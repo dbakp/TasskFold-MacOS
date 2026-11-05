@@ -2,10 +2,11 @@
 
 The immediate delivery is an ordinary personal-workflow app on the existing storage path. Independent-child migration, teams, advanced shared files/audio and their acceptance remain later work.
 
-## Current candidates — 4 November 2026
+## Installed daily-use apps — 5 November 2026
 
-- Mac **1.2.0 (7)**: installed at `/Applications/Taskfold.app`, signed with widgets/sharing, and its verified ZIP matches the accepted native Store binary exactly. Build 6 was closed after verifying no open draft; a fresh private app-file safety copy and build-6 rollback archive were retained. Startup is currently waiting on macOS shared widget/capture app-data approval, confirmed in system logging; startup/sync of build 7 remain unverified. The development profile expires **10 November 2026**.
-- iOS **1.4.0 (22)**: Simulator compilation and actual Store capture/template acceptance pass. The verified Simulator archive matches the accepted binary. This is not a physical-phone package; development signing/installation remains unverified. The reserved Simulator is back in Shutdown.
+- Mac **1.2.0 (14)**: installed at `/Applications/Taskfold.app`; later source builds are separate candidates and do not replace the running app.
+- iPhone **1.4.0 (31)**: installed and launch verified after saved-draft approval. All 205 previous task identities, titles, descriptions, attachments and children were preserved. This update fixes skipped day-review decisions and reduces repeated large-attachment parsing and redundant drop writes. Wider physical rendering/FPS remains unmeasured.
+- Current and rollback archives are retained privately; later candidates are documented in their individual receipts and remain uninstalled until an appropriate update window.
 
 Ordinary candidates use no test launch arguments and keep the recorded advanced feature gates. Acceptance fixtures run only in the reserved namespace. The initial build/package work made no hosted changes, new simulators, real-task edits, installation or publication. The later focused assignment service deployment is recorded below. Build receipts bind the app input fingerprint.
 
@@ -97,3 +98,9 @@ Completed compiler products and duplicate host/app products were retired after r
 ### 4 November · Simulator candidate and bounded storage cleanup
 
 The owning iOS build-23 receipt binds the current committed app inputs; its archive was extracted and every payload file compared, then continuity metadata checked. No Simulator was booted for this compilation. Ten obsolete raw test results were retired only after their full summaries and individual outcomes were saved privately; about 1.9 GiB of reported disk usage was removed. The newest five readable runs and unreadable bundles remain. See `workflow-starters-storage-cleanup.json`. Current device inventory shows no connected physical iOS tunnel; no new signing or installation claim is made. The existing Mac build-7 process is still waiting at shared capture storage.
+
+## Searchable pinned notes — 5 November
+
+Pinned notes now search full note text, task names and project/section paths. Readable previews are prepared off the main actor and shown in bounded pages; completed and archived notes remain available, and duplicate titles have project context. Current pin/workspace/session/source identity is checked before the reader opens. Existing editing, creation and output remain on the normal task-backed path.
+
+Both owning Core suites pass 20 checks. Two current-source signed iPhone Simulator cases pass search/paging/current-text/cold reading and dark/largest-text keyboard/Done/Close, with screenshot review and no reported runtime warnings. Saved task, pin, project and section tables remain unchanged by reading/searching. Mac20 and iPhone32 are independently built, strictly signed and ZIP-payload verified candidates; neither is installed. Current daily apps remain Mac14/iPhone31. Native Mac/iPad/speech, real-device rendering and wider account/cloud contexts remain separate. See `note-library-search.json` and the scoped native/candidate receipts.

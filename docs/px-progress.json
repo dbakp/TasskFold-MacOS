@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Seven-task planning fix and faster saves · iPhone31 installed",
-  "latest": "iPhone 1.4.0 (31) is installed and running; all 205 prior task IDs, titles, notes, attachments and children match after launch. Day review now keeps its original queue, advances only after successful saves and uses full date/time updates. Drops no longer create a separate automatic sort save/Undo step. Ordinary saves/sync reuse exact matching on-disk bytes instead of repeatedly parsing large attachments, and widget summaries render in the background. Both repos pass 74 focused Core checks each. Scoped iPhone acceptance covers seven distinct Today saves, failed-save retry, fixed time, a 2.56 MB synthetic attachment, unrelated work/cold tables, plus actual dated-list drag, one Undo and navigation. Mac19 compiles/signs with both extensions; installed Mac remains14. Cleanup removes 276.6 MiB of obsolete outputs and leaves 64.6 GiB free. Wider rendering/FPS, device/account/accessibility contexts and agreed deferrals remain.",
+  "focus": "Now · Searchable notes accepted on iPhone Simulator · Next updates prepared",
+  "latest": "iPhone31 remains installed with the seven-task planning fix and all 205 prior tasks preserved. Pinned notes now search full text, task and project paths with bounded background previews. Both owning Core suites pass 20 checks; normal and dark/largest-text iPhone Simulator journeys pass search, paging, current-text refresh, cold return and read-only preservation. Signed Mac20/phone32 packages are prepared, not installed; current Mac remains14. Wider Mac/iPad/speech/device rendering contexts remain open.",
   "next": [
     "NEXT: use phone31 for everyday work and address any specific remaining slow screens; continue small notes/headings, planner and widget/insight improvements. Preserve the accepted seven-task and dated-list drag cases; broader native Mac/iPad/shared/account/speech/FPS work stays scoped. Mac19 source is built, with Mac14 still installed.",
     "NEXT DAILY-USE UPDATE: phone31 includes the library creation/starter, ordering/filter-target, stable subtasks, direct note editing, planner search and current correctness/responsiveness fixes. Continue bounded, clearly versioned updates with private pre-update backups and cleanup each run.",
@@ -497,7 +497,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading, project catalogs, searchable parents and background cached library captions. iPhone production cases verify scrolling, current-source refresh, draft/save/cold behavior and saved-work preservation. Wider editor/rendering, platform, account/accessibility/cloud contexts remain. Field conflict review now waits for an ongoing sync before comparing current task data. Visible sibling arrows and branch-aware drag planning now have owning Core proof; actual iPhone menu and Store Undo restore exact saved tables. Actual sibling drag gestures and Mac interaction remain separate. Searchable filter targets now use cancellable background catalogs and bounded pages. Final iPhone project-target Save/Cancel/cold and dark/largest-text keyboard/Done cases pass; Mac/iPad and wider label/section/access/speech/rendering remain separate. Current gain: bounded exact-byte durable-read reuse removes repeated full attachment parsing; ordinary mutation/sync widget summaries move to the existing latest-only background queue. iPhone dated-list drops use one local commit/Undo, and an actual drag/Undo/navigation case passes. Phone31 is installed with prior work preserved; broader rendering/FPS remains open.",
+              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading, project catalogs, searchable parents and background cached library captions. iPhone production cases verify scrolling, current-source refresh, draft/save/cold behavior and saved-work preservation. Wider editor/rendering, platform, account/accessibility/cloud contexts remain. Field conflict review now waits for an ongoing sync before comparing current task data. Visible sibling arrows and branch-aware drag planning now have owning Core proof; actual iPhone menu and Store Undo restore exact saved tables. Actual sibling drag gestures and Mac interaction remain separate. Searchable filter targets now use cancellable background catalogs and bounded pages. Final iPhone project-target Save/Cancel/cold and dark/largest-text keyboard/Done cases pass; Mac/iPad and wider label/section/access/speech/rendering remain separate. Current gain: bounded exact-byte durable-read reuse removes repeated full attachment parsing; ordinary mutation/sync widget summaries move to the existing latest-only background queue. iPhone dated-list drops use one local commit/Undo, and an actual drag/Undo/navigation case passes. Phone31 is installed with prior work preserved; broader rendering/FPS remains open. Pinned-note library now prepares previews and full-text/project search on cancellable workers, with 60-row pages, completed/archive context and identity-aware live reading. Owning 20-case Core suites and two scoped iPhone Simulator journeys pass; Mac20/phone32 packages are uninstalled. Broader native rendering remains separate.",
               "steps": [
                 {
                   "state": "done",
@@ -1186,7 +1186,13 @@
     "repair-keyboard-controls/README.md",
     "repair-keyboard-controls/verification.json",
     "daily-use-build/README.md",
-    "daily-use-build/verification.json"
+    "daily-use-build/verification.json",
+    "daily-use-build/note-library-search.json",
+    "daily-use-build/note-library-core-checks.json",
+    "daily-use-build/note-library-native-ios.json",
+    "daily-use-build/note-library-large-native-ios.json",
+    "daily-use-build/note-library-candidates.json",
+    "daily-use-build/note-library-storage.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1302,7 +1308,7 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
-    "daily-use-build/README.md": "be645e7f3ed5b592d3b389a570fd39a5e94c0ba61820054059ae0cc13a93f164",
+    "daily-use-build/README.md": "82ddcfc2ef7a556688bb209d6b7db0ed13dffd4f86b5ba8fba9a6dfd009cdacd",
     "daily-use-build/context-capture-ios-build.json": "347a2b5b15870bf23539cc7856c7cd9accd12f21d57b9628b35afb61c166c60e",
     "daily-use-build/context-capture-mac-package.json": "01a94b61601f02b1fd223c6307e2fb67af4fe3fbfa907b8ced2f4fd5f108ba0a",
     "daily-use-build/context-capture-native.json": "fddc4e842d98b36a14bff1fef870d8c44f5d1bee74fb13c7984ef119b5cf8506",
@@ -1318,6 +1324,12 @@
     "daily-use-build/library-composer-largest-text.json": "d8a3e945933e76a34b014a51f078a75c5b5e498bf28db2c80f59b3134c77ff89",
     "daily-use-build/library-composer-native.json": "66869643ac1d84418539f6138932c70e0571904c47aa4a4973bf6f59b386df2e",
     "daily-use-build/library-composer-storage.json": "a8f9fb628a11da3b940636e8942d50a85776d2819c02bb534302ed427c0078d8",
+    "daily-use-build/note-library-candidates.json": "6c52f15e8f4e82d7377717c48815fb4fa7e0fd34f83a6bc1125927792179bbdd",
+    "daily-use-build/note-library-core-checks.json": "71e4fbb5e153afdeaeec5b8952f7cce6aa1b042c5f284f95b44114dc1a1362bd",
+    "daily-use-build/note-library-large-native-ios.json": "9e4f0ef972035192c738c8bd947c0ab96d5cb80687e49bccda438966ba07d4f1",
+    "daily-use-build/note-library-native-ios.json": "9108d92515d8f2af6afa3e3a9fb70f54c4e0c1e1e71610fedd5c03f6944b609b",
+    "daily-use-build/note-library-search.json": "943592c6ee446f66481984c787512ae4c754d00f37d4a16088c1d8edd45a720c",
+    "daily-use-build/note-library-storage.json": "9a9b541ecdc75eb61507c3196389320d76b400949193cfb8e06bbccb31db07ca",
     "daily-use-build/source-search-bootstrap.json": "7f0c5805a484ccacd788393eaa7c8c8bb5d54bf00bef4f861d9be63aeb2fdd1b",
     "daily-use-build/source-search-largest-text.json": "b2ab816410c12e31dec0940df2efb6e5fbb94739da0b0fd5fba7e0bdd8ae5679",
     "daily-use-build/source-search-native.json": "e22bc8ffbf0500392c113c3ff2e1191f33e8b1ec5a0619631348f552f5e8afdb",

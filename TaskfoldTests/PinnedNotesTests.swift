@@ -185,3 +185,89 @@ final class PinnedNotesTests: XCTestCase {
         }
     }
 }
+
+private actor PinnedNoteSearchGate {
+    private var opened = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    func wait() async { if opened { return }; await withCheckedContinuation { waiters.append($0) } }
+    func release() { opened = true; waiters.forEach { $0.resume() }; waiters = [] }
+}
+
+final class PinnedNoteCatalogTests: XCTestCase {
+    private let account = "owner"
+    private func task(_ id: String, _ title: String = "Handbook", body: JSON = .string("Review café contrast"), project: String = "design") -> Record {
+        Record(["id": .string(id), "user_id": .string(account), "title": .string(title), "description": body, "project_id": .string(project), "section_id": .string("review"), "task_generation": .string("original"), "completed": .bool(false)])
+    }
+    private func pin(_ id: String, owner: String = "owner") -> Record { Record(["id": .string(PinnedNotes.key(id)), "user_id": .string(owner), "ids": .array([.string(id)])]) }
+    private var projects: [Record] { [Record(["id": .string("personal"), "name": .string("Personal")]), Record(["id": .string("design"), "name": .string("Design"), "parent_id": .string("personal")])] }
+    private var sections: [Record] { [Record(["id": .string("review"), "project_id": .string("design"), "name": .string("Research")])] }
+    private func catalog(_ tasks: [Record], pins: [Record]? = nil) throws -> PinnedNoteCatalog { try .init(tasks: tasks, pins: pins ?? tasks.map { pin($0.id) }, projects: projects, sections: sections, account: account) }
+    func testSearchCombinesTitleFullNoteUnicodeAndProjectSectionPath() throws {
+        let note = task("one", body: .string("# Handoff\n" + String(repeating: "Introduction ", count: 500) + "\nCafé contrast decision"))
+        let index = try catalog([note, task("two", "Handbook", body: .string("Other text"), project: "")])
+        XCTAssertEqual(try index.page(query: "CAFE personal research handbook").options.map(\.id), ["one"])
+        XCTAssertEqual(try index.page(query: "handbook").total, 2)
+        let match = try XCTUnwrap(try index.page(query: "decision").options.first)
+        XCTAssertEqual(match.location, "Personal › Design › Research"); XCTAssertFalse(match.preview.contains("decision")); XCTAssertTrue(match.preview.hasSuffix("…"))
+        XCTAssertLessThanOrEqual(match.preview.utf8.count, 1203)
+        XCTAssertEqual(try index.page(query: "cafe missing").total, 0)
+    }
+    func testCompletedArchivedAndMissingProjectNotesStayReadableWithoutInventingLocation() throws {
+        var note = task("one"); note["completed"] = .bool(true)
+        var archived = projects; archived[0]["is_archived"] = .bool(true)
+        let index = try PinnedNoteCatalog(tasks: [note, task("orphan", project: "missing")], pins: [pin("one"), pin("orphan")], projects: archived, sections: sections, account: account)
+        XCTAssertTrue(try XCTUnwrap(index.options.first { $0.id == "one" }).completed)
+        XCTAssertTrue(try XCTUnwrap(index.options.first { $0.id == "one" }).location.hasPrefix("Archived · "))
+        XCTAssertEqual(try XCTUnwrap(index.options.first { $0.id == "orphan" }).location, "Project unavailable")
+    }
+    func testPinAuthorityAndAmbiguousTaskIdentitiesCannotExposeAnotherNote() throws {
+        let rows = [task("duplicate"), task("duplicate", "Different"), task("shadow"), task("good")]
+        let pins = [pin("duplicate"), pin("shadow", owner: "other"), pin("shadow"), pin("good")]
+        XCTAssertEqual(try catalog(rows, pins: pins).options.map(\.id), ["good"])
+        XCTAssertTrue(try PinnedNoteCatalog(tasks: rows, pins: pins, projects: projects, sections: sections, account: "").options.isEmpty)
+    }
+    func testCurrentSelectionFollowsTextButRejectsReplacementMoveUnpinAndAccount() throws {
+        let original = task("one"), pins = [pin("one")], option = try XCTUnwrap(try catalog([original]).options.first)
+        var current = original; current["title"] = .string("Updated"); current["description"] = .string("New words"); current["completed"] = .bool(true)
+        XCTAssertEqual(PinnedNoteCatalog.current(option, tasks: [current], pins: pins, account: account), current)
+        for field in ["user_id", "project_id", "section_id", "task_generation", "created_at"] {
+            var changed = current; changed[field] = .string("changed")
+            XCTAssertNil(PinnedNoteCatalog.current(option, tasks: [changed], pins: pins, account: account))
+        }
+        XCTAssertNil(PinnedNoteCatalog.current(option, tasks: [current, current], pins: pins, account: account))
+        XCTAssertNil(PinnedNoteCatalog.current(option, tasks: [current], pins: [], account: account))
+        XCTAssertNil(PinnedNoteCatalog.current(option, tasks: [current], pins: pins, account: "other"))
+    }
+    func testBlankOpaqueAndUnsafeMarkupRemainUnmodified() throws {
+        let opaque = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("9007199254740993".utf8))
+        let rows = [task("blank", body: .null), task("opaque", body: opaque), task("link", body: .string("[Keep](javascript:alert(1))"))]
+        let original = rows; let index = try catalog(rows)
+        XCTAssertEqual(index.options.first { $0.id == "blank" }?.preview, "Add instructions or an idea")
+        XCTAssertEqual(index.options.first { $0.id == "opaque" }?.preview, "Open task details to review this saved note")
+        XCTAssertEqual(rows, original)
+        XCTAssertEqual(try index.page(query: "javascript").options.map(\.id), ["link"])
+    }
+    func testBoundedPagesStableOrderAndCooperativeCancellation() throws {
+        let rows = (0..<3000).map { task("\($0)", String(format: "Note %04d", $0), body: .string("# Instructions\nRead the design brief.")) }
+        let start = Date(), index = try catalog(rows)
+        print("PINNED_NOTE_CATALOG_3000_SECONDS \(Date().timeIntervalSince(start))")
+        XCTAssertEqual(try index.page(query: "").options.count, 60)
+        XCTAssertEqual(try index.page(query: "", limit: 120).options.map(\.id).prefix(60), try index.page(query: "").options.map(\.id)[...])
+        XCTAssertEqual(try index.page(query: "instructions", limit: 0).total, 3000)
+        var checks = 0
+        XCTAssertThrowsError(try index.page(query: "missing", checkCancellation: { checks += 1; if checks == 4 { throw CancellationError() } }))
+        checks = 0
+        XCTAssertThrowsError(try PinnedNoteCatalog(tasks: rows, pins: rows.map { pin($0.id) }, projects: projects, sections: sections, account: account, checkCancellation: { checks += 1; if checks == 4 { throw CancellationError() } }))
+    }
+    func testAsyncLoadAndSearchRejectCancelledWork() async throws {
+        let rows = (0..<3000).map { task("\($0)", "Note \($0)") }, pins = rows.map { pin($0.id) }
+        let loadGate = PinnedNoteSearchGate(), projectRows = projects, sectionRows = sections, owner = account
+        let load = Task { await loadGate.wait(); return try await PinnedNoteCatalog.load(tasks: rows, pins: pins, projects: projectRows, sections: sectionRows, account: owner) }
+        load.cancel(); await loadGate.release()
+        do { _ = try await load.value; XCTFail("Cancelled load published") } catch is CancellationError { }
+        let index = try catalog([task("one")])
+        let searchGate = PinnedNoteSearchGate()
+        let search = Task { await searchGate.wait(); return try await index.search(query: "cafe", limit: 60) }; search.cancel(); await searchGate.release()
+        do { _ = try await search.value; XCTFail("Cancelled search published") } catch is CancellationError { }
+    }
+}

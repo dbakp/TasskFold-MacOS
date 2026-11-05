@@ -244,3 +244,77 @@ struct PinnedNoteTextEdit {
         return desired
     }
 }
+
+
+/// Presentation-only note search. Pins and readable task records remain the
+/// authority; a cached result never grants access or authorizes an edit.
+struct PinnedNoteCatalog: Sendable {
+    static let pageSize = 60
+    struct Option: Identifiable, Equatable, Sendable {
+        let id: String, title: String, location: String, preview: String
+        let completed: Bool
+        let identity: JSON
+        fileprivate let body: String
+    }
+    struct Page: Equatable, Sendable { let options: [Option]; let total: Int }
+    let options: [Option]
+    static func identity(_ task: Record) -> JSON {
+        .object(Dictionary(uniqueKeysWithValues: ["id", "user_id", "project_id", "section_id", "task_generation", "created_at"].map { ($0, task[$0]) }))
+    }
+    init(tasks: [Record], pins: [Record], projects: [Record], sections: [Record], account: String, checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws {
+        try checkCancellation()
+        var counts: [String: Int] = [:]
+        for task in tasks { try checkCancellation(); counts[task.id, default: 0] += 1 }
+        let notes = PinnedNotes.tasks(tasks, pins: pins, account: account).filter { counts[$0.id] == 1 }
+        let paths = try WorkflowSourceCatalog(kind: .task, projects: projects, sections: sections, tasks: notes, checkCancellation: checkCancellation)
+        let locations = Dictionary(uniqueKeysWithValues: paths.options.map { ($0.id, $0.location) })
+        var rows: [Option] = []; rows.reserveCapacity(notes.count)
+        for task in notes {
+            try checkCancellation()
+            let body: String, preview: String
+            switch task["description"] {
+            case .string(let text):
+                body = text
+                let excerpt = NoteMarkup.preview(text, characters: 180, bytes: 1200)
+                preview = text.isEmpty ? "Add instructions or an idea" : excerpt.0 + (excerpt.1 ? "…" : "")
+            case .null: body = ""; preview = "Add instructions or an idea"
+            default: body = ""; preview = "Open task details to review this saved note"
+            }
+            rows.append(Option(id: task.id, title: task.title.isEmpty ? "Untitled task" : task.title,
+                location: locations[task.id] ?? (task.string("project_id").isEmpty ? "Inbox" : "Project unavailable"),
+                preview: preview, completed: task.completed, identity: Self.identity(task), body: body))
+        }
+        options = try rows.sorted {
+            try checkCancellation()
+            let title = $0.title.localizedStandardCompare($1.title)
+            if title != .orderedSame { return title == .orderedAscending }
+            let path = $0.location.localizedStandardCompare($1.location)
+            return path == .orderedSame ? $0.id < $1.id : path == .orderedAscending
+        }
+    }
+    static func load(tasks: [Record], pins: [Record], projects: [Record], sections: [Record], account: String) async throws -> Self {
+        let worker = Task.detached(priority: .userInitiated) { try Self(tasks: tasks, pins: pins, projects: projects, sections: sections, account: account) }
+        return try await withTaskCancellationHandler(operation: { let value = try await worker.value; try Task.checkCancellation(); return value }, onCancel: { worker.cancel() })
+    }
+    func page(query: String, limit: Int = pageSize, checkCancellation: () throws -> Void = {}) throws -> Page {
+        let words = query.split(whereSeparator: \.isWhitespace).map(String.init)
+        var result: [Option] = [], total = 0
+        for row in options {
+            try checkCancellation()
+            guard words.allSatisfy({ row.title.localizedStandardContains($0) || row.body.localizedStandardContains($0) || row.location.localizedStandardContains($0) }) else { continue }
+            total += 1
+            if result.count < max(0, limit) { result.append(row) }
+        }
+        return Page(options: result, total: total)
+    }
+    func search(query: String, limit: Int) async throws -> Page {
+        let worker = Task.detached(priority: .userInitiated) { try page(query: query, limit: limit, checkCancellation: { try Task.checkCancellation() }) }
+        return try await withTaskCancellationHandler(operation: { let value = try await worker.value; try Task.checkCancellation(); return value }, onCancel: { worker.cancel() })
+    }
+    static func current(_ option: Option, tasks: [Record], pins: [Record], account: String) -> Record? {
+        let matches = Array(tasks.lazy.filter { $0.id == option.id }.prefix(2))
+        guard matches.count == 1, let task = matches.first,
+              PinnedNotes.contains(task.id, pins: pins, account: account), identity(task) == option.identity else { return nil }
+        return task
+    }
+}

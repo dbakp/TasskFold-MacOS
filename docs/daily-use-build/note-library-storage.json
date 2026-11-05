@@ -1,0 +1,66 @@
+{
+  "freeBeforeBytes": 67752779776,
+  "cacheAudit": {
+    "apply": true,
+    "freeBeforeBytes": 67752820736,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 433176576
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 373993472
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 487579648
+      }
+    ],
+    "freeAfterBytes": 67752812544,
+    "actualFreeChangeBytes": -8192
+  },
+  "removed": [
+    {
+      "path": "/tmp/taskfold-note-library-normal-shots",
+      "allocatedBytes": 278528
+    },
+    {
+      "path": "/tmp/taskfold-note-library-large-shots",
+      "allocatedBytes": 331776
+    },
+    {
+      "path": "/tmp/taskfold-note-library-native-v1.xcresult",
+      "allocatedBytes": 1024000
+    },
+    {
+      "path": "/tmp/taskfold-note-library-large-native-v1.xcresult",
+      "allocatedBytes": 811008
+    },
+    {
+      "path": "/tmp/taskfold-note-library-core-ios-v1.log",
+      "allocatedBytes": 53248
+    },
+    {
+      "path": "/tmp/taskfold-note-library-core-mac-v1.log",
+      "allocatedBytes": 53248
+    }
+  ],
+  "coreCaches": [
+    {
+      "cache": "core-ios",
+      "allocatedBytes": 580640768
+    },
+    {
+      "cache": "core-mac",
+      "allocatedBytes": 532086784
+    }
+  ],
+  "freeAfterBytes": 67755192320,
+  "removedAllocatedBytes": 2551808,
+  "retained": "Signed Mac20/iPhone32 candidates and exact payload verification; installed Mac14/iPhone31 and rollback Mac10/iPhone30 archives; concise native reports, complete test logs and reviewed screenshots; reusable bounded build caches; private user-data backups. Real app data, Keychain, Docker and unrelated devices/projects untouched."
+}

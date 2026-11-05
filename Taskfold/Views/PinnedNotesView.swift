@@ -13,7 +13,8 @@ struct PinnedNotesView: View {
     @Environment(\.dismiss) private var dismiss
     let request: PinnedNoteRequest
     @State private var creating = false
-    private var available: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) }
+    @State private var session: UUID?
+    private var available: Bool { store.workflowPreviewReady(request.workspace) && (session == nil || session == store.backend.reminderSessionIncarnation) }
     var body: some View {
         NavigationStack {
             Group {
@@ -21,40 +22,133 @@ struct PinnedNotesView: View {
                     ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Close this window and open your current pinned notes."))
                 } else if let id = request.taskID { PinnedNoteDetail(taskID: id, binding: request.workspace, close: { dismiss() }) }
                 else {
-                    List {
-                        Section {
-                            Text("Instructions, a checklist, or an idea worth keeping close. Pins use your task notes and stay available after completion.").font(.callout).foregroundStyle(.secondary)
-                            Button("New pinned note", systemImage: "plus") { creating = true }.accessibilityIdentifier("newPinnedNote")
-                        }
-                        let notes = PinnedNotes.tasks(store.tasks, pins: store.rows("view_orders"), account: store.userID)
-                        if notes.isEmpty {
-                            ContentUnavailableView("Keep a useful note close", systemImage: "pin", description: Text("Create a note here, or turn on Show notes in widgets in any task's details."))
-                        } else {
-                            Section("Your pinned notes") {
-                                ForEach(notes) { task in
-                                    NavigationLink { PinnedNoteDetail(taskID: task.id, binding: request.workspace, close: { dismiss() }) } label: {
-                                        VStack(alignment: .leading, spacing: 6) {
-                                            Text(task.title).font(.headline).lineLimit(2)
-                                            Text(task.string("description").isEmpty ? "Add instructions or an idea" : NoteMarkup.summary(task.string("description"))).font(.callout).foregroundStyle(.secondary).lineLimit(2)
-                                            if task.completed { Label("Task completed", systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
-                                        }.padding(.vertical, 6)
-                                    }.accessibilityIdentifier("pinnedNote-" + task.id)
-                                }
-                            }
-                        }
-                    }.navigationTitle("Pinned notes")
+                    PinnedNotesLibrary(binding: request.workspace, session: session ?? store.backend.reminderSessionIncarnation, create: { creating = true }, close: { dismiss() })
                 }
             }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar { if request.taskID == nil { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("closePinnedNotes") } } }
+            .onAppear { if session == nil { session = store.backend.reminderSessionIncarnation } }
+            .onChange(of: available) { _, readable in if !readable { creating = false } }
             .sheet(isPresented: $creating) { NewPinnedNote(binding: request.workspace) }
             .onChange(of: store.workspaceGeneration) { _, _ in creating = false; dismiss() }
         }
         #if os(macOS)
         .frame(minWidth: 460, idealWidth: 580, minHeight: 500)
         #endif
+    }
+}
+
+private struct PinnedNotesLibrary: View {
+    @Environment(Store.self) private var store
+    let binding: WorkspaceBinding
+    let session: UUID
+    let create: () -> Void
+    let close: () -> Void
+    @State private var query = ""
+    @State private var limit = PinnedNoteCatalog.pageSize
+    @State private var catalog: PinnedNoteCatalog?
+    @State private var loaded: Version?
+    @State private var token: UUID?
+    @State private var result: SearchResult?
+    @State private var searching = false
+    @State private var failure: String?
+    @FocusState private var focused: Bool
+    private struct Version: Equatable {
+        let readable: Bool
+        let tasks: [Record], pins: [Record], projects: [Record], sections: [Record]
+    }
+    private struct Key: Equatable { let token: UUID?; let query: String; let limit: Int }
+    private struct SearchResult { let key: Key; let page: PinnedNoteCatalog.Page }
+    private var readable: Bool { store.workflowPreviewReady(binding) && session == store.backend.reminderSessionIncarnation }
+    private var version: Version { Version(readable: readable, tasks: readable ? store.tasks : [], pins: readable ? store.rows("view_orders") : [], projects: readable ? store.allProjects : [], sections: readable ? store.rows("sections") : []) }
+    var body: some View {
+        let input = version, key = Key(token: token, query: query, limit: limit)
+        VStack(spacing: 0) {
+            HStack {
+                Image(systemName: "magnifyingglass").font(.system(size: 20)).foregroundStyle(.secondary).accessibilityHidden(true)
+                TextField("Find a note or project", text: $query).textFieldStyle(.plain).frame(minHeight: 44).focused($focused).onSubmit { focused = false }
+                    .accessibilityLabel("Search pinned notes").accessibilityIdentifier("pinnedNotesSearch")
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.search)
+                    #endif
+                if !query.isEmpty { Button { query = "" } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 20)).foregroundStyle(.secondary).frame(width: 44, height: 44).contentShape(Rectangle()) }.buttonStyle(.borderless).accessibilityLabel("Clear search").accessibilityIdentifier("clearPinnedNotesSearch") }
+            }.padding().background(.bar)
+            List {
+                Section {
+                    Button("New pinned note", systemImage: "plus") { focused = false; query = ""; create() }.accessibilityIdentifier("newPinnedNote")
+                    if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { Text("Find instructions, checklists and ideas by their words or project. Completed tasks can keep their notes pinned.").font(.callout).foregroundStyle(.secondary) }
+                }
+                if loaded == input, let result, result.key.token == token, result.key.query == query {
+                    if result.page.total == 0 {
+                        ContentUnavailableView(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Keep a useful note close" : "No notes found", systemImage: "pin", description: Text(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Create a note here, or turn on Show notes in widgets in any task's details." : "Try another word from the note, task or project."))
+                    } else {
+                        Section("Your pinned notes") {
+                            ForEach(result.page.options) { option in
+                                NavigationLink {
+                                    PinnedNoteLibraryDestination(option: option, binding: binding, session: session, close: close)
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(option.title).font(.headline).lineLimit(2)
+                                        Text(option.preview).font(.callout).foregroundStyle(.secondary).lineLimit(2)
+                                        Text(option.location).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                        if option.completed { Label("Task completed", systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
+                                    }.padding(.vertical, 6)
+                                }.accessibilityIdentifier("pinnedNote-" + option.id).accessibilityLabel(option.title).accessibilityValue(option.location + ", " + option.preview + (option.completed ? ", Task completed" : ""))
+                            }
+                        }
+                        if result.page.options.count < result.page.total {
+                            Text("Showing \(result.page.options.count) of \(result.page.total) notes").font(.caption).foregroundStyle(.secondary)
+                            Button("Show more") { limit += PinnedNoteCatalog.pageSize }.disabled(searching).accessibilityIdentifier("showMorePinnedNotes")
+                        }
+                    }
+                    if searching { ProgressView("Searching notes…") }
+                } else if let failure { Text(failure).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true) }
+                else { ProgressView("Finding notes…") }
+            }.accessibilityIdentifier("pinnedNotesLibrary")
+        }
+        .navigationTitle("Pinned notes")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Close", action: close).accessibilityIdentifier("closePinnedNotes") }
+            ToolbarItem(placement: .confirmationAction) { Button("Done") { focused = false }.accessibilityIdentifier("pinnedNotesKeyboardDone") }
+        }
+        .onChange(of: query) { _, _ in limit = PinnedNoteCatalog.pageSize }
+        .task(id: input) {
+            catalog = nil; loaded = nil; token = nil; result = nil; failure = nil
+            guard readable else { query = ""; return }
+            do {
+                let value = try await PinnedNoteCatalog.load(tasks: input.tasks, pins: input.pins, projects: input.projects, sections: input.sections, account: store.userID)
+                try Task.checkCancellation(); guard readable, input == version else { return }
+                catalog = value; loaded = input; token = UUID()
+            } catch is CancellationError { }
+            catch { guard readable, input == version else { return }; failure = error.localizedDescription }
+        }
+        .task(id: key) {
+            guard readable, let catalog, loaded == input, key.token != nil else { return }
+            searching = true
+            do {
+                let page = try await catalog.search(query: key.query, limit: key.limit)
+                try Task.checkCancellation(); guard readable, loaded == version, key == Key(token: token, query: query, limit: limit) else { return }
+                result = SearchResult(key: key, page: page); searching = false
+            } catch is CancellationError { }
+            catch { guard key == Key(token: token, query: query, limit: limit) else { return }; searching = false; failure = error.localizedDescription }
+        }
+    }
+}
+
+private struct PinnedNoteLibraryDestination: View {
+    @Environment(Store.self) private var store
+    let option: PinnedNoteCatalog.Option
+    let binding: WorkspaceBinding
+    let session: UUID
+    let close: () -> Void
+    var body: some View {
+        if store.workflowPreviewReady(binding), session == store.backend.reminderSessionIncarnation,
+           PinnedNoteCatalog.current(option, tasks: store.tasks, pins: store.rows("view_orders"), account: store.userID) != nil {
+            PinnedNoteDetail(taskID: option.id, binding: binding, close: close)
+        } else {
+            ContentUnavailableView("Note unavailable", systemImage: "pin.slash", description: Text("This note changed or is no longer available. Return to Pinned notes and choose its current entry.")).navigationTitle("Pinned note")
+        }
     }
 }
 
