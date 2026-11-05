@@ -494,6 +494,31 @@ private struct WorkflowSourceSelectionView: View {
     }
 }
 
+/// A contextual capture freezes the current saved source before presenting its
+/// private-copy review. Rendering a menu never writes or captures a stale draft.
+struct WorkflowCaptureRequest: Identifiable {
+    let capture: WorkflowTemplateCapture
+    let name: String
+    var id: UUID { capture.id }
+    @MainActor init(kind: WorkflowTemplate.Kind, source: Record, store: Store) throws {
+        let binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+        guard store.workflowPreviewReady(binding),
+              WorkflowSourceCatalog.current(source.id, kind: kind, projects: store.allProjects,
+                  sections: store.rows("sections"), tasks: kind == .task ? store.tasks : []) == source else {
+            throw WorkflowTemplateCapture.changed
+        }
+        capture = try store.captureWorkflowTemplate(kind: kind, sourceID: source.id, binding: binding)
+        name = String((kind == .task ? source.title : source.name).trimmingCharacters(in: .whitespacesAndNewlines).prefix(160))
+    }
+}
+
+struct WorkflowCaptureSheet: View {
+    let request: WorkflowCaptureRequest
+    var body: some View {
+        TemplateCaptureReview(capture: request.capture, initialName: request.name, completed: {})
+    }
+}
+
 private struct TemplateCaptureReview: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -517,7 +542,7 @@ private struct TemplateCaptureReview: View {
                 if blocked == nil {
                     Section {
                         TextField("Template name", text: $name).accessibilityIdentifier("capturedTemplateName")
-                        Text("Save a private copy of this shared workflow. Project names, task notes, labels and schedule rules are included. People, conversations and attachments stay with the source.").font(.callout).foregroundStyle(.secondary)
+                        Text(capture.shared ? "Save a private copy of this shared workflow. Project names, task notes, labels and schedule rules are included. People, conversations and attachments stay with the source." : "Save this workflow as a reusable template. Structure, notes, labels and schedule rules are included. Completion, conversations, attachments and assignments stay with the originals.").font(.callout).foregroundStyle(.secondary)
                         Text("No tasks will be created. Later changes to the source won’t update this copy.").font(.footnote).foregroundStyle(.secondary)
                     }
                     Section("Workflow preview") { TemplateDefinitionPreview(document: capture.template.document, scope: "capture") }
@@ -556,7 +581,7 @@ private struct TemplateCaptureReview: View {
             let row = Record(["id": .string(capture.id.uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(name), "document": capture.template.document])
             var saved = false
             #if os(macOS)
-            workspace.run("Save Shared Workflow Template") { saved = store.save(WorkflowTemplate.table, row) }
+            workspace.run(capture.shared ? "Save Shared Workflow Template" : "Save Workflow Template") { saved = store.save(WorkflowTemplate.table, row) }
             #else
             saved = store.save(WorkflowTemplate.table, row)
             #endif

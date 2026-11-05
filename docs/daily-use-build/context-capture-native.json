@@ -1,0 +1,459 @@
+{
+  "date": "2026-11-05",
+  "localStartedAt": "2026-11-05T01:09:49+01:00",
+  "syntheticOnly": true,
+  "ordinaryGatesChanged": false,
+  "genuineAuthOrProvider": false,
+  "hardwareOrLargeLibraryRenderingAccepted": false,
+  "buildOnly": false,
+  "largestText": false,
+  "contextual": true,
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "46eb90a97a57a108fadb813b088925003a0a07ef8fb1e61d35a24e120274c0a0",
+    "Taskfold/TaskfoldApp.swift": "399e808f8f53b3e616ec55ed2d716b0554d96b2565a6612a0520b053b502f36d",
+    "Taskfold/Views/WorkflowViews.swift": "e24cf499a1f83af80f9f7ceb8a546c1f7694ab279fbf89c74f482fbedd3ded36",
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "7afee41f5bf313044b2a0775be1e9df337fe62537617939369b683defc24b752"
+  },
+  "preparedUITestSourceCount": 1,
+  "simulatorInitialState": "Shutdown",
+  "xcodeExitCode": 0,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793837593.519,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793837395.918,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "contextualCapture": {
+    "accepted": true,
+    "cancelPreservesTables": true,
+    "explicitSaveOnly": true,
+    "noTasksCreated": true,
+    "originalRowsPreserved": true,
+    "prefilledNames": true,
+    "productionProjectMenu": true,
+    "productionTaskMenu": true
+  },
+  "productSHA256": {
+    "Taskfold": "56e1ee33f008a4b20986ec3ce5f6f4dee9b8bebdda6ba7dc76bf88df3b124e03",
+    "Taskfold.debug.dylib": "adc7a42aa1dc10a2de8ef08084502b82968f26283f4ed0aee191bce849b5c682"
+  },
+  "accepted": true,
+  "simulatorFinalState": "Shutdown",
+  "ownedSimulatorRestored": true,
+  "storageCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 73480876032,
+    "actions": [
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.ExtragalacticPoster/descriptors/44693229-2806-4FFE-A7D8-6770105E08DA/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.ExtragalacticPoster/descriptors/941F80B6-CC38-42C4-83FD-20DA64D5DA96/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.ExtragalacticPoster/descriptors/67D4E920-68AC-4012-9C9C-10BC9C7DBAB7/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.NanoUniverse.AegirProxyApp.AegirPoster/descriptors/56AC0779-2108-4B03-8146-5F65B107D257/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.NanoUniverse.AegirProxyApp.AegirPoster/descriptors/FF664E9B-0555-4633-AF79-2C4924CAF560/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.NanoUniverse.AegirProxyApp.AegirPoster/descriptors/3B3A4ED0-7C96-4DC0-9B02-0FE91ED66DCB/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.NanoUniverse.AegirProxyApp.AegirPoster/descriptors/187D853F-6BD2-4388-9652-99804F6CD6D3/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.NanoUniverse.AegirProxyApp.AegirPoster/descriptors/1F89B9D3-E594-4A7D-97DD-78F957AD677A/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.NanoUniverse.AegirProxyApp.AegirPoster/descriptors/11169061-1C03-4732-A408-0F2C8E8CD617/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.Unity2025Poster/descriptors/867CD235-BD4E-4815-9DA8-EF875B0301E6/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.Unity2025Poster/descriptors/8369FEB2-3D08-4586-83AD-7F32451E674E/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 851968
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.Unity2025Poster/descriptors/C651612B-597D-4C0F-879F-B4CC4EA1EDBB/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 851968
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.Unity2025Poster/descriptors/964510C5-6A6F-4C15-90FC-91D9F53384C3/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.Unity2025Poster/descriptors/B2F55552-DCF1-48D3-BFEE-85A238964C57/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.Unity2025Poster/descriptors/17897D1B-6880-41F0-BE77-29FDB60BBB50/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 851968
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.MercuryPoster/descriptors/186D55C9-B1D4-401D-A36E-A2294E1679F0/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.MercuryPoster/descriptors/02173CA8-4BCE-472B-9336-AEE4701CAC17/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.MercuryPoster/descriptors/261B9AAB-553D-4413-BDA4-10B055460818/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.MercuryPoster/descriptors/DBA9D58A-7580-4791-8E41-70622C64FF53/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.MercuryPoster/descriptors/2AED9C52-1AC9-4E2D-867E-2803A7009327/versions/2/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.MercuryPoster/descriptors/DF929D9F-2929-4B4B-A49C-EE56FEE647C6/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.MercuryPoster/descriptors/3FED5A62-EECF-432F-87B0-7BC40DF5FCAF/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.MercuryPoster/descriptors/B8220056-AE54-4745-A770-7298B209B623/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.UnityPosterExtension/descriptors/25662C3F-3D2F-4D2C-85AF-F55EAAB53E8F/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 851968
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.UnityPosterApp.UnityPosterExtension/descriptors/B9A34285-F877-4CDA-BB11-2EC80E7F2CB4/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PhotosUIPrivate.PhotosAmbientPosterProvider/descriptors/80938E9E-EBBE-4039-B20B-4EAE6C2D618E/versions/384/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 0
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PhotosUIPrivate.PhotosAmbientPosterProvider/descriptors/95B4719F-A8F6-4317-BC87-1622AD695017/versions/367/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 0
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.WeatherPosterApp.WeatherPoster/descriptors/1B8D1E71-907E-4BB0-923C-FC6F8249FB83/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.WeatherPosterApp.WeatherPoster/descriptors/C20C7E8A-16AD-461E-A241-4E69D3B5582E/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.WeatherPosterApp.WeatherPoster/descriptors/C16899CB-EE48-4B62-A930-A60E47ADC92F/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.Posters.WeatherPosterApp.WeatherPoster/descriptors/997410D6-8DF1-4CCC-87A4-73DEBA935D40/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/9EBB1B3E-4A21-474A-BF36-D8BBDB9A8D55/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/52AADAB2-C885-477D-A71C-7EB2914D24E9/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/F34131D9-0708-4030-A1DE-6D330DDFADB5/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/8A415409-EFBA-4C81-9CA8-118147068334/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/D41B7046-DD55-4847-8A5D-09EB775FFEF2/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/B7764613-A206-424E-A442-C44915F42C57/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/1CE28B5A-F600-4989-A828-8F37CC3AA5A4/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/02293D62-1E9C-4841-8236-CA5932B6A9D4/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/518B2236-9A17-447A-9A4B-216DF75AD585/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/0D15A77E-F2E9-401B-8B00-7BAECACE0CE5/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/A1D490F9-CF76-42A0-BEDD-A1FBBF6373BB/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/C3B9C410-8116-4D2A-815B-F14800385DF6/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/4B2771F4-E0BC-4522-9B3F-1AE6B51FA6EE/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 851968
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/0C50A290-C767-4A7F-AB96-7B4A6142B969/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/714E2A10-CA4D-4327-8258-DA7AB0F60C47/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.GradientPoster.GradientPosterExtension/descriptors/F4EA9B98-18B1-4378-866A-2AB4C328B842/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PridePoster.PridePosterExtension/descriptors/4793FB30-7FFA-4B11-B03B-8277E3DFB83B/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PridePoster.PridePosterExtension/descriptors/93BA7DD7-F7A8-421E-BCA3-10D987C25D28/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PridePoster.PridePosterExtension/descriptors/BE0A8C30-0EF9-42FD-BB42-8769909C5696/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PridePoster.PridePosterExtension/descriptors/3D411A7F-E210-45D3-9608-1395F4C20B52/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PridePoster.PridePosterExtension/descriptors/8CEFD621-B0EC-4967-B9A5-76215B6AF529/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PridePoster.PridePosterExtension/descriptors/40D786F1-8CC1-4AEA-98C0-668942ADC16B/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/898ACA8D-E8CC-46B8-B100-16E029B8BEB7/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/23D29ED8-3986-4915-9CAA-646F6B1C6558/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/CF96EB1D-1F4C-4384-83E5-2B6CC9D39DF1/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/12C19EE3-383E-4346-B86F-DD05346785CB/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/7E48B075-EDE0-4A3B-93BA-3D1168E562FF/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/0286A756-107B-4F0B-97FE-DA9CE12759C8/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/0D18276A-4D88-4EBD-BC8D-86DA8A32A55F/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/F35CF0C3-0266-4D96-AAFD-C3F18693F4D2/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/9E861B87-3D93-4731-B466-33F589831C2C/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/C2682C72-D6BF-4CED-8C76-5BDFC253FB36/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/157BB638-70BA-42BA-B4FD-9643C75085EC/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/76FBCF13-B8A8-4526-AEF2-B42A49C81236/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/8D5F0E7B-0023-44BF-B920-5432610D0868/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 851968
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/83B32144-4181-43AA-97D1-814593DEA34D/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/3668D8C8-2353-41AB-AAF0-9A56E2367708/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/ABAE981E-3304-463E-A4E1-71BE5A327DFD/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/6A706297-911B-43C3-A8D5-6FFF666A2879/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/FF999042-02AC-4F04-B24A-14A06B1EABBE/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/58D06890-AAEB-4A96-87BD-1470B53AD30F/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/6982BC55-2189-4B6B-813E-342D5CCD0CD5/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.EmojiPoster.EmojiPosterExtension/descriptors/724362F5-A42E-4B39-8F73-F455FE7EBAB2/versions/1/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 53248
+      }
+    ],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 391344128
+      }
+    ],
+    "freeAfterBytes": 73520406528,
+    "actualFreeChangeBytes": 39530496
+  }
+}

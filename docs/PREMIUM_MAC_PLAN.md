@@ -10872,3 +10872,8 @@ Current daily-use milestone: Mac 1.2.0 (10) remains installed/synced. Phone 1.4.
 
 
 5 November: independently owned iPhone source picker acceptance is now complete for the scoped native refresh/save/fresh-run and largest-text dark cases, both with zero runtime warnings. Done stays available during typing; source identity/readability checks are preserved. Final screenshots reviewed. Mac build 10 remains unchanged and usable. Separate full starter save/run, broader Px and agreed deferrals remain. See P2_PLAN.md and source-search evidence.
+
+
+### 5 November · Contextual workflow capture
+
+Task and project menus now open the existing private-template review directly, with a current saved name filled in. Preserve native controls, full previews, explicit Save, source/session review and Undo. No toolbar/sidebar additions, schema/provider work or ordinary feature-gate changes. Mac development **1.2.0 (11)** builds/signs and its complete archive payload/app/widget/share metadata verify; native Mac menu acceptance remains pending because the Mac is locked. Normal installed build 10 stays running. Independently owned iPhone task/project capture passes its actual synthetic native journey; prior rows remain exact and no tasks are created. See contextual-capture evidence and P2_PLAN.md.

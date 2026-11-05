@@ -39,6 +39,7 @@ struct TaskListView: View {
     @State private var bulkDatePicker = false
     @State private var bulkDate = Date()
     @State private var projectEditor: Record?
+    @State private var workflowCapture: WorkflowCaptureRequest?
     @State private var collaborationProject: Record?
     @State private var sectionsEditor = false
     @State private var filterEditor: Record?
@@ -265,6 +266,7 @@ struct TaskListView: View {
                 context: workspace.quickEntryContext(project: captureDraft.string("project_id")), task: captureDraft, submit: submitQuickAdd)
         }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
+        .sheet(item: $workflowCapture) { WorkflowCaptureSheet(request: $0) }
         .sheet(item: $filterEditor) { SavedViewEditor(record: $0) }
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
@@ -458,6 +460,11 @@ struct TaskListView: View {
             printReview = PrintReviewRequest(document: document, workspace: binding, isCurrent: { (try? printableDocument()) == document })
         } catch { printFailure = error.localizedDescription }
     }
+    private func captureWorkflow(_ kind: WorkflowTemplate.Kind, _ source: Record) {
+        do { workflowCapture = try WorkflowCaptureRequest(kind: kind, source: source, store: store) }
+        catch { store.error = error.localizedDescription }
+    }
+
     // MARK: Menus
 
     @ViewBuilder private func contextMenu(_ ids: Set<String>) -> some View {
@@ -492,6 +499,10 @@ struct TaskListView: View {
             .help("Subtasks stay in their parent's project")
             Menu("Priority") { ForEach(1...4, id: \.self) { n in Button(n == 4 ? "None" : "Priority \(n)", systemImage: "flag") { workspace.setPriority(targets, n) } } }
             Button("Duplicate", systemImage: "doc.on.doc") { workspace.duplicate(targets) }
+            if tasks.count == 1, let task = tasks.first, Workspace.subtaskPath(task.id) == nil {
+                Button("Save as Template…", systemImage: "square.stack.3d.up") { captureWorkflow(.task, task) }
+                    .accessibilityIdentifier("captureTaskTemplate")
+            }
             if tasks.count == 1, let task = tasks.first {
                 Button("Copy Title", systemImage: "doc.on.clipboard") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(task.title + (task.string("description").isEmpty ? "" : "\n" + task.string("description")), forType: .string) }
             }
@@ -518,6 +529,10 @@ struct TaskListView: View {
                     if !projectID.isEmpty {
                     Divider()
                     Button("Edit Project…", systemImage: "pencil") { projectEditor = store.record("projects", id: projectID) }
+                    if let project = store.record("projects", id: projectID) {
+                        Button("Save as Template…", systemImage: "square.stack.3d.up") { captureWorkflow(.project, project) }
+                            .accessibilityIdentifier("captureProjectTemplate")
+                    }
                     Button("Sections…", systemImage: "rectangle.split.3x1") { sectionsEditor = true }
                     Button("Collaborators…", systemImage: "person.2") { collaborationProject = store.record("projects", id: projectID) }.disabled(store.localMode)
                     }

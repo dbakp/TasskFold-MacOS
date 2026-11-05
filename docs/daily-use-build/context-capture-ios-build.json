@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-05",
+  "localStartedAt": "2026-11-05T01:09:40+01:00",
+  "syntheticOnly": true,
+  "ordinaryGatesChanged": false,
+  "genuineAuthOrProvider": false,
+  "hardwareOrLargeLibraryRenderingAccepted": false,
+  "buildOnly": true,
+  "largestText": false,
+  "contextual": true,
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "46eb90a97a57a108fadb813b088925003a0a07ef8fb1e61d35a24e120274c0a0",
+    "Taskfold/TaskfoldApp.swift": "399e808f8f53b3e616ec55ed2d716b0554d96b2565a6612a0520b053b502f36d",
+    "Taskfold/Views/WorkflowViews.swift": "e24cf499a1f83af80f9f7ceb8a546c1f7694ab279fbf89c74f482fbedd3ded36",
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "7afee41f5bf313044b2a0775be1e9df337fe62537617939369b683defc24b752"
+  },
+  "preparedUITestSourceCount": 1,
+  "xcodeExitCode": 0,
+  "productSHA256": {
+    "Taskfold": "56e1ee33f008a4b20986ec3ce5f6f4dee9b8bebdda6ba7dc76bf88df3b124e03",
+    "Taskfold.debug.dylib": "adc7a42aa1dc10a2de8ef08084502b82968f26283f4ed0aee191bce849b5c682"
+  },
+  "accepted": true
+}

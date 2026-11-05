@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-05",
+  "selectedCacheAudit": {
+    "apply": true,
+    "freeBeforeBytes": 73508864000,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 391344128
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 393256960
+      }
+    ],
+    "freeAfterBytes": 73523605504,
+    "actualFreeChangeBytes": 14741504
+  },
+  "obsoleteOutputCleanup": {
+    "freeBeforeBytes": 73522692096,
+    "freeAfterBytes": 73536659456,
+    "retired": [
+      {
+        "path": "/tmp/taskfold-context-ios-native-v1.xcresult",
+        "allocatedBytes": 6828032,
+        "retained": "readable summary, tests tree and proof; initial failure hierarchy / passed preview retained"
+      },
+      {
+        "path": "/tmp/taskfold-context-ios-native-v2.xcresult",
+        "allocatedBytes": 790528,
+        "retained": "readable summary, tests tree and proof; initial failure hierarchy / passed preview retained"
+      },
+      {
+        "path": "/tmp/taskfold-context-ios-v1-attachments",
+        "allocatedBytes": 6438912,
+        "retained": "needed preview and native menu hierarchy"
+      },
+      {
+        "path": "/tmp/taskfold-context-ios-v2-attachments",
+        "allocatedBytes": 233472,
+        "retained": "needed preview and native menu hierarchy"
+      }
+    ],
+    "currentNativeBundleRetained": "/tmp/taskfold-context-ios-native-v3.xcresult",
+    "realAppDataRemoved": false,
+    "unrelatedJobsTouched": false
+  }
+}
