@@ -10952,3 +10952,7 @@ The signed sandboxed Mac app now passes 23 genuine local audio/Keychain/BackupVa
 ### 5 November · Note section navigation and lazy reading
 
 Pinned readers and formatting previews now offer source-bound section navigation and lazy block layout. Normal text retains a compact native menu; accessibility text gets a full-height section list and routing after dismissal, with namespaced content anchors. Both own apps build/sign and each passes 34 focused note checks. An earlier normal iPhone reference passed, but the largest-text routing failure required a follow-up: current native normal/largest checks await an unlocked Mac. No broad state/FPS/accessibility promotion. See `note-section-navigation/`. Mac23 packaging was held/cancelled; normal Mac14 and frozen Mac22 ZIP remain intact.
+
+### 5 November · Shared-array read comparisons
+
+The exact-data comparator now skips a child walk only for the same immutable array buffer and equal count. COW edits, exact Unicode/numeric values, opaque data and TaskCache invalidation remain covered: 116 own selected Core cases pass, and the current Mac app builds/signs. The own Debug diagnostic changes 20.810 → 0.005486 ms per retained 4,096-entry comparison; no rendering/FPS claim follows. The Mac remains locked, so note-navigation UI rechecks and packaging stay pending. Normal app/frozen archive are preserved. See `shared-array-reads/`.

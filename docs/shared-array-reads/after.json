@@ -1,0 +1,16 @@
+{
+  "actualProductionComparison" : true,
+  "comparisonsPerSample" : 3,
+  "configuration" : "SwiftPM Debug",
+  "medianMillisecondsPerComparison" : 0.0054860000000000004,
+  "rows" : 4096,
+  "samplesMillisecondsPerComparison" : [
+    0.0070136666666666672,
+    0.0054860000000000004,
+    0.0053333333333333332,
+    0.0053470000000000002,
+    0.0055556666666666671
+  ],
+  "syntheticOnly" : true,
+  "uiFPSAccepted" : false
+}

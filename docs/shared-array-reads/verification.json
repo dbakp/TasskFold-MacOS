@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-05",
+  "ownerRepository": "TasskFold-MacOS",
+  "actualProductionComparator": true,
+  "coreTests": 116,
+  "newTests": 8,
+  "failures": 0,
+  "sourceBeforeSHA256": "451bc7df6b60ee8a5a61d6f9e96a9ff2c8136731a87488defdd787e721f75bab",
+  "sourceAfterSHA256": "2401de7289904eda44cd849dedaa3118478b935e2710e750355f531f54ba96a8",
+  "testSourceSHA256": "c97481910f97c2ffdeebb76a46e6e5b714f81ced84407399eed8dd02b89e0e2c",
+  "testLogSHA256": "6c272dbeeeadc54390de49a850a5afb0a41d53459ea8fc44ef6f8d4d220935a8",
+  "diagnosticEnvironment": "Both owning SwiftPM Core targets run Debug on this Mac; not phone hardware or Simulator frame timing.",
+  "workload": {
+    "nestedEntries": 4096,
+    "samples": 5,
+    "comparisonsPerSample": 3,
+    "path": "TaskCache-style sameRows read of a fresh record wrapper retaining the same nested array storage"
+  },
+  "beforeMedianMilliseconds": 20.809611,
+  "afterMedianMilliseconds": 0.005486,
+  "currentSignedBuildAccepted": true,
+  "uiFPSAccepted": false,
+  "nativeNoteNavigationAccepted": false,
+  "normalAppsReplaced": false,
+  "ordinaryFeatureGatesChanged": false
+}

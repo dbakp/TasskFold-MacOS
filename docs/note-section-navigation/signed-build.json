@@ -2,6 +2,7 @@
   "platform": "mac",
   "buildOnly": true,
   "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "2401de7289904eda44cd849dedaa3118478b935e2710e750355f531f54ba96a8",
     "Taskfold/Core/NoteMarkup.swift": "8bc28bec74e5e525186e15d639a0147fdf4071aa6737c51c72b940a22cb9e90b",
     "Taskfold/Views/NoteFormattingView.swift": "53192b45e4d4cb142da4b19475e4b9a1c5c7332b61226a33d2e1b84a8a9bdedd",
     "Taskfold/Views/PinnedNotesView.swift": "c461c2787b3484fba5d57901ac5c15c415ced3d241290caa462c0bb47f7e71cb",
@@ -14,6 +15,6 @@
   "ordinaryAppUnchanged": true,
   "runtimeAccepted": false,
   "strictSignatureVerified": true,
-  "binarySHA256": "7cb6e35c3a4c6f4462e5a41702a73afc24e60d9ffb2b008d514ee062b8e542a6",
+  "binarySHA256": "81e70ad3f77435c5221ffad5a5d88470c6ca0d6d8bcb528132ef763d7ea81d8a",
   "sourceUnchanged": true
 }

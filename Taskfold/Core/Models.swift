@@ -22,7 +22,10 @@ enum AuthoredValueComparison {
             case (.string(let x), .string(let y)): if !x.utf8.elementsEqual(y.utf8) { return false }
             case (.array(let x), .array(let y)):
                 guard x.count == y.count else { return false }
-                pending.append(contentsOf: zip(x, y))
+                // Immutable value copies can keep the same backing buffer. A changed
+                // array detaches before writing, so only different buffers need a walk.
+                let identical = x.withUnsafeBufferPointer { a in y.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }
+                if !identical { pending.append(contentsOf: zip(x, y)) }
             case (.object(let x), .object(let y)):
                 guard x.count == y.count else { return false }
                 for (key, value) in x {
