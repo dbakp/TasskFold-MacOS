@@ -23,14 +23,26 @@ struct NoteFormatRequest: Identifiable {
 /// Native, selectable note blocks. Every link has already passed the web-only policy;
 /// this view never fetches metadata, images, HTML or other embedded resources.
 struct NoteMarkupPreview: View {
+    @Environment(\.dynamicTypeSize) private var textSize
     let text: String
     var offersOriginalText = false
+    var scrollToHeading: ((Int) -> Void)? = nil
     @State private var prepared: NoteMarkup.Prepared?
     @State private var originalText = false
+    @State private var contentsPresented = false
+    @State private var selectedHeading: HeadingSelection?
+    private struct HeadingSelection { let source: String; let id: Int }
+    #if DEBUG
+    @State private var observedBlocks: Set<Int> = []
+    private var observesBlocks: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--workspace-long-note-reading") }
+    #endif
     var body: some View {
         Group {
             if let reading = prepared, reading.source == text {
                 VStack(alignment: .leading, spacing: 12) {
+                    #if DEBUG
+                    if observesBlocks { Text("Loaded blocks: \(observedBlocks.count)").font(.caption).accessibilityIdentifier("noteRealizedBlocks") }
+                    #endif
                     if offersOriginalText, reading.document.formatted {
                         Toggle("Show original text", isOn: $originalText).accessibilityIdentifier("noteOriginalText")
                     }
@@ -45,11 +57,22 @@ struct NoteMarkupPreview: View {
                 ProgressView("Preparing note…").frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("notePreviewLoading")
             }
         }
+        .toolbar {
+            if let reading = prepared, reading.source == text, reading.headings.count > 1, !originalText, scrollToHeading != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    contentsControl(reading)
+                }
+            }
+        }
+        .sheet(isPresented: $contentsPresented, onDismiss: finishContentsSelection) { contentsSheet }
         .textSelection(.enabled)
         .environment(\.openURL, OpenURLAction { url in NoteMarkup.safeURL(url.absoluteString) == nil ? .discarded : .systemAction(url) })
         .task(id: text) {
             guard prepared?.source != text else { return }
-            prepared = nil; originalText = false
+            prepared = nil; originalText = false; selectedHeading = nil; contentsPresented = false
+            #if DEBUG
+            observedBlocks = []
+            #endif
             do {
                 let reading = try await NoteMarkup.Prepared.load(text)
                 try Task.checkCancellation()
@@ -58,9 +81,52 @@ struct NoteMarkupPreview: View {
             catch { /* Preparation only throws cancellation; never replace saved text. */ }
         }
     }
+    private func jump(_ id: Int, source: String) {
+        guard prepared?.source == source, text == source, !originalText else { return }
+        scrollToHeading?(id)
+    }
+    private func contentsControl(_ reading: NoteMarkup.Prepared) -> some View {
+        Group {
+            if textSize.isAccessibilitySize {
+                Button { selectedHeading = nil; contentsPresented = true } label: { Label("Jump to section", systemImage: "list.bullet") }
+            } else {
+                Menu {
+                    ForEach(reading.headings) { heading in
+                        Button(heading.title) { jump(heading.id, source: reading.source) }.accessibilityIdentifier("noteHeadingJump-\(heading.id)")
+                    }
+                } label: { Label("Jump to section", systemImage: "list.bullet") }
+            }
+        }.accessibilityIdentifier("noteContents").help("Jump to a section")
+    }
+    private var contentsSheet: some View {
+        NavigationStack {
+            List {
+                if let reading = prepared, reading.source == text {
+                    ForEach(reading.headings) { heading in
+                        Button {
+                            selectedHeading = .init(source: reading.source, id: heading.id); contentsPresented = false
+                        } label: {
+                            Text(heading.title).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                        }.accessibilityIdentifier("noteHeadingJump-\(heading.id)")
+                    }
+                } else { Text("This note changed. Close sections and reopen them to see the latest headings.") }
+            }.navigationTitle("Note sections")
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { selectedHeading = nil; contentsPresented = false }.accessibilityIdentifier("closeNoteContents") } }
+        }
+        #if os(iOS)
+        .presentationDetents([.large]).presentationDragIndicator(.visible)
+        #else
+        .frame(minWidth: 420, minHeight: 400)
+        #endif
+    }
+    private func finishContentsSelection() {
+        guard let selection = selectedHeading else { return }
+        selectedHeading = nil
+        jump(selection.id, source: selection.source)
+    }
     private func blocks(_ reading: NoteMarkup.Prepared) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ForEach(reading.document.blocks) { block in
+        LazyVStack(alignment: .leading, spacing: 12) {
+            ForEach(reading.document.blocks, id: \.scrollID) { block in
                 Group {
                     switch block.kind {
                     case .paragraph:
@@ -85,7 +151,10 @@ struct NoteMarkupPreview: View {
                     case .divider: Divider()
                     case .space: Color.clear.frame(height: 2).accessibilityHidden(true)
                     }
-                }.accessibilityIdentifier("noteBlock-\(block.id)")
+                }.id(block.scrollID).accessibilityIdentifier("noteBlock-\(block.id)")
+                #if DEBUG
+                .onAppear { if observesBlocks { observedBlocks.insert(block.id) } }
+                #endif
             }
         }
     }
@@ -152,9 +221,11 @@ struct NoteFormattingView: View {
                         else { modePicker.pickerStyle(.segmented) }
                     }.padding()
                     if preview {
-                        ScrollView {
-                            if text.isEmpty { ContentUnavailableView("Your note starts here", systemImage: "text.alignleft", description: Text("Write a few words, then preview the formatting.")) }
-                            else { NoteMarkupPreview(text: text).padding(20).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("noteFormatPreview") }
+                        ScrollViewReader { proxy in
+                            ScrollView {
+                                if text.isEmpty { ContentUnavailableView("Your note starts here", systemImage: "text.alignleft", description: Text("Write a few words, then preview the formatting.")) }
+                                else { NoteMarkupPreview(text: text, scrollToHeading: { proxy.scrollTo(NoteMarkup.scrollID($0), anchor: .top) }).padding(20).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("noteFormatPreview") }
+                            }
                         }
                     } else {
                         if message == nil {

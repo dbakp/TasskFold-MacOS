@@ -11,7 +11,9 @@ enum NoteMarkup {
         let kind: Kind
         let text: String
         var depth = 0
+        var scrollID: String { NoteMarkup.scrollID(id) }
     }
+    static func scrollID(_ id: Int) -> String { "note-content-block-" + String(id) }
     struct Document: Equatable, Sendable {
         let blocks: [Block]
         let formatted: Bool
@@ -19,9 +21,11 @@ enum NoteMarkup {
     }
     /// One source-bound render model per reader. Inline markdown is prepared
     /// outside the interface thread and never recomputed by view redraws.
+    struct Heading: Identifiable, Equatable, Sendable { let id: Int; let level: Int; let title: String }
     struct Prepared: Sendable {
         let source: String
         let document: Document
+        let headings: [Heading]
         let inlineText: [Int: AttributedString]
         init(_ source: String, checkCancellation: () throws -> Void = {}) throws {
             try checkCancellation()
@@ -37,6 +41,15 @@ enum NoteMarkup {
                     }
                 }
             }
+            var headings: [Heading] = []
+            for block in document.blocks {
+                try checkCancellation()
+                if case .heading(let level) = block.kind, !document.originalOnly {
+                    let title = inlineText[block.id].map { String($0.characters) } ?? block.text
+                    if !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { headings.append(.init(id: block.id, level: level, title: title)) }
+                }
+            }
+            self.headings = headings
             self.source = source; self.document = document; self.inlineText = inlineText
         }
         static func load(_ source: String) async throws -> Self {

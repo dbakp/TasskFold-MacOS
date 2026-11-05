@@ -265,4 +265,27 @@ final class PreparedNoteMarkupTests: XCTestCase {
         do { _ = try await job.value; XCTFail("Cancelled read must not be published") }
         catch { XCTAssertTrue(error is CancellationError) }
     }
+    func testHeadingContentsKeepOrderLevelAndDistinctTargets() throws {
+        let reading = try NoteMarkup.Prepared("# **Start**\n\nBody.\n\n### Café\n\n## **Start**")
+        XCTAssertEqual(reading.headings.map(\.title), ["Start", "Café", "Start"])
+        XCTAssertEqual(reading.headings.map(\.level), [1, 3, 2])
+        XCTAssertEqual(Set(reading.headings.map(\.id)).count, 3)
+        for heading in reading.headings { XCTAssertTrue(reading.document.blocks.contains { $0.id == heading.id && $0.kind == .heading(heading.level) }) }
+    }
+    func testHeadingContentsExcludeQuotedAndFencedExamplesAndPlainText() throws {
+        let reading = try NoteMarkup.Prepared("## Actual\n\n> # Quote\n\n```markdown\n# Example\n```\n\nInline # text\n\n## ")
+        XCTAssertEqual(reading.headings.map(\.title), ["Actual"])
+        XCTAssertTrue(try NoteMarkup.Prepared("Plain text only").headings.isEmpty)
+    }
+    func testOriginalOnlyNotesHaveNoInexactHeadingTargets() throws {
+        let text = "# Original\n" + String(repeating: "x", count: NoteMarkup.maximumBytes)
+        let reading = try NoteMarkup.Prepared(text)
+        XCTAssertEqual(reading.source, text); XCTAssertTrue(reading.document.originalOnly); XCTAssertTrue(reading.headings.isEmpty)
+    }
+    func testHeadingContentsPreserveUnsafeLinkSpellingAndSafeLabels() throws {
+        let reading = try NoteMarkup.Prepared("## [Guide](https://example.com)\n\n## [Unsafe](file:///private/example)")
+        XCTAssertEqual(reading.headings.map(\.title), ["Guide", "[Unsafe](file:///private/example)"])
+        XCTAssertEqual(reading.headings.map(\.id), reading.document.blocks.filter { if case .heading = $0.kind { return true }; return false }.map(\.id))
+    }
+
 }

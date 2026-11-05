@@ -178,6 +178,7 @@ private struct PinnedNoteDetail: View {
     var body: some View {
         Group {
             if let task = live {
+                ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
                         Label("PINNED NOTE", systemImage: "pin.fill").font(.caption.weight(.semibold)).tracking(1).foregroundStyle(Color.taskfold)
@@ -186,7 +187,7 @@ private struct PinnedNoteDetail: View {
                         if task.string("description").isEmpty {
                             Text("Your note has no text yet. Add instructions or an idea with Edit note.").foregroundStyle(.secondary).accessibilityIdentifier("pinnedNoteBlank")
                         } else {
-                            NoteMarkupPreview(text: task.string("description"), offersOriginalText: true)
+                            NoteMarkupPreview(text: task.string("description"), offersOriginalText: true, scrollToHeading: { proxy.scrollTo(NoteMarkup.scrollID($0), anchor: .top) })
                         }
                         Button(action: editText) { Label("Edit note", systemImage: "square.and.pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNoteText")
                         Button {guard binding.matches(account:store.userID,generation:store.workspaceGeneration) else {return};editing=TaskEditorOpening(task:task,admission:store.editorAdmission(task,workspace:binding)) } label: { Label("Edit details", systemImage: "pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNote")
@@ -195,6 +196,7 @@ private struct PinnedNoteDetail: View {
                         Text("Unpinning keeps the task and its notes. Widgets show a shortened preview; this screen shows the full text.").font(.caption).foregroundStyle(.secondary)
                     }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
                 }.accessibilityIdentifier("pinnedNoteReader")
+                }
             } else {
                 ContentUnavailableView("Note unavailable", systemImage: "pin.slash", description: Text("This task was removed, unpinned, or belongs to a different workspace. Open Pinned notes to choose another."))
             }
