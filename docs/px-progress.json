@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Shared nested-data comparisons accelerated; exact-data checks pass",
-  "latest": "Both apps now skip redundant deep comparisons when immutable nested arrays retain the same buffer. Each owning repo passes 116 focused data/read/cache checks, including eight new preservation/invalidation cases, and both current app builds/signatures pass. The 4,096-entry shared-data Core diagnostic drops from about 20 ms to under 0.01 ms per comparison in Debug on this Mac; this is not UI/FPS or phone-hardware acceptance. The Mac remains locked, so current normal/largest-text note-navigation rechecks and new update packaging stay held. Normal apps and frozen Mac22/phone34 archives are preserved.",
+  "focus": "Now · Dense planner layout accelerated; existing column placement preserved",
+  "latest": "Both independent apps now assign overlapping planner columns without repeatedly scanning every occupied column. Each repo passes 32 focused Core cases, including 240 mixed-input equivalence cases across clock changes. Five-run Debug diagnostics on this Mac reduce the 4,096-overlap layout median from about 527–538 ms to 14 ms. Current source builds/signatures are recorded separately; this is not native scrolling/FPS acceptance. Normal apps and frozen Mac22/phone34 packages remain unchanged. The Mac is locked and Xcode still reports the physical phone unavailable.",
   "next": [
     "FIRST: unlock Mac and run the current normal/largest-text note navigation checks, then package the notes update. Earlier verified frozen Mac22/phone34 archives remain available for the existing saved-draft/connected-device update window. The Mac23 attempt was interrupted before completing a package; the changed cached product was retired after verifying the preserved Mac22 ZIP. Install only a verified archive. Phone remains unavailable; no normal app was replaced.",
     "PRODUCT NEXT: finish note section navigation acceptance, then continue everyday editing/planning/navigation polish in bounded installable updates. Preserve the already accepted protected-session recording milestone and continue remaining native adoption/custody and broader lifecycle work afterward; advanced gates and agreed rollout deferrals remain.",
@@ -497,7 +497,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Read reuse/background preparation now covers filters and assignment captions, rich workflows, template previews/captions, project/parent catalogs, filter/task/note searches and Insights. Exact-byte durable reads avoid repeated attachment parsing; dated-list drops use one commit/Undo. Recorded iPhone journeys accept bounded scrolling, source refresh, draft/save/cold preservation, seven-task review and the new scope/range/persistent-day interactions. Insights has owning Core71 and independent Mac21 build proof. Combined optimized Mac22/phone34 packages are prepared only; installed apps remain Mac14/phone31. Broader editor/rendering/FPS, actual sibling drag, native Mac/iPad/speech, shared/cloud/account/window/access and overnight-clock contexts remain open. Pinned-note readers and editor previews now remove repeated synchronous markup parsing from their view bodies. Current signed iPhone content/toggle/history/cold and largest-text checks pass; Mac source builds/signs. This is not a physical FPS or long-note layout claim. Daily builds now select optimized Release code by default, with actual main-app compiler flags, signatures, profile validity and ZIP payloads verified. Mac compilation is host-only. The updates await a saved-draft/connected-device window; optimized normal startup and physical FPS remain unaccepted. Formatted readers now use lazy blocks and prepared heading captions. A prior normal 12-section iPhone guide reported 25 initially appearing blocks with exact original/cold preservation; subsequent routing/accessibility changes currently have build/Core proof only. Do not infer physical FPS or accepted largest-text navigation. Shared nested-array exact reads now skip redundant walks for the same immutable backing storage. Own Debug diagnostics on this Mac drop about 20 ms to under 0.01 ms for a 4,096-entry retained payload; 116 selected Core cases per repo and current signed app builds pass, with edited-buffer invalidation and exact Unicode/numeric/opaque preservation. Actual rendering/FPS and the pending note-navigation screen checks remain open.",
+              "detail": "Read reuse/background preparation now covers filters and assignment captions, rich workflows, template previews/captions, project/parent catalogs, filter/task/note searches and Insights. Exact-byte durable reads avoid repeated attachment parsing; dated-list drops use one commit/Undo. Recorded iPhone journeys accept bounded scrolling, source refresh, draft/save/cold preservation, seven-task review and the new scope/range/persistent-day interactions. Insights has owning Core71 and independent Mac21 build proof. Combined optimized Mac22/phone34 packages are prepared only; installed apps remain Mac14/phone31. Broader editor/rendering/FPS, actual sibling drag, native Mac/iPad/speech, shared/cloud/account/window/access and overnight-clock contexts remain open. Pinned-note readers and editor previews now remove repeated synchronous markup parsing from their view bodies. Current signed iPhone content/toggle/history/cold and largest-text checks pass; Mac source builds/signs. This is not a physical FPS or long-note layout claim. Daily builds now select optimized Release code by default, with actual main-app compiler flags, signatures, profile validity and ZIP payloads verified. Mac compilation is host-only. The updates await a saved-draft/connected-device window; optimized normal startup and physical FPS remain unaccepted. Formatted readers now use lazy blocks and prepared heading captions. A prior normal 12-section iPhone guide reported 25 initially appearing blocks with exact original/cold preservation; subsequent routing/accessibility changes currently have build/Core proof only. Do not infer physical FPS or accepted largest-text navigation. Shared nested-array exact reads now skip redundant walks for the same immutable backing storage. Own Debug diagnostics on this Mac drop about 20 ms to under 0.01 ms for a 4,096-entry retained payload; 116 selected Core cases per repo and current signed app builds pass, with edited-buffer invalidation and exact Unicode/numeric/opaque preservation. Actual rendering/FPS and the pending note-navigation screen checks remain open. Dense planner columns now use temporary end/free heaps while retaining exact existing placement. Both owning Core suites pass 32 selected checks, including 240 equivalence inputs and a 4,096-overlap diagnostic (about 527–538 ms to 14 ms in Debug on this Mac). Current source is not in the frozen daily packages; native rendering/FPS remains open.",
               "steps": [
                 {
                   "state": "done",
@@ -601,7 +601,8 @@
             "optimized-daily-update/packages.json",
             "optimized-daily-update/mac-verification.json",
             "optimized-daily-update/iphone-verification.json",
-            "optimized-daily-update/storage.json"
+            "optimized-daily-update/storage.json",
+            "planner-lane-layout/README.md"
           ],
           "focus": false
         },
@@ -812,7 +813,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Published, stopped-unfinished and removed-private histories have explicit reviewed choices and recovery contracts. Each repo passes 49 published-only and 58 mixed genuine local Auth/REST/Storage/TLS checks, including atomic rollback, exact bytes/receipts, private audience fences, paused replay and production maintenance with real deletes. Native iPhone publication has 17 scoped cold-flow checks; protected Keychain/native adoption, legacy/other realms, hosted S3 and wider lifecycle remain. Normal use stays gated.",
+              "detail": "Published, stopped-unfinished and removed-private histories have explicit reviewed choices and recovery contracts. Each repo passes 49 published-only and 58 mixed genuine local Auth/REST/Storage/TLS checks, including atomic rollback, exact bytes/receipts, private audience fences, paused replay and production maintenance with real deletes. Scoped native protected-session publication now has 24 iPhone and 23 Mac cold-flow checks with actual Keychain/session and encrypted backup recovery. Native project adoption/custody, legacy/other realms, hosted S3, physical locked-storage protection and wider lifecycle remain. Normal use stays gated.",
               "steps": [
                 {
                   "state": "done",
@@ -1245,7 +1246,8 @@
     "genuine-mixed-recordings/storage.json",
     "native-protected-recordings/verification.json",
     "note-section-navigation/verification.json",
-    "shared-array-reads/verification.json"
+    "shared-array-reads/verification.json",
+    "planner-lane-layout/README.md"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1488,6 +1490,7 @@
     "pending-approval-boundaries/phone-verification.json": "b628b53944e48363cc26d7984a56036ef4ce30a93f582c366003b4d3547954c8",
     "pending-approval-boundaries/verification.json": "12123e97b7fa378c54d0496013693b00909e4573b432d6b606936e63fb40a03a",
     "personal-child-record-moves/verification.json": "576380252e5aec3e56f60ab8956434f0df4f899bd3d721952c1236a9dc3d7d38",
+    "planner-lane-layout/README.md": "ea091a96b495d55a5f4f584e4e6498ff0168ac17777d05a14d669f3cc89c6cf0",
     "prepared-note-previews/README.md": "5e612e83a2d0ac220cf0373214d9aeb40d00706d1253ee68ca17c65895b791a9",
     "prepared-note-previews/core.json": "9c6c3ad436c71fc953db9de68a1d1c045e8a509ab409740f7bede5643af84acf",
     "prepared-note-previews/iphone-largest-text.json": "e648acb188bce201657873bd797a843498dbf5b22fde87a3d44fe98e8f8a0318",

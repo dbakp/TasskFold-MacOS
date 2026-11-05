@@ -331,15 +331,62 @@ struct PlannerTimelineItem:Identifiable {
             if $0.order != $1.order {return $0.order<$1.order}
             return $0.id<$1.id
         }
-        var result:[Self]=[],cluster:[Self]=[],ends:[Double]=[],clusterEnd = -Double.infinity
-        func finish() {for var item in cluster {item.laneCount=ends.count;result.append(item)};cluster=[];ends=[];clusterEnd = -Double.infinity}
+        var result:[Self]=[],cluster:[Self]=[],clusterEnd = -Double.infinity
+        var occupied = MinHeap<(end: Double, lane: Int)> { a, b in
+            a.end == b.end ? a.lane < b.lane : a.end < b.end
+        }
+        var available = MinHeap<Int>(precedes: <)
+        var laneCount = 0
+        func finish() {
+            for var item in cluster { item.laneCount = laneCount; result.append(item) }
+            cluster.removeAll(keepingCapacity: true)
+            occupied.removeAll(); available.removeAll()
+            laneCount = 0; clusterEnd = -Double.infinity
+        }
         for var item in raw {
-            if item.minute>=clusterEnd {finish()}
-            let lane=ends.firstIndex(where:{$0<=item.minute}) ?? ends.count
-            if lane==ends.count {ends.append(item.renderEnd)} else {ends[lane]=item.renderEnd}
+            if item.minute >= clusterEnd { finish() }
+            // Release every ended column, then reuse the lowest index. Selecting
+            // the earliest end alone would move cards between existing columns.
+            while let first = occupied.first, first.end <= item.minute {
+                available.insert(occupied.removeFirst()!.lane)
+            }
+            let lane: Int
+            if let reused = available.removeFirst() { lane = reused }
+            else { lane = laneCount; laneCount += 1 }
+            occupied.insert((item.renderEnd, lane))
             item.lane=lane;cluster.append(item);clusterEnd=max(clusterEnd,item.renderEnd)
         }
         finish();return result
+    }
+    /// Bounded to this layout call; neither tasks nor calendar content is cached.
+    private struct MinHeap<Element> {
+        private var values: [Element] = []
+        let precedes: (Element, Element) -> Bool
+        var first: Element? { values.first }
+        mutating func removeAll() { values.removeAll(keepingCapacity: true) }
+        mutating func insert(_ value: Element) {
+            values.append(value)
+            var index = values.count - 1
+            while index > 0 {
+                let parent = (index - 1) / 2
+                guard precedes(values[index], values[parent]) else { break }
+                values.swapAt(index, parent); index = parent
+            }
+        }
+        mutating func removeFirst() -> Element? {
+            guard !values.isEmpty else { return nil }
+            if values.count == 1 { return values.removeLast() }
+            let result = values[0]
+            values[0] = values.removeLast()
+            var index = 0
+            while index * 2 + 1 < values.count {
+                var child = index * 2 + 1
+                if child + 1 < values.count, precedes(values[child + 1], values[child]) { child += 1 }
+                guard precedes(values[child], values[index]) else { break }
+                values.swapAt(index, child); index = child
+            }
+            return result
+        }
     }
     /// Dense clusters can scroll; unrelated plans retain the viewport's full width.
     func width(in viewport:Double,minimum:Double=140)->Double {max(max(1,viewport)/Double(laneCount),minimum)-4}

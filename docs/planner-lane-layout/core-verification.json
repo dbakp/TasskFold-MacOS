@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-05",
+  "owningPlatform": "mac",
+  "selectedCoreTests": 32,
+  "failures": 0,
+  "equivalenceCases": 240,
+  "clockDates": [
+    "2026-10-21",
+    "2026-10-25",
+    "2026-03-29"
+  ],
+  "referenceSourceRevision": "251fcc8db8f1e5c6921edb795c554b594b83f061",
+  "sourceSHA256": {
+    "Taskfold/Core/Planner.swift": "5b72722ff5a9f1ecd303267c70d4aece9a3d56c88705cfa0ee412383c78305fd",
+    "TaskfoldTests/PlannerLaneScalingTests.swift": "b3cbeccb5abd061221646e9c8fbcd338fd49622eb11a25c798da642c40e7ff3b"
+  },
+  "testLogSHA256": "e8df42559d151bc8b4f253679ec697d44e713e5156626efc0dc21f4276da7a8d",
+  "diagnostic": {
+    "currentMedianMilliseconds": 13.930082321166992,
+    "currentMilliseconds": [
+      13.930082321166992,
+      13.266921043395996,
+      14.068007469177246,
+      14.358997344970703,
+      13.369083404541016
+    ],
+    "referenceMedianMilliseconds": 538.0899906158447,
+    "referenceMilliseconds": [
+      528.3800363540649,
+      540.8329963684082,
+      546.0959672927856,
+      538.0899906158447,
+      533.6190462112427
+    ],
+    "scope": "SwiftPM Debug on this Mac; 4096 synthetic overlapping events; layout only, no UI/FPS claim"
+  },
+  "runtimeOrDeviceFPSAccepted": false,
+  "normalAppsUpdated": false
+}

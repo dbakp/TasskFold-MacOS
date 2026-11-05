@@ -10956,3 +10956,8 @@ Pinned readers and formatting previews now offer source-bound section navigation
 ### 5 November · Shared-array read comparisons
 
 The exact-data comparator now skips a child walk only for the same immutable array buffer and equal count. COW edits, exact Unicode/numeric values, opaque data and TaskCache invalidation remain covered: 116 own selected Core cases pass, and the current Mac app builds/signs. The own Debug diagnostic changes 20.810 → 0.005486 ms per retained 4,096-entry comparison; no rendering/FPS claim follows. The Mac remains locked, so note-navigation UI rechecks and packaging stay pending. Normal app/frozen archive are preserved. See `shared-array-reads/`.
+
+
+### Dense planner overlap calculation — 5 November 2026
+
+Independent Mac and iOS Core implementations now assign collision columns with temporary minimum heaps, preserving lowest-column reuse and cluster widths. Each owning repo passes 32 selected Core cases, including 240 old/new mixed-input equivalence cases across DST and a 4,096-overlap diagnostic. The Mac-owning Debug median on this Mac is 538.09 ms → 13.93 ms; no UI/FPS or hardware acceptance is inferred. [Scope and evidence](planner-lane-layout/README.md). Normal Mac14 and frozen Mac22 remain unchanged; native interaction waits for unlock.
