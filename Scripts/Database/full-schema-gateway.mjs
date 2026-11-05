@@ -7,7 +7,7 @@ if(routes.some(([,host])=>!/^taskfold-full-schema-[a-f0-9]{8}-(auth|rest|storage
 http.createServer((req,res)=>{
  const path=new URL(req.url,'http://local.invalid');
  const route=routes.find(([prefix])=>path.pathname===prefix||path.pathname.startsWith(prefix+'/'));
- if(!route||req.headers.apikey!==process.env.PUBLIC_KEY){res.writeHead(403);res.end('{}');return}
+ if(!route||![process.env.PUBLIC_KEY,process.env.SERVER_KEY].filter(Boolean).includes(req.headers.apikey)){res.writeHead(403);res.end('{}');return}
  const [prefix,hostname,port]=route;
  const headers={...req.headers,host:hostname+':'+port};delete headers.connection;
  const upstream=http.request({hostname,port,method:req.method,path:(path.pathname.slice(prefix.length)||'/')+path.search,headers,timeout:30000},reply=>{

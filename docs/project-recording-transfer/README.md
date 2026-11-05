@@ -48,3 +48,7 @@ The [publication audience foundation](../audio-publication-audience/README.md) n
 ## Unfinished-send follow-up
 
 The [reviewed stop policy](../project-unfinished-recordings/README.md) now covers published plus unfinished sends, including pending-only branches, a crossing upload that loses access, atomic rollback and later cleanup. Each repo passes 151 local SQL/gateway checks and 83 client cases. Native consent/recovery, retained/legacy/other mixed contexts and realm directions remain open. The earlier pending refusal describes the published-only policy, which remains unchanged.
+
+## 5 November · Genuine local service integration
+
+The published-only personal project branch now passes 49 genuine Auth/REST/Storage and validated local TLS checks in each repo, using the production audio handler and full owning schema. Exact bytes, crossing-access refusal, immutable receipts/provider metadata, paused exact replay, audience-bound approval, direct Storage refusal and real session revocation pass. This supersedes the synthetic-backend qualification for this scoped service path; it does not accept native app, hosted S3 or the remaining mixed/legacy/realm directions. One unchanged pg_net placement warning remains. [Full scope and reproduction](../genuine-project-recordings/README.md).

@@ -1,0 +1,45 @@
+{
+  "freeBeforeBytes": 67845574656,
+  "finish": {
+    "apply": true,
+    "freeBeforeBytes": 67845615616,
+    "actions": [],
+    "skipped": [],
+    "freeAfterBytes": 67845611520,
+    "actualFreeChangeBytes": -4096
+  },
+  "removed": [
+    {
+      "name": "taskfold-full-audio-ios-v1.json",
+      "allocatedBytes": 36864
+    },
+    {
+      "name": "taskfold-full-audio-ios-v1.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "name": "taskfold-full-audio-ios-v2.json",
+      "allocatedBytes": 40960
+    },
+    {
+      "name": "taskfold-full-audio-ios-v2.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "name": "taskfold-full-audio-mac-v1.json",
+      "allocatedBytes": 40960
+    },
+    {
+      "name": "taskfold-full-audio-mac-v1.log",
+      "allocatedBytes": 16384
+    }
+  ],
+  "ownedContainersRemaining": [],
+  "tlsFixtureDirectoriesRemaining": [],
+  "automaticImageVolumes": "All five pinned image Config.Volumes values inspected: null; owned DB/provider data use bounded tmpfs.",
+  "newAppBuilds": false,
+  "newSimulators": 0,
+  "freeAfterBytes": 67845664768,
+  "removedAllocatedBytes": 167936,
+  "retained": "Current source-bound service/regression receipts and logs, concise first TLS setup failure, unchanged signed Mac21/iPhone33 packages and installed/rollback archives; real app data, Keychain, Docker user volumes, unrelated containers and devices untouched."
+}

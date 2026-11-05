@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Smoother Insights and persistent day selection · Combined update prepared",
-  "latest": "Insights now prepares one background history read for both scopes and ranges; selecting a day keeps its count visible. Both repos pass 71 focused Core checks, and a signed 5,004-row iPhone production-screen journey passes range/scope/tap, immediate recorded-completion refresh, preserved saved tables and cold history. Combined Mac21/phone33 packages include notes search and are prepared, not installed. Daily apps remain Mac14/phone31. Native Mac/iPad/speech, clock-tick/overnight and physical rendering/FPS remain scoped gaps.",
+  "focus": "Now · Recording transfer verified with real local Auth, Storage and TLS",
+  "latest": "Published-only recording transfers now pass 49 genuine local Auth/REST/Storage checks per repo through the production handler with validated local TLS. Tests verify original bytes, crossing-access refusal, immutable custody/receipts, exact paused replay, changed-audience approval refusal and revoked real sessions. The existing 72-check iOS workspace regression also passes. Native app/Keychain, hosted S3, mixed/legacy policies and wider realm directions remain open; ordinary gates stay off. Mac21/phone33 packages and installed daily sessions are unchanged.",
   "next": [
-    "NEXT: use phone31 for everyday work and address concrete remaining slow screens; combined notes-search/Insights updates are prepared as Mac21/phone33. Preserve accepted planner/drop/notes/Insights cases. Broader native Mac/iPad/shared/account/speech/FPS work remains scoped; continue remaining Px implementation rather than rerunning unchanged matrices.",
+    "NEXT: finish remaining ordinary-use integration for migration and shared files/discussions/recordings, using the new genuine Auth/Storage/TLS fixture. Accept native journals/handlers and remaining mixed/legacy histories/realm directions before enabling the feature. Preserve completed UI/planner/notes/Insights cases; continue concrete everyday UX reports alongside this work.",
     "NEXT DAILY-USE UPDATE: combined Mac21/phone33 contain notes search, prepared Insights and persistent day selection alongside prior fixes. Neither replaces the current sessions automatically. Keep private pre-update backups and cleanup every run.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
@@ -590,7 +590,7 @@
             "daily-use-build/direct-note-storage.json",
             "daily-use-build/direct-note-core-checks.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-voice",
@@ -691,7 +691,7 @@
             {
               "state": "verify",
               "title": "Real cloud-media and provider checks",
-              "detail": "Real local Storage and native mobile file publication, lost-reply recovery, Stop and cleanup pass in isolated fixtures. Root-edit queues now have scoped genuine local Auth/REST Store proof on iPhone/Mac. Full media-handler/hosted Auth/S3, broad task/subtask migration and cloud media remain unaccepted."
+              "detail": "Actual local Storage plus complete owning Auth/REST schema now support the production recording handler over validated loopback TLS. Published personal-branch transfer, exact bytes/receipts, reader-access crossing, audience-bound approval and revoked real sessions pass independently in both repos. This is a local tmpfs file backend. Native app/protected-session integration, hosted S3, mixed/legacy/other realms and broad task/subtask migration remain unaccepted; ordinary gates stay off."
             },
             {
               "state": "build",
@@ -799,7 +799,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Published movement, stopped unfinished sends and removed-private history have separate reviewed choices and exact counts. Both repos pass local service/client checks, including mixed and removed-only histories. iPhone native coverage is bounded and synthetic; Mac/iPad, wider policies and genuine integration remain. Ordinary use stays disabled.",
+              "detail": "Published, stopped-unfinished and removed-private histories have separate reviewed choices and exact recovery contracts. The published-only personal project branch now passes 49 genuine local Auth/REST/Storage/TLS checks per repo using the production handler, including exact bytes, crossing-access refusal, immutable receipts/provider metadata, paused replay and real session revocation. Existing workspace Auth/REST regression passes. Native app/Keychain, hosted S3, genuine mixed/legacy policies, other realm directions and wider recovery remain. Normal use stays gated.",
               "steps": [
                 {
                   "state": "done",
@@ -863,7 +863,7 @@
                 },
                 {
                   "state": "build",
-                  "title": "Whole-project recording transfers"
+                  "title": "Whole-project recording transfers: genuine published-only Auth/Storage/TLS service path passes; native and mixed/legacy/other realms remain"
                 },
                 {
                   "state": "verify",
@@ -1076,7 +1076,7 @@
             "legacy-adoption-boundaries/verification.json",
             "legacy-adoption-boundaries/local-service.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-watch",
@@ -1197,7 +1197,12 @@
     "daily-use-build/prepared-insights-core.json",
     "daily-use-build/prepared-insights-native-ios.json",
     "daily-use-build/prepared-insights-candidates.json",
-    "daily-use-build/prepared-insights-storage.json"
+    "daily-use-build/prepared-insights-storage.json",
+    "genuine-project-recordings/README.md",
+    "genuine-project-recordings/verification.json",
+    "genuine-project-recordings/service.json",
+    "genuine-project-recordings/workspace-regression-ios.json",
+    "genuine-project-recordings/storage.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1377,6 +1382,11 @@
     "genuine-native-adoption/README.md": "e3e8f020e74ee1575878c7aef8789edba0c59b133e71c8f74d3e3337f0d55524",
     "genuine-native-adoption/native.json": "0ab58e5cb82b6c7af06ffd166f1996cac7cd8d7ba477d9c8d3d6ee9bc593f95c",
     "genuine-native-adoption/verification.json": "a972343501f104de4790a5081eee5c93af3576f8e4211521ce86f7bf9cb7a345",
+    "genuine-project-recordings/README.md": "0558dc27a332c35b905c5f0a148b8fd4f022798a988ed3b71c6256dd45ddb819",
+    "genuine-project-recordings/service.json": "35158953ce4e7c0f828ce1958c7e2fcacb08d79a65573a068e32d800698a7b7c",
+    "genuine-project-recordings/storage.json": "cc118e12cbf188adcef884a4aae6495997ae90ac895356d1098a3b5d98c183e0",
+    "genuine-project-recordings/verification.json": "f4c90fcae5b023ef2bf0f37b5cd5e7c80ce8a3a2223e3dedf089e0260a1095e7",
+    "genuine-project-recordings/workspace-regression-ios.json": "08a4b69271744e1ff41946f81c14388b5922d2ea3101193de938f7444c045f88",
     "genuine-store-sync/README.md": "539d1f672860d3ed3ec6ce0bf7b3f86b076c819feea72b56651cb4cd02c0a1f1",
     "genuine-store-sync/attempts.json": "b071d4c956f5e6d8d5f7324e6ad35f657fabacf082bc3ac231361058bc025301",
     "genuine-store-sync/native.json": "2b57caee2dda6224b3c4a935aa63aaa5899fdf07dabc9fec7e0d1658f7c24edf",
@@ -1440,7 +1450,7 @@
     "project-recording-native/phone-consent-verification.json": "834501140dd0ff5bf49ab96889e97f495f37f2dcbba51ea44a9f735c9cb1267d",
     "project-recording-native/phone-retry-verification.json": "4d3d12511869187dd55064fcadc52088e9be7f078f7ecd467c9867793c63ec63",
     "project-recording-native/verification.json": "89ed20e5c781b84e99bd1e392fb23dcea6d37c8804bf1c80542e39faaab1e0d1",
-    "project-recording-transfer/README.md": "2065ed8bbefcf178a6d2f694a33b92525d0d5c7daabb8c0da2bb952ca6fd56b6",
+    "project-recording-transfer/README.md": "64276e7eef78b283b797be10b9c2eb576d52b10561c68599998a864cdd3f6e18",
     "project-recording-transfer/database-verification.json": "60fc26847b6d973597cc892ff272b98d586d863b802de391bcceb9bd390e2f4e",
     "project-recording-transfer/verification.json": "09f44acd38f16ff605702a4936e08b8239dffd2f126d2318325a44a8c97cd301",
     "project-unfinished-recordings/README.md": "1abac9c41c9860021cf24d54c7621aa5e77658c7b16695e4a850fa4f1684beac",

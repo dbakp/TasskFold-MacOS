@@ -1,0 +1,17 @@
+{
+  "accepted": false,
+  "error": {
+    "message": "review HTTP 200\n\n503 !== 200\n",
+    "code": "ERR_ASSERTION"
+  },
+  "lastFailure": {
+    "name": "review",
+    "status": 503,
+    "value": {
+      "error": "Recording unavailable. Your saved work is unchanged.",
+      "code": "retry"
+    }
+  },
+  "cleanedUp": true,
+  "diagnosis": "An isolated direct Deno fetch reproduced CaUsedAsEndEntity: the initial fixture used its CA as a server leaf. Replaced with a private CA plus CA:false server leaf. Final runs require trusted TLS to succeed and untrusted TLS to fail. No production handler/configuration was weakened."
+}

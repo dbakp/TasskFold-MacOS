@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-05",
+  "checksPerRepo": 49,
+  "migrations": {
+    "ios": 207,
+    "mac": 206
+  },
+  "existingWorkspaceRegression": {
+    "platform": "ios",
+    "checks": 72,
+    "passed": true
+  },
+  "genuineLocalAuthRESTStorage": true,
+  "validatedLoopbackTLS": true,
+  "untrustedTLSRejected": true,
+  "productionHandler": true,
+  "syntheticOnly": true,
+  "privateSchemaFixtureSeeding": true,
+  "providerBackend": "Real pinned Storage API, disposable tmpfs file backend. No hosted S3 proof.",
+  "handlerCounters": {
+    "auth": 16,
+    "rpc": 43,
+    "uploads": 2,
+    "downloads": 7
+  },
+  "advisorFindingKeys": [
+    "extension_in_public_pg_net"
+  ],
+  "newAdvisorFindings": 0,
+  "normalAppChanges": false,
+  "normalAppGatesChanged": false,
+  "hostedChanges": false,
+  "nativeAppAcceptance": false,
+  "preparedPackagesUnchanged": {
+    "mac": "21",
+    "ios": "33"
+  },
+  "remaining": [
+    "Actual native app media-handler integration, protected sessions and broader client recovery/access races.",
+    "Hosted S3/Internet delivery and release trust configuration.",
+    "Genuine combined unfinished/private-removed/legacy policies and other realm directions; broader existing migration/media/Px requirements."
+  ],
+  "sources": {
+    "Scripts/Database/full-schema-runtime.mjs": "bb5036b6455ff88fb1ac28cb27174265aba3ef94fe2e8e2812c081c86b13cc24",
+    "Scripts/Database/full-schema-gateway.mjs": "64a1a3d08fcf48e7ff7e2559653a74bbae4533848d71e3d8e0abb1c64f42c65e",
+    "Scripts/Database/full-schema-audio-fixture.mjs": "009b3295f99a9dc5bc31ebbe44d9080b1cf07b92a659d68d4cb62b8ae1cd8cbd",
+    "Scripts/Database/full-schema-audio-server.ts": "2fd91d7dbfc99ea0c6a05342715cb191f1db237df2fb4404c18ce02613c856e3",
+    "Scripts/Database/test-full-schema-project-recordings.mjs": "8730a64d10126e71b7509c21f9a16a81e8ad3446afd48880861f9073bb453aba",
+    "supabase/functions/audio-comments/handler.ts": "00515c3741d98d8cf77b427cc94cff71b38cbeee27fae9925a6d90d7b8e05316",
+    "supabase/functions/audio-comments/wire.ts": "2c3aae590fe9104847f3e71e6cfc4c281d009b1fd26fc0b6a11ff93c302df30c"
+  }
+}
