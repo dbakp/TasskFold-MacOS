@@ -237,3 +237,94 @@ final class CalendarWorkReadingTests: XCTestCase {
         XCTAssertEqual(reading([root] + projected).open(on: "2026-10-26"), 1)
     }
 }
+
+final class PlannerTaskSearchTests: XCTestCase {
+    private let binding = WorkspaceBinding(account: "owner", generation: UUID())
+    private let session = UUID()
+    private func task(_ id: String = "task", title: String = "Review the layout", project: String = "") -> Record {
+        Record(["id": .string(id), "user_id": .string("owner"), "task_generation": .string("generation"), "title": .string(title), "project_id": project.isEmpty ? .null : .string(project), "completed": .bool(false), "description": .string("Keep these notes"), "opaque": .bool(true)])
+    }
+    private func project(_ id: String, _ name: String, parent: String = "") -> Record {
+        Record(["id": .string(id), "name": .string(name), "parent_id": parent.isEmpty ? .null : .string(parent)])
+    }
+    func testSearchMatchesUnicodeProjectSectionAndParentContext() throws {
+        let projects = [project("a", "Design"), project("b", "Research", parent: "a")]
+        let sections = [Record(["id": .string("s"), "project_id": .string("b"), "name": .string("Ready for review")])]
+        var row = task("first", title: "Résumé layout", project: "b"); row["section_id"] = .string("s"); row["duration_minutes"] = .number(30)
+        let catalog = try PlannerTaskCatalog(tasks: [row, task("second", title: row.title)], projects: projects, sections: sections, parents: [row.id: "Website launch"])
+        let page = try catalog.page(query: "resume Research launch")
+        XCTAssertEqual(page.options.map(\.id), [row.id]); XCTAssertEqual(page.options[0].location, "Design › Research › Ready for review › Website launch")
+        XCTAssertEqual(page.options[0].summary, "30 min · Unscheduled"); XCTAssertEqual(try catalog.page(query: "Inbox").options.map(\.id), ["second"])
+    }
+    func testCompletedUnsupportedArchivedMissingAndAmbiguousRowsStayOut() throws {
+        var done = task("duplicate"); done["completed"] = .bool(true)
+        var unsupported = task("future"); unsupported["is_heading"] = .string("future")
+        var archived = project("a", "Archive"); archived["is_archived"] = .bool(true)
+        let rows = [task("duplicate"), done, unsupported, task("archived", project: "b"), task("missing", project: "gone"), task("ambiguous", project: "c"), task("okay")]
+        let projects = [archived, project("b", "Child", parent: "a"), project("c", "First"), project("c", "Second")]
+        XCTAssertEqual(try PlannerTaskCatalog(tasks: rows, projects: projects, sections: []).options.map(\.id), ["okay"])
+    }
+    func testHeadingContextRemainsSchedulableWithoutInventingEstimates() throws {
+        var row = task(); row["is_heading"] = .bool(true)
+        let catalog = try PlannerTaskCatalog(tasks: [row], projects: [], sections: [])
+        XCTAssertEqual(catalog.options.first?.summary, "Heading · context only · Unscheduled")
+        XCTAssertNotNil(PlannerTaskCatalog.current(catalog.options[0], tasks: [row], projects: []))
+    }
+    func testDisplayedChoiceRejectsChangedOwnerProjectGenerationAndCompletion() throws {
+        let row = task(), option = try PlannerTaskCatalog(tasks: [row], projects: [], sections: []).options[0]
+        var renamed = row; renamed["title"] = .string("Current name")
+        XCTAssertEqual(PlannerTaskCatalog.current(option, tasks: [renamed], projects: [])?.title, "Current name")
+        for key in ["user_id", "task_generation", "project_id", "section_id", "is_heading"] {
+            var changed = row; changed[key] = .string("changed")
+            XCTAssertNil(PlannerTaskCatalog.current(option, tasks: [changed], projects: []), key)
+        }
+        var done = row; done["completed"] = .bool(true)
+        XCTAssertNil(PlannerTaskCatalog.current(option, tasks: [done], projects: [])); XCTAssertNil(PlannerTaskCatalog.current(option, tasks: [row, row], projects: []))
+    }
+    func testLargeCatalogPagesAreBoundedAndSearchCancellationIsCooperative() async throws {
+        let rows = (0..<5000).map { task("task-\($0)", title: String(format: "Design task %05d", $0)) }
+        let catalog = try await PlannerTaskCatalog.load(tasks: rows, projects: [], sections: [], parents: [:])
+        XCTAssertEqual(try catalog.page(query: "").options.count, 60)
+        XCTAssertEqual(try catalog.page(query: "", limit: 120).options.count, 120)
+        XCTAssertEqual(try catalog.page(query: "", limit: -1).total, 5000)
+        XCTAssertTrue(try catalog.page(query: "", limit: -1).options.isEmpty)
+        let found = try await catalog.search(query: "04999", limit: 60); XCTAssertEqual(found.options.map(\.id), ["task-4999"])
+        var checks = 0
+        XCTAssertThrowsError(try catalog.page(query: "no match", checkCancellation: { checks += 1; if checks == 10 { throw CancellationError() } }))
+        XCTAssertEqual(checks, 10)
+        let worker = Task { try await PlannerTaskCatalog.load(tasks: rows, projects: [], sections: [], parents: [:]) }; worker.cancel()
+        do { _ = try await worker.value; XCTFail("Cancelled index must not publish") } catch is CancellationError { }
+    }
+    func testPlanningSelectionPreservesDisjointFieldsButRejectsNewerSchedule() throws {
+        let original = task(), selected = try PlannerTaskSelection(task: original, roots: [original], workspace: binding, session: session)
+        var live = original; live["title"] = .string("Renamed"); live["description"] = .string("New notes")
+        let fields: [String: JSON] = ["due_date": .string("2026-11-06"), "due_time": .string("09:00")]
+        XCTAssertEqual(selected.current(tasks: [live], roots: [live], workspace: binding, session: session, fields: fields), live)
+        live["due_date"] = .string("2026-11-07")
+        XCTAssertNil(selected.current(tasks: [live], roots: [live], workspace: binding, session: session, fields: fields))
+        live["due_date"] = fields["due_date"]!
+        XCTAssertNotNil(selected.current(tasks: [live], roots: [live], workspace: binding, session: session, fields: fields))
+    }
+    func testSelectionRejectsWorkspaceSessionRemovalReplacementAndAmbiguity() throws {
+        let row = task(), selected = try PlannerTaskSelection(task: row, roots: [row], workspace: binding, session: session)
+        XCTAssertNil(selected.current(tasks: [row], roots: [row], workspace: .init(account: "other", generation: binding.generation), session: session))
+        XCTAssertNil(selected.current(tasks: [row], roots: [row], workspace: .init(account: binding.account, generation: UUID()), session: session))
+        XCTAssertNil(selected.current(tasks: [row], roots: [row], workspace: binding, session: UUID()))
+        XCTAssertNil(selected.current(tasks: [], roots: [], workspace: binding, session: session))
+        XCTAssertNil(selected.current(tasks: [row, row], roots: [row], workspace: binding, session: session))
+        var restored = row; restored["task_generation"] = .string("restored")
+        XCTAssertNil(selected.current(tasks: [restored], roots: [restored], workspace: binding, session: session))
+        XCTAssertThrowsError(try PlannerTaskSelection(task: row, roots: [restored], workspace: binding, session: session))
+        XCTAssertThrowsError(try PlannerTaskSelection(task: row, roots: [row, row], workspace: binding, session: session))
+    }
+    func testNestedSelectionKeepsItsExactCurrentChildBoundary() throws {
+        var root = task("root"); root["is_heading"] = .bool(true)
+        let child = task("child"); root["subtasks"] = .array([.object(child.fields)])
+        let projected = try XCTUnwrap(TaskEditorSourceContext.projection(root, reference: SubtaskTree.reference(parent: root.id, key: child.id)))
+        let selected = try PlannerTaskSelection(task: projected, roots: [root], workspace: binding, session: session)
+        XCTAssertNotNil(selected.current(tasks: [projected], roots: [root], workspace: binding, session: session))
+        var changed = child; changed["title"] = .string("Changed child"); root["subtasks"] = .array([.object(changed.fields)])
+        let changedProjection = try XCTUnwrap(TaskEditorSourceContext.projection(root, reference: projected.id))
+        XCTAssertNil(selected.current(tasks: [changedProjection], roots: [root], workspace: binding, session: session))
+    }
+}

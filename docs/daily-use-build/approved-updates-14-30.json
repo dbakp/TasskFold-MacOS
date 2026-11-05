@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-05",
+  "approval": "Human confirmed drafts saved and authorized both exact reviewed updates.",
+  "mac": {
+    "version": "1.2.0",
+    "build": "14",
+    "archiveSHA256": "92a74a61ae2c04d12cfaf13edd2cc2b127e0eed8026b015ebd5e9c948aff5651",
+    "strictSignatureVerified": true,
+    "installed": true,
+    "launchVerified": true,
+    "scope": "Installed Mac14 UI reopened Upcoming with the same two displayed tasks and Synced status."
+  },
+  "ios": {
+    "version": "1.4.0",
+    "build": "30",
+    "archiveSHA256": "64ac268cb80a7473dc10b2ac953cac0167f7b37fd2cbb6b35572e89f26c6816c",
+    "strictSignatureVerified": true,
+    "installed": true,
+    "launchVerifiedRunning": true,
+    "scope": "Normal phone30 process launched after in-place installation; subsequent process inspection confirms it remains running. No phone visual/UI acceptance is inferred.",
+    "dataCheck": [
+      {
+        "beforeTasks": 205,
+        "afterTasks": 205,
+        "allPriorIDsPresent": true,
+        "sameTaskWorkFields": false,
+        "changedFieldCounts": {
+          "due_date": 4,
+          "completed_at": 1,
+          "completed": 1,
+          "completion_version": 1
+        },
+        "scope": "All 205 prior task IDs retained; four due dates and one completion state differ after live sync. This is not an unchanged-data acceptance."
+      }
+    ]
+  },
+  "safety": "Private pre-update app-data copies retained; in-place installation without uninstall/reset. Original approved archives and one rollback retained. Later source changes are not included in these installed versions."
+}

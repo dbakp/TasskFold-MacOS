@@ -1,0 +1,34 @@
+{
+  "ios": {
+    "passed": 8,
+    "failed": 0,
+    "testNames": [
+      "testCompletedUnsupportedArchivedMissingAndAmbiguousRowsStayOut",
+      "testDisplayedChoiceRejectsChangedOwnerProjectGenerationAndCompletion",
+      "testHeadingContextRemainsSchedulableWithoutInventingEstimates",
+      "testLargeCatalogPagesAreBoundedAndSearchCancellationIsCooperative",
+      "testNestedSelectionKeepsItsExactCurrentChildBoundary",
+      "testPlanningSelectionPreservesDisjointFieldsButRejectsNewerSchedule",
+      "testSearchMatchesUnicodeProjectSectionAndParentContext",
+      "testSelectionRejectsWorkspaceSessionRemovalReplacementAndAmbiguity"
+    ],
+    "diagnosticRows": 5000,
+    "renderingOrFPSClaim": false
+  },
+  "mac": {
+    "passed": 8,
+    "failed": 0,
+    "testNames": [
+      "testCompletedUnsupportedArchivedMissingAndAmbiguousRowsStayOut",
+      "testDisplayedChoiceRejectsChangedOwnerProjectGenerationAndCompletion",
+      "testHeadingContextRemainsSchedulableWithoutInventingEstimates",
+      "testLargeCatalogPagesAreBoundedAndSearchCancellationIsCooperative",
+      "testNestedSelectionKeepsItsExactCurrentChildBoundary",
+      "testPlanningSelectionPreservesDisjointFieldsButRejectsNewerSchedule",
+      "testSearchMatchesUnicodeProjectSectionAndParentContext",
+      "testSelectionRejectsWorkspaceSessionRemovalReplacementAndAmbiguity"
+    ],
+    "diagnosticRows": 5000,
+    "renderingOrFPSClaim": false
+  }
+}

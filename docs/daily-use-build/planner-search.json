@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-05",
+  "implementation": "Searchable planner task selection with project/section/parent context, estimate/schedule captions, cancellable background indexing and matching, bounded pages and current source revalidation. Capture workspace/session/selection at opening and recheck relevant planned fields before Save. Retain standard Store queue, reminder-default and Undo behavior.",
+  "coreEvidence": "planner-search-core-checks.json",
+  "nativeIPhone": {
+    "normal": "accepted",
+    "conflict": "accepted",
+    "largestText": "accepted",
+    "sameFinalSourceAndProducts": true,
+    "screenshotReview": "Normal context, conflict message, keyboard Done/Cancel and scrolled full largest-text context reviewed. AX search field scrolls its entered text; full row context wraps."
+  },
+  "macBuild": "18: compile, widgets, Share and strict signatures passed; source-only",
+  "limits": [
+    "Production chooser/form and standard local Store callback are tested directly in a reserved synthetic fixture, not the entire Calendar timeline/drag route.",
+    "The Core 5,000-row diagnostic proves no native FPS or broad performance claim. Wider Mac/iPad/shared/account/speech/child/timeline/hardware/cloud contexts remain separate.",
+    "Native Undo permits only the established absent/null equivalence for authored nullable planning/reminder fields of the selected task; all other task fields and other tasks remain exact.",
+    "No schema/provider or ordinary rollout gate changes. All agreed deferrals remain."
+  ],
+  "testSetupCorrections": [
+    "Accept the device locale\u2019s localized 5.002 count, rather than asserting unformatted digits in a localized Text label.",
+    "Check the normal at-planned-time automatic reminder added by Store scheduling, rather than suppressing it. Account explicitly for PATCH Undo clearing newly authored optional fields to null."
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/Planner.swift": "14187437aea6e3d141de0034f2d8f5327867c40e7a9c576a04ff330a76463089",
+    "Taskfold/Views/HourlyPlanner.swift": "b4589d9483b872c35e07a495f390d88c974c4cdbd9d0f5772491aeefd0af4d2c",
+    "TaskfoldTests/PlannerTests.swift": "1f3306668e6589f96251a95ecabae9e656fb8d10937466b9ff5b4817ba647ff4"
+  },
+  "installedPackages": "Exact reviewed Mac14 and phone30 installed after saved-draft approval. These later planner changes are source-only.",
+  "storageEvidence": "planner-search-storage.json"
+}

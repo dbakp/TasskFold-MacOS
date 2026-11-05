@@ -1,0 +1,170 @@
+{
+  "date": "2026-11-05",
+  "localStartedAt": "2026-11-05T06:18:13+01:00",
+  "syntheticOnly": true,
+  "ordinaryGatesChanged": false,
+  "genuineAuthOrProvider": false,
+  "hardwareOrLargeLibraryRenderingAccepted": false,
+  "buildOnly": false,
+  "largestText": false,
+  "contextual": false,
+  "starters": false,
+  "projectOrder": false,
+  "filterTargets": false,
+  "filterTargetsLarge": false,
+  "inlineSubtasks": false,
+  "inlineSubtasksLarge": false,
+  "signedEditorProducts": true,
+  "pinnedNoteEditing": false,
+  "pinnedNoteConflict": false,
+  "pinnedNoteLargestText": false,
+  "plannerSearch": false,
+  "plannerConflict": false,
+  "plannerLargestText": true,
+  "sourceSHA256": {
+    "Taskfold/Core/Planner.swift": "14187437aea6e3d141de0034f2d8f5327867c40e7a9c576a04ff330a76463089",
+    "Taskfold/Views/HourlyPlanner.swift": "81b17266cbf4b0728e623678d0c9d6afa379bad07cde8d7d950a87e8011e2f6c",
+    "Taskfold/Core/PinnedNotes.swift": "1ebd09f67859d40d9837040bda0e013c6a32cca88c9608a09cdf04d1704e256a",
+    "Taskfold/Views/NoteFormattingView.swift": "12e14ed7ae7cc373efac1845e8b7cc940ac703d75c51331bbc5419cdef4ec26e",
+    "Taskfold/Views/PinnedNotesView.swift": "eb2feb2fccebb915b647a113fb0aa7aa7891e182fab867ec1e2a40573d853807",
+    "Taskfold/Core/SubtaskTree.swift": "4c17a0b1b4f2ab03bd71415bef5ad160ae1b6e1dd76a8a22af43c97cf1c0fa17",
+    "Taskfold/Views/TaskEditor.swift": "e7eca9268db44245f17a7b8d3bbf126422727eb7126f6f2f9d1ce225ab6f4f90",
+    "Taskfold/Core/Filters.swift": "a49fbf26b5796315cddcc844624da01c36a13c667c1cbed5300a420f7ea3b026",
+    "Taskfold/Views/SavedViews.swift": "9587c3cbacb861a9f4781833d09e6bdc1f99fdf94d627535a4c7ee7d76f47630",
+    "Taskfold/Core/Models.swift": "83fd8ff72850686898e26439e74cef10a947089e6cd39402e3a5e1da612978e9",
+    "Taskfold/Core/ProjectWorkflows.swift": "0fb2536259349667adb9445dd2e1edc1f4da4af31e34f80e1d7f800cf1cf7518",
+    "Taskfold/TaskfoldApp.swift": "399e808f8f53b3e616ec55ed2d716b0554d96b2565a6612a0520b053b502f36d",
+    "Taskfold/Core/Store.swift": "f056ff26d71061975e3ef21aff3d31e2a8f9ba36df64441be3e053d8b398b0c8",
+    "Taskfold/TeamTemplateNativeFixture.swift": "6c94b30a022cd85f4d125c9c863eff51346d5b9b0cbc68a6098904b200f77202",
+    "Taskfold/Views/BrowseView.swift": "b27bbc493f7c5799fe9064222a55f9dcdd666a09a8536bb3db4bae7fb432aba3",
+    "Taskfold/Views/WorkflowViews.swift": "51e72d04419938c7783f4385315f265abc781d9deda5c2d9bcac6ad5f4ea259a",
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "1a41a1ec94e3241e146ccfedfac31cf39c9cfc12095b19a3c4233d954276453d"
+  },
+  "preparedSourceSHA256": {
+    "Taskfold/Core/Planner.swift": "14187437aea6e3d141de0034f2d8f5327867c40e7a9c576a04ff330a76463089",
+    "Taskfold/Views/HourlyPlanner.swift": "81b17266cbf4b0728e623678d0c9d6afa379bad07cde8d7d950a87e8011e2f6c",
+    "Taskfold/Core/PinnedNotes.swift": "1ebd09f67859d40d9837040bda0e013c6a32cca88c9608a09cdf04d1704e256a",
+    "Taskfold/Views/NoteFormattingView.swift": "12e14ed7ae7cc373efac1845e8b7cc940ac703d75c51331bbc5419cdef4ec26e",
+    "Taskfold/Views/PinnedNotesView.swift": "eb2feb2fccebb915b647a113fb0aa7aa7891e182fab867ec1e2a40573d853807",
+    "Taskfold/Core/SubtaskTree.swift": "4c17a0b1b4f2ab03bd71415bef5ad160ae1b6e1dd76a8a22af43c97cf1c0fa17",
+    "Taskfold/Views/TaskEditor.swift": "e7eca9268db44245f17a7b8d3bbf126422727eb7126f6f2f9d1ce225ab6f4f90",
+    "Taskfold/Core/Filters.swift": "a49fbf26b5796315cddcc844624da01c36a13c667c1cbed5300a420f7ea3b026",
+    "Taskfold/Views/SavedViews.swift": "9587c3cbacb861a9f4781833d09e6bdc1f99fdf94d627535a4c7ee7d76f47630",
+    "Taskfold/Core/Models.swift": "83fd8ff72850686898e26439e74cef10a947089e6cd39402e3a5e1da612978e9",
+    "Taskfold/Core/ProjectWorkflows.swift": "0fb2536259349667adb9445dd2e1edc1f4da4af31e34f80e1d7f800cf1cf7518",
+    "Taskfold/TaskfoldApp.swift": "399e808f8f53b3e616ec55ed2d716b0554d96b2565a6612a0520b053b502f36d",
+    "Taskfold/Core/Store.swift": "3d1b970329bcd91205148d5cad67cd5318d3cf6c18e9319a57dd0aef8efe94a2",
+    "Taskfold/TeamTemplateNativeFixture.swift": "6c94b30a022cd85f4d125c9c863eff51346d5b9b0cbc68a6098904b200f77202",
+    "Taskfold/Views/BrowseView.swift": "b27bbc493f7c5799fe9064222a55f9dcdd666a09a8536bb3db4bae7fb432aba3",
+    "Taskfold/Views/WorkflowViews.swift": "51e72d04419938c7783f4385315f265abc781d9deda5c2d9bcac6ad5f4ea259a",
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "1a41a1ec94e3241e146ccfedfac31cf39c9cfc12095b19a3c4233d954276453d"
+  },
+  "namespaceOnlyStoreChange": "Exactly one app-group identifier is scoped to the reserved test host",
+  "preparedUITestSourceCount": 1,
+  "simulatorSigningTeam": "3UZ4C73FM2",
+  "simulatorSigningReceipt": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "simulatorInitialState": "Shutdown",
+  "xcodeExitCode": 0,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793855984.852,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793855912.958,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "plannerSearchLargestText": {
+    "accepted": true,
+    "cancelPreservesTables": true,
+    "doneAndCancelReachable": true,
+    "fullPathAvailable": true,
+    "largestText": true,
+    "productionChooser": true,
+    "softwareKeyboardVisible": true
+  },
+  "productSHA256": {
+    "Taskfold": "f2ce8d605ad9c8eb01335c72b69a786593cde523e78a98505ae72077ad9d6a92",
+    "Taskfold.debug.dylib": "6a901bf40931df86bdae198878dfa213e4b834a4356fc641a324c324e9bea4a5"
+  },
+  "accepted": true,
+  "simulatorFinalState": "Shutdown",
+  "ownedSimulatorRestored": true,
+  "storageCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 69435031552,
+    "actions": [
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PhotosUIPrivate.PhotosAmbientPosterProvider/descriptors/80938E9E-EBBE-4039-B20B-4EAE6C2D618E/versions/414/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 0
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PhotosUIPrivate.PhotosAmbientPosterProvider/descriptors/95B4719F-A8F6-4317-BC87-1622AD695017/versions/396/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 0
+      }
+    ],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 423481344
+      }
+    ],
+    "freeAfterBytes": 69435019264,
+    "actualFreeChangeBytes": -12288
+  }
+}

@@ -363,3 +363,97 @@ enum BulkPlanningField: String, Sendable {
         return [key: .number(Double(value))]
     }
 }
+
+/// Search data is presentation only. A result never grants scheduling authority.
+struct PlannerTaskCatalog: Sendable {
+    static let pageSize = 60
+    struct Option: Identifiable, Equatable, Sendable {
+        let id: String, title: String, location: String, summary: String
+        let identity: JSON
+    }
+    struct Page: Equatable, Sendable { let options: [Option]; let total: Int }
+    let options: [Option]
+    static func identity(_ row: Record) -> JSON {
+        .object(Dictionary(uniqueKeysWithValues: ["id", "user_id", "project_id", "section_id", "task_generation", "created_at", "is_heading"].map { ($0, row[$0]) }))
+    }
+    private static func eligible(_ tasks: [Record], projects: [Record]) -> [Record] {
+        let available = Dictionary(grouping: projects, by: \.id).filter { !$0.key.isEmpty && $0.value.count == 1 }
+        let archived = ProjectOrganization.archivedIDs(in: projects)
+        let counts = tasks.reduce(into: [String: Int]()) { $0[$1.id, default: 0] += 1 }
+        return tasks.filter { !$0.id.isEmpty && counts[$0.id] == 1 && !$0.completed && TaskKind($0) != .unsupported && ($0.string("project_id").isEmpty || available[$0.string("project_id")] != nil && !archived.contains($0.string("project_id"))) }
+    }
+    init(tasks: [Record], projects: [Record], sections: [Record], parents: [String: String] = [:], calendar: Calendar = .current, checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws {
+        try checkCancellation()
+        let date = DateFormatter(); date.calendar = calendar; date.timeZone = calendar.timeZone; date.dateStyle = .medium
+        let time = DateFormatter(); time.calendar = calendar; time.timeZone = calendar.timeZone; time.dateStyle = .medium; time.timeStyle = .short
+        let candidates = Self.eligible(tasks, projects: projects)
+        let source = try WorkflowSourceCatalog(kind: .task, projects: projects, sections: sections, tasks: candidates, checkCancellation: checkCancellation)
+        let rows = Dictionary(grouping: candidates, by: \.id)
+        var result: [Option] = []; result.reserveCapacity(source.options.count)
+        for option in source.options {
+            try checkCancellation()
+            guard let row = rows[option.id]?.first else { continue }
+            let estimate = TaskKind(row) == .heading ? "Heading · context only" : row.durationMinutes.map { "\($0) min" } ?? "No estimate"
+            let schedule: String
+            if let start = TaskPlanning.start(row, calendar: calendar) { schedule = time.string(from: start) }
+            else if let day = TaskPlanner.dayDate(row, calendar: calendar) { schedule = date.string(from: day) }
+            else { schedule = "Unscheduled" }
+            let parent = parents[row.id].flatMap { $0.isEmpty ? nil : $0 }
+            result.append(Option(id: option.id, title: option.title, location: option.location + (parent.map { " › " + $0 } ?? ""), summary: estimate + " · " + schedule, identity: Self.identity(row)))
+        }
+        options = result
+    }
+    static func load(tasks: [Record], projects: [Record], sections: [Record], parents: [String: String], calendar: Calendar = .current) async throws -> Self {
+        let worker = Task.detached(priority: .userInitiated) { try Self(tasks: tasks, projects: projects, sections: sections, parents: parents, calendar: calendar) }
+        return try await withTaskCancellationHandler(operation: { let value = try await worker.value; try Task.checkCancellation(); return value }, onCancel: { worker.cancel() })
+    }
+    func page(query: String, limit: Int = pageSize, checkCancellation: () throws -> Void = {}) throws -> Page {
+        let words = query.split(whereSeparator: \.isWhitespace).map(String.init)
+        var total = 0, visible: [Option] = []
+        for option in options {
+            try checkCancellation()
+            guard words.allSatisfy({ option.title.localizedStandardContains($0) || option.location.localizedStandardContains($0) }) else { continue }
+            total += 1
+            if visible.count < max(0, limit) { visible.append(option) }
+        }
+        return Page(options: visible, total: total)
+    }
+    func search(query: String, limit: Int) async throws -> Page {
+        let worker = Task.detached(priority: .userInitiated) { try page(query: query, limit: limit, checkCancellation: { try Task.checkCancellation() }) }
+        return try await withTaskCancellationHandler(operation: { let value = try await worker.value; try Task.checkCancellation(); return value }, onCancel: { worker.cancel() })
+    }
+    static func current(_ option: Option, tasks: [Record], projects: [Record]) -> Record? {
+        let matches = Array(tasks.lazy.filter { $0.id == option.id }.prefix(2))
+        guard matches.count == 1, let row = Self.eligible(matches, projects: projects).first, Self.identity(row) == option.identity else { return nil }
+        return row
+    }
+}
+
+/// Captured selection and workspace incarnation; live Store/service permissions
+/// still own the write. Planning conflicts preserve the form for explicit review.
+struct PlannerTaskSelection: Sendable {
+    let task: Record
+    let context: TaskEditorSourceContext
+    let workspace: WorkspaceBinding
+    let session: UUID
+    init(task: Record, roots: [Record], workspace: WorkspaceBinding, session: UUID) throws {
+        let rootID = SubtaskTree.referencePath(task.id)?.first ?? task.id
+        let matches = Array(roots.lazy.filter { $0.id == rootID }.prefix(2))
+        guard matches.count == 1, let root = matches.first, !task.completed, TaskKind(task) != .unsupported else { throw PlannerFailure(message: "This task changed. Choose it again before scheduling.") }
+        let context = TaskEditorSourceContext(record: task, root: root)
+        guard context.persistedSelection, ["user_id", "project_id", "task_generation"].allSatisfy({ task[$0] == root[$0] }) else { throw PlannerFailure(message: "This task changed. Choose it again before scheduling.") }
+        self.task = task; self.context = context; self.workspace = workspace; self.session = session
+    }
+    func current(tasks: [Record], roots: [Record], workspace: WorkspaceBinding, session: UUID, fields: [String: JSON]? = nil) -> Record? {
+        guard self.workspace == workspace, self.session == session else { return nil }
+        let rootID = context.root!.id
+        let roots = Array(roots.lazy.filter { $0.id == rootID }.prefix(2))
+        let matches = Array(tasks.lazy.filter { $0.id == task.id }.prefix(2))
+        guard roots.count == 1, context.matches(roots.first), matches.count == 1, let current = matches.first,
+              !current.completed, TaskKind(current) != .unsupported, PlannerTaskCatalog.identity(current) == PlannerTaskCatalog.identity(task) else { return nil }
+        // Nested writes keep the established exact-selection boundary.
+        if SubtaskTree.referencePath(task.id) != nil, current != task { return nil }
+        if let fields, !fields.allSatisfy({ current[$0.key] == task[$0.key] || current[$0.key] == $0.value }) { return nil }
+        return current
+    }
+}
