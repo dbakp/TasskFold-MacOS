@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Dense planner layout accelerated; existing column placement preserved",
-  "latest": "Both independent apps now assign overlapping planner columns without repeatedly scanning every occupied column. Each repo passes 32 focused Core cases, including 240 mixed-input equivalence cases across clock changes. Five-run Debug diagnostics on this Mac reduce the 4,096-overlap layout median from about 527–538 ms to 14 ms. Current source builds/signatures are recorded separately; this is not native scrolling/FPS acceptance. Normal apps and frozen Mac22/phone34 packages remain unchanged. The Mac is locked and Xcode still reports the physical phone unavailable.",
+  "focus": "Now · Reviewed on-device step suggestions built; real model and native checks remain",
+  "latest": "Both apps now include an optional on-device Suggest steps review in task details. It uses only the editable description, validates literal titles, preserves existing work and rejects stale/cancelled/account-switched results. Each owning Core suite passes 40 checks; the separate real-model probe is explicitly skipped because Apple Intelligence is disabled on this Mac. Current signed builds are recorded separately. Real generation, native review/save/Undo/cold/accessibility checks and filter suggestions remain open. Cloud assistance stays disabled. Normal apps and frozen update packages are unchanged.",
   "next": [
     "FIRST: unlock Mac and run the current normal/largest-text note navigation checks, then package the notes update. Earlier verified frozen Mac22/phone34 archives remain available for the existing saved-draft/connected-device update window. The Mac23 attempt was interrupted before completing a package; the changed cached product was retired after verifying the preserved Mac22 ZIP. Install only a verified archive. Phone remains unavailable; no normal app was replaced.",
     "PRODUCT NEXT: finish note section navigation acceptance, then continue everyday editing/planning/navigation polish in bounded installable updates. Preserve the already accepted protected-session recording milestone and continue remaining native adoption/custody and broader lifecycle work afterward; advanced gates and agreed rollout deferrals remain.",
@@ -627,13 +627,14 @@
             },
             {
               "state": "build",
-              "title": "Cloud AI assistance decisions",
-              "detail": "Provider, cost and data handling are undecided; assistance stays disabled."
+              "title": "Reviewed task and filter assistance",
+              "detail": "Optional on-device task-step generation and editable selection review are implemented in both task editors. Literal-title/schema validation, exact source/workspace/session binding and cancelled/superseded result refusal pass Core checks (40 passes plus one real-model skip per repo). Apple Intelligence is disabled on this Mac, so no genuine generation is accepted. Current app builds/signatures are recorded separately; native review, generation quality/latency, save/Undo/cold, account-switch and accessibility remain. Filter suggestions still need implementation. Cloud provider, cost and data handling remain undecided; cloud assistance stays disabled. Frozen daily packages and installed apps do not contain this feature."
             }
           ],
           "sources": [
             "PX_CHECKLIST.md",
-            "P2_PLAN.md"
+            "P2_PLAN.md",
+            "task-breakdown/README.md"
           ],
           "focus": false
         },
@@ -1247,13 +1248,14 @@
     "native-protected-recordings/verification.json",
     "note-section-navigation/verification.json",
     "shared-array-reads/verification.json",
-    "planner-lane-layout/README.md"
+    "planner-lane-layout/README.md",
+    "task-breakdown/README.md"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "c2866d7aa181d91e09ffccb86b24caf110ca8b54185010319497660fa467123f",
+    "P2_PLAN.md": "9a3396970cf65c01463ae50e421e5881a9e985847506ebb0085327052269bfbc",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1562,6 +1564,7 @@
     "saved-copy-selection/phone-proof.json": "ff630c3b283eec760c05b9b2e26ae10fb2f222cff853a0f81b216171967c7d89",
     "saved-copy-selection/symbol-verification.json": "8cbae5b8d86418540ba082924cb86d86aad0aec83f53a9793282540e38cbddc1",
     "shared-array-reads/verification.json": "ebbfbd53afefdd58b56a141e44a877d034a9877bb41e6800612fa7240dd05456",
+    "task-breakdown/README.md": "a333ba1108007041c7dcee6d0e72659a5875d02f8de811efb377da2141c6ffcf",
     "task-file-cleanup/verification.json": "0797f7fbae6e215131c8324fda2ee3d6d4cf204d2272aab12d12582e02ba4090",
     "task-file-client/verification.json": "11cfb240b700e3bc8950708066d553853ca5a272e83b89990c60947bedde95dc",
     "task-file-custody/verification.json": "2d8b4b3c3a0628ee62101f49e34e2338f13086f6cdcb5be1449ae90ed8fc8d7f",

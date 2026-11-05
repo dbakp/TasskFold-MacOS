@@ -1,0 +1,10 @@
+{
+  "ios": {
+    "allocatedBytes": 649990144,
+    "within768MiB": true
+  },
+  "mac": {
+    "allocatedBytes": 600121344,
+    "within768MiB": true
+  }
+}

@@ -10961,3 +10961,8 @@ The exact-data comparator now skips a child walk only for the same immutable arr
 ### Dense planner overlap calculation — 5 November 2026
 
 Independent Mac and iOS Core implementations now assign collision columns with temporary minimum heaps, preserving lowest-column reuse and cluster widths. Each owning repo passes 32 selected Core cases, including 240 old/new mixed-input equivalence cases across DST and a 4,096-overlap diagnostic. The Mac-owning Debug median on this Mac is 538.09 ms → 13.93 ms; no UI/FPS or hardware acceptance is inferred. [Scope and evidence](planner-lane-layout/README.md). Normal Mac14 and frozen Mac22 remain unchanged; native interaction waits for unlock.
+
+
+### Reviewed on-device task steps — 5 November 2026
+
+The Mac inspector now offers editable, explicitly applied step suggestions through Apple’s on-device model, with a grouped native review form. Existing autosave finishes before the source is captured; application uses normal draft/save/recovery paths. Exact source and account/session binding plus cancellation refusal pass owning Core checks. The real model is unavailable because Apple Intelligence is Off; native review/save/Undo/cold/VoiceOver and generated-quality acceptance remain pending. Cloud and filter assistance remain open. [Scope and evidence](task-breakdown/README.md). Installed app and frozen packages remain unchanged.

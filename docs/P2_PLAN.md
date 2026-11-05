@@ -7956,3 +7956,8 @@ Cleanup removes 17 obsolete outputs/archives and a duplicate verification copy, 
 ## 5 November · Shared nested-data read cost
 
 Exact reads now recognize the same immutable nested-array buffer without visiting its children again. Each own repo passes 116 selected preservation/read/cache cases, with eight new mutation/identity/exact-value cases, and both own app builds/signatures verify. The actual Core Debug shared-data diagnostic on this Mac changes from about 20 ms to under 0.01 ms for a 4,096-entry retained payload. This is scoped comparison evidence, not rendering or phone FPS. Note section-navigation UI rechecks remain pending while the Mac is locked; no normal app update or feature-gate change. See `shared-array-reads/`.
+
+
+### Reviewed on-device steps — 5 November 2026
+
+Both independently owned task editors now have optional Apple Intelligence step generation with editable review and explicit Add selected. Only the entered description is used; literal titles append through the ordinary checklist path. Exact source/workspace/session and late-result checks preserve original work. Each owning Core suite has 40 passes plus one explicit real-model skip: Apple Intelligence is disabled on this Mac. Real inference quality/latency and native review/save/Undo/cold/account/accessibility acceptance remain open. Filter suggestions and cloud provider/cost/data-handling decisions remain open; no cloud fallback or normal gate change. [Detailed scope and evidence](task-breakdown/README.md).

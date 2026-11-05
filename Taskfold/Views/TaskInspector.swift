@@ -111,6 +111,7 @@ struct TaskInspectorForm: View {
     @State private var titleParsingBaseline = ""
     @State private var workspaceBinding: WorkspaceBinding?
     @State private var subtask = ""
+    @State private var breakdown: TaskBreakdownRequest?
     @State private var comment = ""
     @State private var conversation: ConversationRequest?
     @State private var audioDraft: AudioCommentDraftRequest?
@@ -237,6 +238,13 @@ struct TaskInspectorForm: View {
                 guard editorAvailable else { throw AppFailure(message: "The workspace changed. Reopen the task.") }
                 let edited = try request.applying(to: draft, removingMarker: remove, authoringEnabled: store.canAuthorTaskHeadings(teamDraft: teamDraft))
                 saveTask?.cancel(); titleParsingBaseline = edited.title; draft = edited
+            })
+        }
+        .sheet(item: $breakdown) { request in
+            TaskBreakdownView(request: request, current: { editorAvailable ? draft : nil }, onApply: { children in
+                guard editorAvailable, request.matches(draft, workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation) else { throw AppFailure(message: "This task or workspace changed. Reopen its current details.") }
+                saveTask?.cancel(); draft["subtasks"] = children
+                _ = saveNow()
             })
         }
         .sheet(item: $subtaskOrganizing) { SubtaskOrganizerPresentation(request: $0) }
@@ -440,6 +448,13 @@ struct TaskInspectorForm: View {
             }
             if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
+                Button("Suggest steps", systemImage: "wand.and.stars") {
+                    saveTask?.cancel()
+                    guard saveNow() else { return }
+                    do { breakdown = try TaskBreakdownRequest(workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, source: draft, depth: workspace.taskDepth(taskID)) }
+                    catch { store.error = error.localizedDescription }
+                }.disabled(!editorAvailable || draft.completed || !TaskKind.mayComplete(draft) || draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !SubtaskTree.hasListContainer(draft["subtasks"]) || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth)
+                    .accessibilityIdentifier("suggestTaskSteps")
                 let childRows = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope)
                         SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 }, presentHierarchy: { independentHierarchy = .init(rootID: $0) }, saveAndOpen: { children, path in
                     let previous = draft
