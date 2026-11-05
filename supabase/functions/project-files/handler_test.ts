@@ -283,3 +283,32 @@ Deno.test("gate is disabled without network access", async () => {
   assert.equal(r.status, 503);
   assert.equal(calls, 0);
 });
+
+Deno.test("committed preparation requires explicit complete transfer facts", async () => {
+  const f = fixture({
+    plan: (p) => ({ ...p, state: "committed", project_transferred: true }),
+  });
+  const r = await f.call("check", { plan_id: planID, after: null });
+  assert.equal(r.status, 200);
+  assert.equal(r.value.plan.project_transferred, true);
+});
+Deno.test("committed preparation cannot conceal unfinished copies", async () => {
+  for (
+    const change of [{ prepared: 0 }, {
+      items: [{ ...plan().items[0], state: "waiting" }],
+    }]
+  ) {
+    const f = fixture({
+      plan: (p) => ({
+        ...p,
+        ...change,
+        state: "committed",
+        project_transferred: true,
+      }),
+    });
+    assert.equal(
+      (await f.call("check", { plan_id: planID, after: null })).status,
+      503,
+    );
+  }
+});

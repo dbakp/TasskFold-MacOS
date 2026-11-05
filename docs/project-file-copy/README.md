@@ -35,3 +35,7 @@ deno run --allow-run --allow-env --allow-read --allow-write --allow-net=127.0.0.
 ```
 
 The service entry point retains platform JWT verification and requires both its explicit environment gate and the private database gate. No configuration secrets belong in app sources or documentation. Production SQL only reads Storage metadata; file bytes are written/read through its API. This repo owns all source, migrations, tests and future deployment inputs.
+
+## Reviewed transfer service follow-up
+
+[The next local service milestone](../project-file-transfer/README.md) now verifies explicit private-copy consent, atomic project/file custody, exact receipt replay and original privacy, including independent child records and a normal 5 MiB inline file. Native file controls and encrypted pending recovery, combined policies, wider lifecycle/ownership and hosted acceptance remain open. The earlier evidence above retains its original inventory/preparation scope.

@@ -38,3 +38,7 @@ swift test --scratch-path ~/Library/Caches/TaskfoldBuild/core-ios --filter 'Team
 The Mac repository uses its own core-mac scratch cache and independently generated migration. Each repo owns its code, fixtures, runners and deployment inputs.
 
 Current [Storage schema guidance](https://supabase.com/docs/guides/storage/schema/design), [access controls](https://supabase.com/docs/guides/storage/security/access-control) and the [changelog](https://supabase.com/changelog) were reviewed. The installed CLI remains pinned at v2.109.0 after reviewing the v3 breaking change. No engine/SDK update, TLS override or credential/public grant change was introduced.
+
+## Reviewed transfer service follow-up
+
+[The next local service milestone](../project-file-transfer/README.md) now verifies explicit private-copy consent, atomic project/file custody, exact receipt replay and original privacy, including independent child records and a normal 5 MiB inline file. Native file controls and encrypted pending recovery, combined policies, wider lifecycle/ownership and hosted acceptance remain open. The earlier evidence above retains its original inventory/preparation scope.

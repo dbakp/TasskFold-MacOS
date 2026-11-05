@@ -281,15 +281,16 @@ export function createProjectFilesHandler(
         ]);
         if (
           p.protocol !== 1 || !id(p.plan_id) || !id(p.request_id) ||
-          p.project_transferred !== false ||
-          !["preparing", "ready", "cancelled", "expired"].includes(
+          p.project_transferred !== (p.state === "committed") ||
+          !["preparing", "ready", "cancelled", "expired", "committed"].includes(
             String(p.state),
           ) ||
           !Number.isInteger(p.total) || Number(p.total) < 1 ||
           Number(p.total) > 10000 ||
           !Number.isInteger(p.prepared) || Number(p.prepared) < 0 ||
           Number(p.prepared) > Number(p.total) ||
-          (p.state === "ready" && p.prepared !== p.total) ||
+          (["ready", "committed"].includes(String(p.state)) &&
+            p.prepared !== p.total) ||
           !Array.isArray(p.items) || p.items.length > 100 ||
           (p.next !== null && !id(p.next)) ||
           typeof p.expires_at !== "string" || p.expires_at.length > 40 ||
@@ -324,6 +325,8 @@ export function createProjectFilesHandler(
             !Number.isInteger(item.byte_count) || Number(item.byte_count) < 1 ||
             Number(item.byte_count) > maximum ||
             !types.includes(String(item.type)) ||
+            (["ready", "committed"].includes(String(p.state)) &&
+              item.state !== "ready") ||
             !["waiting", "reserved", "ready"].includes(String(item.state))
           ) throw new Failure(503, "retry");
         }
