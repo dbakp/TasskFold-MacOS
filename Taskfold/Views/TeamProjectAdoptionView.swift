@@ -160,7 +160,15 @@ struct TeamProjectAdoptionView: View {
                 LabeledContent("Subtask history entries", value: String(i.contents["counts"]?.object["task_node_activity"]?.integer ?? 0))
             }
             LabeledContent("Discussion comments", value: String(i.contents["counts"]?.object["task_comments"]?.integer ?? 0))
-            LabeledContent("Attachments, including subtasks", value: String(i.contents["attachments"]?.integer ?? 0))
+            LabeledContent("Attachments, including comments and subtasks", value: String(i.contents["attachments"]?.integer ?? 0))
+            if let files = i.fileInventory, files.count > 0 {
+                LabeledContent("Stored file references", value: String(files.stored))
+                if files.legacy > 0 { LabeledContent("Older file references", value: String(files.legacy)) }
+                if files.unavailable > 0 { LabeledContent("References needing attention", value: String(files.unavailable)) }
+                Text("Files need a separate access review before these projects can move. Your original files stay where they are.")
+                    .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("projectTransferFileCustody")
+            }
             if let recordings = i.recordingInventory, recordings.count > 0 {
                 LabeledContent("Published recordings", value: String(recordings.published)).accessibilityIdentifier("projectTransferPublishedRecordings")
                 if recordings.pending > 0 { LabeledContent("Unfinished recordings", value: String(recordings.pending)) }

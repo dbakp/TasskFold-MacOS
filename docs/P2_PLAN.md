@@ -7966,3 +7966,8 @@ Both independently owned task editors now have optional Apple Intelligence step 
 ### Reviewed filter expressions — 5 November 2026
 
 Both filter editors now include optional on-device expression generation with editable query, deterministic meaning/match preview and explicit Use then Save. Only the entered description goes to the model. Background preparation, exact source/context fences and reference checks at Use/Save preserve the original filter; person-directory reads are demand-driven in the helper. Each owning Core suite has 123 passes plus two real-model skips, and current signed app sources build. Real generation/native controls/save/history/cold/account/speech, genuine directory delivery and quality/latency remain unaccepted. Cloud decisions remain open; installed apps and frozen packages are unchanged. [Scope and evidence](filter-assistance/README.md).
+
+
+### 2026-11-05 — Project file review and assistance decision
+
+The project-transfer candidate now inventories task/subtask and inline-comment file references, closing a comments-only custody-review omission. Inaccessible provider references remain opaque; material metadata changes invalidate review, while read bookkeeping does not. Normal 5 MiB inline files stay supported. Actual file custody transfer, consent and native/provider lifecycle integration remain unfinished and gated. [Scope and verification](project-file-inventory/README.md). The user chose on-device-only assistance and deferred further iPhone installation; no cloud provider or fallback is planned.

@@ -2,7 +2,7 @@
 
 ## Implemented
 
-Both filter editors offer **Suggest a filter**. The optional Apple on-device model receives only the entered description and fixed grammar instructions: no tasks, existing query, directory, names/IDs from a catalog, credentials or backend data. The structured response contains one expression string. Cloud assistance remains disabled. Both assistants now share the same on-device availability/locale check; system settings and deployment gates are unchanged.
+Both filter editors offer **Suggest a filter**. The optional Apple on-device model receives only the entered description and fixed grammar instructions: no tasks, existing query, directory, names/IDs from a catalog, credentials or backend data. The structured response contains one expression string. The user chose on-device assistance only on 5 November; no cloud fallback is planned. Both assistants now share the same on-device availability/locale check; system settings and deployment gates are unchanged.
 
 The expression remains editable. **Check preview** uses the ordinary FilterParser/FilterRule validation and actual task matching, with a deterministic meaning caption and match count. No model-written rationale is trusted. Query preparation and reference revalidation run in cancellable background work, with an exact snapshot fence after awaiting. Stop, Cancel, changed descriptions/queries, superseded work and source/workspace/session changes discard late results. Content is hidden and the sheet closes when the filter source becomes unavailable.
 
@@ -18,7 +18,7 @@ Each owning repository passes **123 checks, with 2 explicit skips, out of 125 se
 
 [Current-source signed builds](signed-build.json) pass for both apps, including weak FoundationModels linkage. The two opt-in real-model probes run only on this Mac and report Apple Intelligence disabled, so both skip. **No real model generation or native review flow is accepted.** The Mac was independently observed locked; no UI retry, Simulator boot or test-app launch was attempted. Native Generate/Stop/edit/preview/Cancel/Use/Save/failure/Undo/cold/account/accessibility checks, genuine directory delivery, generated quality/latency and older-system launch remain open. Compilation and Core proof do not establish these outcomes.
 
-Phone34 was subsequently installed from the earlier frozen optimized archive; it excludes this feature. Mac14 remains installed and Mac22 remains prepared. [Phone installation](../daily-use-build/phone-34-installation.json). Cloud provider/cost/data-handling decisions and broader independently stored child-record acceptance remain open. This milestone does not complete the whole assistance checkpoint or the Px goal.
+Phone34 was subsequently installed from the earlier frozen optimized archive; it excludes this feature. Mac14 remains installed and Mac22 remains prepared. [Phone installation](../daily-use-build/phone-34-installation.json). The user’s on-device-only decision removes the cloud-provider decision from scope; broader independently stored child-record acceptance remains open. This milestone does not complete the whole assistance checkpoint or the Px goal.
 
 ## API basis
 

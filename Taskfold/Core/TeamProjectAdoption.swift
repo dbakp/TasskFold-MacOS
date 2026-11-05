@@ -76,6 +76,18 @@ struct TeamProjectRecordingInventory: Equatable, Sendable {
         guard count <= 10000, unavailable <= count else { throw TeamProjectAdoptionValue.invalid }
     }
 }
+/// Counts only. File names, object identities and provider paths stay server-side.
+struct TeamProjectFileInventory: Equatable, Sendable {
+    let stored: Int, legacy: Int, unavailable: Int
+    var count: Int { stored + legacy }
+    init(_ raw: JSON) throws {
+        guard case .object(let fields) = raw, Set(fields.keys) == ["protocol", "stored", "legacy", "unavailable"], fields["protocol"] == .number(1) else { throw TeamProjectAdoptionValue.invalid }
+        stored = try TeamProjectAdoptionValue.count(fields["stored"], limit: 10000)
+        legacy = try TeamProjectAdoptionValue.count(fields["legacy"], limit: 10000)
+        unavailable = try TeamProjectAdoptionValue.count(fields["unavailable"], limit: 10000)
+        guard count <= 10000, unavailable <= stored else { throw TeamProjectAdoptionValue.invalid }
+    }
+}
 struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertible {
     struct Project: Equatable, Sendable, Identifiable {
         let id: String, root: String, parent: String?, depth: Int, name: String?, archived: Bool, inherited: Bool
@@ -90,6 +102,7 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
     let supportsConnectionPause: Bool, connectionPauseSupported: Bool
     let supportsChildHistory: Bool
     let supportsChildRecordCustody: Bool, privateSubtaskUndoCount: Int
+    let fileInventory: TeamProjectFileInventory?
     let recordingInventory: TeamProjectRecordingInventory?
     let recordingTransferSupported: Bool
     let recordingUnfinishedTransferSupported: Bool
@@ -169,6 +182,10 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
         }
         var eligibility: [String: Bool] = [:]
         for person in collaborators { if let id = person.decisionID { guard eligibility[id] == nil || eligibility[id] == person.eligible else { throw TeamProjectAdoptionValue.invalid }; eligibility[id] = person.eligible } }
+        fileInventory = try contents["file_custody"].map(TeamProjectFileInventory.init)
+        if let files = fileInventory {
+            guard files.count <= (contents["provider_files"]?.integer ?? -1), files.count == 0 || !enabled else { throw TeamProjectAdoptionValue.invalid }
+        }
         recordingInventory = try contents["recording_custody"].map(TeamProjectRecordingInventory.init)
         if let capability = contents["recording_transfer"] {
             guard case .object(let values) = capability, Set(values.keys) == ["protocol", "supported"], values["protocol"] == .number(1),

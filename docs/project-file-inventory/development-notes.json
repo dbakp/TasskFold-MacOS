@@ -1,0 +1,17 @@
+{
+  "resolvedDuringDevelopment": [
+    "Made the function-declaration patch anchor unique rather than also matching email_rows.",
+    "Replaced an invalid local-variable qualification with an unambiguous variable name.",
+    "Corrected a test-only boolean-to-JSON cast and the owning Mac migration filename.",
+    "Corrected the genuine REST create assertions to expect HTTP 201.",
+    "Kept the existing 32 MiB source and five MiB inline-file compatibility; added the explicit regression.",
+    "Excluded read timestamps and masked inaccessible provider state so tokens cannot monitor foreign objects."
+  ],
+  "remaining": [
+    "Explicit file transfer policy, owner/audience consent and provider byte verification",
+    "Atomic custody binding and complete retry/native/lifecycle integration",
+    "Legacy reference resolution and other realm directions",
+    "Native rendering/accessibility, hosted S3 and release deployment"
+  ],
+  "normalUseEnabled": false
+}

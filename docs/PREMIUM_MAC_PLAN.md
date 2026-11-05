@@ -10986,3 +10986,8 @@ Ordinary filter editing now reads member lists only when a person condition need
 ### Shared navigation badge counts — 5 November 2026
 
 The sidebar reuses one aggregate for All tasks, projects and labels, replacing repeated workload scans per row. Exact label ID/name union semantics, heading work, archived exclusions and incomplete markers are preserved. Six new checks and the owning heading suite pass (53 Mac checks); the iOS owning suite independently passes 54. Native interaction and physical smoothness remain separate, and normal Mac14/phone34 are unchanged. [Scope and evidence](navigation-counts/README.md).
+
+
+### Project file review — 5 November 2026
+
+The Mac transfer view now distinguishes stored, older and unavailable file references, including inline-comment attachments previously omitted from inspection. The inventory cannot authorize custody changes. Private provider metadata is actor-scoped and cannot become a foreign-file token oracle; normal inline-file limits are preserved. Whole-project file transfer and native acceptance remain open. [Evidence and remaining work](project-file-inventory/README.md). Assistance is on-device only by user choice; further iPhone installation is deferred.
