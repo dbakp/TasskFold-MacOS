@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Easier workflow creation and verified starter save/run",
-  "latest": "The library now opens a focused New template composer from its first row. Suggested names, review/cancel/save and separate fresh runs pass current iPhone Simulator checks, including Weekly reset and dark/largest-text source selection, with zero runtime warnings. Mac 12 and iPhone 29 are signed and ZIP-payload verified; installed Mac 10 and running phone 26 stay unchanged. Mac menu/library interaction awaits unlock. Cleanup leaves about 69.0 GiB free; full Px and agreed deferrals remain.",
+  "focus": "Now · Predictable project organization and easier reusable workflows",
+  "latest": "Phone 26 startup is confirmed by the user. Project arrows now move among visible siblings and keep descendant branches attached. The fix also corrects ORDER Undo admission: ten focused Core checks pass in each repo, and the real iPhone menu/Store Undo journey preserves every saved table with zero runtime warnings. Mac 13 builds/signs and its full archive verifies; installed Mac 10 and phone 26 stay unchanged. Native Mac/drag acceptance and broader Px remain. Cleanup leaves about 66.7 GiB free.",
   "next": [
-    "NEXT IMPLEMENTATION: reduce organization, nested-editing, ordering and filter friction. Keep the prepared app updates ready for a non-disruptive install; accept Mac task/project menus, library creation and starter run when the Mac is available. Preserve scoped native/Core evidence and avoid unchanged broad matrices.",
+    "NEXT IMPLEMENTATION: continue nested-editing and filter friction. Accept Mac task/project menus, library creation/starter run and sibling-order interactions when available; accept actual drag gestures separately. Keep prepared Mac 13 and phone 29 for non-disruptive updates, noting phone 29 predates the newest ordering source. Preserve scoped evidence and avoid unchanged broad matrices.",
     "NEXT DAILY-USE UPDATE: address the highest-friction organization, nested editing, ordering and filter interactions; deliver another installable update with a focused change list. Keep end-of-run cleanup and stable cache/device reuse.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
@@ -496,7 +496,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading, project catalogs, searchable parents and background cached library captions. iPhone production cases verify scrolling, current-source refresh, draft/save/cold behavior and saved-work preservation. Wider editor/rendering, platform, account/accessibility/cloud contexts remain. Field conflict review now waits for an ongoing sync before comparing current task data.",
+              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading, project catalogs, searchable parents and background cached library captions. iPhone production cases verify scrolling, current-source refresh, draft/save/cold behavior and saved-work preservation. Wider editor/rendering, platform, account/accessibility/cloud contexts remain. Field conflict review now waits for an ongoing sync before comparing current task data. Visible sibling arrows and branch-aware drag planning now have owning Core proof; actual iPhone menu and Store Undo restore exact saved tables. Native drag gestures and Mac interaction remain separate.",
               "steps": [
                 {
                   "state": "done",
@@ -1184,7 +1184,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "bcb1f9a5fe5c44d1df3270c24d25a25c0657cf630a6e7ed80109bd10787a8233",
+    "P2_PLAN.md": "5525c9e52533854a825de69b457bee6ef2436787d1670982ff023469931a5b21",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",

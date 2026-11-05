@@ -1981,3 +1981,98 @@ struct WorkflowSourceCatalog: Sendable {
         }
     }
 }
+
+/// One readable project graph for a specific user gesture. Order changes never
+/// edit parent/access/archive fields, and stale callbacks cannot cross sessions.
+struct ProjectOrderRequest: Sendable {
+    let workspace: WorkspaceBinding
+    let session: UUID
+    let projects: [Record]
+    let ordering: ProjectOrganization.Ordering
+    init(workspace: WorkspaceBinding, session: UUID, projects: [Record]) {
+        self.workspace = workspace; self.session = session; self.projects = projects
+        ordering = ProjectOrganization.Ordering(projects)
+    }
+    func matches(workspace: WorkspaceBinding, session: UUID, projects: [Record]) -> Bool {
+        self.workspace == workspace && self.session == session && self.projects == projects
+    }
+}
+
+extension ProjectOrganization {
+    struct Ordering: Sendable {
+        let rows: [Record]
+        let visible: [Item]
+        private let parents: [String: String]
+        private let peerIDs: [String: [String]]
+        private let valid: Bool
+        init(_ projects: [Record]) {
+            rows = OrganizationOrder.sorted(projects)
+            valid = projects.count <= 10000 && projects.allSatisfy { !$0.id.isEmpty } && Set(projects.map(\.id)).count == projects.count
+            let items = valid ? ProjectOrganization.outline(projects) : []
+            visible = items
+            let visibleIDs = Set(items.map(\.id))
+            let keys = Dictionary(uniqueKeysWithValues: items.map { ($0.id, visibleIDs.contains($0.project.string("parent_id")) ? $0.project.string("parent_id") : "") })
+            parents = keys
+            peerIDs = Dictionary(grouping: items, by: { keys[$0.id]! }).mapValues { $0.map(\.id) }
+        }
+        private func parent(_ row: Record) -> String {
+            // Unavailable ancestors are displayed as roots, without detaching them.
+            parents[row.id] ?? ""
+        }
+        func siblings(of id: String) -> [String] {
+            guard let key = parents[id] else { return [] }
+            return peerIDs[key] ?? []
+        }
+        func shifting(_ id: String, by distance: Int) throws -> [String] {
+            guard valid, [-1, 1].contains(distance) else { throw OrganizationOrder.StaleList() }
+            var ids = siblings(of: id)
+            guard let index = ids.firstIndex(of: id) else { throw OrganizationOrder.StaleList() }
+            let next = index + distance
+            guard ids.indices.contains(next) else { return rows.map(\.id) }
+            ids.swapAt(index, next)
+            return replacing(ids)
+        }
+        func moving(from offsets: IndexSet, to destination: Int) throws -> [String] {
+            guard valid, !offsets.isEmpty, offsets.allSatisfy({ visible.indices.contains($0) }),
+                  (0...visible.count).contains(destination) else { throw OrganizationOrder.StaleList() }
+            let selected = Set(offsets.map { visible[$0].id })
+            let index = Dictionary(uniqueKeysWithValues: visible.map { ($0.id, $0.project) })
+            var roots = Set<String>()
+            for id in selected {
+                var cursor = index[id]!.string("parent_id"), seen = Set([id]), covered = false
+                while let ancestor = index[cursor] {
+                    guard seen.insert(cursor).inserted, seen.count <= ProjectOrganization.maximumDepth else { throw OrganizationOrder.StaleList() }
+                    if selected.contains(cursor) { covered = true; break }
+                    cursor = ancestor.string("parent_id")
+                }
+                if !covered { roots.insert(id) }
+            }
+            guard let first = visible.first(where: { roots.contains($0.id) }) else { throw OrganizationOrder.StaleList() }
+            let key = parent(first.project), peers = siblings(of: first.id)
+            guard roots.isSubset(of: Set(peers)) else { throw Self.differentParent }
+            if !key.isEmpty {
+                let branch = ProjectOrganization.descendants(key, in: rows)
+                let start = visible.firstIndex { $0.id == key }! + 1
+                let end = visible[start...].firstIndex { !branch.contains($0.id) } ?? visible.count
+                guard (start...end).contains(destination) else { throw Self.differentParent }
+            }
+            let positions = Dictionary(uniqueKeysWithValues: visible.enumerated().map { ($0.element.id, $0.offset) })
+            var remainder = peers.filter { !roots.contains($0) }
+            let insertion = remainder.filter { positions[$0]! < destination }.count
+            remainder.insert(contentsOf: peers.filter { roots.contains($0) }, at: insertion)
+            return replacing(remainder)
+        }
+        private func replacing(_ siblings: [String]) -> [String] {
+            let selected = Set(siblings)
+            var cursor = 0
+            return rows.map { row in
+                guard selected.contains(row.id) else { return row.id }
+                defer { cursor += 1 }
+                return siblings[cursor]
+            }
+        }
+        private static var differentParent: AppFailure {
+            AppFailure(message: "Reorder projects within the same parent. Use Edit to choose another parent project.")
+        }
+    }
+}

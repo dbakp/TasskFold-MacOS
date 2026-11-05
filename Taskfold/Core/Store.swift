@@ -1831,6 +1831,23 @@ final class Store {
         else { _ = save("favorites", Record(["id": .string(scope.preferenceKey), "user_id": .string(userID), "order_index": .number(Double((favorites.map { $0["order_index"].integer }.max() ?? -1) + 1))])) }
     }
     func reorderFavorites(_ keys: [String]) { _ = reorderOrganization("favorites", ids: keys) }
+    @discardableResult func shiftProjectOrder(_ request: ProjectOrderRequest, id: String, by distance: Int) -> Bool {
+        applyProjectOrder(request) { try $0.shifting(id, by: distance) }
+    }
+    @discardableResult func moveProjectOrder(_ request: ProjectOrderRequest, from offsets: IndexSet, to destination: Int) -> Bool {
+        applyProjectOrder(request) { try $0.moving(from: offsets, to: destination) }
+    }
+    private func applyProjectOrder(_ request: ProjectOrderRequest, plan: (ProjectOrganization.Ordering) throws -> [String]) -> Bool {
+        guard workflowPreviewReady(request.workspace), request.matches(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration),
+            session: backend.reminderSessionIncarnation, projects: allProjects) else {
+            error = "Projects changed. Reopen the list before rearranging them."; return false
+        }
+        do {
+            let ids = try plan(request.ordering)
+            if ids == request.ordering.rows.map(\.id) { return true }
+            return reorderOrganization("projects", ids: ids)
+        } catch { self.error = error.localizedDescription; return false }
+    }
     @discardableResult
     func reorderOrganization(_ table: String, ids: [String], projectID: String? = nil) -> Bool {
         let current = rows(table).filter { table != "sections" || $0.string("project_id") == projectID }

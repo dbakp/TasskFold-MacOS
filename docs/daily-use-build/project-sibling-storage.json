@@ -1,0 +1,68 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 71595130880,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 388317184
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 396648448
+    }
+  ],
+  "freeAfterBytes": 71594807296,
+  "actualFreeChangeBytes": -323584,
+  "retiredOutputs": {
+    "freeBeforeBytes": 71503351808,
+    "removed": [
+      {
+        "path": "/tmp/taskfold-project-order-ios-native-v1.xcresult",
+        "allocatedBytes": 9793536
+      },
+      {
+        "path": "/tmp/taskfold-project-order-ios-native-v2.xcresult",
+        "allocatedBytes": 356352
+      },
+      {
+        "path": "/tmp/taskfold-project-order-native-v1-attachments",
+        "allocatedBytes": 8413184
+      },
+      {
+        "path": "/tmp/taskfold-project-order-native-v3-attachments",
+        "allocatedBytes": 12247040
+      },
+      {
+        "path": "/tmp/taskfold-project-order-native-v5-attachments",
+        "allocatedBytes": 421888
+      }
+    ],
+    "retained": [
+      "Final v5 raw result",
+      "v3 history-admission failure raw result",
+      "All concise attempt reports and readable summary/tests",
+      "Reviewed screenshots",
+      "Installed-app and baseline/candidate archives",
+      "Real app/device data"
+    ],
+    "freeAfterBytes": 71534575616
+  },
+  "retiredSupersededMacPackage": "Candidate 12 retired after candidate 13 and baseline 10 ZIP/payload verification; receipt retained.",
+  "coreCaches": [
+    {
+      "platform": "ios",
+      "allocatedBytes": 576278528,
+      "retained": "Reusable owning Core products, below 768 MiB"
+    },
+    {
+      "platform": "mac",
+      "allocatedBytes": 530546688,
+      "retained": "Reusable owning Core products, below 768 MiB"
+    }
+  ],
+  "finalFreeBytes": 71621857280,
+  "finalFreeGiB": 66.7
+}

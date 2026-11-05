@@ -1352,6 +1352,9 @@ struct EditHistory: Sendable {
                 let rows = (current.tables[change.table] ?? []).filter { command.contains($0) }
                 var back = change; back.id = UUID()
                 back.organizationOrder = OrganizationOrder.Command(ids: OrganizationOrder.sorted(rows).map(\.id), projectID: command.projectID)
+                // The inverse has a different first item; keep its routing identity
+                // consistent with the restored command so ordinary validation admits it.
+                if let first = back.organizationOrder?.ids.first { back.recordID = first }
                 inverse.append(back); redo.append(change); current.apply(change)
                 continue
             }

@@ -18,6 +18,8 @@ struct SidebarView: View {
     private var today: String { Dates.day(Date()) }
     private var open: [Record] { store.productiveReading.work.filter { TaskKind.mayComplete($0) && !$0.completed } }
     var body: some View {
+        let projectOrder = ProjectOrderRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration),
+            session: store.backend.reminderSessionIncarnation, projects: store.allProjects)
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
             Button { workspace.finderPresented = true } label: {
@@ -70,7 +72,7 @@ struct SidebarView: View {
                 Button("New Filter", systemImage: "plus") { filterEditor = store.newSavedView() }.accessibilityIdentifier("newSavedView")
             }
             Section(isExpanded: $projectsExpanded) {
-                ForEach(ProjectOrganization.outline(store.allProjects)) { item in
+                ForEach(projectOrder.ordering.visible) { item in
                     let project = item.project
                     ProjectDropRow(project: project) {
                         Label {
@@ -86,14 +88,13 @@ struct SidebarView: View {
                     .contextMenu {
                         Button("Edit Project…") { projectEditor = project }
                         Button(store.isFavorite(.project(project.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.project(project.id)) }
-                        orderActions(table: "projects", id: project.id, ids: store.allProjects.map(\.id))
+                        projectOrderActions(project.id, request: projectOrder)
                         Button("Delete Project…", role: .destructive) { projectEditor = project }
                     }
                     .accessibilityLabel(project.name).accessibilityIdentifier("project-" + project.id)
                 }
                 .onMove { source, destination in
-                    var projects = store.projects; projects.move(fromOffsets: source, toOffset: destination)
-                    workspace.run("Reorder Projects") { store.reorderOrganization("projects", ids: projects.map(\.id) + store.archivedProjects.map(\.id)) }
+                    workspace.run("Reorder Projects") { store.moveProjectOrder(projectOrder, from: source, to: destination) }
                 }
                 Button { newProject() } label: { Label("New Project", systemImage: "plus").foregroundStyle(.secondary) }
                     .buttonStyle(.plain).accessibilityIdentifier("newProject")
@@ -122,6 +123,14 @@ struct SidebarView: View {
         .sheet(item: $filterEditor) { SavedViewEditor(record: $0) }
         .onChange(of: workspace.newProjectRequest) { _, _ in newProject() }
         .toolbar { ToolbarItem(placement: .navigation) { EmptyView() } }
+        }
+    }
+    @ViewBuilder private func projectOrderActions(_ id: String, request: ProjectOrderRequest) -> some View {
+        let siblings = request.ordering.siblings(of: id)
+        if let index = siblings.firstIndex(of: id) {
+            Divider()
+            Button("Move Up", systemImage: "arrow.up") { workspace.run("Reorder Projects") { store.shiftProjectOrder(request, id: id, by: -1) } }.disabled(index == 0)
+            Button("Move Down", systemImage: "arrow.down") { workspace.run("Reorder Projects") { store.shiftProjectOrder(request, id: id, by: 1) } }.disabled(index == siblings.count - 1)
         }
     }
     @ViewBuilder private func orderActions(table: String, id: String, ids: [String]) -> some View {

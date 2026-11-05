@@ -1,0 +1,81 @@
+{
+  "date": "2026-11-05",
+  "core": [
+    {
+      "platform": "ios",
+      "passed": 10,
+      "failed": 0,
+      "scope": "ProjectSiblingOrderingTests",
+      "log": "/tmp/taskfold-project-siblings-core-ios-final.log"
+    },
+    {
+      "platform": "mac",
+      "passed": 10,
+      "failed": 0,
+      "scope": "ProjectSiblingOrderingTests",
+      "log": "/tmp/taskfold-project-siblings-core-mac-final.log"
+    }
+  ],
+  "scope": "Sibling-aware project menu and drag planning; existing ORDER protocol, no new model or permission grant",
+  "nativeIPhone": {
+    "accepted": true,
+    "passed": 1,
+    "failed": 0,
+    "runtimeWarnings": 0,
+    "report": "project-sibling-native-ios.json",
+    "reviewedScreenshot": "Sibling order, indentation, descendant branch, project titles and task count remain readable in the native iPhone Browse list."
+  },
+  "nativeMac": "pending",
+  "installedMac": "1.2.0 (10), unchanged",
+  "installedIPhone": "1.4.0 (26), user confirms stays open and shows app",
+  "limits": [
+    "Core drag planning does not establish native drag gesture acceptance",
+    "No UI-performance claim from 5,000-project diagnostic",
+    "Normal iOS Undo presentation not covered by reserved fixture control",
+    "Mac interaction and wider account/lifecycle cases remain separate"
+  ],
+  "nativeIPhoneBuild": {
+    "accepted": true,
+    "report": "/tmp/taskfold-project-order-ios-build-v5.json"
+  },
+  "regression": "Actual EditHistory Undo and Redo commands must satisfy OrganizationOrder.valid and restore every original record. The inverse now updates its first-item routing identity.",
+  "attempts": [
+    {
+      "attempt": "v1",
+      "accepted": false,
+      "issue": "Undo test control had no usable XCTest tap position; moved into the list."
+    },
+    {
+      "attempt": "v2",
+      "accepted": false,
+      "issue": "Stopped redundant unchanged run after a failed local edit; no acceptance claimed."
+    },
+    {
+      "attempt": "v3",
+      "accepted": false,
+      "issue": "Actual Store Undo did not restore order; inverse command kept the newer first-item routing identity and failed admission."
+    },
+    {
+      "attempt": "v4",
+      "accepted": false,
+      "issue": "Stopped obsolete diagnostic build after finding the command-identity cause; no acceptance claimed."
+    }
+  ],
+  "owningSources": {
+    "Taskfold/Core/Models.swift": "83fd8ff72850686898e26439e74cef10a947089e6cd39402e3a5e1da612978e9",
+    "Taskfold/Core/ProjectWorkflows.swift": "86a12005e26a8d58fac0d5b9dd08d4f007d4b664c154068bf912ffd16d7a30e8",
+    "Taskfold/Core/Store.swift": "975f9ab583f42818c7f013cb18c0512e023b0aaf7fd58641c98312a8507de801",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "439946ae4d51c7c4de98516c6f85b3d31e29eadcb5e1f85991e7a43907e11ff2"
+  },
+  "macBuild": {
+    "accepted": true,
+    "version": "1.2.0 (13)",
+    "signed": true,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "fullArchivePayloadVerified": true,
+    "installed": false,
+    "nativeInteractionAccepted": false
+  },
+  "preparedIPhone": "1.4.0 (29) retained, includes the earlier workflow UX; this turn does not package or install the newer ordering source on the physical phone"
+}

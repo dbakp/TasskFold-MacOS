@@ -1396,3 +1396,103 @@ extension ProjectWorkflowsTests {
         try JSONSerialization.data(withJSONObject:report,options:[.sortedKeys,.prettyPrinted]).write(to:path,options:.atomic)
     }
 }
+
+final class ProjectSiblingOrderingTests: XCTestCase {
+    private func project(_ id: String, _ order: Int, parent: String = "", archived: Bool = false) -> Record {
+        Record(["id": .string(id), "user_id": .string("me"), "name": .string(id), "order_index": .number(Double(order)),
+            "parent_id": parent.isEmpty ? .null : .string(parent), "is_archived": .bool(archived), "description": .string("Keep " + id)])
+    }
+    private var rows: [Record] {
+        [project("a1", 0, parent: "a"), project("a", 1), project("b1", 2, parent: "b"), project("b", 3),
+         project("a2", 4, parent: "a"), project("c", 5), project("leaf", 6, parent: "a1"), project("archive", 7, archived: true)]
+    }
+    private func apply(_ ids: [String], to rows: [Record]) -> [Record] { OrganizationOrder.Command(ids: ids, projectID: nil).applying(to: rows) }
+    private func outline(_ rows: [Record]) -> [String] { ProjectOrganization.outline(rows).map(\.id) }
+    func testArrowMovesBetweenVisibleSiblingsInsteadOfFlatNeighbors() throws {
+        let source = rows, order = ProjectOrganization.Ordering(source)
+        XCTAssertEqual(order.siblings(of: "a1"), ["a1", "a2"])
+        let ids = try order.shifting("a1", by: 1), result = apply(ids, to: source)
+        XCTAssertEqual(outline(result), ["a", "a2", "a1", "leaf", "b", "b1", "c"])
+        for row in result {
+            var withoutOrder = row; withoutOrder.fields.removeValue(forKey: "order_index")
+            var original = source.first { $0.id == row.id }!; original.fields.removeValue(forKey: "order_index")
+            XCTAssertEqual(withoutOrder, original)
+            if !["a1", "a2"].contains(row.id) { XCTAssertEqual(row, source.first { $0.id == row.id }) }
+        }
+    }
+    func testRootArrowCarriesWholeDescendantBranch() throws {
+        let order = ProjectOrganization.Ordering(rows)
+        XCTAssertEqual(outline(apply(try order.shifting("a", by: 1), to: rows)), ["b", "b1", "a", "a1", "leaf", "a2", "c"])
+        XCTAssertEqual(try order.shifting("a1", by: -1), OrganizationOrder.sorted(rows).map(\.id))
+        XCTAssertEqual(try order.shifting("c", by: 1), OrganizationOrder.sorted(rows).map(\.id))
+    }
+    func testDragUsesDisplayedOutlineAndKeepsBranchesTogether() throws {
+        let order = ProjectOrganization.Ordering(rows)
+        XCTAssertEqual(order.visible.map(\.id), ["a", "a1", "leaf", "a2", "b", "b1", "c"])
+        XCTAssertEqual(outline(apply(try order.moving(from: IndexSet(integer: 0), to: 6), to: rows)), ["b", "b1", "a", "a1", "leaf", "a2", "c"])
+        XCTAssertEqual(outline(apply(try order.moving(from: IndexSet(integer: 3), to: 1), to: rows)), ["a", "a2", "a1", "leaf", "b", "b1", "c"])
+    }
+    func testSelectedParentAndChildMoveAsOneBranch() throws {
+        let order = ProjectOrganization.Ordering(rows)
+        XCTAssertEqual(outline(apply(try order.moving(from: IndexSet([0, 1, 2]), to: 7), to: rows)), ["b", "b1", "c", "a", "a1", "leaf", "a2"])
+        XCTAssertEqual(try order.moving(from: IndexSet(integer: 0), to: 2), OrganizationOrder.sorted(rows).map(\.id))
+    }
+    func testCrossParentAndMixedParentDropsRefuseWithoutChangingInputs() {
+        let source = rows, order = ProjectOrganization.Ordering(source)
+        XCTAssertThrowsError(try order.moving(from: IndexSet(integer: 1), to: 6))
+        XCTAssertThrowsError(try order.moving(from: IndexSet([1, 5]), to: 4))
+        XCTAssertEqual(rows, source)
+    }
+    func testUnavailableParentRootsRemainAttachedAndArchivesStayAnchored() throws {
+        var source = rows; source.append(project("unavailable", 8, parent: "not-shared"))
+        let order = ProjectOrganization.Ordering(source)
+        XCTAssertEqual(order.siblings(of: "unavailable"), ["a", "b", "c", "unavailable"])
+        let result = apply(try order.shifting("unavailable", by: -1), to: source)
+        XCTAssertEqual(result.first { $0.id == "unavailable" }?.string("parent_id"), "not-shared")
+        XCTAssertEqual(result.first { $0.id == "archive" }, source.first { $0.id == "archive" })
+        XCTAssertThrowsError(try order.shifting("archive", by: -1))
+    }
+    func testRequestRejectsAccountSessionGenerationAndGraphChanges() {
+        let workspace = WorkspaceBinding(account: "me", generation: UUID()), session = UUID()
+        let request = ProjectOrderRequest(workspace: workspace, session: session, projects: rows)
+        XCTAssertTrue(request.matches(workspace: workspace, session: session, projects: rows))
+        XCTAssertFalse(request.matches(workspace: .init(account: "other", generation: workspace.generation), session: session, projects: rows))
+        XCTAssertFalse(request.matches(workspace: .init(account: "me", generation: UUID()), session: session, projects: rows))
+        XCTAssertFalse(request.matches(workspace: workspace, session: UUID(), projects: rows))
+        var changed = rows; changed[0]["parent_id"] = .string("b")
+        XCTAssertFalse(request.matches(workspace: workspace, session: session, projects: changed))
+        XCTAssertFalse(request.matches(workspace: workspace, session: session, projects: Array(rows.dropLast())))
+    }
+    func testMalformedIdentityBoundsAndUnsupportedDistanceRefuse() {
+        let order = ProjectOrganization.Ordering(rows)
+        XCTAssertThrowsError(try order.moving(from: IndexSet(integer: 100), to: 0))
+        XCTAssertThrowsError(try order.moving(from: [], to: 0))
+        XCTAssertThrowsError(try order.moving(from: IndexSet(integer: 0), to: -1))
+        XCTAssertThrowsError(try order.shifting("a", by: 2))
+        XCTAssertThrowsError(try ProjectOrganization.Ordering(rows + [rows[0]]).shifting("a", by: 1))
+    }
+    func testOrderProtocolRoundTripRestoresEveryRecordExactly() throws {
+        let source = rows, ids = try ProjectOrganization.Ordering(source).shifting("a1", by: 1)
+        let commands = try OrganizationOrder.command(table: "projects", rows: source, ids: ids)
+        XCTAssertEqual(commands.count, 1); XCTAssertEqual(commands.first?.method, "ORDER"); XCTAssertTrue(commands.allSatisfy(OrganizationOrder.valid))
+        let before = Snapshot(tables: ["projects": source])
+        let history = EditHistory(changes: commands, snapshot: before)
+        XCTAssertNotEqual(commands[0].recordID, history.undo.first?.recordID)
+        XCTAssertTrue(history.undo.allSatisfy(OrganizationOrder.valid), "Real Undo must pass the same command admission as a new reorder")
+        var current = before
+        for command in commands { current.apply(command) }
+        let after = current.tables
+        for command in history.undo { current.apply(command) }
+        XCTAssertEqual(current.tables, before.tables)
+        let redo = EditHistory(changes: history.undo, snapshot: Snapshot(tables: after)).undo
+        XCTAssertTrue(redo.allSatisfy(OrganizationOrder.valid))
+        for command in redo { current.apply(command) }
+        XCTAssertEqual(current.tables, after)
+    }
+    func testLargeSelectionKeepsEveryProjectAndStableRelativeOrder() throws {
+        let source = (0..<5000).map { project(String(format: "p%05d", $0), $0) }
+        let order = ProjectOrganization.Ordering(source), ids = try order.moving(from: IndexSet(100..<200), to: 4000)
+        XCTAssertEqual(Set(ids), Set(source.map(\.id))); XCTAssertEqual(ids.count, 5000)
+        XCTAssertEqual(Array(ids[3900..<4000]), source[100..<200].map(\.id))
+    }
+}
