@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-05",
+  "packages": {
+    "mac": {
+      "platform": "mac",
+      "bundle": "com.dbakp.taskfold.mac",
+      "version": "1.2.0",
+      "build": "12",
+      "sourceFingerprint": "912c366580efe37fb82e18aea0bc31598ab0c0fc54711f5aa432f5421fb64d63",
+      "sourceRevision": "6b462b877f122ddc062feb89dec435db426d9495",
+      "signatureVerified": true,
+      "widgetsIncluded": true,
+      "shareIncluded": true,
+      "omittedCapabilities": [
+        "Remote push notifications",
+        "Time Sensitive notifications"
+      ],
+      "featureFlags": {
+        "TaskfoldAudioRestorationEnabled": false,
+        "TaskfoldMixedCompletionEnabled": false,
+        "TaskfoldTeamAudioPublishingEnabled": false
+      },
+      "installed": false,
+      "published": false,
+      "archiveSHA256": "247dfd9a4253b764893b5d11818cbf18cec4530b93e036931c5c8d68fc383492",
+      "archivePayloadVerified": true,
+      "sourceWasDirty": true,
+      "installedBaseline": "1.2.0 (10)",
+      "installationNote": "Prepared only; preserve current app session. Mac runtime checks require unlock.",
+      "profileExpiresUTC": "2026-11-10T18:38:42Z"
+    },
+    "ios": {
+      "platform": "ios",
+      "bundle": "com.dbakp.taskfold",
+      "version": "1.4.0",
+      "build": "29",
+      "sourceFingerprint": "b40f7235e08f70683ca7cd338ada1169dd895e1d7d5d7866998f3af8ec20b246",
+      "sourceRevision": "8a2930874269f5302047f9b18bdb05d8d897dc01",
+      "signatureVerified": true,
+      "widgetsIncluded": true,
+      "shareIncluded": false,
+      "omittedCapabilities": [
+        "Remote push notifications",
+        "Time Sensitive notifications",
+        "Share-sheet capture: Apple free-account weekly App ID quota"
+      ],
+      "featureFlags": {
+        "TaskfoldAudioRestorationEnabled": false,
+        "TaskfoldMixedCompletionEnabled": false,
+        "TaskfoldTeamAudioPublishingEnabled": false
+      },
+      "installed": false,
+      "published": false,
+      "archiveSHA256": "a1a10cd624dc6ab94e368aae98f7718d36632cfaa431780e3e4011c82739ef3b",
+      "archivePayloadVerified": true,
+      "sourceWasDirty": true,
+      "installedBaseline": "1.4.0 (26)",
+      "installationNote": "Prepared only; normal iPhone Taskfold is running. Preserve its session and recheck before later installation.",
+      "profileExpiresUTC": "2026-11-11T22:18:18Z"
+    }
+  },
+  "macNativeInteractionAccepted": false,
+  "macNativeBlocker": "Native control reports Mac locked; no new Mac app process launched",
+  "phoneInstallationDeferred": {
+    "date": "2026-11-05",
+    "requestedPhoneFound": true,
+    "paired": true,
+    "transport": "localNetwork",
+    "normalTaskfoldRunning": true,
+    "installationDecision": "Preserve the installed build 26 and its current session; prepare candidate only. Recheck before any later installation.",
+    "realDataEdited": false
+  },
+  "releaseOrAppStoreAcceptance": false
+}

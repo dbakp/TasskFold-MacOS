@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Save templates from the task or project you are viewing",
-  "latest": "Task and project menus now offer Save as template with a named private preview. The iPhone native journey verifies cancellation and explicit saves preserve every prior row and create no tasks, with zero runtime warnings. Mac 1.2.0 (11) builds, signs and packages; its menu interaction awaits an unlocked Mac. These changes are not installed yet: Mac 10 and phone 26 remain the daily-use baseline. Full Px and agreed deferrals remain. Final cleanup leaves about 68.5 GiB free; both selected compiler caches remain below 768 MiB each and the used simulator is shut down.",
+  "focus": "Now · Easier workflow creation and verified starter save/run",
+  "latest": "The library now opens a focused New template composer from its first row. Suggested names, review/cancel/save and separate fresh runs pass current iPhone Simulator checks, including Weekly reset and dark/largest-text source selection, with zero runtime warnings. Mac 12 and iPhone 29 are signed and ZIP-payload verified; installed Mac 10 and running phone 26 stay unchanged. Mac menu/library interaction awaits unlock. Cleanup leaves about 69.0 GiB free; full Px and agreed deferrals remain.",
   "next": [
-    "FIRST: finish the separate starter preview/save/run journey and make library creation easier to reach, then bundle the next daily-use update. Verify Mac task/project menus when the Mac is available. Preserve accepted source/capture proof and avoid unchanged broad matrices.",
+    "NEXT IMPLEMENTATION: reduce organization, nested-editing, ordering and filter friction. Keep the prepared app updates ready for a non-disruptive install; accept Mac task/project menus, library creation and starter run when the Mac is available. Preserve scoped native/Core evidence and avoid unchanged broad matrices.",
     "NEXT DAILY-USE UPDATE: address the highest-friction organization, nested editing, ordering and filter interactions; deliver another installable update with a focused change list. Keep end-of-run cleanup and stable cache/device reuse.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
@@ -219,7 +219,7 @@
             {
               "state": "done",
               "title": "Rename and edit saved definitions",
-              "detail": "Template/capture Undo services and scoped actual Mac/iPhone Store proofs remain accepted. Four starters plus contextual source search pass thirteen Core checks per app. Mac source save/run and starter preview/cancel are accepted. iPhone source search, live refresh, explicit save/fresh run and largest-text dark dismissal/selection now pass native checks with zero runtime warnings; full starter save/run remains open. Phone build 26 stays installed and startup-confirmed. Contextual task/project Save as template now opens the existing named private preview. Scoped iPhone native capture/cancel/save preserves all older rows and creates no tasks. Mac build 11 signs/packages, with its native menu check still open. These contextual changes are not installed yet."
+              "detail": "Template/capture Undo and existing scoped Store proofs remain accepted. Four starters and contextual source search keep thirteen prior Core checks per app. Current iPhone Simulator journeys accept library source/review/cancel/save/fresh run, Weekly reset preview/save/separate run and dark/largest-text selection; old tasks/definitions stay preserved and no tasks are created by saving. Mac 12 and phone 29 packages are prepared; installed Mac 10 and phone 26 stay unchanged. Mac native menu/library and wider provider/hardware/speech checks remain open."
             },
             {
               "state": "done",
@@ -246,7 +246,12 @@
             "daily-use-build/context-capture-native.json",
             "daily-use-build/context-capture-mac-package.json",
             "daily-use-build/context-capture-storage.json",
-            "daily-use-build/context-capture-ios-build.json"
+            "daily-use-build/context-capture-ios-build.json",
+            "daily-use-build/library-composer-native.json",
+            "daily-use-build/workflow-starters-native.json",
+            "daily-use-build/library-composer-largest-text.json",
+            "daily-use-build/workflow-ux-packages.json",
+            "daily-use-build/library-composer-storage.json"
           ],
           "focus": false
         },
@@ -1179,7 +1184,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "71cb264c6440b14c91241aff68188c1ccbff75bc1109e9f9e1865a509570ee51",
+    "P2_PLAN.md": "bcb1f9a5fe5c44d1df3270c24d25a25c0657cf630a6e7ed80109bd10787a8233",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1294,6 +1299,9 @@
     "daily-use-build/context-capture-mac-package.json": "01a94b61601f02b1fd223c6307e2fb67af4fe3fbfa907b8ced2f4fd5f108ba0a",
     "daily-use-build/context-capture-native.json": "fddc4e842d98b36a14bff1fef870d8c44f5d1bee74fb13c7984ef119b5cf8506",
     "daily-use-build/context-capture-storage.json": "a03b78dc6775a36b3e9f0ff8cc88ad49e9db7453298e9fd6b5217fe296322eaf",
+    "daily-use-build/library-composer-largest-text.json": "d8a3e945933e76a34b014a51f078a75c5b5e498bf28db2c80f59b3134c77ff89",
+    "daily-use-build/library-composer-native.json": "66869643ac1d84418539f6138932c70e0571904c47aa4a4973bf6f59b386df2e",
+    "daily-use-build/library-composer-storage.json": "a8f9fb628a11da3b940636e8942d50a85776d2819c02bb534302ed427c0078d8",
     "daily-use-build/source-search-bootstrap.json": "7f0c5805a484ccacd788393eaa7c8c8bb5d54bf00bef4f861d9be63aeb2fdd1b",
     "daily-use-build/source-search-largest-text.json": "b2ab816410c12e31dec0940df2efb6e5fbb94739da0b0fd5fba7e0bdd8ae5679",
     "daily-use-build/source-search-native.json": "e22bc8ffbf0500392c113c3ff2e1191f33e8b1ec5a0619631348f552f5e8afdb",
@@ -1302,7 +1310,9 @@
     "daily-use-build/verification.json": "2bf3b81a0e8d48a91fff23cc012eae0979061c6f6e13381639caa8a2cd7fc941",
     "daily-use-build/workflow-starters-build.json": "21cd3f9b9135cd4cb21081f726aa9dcefb84be33fb19e56abdc3a54c71a51501",
     "daily-use-build/workflow-starters-core.json": "5b298ba4f27272c50a3ba1d3cca195feab55d01e6ae631094258dac5c4149206",
+    "daily-use-build/workflow-starters-native.json": "af7b584156a2d6673a6efbda1f1a00ca42f8d485eefdeb0b48ea91827a69fde3",
     "daily-use-build/workflow-starters-storage-cleanup.json": "85ee9ccb52485597c435261a34d83c4d55fdb99b249ac0194c08775c1ed1f63a",
+    "daily-use-build/workflow-ux-packages.json": "b6d190ed9f48bc314a4d3e0e35232024005de0e25966add1594fcbd608128b9c",
     "duplicate-history-repair-native/README.md": "c7063d22e97e3fd4c0813cff33f132bbf866c4f1e4b7ec32eb7326359ee61761",
     "duplicate-history-repair-native/verification.json": "95c758f713b374d01ffa31b95744dba3e20ef7231aa71add535b0f543723ee66",
     "duplicate-history-repair/README.md": "bbdac8ce08eb7bbf9173b5ebfb74516d385ec32bb355cfb8643d828c71f90ba9",
