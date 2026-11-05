@@ -1,0 +1,29 @@
+{
+  "build": {
+    "schema": 1,
+    "platform": "mac",
+    "bundle": "com.dbakp.taskfold.mac",
+    "version": "1.2.0",
+    "build": "19",
+    "app": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Debug/Taskfold.app",
+    "sourceFingerprint": "ac653d71b0a06a4691a4ddb15fd84be82bcd93f00fb488ca1b3a6bbb02f0f6bf",
+    "sourceRevision": "3e0bea486ea9a7a47e95e6d8ee952c2056ef59e5",
+    "simulatorOnly": false,
+    "signatureVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "omittedCapabilities": [
+      "Remote push notifications",
+      "Time Sensitive notifications"
+    ],
+    "featureFlags": {
+      "TaskfoldAudioRestorationEnabled": false,
+      "TaskfoldMixedCompletionEnabled": false,
+      "TaskfoldTeamAudioPublishingEnabled": false
+    },
+    "installed": false,
+    "published": false
+  },
+  "sourceWasDirtyAtBuild": true,
+  "scope": "Independent ordinary Mac compilation, widgets, Share and strict signatures. Not installed; native Mac interaction remains separate."
+}

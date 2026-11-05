@@ -19,11 +19,14 @@ struct PlanDayView: View {
     @State private var queue: [Record]
     @State private var index = 0
     init(kind: PlanKind, queue: [Record]) { self.kind = kind; _queue = State(initialValue: queue) }
+    @State private var binding: WorkspaceBinding?
+    @State private var session: UUID?
+    @State private var failure: String?
     @State private var handled: [String: String] = [:]
     @State private var pickingDate = false
     @State private var picked = Date()
     @FocusState private var sheetFocused: Bool
-    private var current: Record? { index < queue.count ? store.record("tasks", id: queue[index].id) ?? queue[index] : nil }
+    private var current: Record? { index < queue.count ? (try? store.selectionRecord(queue[index].id)) ?? queue[index] : nil }
     private var layout: Animation? { Motion.respecting(reduceMotion, Motion.layout) }
 
     var body: some View {
@@ -50,17 +53,18 @@ struct PlanDayView: View {
         .focusable()
         .focusEffectDisabled()
         .focused($sheetFocused)
-        .onAppear { sheetFocused = true }
+        .onAppear { sheetFocused = true; if binding == nil { binding = .init(account: store.userID, generation: store.workspaceGeneration); session = store.backend.reminderSessionIncarnation } }
+        .alert("Could not save decision", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) { Button("OK") { failure = nil } } message: { Text(failure ?? "") }
         .onKeyPress(phases: .down) { press in handle(press) }
         // Arrow keys belong to focus movement before they reach onKeyPress; the move command still arrives.
-        .onMoveCommand { direction in if direction == .right, current != nil, !pickingDate { advance("Skip") { _ in } } }
+        .onMoveCommand { direction in if direction == .right, current != nil, !pickingDate { advance("Skip") { _ in true } } }
         .popover(isPresented: $pickingDate, arrowEdge: .bottom) {
             VStack(spacing: 12) {
                 DatePicker("Date", selection: $picked, displayedComponents: .date).datePickerStyle(.graphical).labelsHidden()
                 HStack {
                     Button("Cancel") { pickingDate = false }.keyboardShortcut(.cancelAction)
                     Spacer()
-                    Button("Schedule") { pickingDate = false; advance("Scheduled") { workspace.reschedule([$0.id], to: Dates.day(picked), label: picked.formatted(date: .abbreviated, time: .omitted)) } }
+                    Button("Schedule") { pickingDate = false; advance("Scheduled") { schedule($0, day: Dates.day(picked)) } }
                         .keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
                 }
             }.padding(14).frame(width: 300)
@@ -127,16 +131,16 @@ struct PlanDayView: View {
 
     private var actions: some View {
         HStack(spacing: 8) {
-            action("Today", "sun.max.fill", key: "T", tint: Color.taskfold, prominent: true) { workspace.reschedule([$0.id], to: Dates.day(Date()), label: "today") }
-            action("Tomorrow", "sunrise.fill", key: "M", tint: .orange) { workspace.reschedule([$0.id], to: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), label: "tomorrow") }
+            action("Today", "sun.max.fill", key: "T", tint: Color.taskfold, prominent: true) { schedule($0, day: Dates.day(Date())) }
+            action("Tomorrow", "sunrise.fill", key: "M", tint: .orange) { schedule($0, day: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!)) }
             Button { picked = current?.due ?? Date(); pickingDate = true } label: { actionLabel("Pick Date", "calendar", key: "D", tint: .blue) }
                 .buttonStyle(PressableStyle(scale: 0.96)).accessibilityIdentifier("plan-pick")
-            action("Complete", "checkmark.circle.fill", key: "Space", tint: .green) { workspace.complete($0) }
-            action("Skip", "arrow.right", key: "→", tint: .secondary) { _ in }
+            action("Complete", "checkmark.circle.fill", key: "Space", tint: .green) { store.toggleNativeTask($0) }
+            action("Skip", "arrow.right", key: "→", tint: .secondary) { _ in true }
         }
         .accessibilityElement(children: .contain)
     }
-    private func action(_ title: String, _ symbol: String, key: String, tint: Color, prominent: Bool = false, perform: @escaping (Record) -> Void) -> some View {
+    private func action(_ title: String, _ symbol: String, key: String, tint: Color, prominent: Bool = false, perform: @escaping (Record) -> Bool) -> some View {
         Button { advance(title, perform) } label: { actionLabel(title, symbol, key: key, tint: tint, prominent: prominent) }
             .buttonStyle(PressableStyle(scale: 0.96))
             .accessibilityIdentifier("plan-\(title.lowercased())")
@@ -157,19 +161,27 @@ struct PlanDayView: View {
     private func handle(_ press: KeyPress) -> KeyPress.Result {
         guard current != nil, !pickingDate, press.modifiers.isEmpty else { return .ignored }
         switch press.key {
-        case .space: advance("Complete") { workspace.complete($0) }
-        case KeyEquivalent("t"): advance("Today") { workspace.reschedule([$0.id], to: Dates.day(Date()), label: "today") }
-        case KeyEquivalent("m"): advance("Tomorrow") { workspace.reschedule([$0.id], to: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), label: "tomorrow") }
+        case .space: advance("Complete") { store.toggleNativeTask($0) }
+        case KeyEquivalent("t"): advance("Today") { schedule($0, day: Dates.day(Date())) }
+        case KeyEquivalent("m"): advance("Tomorrow") { schedule($0, day: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!)) }
         case KeyEquivalent("d"): picked = current?.due ?? Date(); pickingDate = true
         default: return .ignored
         }
         return .handled
     }
-    private func advance(_ label: String, _ perform: (Record) -> Void) {
+    private func advance(_ label: String, _ perform: (Record) -> Bool) {
         guard let task = current else { return }
-        perform(task)
+        guard binding == WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), session == store.backend.reminderSessionIncarnation, let live = try? store.selectionRecord(task.id), live == task, !live.completed else { failure = "This task or workspace changed. Close planning and reopen the current list."; return }
+        guard perform(task) else { failure = store.error ?? "This decision could not be saved. Try again."; store.error = nil; return }
         handled[task.id] = label
         withAnimation(layout) { index += 1 }
+    }
+
+    private func schedule(_ task: Record, day: String) -> Bool {
+        do {
+            let fields = TaskPlanner.dayFields(task: task, day: day)
+            return try store.commitSelection([task], action: { _ in .patch(fields) })
+        } catch { store.error = error.localizedDescription; return false }
     }
 
     private var summary: some View {

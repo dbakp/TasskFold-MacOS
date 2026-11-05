@@ -1,0 +1,110 @@
+{
+  "freeBeforeBytes": 69226823680,
+  "removed": [
+    {
+      "name": "taskfold-day-triage-native-v3.xcresult",
+      "allocatedBytes": 569344
+    },
+    {
+      "name": "taskfold-day-triage-native-v5.xcresult",
+      "allocatedBytes": 24948736
+    },
+    {
+      "name": "taskfold-day-triage-native-v6.xcresult",
+      "allocatedBytes": 30494720
+    },
+    {
+      "name": "taskfold-day-drag-native-v3.xcresult",
+      "allocatedBytes": 3788800
+    },
+    {
+      "name": "taskfold-day-drag-native-v7.xcresult",
+      "allocatedBytes": 5099520
+    },
+    {
+      "name": "taskfold-day-drag-native-v8.xcresult",
+      "allocatedBytes": 6995968
+    },
+    {
+      "name": "taskfold-day-drag-native-v9.xcresult",
+      "allocatedBytes": 8458240
+    },
+    {
+      "name": "taskfold-day-drag-v3-shots",
+      "allocatedBytes": 3518464
+    },
+    {
+      "name": "taskfold-day-drag-v7-shots",
+      "allocatedBytes": 4730880
+    },
+    {
+      "name": "taskfold-day-drag-v10-shots",
+      "allocatedBytes": 241664
+    },
+    {
+      "name": "Taskfold-1.4.0-25-iphone-development.zip",
+      "allocatedBytes": 34308096
+    },
+    {
+      "name": "Taskfold-1.4.0-26-iphone-development.zip",
+      "allocatedBytes": 34390016
+    },
+    {
+      "name": "Taskfold-1.4.0-22-simulator.zip",
+      "allocatedBytes": 37101568
+    },
+    {
+      "name": "Taskfold-1.4.0-22-simulator-symbols.zip",
+      "allocatedBytes": 21491712
+    },
+    {
+      "name": "Taskfold-1.2.0-6-mac-development.zip",
+      "allocatedBytes": 32612352
+    },
+    {
+      "name": "Taskfold-1.2.0-7-mac-development.zip",
+      "allocatedBytes": 32649216
+    },
+    {
+      "name": "taskfold-phone31-data-check-zb4p1o7c",
+      "allocatedBytes": 8617984
+    }
+  ],
+  "cacheAudit": {
+    "apply": true,
+    "freeBeforeBytes": 69169496064,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 432218112
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 374845440
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 487079936
+      }
+    ],
+    "freeAfterBytes": 69169487872,
+    "actualFreeChangeBytes": -8192
+  },
+  "coreCaches": [
+    {
+      "name": "core-ios",
+      "allocatedBytes": 578875392
+    },
+    {
+      "name": "core-mac",
+      "allocatedBytes": 531460096
+    }
+  ],
+  "freeAfterBytes": 69356744704,
+  "removedAllocatedBytes": 290017280,
+  "retained": "Installed phone31 and rollback30 archives; installed Mac14 and rollback10 archives; current reusable products, accepted raw/portable evidence, reviewed image, private pre-update backups and original Privacy Test task backup. Live apps/data, Keychain, Docker, other projects/devices untouched."
+}

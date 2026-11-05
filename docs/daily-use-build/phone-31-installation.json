@@ -1,0 +1,19 @@
+{
+  "version": "1.4.0",
+  "build": "31",
+  "archiveSHA256": "e01eb92ca37f6a76cad69f2ee468f7a5ab027eefa186e9f91e6417ef060fb2ae",
+  "sourceFingerprint": "564b56755afe20380a6fc4a51565aeede14253ba6de58d00f3fbe2cf6cf66880",
+  "installed": true,
+  "launchVerifiedRunning": true,
+  "dataChecks": [
+    {
+      "priorTasks": 205,
+      "afterTasks": 205,
+      "allPriorIDsRetained": true,
+      "titlesNotesAttachmentsAndChildrenPreserved": true
+    }
+  ],
+  "installedAt": "2026-11-05T07:46:36+01:00",
+  "privatePreUpdateBackupRetained": true,
+  "scope": "Normal app installed in place and running. Prior task identities, titles, notes, attachments and children match. No phone visual/FPS claim."
+}

@@ -328,3 +328,64 @@ final class PlannerTaskSearchTests: XCTestCase {
         XCTAssertNil(selected.current(tasks: [changedProjection], roots: [root], workspace: binding, session: session))
     }
 }
+
+
+final class DurableSnapshotReadCacheTests: XCTestCase {
+    private func snapshot(_ title: String = "Old") -> Snapshot { Snapshot(tables: ["tasks": [Record(["id": .string("task"), "title": .string(title), "subtasks": .array([])])]]) }
+    func testOwnEncodedDataHitsAndSnapshotValueIsImmutable() throws {
+        let cache = DurableSnapshotReadCache(); var original = snapshot()
+        let data = try cache.encode(original)
+        original.tables["tasks"]![0]["title"] = .string("Edited")
+        XCTAssertEqual(try cache.decode(data), snapshot()); XCTAssertEqual(cache.decodeCount, 0)
+    }
+    func testSameSizeExternalReplacementAndRestorationAreReadExactly() throws {
+        let cache = DurableSnapshotReadCache(), old = try cache.encode(snapshot("Old"))
+        let external = try TaskfoldJSONEncoder().encode(snapshot("New")); XCTAssertEqual(old.count, external.count)
+        XCTAssertEqual(try cache.decode(external), snapshot("New")); XCTAssertEqual(cache.decodeCount, 1)
+        XCTAssertEqual(try cache.decode(old), snapshot("Old")); XCTAssertEqual(cache.decodeCount, 2)
+        XCTAssertThrowsError(try cache.decode(Data("{broken".utf8)))
+        XCTAssertEqual(try cache.decode(old), snapshot("Old")); XCTAssertEqual(cache.decodeCount, 4)
+    }
+    func testFailedWriteCannotMakeSpeculativeSnapshotLookDurable() throws {
+        let cache = DurableSnapshotReadCache(), actualDisk = try cache.encode(snapshot())
+        _ = try cache.encode(snapshot("Speculative")) // Simulate write failure: disk stays old.
+        XCTAssertEqual(try cache.decode(actualDisk), snapshot()); XCTAssertEqual(cache.decodeCount, 1)
+    }
+    func testInvalidPrivateLedgerStillFailsTheOrdinaryDecoder() throws {
+        let cache = DurableSnapshotReadCache(); var invalid = snapshot()
+        invalid.timeSnoozes = ["bad": try TaskfoldJSONDecoder().decode(TimeSnoozeIntent.self, from: Data(#"{"version":1,"id":"bad","account":"bad","epoch":"bad","taskID":"bad","specID":"bad","signature":"bad","originalAt":0,"fireAt":0,"phase":"queued","revision":0}"#.utf8))]
+        let data = try cache.encode(invalid)
+        XCTAssertThrowsError(try cache.decode(data)); XCTAssertEqual(cache.decodeCount, 1)
+    }
+    func testOversizeEnvelopesAndMetadataBypassMemo() throws {
+        let cache = DurableSnapshotReadCache(maximumBytes: 0), data = try cache.encode(snapshot())
+        _ = try cache.decode(data); _ = try cache.decode(data); XCTAssertEqual(cache.decodeCount, 2)
+        let headerCache = DurableSnapshotReadCache(); var pending = snapshot()
+        pending.pending = [Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: ["description": .string(String(repeating: "x", count: 600_000))])]
+        let header = try headerCache.encode(pending)
+        XCTAssertEqual(try headerCache.decode(header), pending); XCTAssertEqual(headerCache.decodeCount, 1)
+    }
+    func testPreparedEncodingMustMatchAndOpaqueNumbersRemainExact() throws {
+        let cache = DurableSnapshotReadCache(), old = snapshot(), prepared = try PreparedSnapshotEncoding(old)
+        var current = snapshot("New")
+        current.tables["tasks"]![0]["opaque"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("9007199254740993".utf8))
+        let data = try cache.encode(current, prepared: prepared)
+        XCTAssertEqual(try cache.decode(data), current)
+        XCTAssertEqual(try TaskfoldJSONDecoder().decode(Snapshot.self, from: data), current)
+        XCTAssertTrue(String(decoding: data, as: UTF8.self).contains("9007199254740993"))
+    }
+    func testLargeAttachmentFileReadsReuseParsingWithoutSkippingDiskRead() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true); defer { try? FileManager.default.removeItem(at: folder) }
+        var value = snapshot(); value.tables["tasks"]![0]["attachments"] = .array([.object(["url": .string("data:image/jpeg;base64," + String(repeating: String(repeating: "A", count: 79) + "/", count: 32_000))])])
+        let path = folder.appendingPathComponent("cache.json"), data = try TaskfoldJSONEncoder().encode(value)
+        try data.write(to: path, options: .atomic)
+        let cache = DurableSnapshotReadCache(), start = Date()
+        XCTAssertEqual(try cache.decode(Data(contentsOf: path)), value)
+        let cold = Date().timeIntervalSince(start), warmStart = Date()
+        for _ in 0..<20 { XCTAssertEqual(try cache.decode(Data(contentsOf: path)), value) }
+        let warm = Date().timeIntervalSince(warmStart) / 20
+        XCTAssertEqual(cache.decodeCount, 1)
+        print("DURABLE_READ_TIMING bytes=\(data.count) cold=\(cold) warmFileRead=\(warm)")
+    }
+}

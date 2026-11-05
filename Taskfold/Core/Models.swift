@@ -2682,3 +2682,38 @@ extension WidgetRecordLink {
         return task
     }
 }
+
+
+/// One bounded, exact-byte memo for this Store's last durable envelope. Callers
+/// still read the file on every save: external changes and corruption cannot be
+/// hidden by timestamps, inode reuse, workspace switches or a failed write.
+final class DurableSnapshotReadCache {
+    private let maximumBytes: Int
+    private var bytes: Data?
+    private var value: Snapshot?
+    private(set) var decodeCount = 0
+    init(maximumBytes: Int = 16 * 1024 * 1024) { self.maximumBytes = maximumBytes }
+    func clear() { bytes = nil; value = nil }
+    func decode(_ data: Data) throws -> Snapshot {
+        if bytes == data, let value { return value }
+        clear(); decodeCount += 1
+        let decoded = try TaskfoldJSONDecoder().decode(Snapshot.self, from: data)
+        if data.count <= maximumBytes { bytes = data; value = decoded }
+        return decoded
+    }
+    /// Encode inside this type so a caller cannot associate unrelated bytes with
+    /// a snapshot. Prepared data independently proves its captured input identity.
+    func encode(_ snapshot: Snapshot, prepared: PreparedSnapshotEncoding? = nil) throws -> Data {
+        let data = try prepared?.matching(snapshot) ?? TaskfoldJSONEncoder().encode(snapshot)
+        clear()
+        guard data.count <= maximumBytes else { return data }
+        // Preserve the decoder's private-ledger checks and optional-metadata
+        // normalization. Only task-table parsing is skipped on the next exact hit.
+        var metadata = snapshot; metadata.tables = [:]
+        if let encoded = try? TaskfoldJSONEncoder().encode(metadata), encoded.count <= 512 * 1024,
+           let validated = try? TaskfoldJSONDecoder().decode(Snapshot.self, from: encoded), validated == metadata {
+            bytes = data; value = snapshot
+        }
+        return data
+    }
+}

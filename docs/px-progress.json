@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Mac14 and phone30 installed; searchable planner selection accepted in scoped checks",
-  "latest": "The exact reviewed Mac14 and phone30 updates are installed after saved-draft approval. Mac reopened and synced; the iPhone app remains running. Private pre-update backups and rollback packages retained. New source work adds planner search across task/project/section/parent names, useful estimates and schedule context, bounded pages and current-source safeguards. Eight Core checks pass per repo; three final iPhone cases pass for paging/current names, Save/reminders/Undo/Redo/cold state, newer-schedule refusal and dark/largest-text keyboard/Cancel. Screenshots reviewed; zero reported runtime warnings. Mac source build18 compiles/signs with both extensions. Later notes/planner refinements are not included in installed14/30. Cleanup leaves 65.0 GiB free; wider Px and deferrals remain.",
+  "focus": "Now · Seven-task planning fix and faster saves · iPhone31 installed",
+  "latest": "iPhone 1.4.0 (31) is installed and running; all 205 prior task IDs, titles, notes, attachments and children match after launch. Day review now keeps its original queue, advances only after successful saves and uses full date/time updates. Drops no longer create a separate automatic sort save/Undo step. Ordinary saves/sync reuse exact matching on-disk bytes instead of repeatedly parsing large attachments, and widget summaries render in the background. Both repos pass 74 focused Core checks each. Scoped iPhone acceptance covers seven distinct Today saves, failed-save retry, fixed time, a 2.56 MB synthetic attachment, unrelated work/cold tables, plus actual dated-list drag, one Undo and navigation. Mac19 compiles/signs with both extensions; installed Mac remains14. Cleanup removes 276.6 MiB of obsolete outputs and leaves 64.6 GiB free. Wider rendering/FPS, device/account/accessibility contexts and agreed deferrals remain.",
   "next": [
-    "NEXT IMPLEMENTATION: improve day-planner responsiveness, then continue notes/headings and widget/insight polish. Planner task search now has scoped iPhone acceptance; native Mac/iPad, shared/account/speech and wider rendering remain separate. Ship later source refinements as a clearly versioned next update; installed Mac14/phone30 are the exact approved packages.",
-    "NEXT DAILY-USE UPDATE: preserve the verified library creation/starter runs, sibling ordering/Undo and filter-target improvements in the cumulative packages. Continue with small user-facing feature updates, bounded caches and end-of-run cleanup.",
+    "NEXT: use phone31 for everyday work and address any specific remaining slow screens; continue small notes/headings, planner and widget/insight improvements. Preserve the accepted seven-task and dated-list drag cases; broader native Mac/iPad/shared/account/speech/FPS work stays scoped. Mac19 source is built, with Mac14 still installed.",
+    "NEXT DAILY-USE UPDATE: phone31 includes the library creation/starter, ordering/filter-target, stable subtasks, direct note editing, planner search and current correctness/responsiveness fixes. Continue bounded, clearly versioned updates with private pre-update backups and cleanup each run.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -47,7 +47,7 @@
             {
               "state": "done",
               "title": "Deadlines, estimates and day planning",
-              "detail": "Independent deadline/date behavior, recurrence boundaries and calendar capacity in recorded flows."
+              "detail": "Independent deadline/date behavior, recurrence boundaries and calendar capacity in recorded flows. Day review now retains its original queue and counts only successful saves; the seven-task/failure-retry/fixed-time/cold case passes with a large synthetic attachment."
             },
             {
               "state": "done",
@@ -497,7 +497,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading, project catalogs, searchable parents and background cached library captions. iPhone production cases verify scrolling, current-source refresh, draft/save/cold behavior and saved-work preservation. Wider editor/rendering, platform, account/accessibility/cloud contexts remain. Field conflict review now waits for an ongoing sync before comparing current task data. Visible sibling arrows and branch-aware drag planning now have owning Core proof; actual iPhone menu and Store Undo restore exact saved tables. Native drag gestures and Mac interaction remain separate. Searchable filter targets now use cancellable background catalogs and bounded pages. Final iPhone project-target Save/Cancel/cold and dark/largest-text keyboard/Done cases pass; Mac/iPad and wider label/section/access/speech/rendering remain separate.",
+              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading, project catalogs, searchable parents and background cached library captions. iPhone production cases verify scrolling, current-source refresh, draft/save/cold behavior and saved-work preservation. Wider editor/rendering, platform, account/accessibility/cloud contexts remain. Field conflict review now waits for an ongoing sync before comparing current task data. Visible sibling arrows and branch-aware drag planning now have owning Core proof; actual iPhone menu and Store Undo restore exact saved tables. Actual sibling drag gestures and Mac interaction remain separate. Searchable filter targets now use cancellable background catalogs and bounded pages. Final iPhone project-target Save/Cancel/cold and dark/largest-text keyboard/Done cases pass; Mac/iPad and wider label/section/access/speech/rendering remain separate. Current gain: bounded exact-byte durable-read reuse removes repeated full attachment parsing; ordinary mutation/sync widget summaries move to the existing latest-only background queue. iPhone dated-list drops use one local commit/Undo, and an actual drag/Undo/navigation case passes. Phone31 is installed with prior work preserved; broader rendering/FPS remains open.",
               "steps": [
                 {
                   "state": "done",
@@ -1192,7 +1192,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "09e4f140b76970eeccb52d27bf29364722d6cf43a1bb14fdc853295fdafa3f19",
+    "P2_PLAN.md": "0524135d600bfe67dfa395d0d56cf6aa90acfed97fa9cecd4f6a12fe9718f45f",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",

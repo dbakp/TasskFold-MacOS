@@ -157,6 +157,7 @@ final class Store {
         return presentationReadCache.tables(for: context) { mask.presentation(source) }
     }
     var presentationSnapshot:Snapshot {var visible=snapshot;visible.tables=presentedTables;return visible}
+    @ObservationIgnored private let durableSnapshotReadCache = DurableSnapshotReadCache()
     @ObservationIgnored private let taskCache = TaskCache()
     private(set) var taskRevision = 0
     private(set) var calendarContext = TaskCalendarContext()
@@ -2013,7 +2014,7 @@ final class Store {
         }
         guard FileManager.default.fileExists(atPath: cacheURL.path) else { snapshot = Snapshot(); workspaceCacheDecoded=true;workspaceCacheReadable = true; return }
         do {
-            let loaded=try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
+            let loaded=try durableSnapshotReadCache.decode(Data(contentsOf:cacheURL))
             snapshot=loaded;workspaceCacheDecoded=true
             if let boundary=try teamAccessFenceDisk?.load() {
                 teamAccessMask=try TeamWorkspaceCache(boundary:boundary,previous:loaded.teamWorkspace,pending:loaded.pending,tasks:loaded.tables["tasks"] ?? [])
@@ -2045,7 +2046,7 @@ final class Store {
             WidgetCompletion.prepare(&snapshot)
         }
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        let previous = FileManager.default.fileExists(atPath: cacheURL.path) ? try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) : Snapshot()
+        let previous = FileManager.default.fileExists(atPath: cacheURL.path) ? try durableSnapshotReadCache.decode(Data(contentsOf: cacheURL)) : Snapshot()
         var durable = snapshot
         durable.locationImports = try LocationHandoffImportLedger.staging(previous: previous, proposed: durable)
         durable.timeSnoozes = try stagedTimeSnoozes(previous: previous, proposed: durable, newIntent: timeSnooze)
@@ -2054,7 +2055,7 @@ final class Store {
         #if DEBUG
         if preparedEncoding != nil { workflowPreparedEncodingUsed = preparedData != nil }
         #endif
-        let data = try preparedData ?? TaskfoldJSONEncoder().encode(durable)
+        let data = try durableSnapshotReadCache.encode(durable, prepared: preparedEncoding)
         if UUID(uuidString: userID) != nil {
             try AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).writable {
                 try data.write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -2864,7 +2865,7 @@ final class Store {
         let groupedHistoryChanged = localMode && changes.first.map {
             ActivityOperation.attachLocal(id: $0.id, account: userID, after: ActivityOperation.counts(old), to: &snapshot)
         } == true
-        do { try persist(backgroundWidgets: projectsFreshCreation && widgetReceipt == nil && sharedCaptureReceipt == nil, preparedEncoding: retainCapturedChanges && !groupedHistoryChanged ? admittedHistory?.encodedCache : nil) } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
+        do { try persist(backgroundWidgets: widgetReceipt == nil && sharedCaptureReceipt == nil, preparedEncoding: retainCapturedChanges && !groupedHistoryChanged ? admittedHistory?.encodedCache : nil) } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
         workflowSaveSucceeded = true
         if remember, let history { undoStack.append(history); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         Task { await reschedule(); await sync() }
@@ -3192,7 +3193,7 @@ final class Store {
                         guard generation == accountGeneration, snapshot.pending.first == mutation else { return }
                         if confirmed {
                             guard snapshot.acknowledge(mutation, saved: nil) else { throw PersonalTaskMove.invalid }
-                            try persist(); continue
+                            try persist(backgroundWidgets: true); continue
                         }
                         notice = "Your original project move is saved. Its result is not confirmed; review access before trying it again."
                     }
@@ -3209,7 +3210,7 @@ final class Store {
                 if WorkflowUndo.matches(mutation), WorkflowUndo.reply(saved, change: mutation)?.applied == false {
                     undoStack = []; redoStack = []; notice = WorkflowUndo.message; workflowUndoRefused = true
                 }
-                try persist()
+                try persist(backgroundWidgets: true)
                 if let command=mutation.teamCompletion,command.operation == .undo,let saved,
                    case .object(let raw)=saved["team_completion_reply"],let receipt=try? command.receipt(raw,for:mutation),
                    !receipt.removed,receipt.successor != nil,
@@ -3241,7 +3242,7 @@ final class Store {
                     // its explicit resolution; only cull inaccessible content.
                     snapshot.tables=cache.filtering(snapshot.tables);snapshot.teamWorkspace=cache
                 } else {snapshot=cache.merging(read.tables,into:snapshot)}
-                do {try persist()} catch {snapshot=before;throw error}
+                do {try persist(backgroundWidgets: true)} catch {snapshot=before;throw error}
                 if let fence=teamAccessFenceDisk {try fence.clear(after:boundary)}
                 let wasUnreadable = !workspaceCacheReadable
                 workspaceCacheReadable=true
@@ -3251,7 +3252,7 @@ final class Store {
                     undoStack=[];redoStack=[];syncConflict=nil;markAccessRecovery()
                     notice="Project access changed. Your queued work is kept, and a Recovery copy is saved."
                 }
-            } else {snapshot.mergeRemote(read.tables);try persist()}
+            } else {snapshot.mergeRemote(read.tables);try persist(backgroundWidgets: true)}
             lastSync=Date();migrateOrganization()
             #if DEBUG
             traceTeamAudioNativeSync("Conversation read")
