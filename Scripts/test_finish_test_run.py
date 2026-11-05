@@ -26,9 +26,22 @@ class CleanupTests(unittest.TestCase):
         def measured(path):return 800*1024**2 if path.resolve()==sdk.resolve() else actual(path)
         with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=60*1024**3)),patch.object(module,'allocated',side_effect=measured):
             result=module.finish(build_caches=[self.cache],apply=True)
-        self.assertFalse(sdk.exists());self.assertFalse(cas.exists());self.assertFalse(self.scratch.exists())
+        self.assertFalse(sdk.exists());self.assertFalse(cas.exists());self.assertTrue(self.scratch.exists())
         self.assertTrue(self.product.exists());self.assertTrue(self.result.exists());self.assertEqual(dependency.read_text(),'keep dependency')
-        self.assertEqual(len(result['actions']),3)
+        self.assertEqual(len(result['actions']),2)
+        self.assertLessEqual(result['skipped'][-1]['allocatedBytes'],768*1024**2)
+    def test_budget_dry_run_and_healthy_symlink_never_remove_files(self):
+        sdk=self.cache/'SDKExplicitPrecompiledModules';sdk.mkdir();(sdk/'module.pcm').write_text('generated')
+        actual=module.allocated
+        def measured(path):return 800*1024**2 if path.resolve()==sdk.resolve() else actual(path)
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=60*1024**3)),patch.object(module,'allocated',side_effect=measured):
+            result=module.finish(build_caches=[self.cache],apply=False)
+        self.assertTrue(sdk.exists());self.assertTrue(self.scratch.exists());self.assertEqual(len(result['actions']),1)
+        self.assertGreater(result['skipped'][-1]['allocatedBytes'],768*1024**2);self.assertLessEqual(result['skipped'][-1]['projectedAllocatedBytes'],768*1024**2)
+        (sdk/'module.pcm').unlink();sdk.rmdir();outside=self.home/'unrelated';outside.mkdir();(outside/'source').write_text('keep');sdk.symlink_to(outside,target_is_directory=True)
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=60*1024**3)),self.assertRaises(ValueError):
+            module.finish(build_caches=[self.cache],apply=True)
+        self.assertEqual((outside/'source').read_text(),'keep')
     def test_dry_run_and_active_compiler_preserve_files(self):
         with patch.object(module.subprocess,'check_output',return_value=''):
             module.finish(build_caches=[self.cache],apply=False)

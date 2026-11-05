@@ -1,0 +1,26 @@
+{
+  "final": {
+    "apply": true,
+    "freeBeforeBytes": 64792219648,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 0,
+        "projectedAllocatedBytes": 0
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 582651904,
+        "projectedAllocatedBytes": 582651904
+      }
+    ],
+    "freeAfterBytes": 64792801280,
+    "actualFreeChangeBytes": 581632
+  },
+  "removedAllocatedBytesAcrossAudits": 2207993856,
+  "freeGiBAfter": 60.34299850463867,
+  "note": "Allocated-file sums and global free-space change differ with APFS sharing and concurrent activity. Current ZIPs and installed/rollback archives are retained."
+}

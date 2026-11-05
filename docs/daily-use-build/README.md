@@ -10,6 +10,10 @@ The immediate delivery is an ordinary personal-workflow app on the existing stor
 
 Ordinary candidates use no test launch arguments and keep the recorded advanced feature gates. Acceptance fixtures run only in the reserved namespace. The initial build/package work made no hosted changes, new simulators, real-task edits, installation or publication. The later focused assignment service deployment is recorded below. Build receipts bind the app input fingerprint.
 
+## Prepared optimized update — 5 November 2026
+
+**Mac 1.2.0 (22)** and **iPhone 1.4.0 (34)** are built with optimized Swift code, signed and ZIP-payload verified. They combine the latest personal notes, Insights/day-selection and responsiveness work. Mac includes widgets and Share; the phone retains its documented development-only Share omission. They await a saved-draft update window and the phone's reconnection. Normal startup/data preservation and physical frame timing are not accepted merely by packaging. [Current receipts and limits](../optimized-daily-update/README.md).
+
 ## What the ordinary client exposes
 
 | Experience | Client/configuration inventory | Service inventory |
@@ -37,13 +41,15 @@ iOS Simulator: `python3 Scripts/build_daily.py --simulator`
 
 iPhone, after configuring Xcode Accounts and the registered device: `python3 Scripts/build_daily.py --device DEVICE_ID --allow-provisioning`
 
+Daily-use builds now default to the optimized `Release` configuration; use `--configuration Debug` explicitly for diagnostics. Development signing and deferred capability omissions still apply. Mac daily builds target the current host architecture. The ordinary release project remains separate from this relocated daily project.
+
 Use `--build-number N` for a new daily update, applying the number to app/extensions together. The built app and extensions must still pass the continuity metadata floor. Use `--derived-data PATH` to reuse a current cache and `--team TEAM_ID` to select an existing team explicitly. Otherwise the sole configured project team is applied to app/extensions. Device/Simulator receipts are separate, so a failed physical build cannot erase a successful Simulator receipt. The commands enforce the storage floor, build one platform/job at a time and only the host Simulator architecture. They do not install, launch, create accounts, publish or submit an App Store release.
 
 The Mac ZIP is in this chat's output/daily-use-mac directory, with a byte-bound build receipt. Quit the old app before replacing its application bundle; retain the local-file safety copy while validating startup. A development profile needs renewal when it expires.
 
 ## Next product work
 
-The normal Mac14 and iPhone31 installations are recorded above; old build-7 startup and initial phone-signing blockers are historical. Prepared Mac21/iPhone33 packages include later personal-workflow improvements but remain uninstalled. Continue responsive notes/planning and focused remaining Px work, then package coherent updates with preserved-data checks. Native capture/template Store acceptance already passes on Mac and iPhone Simulator; do not rerun those unchanged matrices. Keep advanced feature gates and the three agreed rollout deferrals visible.
+The normal Mac14 and iPhone31 installations are recorded above; old build-7 startup and initial phone-signing blockers are historical. Prepared optimized Mac22/iPhone34 packages include the later personal-workflow improvements and remain uninstalled pending the update window. Continue responsive notes/planning and focused remaining Px work, then package coherent updates with preserved-data checks. Native capture/template Store acceptance already passes on Mac and iPhone Simulator; do not rerun those unchanged matrices. Keep advanced feature gates and the three agreed rollout deferrals visible.
 
 The delivery check originally assumed exactly three versioned targets and rejected the iOS Watch companion. It now requires both configurations for each core bundle identity and consistent versions across optional companions. Each repo passes 12 focused checks, including matching companions, missing required configurations and mismatched companion versions; the ordinary projects and actual built app/widget/share metadata pass. This does not establish distribution or Watch runtime acceptance.
 
@@ -112,3 +118,5 @@ Insights now folds activity off the main actor and reuses the result for both ch
 Both repos pass 71 focused Core checks (7 new prepared-reading cases and 64 history regressions). These compare complete readings across scopes, ranges, coverage, children, malformed/missing history, zones/DST, cancellation and 5,000-row inputs. Current signed iPhone production-component acceptance covers actual range/scope/tap, separate personal goals, read-only preservation, live completion refresh and cold history, with screenshot review and zero reported runtime warnings. A first gesture-ended-selection failure is retained separately. Mac21 builds/signs with widgets and Share; native Mac, wider iPad/speech/text/access/account and physical FPS remain separate.
 
 Combined **Mac21/iPhone33** ZIPs are payload/signature verified, include the preceding notes search and remain **uninstalled**. Daily apps remain **Mac14/iPhone31**. Mac20/iPhone32 were superseded uninstalled candidates; their retirement is recorded after archive verification. See `prepared-insights.json`, candidate receipts and storage audit.
+
+The earlier uninstalled Mac21/iPhone33 candidates are superseded by optimized Mac22/iPhone34. Their metadata is retained and their ZIPs retired in the current optimized-update cleanup audit; installed and rollback archives remain intact.

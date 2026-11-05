@@ -1,0 +1,13 @@
+{
+  "accepted": false,
+  "reason": "First optimized build requested both architectures; deliberately cancelled before accepting a package, then restarted for this Mac arm64 only in the same cache.",
+  "cancelledXcodeHandleExited": true,
+  "unrelatedProcessesStopped": false,
+  "followupProcessGuardRefusedPythonPID": true,
+  "replacementCompilerSnapshot": [
+    {
+      "pid": 8307,
+      "hostArm64": true
+    }
+  ]
+}

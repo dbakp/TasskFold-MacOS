@@ -1,0 +1,26 @@
+{
+  "freeBeforeBytes": 63656292352,
+  "actions": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Intermediates.noindex/AppAuth.build/Debug",
+      "kind": "completedSupersededDebugObjects",
+      "allocatedBytes": 1425408
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Intermediates.noindex/Taskfold.build/Debug",
+      "kind": "completedSupersededDebugObjects",
+      "allocatedBytes": 312639488
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios/Build/Intermediates.noindex/AppAuth.build/Debug-iphoneos",
+      "kind": "completedSupersededDebugObjects",
+      "allocatedBytes": 1425408
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios/Build/Intermediates.noindex/Taskfold.build/Debug-iphoneos",
+      "kind": "completedSupersededDebugObjects",
+      "allocatedBytes": 320274432
+    }
+  ],
+  "freeAfterBytes": 64277147648
+}

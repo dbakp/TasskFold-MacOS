@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 5 November 2026 · Optimized daily-use packages
+
+Daily builders now default to Release/Swift `-O`; explicit Debug remains available. The ordinary project is unchanged and Mac daily builds target only this host architecture. Mac22 and iPhone34 are signed, profile-valid and ZIP-payload verified, combining the recent personal notes/Insights/planning improvements. They remain uninstalled pending saved drafts/device connection; optimized native runtime and physical smoothness are not accepted by compilation. The cache helper keeps its 768 MiB cap while pruning cheaper caches before costly objects; nine safety/budget checks pass per repo. About 2.06 GiB of obsolete outputs were retired and 60.34 GiB remains free. [Current evidence](optimized-daily-update/README.md).
+
 ## 5 November 2026 · Background note previews
 
 Pinned-note reading and Write/Preview now prepare block/inline formatting outside the interface thread and retain one source-bound model while mounted. The original-text toggle, complete fallback and link policy remain. Each own Core suite passes 30 focused checks. Two signed iPhone journeys verify refreshed preview content, exact original text, Save/Undo/Redo/cold data and largest-text Preview/Cancel; screenshots were inspected. The current Mac app builds and strictly verifies; native Mac/iPad, physical frame timing and wider account/accessibility remain open. Installed daily apps and prepared packages are unchanged; package the combined personal-workflow update next. [Scope, evidence and cleanup](prepared-note-previews/README.md).

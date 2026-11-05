@@ -33,6 +33,7 @@ def main():
     parser.add_argument("--allow-provisioning", action="store_true", help="Let Xcode update development profiles using its configured account")
     parser.add_argument("--team", help="Existing development team for the app and all extensions; defaults to the project's sole configured team")
     parser.add_argument("--build-number", type=int, help="Increment the app/extension build number together for a new daily update")
+    parser.add_argument("--configuration", choices=("Release", "Debug"), default="Release", help="Optimized daily-use build by default; Debug is available explicitly for diagnostics")
     parser.add_argument("--simulator", action="store_true", help="iOS only: build an unsigned Simulator app")
     parser.add_argument("--device", help="iOS only: build for an already registered device identifier")
     args = parser.parse_args()
@@ -81,7 +82,9 @@ def main():
     receipt = args.derived_data / ("taskfold-daily-" + channel + ".json")
     # Never leave a previous successful receipt beside a failed new candidate.
     receipt.unlink(missing_ok=True)
-    command = ["xcodebuild", "-project", str(daily_project.resolve()), "-scheme", "Taskfold", "-configuration", "Debug", "-destination", destination, "-derivedDataPath", str(args.derived_data.resolve()), "-jobs", "1", "COMPILER_INDEX_STORE_ENABLE=NO", "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 2 -j 1", "build"]
+    command = ["xcodebuild", "-project", str(daily_project.resolve()), "-scheme", "Taskfold", "-configuration", args.configuration, "-destination", destination, "-derivedDataPath", str(args.derived_data.resolve()), "-jobs", "1", "COMPILER_INDEX_STORE_ENABLE=NO", "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 2 -j 1", "build"]
+    if PLATFORM == "mac":
+        command.extend(["ONLY_ACTIVE_ARCH=YES", "ARCHS=" + platform.machine()])
     if args.products_directory:
         command.append("CONFIGURATION_BUILD_DIR=" + str(args.products_directory.resolve()))
     if args.allow_provisioning:
@@ -99,7 +102,7 @@ def main():
         raise SystemExit("Daily build failed. See " + str(log) + "\n" + "\n".join(errors[-6:]))
     if fingerprint(project.read_bytes()) != before:
         raise SystemExit("App inputs changed during the build; no candidate receipt recorded")
-    products = args.derived_data / "Build/Products" / ("Debug" if PLATFORM == "mac" else "Debug-iphonesimulator" if args.simulator else "Debug-iphoneos")
+    products = args.derived_data / "Build/Products" / (args.configuration + ("" if PLATFORM == "mac" else "-iphonesimulator" if args.simulator else "-iphoneos"))
     if args.products_directory:
         products = args.products_directory.resolve()
     app = products / "Taskfold.app"
@@ -117,7 +120,7 @@ def main():
         entitlements = plistlib.loads(subprocess.check_output(["codesign", "-d", "--entitlements", ":-", str(app)], stderr=subprocess.DEVNULL))
         if any(key in entitlements for key in ("aps-environment", "com.apple.developer.aps-environment", "com.apple.developer.usernotifications.time-sensitive")):
             raise SystemExit("Daily candidate unexpectedly requests deferred notification capabilities")
-    data = {"schema": 1, "platform": PLATFORM, "bundle": BUNDLE, "version": info["CFBundleShortVersionString"], "build": info["CFBundleVersion"], "app": str(app.resolve()), "sourceFingerprint": before, "sourceRevision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), "simulatorOnly": args.simulator, "signatureVerified": not args.simulator, "widgetsIncluded": True, "shareIncluded": True, "omittedCapabilities": ["Remote push notifications", "Time Sensitive notifications"], "featureFlags": {key: value for key, value in info.items() if key.startswith("Taskfold") and key.endswith("Enabled")}, "installed": False, "published": False}
+    data = {"schema": 1, "configuration": args.configuration, "platform": PLATFORM, "bundle": BUNDLE, "version": info["CFBundleShortVersionString"], "build": info["CFBundleVersion"], "app": str(app.resolve()), "sourceFingerprint": before, "sourceRevision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), "simulatorOnly": args.simulator, "signatureVerified": not args.simulator, "widgetsIncluded": True, "shareIncluded": True, "omittedCapabilities": ["Remote push notifications", "Time Sensitive notifications"], "featureFlags": {key: value for key, value in info.items() if key.startswith("Taskfold") and key.endswith("Enabled")}, "installed": False, "published": False}
     receipt.write_text(json.dumps(data, indent=2) + "\n")
     print("Daily-use development candidate: " + str(app))
     print("Build receipt: " + str(receipt))

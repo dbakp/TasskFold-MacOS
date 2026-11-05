@@ -46,17 +46,24 @@ def finish(simulators=(), build_caches=(), apply=False):
                         and any(alias in line for alias in aliases) for line in running)
         if compiling or any(line.strip().startswith(str(cache) + '/') and '.app/' in line for line in running):
             report['skipped'].append({'cache': str(cache), 'reason': 'Compiler or cache app still running'}); continue
-        candidates = [cache / name for name in ['Build/Intermediates.noindex', 'ModuleCache.noindex', 'SDKStatCaches.noindex', 'Index.noindex', 'CompilationCache.noindex', 'SDKExplicitPrecompiledModules']]
-        total = sum(allocated(p) for p in candidates)
-        # Keep a small reusable cache when space is healthy; never accumulate
-        # repeated derived trees in preference to useful product/evidence bytes.
-        if total <= 768 * 1024**2 and shutil.disk_usage(cache).free >= 30 * 1024**3:
-            report['skipped'].append({'cache': str(cache), 'reason': 'Reusable compiler cache within 768 MiB budget', 'allocatedBytes': total}); continue
+        # Preserve costly app objects when healthy storage only needs a budget
+        # trim. SDK modules regenerate more cheaply than the entire app.
+        candidates = [cache / name for name in ['Index.noindex', 'CompilationCache.noindex', 'SDKExplicitPrecompiledModules', 'ModuleCache.noindex', 'SDKStatCaches.noindex', 'Build/Intermediates.noindex']]
         for path in candidates:
+            if path.is_symlink() or (path.exists() and not path.resolve().is_relative_to(cache)):
+                raise ValueError('Unexpected compiler cache link')
+        sizes = {path: allocated(path) for path in candidates}
+        total = sum(sizes.values())
+        healthy = shutil.disk_usage(cache).free >= 30 * 1024**3
+        budget = 768 * 1024**2
+        for path in candidates:
+            if healthy and total <= budget: break
             if path.exists():
-                if path.is_symlink() or not path.resolve().is_relative_to(cache): raise ValueError('Unexpected compiler cache link')
-                report['actions'].append({'path': str(path), 'kind': 'completedCompilerCache', 'allocatedBytes': allocated(path)})
+                report['actions'].append({'path': str(path), 'kind': 'completedCompilerCache', 'allocatedBytes': sizes[path]})
                 if apply: shutil.rmtree(path)
+                total -= sizes[path]
+        if healthy:
+            report['skipped'].append({'cache': str(cache), 'reason': 'Reusable compiler cache within 768 MiB budget' if apply or sum(sizes.values()) <= budget else 'Dry-run budget trim; no files removed', 'allocatedBytes': total if apply else sum(sizes.values()), 'projectedAllocatedBytes': total})
     report['freeAfterBytes'] = shutil.disk_usage('/tmp').free
     report['actualFreeChangeBytes'] = report['freeAfterBytes'] - report['freeBeforeBytes']
     return report

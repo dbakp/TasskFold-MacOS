@@ -1,0 +1,34 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 64092135424,
+  "actions": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Intermediates.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 403517440
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/ModuleCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 161005568
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/SDKStatCaches.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 15294464
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/CompilationCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/SDKExplicitPrecompiledModules",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 502874112
+    }
+  ],
+  "skipped": [],
+  "freeAfterBytes": 65174810624,
+  "actualFreeChangeBytes": 1082675200
+}

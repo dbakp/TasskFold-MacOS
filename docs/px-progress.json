@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Background note previews preserve formatting and original text",
-  "latest": "Both apps now prepare note formatting outside the interface thread and reuse source-bound previews while reading. Each repo passes 30 focused Core checks. Two signed iPhone journeys verify revised previews, exact original text, Save/Undo/Redo/cold preservation and largest-text Preview/Cancel; inspected layouts remain readable. Mac current source builds/signs. Physical frame timing and wider Mac/iPad/account cases remain open. Installed Mac14/phone31 and prepared Mac21/phone33 packages stay unchanged.",
+  "focus": "Now · Optimized Mac22 and iPhone34 updates ready",
+  "latest": "Combined Mac22 and iPhone34 development ZIPs are built with Swift optimization, signed and verified by extraction/payload comparison. They include recent notes search/editing, prepared Insights/day selection and background note previews. Daily builders now default to optimized code; Debug remains explicit. Mac targets its host architecture. Nine cleanup checks per repo preserve the 768 MiB cap while retaining costly objects where possible. About 2.06 GiB of obsolete outputs were removed; 60.3 GiB remains free. Installed apps remain Mac14/phone31: Mac draft-window confirmation is pending and the phone is disconnected. New optimized runtime/frame timing is not yet accepted.",
   "next": [
-    "NEXT: package a combined personal-workflow update after the prepared notes/Insights/day-selection improvements and new background note previews. Preserve pre-update data and obtain an appropriate restart window. Continue remaining native migration/shared-media integration without repeating unchanged accepted matrices; ordinary advanced gates and agreed rollout deferrals remain.",
-    "NEXT DAILY-USE UPDATE: combined Mac21/phone33 contain notes search, prepared Insights and persistent day selection alongside prior fixes. Neither replaces the current sessions automatically. Keep private pre-update backups and cleanup every run.",
+    "NEXT: install the verified optimized Mac22/phone34 updates when drafts are saved and each device is available, then verify normal startup/data preservation. Packages are ready; Mac draft-window confirmation is pending and the phone is disconnected. Continue independent remaining Px work while installation waits.",
+    "CONTINUE: ordinary-use integration for migration/shared files/discussions/recordings, preserving accepted personal workflows and scoped genuine local service evidence. Finish protected/native lifecycle and remaining mixed/legacy histories before enabling advanced gates. Existing signing/provider/remote-reminder/older-client rollout deferrals remain.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -497,7 +497,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Read reuse/background preparation now covers filters and assignment captions, rich workflows, template previews/captions, project/parent catalogs, filter/task/note searches and Insights. Exact-byte durable reads avoid repeated attachment parsing; dated-list drops use one commit/Undo. Recorded iPhone journeys accept bounded scrolling, source refresh, draft/save/cold preservation, seven-task review and the new scope/range/persistent-day interactions. Insights has owning Core71 and independent Mac21 build proof. Combined Mac21/phone33 packages are prepared only; installed apps remain Mac14/phone31. Broader editor/rendering/FPS, actual sibling drag, native Mac/iPad/speech, shared/cloud/account/window/access and overnight-clock contexts remain open. Pinned-note readers and editor previews now remove repeated synchronous markup parsing from their view bodies. Current signed iPhone content/toggle/history/cold and largest-text checks pass; Mac source builds/signs. This is not a physical FPS or long-note layout claim.",
+              "detail": "Read reuse/background preparation now covers filters and assignment captions, rich workflows, template previews/captions, project/parent catalogs, filter/task/note searches and Insights. Exact-byte durable reads avoid repeated attachment parsing; dated-list drops use one commit/Undo. Recorded iPhone journeys accept bounded scrolling, source refresh, draft/save/cold preservation, seven-task review and the new scope/range/persistent-day interactions. Insights has owning Core71 and independent Mac21 build proof. Combined optimized Mac22/phone34 packages are prepared only; installed apps remain Mac14/phone31. Broader editor/rendering/FPS, actual sibling drag, native Mac/iPad/speech, shared/cloud/account/window/access and overnight-clock contexts remain open. Pinned-note readers and editor previews now remove repeated synchronous markup parsing from their view bodies. Current signed iPhone content/toggle/history/cold and largest-text checks pass; Mac source builds/signs. This is not a physical FPS or long-note layout claim. Daily builds now select optimized Release code by default, with actual main-app compiler flags, signatures, profile validity and ZIP payloads verified. Mac compilation is host-only. The updates await a saved-draft/connected-device window; optimized normal startup and physical FPS remain unaccepted.",
               "steps": [
                 {
                   "state": "done",
@@ -595,7 +595,13 @@
             "prepared-note-previews/iphone.json",
             "prepared-note-previews/iphone-largest-text.json",
             "prepared-note-previews/mac-build.json",
-            "prepared-note-previews/storage.json"
+            "prepared-note-previews/storage.json",
+            "optimized-daily-update/README.md",
+            "optimized-daily-update/verification.json",
+            "optimized-daily-update/packages.json",
+            "optimized-daily-update/mac-verification.json",
+            "optimized-daily-update/iphone-verification.json",
+            "optimized-daily-update/storage.json"
           ],
           "focus": true
         },
@@ -1222,7 +1228,13 @@
     "prepared-note-previews/iphone.json",
     "prepared-note-previews/iphone-largest-text.json",
     "prepared-note-previews/mac-build.json",
-    "prepared-note-previews/storage.json"
+    "prepared-note-previews/storage.json",
+    "optimized-daily-update/README.md",
+    "optimized-daily-update/verification.json",
+    "optimized-daily-update/packages.json",
+    "optimized-daily-update/mac-verification.json",
+    "optimized-daily-update/iphone-verification.json",
+    "optimized-daily-update/storage.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1338,7 +1350,7 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
-    "daily-use-build/README.md": "07cc027d2fbe96e3ea2477927f1ef13818900acd4a368defad5f5e1610f194f8",
+    "daily-use-build/README.md": "4fbb6f1e1bb3c3ba6e058c93b7cc55861fafc9913d1f264c5f121e779369aa75",
     "daily-use-build/context-capture-ios-build.json": "347a2b5b15870bf23539cc7856c7cd9accd12f21d57b9628b35afb61c166c60e",
     "daily-use-build/context-capture-mac-package.json": "01a94b61601f02b1fd223c6307e2fb67af4fe3fbfa907b8ced2f4fd5f108ba0a",
     "daily-use-build/context-capture-native.json": "fddc4e842d98b36a14bff1fef870d8c44f5d1bee74fb13c7984ef119b5cf8506",
@@ -1445,6 +1457,12 @@
     "native-audience-approval/controller-verification.json": "941fe8ca06b88e41e7f8b78633683d2da0ebf82a597c0a23d1c172e461a7f210",
     "native-audience-approval/phone-verification.json": "71292dfcde4e4a2306717549b7b20e4eb047bdb1b443627fc20ae969175181a6",
     "native-audience-approval/verification.json": "37c74717ddb2a5ed0f51803e72b3fc5d0029185dae7c4587bff433ae4b7e857a",
+    "optimized-daily-update/README.md": "dbfc435097ed9fd2ce6ddc24a401f33539ab0cfecb9ca36fcd47e8022d6fef0e",
+    "optimized-daily-update/iphone-verification.json": "b0106d1eaf624ef8d3cbf6265a9d816f795ec98de7ebc7cd547eed194888d47a",
+    "optimized-daily-update/mac-verification.json": "2a616a282ee6cf18c9ae6549d6ae50785255e5c63e181593f6ecb1d6e3a318ec",
+    "optimized-daily-update/packages.json": "3c177205171dd525b3280ceb5a5602c99fc051f47ff1497693d6f4a4d87456f3",
+    "optimized-daily-update/storage.json": "7b9eeea7c5c5faf0bc1f83d78f868284201ced1eb6cd340255f6dc83afd11a3b",
+    "optimized-daily-update/verification.json": "47eb1387e26bfb52611717010ca825fdc9eec8c608fb212be43b403866e41720",
     "order-activity/README.md": "140bf1dc708445d5c9713f4f9e7e5897507a7397b17f12966ec0f9fbe1f896a6",
     "order-activity/verification.json": "e6c987f9ca69abbe66fd64effe1b14addbda5a52f7c04085d00654dcac2d291b",
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",
