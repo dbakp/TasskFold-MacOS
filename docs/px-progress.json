@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Project files · App controls and recovery built",
-  "latest": "Both apps now include private-file preparation progress, Stop/Continue, saved-request recovery and explicit sharing consent in project transfer. The exact request is stored securely before networking; checking recovery starts no work, and cancellation closes even an unacknowledged request. Both current app builds/signatures and focused tests pass. Interactive layout, accessibility, native secure storage and wider lifecycle/provider acceptance remain; this is built code, not a completed everyday rollout. Installed apps are unchanged. Assistance remains on-device only; further iPhone installation is deferred.",
+  "focus": "Project files · Responsive Stop and paused-service controls",
+  "latest": "File preparation now releases Stop/Close controls immediately and preserves the saved request. Late replies cannot overwrite or unlock a newer attempt. A paused transfer service hides Continue and sharing consent while keeping Check/Cancel. Focused race checks and current signed builds are recorded separately from the still-pending full native journey. Installed apps are unchanged. Assistance stays on-device only; further iPhone installation is deferred.",
   "next": [
     "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Unlock Mac for current normal/largest-text note and assistant flows, then package later source changes. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
     "ACCEPT NEXT: run the actual native project-file preparation/consent/recovery journey, including first-response loss, Stop/close latency, Cancel, cold return, disabled/access-changed states, largest text, keyboard and speech. Then finish note section navigation acceptance and everyday editing/planning/navigation polish in bounded updates. Advanced gates and agreed rollout deferrals remain.",
@@ -1297,7 +1297,8 @@
     "native-project-files/signed-build.json",
     "native-project-files/cleanup.json",
     "native-project-files/progress-validation.json",
-    "native-project-files/core-cases.json"
+    "native-project-files/core-cases.json",
+    "native-project-files/controls-verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1529,8 +1530,9 @@
     "native-audience-approval/controller-verification.json": "941fe8ca06b88e41e7f8b78633683d2da0ebf82a597c0a23d1c172e461a7f210",
     "native-audience-approval/phone-verification.json": "71292dfcde4e4a2306717549b7b20e4eb047bdb1b443627fc20ae969175181a6",
     "native-audience-approval/verification.json": "37c74717ddb2a5ed0f51803e72b3fc5d0029185dae7c4587bff433ae4b7e857a",
-    "native-project-files/README.md": "caed345d0b576e4d55cbc4887bdede30a5de782d5bbbb631aaf500e92698d690",
+    "native-project-files/README.md": "0072d0ff705a19c46827ec552608758aa55c886e97faacd461ab049e23cbbda0",
     "native-project-files/cleanup.json": "63b43f84bc2bdbf9831c5a615b16d1a7cbf7b1be1c99f36e1afbaa6cc13e8c8f",
+    "native-project-files/controls-verification.json": "e7090874ccff87a37683c9af2ba42590026e1877df10ff223a4352a35a90de4a",
     "native-project-files/core-cases.json": "c879720bcdd4b07ef0fff39feec273b6d2494742295c36de5739f06e69f1dc82",
     "native-project-files/full-schema.json": "69b1feeb3100d6b7166bfad6b12aaa1a158c9fbef0bfc3e3a0004fe1ec079e10",
     "native-project-files/progress-validation.json": "be2185da55d806421c603ed2665d443a52b4b128f86e256d4d4295d6deab8911",

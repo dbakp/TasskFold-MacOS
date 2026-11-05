@@ -148,10 +148,59 @@ final class ProjectFilePreparationTests: XCTestCase {
         let (raw, i, _, _) = try fixture(), io = FilePreparationIO(), peer = FilePreparationPeer(raw); peer.holdCopy = true
         let vault = ProjectFilePreparationVault(io: io), model = ProjectFilePreparationModel(account: i.scope.account, origin: i.scope.origin, incarnation: UUID(), vault: vault, service: peer, current: { true })
         let task = Task { await model.prepare(i) }; for _ in 0..<10000 { if peer.continuation != nil { break }; await Task.yield() }
-        let continuation = try XCTUnwrap(peer.continuation), saved = try XCTUnwrap(model.request); model.stop(); continuation.resume(); await task.value
+        let continuation = try XCTUnwrap(peer.continuation), saved = try XCTUnwrap(model.request); model.stop(); XCTAssertFalse(model.busy); XCTAssertTrue(model.paused); XCTAssertNil(model.consent); continuation.resume(); await task.value
         XCTAssertNil(model.consent); XCTAssertEqual(model.request, saved); let retained = try await vault.pending(account: saved.account, origin: saved.origin); XCTAssertEqual(retained, saved)
         await model.resume(); XCTAssertNotNil(model.consent)
     }
+    @MainActor func testLateStoppedRunCannotUnlockOrReplaceNewRun() async throws {
+        let (raw, inspection, _, _) = try fixture(), io = FilePreparationIO(), peer = FilePreparationPeer(raw)
+        peer.holdCopy = true
+        let vault = ProjectFilePreparationVault(io: io)
+        let model = ProjectFilePreparationModel(account: inspection.scope.account, origin: inspection.scope.origin, incarnation: UUID(), vault: vault, service: peer, current: { true })
+        let first = Task { await model.prepare(inspection) }
+        for _ in 0..<10000 { if peer.continuation != nil { break }; await Task.yield() }
+        let oldReply = try XCTUnwrap(peer.continuation), saved = try XCTUnwrap(model.request)
+        model.stop(); XCTAssertFalse(model.busy)
+        peer.continuation = nil
+        let second = Task { await model.resume() }
+        for _ in 0..<10000 { if peer.continuation != nil { break }; await Task.yield() }
+        let newReply = try XCTUnwrap(peer.continuation)
+        XCTAssertTrue(model.busy); XCTAssertFalse(model.paused)
+        oldReply.resume(); await first.value
+        XCTAssertTrue(model.busy); XCTAssertNil(model.consent)
+        XCTAssertEqual(model.request, saved); XCTAssertEqual(model.page?.state, .preparing)
+        newReply.resume(); await second.value
+        XCTAssertFalse(model.busy); XCTAssertNotNil(model.consent)
+        XCTAssertTrue(peer.calls.allSatisfy { $0.0 == saved })
+    }
+    @MainActor func testCloseImmediatelyReleasesControlsAndFencesHeldReply() async throws {
+        let (raw, inspection, _, _) = try fixture(), io = FilePreparationIO(), peer = FilePreparationPeer(raw)
+        peer.holdCopy = true
+        let vault = ProjectFilePreparationVault(io: io)
+        let model = ProjectFilePreparationModel(account: inspection.scope.account, origin: inspection.scope.origin, incarnation: UUID(), vault: vault, service: peer, current: { true })
+        let task = Task { await model.prepare(inspection) }
+        for _ in 0..<10000 { if peer.continuation != nil { break }; await Task.yield() }
+        let reply = try XCTUnwrap(peer.continuation), saved = try XCTUnwrap(model.request)
+        model.stop(); model.close()
+        XCTAssertFalse(model.busy); XCTAssertNil(model.request); XCTAssertTrue(model.pages.isEmpty)
+        reply.resume(); await task.value
+        XCTAssertNil(model.consent); XCTAssertTrue(model.pages.isEmpty); XCTAssertNil(model.message)
+        let retained = try await vault.pending(account: saved.account, origin: saved.origin)
+        XCTAssertEqual(retained, saved)
+    }
+    @MainActor func testPausedServiceCannotOfferReadyCopyConsent() async throws {
+        let (raw, inspection, _, _) = try fixture(), peer = FilePreparationPeer(raw)
+        let model = ProjectFilePreparationModel(account: inspection.scope.account, origin: inspection.scope.origin, incarnation: UUID(), vault: ProjectFilePreparationVault(io: FilePreparationIO()), service: peer, current: { true })
+        await model.prepare(inspection); XCTAssertNotNil(model.consent(for: inspection))
+        var fields = raw["inspection"]!.object
+        fields["file_preparation"] = .object(["protocol": .number(1), "enabled": .bool(false)])
+        let paused = try TeamProjectAdoptionInspection(fields, scope: inspection.scope)
+        XCTAssertTrue(model.request?.matches(paused) == true)
+        XCTAssertNil(model.consent(for: paused)); XCTAssertNotNil(model.consent(for: inspection))
+        // Idle Stop must not revoke an already reviewed, ready preparation.
+        model.stop(); XCTAssertNotNil(model.consent(for: inspection))
+    }
+
     @MainActor func testAnotherWindowClearingSavedRequestRevokesLocalConsent() async throws {
         let (raw,i,_,_) = try fixture(), io=FilePreparationIO(), peer=FilePreparationPeer(raw), vault=ProjectFilePreparationVault(io: io)
         let model=ProjectFilePreparationModel(account:i.scope.account,origin:i.scope.origin,incarnation:UUID(),vault:vault,service:peer,current:{true})

@@ -46,3 +46,11 @@ swift test --scratch-path ~/Library/Caches/TaskfoldBuild/core-ios --filter 'Proj
 ```
 
 The Mac repo uses its own core-mac scratch path. Each repository owns its app/project/package bindings, service, migration, captured fixture and tests. No sibling checkout is required.
+
+## Follow-up: responsive Stop and paused service
+
+Stop now immediately releases the preparation controls, preserving the exact saved request. Continue can reconcile that same request without waiting for the previous HTTP response; a late response cannot overwrite progress or clear the newer run’s busy state. Closing clears the private screen immediately while retaining recovery. A paused attempt cannot provide sharing consent. An already admitted private copy may still finish on the server; Stop does not assert server cancellation or deletion.
+
+When a fresh project inspection says file transfer is unavailable, the screen hides Continue and sharing consent, explains the pause, and keeps read-only Check and explicit Cancel available. Review and final confirmation use the same inspection-bound consent check. Existing server validation remains authoritative.
+
+See [follow-up verification](controls-verification.json) for the current focused checks and build results. The full native interaction, accessibility and provider acceptance listed above remains pending; no normal gate or installed app changed.

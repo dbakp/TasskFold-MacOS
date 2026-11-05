@@ -11006,3 +11006,8 @@ The owning service now signs explicit immutable-copy consent into the existing p
 ### 5 November — native project-file controls and saved recovery built
 
 The existing project-transfer view now includes private preparation progress, Stop/Continue, explicit sharing consent, saved-request review and exact file-policy confirmation. Requests use the Keychain-backed conditional command vault before networking, resolve without starting work, and cancel even before a lost first reply can create a late preparation. The owning schema and real local APIs pass 100 checks; 114 client cases (including 36 existing upload regressions) and 27 handler cases pass per repo. Both signed current app builds pass. Native interaction/accessibility/secure storage, Stop/close latency, wider lifecycle/combined policies and hosted providers remain unaccepted. Normal apps and feature gates are unchanged. [Evidence and remaining acceptance](native-project-files/README.md).
+
+
+### 5 November — project-file Stop responsiveness follow-up
+
+Stop/Close now release private preparation controls immediately; a superseded response cannot unlock or overwrite a newer run. The exact saved request remains recoverable. Disabled-service inspection hides Continue/sharing consent and offers Check/Cancel. Focused model races and current build verification are recorded in `native-project-files/controls-verification.json`. Full native journey/accessibility acceptance remains open; normal gates and installed apps are unchanged.

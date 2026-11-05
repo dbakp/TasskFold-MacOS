@@ -363,8 +363,12 @@ struct TeamProjectAdoptionView: View {
                 Text("Prepare private copies first. They become available to people with access to the destination only after you confirm the transfer. Original files stay private.").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 if let files, let request = files.request {
                     if request.matches(inspection) {
-                        fileProgress(files)
-                        if let consent = files.consent {
+                        fileProgress(files, canContinue: inspection.filePreparationSupported)
+                        if !inspection.filePreparationSupported {
+                            Text("File transfers are currently unavailable. Your saved preparation and originals remain private. You can check or cancel it, then review again when transfers are available.")
+                                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
+                        if let consent = files.consent(for: inspection) {
                             Toggle("Share \(consent.count) prepared \(consent.count == 1 ? "file" : "files") with these projects", isOn: $shareFileCopies)
                                 .disabled(preparing || files.busy).accessibilityIdentifier("projectTransferFileConsent")
                         }
@@ -382,7 +386,7 @@ struct TeamProjectAdoptionView: View {
             }
         }
     }
-    @ViewBuilder private func fileProgress(_ files: ProjectFilePreparationModel) -> some View {
+    @ViewBuilder private func fileProgress(_ files: ProjectFilePreparationModel, canContinue: Bool = true) -> some View {
         if let page = files.page {
             if page.state == .committed {
                 Label("This transfer already completed", systemImage: "checkmark.circle")
@@ -404,8 +408,11 @@ struct TeamProjectAdoptionView: View {
         if files.busy {
             Button("Stop preparing", systemImage: "stop.circle") { shareFileCopies = false; files.stop() }.accessibilityIdentifier("stopProjectFiles")
         } else if files.page?.state != .committed {
-            if files.page?.state != .cancelled && files.page?.state != .expired && files.consent == nil {
+            if canContinue && files.page?.state != .cancelled && files.page?.state != .expired && files.consent == nil {
                 Button("Continue preparing files") { Task { shareFileCopies = false; await files.resume() } }.accessibilityIdentifier("resumeProjectFiles")
+            }
+            if !canContinue {
+                Button("Check saved file preparation") { Task { shareFileCopies = false; await files.load() } }.accessibilityIdentifier("checkProjectFiles")
             }
             Button("Cancel file preparation", role: .destructive) { Task { shareFileCopies = false; review = nil; await files.cancel() } }.accessibilityIdentifier("cancelProjectFiles")
         }
@@ -421,7 +428,7 @@ struct TeamProjectAdoptionView: View {
     }
     private func fileConsentsMet(_ inspection: TeamProjectAdoptionInspection) -> Bool {
         guard inspection.filePreparationSupported else { return true }
-        return shareFileCopies && files?.consent != nil && files?.request?.matches(inspection) == true
+        return shareFileCopies && files?.consent(for: inspection) != nil
     }
     private func loadFiles() async {
         guard current, let origin = try? store.backend.accountRemovalOrigin else { return }
@@ -469,13 +476,13 @@ struct TeamProjectAdoptionView: View {
         let id = UUID(); epoch = id; preparing = true; message = nil; defer { if epoch == id { preparing = false } }
         do {
             let d = try i.people.map { person -> TeamProjectAdoptionDecision in guard let choice = choices[person.decisionID!], let user = person.user else { throw TeamProjectAdoptionValue.invalid }; return try TeamProjectAdoptionDecision(project: person.project, user: user, choice: choice) }
-            let value = try await store.backend.reviewProjectAdoption(i, decisions: d, connectionPolicy: pauseConnections ? .pause : nil, recordingPolicy: i.needsRecordingCustody && recordingConsentsMet(i) ? i.supportedRecordingPolicy : nil, fileConsent: shareFileCopies && files?.request?.matches(i) == true ? files?.consent : nil)
+            let value = try await store.backend.reviewProjectAdoption(i, decisions: d, connectionPolicy: pauseConnections ? .pause : nil, recordingPolicy: i.needsRecordingCustody && recordingConsentsMet(i) ? i.supportedRecordingPolicy : nil, fileConsent: shareFileCopies ? files?.consent(for: i) : nil)
             guard reviewCurrent, epoch == id else { throw TeamProjectAdoptionValue.invalid }; review = value
         } catch { guard current, epoch == id else { return }; message = "The saved contents or access may have changed. Start a fresh review before transferring." }
     }
     private func confirm(_ r: TeamProjectAdoptionReview) async {
-        guard reviewCurrent, review == r, r.fileConsent == nil || (shareFileCopies && r.fileConsent == files?.consent), r.recordingPolicy == nil || recordingConsentsMet(r.inspection), let model else { message = "Finish any edits and refresh this review before transferring."; return }
-        do { let command = try TeamProjectAdoptionCommand(review: r); await model.send(command, canAuthor: { reviewCurrent && review == r && (r.fileConsent == nil || (shareFileCopies && r.fileConsent == files?.consent)) && (r.recordingPolicy == nil || recordingConsentsMet(r.inspection)) }); await received() }
+        guard reviewCurrent, review == r, r.fileConsent == nil || (shareFileCopies && r.fileConsent == files?.consent(for: r.inspection)), r.recordingPolicy == nil || recordingConsentsMet(r.inspection), let model else { message = "Finish any edits and refresh this review before transferring."; return }
+        do { let command = try TeamProjectAdoptionCommand(review: r); await model.send(command, canAuthor: { reviewCurrent && review == r && (r.fileConsent == nil || (shareFileCopies && r.fileConsent == files?.consent(for: r.inspection))) && (r.recordingPolicy == nil || recordingConsentsMet(r.inspection)) }); await received() }
         catch { message = "This review expired or changed. Review the transfer again." }
     }
     private func received() async {

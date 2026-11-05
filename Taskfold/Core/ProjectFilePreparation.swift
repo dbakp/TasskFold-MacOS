@@ -110,9 +110,10 @@ enum ProjectFilePreparationAction: Equatable, Sendable {
     private(set) var request: ProjectFilePreparationRequest?
     private(set) var pages: [ProjectFilePreparationPage] = []
     private(set) var busy = false
+    private(set) var paused = false
     private(set) var recoveryLoaded = false
     private(set) var message: String?
-    var consent: ProjectFileConsent? { guard !closed, current(), !busy, request == pages.first?.request, let expires = page?.expires, expires > Date() else { return nil }; return try? ProjectFileConsent(pages: pages) }
+    var consent: ProjectFileConsent? { guard !closed, current(), !busy, !paused, request == pages.first?.request, let expires = page?.expires, expires > Date() else { return nil }; return try? ProjectFileConsent(pages: pages) }
     var page: ProjectFilePreparationPage? { pages.first }
     @ObservationIgnored private let vault: ProjectFilePreparationVault
     @ObservationIgnored private let service: any ProjectFilePreparationService
@@ -122,8 +123,18 @@ enum ProjectFilePreparationAction: Equatable, Sendable {
     private var closed = false
     private var run = UUID()
     init(account: String, origin: String, incarnation: UUID, vault: ProjectFilePreparationVault, service: any ProjectFilePreparationService, current: @escaping () -> Bool) { self.account = account; self.origin = origin; self.incarnation = incarnation; self.vault = vault; self.service = service; self.current = current }
-    func close() { closed = true; run = UUID(); lease.cancel(); request = nil; pages = []; message = nil; recoveryLoaded = false }
-    func stop() { run = UUID(); message = "Preparation paused. Files remain private; continue when you’re ready." }
+    func close() { closed = true; run = UUID(); busy = false; paused = true; lease.cancel(); request = nil; pages = []; message = nil; recoveryLoaded = false }
+    func stop() {
+        guard !closed, busy else { return }
+        // A request may finish on the server after Stop. Its immutable identity
+        // is retained for reconciliation, but it no longer owns this screen.
+        run = UUID(); busy = false; paused = true
+        message = "Preparation paused. Files remain private; continue when you’re ready."
+    }
+    func consent(for inspection: TeamProjectAdoptionInspection) -> ProjectFileConsent? {
+        guard inspection.filePreparationSupported, request?.matches(inspection) == true else { return nil }
+        return consent
+    }
     private func check(_ id: UUID) throws { try Task.checkCancellation(); try lease.check(); guard !closed, current(), run == id else { throw CancellationError() } }
     private func recover(_ id: UUID) async throws { recoveryLoaded = false; let saved = try await vault.pending(account: account, origin: origin); try check(id); if request != saved { pages = [] }; request = saved; recoveryLoaded = true }
     func load() async { await perform { id in try await self.recover(id); if let request = self.request { try await self.resolve(request, id: id) } } }
@@ -182,7 +193,8 @@ enum ProjectFilePreparationAction: Equatable, Sendable {
         try await resolve(request, id: id)
     }
     private func perform(_ action: (UUID) async throws -> Void) async {
-        guard !closed, current(), !busy else { return }; let id = UUID(); run = id; busy = true; message = nil; defer { busy = false }
+        guard !closed, current(), !busy else { return }; let id = UUID(); run = id; busy = true; paused = false; message = nil
+        defer { if run == id { busy = false } }
         do { try check(id); try await action(id); try check(id) }
         catch { guard !closed, current(), run == id else { return }; pages = []; message = request == nil ? "File preparation couldn’t start. Check this device’s saved request storage and try again. Original files remain unchanged." : "File preparation couldn’t be confirmed. Your exact request is saved; retry or cancel it. Original files remain unchanged." }
     }

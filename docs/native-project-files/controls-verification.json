@@ -1,0 +1,211 @@
+{
+  "date": "2026-11-05",
+  "platform": "mac",
+  "focusedCore": {
+    "passed": 76,
+    "failed": 0,
+    "filePreparationCases": 17,
+    "adoptionCases": 59,
+    "cases": [
+      "ProjectFilePreparationTests.testAnotherWindowClearingSavedRequestRevokesLocalConsent",
+      "ProjectFilePreparationTests.testBackendRefusesWrongAccountBeforeNetwork",
+      "ProjectFilePreparationTests.testBackendUsesFixedPrivateGatewayWithExactFrozenBodyAndExplicitConsent",
+      "ProjectFilePreparationTests.testCloseImmediatelyReleasesControlsAndFencesHeldReply",
+      "ProjectFilePreparationTests.testEmptyCancellationIsClosedButCannotAuthorizeSharing",
+      "ProjectFilePreparationTests.testForeignResponseAndClosedContextCannotProduceConsent",
+      "ProjectFilePreparationTests.testGenuineServiceContractProducesExplicitSignedCommandAndExactColdReceipt",
+      "ProjectFilePreparationTests.testInventoryPreparationOrUnrequestedReceiptNeverSubstituteForConsent",
+      "ProjectFilePreparationTests.testLargeManifestPagesOnlyAtStartAndFinish",
+      "ProjectFilePreparationTests.testLateStoppedRunCannotUnlockOrReplaceNewRun",
+      "ProjectFilePreparationTests.testLostFirstReplyColdLoadIsReadOnlyThenExplicitResumeReusesExactRequest",
+      "ProjectFilePreparationTests.testPausedServiceCannotOfferReadyCopyConsent",
+      "ProjectFilePreparationTests.testPlanRejectsForeignScopeMissingKeysOverexposureAndFalseCommit",
+      "ProjectFilePreparationTests.testRequestColdDecodeRevalidatesBodyAndBoundedCounts",
+      "ProjectFilePreparationTests.testSecureWriteFailureMakesNoNetworkCallOrSavedClaim",
+      "ProjectFilePreparationTests.testStopKeepsRequestAndIgnoresLateCopyResult",
+      "ProjectFilePreparationTests.testTransferredCopyRetainsExistingUploadReceiptCodec",
+      "TeamProjectAdoptionTests.testAccountSwitchDuringReplyCannotClearPrivateRecovery",
+      "TeamProjectAdoptionTests.testActualChildRecordAdoptionSQLReviewAndReceipt",
+      "TeamProjectAdoptionTests.testActualPausedConnectionStillLoadsInExistingSettingsDecoder",
+      "TeamProjectAdoptionTests.testActualSQLChildHistoryInspectionReviewAndReceipt",
+      "TeamProjectAdoptionTests.testActualSQLCombinedStopAndConnectionPreservesExistingWire",
+      "TeamProjectAdoptionTests.testActualSQLInspectionReviewAndReceipt",
+      "TeamProjectAdoptionTests.testActualSQLMixedRecordingMoveAndStopContract",
+      "TeamProjectAdoptionTests.testActualSQLPausePolicyAndReceiptCounts",
+      "TeamProjectAdoptionTests.testActualSQLPendingOnlyMoveDoesNotInventPublishedRecordings",
+      "TeamProjectAdoptionTests.testActualSQLPrivateHistoryBindsAllCountsAndConnectionPause",
+      "TeamProjectAdoptionTests.testActualSQLRecordingConsentCommandAndReceipt",
+      "TeamProjectAdoptionTests.testActualSQLRecordingInventoryKeepsPrivateDetailsOnServer",
+      "TeamProjectAdoptionTests.testActualSQLRemovedOnlyDoesNotInventMovingOrStoppedRecordings",
+      "TeamProjectAdoptionTests.testAppliedPauseReplyLossPreservesExactPolicyAcrossRelaunch",
+      "TeamProjectAdoptionTests.testArchivePreviewSeparatesOwnStateFromDestinationInheritance",
+      "TeamProjectAdoptionTests.testBackendCarriesExactPublishedAndUnfinishedChoices",
+      "TeamProjectAdoptionTests.testBackendSendsRecordingConsentOnlyWhenExplicitlyRequested",
+      "TeamProjectAdoptionTests.testBackendUsesTheActualAdoptionProtocolAndSessionFence",
+      "TeamProjectAdoptionTests.testChildCustodyNeedsPairedVersionPolicyAndBoundedCount",
+      "TeamProjectAdoptionTests.testChildHistoryReviewHasAnExplicitBoundedVersion",
+      "TeamProjectAdoptionTests.testClosingAnInFlightTransferKeepsOriginalRecovery",
+      "TeamProjectAdoptionTests.testCustodyPolicyCannotChangeBetweenInspectionAndReview",
+      "TeamProjectAdoptionTests.testDifferentOriginAndAccountNeverShareRecovery",
+      "TeamProjectAdoptionTests.testEveryAcceptedCollaboratorNeedsAnExplicitDecision",
+      "TeamProjectAdoptionTests.testForeignReplyAndCleanupFailureKeepTheRequest",
+      "TeamProjectAdoptionTests.testFreshAuthoringAndExpiredRetryAreDifferent",
+      "TeamProjectAdoptionTests.testLegacyInspectionDoesNotClaimPrivateSubtaskRetention",
+      "TeamProjectAdoptionTests.testLostReplyRelaunchRetriesTheExactNonce",
+      "TeamProjectAdoptionTests.testMalformedRecordingInventoryNeverBecomesTransferConsent",
+      "TeamProjectAdoptionTests.testMixedRecordingConsentSurvivesColdExactRetry",
+      "TeamProjectAdoptionTests.testNewAuthoringCannotBypassTheCleanWorkspaceGate",
+      "TeamProjectAdoptionTests.testNoNetworkWriteBeforeDurablePrivateSave",
+      "TeamProjectAdoptionTests.testOnlyIdentityAndProofFieldsEnterThePrivateRetry",
+      "TeamProjectAdoptionTests.testOtherWindowsCannotReplaceThePendingTransfer",
+      "TeamProjectAdoptionTests.testPausePrivateCommandKeepsOnlyActionAndBoundedCounts",
+      "TeamProjectAdoptionTests.testPauseReceiptCannotHideActionsOrChangeCounts",
+      "TeamProjectAdoptionTests.testPauseRequiresExplicitConsentAndMatchingSummary",
+      "TeamProjectAdoptionTests.testPrivateHistoryAndConnectionConsentSurviveColdExactRetry",
+      "TeamProjectAdoptionTests.testPrivateHistoryCapabilityRejectsInvalidInventoryAndProtocol",
+      "TeamProjectAdoptionTests.testPrivateHistoryReceiptMustConfirmExactRetentionChoice",
+      "TeamProjectAdoptionTests.testPrivateHistorySavedMetadataAndBodyCountsCannotDiverge",
+      "TeamProjectAdoptionTests.testReceiptRequiresTheWholeReviewedForestAndExactCounts",
+      "TeamProjectAdoptionTests.testRecordingCapabilityMustMatchAvailableInventory",
+      "TeamProjectAdoptionTests.testRecordingConsentSurvivesSecureItemColdRetryAfterLostReply",
+      "TeamProjectAdoptionTests.testRecordingInventoryCannotChangeBetweenInspectionAndReview",
+      "TeamProjectAdoptionTests.testRecordingInventoryCannotEnableTransferBeforeCustodyCommit",
+      "TeamProjectAdoptionTests.testRecordingSupportNeverSubstitutesForExplicitConsent",
+      "TeamProjectAdoptionTests.testRemovalAndLeaseFencesProtectAdoptionRecovery",
+      "TeamProjectAdoptionTests.testRemovedHistoryRequiresItsOwnExplicitChoice",
+      "TeamProjectAdoptionTests.testReviewCannotChangeAChoiceOrHideAnInvitation",
+      "TeamProjectAdoptionTests.testReviewedClearIsLocalAndDoesNotSendOrUndo",
+      "TeamProjectAdoptionTests.testSavedRecordingConsentAndAcknowledgedCountAreBoundTogether",
+      "TeamProjectAdoptionTests.testSourceForestCannotBeRetargetedOrFabricated",
+      "TeamProjectAdoptionTests.testUnfinishedCapabilityRejectsUnsupportedInventoryAndProtocol",
+      "TeamProjectAdoptionTests.testUnfinishedReceiptMustConfirmBothOriginalCountsAndPolicy",
+      "TeamProjectAdoptionTests.testUnfinishedStoppingRequiresItsOwnExplicitPolicy",
+      "TeamProjectAdoptionTests.testUnfinishedStoredCountsCannotBeStrippedOrChangeTheSavedBody",
+      "TeamProjectAdoptionTests.testUnreadableRecoveryCannotStartAFreshTransfer",
+      "TeamProjectAdoptionTests.testVaultCapacitySupports1000IdentityOnlyDecisions"
+    ]
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectFilePreparation.swift": "3444263a3725199c8c971b53d8747c02da4f4d965f42f0a5ad0439c0bc25741b",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "5c966de6d300382ac1d4cd4c00771863de68f7283c2bcd67ec4607c10ee09c95",
+    "TaskfoldTests/ProjectFilePreparationTests.swift": "78c6e937d4accbcd71a38e082a2224c249dca32c66b4e3dfbc5508ddf73d3d64"
+  },
+  "scope": [
+    "Immediate Stop/Close state release",
+    "Held old reply cannot overwrite or unlock a newer run",
+    "Saved exact request survives Stop and Close",
+    "Inspection-bound consent excludes paused service"
+  ],
+  "nativeRuntimeAccepted": false,
+  "hostedDeployment": false,
+  "normalGatesChanged": false,
+  "installedAppsUnchanged": true,
+  "assistance": "On-device only",
+  "furtherIPhoneInstallation": "Deferred by user",
+  "remaining": [
+    "Full native preparation/transfer/restore interaction and accessibility",
+    "OS secure-storage/session/window acceptance",
+    "Wider provider, lifecycle and volume acceptance"
+  ],
+  "build": {
+    "platform": "mac",
+    "buildOnly": true,
+    "sourceSHA256": {
+      "Taskfold/Core/ProjectFilePreparation.swift": "3444263a3725199c8c971b53d8747c02da4f4d965f42f0a5ad0439c0bc25741b",
+      "Taskfold/Core/TeamProjectAdoption.swift": "1effa533fbced7a347588f4a5c41140b8bb294a318e836fd1884581501986e82",
+      "Taskfold/Views/TeamProjectAdoptionView.swift": "5c966de6d300382ac1d4cd4c00771863de68f7283c2bcd67ec4607c10ee09c95",
+      "Taskfold/Core/TaskActivity.swift": "7216b69136c1dcd4297bc3de54d27cefeea59d86cd197a9909f618b3d6246068",
+      "Taskfold/Views/SidebarView.swift": "ffe405dae88cebf15fb7b742c8e49d22bb835657d5cd1b3c5aecb27dc97921b7",
+      "Taskfold/Core/ProjectMemberReads.swift": "42646cb9c8da6eda2106358a65d083e76e5bd099eb91a9d769a6e8873259fc3e",
+      "Taskfold/Core/OnDeviceAssistance.swift": "16f18401a70b061277717e96440a182d8feca3f3b1bfb2175de5d3447b464f92",
+      "Taskfold/Core/FilterAssistance.swift": "442c0a4888aa6e1ad2af547a05463d2e872958d0f6cc74313ab226c275fdc2b6",
+      "Taskfold/Views/FilterAssistanceView.swift": "5d6df884eb9df945f4c9daa0fc16d3be430496c735608e528da3e3d89616dd57",
+      "Taskfold/Views/SavedViews.swift": "d1d1296fac4330e02309090017e283d1ecbab88db938b4d184a587457627ba39",
+      "Taskfold/Core/Filters.swift": "9b13361359443c94da2eb089aaea52dca8e353a69fff4dadf211fdc6e61f97c7",
+      "Taskfold/Core/TaskBreakdown.swift": "8c408e3faa839ff68890ead42d7e001aea79017bca6bbd758abef770e2a306bc",
+      "Taskfold/Views/TaskBreakdownView.swift": "be4318fa36ce0ca89b0f8defa79276312bdb7ad65cd1a1eed53ffe69002dd3c5",
+      "Taskfold/Views/TaskInspector.swift": "ff273397b40ce40bd5351af89c2e50e798353e3eb5091cc14c5acbc997382bb6",
+      "Taskfold/Core/Planner.swift": "5b72722ff5a9f1ecd303267c70d4aece9a3d56c88705cfa0ee412383c78305fd",
+      "Taskfold/Core/Models.swift": "f93233a2f1a98b8ac5127e08ceea76783ac54aff70d8aa761baac42de2c49837",
+      "Taskfold/Core/NoteMarkup.swift": "8bc28bec74e5e525186e15d639a0147fdf4071aa6737c51c72b940a22cb9e90b",
+      "Taskfold/Views/NoteFormattingView.swift": "53192b45e4d4cb142da4b19475e4b9a1c5c7332b61226a33d2e1b84a8a9bdedd",
+      "Taskfold/Views/PinnedNotesView.swift": "c461c2787b3484fba5d57901ac5c15c415ced3d241290caa462c0bb47f7e71cb",
+      "Taskfold/Core/Backend.swift": "24766210c99e3fb3727d3f6b25bebadbd38f171a5b5e7484e67b971c99e1f456",
+      "Taskfold/Core/Backups.swift": "f74554e10a7920d2a847093e10632c5ee51bc01662622de2d371eb9057d54824",
+      "Taskfold/Core/Store.swift": "c800c40f94c40441fcf10d840d21f83c95ec3e420fbe72d2bdf30aad4b1bff09",
+      "Taskfold/TeamTemplateNativeFixture.swift": "8bacac1de13acf84512205ced304e4f569786a30935e253e12c00a3e38447ba1"
+    },
+    "xcodeExitCode": 0,
+    "ordinaryAppUnchanged": true,
+    "runtimeAccepted": false,
+    "strictSignatureVerified": true,
+    "binarySHA256": "54212f2b64eb959c8847df8587379a52104aa9258d903b9d4df663cb706b70a6",
+    "sourceUnchanged": true
+  },
+  "storageCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 56535924736,
+    "actions": [
+      {
+        "kind": "summarizedSuccessfulTestLog",
+        "path": "/tmp/taskfold-file-controls-ios-core.log",
+        "allocatedBytes": 65536
+      },
+      {
+        "kind": "summarizedSuccessfulTestLog",
+        "path": "/tmp/taskfold-file-controls-ios-build.log",
+        "allocatedBytes": 53248
+      },
+      {
+        "kind": "summarizedSuccessfulTestLog",
+        "path": "/tmp/taskfold-file-controls-ios-build-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedSuccessfulTestLog",
+        "path": "/tmp/taskfold-file-controls-mac-core.log",
+        "allocatedBytes": 69632
+      },
+      {
+        "kind": "summarizedSuccessfulTestLog",
+        "path": "/tmp/taskfold-file-controls-mac-build.log",
+        "allocatedBytes": 40960
+      },
+      {
+        "kind": "summarizedSuccessfulTestLog",
+        "path": "/tmp/taskfold-file-controls-mac-build-driver.log",
+        "allocatedBytes": 4096
+      }
+    ],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 669732864,
+        "projectedAllocatedBytes": 669732864
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 530026496,
+        "projectedAllocatedBytes": 530026496
+      }
+    ],
+    "freeAfterBytes": 56371552256,
+    "actualFreeChangeBytes": -164372480,
+    "coreCaches": [
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+        "beforeAllocatedBytes": 667668480,
+        "afterAllocatedBytes": 667668480,
+        "removed": []
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+        "beforeAllocatedBytes": 612732928,
+        "afterAllocatedBytes": 612732928,
+        "removed": []
+      }
+    ]
+  }
+}
