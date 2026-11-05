@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-05",
+  "owningPlatform": "mac",
+  "testRuntime": "SwiftPM on this Mac",
+  "selectedTests": 125,
+  "passed": 123,
+  "skipped": 2,
+  "failures": 0,
+  "realModelProbesRequested": true,
+  "realGenerationAccepted": false,
+  "modelUnavailableReasons": [
+    "Turn on Apple Intelligence in system settings to suggest steps on this device.",
+    "Turn on Apple Intelligence in system settings to suggest steps on this device."
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "16f18401a70b061277717e96440a182d8feca3f3b1bfb2175de5d3447b464f92",
+    "Taskfold/Core/FilterAssistance.swift": "442c0a4888aa6e1ad2af547a05463d2e872958d0f6cc74313ab226c275fdc2b6",
+    "Taskfold/Core/Filters.swift": "0daded24883f4eea1e4776473daa231c118400cd67ddff78a298a83f65f5ffa1",
+    "Taskfold/Core/TaskBreakdown.swift": "8c408e3faa839ff68890ead42d7e001aea79017bca6bbd758abef770e2a306bc",
+    "Taskfold/Views/FilterAssistanceView.swift": "5d6df884eb9df945f4c9daa0fc16d3be430496c735608e528da3e3d89616dd57",
+    "Taskfold/Views/SavedViews.swift": "d4286e32a7d3399586b08ea22bd2449efce834f12d3d5ca07bceedc6d1ce9a48",
+    "TaskfoldTests/FilterAssistanceTests.swift": "a7f243f60c6f0e6c9a70ae435e43c1f9d88d55cf51e3e77188bfc7a666ec6498"
+  },
+  "testLogSHA256": "ef332044ab97ac98773e5fec0b59714e230ab8a5745f05877eac0fb577062704",
+  "nativeFlowsAccepted": false,
+  "normalAppsUpdated": false,
+  "syntheticOnly": true
+}

@@ -20,6 +20,27 @@ struct SavedViewEditor: View {
     @State private var loadFailure: String?
     @State private var saveFailure: String?
     @State private var targetRequest: SavedFilterTargetRequest?
+    @State private var assistance: FilterAssistanceRequest?
+    private struct AppliedSuggestion { let request: FilterAssistanceRequest; let proposal: FilterSuggestion }
+    @State private var appliedSuggestion: AppliedSuggestion?
+    @State private var openingWorkspace: WorkspaceBinding?
+    @State private var openingSession: UUID?
+    private var assistanceSource: JSON {
+        .object(["record": .object(record.fields), "saved": store.record("saved_views", id: record.id).map { .object($0.fields) } ?? .null,
+            "advanced": .bool(advanced), "expression": .string(expression), "match_any": .bool(matchAny),
+            "conditions": .array(conditions.map { .object(["id": .string($0.id.uuidString), "rule": $0.rule.json]) })])
+    }
+    private var workspaceCurrent: Bool {
+        openingWorkspace.map { store.workflowPreviewReady($0) } == true && openingSession == store.backend.reminderSessionIncarnation
+    }
+    private func openAssistance() {
+        guard loadFailure == nil, workspaceCurrent, let openingWorkspace, let openingSession else { return }
+        let original: String
+        if advanced { original = expression }
+        else if case .success(let rule) = parsed { original = rule.expression(in: store.filterContext) }
+        else { original = "" }
+        assistance = FilterAssistanceRequest(workspace: openingWorkspace, session: openingSession, source: assistanceSource, expression: original, includeCompleted: record["include_completed"].flag)
+    }
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
         ("all","All tasks"),("root","Main tasks"),("subtask","Subtasks"),("parent","Tasks with subtasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_next_days","Planned in next days"),("planned_past_days","Planned in past days"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_next_days","Due in next days"),("effective_due_past_days","Due in past days"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_next_days","Deadline within days"),("deadline_past_days","Deadline in past days"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
@@ -80,6 +101,8 @@ struct SavedViewEditor: View {
                         .font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
                 }
                 Section {
+                    Button("Suggest a filter", systemImage: "wand.and.stars", action: openAssistance)
+                        .disabled(!loaded || loadFailure != nil || !workspaceCurrent).accessibilityIdentifier("suggestSavedFilter")
                     TextField("Filter name", text: text("name")).focused($focusedField, equals: "name").accessibilityIdentifier("savedViewName")
                     if let nameFailure { Label(nameFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterNameValidationError") }
                     Toggle("Edit expression", isOn: Binding(get: { advanced }, set: { value in
@@ -173,8 +196,8 @@ struct SavedViewEditor: View {
             .alert("Could not save filter", isPresented: Binding(get: { saveFailure != nil }, set: { if !$0 { saveFailure = nil } })) {
                 Button("OK") { saveFailure = nil }
             } message: { Text(saveFailure ?? "") }
-            .task(id: advanced || conditions.contains { $0.field == "assignee" || $0.field == "assigned_by" || $0.field == "assignee_name" }) {
-                guard !store.localMode, advanced || conditions.contains(where: { $0.field == "assignee" || $0.field == "assignee_name" }) else { return }
+            .task(id: [advanced || conditions.contains { $0.field == "assignee" || $0.field == "assigned_by" || $0.field == "assignee_name" }, appliedSuggestion == nil]) {
+                guard !store.localMode, appliedSuggestion == nil, advanced || conditions.contains(where: { $0.field == "assignee" || $0.field == "assignee_name" }) else { return }
                 for project in store.projects { _ = try? await store.refreshProjectMembers(project.id) }
             }
             .confirmationDialog("Delete this filter?", isPresented: $deleting, titleVisibility: .visible) { Button("Delete", role: .destructive) { store.remove("saved_views", record.id); dismiss() } } message: { Text("Your tasks stay in place.") }
@@ -182,6 +205,18 @@ struct SavedViewEditor: View {
         .tint(Color.taskfold)
         // The editor owns this sheet outside reusable Form rows. In accessibility
         // layouts the condition row also has a link; target taps must not push both.
+        .sheet(item: $assistance) { request in
+            FilterAssistanceView(request: request, source: { assistanceSource }, onApply: { proposal in
+                guard workspaceCurrent, request.matches(assistanceSource, workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation) else { throw FilterFailure(message: "This filter or workspace changed. Reopen its current details.") }
+                advanced = true; expression = proposal.expression
+                appliedSuggestion = AppliedSuggestion(request: request, proposal: proposal)
+            })
+        }
+        .onChange(of: expression) { _, value in
+            if let appliedSuggestion, !appliedSuggestion.proposal.expression.utf8.elementsEqual(value.utf8) { self.appliedSuggestion = nil }
+        }
+        .onChange(of: advanced) { _, value in if !value { appliedSuggestion = nil } }
+        .onChange(of: store.workspaceGeneration) { _, _ in if loaded && !workspaceCurrent { assistance = nil; dismiss() } }
         .sheet(item: $targetRequest) { request in
             NavigationStack {
                 SavedFilterTargetChooser(request: request, selected: conditions.first { $0.id == request.condition }?.value ?? "") { id in
@@ -357,6 +392,7 @@ struct SavedViewEditor: View {
     private func load() {
         guard !loaded else { return }
         loaded = true; baseline = store.record("saved_views", id: record.id)
+        openingWorkspace = .init(account: store.userID, generation: store.workspaceGeneration); openingSession = store.backend.reminderSessionIncarnation
         do {
             let rule = try FilterRule(document: record["query_ast"])
             expression = rule.expression(in: store.filterContext)
@@ -367,7 +403,15 @@ struct SavedViewEditor: View {
         }
     }
     private func save() {
+        guard workspaceCurrent else { saveFailure = "The workspace changed. Reopen the filter before saving. Your saved filter is unchanged."; return }
         guard case .success(let rule) = parsed, failure == nil else { return }
+        if let appliedSuggestion, advanced {
+            do {
+                guard store.workflowPreviewReady(appliedSuggestion.request.workspace), appliedSuggestion.request.session == store.backend.reminderSessionIncarnation else { throw FilterFailure(message: "The workspace changed. Reopen the filter before saving.") }
+                let checked = try appliedSuggestion.proposal.revalidated(in: store.filterContext)
+                guard AuthoredValueComparison.exactJSON(checked.rule.document, rule.document) else { throw FilterFailure(message: "The expression changed. Review it again before saving.") }
+            } catch { saveFailure = error.localizedDescription + " Reopen Suggest a filter and check its preview. Your draft is still here."; return }
+        }
         record["name"] = .string(record.name.trimmingCharacters(in: .whitespacesAndNewlines)); record["query_ast"] = rule.document
         if store.save("saved_views", record, baseline: baseline) {
             dismiss()

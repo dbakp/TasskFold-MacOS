@@ -7961,3 +7961,8 @@ Exact reads now recognize the same immutable nested-array buffer without visitin
 ### Reviewed on-device steps — 5 November 2026
 
 Both independently owned task editors now have optional Apple Intelligence step generation with editable review and explicit Add selected. Only the entered description is used; literal titles append through the ordinary checklist path. Exact source/workspace/session and late-result checks preserve original work. Each owning Core suite has 40 passes plus one explicit real-model skip: Apple Intelligence is disabled on this Mac. Real inference quality/latency and native review/save/Undo/cold/account/accessibility acceptance remain open. Filter suggestions and cloud provider/cost/data-handling decisions remain open; no cloud fallback or normal gate change. [Detailed scope and evidence](task-breakdown/README.md).
+
+
+### Reviewed filter expressions — 5 November 2026
+
+Both filter editors now include optional on-device expression generation with editable query, deterministic meaning/match preview and explicit Use then Save. Only the entered description goes to the model. Background preparation, exact source/context fences and reference checks at Use/Save preserve the original filter; person-directory reads are demand-driven in the helper. Each owning Core suite has 123 passes plus two real-model skips, and current signed app sources build. Real generation/native controls/save/history/cold/account/speech, genuine directory delivery and quality/latency remain unaccepted. Cloud decisions remain open; installed apps and frozen packages are unchanged. [Scope and evidence](filter-assistance/README.md).

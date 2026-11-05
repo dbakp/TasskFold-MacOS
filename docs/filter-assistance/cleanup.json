@@ -1,0 +1,84 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 56466227200,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 667901952,
+      "projectedAllocatedBytes": 667901952
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 526835712,
+      "projectedAllocatedBytes": 526835712
+    }
+  ],
+  "freeAfterBytes": 56466219008,
+  "actualFreeChangeBytes": -8192,
+  "retiredSupersededBuildOutputs": [
+    {
+      "path": "/tmp/taskfold-filter-assistance-ios-build.log",
+      "bytes": 60042,
+      "allocatedBytes": 61440,
+      "sha256": "ba05cd0da60c7b3e26dbdd5542f1ff2bf5f42dfd41dc4e38f86f836e14cc18bf"
+    },
+    {
+      "path": "/tmp/taskfold-filter-assistance-ios-build.json",
+      "bytes": 8026,
+      "allocatedBytes": 8192,
+      "sha256": "da0f24b4074590e15af19e07944ee76282920fa8ce5bd4b68ab74a6f5f279336"
+    },
+    {
+      "path": "/tmp/taskfold-filter-assistance-ios-final-build.log",
+      "bytes": 55544,
+      "allocatedBytes": 57344,
+      "sha256": "c15445cfe3659e82189429efbc81903ceea6186c07bdf6250c9232f341e2ffdc"
+    },
+    {
+      "path": "/tmp/taskfold-filter-assistance-ios-final-build.json",
+      "bytes": 8026,
+      "allocatedBytes": 8192,
+      "sha256": "c2fdd547dd44074ab45f735edaf853dac5863b6fd9ca46ac335cb297b85e13ce"
+    },
+    {
+      "path": "/tmp/taskfold-filter-assistance-mac-build.log",
+      "bytes": 44848,
+      "allocatedBytes": 45056,
+      "sha256": "5c5992804e7da6ad5c386d4160489f2a9afafc7306b9ec05fd31da234793f313"
+    },
+    {
+      "path": "/tmp/taskfold-filter-assistance-mac-build.json",
+      "bytes": 2146,
+      "allocatedBytes": 4096,
+      "sha256": "185e54f775614ed421f0b48d63b9f26b1694aaab460451a2dcd7571f2da17cbe"
+    },
+    {
+      "path": "/tmp/taskfold-filter-assistance-mac-build-driver.log",
+      "bytes": 2163,
+      "allocatedBytes": 4096,
+      "sha256": "5a3f2731bbd87baeaafce2824839c2940ffc157f479742eaea5ba431bf40acfb"
+    },
+    {
+      "path": "/tmp/taskfold-filter-assistance-mac-final-build.log",
+      "bytes": 40450,
+      "allocatedBytes": 40960,
+      "sha256": "e05a0ac575c58cf06a84d3d1b27a68cebf6046272bb907eaf28312f93fbccb6e"
+    },
+    {
+      "path": "/tmp/taskfold-filter-assistance-mac-final-build.json",
+      "bytes": 2146,
+      "allocatedBytes": 4096,
+      "sha256": "d6b97da9202a72db96cd1cc5526030baaf34724822eb8f575d4741dca1aa8009"
+    },
+    {
+      "path": "/tmp/taskfold-filter-assistance-mac-final-build-driver.log",
+      "bytes": 2163,
+      "allocatedBytes": 4096,
+      "sha256": "ff4ffd0b079f56ca9d88ea65304b9199133c2948f2b220bbc8226853fb1ebdbb"
+    }
+  ],
+  "freeAfterRetirementBytes": 56037576704
+}

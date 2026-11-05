@@ -1,7 +1,7 @@
 import Foundation
 import CryptoKit
 
-struct FilterFailure: LocalizedError, Equatable { var message: String; var errorDescription: String? { message } }
+struct FilterFailure: LocalizedError, Equatable { var message: String; var needsPeopleDirectory = false; var errorDescription: String? { message } }
 struct FilterReference: Hashable, Sendable {
     var id: String; var name: String; var projectID: String? = nil
     var parentID: String? = nil
@@ -68,7 +68,7 @@ private enum FilterProjectTree {
         return FilterNameBinding(field: "project_tree", value: target, ids: descendants, names: [], availableIDs: available)
     }
 }
-struct FilterContext {
+struct FilterContext: Sendable {
     var projects: [Record] = [], sections: [Record] = [], labels: [Record] = []
     var userID = ""
     var people: [Record] = []
@@ -102,7 +102,7 @@ struct FilterContext {
             }
             let ids = Set(matches.map(\.id))
             guard ids.count == 1, let id = ids.first, id == userID || UUID(uuidString: id) != nil else {
-                throw FilterFailure(message: ids.isEmpty ? "This collaborator is unavailable. Use their exact display name, email or ID, or refresh the project members." : "More than one collaborator matches this name. Use an email or ID.")
+                throw FilterFailure(message: ids.isEmpty ? "This collaborator is unavailable. Use their exact display name, email or ID, or refresh the project members." : "More than one collaborator matches this name. Use an email or ID.", needsPeopleDirectory: ids.count != 1)
             }
             return id == userID ? "me" : id
         }

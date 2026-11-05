@@ -10966,3 +10966,8 @@ Independent Mac and iOS Core implementations now assign collision columns with t
 ### Reviewed on-device task steps — 5 November 2026
 
 The Mac inspector now offers editable, explicitly applied step suggestions through Apple’s on-device model, with a grouped native review form. Existing autosave finishes before the source is captured; application uses normal draft/save/recovery paths. Exact source and account/session binding plus cancellation refusal pass owning Core checks. The real model is unavailable because Apple Intelligence is Off; native review/save/Undo/cold/VoiceOver and generated-quality acceptance remain pending. Cloud and filter assistance remain open. [Scope and evidence](task-breakdown/README.md). Installed app and frozen packages remain unchanged.
+
+
+### Reviewed filter assistance — 5 November 2026
+
+The Mac filter editor now has an optional on-device helper with editable expression, cancellable background validation, deterministic preview, explicit Use and separate Save. Reference/date bindings are checked again at Save; helper member reads occur only when a person lookup needs them. Shared availability handling preserves the task-step flow. Owning Core checks and current signatures pass; the locked Mac and disabled Apple Intelligence leave native/generation acceptance open. [Detailed scope](filter-assistance/README.md). Normal app/packages remain unchanged.
