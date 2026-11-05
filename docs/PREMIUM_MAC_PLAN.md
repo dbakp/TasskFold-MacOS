@@ -10991,3 +10991,8 @@ The sidebar reuses one aggregate for All tasks, projects and labels, replacing r
 ### Project file review — 5 November 2026
 
 The Mac transfer view now distinguishes stored, older and unavailable file references, including inline-comment attachments previously omitted from inspection. The inventory cannot authorize custody changes. Private provider metadata is actor-scoped and cannot become a foreign-file token oracle; normal inline-file limits are preserved. Whole-project file transfer and native acceptance remain open. [Evidence and remaining work](project-file-inventory/README.md). Assistance is on-device only by user choice; further iPhone installation is deferred.
+
+
+### 5 November — private project-file copy preparation
+
+The owning service now prepares immutable private copies of eligible actor-owned project attachments, verifies full bytes and SHA-256, and recovers lost upload/ready replies without duplicate writes. All copies remain reserved and inaccessible through direct user Storage access; the source project, files and discussion references remain intact. The complete Mac schema replays independently, with 69 genuine local Auth/REST/Storage checks and 22 handler tests passing. Explicit consent, atomic custody/project transfer, native pending recovery and controls, producer-terminal recovery and wider lifecycle/hosted acceptance remain unfinished. Normal gates stay Off; installed Mac14 and phone34 are unchanged. [Evidence and remaining scope](project-file-copy/README.md).

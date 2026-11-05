@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Project files · Comment attachments included in review",
-  "latest": "The project-transfer review now includes files in older inline comments, closing a case where a move could be offered without file custody review. Actor-scoped provider metadata is bound to the inspection, while inaccessible objects and read timestamps stay opaque. Both repos pass 44 focused SQL checks, 32 genuine local Auth/REST/Storage checks and 64 client tests. Original bytes and task/project context are preserved. The complete owning schemas replay independently (208 iOS, 207 Mac); both current app builds and strict signatures pass. Actual file transfer consent/custody and native acceptance remain unfinished and gated. Assistance is on-device only; further iPhone installation is deferred. Installed phone34 and Mac14 are unchanged.",
+  "focus": "Project files · Private copy preparation verified",
+  "latest": "Private project-file preparation now reads and hashes eligible originals, writes immutable private copies and verifies exact bytes before marking them ready. Each repo independently passes 69 genuine local Auth/REST/Storage checks and 22 handler tests, including lost replies, concurrent retries, cancellation, stale sources and access refusals. Originals and task/project context remain unchanged. This is a partial service step: consent, atomic custody transfer and native controls remain unfinished and gated. No hosted deployment or installed app update occurred. Assistance is on-device only; further iPhone installation is deferred.",
   "next": [
     "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Unlock Mac for current normal/largest-text note and assistant flows, then package later source changes. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
     "PRODUCT NEXT: finish note section navigation acceptance, then continue everyday editing/planning/navigation polish in bounded installable updates. Preserve the already accepted protected-session recording milestone and continue remaining native adoption/custody and broader lifecycle work afterward; advanced gates and agreed rollout deferrals remain.",
@@ -718,7 +718,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Complete own schema and genuine local APIs now extend into actual iPhone/Mac Store root-edit queues: offline save, committed lost reply, exact cold retry, remote sibling/title preservation and final offline cache pass. Independent child-field and hierarchy journals now pass offline/cold lost-reply recovery, with whole-branch Undo/Redo. Scoped field/hierarchy conflicts now preserve originals, closure proofs and reviewed replacements. Reviewed valid legacy adoption now passes through actual apps without administrative promotion, including preserved-edit refusal and cold proof recovery. Wider history/media migration, protected storage/TLS and wider lifecycle/accessibility remain. Normal use stays disabled. Malformed legacy sources and stale/closed migration requests now have scoped genuine API refusal/preservation proof. File review now covers inline-comment attachments, with private provider-state binding and opaque inaccessible references. Each repo passes 44 focused SQL, 32 genuine local API and 64 client checks. Complete file transfer consent/custody and native/hosted acceptance remain unfinished.",
+              "detail": "Complete own schema and genuine local APIs now extend into actual iPhone/Mac Store root-edit queues: offline save, committed lost reply, exact cold retry, remote sibling/title preservation and final offline cache pass. Independent child-field and hierarchy journals now pass offline/cold lost-reply recovery, with whole-branch Undo/Redo. Scoped field/hierarchy conflicts now preserve originals, closure proofs and reviewed replacements. Reviewed valid legacy adoption now passes through actual apps without administrative promotion, including preserved-edit refusal and cold proof recovery. Wider history/media migration, protected storage/TLS and wider lifecycle/accessibility remain. Normal use stays disabled. Malformed legacy sources and stale/closed migration requests now have scoped genuine API refusal/preservation proof. File review now covers inline-comment attachments, with private provider-state binding and opaque inaccessible references. Each repo passes 44 focused SQL, 32 genuine local API and 64 client checks. Complete file transfer consent/custody and native/hosted acceptance remain unfinished. Private copy preparation now passes 69 genuine local service checks and 22 handler tests per repo; it preserves original bytes and keeps copies inaccessible/unpublished through retries and cancellation. Consent, atomic custody commit, producer-terminal recovery and native/hosted acceptance remain open.",
               "steps": [
                 {
                   "state": "done",
@@ -802,7 +802,7 @@
                 },
                 {
                   "state": "build",
-                  "title": "Keep shared files and discussions with the right workspace: file inventory and privacy checks pass; transfer consent/custody remain to build"
+                  "title": "Keep shared files and discussions with the right workspace: inventory and private copy preparation pass; consent, custody commit and native controls remain to build"
                 },
                 {
                   "state": "done",
@@ -1105,7 +1105,12 @@
             "project-file-inventory/database.json",
             "project-file-inventory/full-schema.json",
             "project-file-inventory/client-verification.json",
-            "project-file-inventory/signed-build.json"
+            "project-file-inventory/signed-build.json",
+            "project-file-copy/README.md",
+            "project-file-copy/verification.json",
+            "project-file-copy/full-schema.json",
+            "project-file-copy/cleanup.json",
+            "project-file-copy/progress-validation.json"
           ],
           "focus": true
         },
@@ -1263,7 +1268,12 @@
     "planner-lane-layout/README.md",
     "task-breakdown/README.md",
     "filter-assistance/README.md",
-    "daily-use-build/phone-34-installation.json"
+    "daily-use-build/phone-34-installation.json",
+    "project-file-copy/README.md",
+    "project-file-copy/verification.json",
+    "project-file-copy/full-schema.json",
+    "project-file-copy/cleanup.json",
+    "project-file-copy/progress-validation.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1528,6 +1538,11 @@
     "project-catalog-reads/ios-core-before.json": "0ac05a8e279c2acb65692e5512dec5ed16c4c14a0f36f8d7e34b55cde210106d",
     "project-catalog-reads/iphone-after.json": "9b81f07ad657734a205d32962adf598cf22154cbf7f9c93d4f45d0bd11bfd62f",
     "project-catalog-reads/verification.json": "b256f10bce156d3d482e7f8b96b3900de0a778131630caaaaf53871936ec8cd1",
+    "project-file-copy/README.md": "926c7bdc4e8ae4f0f9104ba9db00d80271bc8d95e2d46cd9aaa8711b1f8bd316",
+    "project-file-copy/cleanup.json": "82cd61e0b1a11875a4517b4183d7346dd63c4b6db31f04565a5f0441184041d0",
+    "project-file-copy/full-schema.json": "89964488571f69a200565e9f1350e45423ddbdb9e6ee77999d3df5beb3940dba",
+    "project-file-copy/progress-validation.json": "be2185da55d806421c603ed2665d443a52b4b128f86e256d4d4295d6deab8911",
+    "project-file-copy/verification.json": "4b5bab1885b15b07fd4ab5c97407a7b921ac055551cc1c34c316083aad1c6e33",
     "project-file-inventory/README.md": "6d45c0dab7fb2b6304a1d136abd82073c4ead50db9bec1e258e755070bd0d9a0",
     "project-file-inventory/client-verification.json": "0f9fee33a041ec7737a054fa245ecc779d5dbf8629aaf52a20cf09bec6767315",
     "project-file-inventory/database.json": "f2071a68d8c3fe9a521853076ac1ed1de6778d299ee9a949394928d800d90737",
