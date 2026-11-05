@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Searchable notes accepted on iPhone Simulator · Next updates prepared",
-  "latest": "iPhone31 remains installed with the seven-task planning fix and all 205 prior tasks preserved. Pinned notes now search full text, task and project paths with bounded background previews. Both owning Core suites pass 20 checks; normal and dark/largest-text iPhone Simulator journeys pass search, paging, current-text refresh, cold return and read-only preservation. Signed Mac20/phone32 packages are prepared, not installed; current Mac remains14. Wider Mac/iPad/speech/device rendering contexts remain open.",
+  "focus": "Now · Smoother Insights and persistent day selection · Combined update prepared",
+  "latest": "Insights now prepares one background history read for both scopes and ranges; selecting a day keeps its count visible. Both repos pass 71 focused Core checks, and a signed 5,004-row iPhone production-screen journey passes range/scope/tap, immediate recorded-completion refresh, preserved saved tables and cold history. Combined Mac21/phone33 packages include notes search and are prepared, not installed. Daily apps remain Mac14/phone31. Native Mac/iPad/speech, clock-tick/overnight and physical rendering/FPS remain scoped gaps.",
   "next": [
-    "NEXT: use phone31 for everyday work and address any specific remaining slow screens; continue small notes/headings, planner and widget/insight improvements. Preserve the accepted seven-task and dated-list drag cases; broader native Mac/iPad/shared/account/speech/FPS work stays scoped. Mac19 source is built, with Mac14 still installed.",
-    "NEXT DAILY-USE UPDATE: phone31 includes the library creation/starter, ordering/filter-target, stable subtasks, direct note editing, planner search and current correctness/responsiveness fixes. Continue bounded, clearly versioned updates with private pre-update backups and cleanup each run.",
+    "NEXT: use phone31 for everyday work and address concrete remaining slow screens; combined notes-search/Insights updates are prepared as Mac21/phone33. Preserve accepted planner/drop/notes/Insights cases. Broader native Mac/iPad/shared/account/speech/FPS work remains scoped; continue remaining Px implementation rather than rerunning unchanged matrices.",
+    "NEXT DAILY-USE UPDATE: combined Mac21/phone33 contain notes search, prepared Insights and persistent day selection alongside prior fixes. Neither replaces the current sessions automatically. Keep private pre-update backups and cleanup every run.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -497,7 +497,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading, project catalogs, searchable parents and background cached library captions. iPhone production cases verify scrolling, current-source refresh, draft/save/cold behavior and saved-work preservation. Wider editor/rendering, platform, account/accessibility/cloud contexts remain. Field conflict review now waits for an ongoing sync before comparing current task data. Visible sibling arrows and branch-aware drag planning now have owning Core proof; actual iPhone menu and Store Undo restore exact saved tables. Actual sibling drag gestures and Mac interaction remain separate. Searchable filter targets now use cancellable background catalogs and bounded pages. Final iPhone project-target Save/Cancel/cold and dark/largest-text keyboard/Done cases pass; Mac/iPad and wider label/section/access/speech/rendering remain separate. Current gain: bounded exact-byte durable-read reuse removes repeated full attachment parsing; ordinary mutation/sync widget summaries move to the existing latest-only background queue. iPhone dated-list drops use one local commit/Undo, and an actual drag/Undo/navigation case passes. Phone31 is installed with prior work preserved; broader rendering/FPS remains open. Pinned-note library now prepares previews and full-text/project search on cancellable workers, with 60-row pages, completed/archive context and identity-aware live reading. Owning 20-case Core suites and two scoped iPhone Simulator journeys pass; Mac20/phone32 packages are uninstalled. Broader native rendering remains separate.",
+              "detail": "Read reuse/background preparation now covers filters and assignment captions, rich workflows, template previews/captions, project/parent catalogs, filter/task/note searches and Insights. Exact-byte durable reads avoid repeated attachment parsing; dated-list drops use one commit/Undo. Recorded iPhone journeys accept bounded scrolling, source refresh, draft/save/cold preservation, seven-task review and the new scope/range/persistent-day interactions. Insights has owning Core71 and independent Mac21 build proof. Combined Mac21/phone33 packages are prepared only; installed apps remain Mac14/phone31. Broader editor/rendering/FPS, actual sibling drag, native Mac/iPad/speech, shared/cloud/account/window/access and overnight-clock contexts remain open.",
               "steps": [
                 {
                   "state": "done",
@@ -1192,7 +1192,12 @@
     "daily-use-build/note-library-native-ios.json",
     "daily-use-build/note-library-large-native-ios.json",
     "daily-use-build/note-library-candidates.json",
-    "daily-use-build/note-library-storage.json"
+    "daily-use-build/note-library-storage.json",
+    "daily-use-build/prepared-insights.json",
+    "daily-use-build/prepared-insights-core.json",
+    "daily-use-build/prepared-insights-native-ios.json",
+    "daily-use-build/prepared-insights-candidates.json",
+    "daily-use-build/prepared-insights-storage.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1308,7 +1313,7 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
-    "daily-use-build/README.md": "82ddcfc2ef7a556688bb209d6b7db0ed13dffd4f86b5ba8fba9a6dfd009cdacd",
+    "daily-use-build/README.md": "5b2bd3271dc521a799fce669a2d6dd4fdf79eef13af54b7883559bd511d75e9b",
     "daily-use-build/context-capture-ios-build.json": "347a2b5b15870bf23539cc7856c7cd9accd12f21d57b9628b35afb61c166c60e",
     "daily-use-build/context-capture-mac-package.json": "01a94b61601f02b1fd223c6307e2fb67af4fe3fbfa907b8ced2f4fd5f108ba0a",
     "daily-use-build/context-capture-native.json": "fddc4e842d98b36a14bff1fef870d8c44f5d1bee74fb13c7984ef119b5cf8506",
@@ -1330,6 +1335,11 @@
     "daily-use-build/note-library-native-ios.json": "9108d92515d8f2af6afa3e3a9fb70f54c4e0c1e1e71610fedd5c03f6944b609b",
     "daily-use-build/note-library-search.json": "943592c6ee446f66481984c787512ae4c754d00f37d4a16088c1d8edd45a720c",
     "daily-use-build/note-library-storage.json": "9a9b541ecdc75eb61507c3196389320d76b400949193cfb8e06bbccb31db07ca",
+    "daily-use-build/prepared-insights-candidates.json": "5f24f9bc40beb2f4c1c35646cfdc5a43f94a0c579b1bf1fb14c9fbdfe0130cae",
+    "daily-use-build/prepared-insights-core.json": "de7d8e4b87a866fe09158e517adcc5cdda7b427c140ddb3c6dcfea21c2600a95",
+    "daily-use-build/prepared-insights-native-ios.json": "4ff32fc36e1bd62c20d3689d44c555628b7b9087ac2c8b3bdb4716b459af3d4c",
+    "daily-use-build/prepared-insights-storage.json": "c70ea41a866efe64e81f65f93345d76770a9354d8b639560d52141a1bb15fcd1",
+    "daily-use-build/prepared-insights.json": "52715f47c986a07c3d3eba9a592d5379ad8b4119f6e982815a09f3b3d8c61f7f",
     "daily-use-build/source-search-bootstrap.json": "7f0c5805a484ccacd788393eaa7c8c8bb5d54bf00bef4f861d9be63aeb2fdd1b",
     "daily-use-build/source-search-largest-text.json": "b2ab816410c12e31dec0940df2efb6e5fbb94739da0b0fd5fba7e0bdd8ae5679",
     "daily-use-build/source-search-native.json": "e22bc8ffbf0500392c113c3ff2e1191f33e8b1ec5a0619631348f552f5e8afdb",

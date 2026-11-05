@@ -1,0 +1,70 @@
+{
+  "freeBeforeBytes": 66929844224,
+  "cacheAudit": {
+    "apply": true,
+    "freeBeforeBytes": 66930917376,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 435367936
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 374894592
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 488538112
+      }
+    ],
+    "freeAfterBytes": 66929864704,
+    "actualFreeChangeBytes": -1052672
+  },
+  "removed": [
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-20-mac-development.zip",
+      "allocatedBytes": 33153024
+    },
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-32-iphone-development.zip",
+      "allocatedBytes": 37376000
+    },
+    {
+      "path": "/tmp/taskfold-insights-native-v1.xcresult",
+      "allocatedBytes": 7426048
+    },
+    {
+      "path": "/tmp/taskfold-insights-native-v2.xcresult",
+      "allocatedBytes": 1830912
+    },
+    {
+      "path": "/tmp/taskfold-insights-v1-fail-shots",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-insights-v1-failure-files",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-insights-v2-shots",
+      "allocatedBytes": 503808
+    }
+  ],
+  "coreCaches": [
+    {
+      "cache": "core-ios",
+      "allocatedBytes": 581476352
+    },
+    {
+      "cache": "core-mac",
+      "allocatedBytes": 533913600
+    }
+  ],
+  "freeAfterBytes": 66937417728,
+  "removedAllocatedBytes": 80297984,
+  "retained": "Current combined Mac21/phone33 candidates, installed Mac14/phone31 archives and rollback Mac10/phone30; concise acceptance and failed-gesture evidence, test logs, reviewed selected-day image and private pre-update backups. Compiler caches remain bounded. Real app data, Keychain, Docker and unrelated devices/projects untouched."
+}

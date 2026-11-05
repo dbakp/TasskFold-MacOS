@@ -1,0 +1,20 @@
+{
+  "ios": {
+    "tests": 71,
+    "failures": 0,
+    "newPreparedCases": 7,
+    "existingHistoryCases": 64,
+    "logSHA256": "f6d2710cd943a8986754cd7e437c907d31af93a2d8b4c98b5453eaa9c8af915f",
+    "prepared5000Seconds": 0.21401596069335938,
+    "scope": "Core diagnostic; not a main-thread, render/FPS or physical-device timing guarantee. Existing fold diagnostic uses a separate fixture and is not a direct speedup ratio."
+  },
+  "mac": {
+    "tests": 71,
+    "failures": 0,
+    "newPreparedCases": 7,
+    "existingHistoryCases": 64,
+    "logSHA256": "017eb7a57454b2f3e28ee4a867f067307b82fa1f917e470d8a73fe9cae3d7f78",
+    "prepared5000Seconds": 0.20304501056671143,
+    "scope": "Core diagnostic; not a main-thread, render/FPS or physical-device timing guarantee. Existing fold diagnostic uses a separate fixture and is not a direct speedup ratio."
+  }
+}

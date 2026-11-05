@@ -992,7 +992,7 @@ enum TaskActivityPage {
 }
 
 /// Goal settings are account-owned; the saved zone keeps phone and Mac on the same civil day.
-struct ProductivityGoals: Equatable {
+struct ProductivityGoals: Equatable, Sendable {
     static let recordID = "insights"
     static let field = "productivity_goals"
     var dailyTarget: Int
@@ -1029,17 +1029,17 @@ struct ProductivityGoals: Equatable {
 }
 
 /// Observed completion credits, corrected by later reopen/time edits. No history is inferred from today's task rows.
-struct InsightsReading {
-    enum Scope:String,CaseIterable { case mine,workspace;var title:String { self == .mine ? "My completions" : "Workspace completions" } }
-    enum Coverage:String { case recorded,partial,untracked }
-    struct Day:Identifiable,Equatable {
+struct InsightsReading: Equatable, Sendable {
+    enum Scope:String,CaseIterable,Sendable { case mine,workspace;var title:String { self == .mine ? "My completions" : "Workspace completions" } }
+    enum Coverage:String,Sendable { case recorded,partial,untracked }
+    struct Day:Identifiable,Equatable,Sendable {
         var id:String
         var date:Date
         var count:Int
         var coverage:Coverage
         var restDay:Bool
     }
-    struct Credit:Equatable {
+    struct Credit:Equatable,Sendable {
         var taskID:String
         var lifecycle:String
         var version:Int64
@@ -1055,13 +1055,14 @@ struct InsightsReading {
     var recordedFrom:Date?
     var historyIncomplete = false
     var childRecordedFrom: Date?
+    var rootRecordedFrom: Date?
     var windowStart:Date
     var windowEnd:Date
     var weekStart:Date
     var scope:Scope
     var hasHistory:Bool { recordedFrom != nil }
     var reliable:Bool { hasHistory && malformed==0 }
-    init(account:String,activity:[Record],epoch:[Record],goals:ProductivityGoals,scope:Scope = .mine,projectID:String? = nil,accessibleProjects:Set<String> = [],windowDays:Int=7,now:Date=Date(),children:ChildWorkHistory?=nil) {
+    init(account:String,activity:[Record],epoch:[Record],goals:ProductivityGoals,scope:Scope = .mine,projectID:String? = nil,accessibleProjects:Set<String> = [],windowDays:Int=7,now:Date=Date(),children:ChildWorkHistory?=nil,shouldStop:() -> Bool = { false }) {
         self.scope=scope
         let validGoals=try? goals.validated()
         let goals=validGoals ?? (try! ProductivityGoals())
@@ -1086,9 +1087,11 @@ struct InsightsReading {
         if epochRows.count==1,let date=instant(epochRows[0].string("recorded_from")),date<=now { recordedFrom=date }
         else if !epochRows.isEmpty { malformed+=1 }
         let rootRecordedFrom = recordedFrom
+        self.rootRecordedFrom = recordedFrom
         let account=account.lowercased(),accessible=Set(accessibleProjects.map{$0.lowercased()})
         var unique:[String:TaskActivity]=[:],blocked=Set<String>()
         for row in activity {
+            guard !shouldStop() else { malformed += 1; return }
             let projects=[row["before_state"].object["project_id"]?.text.lowercased() ?? "",row["after_state"].object["project_id"]?.text.lowercased() ?? ""]
             guard row.string("user_id").lowercased()==account || projects.contains(where:{!$0.isEmpty && accessible.contains($0)}) else { continue }
             guard let event=TaskActivity(row:row,parseInstant:instant,validDay:validDay) else { malformed+=1;continue }
@@ -1099,6 +1102,7 @@ struct InsightsReading {
         var latest:[String:Int64]=[:],active:[String:Credit]=[:],deleted=Set<String>(),lifecycles:[String:String]=[:],archived:[Credit]=[]
         var occurrences: [String: String] = [:]
         for event in unique.values.sorted(by:{$0.sequence==$1.sequence ? $0.id<$1.id : $0.sequence<$1.sequence}) {
+            guard !shouldStop() else { malformed += 1; return }
             guard rootRecordedFrom != nil else { break }
             if let context = event.rootContext {
                 guard context.readable else { malformed += 1; continue }
@@ -1146,15 +1150,17 @@ struct InsightsReading {
         var childCredits: [Credit] = []
         if let children {
             let visible = children.rows.map { rows in rows.filter { row in
+                if shouldStop() { return false }
                 let scopes = [row["before_state"].object["project_id"]?.text.lowercased() ?? "", row["after_state"].object["project_id"]?.text.lowercased() ?? ""].filter { !$0.isEmpty }
                 return scopes.isEmpty ? row.string("user_id").lowercased() == account : scopes.allSatisfy { accessible.contains($0) }
             } }
-            let child = ChildWorkReading(ChildWorkHistory(rows: visible, epoch: children.epoch), now: now)
-            childCredits = child.credits()
+            let child = ChildWorkReading(ChildWorkHistory(rows: visible, epoch: children.epoch), now: now, shouldStop: shouldStop)
+            childCredits = child.credits(shouldStop: shouldStop)
             historyIncomplete = child.incomplete || rootRecordedFrom == nil
             childRecordedFrom = child.recordedFrom
             if let childStart = child.recordedFrom { recordedFrom = rootRecordedFrom.map { min($0, childStart) } ?? childStart }
         }
+        guard !shouldStop() else { malformed += 1; return }
         credits=(archived+Array(active.values)+childCredits).filter { credit in
             credit.date<=now && (scope == .workspace || credit.actor==account) && (projectID.map{$0.lowercased()==credit.projectID} ?? true)
         }.sorted{$0.date==$1.date ? $0.taskID<$1.taskID : $0.date<$1.date}
@@ -1164,18 +1170,24 @@ struct InsightsReading {
         var day=windowStart
         while day<windowEnd {
             let end=calendar.date(byAdding:.day,value:1,to:day)!,key=TaskPlanner.dayKey(day,calendar:calendar)
-            func coverageSince(_ from: Date?) -> Coverage { from.map { $0 >= end ? .untracked : $0 > day ? .partial : .recorded } ?? .untracked }
-            var coverage = coverageSince(rootRecordedFrom)
-            if children != nil {
-                let other = coverageSince(childRecordedFrom)
-                coverage = coverage == .recorded && other == .recorded ? .recorded : coverage == .untracked && other == .untracked ? .untracked : .partial
-            }
-            if coverage == .untracked,counts[key,default:0]>0 { coverage = .partial }
-            if historyIncomplete, coverage == .recorded { coverage = .partial }
+            let coverage = Self.coverage(start: day, end: end, root: rootRecordedFrom, child: childRecordedFrom,
+                                         includesChildren: children != nil, incomplete: historyIncomplete, count: counts[key, default: 0])
             days.append(Day(id:key,date:day,count:counts[key] ?? 0,coverage:coverage,restDay:!goals.activeWeekdays.contains(calendar.component(.weekday,from:day))))
             day=end
         }
     }
+    static func coverage(start: Date, end: Date, root: Date?, child: Date?, includesChildren: Bool, incomplete: Bool, count: Int) -> Coverage {
+        func since(_ from: Date?) -> Coverage { from.map { $0 >= end ? .untracked : $0 > start ? .partial : .recorded } ?? .untracked }
+        var value = since(root)
+        if includesChildren {
+            let other = since(child)
+            value = value == .recorded && other == .recorded ? .recorded : value == .untracked && other == .untracked ? .untracked : .partial
+        }
+        if value == .untracked, count > 0 { value = .partial }
+        if incomplete, value == .recorded { value = .partial }
+        return value
+    }
+
 }
 
 /// One guarded preference command; immutable account scope survives retries and explicit review.
@@ -1281,7 +1293,7 @@ struct ProjectActivityContext {
 }
 
 /// Optional child history is distinct from a loaded empty ledger.
-struct ChildWorkHistory: Sendable {
+struct ChildWorkHistory: Equatable, Sendable {
     let rows: [Record]?
     let epoch: [Record]?
     var orderRecordedFrom: Date? {
@@ -1425,7 +1437,7 @@ struct ChildWorkReading {
     private let globallyIncomplete: Bool
     func events(project: String) -> [TaskNodeActivity] { grouped[project.lowercased()] ?? [] }
     func incomplete(project: String) -> Bool { globallyIncomplete || incompleteProjects.contains(project.lowercased()) }
-    init(_ history: ChildWorkHistory, now: Date) {
+    init(_ history: ChildWorkHistory, now: Date, shouldStop: () -> Bool = { false }) {
         recordedFrom = history.rows == nil ? nil : history.recordedFrom.flatMap { $0 <= now ? $0 : nil }
         guard let rows = history.rows, recordedFrom != nil else { events = []; incomplete = true; malformed = 0; blockedSubjects = []; grouped = [:]; incompleteProjects = []; globallyIncomplete = true; return }
         let parser = TaskNodeActivity.Parser()
@@ -1437,6 +1449,7 @@ struct ChildWorkReading {
             if ids.isEmpty { global = true }; partial.formUnion(ids)
         }
         for row in rows {
+            if shouldStop() { malformed += 1; global = true; unique.removeAll(); break }
             guard let event = parser.event(row) else {
                 malformed += 1; mark(row["before_state"].object, row["after_state"].object)
                 if let gen = UUID(uuidString: row.string("task_generation")), UUID(uuidString: row.string("task_id")) != nil, !row.string("node_key").isEmpty { blocked.insert(row.string("task_id").lowercased() + ":" + gen.uuidString.lowercased() + ":" + row.string("node_key")) }
@@ -1463,12 +1476,13 @@ struct ChildWorkReading {
         grouped = groups; incompleteProjects = partial; globallyIncomplete = global
         incomplete = malformed > 0 || events.contains(where: \.isGap)
     }
-    func credits() -> [InsightsReading.Credit] {
+    func credits(shouldStop: () -> Bool = { false }) -> [InsightsReading.Credit] {
         var active: [String: InsightsReading.Credit] = [:], archived: [InsightsReading.Credit] = []
         var latest: [String: Int64] = [:], deleted = Set<String>(), lifecycle: [String: String] = [:], roots: [String: String] = [:]
         let dates = TaskNodeActivity.Parser()
         var handoffs: [String: (event: TaskNodeActivity, credit: InsightsReading.Credit)] = [:]
         for e in events {
+            guard !shouldStop() else { return [] }
             if e.isOrdering { continue }
             if let reconciliation = e.reconciliation, let generation = e.generation {
                 for item in reconciliation.subjects {
@@ -1807,4 +1821,62 @@ fileprivate final class LocalActivityDates {
     func state(_ task: Record?) -> [String: JSON] { TaskActivity.state(task, parseInstant: instant, stamp: stamp) }
     func parent(_ row: Record) -> TaskActivity? { TaskActivity(row: row, parseInstant: instant, validDay: validDay) }
     func node(_ row: Record) -> TaskNodeActivity? { TaskNodeActivity(row: row, parseInstant: instant, validDay: validDay) }
+}
+
+/// Immutable display-only preparation. One history fold supplies both scopes and
+/// both chart windows; interacting with the chart never reparses activity rows.
+struct PreparedInsights: Sendable {
+    struct Input: Equatable, Sendable {
+        let account: String
+        let activity: [Record]
+        let epoch: [Record]
+        let goals: ProductivityGoals
+        let accessibleProjects: Set<String>
+        let children: ChildWorkHistory
+        let now: Date
+    }
+    let input: Input
+    private let personal7: InsightsReading, personal28: InsightsReading
+    private let workspace7: InsightsReading, workspace28: InsightsReading
+    init(_ input: Input, shouldStop: () -> Bool = { Task.isCancelled }) throws {
+        self.input = input
+        _ = try input.goals.validated()
+        if shouldStop() { throw CancellationError() }
+        let workspace = InsightsReading(account: input.account, activity: input.activity, epoch: input.epoch,
+            goals: input.goals, scope: .workspace, accessibleProjects: input.accessibleProjects, windowDays: 28,
+            now: input.now, children: input.children, shouldStop: shouldStop)
+        if shouldStop() { throw CancellationError() }
+        var personal = workspace
+        personal.scope = .mine
+        personal.credits = workspace.credits.filter { $0.actor == input.account.lowercased() }
+        let today = input.goals.calendar.startOfDay(for: input.now)
+        personal.today = personal.credits.filter { $0.date >= today && $0.date < personal.windowEnd }.count
+        personal.week = personal.credits.filter { $0.date >= personal.weekStart && $0.date < personal.windowEnd }.count
+        let counts = Dictionary(grouping: personal.credits) { TaskPlanner.dayKey($0.date, calendar: input.goals.calendar) }.mapValues(\.count)
+        personal.days = workspace.days.map { day in
+            var value = day; value.count = counts[day.id] ?? 0
+            value.coverage = InsightsReading.coverage(start: day.date, end: input.goals.calendar.date(byAdding: .day, value: 1, to: day.date)!,
+                root: workspace.rootRecordedFrom, child: workspace.childRecordedFrom, includesChildren: true,
+                incomplete: workspace.historyIncomplete, count: value.count)
+            return value
+        }
+        func week(_ reading: InsightsReading) -> InsightsReading {
+            var value = reading
+            value.windowStart = input.goals.calendar.date(byAdding: .day, value: -7, to: reading.windowEnd)!
+            value.days = reading.days.filter { $0.date >= value.windowStart }
+            return value
+        }
+        workspace28 = workspace; workspace7 = week(workspace)
+        personal28 = personal; personal7 = week(personal)
+        if shouldStop() { throw CancellationError() }
+    }
+    func reading(scope: InsightsReading.Scope, windowDays: Int) -> InsightsReading {
+        scope == .mine ? (windowDays == 28 ? personal28 : personal7) : (windowDays == 28 ? workspace28 : workspace7)
+    }
+    static func load(_ input: Input) async throws -> Self {
+        let worker = Task.detached(priority: .userInitiated) { try Self(input) }
+        return try await withTaskCancellationHandler(operation: {
+            let value = try await worker.value; try Task.checkCancellation(); return value
+        }, onCancel: { worker.cancel() })
+    }
 }

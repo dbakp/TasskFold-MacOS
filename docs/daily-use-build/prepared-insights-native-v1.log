@@ -1,0 +1,228 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /tmp/taskfold-source-selection-ios-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -derivedDataPath /tmp/taskfold-prepared-undo-signed-ios-build -jobs 1 -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/WorkflowSourceSelectionUITests/testPreparedInsightsScopeRangeRefreshAndColdReturn" CONFIGURATION_BUILD_DIR=/tmp/taskfold-source-native-ios-products/Debug-iphonesimulator CODE_SIGNING_ALLOWED=YES ONLY_ACTIVE_ARCH=YES ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 2 -j 1" CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=3UZ4C73FM2 -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -resultBundlePath /private/tmp/taskfold-insights-native-v1.xcresult -test-timeouts-enabled YES -default-test-execution-time-allowance 240 -maximum-test-execution-time-allowance 300 test-without-building
+
+Build settings from command line:
+    ARCHS = arm64
+    CODE_SIGN_IDENTITY = -
+    CODE_SIGNING_ALLOWED = YES
+    COMPILER_INDEX_STORE_ENABLE = NO
+    CONFIGURATION_BUILD_DIR = /tmp/taskfold-source-native-ios-products/Debug-iphonesimulator
+    DEVELOPMENT_TEAM = 3UZ4C73FM2
+    ONLY_ACTIVE_ARCH = YES
+    OTHER_SWIFT_FLAGS = $(inherited) -driver-batch-count 2 -j 1
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/private/tmp/taskfold-insights-native-v1.xcresult
+
+2026-11-05 09:08:18.246560+0100 TaskfoldUITests-Runner[93459:52529821] [Default] Running tests...
+objc[93459]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x105d14398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x109b0c310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-05 09:08:24.739.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-11-05 09:08:24.740.
+Test Suite 'WorkflowSourceSelectionUITests' started at 2026-11-05 09:08:24.741.
+Test Case '-[TaskfoldUITests.WorkflowSourceSelectionUITests testPreparedInsightsScopeRangeRefreshAndColdReturn]' started.
+    t =     0.03s Start Test at 2026-11-05 09:08:24.767
+    t =     0.50s Set Up
+    t =     0.51s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.51s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-11-05 09:08:25.819 xcodebuild[92534:52524873] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-05 09:08:25.819 xcodebuild[92534:52524873] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     5.46s         Setting up automation session
+    t =    10.75s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.70s Waiting 45.0s for "workspaceReadStatus" StaticText to exist
+    t =    14.76s     Checking `Expect predicate `existsNoRetry == 1` for object "workspaceReadStatus" StaticText`
+    t =    14.76s         Checking existence of `"workspaceReadStatus" StaticText`
+    t =    15.92s Find the "workspaceReadStatus" StaticText
+    t =    15.95s Tap "openPreparedInsights" Button
+    t =    15.95s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.96s     Find the "openPreparedInsights" Button
+    t =    15.98s     Check for interrupting elements affecting "openPreparedInsights" Button
+    t =    16.06s     Synthesize event
+    t =    16.55s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.36s Waiting 20.0s for "insightsTodayCount" StaticText to exist
+    t =    18.41s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsTodayCount" StaticText`
+    t =    18.41s         Checking existence of `"insightsTodayCount" StaticText`
+    t =    18.70s Find the "insightsTodayCount" StaticText
+    t =    18.77s Find the "insightsWeekCount" StaticText
+    t =    18.83s Checking existence of `"insightsWindow" Button`
+    t =    18.88s Find the "insightsWindow" Button
+    t =    18.94s Checking existence of `"insightsWindow" Button`
+    t =    18.99s Find the "insightsWindow" Button
+    t =    19.05s Checking existence of `"insightsWindow" Button`
+    t =    19.10s Find the "insightsWindow" Button
+    t =    19.16s Checking existence of `"insightsWindow" Button`
+    t =    19.21s Find the "insightsWindow" Button
+    t =    19.30s Checking existence of `"insightsWindow" Button`
+    t =    19.35s Find the "insightsWindow" Button
+    t =    19.41s Checking existence of `"insightsWindow" Button`
+    t =    19.46s Find the "insightsWindow" Button
+    t =    19.52s Checking existence of `"insightsWindow" Button`
+    t =    19.58s Find the "insightsWindow" Button
+    t =    19.65s Checking existence of `"insightsWindow" Button`
+    t =    19.70s Find the "insightsWindow" Button
+    t =    19.77s Checking existence of `"insightsWindow" Button`
+    t =    19.82s Find the "insightsWindow" Button
+    t =    19.89s Checking existence of `"insightsWindow" Button`
+    t =    19.93s Find the "insightsWindow" Button
+    t =    20.00s Checking existence of `"insightsWindow" Button`
+    t =    20.05s Find the "insightsWindow" Button
+    t =    20.12s Checking existence of `"insightsWindow" Button`
+    t =    20.17s Find the "insightsWindow" Button
+    t =    20.23s Checking existence of `"insightsWindow" Button`
+    t =    20.28s Find the "insightsWindow" Button
+    t =    20.34s Checking existence of `"insightsWindow" Button`
+    t =    20.39s Find the "insightsWindow" Button
+    t =    20.46s Find the "insightsWindow" Button
+    t =    20.52s Waiting 12.0s for "insightsWindowCount" StaticText to exist
+    t =    21.57s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsWindowCount" StaticText`
+    t =    21.57s         Checking existence of `"insightsWindowCount" StaticText`
+    t =    22.67s Find the "insightsWindowCount" StaticText
+    t =    22.72s Tap "insightsWindow" Button
+    t =    22.72s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.73s     Find the "insightsWindow" Button
+    t =    22.78s     Check for interrupting elements affecting "insightsWindow" Button
+    t =    22.83s     Synthesize event
+    t =    23.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.39s Tap "28 days" Button
+    t =    24.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.40s     Find the "28 days" Button
+    t =    24.47s     Check for interrupting elements affecting "28 days" Button
+    t =    24.52s     Synthesize event
+    t =    24.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.30s Waiting 12.0s for "insightsWindowCount" StaticText to exist
+    t =    27.36s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsWindowCount" StaticText`
+    t =    27.36s         Checking existence of `"insightsWindowCount" StaticText`
+    t =    28.46s Find the "insightsWindowCount" StaticText
+    t =    28.61s Tap Button (Element at index 1)
+    t =    28.61s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.64s     Find the Button (Element at index 1)
+    t =    28.78s     Check for interrupting elements affecting "Workspace completions" Button
+    t =    28.84s     Synthesize event
+    t =    29.15s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.77s Waiting 12.0s for "insightsWindowCount" StaticText to exist
+    t =    31.81s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsWindowCount" StaticText`
+    t =    31.81s         Checking existence of `"insightsWindowCount" StaticText`
+    t =    32.91s Find the "insightsWindowCount" StaticText
+    t =    33.09s Tap "insightsWindow" Button
+    t =    33.09s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    33.11s     Find the "insightsWindow" Button
+    t =    33.23s     Check for interrupting elements affecting "insightsWindow" Button
+    t =    33.30s     Synthesize event
+    t =    33.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.76s Tap "7 days" Button
+    t =    34.76s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.77s     Find the "7 days" Button
+    t =    34.85s     Check for interrupting elements affecting "7 days" Button
+    t =    35.06s     Synthesize event
+    t =    35.37s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.87s Waiting 12.0s for "insightsWindowCount" StaticText to exist
+    t =    37.91s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsWindowCount" StaticText`
+    t =    37.91s         Checking existence of `"insightsWindowCount" StaticText`
+    t =    39.03s Find the "insightsWindowCount" StaticText
+    t =    39.08s Find the "insightsTodayCount" StaticText
+    t =    39.13s Tap Button (Element at index 0)
+    t =    39.13s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.14s     Find the Button (Element at index 0)
+    t =    39.20s     Check for interrupting elements affecting "My completions" Button
+    t =    39.25s     Synthesize event
+    t =    39.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    41.17s Waiting 12.0s for "insightsWindowCount" StaticText to exist
+    t =    42.21s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsWindowCount" StaticText`
+    t =    42.21s         Checking existence of `"insightsWindowCount" StaticText`
+    t =    43.34s Find the "insightsWindowCount" StaticText
+    t =    43.39s Checking existence of `"insightsChart" Any`
+    t =    43.51s Find the "insightsChart" Any
+    t =    43.66s Checking existence of `"insightsChart" Other`
+    t =    43.79s Find the "insightsChart" Other
+    t =    43.93s Checking existence of `"insightsChart" Other`
+    t =    44.06s Find the "insightsChart" Other
+    t =    44.20s Checking existence of `"insightsChart" Other`
+    t =    44.32s Find the "insightsChart" Other
+    t =    44.46s Checking existence of `"insightsChart" Other`
+    t =    44.60s Find the "insightsChart" Other
+    t =    44.73s Checking existence of `"insightsChart" Other`
+    t =    44.87s Find the "insightsChart" Other
+    t =    45.02s Checking existence of `"insightsChart" Other`
+    t =    45.15s Find the "insightsChart" Other
+    t =    45.29s Checking existence of `"insightsChart" Other`
+    t =    45.41s Find the "insightsChart" Other
+    t =    45.56s Checking existence of `"insightsChart" Other`
+    t =    45.70s Find the "insightsChart" Other
+    t =    45.84s Checking existence of `"insightsChart" Other`
+    t =    45.95s Find the "insightsChart" Other
+    t =    46.09s Checking existence of `"insightsChart" Other`
+    t =    46.21s Find the "insightsChart" Other
+    t =    46.34s Checking existence of `"insightsChart" Other`
+    t =    46.46s Find the "insightsChart" Other
+    t =    46.62s Checking existence of `"insightsChart" Other`
+    t =    46.73s Find the "insightsChart" Other
+    t =    46.87s Checking existence of `"insightsChart" Other`
+    t =    46.99s Find the "insightsChart" Other
+    t =    47.12s Find the "insightsChart" Other
+    t =    47.27s Press "insightsChart" Other[0.40, 0.50] for 0.2 seconds, then drag to "insightsChart" Other[0.65, 0.50] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    47.27s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.27s     Find the "insightsChart" Other
+    t =    47.39s     Check for interrupting elements affecting "insightsChart" Other
+    t =    47.46s     Synthesize event
+    t =    47.46s         Find the "insightsChart" Other
+    t =    47.59s         Find the "insightsChart" Other
+    t =    47.72s         Find the "insightsChart" Other
+    t =    47.84s         Find the "insightsChart" Other
+    t =    47.96s         Find the "insightsChart" Other
+    t =    48.77s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.77s Waiting 8.0s for "insightsSelectedDay" StaticText to exist
+    t =    49.79s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsSelectedDay" StaticText`
+    t =    49.80s         Checking existence of `"insightsSelectedDay" StaticText`
+    t =    49.86s         Capturing element debug description
+    t =    50.86s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsSelectedDay" StaticText`
+    t =    50.86s         Checking existence of `"insightsSelectedDay" StaticText`
+    t =    50.91s         Capturing element debug description
+    t =    51.86s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsSelectedDay" StaticText`
+    t =    51.86s         Checking existence of `"insightsSelectedDay" StaticText`
+    t =    51.91s         Capturing element debug description
+    t =    52.85s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsSelectedDay" StaticText`
+    t =    52.85s         Checking existence of `"insightsSelectedDay" StaticText`
+    t =    52.90s         Capturing element debug description
+    t =    53.81s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsSelectedDay" StaticText`
+    t =    53.81s         Checking existence of `"insightsSelectedDay" StaticText`
+    t =    53.86s         Capturing element debug description
+    t =    54.81s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsSelectedDay" StaticText`
+    t =    54.81s         Checking existence of `"insightsSelectedDay" StaticText`
+    t =    54.86s         Capturing element debug description
+    t =    55.81s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsSelectedDay" StaticText`
+    t =    55.81s         Checking existence of `"insightsSelectedDay" StaticText`
+    t =    55.86s         Capturing element debug description
+    t =    56.78s     Checking `Expect predicate `existsNoRetry == 1` for object "insightsSelectedDay" StaticText`
+    t =    56.78s         Checking existence of `"insightsSelectedDay" StaticText`
+    t =    56.83s         Capturing element debug description
+    t =    56.83s     Checking existence of `"insightsSelectedDay" StaticText`
+    t =    56.88s Collecting debug information to assist test failure triage
+    t =    56.88s     Requesting snapshot of accessibility hierarchy for app with pid 93799
+/tmp/taskfold-source-selection-ios-host/TaskfoldUITests/WorkflowSourceSelectionUITests.swift:809: error: -[TaskfoldUITests.WorkflowSourceSelectionUITests testPreparedInsightsScopeRangeRefreshAndColdReturn] : XCTAssertTrue failed
+    t =    57.32s Tear Down
+Test Case '-[TaskfoldUITests.WorkflowSourceSelectionUITests testPreparedInsightsScopeRangeRefreshAndColdReturn]' failed (57.621 seconds).
+Test Suite 'WorkflowSourceSelectionUITests' failed at 2026-11-05 09:09:22.388.
+	 Executed 1 test, with 1 failure (0 unexpected) in 57.621 (57.647) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-11-05 09:09:22.391.
+	 Executed 1 test, with 1 failure (0 unexpected) in 57.621 (57.650) seconds
+Test Suite 'Selected tests' failed at 2026-11-05 09:09:22.391.
+	 Executed 1 test, with 1 failure (0 unexpected) in 57.621 (57.652) seconds
+2026-11-05 09:09:22.924 xcodebuild[92534:52524873] [MT] IDETestOperationsObserverDebug: 101.681 elapsed -- Testing started completed.
+2026-11-05 09:09:22.924 xcodebuild[92534:52524873] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-05 09:09:22.924 xcodebuild[92534:52524873] [MT] IDETestOperationsObserverDebug: 101.681 sec, +101.681 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-insights-native-v1.xcresult
+
+Failing tests:
+	WorkflowSourceSelectionUITests.testPreparedInsightsScopeRangeRefreshAndColdReturn()
+
+** TEST EXECUTE FAILED **
+
+Testing started

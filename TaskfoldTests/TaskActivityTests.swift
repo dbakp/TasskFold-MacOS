@@ -384,3 +384,103 @@ extension TaskActivityTests {
         }
     }
 }
+
+private actor InsightsReadGate {
+    private var opened = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    func wait() async { if opened { return }; await withCheckedContinuation { waiters.append($0) } }
+    func release() { opened = true; waiters.forEach { $0.resume() }; waiters = [] }
+}
+final class PreparedInsightsTests: XCTestCase {
+    private let account = "11111111-1111-4111-8111-111111111111"
+    private let now = TaskPlanning.instant("2026-11-05T12:00:00Z")!
+    private func input(now: Date? = nil, zone: String = "UTC", children: ChildWorkHistory? = nil) throws -> PreparedInsights.Input {
+        let time = now ?? self.now, snapshot = Snapshot.insightsFixture(account: account, now: time)
+        var goals = try ProductivityGoals(document: snapshot.tables["view_preferences"]![0][ProductivityGoals.field]); goals.timeZone = zone
+        return .init(account: account, activity: snapshot.tables[TaskActivity.table]!, epoch: snapshot.tables[TaskActivity.epochTable]!, goals: goals,
+                     accessibleProjects: [], children: children ?? .init(rows: [], epoch: snapshot.tables[TaskActivity.epochTable]), now: time)
+    }
+    private func assertEquivalent(_ source: PreparedInsights.Input, file: StaticString = #filePath, line: UInt = #line) throws {
+        let prepared = try PreparedInsights(source)
+        for scope in InsightsReading.Scope.allCases {
+            for days in [7, 28] {
+                let direct = InsightsReading(account: source.account, activity: source.activity, epoch: source.epoch, goals: source.goals,
+                    scope: scope, accessibleProjects: source.accessibleProjects, windowDays: days, now: source.now, children: source.children)
+                XCTAssertEqual(prepared.reading(scope: scope, windowDays: days), direct, file: file, line: line)
+            }
+        }
+    }
+    func testBothScopesAndWindowsExactlyMatchRecordedTotalsAndCoverage() throws {
+        let source = try input(); try assertEquivalent(source)
+        let value = try PreparedInsights(source)
+        XCTAssertEqual(value.reading(scope: .mine, windowDays: 7).today, 2)
+        XCTAssertEqual(value.reading(scope: .workspace, windowDays: 7).today, 3)
+        XCTAssertEqual(value.reading(scope: .mine, windowDays: 28).days.reduce(0) { $0 + $1.count }, 3)
+        XCTAssertEqual(value.reading(scope: .workspace, windowDays: 28).days.reduce(0) { $0 + $1.count }, 4)
+    }
+    func testOtherActorsBackdatedCreditDoesNotInventPersonalCoverage() throws {
+        let source = try input(), stamp = TaskActivity.stamp(now.addingTimeInterval(-24*3600))
+        let epoch = [Record(["id": .string("current"), "recorded_from": .string(stamp)])]
+        var rows = source.activity
+        for index in rows.indices { rows[index]["actor_id"] = .string("22222222-2222-4222-8222-222222222222") }
+        let changed = PreparedInsights.Input(account: account, activity: rows, epoch: epoch, goals: source.goals, accessibleProjects: [], children: .init(rows: [], epoch: epoch), now: now)
+        try assertEquivalent(changed)
+        let value = try PreparedInsights(changed)
+        let mine = value.reading(scope: .mine, windowDays: 28), workspace = value.reading(scope: .workspace, windowDays: 28)
+        let day = try XCTUnwrap(workspace.days.first { $0.count == 1 && $0.date < now.addingTimeInterval(-7*24*3600) })
+        XCTAssertEqual(day.coverage, .partial); XCTAssertEqual(mine.days.first { $0.id == day.id }?.coverage, .untracked)
+    }
+    func testChildCreditsGapsMissingEpochMalformedAndDuplicateHistoryMatch() throws {
+        let source = try input(), project = "22222222-2222-4222-8222-222222222222"
+        var before = Record.task(user: account, project: project); before["is_heading"] = .bool(true)
+        before["subtasks"] = .array([.object(["id": .string("33333333-3333-4333-8333-333333333333"), "title": .string("Child"), "completed": .bool(false), "completion_version": .number(0)])])
+        var after = before, node = before["subtasks"].list[0].object; node["completed"] = .bool(true); node["completed_at"] = .string(TaskActivity.stamp(now)); node["completion_version"] = .number(1); after["subtasks"] = .array([.object(node)])
+        let rows = TaskNodeActivity.localRows(.init(table: "tasks", recordID: before.id, method: "PATCH", fields: after.fields), before: before, after: after, account: account, recordedAt: now, afterSequence: 0)
+        XCTAssertFalse(rows.isEmpty)
+        for child in [ChildWorkHistory(rows: rows, epoch: source.epoch), .init(rows: rows + rows, epoch: source.epoch), .init(rows: nil, epoch: source.epoch), .init(rows: rows, epoch: nil), .init(rows: [Record(["id": .string("unreadable")])], epoch: source.epoch)] {
+            try assertEquivalent(.init(account: account, activity: source.activity, epoch: source.epoch, goals: source.goals, accessibleProjects: [project], children: child, now: now))
+        }
+        let value = try PreparedInsights(.init(account: account, activity: source.activity, epoch: source.epoch, goals: source.goals, accessibleProjects: [project], children: .init(rows: rows, epoch: source.epoch), now: now))
+        XCTAssertEqual(value.reading(scope: .mine, windowDays: 7).today, 3)
+    }
+    func testTimeZonesDSTMidnightRestDaysAndUnreadableRootHistoryMatch() throws {
+        for instant in ["2026-10-25T00:30:00Z", "2026-10-25T02:30:00Z", "2026-11-05T23:59:59Z", "2026-11-06T00:00:01Z"] {
+            for zone in ["UTC", "Europe/Copenhagen", "America/Los_Angeles"] { try assertEquivalent(input(now: TaskPlanning.instant(instant)!, zone: zone)) }
+        }
+        let source = try input()
+        for rows in [[], [Record(["id": .string("bad")])], source.activity + source.activity] {
+            try assertEquivalent(.init(account: account, activity: rows, epoch: source.epoch, goals: source.goals, accessibleProjects: [], children: source.children, now: now))
+        }
+        try assertEquivalent(.init(account: "", activity: source.activity, epoch: [], goals: source.goals, accessibleProjects: [], children: source.children, now: now))
+    }
+    func testCancellationStopsRootAndChildParsingAndInvalidGoalsNeverPublish() throws {
+        let source = try input(); var checks = 0
+        XCTAssertThrowsError(try PreparedInsights(source, shouldStop: { checks += 1; return checks > 3 })) { XCTAssertTrue($0 is CancellationError) }
+        let reading = InsightsReading(account: account, activity: source.activity, epoch: source.epoch, goals: source.goals, children: source.children, shouldStop: { true })
+        XCTAssertFalse(reading.reliable)
+        var goals = source.goals; goals.weekStart = 9
+        XCTAssertThrowsError(try PreparedInsights(.init(account: account, activity: source.activity, epoch: source.epoch, goals: goals, accessibleProjects: [], children: source.children, now: now)))
+        let child = ChildWorkReading(.init(rows: [Record(["id": .string("bad")])], epoch: source.epoch), now: now, shouldStop: { true })
+        XCTAssertTrue(child.incomplete); XCTAssertEqual(child.malformed, 1); XCTAssertTrue(child.credits(shouldStop: { true }).isEmpty)
+    }
+    func testAsyncLoadIsCancellableAndMatchesSynchronousPreparation() async throws {
+        let source = try input(), gate = InsightsReadGate()
+        let task = Task { await gate.wait(); return try await PreparedInsights.load(source) }
+        task.cancel(); await gate.release()
+        do { _ = try await task.value; XCTFail("Cancelled reading must not publish") } catch { XCTAssertTrue(error is CancellationError) }
+        let result = try await PreparedInsights.load(source)
+        XCTAssertEqual(result.reading(scope: .mine, windowDays: 7), try PreparedInsights(source).reading(scope: .mine, windowDays: 7))
+    }
+    func testLargeHistoryCanSwitchScopeAndRangeWithoutReparsingOrChangingSources() throws {
+        let source = try input(); var rows = source.activity
+        let prototype = source.activity[0], old = TaskActivity.stamp(now.addingTimeInterval(-60*24*3600))
+        for index in 10..<5010 {
+            var row = prototype; row["id"] = .string(String(format: "ed130000-0000-4000-8000-%012d", index)); row["task_id"] = row["id"]; row["sequence"] = .number(Double(index)); var after = row["after_state"].object; after["completed_at"] = .string(old); row["after_state"] = .object(after); rows.append(row)
+        }
+        let large = PreparedInsights.Input(account: account, activity: rows, epoch: source.epoch, goals: source.goals, accessibleProjects: [], children: source.children, now: now)
+        let start = Date(), value = try PreparedInsights(large), elapsed = Date().timeIntervalSince(start)
+        for index in 0..<1000 { XCTAssertEqual(value.reading(scope: index.isMultiple(of: 2) ? .mine : .workspace, windowDays: index.isMultiple(of: 3) ? 7 : 28).days.count, index.isMultiple(of: 3) ? 7 : 28) }
+        XCTAssertEqual(value.input, large); try assertEquivalent(large)
+        print("PREPARED_INSIGHTS_5000_SECONDS=\(elapsed)")
+    }
+}

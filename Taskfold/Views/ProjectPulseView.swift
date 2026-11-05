@@ -256,15 +256,55 @@ struct InsightsView:View {
     @State private var windowDays=7
     @State private var selectedDate:Date?
     @State private var editing=false
+    @State private var clockStart = Date()
+    @State private var session: UUID?
+    @State private var prepared: ReadResult?
+    @State private var readingFailure: String?
+    private struct ReadRequest: Equatable {
+        let input: PreparedInsights.Input
+        let session: UUID
+        func sameSource(as other: Self) -> Bool {
+            session == other.session && input.account == other.input.account && input.activity == other.input.activity &&
+            input.epoch == other.input.epoch && input.goals == other.input.goals && input.accessibleProjects == other.input.accessibleProjects && input.children == other.input.children
+        }
+    }
+    private struct ReadResult { let request: ReadRequest; let value: PreparedInsights }
     @AccessibilityFocusState private var goalsFocused:Bool
-    private var active:Bool { request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) && store.insightsAvailable }
+    private var active:Bool { request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) && store.insightsAvailable && store.workflowPreviewReady(request.workspace) && (session == nil || session == store.backend.reminderSessionIncarnation) }
     var body:some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment:.leading,spacing:24) {
                     if !active { ContentUnavailableView("Workspace changed",systemImage:"person.crop.circle",description:Text("Reopen Insights in your current workspace.")) }
                     else if let goals=store.productivityGoals {
-                        TimelineView(.periodic(from:.now,by:60)) { context in content(goals,now:context.date) }
+                        TimelineView(.periodic(from:clockStart,by:60)) { context in
+                            let read = ReadRequest(input: input(goals, now: context.date), session: session ?? store.backend.reminderSessionIncarnation)
+                            Group {
+                                if let prepared, prepared.request.sameSource(as: read) { content(goals, prepared: prepared.value, now: prepared.value.input.now) }
+                                else if let readingFailure { ContentUnavailableView("Progress unavailable", systemImage: "chart.bar.xaxis", description: Text(readingFailure)) }
+                                else { ProgressView("Reading recorded progress…").accessibilityIdentifier("insightsLoading") }
+                            }
+                            .task(id: read) {
+                                readingFailure = nil
+                                do {
+                                    // Capture time when a source revision starts, so newly recorded
+                                    // work appears immediately without restarting reads for chart selection.
+                                    let source = read.input
+                                    let current = PreparedInsights.Input(account: source.account, activity: source.activity, epoch: source.epoch,
+                                        goals: source.goals, accessibleProjects: source.accessibleProjects, children: source.children, now: Date())
+                                    let value = try await PreparedInsights.load(current)
+                                    try Task.checkCancellation()
+                                    guard active, read.session == store.backend.reminderSessionIncarnation, let currentGoals = store.productivityGoals,
+                                          read.input == input(currentGoals, now: context.date) else { return }
+                                    prepared = ReadResult(request: read, value: value)
+                                } catch is CancellationError { }
+                                catch {
+                                    guard active, read.session == store.backend.reminderSessionIncarnation, let currentGoals = store.productivityGoals,
+                                          read.input == input(currentGoals, now: context.date) else { return }
+                                    readingFailure = error.localizedDescription
+                                }
+                            }
+                        }
                     } else { ContentUnavailableView("Goals unavailable",systemImage:"arrow.down.app",description:Text("The saved settings are preserved. Refresh or update Taskfold before editing these goals.")) }
                 }.padding(24).frame(maxWidth:760,alignment:.leading).frame(maxWidth:.infinity)
             }.navigationTitle("Insights")
@@ -273,6 +313,8 @@ struct InsightsView:View {
             #endif
             .toolbar { ToolbarItem(placement:.cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("closeInsights") } }
             .sheet(isPresented:$editing,onDismiss:{if active { goalsFocused=true }}) { ProductivityGoalsEditor(workspace:request.workspace) }
+            .onAppear { if session == nil { session = store.backend.reminderSessionIncarnation } }
+            .onChange(of: active) { _, readable in if !readable { prepared = nil; readingFailure = nil; editing = false } }
             .onChange(of:store.workspaceGeneration) { _,_ in dismiss() }
             .onChange(of:windowDays) { _,_ in selectedDate=nil }
             .onChange(of:scope) { _,_ in selectedDate=nil }
@@ -281,11 +323,13 @@ struct InsightsView:View {
         .frame(minWidth:520,idealWidth:700,minHeight:580,idealHeight:760)
         #endif
     }
-    private func reading(_ goals:ProductivityGoals,scope:InsightsReading.Scope,now:Date) -> InsightsReading {
-        InsightsReading(account:store.userID,activity:store.rows(TaskActivity.table),epoch:store.rows(TaskActivity.epochTable),goals:goals,scope:scope,accessibleProjects:Set(store.allProjects.map(\.id)),windowDays:windowDays,now:now,children:store.childActivityHistory)
+    private func input(_ goals: ProductivityGoals, now: Date) -> PreparedInsights.Input {
+        .init(account: store.userID, activity: store.rows(TaskActivity.table), epoch: store.rows(TaskActivity.epochTable),
+              goals: goals, accessibleProjects: Set(store.allProjects.map(\.id)), children: store.childActivityHistory, now: now)
     }
-    private func content(_ goals:ProductivityGoals,now:Date) -> some View {
-        let personal=reading(goals,scope:.mine,now:now),shown=scope == .mine ? personal : reading(goals,scope:scope,now:now)
+    private func content(_ goals:ProductivityGoals, prepared: PreparedInsights, now:Date) -> some View {
+        let personal = prepared.reading(scope: .mine, windowDays: windowDays)
+        let shown = prepared.reading(scope: scope, windowDays: windowDays)
         return VStack(alignment:.leading,spacing:24) {
             if textSize.isAccessibilitySize {
                 VStack(alignment:.leading,spacing:12) { personalHeading;goalsButton }
@@ -320,7 +364,7 @@ struct InsightsView:View {
                     } else { chart(shown,goals:goals) }
                     if let selection=selectedDate,let day=shown.days.first(where:{$0.id==TaskPlanner.dayKey(selection,calendar:goals.calendar)}) {
                         Text(daySummary(day,calendar:goals.calendar)).font(.callout).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("insightsSelectedDay")
-                    } else if !textSize.isAccessibilitySize { Text("Select a day to see its count. Rest days are muted.").font(.caption).foregroundStyle(.secondary) }
+                    } else if !textSize.isAccessibilitySize { Text("Tap a day to keep its count visible. Rest days are muted.").font(.caption).foregroundStyle(.secondary) }
                 }.padding(20).background(Color.secondary.opacity(0.05),in:RoundedRectangle(cornerRadius:24))
             }
             if shown.historyIncomplete { Label("Partial history. Available parent and subtask completions are shown; missing history is not treated as zero.",systemImage:"clock.badge.exclamationmark").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("insightsHistoryPartial") }
@@ -365,7 +409,9 @@ struct InsightsView:View {
             .chartYScale(domain:0...maxCount)
             .chartXAxis { AxisMarks(values:.stride(by:.day,count:windowDays==7 ? 1 : 7)) { _ in AxisValueLabel(format:windowDays==7 ? .dateTime.weekday(.abbreviated) : .dateTime.month(.abbreviated).day());AxisGridLine() } }
             .chartYAxis { AxisMarks(values:ticks) { AxisValueLabel();AxisGridLine() } }
-            .chartXSelection(value:$selectedDate).frame(height:220).environment(\.calendar,goals.calendar).environment(\.timeZone,goals.calendar.timeZone).accessibilityIdentifier("insightsChart")
+            .chartXSelection(value:$selectedDate)
+            .chartGesture { proxy in SpatialTapGesture().onEnded { proxy.selectXValue(at: $0.location.x) } }
+            .frame(height:220).environment(\.calendar,goals.calendar).environment(\.timeZone,goals.calendar.timeZone).accessibilityIdentifier("insightsChart")
     }
     private func weekday(_ value:Int) -> String { ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][value-1] }
     private func date(_ date:Date,calendar:Calendar) -> String { let f=DateFormatter();f.calendar=calendar;f.timeZone=calendar.timeZone;f.dateStyle = .medium;return f.string(from:date) }
