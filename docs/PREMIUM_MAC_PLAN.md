@@ -11016,3 +11016,8 @@ Stop/Close now release private preparation controls immediately; a superseded re
 ### 6 November — accessible project-file review and saved summaries
 
 Final-review/result file counts now expose explicit accessibility label/value pairs. Saved-transfer recovery identifies the reviewed file count and private originals. The owning Mac app and its adapted isolated file fixture build and sign successfully. Three native iPhone peer journeys pass in the owning iOS repository (consent/exact cold transfer retry, lost preparation/cancellation, held-copy Stop/cold Continue); this is not Mac runtime acceptance. See `native-project-files/native-ui-verification.json`. Mac/iPad native journeys and wider speech/context/provider acceptance remain open; no normal gate or installed app changed.
+
+
+### 6 November — tablet scope accepted; Mac walkthrough awaits unlock
+
+The owning iOS repository accepts the same three project-file consent/recovery journeys on its existing iPad Pro Simulator, with no runtime warnings and the same production Swift candidate as the accepted phone runs. This does not establish Mac runtime acceptance. The signed Mac fixture was launched, but computer use reports a locked Mac; one unlock request is pending, and the isolated process was closed to avoid clutter. Normal Taskfold stays untouched. See `native-project-files/tablet-native-verification.json`.

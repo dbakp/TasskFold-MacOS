@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Project files · iPhone consent and cold recovery verified",
-  "latest": "Three real iPhone Simulator screen journeys now pass, with consent/cold Retry also accepted at the largest text size: explicit file consent with an exact cold transfer retry, lost-preparation recovery/cancellation, and Stop during a held copy followed by cold Continue. The final-review/success counts now have explicit accessibility values, and saved-transfer recovery shows its reviewed file count. Both current app builds/signatures pass. These are isolated native peer checks; Mac/iPad runtime, wider accessibility/context/lifecycle and hosted/provider acceptance remain. Normal gates and installed apps are unchanged; assistance stays on-device only and further iPhone installation is deferred.",
+  "focus": "Project files · iPhone and iPad recovery verified",
+  "latest": "The three file-transfer journeys now pass on both iPhone and iPad Simulators: explicit consent with exact cold transfer retry, lost-preparation checking/cancellation, and held-copy Stop/cold Continue. Phone consent/cold Retry also passes at largest text. Tablet sheets and count readability are observed; no runtime warnings are reported. Mac screen verification awaits a manual unlock; its signed isolated app was closed after the blocked inspection. Wider contexts and hosted/provider acceptance remain. Installed apps and normal gates are unchanged; assistance remains on-device only and further iPhone installation is deferred.",
   "next": [
     "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Unlock Mac for current normal/largest-text note and assistant flows, then package later source changes. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
-    "ACCEPT NEXT: run the Mac/iPad project-file preparation/consent/recovery screens. Standard iPhone consent, exact cold transfer retry, lost-preparation cancellation and held-copy Stop/cold Continue now pass, including largest-text consent/cold Retry; do not repeat those unchanged. Continue wider account/window/access/storage and speech acceptance separately, then everyday note/editing/planning/navigation polish in bounded updates. Advanced gates and agreed rollout deferrals remain.",
+    "ACCEPT NEXT: inspect the already-signed Mac project-file preparation/consent/recovery screens after a manual unlock. Standard iPhone/iPad consent, exact cold transfer retry, lost-preparation cancellation and held-copy Stop/cold Continue now pass, with largest-text phone consent/cold Retry; do not repeat those unchanged. Continue wider account/window/access/storage and speech acceptance separately, then everyday note/editing/planning/navigation polish in bounded updates. Advanced gates and agreed rollout deferrals remain.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -718,7 +718,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Independent subtask editing, conflict review and cold retry have scoped iPhone/Mac proof. Legacy-tree review preserves supported older work and refuses malformed/stale requests. Project files pass inventory, private preparation and the reviewed atomic local service move. Three production-screen iPhone peer journeys now verify explicit consent, exact cold transfer retry, lost preparation/cancellation and held-copy Stop/cold Continue through real saved-request storage. Accessible file counts and a saved-transfer file summary are fixed; both apps build/sign. Mac/iPad native screens, wider accessibility/account/window/locked-storage, combined policies, wider legacy/history/lifecycle/ownership and hosted acceptance remain. Advanced gates stay off.",
+              "detail": "Independent subtask editing, conflict review and cold retry have scoped iPhone/Mac proof. Legacy-tree review preserves supported older work and refuses malformed/stale requests. Project files pass inventory, private preparation and the reviewed atomic local service move. Production-screen iPhone and iPad peer journeys now verify explicit consent, exact cold transfer retry, lost preparation/cancellation and held-copy Stop/cold Continue through real saved-request storage. Accessible file counts and a saved-transfer file summary are fixed; both apps build/sign. Mac native screens, wider iPad sizes, wider accessibility/account/window/locked-storage, combined policies, wider legacy/history/lifecycle/ownership and hosted acceptance remain. Advanced gates stay off.",
               "steps": [
                 {
                   "state": "done",
@@ -802,7 +802,7 @@
                 },
                 {
                   "state": "build",
-                  "title": "Keep shared files and discussions with the right workspace: atomic service and iPhone consent/cold recovery pass; Mac/iPad, wider ownership and hosted acceptance remain"
+                  "title": "Keep shared files and discussions with the right workspace: atomic service and phone/tablet consent/cold recovery pass; Mac, wider ownership and hosted acceptance remain"
                 },
                 {
                   "state": "done",
@@ -1123,7 +1123,8 @@
             "native-project-files/cleanup.json",
             "native-project-files/progress-validation.json",
             "native-project-files/core-cases.json",
-            "native-project-files/native-ui-verification.json"
+            "native-project-files/native-ui-verification.json",
+            "native-project-files/tablet-native-verification.json"
           ],
           "focus": true
         },
@@ -1300,7 +1301,8 @@
     "native-project-files/progress-validation.json",
     "native-project-files/core-cases.json",
     "native-project-files/controls-verification.json",
-    "native-project-files/native-ui-verification.json"
+    "native-project-files/native-ui-verification.json",
+    "native-project-files/tablet-native-verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1532,7 +1534,7 @@
     "native-audience-approval/controller-verification.json": "941fe8ca06b88e41e7f8b78633683d2da0ebf82a597c0a23d1c172e461a7f210",
     "native-audience-approval/phone-verification.json": "71292dfcde4e4a2306717549b7b20e4eb047bdb1b443627fc20ae969175181a6",
     "native-audience-approval/verification.json": "37c74717ddb2a5ed0f51803e72b3fc5d0029185dae7c4587bff433ae4b7e857a",
-    "native-project-files/README.md": "9aa6caac89b57b170c6fc3d55804b7e1337f421b4afaf0f463a8f47f0a998c12",
+    "native-project-files/README.md": "85261993848d8a4cb4372a5b750cc49bad9e5db66edcba1ef6ba927265449a1d",
     "native-project-files/cleanup.json": "63b43f84bc2bdbf9831c5a615b16d1a7cbf7b1be1c99f36e1afbaa6cc13e8c8f",
     "native-project-files/controls-verification.json": "e7090874ccff87a37683c9af2ba42590026e1877df10ff223a4352a35a90de4a",
     "native-project-files/core-cases.json": "c879720bcdd4b07ef0fff39feec273b6d2494742295c36de5739f06e69f1dc82",
@@ -1540,6 +1542,7 @@
     "native-project-files/native-ui-verification.json": "853c76375b8f2015b733f4904b5d3f4e6b42ea7b46cf811e7816c058b9c67eb5",
     "native-project-files/progress-validation.json": "be2185da55d806421c603ed2665d443a52b4b128f86e256d4d4295d6deab8911",
     "native-project-files/signed-build.json": "46c66f40cbd9e97699ea1ec3e23226ec8de85c2e80a357aa170510fe6df90b27",
+    "native-project-files/tablet-native-verification.json": "e8332008cbec50d1a4365b6f06ddc830d28ff54e56400cfcafbe4047a771457c",
     "native-project-files/verification.json": "ff40cfbe7c13264946d5f8ecd76c3397cd52d9a0cb04ada30fff23bebea7df05",
     "native-protected-recordings/verification.json": "7a756520c74249d6b962e40138eb12c82deed2b998ca404aaef14ac4ef31c8c7",
     "navigation-counts/README.md": "7364071d0757b755a1699119d69a331ec9905027be48d1b0281b9aeadb16ddd9",

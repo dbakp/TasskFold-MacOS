@@ -1,0 +1,118 @@
+{
+  "date": "2026-11-06",
+  "platform": "mac",
+  "nativeSyntheticPeer": true,
+  "integratedSQLGatewayStorage": false,
+  "normalGatesChanged": false,
+  "installedAppsUnchanged": true,
+  "sourceSHA256": {
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "be471585024c1d0af216706d723e458d795a3d0adec9551fe3b33cd52933357e",
+    "Taskfold/ProjectAdoptionNativeFixture.swift": "0434f412bf41258dba19e55c4f98a64da1fa98ae11de8e7b8df20e72b400c1d9"
+  },
+  "macWalkthrough": {
+    "macScreenObserved": false,
+    "reason": "Computer use reports Mac locked; manual unlock requested once. No reply yet.",
+    "isolatedProcessClosed": [
+      16933
+    ],
+    "ordinaryAppUnchanged": true,
+    "isolatedProcessesObservedBeforeCleanup": [
+      16933
+    ]
+  },
+  "remaining": [
+    "Mac native screens require manual unlock",
+    "Wider account/window/locked-storage and human speech contexts",
+    "Wider iPad sizes and largest-text controls",
+    "Hosted/provider/lifecycle acceptance remains separate"
+  ],
+  "nativeCasesPassed": 0,
+  "owningIOSContext": "The iOS repository records three accepted iPad native peer journeys. This is context, not Mac runtime acceptance.",
+  "cleanup": {
+    "apply": true,
+    "freeBeforeBytes": 60285546496,
+    "actions": [
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-device-inventory.json",
+        "allocatedBytes": 24576
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-consent-v1-attachments",
+        "allocatedBytes": 700416
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-consent-v1-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-stop-v1-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-cancel-v1-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-cancel-v1.xcresult",
+        "allocatedBytes": 1564672
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-export.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-stop-v1.log",
+        "allocatedBytes": 40960
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-cancel-v1.log",
+        "allocatedBytes": 40960
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-stop-v1.xcresult",
+        "allocatedBytes": 1617920
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-consent-v1.xcresult",
+        "allocatedBytes": 3256320
+      },
+      {
+        "kind": "summarizedTabletTestOutput",
+        "path": "/tmp/taskfold-files-ipad-consent-v1.log",
+        "allocatedBytes": 65536
+      },
+      {
+        "kind": "retiredEvidenceHelper",
+        "path": "/tmp/taskfold-record-ipad-files.py",
+        "allocatedBytes": 8192
+      }
+    ],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 672514048,
+        "projectedAllocatedBytes": 672514048
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 532709376,
+        "projectedAllocatedBytes": 532709376
+      }
+    ],
+    "freeAfterBytes": 60278472704,
+    "actualFreeChangeBytes": -7073792
+  }
+}

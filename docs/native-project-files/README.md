@@ -30,7 +30,7 @@ Each handler suite passes **27 tests**, including default-off publication, recov
 
 ## Still required
 
-Extend the scoped iPhone peer journeys recorded below to Mac/iPad and wider disabled/access-changed availability, largest text, keyboard and speech. Accept provider-integrated native flows separately. Verify native secure storage and multiple-window behavior, rate-limit/high-volume behavior, combined file/recording/integration policies, wider lifecycle/history/account removal, legacy/unavailable references and other ownership/realm directions. Hosted and producer-terminal/maintenance acceptance remain separate. The new code is built; the full everyday feature is not yet accepted or enabled.
+Extend the scoped iPhone peer journeys recorded below to Mac and wider iPad disabled/access-changed availability, largest text, keyboard and speech. Accept provider-integrated native flows separately. Verify native secure storage and multiple-window behavior, rate-limit/high-volume behavior, combined file/recording/integration policies, wider lifecycle/history/account removal, legacy/unavailable references and other ownership/realm directions. Hosted and producer-terminal/maintenance acceptance remain separate. The new code is built; the full everyday feature is not yet accepted or enabled.
 
 On-device-only assistance and deferred further iPhone installation remain the user's current choices. Normal phone34/Mac14 and frozen packages remain unchanged. Only reusable test/compiler outputs are cleaned; no real tasks, Keychain entries, backups, Docker volumes or unrelated devices are deleted.
 
@@ -70,3 +70,11 @@ The captured genuine service file contract is adapted onto the existing syntheti
 [Current owning build evidence](native-ui-verification.json). The Mac screen/fixture builds and signs successfully; the iPhone UI results are context from its owning repository, not Mac runtime acceptance. The existing Mac host's identity, session namespace and private app-group binding are verified before preparing its synthetic file scenario. No sibling repository is required for the Mac build or fixture.
 
 The complete iPhone consent/review/confirmation-loss/cold-retry journey also passes at the largest accessibility text size, with the final/result counts readable in the scrolling list. The Simulator restores its previous text size and shutdown state. This does not establish human speech, every other largest-text control, Mac/iPad runtime or an integrated provider journey. Repeat fixture preparation preserves the timestamps of unchanged project, Info and resource inputs in both owning hosts; this is verified directly to avoid unnecessary build invalidation.
+
+## 6 November — iPad transfer sheet follow-up
+
+The same production Swift candidate now passes all three standard-size journeys on the existing iPad Pro Simulator: explicit file consent/review/back, applied-reply loss with exact cold transfer retry and current cache refresh; lost first preparation reply with read-only cold checking/cancellation and unchanged source tables; and held-copy Stop/Close with exact cold Continue and cancellation. Each run passes without runtime warnings and restores the prior text size and shutdown state. The observed result sheet is readable with its count and actions in the tablet layout. This verifies a synthetic native peer, not a provider transaction, every tablet size or human speech.
+
+The owning iOS driver now selects either of the two existing acceptance devices with `--device iphone` or `--device ipad`. No Simulator is created, no physical app is installed and no normal gate changes. [Follow-up evidence](tablet-native-verification.json).
+
+The Mac walkthrough is still unobserved: computer use reported the Mac locked. One manual-unlock request was issued while independent iPad work continued. The one verified isolated process was closed after testing; the normal app and its drafts were left untouched. The signed candidate remains ready for the Mac check when unlocked.
