@@ -1,0 +1,62 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 59764457472,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 685621248,
+      "projectedAllocatedBytes": 685621248
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 624594944,
+      "projectedAllocatedBytes": 624594944
+    }
+  ],
+  "freeAfterBytes": 59763425280,
+  "actualFreeChangeBytes": -1032192,
+  "runStartFreeBytes": 61440593920,
+  "retiredCompletedOutputs": [
+    {
+      "path": "/tmp/taskfold-recovery-current-build.log",
+      "bytes": 89648
+    },
+    {
+      "path": "/tmp/taskfold-recovery-current-build-2.log",
+      "bytes": 80249
+    },
+    {
+      "path": "/tmp/taskfold-recovery-current-build-3.log",
+      "bytes": 44836
+    },
+    {
+      "path": "/tmp/taskfold-recovery-current-build-4.log",
+      "bytes": 41162
+    },
+    {
+      "path": "/tmp/taskfold-recovery-current-mac-build.log",
+      "bytes": 45002
+    },
+    {
+      "path": "/tmp/taskfold-recovery-refusals-current.log",
+      "bytes": 53280
+    },
+    {
+      "path": "/tmp/taskfold-recovery-refusals-preview.log",
+      "bytes": 51087
+    },
+    {
+      "path": "/tmp/taskfold-recovery-refusals-current.xcresult",
+      "bytes": 38773323
+    },
+    {
+      "path": "/tmp/taskfold-recovery-refusals-preview.xcresult",
+      "bytes": 36191176
+    }
+  ],
+  "installedAppsChanged": false,
+  "realDataRemoved": false
+}

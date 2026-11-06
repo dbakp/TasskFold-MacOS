@@ -38,8 +38,10 @@
     "evidence": "iphone-completion.json",
     "endpointSynthetic": true,
     "largestTextRefusalCaseAccepted": false,
-    "lastFailure": "System Files selection/view controls did not reach the intended callback",
-    "wholeNativeRunAccepted": false
+    "lastFailure": "The real Files picker remained presented after a fully visible preview tap at accessibility XXXL. No production recovery callback or preservation acceptance was reached.",
+    "wholeNativeRunAccepted": false,
+    "currentSourceRefusalEvidence": "iphone-refusals-current.json",
+    "currentSourceBuildAndStrictSignaturesPassed": true
   },
   "macNativeProtectedSessionAccepted": false,
   "hostedIssuerVerifierAccepted": false,
@@ -54,5 +56,20 @@
     "supabase/functions/delete-account/recovery.ts": "bc72c23b3688d47165c005a8b2b9f3727507ed97918211493a6beef7f48e91a3",
     "supabase/functions/account-removal-repair/handler.ts": "3766d12cf005747c38b01607a72dbf502178794a637a499840f66b6b76ba7d16",
     "Scripts/Database/test-account-removal-repair.mjs": "a58f38fcc2f8e1128e2e43a3a0f238d7a55baef6d65554cba2ad1dcc342c478c"
+  },
+  "currentReviewDate": "2026-11-06",
+  "acceptanceMachinery": {
+    "backupKeyQueryUsesActualVaultNamespace": true,
+    "activeFilesViewOnly": true,
+    "fullyVisiblePreviewTap": true,
+    "sourceAndProductStabilityRequired": true,
+    "boundedRun": true,
+    "genuineProviderClaim": false
+  },
+  "currentMacFixtureQueryBuild": {
+    "xcodeExitCode": 0,
+    "strictSignatureVerified": true,
+    "runtimeAccepted": false,
+    "owningEvidence": "Mac repository: mac-fixture-query-build.json"
   }
 }

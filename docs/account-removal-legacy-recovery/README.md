@@ -113,3 +113,27 @@ server refusal contracts have their separate passing checks. The driver now
 supports one selected case and reads XCTest JSON attachments, so resetting the
 next synthetic workspace cannot erase the earlier case's evidence. No new
 native retry was used to replace the already accepted completion/cold case.
+
+
+### Current-source refusal acceptance — 6 November 2026
+
+The isolated backup-key observation now uses BackupVault's own item query,
+including its test-only namespace, without reading secret bytes. It no longer
+checks a hard-coded normal-app service while the prepared app writes elsewhere.
+The iOS picker driver selects only cells in the active Files collection and
+waits for the production import's review or refusal callback, rather than using
+retained system cells as evidence of modal dismissal. The runner requires a
+successful current-source build receipt, checks every prepared Swift source and
+the owning test file, verifies both signatures, bounds test execution, and
+checks source/product stability afterward. This changes acceptance machinery;
+normal recovery enablement and hosted services remain unchanged.
+
+The current source-bound iPhone build and strict app/runner signatures pass.
+Two bounded attempts still fail inside the real Files picker: first at the
+cell tap, then after tapping a fully visible preview. Neither reached the
+production import callback. The largest-text refusal case remains **unaccepted**;
+this is not a new successful P0 checkpoint or an established production defect.
+`iphone-refusals-current.json` records the final result. Do not repeat this
+unchanged picker matrix or ask the user for another routine click. Normal-size
+completion/cold preservation retains its earlier, separately scoped evidence.
+Mac protected-session and hosted issuer/verifier acceptance remain open.
