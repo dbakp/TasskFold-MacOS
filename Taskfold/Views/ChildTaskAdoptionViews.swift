@@ -41,6 +41,7 @@ struct ChildTaskAdoptionView: View {
     @State private var activeID: String?
     @State private var failure: String?
     @State private var search = ""
+    @State private var resultsQuery: ChildTaskAdoptionSearch?
     @State private var exportDocument: WorkspaceDocument?
     @State private var exporting = false
     @State private var exportScope: ChildTaskFieldClientScope?
@@ -61,7 +62,8 @@ struct ChildTaskAdoptionView: View {
         return "original-subtasks-" + Dates.day(Date())
     }
     private var displayedTargets: [ChildTaskAdoptionTarget] {
-        targets.filter { search.isEmpty || $0.title.localizedStandardContains(search) }.sorted {
+        guard let query = try? ChildTaskAdoptionSearch(search), resultsQuery == query else { return [] }
+        return targets.sorted {
             let order = $0.title.localizedStandardCompare($1.title)
             return order == .orderedSame ? $0.id < $1.id : order == .orderedAscending
         }
@@ -128,14 +130,26 @@ struct ChildTaskAdoptionView: View {
                 } else {
                     if store.childTaskAdoptionEnabled {
                         Section("Review a task") {
-                            Text("Upgrade saved subtasks one task at a time. Private drafts and unfinished actions stay protected.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            if (try? ChildTaskAdoptionSearch(search)) == nil {
+                                Text("Search with up to 256 characters.").foregroundStyle(.secondary).accessibilityIdentifier("childAdoptionSearchValidation")
+                            } else if !discovering, failure == nil, resultsQuery == (try? ChildTaskAdoptionSearch(search)), displayedTargets.isEmpty {
+                                Text(search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "No tasks available to review." : "No matching tasks. Try another title.").foregroundStyle(.secondary).accessibilityIdentifier("childAdoptionSearchEmpty")
+                            }
+                            if search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                Text("Upgrade saved subtasks one task at a time. Private drafts and unfinished actions stay protected.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            }
                             ForEach(displayedTargets) { root in
-                                Button(root.title + (root.titleTruncated ? "…" : "")) { select(root.id) }.disabled(model.busy || !model.loaded).accessibilityIdentifier("childAdoptionTarget-" + root.id)
+                                Button { select(root.id) } label: {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(root.title + (root.titleTruncated ? "…" : "")).fixedSize(horizontal: false, vertical: true)
+                                        if let excerpt = root.matchExcerpt { Text("…" + excerpt + "…").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                                    }
+                                }.disabled(model.busy || !model.loaded).accessibilityIdentifier("childAdoptionTarget-" + root.id)
                             }
                             if discovering { ProgressView("Finding saved tasks…") }
-                            if let nextTarget { Button("Load more tasks") { Task { await discover(after: nextTarget) } }.disabled(discovering || model.busy).accessibilityIdentifier("childAdoptionMore") }
+                            if resultsQuery == (try? ChildTaskAdoptionSearch(search)), let nextTarget { Button("Load more tasks") { Task { await discover(after: nextTarget) } }.disabled(discovering || model.busy).accessibilityIdentifier("childAdoptionMore") }
                             Button("Refresh tasks", systemImage: "arrow.clockwise") { Task { await discover() } }.disabled(discovering || model.busy || !store.online).accessibilityIdentifier("childAdoptionDiscover")
-                            if !search.isEmpty { Text("Search covers the tasks loaded here. Load more to include more tasks.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                            if !search.isEmpty { Text("Search includes all tasks you can access. More matches appear as you load more.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                         }
                     }
                     if !model.entries.isEmpty {
@@ -152,10 +166,16 @@ struct ChildTaskAdoptionView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .task(id: scope) { await open() }
+            .task(id: search) {
+                guard usable, selected == nil else { return }
+                do { try await Task.sleep(for: .milliseconds(250)); try Task.checkCancellation() }
+                catch { return }
+                await discover()
+            }
             .onChange(of: phase) { _, value in if value == .active { Task { await open() } } else { close() } }
             .onChange(of: scope) { before, after in
                 exporting = false; exportDocument = nil; exportScope = nil; exportRoot = nil; exportMessage = nil
-                if before?.account != after?.account || before?.origin != after?.origin || before?.workspace != after?.workspace || after == nil { selected = nil; activeID = nil }
+                if before != after { search = ""; resultsQuery = nil }; if before?.account != after?.account || before?.origin != after?.origin || before?.workspace != after?.workspace || after == nil { selected = nil; activeID = nil }
             }
             .onChange(of: store.snapshotRevision) { _, _ in if !reading { read = nil } }
             .onDisappear { close() }
@@ -173,8 +193,8 @@ struct ChildTaskAdoptionView: View {
                 }
             }
     }
-    private func select(_ root: String?) { ticket = UUID(); selected = root; activeID = nil; read = nil; failure = nil; exportMessage = nil; reading = false; if root != nil { Task { await refresh() } } }
-    private func close() { targets = []; nextTarget = nil; discovering = false; discoveryTicket = UUID(); model?.close(); model = nil; modelScope = nil; read = nil; ticket = UUID(); reading = false; failure = nil }
+    private func select(_ root: String?) { discoveryTicket = UUID(); discovering = false; ticket = UUID(); selected = root; activeID = nil; read = nil; failure = nil; exportMessage = nil; reading = false; if root != nil { Task { await refresh() } } else { Task { await discover() } } }
+    private func close() { resultsQuery = nil; targets = []; nextTarget = nil; discovering = false; discoveryTicket = UUID(); model?.close(); model = nil; modelScope = nil; read = nil; ticket = UUID(); reading = false; failure = nil }
     private func open() async {
         close(); guard phase == .active, let captured = scope else { return }
         do {
@@ -184,20 +204,24 @@ struct ChildTaskAdoptionView: View {
         } catch { guard captured == scope else { return }; failure = "Saved upgrades couldn’t be read. Their originals are kept." }
     }
     private func discover(after: String? = nil) async {
-        guard usable, store.childTaskAdoptionEnabled else { return }
+        guard usable, selected == nil, store.childTaskAdoptionEnabled else { return }
+        guard let query = try? ChildTaskAdoptionSearch(search) else {
+            discoveryTicket = UUID(); discovering = false; resultsQuery = nil; targets = []; nextTarget = nil; failure = nil; return
+        }
+        guard after == nil || resultsQuery == query else { return }
         let captured = scope, request = UUID(); discoveryTicket = request; discovering = true; failure = nil
-        if after == nil { targets = []; nextTarget = nil }
+        if after == nil { targets = []; nextTarget = nil; resultsQuery = query }
         defer { if discoveryTicket == request { discovering = false } }
         do {
-            let page = try await store.childTaskAdoptionTargets(after: after)
-            guard usable, captured == scope, discoveryTicket == request, phase == .active, !Task.isCancelled else { return }
+            let page = try await store.childTaskAdoptionTargets(after: after, query: query)
+            guard usable, selected == nil, captured == scope, discoveryTicket == request, query == (try? ChildTaskAdoptionSearch(search)), phase == .active, !Task.isCancelled else { return }
             if after != nil {
                 guard targets.last?.id == after, Set(targets.map(\.id)).isDisjoint(with: page.targets.map(\.id)) else { throw ChildTaskAdoptionCommand.invalid }
                 targets += page.targets
             } else { targets = page.targets }
             nextTarget = page.next
         } catch {
-            guard usable, captured == scope, discoveryTicket == request else { return }
+            guard usable, selected == nil, captured == scope, discoveryTicket == request, query == (try? ChildTaskAdoptionSearch(search)), !Task.isCancelled else { return }
             failure = "Saved tasks couldn’t be listed. Refresh to try again; their original content is kept."
         }
     }

@@ -3,7 +3,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
-const migrations=["20261030093035_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104147_personal_child_record_task_moves.sql", "20261030114138_cross_root_child_task_transfers.sql", "20261030134132_reviewed_child_record_adoption.sql", "20261030170753_child_adoption_metadata_discovery.sql"];
+const migrations=["20261030093035_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104147_personal_child_record_task_moves.sql", "20261030114138_cross_root_child_task_transfers.sql", "20261030134132_reviewed_child_record_adoption.sql", "20261030170753_child_adoption_metadata_discovery.sql", "20261106173430_child_adoption_global_search.sql"];
 const candidate=await readFile(new URL('../../supabase/migrations/'+migrations.at(-1),import.meta.url),'utf8');
 const report={checks:{},candidateSHA256:createHash('sha256').update(candidate).digest('hex'),deployed:false};
 const check=(name,value,expected=true)=>{assert.deepEqual(value,expected,name);report.checks[name]=true;};
@@ -160,6 +160,41 @@ try {
  for(const role of ['anon','service_role'])check(role+' cannot call discovery',await pg.scalar(`select to_jsonb(has_function_privilege(${lit(role)},'public.taskfold_child_adoption_targets(uuid,integer,uuid)','EXECUTE'))`),false);
  check('discovery wrapper retains caller RLS',await pg.scalar(`select to_jsonb(prosecdef) from pg_proc where oid='public.taskfold_child_adoption_targets(uuid,integer,uuid)'::regprocedure`),false);
  check('discovery actor helper returns only own UUID',await run('taskfold_private.child_adoption_discovery_actor()'),owner.id);
+
+ // Global metadata search: literal matching across the accessible library,
+ // including titles beyond the browse page and beyond the displayed prefix.
+ const search=(q,after=null,limit=100,who='owner')=>run(`public.taskfold_search_child_adoption_targets(${q===null?'null':lit(q)},${after?lit(after):'null'},${limit===null?'null':limit})`,who);
+ const searchID='ffffffff-ffff-4fff-bfff-fffffffffff0';
+ await pg.raw(`insert into public.tasks(id,user_id,title,subtasks) select ('a0000000-0000-4000-8000-'||lpad(i::text,12,'0'))::uuid,${lit(owner.id)},'Search library filler '||i,'[]'::jsonb from generate_series(1,130) i;
+ insert into public.tasks(id,user_id,title,subtasks) values(${lit(searchID)},${lit(owner.id)},${lit('x'.repeat(650)+' Café 100%_\\ exact needle')},'[{"id":"raw","future":{"precise":9007199254740993,"huge":1e1000}}]');`);
+ const searchBefore=await pg.scalar(`select jsonb_build_object('tasks',(select md5(coalesce(jsonb_agg(to_jsonb(t) order by id)::text,'')) from public.tasks t),'records',(select md5(coalesce(jsonb_agg(to_jsonb(r) order by task_id,node_key)::text,'')) from taskfold_private.child_task_records r),'history',(select md5(coalesce(jsonb_agg(to_jsonb(h) order by id)::text,'')) from public.task_node_activity h))`);
+ check('search target lies beyond first browse page',(await discover()).items.some(x=>x.task_id===searchID),false);
+ const match=await search('cafe\u0301');report.searchExample=match;
+ check('search binds protocol and normalized query',[match.protocol,match.query],[2,'café']);
+ check('search finds canonical accented title past first page',match.items.map(x=>x.task_id),[searchID]);
+ check('search keeps metadata bounded and exposes matching tail',match.items[0].title.length===256&&match.items[0].title_truncated&&match.items[0].match_excerpt.includes('Café'));
+ check('literal percent underscore and backslash match exactly',(await search('100%_\\')).items.map(x=>x.task_id),[searchID]);
+ check('percent is not a wildcard',(await search('%not-present%')).items,[]);
+ check('underscore is not a wildcard',(await search('library_filler')).items,[]);
+ check('outside account cannot search private title',(await search('exact needle',null,100,'outside')).items,[]);
+ let searchIDs=[],searchCursor=null,searchPages=0;
+ do { const page=await search('SEARCH LIBRARY FILLER',searchCursor,17);searchIDs.push(...page.items.map(x=>x.task_id));searchCursor=page.next_after;searchPages++;assert(searchPages<10); } while(searchCursor);
+ check('all search matches page without duplicates',searchIDs.length===130&&new Set(searchIDs).size===130);
+ check('search pages use increasing identity order',searchIDs,[...searchIDs].sort());
+ for(const q of [null,'','x'.repeat(257),'🪴'.repeat(257)])await expect('search rejects query '+String(q).length,()=>search(q),'22023');
+ for(const limit of [null,0,101])await expect('search rejects limit '+limit,()=>search('task',null,limit),'22023');
+ check('shared viewer can search allowed project',(await search('Older task',null,100,'owner')).items.some(x=>x.task_id===poisonRoot));
+ await pg.raw(`insert into taskfold_private.team_project_grants(project_id,team_id,user_id,role) values(${lit(tp)},${lit(team)},${lit(users.outside.id)},'viewer')`);
+ check('viewer search includes allowed shared task',(await search('Older task',null,100,'outside')).items.some(x=>x.task_id===poisonRoot));
+ await pg.raw(`delete from taskfold_private.team_project_grants where project_id=${lit(tp)} and user_id=${lit(users.outside.id)}`);
+ check('revoked shared access disappears from search',(await search('Older task',null,100,'outside')).items.some(x=>x.task_id===poisonRoot),false);
+ await pg.raw(`update auth.sessions set not_after=clock_timestamp()-interval '1 second' where id=${lit(owner.session)}`);await expect('expired session cannot search',()=>search('task'),'28000');await pg.raw(`update auth.sessions set not_after=null where id=${lit(owner.session)}`);
+ await pg.raw('update taskfold_private.child_task_record_config set adoption_enabled=false');await expect('disabled rollout cannot search',()=>search('task'),'PT503');await pg.raw('update taskfold_private.child_task_record_config set adoption_enabled=true');
+ for(const role of ['anon','service_role'])check(role+' cannot call search',await pg.scalar(`select to_jsonb(has_function_privilege(${lit(role)},'public.taskfold_search_child_adoption_targets(text,uuid,integer)','EXECUTE'))`),false);
+ check('search retains caller RLS',await pg.scalar(`select to_jsonb(prosecdef) from pg_proc where oid='public.taskfold_search_child_adoption_targets(text,uuid,integer)'::regprocedure`),false);
+ const searchAfter=await pg.scalar(`select jsonb_build_object('tasks',(select md5(coalesce(jsonb_agg(to_jsonb(t) order by id)::text,'')) from public.tasks t),'records',(select md5(coalesce(jsonb_agg(to_jsonb(r) order by task_id,node_key)::text,'')) from taskfold_private.child_task_records r),'history',(select md5(coalesce(jsonb_agg(to_jsonb(h) order by id)::text,'')) from public.task_node_activity h))`);
+ check('search preserves exact task record and history rows',searchAfter,searchBefore);
+ const started=performance.now();await search('exact needle');report.searchMilliseconds=performance.now()-started;report.searchLibrarySize=await pg.scalar('select count(*) from public.tasks');
  const locked=await seed(tree),lb=body(await review(locked)),holder=await pg.hold(`select 1 from public.tasks where id=${lit(locked)} for update`);
  try{await expect('busy root gives bounded retry without writes',()=>rpc(lb),'55P03');}finally{await holder.release('rollback');}
  const rollback=await seed(tree),rb=body(await review(rollback));await pg.raw(`create function taskfold_private.fixture_adoption_failure() returns trigger language plpgsql set search_path='' as $$begin raise exception using errcode='23514',message='Synthetic receipt failure';end$$;create trigger fixture_adoption_failure before insert on taskfold_private.child_task_adoptions for each row execute function taskfold_private.fixture_adoption_failure()`);

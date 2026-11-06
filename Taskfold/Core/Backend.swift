@@ -340,7 +340,7 @@ final class Backend: NSObject {
         let childRepairPreview = path == "/rest/v1/rpc/taskfold_preview_child_repair"
         let childRepairOriginal = childRepair && body?["_operation"] == .string("original")
         let childAdoptionWrite = path == "/rest/v1/rpc/taskfold_adopt_child_records"
-        let childAdoptionTargets = path == "/rest/v1/rpc/taskfold_child_adoption_targets"
+        let childAdoptionTargets = ["/rest/v1/rpc/taskfold_child_adoption_targets", "/rest/v1/rpc/taskfold_search_child_adoption_targets"].contains(path)
         let childAdoptionReview = path == "/rest/v1/rpc/taskfold_review_child_adoption"
         let childTransfer = path == "/rest/v1/rpc/taskfold_transfer_child"
         let childStructureArchive = path == "/rest/v1/rpc/taskfold_child_structure_undo_archives"
@@ -897,19 +897,24 @@ final class Backend: NSObject {
             throw ChildTaskRepairFailure(reason: .review)
         }
     }
-    func childTaskAdoptionTargets(scope: ChildTaskFieldClientScope, after: String? = nil, limit: Int = 100, id: String? = nil) async throws -> ChildTaskAdoptionTargetPage {
+    func childTaskAdoptionTargets(scope: ChildTaskFieldClientScope, after: String? = nil, limit: Int = 100, id: String? = nil, query: ChildTaskAdoptionSearch? = nil) async throws -> ChildTaskAdoptionTargetPage {
         guard (1...100).contains(limit), id == nil || after == nil && limit == 1 else { throw ChildTaskAdoptionCommand.invalid }
         for value in [after, id].compactMap({ $0 }) { guard UUID(uuidString: value)?.uuidString.lowercased() == value else { throw ChildTaskAdoptionCommand.invalid } }
         try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
-        let data = try await request("/rest/v1/rpc/taskfold_child_adoption_targets", method: "POST", body: ["_after": after.map(JSON.string) ?? .null, "_limit": .number(Double(limit)), "_id": id.map(JSON.string) ?? .null], expectedAccount: scope.account)
+        let searching = query?.isEmpty == false
+        guard !searching || id == nil else { throw ChildTaskAdoptionCommand.invalid }
+        var body: [String: JSON] = ["_after": after.map(JSON.string) ?? .null, "_limit": .number(Double(limit))]
+        body[searching ? "_query" : "_id"] = searching ? .string(query!.text) : id.map(JSON.string) ?? .null
+        let path = searching ? "/rest/v1/rpc/taskfold_search_child_adoption_targets" : "/rest/v1/rpc/taskfold_child_adoption_targets"
+        let data = try await request(path, method: "POST", body: body, expectedAccount: scope.account)
         try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
-        let page = try await Self.decodeAdoptionTargets(data, account: scope.account, after: after, limit: limit, id: id)
+        let page = try await Self.decodeAdoptionTargets(data, account: scope.account, after: after, limit: limit, id: id, query: query)
         try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
         return page
     }
-    nonisolated private static func decodeAdoptionTargets(_ data: Data, account: String, after: String?, limit: Int, id: String?) async throws -> ChildTaskAdoptionTargetPage {
+    nonisolated private static func decodeAdoptionTargets(_ data: Data, account: String, after: String?, limit: Int, id: String?, query: ChildTaskAdoptionSearch?) async throws -> ChildTaskAdoptionTargetPage {
         try Task.checkCancellation()
-        return try ChildTaskAdoptionTargetPage(data: data, account: account, after: after, limit: limit, id: id)
+        return try ChildTaskAdoptionTargetPage(data: data, account: account, after: after, limit: limit, id: id, query: query)
     }
     /// The server determines the current workspace from the live root. Discovery
     /// supplies only its identity; ordinary task-cache decoding is not required.

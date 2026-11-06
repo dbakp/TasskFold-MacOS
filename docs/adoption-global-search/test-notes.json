@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-06",
+  "resolvedTestSetupIssues": [
+    "Local SQL viewer fixture needed its team_id; the completed 211-check run passes per owner.",
+    "Mac has independently named historical migrations; its explicit fixture list now loads its own new candidate.",
+    "Reused native iOS host lacked the adoption-review Info switch. Enabled only in the exact reserved test copy, then verified search in production views."
+  ],
+  "decoderCorrection": "Query echo validation compares exact normalized UTF-8 bytes rather than Swift canonical String equality. Final Core checks pass per owner.",
+  "iphoneAccepted": "Largest-text browse excludes target, server search finds target, fresh review opens, Back retains query, replacement yields empty results and clearing restores browse. No synthetic writes or receipts.",
+  "ipadInitialBoundary": "Search and fresh review pass; typing after Clear fails because XCTest has no keyboard focus. The test now explicitly refocuses the current search control before typing. Continuous keyboard-focus preservation is not claimed.",
+  "normalAppGatesChanged": false,
+  "hostedServiceChanged": false,
+  "ipadLargestTextLayoutFix": "The next run entered absentneedle with keyboard focus, but the empty-result message was below a 341.5-point introduction plus Refresh in the small sheet. Production search feedback now comes first, and the introductory paragraph is hidden while searching. The revised product passes the complete iPad journey, including empty feedback and clearing back to browse, with no synthetic writes/receipts.",
+  "finalScope": "Current-source phone/iPad largest-text journeys pass after the layout change; final independent Mac source builds and signs. Both peer results retain zero writes and no receipts. Spoken and continuous keyboard-focus acceptance remain open."
+}

@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "task_id": "ffffffff-ffff-4fff-bfff-fffffffffff0",
+      "project_id": null,
+      "match_excerpt": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Café 100%_\\ exact needle",
+      "task_generation": "e97ddfc3-8355-46e6-9d14-42c6ba223535",
+      "title_truncated": true
+    }
+  ],
+  "query": "café",
+  "account": "cf6c2ff8-5f6b-4f72-b782-a5210d10ad23",
+  "protocol": 2,
+  "next_after": null
+}

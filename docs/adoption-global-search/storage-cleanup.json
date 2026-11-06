@@ -1,0 +1,231 @@
+{
+  "date": "2026-11-06",
+  "freeBeforeRetirementBytes": 59796344832,
+  "retired": [
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-native.xcresult",
+      "allocatedBytes": 4161536
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-native-v2.xcresult",
+      "allocatedBytes": 1187840
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-native-v3.xcresult",
+      "allocatedBytes": 1216512
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-native.xcresult",
+      "allocatedBytes": 20602880
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-native-v2.xcresult",
+      "allocatedBytes": 34770944
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-native-v3.xcresult",
+      "allocatedBytes": 1155072
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-failure",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-success",
+      "allocatedBytes": 532480
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-failure",
+      "allocatedBytes": 19996672
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-v2-attachments",
+      "allocatedBytes": 34308096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-success",
+      "allocatedBytes": 528384
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-attachment-export.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-export-success.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-build-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-build-v2.log",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-build-v3-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-build-v3.log",
+      "allocatedBytes": 24576
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-build-v4-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-build-v4.log",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-build-v5-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-build-v5.log",
+      "allocatedBytes": 53248
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-build.log",
+      "allocatedBytes": 200704
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-channel-smoke.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-channel-unit.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-core.log",
+      "allocatedBytes": 36864
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ios-sql.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-export.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-native-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-native-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-native-v2.log",
+      "allocatedBytes": 20480
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-native-v3-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-native-v3.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-native.log",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-success-export.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-ipad-v2-export.log",
+      "allocatedBytes": 8192
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-native-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-native-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-native-v2.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-native-v3-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-native-v3.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-iphone-native.log",
+      "allocatedBytes": 12288
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-mac-build-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-mac-build-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-mac-build-v2.log",
+      "allocatedBytes": 36864
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-mac-build.log",
+      "allocatedBytes": 135168
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-mac-channel-smoke.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-mac-channel-unit.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-mac-core.log",
+      "allocatedBytes": 32768
+    },
+    {
+      "path": "/tmp/taskfold-adoption-search-mac-sql.log",
+      "allocatedBytes": 4096
+    }
+  ],
+  "preserved": "Current signed packages, rollback, source, app/device data, concise JSON/gz evidence and inspected screenshot",
+  "coreAllocatedBytes": {
+    "ios": 679616512,
+    "mac": 621527040
+  },
+  "finishRun": {
+    "apply": true,
+    "freeBeforeBytes": 59922960384,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 688148480,
+        "projectedAllocatedBytes": 688148480
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 624427008,
+        "projectedAllocatedBytes": 624427008
+      }
+    ],
+    "freeAfterBytes": 59922890752,
+    "actualFreeChangeBytes": -69632
+  },
+  "freeAfterRetirementBytes": 59915390976,
+  "retiredAllocatedBytes": 119283712,
+  "actualFreeChangeBytes": 119046144
+}
