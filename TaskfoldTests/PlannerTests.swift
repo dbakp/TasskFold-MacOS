@@ -389,3 +389,99 @@ final class DurableSnapshotReadCacheTests: XCTestCase {
         print("DURABLE_READ_TIMING bytes=\(data.count) cold=\(cold) warmFileRead=\(warm)")
     }
 }
+
+final class TaskRowPlanningReadTests: XCTestCase {
+    private func calendar(_ zone: String = "UTC", identifier: Calendar.Identifier = .gregorian) -> Calendar {
+        var value = Calendar(identifier: identifier); value.timeZone = TimeZone(identifier: zone)!; return value
+    }
+    private func task(_ day: String = "2026-11-09", time: String = "09:30", zone: String = "UTC", instant: String = "2026-11-09T09:30:00Z") -> Record {
+        Record(["id": .string("row"), "title": .string("Keep this title"), "due_date": .string(day), "due_time": .string(time), "time_zone": .string(zone), "scheduled_at": .string(instant), "completed": .bool(false), "deadline_date": .string("2026-11-08")])
+    }
+    private let now = Date(timeIntervalSince1970: 1_794_266_100) // Fixed, never the test machine's current day.
+    private func assertOriginalReads(_ task: Record, compact: Bool = false, calendar: Calendar, now: Date) {
+        let read = TaskRowPlanningRead(task: task, compactDate: compact, calendar: calendar, now: now)
+        let day = TaskPlanner.dayDate(task, calendar: calendar)
+        let overdue = TaskKind.mayComplete(task) && !task.completed && day.map { $0 < calendar.startOfDay(for: now) } == true
+        XCTAssertEqual(read.day, day); XCTAssertEqual(read.clock, TaskPlanner.clockValue(task, calendar: calendar)); XCTAssertEqual(read.zone, TaskPlanner.zoneLabel(task, calendar: calendar))
+        XCTAssertEqual(read.overdue, overdue)
+        XCTAssertEqual(read.dueToday, TaskPlanner.plannedDay(task, calendar: calendar) == TaskPlanner.dayKey(now, calendar: calendar))
+        XCTAssertEqual(read.showsDate, day != nil && (!compact || overdue || !task.string("due_time").isEmpty || task["is_recurring"].flag))
+        XCTAssertEqual(read.deadline, Dates.parse(task.string("deadline_date"), calendar: calendar))
+        XCTAssertEqual(read.deadlineOverdue, !task.completed && read.deadline.map { $0 < calendar.startOfDay(for: now) } == true)
+    }
+    func testFloatingAndMissingDatesKeepTheirOriginalClockFallback() {
+        for day in ["", "2026-11-09", "not a date", "2026-02-30", "2026-11-09T12:00:00Z"] {
+            for time in ["", "9:0", "09:30", "bad clock"] {
+                assertOriginalReads(task(day, time: time, zone: "", instant: "ignored"), compact: true, calendar: calendar(), now: now)
+            }
+        }
+    }
+    func testFixedTimeCrossesDisplayedDayAndKeepsZoneAbbreviation() {
+        let row = task("2026-11-09", time: "23:30", zone: "America/New_York", instant: "2026-11-10T04:30:00Z")
+        for zone in ["Europe/Copenhagen", "Pacific/Auckland", "America/Los_Angeles"] { assertOriginalReads(row, calendar: calendar(zone), now: now) }
+        let read = TaskRowPlanningRead(task: row, calendar: calendar("Europe/Copenhagen"), now: now)
+        XCTAssertEqual(TaskPlanner.dayKey(read.day!, calendar: calendar("Europe/Copenhagen")), "2026-11-10"); XCTAssertEqual(read.clock, "05:30")
+    }
+    func testInvalidZoneClockOrSavedInstantUsesTheSameSafeFallback() {
+        for row in [task(zone: "Unknown/Zone"), task(time: "29:99"), task(instant: ""), task(instant: "invalid"), task(instant: "2026-11-08T09:30:00Z")] {
+            assertOriginalReads(row, calendar: calendar("Europe/Copenhagen"), now: now)
+        }
+    }
+    func testSavedDSTFoldAndHalfHourGapUseExistingPlanningRules() {
+        for row in [task("2026-10-25", time: "02:30", zone: "Europe/Copenhagen", instant: "2026-10-25T01:30:00Z"), task("2026-10-04", time: "02:15", zone: "Australia/Lord_Howe", instant: "")] {
+            for zone in ["UTC", "Europe/Copenhagen", "Australia/Lord_Howe"] { assertOriginalReads(row, calendar: calendar(zone), now: now) }
+        }
+    }
+    func testDisplayCalendarDoesNotReinterpretStoredGregorianDates() {
+        let row = task("2026-11-09", time: "20:30", zone: "Asia/Bangkok", instant: "2026-11-09T13:30:00Z")
+        assertOriginalReads(row, calendar: calendar("Europe/Copenhagen", identifier: .buddhist), now: now)
+        assertOriginalReads(row, calendar: calendar("Asia/Tokyo", identifier: .japanese), now: now)
+    }
+    func testCompletionHeadingRecurrenceAndCompactFlagsStayConsistent() {
+        let c = calendar(), today = Dates.parse("2026-11-09", calendar: calendar())!
+        for completed in [false, true] {
+            for kind in [JSON.null, .bool(true), .string("future")] {
+                for compact in [false, true] {
+                    var row = task("2026-11-08", time: "", zone: "", instant: ""); row["completed"] = .bool(completed); row["is_heading"] = kind
+                    assertOriginalReads(row, compact: compact, calendar: c, now: today)
+                    row["is_recurring"] = .bool(true); assertOriginalReads(row, compact: compact, calendar: c, now: today)
+                }
+            }
+        }
+    }
+    func testNewRecordClockAndZoneAreReadFreshWithoutMutatingSource() throws {
+        var row = task(); row["description"] = .string("Café e\u{301} 🪴"); row["future"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("9007199254740993".utf8))
+        let before = try TaskfoldJSONEncoder().encode(row), first = TaskRowPlanningRead(task: row, calendar: calendar(), now: now)
+        let tomorrow = TaskRowPlanningRead(task: row, calendar: calendar(), now: Dates.parse("2026-11-10", calendar: calendar())!)
+        XCTAssertNotEqual(first.overdue, tomorrow.overdue)
+        var edited = row; edited["due_time"] = .string("14:45"); edited["scheduled_at"] = .null
+        let changed = TaskRowPlanningRead(task: edited, calendar: calendar(), now: now)
+        XCTAssertEqual(changed.clock, "14:45"); XCTAssertNotEqual(changed.clock, first.clock)
+        let travel = TaskRowPlanningRead(task: row, calendar: calendar("America/New_York"), now: now)
+        XCTAssertNotEqual(travel.clock, first.clock)
+        XCTAssertEqual(try TaskfoldJSONEncoder().encode(row), before)
+    }
+    func testRepeatedRowDateWorkloadMatchesSingleReadAndRecordsTiming() {
+        let c = calendar("Europe/Copenhagen"), rows = (0..<40).map { n -> Record in var row = task(); row["id"] = .string("row-\(n)"); return row }
+        func legacy(_ row: Record) -> Int {
+            let visible = TaskPlanner.dayDate(row, calendar: c) != nil
+            let day = TaskPlanner.dayDate(row, calendar: c)
+            let clock = TaskPlanner.clockValue(row, calendar: c)
+            let zone = TaskPlanner.zoneLabel(row, calendar: c).isEmpty ? "" : TaskPlanner.zoneLabel(row, calendar: c)
+            let overdue = TaskPlanner.dayDate(row, calendar: c).map { $0 < c.startOfDay(for: now) } == true
+            let today = TaskPlanner.plannedDay(row, calendar: c) == TaskPlanner.dayKey(now, calendar: c)
+            return (visible ? 1 : 0) + (day == nil ? 0 : 1) + clock.count + zone.count + (overdue ? 1 : 0) + (today ? 1 : 0)
+        }
+        var oldTimes: [Double] = [], newTimes: [Double] = []
+        for _ in 0..<5 {
+            var old = 0, fresh = 0; let a = Date()
+            for row in rows { old += legacy(row) }; let b = Date()
+            for row in rows {
+                let read = TaskRowPlanningRead(task: row, calendar: c, now: now)
+                fresh += (read.showsDate ? 1 : 0) + (read.day == nil ? 0 : 1) + read.clock.count + read.zone.count + (read.overdue ? 1 : 0) + (read.dueToday ? 1 : 0)
+            }; let end = Date()
+            XCTAssertEqual(old, fresh); oldTimes.append(b.timeIntervalSince(a)); newTimes.append(end.timeIntervalSince(b))
+        }
+        print("ROW_PLANNING_READ_TIMING rows=40 repeated=\(oldTimes.sorted()[2]) single=\(newTimes.sorted()[2])")
+    }
+}

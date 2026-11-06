@@ -30,14 +30,8 @@ struct TaskRowView: View {
     private var selectedForeground: Color { appearsActive && listFocused ? Color(nsColor: .alternateSelectedControlTextColor) : Color(nsColor: .labelColor) }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
-    private var overdue: Bool { if let due = TaskPlanner.dayDate(task) { return TaskKind.mayComplete(task) && due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
-    private var dueToday: Bool { TaskPlanner.plannedDay(task) == Dates.day(Date()) }
-    private var showsDate: Bool {
-        guard TaskPlanner.dayDate(task) != nil else { return false }
-        if !compactDate { return true }
-        return overdue || !task.string("due_time").isEmpty || task["is_recurring"].flag
-    }
     var body: some View {
+        let planning = TaskRowPlanningRead(task: task, compactDate: compactDate)
         let fullRequest = dynamicTypeSize.isAccessibilitySize ? store.fullTaskNotePreviewRequest(task) : nil
         let fullReading = fullNote?.request == fullRequest ? fullNote?.reading : nil
         let notePreview = fullReading?.text ?? store.taskNotePreview(task)
@@ -83,14 +77,14 @@ struct TaskRowView: View {
                         .foregroundStyle(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary)
                         .strikethrough(checked, color: .secondary)
                         .lineLimit(2)
-                        .accessibilityLabel(accessibilitySummary)
+                        .accessibilityLabel(accessibilitySummary(planning))
                         .accessibilityIdentifier("title-\(task.id)")
                 } else {
                     LinkText(text: task.title, font: TaskKind(task) == .heading ? .systemFont(ofSize: NSFont.preferredFont(forTextStyle: .body).pointSize, weight: .semibold) : .preferredFont(forTextStyle: .body),
                              color: NSColor(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary),
                              linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold),
                              strikethrough: checked, lineLimit: 2,
-                             accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary, preparedLinks: titleLinks)
+                             accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary(planning), preparedLinks: titleLinks)
                 }
                 if !notePreview.isEmpty {
                     if previewLinks.matches.isEmpty {
@@ -111,11 +105,11 @@ struct TaskRowView: View {
                 if workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {
                     Text(parent).font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1)
                 }
-                if task.deadline != nil || (TaskKind.mayComplete(task) && task.durationMinutes != nil) || showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
+                if planning.deadline != nil || (TaskKind.mayComplete(task) && task.durationMinutes != nil) || planning.showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
                     ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 10) { metadata(wrapping: false) }
+                        HStack(spacing: 10) { metadata(wrapping: false, planning: planning) }
                             .labelStyle(.titleAndIcon).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                        VStack(alignment: .leading, spacing: 4) { metadata(wrapping: true) }
+                        VStack(alignment: .leading, spacing: 4) { metadata(wrapping: true, planning: planning) }
                             .labelStyle(WrappingMetadataLabelStyle(wraps: true))
                     }.font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary)
                 }
@@ -187,21 +181,22 @@ struct TaskRowView: View {
             Button(priority == 4 ? "None" : "Priority \(priority)") { workspace.setPriority([task.id], priority) }
         }
     }
-    @ViewBuilder private func metadata(wrapping: Bool) -> some View {
-        if showsDate, let due = TaskPlanner.dayDate(task) {
-            let time = TaskPlanner.clockValue(task)
-            let text = (compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))) + (TaskPlanner.zoneLabel(task).isEmpty ? "" : " · " + TaskPlanner.zoneLabel(task))
+    @ViewBuilder private func metadata(wrapping: Bool, planning: TaskRowPlanningRead) -> some View {
+        if planning.showsDate, let due = planning.day {
+            let time = planning.clock
+            let text = (compactDate && !planning.overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))) + (planning.zone.isEmpty ? "" : " · " + planning.zone)
             Button { choosingDate = true } label: {
-                Label(text, systemImage: task["is_recurring"].flag ? "repeat" : overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
-                    .foregroundStyle(isSelected ? selectedForeground : overdue ? Color.red : dueToday ? Color.taskfold : Color.secondary)
+                Label(text, systemImage: task["is_recurring"].flag ? "repeat" : planning.overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
+                    .accessibilityIdentifier("plannedDate-" + task.id)
+                    .foregroundStyle(isSelected ? selectedForeground : planning.overdue ? Color.red : planning.dueToday ? Color.taskfold : Color.secondary)
             }
             .buttonStyle(.borderless)
             .help("Change date")
             .accessibilityIdentifier("date-\(task.id)")
         }
-        if let deadline = task.deadline {
+        if let deadline = planning.deadline {
             Label("Deadline " + deadline.formatted(.dateTime.month(.abbreviated).day()), systemImage: "flag.checkered")
-                .foregroundStyle(isSelected ? selectedForeground : deadline < Calendar.current.startOfDay(for: Date()) && !task.completed ? Color.red : Color.secondary)
+                .foregroundStyle(isSelected ? selectedForeground : planning.deadlineOverdue ? Color.red : Color.secondary)
                 .accessibilityIdentifier("deadline-" + task.id)
         }
         if TaskKind.mayComplete(task), let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").accessibilityIdentifier("duration-" + task.id) }
@@ -239,14 +234,14 @@ Label("\(progress.completed)/\(progress.total)", systemImage: "checklist")
         }
     }
 
-    private var accessibilitySummary: String {
+    private func accessibilitySummary(_ planning: TaskRowPlanningRead) -> String {
         var parts = [task.title]
         if TaskKind(task) == .heading { parts.append("heading, stays open") }
         if TaskKind(task) == .unsupported { parts.append("task type unavailable") }
         if checked { parts.append("completed") }
         if workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) { parts.append("Subtask of " + parent) }
         if task.priority < 4 { parts.append("priority \(task.priority)") }
-        if let due = TaskPlanner.dayDate(task) { parts.append(overdue ? "overdue since \(due.formatted(date: .abbreviated, time: .omitted))" : "due \(due.formatted(date: .abbreviated, time: .omitted))") }
+        if let due = planning.day { parts.append(planning.overdue ? "overdue since \(due.formatted(date: .abbreviated, time: .omitted))" : "due \(due.formatted(date: .abbreviated, time: .omitted))") }
         if let project = store.record("projects", id: task.string("project_id")) { parts.append("in \(project.name)") }
         return parts.joined(separator: ", ")
     }

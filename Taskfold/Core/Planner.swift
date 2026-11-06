@@ -504,3 +504,32 @@ struct PlannerTaskSelection: Sendable {
         return current
     }
 }
+
+/// One immutable planning read per row render. A fixed-time task resolves its
+/// instant once for the date, clock and zone; ordinary checklist dates still float.
+struct TaskRowPlanningRead: Equatable, Sendable {
+    let day: Date?
+    let clock: String
+    let zone: String
+    let overdue: Bool
+    let dueToday: Bool
+    let showsDate: Bool
+    let deadline: Date?
+    let deadlineOverdue: Bool
+    init(task: Record, compactDate: Bool = false, calendar: Calendar = .current, now: Date = Date()) {
+        let start = task.string("time_zone").isEmpty ? nil : TaskPlanning.start(task, calendar: calendar)
+        let planned = start.map { TaskPlanner.dayKey($0, calendar: calendar) } ?? String(task.string("due_date").prefix(10))
+        day = Dates.parse(planned, calendar: calendar)
+        if let start {
+            let parts = calendar.dateComponents([.hour, .minute], from: start)
+            clock = String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
+            zone = calendar.timeZone.abbreviation(for: start) ?? calendar.timeZone.identifier
+        } else { clock = String(task.string("due_time").prefix(5)); zone = "" }
+        let today = calendar.startOfDay(for: now)
+        overdue = TaskKind.mayComplete(task) && !task.completed && day.map { $0 < today } == true
+        dueToday = planned == TaskPlanner.dayKey(now, calendar: calendar)
+        showsDate = day != nil && (!compactDate || overdue || !task.string("due_time").isEmpty || task["is_recurring"].flag)
+        deadline = Dates.parse(task.string("deadline_date"), calendar: calendar)
+        deadlineOverdue = !task.completed && deadline.map { $0 < today } == true
+    }
+}
