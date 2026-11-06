@@ -5702,6 +5702,15 @@ extension Store {
             self?.projectTransferContext(account: account, origin: origin, workspace: workspace, session: session) == true
         })
     }
+    /// File preparation and transfer recovery share the exact workspace fence.
+    func projectFilePreparationModel() throws -> ProjectFilePreparationModel {
+        guard projectTransferRecoveryAvailable else { throw ProjectFilePreparationRequest.invalid }
+        let account = userID, origin = try backend.accountRemovalOrigin
+        let workspace = WorkspaceBinding(account: account, generation: workspaceGeneration), session = backend.reminderSessionIncarnation
+        return ProjectFilePreparationModel(account: account, origin: origin, incarnation: session, vault: projectFilePreparationVault, service: backend, current: { [weak self] in
+            self?.projectTransferContext(account: account, origin: origin, workspace: workspace, session: session) == true
+        })
+    }
     func projectTransferContext(account: String, origin: String, workspace: WorkspaceBinding, session: UUID) -> Bool {
         projectTransferRecoveryAvailable && account == userID && origin == (try? backend.accountRemovalOrigin) && workspace.matches(account: userID, generation: workspaceGeneration) && session == backend.reminderSessionIncarnation
     }
@@ -7305,7 +7314,11 @@ extension Store {
         guard backend.session?.user.id == c.account, signedIn, !localMode else { throw AppFailure(message: "Project transfer session was not reopened") }
         let model = try projectTransferModel(); defer { model.close() }
         await model.load()
-        var refreshed = false, downloaded = false
+        let combined = ProcessInfo.processInfo.arguments.contains("--full-schema-combined-custody-testing")
+        let files = combined ? try projectFilePreparationModel() : nil
+        defer { files?.close() }
+        var refreshed = false, downloaded = false, downloadedFile = false, clearedFiles = false
+        if combined && phase != "audio-project-verify" { await files?.load() }
         if phase == "audio-project-queue" {
             FullSchemaNativeNetwork.offline = false; online = true; try await fullSchemaSyncSettled()
             guard let task = record("tasks", id: c.task), let project = UUID(uuidString: task.string("project_id")) else { throw AppFailure(message: "Original recording project is missing") }
@@ -7321,7 +7334,15 @@ extension Store {
                 guard let user = person.user else { throw TeamProjectAdoptionValue.invalid }
                 return try TeamProjectAdoptionDecision(project: person.project, user: user, choice: .retire)
             }
-            let review = try await backend.reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil, recordingPolicy: policy)
+            var fileConsent: ProjectFileConsent?
+            if combined {
+                guard inspection.filePreparationSupported, inspection.fileInventory?.stored == 1, let files, files.request == nil else { throw AppFailure(message: "Original file inventory is not ready") }
+                await files.prepare(inspection)
+                guard let consent = files.consent(for: inspection), consent.count == 1 else { throw AppFailure(message: files.message ?? "Private file copies are not ready") }
+                fileConsent = consent
+            }
+            let review = try await backend.reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil, recordingPolicy: policy, fileConsent: fileConsent)
+            guard review.fileConsent == fileConsent else { throw AppFailure(message: "File consent changed during review") }
             guard review.canCommit, review.recordingCount == 1,
                   review.unfinishedRecordingCount == (mixed ? 1 : nil), review.retainedRecordingCount == (mixed ? 1 : nil) else { throw AppFailure(message: "Current recording review is not committable") }
             let command = try TeamProjectAdoptionCommand(review: review)
@@ -7333,6 +7354,13 @@ extension Store {
         } else if phase == "audio-project-loss" || phase == "audio-project-replay" {
             guard let command = model.pending, try fullSchemaReviewFingerprint(command) == c.queuedFingerprint else { throw AppFailure(message: "The original recording transfer changed across launch") }
             FullSchemaNativeNetwork.offline = false; online = true
+            if combined {
+                // load() above may be offline at startup. Resolve the exact saved
+                // preparation once transport is online, without preparing again.
+                await files?.load()
+                guard let consent = command.fileConsent, files?.request == consent.request,
+                      files?.page?.id == consent.plan, files?.page?.state == (phase == "audio-project-loss" ? .ready : .committed) else { throw AppFailure(message: files?.message ?? "Original file preparation was not recovered") }
+            }
             if phase == "audio-project-loss" { FullSchemaNativeNetwork.armDrop() }
             await model.retry()
             if phase == "audio-project-loss" {
@@ -7349,10 +7377,27 @@ extension Store {
                 let source = try AudioCommentVault(applicationSupport: folder, owner: .init(c.account)).drafts()
                 guard source.count == 1, clip.data == source[0].clip.data else { throw AppFailure(message: "Transferred recording bytes changed") }
                 downloaded = true
+                if combined {
+                    guard case .array(let attachments) = task["attachments"], let first = attachments.first,
+                          case .object(let fields) = first else { throw AppFailure(message: "Transferred file reference is missing") }
+                    let target = Record(["task_id": .string(c.task), "task_generation": task["task_generation"]])
+                    let bytes = try await backend.downloadTaskFile(Record(fields), target: target, account: c.account, origin: backend.accountRemovalOrigin, incarnation: backend.reminderSessionIncarnation)
+                    guard bytes == Data("%PDF-1.7\nNative combined custody\n%%EOF\n".utf8) else { throw AppFailure(message: "Transferred file bytes changed") }
+                    downloadedFile = true
+                    await files?.clearCommitted()
+                    guard files?.request == nil, files?.recoveryLoaded == true else { throw AppFailure(message: files?.message ?? "Confirmed file preparation was not cleared") }
+                    clearedFiles = true
+                }
             }
         } else {
             guard phase == "audio-project-verify", FullSchemaNativeNetwork.offline, model.pending == nil,
                   let task = record("tasks", id: c.task), nativeConversationTeamCache?.knownTeams[task.string("project_id")] == c.sibling else { throw AppFailure(message: "Transferred workspace did not survive offline reopening") }
+        }
+        let savedFiles = combined ? try await projectFilePreparationVault.pending(account: c.account, origin: backend.accountRemovalOrigin) : nil
+        if combined {
+            if phase == "audio-project-queue" || phase == "audio-project-loss" {
+                guard let request = savedFiles, request == model.pending?.fileConsent?.request else { throw AppFailure(message: "Saved file request differs from the reviewed original") }
+            } else { guard savedFiles == nil else { throw AppFailure(message: "Confirmed file request survived clearing") } }
         }
         let pending = try await projectAdoptionVault.pending(account: c.account, origin: backend.accountRemovalOrigin)
         guard pending == model.pending, snapshot.pending.isEmpty,
@@ -7366,6 +7411,8 @@ extension Store {
             "pending": .bool(pending != nil), "commandFingerprint": .string(fingerprint), "command": pending.map { .object($0.body) } ?? .null,
             "receipt": model.receipt.map { .object(["request_id": .string($0.command.id), "replayed": .bool($0.replayed), "command": .object($0.command.body)]) } ?? .null, "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)),
             "workspaceRefreshed": .bool(refreshed), "downloadedExactBytes": .bool(downloaded), "offline": .bool(FullSchemaNativeNetwork.offline),
+            "downloadedExactFileBytes": .bool(downloadedFile), "clearedFilePreparation": .bool(clearedFiles), "filePreparationPending": .bool(savedFiles != nil),
+            "filePreparationFingerprint": .string(try savedFiles.map(fullSchemaReviewFingerprint) ?? ""),
             "rawDraftSHA256": .string(SHA256.hash(data: try Data(contentsOf: raw)).map { String(format: "%02x", $0) }.joined()), "diskMatchesStore": .bool(true)]
         try FullSchemaNativeFixture.writeReport(report, phase: phase)
     }

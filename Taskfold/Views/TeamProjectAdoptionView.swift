@@ -439,10 +439,9 @@ struct TeamProjectAdoptionView: View {
         return shareFileCopies && files?.consent(for: inspection) != nil
     }
     private func loadFiles() async {
-        guard current, let origin = try? store.backend.accountRemovalOrigin else { return }
+        guard current else { return }
         files?.close()
-        let account = store.userID, workspace = WorkspaceBinding(account: account, generation: store.workspaceGeneration), session = store.backend.reminderSessionIncarnation
-        let value = ProjectFilePreparationModel(account: account, origin: origin, incarnation: session, vault: store.projectFilePreparationVault, service: store.backend, current: { store.projectTransferContext(account: account, origin: origin, workspace: workspace, session: session) })
+        guard let value = try? store.projectFilePreparationModel() else { files = nil; return }
         files = value; await value.load()
     }
     private func resumeFileReview(_ request: ProjectFilePreparationRequest) async {
