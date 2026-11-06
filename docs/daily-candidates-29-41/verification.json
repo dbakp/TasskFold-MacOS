@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-06",
+  "owningRepository": "TasskFold-MacOS",
+  "candidate": "1.2.0 (29)",
+  "sourceRevision": "08d8dbbfb334834b989247794ce46e92071ae367",
+  "sourceFingerprint": "c648d094ce0ef6bfa5f28b7af0dc4392bb8966e4840666484eb3b0e82fa426d3",
+  "sourceWasClean": true,
+  "currentAppInputsMatch": true,
+  "optimizedMainAppCompilerObserved": true,
+  "configuration": "Release",
+  "archiveSHA256": "daa34921fd2c6fb1ff90ec76e17b275316155e7f9ed2a736b6f5112b2d8433ee",
+  "archivePayloadVerified": true,
+  "strictSignatureVerified": true,
+  "exactEmbeddedProfilesVerified": true,
+  "profileExpires": "2026-11-10T18:32:04+00:00",
+  "normalFeatureFlagsUnchanged": true,
+  "installed": false,
+  "published": false,
+  "hostedChanges": false,
+  "profileRenewalPerformed": false,
+  "physicalOrReleaseAcceptance": false,
+  "phoneInstallationDeferred": true,
+  "macDraftReadinessPending": true,
+  "installedMacBinaryUnchanged": true,
+  "buildToolsSHA256": {
+    "build_daily.py": "82c77051f4845176d305f8ef0f5df039e51ce318ff0b5947dd23c74ed6579b58",
+    "cached_development_signing.py": "319da92eff45402826db9d8a5e9c54cb64a754f3abafe67585719261bcfa54a9"
+  },
+  "packageToolSHA256": "a32fa10f83913f227e36cd2676131809631b03aab21a16533c06120ed44958ed"
+}

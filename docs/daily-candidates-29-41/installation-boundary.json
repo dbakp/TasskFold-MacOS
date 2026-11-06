@@ -1,0 +1,9 @@
+{
+  "observedInstalledMacBuild": "23",
+  "binaryPayloadUnchanged": true,
+  "appsRestartedByAgent": false,
+  "phoneInstallationPerformed": false,
+  "macDraftReadinessPending": true,
+  "privateRowsInspected": false,
+  "defaultMacAppPath": "/Applications/Taskfold.app"
+}
