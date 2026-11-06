@@ -1,0 +1,11 @@
+{
+  "reviewed": "2026-11-02",
+  "v1": "Strict destination check stopped Save; folder label selected text rather than opening the folder. Importer cancellation control was not a Button. Viewer regression passed.",
+  "v2": "Folder-icon navigation passed the destination guard. Generic Cancel overlay opened the sort menu instead of dismissing. Viewer regression passed; both new cases failed. Collector remained after tests ended; only the verified owned xcodebuild collector was terminated.",
+  "v3": "Explicit SDK onCancellation handlers and ordinary native sheet dismissal. Phone: three cases passed, no failure or skip. iPad tracked separately.",
+  "testsOrGatesWeakened": false,
+  "realTasksUsed": false,
+  "ipadV3": "Shared-copy cancellation had already closed through the real iPad Cancel button, but the phone-specific navigation assertion continued. Private export saved the correct local file and callback receipt; its confirmation was below the compact form viewport. Neither new case was accepted.",
+  "v5": "Explicit actual Cancel button when available; otherwise ordinary native sheet dismissal. Copy feedback moved above controls. Phone and iPad: all three cases each passed, no failure or skip.",
+  "v4": "Compiled the platform-aware test cancellation control; no runtime run. Superseded by v5, which also moves feedback above the compact iPad form."
+}

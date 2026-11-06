@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "focusedTests": 126,
+  "failed": 0,
+  "actualServerFixtureRows": 24,
+  "orderingEntries": 6,
+  "source": "TaskOrderActivityTests plus node/root activity, project context, legacy date compatibility and fresh-local regression suites"
+}

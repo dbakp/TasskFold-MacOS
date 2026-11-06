@@ -1,0 +1,39 @@
+{
+  "phone": {
+    "actualPassingTests": 1,
+    "strictVerifier": "Verified 1 actual passing UI tests; no runtime warnings.",
+    "bytes": 1089,
+    "sha256": "a517e29c09551f01986d028a510c3525085e91f5dfce39736ba26b2b4c52a8b5",
+    "rows": 4,
+    "columns": 19,
+    "fieldBoundsRecords": 23,
+    "fieldsPerRow": {
+      "1": 6,
+      "2": 6,
+      "3": 6,
+      "4": 5
+    },
+    "csvReadback": "19-column marker/ref/type/text/privacy assertions passed",
+    "scope": "Real local Share to Files; saved tables and delivered bytes retained across cold relaunch; dark Accessibility XXXL, field-by-field sheet viewport assertions."
+  },
+  "ipad": {
+    "actualPassingTests": 1,
+    "strictVerifier": "Verified 1 actual passing UI tests; no runtime warnings.",
+    "bytes": 1089,
+    "sha256": "a517e29c09551f01986d028a510c3525085e91f5dfce39736ba26b2b4c52a8b5",
+    "rows": 4,
+    "columns": 19,
+    "fieldBoundsRecords": 23,
+    "fieldsPerRow": {
+      "1": 6,
+      "2": 6,
+      "3": 6,
+      "4": 5
+    },
+    "csvReadback": "19-column marker/ref/type/text/privacy assertions passed",
+    "scope": "Real local Share to Files; saved tables and delivered bytes retained across cold relaunch; dark Accessibility XXXL, field-by-field sheet viewport assertions."
+  },
+  "byteIdentical": true,
+  "productCodeChanged": false,
+  "limits": "Simulator local provider only. No Mac Share, cloud provider, real device, spoken, account-switch or multi-window acceptance."
+}

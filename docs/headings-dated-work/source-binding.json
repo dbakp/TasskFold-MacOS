@@ -1,0 +1,60 @@
+{
+  "baseCommit": "40a02816dfcd92b321086e3d3651c0bbf7ea7568",
+  "files": {
+    "Taskfold/Core/Models.swift": {
+      "sourceSHA256": "3d6fbbd49fcc6502542d193512ecbbc94338d8fcf699d7f2836b36f32936c6d7",
+      "hostSHA256": "3d6fbbd49fcc6502542d193512ecbbc94338d8fcf699d7f2836b36f32936c6d7",
+      "scope": "matches isolated native source under namespace transforms"
+    },
+    "Taskfold/Core/TaskActivity.swift": {
+      "sourceSHA256": "2f17d31f6ea4216d6d3ff5560d6b4e2c98245caf7641181ec671c6806ee9b2dc",
+      "hostSHA256": "2f17d31f6ea4216d6d3ff5560d6b4e2c98245caf7641181ec671c6806ee9b2dc",
+      "scope": "matches isolated native source under namespace transforms"
+    },
+    "Taskfold/Core/Store.swift": {
+      "sourceSHA256": "cfeb4df1de476af492b66e5bb850df219464352008b2d6300c940a521fe5be5b",
+      "hostSHA256": "98f19b0bcd40d817e2f91bb41141e020fe0bb290a1e7798a0e13d061cadab9b4",
+      "scope": "matches isolated native source under namespace transforms"
+    },
+    "TaskfoldTests/HeadingProjectProgressTests.swift": {
+      "sourceSHA256": "7db2b1d9db928b54e10a8be68af6224a747e031cf8775cde6f65d7cbef0b8de9",
+      "hostSHA256": null,
+      "scope": "Core package test source"
+    },
+    "Taskfold/Workspace.swift": {
+      "sourceSHA256": "e5d9c824dc75fec935898e3e67e66fc8cfde262b0ead7ce8563beedc5ecd52db",
+      "hostSHA256": "864126eb77e9cc01dfa9689f5c08b7624df49736f8dd802296ca043ba4a18b6e",
+      "scope": "matches isolated native source under namespace transforms"
+    },
+    "Taskfold/Collaboration.swift": {
+      "sourceSHA256": "b9ce5c7c1cc4322970057e468819d6a5d2be4f4fe7b5f84c7f057735d48d049f",
+      "hostSHA256": "b9ce5c7c1cc4322970057e468819d6a5d2be4f4fe7b5f84c7f057735d48d049f",
+      "scope": "matches isolated native source under namespace transforms"
+    },
+    "Taskfold/Views/TaskRowView.swift": {
+      "sourceSHA256": "21c34e6897748ec6fbdcf2d98e6e7ec97ba7984f54395b60da8cbbb355639d64",
+      "hostSHA256": "21c34e6897748ec6fbdcf2d98e6e7ec97ba7984f54395b60da8cbbb355639d64",
+      "scope": "matches isolated native source under namespace transforms"
+    },
+    "Taskfold/Views/TaskListView.swift": {
+      "sourceSHA256": "4b1464a9597377dc93e18006b8732bb2d5521bd3a0894c80e8e47b8736e214b7",
+      "hostSHA256": "4b1464a9597377dc93e18006b8732bb2d5521bd3a0894c80e8e47b8736e214b7",
+      "scope": "matches isolated native source under namespace transforms"
+    },
+    "Taskfold/Views/TaskInspector.swift": {
+      "sourceSHA256": "b98c8ad1b382691bb3bd432c448de156dda8d5857b4bf2d98cd93b74e6aceda1",
+      "hostSHA256": "b98c8ad1b382691bb3bd432c448de156dda8d5857b4bf2d98cd93b74e6aceda1",
+      "scope": "matches isolated native source under namespace transforms"
+    },
+    "Taskfold/Views/SidebarView.swift": {
+      "sourceSHA256": "f19a507ba263de37668f873770d143f8fbc7fd94f8b1afb1f54b4517e72a3270",
+      "hostSHA256": "f19a507ba263de37668f873770d143f8fbc7fd94f8b1afb1f54b4517e72a3270",
+      "scope": "matches isolated native source under namespace transforms"
+    },
+    "TaskfoldUITests/TaskfoldMacUITests.swift": {
+      "sourceSHA256": "975a2e85d48f7932944a309f843b0a25005de443e02cda3870812c026966d5a8",
+      "hostSHA256": "1b3c0e9f1f6e8b2ed6d939c992af6be7162b063c0d4d641ecf1fc30c97f586da",
+      "scope": "matches isolated native source under namespace transforms"
+    }
+  }
+}

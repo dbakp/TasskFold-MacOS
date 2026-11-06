@@ -1,0 +1,255 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -derivedDataPath /tmp/taskfold-history-binding-native-build -resultBundlePath /tmp/taskfold-history-binding-phone-first.xcresult -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TeamTaskBatchDeletionUITests/testCapturedUndoCannotRetargetAtHistoryLimit" -test-timeouts-enabled YES -default-test-execution-time-allowance 150 -maximum-test-execution-time-allowance 240 test-without-building
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/tmp/taskfold-history-binding-phone-first.xcresult
+
+2026-10-25 13:04:00.020946+0100 TaskfoldUITests-Runner[83924:19729668] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-25 13:04:03.852.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-25 13:04:03.853.
+Test Suite 'TeamTaskBatchDeletionUITests' started at 2026-10-25 13:04:03.853.
+Test Case '-[TaskfoldUITests.TeamTaskBatchDeletionUITests testCapturedUndoCannotRetargetAtHistoryLimit]' started.
+    t =     0.02s Start Test at 2026-10-25 13:04:03.875
+    t =     0.07s Set Up
+    t =     0.08s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.08s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-25 13:04:04.153 xcodebuild[83914:19729383] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 13:04:04.153 xcodebuild[83914:19729383] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.14s         Setting up automation session
+objc[83924]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x101ff8398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x106478310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     5.39s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.88s Waiting 15.0s for "openTeamBatchListFixture" Button to exist
+    t =     8.95s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamBatchListFixture" Button`
+    t =     8.95s         Checking existence of `"openTeamBatchListFixture" Button`
+    t =     9.14s Tap "openTeamBatchListFixture" Button
+    t =     9.14s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.14s     Find the "openTeamBatchListFixture" Button
+    t =     9.16s     Check for interrupting elements affecting "openTeamBatchListFixture" Button
+    t =     9.21s     Synthesize event
+    t =     9.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.44s Tap "Task options" Button
+    t =    10.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.90s     Find the "Task options" Button
+    t =    11.09s     Check for interrupting elements affecting "Task options" Button
+    t =    11.14s     Synthesize event
+    t =    11.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.51s Waiting 5.0s for "seedHistoryBindingFixture" Button to exist
+    t =    13.59s     Checking `Expect predicate `existsNoRetry == 1` for object "seedHistoryBindingFixture" Button`
+    t =    13.59s         Checking existence of `"seedHistoryBindingFixture" Button`
+    t =    13.67s         Capturing element debug description
+    t =    14.54s     Checking `Expect predicate `existsNoRetry == 1` for object "seedHistoryBindingFixture" Button`
+    t =    14.54s         Checking existence of `"seedHistoryBindingFixture" Button`
+    t =    14.61s         Capturing element debug description
+    t =    15.58s     Checking `Expect predicate `existsNoRetry == 1` for object "seedHistoryBindingFixture" Button`
+    t =    15.58s         Checking existence of `"seedHistoryBindingFixture" Button`
+    t =    15.65s         Capturing element debug description
+    t =    16.51s     Checking `Expect predicate `existsNoRetry == 1` for object "seedHistoryBindingFixture" Button`
+    t =    16.52s         Checking existence of `"seedHistoryBindingFixture" Button`
+    t =    16.59s         Capturing element debug description
+    t =    17.52s     Checking `Expect predicate `existsNoRetry == 1` for object "seedHistoryBindingFixture" Button`
+    t =    17.52s         Checking existence of `"seedHistoryBindingFixture" Button`
+    t =    17.60s         Capturing element debug description
+    t =    17.60s     Checking existence of `"seedHistoryBindingFixture" Button`
+    t =    17.64s Collecting debug information to assist test failure triage
+    t =    17.64s     Requesting snapshot of accessibility hierarchy for app with pid 83946
+    t =    17.71s Requesting snapshot of accessibility hierarchy for app with pid 83946
+    t =    17.98s Requesting snapshot of accessibility hierarchy for app with pid 83946
+/tmp/taskfold-history-binding-host/TaskfoldUITests/TeamTaskBatchDeletionUITests.swift:432: error: -[TaskfoldUITests.TeamTaskBatchDeletionUITests testCapturedUndoCannotRetargetAtHistoryLimit] : XCTAssertTrue failed - Attributes: Application, 0x1071a8c80, pid: 83946, label: 'Taskfold Team Editor Test'
+Element subtree:
+ →Application, 0x1071a8c80, pid: 83946, label: 'Taskfold Team Editor Test'
+    Window (Main), 0x1071a8dc0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1071a8f00, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1071a9040, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1071a9180, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1071a92c0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1071a9400, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1071a9540, {{0.0, 0.0}, {402.0, 874.0}}
+                NavigationBar, 0x1071a9680, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Design workshop'
+                  Button, 0x1071a97c0, {{16.0, 62.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Team editor test'
+                  Other, 0x1071a9900, {{288.3, 66.0}, {38.0, 36.0}}
+                    Other, 0x1071a9a40, {{288.3, 66.0}, {38.0, 36.0}}
+                      Button, 0x1071a9b80, {{288.3, 66.0}, {38.0, 36.0}}, label: 'Task options'
+                        Button, 0x1071a9cc0, {{288.3, 66.0}, {38.0, 36.0}}
+                          Image, 0x1071a9e00, {{297.3, 82.0}, {20.0, 4.3}}, identifier: 'ellipsis', label: 'More'
+                  Other, 0x1071a9f40, {{342.3, 66.0}, {39.7, 36.0}}
+                    Other, 0x1071aa080, {{342.3, 66.0}, {39.7, 36.0}}
+                      Button, 0x1071aa1c0, {{342.3, 66.0}, {39.7, 36.0}}, identifier: 'openTaskSearch', label: 'Search'
+                  StaticText, 0x1071aa300, {{16.0, 119.7}, {274.0, 40.7}}, label: 'Design workshop'
+                Other, 0x1071aa440, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1071aa580, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1071aa6c0, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1071aa800, {{0.0, 0.0}, {402.0, 874.0}}
+                        CollectionView, 0x1071aa940, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1071aaa80, {{-16.0, -1580.0}, {434.0, 1817.7}}
+                          Other, 0x1071aabc0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1071aad00, {{0.0, 0.0}, {402.0, 156.0}}
+                          Other, 0x1071aae40, {{0.0, 0.0}, {402.0, 874.0}}
+                          Cell, 0x1071aaf80, {{16.0, 168.0}, {370.0, 52.0}}
+                            Other, 0x1071ab0c0, {{16.0, 168.0}, {370.0, 52.0}}
+                              Other, 0x1071ab200, {{16.0, 168.0}, {370.0, 52.0}}
+                            Other, 0x1071ab340, {{16.0, 168.0}, {370.0, 52.0}}
+                              Other, 0x1071ab480, {{16.0, 168.0}, {370.0, 52.0}}
+                                Other, 0x1071ab5c0, {{16.0, 168.0}, {370.0, 52.0}}
+                                  Other, 0x1071ab700, {{16.0, 168.0}, {370.0, 52.0}}, identifier: 'syncStatus', label: 'Waiting to sync'
+                                    StaticText, 0x1071ab840, {{34.0, 186.2}, {131.0, 15.7}}, label: 'Waiting to sync'
+                                    Image, 0x1071ab980, {{34.0, 187.0}, {20.3, 14.0}}, identifier: 'icloud', label: 'Icloud'
+                          Other, 0x1071abac0, {{-16.0, 237.7}, {434.0, 2134.3}}
+                          Cell, 0x1071abc00, {{16.0, 237.7}, {370.0, 64.0}}
+                            Other, 0x1071abd40, {{16.0, 237.7}, {370.0, 64.0}}
+                            Other, 0x1071abe80, {{16.0, 237.7}, {370.0, 64.0}}
+                              Other, 0x107234000, {{16.0, 237.7}, {370.0, 64.0}}
+                                Other, 0x107234140, {{16.0, 237.7}, {370.0, 64.0}}
+                                  Button, 0x107234280, {{16.0, 237.7}, {370.0, 64.0}}, identifier: 'sectionHeader-ec240000-0000-4000-8000-000000000003:unsectioned', label: 'Tasks, 3', value: Expanded
+                                    Image, 0x1072343c0, {{31.2, 266.8}, {13.3, 7.7}}, identifier: 'chevron.right', label: 'Forward'
+                                    StaticText, 0x107234500, {{51.7, 260.7}, {41.0, 18.0}}, label: 'Tasks'
+                                    StaticText, 0x107234640, {{100.7, 260.7}, {9.7, 18.0}}, label: '3'
+                          Cell, 0x107234780, {{16.0, 301.7}, {370.0, 101.0}}
+                            Other, 0x1072348c0, {{16.0, 301.7}, {370.0, 101.0}}
+                              Other, 0x107234a00, {{16.0, 301.7}, {370.0, 101.0}}
+                            Other, 0x107234b40, {{16.0, 301.7}, {370.0, 101.0}}
+                              Other, 0x107234c80, {{16.0, 301.7}, {370.0, 101.0}}
+                                Other, 0x107234dc0, {{16.0, 301.7}, {370.0, 101.0}}
+                                  Other, 0x107234f00, {{32.0, 316.7}, {338.0, 71.0}}, identifier: 'taskRow-ec240000-0000-4000-8000-000000000002'
+                                    Button, 0x107235040, {{32.0, 316.7}, {44.0, 44.0}}, label: 'Complete Team editor proof'
+                                      Image, 0x107235180, {{32.0, 316.7}, {44.0, 44.0}}, identifier: 'checkmark', label: 'Selected', Selected
+                                    Button, 0x1072352c0, {{88.0, 316.7}, {282.0, 71.0}}, identifier: 'taskDetails-ec240000-0000-4000-8000-000000000002', label: 'Team editor proof, Original team notes, Design workshop, 0 of 2 subtasks completed'
+                                      StaticText, 0x107235400, {{88.0, 320.8}, {135.0, 20.3}}, label: 'Team editor proof'
+                                      StaticText, 0x107235540, {{88.0, 346.1}, {133.3, 18.0}}, identifier: 'taskNotesPreview-ec240000-0000-4000-8000-000000000002', label: 'Original team notes'
+                                      StaticText, 0x107235680, {{100.0, 369.1}, {100.0, 14.3}}, label: 'Design workshop'
+                                      StaticText, 0x1072357c0, {{211.3, 369.2}, {50.3, 14.3}}, identifier: 'subtaskSummary-ec240000-0000-4000-8000-000000000002', label: '0 of 2 subtasks completed'
+                                      Image, 0x107235900, {{211.3, 370.0}, {13.7, 12.0}}, identifier: 'subtaskSummary-ec240000-0000-4000-8000-000000000002', label: '0 of 2 subtasks completed'
+                          Cell, 0x107235a40, {{16.0, 402.7}, {370.0, 100.7}}
+                            Other, 0x107235b80, {{16.0, 402.7}, {370.0, 100.7}}
+                              Other, 0x107235cc0, {{16.0, 402.7}, {370.0, 100.7}}
+                            Other, 0x107235e00, {{16.0, 402.7}, {370.0, 100.7}}
+                              Other, 0x107235f40, {{16.0, 402.7}, {370.0, 100.7}}
+                                Other, 0x107236080, {{16.0, 402.7}, {370.0, 100.7}}
+                                  Other, 0x1072361c0, {{32.0, 417.7}, {338.0, 70.7}}, identifier: 'taskRow-ec240000-0000-4000-8000-000000000031'
+                                    Button, 0x107236300, {{32.0, 417.7}, {44.0, 44.0}}, label: 'Complete Next workshop review'
+                                      Image, 0x107236440, {{32.0, 417.7}, {44.0, 44.0}}, identifier: 'checkmark', label: 'Selected', Selected
+                                    Button, 0x107236580, {{88.0, 417.7}, {282.0, 70.7}}, identifier: 'taskDetails-ec240000-0000-4000-8000-000000000031', label: 'Next workshop review, Keep the selected occurrence notes, Design workshop'
+                                      StaticText, 0x1072366c0, {{88.0, 421.7}, {167.7, 20.3}}, label: 'Next workshop review'
+                                      StaticText, 0x107236800, {{88.0, 447.0}, {247.3, 18.0}}, identifier: 'taskNotesPreview-ec240000-0000-4000-8000-000000000031', label: 'Keep the selected occurrence notes'
+                                      StaticText, 0x107236940, {{100.0, 470.0}, {100.0, 14.3}}, label: 'Design workshop'
+                          Other, 0x107236a80, {{88.0, 401.7}, {282.0, 1.0}}
+                          Cell, 0x107236bc0, {{16.0, 503.3}, {370.0, 100.7}}
+                            Other, 0x107236d00, {{16.0, 503.3}, {370.0, 100.7}}
+                              Other, 0x107236e40, {{16.0, 503.3}, {370.0, 100.7}}
+                            Other, 0x107236f80, {{16.0, 503.3}, {370.0, 100.7}}
+                              Other, 0x1072370c0, {{16.0, 503.3}, {370.0, 100.7}}
+                                Other, 0x107237200, {{16.0, 503.3}, {370.0, 100.7}}
+                                  Other, 0x107237340, {{32.0, 518.3}, {338.0, 70.7}}, identifier: 'taskRow-ec240000-0000-4000-8000-000000000032'
+                                    Button, 0x107237480, {{32.0, 518.3}, {44.0, 44.0}}, label: 'Complete Later workshop review'
+                                      Image, 0x1072375c0, {{32.0, 518.3}, {44.0, 44.0}}, identifier: 'checkmark', label: 'Selected', Selected
+                                    Button, 0x107237700, {{88.0, 518.3}, {282.0, 70.7}}, identifier: 'taskDetails-ec240000-0000-4000-8000-000000000032', label: 'Later workshop review, Keep this unselected occurrence, Design workshop'
+                                      StaticText, 0x107237840, {{88.0, 522.3}, {171.7, 20.3}}, label: 'Later workshop review'
+                                      StaticText, 0x107237980, {{88.0, 547.7}, {225.0, 18.0}}, identifier: 'taskNotesPreview-ec240000-0000-4000-8000-000000000032', label: 'Keep this unselected occurrence'
+                                      StaticText, 0x107237ac0, {{100.0, 570.7}, {100.0, 14.3}}, label: 'Design workshop'
+                          Other, 0x107237c00, {{88.0, 502.3}, {282.0, 1.0}}
+                          Other, 0x107237d40, {{369.0, 116.0}, {30.0, 640.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                            Other, 0x107237e80, {{396.0, 251.0}, {3.0, 502.0}}
+                          Other, 0x107238000, {{369.0, 116.0}, {30.0, 640.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                            Other, 0x107238140, {{396.0, 251.0}, {3.0, 502.0}}
+                        Button, 0x107238280, {{308.0, 748.0}, {74.0, 74.0}}, identifier: 'floatingAdd', label: 'Create task or section'
+                Toolbar, 0x1072383c0, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x107238500, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x107238640, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x107238780, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1072388c0, {{136.0, 62.0}, {250.0, 520.0}}
+            Other, 0x107238a00, {{136.0, 62.0}, {250.0, 520.0}}
+              Other, 0x107238b40, {{136.0, 62.0}, {250.0, 520.0}}
+                Other, 0x107238c80, {{136.0, 62.0}, {250.0, 520.0}}
+                CollectionView, 0x107238dc0, {{136.0, 62.0}, {250.0, 874.0}}
+                  Cell, 0x107238f00, {{136.0, 72.0}, {250.0, 42.0}}
+                    Button, 0x107239040, {{136.0, 72.0}, {250.0, 42.0}}, label: 'Add multiple tasks'
+                      Image, 0x107239180, {{165.7, 83.3}, {21.0, 18.7}}, identifier: 'text.badge.plus', label: 'add list'
+                  Cell, 0x1072392c0, {{136.0, 114.0}, {250.0, 42.0}}
+                    Button, 0x107239400, {{136.0, 114.0}, {250.0, 42.0}}, label: 'Project pulse'
+                      Image, 0x107239540, {{163.3, 126.0}, {25.3, 18.3}}, identifier: 'chart.bar', label: 'chart column'
+                  Cell, 0x107239680, {{136.0, 156.0}, {250.0, 42.0}}
+                    Button, 0x1072397c0, {{136.0, 156.0}, {250.0, 42.0}}, label: 'Select tasks'
+                      Image, 0x107239900, {{166.3, 167.3}, {19.7, 19.7}}, identifier: 'checkmark.circle', label: 'selected'
+                  Cell, 0x107239a40, {{136.0, 198.0}, {250.0, 42.0}}
+                    Button, 0x107239b80, {{136.0, 198.0}, {250.0, 42.0}}, label: 'Reorder tasks'
+                      Image, 0x107239cc0, {{165.7, 213.7}, {21.0, 11.3}}, identifier: 'line.3.horizontal', label: 'drag'
+                  Other, 0x107239e00, {{160.0, 250.0}, {202.0, 1.0}}
+                  Cell, 0x107239f40, {{136.0, 261.0}, {250.0, 42.0}}
+                    Button, 0x10723a080, {{136.0, 261.0}, {250.0, 42.0}}, label: 'Print or save PDF'
+                      Image, 0x10723a1c0, {{164.7, 272.0}, {23.0, 20.7}}, identifier: 'printer', label: 'print'
+                  Cell, 0x10723a300, {{136.0, 303.0}, {250.0, 42.0}}
+                    Button, 0x10723a440, {{136.0, 303.0}, {250.0, 42.0}}, label: 'View options'
+                      Image, 0x10723a580, {{165.7, 315.7}, {21.0, 17.0}}, identifier: 'slider.horizontal.3', label: 'edit'
+                  Cell, 0x10723a6c0, {{136.0, 345.0}, {250.0, 42.0}}
+                    Button, 0x10723a800, {{136.0, 345.0}, {250.0, 42.0}}, label: 'Project'
+                      Image, 0x10723a940, {{350.3, 359.7}, {9.3, 12.7}}, identifier: 'chevron.forward', label: 'Forward'
+                      Image, 0x10723aa80, {{164.7, 357.3}, {23.0, 18.0}}, identifier: 'folder', label: 'move'
+                  Other, 0x10723abc0, {{136.0, 398.0}, {250.0, 40.3}}
+                    Other, 0x10723ad00, {{136.0, 398.0}, {250.0, 40.3}}
+                    StaticText, 0x10723ae40, {{164.0, 410.0}, {182.0, 15.7}}, label: 'Isolated history controls'
+                  Other, 0x10723af80, {{160.0, 397.0}, {202.0, 1.0}}
+                  Cell, 0x10723b0c0, {{136.0, 436.3}, {250.0, 42.0}}
+                    Button, 0x10723b200, {{136.0, 436.3}, {250.0, 42.0}}, label: 'Fill test history'
+                  Cell, 0x10723b340, {{136.0, 478.3}, {250.0, 42.0}}
+                    Button, 0x10723b480, {{136.0, 478.3}, {250.0, 42.0}}, label: 'Make newer test edit'
+                  Cell, 0x10723b5c0, {{136.0, 520.3}, {250.0, 42.0}}
+                    Button, 0x10723b700, {{136.0, 520.3}, {250.0, 42.0}}, label: 'Undo newer test edit'
+                  Other, 0x10723b840, {{160.0, 572.3}, {202.0, 1.0}}
+                  Cell, 0x10723b980, {{136.0, 583.3}, {250.0, 62.0}}
+                    Button, 0x10723bac0, {{136.0, 583.3}, {250.0, 62.0}}, label: 'Recent shared task moves'
+                      Image, 0x10723bc00, {{166.0, 603.3}, {20.3, 22.3}}, identifier: 'arrow.left.arrow.right', label: 'Left and right arrows'
+                  Cell, 0x10723bd40, {{136.0, 645.3}, {250.0, 42.0}}
+                    Button, 0x10723be80, {{136.0, 645.3}, {250.0, 42.0}}, label: 'Undo & redo'
+                      Image, 0x107240000, {{350.3, 660.0}, {9.3, 12.7}}, identifier: 'chevron.forward', label: 'Forward'
+                      Image, 0x107240140, {{166.0, 657.3}, {20.0, 18.3}}, identifier: 'arrow.uturn.backward', label: 'undo'
+                  Other, 0x107240280, {{353.0, 92.0}, {30.0, 460.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 %
+                    Other, 0x1072403c0, {{380.0, 95.0}, {3.0, 401.0}}
+                  Other, 0x107240500, {{136.0, 519.0}, {204.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0 %
+                    Other, 0x107240640, {{139.0, 546.0}, {198.0, 3.0}}
+                  Other, 0x107240780, {{353.0, 92.0}, {30.0, 460.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 %
+                    Other, 0x1072408c0, {{380.0, 95.0}, {3.0, 401.0}}
+                  Other, 0x107240a00, {{136.0, 519.0}, {204.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0 %
+                    Other, 0x107240b40, {{139.0, 546.0}, {198.0, 3.0}}
+              Other, 0x107240c80, {{136.0, 62.0}, {250.0, 520.0}}
+                Other, 0x107240dc0, {{136.0, 62.0}, {250.0, 520.0}}
+                  Other, 0x107240f00, {{136.0, 62.0}, {250.0, 520.0}}
+                    Other, 0x107241040, {{136.0, 62.0}, {250.0, 520.0}}
+                      Other, 0x107241180, {{136.0, 62.0}, {250.0, 520.0}}
+                        Other, 0x1072412c0, {{136.0, 62.0}, {250.0, 44.0}}
+                    Other, 0x107241400, {{136.0, 62.0}, {250.0, 520.0}}
+                      Other, 0x107241540, {{136.0, 62.0}, {250.0, 44.0}}
+Path to element:
+ →Application, 0x1071a8c80, pid: 83946, label: 'Taskfold Team Editor Test'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+  Output: {
+    Application, 0x107241680, pid: 83946, label: 'Taskfold Team Editor Test'
+  }
+
+    t =    18.22s Tear Down
+Test Case '-[TaskfoldUITests.TeamTaskBatchDeletionUITests testCapturedUndoCannotRetargetAtHistoryLimit]' failed (18.469 seconds).
+Test Suite 'TeamTaskBatchDeletionUITests' failed at 2026-10-25 13:04:22.345.
+	 Executed 1 test, with 1 failure (0 unexpected) in 18.469 (18.491) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-25 13:04:22.349.
+	 Executed 1 test, with 1 failure (0 unexpected) in 18.469 (18.496) seconds
+Test Suite 'Selected tests' failed at 2026-10-25 13:04:22.350.
+	 Executed 1 test, with 1 failure (0 unexpected) in 18.469 (18.497) seconds
+2026-10-25 13:04:22.679 xcodebuild[83914:19729383] [MT] IDETestOperationsObserverDebug: 26.422 elapsed -- Testing started completed.
+2026-10-25 13:04:22.679 xcodebuild[83914:19729383] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-25 13:04:22.679 xcodebuild[83914:19729383] [MT] IDETestOperationsObserverDebug: 26.422 sec, +26.422 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-history-binding-phone-first.xcresult
+
+Failing tests:
+	TeamTaskBatchDeletionUITests.testCapturedUndoCannotRetargetAtHistoryLimit()
+
+** TEST EXECUTE FAILED **
+
+Testing started

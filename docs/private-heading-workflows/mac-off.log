@@ -1,0 +1,124 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-private-headings-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testHeadingClientGateKeepsDefinitionsAndTransferAvailable" -resultBundlePath /tmp/taskfold-private-headings-mac-off-final.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-private-headings-mac-off-final.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 18:45:27.448848+0100 TaskfoldUITests-Runner[18070:23199410] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 18:45:27.557.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 18:45:27.557.
+Test Suite 'TeamWorkflowMacUITests' started at 2026-10-26 18:45:27.557.
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testHeadingClientGateKeepsDefinitionsAndTransferAvailable]' started.
+    t =     0.00s Start Test at 2026-10-26 18:45:27.558
+    t =     0.15s Set Up
+    t =     0.17s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.17s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:45:27.786 xcodebuild[18059:23199161] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:45:27.786 xcodebuild[18059:23199161] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.87s         Wait for accessibility to load
+    t =     1.08s         Setting up automation session
+    t =     1.10s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.13s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.13s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.14s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.15s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     2.19s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     2.19s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     2.34s Click "openPrivateWorkflowRunFixture" Button
+    t =     2.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.35s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     2.39s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     2.41s     Synthesize event
+    t =     3.10s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.11s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =     4.15s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =     4.15s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =     4.26s Find the "runPrivateTemplateShared" Button
+    t =     4.44s Checking existence of `"privateWorkflowHeadingUnavailable" StaticText`
+    t =     4.50s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:18075
+    t =     5.58s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     5.59s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:45:33.146 xcodebuild[18059:23199161] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:45:33.146 xcodebuild[18059:23199161] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     6.10s         Wait for accessibility to load
+    t =     6.27s         Setting up automation session
+    t =     6.29s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.30s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     6.31s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     6.31s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.32s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     7.36s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     7.36s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     7.51s Click "openTeamTemplateLibraryFixture" Button
+    t =     7.51s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.52s     Find the "openTeamTemplateLibraryFixture" Button
+    t =     7.55s     Check for interrupting elements affecting "openTeamTemplateLibraryFixture" Button
+    t =     7.57s     Synthesize event
+    t =     8.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.21s Waiting 10.0s for "teamTemplate-ec240000-0000-4000-8000-000000000061" Button to exist
+    t =     9.25s     Checking `Expect predicate `existsNoRetry == 1` for object "teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =     9.25s         Checking existence of `"teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =     9.33s Click "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =     9.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.34s     Find the "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =     9.40s     Check for interrupting elements affecting "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =     9.42s     Synthesize event
+    t =     9.99s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.00s Waiting 8.0s for "copyTeamTemplate" Button to exist
+    t =    11.04s     Checking `Expect predicate `existsNoRetry == 1` for object "copyTeamTemplate" Button`
+    t =    11.04s         Checking existence of `"copyTeamTemplate" Button`
+    t =    11.13s Find the "copyTeamTemplate" Button
+    t =    11.20s Find the "runTeamTemplate" Button
+    t =    11.27s Checking existence of `"teamWorkflowHeadingUnavailable" StaticText`
+    t =    11.34s Find the "exportTeamTemplate" Button
+    t =    11.41s Checking existence of `Window (First Match)`
+    t =    11.41s Find the Window (First Match)
+2026-10-26 18:45:38.977255+0100 TaskfoldUITests-Runner[18070:23199410] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    11.47s Added attachment named 'mac-heading-client-support-unavailable'
+    t =    11.48s Click "copyTeamTemplate" Button
+    t =    11.48s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.48s     Find the "copyTeamTemplate" Button
+    t =    11.53s     Check for interrupting elements affecting "copyTeamTemplate" Button
+    t =    11.54s     Synthesize event
+    t =    12.13s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.54s Waiting 8.0s for "saveTeamTemplateCopy" Button to exist
+    t =    13.60s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTeamTemplateCopy" Button`
+    t =    13.61s         Checking existence of `"saveTeamTemplateCopy" Button`
+<unknown>:0: warning: -[TaskfoldUITests.TeamWorkflowMacUITests testHeadingClientGateKeepsDefinitionsAndTransferAvailable] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+    t =    13.80s Click "saveTeamTemplateCopy" Button
+    t =    13.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.80s     Find the "saveTeamTemplateCopy" Button
+    t =    13.88s     Check for interrupting elements affecting "saveTeamTemplateCopy" Button
+    t =    13.89s     Synthesize event
+    t =    14.40s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.71s Waiting 10.0s for "copyTeamTemplate" Button to exist
+    t =    15.75s     Checking `Expect predicate `existsNoRetry == 1` for object "copyTeamTemplate" Button`
+    t =    15.75s         Checking existence of `"copyTeamTemplate" Button`
+    t =    15.84s Checking existence of `Window (First Match)`
+    t =    15.85s Find the Window (First Match)
+2026-10-26 18:45:43.408749+0100 TaskfoldUITests-Runner[18070:23199410] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    15.89s Added attachment named 'mac-heading-client-private-copy'
+    t =    15.89s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:18088
+    t =    16.99s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testHeadingClientGateKeepsDefinitionsAndTransferAvailable]' passed (17.403 seconds).
+Test Suite 'TeamWorkflowMacUITests' passed at 2026-10-26 18:45:44.962.
+	 Executed 1 test, with 0 failures (0 unexpected) in 17.403 (17.404) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 18:45:44.962.
+	 Executed 1 test, with 0 failures (0 unexpected) in 17.403 (17.405) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 18:45:44.963.
+	 Executed 1 test, with 0 failures (0 unexpected) in 17.403 (17.407) seconds
+2026-10-26 18:45:55.898 xcodebuild[18059:23199161] [MT] IDETestOperationsObserverDebug: 29.174 elapsed -- Testing started completed.
+2026-10-26 18:45:55.898 xcodebuild[18059:23199161] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 18:45:55.898 xcodebuild[18059:23199161] [MT] IDETestOperationsObserverDebug: 29.174 sec, +29.174 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-private-headings-mac-off-final.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

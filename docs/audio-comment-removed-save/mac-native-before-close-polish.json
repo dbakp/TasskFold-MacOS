@@ -1,0 +1,17 @@
+{
+  "scope": "Native CUA, synthetic audio; removed original via a second vault instance in the DEBUG fixture, not a genuine second running user editor. No sound or permission access. Final controller and fixture, but preceding view before Close-dialog polish; no final-view runtime acceptance or binary binding.",
+  "initialPID": 46147,
+  "coldPID": 46627,
+  "normalQuitExitedInitialAndColdProcesses": true,
+  "retryRefusedMissingPreparedSave": true,
+  "explanationAndCopyActionVisuallyInspected": true,
+  "copyRequiredExplicitAction": true,
+  "coldReturnOnePendingFinishNoSavedRow": true,
+  "pendingCopyOperation": "5bdabeb6-2840-4eb6-84b4-94704336f1ff",
+  "finishedDraft": "0a8468fc-f9a3-4e1a-a488-0d03013ced04",
+  "oneSavedRowAfterExplicitFinish": true,
+  "caption": "Keep my cafe\u0301 review after another window discards Save",
+  "originalVsNewIDsVerifiedByMacFiles": false,
+  "persistentScreenshotRetained": false,
+  "viewSourceSHA256": "b5b80151039170aa6b16c57d664ac5868928abcbc81fcbd4d9c65b8ac0c02fad"
+}

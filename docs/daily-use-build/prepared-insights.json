@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-05",
+  "feature": "Prepared Insights and persistent day selection",
+  "change": [
+    "One immutable background history fold supplies personal/workspace readings for 7/28 days. Range/scope/chart interaction does not run the history parser.",
+    "Cooperative cancellation in root/child folds; discard results if source, goal, account, session or readability changed. No persistent schema or write-policy changes.",
+    "Keep a prepared chart during clock-only refreshes with identical source/authority; changed data waits for its new reading. Capture current time once when a revision begins so newly recorded work appears immediately.",
+    "A tap selects a day and keeps its count visible; existing range/scope changes clear selection.",
+    "Personal coverage is projected independently: other actors\u2019 backdated credit cannot invent personal tracking coverage. Rest days, time zones, week boundaries, missing/malformed/child/root history and existing completion-credit semantics are retained."
+  ],
+  "core": {
+    "ios": {
+      "tests": 71,
+      "failures": 0,
+      "newPreparedCases": 7,
+      "existingHistoryCases": 64,
+      "logSHA256": "f6d2710cd943a8986754cd7e437c907d31af93a2d8b4c98b5453eaa9c8af915f",
+      "prepared5000Seconds": 0.21401596069335938,
+      "scope": "Core diagnostic; not a main-thread, render/FPS or physical-device timing guarantee. Existing fold diagnostic uses a separate fixture and is not a direct speedup ratio."
+    },
+    "mac": {
+      "tests": 71,
+      "failures": 0,
+      "newPreparedCases": 7,
+      "existingHistoryCases": 64,
+      "logSHA256": "017eb7a57454b2f3e28ee4a867f067307b82fa1f917e470d8a73fe9cae3d7f78",
+      "prepared5000Seconds": 0.20304501056671143,
+      "scope": "Core diagnostic; not a main-thread, render/FPS or physical-device timing guarantee. Existing fold diagnostic uses a separate fixture and is not a direct speedup ratio."
+    }
+  },
+  "nativeScope": "Signed reserved iPhone 18 Pro Simulator, production Insights, synthetic 5,004 initial history rows. Actual range/scope controls, tap/day detail, live additional completion, close and cold history readback. Full tables unchanged by browsing; cold task/activity/epoch arrays match. No real task data, cloud provider, protected Keychain or physical FPS acceptance.",
+  "native": {
+    "accepted": true,
+    "actualChartSelection": true,
+    "coldSavedHistory": true,
+    "fiveThousandRows": true,
+    "liveRecordedCompletionRefresh": true,
+    "personalGoalsSeparate": true,
+    "productionInsights": true,
+    "readOnlyTablesPreserved": true,
+    "scopesAndWindows": true
+  },
+  "clockOnlyRetentionScope": "Implemented and compiled; no separate native clock-tick/overnight or real VoiceOver acceptance claimed.",
+  "screenshotsReviewed": true,
+  "macScope": "71 owning Core cases, independent Mac21 app/widget/Share build and strict ZIP/signature verification. Native Mac interaction remains open.",
+  "packages": {
+    "mac": "1.2.0 (21)",
+    "ios": "1.4.0 (33)"
+  },
+  "installed": {
+    "mac": "1.2.0 (14)",
+    "ios": "1.4.0 (31)"
+  },
+  "candidateInstallation": "Prepared only. Combined candidates include preceding notes search; existing sessions are preserved. iOS development Share remains omitted under the recorded Apple quota limit.",
+  "remaining": [
+    "Wider editor/navigation scrolling and physical frame timing.",
+    "Mac/iPad, largest-text/speech and broader account/permission/window/background contexts.",
+    "Remaining Px migration, media/provider work and all explicit rollout/signing/OAuth/email/dictation/geofence deferrals."
+  ],
+  "primaryAPIReference": "https://developer.apple.com/documentation/swiftui/view/chartgesture(_:)",
+  "progressAccounting": "74 curated checkpoints and 54 existing substeps; no new bar unit or broad completion claim."
+}

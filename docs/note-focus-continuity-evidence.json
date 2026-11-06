@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-09",
+  "scope": "Native isolated Simulator phone/tablet pinned-note and Focus offline continuity; Mac authenticated transport only",
+  "nativeUITests": {
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "resultRoot": "/tmp/taskfold-note-focus-v1",
+    "phases": [
+      "phone-login",
+      "tablet-login",
+      "phone-create",
+      "tablet-offline",
+      "tablet-reconnect",
+      "phone-finish",
+      "tablet-final"
+    ]
+  },
+  "checkpoints": [
+    {
+      "phase": "phone-create",
+      "passed": true,
+      "serverFocusStatus": "running",
+      "taskID": "fe25bd37-83a9-47e1-8384-94f2b2e2683d",
+      "sessionID": "cd2ae1ce-024e-4c78-ad0d-29e5aabf22e9",
+      "pendingCount": 0
+    },
+    {
+      "phase": "tablet-offline",
+      "passed": true,
+      "serverFocusStatus": "running",
+      "taskID": "fe25bd37-83a9-47e1-8384-94f2b2e2683d",
+      "sessionID": "cd2ae1ce-024e-4c78-ad0d-29e5aabf22e9",
+      "pendingCount": 2
+    },
+    {
+      "phase": "tablet-reconnect",
+      "passed": true,
+      "serverFocusStatus": "paused",
+      "taskID": "fe25bd37-83a9-47e1-8384-94f2b2e2683d",
+      "sessionID": "cd2ae1ce-024e-4c78-ad0d-29e5aabf22e9",
+      "pendingCount": 0
+    },
+    {
+      "phase": "phone-finish",
+      "passed": true,
+      "serverFocusStatus": "stopped",
+      "taskID": "fe25bd37-83a9-47e1-8384-94f2b2e2683d",
+      "sessionID": "cd2ae1ce-024e-4c78-ad0d-29e5aabf22e9",
+      "pendingCount": 0
+    },
+    {
+      "phase": "tablet-final",
+      "passed": true,
+      "serverFocusStatus": "stopped",
+      "taskID": "fe25bd37-83a9-47e1-8384-94f2b2e2683d",
+      "sessionID": "cd2ae1ce-024e-4c78-ad0d-29e5aabf22e9",
+      "pendingCount": 0
+    }
+  ],
+  "macTransport": {
+    "passed": 1,
+    "log": "/tmp/taskfold-note-focus-mac-live-v1.log"
+  },
+  "cleanup": {
+    "backendCounts": {
+      "users": 0,
+      "sessions": 0,
+      "profiles": 0,
+      "tasks": 0,
+      "views": 0,
+      "focus": 0
+    },
+    "scopedDeviceCachesAndVaultsRemoved": true,
+    "temporaryCredentialFileRemoved": true
+  },
+  "limitations": [
+    "No Mac GUI",
+    "No physical device or notification delivery",
+    "No installed widget-host or reboot acceptance",
+    "Organization and rich task fields remain open"
+  ]
+}

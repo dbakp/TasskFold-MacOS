@@ -1,0 +1,42 @@
+[
+  {
+    "configurationName": "Test Scheme Action",
+    "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "deviceName": "iPhone 18 Pro",
+    "exportedFileName": "D7C61A94-137C-444B-97D2-592158882CC7.png",
+    "isAssociatedWithFailure": false,
+    "suggestedHumanReadableName": "Both saved recordings survive a cold return_0_6CE38673-85A2-4304-9EFE-89FE4D23904E.png",
+    "timestamp": 1793193718.679,
+    "retainedFile": "phone-cold-return.png"
+  },
+  {
+    "configurationName": "Test Scheme Action",
+    "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "deviceName": "iPhone 18 Pro",
+    "exportedFileName": "DB7F033A-7368-44A7-8EB1-A8E30463AE3F.png",
+    "isAssociatedWithFailure": false,
+    "suggestedHumanReadableName": "Imported recording saved as an independent private draft_0_95138372-F131-446D-90B5-5D442C0EF2AA.png",
+    "timestamp": 1793193656.105,
+    "retainedFile": "phone-saved.png"
+  },
+  {
+    "configurationName": "Test Scheme Action",
+    "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "deviceName": "iPhone 18 Pro",
+    "exportedFileName": "F96DDACC-9D34-43AE-9AC3-8F980C5ED68F.png",
+    "isAssociatedWithFailure": false,
+    "suggestedHumanReadableName": "Cancel leaves source and existing recording untouched_0_1E1E9E80-93C5-4890-A392-C252A7B9B6A4.png",
+    "timestamp": 1793193629.818,
+    "retainedFile": "phone-cancelled.png"
+  },
+  {
+    "configurationName": "Test Scheme Action",
+    "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "deviceName": "iPhone 18 Pro",
+    "exportedFileName": "B8D2F0E1-ECB0-4114-AD11-09DC06AE4EF3.png",
+    "isAssociatedWithFailure": false,
+    "suggestedHumanReadableName": "Recording import reviews the complete caption before Save_0_56476B1B-5FFA-414C-AAAA-4C0EE785B0C4.png",
+    "timestamp": 1793193627.336,
+    "retainedFile": "phone-review.png"
+  }
+]

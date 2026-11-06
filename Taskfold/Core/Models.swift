@@ -1,9 +1,50 @@
 import Foundation
 
-/// Lossless JSON keeps optional and future backend fields intact across edits.
+/// Exact authored-source comparison for caches and reviewed output. Domain-level
+/// Record/JSON equality keeps its existing semantic behavior.
+enum AuthoredValueComparison {
+    static func sameRows(_ lhs: [Record], _ rhs: [Record]) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        let identical = lhs.withUnsafeBufferPointer { a in rhs.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }
+        if identical { return true }
+        return zip(lhs, rhs).allSatisfy { exactJSON(.object($0.fields), .object($1.fields)) }
+    }
+    /// Iterative traversal avoids adding recursive stack depth for opaque fields
+    /// in a pinned note. Object ordering is irrelevant; key/value bytes are exact.
+    static func exactJSON(_ lhs: JSON, _ rhs: JSON) -> Bool {
+        var pending = [(lhs, rhs)]
+        while let (a, b) = pending.popLast() {
+            switch (a, b) {
+            case (.null, .null): break
+            case (.preserved(let x), .preserved(let y)): if !x.sameContent(as: y) { return false }
+            case (.bool(let x), .bool(let y)): if x != y { return false }
+            case (.number(let x), .number(let y)): if x.bitPattern != y.bitPattern { return false }
+            case (.string(let x), .string(let y)): if !x.utf8.elementsEqual(y.utf8) { return false }
+            case (.array(let x), .array(let y)):
+                guard x.count == y.count else { return false }
+                // Immutable value copies can keep the same backing buffer. A changed
+                // array detaches before writing, so only different buffers need a walk.
+                let identical = x.withUnsafeBufferPointer { a in y.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }
+                if !identical { pending.append(contentsOf: zip(x, y)) }
+            case (.object(let x), .object(let y)):
+                guard x.count == y.count else { return false }
+                for (key, value) in x {
+                    guard let index = y.index(forKey: key), key.utf8.elementsEqual(y[index].key.utf8) else { return false }
+                    pending.append((value, y[index].value))
+                }
+            default: return false
+            }
+        }
+        return true
+    }
+}
+
+/// Familiar values stay editable; unrepresentable future values retain exact
+/// validated bytes through Taskfold’s preserving codec.
 enum JSON: Codable, Equatable, Sendable {
-    case string(String), number(Double), bool(Bool), array([JSON]), object([String: JSON]), null
+    case string(String), number(Double), bool(Bool), array([JSON]), object([String: JSON]), null, preserved(PreservedJSON)
     init(from decoder: Decoder) throws {
+        if let context = decoder.userInfo[PreservedJSONDecodingContext.key] as? PreservedJSONDecodingContext, let value = try context.value(at: decoder.codingPath) { self = .preserved(value); return }
         let c = try decoder.singleValueContainer()
         if c.decodeNil() { self = .null }
         else if let v = try? c.decode(Bool.self) { self = .bool(v) }
@@ -21,11 +62,14 @@ enum JSON: Codable, Equatable, Sendable {
         case .array(let v): try c.encode(v)
         case .object(let v): try c.encode(v)
         case .null: try c.encodeNil()
+        case .preserved(let value):
+            guard let context = encoder.userInfo[PreservedJSONEncodingContext.key] as? PreservedJSONEncodingContext else { throw PreservedJSONFailure.encoderRequired }
+            try c.encode(context.register(value))
         }
     }
     var text: String { if case .string(let v) = self { return v }; return "" }
     var flag: Bool { if case .bool(let v) = self { return v }; return false }
-    var integer: Int { if case .number(let v) = self { return Int(v) }; return 0 }
+    var integer: Int { if case .number(let v) = self, v.isFinite, let value = Int(exactly: v.rounded(.towardZero)) { return value }; return 0 }
     var list: [JSON] { if case .array(let v) = self { return v }; return [] }
     var object: [String: JSON] { if case .object(let v) = self { return v }; return [:] }
 }
@@ -34,7 +78,10 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     var fields: [String: JSON]
     var id: String { string("id") }
     init(_ fields: [String: JSON] = [:]) { self.fields = fields }
-    init(from decoder: Decoder) throws { fields = try [String: JSON](from: decoder) }
+    init(from decoder: Decoder) throws {
+        try (decoder.userInfo[PreservedJSONDecodingContext.key] as? PreservedJSONDecodingContext)?.requireRecord(at: decoder.codingPath)
+        fields = try [String: JSON](from: decoder)
+    }
     func encode(to encoder: Encoder) throws { try fields.encode(to: encoder) }
     subscript(_ key: String) -> JSON {
         get { fields[key] ?? .null }
@@ -49,13 +96,175 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     var deadline: Date? { Dates.parse(string("deadline_date")) }
     var durationMinutes: Int? { (1...10080).contains(self["duration_minutes"].integer) ? self["duration_minutes"].integer : nil }
     static func task(user: String, project: String = "", date: Date? = nil) -> Record {
+        task(user: user, project: project, date: date, createdAt: Dates.timestamp())
+    }
+    /// Internal batch callers may supply the same timestamp format using their
+    /// own formatter. Identity generation and every task default stay here.
+    static func task(user: String, project: String = "", date: Date? = nil, createdAt: String) -> Record {
         Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(user),
                 "title": .string(""), "description": .string(""), "completed": .bool(false),
                 "completion_version": .number(0), "task_generation": .string(UUID().uuidString.lowercased()), "priority": .number(4), "project_id": project.isEmpty ? .null : .string(project),
                 "due_date": date.map { .string(Dates.day($0)) } ?? .null,
-                "created_at": .string(Dates.timestamp()), "labels": .array([]),
+                "created_at": .string(createdAt), "labels": .array([]),
                 "subtasks": .array([]), "comments": .array([]), "attachments": .array([]),
                 "reminders": .array([]), "is_recurring": .bool(false)])
+    }
+}
+
+/// Explicit persisted task behavior. Missing/null is the legacy ordinary task;
+/// unknown future values never gain completion authority from a permissive read.
+enum TaskKind: Equatable, Sendable {
+    case task, heading, unsupported
+    init(_ row: Record) {
+        switch row["is_heading"] {
+        case .null, .bool(false): self = .task
+        case .bool(true): self = .heading
+        default: self = .unsupported
+        }
+    }
+    static func mayComplete(_ row: Record) -> Bool { Self(row) == .task }
+    /// Counts the displayed records, without counting checklist descendants twice.
+    /// Headings remain visible context; unknown future types are labelled separately.
+    static func listCountLabel(_ rows: [Record]) -> String {
+        let tasks = rows.filter(mayComplete).count
+        let headings = rows.filter { Self($0) == .heading }.count
+        let unsupported = rows.count - tasks - headings
+        guard headings > 0 || unsupported > 0 else { return String(tasks) }
+        func label(_ count: Int, _ noun: String) -> String { "\(count) " + noun + (count == 1 ? "" : "s") }
+        var parts = [label(tasks, "task")]
+        if headings > 0 { parts.append(label(headings, "heading")) }
+        if unsupported > 0 { parts.append(label(unsupported, "unsupported item")) }
+        return parts.joined(separator: " · ")
+    }
+
+    static func containsTypeMetadata(_ rows: [Record]) -> Bool {
+        rows.contains { row in
+            row.fields["is_heading"] != nil || (checklistNodes(row["subtasks"]).map { $0.contains { $0.fields["is_heading"] != nil } } ?? true)
+        }
+    }
+    /// Existing headings can still be read/edited/deleted when authoring is off.
+    /// New headings and explicit conversions must use the workspace's capability.
+    static func requiresAuthoring(_ change: Mutation, existing: Record?) -> Bool {
+        guard change.table == "tasks", ["POST", "PATCH"].contains(change.method) else { return false }
+        if change.fields["is_heading"] != nil {
+            let next = Record((existing?.fields ?? [:]).merging(change.fields) { _, value in value })
+            if Self(next) == .heading && existing == nil || existing.map({ Self($0) != Self(next) }) == true { return true }
+        }
+        guard let children = change.fields["subtasks"] else { return false }
+        let old = Dictionary((checklistNodes(existing?["subtasks"] ?? .null) ?? []).map { ($0.id, Self($0)) }, uniquingKeysWith: { first, _ in first })
+        guard let next = checklistNodes(children) else { return true }
+        return next.contains { row in
+            Self(row) == .heading && old[row.id] != .heading || old[row.id] == .heading && Self(row) != .heading
+        }
+    }
+
+    private static func validHeading(_ row: Record) -> Bool {
+        Self(row) != .unsupported && (Self(row) != .heading || row["completed"] == .bool(false) && row["completed_at"] == .null)
+    }
+    /// Iterate only recognized checklist containment, never arbitrary metadata.
+    /// Normal legacy strings/containers are preserved rather than reinterpreted.
+    static func checklistNodes(_ value: JSON) -> [Record]? {
+        if value == .null { return [] }
+        guard case .array(let list) = value else { return [] }
+        var stack = list.map { ($0, 1) }, nodes: [Record] = []
+        while let (item, depth) = stack.popLast() {
+            guard depth <= 32, nodes.count < 100_000 else { return nil }
+            guard case .object(let fields) = item else { continue }
+            let row = Record(fields); nodes.append(row)
+            if case .array(let children) = row["subtasks"] { stack.append(contentsOf: children.map { ($0, depth + 1) }) }
+        }
+        return nodes
+    }
+    static func permits(_ change: Mutation, existing: Record?) -> Bool {
+        guard change.table == "tasks", ["POST", "PATCH"].contains(change.method) else { return true }
+        if let existing, let type = change.fields["is_heading"] {
+            guard Self(existing) != .unsupported, !(Self(existing) == .heading && type == .null) else { return false }
+        }
+        if change.method == "POST" || change.fields["is_heading"] != nil || TaskCompletionRevision.touches(change.fields) {
+            let resulting = Record((existing?.fields ?? [:]).merging(change.fields) { _, new in new })
+            guard validHeading(resulting) else { return false }
+        }
+        if let children = change.fields["subtasks"], children != existing?["subtasks"] {
+            guard let next = checklistNodes(children) else { return false }
+            for child in next {
+                guard validHeading(child) else { return false }
+                if Self(child) == .heading { guard !child.id.isEmpty, child.id.count <= 400 else { return false } }
+            }
+            // An old checklist writer cannot erase the new behavior merely by
+            // dropping an unknown field from an otherwise identical child ID.
+            let old = checklistNodes(existing?["subtasks"] ?? .null) ?? []
+            let headings = Set(old.filter { Self($0) == .heading }.map(\.id))
+            for row in next where headings.contains(row.id) {
+                guard case .bool = row["is_heading"] else { return false }
+            }
+        }
+        return true
+    }
+    /// Draft-only type choice. Identity and workspace stay with the enclosing
+    /// native editor; nested checklist nodes do not acquire a root identity.
+    static func setting(_ row: Record, heading: Bool) throws -> Record {
+        guard Self(row) != .unsupported else { throw AppFailure(message: "This task type needs a newer supported editor. Your work is unchanged.") }
+        guard Self(row) != (heading ? .heading : .task) else { return row }
+        guard !heading || !row.completed else { throw AppFailure(message: "Reopen the task before making it a heading.") }
+        var edited = row; edited["is_heading"] = .bool(heading)
+        if heading {
+            if edited["completed"] != .bool(false) { edited["completed"] = .bool(false) }
+            if edited["completed_at"] != .null { edited["completed_at"] = .null }
+        }
+        return edited
+    }
+    /// A type choice must not overtake a complete/reopen or a different type
+    /// choice while this editor was open. Unrelated metadata may still merge.
+    static func validateTypeEdit(original: Record, edited: Record, current: Record) throws {
+        guard original["is_heading"] != edited["is_heading"] else { return }
+        let oldStamp = TaskPlanning.instant(original.string("completed_at"))
+        let sameStamp = current["completed_at"] == original["completed_at"] || (oldStamp != nil && oldStamp == TaskPlanning.instant(current.string("completed_at")))
+        guard original.id == edited.id, current.id == original.id,
+              original["task_generation"] == .null || original["task_generation"] == current["task_generation"],
+              Self(original) != .unsupported, Self(current) == Self(original),
+              current.completed == original.completed, sameStamp,
+              let capturedRevision = revision(original), let liveRevision = revision(current), capturedRevision == liveRevision else {
+            throw AppFailure(message: "The task type or completion changed while you were editing. Your draft is still here; reopen the current task before changing its type.")
+        }
+        let changes = edited.fields.filter { original.fields[$0.key] != $0.value }
+        guard permits(Mutation(table: "tasks", recordID: current.id, method: "PATCH", fields: changes), existing: current) else {
+            throw AppFailure(message: "This heading needs an open state. Your draft is still here.")
+        }
+    }
+    private static func revision(_ row: Record) -> Double? {
+        if row["completion_version"] == .null { return 0 } // Legacy roots and embedded nodes.
+        guard case .number(let value) = row["completion_version"], value.isFinite,
+              value >= 0, value < 9_007_199_254_740_991, value.rounded(.down) == value else { return nil }
+        return value
+    }
+    /// Final Store admission also covers compound edits such as a type change
+    /// saved with a note pin; they must retain the same opening completion fence.
+    static func validateCapturedTypeEdit(_ change: Mutation, existing: Record?) throws {
+        guard change.table == "tasks", change.method == "PATCH", change.fields["is_heading"] != nil else { return }
+        guard let existing, let baseline = change.baseline,
+              ["is_heading", "completed", "completed_at", "completion_version", "task_generation"].allSatisfy({ baseline[$0] != nil }) else {
+            throw AppFailure(message: "Reopen this task before changing its type. Your draft is still here.")
+        }
+        let original = Record(existing.fields.merging(baseline) { _, captured in captured })
+        let edited = Record(original.fields.merging(change.fields) { _, intended in intended })
+        try validateTypeEdit(original: original, edited: edited, current: existing)
+    }
+    static func change(_ row: Record, heading: Bool) throws -> Mutation? {
+        guard Self(row) != .unsupported, UUID(uuidString: row.id) != nil,
+              UUID(uuidString: row.string("task_generation")) != nil else {
+            throw AppFailure(message: "Reopen this task before changing its type. Your work is unchanged.")
+        }
+        guard Self(row) != (heading ? .heading : .task) else { return nil }
+        guard !heading || !row.completed else {
+            throw AppFailure(message: "Reopen the task before making it a heading.")
+        }
+        var fields: [String: JSON] = ["is_heading": .bool(heading)]
+        if heading {
+            if row["completed"] != .bool(false) { fields["completed"] = .bool(false) }
+            if row["completed_at"] != .null { fields["completed_at"] = .null }
+        }
+        return Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields,
+                        baseline: TaskCompletionRevision.editBaseline(for: fields, from: row))
     }
 }
 
@@ -96,6 +305,17 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var insertOnly: Bool? = nil
     /// Semantic preference command; absent in older queues means snooze. Never a row field.
     var reminderPreferenceField: String? = nil
+    /// One complete ordering intent, persisted with its retry identity.
+    var organizationOrder: OrganizationOrder.Command? = nil
+    /// Account/backend-bound prior state for explicit local list recovery only.
+    var orderRecovery: TaskOrderRecovery? = nil
+    var teamTaskScope: TeamTaskEditScope? = nil
+    var teamTaskBatch: TeamTaskBatch? = nil
+    var teamCompletion: TeamCompletion? = nil
+    /// Opt-in personal project moves retain their durable queue identity on retry.
+    var personalTaskMove: Bool? = nil
+    /// Personal workflow provenance survives queued creation and history recreation.
+    var workflowRun: UUID? = nil
 }
 
 /// Undo/redo recreation is a new task incarnation; an exact queued retry retains its chosen ID.
@@ -116,11 +336,18 @@ enum TaskGeneration {
 
 /// A local prediction follows the server counter; only the server owns confirmed revisions.
 enum TaskCompletionRevision {
-    static func touches(_ fields: [String: JSON]) -> Bool { fields["completed"] != nil || fields["completed_at"] != nil }
+    static func touches(_ fields: [String: JSON]) -> Bool { fields["completed"] != nil || fields["completed_at"] != nil || fields["is_heading"] != nil }
     static func editBaseline(for fields: [String: JSON], from original: Record) -> [String: JSON] {
         var baseline = Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, original[$0]) })
         baseline["task_generation"] = original["task_generation"]
-        if touches(fields) { baseline["completion_version"] = original.fields["completion_version"] ?? .number(0) }
+        if TeamTaskRecurrence.touches(fields) {
+            for key in TeamTaskRecurrence.cohort { baseline[key] = original[key] }
+        }
+        if touches(fields) {
+            baseline["completion_version"] = original.fields["completion_version"] ?? .number(0)
+            if original.fields["is_heading"] != nil || fields["is_heading"] != nil { baseline["is_heading"] = original["is_heading"] }
+        }
+        if fields["is_heading"] != nil { baseline["completed"] = original["completed"]; baseline["completed_at"] = original["completed_at"] }
         return baseline
     }
     static func capturing(_ change: Mutation, existing: Record?) -> Mutation {
@@ -149,7 +376,7 @@ enum TaskCompletionRevision {
     static func applying(_ fields: [String: JSON], to old: Record) -> Record {
         var row = old; row.fields.merge(fields.filter { $0.key != "task_generation" }) { _, new in new }
         if fields["completion_version"] == nil, touches(fields),
-           old.completed != row.completed || instant(old["completed_at"]) != instant(row["completed_at"]) {
+           old.completed != row.completed || instant(old["completed_at"]) != instant(row["completed_at"]) || TaskKind(old) != TaskKind(row) {
             row["completion_version"] = .number(Double(old["completion_version"].integer + 1))
         }
         return row
@@ -164,14 +391,59 @@ enum TaskCompletionRevision {
 
 /// Applies only the user's changes when explicitly resolving a conflict. Remote-only items survive.
 enum TaskEdit {
+    /// Labels are membership, not an ordered replacement. Keep remote-only labels
+    /// while applying this edit's additions/removals relative to its own baseline.
+    static func keepingLocal(field: String, base: JSON, desired: JSON, remote: JSON) -> JSON {
+        if let merged = collectionEdit(field: field, base: base, desired: desired, remote: remote) { return merged }
+        return keepingLocal(base: base, desired: desired, remote: remote)
+    }
+    fileprivate static func collectionEdit(field: String, base: JSON, desired: JSON, remote: JSON) -> JSON? {
+        if field == "labels" { return labelMembershipEdit(base: base, desired: desired, remote: remote) }
+        guard ["comments", "attachments", "subtasks"].contains(field) else { return nil }
+        // Supported legacy rows use null for an empty list. A captured null is
+        // known-empty; an absent mutation baseline is still unknown and guarded.
+        let values = [base, desired, remote].map { $0 == .null ? JSON.array([]) : $0 }
+        guard case .array(let before) = values[0], case .array(let after) = values[1], case .array(let current) = values[2],
+              [before, after, current].allSatisfy({ items in
+                  let ids = items.map { $0.object["id"]?.text ?? "" }
+                  return !ids.contains("") && Set(ids).count == ids.count
+              }) else { return nil }
+        // Keep exact representations when no merge is necessary.
+        if desired == base { return remote }
+        if remote == base || remote == desired { return desired }
+        if field == "subtasks", let merged = SubtaskTree.rebased(base: values[0], desired: values[1], remote: values[2]) { return merged }
+        return keepingLocal(base: values[0], desired: values[1], remote: values[2])
+    }
+    fileprivate static func labelMembershipEdit(base: JSON, desired: JSON, remote: JSON) -> JSON? {
+        guard let before = labelMembers(base), let after = labelMembers(desired), let current = labelMembers(remote) else { return nil }
+        let removed = Set(before).subtracting(after)
+        let added = Set(after).subtracting(before)
+        var result = current.filter { !removed.contains($0) }
+        for value in after where added.contains(value) && !result.contains(value) { result.append(value) }
+        return .array(result.map(JSON.string))
+    }
+    private static func labelMembers(_ value: JSON) -> [String]? {
+        if value == .null { return [] }
+        guard case .array(let values) = value else { return nil }
+        var result: [String] = []
+        for value in values {
+            guard case .string(let label) = value, !label.isEmpty, !result.contains(label) else { return nil }
+            result.append(label)
+        }
+        return result
+    }
     static func keepingLocal(base: JSON, desired: JSON, remote: JSON) -> JSON {
         if desired == base { return remote }
         if remote == base || remote == desired { return desired }
         if case .object(let b) = base, case .object(let d) = desired, case .object(let c) = remote {
             var result = c
             for key in Set(b.keys).union(d.keys) where b[key] != d[key] {
-                if let value = d[key] { result[key] = keepingLocal(base: b[key] ?? .null, desired: value, remote: c[key] ?? .null) }
-                else { result.removeValue(forKey: key) }
+                if let value = d[key] { result[key] = keepingLocal(field: key, base: b[key] ?? .null, desired: value, remote: c[key] ?? .null) }
+                else if let merged = collectionEdit(field: key, base: b[key] ?? .null, desired: .null, remote: c[key] ?? .null) {
+                    // Child records may omit empty lists. Reversing a nested
+                    // addition must retain remote-only items, not erase the key.
+                    result[key] = merged
+                } else { result.removeValue(forKey: key) }
             }
             return .object(result)
         }
@@ -202,23 +474,40 @@ enum TaskEdit {
 struct SyncConflict: Identifiable {
     var mutation: Mutation
     var remote: Record
+    var completionReview: TeamCompletion.Review? = nil
+    var completionBatchReview: TeamTaskBatch.Review? = nil
     var id: UUID { mutation.id }
+    var assignmentContextChanged: Bool { !TaskAssignment.permitsScope(mutation, current: remote) }
 
     /// Resolve only the edit that was reviewed, then replay later offline work.
     /// Returning nil leaves stale or mismatched review requests untouched.
     func resolving(_ snapshot: Snapshot, keepLocal: Bool) -> Snapshot? {
+        if mutation.teamCompletion != nil || mutation.teamTaskBatch != nil { return nil }
+        if ProductivityGoalEdit.matches(mutation) { return ProductivityGoalEdit.resolving(self,snapshot:snapshot,keepLocal:keepLocal) }
+        if mutation.table == WorkflowTemplate.table { return TemplateEditing.resolving(self, snapshot: snapshot, keepLocal: keepLocal) }
         guard mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
               remote.id.lowercased() == mutation.recordID.lowercased(),
               let index = snapshot.pending.firstIndex(where: { $0 == mutation }) else { return nil }
+        if let scope = mutation.teamTaskScope, keepLocal {
+            guard remote["project_id"] == .string(scope.project), remote["task_generation"] == mutation.baseline?["task_generation"] else { return nil }
+        }
+        if keepLocal, !TaskAssignment.permitsScope(mutation, current: remote) { return nil }
+        let dependentAssignment = TaskAssignment.dependentAssignment(after: mutation, at: index, pending: snapshot.pending)
+        let laterMutationIDs = Set(snapshot.pending.dropFirst(index + 1).map(\.id))
         var result = snapshot
         if keepLocal, mutation.method == "DELETE" {
             result.pending[index].baseline = remote.fields
         } else if keepLocal {
+            let explicitAssignment = TaskAssignment.scopedProject(mutation) != nil
             result.pending[index].fields = Dictionary(uniqueKeysWithValues: mutation.fields.map { key, value in
-                (key, mutation.baseline?[key].map { TaskEdit.keepingLocal(base: $0, desired: value, remote: remote[key]) } ?? value)
+                (key, explicitAssignment && key == "assigned_to" ? value : mutation.baseline?[key].map { TaskEdit.keepingLocal(field: key, base: $0, desired: value, remote: remote[key]) } ?? value)
             })
             result.pending[index].baseline = Dictionary(uniqueKeysWithValues: mutation.fields.keys.map { ($0, remote[$0]) })
             result.pending[index] = TaskCompletionRevision.capturing(result.pending[index], existing: remote)
+            if let scope = mutation.teamTaskScope {
+                guard let reviewed = try? scope.capturing(result.pending[index], existing: remote) else { return nil }
+                result.pending[index] = reviewed; result.pending[index].id = UUID()
+            }
             if TaskCompletionRevision.touches(mutation.fields) {
                 let before = TaskCompletionRevision.applying(mutation.fields, to: Record(mutation.baseline ?? [:]))["completion_version"].integer
                 let after = TaskCompletionRevision.applying(result.pending[index].fields, to: remote)["completion_version"].integer
@@ -229,9 +518,28 @@ struct SyncConflict: Identifiable {
                     }
                 }
             }
+            // The synced completion already owns the next occurrence. Keeping a
+            // different completion timestamp must not enqueue a second next day.
+            if remote.completed, mutation.fields["completed"] == .bool(true) {
+                cancelUnacceptedSuccessors(in: &result)
+            }
+            if mutation.personalTaskMove == true, mutation.teamTaskScope == nil,
+               let replacement = result.pending.firstIndex(where: { $0.id == mutation.id }) {
+                // Explicit review is a fresh decision, never a changed body
+                // under the original receipt identity. If it is already in the
+                // desired project, retain only the other authored root edits.
+                result.pending[replacement].id = UUID()
+                if result.pending[replacement].fields["project_id"] == remote["project_id"] {
+                    result.pending[replacement].fields.removeValue(forKey: "project_id")
+                    result.pending[replacement].baseline?.removeValue(forKey: "project_id")
+                    result.pending[replacement].personalTaskMove = nil
+                    if result.pending[replacement].fields.isEmpty { result.pending.remove(at: replacement) }
+                }
+            }
         } else {
             result.pending.remove(at: index)
-            if !remote.completed, mutation.fields["completed"] == .bool(true) {
+            if let dependentAssignment { result.pending.removeAll { $0.id == dependentAssignment } }
+            if mutation.fields["completed"] == .bool(true) {
                 cancelUnacceptedSuccessors(in: &result)
             }
         }
@@ -249,9 +557,28 @@ struct SyncConflict: Identifiable {
         if let row = confirmed.firstIndex(where: { $0.id.lowercased() == mutation.recordID.lowercased() }) { confirmed[row] = Record(remoteFields) }
         else { confirmed.append(Record(remoteFields)) }
         result.tables["tasks"] = confirmed
-        for change in result.pending where change.table == "tasks" && change.recordID.lowercased() == mutation.recordID.lowercased() {
-            var local = change; local.recordID = mutation.recordID
+        for pendingIndex in result.pending.indices where result.pending[pendingIndex].table == "tasks" && result.pending[pendingIndex].recordID.lowercased() == mutation.recordID.lowercased() {
+            var local = result.pending[pendingIndex]; local.recordID = mutation.recordID
             if local.fields["id"] != nil { local.fields["id"] = .string(mutation.recordID) }
+            // Later collection edits express their own delta. Rebase it after the
+            // reviewed choice so replay retains remote additions and cannot resurrect
+            // an earlier edit that the user discarded. Unknown baselines stay guarded.
+            if laterMutationIDs.contains(local.id), local.method == "PATCH",
+               let current = result.tables["tasks"]?.first(where: { $0.id.lowercased() == mutation.recordID.lowercased() }),
+               TaskGeneration.permitsLocalAction(local, existing: current) {
+                for field in ["labels", "comments", "attachments", "subtasks"] {
+                    guard let desired = local.fields[field], let baseline = local.baseline?[field],
+                          let merged = TaskEdit.collectionEdit(field: field, base: baseline, desired: desired, remote: current[field]) else { continue }
+                    // Reverse only this edit's delta to reconstruct its guard.
+                    // Remote-only items join the baseline, but a later overlapping
+                    // edit still guards its original value and requires review.
+                    let rebasedBaseline = field == "labels" ? current[field] : TaskEdit.keepingLocal(field: field, base: desired, desired: baseline, remote: current[field])
+                    local.fields[field] = merged
+                    local.baseline?[field] = rebasedBaseline
+                    result.pending[pendingIndex].fields[field] = merged
+                    result.pending[pendingIndex].baseline?[field] = rebasedBaseline
+                }
+            }
             result.apply(local)
         }
         return result
@@ -265,7 +592,12 @@ struct SyncConflict: Identifiable {
         for creation in creations {
             let later = result.pending.filter { $0.table == "tasks" && $0.recordID.lowercased() == creation.recordID.lowercased() && $0.id != creation.id }
             let current = result.tables["tasks"]?.first { $0.id.lowercased() == creation.recordID.lowercased() }
-            if later.isEmpty && (current == nil || current == Record(creation.fields)) {
+            if let current, !current.string("task_generation").isEmpty,
+               current["task_generation"] != creation.fields["task_generation"] {
+                // A confirmed occurrence from another action is already cached.
+                // Cancel only our insert; retain that row and any later edits for review.
+                result.pending.removeAll { $0.id == creation.id }
+            } else if later.isEmpty && (current == nil || current == Record(creation.fields)) {
                 result.pending.removeAll { $0.id == creation.id }
                 result.tables["tasks"]?.removeAll { $0.id.lowercased() == creation.recordID.lowercased() }
             } else {
@@ -301,54 +633,272 @@ struct SyncConflict: Identifiable {
 struct Snapshot: Codable, Equatable, Sendable {
     var tables: [String: [Record]] = [:]
     var pending: [Mutation] = []
+    var teamWorkspace: TeamWorkspaceCache? = nil
+    var workflowUndoService: WorkflowUndoService? = nil
     var widgetCompletion = WidgetCompletionCache()
+    var sharedCaptureReceipts: [String: String]? = nil
+    /// Device-private, monotonic wearable mutation proofs; excluded from exports and sync.
+    var wearableReceipts: [String: WearableMutationReceipt]? = nil
+    var wearableReceiptGeneration: UInt64? = nil
+    /// Local cancellation outbox; never included in a portable workspace export.
+    var locationRetirements: [String: LocationReminderTicket]? = nil
+    var locationActions: [String: LocationNotificationAction]? = nil
+    /// Device-bound time snooze recovery; excluded from portable workspace exports.
+    var timeSnoozes: [String: TimeSnoozeIntent]? = nil
+    /// Monotonic import receipts; excluded from shared rows and portable backups.
+    var locationImports: [String: LocationHandoffImportReceipt]? = nil
     mutating func apply(_ change: Mutation) {
+        if WorkflowUndo.matches(change) { WorkflowUndo.apply(change, snapshot: &self); return }
+        guard change.table != TaskAssignmentProvenance.table else { return }
+        if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
+            guard let command=change.teamCompletion else { return }
+            _=command.apply(to:&self,header:change);return
+        }
+        if change.method == "TEAM_BATCH" || change.teamTaskBatch != nil {
+            guard let batch=change.teamTaskBatch else { return }
+            _=batch.apply(to:&self,header:change);return
+        }
+        if change.organizationOrder != nil || change.method == "ORDER" {
+            guard let command = change.organizationOrder, OrganizationOrder.valid(change) else { return }
+            tables[change.table] = command.applying(to: tables[change.table] ?? [])
+            return
+        }
         var rows = tables[change.table] ?? []
+        let assignmentBefore = change.table == "tasks" ? rows.first { $0.id == change.recordID } : nil
         // A fetched recreated task must remain visible while its older queued action needs review.
         if !TaskGeneration.permitsLocalAction(change, existing: rows.first(where: { $0.id == change.recordID })) { return }
+        if !TaskKind.permits(change, existing: rows.first(where: { $0.id == change.recordID })) { return }
         if change.table == ReminderSnooze.table, change.method == "POST", change.insertOnly != true {
             let index = rows.firstIndex { $0.id == change.recordID }
             guard let replayed = ReminderAutomatic.replay(change, onto: index.map { rows[$0] }) else { return }
             if let index { rows[index] = replayed } else { rows.append(replayed) }
-        } else if change.method == "DELETE" { rows.removeAll { $0.id == change.recordID } }
+        } else if change.method == "DELETE" {
+            if change.table == "tasks", change.teamTaskScope != nil {
+                for index in rows.indices where rows[index].string("recurrence_parent_id") == change.recordID {
+                    rows[index]["recurrence_parent_id"] = .null
+                }
+            }
+            rows.removeAll { $0.id == change.recordID }
+        }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
-            rows[i] = change.table == "tasks" ? TaskCompletionRevision.applying(change.fields, to: rows[i]) : Record(rows[i].fields.merging(change.fields) { _, new in new })
+            guard var projected = try? PersonalTaskMove.projectedFields(change, onto: rows[i]) else { return }
+            if change.table == "tasks", change.method == "PATCH" {
+                // Read projection preserves remote additions beside the queued delta.
+                // The original request/baseline remains unchanged for guarded delivery.
+                for field in ["subtasks", "attachments"] {
+                    if let base = change.baseline?[field], let desired = projected[field] {
+                        projected[field] = TaskEdit.keepingLocal(field: field, base: base, desired: desired, remote: rows[i][field])
+                    }
+                }
+            }
+            rows[i] = change.table == "tasks" ? TaskCompletionRevision.applying(projected, to: rows[i]) : Record(rows[i].fields.merging(projected) { _, new in new })
         } else {
             var fields = change.fields
+            if change.table == WorkflowTemplate.table, change.method == "PATCH" {
+                // Keep a deleted template's full queued draft visible until its guarded sync review.
+                fields = (change.baseline ?? [:]).merging(fields) { _, desired in desired }
+                fields["id"] = .string(change.recordID)
+            }
             if change.table == "tasks", change.method == "POST" { fields["completion_version"] = .number(0) }
             rows.append(Record(fields))
         }
         tables[change.table] = rows
+        if change.table == "tasks" { TaskAssignmentProvenance.invalidate(before:assignmentBefore,after:rows.first { $0.id == change.recordID },snapshot:&self) }
     }
     /// Confirm the server revision before replaying work queued during the request.
-    mutating func acknowledge(_ change: Mutation, saved: Record?) {
+    @discardableResult mutating func acknowledge(_ change: Mutation, saved: Record?) -> Bool {
+        if WorkflowUndo.matches(change) { return WorkflowUndo.acknowledge(saved, change: change, snapshot: &self) }
+        if change.method == "TEAM_BATCH", change.teamTaskBatch == nil { return false }
+        if let batch = change.teamTaskBatch, batch.isCompletion { return batch.acknowledgeCompletion(saved, header: change, snapshot: &self) }
+        if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
+            guard let command=change.teamCompletion else { return false }
+            return command.acknowledge(saved,header:change,snapshot:&self)
+        }
         pending.removeAll { $0.id == change.id }
-        guard let saved else { return }
+        if change.organizationOrder != nil {
+            if let saved, case .array(let values) = saved["organization_order_rows"] {
+                tables[change.table] = values.map { Record($0.object) }
+            }
+            for queued in pending where queued.table == change.table { apply(queued) }
+            return true
+        }
+        guard let saved else { return true }
         var rows = tables[change.table] ?? []
         if let index = rows.firstIndex(where: { $0.id.lowercased() == change.recordID.lowercased() }) {
             var confirmed = saved; confirmed["id"] = .string(rows[index].id); rows[index] = confirmed
         } else { rows.append(saved) }
         tables[change.table] = rows
-        for queued in pending where queued.table == change.table && queued.recordID.lowercased() == change.recordID.lowercased() {
-            var queued = queued
-            if let id = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() })?.id { queued.recordID = id }
-            apply(queued)
+        for queued in pending where queued.table == change.table {
+            if let batch = queued.teamTaskBatch {
+                guard !batch.isCompletion, (try? batch.body(for: queued)) != nil else { continue }
+                // Acknowledgement replaces only this member's row. Other members
+                // already have their optimistic values, so replaying the whole
+                // group's admission would incorrectly reject its changed baseline.
+                // Project this member only; the complete frozen RPC stays queued.
+                for member in batch.items where member.recordID.lowercased() == change.recordID.lowercased() {
+                    var member = member
+                    if let id = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() })?.id { member.recordID = id }
+                    apply(member)
+                }
+            } else if queued.recordID.lowercased() == change.recordID.lowercased() {
+                var queued = queued
+                if let id = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() })?.id { queued.recordID = id }
+                apply(queued)
+            }
         }
+        return true
     }
     mutating func mergeRemote(_ remote: [String: [Record]]) {
+        // A fresh task snapshot without matching history cannot certify the old
+        // actor, including an unobserved remote A→B→A assignment cycle.
+        if remote["tasks"] != nil && remote[TaskAssignmentProvenance.table] == nil { tables.removeValue(forKey:TaskAssignmentProvenance.table) }
         tables.merge(remote) { _, new in new }
+        TaskNodeActivity.discardUnavailable(in: &tables, remote: remote)
         for change in pending { apply(change) }
+        ConversationCache.prune(&self)
+    }
+}
+
+/// Recovery requires authenticated absence, and the caller must preserve the original
+/// snapshot in the encrypted vault before replacing the active workspace.
+extension Snapshot {
+    func recoveryProjectIDs(for mutation: Mutation) -> [String] {
+        guard mutation.teamTaskScope == nil, mutation.teamCompletion == nil, mutation.teamTaskBatch == nil, pending.contains(mutation), ["tasks", "sections", "projects", "project_collaborators"].contains(mutation.table),
+              ["POST", "PATCH", "DELETE"].contains(mutation.method) else { return [] }
+        if mutation.table == "projects", mutation.method == "POST" { return [] }
+        let row = tables[mutation.table]?.first { $0.id.lowercased() == mutation.recordID.lowercased() }
+        let related = pending.filter { $0.table == mutation.table && $0.recordID.lowercased() == mutation.recordID.lowercased() }
+        let candidates = mutation.table == "projects" ? [mutation.recordID] :
+            related.flatMap { [$0.baseline?["project_id"]?.text ?? "", $0.fields["project_id"]?.text ?? ""] } + [row?.string("project_id") ?? ""]
+        var result: [String] = []
+        for id in candidates.map({ $0.lowercased() }) where !id.isEmpty && !result.contains(id) {
+            // An unacknowledged local project is not evidence of revoked access.
+            guard !pending.contains(where: { $0.table == "projects" && $0.method == "POST" && $0.recordID.lowercased() == id }) else { continue }
+            result.append(id)
+        }
+        return result
+    }
+    func recoveringUnavailableProject(for mutation: Mutation, remote: [String: [Record]]) -> Snapshot? {
+        guard let blockedRows = remote[mutation.table],
+              !blockedRows.contains(where: { $0.id.lowercased() == mutation.recordID.lowercased() }) else { return nil }
+        for project in recoveryProjectIDs(for: mutation) {
+            if let result = removingUnavailableProject(project, blockedRecord: mutation, remote: remote) { return result }
+        }
+        return nil
+    }
+    private func removingUnavailableProject(_ project: String, blockedRecord: Mutation, remote: [String: [Record]]) -> Snapshot? {
+        let projectTables = ["tasks", "sections", "project_collaborators"]
+        guard let projects = remote["projects"], !projects.contains(where: { $0.id.lowercased() == project }),
+              projectTables.allSatisfy({ table in
+                  guard let rows = remote[table] else { return false }
+                  return !rows.contains { $0.string("project_id").lowercased() == project }
+              }) else { return nil }
+        var removed: [String: Set<String>] = ["projects": [project]]
+        removed[blockedRecord.table, default: []].insert(blockedRecord.recordID.lowercased())
+        for table in projectTables {
+            for row in tables[table] ?? [] where row.string("project_id").lowercased() == project { removed[table, default: []].insert(row.id.lowercased()) }
+            for change in pending where change.table == table && (change.fields["project_id"]?.text.lowercased() == project || change.baseline?["project_id"]?.text.lowercased() == project) {
+                removed[table, default: []].insert(change.recordID.lowercased())
+            }
+            // A row moved elsewhere on the server still needs normal conflict handling.
+            guard !(remote[table] ?? []).contains(where: { removed[table]?.contains($0.id.lowercased()) == true }) else { return nil }
+        }
+        // A legacy mutation in the same project cannot discard a later scoped
+        // team intent while recovering its own unavailable-project snapshot.
+        guard !pending.contains(where: { ($0.teamTaskScope != nil || $0.teamCompletion != nil) && removed[$0.table]?.contains($0.recordID.lowercased()) == true }) else { return nil }
+        var recovered = self
+        recovered.pending.removeAll { removed[$0.table]?.contains($0.recordID.lowercased()) == true }
+        for key in recovered.tables.keys.filter({ $0.lowercased() == "project_members:" + project }) { recovered.tables.removeValue(forKey: key) }
+        recovered.mergeRemote(remote)
+        return recovered
     }
 }
 
 extension Snapshot {
-    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion }
+    private enum CodingKeys: String, CodingKey { case tables, pending, teamWorkspace, workflowUndoService, widgetCompletion, sharedCaptureReceipts, wearableReceipts, wearableReceiptGeneration, locationRetirements, locationActions, timeSnoozes, locationImports }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         tables = try row.decode([String: [Record]].self, forKey: .tables)
         pending = try row.decode([Mutation].self, forKey: .pending)
+        teamWorkspace = try row.decodeIfPresent(TeamWorkspaceCache.self, forKey:.teamWorkspace)
+        // Optional compatibility metadata is not a privacy boundary or authored work.
+        // A fresh service check is still required before forwarding any Undo.
+        workflowUndoService = try? row.decodeIfPresent(WorkflowUndoService.self, forKey: .workflowUndoService)
         widgetCompletion = try row.decodeIfPresent(WidgetCompletionCache.self, forKey: .widgetCompletion) ?? WidgetCompletionCache()
+        sharedCaptureReceipts = try row.decodeIfPresent([String: String].self, forKey: .sharedCaptureReceipts)
+        wearableReceiptGeneration = try row.decodeIfPresent(UInt64.self, forKey: .wearableReceiptGeneration)
+        wearableReceipts = try row.decodeIfPresent([String: WearableMutationReceipt].self, forKey: .wearableReceipts)
+        guard WearableReceiptLedger.valid(wearableReceipts ?? [:]) else {
+            throw DecodingError.dataCorruptedError(forKey: .wearableReceipts, in: row, debugDescription: "Invalid private wearable receipts")
+        }
+        locationRetirements = try row.decodeIfPresent([String: LocationReminderTicket].self, forKey: .locationRetirements)
+        locationActions = try row.decodeIfPresent([String: LocationNotificationAction].self, forKey: .locationActions)
+        timeSnoozes = try row.decodeIfPresent([String: TimeSnoozeIntent].self, forKey: .timeSnoozes)
+        locationImports = try row.decodeIfPresent([String: LocationHandoffImportReceipt].self, forKey: .locationImports)
+        guard LocationHandoffImportLedger.valid(locationImports ?? [:]) else {
+            throw DecodingError.dataCorruptedError(forKey: .locationImports, in: row, debugDescription: "Invalid private place import history")
+        }
+        guard TimeSnoozeOutbox.valid(timeSnoozes ?? [:]) else {
+            throw DecodingError.dataCorruptedError(forKey: .timeSnoozes, in: row, debugDescription: "Invalid time snooze recovery")
+        }
+        guard LocationNotificationLedger.valid(locationActions ?? [:]) else {
+            throw DecodingError.dataCorruptedError(forKey: .locationActions, in: row, debugDescription: "Invalid location action ledger")
+        }
+        guard LocationRetirementOutbox.valid(locationRetirements ?? [:]) else {
+            throw DecodingError.dataCorruptedError(forKey: .locationRetirements, in: row, debugDescription: "Invalid location cancellation outbox")
+        }
+    }
+}
+
+/// A worker may encode an immutable snapshot before the final durable save.
+/// Reuse proves table-buffer identity and byte-exact encoded metadata; changed
+/// input takes the ordinary encoder. No files, clocks or account state are read.
+struct PreparedSnapshotEncoding: Sendable {
+    let snapshot: Snapshot
+    private let data: Data
+    private let metadata: Data
+    private let widgetCompletionPrepared: Bool
+    init(_ snapshot: Snapshot) throws {
+        try self.init(snapshot, widgetCompletionPrepared: false)
+    }
+    /// Only this initializer attests that widget signatures were prepared. The
+    /// final Store still proves the entire immutable capture before reusing it.
+    init(preparingWidgetCompletion snapshot: Snapshot, checkCancellation: () throws -> Void = {}) throws {
+        var prepared = snapshot
+        WidgetCompletion.prepare(&prepared)
+        try checkCancellation()
+        try self.init(prepared, widgetCompletionPrepared: true)
+    }
+    private init(_ snapshot: Snapshot, widgetCompletionPrepared: Bool) throws {
+        self.widgetCompletionPrepared = widgetCompletionPrepared
+        self.snapshot = snapshot
+        data = try TaskfoldJSONEncoder().encode(snapshot)
+        metadata = try Self.encodeMetadata(snapshot)
+    }
+    func hasPreparedWidgetCompletion(matching current: Snapshot) throws -> Bool {
+        guard widgetCompletionPrepared else { return false }
+        return try matching(current) != nil
+    }
+    func matching(_ current: Snapshot) throws -> Data? {
+        guard snapshot.tables.count == current.tables.count else { return nil }
+        for (key, original) in snapshot.tables {
+            guard let index = current.tables.index(forKey: key),
+                  key.utf8.elementsEqual(current.tables[index].key.utf8) else { return nil }
+            let final = current.tables[index].value
+            guard original.count == final.count else { return nil }
+            let identical = original.withUnsafeBufferPointer { captured in
+                final.withUnsafeBufferPointer { captured.baseAddress == $0.baseAddress }
+            }
+            guard identical else { return nil }
+        }
+        guard try metadata == Self.encodeMetadata(current) else { return nil }
+        return data
+    }
+    private static func encodeMetadata(_ value: Snapshot) throws -> Data {
+        var metadata = value; metadata.tables = [:]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
+        return try encoder.encode(metadata)
     }
 }
 
@@ -407,6 +957,7 @@ struct QuickEntry {
         protect(#"(?<!\S)\\"# + QuickPlannedClockText.body + QuickPlannedClockText.ending, removeEscape: true)
         protect(QuickRecurrenceText.pattern.replacingOccurrences(of: #"(?<![\p{L}\p{N}_!])"#, with: #"(?<!\S)\\"#), removeEscape: true)
         protect(QuickReminderText.pattern.replacingOccurrences(of: #"(?<!\S)!"#, with: #"(?<!\S)\\!"#), removeEscape: true)
+        protect(#"(?<!\S)\\"# + QuickNaturalDateText.capturedCompound, removeEscape: true)
         protect(#"\\(?:[#/@%+](?:"[^"\n]*"|[^\s]+)|\{[^}]+\}|[^\s]+)"#, removeEscape: true)
         protect(#""[^"\n]*""#)
         protect(#"(?<!\S)(?:https?://|www\.)\S+"#)
@@ -523,7 +1074,16 @@ struct QuickEntry {
                 }
             }
         }
-        if enabled("due_date") {
+        let compoundPattern = #"(?<![\p{L}\p{N}_])"# + QuickNaturalDateText.capturedCompound
+        if let m = match(compoundPattern) {
+            if enabled("due_date"), let date = QuickNaturalDateText.resolve(m[0], relativeTo: now, calendar: calendar, datePreferences: context.datePreferences) {
+                updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("due_date", m[0], dayLabel(date))
+            } else if enabled("due_date") {
+                warnings.append("“\(m[0])” is not a valid date offset. Use days or weeks before or after a supported date, within 3,650 days. Its text stays in the title.")
+            }
+        }
+        protect(compoundPattern)
+        if enabled("due_date"), updates["due_date"] == nil {
             if let m = match(#"(?<![\p{L}\p{N}_])"# + QuickNaturalDateText.expanded) {
                 if let date = QuickNaturalDateText.resolve(m[0], relativeTo: now, calendar: calendar, datePreferences: context.datePreferences) {
                     updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("due_date", m[0], dayLabel(date))
@@ -586,11 +1146,16 @@ struct QuickEntry {
 
     /// Accepted references are applied together. Moving projects clears incompatible destinations
     /// and assignments, while additional labels preserve the task's existing labels.
-    func applying(to task: Record) -> Record {
+    func applying(to task: Record) -> Record { (try? applyingChecked(to: task)) ?? task }
+    func applyingChecked(to task: Record) throws -> Record { try applying(to: task, clearChildren: true) }
+    /// Read-only reminder/assignee chips do not rebuild a checklist on every keystroke.
+    /// This field preview is never a replacement task; writes use applyingChecked.
+    func fieldPreview(to task: Record) -> Record { (try? applying(to: task, clearChildren: false)) ?? task }
+    private func applying(to task: Record, clearChildren: Bool) throws -> Record {
         var result = task
         if let project = updates["project_id"], project != task["project_id"] {
-            result["section_id"] = .null; result["assigned_to"] = .null
-            if !result["subtasks"].list.isEmpty { result["subtasks"] = TaskAssignment.clearChildren(result["subtasks"]) }
+            if clearChildren { result = try TaskAssignment.movingDraft(result, to: project) }
+            else { result["assigned_to"] = .null; result["section_id"] = .null }
         }
         result["title"] = .string(title.trimmingCharacters(in: .whitespacesAndNewlines))
         for (key, value) in updates where key != "labels" && key != "reminder_specs" { result[key] = value }
@@ -758,28 +1323,96 @@ private struct QuickEntryReferences {
 }
 
 
-struct EditHistory {
+struct EditHistory: Sendable {
+    let id: UUID
     var undo: [Mutation]
     var redo: [Mutation]
     var reversed: EditHistory { var result = self; swap(&result.undo, &result.redo); return result }
-    init(changes: [Mutation], snapshot: Snapshot) {
+    init(changes: [Mutation], snapshot: Snapshot, id: UUID = UUID()) {
+        self.id = id
         redo = []
+        if changes.count == 1, WorkflowUndo.matches(changes[0]), let restore = WorkflowUndo.restoring(changes[0]) {
+            redo = changes; undo = restore; return
+        }
+        if let command = WorkflowUndo.deleting(changes, snapshot: snapshot) {
+            redo = changes; undo = [command]; return
+        }
+        // A malformed or partially reused workflow must not fall back to blind
+        // individual deletion. Older untagged history keeps its existing behavior.
+        if changes.contains(where: { $0.workflowRun != nil }) { redo = changes; undo = []; return }
         var current = snapshot
         var inverse: [Mutation] = []
         for change in changes {
+            if let command=change.teamCompletion {
+                if let back=try? command.inverse(of:change) { inverse.append(back) }
+                redo.append(change);current.apply(change);continue
+            }
+            if let batch=change.teamTaskBatch {
+                if let back=try? batch.inverse(of:change,snapshot:current) { inverse.append(back) }
+                redo.append(change);current.apply(change);continue
+            }
+            if let command = change.organizationOrder, OrganizationOrder.valid(change) {
+                let rows = (current.tables[change.table] ?? []).filter { command.contains($0) }
+                var back = change; back.id = UUID()
+                back.organizationOrder = OrganizationOrder.Command(ids: OrganizationOrder.sorted(rows).map(\.id), projectID: command.projectID)
+                // The inverse has a different first item; keep its routing identity
+                // consistent with the restored command so ordinary validation admits it.
+                if let first = back.organizationOrder?.ids.first { back.recordID = first }
+                inverse.append(back); redo.append(change); current.apply(change)
+                continue
+            }
             if let old = current.tables[change.table]?.first(where: { $0.id == change.recordID }) {
-                let fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(change.fields, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil))
+                guard let projected = try? PersonalTaskMove.projectedFields(change, onto: old) else { undo = []; redo = []; return }
+                var fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
+                if change.personalTaskMove == true, change.method == "PATCH", change.fields["project_id"] != old["project_id"] {
+                    fields["assigned_to"] = old["assigned_to"]; fields["section_id"] = old["section_id"]
+                }
+                if change.table == "tasks", change.method == "PATCH", change.fields["is_heading"] != nil, old["is_heading"] == .null {
+                    fields["is_heading"] = .bool(false) // An explicit ordinary task, not removal of an unknown field.
+                }
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(projected, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil, teamTaskScope: change.teamTaskScope, personalTaskMove: change.personalTaskMove))
                 var forward = change
                 if change.method == "PATCH" { forward.baseline = change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: change.fields, from: old) : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old[$0]) }) }
+                if let scope = change.teamTaskScope { forward.baseline?["project_id"] = .string(scope.project) }
                 redo.append(forward)
             } else {
                 redo.append(change)
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: "DELETE", fields: [:], baseline: change.table == "tasks" ? change.fields : nil))
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: "DELETE", fields: [:], baseline: change.table == "tasks" ? change.fields : nil, teamTaskScope: change.teamTaskScope))
+                if inverse.last?.teamTaskScope?.audioRestoration?.policy == .omitExpired { inverse[inverse.count - 1].teamTaskScope?.audioRestoration = nil }
+            }
+            if var scope = change.teamTaskScope, change.method == "DELETE", !inverse.isEmpty {
+                scope.restoreRequest = change.id
+                inverse[inverse.count - 1].teamTaskScope = scope
+            }
+            if var scope = change.teamTaskScope, change.method == "PATCH", change.fields["subtasks"] != nil, !inverse.isEmpty {
+                scope.checklistRestoreRequest = change.id
+                inverse[inverse.count - 1].teamTaskScope = scope
+            }
+            if let scope = change.teamTaskScope, !inverse.isEmpty, inverse[inverse.count - 1].method == "PATCH" {
+                inverse[inverse.count - 1].baseline?["project_id"] = .string(scope.project)
             }
             current.apply(change)
         }
         undo = inverse.reversed()
+    }
+}
+
+/// Ephemeral UI authority for one logical history entry. It is separate from
+/// the fresh mutation/request identities generated for each Undo and Redo.
+struct EditHistoryRequest: Equatable, Sendable {
+    enum Direction: Equatable, Sendable { case undo, redo }
+    let direction: Direction
+    let entry: UUID
+    let workspace: WorkspaceBinding
+    let session: UUID
+    init?(direction: Direction, history: EditHistory?, workspace: WorkspaceBinding, session: UUID) {
+        guard let history, !workspace.account.isEmpty,
+              !(direction == .undo ? history.undo : history.redo).isEmpty else { return nil }
+        self.direction = direction; entry = history.id; self.workspace = workspace; self.session = session
+    }
+    func matches(direction: Direction, history: EditHistory?, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        self.direction == direction && self.workspace == workspace && self.session == session && entry == history?.id
+            && !(direction == .undo ? history?.undo ?? [] : history?.redo ?? []).isEmpty
     }
 }
 
@@ -895,6 +1528,8 @@ struct TaskQuery: Hashable {
     var filterLabels: [FilterReference] = []
     var filterProjects: [FilterReference] = []
     var filterSections: [FilterReference] = []
+    var filterPeople: [FilterReference] = []
+    var filterAssignments = TaskAssignmentProvenance.Catalog(nil)
     var userID = ""
     var timeZone = TimeZone.current.identifier
 }
@@ -902,12 +1537,97 @@ struct TaskQuery: Hashable {
 /// Shared by tabs. Results survive navigation and invalidate only when task data changes.
 final class TaskCache {
     private var source: [Record] = []
+    private var projectPresentation: [String: [Record]]?
+    private var projectOutline: [String: [Record]]?
+    private var labelPositions: [String: [Int]]?
+    private func scopedCandidates(_ query: TaskQuery, reading: ProductiveTaskReading) -> [Record] {
+        switch query.scope {
+        case .project(let id):
+            if query.sort == "manual" {
+                if projectOutline == nil { projectOutline = Dictionary(grouping: reading.outline, by: { $0.string("project_id") }) }
+                return projectOutline?[id] ?? []
+            }
+            if projectPresentation == nil { projectPresentation = Dictionary(grouping: reading.presentation, by: { $0.string("project_id") }) }
+            return projectPresentation?[id] ?? []
+        case .label(let id):
+            let rows = reading.presentation
+            if labelPositions == nil {
+                var indexed: [String: [Int]] = [:]
+                for (position, row) in rows.enumerated() {
+                    var seen = Set<String>()
+                    for value in row["labels"].list {
+                        guard case .string(let label) = value, seen.insert(label).inserted else { continue }
+                        indexed[label, default: []].append(position)
+                    }
+                }
+                labelPositions = indexed
+            }
+            let positions = Set((labelPositions?[id] ?? []) + (labelPositions?[query.labelName] ?? [])).sorted()
+            return positions.map { rows[$0] }
+        default: return reading.presentation
+        }
+    }
+
     private var results: [TaskQuery: [Record]] = [:]
+    private var productiveResult: ProductiveTaskReading?
+    private var inboxProductiveResult: ProductiveTaskReading?
+    func inboxProductiveReading() -> ProductiveTaskReading {
+        if let inboxProductiveResult { return inboxProductiveResult }
+        let value = ProductiveTaskReading(tasks: tasks.filter { $0.string("project_id").isEmpty })
+        inboxProductiveResult = value; return value
+    }
+    private var navigationResult: TaskNavigationCounts?
+    private var navigationLabels: [Record] = []
+    private var navigationExcluded = Set<String>()
+    private(set) var navigationComputationCount = 0
+    func navigationCounts(labels: [Record], excluding projects: Set<String> = []) -> TaskNavigationCounts {
+        if let navigationResult, navigationExcluded == projects, AuthoredValueComparison.sameRows(navigationLabels, labels) { return navigationResult }
+        let counts = TaskNavigationCounts(reading: productiveReading(excluding: projects), labels: labels)
+        navigationResult = counts; navigationLabels = labels; navigationExcluded = projects
+        navigationComputationCount += 1
+        return counts
+    }
+    private var productiveExcluded = Set<String>()
+    func productiveReading(excluding projects: Set<String> = []) -> ProductiveTaskReading {
+        if let productiveResult, productiveExcluded == projects { return productiveResult }
+        let value = ProductiveTaskReading(tasks: tasks.filter { !projects.contains($0.string("project_id")) })
+        productiveResult = value; productiveExcluded = projects
+        return value
+    }
     private(set) var tasks: [Record] = []
     private(set) var computationCount = 0
+    private struct HierarchyKey: Hashable { var projects: [FilterReference]; var userID: String }
+    private var hierarchyKey: HierarchyKey?
+    private var hierarchyResult: Result<[Record], FilterFailure>?
+    /// Only records leave this cache. Store captures live workspace selections
+    /// again before an action; the read-only cache never supplies edit authority.
+    func hierarchyRecords(projects: [FilterReference], userID: String) throws -> [Record] {
+        let key = HierarchyKey(projects: projects, userID: userID)
+        if key == hierarchyKey, let hierarchyResult { return try hierarchyResult.get() }
+        let rows = projects.map { Record(["id": .string($0.id), "name": .string($0.name), "parent_id": $0.parentID.map(JSON.string) ?? .null, "is_archived": .bool($0.unavailable)]) }
+        let result: Result<[Record], FilterFailure>
+        do {
+            let index = try TaskHierarchyIndex(roots: tasks, projects: rows, workspace: WorkspaceBinding(account: userID, generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+            result = .success(index.records(in: .all, includeCompleted: true))
+        } catch { result = .failure(FilterFailure(message: error.localizedDescription)) }
+        hierarchyKey = key; hierarchyResult = result
+        return try result.get()
+    }
+    func hierarchyCandidates(for rule: FilterRule, projects: [FilterReference], userID: String) throws -> [Record] {
+        if rule.needsChildCandidates { return try hierarchyRecords(projects: projects, userID: userID) }
+        let visible = Set(Dictionary(grouping: projects, by: \.id).filter { $0.value.count == 1 && !$0.value[0].unavailable }.keys)
+        let roots = tasks.filter { $0.string("project_id").isEmpty || visible.contains($0.string("project_id")) }
+        if rule.usesParentPredicate {
+            for root in roots where root["subtasks"] != .null {
+                guard FilterRule.supportedParentShape(root) else { throw FilterFailure(message: "A checklist uses an unsupported format. Open its parent task to review it.") }
+            }
+        }
+        return roots
+    }
     @discardableResult func update(_ rows: [Record]) -> Bool {
-        guard source != rows else { return false }
-        source = rows
+        guard !AuthoredValueComparison.sameRows(source, rows) else { return false }
+        projectPresentation = nil; projectOutline = nil; labelPositions = nil
+        source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; inboxProductiveResult = nil; navigationResult = nil
         tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
         results.removeAll(keepingCapacity: true)
         return true
@@ -916,18 +1636,34 @@ final class TaskCache {
         var query = incoming
         query.now = query.filter?.usesClockWindow == true ? query.now.flatMap { $0.timeIntervalSinceReferenceDate.isFinite ? FilterClockWindow.minute($0) : nil } : nil
         if query.filter?.usesDatePreferences != true { query.datePreferences = DatePhrasePreferences() }
+        if query.filter?.usesAssignmentHistory != true { query.filterAssignments = .init(nil) }
         if let cached = results[query] { return cached }
         computationCount += 1
-        let nameBindings = query.filter?.nameBindings(projects: query.filterProjects, sections: query.filterSections, labels: query.filterLabels)
-        let matched = tasks.filter { task in
+        let nameBindings = query.filter?.nameBindings(projects: query.filterProjects, sections: query.filterSections, labels: query.filterLabels, people: query.filterPeople)
+        let candidates: [Record]
+        if let filter = query.filter, filter.usesTaskHierarchy {
+            guard let rows = try? hierarchyCandidates(for: filter, projects: query.filterProjects, userID: query.userID) else { return [] }
+            if filter.hasProductiveBranches {
+                let visible = Set(Dictionary(grouping: query.filterProjects, by: \.id).filter { $0.value.count == 1 && !$0.value[0].unavailable }.keys)
+                let work = productiveReading().presentation.filter { $0.string("project_id").isEmpty || visible.contains($0.string("project_id")) }
+                var seen = Set<String>()
+                candidates = (rows + work).filter { seen.insert($0.id).inserted }
+            } else { candidates = rows }
+        } else {
+            let reading = productiveReading()
+            if query.filter == nil { candidates = scopedCandidates(query, reading: reading) }
+            else if incoming.sort == "manual", case .project = incoming.scope { candidates = reading.outline }
+            else { candidates = reading.presentation }
+        }
+        let matched = candidates.filter { task in
             if query.scope == .completed { if !task.completed { return false } }
             else if !query.includeCompleted && task.completed && !(query.filter?.hasQuerySections == true && query.filter?.includesCompletion == true) { return false }
             if query.priority > 0 && task.priority != query.priority { return false }
             if !query.text.isEmpty && !(task.title + " " + task.string("description")).localizedCaseInsensitiveContains(query.text) { return false }
             if let filter = query.filter {
                 if case .sections(let rules) = filter {
-                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences) }) else { return false }
-                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences) { return false }
+                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, productiveWork: productiveReading().contains(task.id), assignments: query.filterAssignments) }) else { return false }
+                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, productiveWork: productiveReading().contains(task.id), assignments: query.filterAssignments) { return false }
             }
             let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
             switch query.scope {
@@ -940,7 +1676,10 @@ final class TaskCache {
             }
         }
         let sorted: [Record]
-        if query.sort == "title" { sorted = matched.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending } }
+        if query.sort == "priority", query.filter?.usesTaskHierarchy == true || query.scope.usesProductiveWork {
+            sorted = matched.enumerated().sorted { $0.element.priority == $1.element.priority ? $0.offset < $1.offset : $0.element.priority < $1.element.priority }.map(\.element)
+        }
+        else if query.sort == "title" { sorted = matched.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending } }
         else if query.sort == "date" { sorted = matched.sorted { ($0.string("due_date").isEmpty ? "9999" : $0.string("due_date")) < ($1.string("due_date").isEmpty ? "9999" : $1.string("due_date")) } }
         else if query.sort == "deadline" { sorted = matched.sorted { ($0.string("deadline_date").isEmpty ? "9999" : $0.string("deadline_date")) < ($1.string("deadline_date").isEmpty ? "9999" : $1.string("deadline_date")) } }
         else if query.sort == "duration" { sorted = matched.sorted { ($0.durationMinutes ?? Int.max) < ($1.durationMinutes ?? Int.max) } }
@@ -954,6 +1693,30 @@ final class TaskCache {
 
 /// Day placement and due-date mutations share the durable, account-owned sync queue.
 enum DayPlacement {
+    /// Stable ordinary order upserts remain compatible with legacy rows. A
+    /// workflow's existing-order edit must retain PATCH for its checked inverse.
+    static func preparing(_ input: Mutation, account: String) -> Mutation {
+        guard input.table == table, input.method != "DELETE" else { return input }
+        var change = input
+        if change.workflowRun == nil { change.method = "POST" }
+        change.fields["id"] = .string(change.recordID)
+        change.fields["user_id"] = .string(account)
+        return change
+    }
+    /// Existing project orders may contain only heading roots. Expand those
+    /// sparse anchors without overriding any child positions explicitly saved.
+    static func arrangedOutline(_ tasks: [Record], ids: [String]) -> [Record] {
+        let explicit = Set(ids)
+        let anchors = Set(tasks.compactMap { task -> String? in
+            if let root = SubtaskTree.referencePath(task.id)?.first { return root }
+            return TaskKind(task) == .heading ? task.id : nil
+        })
+        let groups = Dictionary(grouping: tasks) { SubtaskTree.referencePath($0.id)?.first ?? $0.id }
+        let expanded = ids.flatMap { id in
+            [id] + (anchors.contains(id) ? (groups[id] ?? []).filter { !explicit.contains($0.id) }.map(\.id) : [])
+        }
+        return arranged(tasks, ids: expanded)
+    }
     static let table = "view_orders"
     static func ordered(_ tasks: [Record], ids: [String]) -> [Record] {
         let ranks = Dictionary(ids.enumerated().map { ($1, $0) }, uniquingKeysWith: { a, _ in a })
@@ -968,6 +1731,14 @@ enum DayPlacement {
         ordered(tasks, ids: ids).enumerated().sorted { a, b in
             a.element.priority == b.element.priority ? a.offset < b.offset : a.element.priority < b.element.priority
         }.map(\.element)
+    }
+    static func hierarchyChanges(task: Record, day: String, orderedIDs: [String], before: String?, roots: [Record], projects: [Record], workspace: WorkspaceBinding, calendar: Calendar = .current) throws -> [Mutation] {
+        guard SubtaskTree.referencePath(task.id) != nil, !task.completed, Dates.parse(day, calendar: calendar) != nil, before != task.id else { return [] }
+        let fields = TaskPlanner.dayFields(task: task, day: day, calendar: calendar)
+        let changes = try TaskSelectionPlan.changes([.init(task: task, action: .patch(fields), workspace: workspace)], accessibleRoots: roots, projects: projects, workspace: workspace, calendar: calendar)
+        var ids = orderedIDs.filter { $0 != task.id }
+        ids.insert(task.id, at: before.flatMap { ids.firstIndex(of: $0) } ?? ids.count)
+        return changes + [Mutation(table: table, recordID: day, method: "PATCH", fields: ["id": .string(day), "ids": .array(ids.map(JSON.string))])]
     }
     /// Keeps a drop inside the dragged task's priority band. A slot among other priorities snaps to the
     /// end of the task's own band (which is also where a newly re-prioritised task lands).
@@ -993,6 +1764,9 @@ enum DayPlacement {
 }
 
 extension TaskScope {
+    /// Default lists expose independent work. Explicit hierarchy predicates use
+    /// their own candidate semantics in TaskCache.
+    var usesProductiveWork: Bool { true }
     var preferenceKey: String {
         switch self {
         case .today: return "today"
@@ -1038,17 +1812,19 @@ enum TaskAssignment {
     static func members(project: Record, collaborators: [Record], currentUser: String, profile: Record) -> [Record] {
         let owner = project.string("user_id")
         var people: [String: Record] = [:]
-        if !owner.isEmpty { people[owner] = Record(["id": .string(owner), "display_name": .string("Project owner")]) }
+        if !owner.isEmpty { people[owner] = Record(["id": .string(owner), "display_name": .string("Project owner"), "display_name_is_fallback": .bool(true)]) }
         for person in collaborators where person.string("status") == "accepted" && !person.string("user_id").isEmpty {
             let id = person.string("user_id")
             var member = person; member["id"] = .string(id)
             if member.string("display_name").isEmpty {
+                member["display_name_is_fallback"] = .bool(true)
                 member["display_name"] = .string(person.string("invited_email").isEmpty ? "Project collaborator" : person.string("invited_email"))
             }
             people[id] = member
         }
         if people[currentUser] != nil {
             if !profile.string("display_name").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                people[currentUser]?["display_name_is_fallback"] = .bool(false)
                 people[currentUser]?["display_name"] = profile["display_name"]
             } else if people[currentUser]?.string("display_name") == "Project owner" {
                 people[currentUser]?["display_name"] = .string("You")
@@ -1057,27 +1833,170 @@ enum TaskAssignment {
         }
         return people.values.sorted { $0.string("display_name").localizedStandardCompare($1.string("display_name")) == .orderedAscending }
     }
-    static func clearChildren(_ value: JSON) -> JSON {
-        .array(value.list.map { child in
-            var fields = child.object
-            fields["assigned_to"] = .null
-            if fields["subtasks"] != nil { fields["subtasks"] = clearChildren(fields["subtasks"]!) }
-            return .object(fields)
-        })
+    /// A project move implicitly clears assignments. A deliberate final choice
+    /// therefore remains authored even when it equals the opening assignee.
+    static func preservingAssignmentIntent(_ changed: [String: JSON], authored: [String: JSON]) -> [String: JSON] {
+        var result = changed
+        if result["project_id"] != nil, case .string(let person)? = authored["assigned_to"], !person.isEmpty { result["assigned_to"] = .string(person) }
+        if result["assigned_to"] != nil, result["project_id"] == nil, let project = authored["project_id"] { result["project_id"] = project }
+        return result
+    }
+    static func sameIdentity(_ first: JSON, _ second: JSON) -> Bool {
+        if case .string(let a) = first, case .string(let b) = second, let left = UUID(uuidString: a), let right = UUID(uuidString: b) { return left == right }
+        return AuthoredValueComparison.exactJSON(first, second)
+    }
+    static var staleMove: AppFailure { AppFailure(message: "This task moved or was replaced. Reopen it before applying this saved action. Your task is unchanged.") }
+    /// A no-op project field is a server-checked context fence, not a second move.
+    /// Existing queues without this pair retain their original representation.
+    static func scopedProject(_ change: Mutation) -> JSON? {
+        guard change.table == "tasks", change.method == "PATCH", change.personalTaskMove != true, change.teamTaskScope == nil,
+              change.fields["assigned_to"] != nil,
+              let project = change.fields["project_id"], let baseline = change.baseline,
+              let originalProject = baseline["project_id"], baseline["task_generation"] != nil,
+              sameIdentity(project, originalProject) else { return nil }
+        return project
+    }
+    static func permitsScope(_ change: Mutation, current: Record) -> Bool {
+        guard let project = scopedProject(change) else { return true }
+        return sameIdentity(project, current["project_id"]) &&
+            sameIdentity(change.baseline!["task_generation"]!, current["task_generation"])
+    }
+    static func dependentAssignment(after move: Mutation, at index: Int, pending: [Mutation]) -> UUID? {
+        guard move.table == "tasks", move.method == "PATCH", let project = move.fields["project_id"],
+              let source = move.baseline?["project_id"], !AuthoredValueComparison.exactJSON(project, source),
+              pending.indices.contains(index + 1) else { return nil }
+        let next = pending[index + 1]
+        guard next.recordID == move.recordID, let scope = scopedProject(next), AuthoredValueComparison.exactJSON(scope, project),
+              next.baseline?["task_generation"] == move.baseline?["task_generation"] else { return nil }
+        return next.id
+    }
+    /// Normalize a group against its projected predecessors. This also makes
+    /// already-normalized history replay idempotent for move/assignment pairs.
+    static func normalizedChanges(_ changes: [Mutation], existing: (String) -> Record?, markMove: (Mutation, Record?) -> Mutation = { value, _ in value }) throws -> [Mutation] {
+        guard changes.contains(where: { $0.table == "tasks" && $0.method == "PATCH" && ($0.fields["project_id"] != nil || $0.fields["assigned_to"] != nil) }) else { return changes }
+        var rows: [String: Record] = [:], loaded = Set<String>(), result: [Mutation] = []
+        var budget = TaskAssignmentTree.Budget()
+        for input in changes {
+            guard input.table == "tasks" else { result.append(input); continue }
+            if loaded.insert(input.recordID).inserted, let row = existing(input.recordID) { rows[input.recordID] = row }
+            var current = rows[input.recordID]
+            let change = markMove(input, current)
+            for output in try mutations(change, existing: current, budget: &budget) {
+                result.append(output)
+                var projection = Snapshot(tables: ["tasks": current.map { [$0] } ?? []])
+                projection.apply(TaskCompletionRevision.capturing(output, existing: current))
+                current = projection.tables["tasks"]?.first
+            }
+            rows[input.recordID] = current
+        }
+        return result
+    }
+    /// Rebase a project history group in order, refuse moved/replaced roots,
+    /// and return the normalized commands that history will actually record.
+    static func replayingHistory(_ changes: [Mutation], existing: (String, String) -> Record?, markMove: (Mutation, Record?) -> Mutation = { value, _ in value }) throws -> [Mutation] {
+        let projectRoots = Set(changes.filter { $0.table == "tasks" && $0.method == "PATCH" && $0.fields["project_id"] != nil }.map(\.recordID))
+        var rows: [String: Record] = [:], loaded = Set<String>(), result: [Mutation] = []
+        var budget = TaskAssignmentTree.Budget()
+        for change in changes {
+            let tracksProject = change.table == "tasks" && projectRoots.contains(change.recordID)
+            if tracksProject, loaded.insert(change.recordID).inserted, let row = existing("tasks", change.recordID) { rows[change.recordID] = row }
+            let current = tracksProject ? rows[change.recordID] : existing(change.table, change.recordID)
+            var next = change
+            if change.table == "tasks", change.method == "PATCH", let base = change.baseline, let current {
+                if tracksProject {
+                    if let generation = base["task_generation"], !sameIdentity(generation, current["task_generation"]) { throw staleMove }
+                    if change.fields["project_id"] != nil, let project = base["project_id"], !sameIdentity(project, current["project_id"]) { throw staleMove }
+                    if scopedProject(change) != nil, let assigned = base["assigned_to"], let desired = change.fields["assigned_to"],
+                       !sameIdentity(current["assigned_to"], assigned), !sameIdentity(current["assigned_to"], desired) {
+                        throw AppFailure(message: "The assignment changed since this action. Reopen the task before changing it again. Your task is unchanged.")
+                    }
+                }
+                next.fields = Dictionary(uniqueKeysWithValues: change.fields.map { key, value in
+                    (key, TaskEdit.keepingLocal(field: key, base: base[key] ?? .null, desired: value, remote: current[key]))
+                })
+                next.baseline = nil
+            } else if tracksProject, change.method == "PATCH" { throw staleMove }
+            guard tracksProject else { result.append(next); continue }
+            var projected = current
+            for output in try mutations(markMove(next, current), existing: current, budget: &budget) {
+                result.append(output)
+                var projection = Snapshot(tables: ["tasks": projected.map { [$0] } ?? []])
+                projection.apply(TaskCompletionRevision.capturing(output, existing: projected))
+                projected = projection.tables["tasks"]?.first
+            }
+            rows[change.recordID] = projected
+        }
+        return result
+    }
+    static func clearChildren(_ value: JSON) throws -> JSON {
+        try TaskAssignmentTree.cleared(value, removing: false)
+    }
+    static func clearingAssignments(_ task: Record, budget: inout TaskAssignmentTree.Budget) throws -> Record {
+        var result = task
+        if let tree = task.fields["subtasks"] { result["subtasks"] = try TaskAssignmentTree.cleared(tree, removing: false, budget: &budget) }
+        result["assigned_to"] = .null
+        return result
+    }
+    static func movingDraft(_ task: Record, to project: JSON, budget: inout TaskAssignmentTree.Budget) throws -> Record {
+        guard project == .null || { if case .string(let id) = project { return !id.isEmpty }; return false }() else { throw TaskAssignmentTree.invalid }
+        guard !AuthoredValueComparison.exactJSON(task["project_id"], project) else { return task }
+        var result = try clearingAssignments(task, budget: &budget)
+        result["project_id"] = project; result["section_id"] = .null
+        return result
+    }
+    static func movingDraft(_ task: Record, to project: JSON) throws -> Record {
+        var budget = TaskAssignmentTree.Budget(); return try movingDraft(task, to: project, budget: &budget)
     }
     /// The server clears assignments on a project move. Send an explicit new
     /// assignment after the move so both writes obey the existing membership guard.
-    static func mutations(_ change: Mutation, existing: Record?) -> [Mutation] {
-        guard change.table == "tasks", change.method == "PATCH", let existing,
-              let project = change.fields["project_id"], project != existing["project_id"] else { return [change] }
-        var move = change
-        move.fields["assigned_to"] = .null
-        move.fields["subtasks"] = clearChildren(change.fields["subtasks"] ?? existing["subtasks"])
-        if move.baseline != nil {
-            for field in ["assigned_to", "subtasks"] where move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
+    static func mutations(_ change: Mutation, existing: Record?) throws -> [Mutation] {
+        var budget = TaskAssignmentTree.Budget(); return try mutations(change, existing: existing, budget: &budget)
+    }
+    static func mutations(_ change: Mutation, existing: Record?, budget: inout TaskAssignmentTree.Budget) throws -> [Mutation] {
+        if scopedProject(change) != nil {
+            guard let existing, permitsScope(change, current: existing) else { throw staleMove }
+            return [change]
         }
-        if let person = change.fields["assigned_to"], !person.text.isEmpty, !project.text.isEmpty {
-            return [move, Mutation(table: "tasks", recordID: change.recordID, method: "PATCH", fields: ["assigned_to": person], baseline: ["assigned_to": .null])]
+        guard change.table == "tasks", change.method == "PATCH", let existing else { return [change] }
+        guard let project = change.fields["project_id"], !sameIdentity(project, existing["project_id"]) else {
+            guard change.teamTaskScope == nil, change.fields["assigned_to"] != nil else { return [change] }
+            var assignment = change
+            assignment.fields["project_id"] = existing["project_id"]
+            if var baseline = assignment.baseline {
+                baseline["project_id"] = baseline["project_id"] ?? existing["project_id"]
+                baseline["task_generation"] = baseline["task_generation"] ?? existing["task_generation"]
+                assignment.baseline = baseline
+            }
+            guard permitsScope(assignment, current: existing) else { throw staleMove }
+            return [assignment]
+        }
+        var move = change
+        if change.personalTaskMove == true {
+            // The row-first server clears current assignments. Do not upload
+            // an old whole checklist just to move a root; predict it locally.
+            move.fields.removeValue(forKey: "assigned_to")
+            if let authored = change.fields["subtasks"] {
+                let cleared = try TaskAssignmentTree.cleared(authored, removing: true, budget: &budget)
+                let baseline = try TaskAssignmentTree.cleared(change.baseline?["subtasks"] ?? existing["subtasks"], removing: true, budget: &budget)
+                if AuthoredValueComparison.exactJSON(cleared, baseline) {
+                    // The editor only cleared assignments. Let the server clear its
+                    // current tree, including newer child edits absent from the draft.
+                    move.fields.removeValue(forKey: "subtasks")
+                    move.baseline?.removeValue(forKey: "subtasks")
+                    _ = try TaskAssignmentTree.cleared(existing["subtasks"], removing: true, budget: &budget)
+                } else { move.fields["subtasks"] = cleared }
+            } else { _ = try TaskAssignmentTree.cleared(existing["subtasks"], removing: true, budget: &budget) }
+        } else {
+            move.fields["assigned_to"] = .null
+            if move.fields["section_id"] == nil { move.fields["section_id"] = .null }
+            move.fields["subtasks"] = try TaskAssignmentTree.cleared(change.fields["subtasks"] ?? existing["subtasks"], removing: false, budget: &budget)
+        }
+        if move.baseline != nil {
+            for field in ["assigned_to", "subtasks", "section_id"] where move.fields[field] != nil && move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
+        }
+        if let person = change.fields["assigned_to"], !person.text.isEmpty {
+            guard project != .null || sameIdentity(person, existing["user_id"]) else { throw AppFailure(message: "Inbox tasks can only be assigned to the task’s owner. Your task is unchanged.") }
+            return [move, Mutation(table: "tasks", recordID: change.recordID, method: "PATCH", fields: ["assigned_to": person, "project_id": project], baseline: ["assigned_to": .null, "project_id": project, "task_generation": existing["task_generation"]])]
         }
         return [move]
     }
@@ -1169,12 +2088,12 @@ enum TaskCompletion {
         let hex = Array(DueReminder.digest("com.taskfold.recurrence.v1|" + parent.lowercased() + "|" + day).prefix(32))
         return String(hex[0..<8]) + "-" + String(hex[8..<12]) + "-5" + String(hex[13..<16]) + "-a" + String(hex[17..<20]) + "-" + String(hex[20..<32])
     }
-    static func complete(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current) -> [Mutation] {
+    static func complete(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current, account: String? = nil) -> [Mutation] {
         guard !task.completed, !task.id.isEmpty else { return [] }
-        return toggle(task, tasks: tasks, at: now, calendar: input)
+        return toggle(task, tasks: tasks, at: now, calendar: input, account: account)
     }
-    static func toggle(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current) -> [Mutation] {
-        guard !task.id.isEmpty else { return [] }
+    static func toggle(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current, account: String? = nil) -> [Mutation] {
+        guard !task.id.isEmpty, TaskKind.mayComplete(task) else { return [] }
         let stamp = ISO8601DateFormatter().string(from: now)
         let fields: [String: JSON] = ["completed": .bool(!task.completed), "completed_at": task.completed ? .null : .string(stamp)]
         var changes = [Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields,
@@ -1185,6 +2104,9 @@ enum TaskCompletion {
         let day = TaskPlanner.dayKey(next, calendar: calendar), nextID = successorID(parent: parent, day: TaskPlanner.dayKey(next, calendar: calendar))
         guard !tasks.contains(where: { $0.id.lowercased() == nextID || ($0.string("recurrence_parent_id").lowercased() == parent.lowercased() && String($0.string("due_date").prefix(10)) == day) }) else { return changes }
         var copy = TaskPlanning.nextOccurrence(task, date: next, calendar: calendar)
+        // The accepted collaborator creates this occurrence in the same project;
+        // native INSERT policies require its creator to be the acting account.
+        if let account, !account.isEmpty { copy["user_id"] = .string(account) }
         copy["id"] = .string(nextID); copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["completion_version"] = .number(0)
         copy["task_generation"] = .string(UUID().uuidString.lowercased())
         copy["notification_sent_at"] = .null; copy["created_at"] = .string(stamp); copy.fields.removeValue(forKey: "updated_at")
@@ -1201,6 +2123,7 @@ enum TaskCompletion {
         if !pattern["fromCompletion", default: .bool(false)].flag {
             if ["monthly", "yearly"].contains(pattern["type"]?.text ?? ""), pattern["dayOfMonth"] == nil || pattern["dayOfMonth"] == .null,
                pattern["weekdayOrdinal"] == nil || pattern["weekdayOrdinal"] == .null,
+               pattern["daysOfMonth"] == nil || pattern["daysOfMonth"] == .null,
                let first = Dates.parse(task.string("due_date"), calendar: calendar) { pattern["dayOfMonth"] = .number(Double(calendar.component(.day, from: first))) }
             if pattern["type"] == .string("yearly"), pattern["monthOfYear"] == nil || pattern["monthOfYear"] == .null,
                let first = Dates.parse(task.string("due_date"), calendar: calendar) { pattern["monthOfYear"] = .number(Double(calendar.component(.month, from: first))) }
@@ -1220,6 +2143,7 @@ enum TaskCompletion {
             var child = Record(fields)
             let path = path + "/" + String(index) + ":" + child.id
             child["id"] = .string(successorID(parent: root + path, day: "child"))
+            child.fields.removeValue(forKey: TeamChecklist.key)
             child["completed"] = .bool(false); child["completed_at"] = .null; child["comments"] = .array([])
             child["deadline_date"] = .null; child["notification_sent_at"] = .null
             child["reminder_specs"] = .array(ReminderSpec.successorRows(ReminderSpec.rows(child)))
@@ -1235,23 +2159,70 @@ enum TaskCompletion {
 }
 
 /// Versioned widget payload. The extension receives bounded planning/Focus data, never authentication sessions or executable mutations.
+/// Capture value types on the app actor; construct and encode the full projection
+/// on a worker. The final disk replacement stays on the app actor, after its
+/// workspace/session/access checks, so sign-out cannot race a late file write.
+struct WidgetPublicationInput: Sendable {
+    var tasks: [Record], projects: [Record], account: String
+    var now = Date()
+    var labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = []
+    var calendar = Calendar.current
+    var completionTokens: [String: String] = [:]
+    var pendingSync = 0
+    var workingHours: WorkingHours? = WorkingHours()
+    var calendarWindow: CalendarCapacityWindow?
+    var calendarFallback = "off"
+    var notePins: [Record] = [], focusRecord: Record?
+    var focusConflict = false, focusReadable = true
+    var pulseActivity: [Record] = [], pulseEpoch: [Record] = []
+    var pulseChildren: ChildWorkHistory?
+    var datePreferences: DatePhrasePreferences? = DatePhrasePreferences()
+    var people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = []
+    var collaborators: [Record]?
+    var assignments = TaskAssignmentProvenance.Catalog(nil)
+    var feedback: WidgetCompletionFeedback?
+
+    func encoded() throws -> Data {
+        var payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, now: now, labels: labels, sections: sections, savedViews: savedViews, calendar: calendar, completionTokens: completionTokens, pendingSync: pendingSync, workingHours: workingHours, calendarWindow: calendarWindow, calendarFallback: calendarFallback, notePins: notePins, focusRecord: focusRecord, focusConflict: focusConflict, focusReadable: focusReadable, pulseActivity: pulseActivity, pulseEpoch: pulseEpoch, pulseChildren: pulseChildren, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
+        if let feedback, !account.isEmpty, feedback.account == account, now < feedback.expiresAt {
+            payload["completionFeedback"] = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(feedback))
+        }
+        return try TaskfoldJSONEncoder().encode(payload)
+    }
+}
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], pulseChildren: ChildWorkHistory? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
-        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences)
-        let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar)
+        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
+        let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar, children: pulseChildren)
+        let nested = WidgetCompletion.childItems(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account).filter { TaskKind.mayComplete($0.record) && !$0.record.completed }
+        let reading = ProductiveTaskReading(tasks: tasks)
+        let nestedByID = Dictionary(nested.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        let rows = tasks.filter { !$0.completed }.map { task -> JSON in
+        func projected(_ task: Record, parent: String? = nil, routeContext: String? = nil) -> JSON {
             let project = projects[task.string("project_id")]
             let instant = !task.string("time_zone").isEmpty ? TaskPlanning.start(task).map { ISO8601DateFormatter().string(from: $0) } : nil
             return .object(["id": .string(task.id), "title": .string(task.title), "due": .string(String(task.string("due_date").prefix(10))), "time": .string(String(task.string("due_time").prefix(5))),
-                "completionToken": completionTokens[task.id.lowercased()].map(JSON.string) ?? .null,
+                "completionToken": completionTokens[WidgetTaskIdentity.key(task.id)].map(JSON.string) ?? .null,
+                "parent": parent.map(JSON.string) ?? .null, "routeContext": routeContext.map(JSON.string) ?? .null,
                 "priority": .number(Double(task.priority)), "project": .string(project?.name ?? ""), "projectID": .string(task.string("project_id")), "color": .string(project?.string("color") ?? ""),
                 "deadline": task.deadline.map { _ in .string(String(task.string("deadline_date").prefix(10))) } ?? .null,
                 "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
-        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
+        var incomplete = reading.incomplete
+        let rows = reading.presentation.filter { TaskKind.mayComplete($0) && !$0.completed }.compactMap { task -> JSON? in
+            if SubtaskTree.referencePath(task.id) != nil {
+                guard let item = nestedByID[task.id] else { incomplete = true; return nil }
+                return projected(task, parent: item.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext(item))
+            }
+            return projected(task)
+        }
+        let filterChildren = WidgetCompletion.hasChildFilter(Snapshot(tables: ["saved_views": savedViews])) ? nested : []
+        let nestedRows = filterChildren.map { projected($0.record, parent: $0.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext($0)) }
+        var payload: [String: JSON] = ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "nestedTasks": .array(nestedRows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
+        if incomplete { payload["workIncomplete"] = .bool(true) }
+        return payload
     }
 
     static func focusPayload(_ row: Record?, tasks: [Record], account: String, conflict: Bool) -> JSON {
@@ -1265,39 +2236,71 @@ enum WidgetProjection {
                 taskState: task.map { $0.completed ? "completed" : "open" } ?? "unavailable",
                 title: task.map { PinnedNotes.excerpt($0.title, characters: 160, bytes: 1000).0 })
         }
-        return (try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(FocusWidgetSnapshot(account: account, clock: clock, conflict: conflict)))) ?? .null
+        return (try? TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(FocusWidgetSnapshot(account: account, clock: clock, conflict: conflict)))) ?? .null
     }
 
     /// Materialize the planner's exact day semantics in a bounded, title-free projection.
-    static func capacityPayload(tasks: [Record], account: String, hours: WorkingHours, window: CalendarCapacityWindow?, fallback: String, now: Date, calendar input: Calendar) -> JSON {
+    static func capacityPayload(tasks: [Record], account: String, hours: WorkingHours?, window: CalendarCapacityWindow?, fallback: String, now: Date, calendar input: Calendar) -> JSON {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        guard let hours else {
+            return .object(["version": .number(1), "timeZone": .string(calendar.timeZone.identifier), "calendarState": .string("settings"), "calendarUpdated": .null, "hours": .string(""), "days": .object([:])])
+        }
         let usable = window.flatMap { value -> CalendarCapacityWindow? in
             value.account == account && value.timeZone == calendar.timeZone.identifier && now >= value.updated.addingTimeInterval(-300) && now < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let state = usable?.state ?? fallback
+        let reading = ProductiveTaskReading(tasks: tasks)
+        let tasks = reading.work
         var days: [String: JSON] = [:]
         for offset in 0..<8 {
             guard let day = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
-            let capacity = TaskPlanner.capacity(tasks, events: usable?.events ?? [], on: day, hours: hours, calendar: calendar)
+            let capacity = TaskPlanner.capacity(tasks, events: usable?.events ?? [], on: day, hours: hours, calendar: calendar, reading: reading)
             let key = TaskPlanner.dayKey(day, calendar: calendar)
             let plannedIDs = Set(TaskPlanner.blocks(tasks, on: day, calendar: calendar).map(\.id) + TaskPlanner.allDay(tasks, on: day, calendar: calendar).map(\.id))
-            let overdue = tasks.filter { !plannedIDs.contains($0.id) && !$0.completed && !$0.string("due_date").isEmpty && Dates.parse(TaskPlanner.plannedDay($0, calendar: calendar)) != nil && TaskPlanner.plannedDay($0, calendar: calendar) < key }.count
-            days[key] = .object(["working": .number(Double(capacity.workingMinutes)), "busy": .number(Double(capacity.busyMinutes)), "estimated": .number(Double(capacity.estimatedMinutes)), "unknown": .number(Double(capacity.unknownTasks)), "overdue": .number(Double(overdue))])
+            let overdue = tasks.filter { TaskKind.mayComplete($0) && !plannedIDs.contains($0.id) && !$0.completed && !$0.string("due_date").isEmpty && Dates.parse(TaskPlanner.plannedDay($0, calendar: calendar)) != nil && TaskPlanner.plannedDay($0, calendar: calendar) < key }.count
+            var fields: [String: JSON] = ["working": .number(Double(capacity.workingMinutes)), "busy": .number(Double(capacity.busyMinutes)), "estimated": .number(Double(capacity.estimatedMinutes)), "unknown": .number(Double(capacity.unknownTasks)), "overdue": .number(Double(overdue))]
+            if reading.incomplete { fields["workIncomplete"] = .bool(true) }
+            days[key] = .object(fields)
         }
         return .object(["version": .number(1), "timeZone": .string(calendar.timeZone.identifier), "calendarState": .string(state),
             "calendarUpdated": usable.map { .number($0.updated.timeIntervalSinceReferenceDate) } ?? .null,
             "hours": .string(String(format: "%02d:%02d–%02d:%02d", hours.start / 60, hours.start % 60, hours.end / 60, hours.end % 60)), "days": .object(days)])
     }
 
-    /// Only open task IDs and display names leave the app; filter expressions and credentials do not.
-    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences()) -> [JSON] {
+    /// Publish open task IDs and display names, never filter expressions or ordering records.
+    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> [JSON] {
+        guard !account.isEmpty else { return [] }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
-        let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, datePreferences: preferences)
+        let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, people: people, datePreferences: preferences, collaborators: collaborators, assignments: assignments)
         let cache = TaskCache(); cache.update(tasks)
-        func row(_ record: Record, kind: String, days: [String: [String]], error: Bool = false, clock: Bool = false) -> JSON {
-            let key = (try? JSONEncoder().encode([account, kind, record.id]).base64EncodedString()) ?? ""
+        let workScope = ProjectWorkScope(tasks: tasks)
+        let incompleteProjects = workScope.incompleteProjects.union(workScope.items.filter { $0.navigationTask == nil }.map { $0.root.string("project_id").lowercased() })
+        let settings = viewPreferences.filter { $0.string("user_id") == account }
+        let orders = viewOrders.filter { $0.string("user_id") == account }
+        let settingsByID = Dictionary(settings.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let ordersByID = Dictionary(orders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let sectionsByProject = Dictionary(grouping: sections, by: { $0.string("project_id") })
+        func sort(_ scope: TaskScope) -> String { settingsByID[scope.preferenceKey]?.fields["sort_by"]?.text ?? "manual" }
+        func supportedSort(_ value:String) -> Bool { ["manual","priority","title","date","deadline","duration"].contains(value) }
+        func arranged(_ rows: [Record], key: String, sort: String) -> [Record] {
+            guard ["manual", "priority"].contains(sort) else { return rows }
+            let ids = ordersByID[key]?["ids"].list.map(\.text) ?? []
+            return key.hasPrefix("group:") ? DayPlacement.arrangedOutline(rows, ids: ids) : DayPlacement.arranged(rows, ids: ids)
+        }
+        func projection(_ groups: [TaskGrouping.Group]) -> (ids: [String], groups: [JSON]) {
+            var seen=Set<String>(), ids:[String]=[], values:[JSON]=[]
+            for group in groups {
+                let unique=group.tasks.filter { TaskKind.mayComplete($0) && !$0.completed && seen.insert($0.id).inserted }.map(\.id)
+                guard !unique.isEmpty else { continue }
+                ids += unique
+                values.append(.object(["id":.string(group.id),"name":.string(group.name),"ids":.array(unique.map(JSON.string))]))
+            }
+            return (ids,values)
+        }
+        func row(_ record: Record, kind: String, days: [String: [String]], groups: [String:[JSON]] = [:], error: Bool = false, clock: Bool = false) -> JSON {
+            let key = (try? TaskfoldJSONEncoder().encode([account, kind, record.id]).base64EncodedString()) ?? ""
             var fields: [String: JSON] = ["id": .string(key), "recordID": .string(record.id), "kind": .string(kind), "name": .string(record.name),
-                "days": .object(days.mapValues { .array($0.map(JSON.string)) }), "timeZone": .string(calendar.timeZone.identifier), "invalid": .bool(error)]
+                "days": .object(days.mapValues { .array($0.map(JSON.string)) }), "groups": .object(groups.mapValues(JSON.array)), "timeZone": .string(calendar.timeZone.identifier), "invalid": .bool(error)]
             if clock {
                 let minute = FilterClockWindow.minute(now).timeIntervalSinceReferenceDate
                 fields["clockUpdated"] = .number(minute); fields["clockValidUntil"] = .number(minute + 60)
@@ -1305,26 +2308,53 @@ enum WidgetProjection {
             return .object(fields)
         }
         var result = projects.filter { !$0.id.isEmpty }.map { project in
-            row(project, kind: "project", days: ["*": cache.matching(TaskQuery(scope: .project(project.id))).map(\.id)])
+            let scope=TaskScope.project(project.id), ordering=sort(scope)
+            guard supportedSort(ordering), !incompleteProjects.contains(project.id.lowercased()) else { return row(project,kind:"project",days:[:],error:true) }
+            let rows=cache.matching(TaskQuery(scope:scope,sort:ordering))
+            let selected=OrganizationOrder.sorted(sectionsByProject[project.id] ?? [])
+            let valid=Set(selected.map(\.id))
+            let rowsBySection = Dictionary(grouping: rows, by: { $0.string("section_id") })
+            var groups=[TaskGrouping.Group(id:"none",name:selected.isEmpty ? "" : "Tasks",tasks:arranged(rows.filter { !valid.contains($0.string("section_id")) },key:"group:"+project.id+":none",sort:ordering))]
+            groups += selected.map { section in TaskGrouping.Group(id:section.id,name:section.name,tasks:arranged(rowsBySection[section.id] ?? [],key:"group:"+project.id+":"+section.id,sort:ordering)) }
+            let value=projection(groups)
+            return row(project,kind:"project",days:["*":value.ids],groups:["*":value.groups])
         }
         result += labels.filter { !$0.id.isEmpty }.map { label in
-            row(label, kind: "label", days: ["*": cache.matching(TaskQuery(scope: .label(label.id), labelName: label.name)).map(\.id)])
+            let scope=TaskScope.label(label.id), ordering=sort(scope)
+            guard supportedSort(ordering), !cache.productiveReading().incomplete else { return row(label,kind:"label",days:[:],error:true) }
+            let rows=cache.matching(TaskQuery(scope:scope,sort:ordering,labelName:label.name))
+            let value=projection([TaskGrouping.Group(id:"all",name:"",tasks:arranged(rows,key:"scope:"+scope.preferenceKey,sort:ordering))])
+            return row(label,kind:"label",days:["*":value.ids],groups:["*":value.groups])
         }
         for view in savedViews where !view.id.isEmpty {
             guard let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: context)) != nil else {
                 result.append(row(view, kind: "filter", days: [:], error: true)); continue
             }
-            var days: [String: [String]] = [:]
+            if rule.usesTaskHierarchy, (try? cache.hierarchyCandidates(for: rule, projects: context.projectReferences, userID: account)) == nil { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
+            if rule.hasProductiveBranches, cache.productiveReading().incomplete { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
+            let ordering=view.fields["sort_by"]?.text ?? "manual", grouping=view.fields["grouping"]?.text ?? "none"
+            guard supportedSort(ordering),["none","project","priority","date","deadline"].contains(grouping) else { result.append(row(view,kind:"filter",days:[:],error:true));continue }
+            var days: [String: [String]] = [:], dayGroups:[String:[JSON]]=[:]
             for offset in 0..<(rule.usesClockWindow ? 1 : 8) {
                 guard let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
                 let day = TaskPlanner.dayKey(date, calendar: calendar)
-                let query = TaskQuery(scope: .all, sort: view.string("sort_by"), today: day, filter: rule, now: rule.usesClockWindow ? now : nil, datePreferences: preferences,
+                let query = TaskQuery(scope: .all, sort: ordering, today: day, filter: rule, now: rule.usesClockWindow ? now : nil, datePreferences: preferences,
                     filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) },
-                    filterProjects: projects.map { FilterReference(id: $0.id, name: $0.name) },
-                    filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, userID: account, timeZone: calendar.timeZone.identifier)
-                days[day] = cache.matching(query).filter { !$0.completed }.map(\.id)
+                    filterProjects: context.projectReferences,
+                    filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: context.personReferences, filterAssignments: assignments, userID: account, timeZone: calendar.timeZone.identifier)
+                let matches=cache.matching(query).filter{!$0.completed}
+                var groups=TaskGrouping.queryGroups(matches,rule:rule,by:grouping,context:context,today:day,timeZone:calendar.timeZone.identifier,now:query.now,work:cache.productiveReading())
+                for index in groups.indices {
+                    groups[index].tasks=arranged(groups[index].tasks,key:"scope:view:"+view.id+":group:"+groups[index].id,sort:ordering)
+                    // Query text stays in the app. Ordinals retain its displayed section order.
+                    if let ordinal=rule.querySectionKeys.firstIndex(where:{groups[index].id.hasPrefix($0+":")}) {
+                        let subgroup=grouping=="none" ? "" : TaskGrouping.groups(groups[index].tasks,by:grouping,projects:projects,timeZone:calendar.timeZone.identifier).first?.name ?? ""
+                        groups[index].name="Query \(ordinal+1)"+(subgroup.isEmpty ? "" : " · "+subgroup)
+                    } else if grouping=="none" { groups[index].name="" }
+                }
+                let value=projection(groups);days[day]=value.ids;dayGroups[day]=value.groups
             }
-            result.append(row(view, kind: "filter", days: days, clock: rule.usesClockWindow))
+            result.append(row(view, kind: "filter", days: days,groups:dayGroups, clock: rule.usesClockWindow))
         }
         return result
     }
@@ -1521,7 +2551,7 @@ extension Snapshot {
         }
         return result
     }
-    static func filterPrimitiveFixture(user: String) -> Snapshot {
+    static func filterPrimitiveFixture(user: String, unknownSettings: Bool = false) -> Snapshot {
         var result = Snapshot()
         let project = Record(["id": .string("filter-studio"), "name": .string("Studio"), "user_id": .string(user)])
         result.tables["projects"] = [project]
@@ -1537,8 +2567,167 @@ extension Snapshot {
             if index == 5 { row["comments"] = .array([.object(["text": .string("email")])]) }
             return row
         }
-        result.tables["saved_views"] = [Record(["id": .string("filter-future"), "user_id": .string(user), "name": .string("Future filter"), "query_ast": .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("future_field"), "value": .string("retain this value")])]), "layout": .string("list"), "grouping": .string("none"), "sort_by": .string("manual"), "include_completed": .bool(false), "order_index": .number(0)])]
+        result.tables["saved_views"] = [Record(["id": .string("filter-future"), "user_id": .string(user), "name": .string("Future filter"), "query_ast": unknownSettings
+            ? .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("search"), "value": .string("email"), "case_sensitive": .bool(true)])])
+            : .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("future_field"), "value": .string("retain this value")])]), "layout": .string("list"), "grouping": .string("none"), "sort_by": .string("manual"), "include_completed": .bool(false), "order_index": .number(0)])]
         return result
     }
 }
 #endif
+
+/// A native drag persists one complete intent; row metadata never enters its command.
+enum OrganizationOrder {
+    struct Command: Codable, Equatable, Sendable {
+        var ids: [String]
+        var projectID: String?
+        func contains(_ row: Record) -> Bool { projectID == nil || row.string("project_id") == projectID }
+        /// Removed rows stay removed; additions not in the offline intent retain relative order at the end.
+        func applying(to rows: [Record]) -> [Record] {
+            let scoped = rows.filter { contains($0) }
+            let wanted = Set(ids)
+            let existing = Set(scoped.map(\.id))
+            let complete = ids.filter { existing.contains($0) } + OrganizationOrder.sorted(scoped).map(\.id).filter { !wanted.contains($0) }
+            let positions = Dictionary(uniqueKeysWithValues: complete.enumerated().map { ($0.element, $0.offset) })
+            return rows.map { row in
+                var row = row
+                if contains(row), let position = positions[row.id] { row["order_index"] = .number(Double(position)) }
+                return row
+            }
+        }
+    }
+    static func valid(_ change: Mutation) -> Bool {
+        guard let command = change.organizationOrder, change.method == "ORDER", change.fields.isEmpty,
+              ["projects", "sections", "saved_views", "favorites"].contains(change.table),
+              !command.ids.isEmpty, command.ids.count <= 10000, Set(command.ids).count == command.ids.count,
+              command.ids.allSatisfy({ !$0.isEmpty }), change.recordID == command.ids.first else { return false }
+        return change.table == "sections" ? command.projectID?.isEmpty == false : command.projectID == nil
+    }
+    static func command(table: String, rows: [Record], ids: [String], projectID: String? = nil) throws -> [Mutation] {
+        guard !(try changes(table: table, rows: rows, ids: ids)).isEmpty else { return [] }
+        let change = Mutation(table: table, recordID: ids[0], method: "ORDER", fields: [:], organizationOrder: Command(ids: ids, projectID: projectID))
+        guard valid(change), table != "sections" || rows.allSatisfy({ $0.string("project_id") == projectID }) else { throw StaleList() }
+        return [change]
+    }
+    struct StaleList: LocalizedError {
+        var errorDescription: String? { "This list changed. Reopen it before rearranging items." }
+    }
+    static func sorted(_ rows: [Record]) -> [Record] {
+        rows.sorted {
+            let left = $0["order_index"].integer, right = $1["order_index"].integer
+            return left == right ? $0.id < $1.id : left < right
+        }
+    }
+    static func changes(table: String, rows: [Record], ids: [String]) throws -> [Mutation] {
+        let allowed: Set<String> = ["projects", "sections", "saved_views", "favorites"]
+        guard allowed.contains(table), Set(ids).count == ids.count,
+              Set(rows.map(\.id)).count == rows.count,
+              rows.count == ids.count, Set(rows.map(\.id)) == Set(ids) else { throw StaleList() }
+        let existing = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0) })
+        return ids.enumerated().compactMap { index, id in
+            let order = JSON.number(Double(index))
+            guard existing[id]?["order_index"] != order else { return nil }
+            return Mutation(table: table, recordID: id, method: "PATCH", fields: ["order_index": order])
+        }
+    }
+}
+
+/// Keeps an editable name with its workspace; background sync must not erase typing.
+struct ProfileNameDraft: Equatable {
+    private(set) var workspace: WorkspaceBinding?
+    private(set) var sourceName = ""
+    var text = ""
+
+    mutating func refresh(account: String, generation: UUID, name: String) {
+        let next = WorkspaceBinding(account: account, generation: generation)
+        if workspace != next || text == sourceName { text = name }
+        workspace = next
+        sourceName = name
+    }
+
+    func matches(account: String, generation: UUID) -> Bool {
+        workspace?.matches(account: account, generation: generation) == true
+    }
+}
+
+
+/// New widget record links retain their workspace even if a different workspace reuses the ID.
+/// Existing unscoped task/project links remain compatible with earlier apps and shared links.
+enum WidgetRecordLink {
+    static func allows(_ url: URL, account: String, available: Bool) -> Bool {
+        guard url.scheme == "taskfold", let host = url.host,
+              ["task", "project", "label", "view"].contains(host),
+              let parts = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return true }
+        let child = host == "task" && url.lastPathComponent.hasPrefix("subtask:")
+        let items = parts.queryItems ?? []
+        if !child && !items.contains(where: { $0.name == "account" }) { return true }
+        guard available, !account.isEmpty, parts.fragment == nil,
+              url.pathComponents.count == 2, !url.lastPathComponent.isEmpty,
+              items.filter({ $0.name == "account" }).map(\.value) == [account] else { return false }
+        if child {
+            guard SubtaskTree.referencePath(url.lastPathComponent) != nil, items.count == 2,
+                  let context = items.first(where: { $0.name == "context" })?.value,
+                  context.count == 64, context.allSatisfy({ "0123456789abcdef".contains($0) }) else { return false }
+        } else if items.count != 1 { return false }
+        return true
+    }
+}
+
+
+extension WidgetRecordLink {
+    /// Completed children still belong in the list containing their actual root.
+    static func containingTask(_ task: Record, roots: [Record]) -> Record? {
+        guard let path = SubtaskTree.referencePath(task.id) else { return task }
+        let matches = roots.filter { $0.id == path[0] }
+        return matches.count == 1 ? matches[0] : nil
+    }
+    static func task(_ url: URL, roots: [Record], projects: [Record], workspace: WorkspaceBinding) throws -> Record {
+        guard allows(url, account: workspace.account, available: true), url.scheme == "taskfold", url.host == "task" else { throw WidgetActionFailure("This task widget is unavailable in your current workspace.") }
+        let id = url.lastPathComponent
+        if let path = SubtaskTree.referencePath(id) {
+            let selectedRoots = roots.filter { $0.id == path[0] }
+            guard selectedRoots.count == 1 else { throw WidgetActionFailure("This subtask is no longer available.") }
+            let index = try TaskHierarchyIndex(roots: selectedRoots, projects: projects, workspace: workspace)
+            guard let item = index.item(id), WidgetCompletion.routeContext(item) == URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "context" })?.value else { throw WidgetActionFailure("This subtask moved or was replaced. Refresh its widget.") }
+            return item.record
+        }
+        let selectedRoots = roots.filter { $0.id == id }
+        guard selectedRoots.count == 1, let task = selectedRoots.first,
+              task.string("project_id").isEmpty || (projects.filter { $0.id == task.string("project_id") }.count == 1 && !ProjectOrganization.archived(task.string("project_id"), in: projects)) else { throw WidgetActionFailure("This task is no longer accessible.") }
+        return task
+    }
+}
+
+
+/// One bounded, exact-byte memo for this Store's last durable envelope. Callers
+/// still read the file on every save: external changes and corruption cannot be
+/// hidden by timestamps, inode reuse, workspace switches or a failed write.
+final class DurableSnapshotReadCache {
+    private let maximumBytes: Int
+    private var bytes: Data?
+    private var value: Snapshot?
+    private(set) var decodeCount = 0
+    init(maximumBytes: Int = 16 * 1024 * 1024) { self.maximumBytes = maximumBytes }
+    func clear() { bytes = nil; value = nil }
+    func decode(_ data: Data) throws -> Snapshot {
+        if bytes == data, let value { return value }
+        clear(); decodeCount += 1
+        let decoded = try TaskfoldJSONDecoder().decode(Snapshot.self, from: data)
+        if data.count <= maximumBytes { bytes = data; value = decoded }
+        return decoded
+    }
+    /// Encode inside this type so a caller cannot associate unrelated bytes with
+    /// a snapshot. Prepared data independently proves its captured input identity.
+    func encode(_ snapshot: Snapshot, prepared: PreparedSnapshotEncoding? = nil) throws -> Data {
+        let data = try prepared?.matching(snapshot) ?? TaskfoldJSONEncoder().encode(snapshot)
+        clear()
+        guard data.count <= maximumBytes else { return data }
+        // Preserve the decoder's private-ledger checks and optional-metadata
+        // normalization. Only task-table parsing is skipped on the next exact hit.
+        var metadata = snapshot; metadata.tables = [:]
+        if let encoded = try? TaskfoldJSONEncoder().encode(metadata), encoded.count <= 512 * 1024,
+           let validated = try? TaskfoldJSONDecoder().decode(Snapshot.self, from: encoded), validated == metadata {
+            bytes = data; value = snapshot
+        }
+        return data
+    }
+}

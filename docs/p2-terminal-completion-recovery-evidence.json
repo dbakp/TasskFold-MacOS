@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-25",
+  "stage": "Cold terminal cancellation discovery and current-read retirement",
+  "platform": "mac",
+  "baseCommit": "1940eace78cbb5b689049b843f677fbee669df2e",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "cce0d6cb181884615379440ff3b3be6316264da13f3498b7707ba421c81e8a85",
+    "Taskfold/Core/TeamCompletion.swift": "dbef4ce07a8af6be847707b37bdafeca671de56ef8963e9197ab4fba8c284805",
+    "Taskfold/Core/TeamTaskBatch.swift": "9bc89f4e9ae2a09c59f8b78ab6abd3499c0ba10fdf5affc7563d44edb093bcaf",
+    "Taskfold/Core/TeamWorkspace.swift": "133ecd4d227e0bf8d704fe9534ac9cf469d75c867f71274033a01498378c98d3",
+    "TaskfoldTests/TeamCompletionTests.swift": "a65806a34833361e152936c39f56cdfcd5bb077500c879cc0793452152b3f090",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "8e05898ccddcaa9168afdb01a324651315a14fd101e43e54d64a1c909dc27649"
+  },
+  "core": {
+    "selected": 743,
+    "passed": 742,
+    "skipped": 1,
+    "failures": 0,
+    "completionCases": 181,
+    "newCases": 7,
+    "skip": "Live shared-conversation integration requires disposable accounts; no hosted acceptance claimed"
+  },
+  "build": "Passed; signed isolated test products",
+  "rawLogSHA256": {
+    "completion-cases.log": "6c1f809aa006b2ab1491ed09994e42ab09022b4820dd4d82d958721a58c67a3c",
+    "core-regressions.log": "1caa341150b4977e1432a3e7e8d8c381286e00463a2c4e3c9ba54947e60229ed",
+    "app-build.log": "5f0db42d8f9d80a6b46c4b303eda3028f0d0bdd856cb1059fc799ab2c24d8f25"
+  },
+  "native": {
+    "iphone": {
+      "actualPassed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
+    },
+    "ipad": {
+      "actualPassed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
+    },
+    "cases": [
+      "cancelled single viewer",
+      "cancelled single archive",
+      "cancelled group viewer with authored draft",
+      "cancelled group write pause with authored draft",
+      "recorded single viewer regression",
+      "recorded group viewer regression"
+    ],
+    "discovery": "All twelve pre-acceptance traces contain exactly POST workspace_boundary plus matching single/group review; unchanged saved tasks and queue asserted",
+    "cancelledAcceptance": "Eight acceptance traces contain no completion writer or repeated cancellation request; any subsequent POST is a boundary/status read",
+    "persistence": "All twelve full post-acceptance snapshots equal after next launch; only knownTasks/quarantined Codable Set ordering canonicalized",
+    "drafts": "All four group-cancellation runs reopen permanent saved authored text after relaunch; Core verifies exact encrypted snapshot custody",
+    "fixture": "Reserved DEBUG app, synthetic ordinary roots and local HTTP peer; all external HTTP blocked",
+    "visual": "Phone cancelled individual review and iPad saved group draft inspected",
+    "mac": {
+      "compiledNativeCases": 7,
+      "executedNativeCases": 0,
+      "build": "Current-source signed app and runner pass strict/deep verification",
+      "reason": "Native computer use still reports Mac locked; prior unlock request remains pending",
+      "preparedHost": "/tmp/taskfold-mac-recovery-host",
+      "preparedBuild": "/tmp/taskfold-mac-recovery-build"
+    }
+  },
+  "limits": [
+    "Unrecorded reads never retire pending intent",
+    "Unsupported authored single work and broader missing-incarnation/cross-table recovery remain protected for separate review",
+    "Native recurring/history, Mac window/keyboard/spoken, storage/account-race and large-workload acceptance remain open",
+    "Genuine hosted acceptance and remaining rank-6/Px/wearable work remain open",
+    "All user-deferred release/provider/device work remains deferred"
+  ],
+  "retainedEvidence": "docs/terminal-completion-recovery",
+  "externalChanges": "No SQL, hosted schema/configuration, rollout, real task/account or user-deferred provider/release/device changes",
+  "cleanup": {
+    "ownedScratchBytesRemoved": 750018854,
+    "ownedScratchPathsRemoved": 23,
+    "isolatedSimulatorUninstalls": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+      }
+    ],
+    "preserved": "Both repo .build caches, baseline booted Simulators, current signed Mac recovery host/build and older ready Mac workflow artifacts",
+    "MacTestAppLaunched": false,
+    "MacRuntime": "Still pending requested unlock; native tool reports locked"
+  }
+}

@@ -1,0 +1,214 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native Mac real-provider replay save loses one genuine HTTP 200 response, shows uncertainty, retries same preview, clears token and normally quits/relaunches with unchanged imported workspace.",
+  "sourceBase": {
+    "macOS": "5029936",
+    "iOS": "f0a5a06"
+  },
+  "freshIsolation": {
+    "bundle": "com.dbakp.taskfold.mac.p0signeduitests",
+    "allCurrentOwnedSwiftFilesCompared": 61,
+    "namespaceOnlySourceSubstitutions": {
+      "com.taskfold.ios.session": "com.taskfold.mac.p0signeduitests.session",
+      "com.taskfold.recovery.v1": "com.taskfold.mac.p0signeduitests.recovery.v1",
+      "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.mac.p0signeduitests"
+    },
+    "allOwnedSourceSHA256": {
+      "Taskfold/DebugDiagnostics.swift": "dfd9e172867bb0a4080f390491bbaee5be2ca9564af543f07d096501d323efa0",
+      "Taskfold/Identity.swift": "7a1c17c6c73d1c1687cdd848e7cde1cab1de7c3ccef574d362dcff0c7f9acce6",
+      "Taskfold/Collaboration.swift": "1a3ace5249ffb38a7e27e77be877656f43cb9026e558043aa20ca37c2749c303",
+      "Taskfold/LiveActivityStub.swift": "e10d7c220e2b7b515f61f9aeccc342a139d870948515da19bde20262cdc975f2",
+      "Taskfold/Workspace.swift": "00650e58f8261c717fb3668ff4818b4e66a4e20fc0699bcc55acf0ea9cf6bd8a",
+      "Taskfold/TaskfoldMacApp.swift": "937f5323f58fae51987f0d8b742c220811fe5ff0f49acd4b8def48a58a258a4c",
+      "Taskfold/Core/FocusSession.swift": "b1b2a4405fa036fe297f9b9c27273fe9e1b7880c06481e2b3644fe7578b15e62",
+      "Taskfold/Core/ProjectPulseWidget.swift": "5cff18a7008e95a29d0bbee1e07aacab2cd34d87dc874493557daa27bf0e57a9",
+      "Taskfold/Core/Backups.swift": "5bc30bf8c4a8b61b5746e870d89e34739393b89e642d5a4c9719519a9d4d8c8f",
+      "Taskfold/Core/CalendarEvents.swift": "6abce87bbb70660adbf928e61e5a3f17b92d64e96bcb40e5560b9d08b23717fa",
+      "Taskfold/Core/Intents.swift": "42043dbe81c0d53b3e50938dfc5102e24f9ab76e4af3a36f289f00386c423240",
+      "Taskfold/Core/ReminderDevices.swift": "f1be43ad21f196794ddbda51f50005364c226ba5227ece4d825efb93567d9565",
+      "Taskfold/Core/Backend.swift": "0fcc05c768130af41de4f699626b0cdc4819e6099c83aad38c5bbc786123336b",
+      "Taskfold/Core/FocusWidget.swift": "f89f11f4594a1669402e79dfb525ae79e206664ccf69477662be800a24862101",
+      "Taskfold/Core/WidgetActionTestPanel.swift": "3cdd9d5c8776c2c192abba0ceb3e886ead1c0faed1bb5baba911d3821c9e8ad6",
+      "Taskfold/Core/InboxReview.swift": "6f073a7ae9e697f14d905083860768fb746bcbd53d82aca52ea8482d4e183bcd",
+      "Taskfold/Core/TaskActivity.swift": "8e36517cae89848d0e233b029b78644670481809ec848ff77b55c8ad18fe18b5",
+      "Taskfold/Core/Planner.swift": "4aa5c2c5008379d89a92f7d48dec21949d36225ad7552e3413a112ed0df943ae",
+      "Taskfold/Core/Models.swift": "df922353f53e98f128cc4e7434e7e624b1541577a6d7b4dd4acc78ee3b6365a4",
+      "Taskfold/Core/TodoistImport.swift": "16401db77be0ca0e747eab25187960993cfda71e991caed1a70a7f49abf3353d",
+      "Taskfold/Core/Store.swift": "a9f47898e8fd0b062a5cd26aaead23e143184994f62be70874bebf20fe5fcea5",
+      "Taskfold/Core/QuickReferenceCompletion.swift": "ad5746e08c8a560514cdc3184387866c4be08a2c353d5ccd9be6b23fae291fdf",
+      "Taskfold/Core/QuickPlanningCompletion.swift": "0227510a4c5b0b4c9d01d349e5f7317c1dad48df21f7b3dc5241c843cd59f0b0",
+      "Taskfold/Core/Recurrence.swift": "f9b53a0e1452161922dc79e01828312afeba68161357c3ac84b91c042649b1b9",
+      "Taskfold/Core/PinnedNotes.swift": "498f1bdf7c22682f4e9d423fe0c3afd4f93cf2eb0b9093d9e6a6e33010c2cf7e",
+      "Taskfold/Core/Filters.swift": "9be0ebd704f1a7de47cdfc5f8e17fcb8e046b27ffe967f398b649546def3ab3b",
+      "Taskfold/Core/WidgetActions.swift": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2",
+      "Taskfold/Core/Reminders.swift": "b288f26c0cdcd482a86de666f4711525f6083ffa22c6dc8800dfe0f5921423bf",
+      "Taskfold/Core/WidgetCompletion.swift": "654fc7f9e350b9ab9bfe8f245e754b62de15c0c435b2b10b0ad34ee9b513f310",
+      "Taskfold/Views/FocusSessionView.swift": "c3a317368dccd1227feb93f6b77f6bfa9cd09c435d6ec644418c7fc87f1e3dc0",
+      "Taskfold/Views/Motion.swift": "704c34addcc7cedd297197c8d9387e660514f69f70d74371d8f84abef6d5d2b8",
+      "Taskfold/Views/CommentEditor.swift": "dd79e0587114029453ee71a0c863763049af4dbfcf24921a43fe17ef65868d94",
+      "Taskfold/Views/TaskListView.swift": "1823dd0aa5b58eea1fcef5c94aee423bf71dc9d71b17db808e4e15ba50194ae2",
+      "Taskfold/Views/ProjectBoard.swift": "d362ce9aedd85d56dd0ee7b889b296aa4aa01b524aa6a0c1ee286f546852ce48",
+      "Taskfold/Views/ReminderEditor.swift": "71c868d3beda9655189823af8b69f705141f58a76e314b0e03f26e6ca128cbba",
+      "Taskfold/Views/Editors.swift": "245b57063eb4b94855615fa02db8fb1d236729779b8b6e34d5eec22857bfd49c",
+      "Taskfold/Views/SettingsView.swift": "416b1b287e056a3b82b765925d3df06ec26277c290add9273cb6e67cb59e2acc",
+      "Taskfold/Views/QuickEntryChips.swift": "902215ed5d30735165c573ca53e95a56f15d88ba041674eca545722be7271769",
+      "Taskfold/Views/DragDrop.swift": "7e52177e93a21b36857538eea817a885d9be224cb51bf7a8f935501f28427cf5",
+      "Taskfold/Views/KeyRouter.swift": "f1e80fc2500f660d2fd780f5c78fd8beb87ca2dd27435759377e67d67958c468",
+      "Taskfold/Views/Links.swift": "ffbffefa6aea8e7091459a21e6bda4144fe21a60b0ab1c26d896c6d9214a4ed9",
+      "Taskfold/Views/PinnedNotesView.swift": "22a9b0ea717bd850ee799ba9996bda61dbeb811bd103102816d08f703148fb44",
+      "Taskfold/Views/AccountSecurityViews.swift": "2cb9a46a93cabfcd77a33e06cb8c1f5bded5f2cdb3e2c1547ebf5aa0ef94c99e",
+      "Taskfold/Views/InboxReviewView.swift": "0f177ef987e8c6b699ad0ff555a99aa302e73b643db51cbcf6d9fd8f05b27921",
+      "Taskfold/Views/TaskRowView.swift": "eb6f6cf27c5b86b42a4cba74ff53fc78cb2319aedda506dce014ac849996611b",
+      "Taskfold/Views/PlanDayView.swift": "ce964719081055eeb68fa2403b602cb3509973c7c4b181e974952422106ecd34",
+      "Taskfold/Views/SidebarView.swift": "fc239de34fbb181f0b622b545939cc08471d465b4c629bbbcbdf6226997278c9",
+      "Taskfold/Views/RootView.swift": "9398e5f76ae0e435c3f82caee0c81de0c1e3dd6ad2d784377739026ed5f262f8",
+      "Taskfold/Views/HourlyPlanner.swift": "d9e91291f806c78d4bc6e44b732e88ba0e0b7b943bc81d647416422ff31d57c7",
+      "Taskfold/Views/Transitions.swift": "3cffe5d397423cd35f5eeebdd29b0b170fe9153b05fa6031aef16d22a2143330",
+      "Taskfold/Views/AuthView.swift": "04260a1a62cfd27860fe34563dfd45311b13c14b4c09aaf0838269e9a9146bc1",
+      "Taskfold/Views/FinderView.swift": "eb247012be5a0ee23763807bf71e6d77b7e053af001fa59bbef435c611ee98bf",
+      "Taskfold/Views/BackupTools.swift": "c76962b6198884488a84b3bfcea276f4886d816b011f8e8e4246bb156b739e6b",
+      "Taskfold/Views/ProjectPulseView.swift": "6c2a6bd4bd5d8c5b268f15ddf46effa5bd801401b7f10981d4856e4f1cbb7bff",
+      "Taskfold/Views/AppearanceSettings.swift": "c8841f300be2415499ad214b60ef0d393e68b10d42c7a9bdd8a59e75170a9537",
+      "Taskfold/Views/ListScrollMemory.swift": "45e94bd84ee5e5cfbe12120f7d79a5e630b9f262bc753a34563b9e41fa4446cf",
+      "Taskfold/Views/PlannerSettings.swift": "705b1528f56e2befa0df32832cead224fb2ea0ffea992d9b505be0369c754567",
+      "Taskfold/Views/OnboardingView.swift": "6dc531639d23a91e686bc45e196ceb19d437105ed570432bcadcc88852cfd40f",
+      "Taskfold/Views/CalendarView.swift": "808ca8fe26ff01992dec5b443556b15eca5ee79bd18a4ee0c7bc13eb5c097184",
+      "Taskfold/Views/SavedViews.swift": "860fb737c679b138d34eb4b93873fe4cafcac35eef137e80546ea4a891c0998a",
+      "Taskfold/Views/TaskInspector.swift": "9e59522c8b24d8c6a3bbc002767379560aa314c9d6f1a9446445b9938aabb195"
+    },
+    "scriptSHA256": "472c36d7257c307707a75606687f27b527e259958cebd5c6de2a22b9aa2428fe",
+    "defaultVariantBehaviorVerified": true,
+    "noEmbeddedWidgetTarget": true,
+    "noProductionURLOrFileRegistrations": true,
+    "stableDevelopmentTeam": "3UZ4C73FM2",
+    "debugDeepStrictSignatureVerified": true,
+    "firstLaunchReachedNativeSignIn": true,
+    "nativeSignInAndNormalRelaunchSucceededWithoutNewKeychainPrompt": true
+  },
+  "validation": {
+    "coreTodoistCases": 8,
+    "coreFailures": 0,
+    "debugBuild": "BUILD SUCCEEDED",
+    "releaseBuild": "BUILD SUCCEEDED",
+    "releaseArchitectures": [
+      "arm64",
+      "x86_64"
+    ],
+    "responseDiscardMarkerAbsentFromBothReleaseBackendObjects": true,
+    "debugBinarySHA256": "ec80a1bdf111c37a91acd148c507f42daea3da363ab0756295d4791eae21e9d5",
+    "automatedMacXCTestPassClaimed": false,
+    "execution": "CUA native UI plus scoped server/cache/real-response evidence"
+  },
+  "native": {
+    "preview": {
+      "projects": 23,
+      "sections": 88,
+      "labels": 5,
+      "tasks": 252,
+      "subtasks": 24,
+      "comments": 94
+    },
+    "genuineDiscardedSave": {
+      "labelsImported": 0,
+      "sectionsSkipped": 88,
+      "labelsSkipped": 5,
+      "tasksSkipped": 252,
+      "projectsImported": 0,
+      "sectionsImported": 0,
+      "commentsImported": 0,
+      "subtasksImported": 0,
+      "projectsSkipped": 23,
+      "realResponseDiscarded": true,
+      "httpStatus": 200,
+      "tasksImported": 0
+    },
+    "uncertaintyMessageAndRetryVisible": true,
+    "retryResult": {
+      "labelsImported": 0,
+      "sectionsSkipped": 88,
+      "labelsSkipped": 5,
+      "tasksSkipped": 252,
+      "projectsImported": 0,
+      "sectionsImported": 0,
+      "commentsImported": 0,
+      "subtasksImported": 0,
+      "projectsSkipped": 23,
+      "tasksImported": 0
+    },
+    "successVisible": true,
+    "tokenAutomaticallyCleared": true,
+    "normalQuitExitCode": 0,
+    "tokenEmptyAfterNormalRelaunch": true,
+    "signedInSessionSurvivesNormalRelaunch": true,
+    "firstQuitAttemptDidNotTerminateUntilWelcomeSheetWasSkipped": true
+  },
+  "preservation": {
+    "all15ServerTablesExactBeforeDiscardBeforeRetryAfterRetry": true,
+    "native14CacheTablesExactAcrossRetryAndRelaunch": true,
+    "taskRows": 256,
+    "sourceMappings": 368,
+    "pending": 0,
+    "oldIsolatedMacAccountCachesExact": 2,
+    "protectedPrimaryDevices": [
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "files": 43,
+        "exactBaseline": true
+      },
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "files": 26,
+        "exactBaseline": true
+      }
+    ],
+    "sourceFourGetFingerprintsExact": true,
+    "sourceFingerprints": {
+      "projects": {
+        "count": 24,
+        "sha256": "8ba2e39e3b67b7682a2475fc431e0e3387e5da148703eab9d6abc0b2d1ce5a3f"
+      },
+      "sections": {
+        "count": 88,
+        "sha256": "f0cff4d29f874c253c39d178e16ac40a83e130bd26296cab13c003b13481576d"
+      },
+      "labels": {
+        "count": 5,
+        "sha256": "e6e96dbc92493f67d26be605fb6d8c871483e7f05b0f1ab74d0de3d043ae4dda"
+      },
+      "tasks": {
+        "count": 276,
+        "sha256": "bbf51e1e53430835e500ff6bf08ab2795dbd797d9e32cd3f6110247765ee74ba"
+      }
+    },
+    "sourceCommentsIndependentlyFingerprinted": false
+  },
+  "cleanup": {
+    "transientTodoistTokenRemovedFromPrivateFixture": true,
+    "clipboardCleared": true,
+    "obsoleteWaitProcessPID": 16355,
+    "obsoleteWaitProcessExitCode": 143,
+    "stoppedOnlyAfterReplacementAccepted": true,
+    "obsoleteBuildCachePrunedBytes": 271429842,
+    "originalAppContainersAndLogsRetained": true
+  },
+  "diagnostics": {
+    "initialRunNSTableViewReentrancyWarnings": 1,
+    "initialRunAttributeGraphWarnings": 0,
+    "relaunchNSTableViewReentrancyWarnings": 0,
+    "relaunchAttributeGraphWarnings": 0,
+    "warningFreeRunClaimed": false
+  },
+  "limitations": [
+    "Replay-response loss on Mac; first-import response loss on iPhone retains its separate accepted evidence. No Mac first-import response-loss pass is claimed.",
+    "This is a development-signed app-only native walk, not Developer ID/notarization or installed Mac WidgetKit acceptance.",
+    "One initial NSTableView reentrancy warning remains unexplained; the prior seven AttributeGraph warnings are not resolved by this run.",
+    "No remote APNs, native Mac notification action, external file-provider or VoiceOver acceptance is inferred.",
+    "No private task content, raw cache/server records, credentials or API tokens are committed."
+  ],
+  "captures": {
+    "preview.png": "f4cac2d871116ee0f007294df785bb5b6e8cc11aca7dea9204a4f672e6fce390",
+    "relaunched.png": "869e4a3a94bac4da4906035ebe2b5712d06a07d5e240a572250637723b8d7bf6",
+    "uncertain.png": "00c7a8889afb0dbbd00ee65228c6d7253f648e9f1f450cabd75257fddc1d3300",
+    "retry-success.png": "d3cc14bca98fb1c296e712062cabe06eedb12e047b8e47d139c654a85840d26d"
+  }
+}

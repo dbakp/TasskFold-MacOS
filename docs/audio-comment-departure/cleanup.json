@@ -1,0 +1,11 @@
+{
+  "obsoletePrototypeResultBundlesRemoved": [
+    "/tmp/taskfold-audio-departure-phone.xcresult",
+    "/tmp/taskfold-audio-departure-ipad.xcresult"
+  ],
+  "logicalBytesPruned": 2288488,
+  "finalResultBundlesAndReusableBuildCachesRetained": true,
+  "isolatedMacProcessesExitedThroughNormalQuit": true,
+  "ownedIPadSimulatorShutdown": true,
+  "realMicrophoneSpeechSpeakerAndPermissionsUntouched": true
+}

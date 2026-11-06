@@ -1,0 +1,43 @@
+{
+  "removed": [
+    {
+      "path": "/tmp/taskfold-adoption-discovery-phone-v2.xcresult",
+      "allocatedKiB": 86460
+    },
+    {
+      "path": "/tmp/taskfold-adoption-discovery-phone-v2-attachments",
+      "allocatedKiB": 68932
+    },
+    {
+      "path": "/tmp/taskfold-adoption-discovery-retake-phone-v1.xcresult",
+      "allocatedKiB": 4252
+    },
+    {
+      "path": "/tmp/taskfold-adoption-discovery-retake-phone-v1-attachments",
+      "allocatedKiB": 1432
+    },
+    {
+      "path": "/tmp/taskfold-adoption-discovery-retake-phone-v2.xcresult",
+      "allocatedKiB": 4520
+    },
+    {
+      "path": "/tmp/taskfold-adoption-discovery-retake-phone-v2-attachments",
+      "allocatedKiB": 1428
+    },
+    {
+      "path": "/tmp/taskfold-adoption-discovery-ipad-v2.xcresult",
+      "allocatedKiB": 20024
+    },
+    {
+      "path": "/tmp/taskfold-adoption-discovery-ipad-v2-attachments",
+      "allocatedKiB": 7304
+    }
+  ],
+  "retained": "Independent summaries, source receipts, compressed logs, focused captures and actual delivered originals retained before removal",
+  "isolatedMacAppQuit": true,
+  "ownedSimulatorStates": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": "Shutdown",
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": "Shutdown"
+  },
+  "temporaryDisplayAwakeAssertionEnded": true
+}

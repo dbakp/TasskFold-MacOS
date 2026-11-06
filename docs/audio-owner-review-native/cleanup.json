@@ -1,0 +1,341 @@
+{
+  "earlierObsoleteResultsAndVideosRemovedMiB": 452.6,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app",
+      "bundleIdentifier": "com.dbakp.taskfold.workflowteststeameditbridge",
+      "bytes": 103049756
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldWidgets.appex",
+      "bundleIdentifier": "com.dbakp.taskfold.workflowteststeameditbridge.widgets",
+      "bytes": 2815881
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldShare.appex",
+      "bundleIdentifier": "com.dbakp.taskfold.workflowteststeameditbridge.share",
+      "bytes": 458875
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+      "bundleIdentifier": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+      "bytes": 94253172
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-final-attachments",
+      "bytes": 24966524
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-final.xcresult",
+      "bytes": 78205004
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-focused-final-attachments",
+      "bytes": 845647
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-focused-final.xcresult",
+      "bytes": 2433929
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-focused-final-attachments",
+      "bytes": 838693
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-focused-final.xcresult",
+      "bytes": 2309887
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-functional-final-attachments",
+      "bytes": 21202785
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-functional-final.xcresult",
+      "bytes": 74274066
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-bare-attachments",
+      "bytes": 905
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-bare.xcresult",
+      "bytes": 412625
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-voice.txt",
+      "bytes": 1605
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v7.log",
+      "bytes": 41528
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v13.log",
+      "bytes": 41312
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-focused-final.log",
+      "bytes": 70514
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v12.log",
+      "bytes": 42344
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v6.log",
+      "bytes": 60340
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v4.log",
+      "bytes": 34331
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v10.log",
+      "bytes": 89543
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-bare.log",
+      "bytes": 8902
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v11.log",
+      "bytes": 81903
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v5.log",
+      "bytes": 66672
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-final-export.log",
+      "bytes": 677
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build.log",
+      "bytes": 611347
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-final.log",
+      "bytes": 82747
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-v5.log",
+      "bytes": 8515
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-focused-final.log",
+      "bytes": 82510
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-v5.json",
+      "bytes": 1124
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-fixture.txt",
+      "bytes": 6961
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v2.log",
+      "bytes": 128993
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-functional-final.log",
+      "bytes": 57010
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v3.log",
+      "bytes": 56623
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-voice-failure.png",
+      "bytes": 401141
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v12.log",
+      "bytes": 31990
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v8.log",
+      "bytes": 107863
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v9.log",
+      "bytes": 114287
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v11.log",
+      "bytes": 34331
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-v1.json",
+      "bytes": 13334
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-voice-after-scroll.png",
+      "bytes": 420943
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-frame.swift",
+      "bytes": 458
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v10.log",
+      "bytes": 33399
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-voice-before.txt",
+      "bytes": 2
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-diagnostic-export.log",
+      "bytes": 356
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-baseline-build.json",
+      "bytes": 648
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-functional-final.json",
+      "bytes": 1133
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-focused-final.json",
+      "bytes": 743
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-prepare.log",
+      "bytes": 44
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-focused-final.json",
+      "bytes": 727
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-bare.json",
+      "bytes": 727
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-frame.log",
+      "bytes": 897
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v2.log",
+      "bytes": 205911
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-voice-after.txt",
+      "bytes": 2
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v3.log",
+      "bytes": 95482
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-v3.json",
+      "bytes": 10265
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-prepare.log",
+      "bytes": 44
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-tests.txt",
+      "bytes": 6486
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-v2.json",
+      "bytes": 20421
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v7.log",
+      "bytes": 89466
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v6.log",
+      "bytes": 39858
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build.json",
+      "bytes": 435
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-diagnostic.log",
+      "bytes": 8920
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v4.log",
+      "bytes": 90498
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ios-build-v5.log",
+      "bytes": 84182
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build.log",
+      "bytes": 78552
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-observation.png",
+      "bytes": 508464
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-v2.log",
+      "bytes": 49424
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-v3.log",
+      "bytes": 123560
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-frame2.log",
+      "bytes": 897
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-final.json",
+      "bytes": 1125
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-diagnostic.json",
+      "bytes": 727
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-v1.log",
+      "bytes": 49995
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-v3-export.log",
+      "bytes": 7355
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-phone-voice-final.log",
+      "bytes": 8524
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-ipad-final.json",
+      "bytes": 1149
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v8.log",
+      "bytes": 33399
+    },
+    {
+      "path": "/tmp/taskfold-owner-review-mac-build-v9.log",
+      "bytes": 67931
+    }
+  ],
+  "simulators": {
+    "phone": {
+      "id": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "terminateExit": 3,
+      "shutdown": "verified Shutdown"
+    },
+    "ipad": {
+      "id": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "terminateExit": 3,
+      "shutdown": "verified Shutdown"
+    }
+  },
+  "preserved": "Repo sources/evidence; reusable Core, DerivedData, compiler/dependency caches and prepared isolated source hosts.",
+  "removedThisCleanupMiB": 387.3,
+  "totalRemovedMiB": 844.0,
+  "remainingTaskfoldExecutables": []
+}

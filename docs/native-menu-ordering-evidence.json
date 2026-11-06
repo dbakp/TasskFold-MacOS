@@ -1,0 +1,166 @@
+{
+  "date": "2026-10-11",
+  "scope": "Independent native menu actions for project, saved-filter and favorite ordering. Existing drag controls retained. No data contract or schema changes.",
+  "reason": "Two native Mac project drags did not change order; explicit menu actions provide an alternative using the existing durable reorder operation. These attempts do not establish a general drag defect.",
+  "builds": {
+    "ios": "menu-order-ios-build-v3.log: TEST BUILD SUCCEEDED",
+    "mac": "menu-order-mac-build-v1.log: TEST BUILD SUCCEEDED"
+  },
+  "sourceSHA256": {
+    "ios": "ea0ee178a39ca98411c8fdb84d4b8d82053a6bcc235ee481710798ecf6bcb2a1",
+    "mac": "fc239de34fbb181f0b622b545939cc08471d465b4c629bbbcbdf6226997278c9"
+  },
+  "nativeMac": {
+    "bundle": "com.dbakp.taskfold.mac.p0importa11ytests",
+    "accepted": [
+      "Create two synthetic local projects through native editor.",
+      "Project Move Up changes Alpha/Beta order to Beta/Alpha.",
+      "Command-Z restores Alpha/Beta; Shift-Command-Z reapplies Beta/Alpha.",
+      "Favorite Move Up changes Alpha/Beta to Beta/Alpha independently.",
+      "Quit/relaunch retains both Beta/Alpha orders.",
+      "First item Move Up and last item Move Down disabled.",
+      "After relaunch favorite Move Down restores Alpha/Beta while projects retain Beta/Alpha.",
+      "Create two synthetic Planned today saved filters through native editor.",
+      "Saved-filter Move Up reverses filter order and retains it after a further quit/relaunch.",
+      "Final relaunch retains independent project Beta/Alpha, favorite Alpha/Beta and filter Beta/Alpha orders."
+    ],
+    "dataProof": {
+      "unchangedBaselineTables": {
+        "task_activity": true,
+        "task_activity_epoch": true,
+        "tasks": true
+      },
+      "projectOrder": [
+        "Ordering Beta",
+        "Ordering Alpha"
+      ],
+      "favoriteOrder": [
+        "Ordering Alpha",
+        "Ordering Beta"
+      ],
+      "pending": 0,
+      "scope": "Only isolated ui-testing workspace; two synthetic projects and two favorite references added through native UI.",
+      "filterOrder": [
+        "Ordering Today Beta",
+        "Ordering Today Alpha"
+      ],
+      "filterDefinitionsPreserved": true
+    },
+    "limits": [
+      "No passing Mac XCTest run claimed.",
+      "No new cloud/offline/concurrent handoff acceptance.",
+      "Actual VoiceOver remains open.",
+      "Mac drag operation not accepted by this checkpoint."
+    ]
+  },
+  "nativePhone": {
+    "result": "menu-order-phone-v3.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "case": "testResumeOrganizationMenuOrderingAfterRelaunch",
+    "evidenceComposition": "v2 verified project Move Up, adding two favorites, favorite Move Up and favorite relaunch ordering before failing at an unscrolled, virtualized project query. v3 resumes the preserved local fixture, scrolls to projects, verifies both persisted orders, boundary disabled action, Move Down and original cloud return. The complete initial test has not passed end-to-end; this is composed native acceptance.",
+    "retainedFailures": [
+      {
+        "result": "menu-order-phone-v1.xcresult",
+        "cause": "Test assumed tied fixture positions placed Client Work before Home; actual stable fallback order is Home first."
+      },
+      {
+        "result": "menu-order-phone-v2.xcresult",
+        "cause": "Test queried virtualized project rows below viewport after relaunch; fixed by revealing them before asserting order."
+      }
+    ],
+    "diagnostics": "Native context-menu interactions incur repeated 60-second XCTest animation-idle waits; retained logs show synthesis proceeds afterward. These are diagnostic overhead, not runtime-warning skips.",
+    "limits": [
+      "Saved-filter menu not newly exercised on phone.",
+      "No new native Mac/phone ordering sync, concurrent-edit or VoiceOver acceptance."
+    ]
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-menu-order-initial.png",
+      "sha256": "37dcf90cf8a3795a9f91036e06a43363af6aca72537fe7a0870161be97ec3491",
+      "visuallyInspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-menu-order-relaunch.png",
+      "sha256": "f9faa8cf13d6e394ea412f701001c73e1ce92be21c906b0feb1fc19f14490e9a",
+      "visuallyInspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-menu-order-move-down.png",
+      "sha256": "0a612244d01ad5870bbd152384cffe37a8bb7c278338770ae8e8ed8f667efb81",
+      "visuallyInspected": true
+    }
+  ],
+  "iosSigning": "menu-order-ios-signing-v3.json: strict real-team signatures and embedded Simulator identity preserved",
+  "originalAccountDataProof": {
+    "tables": {
+      "focus_sessions": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "labels": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "reminder_preferences": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "sections": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "projects": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "project_collaborators": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "project_members:aea110b0-fc43-49eb-86c6-b3ccd1cdaccc": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "view_preferences": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "saved_views": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "favorites": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "view_orders": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "task_activity": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "profiles": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "task_activity_epoch": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "tasks": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      }
+    },
+    "pending": {
+      "mac": 0,
+      "phone": 0
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "compiledNames": [
+    "testRecordedGroupArchiveColdRecovery",
+    "testRecordedGroupPauseColdRecovery",
+    "testRecordedGroupViewerColdRecovery",
+    "testRecordedSingleArchiveColdRecovery",
+    "testRecordedSinglePauseColdRecovery",
+    "testRecordedSingleRefreshShowsCurrentObservation",
+    "testRecordedSingleViewerColdRecovery"
+  ],
+  "testBinarySHA256": "6a8ebab4836484a122646318505c58da28b64bfc9f18345f7e29b668e17d4fc7",
+  "executed": 0,
+  "runtimeAcceptance": false
+}

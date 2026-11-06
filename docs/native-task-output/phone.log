@@ -1,0 +1,160 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-native-output-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TaskfoldUITests/testTaskCSVNativeSaveReadbackAndColdReturn" -resultBundlePath /tmp/taskfold-native-output-phone.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-native-output-phone.xcresult
+
+2026-10-26 19:36:18.986833+0100 TaskfoldUITests-Runner[27803:23307099] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 19:36:24.480.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 19:36:24.480.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 19:36:24.481.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testTaskCSVNativeSaveReadbackAndColdReturn]' started.
+    t =     0.02s Start Test at 2026-10-26 19:36:24.504
+    t =     0.05s Set Up
+    t =     0.05s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.06s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:36:24.619 xcodebuild[27795:23306694] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:36:24.619 xcodebuild[27795:23306694] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.06s         Setting up automation session
+objc[27803]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x102af4398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x105b54310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     7.52s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.95s Checking existence of `"Today" Button`
+    t =    11.55s Tap "Today" Button
+    t =    11.55s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.60s     Find the "Today" Button
+    t =    11.65s     Check for interrupting elements affecting "Today" Button
+    t =    11.81s     Synthesize event
+    t =    12.18s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.66s Tap Any (First Match)
+    t =    14.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.67s     Find the Any (First Match)
+    t =    14.78s     Check for interrupting elements affecting "Task options" Button
+    t =    14.95s     Synthesize event
+    t =    15.25s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.49s Tap "Print or export" Button
+    t =    16.49s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.50s     Find the "Print or export" Button
+    t =    16.58s     Check for interrupting elements affecting "Print or export" Button
+    t =    16.63s     Synthesize event
+    t =    16.93s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.56s Waiting 10.0s for "openTaskCSV" Button to exist
+    t =    19.61s     Checking `Expect predicate `existsNoRetry == 1` for object "openTaskCSV" Button`
+    t =    19.61s         Checking existence of `"openTaskCSV" Button`
+    t =    20.41s Tap "openTaskCSV" Button
+    t =    20.41s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.41s     Find the "openTaskCSV" Button
+    t =    21.03s     Check for interrupting elements affecting "openTaskCSV" Button
+    t =    21.10s     Synthesize event
+    t =    21.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.44s Waiting 10.0s for "csvRowCount" StaticText to exist
+    t =    22.47s     Checking `Expect predicate `existsNoRetry == 1` for object "csvRowCount" StaticText`
+    t =    22.47s         Checking existence of `"csvRowCount" StaticText`
+    t =    23.16s Find the "csvRowCount" StaticText
+    t =    23.86s Tap "saveTaskCSV" Button
+    t =    23.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.87s     Find the "saveTaskCSV" Button
+    t =    24.56s     Check for interrupting elements affecting "saveTaskCSV" Button
+    t =    24.65s     Synthesize event
+    t =    24.95s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.21s Waiting 12.0s for "DOCPicker.actionButton" Button to exist
+    t =    26.25s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    26.25s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    26.94s         Capturing element debug description
+    t =    27.25s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    27.25s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    27.93s         Capturing element debug description
+    t =    28.24s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    28.24s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    29.04s         Capturing element debug description
+    t =    29.24s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    29.24s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    30.09s         Capturing element debug description
+    t =    30.29s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    30.29s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    31.46s         Capturing element debug description
+    t =    32.29s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    32.29s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    36.41s Find the "DOCPicker.actionButton" Button
+    t =    37.14s Tap "DOCPicker.actionButton" Button
+    t =    37.14s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.14s     Find the "DOCPicker.actionButton" Button
+    t =    37.95s     Check for interrupting elements affecting "DOCPicker.actionButton" Button
+    t =    38.08s     Synthesize event
+    t =    38.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    38.39s Waiting 15.0s for "csvExportStatus" StaticText to exist
+    t =    39.43s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    39.43s         Checking existence of `"csvExportStatus" StaticText`
+    t =    40.21s Ignoring failure to get hierarchy for remote element in process 27929 (Error getting main window kAXErrorInvalidUIElement)
+    t =    40.21s         Capturing element debug description
+    t =    40.41s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    40.41s         Checking existence of `"csvExportStatus" StaticText`
+    t =    41.11s Find the "csvExportStatus" StaticText
+    t =    41.79s Added attachment named 'Actual native task-row CSV through Files'
+    t =    41.79s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    42.03s Added attachment named 'Saved task CSV review'
+    t =    42.03s Tap "saveTaskCSV" Button
+    t =    42.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.04s     Find the "saveTaskCSV" Button
+    t =    42.70s     Check for interrupting elements affecting "saveTaskCSV" Button
+    t =    42.80s     Synthesize event
+    t =    43.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.39s Waiting 12.0s for "DOCPicker.actionButton" Button to exist
+    t =    44.42s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    44.42s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    46.50s Checking existence of `"FullDocumentManagerViewControllerNavigationBar" NavigationBar`
+    t =    47.07s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    47.18s Find the "FullDocumentManagerViewControllerNavigationBar" NavigationBar
+    t =    47.84s Press Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'[0.00, 0.00] -> (201.0, 78.0) for 0.1 seconds, then drag to Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'[0.50, 0.90] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    47.84s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.84s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    47.95s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    48.08s     Synthesize event
+    t =    48.09s         Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    48.20s         Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    48.32s         Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    48.43s         Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    48.54s         Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    50.36s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    50.74s Waiting 12.0s for "DOCPicker.actionButton" Button to not exist
+    t =    51.80s     Checking `Expect predicate `existsNoRetry == 0` for object "DOCPicker.actionButton" Button`
+    t =    51.80s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    52.49s Checking existence of `"csvExportStatus" StaticText`
+    t =    53.15s Tap "closeTaskCSV" Button
+    t =    53.15s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    53.16s     Find the "closeTaskCSV" Button
+    t =    53.86s     Check for interrupting elements affecting "closeTaskCSV" Button
+    t =    53.97s     Synthesize event
+    t =    54.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    55.00s Tap "closePrintReview" Button
+    t =    55.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    55.00s     Find the "closePrintReview" Button
+    t =    55.54s     Check for interrupting elements affecting "closePrintReview" Button
+    t =    55.66s     Synthesize event
+    t =    55.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    56.44s Terminate com.dbakp.taskfold.workflowteststeameditbridge:27841
+    t =    57.52s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    57.52s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:37:22.006 xcodebuild[27795:23306694] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:37:22.006 xcodebuild[27795:23306694] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    57.73s         Setting up automation session
+    t =    62.34s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    65.22s Terminate com.dbakp.taskfold.workflowteststeameditbridge:28074
+    t =    66.24s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testTaskCSVNativeSaveReadbackAndColdReturn]' passed (66.372 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-26 19:37:30.876.
+	 Executed 1 test, with 0 failures (0 unexpected) in 66.372 (66.396) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 19:37:30.877.
+	 Executed 1 test, with 0 failures (0 unexpected) in 66.372 (66.396) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 19:37:30.877.
+	 Executed 1 test, with 0 failures (0 unexpected) in 66.372 (66.397) seconds
+2026-10-26 19:37:31.192 xcodebuild[27795:23306694] [MT] IDETestOperationsObserverDebug: 76.927 elapsed -- Testing started completed.
+2026-10-26 19:37:31.193 xcodebuild[27795:23306694] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 19:37:31.193 xcodebuild[27795:23306694] [MT] IDETestOperationsObserverDebug: 76.927 sec, +76.927 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-native-output-phone.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

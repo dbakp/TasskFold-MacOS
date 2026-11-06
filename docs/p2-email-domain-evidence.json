@@ -1,0 +1,623 @@
+{
+  "date": "2026-10-23",
+  "scope": "Disabled email-domain binding and management protocol 2; independent repository implementation",
+  "appliedToHosted": false,
+  "releaseFeatureFlagEnabled": false,
+  "providerConfigured": false,
+  "liveEmailSent": false,
+  "realDataChanged": false,
+  "fullEmailIntakeComplete": false,
+  "sourceSha256": {
+    "supabase/migrations/20261023162006_email_domain_binding.sql": "b2413f116b40243323f4873c8fd6e72a17271f9332b2d748ad12c17e7d0535f0",
+    "supabase/functions/email-routes/handler.ts": "dd8cf34e3c33eb6d997f03d446a9795e8e90af69932526d2b8d69d5147a8e98c",
+    "supabase/functions/email-routes/handler_test.ts": "6b6b62f39c762c5a6ad144bd6eef0b7b2a233f592b728e4930daa536276954ce",
+    "Scripts/Database/email-intake-schema.mjs": "b5a5fa0efd8d26e651c24b260f904b9b47e0c8ae0d8d8d914e59083d0ad2af47",
+    "Scripts/Database/package.json": "f471b5b7cbbdc628cb2cc074fe12648368d8ce653d2b73b16dc91990ff3cfffb",
+    "Scripts/Database/test-email-domain.mjs": "9be1d7e3af365c541887e0c452554631c77cb397cfc2e04be249210de622ff98",
+    "Scripts/Database/test-email-intake.mjs": "9b4cf2af26ab62101f29344fbb1321842344c4cd16ae54fc7f66b69f2c674e89",
+    "Scripts/Database/test-email-intake-concurrency.mjs": "3a14905dda4f9cf2c27b36e32fcaaef78e30ff7bd15ce8641a731a7ae6061554",
+    "Scripts/Database/test-email-routes-http.mjs": "e53cf028fc22673779dac58dd5fa1046b5c8d69f9fe4c06818bb32effa689a22",
+    "Taskfold/Core/Backend.swift": "fe65343a22cb6bfeff7f29e8eadec76e102108c95b78fe3f27be43b4c2802519",
+    "Taskfold/Core/EmailCapture.swift": "2683ea3254a344af4f81d918196fd37e367e3018b23cb2a01e77500f3a54527a",
+    "Taskfold/Views/EmailCaptureView.swift": "bde24159e08aac9c477b5406f694112c1ae1935171c453948cc6cc2132b32a8d",
+    "TaskfoldTests/EmailCaptureTests.swift": "a770dc98ade6d6c4ea15932402a22608fcdb828f3ac5a4377d912c9acb78a4c2"
+  },
+  "candidateCorrection": "Final review added the actual provider-attested recipient domain to delivery v2; checking only the route domain against configuration did not bind a reused opaque hash to the original envelope domain.",
+  "sqlSuites": {
+    "base": {
+      "date": "2026-10-23T16:44:23.102Z",
+      "checks": {
+        "default delivery gate closed": true,
+        "disabled create refused": true,
+        "disabled create stores no route": true,
+        "unknown session refused": true,
+        "unverified sender cannot set up capture": true,
+        "unknown field refused": true,
+        "invalid identity refused": true,
+        "invalid name refused": true,
+        "invalid project refused": true,
+        "bad timestamp refused": true,
+        "old setup refused": true,
+        "verified sender fixed by Auth": true,
+        "route receipt omits alias hash": true,
+        "same setup retry keeps complete receipt": true,
+        "changed setup conflicts": true,
+        "foreign route identity refused": true,
+        "foreign route edits refused": true,
+        "foreign catalog empty": true,
+        "untrusted sender refused": true,
+        "plus alias not guessed to be same sender": true,
+        "wrong configured provider refused": true,
+        "unknown route refused": true,
+        "extra destination refused": true,
+        "extra sender claim refused": true,
+        "header newline refused": true,
+        "binary content refused": true,
+        "not normalized CR refused": true,
+        "large UTF8 title refused": true,
+        "invalid count refused": true,
+        "rejected input creates no tasks": true,
+        "rejected input creates no journal": true,
+        "first delivery committed": true,
+        "actor claim restored": true,
+        "owner comes from route": true,
+        "Inbox remains Inbox": true,
+        "title preserved": true,
+        "full note preserved": true,
+        "no instruction-derived planning": true,
+        "generation identity recorded": true,
+        "no private metadata leaks to task": true,
+        "content fingerprint matches JS contract": true,
+        "delivery key matches JS contract": true,
+        "exact retry acknowledged": true,
+        "exact retry cannot duplicate task": true,
+        "changed content cannot overwrite task": true,
+        "changed original timestamp conflicts": true,
+        "retry preserves user edit": true,
+        "retry preserves user task move": true,
+        "retry never recreates deleted task": true,
+        "retry preserves restored incarnation": true,
+        "email receipt retains original generation": true,
+        "pause replay does not increment revision": true,
+        "paused delivery refused even for replay": true,
+        "resume cannot import mail from paused interval": true,
+        "already committed retry still acknowledged after resume": true,
+        "stale pause cannot undo resume": true,
+        "accepted shared destination used": true,
+        "lost membership refuses new mail": true,
+        "lost membership refuses old receipt access": true,
+        "lost membership cannot fall back to Inbox": true,
+        "archived project refuses delivery": true,
+        "archived ancestor refuses delivery": true,
+        "deleted route destination is retained": true,
+        "deleted project refuses delivery": true,
+        "rotation revokes old address": true,
+        "replacement active": true,
+        "rotation retry retains replacement": true,
+        "old address rejected after rotation": true,
+        "old setup replay cannot revive address": true,
+        "revoked route cannot resume": true,
+        "cancel before create fences late enrollment": true,
+        "failed rotation rolls back old revocation": true,
+        "old route survives failed rotation": true,
+        "changed Auth email invalidates old sender approval": true,
+        "removed verification refuses old routes": true,
+        "expired native session refuses management": true,
+        "pending account removal blocks delivery": true,
+        "pending account removal blocks management": true,
+        "banned account cannot receive": true,
+        "stale original delivery refused": true,
+        "future original delivery refused": true,
+        "expired delivery tombstones pruned": true,
+        "pruned receipt cannot replay old message": true,
+        "five live routes available": true,
+        "sixth live route refused": true,
+        "rotation works at live route capacity": true,
+        "rotation retains live route limit": true,
+        "rolling route birth limit enforced": true,
+        "fiftieth route-hour final slot enforced": true,
+        "exact receipt retry works at quota": true,
+        "account daily quota spans routes": true,
+        "rolling quota permits a later day": true,
+        "256-byte receipt identity supported": true,
+        "257-byte receipt identity refused": true,
+        "non-ASCII receipt identity refused": true,
+        "Unicode content contract remains compatible": true,
+        "hard receipt storage bound enforced": true,
+        "account deletion clears routes": true,
+        "account deletion clears receipts": true,
+        "account deletion clears cancellations": true,
+        "other account tasks retained": true,
+        "removed account cannot receive late mail": true,
+        "anon has no direct email_routes access": true,
+        "anon has no direct email_route_cancellations access": true,
+        "anon has no direct email_deliveries access": true,
+        "anon has no direct email_intake_config access": true,
+        "authenticated has no direct email_routes access": true,
+        "authenticated has no direct email_route_cancellations access": true,
+        "authenticated has no direct email_deliveries access": true,
+        "authenticated has no direct email_intake_config access": true,
+        "service_role has no direct email_routes access": true,
+        "service_role has no direct email_route_cancellations access": true,
+        "service_role has no direct email_deliveries access": true,
+        "service_role has no direct email_intake_config access": true,
+        "all intake tables use RLS": true,
+        "public wrappers are invokers": true,
+        "anon cannot execute intake RPC": true,
+        "authenticated cannot execute intake RPC": true,
+        "actual native SQL execution refused": true
+      },
+      "deployed": false,
+      "realDataChanged": false,
+      "passed": true
+    },
+    "config": {
+      "date": "2026-10-23T16:44:21.775Z",
+      "checks": {
+        "migration disables unknown configuration": true,
+        "legacy active and paused addresses are revoked without guessing domain": true,
+        "migration handles maximum legacy revision without overflow": true,
+        "migration preserves every task and delivery receipt": true,
+        "new RPC declares wire protocol two": true,
+        "legacy metadata retains unknown revoked domain": true,
+        "invalid domain 0": true,
+        "invalid domain 1": true,
+        "invalid domain 2": true,
+        "invalid domain 3": true,
+        "invalid domain 4": true,
+        "invalid domain 5": true,
+        "enabled without domain refused": true,
+        "partially configured provider refused": true,
+        "unknown enabled flag refused": true,
+        "disabled configured domain is not advertised": true,
+        "configuration helper returns canonical domain": true,
+        "enabled list advertises the database domain": true,
+        "old body cannot enroll without reviewed domain": true,
+        "stale reviewed domain cannot enroll": true,
+        "new receipt binds immutable alias domain": true,
+        "legacy unknown domain cannot resume": true,
+        "legacy setup cannot be silently assigned a domain": true,
+        "active routes prevent domain replacement": true,
+        "active routes prevent provider replacement": true,
+        "disabling and changing domain together cannot bypass review": true,
+        "disabled capture refuses delivery": true,
+        "pause stays available while disabled": true,
+        "paused routes still protect their address domain": true,
+        "resetting configuration cannot bypass existing address ownership": true,
+        "resume requires explicit reviewed domain": true,
+        "resume cannot silently switch an alias domain": true,
+        "correct reviewed resume remains available": true,
+        "extra domain on pause is refused": true,
+        "direct admin update also respects live-address guard": true,
+        "configuration refuses a stale snapshot transaction": true,
+        "serializable configuration also uses explicit supported isolation": true,
+        "active row cannot lose its domain": true,
+        "configuration may change after explicit revocation": true,
+        "revoked old address retains original domain": true,
+        "stale worker cannot enroll against changed database domain": true,
+        "fresh setup uses new reviewed domain": true,
+        "verified recipient domain cannot disagree with route": true,
+        "old delivery helper cannot guess an attested domain": true,
+        "old delivery endpoint has no service role grant": true,
+        "new delivery endpoint is service-only": true,
+        "new domain can capture one task": true,
+        "known revoked old address cannot capture": true,
+        "anon cannot execute verified-domain delivery": true,
+        "anon has no configuration EXECUTE": true,
+        "authenticated cannot execute verified-domain delivery": true,
+        "authenticated has no configuration EXECUTE": true,
+        "service role owns configuration capability": true,
+        "actual native role cannot attest delivery domains": true,
+        "actual native role cannot configure provider": true,
+        "configuration public wrapper remains invoker": true,
+        "legacy migration did not erase original task": true
+      },
+      "deployed": false,
+      "realDataChanged": false,
+      "passed": true
+    },
+    "races": {
+      "date": "2026-10-23T16:44:24.595Z",
+      "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+      "checks": {
+        "domain-change-before-create result": true,
+        "stale worker creates no route after domain change": true,
+        "create-before-domain-change result": true,
+        "configuration sees newly committed enrollment after lock wait": true,
+        "configuration cannot revoke concurrent native setup": true,
+        "explicit re-enrollment binds changed domain": true,
+        "actual paused route prevents provider change": true,
+        "actual PostgreSQL refuses snapshot-isolated configuration": true,
+        "actual delivery refuses mismatched verified envelope domain": true,
+        "wrong recipient domain cannot create task": true,
+        "old delivery RPC refuses service role": true,
+        "all exact concurrent retries accepted": true,
+        "exactly one worker creates": true,
+        "eleven workers acknowledge original": true,
+        "concurrent retry task count": true,
+        "concurrent retry journal count": true,
+        "conflicting concurrent replay has one winner": true,
+        "conflicting concurrent replay refuses loser": true,
+        "conflict cannot duplicate task": true,
+        "actual PostgreSQL key matches JS contract": true,
+        "actual PostgreSQL Unicode fingerprint matches JS contract": true,
+        "journal failure refuses whole transaction": true,
+        "task generation and receipt all rolled back": true,
+        "same request can retry after rollback": true,
+        "cancel-before-create result": true,
+        "cancelled race creates no route": true,
+        "pause-before-delivery result": true,
+        "delivery-before-pause result": true,
+        "committed delivery precedes later pause": true,
+        "later replay sees paused state": true,
+        "membership-removal-before-delivery result": true,
+        "membership race creates no Inbox fallback": true,
+        "archive-before-delivery result": true,
+        "project-delete-before-delivery result": true,
+        "Auth-email-change-before-delivery result": true,
+        "verification-removal-before-delivery result": true,
+        "session-expiry-before-management result": true,
+        "provider capture independent of native sign-in expiry": true,
+        "account-removal-before-delivery result": true,
+        "quota race has one accepted final slot": true,
+        "quota race refuses other final slot": true,
+        "quota race exact receipt bound": true,
+        "official advisors no new email warnings or errors": true
+      },
+      "barriers": [
+        {
+          "label": "domain-change-before-create",
+          "pid": 269,
+          "event": "transactionid",
+          "blockers": [
+            256
+          ]
+        },
+        {
+          "label": "create-before-domain-change",
+          "pid": 311,
+          "event": "transactionid",
+          "blockers": [
+            298
+          ]
+        },
+        {
+          "label": "cancel-before-create",
+          "pid": 612,
+          "event": "advisory",
+          "blockers": [
+            598
+          ]
+        },
+        {
+          "label": "pause-before-delivery",
+          "pid": 648,
+          "event": "advisory",
+          "blockers": [
+            634
+          ]
+        },
+        {
+          "label": "delivery-before-pause",
+          "pid": 683,
+          "event": "advisory",
+          "blockers": [
+            669
+          ]
+        },
+        {
+          "label": "membership-removal-before-delivery",
+          "pid": 746,
+          "event": "transactionid",
+          "blockers": [
+            733
+          ]
+        },
+        {
+          "label": "archive-before-delivery",
+          "pid": 790,
+          "event": "transactionid",
+          "blockers": [
+            776
+          ]
+        },
+        {
+          "label": "project-delete-before-delivery",
+          "pid": 824,
+          "event": "transactionid",
+          "blockers": [
+            811
+          ]
+        },
+        {
+          "label": "Auth-email-change-before-delivery",
+          "pid": 854,
+          "event": "transactionid",
+          "blockers": [
+            839
+          ]
+        },
+        {
+          "label": "verification-removal-before-delivery",
+          "pid": 888,
+          "event": "transactionid",
+          "blockers": [
+            875
+          ]
+        },
+        {
+          "label": "session-expiry-before-management",
+          "pid": 924,
+          "event": "transactionid",
+          "blockers": [
+            910
+          ]
+        },
+        {
+          "label": "account-removal-before-delivery",
+          "pid": 965,
+          "event": "transactionid",
+          "blockers": [
+            952
+          ]
+        }
+      ],
+      "hostedAcceptance": false,
+      "containerRemoved": true,
+      "postgresVersion": 170006,
+      "advisors": {
+        "ran": true,
+        "source": "supabase db advisors --type all",
+        "result": [
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+          },
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+          },
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+          },
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+          },
+          {
+            "name": "function_search_path_mutable",
+            "title": "Function Search Path Mutable",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "SECURITY"
+            ],
+            "description": "Detects functions where the search_path parameter is not set.",
+            "detail": "Function `public.is_project_owner` has a role mutable search_path",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+            "metadata": {
+              "name": "is_project_owner",
+              "type": "function",
+              "schema": "public"
+            },
+            "cache_key": "function_search_path_mutable_public_is_project_owner_8f50cf28f66c9989c028839a0b8123dc"
+          }
+        ],
+        "emailFindings": []
+      },
+      "passed": true
+    },
+    "http": {
+      "date": "2026-10-23T16:44:38.732Z",
+      "checks": {
+        "HTTP list reports database disabled": true,
+        "HTTP disabled create refused": true,
+        "HTTP create reaches actual service-role SQL": true,
+        "HTTP create does not reveal alias hash": true,
+        "HTTP exact create retry": true,
+        "gateway-created route captures one actual task": true,
+        "HTTP pause persists": true,
+        "HTTP paused route refuses capture": true,
+        "HTTP resume persists": true,
+        "HTTP stale pause conflicts": true,
+        "HTTP cannot list another account routes": true,
+        "HTTP foreign route cannot be revoked": true,
+        "HTTP atomic rotation returns both route identities": true,
+        "HTTP exact rotation retry": true,
+        "rotation prevents old address delivery": true,
+        "HTTP cancellation before setup": true,
+        "HTTP late cancelled create conflicts": true,
+        "HTTP can revoke final old-domain route": true,
+        "HTTP stale worker advertises unavailable instead of wrong domain": true,
+        "HTTP stale worker cannot commit an old-domain setup": true,
+        "current-domain enrollment remains possible": true,
+        "HTTP stale worker retains pause safety control": true,
+        "HTTP stale worker retains revoke safety control": true,
+        "HTTP SQL fences expired native session despite successful Auth": true,
+        "gateway actions never duplicate captured task": true,
+        "gateway actions preserve task note": true
+      },
+      "hostedAcceptance": false,
+      "realDataChanged": false,
+      "postgresVersion": 170006,
+      "passed": true,
+      "gatewayStopped": true,
+      "bridgeStopped": true,
+      "containerRemoved": true
+    }
+  },
+  "edge": {
+    "passed": 40,
+    "failed": 0,
+    "gatewayCases": 28,
+    "aliasCases": 3,
+    "admissionCases": 9,
+    "lintPassed": true,
+    "logSha256": "b54564d9b54315148acf7ce6a1187ebc1e9c37a8bdedbea8a8e6bacebf1158eb"
+  },
+  "nativeCore": {
+    "passed": 28,
+    "failed": 0,
+    "logSha256": "49326da64fdf7bdd3ccea6c9e754248b22db70572f39d3a3045c5480585b4a77",
+    "cases": [
+      "testAccountErasureAndRevokedPruningPreserveOtherAccounts",
+      "testActiveReceiptRequiresDomainWhileRevokedLegacyMayBeUnknown",
+      "testAliasContractAndRedaction",
+      "testBackendRequiresVersionTwoReceipt",
+      "testCancelSetupPersistsTerminalIntentBeforeRetry",
+      "testCreatePersistsThenRevealsOnlyConfirmedAddress",
+      "testDisabledConfigurationAndExpiredSessionConcealAddresses",
+      "testDiscardLostCreationRevokesItAndDoesNotExposeAddress",
+      "testDraftValidationAndMailboxBounds",
+      "testFailedPrivateSaveNeverSendsCreation",
+      "testHTTPRefusesForeignOwnerAndOversizeStreamWithoutConfirming",
+      "testHTTPUsesBoundedPrivateFixedRouteAndReviewedDomain",
+      "testLegacyProtocolCannotPopulateNativeModel",
+      "testLostResponseRelaunchRetriesSameIdentity",
+      "testOperationValidationAndPrivateDescription",
+      "testOtherDeviceCanManageButCannotRevealOrResumeUnknownAddress",
+      "testPauseResumeRotateAndRevokeKeepPrivateVaultAligned",
+      "testPrivateAddressCannotBeRevealedAgainstDifferentReceiptDomain",
+      "testPrivateSaveFailureAfterServerCommitRetainsRetry",
+      "testRefreshResolvesSupersededControlWithoutErasingLiveAddress",
+      "testRetiredLegacyPendingSetupCanBeDiscardedWithoutGuessingDomain",
+      "testRetryRefreshesWhenAnotherWindowAlreadyFinished",
+      "testReviewedDomainIsExplicitInSetupAndResume",
+      "testSeparateVaultActorsSerializeCompetingSetupsUsingProcessLock",
+      "testVaultFencesAccountOriginCancellationAndCompetingSetup",
+      "testVaultRetainsExactSetupBeforeNetworkAndAcrossActors",
+      "testWorkspaceChangeDiscardsLateResponseButKeepsPrivateRecovery",
+      "testWrongReceiptNeverConfirmsSecretOrClearsRecovery"
+    ]
+  },
+  "nativeBuild": {
+    "passed": true,
+    "platform": "macOS Debug unsigned compilation; no Mac runtime claim",
+    "logSha256": "2db51210892d15633deb74cd7d964c8f985e966804f5f2388b60fa7476d522b7"
+  },
+  "simulatorWorkflows": {
+    "phone": {
+      "cases": 1,
+      "failures": 0,
+      "passed": true,
+      "style": "default light",
+      "logSha256": "f319edf92f06540a88a6ef838bbbb7f1f3fc851a0a40191bb0e5f26bb72dee41",
+      "scope": "Protocol-2 native workflow using synthetic peer/memory vault; not hosted Auth or real email-vault Keychain acceptance."
+    },
+    "tablet": {
+      "cases": 1,
+      "failures": 0,
+      "passed": true,
+      "style": "largest accessibility text, dark",
+      "logSha256": "2667dfeb0d315df794eca237be0a4b360d63900e4e9fd39ecfbc31809b1199a3",
+      "scope": "Protocol-2 native workflow using synthetic peer/memory vault; not hosted Auth or real email-vault Keychain acceptance."
+    }
+  },
+  "visualScope": "View layout is unchanged from the reviewed phone/tablet screenshots in p2-email-native-setup-evidence.json. This run exercises the protocol-2 state/decoder changes with the same scoped workflow, not all visual states or human speech.",
+  "configurationContract": [
+    "Database domain and route alias_domain are authoritative.",
+    "Create/resume/replacement must include the reviewed canonical domain.",
+    "Management replies require numeric protocol 2; old/unbound receipts are refused.",
+    "Delivery v2 requires the provider-attested original recipient domain to match the route and configuration; hash-only delivery RPC access is revoked.",
+    "Changing domain/provider requires explicit revocation of every live/paused address. Disabling alone cannot bypass that rule.",
+    "Configuration uses the privileged service-only helper and a guarded read-committed transaction.",
+    "Pre-binding unknown-domain routes retire with no task or journal changes.",
+    "Environment-domain mismatch preserves authenticated pause/revoke but refuses capture advertisement/enrollment."
+  ],
+  "raceEvidence": [
+    "domain-change-before-create: observed config-row blocking then stale setup refusal",
+    "create-before-domain-change: observed config-row blocking then fresh committed live route refusal",
+    "snapshot-isolated configuration refused by actual PostgreSQL"
+  ],
+  "advisorScope": "Official advisors ran on owned PostgreSQL17.6 fixtures in both repos. Zero email-object findings; five prior minimal-fixture findings retained in raw receipts. Not a production audit.",
+  "cleanup": {
+    "date": "2026-10-23",
+    "ownedAppsRemoved": [
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378"
+    ],
+    "temporaryArtifactsRemoved": [
+      "EmailDomainPhone.xcresult",
+      "EmailDomainTablet.xcresult",
+      "APIRenewalNativeHost"
+    ],
+    "hostedChanges": false,
+    "ownedDatabaseContainersAbsent": true,
+    "finalVerifiedAfterRecipientDomainRetest": true
+  },
+  "remaining": [
+    "Real email-vault Keychain relaunch/error runtime acceptance",
+    "Hosted end-to-end native Auth/recovery/account isolation",
+    "Real hosted migration/re-enrollment acceptance",
+    "Mac native runtime and spoken accessibility",
+    "Verified provider signature/MIME/sender/original-receipt integration",
+    "Source links",
+    "Scheduled inactive-account cleanup",
+    "Additional verified senders",
+    "Provider/domain configuration later as requested"
+  ],
+  "existingDeferralsUnchanged": [
+    "Remote reminder delivery/recovery",
+    "General older-client editing/rollout safeguards",
+    "Distribution signing/install/update verification",
+    "Genuine calendar provider registration/acceptance",
+    "Physical location delivery"
+  ]
+}

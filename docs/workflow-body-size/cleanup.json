@@ -1,0 +1,17 @@
+{
+  "removedOwnedPaths": [
+    "/tmp/taskfold-save-baseline-attachments",
+    "/tmp/taskfold-body-mac-attachments",
+    "/tmp/taskfold-body-phone-attachments",
+    "/tmp/taskfold-body-tablet-attachments",
+    "/tmp/taskfold-save-control.xcresult"
+  ],
+  "logicalBytesRemoved": 275210,
+  "temporaryMainAppsRunning": 0,
+  "retained": [
+    "One current host/build cache per platform",
+    "Current native results and original profile/unprofiled baseline",
+    "Core caches for each owned repository"
+  ],
+  "scope": "Only obsolete owned extracts and rejected zero-selection result; no real data, general cache or simulator runtime removed. Logical sizes are not measured free-space change."
+}

@@ -1,0 +1,159 @@
+{
+  "date": "2026-11-01",
+  "repository": "macOS",
+  "scope": "Private read-only identity/lifecycle mapping planner; no save transaction, public API or app integration",
+  "passed": true,
+  "assertions": 65,
+  "checks": {
+    "planning never changes roots records or historical events": true,
+    "parent history reference restored explicitly": true,
+    "child history reference restored despite reverse mapping input order": true,
+    "chosen child notes retained": true,
+    "unknown source fields retained": true,
+    "recorded completion date and version stay exact": true,
+    "new source gets explicit unused identity": true,
+    "new source keeps original completion date": true,
+    "new source receives fresh zero version": true,
+    "new source cohort is UUID": true,
+    "null child shape retained": true,
+    "only new history cohort requires a reset": true,
+    "retired reference remains an explicit plan decision": true,
+    "new identity count explicit": true,
+    "deterministic full plan": true,
+    "mapping order cannot lose already-mapped descendants": true,
+    "selected reopen state retained": true,
+    "selected state starts a different completion cohort": true,
+    "recorded date is not fabricated onto selected open state": true,
+    "explicit lifecycle reset reported": true,
+    "missing node mapping refused": true,
+    "duplicate source mapping refused": true,
+    "two sources cannot take the same prior history": true,
+    "stale existing incarnation refused": true,
+    "new identity cannot reuse existing history": true,
+    "new identity cannot reuse retired history": true,
+    "new identity cannot reuse an older deleted reference": true,
+    "NFC aliases cannot inherit another subject history": true,
+    "new identity cannot claim a retained lifecycle": true,
+    "replacement tree injection refused": true,
+    "unmentioned recorded subject cannot disappear": true,
+    "still-selected history cannot also retire": true,
+    "retired incarnation must be current": true,
+    "unknown retirement consent refused": true,
+    "unknown overall choice fields refused": true,
+    "selected foreign recipient refused": true,
+    "recorded recipient choice does not import selected foreign recipient": true,
+    "caller-supplied eligible directory retained for internal planner": true,
+    "unresolved selected recurrence lineage refused": true,
+    "recorded lineage does not silently import selected relationship": true,
+    "selected historical timestamp is not redated": true,
+    "old completion version cannot authorize restored state": true,
+    "another root record cannot supply an identity": true,
+    "large exact integer retained by planning": true,
+    "numeric scale retained by planning": true,
+    "distinct Unicode metadata keys retained": true,
+    "anon has no mapping helper privilege": true,
+    "authenticated has no mapping helper privilege": true,
+    "service_role has no mapping helper privilege": true,
+    "existing raw Unicode reference spelling survives explicit binding": true,
+    "two new NFC aliases cannot become separate identities": true,
+    "an explicitly empty selection retains empty shape": true,
+    "an explicitly null selection retains null shape": true,
+    "all discarded current identities require explicit retirement": true,
+    "new recurring identity cannot silently retain unrelated lineage": true,
+    "duplicate supplied stored identity is ambiguous": true,
+    "stored raw ID must identify its canonical record": true,
+    "stored fields cannot inject another tree": true,
+    "duplicate selected source must be repaired first": true,
+    "oversized consent is refused before planning": true,
+    "unsupported mapping protocol refused": true,
+    "null trusted recipient entry cannot admit a foreign recipient": true,
+    "null trusted history entry is refused": true,
+    "all original persisted data still unchanged": true,
+    "no new advisor findings": true
+  },
+  "candidateSHA256": "ddf413624e19aab8b74634903f962f07e30e08d4803bf3ef940c68f5f01160cf",
+  "testSHA256": "78a973b71893f44ae6887d2ff3ba365b6a72b52fef0d7c3f32404e7bb845f906",
+  "fixtureRemoved": true,
+  "deployed": false,
+  "baselineAdvisorFindings": [
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+    }
+  ],
+  "finalAdvisorFindings": [
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+    }
+  ],
+  "remaining": [
+    "Caller-authorized snapshot-bound preview and atomic apply",
+    "Complete immutable originals and neutral reconciliation audit without new productivity credit",
+    "Durable native mapping review, recovery and acceptance",
+    "Ambiguous recurrence lineage",
+    "Exact editable caches and shared file/discussion/archive custody"
+  ]
+}

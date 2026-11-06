@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-27",
+  "functionalNativeCasesPassed": 4,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "runtimeWarningCount": 4,
+  "strictRuntimeAccepted": false,
+  "functionalVerifier": "Passed only with explicit --allow-runtime-warnings; strict verifier rejects warnings",
+  "localCoreCasesPassed": 15,
+  "nativePlatform": "macOS signed isolated debug host",
+  "unchangedIOSImplementation": true,
+  "scenarios": [
+    "testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry",
+    "testMacNotesFormattingCancelPreservesWholeWorkspace",
+    "testMacNotesSelectionPreviewApplyUndoAndColdReturn",
+    "testMacNotesStaleApplyPreservesNewerSavedNote"
+  ],
+  "scope": "Existing personal task notes in light/standard local workspace. Concurrent note change simulated through real Store. Production inspector/formatter/Save/Undo/relaunch exercised.",
+  "remaining": [
+    "Inspector-opening runtime priority-inversion warnings; origin unresolved",
+    "VoiceOver and broader text/layout acceptance",
+    "Workspace/access changes and genuine cloud concurrency",
+    "New pinned-note creation variants",
+    "Full rank 3 and wider backlog"
+  ],
+  "data": "Only scoped synthetic workspace. No Supabase service/schema/account mutation. No production rollout change.",
+  "completeSnapshotPreservation": "Final native round additionally compares the complete persisted snapshot for Cancel, failed Apply, stale Apply and stale recovery cold return, including queues/widget metadata.",
+  "acceptedResultBundle": "/tmp/taskfold-mac-notes-cache.xcresult"
+}

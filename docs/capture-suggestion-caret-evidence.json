@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native quick-capture suggestion caret preservation; independently owned iOS/macOS views, unchanged parser and persistence contracts.",
+  "reproduction": {
+    "platform": "macOS native local test app",
+    "steps": [
+      "Type Suggestion review Mac 11Oct ~25m !",
+      "Press Down then Return to accept !30m.",
+      "Type a space and follow-up."
+    ],
+    "before": "Caret remains inside inserted token: Suggestion review Mac 11Oct ~25m ! follow-up30m; reminder chip disappears. No broken draft submitted.",
+    "after": "Caret follows inserted token and space; following text leaves !30m intact and the suggestion menu closes."
+  },
+  "implementation": "Apply the computed TextSelection asynchronously on the main queue after the native text update. Guard the captured result against a changed draft before moving the caret. Each repo owns its implementation.",
+  "sourceSHA256": {
+    "TasskFold-MacOS/Taskfold/Views/TaskListView.swift": "dd7396ead6f1c23e47f84f253867a50e8c5d16528acaf4b3dc7686fc4eec664a",
+    "TaskFold-iOS/Taskfold/Views/QuickAdd.swift": "821738537df19521d3288a2d8cf21f1a109c4909ef389c1a053722a393b021e4",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "d24103647bfc78cf05be896c86d7db3e241a176f5396e300aad329be6c51514e"
+  },
+  "mac": {
+    "build": "capture-caret-mac-build-v1.log: TEST BUILD SUCCEEDED; app-only ad-hoc diagnostic build.",
+    "execution": "CUA native keyboard/mouse, accessibility tree, inline inspected captures and persisted cache comparisons. No Mac XCTest pass claimed.",
+    "checks": [
+      "Down/Return selects !30m, following typing yields Caret reminder Mac 11Oct ~25m !30m follow-up.",
+      "Return submits one task with correct clean title, 25-minute estimate and one explicit absolute reminder.",
+      "Normal quit/relaunch, exact task opens through Return; native Reminders editor retains fixed instant 11 Oct 2026 at 16.12. Delivery remains off.",
+      "Mouse-select quoted Client Work project, type follow-up: complete quoted token remains intact, destination and project chip remain Client Work. Escape discards this draft."
+    ],
+    "preservation": {
+      "preexistingRecordsUnchanged": true,
+      "changedPreexistingRecords": [],
+      "pending": 0,
+      "newLocalTask": "aa552065-56df-401f-a32d-ed459f20e0a0",
+      "estimate": 25,
+      "absoluteReminders": 1,
+      "fullTaskUnchangedAfterRelaunch": true
+    },
+    "retainedFixture": "One new synthetic local task retained for future tests; all preexisting records unchanged."
+  },
+  "nativeIOS": {
+    "phone": {
+      "resultBundle": "capture-caret-phone-v1.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 67.982,
+      "runtimeWarnings": []
+    },
+    "tablet": {
+      "resultBundle": "capture-caret-tablet-v1.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 70.586,
+      "runtimeWarnings": []
+    },
+    "coverage": "Normal/light and accessibility XXXL/dark on iPhone 17 Pro and iPad Pro 11-inch M5, iOS 26.5 Simulators: choose real suggestion, type suffix, assert exact raw field, one reminder chip, save, terminate/relaunch, open exact retained title. Final local snapshots independently retain estimate 25, exactly one explicit absolute reminder and empty pending queues.",
+    "signing": "capture-caret-ios-signing-v1.json: strict real development team signatures and preserved app/group identities.",
+    "build": "capture-caret-ios-build-v1.log: TEST BUILD SUCCEEDED.",
+    "captures": [
+      "docs/capture-caret-previews/phone-saved-title-estimate.png",
+      "docs/capture-caret-previews/phone-largest-saved-title.png"
+    ],
+    "captureLimits": "Four phone captures inspected; retained two final saved-editor captures. Earlier capture snapshots caught keyboard dismissal animation and do not prove unobscured controls. No iPad capture visually inspected.",
+    "phoneOriginalCloudReturn": {
+      "resultBundle": "capture-caret-cloud-return-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "preservation": {
+        "sharedTablesCompared": 14,
+        "changedTables": [],
+        "pending": 0
+      }
+    },
+    "tabletIsolation": "Primary tablet app had only local/ui-testing snapshots and no original cloud snapshot before this run. Tests remain in disposable local fixture; secondary cloud app untouched."
+  },
+  "remaining": [
+    "Unfiltered clipping warnings and full VoiceOver/keyboard acceptance remain open; no warning suppression or layout-clearance claim.",
+    "Native authenticated Mac attachment handoff is still pending the existing cloud app Keychain approval. Process was not restarted after observation timeout.",
+    "Actual Focus notification Open, remaining widget hosts, external providers, lost real save-response recovery and distribution/provider signing gates remain open. Full P0 objective remains active."
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "Taskfold/Core/TaskActivity.swift": "8e0ca0d8fec3aabff3a7f203afd158200156a308a1ffcf2c11dc7799c0bfa4ae",
+  "Taskfold/Core/Store.swift": "ed8ae4a3f8f74271d958e964f6b66a5d3014a9577a3b3ff5131fa8700c69bfef",
+  "Taskfold/Views/ProjectPulseView.swift": "ec8bf9846b98277597ce406d8ec073994fba4f2476f8ab12b883ec5f46b2dd36",
+  "TaskfoldTests/TaskOrderActivityTests.swift": "55edba44aaca40d78255cb0622bb4364449c4a108d4674e095f663d398ba8a2e",
+  "TaskfoldTests/Fixtures/child-order-activity-v3.json": "836eee3d53e86eb4c1922dee8ea517f258b04a562ca5ecc7c59eddfa284937ef",
+  "Scripts/Database/test-child-order-activity.mjs": "c91425150170707ba6f0934fe1d6a2f2c9bd8d4f1fd8b2f79718048e1a6d7639",
+  "Scripts/verify_child_order_activity_snapshot.py": "955fe2f18b6e427d6d78ff0441f09153b69a51235b5a3e1c87c1d19abe6e751d",
+  "supabase/migrations/20261101041509_child_order_activity.sql": "521f9b92ece30c56f9ace24d49bbc756104cae2fe26a65dbfe0dd1d923bf827e"
+}

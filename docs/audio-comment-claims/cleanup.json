@@ -1,0 +1,60 @@
+{
+  "closedOwnedProcesses": [],
+  "simulatorsShutDown": [
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "ECE507C1-5704-4243-A7F7-232BF745FDB8"
+  ],
+  "removed": [
+    {
+      "path": "/tmp/taskfold-audio-save-mac-final.xcresult",
+      "allocatedBytesBeforeRemoval": 5124096
+    },
+    {
+      "path": "/tmp/taskfold-audio-save-phone-final.xcresult",
+      "allocatedBytesBeforeRemoval": 4907008
+    },
+    {
+      "path": "/tmp/taskfold-audio-save-ipad-final.xcresult",
+      "allocatedBytesBeforeRemoval": 4710400
+    },
+    {
+      "path": "/tmp/taskfold-audio-claims-mac.xcresult",
+      "allocatedBytesBeforeRemoval": 5935104
+    },
+    {
+      "path": "/tmp/taskfold-audio-claims-phone.xcresult",
+      "allocatedBytesBeforeRemoval": 98033664
+    },
+    {
+      "path": "/tmp/taskfold-audio-claims-ipad.xcresult",
+      "allocatedBytesBeforeRemoval": 75247616
+    },
+    {
+      "path": "/tmp/taskfold-audio-claims-polish-mac.xcresult",
+      "allocatedBytesBeforeRemoval": 1814528
+    },
+    {
+      "path": "/tmp/taskfold-audio-claims-mac-captures",
+      "allocatedBytesBeforeRemoval": 4370432
+    },
+    {
+      "path": "/tmp/taskfold-audio-claims-polish-mac-captures",
+      "allocatedBytesBeforeRemoval": 1159168
+    },
+    {
+      "path": "/tmp/taskfold-audio-claims-final-mac-captures",
+      "allocatedBytesBeforeRemoval": 4345856
+    },
+    {
+      "path": "/tmp/taskfold-audio-claims-final-phone-captures",
+      "allocatedBytesBeforeRemoval": 3571712
+    },
+    {
+      "path": "/tmp/taskfold-audio-claims-final-ipad-captures",
+      "allocatedBytesBeforeRemoval": 3158016
+    }
+  ],
+  "allocatedBytesBeforeRemoval": 212377600,
+  "retained": "Final claims xcresults, current signed hosts/builds and reused Core caches. Initial failure summaries/logs and selected final captures are saved in repo evidence.",
+  "measurement": "Allocated-before-removal accounting; not guaranteed physical free space."
+}

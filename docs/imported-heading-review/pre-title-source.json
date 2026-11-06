@@ -1,0 +1,4 @@
+{
+  "viewSHA256": "e0fbe54441f861939a31a5ba2ac5622e2ce0f7acd7ad05aeea854775bd1a6d6b",
+  "note": "Accepted phone/iPad runs before the adaptive accessibility-size navigation title. Core/editor behavior is unchanged by the later title-only patch."
+}

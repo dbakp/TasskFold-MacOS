@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-26",
+  "logicalBytesRemoved": 1284258908,
+  "ownedPrefixRemoved": "/tmp/taskfold-type-life-*",
+  "databaseContainersRemoved": true,
+  "nativeAppsLaunched": false,
+  "retained": "Repository build caches and earlier signed Mac harness; no real task data touched."
+}

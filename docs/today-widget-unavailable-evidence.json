@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-12",
+  "scope": "Owned Today view unavailable-state correction; rendered SwiftUI previews and widget target builds, not installed-host acceptance",
+  "change": "No shared snapshot now shows \u2014, Open Taskfold and Refresh your tasks, instead of 0 and All clear. Loaded empty/task states retain existing behavior. iOS accessory families receive equivalent unavailable wording.",
+  "sourceHashes": {
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "6d3056ea05c45e7418f00ce1d5f885fa8e897e7ab4785c914444fbc29ebcdec4",
+    "Scripts/render_today_widget_states.py": "3284a195a3dd4deb5ce701b2d95e7e49ed3457377fa92eaf9ce1501b8b309224"
+  },
+  "rendererCommand": "python3 Scripts/render_today_widget_states.py --output <directory>",
+  "renderMethod": "Actual owned TodayWidgetView via ImageRenderer; Link labels wrapped; small/medium/large and light/dark. Container backgrounds simulated. Final source differs from captured source only in footer whitespace formatting.",
+  "inspectedCorrectedUnavailable": [
+    "light: small, medium, large",
+    "dark: small, medium, large"
+  ],
+  "unchangedImagesByteEqual": [
+    "empty-light",
+    "empty-dark",
+    "ready-light",
+    "ready-dark"
+  ],
+  "builds": [
+    {
+      "log": "today-state-mac-debug-v2.log",
+      "sha256": "f165d0093f6c667d3c064d69366c6f95f85c0252a18fe8c2b63a76f075af8cde",
+      "result": "BUILD SUCCEEDED",
+      "scope": "Unsigned owned macOS widget target"
+    },
+    {
+      "log": "today-state-mac-release-v2.log",
+      "sha256": "62475c07257b2d80a610a4173b2643bf5c47b00cc50b49e41a993996eadd067d",
+      "result": "BUILD SUCCEEDED",
+      "scope": "Unsigned owned macOS widget target"
+    }
+  ],
+  "imageSHA256": {
+    "before-ready-dark.png": "ae584b8e461da099622e1f880c4c73ef6c8e40d1c5c9391d3e5d6865615b88e4",
+    "before-unavailable-light.png": "180d4929d4170eefa830d471fa153bc5611631d4478ca442c963c47bc8d64f53",
+    "before-ready-light.png": "2bb756899cfaa6f8648f1f16c32b0529d18cea0e72a48eb77f38c97a92fe65d3",
+    "before-empty-light.png": "3762e99b2779e8fb32144d08a5b1c601ee9cd979f982caaad4cf12473d99d758",
+    "before-empty-dark.png": "838e7d66ccafcbb49213b1304709eaf87385b7e2d6d38d32b3735105e7039b41",
+    "before-unavailable-dark.png": "d8ccc4269ae0b66d791fea14be6e1e6d0319f14fd07067e075561d1111e6f1be",
+    "after-ready-dark.png": "ae584b8e461da099622e1f880c4c73ef6c8e40d1c5c9391d3e5d6865615b88e4",
+    "after-unavailable-light.png": "7efb219d7c7bb45e9bc25938ccb0ad6eb6cbb136c7ccbd7eedd8bda48b01f279",
+    "after-ready-light.png": "2bb756899cfaa6f8648f1f16c32b0529d18cea0e72a48eb77f38c97a92fe65d3",
+    "after-empty-light.png": "3762e99b2779e8fb32144d08a5b1c601ee9cd979f982caaad4cf12473d99d758",
+    "after-empty-dark.png": "838e7d66ccafcbb49213b1304709eaf87385b7e2d6d38d32b3735105e7039b41",
+    "after-unavailable-dark.png": "97fe41b3bc082080d44524895c2f0d3c29331a2af53fc9c28a2469a2225fbcec"
+  },
+  "notAccepted": [
+    "Native installed-host unavailable visuals",
+    "iOS accessory rendered layout",
+    "System privacy/tint and distribution",
+    "Native Mac host currently built before this Today source fix"
+  ]
+}

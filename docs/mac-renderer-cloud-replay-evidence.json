@@ -1,0 +1,121 @@
+{
+  "date": "2026-10-13",
+  "scope": "Original imported authenticated owner on repaired Mac renderer: fresh sign-in/startup/native relaunch, then normal OS-launched original backup preview/Cancel/Quit/relaunch/repeat. Read-only cloud data.",
+  "shippingAppSourceBase": "d9e8a90",
+  "nativeTest": "testImportedWorkspaceStartupAndOpenSettingsRelaunchReadOnly",
+  "nativeTestSourceSHA256": "64634027f9d987c7e3b2803a64ccdc57a3cd01aa60ff6a797a8e9cd398f485b0",
+  "nativeResults": [
+    {
+      "result": "mac-renderer-imported-runtime-v1.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "strictVerifier": "Rejected: failed sign-in readiness assertion"
+    },
+    {
+      "result": "mac-renderer-imported-runtime-v2.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "strictVerifier": "Passed"
+    }
+  ],
+  "driverChange": "Use the existing Dock-style reopen helper after both XCTest launches. Retain every sign-in, cloud load, Account, relaunch and cache-table assertion; keep OS restoration enabled. Initial failed authEmail wait does not prove its underlying cause.",
+  "nativeAcceptedScope": {
+    "freshSignInToGuardedOriginalDisposableOwner": true,
+    "tasks": 256,
+    "cachedTablesCompared": 14,
+    "AccountDuringInitialCloudLoading": true,
+    "settingsLeftOpenAtQuit": true,
+    "AccountCheckedAfterRelaunch": true,
+    "automaticAccountRestorationClaimed": false,
+    "nativeWindowScreenshotsRetainedInResult": true
+  },
+  "normalCUAJourney": {
+    "processes": 2,
+    "fixtureAuthOrSeedFlags": false,
+    "normalSettingsOverrides": [
+      "-localMode NO",
+      "-onboardingSeen YES",
+      "-dailyBackups.<isolated-owner> NO"
+    ],
+    "originalBackupSHA256": "73b27927f4c8dde6df061da2dd072b483b330c8b015c98148dba9b3278a7191a",
+    "bothNativePickerSelectionsObserved": true,
+    "bothPreviews": {
+      "add": 0,
+      "update": 0,
+      "keep": 14,
+      "policy": "Keep current edits",
+      "restoreDisabled": true,
+      "cancelVisibleReachableAndObserved": true
+    },
+    "firstPreviewScreenshotInspectedInConversation": true,
+    "normalQuitAndProcessExitVerifiedTwice": true,
+    "wholeCacheExactlyUnchangedAcrossBothReviewsAndRelaunch": true,
+    "wholeCacheSHA256Before": "7d153d781a9be82cfea2f837ad47db12d6f6cfbe6805cfac9c4c32e0c0544492",
+    "AccountReopenedExplicitlyAfterRelaunch": true
+  },
+  "runtime": {
+    "logs": [
+      {
+        "log": "taskfold-renderer-cloud-replay-cua-v1.log",
+        "sha256": "dc28641d4fae440fdb77987995d4bb11379ed2e051deb97193f0b4f2aaad6d6e",
+        "beforeCUA": {
+          "attributeGraphCycles": 0,
+          "tableReentryWarnings": 1
+        },
+        "afterMainAXSettingsPreviewCancelQuit": {
+          "attributeGraphCycles": 0,
+          "tableReentryWarnings": 1
+        }
+      },
+      {
+        "log": "taskfold-renderer-cloud-replay-cua-v2.log",
+        "sha256": "5493b7ab313194625588b67e7fb00aa1f2f3e221f20a673c4c2f2bcc3c8b231c",
+        "beforeCUA": {
+          "attributeGraphCycles": 0,
+          "tableReentryWarnings": 1
+        },
+        "afterMainAXSettingsPreviewCancelQuit": {
+          "attributeGraphCycles": 0,
+          "tableReentryWarnings": 1
+        }
+      }
+    ],
+    "assessment": "Original authenticated full-tree/Settings/repeat-preview path now adds zero AttributeGraph cycles in both normal processes. One table warning is already present before CUA in each and no additional warnings appear through the preview and cancellation. Framework-only table reproduction remains documented separately; these CUA processes are not claimed warning-free."
+  },
+  "server": {
+    "tablesExactlyUnchanged": 15,
+    "counts": {
+      "favorites": 0,
+      "focus_sessions": 1,
+      "import_sources": 368,
+      "labels": 6,
+      "profiles": 1,
+      "project_collaborators": 0,
+      "projects": 24,
+      "reminder_preferences": 0,
+      "saved_views": 1,
+      "sections": 89,
+      "task_activity": 258,
+      "task_activity_epoch": 1,
+      "tasks": 256,
+      "view_orders": 3,
+      "view_preferences": 5
+    },
+    "matchesRetainedOriginalBaseline": true,
+    "noTodoistImportOrSourceMutationInvoked": true
+  },
+  "preservation": {
+    "currentMacSwiftFilesMatchedNamespaceOnly": 62,
+    "originalIsolatedFilesRestoredExact": 28,
+    "otherProtectedFilesExact": 100,
+    "phoneFixtureFilesExact": 36,
+    "pendingWidgetDataExact": true,
+    "extraAuthenticatedAppClosed": true
+  },
+  "remaining": "Broader widget privacy/expiry/routes, spoken/provider and continuity acceptance remain open. Table/QoS diagnostics remain separately documented. Release signing stays user-deferred; this receipt does not establish APNs or distribution.",
+  "platformOwnership": "Native test adjustment belongs only to Mac. iOS receives bounded cross-platform acceptance notes, with no sibling source/build dependency."
+}

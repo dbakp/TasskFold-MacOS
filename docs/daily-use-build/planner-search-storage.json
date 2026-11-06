@@ -1,0 +1,81 @@
+{
+  "freeBeforeBytes": 69435703296,
+  "removed": [
+    {
+      "name": "taskfold-planner-search-ios-native-v1.xcresult",
+      "allocatedBytes": 20434944
+    },
+    {
+      "name": "taskfold-planner-search-ios-native-v2.xcresult",
+      "allocatedBytes": 41734144
+    },
+    {
+      "name": "taskfold-planner-search-ios-native-v3.xcresult",
+      "allocatedBytes": 1024000
+    },
+    {
+      "name": "taskfold-planner-search-v3-shots",
+      "allocatedBytes": 253952
+    },
+    {
+      "name": "taskfold-planner-conflict-ios-native-v3.xcresult",
+      "allocatedBytes": 770048
+    },
+    {
+      "name": "taskfold-planner-conflict-v3-shots",
+      "allocatedBytes": 225280
+    },
+    {
+      "name": "taskfold-planner-large-ios-native-v3.xcresult",
+      "allocatedBytes": 1355776
+    },
+    {
+      "name": "taskfold-planner-large-v3-shots",
+      "allocatedBytes": 876544
+    },
+    {
+      "name": "taskfold-planner-search-v1-failure",
+      "allocatedBytes": 19939328
+    },
+    {
+      "name": "taskfold-planner-search-ios-native-v2.log",
+      "allocatedBytes": 6295552
+    },
+    {
+      "name": "taskfold-approved-updates-14-30-xyl7sjt3",
+      "allocatedBytes": 400695296
+    }
+  ],
+  "retained": "Approved Mac14/phone30 and one rollback archives, actual private app-data backups, final native results and concise earlier outcomes/images. No live installed apps or real task data removed.",
+  "freeAfterBytes": 69795979264,
+  "removedAllocatedBytes": 493604864,
+  "boundedCacheAudit": {
+    "apply": true,
+    "freeBeforeBytes": 69431246848,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 423481344
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 486645760
+      }
+    ],
+    "freeAfterBytes": 69431410688,
+    "actualFreeChangeBytes": 163840
+  },
+  "coreCaches": [
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 579887104
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 532582400
+    }
+  ]
+}

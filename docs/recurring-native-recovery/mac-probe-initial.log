@@ -1,0 +1,65 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-mac-recovery-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedSingleViewerColdRecovery" -resultBundlePath /tmp/taskfold-recurring-recovery-mac-probe.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-recurring-recovery-mac-probe.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-25 18:27:28.671658+0100 TaskfoldUITests-Runner[52456:20441825] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-25 18:27:28.756.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-25 18:27:28.756.
+Test Suite 'TeamCompletionRecoveryMacUITests' started at 2026-10-25 18:27:28.756.
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedSingleViewerColdRecovery]' started.
+    t =     0.00s Start Test at 2026-10-25 18:27:28.757
+    t =     0.48s Set Up
+    t =     0.49s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.49s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:27:29.504 xcodebuild[52445:20441573] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:27:29.504 xcodebuild[52445:20441573] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.92s         Wait for accessibility to load
+    t =     3.29s         Setting up automation session
+    t =     3.32s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.33s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.33s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.35s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.36s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =     4.40s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     4.40s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     4.58s Get number of matches for: Descendants matching type Window
+    t =     4.62s Click "openMacCompletionRecovery" Button
+    t =     4.62s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.63s     Find the "openMacCompletionRecovery" Button
+    t =     4.71s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     4.72s     Synthesize event
+    t =     5.22s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.26s Waiting 12.0s for "continueTeamCompletionReview" Button to exist
+    t =     6.30s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =     6.30s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =     6.43s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:52469
+2026-10-25 18:27:36.414546+0100 TaskfoldUITests-Runner[52456:20441825] [Default] Exception attempting to serialize sanitized error of issue. All userInfo with be discarded except localized description: NSInvalidUnarchiveOperationException: The data couldn’t be read because it isn’t in the correct format.
+/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:3372: error: -[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedSingleViewerColdRecovery] : failed: caught error: "Error Domain=NSCocoaErrorDomain Code=260 "The file “ec240000-0000-4000-8000-000000000001.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner/Data/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ec240000-0000-4000-8000-000000000001.json, NSURL=file:///Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner/Data/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application%20Support/Taskfold/ec240000-0000-4000-8000-000000000001.json, NSUnderlyingError=0x99a8984e0 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}"
+    t =     7.66s Tear Down
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedSingleViewerColdRecovery]' failed (8.055 seconds).
+Test Suite 'TeamCompletionRecoveryMacUITests' failed at 2026-10-25 18:27:36.813.
+	 Executed 1 test, with 1 failure (1 unexpected) in 8.055 (8.056) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-25 18:27:36.814.
+	 Executed 1 test, with 1 failure (1 unexpected) in 8.055 (8.057) seconds
+Test Suite 'Selected tests' failed at 2026-10-25 18:27:36.815.
+	 Executed 1 test, with 1 failure (1 unexpected) in 8.055 (8.059) seconds
+2026-10-25 18:27:48.436 xcodebuild[52445:20441573] [MT] IDETestOperationsObserverDebug: 21.103 elapsed -- Testing started completed.
+2026-10-25 18:27:48.436 xcodebuild[52445:20441573] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-25 18:27:48.436 xcodebuild[52445:20441573] [MT] IDETestOperationsObserverDebug: 21.103 sec, +21.103 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-recurring-recovery-mac-probe.xcresult
+
+Failing tests:
+	TeamCompletionRecoveryMacUITests.testRecordedSingleViewerColdRecovery()
+
+** TEST EXECUTE FAILED **
+
+Testing started

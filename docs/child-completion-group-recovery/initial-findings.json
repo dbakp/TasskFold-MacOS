@@ -1,0 +1,15 @@
+{
+  "runtimeFinding": {
+    "phase": "mac-v1",
+    "executed": 28,
+    "passed": 27,
+    "failed": 1,
+    "finding": "Real PostgreSQL fixture reverses Undo member order, so ordered parent pairing refused a valid whole-group inverse",
+    "fix": "Resolve parent membership by original request identity, retain exact per-member body/proof checks, and refuse partial or stitched parent sets"
+  },
+  "sourceReviewFinding": {
+    "finding": "Capacity pruning could remove the old owner of a reused member ID before whole-state uniqueness validation",
+    "fix": "Refuse already reserved member IDs before retention in both enqueue and reviewed replacement",
+    "regression": "testGroupMemberReuseIsRefusedBeforeSettledHistoryCanBePruned"
+  }
+}

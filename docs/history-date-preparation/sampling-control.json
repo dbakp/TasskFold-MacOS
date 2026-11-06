@@ -1,0 +1,51 @@
+{
+  "sampled": {
+    "result": "Passed",
+    "totalTestCount": 1,
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "expectedFailures": 0,
+    "runtimeWarnings": [],
+    "startTime": 1793084581.384,
+    "finishTime": 1793084608.256
+  },
+  "firstCaptureMissedPID": {
+    "result": "Passed",
+    "totalTestCount": 1,
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "expectedFailures": 0,
+    "runtimeWarnings": [],
+    "startTime": 1793084502.888,
+    "finishTime": 1793084529.428
+  },
+  "note": "First capture helper missed the PID; its underlying app case passed. Corrected scoped capture succeeded. Sample timing includes overhead and is not the comparison baseline.",
+  "sampling": {
+    "command": [
+      "xcodebuild",
+      "test-without-building",
+      "-xctestrun",
+      "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+      "-destination",
+      "platform=macOS,arch=arm64",
+      "-parallel-testing-enabled",
+      "NO",
+      "-collect-test-diagnostics",
+      "never",
+      "-resultBundlePath",
+      "/tmp/taskfold-history-format-sampled.xcresult",
+      "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce"
+    ],
+    "started": 1793084580.532779,
+    "finished": 1793084608.495299,
+    "returncode": 0,
+    "sampling": {
+      "returncode": 0,
+      "pid": "42476",
+      "stderr": "Sampling process 42476 for 3 seconds with 10 milliseconds of run time between samples\nSampling completed, processing symbols...\nSample analysis of process 42476 written to file /tmp/taskfold-history-format-control.sample.txt\n"
+    },
+    "note": "Sampling adds overhead; do not use this save time for comparison."
+  }
+}

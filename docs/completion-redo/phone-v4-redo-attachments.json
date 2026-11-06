@@ -1,0 +1,214 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "1ECCFD30-6C6F-4C67-BD0B-FFFB2C240F37.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "App UI hierarchy for com.dbakp.taskfold_0_02CF781C-996A-4EB6-9247-560817ABACF2.workflowteststeameditbridge",
+        "timestamp" : 1793431751.337
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "682F91DA-66BA-4350-9927-1DF2C17B833C",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "UI Snapshot 2026-10-31 at 08.29.11 AM",
+        "timestamp" : 1793431751.337
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "4877DBB0-6DFC-4B89-8A66-C77597CFCD91.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_5768D916-61A9-4A4C-A5E4-3CC367398DF2.txt",
+        "timestamp" : 1793431751.181
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "B79CF627-9F64-4F7F-9502-304A204EB225.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_8BD2E53A-72A9-4C3B-B755-5F5C06BF3FB6.txt",
+        "timestamp" : 1793431750.241
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "46D4AB69-5533-45C5-BC8A-67C4AEAAF2A0.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_825B0709-D1CA-477E-9AB8-8C2C3FA77953.txt",
+        "timestamp" : 1793431749.245
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "C8F46DAC-F80E-4D81-849D-D735FF760282.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_40C4E069-5C68-455E-BA3E-CD0F1E9856B6.txt",
+        "timestamp" : 1793431748.238
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "E0117881-0DDD-4E7F-991E-9141EE2DBAE9.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_30515440-53D9-4CBB-9F7D-49E2B033B732.txt",
+        "timestamp" : 1793431747.228
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "29C4F90E-7984-480D-BB61-4CF23043722F.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_A7D93DF5-95F7-4F81-B66C-455A1F5E42E7.txt",
+        "timestamp" : 1793431746.211
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "E9938F57-67BF-4527-9C23-5E34ABC2F39E.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_CB79A203-D3FC-4A23-95D6-DD909D607E9E.txt",
+        "timestamp" : 1793431745.214
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "02E7964B-8E12-444B-80DD-E181530FBE6C.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_C620D76E-FD16-4690-B13A-457338252D66.txt",
+        "timestamp" : 1793431744.19
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "E09FD215-467B-47CD-A596-4799D957CED2.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_CFBBEA0E-0B3D-4C6A-8B5B-B5850C2E8748.txt",
+        "timestamp" : 1793431743.268
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "E9C907D7-D12F-4909-92FE-559E7DDE3766.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"Redo\" Button`_0_290B9E93-5115-442D-922C-7E76411B3836.txt",
+        "timestamp" : 1793431742.262
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "4F3B5787-82C3-4AFE-B62B-50C704820B4F",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-31 at 08.29.00 AM",
+        "timestamp" : 1793431740.433
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "69C21E66-149E-4AB4-B4C8-2DD9A2D3F7E0",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-31 at 08.28.56 AM",
+        "timestamp" : 1793431736.563
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "6184164C-03AF-4434-90E0-5A485F9FCC39",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-31 at 08.28.52 AM",
+        "timestamp" : 1793431732.588
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "F1127204-3F58-42B6-83A9-D9FF732AD8C8",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-31 at 08.28.49 AM",
+        "timestamp" : 1793431729.657
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "0886A579-7943-48A6-97A8-19174193CFA0",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-31 at 08.28.46 AM",
+        "timestamp" : 1793431726.938
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "D9EC42F1-766F-41B4-8DBE-ACEF7AF70416",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-31 at 08.28.42 AM",
+        "timestamp" : 1793431722.104
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "3B09DEE4-95BC-4586-99E9-017A1FF126D7",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-31 at 08.28.36 AM",
+        "timestamp" : 1793431716.138
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "7875631F-6A66-436E-871D-84FE2D88FFD5",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-31 at 08.28.32 AM",
+        "timestamp" : 1793431712.372
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "3BF8B975-7978-4D20-B1BE-71921D073B27",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-31 at 08.28.29 AM",
+        "timestamp" : 1793431709.332
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "B25B6491-5F06-4E96-BC61-54DC42154B16.mp4",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Screen Recording 2026-10-31 at 08.28.13 AM.mp4",
+        "timestamp" : 1793431693.093
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "E5D361AC-44B3-466A-9A2D-E765234F7663.txt",
+        "isAssociatedWithFailure" : true,
+        "suggestedHumanReadableName" : "Complete Issue Description.txt"
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testMixedSelectionNativeUndoRedoUndoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testMixedSelectionNativeUndoRedoUndoAndColdReturn"
+  }
+]

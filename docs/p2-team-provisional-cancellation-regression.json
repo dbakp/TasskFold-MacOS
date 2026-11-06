@@ -1,0 +1,207 @@
+{
+  "checks": {
+    "cancel defaults closed": true,
+    "outsider cannot cancel": true,
+    "anon cannot cancel": true,
+    "service_role cannot cancel": true,
+    "expired session cannot cancel": true,
+    "cancel unrecorded action": true,
+    "durable cancelled state": true,
+    "no fabricated completion receipt": true,
+    "source unchanged": true,
+    "next occurrence not created": true,
+    "no completion counters changed": true,
+    "nonce reserved in shared namespace": true,
+    "no completion receipt": true,
+    "repeated cancellation": true,
+    "cancel exact retry": true,
+    "read durable cancellation": true,
+    "cancel recoverable through read": true,
+    "ordinary edit cannot reuse cancelled nonce": true,
+    "lifecycle cannot reuse cancelled nonce": true,
+    "old completion cannot apply": true,
+    "old completion preserves source": true,
+    "old completion cannot clone": true,
+    "changed payload cannot inspect cancellation": true,
+    "changed payload cannot cancel same nonce": true,
+    "another actor cannot cancel same nonce": true,
+    "already completed setup": true,
+    "cannot cancel recorded action": true,
+    "recorded action returned": true,
+    "recorded receipt preserved": true,
+    "Undo cancellation": true,
+    "cancel pending Undo": true,
+    "cancelled Undo cannot reopen": true,
+    "completed root remains completed": true,
+    "fresh intentional completion allowed": true,
+    "old cancelled request remains fenced": true,
+    "fresh completion owns next": true,
+    "viewer cancellation": true,
+    "viewer may cancel own unsent intent": true,
+    "viewer cancellation is durable": true,
+    "cancel with edits paused": true,
+    "edit pause permits own cancellation": true,
+    "read pause denies cancellation": true,
+    "waited recorded result": true,
+    "completion wins concurrent cancellation": true,
+    "cancellation wins concurrent completion": true,
+    "concurrent cancellation leaves root open": true,
+    "no concurrent successor": true,
+    "interrupted cancellation fails": true,
+    "interrupted cancellation rolls back nonce": true,
+    "completion still allowed after failed cancellation": true,
+    "permission rechecked after wait": true,
+    "denied cancellation reserves nothing": true,
+    "actor removal setup": true,
+    "actor removal purges cancellation": true,
+    "revoked actor cannot reuse request": true,
+    "private table has no client grants": true,
+    "private table has RLS": true,
+    "no task scopes leaked": true,
+    "team deletion purges cancellations": true,
+    "team deletion purges cancelled headers": true,
+    "no new advisor warnings": true
+  },
+  "deployed": false,
+  "realDataChanged": false,
+  "nativeTeamUIEnabled": false,
+  "reviewMigrationSHA256": "06ec6579335ffc74e70947305679c0913adaef6145b9e99a2e541e8958903729",
+  "cancellationMigrationSHA256": "7148ee558cbdf952b9b44ecd1627a97293eb8748a2ef90495cbe74a051b4c058",
+  "rebaseMigrationSHA256": "a713ce29af6b3cc946f5ca7471638254e62ea837567b9ee4d7cf2d2de122276a",
+  "retirementMigrationSHA256": "924917186b1bf3e787a6aee721bc02e1492422db4f302e40d47f231d9c90dc73",
+  "completionMigrationSHA256": "e7584b94e6e0638b9bafdb7a118f86d452225291b12b04342e7dc1a9361c6ed5",
+  "advisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+      }
+    ]
+  },
+  "containerRemoved": true,
+  "checkCount": 61
+}

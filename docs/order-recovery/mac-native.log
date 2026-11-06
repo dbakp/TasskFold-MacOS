@@ -1,0 +1,478 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-mac-recovery-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedMissingTaskKeepsOrderAndPinHistoryAfterRelaunch" "-only-testing:TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch" -resultBundlePath /tmp/taskfold-order-recovery-mac-opaque.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-order-recovery-mac-opaque.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-25 22:16:53.027365+0100 TaskfoldUITests-Runner[93312:20913203] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-25 22:16:53.151.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-25 22:16:53.151.
+Test Suite 'TeamCompletionRecoveryMacUITests' started at 2026-10-25 22:16:53.151.
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch]' started.
+    t =     0.00s Start Test at 2026-10-25 22:16:53.152
+    t =     0.24s Set Up
+    t =     0.25s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.25s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 22:16:53.674 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 22:16:53.674 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.43s         Wait for accessibility to load
+    t =     2.85s         Setting up automation session
+    t =     2.89s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.00s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.00s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.01s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.02s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =     4.05s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     4.05s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     4.26s Get number of matches for: Descendants matching type Window
+    t =     4.30s Click "openMacCompletionRecovery" Button
+    t =     4.30s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.31s     Find the "openMacCompletionRecovery" Button
+    t =     4.37s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     4.38s     Synthesize event
+    t =     4.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.91s Waiting 10.0s for "Later" Button to exist
+    t =     5.95s     Checking `Expect predicate `existsNoRetry == 1` for object "Later" Button`
+    t =     5.95s         Checking existence of `"Later" Button`
+    t =     6.07s Click "Later" Button
+    t =     6.07s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.08s     Find the "Later" Button
+    t =     6.14s     Check for interrupting elements affecting "Later" Button
+    t =     6.18s     Synthesize event
+    t =     6.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.96s Waiting 10.0s for "checkRecordedDraftAdmission" Button to exist
+    t =     8.00s     Checking `Expect predicate `existsNoRetry == 1` for object "checkRecordedDraftAdmission" Button`
+    t =     8.00s         Checking existence of `"checkRecordedDraftAdmission" Button`
+    t =     8.07s Click "checkRecordedDraftAdmission" Button
+    t =     8.07s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.07s     Find the "checkRecordedDraftAdmission" Button
+    t =     8.12s     Check for interrupting elements affecting "checkRecordedDraftAdmission" Button
+    t =     8.13s     Synthesize event
+    t =     8.63s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.64s Waiting 12.0s for "Saved draft context protected" StaticText to exist
+    t =     9.68s     Checking `Expect predicate `existsNoRetry == 1` for object "Saved draft context protected" StaticText`
+    t =     9.68s         Checking existence of `"Saved draft context protected" StaticText`
+    t =     9.74s Click "openMacCompletionRecovery" Button
+    t =     9.74s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.75s     Find the "openMacCompletionRecovery" Button
+    t =     9.80s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     9.81s     Synthesize event
+    t =    10.29s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.31s Waiting 15.0s for "preserveRecordedCompletionDraft" Button to exist
+    t =    11.36s     Checking `Expect predicate `existsNoRetry == 1` for object "preserveRecordedCompletionDraft" Button`
+    t =    11.36s         Checking existence of `"preserveRecordedCompletionDraft" Button`
+    t =    11.51s Find the "preserveRecordedCompletionDraft" Button
+    t =    11.65s Checking existence of `Window (First Match)`
+    t =    11.66s Find the Window (First Match)
+2026-10-25 22:17:04.823496+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    12.45s Added attachment named 'Recorded draft review single'
+    t =    12.45s Click "blockNativeRecoveryStorage" Button
+    t =    12.45s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.46s     Find the "blockNativeRecoveryStorage" Button
+    t =    12.55s     Check for interrupting elements affecting "blockNativeRecoveryStorage" Button
+    t =    12.63s     Synthesize event
+    t =    13.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.22s Waiting 8.0s for "Storage blocked" StaticText to exist
+    t =    14.29s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage blocked" StaticText`
+    t =    14.29s         Checking existence of `"Storage blocked" StaticText`
+    t =    14.38s Click "repairNativeRecoveryStorage" Button
+    t =    14.38s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.39s     Find the "repairNativeRecoveryStorage" Button
+    t =    14.56s     Check for interrupting elements affecting "repairNativeRecoveryStorage" Button
+    t =    14.62s     Synthesize event
+    t =    15.26s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.27s Waiting 8.0s for "Storage available" StaticText to exist
+    t =    16.31s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage available" StaticText`
+    t =    16.31s         Checking existence of `"Storage available" StaticText`
+    t =    16.43s Click "preserveRecordedCompletionDraft" Button
+    t =    16.43s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.43s     Find the "preserveRecordedCompletionDraft" Button
+    t =    16.57s     Check for interrupting elements affecting "preserveRecordedCompletionDraft" Button
+    t =    16.59s     Synthesize event
+    t =    17.17s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.18s Waiting 25.0s for "openMacCompletionRecovery" Button to exist
+    t =    18.22s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    18.22s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    18.33s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:93317
+    t =    19.38s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    19.38s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 22:17:12.532 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 22:17:12.532 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    20.39s         Wait for accessibility to load
+    t =    20.54s         Setting up automation session
+    t =    20.59s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.65s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    20.66s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    20.66s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.83s Waiting 15.0s for "openMacSavedDrafts" Button to exist
+    t =    21.86s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacSavedDrafts" Button`
+    t =    21.86s         Checking existence of `"openMacSavedDrafts" Button`
+    t =    22.04s Click "openMacSavedDrafts" Button
+    t =    22.04s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.05s     Find the "openMacSavedDrafts" Button
+    t =    22.09s     Check for interrupting elements affecting "openMacSavedDrafts" Button
+    t =    22.12s     Synthesize event
+    t =    22.77s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.07s Waiting 12.0s for "savedRecordedCompletionDraft" Button to exist
+    t =    24.11s     Checking `Expect predicate `existsNoRetry == 1` for object "savedRecordedCompletionDraft" Button`
+    t =    24.12s         Checking existence of `"savedRecordedCompletionDraft" Button`
+    t =    24.28s Click "savedRecordedCompletionDraft" Button
+    t =    24.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.28s     Find the "savedRecordedCompletionDraft" Button
+    t =    24.34s     Check for interrupting elements affecting "savedRecordedCompletionDraft" Button
+    t =    24.37s     Synthesize event
+    t =    24.98s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.99s Waiting 12.0s for StaticText (First Match) to exist
+    t =    26.09s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    26.09s         Checking existence of `StaticText (First Match)`
+    t =    26.15s Checking existence of `Window (First Match)`
+    t =    26.16s Find the Window (First Match)
+2026-10-25 22:17:19.313213+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    26.25s Added attachment named 'Recorded draft retained preview single'
+    t =    26.25s Find the "exportRecordedEdits" Button
+    t =    26.33s Find the "exportRecordedEdits" Button
+    t =    26.43s Find the "exportRecordedEdits" Button
+    t =    26.52s Find the "exportRecordedEdits" Button
+    t =    26.63s Find the "exportRecordedEdits" Button
+    t =    26.74s Find the "exportRecordedEdits" Button
+    t =    26.82s Find the "exportRecordedEdits" Button
+    t =    26.91s Find the "exportRecordedEdits" Button
+    t =    26.99s Find the "exportRecordedEdits" Button
+    t =    27.07s Added attachment named 'Recorded draft single before'
+    t =    27.07s Added attachment named 'Recorded draft single after'
+    t =    27.07s Added attachment named 'Recorded draft single relaunch'
+    t =    27.07s Added attachment named 'Recorded draft single draft'
+    t =    27.07s Added attachment named 'Recorded draft single export'
+    t =    27.07s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:93379
+    t =    28.09s Tear Down
+    t =    28.09s     Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:0
+    t =    28.10s     Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    28.10s         Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 22:17:21.253 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 22:17:21.253 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    28.80s             Wait for accessibility to load
+    t =    29.91s             Setting up automation session
+    t =    29.93s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.99s     Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    30.00s         Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    30.01s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.02s     Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:93406
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch]' passed (33.578 seconds).
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedMissingTaskKeepsOrderAndPinHistoryAfterRelaunch]' started.
+    t =     0.00s Start Test at 2026-10-25 22:17:26.731
+    t =     0.41s Set Up
+    t =     0.42s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.42s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 22:17:27.154 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 22:17:27.154 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.29s         Wait for accessibility to load
+    t =     1.45s         Setting up automation session
+    t =     1.47s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.57s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.58s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.58s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.59s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =     2.66s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     2.67s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     2.86s Get number of matches for: Descendants matching type Window
+    t =     2.89s Click "openMacCompletionRecovery" Button
+    t =     2.89s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.91s     Find the "openMacCompletionRecovery" Button
+    t =     2.97s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     3.00s     Synthesize event
+    t =     3.49s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.94s Waiting 10.0s for "laterTeamBatchRecovery" Button to exist
+    t =     5.02s     Checking `Expect predicate `existsNoRetry == 1` for object "laterTeamBatchRecovery" Button`
+    t =     5.02s         Checking existence of `"laterTeamBatchRecovery" Button`
+    t =     5.14s Click "laterTeamBatchRecovery" Button
+    t =     5.14s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.19s     Find the "laterTeamBatchRecovery" Button
+    t =     5.29s     Check for interrupting elements affecting "laterTeamBatchRecovery" Button
+    t =     5.30s     Synthesize event
+    t =     5.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.09s Waiting 10.0s for "checkRecordedDraftAdmission" Button to exist
+    t =     7.13s     Checking `Expect predicate `existsNoRetry == 1` for object "checkRecordedDraftAdmission" Button`
+    t =     7.14s         Checking existence of `"checkRecordedDraftAdmission" Button`
+    t =     7.24s Click "checkRecordedDraftAdmission" Button
+    t =     7.24s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.25s     Find the "checkRecordedDraftAdmission" Button
+    t =     7.28s     Check for interrupting elements affecting "checkRecordedDraftAdmission" Button
+    t =     7.29s     Synthesize event
+    t =     7.79s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.79s Waiting 12.0s for "Saved draft context protected" StaticText to exist
+    t =     8.84s     Checking `Expect predicate `existsNoRetry == 1` for object "Saved draft context protected" StaticText`
+    t =     8.85s         Checking existence of `"Saved draft context protected" StaticText`
+    t =     8.93s Click "openMacCompletionRecovery" Button
+    t =     8.93s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.93s     Find the "openMacCompletionRecovery" Button
+    t =     9.01s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     9.02s     Synthesize event
+    t =     9.55s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.79s Waiting 15.0s for "preserveRecordedCompletionDraft" Button to exist
+    t =    10.82s     Checking `Expect predicate `existsNoRetry == 1` for object "preserveRecordedCompletionDraft" Button`
+    t =    10.82s         Checking existence of `"preserveRecordedCompletionDraft" Button`
+    t =    10.91s Find the "preserveRecordedCompletionDraft" Button
+    t =    10.98s Checking existence of `Window (First Match)`
+    t =    10.98s Find the Window (First Match)
+2026-10-25 22:17:37.722806+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    11.06s Added attachment named 'Recorded draft review group'
+    t =    11.06s Click "blockNativeRecoveryStorage" Button
+    t =    11.06s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.07s     Find the "blockNativeRecoveryStorage" Button
+    t =    11.12s     Check for interrupting elements affecting "blockNativeRecoveryStorage" Button
+    t =    11.12s     Synthesize event
+    t =    11.63s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.64s Waiting 8.0s for "Storage blocked" StaticText to exist
+    t =    12.69s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage blocked" StaticText`
+    t =    12.69s         Checking existence of `"Storage blocked" StaticText`
+    t =    12.76s Click "repairNativeRecoveryStorage" Button
+    t =    12.76s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.77s     Find the "repairNativeRecoveryStorage" Button
+    t =    12.83s     Check for interrupting elements affecting "repairNativeRecoveryStorage" Button
+    t =    12.85s     Synthesize event
+    t =    13.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.37s Waiting 8.0s for "Storage available" StaticText to exist
+    t =    14.40s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage available" StaticText`
+    t =    14.40s         Checking existence of `"Storage available" StaticText`
+    t =    14.47s Click "preserveRecordedCompletionDraft" Button
+    t =    14.47s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.47s     Find the "preserveRecordedCompletionDraft" Button
+    t =    14.54s     Check for interrupting elements affecting "preserveRecordedCompletionDraft" Button
+    t =    14.55s     Synthesize event
+    t =    15.06s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.07s Waiting 25.0s for "openMacCompletionRecovery" Button to exist
+    t =    16.11s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    16.11s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    16.21s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:93421
+    t =    17.29s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    17.29s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 22:17:44.024 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 22:17:44.024 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    18.03s         Wait for accessibility to load
+    t =    18.18s         Setting up automation session
+    t =    18.21s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.29s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    18.30s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    18.30s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.50s Waiting 15.0s for "openMacSavedDrafts" Button to exist
+    t =    19.52s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacSavedDrafts" Button`
+    t =    19.52s         Checking existence of `"openMacSavedDrafts" Button`
+    t =    19.67s Click "openMacSavedDrafts" Button
+    t =    19.67s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.68s     Find the "openMacSavedDrafts" Button
+    t =    19.73s     Check for interrupting elements affecting "openMacSavedDrafts" Button
+    t =    19.75s     Synthesize event
+    t =    20.35s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.64s Waiting 12.0s for "savedRecordedCompletionDraft" Button to exist
+    t =    21.66s     Checking `Expect predicate `existsNoRetry == 1` for object "savedRecordedCompletionDraft" Button`
+    t =    21.66s         Checking existence of `"savedRecordedCompletionDraft" Button`
+    t =    21.77s Click "savedRecordedCompletionDraft" Button
+    t =    21.77s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.77s     Find the "savedRecordedCompletionDraft" Button
+    t =    21.83s     Check for interrupting elements affecting "savedRecordedCompletionDraft" Button
+    t =    21.85s     Synthesize event
+    t =    22.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.43s Waiting 12.0s for StaticText (First Match) to exist
+    t =    23.45s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    23.45s         Checking existence of `StaticText (First Match)`
+    t =    23.51s Waiting 10.0s for StaticText (First Match) to exist
+    t =    24.53s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    24.53s         Checking existence of `StaticText (First Match)`
+    t =    24.59s Waiting 10.0s for StaticText (First Match) to exist
+    t =    25.62s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    25.62s         Checking existence of `StaticText (First Match)`
+    t =    25.68s Checking existence of `Window (First Match)`
+    t =    25.69s Find the Window (First Match)
+2026-10-25 22:17:52.423365+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    25.75s Added attachment named 'Recorded draft retained preview group'
+    t =    25.75s Find the "exportRecordedEdits" Button
+    t =    25.86s Swipe up "savedRecordedEditsForm" Any with velocity 5000.00
+    t =    25.86s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.86s     Find the "savedRecordedEditsForm" Any
+    t =    25.88s     Check for interrupting elements affecting "savedRecordedEditsForm" ScrollView
+    t =    25.89s     Synthesize event
+    t =    28.41s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.42s Find the "exportRecordedEdits" Button
+    t =    28.55s Find the "exportRecordedEdits" Button
+    t =    28.63s Find the "exportRecordedEdits" Button
+    t =    28.70s Find the "exportRecordedEdits" Button
+    t =    28.77s Find the "exportRecordedEdits" Button
+    t =    28.84s Find the "exportRecordedEdits" Button
+    t =    28.91s Find the "exportRecordedEdits" Button
+    t =    28.98s Find the "exportRecordedEdits" Button
+    t =    29.04s Click "exportRecordedEdits" Button
+    t =    29.04s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.05s     Find the "exportRecordedEdits" Button
+    t =    29.10s     Check for interrupting elements affecting "exportRecordedEdits" Button
+    t =    29.12s     Synthesize event
+    t =    29.63s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.86s Waiting 12.0s for "Cancel" Button to exist
+    t =    31.88s     Checking `Expect predicate `existsNoRetry == 1` for object "Cancel" Button`
+    t =    31.89s         Checking existence of `"Cancel" Button`
+    t =    32.10s Waiting 8.0s for TextField (First Match) to exist
+    t =    33.13s     Checking `Expect predicate `existsNoRetry == 1` for object TextField (First Match)`
+    t =    33.13s         Checking existence of `TextField (First Match)`
+    t =    33.23s Click TextField (First Match)
+    t =    33.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    33.23s     Find the TextField (First Match)
+    t =    33.31s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    33.32s     Synthesize event
+    t =    33.83s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    33.84s Type 'a' key with modifiers '⌘' (0x10)
+    t =    33.85s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    33.85s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    33.96s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    33.96s     Synthesize event
+2026-10-25 22:18:00.694192+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-25 22:18:00.695602+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    34.08s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.10s Type 'Taskfold-recovery-...' into "saveAsNameTextField" TextField
+    t =    34.10s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.11s     Find the "saveAsNameTextField" TextField
+    t =    34.23s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    34.31s     Synthesize event
+2026-10-25 22:18:01.040861+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-25 22:18:01.051624+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    35.48s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    35.49s Type 'g' key with modifiers '⌘⇧' (0x12)
+    t =    35.49s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    35.50s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    35.62s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    35.62s     Synthesize event
+2026-10-25 22:18:02.355435+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-25 22:18:02.362494+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    35.95s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    36.16s Waiting 8.0s for "PathTextField" TextField to exist
+    t =    37.19s     Checking `Expect predicate `existsNoRetry == 1` for object "PathTextField" TextField`
+    t =    37.19s         Checking existence of `"PathTextField" TextField`
+    t =    37.32s Click "PathTextField" TextField
+    t =    37.32s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    37.33s     Find the "PathTextField" TextField
+    t =    37.42s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    37.43s     Synthesize event
+2026-10-25 22:18:04.163465+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    37.94s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    37.94s Type 'a' key with modifiers '⌘' (0x10)
+    t =    37.94s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    37.95s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    38.04s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    38.04s     Synthesize event
+2026-10-25 22:18:04.774763+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-25 22:18:04.775995+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    38.08s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    38.09s Type '/Users/davidbakpos...' into "PathTextField" TextField
+    t =    38.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    38.10s     Find the "PathTextField" TextField
+    t =    38.22s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    38.23s     Synthesize event
+2026-10-25 22:18:04.966301+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-25 22:18:04.968436+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    41.74s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    41.75s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =    41.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    41.76s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    41.87s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    41.87s     Synthesize event
+2026-10-25 22:18:08.598778+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-25 22:18:08.599891+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    42.21s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    42.21s Waiting 8.0s for TextField (First Match) to exist
+    t =    43.24s     Checking `Expect predicate `existsNoRetry == 1` for object TextField (First Match)`
+    t =    43.24s         Checking existence of `TextField (First Match)`
+    t =    43.33s Waiting 8.0s for "where popup" PopUpButton to exist
+    t =    44.35s     Checking `Expect predicate `existsNoRetry == 1` for object "where popup" PopUpButton`
+    t =    44.35s         Checking existence of `"where popup" PopUpButton`
+    t =    44.46s Find the "where popup" PopUpButton
+    t =    44.53s Checking existence of `"Save" Button`
+    t =    44.63s Waiting 8.0s for "Export" Button to exist
+    t =    45.64s     Checking `Expect predicate `existsNoRetry == 1` for object "Export" Button`
+    t =    45.65s         Checking existence of `"Export" Button`
+    t =    45.77s Find the "Export" Button
+    t =    45.87s Checking existence of `Window (First Match)`
+    t =    45.87s Find the Window (First Match)
+2026-10-25 22:18:12.608324+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    45.96s Added attachment named 'Recorded draft native save picker'
+    t =    45.96s Click "OKButton" Button
+    t =    45.96s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    45.97s     Find the "OKButton" Button
+    t =    46.03s     Check for interrupting elements affecting "OKButton" Button
+    t =    46.06s     Synthesize event
+2026-10-25 22:18:12.792081+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    46.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    46.84s Waiting 12.0s for "Details saved." StaticText to exist
+    t =    47.86s     Checking `Expect predicate `existsNoRetry == 1` for object "Details saved." StaticText`
+    t =    47.86s         Checking existence of `"Details saved." StaticText`
+    t =    47.94s Added attachment named 'Recorded draft local delivery'
+    t =    47.94s Click "exportRecordedEdits" Button
+    t =    47.94s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    47.94s     Find the "exportRecordedEdits" Button
+    t =    48.00s     Check for interrupting elements affecting "exportRecordedEdits" Button
+    t =    48.02s     Synthesize event
+2026-10-25 22:18:14.750301+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    48.53s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    48.99s Waiting 12.0s for "Cancel" Button to exist
+    t =    50.03s     Checking `Expect predicate `existsNoRetry == 1` for object "Cancel" Button`
+    t =    50.03s         Checking existence of `"Cancel" Button`
+    t =    50.15s Checking existence of `Window (First Match)`
+    t =    50.16s Find the Window (First Match)
+2026-10-25 22:18:16.893847+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    50.23s Added attachment named 'Recorded draft native export picker'
+    t =    50.24s Click "Cancel" Button
+    t =    50.24s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    50.24s     Find the "Cancel" Button
+    t =    50.32s     Check for interrupting elements affecting "CancelButton" Button
+    t =    50.33s     Synthesize event
+2026-10-25 22:18:17.060570+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    50.83s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    51.11s Waiting 12.0s for "CancelButton" Button to not exist
+    t =    52.13s     Checking `Expect predicate `existsNoRetry == 0` for object "CancelButton" Button`
+    t =    52.13s         Checking existence of `"CancelButton" Button`
+    t =    52.22s Waiting 10.0s for "exportRecordedEdits" Button to exist
+    t =    53.23s     Checking `Expect predicate `existsNoRetry == 1` for object "exportRecordedEdits" Button`
+    t =    53.23s         Checking existence of `"exportRecordedEdits" Button`
+    t =    53.30s Find the "exportRecordedEdits" Button
+    t =    53.36s Checking existence of `Window (First Match)`
+    t =    53.37s Find the Window (First Match)
+2026-10-25 22:18:20.104866+0100 TaskfoldUITests-Runner[93312:20913203] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    53.45s Added attachment named 'Recorded draft export cancelled safely'
+    t =    53.45s Added attachment named 'Recorded draft group before'
+    t =    53.46s Added attachment named 'Recorded draft group after'
+    t =    53.46s Added attachment named 'Recorded draft group relaunch'
+    t =    53.46s Added attachment named 'Recorded draft group draft'
+    t =    53.46s Added attachment named 'Recorded draft group export'
+    t =    53.46s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:93465
+    t =    54.56s Tear Down
+    t =    54.57s     Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:0
+    t =    54.58s     Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    54.58s         Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 22:18:21.316 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 22:18:21.316 xcodebuild[93299:20912912] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    55.53s             Wait for accessibility to load
+    t =    56.50s             Setting up automation session
+    t =    56.74s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    56.83s     Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    56.84s         Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    56.86s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    56.87s     Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:93559
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedMissingTaskKeepsOrderAndPinHistoryAfterRelaunch]' passed (58.935 seconds).
+Test Suite 'TeamCompletionRecoveryMacUITests' passed at 2026-10-25 22:18:25.668.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 92.513 (92.516) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-25 22:18:25.669.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 92.513 (92.518) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:18:25.670.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 92.513 (92.519) seconds
+2026-10-25 22:18:26.154 xcodebuild[93299:20912912] [MT] IDETestOperationsObserverDebug: 93.843 elapsed -- Testing started completed.
+2026-10-25 22:18:26.154 xcodebuild[93299:20912912] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-25 22:18:26.154 xcodebuild[93299:20912912] [MT] IDETestOperationsObserverDebug: 93.843 sec, +93.843 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-order-recovery-mac-opaque.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

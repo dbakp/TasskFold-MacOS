@@ -1,0 +1,98 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "sourceProof": {
+    "Taskfold/Core/Store.swift": {
+      "repositorySHA256": "31d987377d2db4cb611023d544c0307cf8c29cfb66459d83fe73a7b05a65b12f",
+      "compiledHostSHA256": "5d08ead2fd64a8b7731fcf6a0e03bb3a800ee306dc505bbcdee8ff316a783e07",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Core/Backend.swift": {
+      "repositorySHA256": "1c8ef6005d7061284496b3a52dcd38ea160983de4dfa2262eee13209f488bb2c",
+      "compiledHostSHA256": "7c4e974dffc9a63e82fb49a15d3d6586d2e76871160ada9bee131999af0e4e74",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Core/Models.swift": {
+      "repositorySHA256": "ee40af7527bad4e3a0afb5449d19c309916adee169f81b8fbc90ecf827f0f921",
+      "compiledHostSHA256": "ee40af7527bad4e3a0afb5449d19c309916adee169f81b8fbc90ecf827f0f921",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Core/TeamWorkspace.swift": {
+      "repositorySHA256": "3578950a47acbf89105f50b673bfb3cfa9b0169b8f3aed8ed3ab72f2ebd4b31b",
+      "compiledHostSHA256": "3578950a47acbf89105f50b673bfb3cfa9b0169b8f3aed8ed3ab72f2ebd4b31b",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Core/TaskFileUpload.swift": {
+      "repositorySHA256": "4765c6cf1b3d3021ab1f6d2347be6c4d9ed0052095e0188211b53abc19151c2f",
+      "compiledHostSHA256": "4765c6cf1b3d3021ab1f6d2347be6c4d9ed0052095e0188211b53abc19151c2f",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/TaskFileUploadView.swift": {
+      "repositorySHA256": "ff948074df8997c59db468582c811909b685eccf5d6744077e5152e0a7115521",
+      "compiledHostSHA256": "ff948074df8997c59db468582c811909b685eccf5d6744077e5152e0a7115521",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/AudioCommentNativeFixture.swift": {
+      "repositorySHA256": "9ea5cf0eab922e80868abd931a782efdc2b7f9a911dde553c8ac9c1ed486334b",
+      "compiledHostSHA256": "9ea5cf0eab922e80868abd931a782efdc2b7f9a911dde553c8ac9c1ed486334b",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/AudioCommentDraftView.swift": {
+      "repositorySHA256": "4f6defae97c16fe820791c09a8b178d874ff51683e995170fc022316a3efd06a",
+      "compiledHostSHA256": "4f6defae97c16fe820791c09a8b178d874ff51683e995170fc022316a3efd06a",
+      "matchesAfterIsolation": true
+    }
+  },
+  "build": {
+    "phase": "workspace-sync-v2",
+    "appAndRunnerStrictSignaturesVerified": true,
+    "logSHA256": "550e80575d8dfa5fcdbbc2802c9d35148aa8c1a449a8f1fec87a6931efe3c7fe",
+    "appDebugDylibSHA256": "1ce8514d8de538ec7ddb3ca52f51231a280aeaae4a655ddf2c3619797fc14197",
+    "testBinarySHA256": "670843459d119a3b2e4c98bd1a56ed7d6aed84636dd98d71f0181b3fe2a136a1"
+  },
+  "native": {
+    "distinctFullSyncFlows": 4,
+    "publicationSourcePhase": "workspace-sync-v4",
+    "stopSourcePhase": "workspace-sync-v3",
+    "iOSReacceptanceSourcePhase": "phone five v5 + export v6 + import v10; iPad affected-five v10 interrupted; no accepted rerun cases",
+    "cacheReacceptanceCasesPerDevice": {
+      "phone": 7,
+      "ipad": 0
+    },
+    "iPadAffectedFiveReacceptanceComplete": false,
+    "acceptedCaseFailures": 0,
+    "failedAttemptsRetained": true,
+    "normalStoreSyncWithLocalSqlRlsStorage": true,
+    "genuineAuthPostgrestOrFullSchemaParity": false,
+    "actualAccountWindowTransitions": false,
+    "macRuntimeAccepted": false,
+    "speechLargestTextOrNewAccountMigrationAccepted": false
+  },
+  "ownRoleReadChecks": 25,
+  "ownProviderRegressions": 56,
+  "coreAndServiceNotRepeated": "No production Core/service-handler change this turn; previous179Core/61service retain their recorded scope.",
+  "testScope": "V5 makes cache identity explicit per caller; v6 fixes real Files navigation for import/export; v7 centers the import filename below the large-text Files navigation overlay; v10 taps the visible center of its exact observed decorative preview with bounds guards and ends unchanged bounded scrolling once found. Phone accepts five unchanged v5 cases, export v6 and import v10; The iPad affected-five v10 run was interrupted after repeated 60-second system-animation waits; no case from it is accepted. Original local recording scope remains valid; current signed-in iPad file-dialog cache reacceptance remains open. Four separate normal-sync file flows on phone/iPad are accepted. Four native full-sync flows v3/v4 used the same UUID file identity; their coverage is retained.",
+  "deployed": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "fixtureSourcesSHA256": {
+    "Scripts/Database/task-file-workspace-fixture.mjs": "ab871a79df91821fd367295db5e4327616aab4a38bf5a64bb0ca3108644157cf",
+    "Scripts/Database/test-task-file-workspace-read.mjs": "45cd74e5091e15725af9244bc24096b92e0150cb379206b2c490ed4d2b63eb3d",
+    "Scripts/Database/task-files-provider-http-fixture.mjs": "85e7c1a37de5b2c72d447c656aec81c43f6f3db14a8ec63548fae92cc70ee0b8",
+    "Scripts/Database/task-files-provider-http.ts": "2d47a670c5deace39d5d8ca520ce71061eb776e7e964e8aed82cf33af5c4c8fb"
+  },
+  "reportsSHA256": {
+    "phone-cache-composition.json": "313f287cc2c61e8f3b2a87833aadbc245de5c42dc781a21da190060eb525a6f5",
+    "phone-publish.json": "14dcc694b40a61ac1864a0954ad2556a43df5eefe25a883776a64b27b562cffd",
+    "provider-regression.json": "b96c7aaf9def4baa92aa71abd91cad445a501391159c6390ad529f55da83e5d8",
+    "ipad-stop.json": "9c3ece601f63c0fccf05fa717cf2c561ec1cc2fac694b447beeb02aa96d305f1",
+    "ipad-publish.json": "21a9ccaa0b990dea5c1c17217da1685d849bd3513610c1df4363d46a2b3fa47f",
+    "cache-source-preflight.json": "a6bd5144c000c8c2726555c5bf5c8fec4c41900b7f52b3db8ab168d5fcbc93d0",
+    "phone-v5-test-tree.json": "1c8ed5343902b48d9df948b8a7bcc1d7f9cb6a5bc176c908527927b1aaed386a",
+    "workspace-read.json": "826dad8d8a8865a40f2bc733d2d7ccaf757f1f71cc9524fe691b9d4e184b5328",
+    "phone-v5-mixed-run.json": "8b25c0452e497576c849d6fe58f3ad1e093bea987627d66b9e4ff45980c2d92e",
+    "phone-stop.json": "49dbe030df8efd0a3b2abc624eb8c3bbb0784deb8a6eadf1f8588f5bde885bda",
+    "phone-v10-cache-reacceptance.json": "f01e74c748d3be5ee6846625b206a1ecc3bcba3cffc0e105e1c120419ef60368",
+    "phone-v6-mixed-run.json": "1412e44d660ed50cc15e16838ed9afad140acb02843073d89ac60ace9f872903"
+  }
+}

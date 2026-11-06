@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-24",
+  "scope": "Watch phone command planner, atomic private receipts and normal Store save path; paired authority and transport still required",
+  "repositoryPlatform": "mac",
+  "fullSuites": {
+    "ios": {
+      "TaskfoldWatchTests": {
+        "executed": 24,
+        "skipped": 0,
+        "failed": 0
+      },
+      "TaskfoldCoreTests": {
+        "executed": 1410,
+        "skipped": 13,
+        "failed": 0
+      }
+    },
+    "mac": {
+      "TaskfoldCoreTests": {
+        "executed": 1442,
+        "skipped": 33,
+        "failed": 0
+      }
+    }
+  },
+  "focusedNewCases": {
+    "iosPhonePlanner": 8,
+    "iosExistingWatchContract": 16,
+    "privateLedgerEachRepo": 4,
+    "failures": 0,
+    "skipsInTheseCases": 0
+  },
+  "nativeLocalStore": {
+    "repository": "TaskFold-iOS",
+    "device": "iPhone 18 Pro, iOS 27 Simulator",
+    "firstRun": {
+      "checks": [
+        "fresh-isolated-workspace",
+        "failed-save-reports-retry",
+        "failed-save-keeps-task-and-receipt-unchanged",
+        "capture-saved-through-normal-store",
+        "capture-and-proof-committed-together",
+        "exact-capture-retry-does-not-duplicate",
+        "undo-keeps-capture-proof",
+        "replay-does-not-recreate-undone-capture",
+        "changed-payload-replay-refused",
+        "normal-task-save",
+        "completion-saved-through-normal-store",
+        "completion-and-proof-committed-together",
+        "normal-undo-reopens-task",
+        "replay-cannot-recomplete-after-undo",
+        "old-completion-token-with-new-command-refused",
+        "delete-undo-mints-new-incarnation",
+        "old-incarnation-refused",
+        "old-live-workspace-binding-refused",
+        "first-run-cache-and-memory-agree"
+      ],
+      "cloudAuthClaimed": false,
+      "count": 19,
+      "pairedTransportClaimed": false,
+      "passed": true
+    },
+    "relaunch": {
+      "checks": [
+        "two-receipts-survived-process-relaunch",
+        "lost-capture-reply-acknowledged-after-relaunch",
+        "lost-completion-reply-acknowledged-after-relaunch",
+        "replays-preserve-exact-saved-work",
+        "native-persist-restores-monotonic-receipts",
+        "portable-backup-excludes-private-receipts",
+        "relaunch-cache-and-memory-agree"
+      ],
+      "cloudAuthClaimed": false,
+      "count": 7,
+      "pairedTransportClaimed": false,
+      "passed": true
+    },
+    "totalAssertions": 26,
+    "productionStoreAndActualCacheUsed": true,
+    "diskFailureInjectedBeforeCacheCommit": true,
+    "cloudAccountAcceptanceClaimed": false,
+    "pairedTransportAcceptanceClaimed": false,
+    "humanInteractionClaimed": false
+  },
+  "builds": {
+    "watch-phone-native-build.log": true,
+    "watch-receipt-mac-native-build.log": true,
+    "watch-phone-watch-target-build.log": true
+  },
+  "sources": {
+    "Package.swift": "94355669c0974182bbef1823bdf393905e9d22ea5c8ef0c1021eaef99cad1932",
+    "Scripts/configure_wearable_receipts.py": "6f6fa46b81ccbb14799c160c398f3a4d386638c42b12148da1a2a46cfd9d63d5",
+    "Taskfold/Core/Models.swift": "80f0cfa766a8be81154c1151274b4550da3f996363961535544938d56599c92c",
+    "Taskfold/Core/Store.swift": "b1b6cb653ef7f3aaa0658da3b5671cef4177d2ba8d8dcc78112f9c9c528f9442",
+    "Taskfold/Core/WearableReceipts.swift": "63a22135f80954b8d498107bb3d915d422197c0d6f83f14f1e061348a0e88f0d",
+    "TaskfoldTests/WearableReceiptTests.swift": "4be71c5854a91a95c6097bfe811418e68783c25635ef2d80af9e76d2a14d683b",
+    "Taskfold.xcodeproj/project.pbxproj": "cb11c518e13b027630538d525af77f654bc0f8c37e39b0fee3fa95dec296e3a2"
+  },
+  "stagedNativeSourcesMatched": true,
+  "privateMetadata": {
+    "syncTableField": false,
+    "portableBackupIncluded": false,
+    "capacity": 4096,
+    "automaticPruning": false,
+    "monotonicPreservationBothClients": true
+  },
+  "cleanup": {
+    "isolatedPhoneAppAndContainerRemoved": true,
+    "ownedStagedHostRemoved": true,
+    "stagedHostBytesPruned": 5367145,
+    "previouslyBootedPhoneSimulatorKeptBooted": true,
+    "realTaskDataChanged": 0,
+    "mainServiceChanged": false,
+    "reusableBuildCachesRetained": true
+  },
+  "limitations": [
+    "A paired transport must resolve WatchPhoneAuthority from durable phone/Watch installation and workspace epoch state, never a received command",
+    "Phone projection, normal startup/signout hooks and peer handshake remain unimplemented",
+    "Saved means durable iPhone cache, not cloud acceptance; actual cloud account/queued-write recovery still needs acceptance",
+    "No paired Watch/background transfer, hardware protection, native input or VoiceOver acceptance",
+    "No receipt pruning; explicit capacity/reset fencing and user recovery remain required",
+    "Old-client editing/distribution/provider/remote-reminder/location deferrals remain; all remaining Px retains scope"
+  ],
+  "next": "Durable paired authority, current Today projection and WatchConnectivity receiver, then paired/fault acceptance before embedding"
+}

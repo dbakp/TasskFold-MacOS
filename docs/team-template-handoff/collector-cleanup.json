@@ -1,0 +1,14 @@
+[
+  {
+    "device": "phone",
+    "pid": 45366,
+    "allCasesTerminalBeforeStop": true,
+    "action": "SIGTERM to exact owned diagnostic collector"
+  },
+  {
+    "device": "tablet",
+    "pid": 45367,
+    "allCasesTerminalBeforeStop": true,
+    "action": "SIGTERM to exact owned diagnostic collector"
+  }
+]

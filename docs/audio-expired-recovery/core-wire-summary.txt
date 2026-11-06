@@ -1,0 +1,8 @@
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testUnrecordedObservationNeverAuthorizesDifferentDecision]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testUnrecordedObservationNeverAuthorizesDifferentDecision]' passed (0.011 seconds).
+Test Suite 'TeamTaskLifecycleTests' passed at 2026-11-02 21:12:03.623.
+	 Executed 33 tests, with 0 failures (0 unexpected) in 0.218 (0.221) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-11-02 21:12:03.623.
+	 Executed 33 tests, with 0 failures (0 unexpected) in 0.218 (0.221) seconds
+Test Suite 'Selected tests' passed at 2026-11-02 21:12:03.623.
+	 Executed 33 tests, with 0 failures (0 unexpected) in 0.218 (0.226) seconds

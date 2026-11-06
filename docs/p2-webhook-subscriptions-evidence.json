@@ -1,0 +1,298 @@
+{
+  "date": "2026-10-23",
+  "platformSource": "macOS",
+  "baseCommit": "8470cb17f6bd6a3c509929d710f782d0b9b3a39d",
+  "milestone": "Authorized immutable webhook enrollment, receiver-secret proof and guarded state controls",
+  "fullWebhookFeatureComplete": false,
+  "fullPxComplete": false,
+  "nativeAppBehaviorChanged": false,
+  "mainMigrationsApplied": false,
+  "mainEndpointEnabled": false,
+  "realTasksChanged": 0,
+  "implementation": [
+    "Private RLS/privilege-restricted subscription, cancellation, verification, command and removal-block records; fixed service-only native-session RPC.",
+    "Immutable exact setup retry, bounded scopes/events/TTL and permanent account-bound discard before creation.",
+    "Receiver HMAC secret-possession proof; actual expected proof never sent in challenge; fresh session/scope/expiry/state checks before activation.",
+    "Pause/Resume baseline revision and immutable command receipts prevent delayed retries from overriding newer controls.",
+    "Revocation erases encrypted secret; removal blocks persist for surviving Auth rows despite receipt pruning; Auth deletion cascades all private records.",
+    "Bounded/cancellable private HTTP management, AES envelope creation before SQL and redacted typed responses; missing masters do not prevent cleanup."
+  ],
+  "localSql": {
+    "date": "2026-10-23T05:27:43.250Z",
+    "checks": {
+      "verified-service-can-create-pending-only": true,
+      "receipt-redacts-query-path-and-key": true,
+      "no-secret-envelope-in-receipt": true,
+      "no-secret-hash-in-receipt": true,
+      "retry-does-not-renew-expiry": true,
+      "same-endpoint-intent-has-one-record": true,
+      "foreign-account-sees-no-subscriptions": true,
+      "foreign-account-cannot-read-details": true,
+      "foreign-account-cannot-use-same-id": true,
+      "changed-create-intent-refused": true,
+      "unsigned-session-has-no-management": true,
+      "wrong-project-permission-refused": true,
+      "reject-duplicate-events": true,
+      "reject-unknown-events": true,
+      "reject-missing-project": true,
+      "reject-null-name": true,
+      "reject-invalid-envelope": true,
+      "reject-userinfo": true,
+      "reject-bad-TTL": true,
+      "cannot-pause-unverified-endpoint": true,
+      "challenge-is-random-256-bit-nonce": true,
+      "challenge-gets-original-encrypted-secret": true,
+      "exact-retry-keeps-challenge-and-expiry": true,
+      "verification-retry-does-not-create-record": true,
+      "failed-proof-keeps-endpoint-pending": true,
+      "late-success-does-not-overwrite-first-terminal-result": true,
+      "trusted-validated-proof-connects-endpoint": true,
+      "proof-acknowledgement-retry-is-stable": true,
+      "pause-is-durable": true,
+      "resume-requires-verified-record": true,
+      "pause-advances-state-revision": true,
+      "late-pause-retry-cannot-undo-newer-resume": true,
+      "exact-command-retry-confirms-same-request": true,
+      "stale-new-pause-needs-review": true,
+      "same-command-id-cannot-change-action": true,
+      "stale-command-did-not-change-current-revision": true,
+      "revoke-records-terminal-state": true,
+      "revoke-retry-keeps-timestamp": true,
+      "late-create-never-reactivates-revoked-endpoint": true,
+      "revoked-endpoint-cannot-resume": true,
+      "ordinary-list-excludes-revoked": true,
+      "history-retains-revoked": true,
+      "details-explicitly-return-private-destination": true,
+      "cancel-retry-is-idempotent": true,
+      "cancel-before-create-permanently-blocks-late-create": true,
+      "foreign-cancel-does-not-expose-or-change-owner": true,
+      "new-attempt-invalidates-older-callback": true,
+      "discard-during-proof-cannot-connect-later": true,
+      "revocation-erases-retrievable-receiver-secret": true,
+      "expired-proof-does-not-connect": true,
+      "membership-loss-during-proof-prevents-activation": true,
+      "revocation-still-works-after-project-access-loss": true,
+      "signout-during-proof-prevents-activation": true,
+      "removal-revokes-before-auth-delete": true,
+      "removing-account-cannot-manage": true,
+      "auth-delete-cleans-subscriptions-and-attempts": true,
+      "bounded-page-has-owned-cursor": true,
+      "next-page-does-not-repeat-first": true,
+      "foreign-cursor-does-not-disclose-history": true,
+      "five-live-subscription-limit": true,
+      "foreign-discard-does-not-revoke-pending-owner": true,
+      "ten-creation-per-day-limit-includes-revoked": true,
+      "six-new-verifications-per-minute": true,
+      "exact-verification-retry-is-free-at-limit": true,
+      "sixty-new-verifications-per-day": true,
+      "new-control-receipts-are-bounded-per-day": true,
+      "revoke-remains-available-at-verification-limit": true,
+      "new-cancellation-tombstones-are-bounded": true,
+      "existing-discard-retries-work-at-limit": true,
+      "revoking-existing-setup-works-at-cancellation-limit": true,
+      "command-history-cannot-be-rewritten": true,
+      "command-history-cannot-be-pruned": true,
+      "cancellation-history-cannot-be-pruned": true,
+      "revoked-setup-history-cannot-be-pruned": true,
+      "revoked-setup-cannot-be-renewed": true,
+      "anon-cannot-call-management": true,
+      "anon-cannot-read-encrypted-table": true,
+      "authenticated-cannot-call-management": true,
+      "authenticated-cannot-read-encrypted-table": true,
+      "service-has-no-direct-table-access": true,
+      "all-private-tables-enable-RLS": true,
+      "no-webhook-task-trigger-is-installed": true,
+      "physical-auth-removal-cleans-immutable-history": true
+    },
+    "realTasksChanged": 0,
+    "hostedAcceptance": false,
+    "passed": true
+  },
+  "actualPostgres": {
+    "date": "2026-10-23T05:27:44.814Z",
+    "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+    "checks": {
+      "eight-exact-enrollments-have-one-receipt": true,
+      "all-exact-enrollments-succeed": true,
+      "enrollments-use-independent-backends": true,
+      "one-row-after-concurrent-retries": true,
+      "different-intents-with-one-id-have-one-conflict": true,
+      "five-final-slots-are-atomic": true,
+      "other-seven-enrollments-refused": true,
+      "no-quota-overrun-in-table": true,
+      "create-f09fcafe-0000-4000-8000-000000000103": true,
+      "begin-f09fcafe-0000-4000-8000-000000000303": true,
+      "late-proof-does-not-reactivate-revoked-endpoint": true,
+      "late-proof-is-cancelled": true,
+      "revoked-secret-remains-erased": true,
+      "create-f09fcafe-0000-4000-8000-000000000104": true,
+      "begin-f09fcafe-0000-4000-8000-000000000304": true,
+      "proof-first-then-revoke-is-still-terminal": true,
+      "successful-verification-does-not-protect-secret-from-revoke": true,
+      "create-f09fcafe-0000-4000-8000-000000000105": true,
+      "begin-f09fcafe-0000-4000-8000-000000000305": true,
+      "committed-signout-blocks-late-proof": true,
+      "signout-left-no-activation": true,
+      "create-f09fcafe-0000-4000-8000-000000000106": true,
+      "begin-f09fcafe-0000-4000-8000-000000000306": true,
+      "expiry-is-rechecked-after-the-lock-wait": true,
+      "create-f09fcafe-0000-4000-8000-000000000107": true,
+      "begin-f09fcafe-0000-4000-8000-000000000307": true,
+      "membership-removal-wins-before-proof-commit": true,
+      "membership-removal-left-no-activation": true,
+      "create-f09fcafe-0000-4000-8000-000000000109": true,
+      "begin-f09fcafe-0000-4000-8000-000000000309": true,
+      "guarded-pause-succeeds": true,
+      "newer-resume-succeeds": true,
+      "late-old-pause-retry-does-not-reapply": true,
+      "new-stale-pause-needs-current-review": true,
+      "same-control-id-cannot-change-action": true,
+      "exact-control-retry-does-not-add-a-receipt": true,
+      "create-f09fcafe-0000-4000-8000-000000000108": true,
+      "begin-f09fcafe-0000-4000-8000-000000000308": true,
+      "removal-receipt-blocks-late-proof": true,
+      "removal-permanently-revokes-and-erases-secret": true,
+      "receipt-pruning-cannot-restore-account-access": true,
+      "receipt-pruning-cannot-enroll-a-new-webhook": true,
+      "permanent-removal-marker-cannot-be-pruned": true
+    },
+    "barriers": [
+      {
+        "app": "taskfold-webhook-retry-0",
+        "pid": 297,
+        "event": "advisory",
+        "blockers": [
+          243,
+          295,
+          294
+        ]
+      },
+      {
+        "app": "taskfold-webhook-slot-0",
+        "pid": 430,
+        "event": "advisory",
+        "blockers": [
+          345,
+          419,
+          421,
+          418,
+          420,
+          423,
+          424,
+          422,
+          425,
+          426,
+          428,
+          427
+        ]
+      },
+      {
+        "app": "taskfold-webhook-revoke-first",
+        "pid": 476,
+        "event": "advisory",
+        "blockers": [
+          465
+        ]
+      },
+      {
+        "app": "taskfold-webhook-proof-first",
+        "pid": 527,
+        "event": "advisory",
+        "blockers": [
+          513
+        ]
+      },
+      {
+        "app": "taskfold-webhook-session",
+        "pid": 576,
+        "event": "transactionid",
+        "blockers": [
+          562
+        ]
+      },
+      {
+        "app": "taskfold-webhook-expiry",
+        "pid": 643,
+        "event": "advisory",
+        "blockers": [
+          630
+        ]
+      },
+      {
+        "app": "taskfold-webhook-member",
+        "pid": 699,
+        "event": "transactionid",
+        "blockers": [
+          685
+        ]
+      },
+      {
+        "app": "taskfold-webhook-removal",
+        "pid": 831,
+        "event": "transactionid",
+        "blockers": [
+          818
+        ]
+      }
+    ],
+    "realTasksChanged": 0,
+    "hostedAcceptance": false,
+    "containerRemoved": true,
+    "postgresVersion": 170006,
+    "passed": true
+  },
+  "deno": {
+    "testsPassed": 26,
+    "handlerTests": 15,
+    "transportWireTests": 11,
+    "tlsHttpSubsteps": 7,
+    "failures": 0,
+    "format": true,
+    "lint": true,
+    "types": true,
+    "log": "webhook-subscriptions-mac-checks.log"
+  },
+  "sourceHashes": {
+    "Scripts/Database/package.json": "7f2f7c1795afd4a49f44035f140f132b5a9cf832f2dfe67548f84c0be88f2558",
+    "Scripts/Database/test-webhook-subscriptions.mjs": "06b3f131fd0a4a60b866014b97dcb5cfb46d024a5d2958fcbac5a5969cd9307c",
+    "Scripts/Database/test-webhook-concurrency.mjs": "8e69cd70104f4971e8091cb3a1d84216e3069b494c5d7fc2598b06eb59bd16e4",
+    "supabase/migrations/20261023050732_webhook_subscriptions.sql": "7e0011738fbcaa92fbb5e21473a1c96bde92450f300af81c1a5c60f7c1f4a3d1",
+    "supabase/functions/automation-webhooks/challenge.ts": "a63e02b59c7e701216861e240d49e79eae6e79f088d3317f33758325466520fc",
+    "supabase/functions/automation-webhooks/handler.ts": "8e1bbf2abd72e0760ae0d127669ff06a747631a8b68c00babc56796b37c6eeca",
+    "supabase/functions/automation-webhooks/handler_test.ts": "aa92d7351dd05b38e1e1ca34585788e0f19c5778006e99c8a4dfd8330b9b8c21",
+    "supabase/functions/automation-webhooks/index.ts": "dadefddc2385ac1976f5d883fe46ea1e5a61ae37b5b1da4297cc56047e84a96f"
+  },
+  "mainReadback": {
+    "subscriptionMigration": 0,
+    "subscriptionTablePresent": false,
+    "webhookEndpointPresent": false
+  },
+  "cleanup": {
+    "ownedContainersRemoved": true,
+    "localTlsFixturesRemoved": true,
+    "dockerInitiallyOff": true,
+    "dockerStarted": true,
+    "dockerRestoredOff": false,
+    "reasonDockerLeftRunning": "Other-project containers are active; do not stop unrelated work.",
+    "unrelatedRunningContainersObserved": 7,
+    "unrelatedContainersModified": false,
+    "cloudBranchCreated": false,
+    "cloudAccountsCreated": 0,
+    "privateCredentialExportCreated": false,
+    "nativeAppsLaunched": 0
+  },
+  "verificationLimits": [
+    "Handler Auth/RPC/receiver responses use owned injected fixtures; no hosted management or real receiver-possession flow was claimed.",
+    "SQL exercises actual candidate/native routines on a minimal recorded dependency schema, not all hosted RLS/triggers.",
+    "The earlier nine-per-source hosted transport milestone remains separate.",
+    "Task-change capture, full/large payload projection, durable outbox/dispatcher, native management/private recovery and coherent enablement remain open.",
+    "Master-key provisioning/rotation/recovery and hosted advisors/deadlines/permission acceptance remain required before enablement.",
+    "All user-deferred distribution/Mac private-Keychain, remote reminders, older-client rollout, OAuth and physical location checks remain deferred."
+  ],
+  "correctedIterations": [
+    "Invitation fixture now uses actual owner pending-invitation/recipient acceptance instead of inserting an already accepted membership.",
+    "State controls gained baseline revisions and immutable command receipts after identifying unsafe Pause replay after Resume.",
+    "Permanent removal block added so pruned recovery receipts cannot restore new webhook access.",
+    "Fixtures were updated for new revision receipts and blocked post-removal metadata; failed iterations are superseded by the current successful scoped runs."
+  ]
+}

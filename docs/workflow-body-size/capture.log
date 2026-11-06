@@ -1,0 +1,6 @@
+Test Case '-[TaskfoldCoreTests.WorkflowBodySizeTests testFrozenBodySizeCorpus]' started.
+Test Case '-[TaskfoldCoreTests.WorkflowBodySizeTests testFrozenBodySizeCorpus]' passed (0.667 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.667 (0.668) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.667 (0.668) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.667 (0.670) seconds
+WORKFLOW_BODY_SIZE_CORPUS 1377 61adeb48f306dd1a3e94f15647507e6227a67af0e1221eb2d262de442bd3acf6

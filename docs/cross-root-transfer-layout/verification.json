@@ -1,0 +1,23 @@
+{
+  "reviewed": "2026-10-30",
+  "platform": "mac",
+  "change": "Undo uses a full-width baseline-aligned label with vertically wrapping text, preserving the full action name at largest Dynamic Type.",
+  "appBuild": "Isolated build-for-testing and strict development signatures passed",
+  "native": [],
+  "macNativeAccepted": false,
+  "coreAndSQL": "No Core/SQL changes; preceding 540 Core and 77 SQL checks are historical, not rerun here.",
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "sourceSHA256": {
+    "Taskfold/Views/ChildTaskTransferViews.swift": "e07a030db864c4d404fbaab56c375e877930aa48e86427c29c23d52501420556",
+    "TaskfoldUITests/AudioCommentUITests.swift": "0ee89c38f4da29029d1a32cbb1e53d89be0f473548042b19e42695a884c080dc"
+  },
+  "evidenceSHA256": {
+    "app-build.log.gz": "7050d14b8be016cf0661ca7b2e017d5c23927911fab22bd5ffed0eb75917db6c"
+  },
+  "remaining": [
+    "Older-work review/adoption tools",
+    "Mac/spoken, shared-account/window/background and genuine secure-storage acceptance",
+    "Full attachment/discussion custody and larger workflows"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "Taskfold/Core/SharedComments.swift": "254082d78a2664a23656c5cf2b879d1706576e6e8ab2f1a903ca88448ea6c7c3",
+  "TaskfoldTests/ConversationTimelineTests.swift": "17a57fb7fce075457bd7bee1f33454f7f8c4a0b02ce19af325e3f2e7414b0284",
+  "Taskfold/Views/SharedConversationView.swift": "fa6190d382088ceecc5ec8dd51d7fd46c187aafe6ad21947a79e24ed4d124c0d",
+  "Taskfold/Views/AudioCommentConversationView.swift": "2ec0e572a14f1addaef4ee1036af2b947146b8c5bd2e3bd6470651371c65ec42",
+  "Taskfold/AudioCommentNativeFixture.swift": "b3d99a7a65f692d800ab94cc37b071cd513c0b07f9beb7fcd66565dffd43a1dc",
+  "TaskfoldUITests/AudioCommentUITests.swift": "4e6bbba42ca0305450a95bfddd064dd94578dc3408da0f35168c3341c03cc646"
+}

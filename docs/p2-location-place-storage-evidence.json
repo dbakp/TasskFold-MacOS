@@ -1,0 +1,152 @@
+{
+  "feature": "Protected private place/journal file store and isolated iOS native place picker",
+  "date": "2026-10-22",
+  "scope": "Advanced-reminder foundation progress. Normal app location-reminder editing and OS geofencing are not enabled. Location/Todoist parity and remaining Px are incomplete.",
+  "core": {
+    "ios": {
+      "reported": 1114,
+      "skipped": 13,
+      "passed": 1101,
+      "failed": 0,
+      "newFilesystemCases": 10,
+      "log": {
+        "file": "location-place-full-ios.log",
+        "sha256": "405c5f3d2da0c55c151cda946d8e739e165e095a170cd7091d877884c9cee861"
+      }
+    },
+    "mac": {
+      "reported": 1146,
+      "skipped": 33,
+      "passed": 1113,
+      "failed": 0,
+      "newFilesystemCases": 10,
+      "log": {
+        "file": "location-place-full-mac.log",
+        "sha256": "80fdc689c0c31a23e2757a92095c19e2b764e5ae30e24538828695062724e337"
+      }
+    }
+  },
+  "privateStoreChecks": [
+    "Missing state creates neither identity nor private directory",
+    "Real disk restart roundtrip, 0700/0600 modes, backup exclusion, stable device identity and no leftover temporary file",
+    "Account-scoped listing/clear retains other accounts and journal identity",
+    "Rename keeps boundary revision; geometry changes it; exact retry is idempotent; stale writes/deletes are refused",
+    "Corrupt/unknown-future data preserved; explicit confirmed reset mints fresh identity",
+    "Oversize file is bounded and refused",
+    "Symbolic/hard links cannot redirect read/reset into unrelated data",
+    "Aliased directory and competing process lock are refused without replacing data",
+    "Independent actor instances reread fresh disk state and preserve private place extensions",
+    "Journal cannot rewind/drop intent/change device; clearing places retains submitted history"
+  ],
+  "native": {
+    "phoneFinal": {
+      "result": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "log": {
+        "file": "location-places-phone-final.log",
+        "sha256": "1d336dc347bf6ce0dab955529d65e954097f72c4ee2efbff7c8213b86022c35b"
+      },
+      "cases": [
+        "Largest-text dark picker and Cancel without creating state or changing task tables",
+        "Actual Apple Maps search for public Copenhagen Central Station, pin review, native Save, exact private file inspection, relaunch, rename/revision preservation, radius/revision update and delete; task tables stay unchanged"
+      ]
+    },
+    "phoneEarlierSyntheticPinFlow": {
+      "result": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "log": {
+        "file": "location-places-phone-v2.log",
+        "sha256": "8a783e4a81da41bca80423f28346455ab8e6ad2f34d8a4b10a98f2730dea507b"
+      },
+      "scope": "Earlier layout iteration: synthetic search result, exact E6 coordinates, disk save/relaunch/edit/delete and dark Cancel. Final phone run rechecks production component after separate-row/full-width Search layout changes."
+    },
+    "tabletFinal": {
+      "result": {
+        "result": "Failed",
+        "totalTestCount": 2,
+        "passedTests": 1,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "log": {
+        "file": "location-places-tablet-final.log",
+        "sha256": "7996d8cc57ab3f3dbabedd081bda66bbef1a231cab51df8fd4a71e6d6a958b2b"
+      },
+      "acceptedAsFullFlow": false,
+      "scope": "Largest-text dark picker/Cancel passes. Search-result/save/edit flow fails because automated Search tap does not invoke its action. Repeated system accessibility-service errors remain after non-erasing simulator restart. App-versus-simulator cause is unresolved; no iPad search acceptance claim."
+    },
+    "macBuild": {
+      "log": {
+        "file": "location-place-native-mac.log",
+        "sha256": "4ce1d1f9db873eb8197eb5455d39ea399c90dc9ae8b8c3564fdfd5a985df5eff"
+      },
+      "scope": "Unsigned native compilation/link only. No Mac location UI/permission or distribution acceptance."
+    },
+    "iosSignature": "Strict deep verification of isolated Simulator app passed; this is not distribution verification",
+    "screenshots": "Actual iPhone pin/Apple map and largest-text dark initial screen inspected. iPad largest-text dark initial screen inspected. Images retained with local xcresult attachments."
+  },
+  "implemented": [
+    "Bounded account-scoped private archive with stable installation identity and journal, separate from tasks, widgets, App Groups and portable backups",
+    "Process writer lock, bounded no-follow regular-file reads, restricted directory/file modes, backup exclusion, atomic rename and synchronization; iOS Complete Until First User Authentication attribute",
+    "Unreadable and missing states stay distinct; future private protocol fields refused rather than silently dropped; explicit reset and account-only clearing",
+    "Native iOS deliberate address search, map/pin/map-center selection, name/radius review, explicit Save/Cancel, edit/delete/clear and storage recovery",
+    "One-use current-location manager exists only after explicit tap, When In Use only, approximate-location cue, cancellation and bounded 20-second timeout",
+    "Address lookup has separate timeout/cancellation and query/map-area disclosure; Search uses its own full-width row"
+  ],
+  "appWiring": {
+    "normalLocationReminderChoice": false,
+    "version6ReminderWriter": false,
+    "geofencesRegistered": false,
+    "pickerRoute": "DEBUG only, exact isolated workflowtestsp1 bundle plus --location-place-fixture",
+    "macPickerOrLocationPermission": false,
+    "alwaysOrBackgroundLocationAdded": false
+  },
+  "openWork": [
+    "Resolve iPad Search interaction and complete native saved-place acceptance there",
+    "Exercise actual Use current location and permission denial/recovery; physical iOS protected-data/backup behavior and process/power-loss interruption acceptance",
+    "Connect private store to native location scheduling engine, explicit default-off account/device allowance and task Save/Cancel/Undo",
+    "Actual iOS location-trigger adapter and coordinated time/Focus/location notification budget",
+    "OS response-origin/replay/account/task/place validation and Open/Complete/Tomorrow/Snooze actions",
+    "Every-visit-until-completed mode, private desktop-to-phone authoring/handoff and Mac unsupported-reference UI",
+    "Genuine boundary delivery, physical background/locked/reinstall acceptance and spoken accessibility"
+  ],
+  "failedIterations": [
+    "Initial phone test required locale-independent radius option identifiers and navigation-bar readiness instead of offscreen lazy-form Add control",
+    "Screenshot review led to separate Search row for large text and full-width tappable content",
+    "iPad Search taps fail before action invocation; temporary staged-only logging confirmed no callback and was removed. Separate row, larger target, explicit center tap and non-erasing simulator restart did not establish acceptance. This remains open, not treated as a passing test."
+  ],
+  "limitations": "File tests prove the exercised filesystem paths, not physical iOS data protection or power-loss durability. Map/search/save tests do not prove GPS permission, geofence scheduling or delivery. The component remains isolated until native reminder integration and acceptance are finished.",
+  "userDeferred": [
+    "Remote reminder delivery/device-reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution signing/install-update verification",
+    "Genuine Google/Microsoft OAuth/provider acceptance"
+  ],
+  "cleanup": {
+    "ownedMainTestAppsClosed": true,
+    "syntheticPrivatePlaceNamespacesRemovedAfterEvidence": true,
+    "obsoleteUnsignedMacProductRemoved": true,
+    "acceptedResultsAndDiagnosticLogsRetained": true
+  },
+  "remainingGoal": "Continue the complete remaining P2_PLAN.md scope; this milestone does not complete the active goal.",
+  "ownedSourceSHA256": {
+    "Taskfold/Core/LocationPlaceStore.swift": "13a523d975a3c55de3b9e13438c5bb68352f0425abacf28291dbbccf868cc4c3",
+    "Taskfold/Core/LocationReminders.swift": "57b4b3a6c2f08adbeae69ad486657694f903eccaeff5e71f67fa06a46f01e6c6",
+    "TaskfoldTests/LocationPlaceStoreTests.swift": "640314a16db214bf792412f858f758690da08ca30a8f14ef5e7d324a3db457a2",
+    "Package.swift": "1193a11f2862baa788beb8ea263f163dd6b2384609ffdb6f9dcb7f10df7b0a15",
+    "Taskfold.xcodeproj/project.pbxproj": "8846198bf9e517a7611b32d2994a38ca8081f5ceffa460c7f8e040f8c7c997be"
+  }
+}

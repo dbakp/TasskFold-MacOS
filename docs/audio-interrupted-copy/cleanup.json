@@ -1,0 +1,48 @@
+{
+  "ownedSimulatorSessions": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "finalState": "Shutdown"
+    },
+    {
+      "device": "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+      "finalState": "Shutdown"
+    }
+  ],
+  "removed": [
+    {
+      "path": "/tmp/taskfold-audio-copy-phone-v1.xcresult",
+      "logicalBytes": 116634960
+    },
+    {
+      "path": "/tmp/taskfold-audio-copy-phone-v1-attachments",
+      "state": "Not exported"
+    },
+    {
+      "path": "/tmp/taskfold-audio-copy-phone-final.xcresult",
+      "logicalBytes": 5426993
+    },
+    {
+      "path": "/tmp/taskfold-audio-copy-phone-final-attachments",
+      "logicalBytes": 2430334
+    },
+    {
+      "path": "/tmp/taskfold-audio-copy-ipad-v1.xcresult",
+      "logicalBytes": 82945716
+    },
+    {
+      "path": "/tmp/taskfold-audio-copy-ipad-v1-attachments",
+      "logicalBytes": 80615045
+    },
+    {
+      "path": "/tmp/taskfold-audio-copy-ipad-final.xcresult",
+      "logicalBytes": 4603154
+    },
+    {
+      "path": "/tmp/taskfold-audio-copy-ipad-final-attachments",
+      "logicalBytes": 2327312
+    }
+  ],
+  "allocatedBytesEstimate": 295854080,
+  "evidenceRetained": "Result summaries, compressed logs, 12 final screenshots, rejected-row screenshot, source/build/signature bindings in both repositories. Active reusable build and Core scratch caches retained."
+}

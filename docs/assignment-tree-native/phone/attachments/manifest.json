@@ -1,0 +1,86 @@
+[
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "4D4058C9-4A7B-46DB-BB6B-D5D56AA2C01A.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Actual saved project change cache_0_D827B92C-5616-4542-8F9C-7E6D9D117182.json",
+        "timestamp": 1793560444.03
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "63F8A676-A958-42C6-B121-FCED2E117483.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Actual saved project change cache_0_212368CF-683C-4BF0-B906-BC326C6FD90D.json",
+        "timestamp": 1793560432.999
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "C459AE5E-195A-4B4E-A873-09D552A7C97D.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Native project destination chosen_0_B9C29A12-BAC8-4D6A-A749-A5FE9E509566.png",
+        "timestamp": 1793560431.356
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "34099A6A-D64A-44F2-8E95-5883E53C2E5E.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Original project change source_0_94BCE36B-5B7E-41AF-A417-DF48869937D9.json",
+        "timestamp": 1793560421.947
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testProjectChangePreservesExactChecklistThroughSaveAndColdReturn()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testProjectChangePreservesExactChecklistThroughSaveAndColdReturn"
+  },
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "A5051F87-32C5-4628-8408-61F79CD4C5B2.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported source after cold return_0_D9E07786-CBB0-4DE7-9ABB-8C64CA230287.json",
+        "timestamp": 1793560491.264
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "709B8C6F-18DF-4412-86D6-2CA0DF8EA320.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported source after refusal_0_D47913E4-1607-4B85-ABBD-75319235A45D.json",
+        "timestamp": 1793560478.018
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "B3A122F4-8C79-438D-ACC8-4CFA3BF58E0C.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported project move keeps original selection_0_E5CB9903-9EA4-4620-8C79-0274879DCFF1.png",
+        "timestamp": 1793560478.017
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "FE367AD0-47F5-400B-9ACA-8DB9D284EAF6.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported project change source_0_D29CB30E-69AA-4E80-B5CC-0B0C4D5A0EB0.json",
+        "timestamp": 1793560467.534
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource"
+  }
+]

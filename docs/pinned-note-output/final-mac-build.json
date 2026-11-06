@@ -1,0 +1,11 @@
+{
+  "succeeded": true,
+  "rawSHA256": "dbd0b9a7c2bf45f7b438c0d9aa33865f21b389771b8c9804abd1637b5eea2a15",
+  "warnings": [
+    "/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:3764:13: warning: initialization of immutable value 'vault' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]",
+    "|             `- warning: initialization of immutable value 'vault' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]",
+    "/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4056:52: warning: will never be executed",
+    "|                                 |                  `- warning: will never be executed",
+    "2026-10-27 23:50:10.549 appintentsmetadataprocessor[97637:26334066] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+  ]
+}

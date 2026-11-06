@@ -1,0 +1,15 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 64670220288,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 522973184,
+      "projectedAllocatedBytes": 522973184
+    }
+  ],
+  "freeAfterBytes": 64670187520,
+  "actualFreeChangeBytes": -32768
+}

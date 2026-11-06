@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "baseCommit": "62382f98b5e4375caaec4f49ab55611423720df0",
+  "milestone": "Read-scoped project and section discovery; full automation feature incomplete",
+  "featureEnabled": false,
+  "migrationApplied": false,
+  "edgeFunctionDeployed": false,
+  "hostedKeysIssued": 0,
+  "realTasksChanged": 0,
+  "fullPxComplete": false,
+  "candidateMigration": "20261023010559_automation_destinations.sql",
+  "liveMetadataReadback": {
+    "migrationApplied": false,
+    "destinationRPCExists": false,
+    "privateKeysExist": false
+  },
+  "verification": {
+    "destinationSQL": {
+      "passed": true,
+      "assertions": 72,
+      "command": "node Scripts/Database/test-automation-destinations.mjs",
+      "runtime": "Pinned PGlite 0.5.11 with pgcrypto; actual candidate SQL; synthetic dependency schema",
+      "checks": [
+        "Service-only grants and read scope",
+        "Own/accepted access; pending/foreign resources excluded",
+        "Inaccessible parent identity hidden; accessible parent preserved",
+        "Archived/ancestor-archived availability",
+        "Native order metadata independent of stable UUID pages",
+        "Cursor reauthorization and cross-project section rejection",
+        "Strict input, response byte bound, revocation and quota rollback",
+        "Synthetic Auth fixtures removed"
+      ]
+    },
+    "mutationRegression": {
+      "passed": true,
+      "assertions": 101,
+      "loadsAllSevenAutomationCandidateMigrations": true
+    },
+    "realLoopbackHTTP": {
+      "passed": true,
+      "assertions": 25,
+      "rpcCalls": 14,
+      "scope": "Actual Deno handler and actual SQL through owned loopback service adapter; includes projects, sections and inaccessible destination"
+    },
+    "handler": {
+      "passed": true,
+      "tests": 21,
+      "lintFiles": 3
+    },
+    "core": {
+      "passed": true,
+      "tests": 92,
+      "failures": 0,
+      "command": "swift test --filter 'AutomationAccessTests|LocationReminderTests|LocationTaskDraftTests|NotificationAdmissionTests'",
+      "scope": "Native Core tests including reminder engines with owned adapters; not positive OS geofence delivery"
+    }
+  },
+  "unverified": [
+    "Hosted Auth/TLS/PostgREST and timeout enforcement",
+    "Cross-connection revocation/membership races",
+    "Full production-trigger schema acceptance",
+    "Hosted management and clipboard lifecycle",
+    "Fresh native UI/build acceptance for this backend checkpoint",
+    "Portable advanced-reminder authoring remains next"
+  ],
+  "userDeferrals": [
+    "Physical-iPhone positive location delivery",
+    "Remote reminders",
+    "Older-client editing safeguard rollout",
+    "Signing/distribution/update verification",
+    "Calendar-provider OAuth registration"
+  ],
+  "sourceSHA256": {
+    "supabase/migrations/20261023010559_automation_destinations.sql": "141aa63e4e0cb593cbf56c96c6975f7eb4a53cbcc38d2f3449e7c2c73888ec7b",
+    "supabase/functions/automation-tasks/handler.ts": "f1d095aed04c7d7aebf21ccba0c1d63422e07d38348faf678386659eee716c07",
+    "supabase/functions/automation-tasks/handler_test.ts": "82bf2813aeb5776bd5f9c434d9ea265ec0a05808b5e9a258daadef6accf2289b",
+    "Scripts/Database/test-automation-destinations.mjs": "b99f6d33d84664f4362e3a9729237769e22fba87cc3e350b0f5b449fa81e108a",
+    "Scripts/Database/test-automation-mutations.mjs": "6f228e6e9a7c6a1855f84dcdddfb7cf3c4e78e66dfdb37b822c85914a08e3885",
+    "Scripts/Database/automation-http-pipeline.mjs": "ab34352c73e6f6df36a4e9380f443039631e6297062b8d38101269df061eb53d",
+    "Scripts/Database/automation-http-fixture.ts": "517f15a79dedae7bebe3ce5f7a5d9a16c411ff22aac5106f113b93f07413f9de",
+    "Taskfold/Core/AutomationAccess.swift": "b2179a5551972a9df017d114e88ee2c788038a9e4feb6c17022c96adb9e0bf02"
+  },
+  "failedIterations": [
+    "Synthetic read/create keys initially used duplicate unique token hash; fixture corrected",
+    "Synthetic accepted invitation INSERT refused real native invitation guard; fixture now uses owner invitation then recipient acceptance"
+  ],
+  "noLiveDataMutated": true
+}

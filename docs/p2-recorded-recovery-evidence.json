@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-25",
+  "platform": "macos",
+  "stage": "Explicit encrypted recorded-result draft preservation for missing/displaced task incarnations",
+  "baseCommit": "a97b62ba20930626e6a39ecfb5965a0c2cbc5c15",
+  "sourceSHA256": {
+    "Taskfold/Collaboration.swift": "d018e012f1822c8f665c92955f5a61658373b4e1d5bae16d1bbb057150d65872",
+    "Taskfold/Core/Store.swift": "4d4b986a0d4ae60ce04e435cf445992e8e23c763ef5e3ed0cc59e78c5a996f12",
+    "Taskfold/Core/TeamCompletion.swift": "4ab6e4930664a3776e0579bc9e3a15e6e72e61168213d53253f9b9dcc67fab79",
+    "Taskfold/Core/TeamCompletionDraft.swift": "0039b1abd31eafde46d0e10136d9aafda171182515a0e359ecd3f8445f0a589c",
+    "Taskfold/Core/TeamTaskBatch.swift": "f333b48abc2e5e020b58d1ed9b294c8a433fd8100dd3730817d0fb34abed59ee",
+    "Taskfold/Views/TaskInspector.swift": "bd9d3ddcc88c1bfca2b8c91db354dd0cec0dfe7fa7d40e4878b55e2320d47507",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "a6fb907c2f5598bb4c83b287cdbbc8c6cf8a9ba766342cbc15e4edb619becc77",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "cce720c1a5964445651a07dfec54bf75ffdd18aca39ba16725cbe2f11c94890c"
+  },
+  "core": {
+    "actualPassed": 203,
+    "failed": 0,
+    "skipped": 0,
+    "newCases": 12,
+    "scope": "94 individual + 99 group/recovery draft + 3 failure-message + 7 presentation tests. New cases cover individual actual-envelope preservation, missing source, canonical recurring successor replacement, task cohorts, queued deletion/comments, read boundaries, unsupported intent, encrypted storage, dedupe, capacity/removal fences and tampering."
+  },
+  "native": {
+    "selectedPerPlatform": 5,
+    "newPerPlatform": 4,
+    "legacyControlsPerPlatform": 1,
+    "results": {
+      "mac": {
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "result": "Passed"
+      }
+    },
+    "qualification": "Mac acceptance combines four successful cases from its suite with one corrected export rerun. Initial filename/folder-selector failures are retained separately; no file was saved in that attempt.",
+    "scope": "Four new ordinary missing-source cases: single and group explicit preservation/relaunch/export; real workspace-cache write failure after verified archive; real archive-directory barrier before local retirement. Existing cancelled-selection draft storage/retry/reopen control remains. Every new case also verifies obsolete-presentation rejection through the actual Store API without changing the cache or consuming the current message.",
+    "independentEvidence": "12 complete before/after/relaunch/archive/export groups plus three legacy failure/retry controls. Original envelopes and all archived snapshot fields retained, connected export only, no new editing grant. Only knownTasks/quarantined Codable Set ordering normalized.",
+    "sharing": "Actual JSON transfer data retained through reserved DEBUG inspection. iPhone/iPad native Save to Files action is observed and sharing cancelled. Mac native Save dialog writes the synthetic JSON to a temporary local folder; actual saved bytes equal the prepared export. A second Cancel preserves the file and workspace. No external delivery is claimed.",
+    "limits": "Ordinary missing source and synthetic local peer on native hosts. Canonical recurring replacement and comment/cohort cases are Core-tested here, not broad new native series acceptance. Production account chooser, hosted receipt freshness/multiwriter, I/O-phase races, release/reinstall behavior and unsupported cross-table intent remain unaccepted."
+  },
+  "storage": {
+    "format": "com.taskfold.saved-edits v1 export; encrypted TeamCompletionRecoveryDraft v1 private archive",
+    "directory": "Team drafts/<backend-bound ID>/Recorded recovery; separate from legacy Selections",
+    "bounds": "20 explicit archives, 16 MB per plaintext archive, 64 MB aggregate ciphertext; no automatic eviction",
+    "safety": "Backup then account/backend-authenticated encrypted save and load verification before workspace persistence. Removal fence precedes the private lock. Same-work retry binds original envelope, complete review response and whole snapshot. Export does not include the full snapshot or analysis wrapper."
+  },
+  "remaining": [
+    "Supported cross-table preference/mention cohorts",
+    "Broader native missing/recurring history and keyboard/spoken acceptance",
+    "Backup/vault I/O-phase session/account races and remaining storage variants",
+    "Large workloads and genuine hosted multiwriter delivery",
+    "Remaining advanced/wearable work; all user-deferred release/provider/device gates unchanged"
+  ],
+  "hosted": "No hosted schema/service/configuration/rollout or real account/task mutation. No new recovery write RPC. Existing native collaboration rollout stays default off.",
+  "developmentCorrections": [
+    "Initial native runs: legacy control passed per platform; new cases exposed a DEBUG fixture that reseeded a deliberately absent root after relaunch. Preserve missing roots in the reserved recorded-draft mode unless explicitly reset.",
+    "An assertion interrupted an iOS Swift defer cleanup, leaving its previous fixture vault parked. Restored those exact prior vaults, retained temporary synthetic copies for diagnosis, and moved cleanup to XCTest async teardown blocks.",
+    "Mac initial export assertions queried an always-present Apple menu. App-targeted Escape also closed the parent sheet. Refined Mac JSON export to the standard Save dialog and verified actual local delivery plus a second cancellation without changing the workspace.",
+    "Explicitly bound the new Store entry point to the preview presentation and added real stale-entry refusal checks. Kept the established provisional task-copy route ahead of generic fallback.",
+    "Stopped only the verified optional iPad simctl diagnostic collector after all failed test methods were terminal; parent result job then exited 65. No actual test was restarted because of an observation timeout."
+  ],
+  "artifactSHA256": {
+    "app-build.log": "249495113929af9c908bb781bef3fe9dad1c6444f7e0f27bb77df7e116f9b061",
+    "cleanup.json": "604e4a4bdd0acb4ad0d0bb23d5d0bf1f90c3e8b16bd4ae60799c509ccc78e97e",
+    "completion-regressions.log": "5b8c2122f11f45545e1f72ded52d84d63fa0936ed64ac663e136b3dbd440a1be",
+    "development-run-counts.json": "0d27318e6d674a43ccd7d7e3c722845c227d88a106c5d35323c08391a3f01348",
+    "final-review.json": "ebb37297979cfc917fdef2abae95096645f62883dab864ddf2a0ba3a23954eda",
+    "final-source-check.json": "c5b207a992cf2e25324d2b3554877f3f9e368247261ab2d2e143d4d111507829",
+    "independent-validation.json": "85558aab6e470f8a6ae8560fb6ee610266571eaec92f804492cb0591e061d0d6",
+    "initial-fixture-vault-restoration.json": "b63cf16b44e984adc4336ac92e8eb9da409037af1dbb2d140fa26e3c1433609c",
+    "installed-check.json": "8e79d865b1a6d1ea7c090160e9e2df25fab57903bccf198f9de8ae7590a686c1",
+    "isolation-receipt.json": "1d03518ebcc0ffccc962abdefd34b0f35c14116485a4aaebcc1d0ee76af7f680",
+    "mac-cache.json": "fd96a73cae7280d92707d642f0efbb4d18a331a743c2c25ea529da0af14ebcc2",
+    "mac-group.json": "ba88c2fc04bfb6deae4746a906ea68b258da4f2ab4ea5ae0415d6f45a964c0dd",
+    "mac-legacy-selection-control.json": "75b3f52d17e1c351a8b6a741641dc4e3593b251d1f0c5620cd5b59ac5ae65aaf",
+    "mac-native-export-delivery.json": "0fd1676836c66d3ecdc4ab37479eb8f2d628d4f5f4da223ab875cb3453610529",
+    "mac-native.log": "c0ad66a3d2ebb3321ff6a040b341e6b8cfffff48bd5054ebd0a86b6965bbc869",
+    "mac-recorded-draft-export-cancelled-safely.png": "c8ad4969aad157618b4bf9d7975d08278d9af9aef7993e05cf51d7b53b69663c",
+    "mac-recorded-draft-native-export-picker.png": "b1d472f5b4bfd89d371cae1d601bef8bff1a9a999392be0ee07abce08b314f66",
+    "mac-recorded-draft-native-save-picker.png": "f0493a7e6cd579628acc5dc72b760100f8fef1e17adb54e8adc444c2dd21c745",
+    "mac-recorded-draft-retained-preview-group.png": "c8ad4969aad157618b4bf9d7975d08278d9af9aef7993e05cf51d7b53b69663c",
+    "mac-recorded-draft-review-single.png": "e3587ca4f582d5a86cad05f0aba8e531a78b85791c8132e91784043342a7c546",
+    "mac-recorded-draft-storage-failure-cache.png": "685f29fa8c9b5af7bbbdd68c0a780b60ceea017ec0e05ddac878bbbafa21ce85",
+    "mac-recorded-draft-storage-failure-vault.png": "49a0c3a405a5f458edec7f2575e16a52063884cbbb44341efaf2e3049a9eb2f5",
+    "mac-save-confirmed-native.log": "b154a18b06945510ed5cf4373092e02e5167459f6555dc57b3762245c9909bf2",
+    "mac-save-confirmed-summary.json": "7aa9a8c99fd820bffaf0891aabdd185111f406fe8b89a57d3503228a71c84ad9",
+    "mac-save-group-summary.json": "e07505c4a54f6a307ff283efe932c5251f24ff269c4edbe85759a79f37e738c6",
+    "mac-save-native.log": "4b5b5b0704c785a7dae7c14308ddf62a725e63dfe73ed365fec489a47401acf6",
+    "mac-save-summary.json": "19b8d3ce2d6cc19ed5861f98d8afe729dc8feba4dea3f1ba09352645cdb5dadd",
+    "mac-single.json": "6480806b71934f71b51723c941f6ecdc02f198f2bf7613bad17508d8ac134a4c",
+    "mac-summary.json": "d0f77c18d3df017e6a394d0df093a9a57677df6ebf3e6d04f3764ea945ba16fc",
+    "mac-vault.json": "4fdad5dce87b030060276e91ab15616dc4fc30d93330e09f8754e157696968bf",
+    "mac-verification.txt": "472209fdca0591e995abd36ad78d8e361ee990033317c5e61befa55e4c408128",
+    "metadata-tests.log": "c5e0591ec2fe8b9ba541adf31103fb670d7239e32d2ab3d2ed7ed6dd70f1adb7"
+  },
+  "cleanup": "recorded-recovery/cleanup.json"
+}

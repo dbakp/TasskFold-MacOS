@@ -1,0 +1,32 @@
+{
+  "platform": "mac",
+  "buildOnly": true,
+  "sourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "16f18401a70b061277717e96440a182d8feca3f3b1bfb2175de5d3447b464f92",
+    "Taskfold/Core/FilterAssistance.swift": "442c0a4888aa6e1ad2af547a05463d2e872958d0f6cc74313ab226c275fdc2b6",
+    "Taskfold/Views/FilterAssistanceView.swift": "5d6df884eb9df945f4c9daa0fc16d3be430496c735608e528da3e3d89616dd57",
+    "Taskfold/Views/SavedViews.swift": "d4286e32a7d3399586b08ea22bd2449efce834f12d3d5ca07bceedc6d1ce9a48",
+    "Taskfold/Core/Filters.swift": "0daded24883f4eea1e4776473daa231c118400cd67ddff78a298a83f65f5ffa1",
+    "Taskfold/Core/TaskBreakdown.swift": "8c408e3faa839ff68890ead42d7e001aea79017bca6bbd758abef770e2a306bc",
+    "Taskfold/Views/TaskBreakdownView.swift": "be4318fa36ce0ca89b0f8defa79276312bdb7ad65cd1a1eed53ffe69002dd3c5",
+    "Taskfold/Views/TaskInspector.swift": "ff273397b40ce40bd5351af89c2e50e798353e3eb5091cc14c5acbc997382bb6",
+    "Taskfold/Core/Planner.swift": "5b72722ff5a9f1ecd303267c70d4aece9a3d56c88705cfa0ee412383c78305fd",
+    "Taskfold/Core/Models.swift": "2401de7289904eda44cd849dedaa3118478b935e2710e750355f531f54ba96a8",
+    "Taskfold/Core/NoteMarkup.swift": "8bc28bec74e5e525186e15d639a0147fdf4071aa6737c51c72b940a22cb9e90b",
+    "Taskfold/Views/NoteFormattingView.swift": "53192b45e4d4cb142da4b19475e4b9a1c5c7332b61226a33d2e1b84a8a9bdedd",
+    "Taskfold/Views/PinnedNotesView.swift": "c461c2787b3484fba5d57901ac5c15c415ced3d241290caa462c0bb47f7e71cb",
+    "Taskfold/Core/Backend.swift": "e96e94bb2e7eeecb60bb440c9a5ec4fe8db3ee765d7fb6fe583ad04ad7a2eddc",
+    "Taskfold/Core/Backups.swift": "f74554e10a7920d2a847093e10632c5ee51bc01662622de2d371eb9057d54824",
+    "Taskfold/Core/Store.swift": "eca6a4f0d5bb9d115c2b706f3484a4ec5dd204ef7ce09d57fb1b6834c1dcdf3f",
+    "Taskfold/TeamTemplateNativeFixture.swift": "8bacac1de13acf84512205ced304e4f569786a30935e253e12c00a3e38447ba1"
+  },
+  "xcodeExitCode": 0,
+  "ordinaryAppUnchanged": true,
+  "runtimeAccepted": false,
+  "strictSignatureVerified": true,
+  "binarySHA256": "7fac12660a3b26ce850805290f940ddfc313a0da6fe5140f2286cddc347638b1",
+  "sourceUnchanged": true,
+  "foundationModelsWeakLinkVerified": true,
+  "olderOSRuntimeAccepted": false,
+  "owningProjectSHA256": "35b5c3b0821a22234d38f86d532985a8f53d0c15cf8ffa8c4b6afd1d60179a10"
+}

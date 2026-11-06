@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-11",
+  "scope": "Mac Year-grid keyboard navigation, independent Year today-marker corrections, and authorized VoiceOver attempt.",
+  "initialGap": "Down did nothing in Year view; Right paged the year rather than selecting a month.",
+  "implementation": {
+    "mac": "Down enters month navigation; Left/Right move one month, Up/Down four months, Return opens selected month, Escape restores year paging. Selected month has a visible outline, selected accessibility trait, stable identifier and Open month action.",
+    "both": "Only in-month cells draw the today overlay; trailing cells no longer draw a duplicate marker."
+  },
+  "builds": {
+    "mac": [
+      "year-keyboard-mac-build-v1.log: TEST BUILD SUCCEEDED",
+      "year-keyboard-mac-build-v2.log: TEST BUILD SUCCEEDED"
+    ],
+    "ios": "year-today-ios-build-v1.log: TEST BUILD SUCCEEDED"
+  },
+  "nativeMac": {
+    "v1Checks": [
+      "Down entry, October to November",
+      "Down November 2026 to March 2027; Up returns",
+      "December 2026 to January 2027 and back",
+      "Return from October opens Month with October 11 selected and 3 tasks",
+      "Escape restores year paging",
+      "Selected month outline inspected in normal/light wide window"
+    ],
+    "v2Checks": [
+      "Normal Quit and explicit isolated relaunch returns Today with 3 tasks",
+      "Year October 2026 selected with 3 tasks and Open month action",
+      "Screenshot confirms September trailing today outline absent, October marker present"
+    ],
+    "preservation": {
+      "date": "2026-10-11",
+      "allRawTablesEqual": true,
+      "rawTableCount": 9,
+      "pendingBefore": 0,
+      "pendingAfter": 0,
+      "normalQuit": true
+    }
+  },
+  "regression": {
+    "name": "testYearGridKeyboardSelectsMonthsAcrossYears",
+    "compiled": true,
+    "executedByXCTest": false
+  },
+  "voiceOver": {
+    "authorization": "User explicitly approved testing and restoring VoiceOver.",
+    "originalEnabled": false,
+    "enabledVerified": true,
+    "welcome": "Use VoiceOver activated; introductory tutorial closed.",
+    "captionPanelOriginallyEnabled": true,
+    "captionPreferenceChanged": false,
+    "attempt": "Control-Option-Right and Control-Option-Shift-Down attempted in isolated calendar. No reliable VoiceOver cursor or announcement was observed. VoiceOver window access timed out; app-only captures did not expose the caption.",
+    "spokenOutputVerified": false,
+    "restoredEnabled": false,
+    "restorationVerifiedInSystemSettings": true,
+    "acceptance": "OPEN: this is an attempted test and verified settings restoration, not VoiceOver journey acceptance."
+  },
+  "limits": [
+    "Mac native acceptance scoped to normal/light wide-window flow.",
+    "iOS today-marker correction is build verified, without new native Simulator execution.",
+    "Regression compilation is not a Mac XCTest runtime pass.",
+    "Compact pointer routing, full VoiceOver, iOS hardware keyboard, retained clipping findings and wider P0 acceptance remain open."
+  ]
+}

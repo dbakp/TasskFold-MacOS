@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-21",
+  "status": "iOS native child action bridge implemented and scoped phone/tablet acceptance passed; parent/child filter feature remains unfinished",
+  "implementation": {
+    "both_owned_cores": "native contextual draft to authored-field child edit; root generation is read-only action context, never a new child field",
+    "both_owned_stores": "resolve displayed selection against current readable root, capture workspace, commit real root mutations; reject direct synthetic task-row mutation IDs",
+    "iOS": "captured selection opens embedded detail editor; flat row parent breadcrumb; row completion/delete use guarded Store transaction and existing Undo",
+    "normal_iOS_editor": "ordinary tasks use their previous Save path through the presentation wrapper",
+    "fixture": "exact isolated bundle com.dbakp.taskfold.workflowtestsp1, ui-testing account, DEBUG, --uitesting and --hierarchy-editor-fixture; only fixture All tasks shows child candidates",
+    "Mac": "helpers and direct-write guard compile independently; native flat-result controllers are not yet connected"
+  },
+  "verification": {
+    "owned_full_core_suite": {
+      "executed": 965,
+      "skipped": 32,
+      "failures": 0,
+      "log": "mac-p2-child-editor-core.log"
+    },
+    "additional_draft_cases": 4,
+    "total_hierarchy_cases": 18,
+    "phone_children": {
+      "result": "ios-p2-child-editor-phone-v4.xcresult",
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0
+    },
+    "phone_normal_root": {
+      "result": "ios-p2-child-editor-root-phone.xcresult",
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0
+    },
+    "tablet_children": {
+      "result": "ios-p2-child-editor-tablet.xcresult",
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0
+    },
+    "native_child_checks": [
+      "open exact third-level child from actual flat row",
+      "parent path included in accessible row label",
+      "native Select All replacement and Save",
+      "saved root remains the only task row",
+      "restoring only child title makes saved root exactly equal to original root",
+      "saved child completion true and parent completion false",
+      "completion Undo restores exact edited root",
+      "native context-menu Delete removes the selected child",
+      "deletion Undo restores exact edited root",
+      "normal process relaunch without reseeding preserves exact edited root"
+    ],
+    "normal_root_checks": [
+      "open normal task through presentation wrapper",
+      "native edit and Save",
+      "normal relaunch without fixture reset retains changed title"
+    ],
+    "visual": "actual normal-light phone/tablet row and editor captures inspected; parent breadcrumbs wrap; tablet lower Form fields require ordinary scrolling",
+    "captures": [
+      "tmp/child-editor-phone-v4",
+      "tmp/child-editor-tablet"
+    ],
+    "builds": [
+      "ios-p2-child-editor-final-build.log",
+      "mac-p2-child-editor-build.log"
+    ],
+    "app_signatures": "strict deep verification passed for both final products; p2-child-editor-signatures.json",
+    "staging_inputs": "p2-child-editor-staging-inputs.json; all changed sources match own repository inputs plus expected isolation namespace transforms"
+  },
+  "diagnostics": [
+    "First phone run: bulk-delete text entry lost input; not accepted",
+    "Second phone run: XCTest string identifier query exceeded 128 characters; changed test to explicit identifier predicate",
+    "Third phone run: Command-A did not select text in this simulator; native Select All menu used instead",
+    "Passing child cases retained framework animation-notification waits around context menus; the same live jobs continued without restart and saved Delete/Undo results were verified",
+    "Alternating simulator destinations modified cached Assets.car after signing; only the owned app build product was removed and rebuilt from cached objects, then strict signature verification passed"
+  ],
+  "remaining": [
+    "normal saved-view hierarchy grammar, builder and candidate source integration",
+    "Mac flat-result routing/commands and native acceptance",
+    "mixed root/child bulk, planning, movement and duplication actions",
+    "case-sensitive child widget identities, membership, routes and completion",
+    "dependent print/output parent context",
+    "source/workspace/access-change, persistence-failure and cloud/offline native acceptance",
+    "legacy-checklist recovery, large text, dark appearance and VoiceOver for new flows"
+  ],
+  "limits": [
+    "Public hierarchy filter controls are not exposed yet; the fixture is only a native action proof",
+    "No claim that all child actions or metadata editor fields are natively accepted",
+    "No genuine new cloud transport, Mac UI or installed-widget proof for this bridge",
+    "Existing root-generation limitations for legacy metadata and all explicit user deferrals remain unchanged"
+  ],
+  "owned_source_sha256": {
+    "Taskfold/Core/SubtaskTree.swift": "b0f253280f92c5734eb4894bbea4e1028995a56563f0e5eaaa7998f5202b65e0",
+    "Taskfold/Core/Store.swift": "4d9e0bf9df55fa3d562f0a21eff49e8d6c0f5523ddc3ef88914cb08168c9591a",
+    "TaskfoldTests/SubtaskTreeTests.swift": "fd1618f6438ec55ca05885c126de9daa159f1098ce6f65a6f57df6569fa10981"
+  },
+  "cleanup": {
+    "main_app_sessions": "none remaining after native test teardown; no native Mac app launched",
+    "pruned_mib": 45.7,
+    "record": "p2-child-editor-cleanup.json",
+    "preserved": "accepted results, summaries, logs and inspected captures; existing warm caches reused"
+  }
+}

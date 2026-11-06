@@ -1,0 +1,26 @@
+{
+  "removed": [
+    {
+      "path": "BuildCache/widget-privacy-ios",
+      "allocatedBytes": 205684736
+    },
+    {
+      "path": "BuildCache/widget-privacy-mac",
+      "allocatedBytes": 400052224
+    },
+    {
+      "path": "widget-privacy-before",
+      "allocatedBytes": 622592
+    },
+    {
+      "path": "widget-privacy-ios-after",
+      "allocatedBytes": 581632
+    },
+    {
+      "path": "widget-privacy-mac-after",
+      "allocatedBytes": 581632
+    }
+  ],
+  "allocatedBytesRemoved": 607522816,
+  "retained": "Selected before/normal/private PNGs in both repos, source renderer, source hashes and all build logs. Existing live Mac test binaries untouched."
+}

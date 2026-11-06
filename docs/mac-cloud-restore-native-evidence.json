@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native isolated Mac cloud cross-account restore and independently owned restore accessibility fix",
+  "source": {
+    "nativeExport": true,
+    "syntheticOnly": true,
+    "bytes": 19046,
+    "sha256": "73b27927f4c8dde6df061da2dd072b483b330c8b015c98148dba9b3278a7191a"
+  },
+  "mac": {
+    "nativeReview": {
+      "add": 14,
+      "update": 0,
+      "keep": 0,
+      "independentCountLabelsAndValues": true
+    },
+    "encryptedBeforeRestoreCopyVisible": true,
+    "nativeCompletionMessage": "Restored 14 records. Your recovery copy is available in Backups & restore.",
+    "destinationTasksBefore": 253,
+    "destinationTasksAfter": 256,
+    "repeatReview": {
+      "add": 0,
+      "update": 0,
+      "keep": 14,
+      "applyDisabled": true
+    },
+    "normalQuitAndRelaunch": true,
+    "nativeRestoredProjectTaskInspector": {
+      "fullNotes": true,
+      "estimate25Minutes": true,
+      "projectSectionLabel": true,
+      "screenshotInspected": true
+    },
+    "cacheChecks": {
+      "originalAccountAllTablesUnchanged": true,
+      "existingDestinationRowsUnchanged": {
+        "projects": true,
+        "labels": true,
+        "view_preferences": true,
+        "task_activity": true,
+        "saved_views": true,
+        "sections": true,
+        "task_activity_epoch": true,
+        "favorites": true,
+        "reminder_preferences": true,
+        "view_orders": true,
+        "tasks": true,
+        "focus_sessions": true,
+        "profiles": true,
+        "project_collaborators": true
+      },
+      "additions": {
+        "projects": 1,
+        "labels": 1,
+        "view_preferences": 5,
+        "task_activity": 3,
+        "saved_views": 1,
+        "sections": 1,
+        "task_activity_epoch": 0,
+        "favorites": 0,
+        "reminder_preferences": 0,
+        "view_orders": 1,
+        "tasks": 3,
+        "focus_sessions": 1,
+        "profiles": 0,
+        "project_collaborators": 0
+      },
+      "restoredTaskPlanningNotesAndRelationships": [
+        true,
+        true,
+        true
+      ],
+      "bothQueuesEmpty": true
+    },
+    "focus": {
+      "endedStateAndTimingPreserved": true,
+      "taskReferenceRemapped": true,
+      "sessionIdentityRemapped": true
+    },
+    "runtimeLimitations": [
+      "Seven AttributeGraph cycle warnings in native restore process; unresolved",
+      "Native computer-use evidence; no new Mac XCTest result",
+      "No actual VoiceOver claim"
+    ],
+    "afterRelaunchOriginalAndRestoredWorkTablesUnchanged": true,
+    "readOnlyProjectMemberCacheLoadedByInspector": true
+  },
+  "ios": {
+    "nativeResult": "mac-cloud-restore-ios-v2.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0,
+    "durationSeconds": 66.199,
+    "largestTextDark": true,
+    "labelsAndValues": [
+      "Add 1",
+      "Update 0",
+      "Keep 1",
+      "Tasks 1"
+    ],
+    "applyReachableEnabledAnd44PointMinimum": true,
+    "screenshotInspected": true,
+    "originalCloudModeRestored": true,
+    "originalSharedTablesUnchanged": true,
+    "pending": 0,
+    "firstAttempt": "Failed before preview because the test expected a Taskfold folder instead of the isolated app display name. Helper now selects the app-named container cell."
+  },
+  "preservation": {
+    "todoistRequests": 0,
+    "todoistChanges": 0,
+    "rawPrivateCachesExportsOrCredentialsCommitted": false,
+    "primaryAppsReplaced": false
+  },
+  "remaining": [
+    "External provider transfer",
+    "Broader P0 release checklist remains open"
+  ]
+}

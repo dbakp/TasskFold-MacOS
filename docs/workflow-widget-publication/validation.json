@@ -1,0 +1,261 @@
+{
+  "date": "2026-10-27",
+  "scope": "Source implementation and isolated native acceptance; no release/hosted/paired/production-screen responsiveness claim.",
+  "status": "Accepted functional coverage; residual save latency and inherited broad-Mac runtime warnings remain open.",
+  "distinctPlatformCasePairsPassed": 36,
+  "coverage": {
+    "mac": {
+      "testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery": {
+        "job": "mac-checks",
+        "seconds": 9.148
+      },
+      "testPrivateWorkflowNativeCommitScale1000PublishesOnce": {
+        "job": "mac-final",
+        "seconds": 9.31
+      },
+      "testPrivateWorkflowNativeCommitScale5000PublishesOnce": {
+        "job": "mac-final",
+        "seconds": 28.363
+      },
+      "testPrivateWorkflowNativeCreateUndoRedoAndColdReturn": {
+        "job": "mac-final",
+        "seconds": 23.671
+      },
+      "testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo": {
+        "job": "mac-final",
+        "seconds": 19.915
+      },
+      "testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly": {
+        "job": "mac-final",
+        "seconds": 20.609
+      },
+      "testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave": {
+        "job": "mac-final",
+        "seconds": 15.451
+      },
+      "testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry": {
+        "job": "mac-final",
+        "seconds": 38.756
+      },
+      "testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn": {
+        "job": "mac-final",
+        "seconds": 29.611
+      },
+      "testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries": {
+        "job": "mac-final",
+        "seconds": 13.887
+      },
+      "testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace": {
+        "job": "mac-final",
+        "seconds": 19.516
+      },
+      "testWidgetIntentRecurringCompletionRetryUndoAndOldTap": {
+        "job": "mac-checks",
+        "seconds": 12.023
+      }
+    },
+    "phone": {
+      "testPrivateWorkflowNativeCommitScale1000PublishesOnce": {
+        "job": "phone-final",
+        "seconds": 16.198
+      },
+      "testPrivateWorkflowNativeCommitScale5000PublishesOnce": {
+        "job": "phone-final",
+        "seconds": 33.046
+      },
+      "testPrivateWorkflowNativeCreateUndoRedoAndColdReturn": {
+        "job": "phone-final",
+        "seconds": 37.139
+      },
+      "testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo": {
+        "job": "phone-final",
+        "seconds": 34.908
+      },
+      "testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly": {
+        "job": "phone-final",
+        "seconds": 33.703
+      },
+      "testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave": {
+        "job": "phone-final",
+        "seconds": 34.596
+      },
+      "testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry": {
+        "job": "phone-final",
+        "seconds": 50.191
+      },
+      "testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn": {
+        "job": "phone-final",
+        "seconds": 41.739
+      },
+      "testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries": {
+        "job": "phone-final",
+        "seconds": 21.93
+      },
+      "testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace": {
+        "job": "phone-final",
+        "seconds": 26.986
+      },
+      "testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery": {
+        "job": "phone-checks",
+        "seconds": 15.845
+      },
+      "testWidgetIntentRecurringCompletionRetryUndoAndOldTap": {
+        "job": "phone-checks",
+        "seconds": 32.887
+      }
+    },
+    "tablet": {
+      "testPrivateWorkflowNativeCommitScale1000PublishesOnce": {
+        "job": "tablet-final",
+        "seconds": 16.014
+      },
+      "testPrivateWorkflowNativeCommitScale5000PublishesOnce": {
+        "job": "tablet-final",
+        "seconds": 34.839
+      },
+      "testPrivateWorkflowNativeCreateUndoRedoAndColdReturn": {
+        "job": "tablet-final",
+        "seconds": 38.42
+      },
+      "testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo": {
+        "job": "tablet-final",
+        "seconds": 33.422
+      },
+      "testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly": {
+        "job": "tablet-final",
+        "seconds": 36.995
+      },
+      "testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave": {
+        "job": "tablet-final",
+        "seconds": 30.845
+      },
+      "testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry": {
+        "job": "tablet-final",
+        "seconds": 48.828
+      },
+      "testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn": {
+        "job": "tablet-final",
+        "seconds": 42.205
+      },
+      "testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries": {
+        "job": "tablet-final",
+        "seconds": 22.143
+      },
+      "testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace": {
+        "job": "tablet-final",
+        "seconds": 26.224
+      },
+      "testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery": {
+        "job": "tablet-checks",
+        "seconds": 15.952
+      },
+      "testWidgetIntentRecurringCompletionRetryUndoAndOldTap": {
+        "job": "tablet-checks",
+        "seconds": 33.576
+      }
+    }
+  },
+  "core": [
+    {
+      "log": "core-final.log",
+      "commandFilter": "WidgetPublicationTests|WidgetActionTests|WidgetListTests|CapacityWidgetTests|FocusWidgetTests|ProjectPulseWidgetTests|PinnedNote|ProjectWorkflowTests",
+      "aggregate": "Executed 89 tests, with 1 test skipped and 0 failures (0 unexpected) in 9.105 (9.116) seconds"
+    },
+    {
+      "log": "core-parity.log",
+      "commandFilter": "WidgetPublicationTests|testFullStructuredWorkflowPublishesAllWidgetListsGroupsAndMembership",
+      "aggregate": "Executed 6 tests, with 0 failures (0 unexpected) in 4.351 (4.353) seconds"
+    }
+  ],
+  "nativeAttempts": {
+    "mac-final": {
+      "result": "Passed",
+      "totalTestCount": 12,
+      "passedTests": 12,
+      "failedTests": 0,
+      "skippedTests": 0
+    },
+    "mac-checks": {
+      "result": "Passed",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0
+    },
+    "mac-proof": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0
+    },
+    "phone-final": {
+      "result": "Failed",
+      "totalTestCount": 12,
+      "passedTests": 10,
+      "failedTests": 2,
+      "skippedTests": 0
+    },
+    "phone-checks": {
+      "result": "Passed",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0
+    },
+    "tablet-final": {
+      "result": "Failed",
+      "totalTestCount": 12,
+      "passedTests": 10,
+      "failedTests": 2,
+      "skippedTests": 0
+    },
+    "tablet-checks": {
+      "result": "Passed",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0
+    },
+    "mac-initial": {
+      "result": "Failed",
+      "totalTestCount": 12,
+      "passedTests": 2,
+      "failedTests": 10,
+      "skippedTests": 0
+    }
+  },
+  "incompleteAttempt": {
+    "name": "phone-initial",
+    "status": "Interrupted before terminal result; original process verified absent before corrected preparation; no accepted coverage"
+  },
+  "runtimeWarnings": {
+    "mac-final": {
+      "count": 7,
+      "priorScaleStageSameCount": 7,
+      "allowance": "Explicit --allow-runtime-warnings; not clean-runtime evidence"
+    },
+    "finalChecksAllPlatforms": "None"
+  },
+  "setupCorrections": [
+    "Explicit --headings flag affects only disposable host; startup asserts actual authoring state",
+    "Expected account matches the synthetic signed-in fixture",
+    "Mac assertions read Cocoa accessibility value when label is empty",
+    "Nonce-scoped result directory is created before running fresh-install proof",
+    "iOS DEBUG test entry opens its local workspace before seeding; missing task is unavailable and completion waits for a real token"
+  ],
+  "unchanged": [
+    "Normal heading/team rollout configuration",
+    "No schema or hosted service changes",
+    "Distribution, remote reminders, older-client rollout, provider setup and physical geofence deferrals"
+  ],
+  "remaining": [
+    "Durable-cache/save I/O and normalization latency",
+    "Local activity-history scaling",
+    "Full production-screen rendering and input responsiveness",
+    "Genuine paired/hosted bulk delivery",
+    "Wider ranked Px backlog"
+  ],
+  "currentCachePolicy": "One current native source/build cache per platform retained for continuing goal work; owned obsolete scratch/evidence bundles pruned after filtered retention.",
+  "nativeBuilds": "Both final signed build-for-testing products succeeded; see native-build-receipts.json"
+}

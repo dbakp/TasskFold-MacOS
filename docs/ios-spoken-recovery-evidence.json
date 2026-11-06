@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-20",
+  "status": "accepted_named_native_spoken_recovery",
+  "scope": "iPhone 18 Pro iOS 27.0 (24A434) Simulator; actual native file-picker human Cancel with VoiceOver on, clear recovery focus and exact complete-cache relaunch. This closes the outstanding named representative iOS spoken recovery gate.",
+  "case": "testIOS27VoiceOverManualPickerCancelPreservesWorkspace",
+  "bundle": "ios-voiceover-order-human-v1.xcresult outside repos",
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "structuredRuntimeWarnings": 0,
+  "source": {
+    "repository": "TaskFold-iOS",
+    "path": "Taskfold/Views/BackupTools.swift",
+    "sha256": "c15b5f224fe8cf17047c7f1f56cb14b09bd61afd18c62508ba800cad523caae9",
+    "codeCommit": "fa83873",
+    "build": "ios-focus-order-build-v1.log; TEST BUILD SUCCEEDED",
+    "newCodeChangeThisCheck": false
+  },
+  "humanReport": "Restore from file",
+  "actualServiceUtterance": "Restore from file Button",
+  "actualCallbackAndLifecycle": {
+    "events": [],
+    "focusLifecycle": [
+      {
+        "event": "Sheet dismissal",
+        "flags": {
+          "busy": false,
+          "hasCancelledWorkspace": false,
+          "hasMessage": false,
+          "hasPicker": false,
+          "hasReview": false,
+          "sameWorkspace": false
+        },
+        "timestamp": 1792494477.34064,
+        "voiceOverRunning": true
+      },
+      {
+        "event": "Cancelled workspace captured",
+        "flags": {},
+        "timestamp": 1792494477.3432899,
+        "voiceOverRunning": true
+      },
+      {
+        "event": "Restore focus event emitted",
+        "flags": {},
+        "timestamp": 1792494477.343972,
+        "voiceOverRunning": true
+      },
+      {
+        "event": "Restore focus binding applied",
+        "flags": {},
+        "timestamp": 1792494477.352097,
+        "voiceOverRunning": true
+      }
+    ],
+    "observerInstalled": true,
+    "pickerCancellations": [
+      {
+        "requestAccepted": true,
+        "timestamp": 1792494477.342505
+      }
+    ],
+    "source": "UIAccessibility.announcementDidFinishNotification",
+    "voiceOverRunning": true
+  },
+  "preservation": {
+    "entirePrePickerCacheEqualsPostCancel": true,
+    "entireSameCasePostRelaunchCacheEqualsBaseline": true,
+    "postCancelAttachmentSHA256": "adf2556c3eeabac587629a6dfc61d954599257f7dd4dfe5c8ffe5e067c3b25db",
+    "independentInspection": {
+      "entirePostRelaunchCacheEqualsAttachedPostCancelCache": true,
+      "canonicalCacheSHA256": "3e5e30aa5b9be593c009fb23f4c3417e76ae6edb5935cf4a1e0588e71f5db50e",
+      "appObservedVoiceOverOffBeforeTeardown": true,
+      "pendingWrites": 0,
+      "taskCount": 2,
+      "inspection": "Read own container metadata while Simulator stays Shutdown; no relaunch to recover simctl lookup."
+    }
+  },
+  "isolation": {
+    "bundle": "com.dbakp.taskfold.voiceovertests",
+    "workspace": "Synthetic ui-testing fixture only; two tasks, no authenticated provider writes or real Todoist changes.",
+    "nativeInput": "Real human input, guarded explicit manual-readiness test. No fake callbacks or enabled flags.",
+    "observer": "Read-only copy-only callback and lifecycle observations; shipping app has no probe."
+  },
+  "cleanup": {
+    "voiceOverOffVerifiedByTestAndAppObserver": true,
+    "testAppTerminatedByTeardown": true,
+    "dedicatedSimulatorShutdown": true,
+    "deviceHubClosedVerifiedByFreshAppInventory": true,
+    "originalIPadSelectionRestored": true,
+    "keyboardCaptureStayedOff": true,
+    "mainMacVoiceOverOff": true
+  },
+  "limits": [
+    "Named current-source representative acceptance, not every device/gesture/provider combination.",
+    "Previous failed XCTest Cancel input routes and first focus repair remain failed historical results; final human case is a distinct passing case.",
+    "Compiler and console warnings, including duplicate system accessibility-loader messages, remain in original logs; structured test warnings are separately zero.",
+    "Actual system-selected widget privacy and user-deferred signing/provider/distribution/old-writer rollout remain open."
+  ],
+  "references": [
+    "ios-spoken-workflows-evidence.json",
+    "ios-restore-focus-order-evidence.json",
+    "mac-voiceover-live-followup-evidence.json"
+  ]
+}

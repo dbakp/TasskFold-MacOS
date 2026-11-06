@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-25",
+  "stage": "Whole-selection completion recovery service",
+  "baseCommit": "1ee413eff5a52c29d09343554b91c97e53a8cb36",
+  "sourceSHA256": {
+    "supabase/migrations/20261025140005_team_completion_batch_recovery.sql": "a65c0c58f169e8f181ece433b1c19686ea6867bb3179bee1368be59fd8b5018b",
+    "Scripts/Database/team-completion-batch-recovery-schema.mjs": "2cff12e9428be1c6747634b3f90110b24437fb4d6779f0255ea1499ac0c71211",
+    "Scripts/Database/team-completion-batch-recovery-checks.mjs": "80445c6886ef2b307bc29aadea4f7400eaee4a8fc5ef32eb983f945d3bca3326",
+    "Scripts/Database/test-team-completion.mjs": "54f9e53c76f8f61200485a52c1267c55ff3dcacc89ca66566ea5019aa5631917"
+  },
+  "verification": {
+    "command": "TASKFOLD_TEAM_BATCH_RECOVERY_REGRESSION=1 node Scripts/Database/test-team-completion.mjs <owned report path>",
+    "actualChecks": 348,
+    "recoveryChecks": 104,
+    "deletionCleanupChecks": 1,
+    "priorChecks": 243,
+    "officialAdvisorsRan": true,
+    "newAdvisorWarnings": [],
+    "containerRemoved": true
+  },
+  "contract": {
+    "reviewRPC": "taskfold_review_team_completion_batch",
+    "cancelRPC": "taskfold_cancel_team_completion_batch",
+    "input": "Exact original _action and _body from taskfold_complete_team_tasks",
+    "protocol": "group_review_protocol: 1",
+    "states": [
+      "unrecorded",
+      "recorded",
+      "cancelled"
+    ],
+    "recordedReceipt": "Complete existing batch_protocol:1 replay receipt; all member receipts replayed",
+    "requestBytes": 2000000,
+    "memberRequestBytes": 128000,
+    "memberCount": [
+      1,
+      100
+    ],
+    "responseBytes": 8000000,
+    "cancellation": "Retires exact unrecorded intent; never changes tasks; lost-response retry and observed completion winner recover terminal proof",
+    "accumulationBound": "Aggregate budget checked during member accumulation and at return"
+  },
+  "limits": [
+    "Source-only, undeployed candidate. Teams rollout remains off.",
+    "No app code/UI behavior changed; no current native or hosted acceptance.",
+    "Native parser, whole-cohort draft preservation and review/refresh/retry/acknowledgement/cancellation flow still required.",
+    "Native Redo, current Mac runtime, large-selection responsiveness, broader Px and deferred release/provider/device work remain open."
+  ],
+  "retainedEvidence": "docs/completion-batch-recovery/",
+  "documentationChecked": [
+    "https://supabase.com/changelog.md",
+    "https://supabase.com/docs/guides/database/functions"
+  ],
+  "cliVersion": "2.109.0",
+  "protocolNotes": "docs/TEAM_COMPLETION_BATCH_RECOVERY.md"
+}

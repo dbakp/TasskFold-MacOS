@@ -1,0 +1,197 @@
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testHeadingProjectWorkCountsExactChildAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 08:15:01.812
+    t =     0.19s Set Up
+    t =     0.21s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.21s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 08:15:02.092 xcodebuild[93757:21964545] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 08:15:02.093 xcodebuild[93757:21964545] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.38s         Wait for accessibility to load
+    t =     2.16s         Setting up automation session
+    t =     2.18s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.27s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.27s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.28s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.29s Waiting 15.0s for "openProjectPulse" Button to exist
+    t =     3.33s     Checking `Expect predicate `existsNoRetry == 1` for object "openProjectPulse" Button`
+    t =     3.33s         Checking existence of `"openProjectPulse" Button`
+    t =     3.60s Click "openProjectPulse" Button
+    t =     3.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.61s     Find the "openProjectPulse" Button
+    t =     3.69s     Check for interrupting elements affecting "openProjectPulse" Button
+    t =     3.71s     Synthesize event
+    t =     4.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.65s Waiting 5.0s for "pulseProjectPicker" Any to exist
+    t =     5.69s     Checking `Expect predicate `existsNoRetry == 1` for object "pulseProjectPicker" Any`
+    t =     5.69s         Checking existence of `"pulseProjectPicker" Any`
+    t =     5.80s Click "pulseProjectPicker" Any
+    t =     5.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.80s     Find the "pulseProjectPicker" Any
+    t =     5.87s     Check for interrupting elements affecting "pulseProjectPicker" PopUpButton
+    t =     5.89s     Synthesize event
+    t =     6.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.39s Click "Launch lab" MenuItem
+    t =     6.39s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.40s     Find the "Launch lab" MenuItem
+    t =     6.48s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     6.49s     Synthesize event
+    t =     6.49s         Checking existence of `"menuAction:" MenuItem`
+    t =     6.56s         Hover menu item 'Launch lab'
+    t =     6.56s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.57s             Find the "menuAction:" MenuItem
+    t =     6.64s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     6.64s             Synthesize event
+    t =     6.89s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.90s         Find the "menuAction:" MenuItem
+    t =     7.86s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.88s Waiting 5.0s for "pulseProgress" StaticText to exist
+    t =     8.91s     Checking `Expect predicate `existsNoRetry == 1` for object "pulseProgress" StaticText`
+    t =     8.92s         Checking existence of `"pulseProgress" StaticText`
+    t =     9.03s Find the "pulseProgress" StaticText
+    t =     9.11s Find the Button (First Match)
+    t =     9.18s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.23s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.28s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.32s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.36s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.42s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.47s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.53s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.58s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.62s Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.68s Click "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.69s     Find the "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.73s     Check for interrupting elements affecting "pulseAttention-work:6e2e67e345a43417dd73e3b19b56d28dbbdfd6127844b33ba5cca78682a92875" Button
+    t =     9.74s     Synthesize event
+    t =    10.91s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.12s Waiting 8.0s for "taskTitle" Any to exist
+    t =    13.15s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" Any`
+    t =    13.15s         Checking existence of `"taskTitle" Any`
+    t =    13.36s Find the "taskTitle" Any
+    t =    13.52s Checking existence of `Window (First Match)`
+    t =    13.53s Find the Window (First Match)
+2026-10-26 08:15:15.341377+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    13.59s Added attachment named 'Mac project attention opens exact ordinary child under heading'
+    t =    13.59s Waiting 5.0s for "complete-subtask:WyJmMTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmNTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiXQ==" Button to exist
+    t =    14.63s     Checking `Expect predicate `existsNoRetry == 1` for object "complete-subtask:WyJmMTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmNTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiXQ==" Button`
+    t =    14.63s         Checking existence of `"complete-subtask:WyJmMTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmNTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiXQ==" Button`
+    t =    14.79s Click "complete-subtask:WyJmMTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmNTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiXQ==" Button
+    t =    14.79s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.79s     Find the "complete-subtask:WyJmMTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmNTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiXQ==" Button
+    t =    14.94s     Check for interrupting elements affecting "complete-subtask:WyJmMTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmNTgxMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiXQ==" Button
+    t =    14.96s     Synthesize event
+    t =    15.86s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.90s Type 'z' key with modifiers '⌘' (0x10)
+    t =    16.90s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.91s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    17.01s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    17.02s     Synthesize event
+2026-10-26 08:15:18.829824+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-26 08:15:18.831907+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    17.46s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.54s Type 'z' key with modifiers '⌘⇧' (0x12)
+    t =    18.54s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.54s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    18.67s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    18.68s     Synthesize event
+2026-10-26 08:15:20.488893+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-26 08:15:20.489711+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    19.19s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.28s Waiting 15.0s for "openProjectPulse" Button to exist
+    t =    21.32s     Checking `Expect predicate `existsNoRetry == 1` for object "openProjectPulse" Button`
+    t =    21.32s         Checking existence of `"openProjectPulse" Button`
+    t =    21.50s Click "openProjectPulse" Button
+    t =    21.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.51s     Find the "openProjectPulse" Button
+    t =    21.64s     Check for interrupting elements affecting "openProjectPulse" Button
+    t =    21.65s     Synthesize event
+2026-10-26 08:15:23.460425+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    22.22s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.92s Waiting 5.0s for "pulseProjectPicker" Any to exist
+    t =    23.95s     Checking `Expect predicate `existsNoRetry == 1` for object "pulseProjectPicker" Any`
+    t =    23.96s         Checking existence of `"pulseProjectPicker" Any`
+    t =    24.07s Click "pulseProjectPicker" Any
+    t =    24.07s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.08s     Find the "pulseProjectPicker" Any
+    t =    24.16s     Check for interrupting elements affecting "pulseProjectPicker" PopUpButton
+    t =    24.18s     Synthesize event
+2026-10-26 08:15:25.991162+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    24.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.69s Click "Launch lab" MenuItem
+    t =    24.69s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.69s     Find the "Launch lab" MenuItem
+    t =    24.77s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    24.78s     Synthesize event
+2026-10-26 08:15:26.593071+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    24.78s         Checking existence of `"menuAction:" MenuItem`
+    t =    24.89s         Hover menu item 'Launch lab'
+    t =    24.89s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.89s             Find the "menuAction:" MenuItem
+    t =    25.00s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    25.00s             Synthesize event
+2026-10-26 08:15:26.820819+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    25.25s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.26s         Find the "menuAction:" MenuItem
+    t =    26.22s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    26.23s Waiting 5.0s for "pulseProgress" StaticText to exist
+    t =    27.27s     Checking `Expect predicate `existsNoRetry == 1` for object "pulseProgress" StaticText`
+    t =    27.28s         Checking existence of `"pulseProgress" StaticText`
+    t =    27.43s Find the "pulseProgress" StaticText
+    t =    27.58s Checking existence of `Window (First Match)`
+    t =    27.59s Find the Window (First Match)
+2026-10-26 08:15:29.403175+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    27.68s Added attachment named 'Mac heading child completion Undo Redo updates project totals'
+    t =    27.68s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:93770
+    t =    28.76s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    28.76s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 08:15:30.573 xcodebuild[93757:21964545] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 08:15:30.573 xcodebuild[93757:21964545] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    29.28s         Wait for accessibility to load
+    t =    29.38s         Setting up automation session
+    t =    29.39s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.46s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    29.46s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    29.46s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.18s Waiting 15.0s for "openProjectPulse" Button to exist
+    t =    31.21s     Checking `Expect predicate `existsNoRetry == 1` for object "openProjectPulse" Button`
+    t =    31.21s         Checking existence of `"openProjectPulse" Button`
+    t =    31.50s Click "openProjectPulse" Button
+    t =    31.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    31.51s     Find the "openProjectPulse" Button
+    t =    31.60s     Check for interrupting elements affecting "openProjectPulse" Button
+    t =    31.62s     Synthesize event
+2026-10-26 08:15:33.432784+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    32.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    32.61s Waiting 5.0s for "pulseProjectPicker" Any to exist
+    t =    33.65s     Checking `Expect predicate `existsNoRetry == 1` for object "pulseProjectPicker" Any`
+    t =    33.65s         Checking existence of `"pulseProjectPicker" Any`
+    t =    33.75s Click "pulseProjectPicker" Any
+    t =    33.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    33.76s     Find the "pulseProjectPicker" Any
+    t =    33.82s     Check for interrupting elements affecting "pulseProjectPicker" PopUpButton
+    t =    33.84s     Synthesize event
+2026-10-26 08:15:35.653608+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    34.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.35s Click "Launch lab" MenuItem
+    t =    34.35s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.35s     Find the "Launch lab" MenuItem
+    t =    34.43s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    34.44s     Synthesize event
+2026-10-26 08:15:36.247468+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    34.44s         Checking existence of `"menuAction:" MenuItem`
+    t =    34.52s         Hover menu item 'Launch lab'
+    t =    34.52s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.52s             Find the "menuAction:" MenuItem
+    t =    34.60s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    34.60s             Synthesize event
+2026-10-26 08:15:36.413298+0100 TaskfoldUITests-Runner[93763:21964791] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    34.85s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.87s         Find the "menuAction:" MenuItem
+    t =    35.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    35.83s Waiting 5.0s for "pulseProgress" StaticText to exist
+    t =    36.85s     Checking `Expect predicate `existsNoRetry == 1` for object "pulseProgress" StaticText`
+    t =    36.85s         Checking existence of `"pulseProgress" StaticText`
+    t =    36.96s Find the "pulseProgress" StaticText
+    t =    37.05s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:93824
+    t =    38.12s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testHeadingProjectWorkCountsExactChildAndColdReturn]' passed (38.627 seconds).

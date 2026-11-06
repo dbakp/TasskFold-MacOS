@@ -1,0 +1,380 @@
+[
+  {
+    "formerBundle": "/tmp/taskfold-keyboard-save-phone-v1.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+            "deviceName": "Taskfold assignment iPhone",
+            "modelName": "iPhone 17 Pro",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 2,
+          "passedTests": 0,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 2,
+      "finishTime": 1791610097.026,
+      "passedTests": 0,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610040.274,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013Return must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testCommandReturnSavesFocusedTaskDetails()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandReturnSavesFocusedTaskDetails",
+          "testName": "testCommandReturnSavesFocusedTaskDetails()"
+        },
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013Return must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 2,
+          "testIdentifierString": "TaskfoldUITests/testCommandReturnSavesFocusedTaskDetailsDarkLargest()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandReturnSavesFocusedTaskDetailsDarkLargest",
+          "testName": "testCommandReturnSavesFocusedTaskDetailsDarkLargest()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [
+        {
+          "category": "Common Failures",
+          "impact": "100% of failures",
+          "text": "2 runs of 2 tests failed with XCTAssertTrue failed - Command\u2013Return must save from the focused description field"
+        }
+      ],
+      "totalTestCount": 2
+    },
+    "retention": "Discarded prototype. Summary retained; raw bundle removed."
+  },
+  {
+    "formerBundle": "/tmp/taskfold-keyboard-save-phone-v5.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+            "deviceName": "Taskfold assignment iPhone",
+            "modelName": "iPhone 17 Pro",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 2,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 2,
+      "finishTime": 1791610641.325,
+      "passedTests": 2,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610522.286,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013S must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testCommandSSavesFocusedTaskDetails()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandSSavesFocusedTaskDetails",
+          "testName": "testCommandSSavesFocusedTaskDetails()"
+        },
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013S must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 2,
+          "testIdentifierString": "TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest",
+          "testName": "testCommandSSavesFocusedTaskDetailsDarkLargest()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [
+        {
+          "category": "Common Failures",
+          "impact": "100% of failures",
+          "text": "2 runs of 2 tests failed with XCTAssertTrue failed - Command\u2013S must save from the focused description field"
+        }
+      ],
+      "totalTestCount": 4
+    },
+    "retention": "Discarded prototype. Summary retained; raw bundle removed."
+  },
+  {
+    "formerBundle": "/tmp/taskfold-keyboard-save-tablet-v1.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+            "deviceName": "Taskfold assignment iPad",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 0,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "finishTime": 1791610071.441,
+      "passedTests": 0,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610040.273,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013Return must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testCommandReturnSavesFocusedTaskDetailsDarkLargest()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandReturnSavesFocusedTaskDetailsDarkLargest",
+          "testName": "testCommandReturnSavesFocusedTaskDetailsDarkLargest()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "retention": "Discarded prototype. Summary retained; raw bundle removed."
+  },
+  {
+    "formerBundle": "/tmp/taskfold-keyboard-save-tablet-v2.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+            "deviceName": "Taskfold assignment iPad",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 0,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "finishTime": 1791610179.032,
+      "passedTests": 0,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610150.415,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013Return must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testCommandReturnSavesFocusedTaskDetailsDarkLargest()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandReturnSavesFocusedTaskDetailsDarkLargest",
+          "testName": "testCommandReturnSavesFocusedTaskDetailsDarkLargest()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "retention": "Discarded prototype. Summary retained; raw bundle removed."
+  },
+  {
+    "formerBundle": "/tmp/taskfold-keyboard-save-tablet-v3.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+            "deviceName": "Taskfold assignment iPad",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 0,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "finishTime": 1791610277.737,
+      "passedTests": 0,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610250.095,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013S must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest",
+          "testName": "testCommandSSavesFocusedTaskDetailsDarkLargest()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "retention": "Discarded prototype. Summary retained; raw bundle removed."
+  },
+  {
+    "formerBundle": "/tmp/taskfold-keyboard-save-tablet-v4.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+            "deviceName": "Taskfold assignment iPad",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 0,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "finishTime": 1791610399.177,
+      "passedTests": 0,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610371.138,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013S must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest",
+          "testName": "testCommandSSavesFocusedTaskDetailsDarkLargest()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "retention": "Discarded prototype. Summary retained; raw bundle removed."
+  },
+  {
+    "formerBundle": "/tmp/taskfold-keyboard-save-tablet-v5.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+            "deviceName": "Taskfold assignment iPad",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 0,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "finishTime": 1791610539.967,
+      "passedTests": 0,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610510.566,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013S must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest",
+          "testName": "testCommandSSavesFocusedTaskDetailsDarkLargest()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "retention": "Discarded prototype. Summary retained; raw bundle removed."
+  }
+]

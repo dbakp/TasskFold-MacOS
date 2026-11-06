@@ -18,6 +18,11 @@ struct CalendarView: View {
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
     @FocusState private var calendarFocused: Bool
+    @FocusState private var taskListFocused: Bool
+    @FocusState private var focusedCard: String?
+    @FocusState private var focusedGridDay: String?
+    @State private var gridNavigationActive = false
+    @State private var yearNavigationActive = false
     @Namespace private var dayNamespace
 
     private var calendar: Calendar { Calendar.current }
@@ -26,19 +31,16 @@ struct CalendarView: View {
     private var selected: Date { workspace.calendarDay }
     private var layout: Animation? { Motion.respecting(reduceMotion, Motion.layout) }
 
-    private var byDay: [String: [Record]] {
-        var map: [String: [Record]] = [:]
-        for task in store.tasks { let day = TaskPlanner.plannedDay(task); if !day.isEmpty { map[day, default: []].append(task) } }
-        return map
-    }
+    @State private var periodWork = CalendarWorkReading(work: ProductiveTaskReading(tasks: []))
+    private func rebuildIndex() { periodWork = CalendarWorkReading(work: store.productiveReading, calendar: calendar) }
     private func tasks(on day: Date) -> [Record] {
         let key = Dates.day(day)
-        return workspace.ordered(byDay[key] ?? [], day: key).sorted { a, b in
+        return workspace.ordered(periodWork.rowsByDay[key] ?? [], day: key).sorted { a, b in
             if a.completed != b.completed { return !a.completed }
             return false
         }
     }
-    private func open(on day: Date) -> Int { tasks(on: day).filter { !$0.completed && !workspace.completing.contains($0.id) }.count }
+    private func open(on day: Date) -> Int { periodWork.open(on: Dates.day(day), excluding: workspace.completing) }
 
     // MARK: Period math
 
@@ -84,6 +86,12 @@ struct CalendarView: View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
                 header
+                if periodWork.incomplete {
+                    Label("Some work needs review. Calendar totals include only readable tasks.", systemImage: "exclamationmark.circle")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16).padding(.bottom, 8)
+                        .accessibilityIdentifier("calendarPartialWork")
+                }
                 Divider()
                 Group {
                     switch mode {
@@ -111,6 +119,10 @@ struct CalendarView: View {
         }
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        .onChange(of: store.taskRevision, initial: true) { _, _ in rebuildIndex() }
+        .onChange(of: ProjectOrganization.archivedIDs(in: store.allProjects)) { _, _ in rebuildIndex() }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name.NSSystemTimeZoneDidChange)) { _ in rebuildIndex() }
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in rebuildIndex() }
         .onChange(of: periodTitle) { _, value in if workspace.section == .calendar { workspace.navigationSubtitle = value } }
         .toolbar {
             if workspace.section == .calendar {
@@ -135,8 +147,19 @@ struct CalendarView: View {
             // it in the sidebar keeps Calendar's active accent selection lit.
             calendarFocused = true
         }
+        .task(id: page) {
+            // Recreating a month grid removes its old focused cell. Keep arrow
+            // navigation in the calendar until the new date receives focus.
+            if (mode == .month && gridNavigationActive) || (mode == .year && yearNavigationActive) { refocusCalendar() }
+        }
         .onChange(of: workspace.calendarDay) { _, _ in page = page(containing: selected, mode: mode) }
-        .onChange(of: workspace.calendarMode) { _, _ in withAnimation(layout) { page = page(containing: selected, mode: mode) } }
+        .onChange(of: workspace.calendarMode) { _, _ in
+            gridNavigationActive = false
+            yearNavigationActive = false
+            focusedGridDay = nil
+            withAnimation(layout) { page = page(containing: selected, mode: mode) }
+            refocusCalendar()
+        }
         .sheet(isPresented: $quickAddVisible) {
             TaskCapturePanel(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, choices: $referenceChoices, destination: selected.formatted(date: .abbreviated, time: .omitted), prompt: "What needs to get done?", context: workspace.quickEntryContext(project: workspace.captureTask(date: selected).string("project_id")), task: workspace.captureTask(date: selected)) {
                 if let id = workspace.add(quickAdd, date: selected, declined: declinedGroups, referenceChoices: referenceChoices) {
@@ -144,10 +167,28 @@ struct CalendarView: View {
                 }
             }
         }
-        .onChange(of: workspace.quickAddFocusRequest) { _, _ in if workspace.section == .calendar { quickAddVisible = true } }
+        .onChange(of: workspace.quickAddFocusRequest, initial: true) { _, _ in
+            if workspace.section == .calendar, workspace.consumeQuickAddRequest(destination: "calendar") { quickAddVisible = true }
+        }
         .onDisappear { quickAddVisible = false }
-        .onKeyPress(.leftArrow) { shift(-1); return .handled }
-        .onKeyPress(.rightArrow) { shift(1); return .handled }
+        .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow, .return, .escape], phases: .down) { press in
+            guard press.modifiers.intersection([.command, .option, .control, .shift]).isEmpty else { return .ignored }
+            // The native grid can retain focus at its collection rather than a cell.
+            if mode == .month && gridNavigationActive { return monthGridKey(press, day: selected) }
+            if mode == .month && press.key == .downArrow {
+                gridNavigationActive = true
+                focusedGridDay = Dates.day(selected)
+                return .handled
+            }
+            if mode == .year && yearNavigationActive { return yearGridKey(press) }
+            if mode == .year && press.key == .downArrow {
+                yearNavigationActive = true
+                return .handled
+            }
+            if press.key == .leftArrow { shift(-1); return .handled }
+            if press.key == .rightArrow { shift(1); return .handled }
+            return .ignored
+        }
         .onChange(of: page) { _, new in
             let start = start(of: new, mode: mode)
             switch mode {
@@ -163,11 +204,19 @@ struct CalendarView: View {
     }
 
     private var hourlyPlanner: some View {
-        HourlyPlannerView(day: selected, tasks: store.tasks, open: { workspace.open($0.id) }, complete: { task in workspace.run("Complete Task") { store.toggle(task) } }, save: { task, fields in
+        HourlyPlannerView(day: selected, work: store.productiveReading, open: { workspace.open($0.id) }, complete: { task in
+            if SubtaskTree.referencePath(task.id) == nil { workspace.run("Complete Task") { store.toggle(task) } }
+            else { _ = workspace.runSelection([task], name: "Complete Task") { _ in .completion(!task.completed, Date()) } }
+        }, save: { task, fields in
+            if SubtaskTree.referencePath(task.id) != nil { return workspace.runSelection([task], name: "Schedule Task") { _ in .patch(fields) } }
             var saved = false
             workspace.run("Schedule Task") { saved = store.commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields, baseline: Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, task[$0]) }))]) }
             return saved
-        }, undo: { workspace.undoManager?.undo() }, undoDepth: store.undoStack.count)
+        }, undo: { request in
+            guard store.canApplyHistory(request), let manager = workspace.undoManager, manager.canUndo else { return false }
+            manager.undo()
+            return store.redoStack.last?.id == request.entry
+        })
     }
 
     /// The period title lives in the toolbar subtitle; the header holds only the centred mode switcher.
@@ -253,28 +302,26 @@ struct CalendarView: View {
     }
     private func calendarCard(_ task: Record, day: Date) -> some View {
         let selectedTask = workspace.selection.contains(task.id)
-        return HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Button { workspace.complete(task) } label: { CheckMark(checked: task.completed || workspace.completing.contains(task.id), color: Color.priority(task.priority), emphasized: task.priority < 4, size: 16) }
-                .buttonStyle(GlyphStyle()).pointerStyle(.link)
-                .accessibilityLabel(task.completed ? "Reopen \(task.title)" : "Complete \(task.title)")
-            VStack(alignment: .leading, spacing: 2) {
-                Text(task.title).font(.callout).lineLimit(2).truncationMode(.tail).foregroundStyle(task.completed ? .secondary : .primary).strikethrough(task.completed)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                HStack(spacing: 6) {
-                    if !task.string("due_time").isEmpty { Text(TaskRowView.timeText(TaskPlanner.clockValue(task))).fixedSize() }
-                    if let project = store.record("projects", id: task.string("project_id")) {
-                        HStack(spacing: 4) { Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6); Text(project.name).lineLimit(1) }
-                    }
-                }.font(.caption).foregroundStyle(.secondary).lineLimit(1)
-            }
-            Spacer(minLength: 0)
-        }
+        let projectName = store.record("projects", id: task.string("project_id"))?.name ?? ""
+        let plannedTime = task.string("due_time").isEmpty ? "" : TaskRowView.timeText(TaskPlanner.clockValue(task))
+        let accessibilityValue = [task.completed ? "Completed" : "Open", store.productiveReading.parents[task.id] ?? "", plannedTime, projectName]
+            .filter { !$0.isEmpty }.joined(separator: ", ")
+        return calendarCardContent(task)
         .padding(.horizontal, 8).padding(.vertical, density == "compact" ? 5 : 8)
         .modifier(CardSurface(radius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.taskfold, lineWidth: selectedTask ? 1.5 : 0))
         .contentShape(.rect)
-        .onTapGesture { select(day); workspace.selection = [task.id] }
-        .onTapGesture(count: 2) { workspace.open(task.id) }
+        .focusable()
+        .focusEffectDisabled()
+        .focused($focusedCard, equals: task.id)
+        .onChange(of: focusedCard) { _, id in
+            if id == task.id { select(day); workspace.selection = [task.id] }
+        }
+        .onTapGesture { focusCard(task, day: day) }
+        .onTapGesture(count: 2) { focusCard(task, day: day); workspace.open(task.id) }
+        .onKeyPress(keys: [.space, .return, .escape, .upArrow, .downArrow], phases: .down) { press in
+            calendarCardKey(press, task: task, day: day)
+        }
         .onDrag {
             workspace.drag.begin([task.id], order: [], priorities: [task.id: task.priority])
             return taskItemProvider(for: [task])
@@ -286,8 +333,59 @@ struct CalendarView: View {
             Button("Delete", role: .destructive) { workspace.delete([task.id]) }
         }
         .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
-        .accessibilityElement(children: .combine)
+        // Combining the check button made its completion action the card's default action.
+        // Keep selection as the primary action and expose the two task actions explicitly.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(task.title)
+        .accessibilityValue(accessibilityValue)
+        .accessibilityHint("Press Return to open details, or Space to complete or reopen.")
+        .accessibilityAddTraits(.isButton)
         .accessibilityAddTraits(selectedTask ? .isSelected : [])
+        .accessibilityIdentifier("calendar-card-" + task.id)
+        .accessibilityAction { focusCard(task, day: day) }
+        .accessibilityAction(named: Text("Open in Inspector")) { workspace.open(task.id) }
+        .accessibilityAction(named: Text(task.completed ? "Reopen" : "Complete")) { workspace.complete(task) }
+    }
+    private func calendarCardContent(_ task: Record) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Button { workspace.complete(task) } label: { CheckMark(checked: task.completed || workspace.completing.contains(task.id), color: Color.priority(task.priority), emphasized: task.priority < 4, size: 16) }
+                .buttonStyle(GlyphStyle()).pointerStyle(.link)
+                .accessibilityLabel(task.completed ? "Reopen \(task.title)" : "Complete \(task.title)")
+            VStack(alignment: .leading, spacing: 2) {
+                if let parent = store.productiveReading.parents[task.id] {
+                    Text(parent).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                }
+                Text(task.title).font(.callout).lineLimit(2).truncationMode(.tail).foregroundStyle(task.completed ? .secondary : .primary).strikethrough(task.completed)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(spacing: 6) {
+                    if !task.string("due_time").isEmpty { Text(TaskRowView.timeText(TaskPlanner.clockValue(task))).fixedSize() }
+                    if let project = store.record("projects", id: task.string("project_id")) {
+                        HStack(spacing: 4) { Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6); Text(project.name).lineLimit(1) }
+                    }
+                }.font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+    private func calendarCardKey(_ press: KeyPress, task: Record, day: Date) -> KeyPress.Result {
+        guard focusedCard == task.id, press.modifiers.intersection([.command, .option, .control]).isEmpty else { return .ignored }
+        switch press.key {
+        case .space: workspace.complete(task)
+        case .return: workspace.open(task.id)
+        case .escape:
+            focusedCard = nil; workspace.finderTaskID = nil; workspace.selection = []; calendarFocused = true
+        case .upArrow, .downArrow:
+            let items = tasks(on: day)
+            if let index = items.firstIndex(where: { $0.id == task.id }) {
+                let next = index + (press.key == .upArrow ? -1 : 1)
+                if items.indices.contains(next) { focusCard(items[next], day: day) }
+            }
+        default: return .ignored
+        }
+        return .handled
+    }
+    private func focusCard(_ task: Record, day: Date) {
+        select(day); workspace.selection = [task.id]; focusedCard = task.id
     }
 
     // MARK: Month
@@ -322,8 +420,7 @@ struct CalendarView: View {
         let isSelected = calendar.isDate(day, inSameDayAs: selected)
         let isToday = calendar.isDate(day, inSameDayAs: today)
         let items = tasks(on: day).filter { !$0.completed }
-        return Button { select(day) } label: {
-            VStack(alignment: .leading, spacing: 3) {
+        return VStack(alignment: .leading, spacing: 3) {
                 Text(day.formatted(.dateTime.day())).font(.callout.weight(isSelected || isToday ? .semibold : .regular)).monospacedDigit()
                     .foregroundStyle(dayNumberColor(selected: isSelected, today: isToday, inMonth: inMonth))
                     .frame(width: 24, height: 24)
@@ -340,12 +437,76 @@ struct CalendarView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(isSelected ? Color.taskfold.opacity(0.06) : Color.clear)
             .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
+        .onTapGesture { activateMonthDay(day) }
         .modifier(CalendarDayDrop(day: day))
+        .focusable()
+        .focused($focusedGridDay, equals: Dates.day(day))
+        .onChange(of: focusedGridDay) { _, value in
+            if value == Dates.day(day) { select(day) }
+        }
+        .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow, .space, .return, .escape], phases: .down) { press in
+            monthGridKey(press, day: day)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
         .accessibilityLabel(day.formatted(date: .complete, time: .omitted))
         .accessibilityValue(items.isEmpty ? "No tasks" : "\(items.count) tasks")
         .accessibilityIdentifier("calendar-day-\(Dates.day(day))")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityAction { activateMonthDay(day) }
+        .accessibilityHint("Use arrow keys to move by day or week. Press Return to open this day's planner.")
+        .accessibilityAction(named: Text("Open day")) { openDay(day) }
+    }
+
+    private func refocusCalendar() {
+        // A collection may have removed the focused child while the parent's
+        // focus binding still reads true. Make this a new focus request.
+        calendarFocused = false
+        Task { @MainActor in
+            await Task.yield()
+            if workspace.section == .calendar { calendarFocused = true }
+        }
+    }
+
+    private func activateMonthDay(_ day: Date) {
+        if showsDayPanel {
+            gridNavigationActive = true
+            select(day)
+            focusedGridDay = Dates.day(day)
+        } else { openDay(day) }
+    }
+
+    private func monthGridKey(_ press: KeyPress, day: Date) -> KeyPress.Result {
+        guard press.modifiers.intersection([.command, .option, .control, .shift]).isEmpty else { return .ignored }
+        if press.key == .return { openDay(day); return .handled }
+        if press.key == .space { activateMonthDay(day); return .handled }
+        if press.key == .escape {
+            gridNavigationActive = false
+            focusedGridDay = nil
+            refocusCalendar()
+            return .handled
+        }
+        let delta: Int
+        switch press.key {
+        case .leftArrow: delta = -1
+        case .rightArrow: delta = 1
+        case .upArrow: delta = -7
+        case .downArrow: delta = 7
+        default: return .ignored
+        }
+        guard let next = calendar.date(byAdding: .day, value: delta, to: day) else { return .ignored }
+        gridNavigationActive = true
+        select(next)
+        focusedGridDay = Dates.day(next)
+        return .handled
+    }
+
+    private func openDay(_ day: Date) {
+        gridNavigationActive = false
+        focusedGridDay = nil
+        select(day)
+        workspace.calendarMode = .day
+        calendarFocused = true
     }
 
     private func dayNumberColor(selected: Bool, today: Bool, inMonth: Bool) -> AnyShapeStyle {
@@ -371,12 +532,8 @@ struct CalendarView: View {
         let cells = days(from: first, count: 42)
         let isCurrent = calendar.isDate(month, equalTo: today, toGranularity: .month)
         let total = cells.filter { calendar.isDate($0, equalTo: month, toGranularity: .month) }.reduce(0) { $0 + open(on: $1) }
-        return Button {
-            withAnimation(layout) {
-                workspace.calendarDay = isCurrent ? today : month
-                workspace.calendarMode = .month
-            }
-        } label: {
+        let isSelected = calendar.isDate(month, equalTo: selected, toGranularity: .month)
+        return Button { openMonth(month) } label: {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(month.formatted(.dateTime.month(.wide))).font(.callout.weight(.semibold)).foregroundStyle(isCurrent ? Color.taskfold : .primary)
@@ -385,24 +542,62 @@ struct CalendarView: View {
                 }
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 3), count: 7), spacing: 3) {
                     ForEach(cells, id: \.self) { day in
-                        let inMonth = calendar.isDate(day, equalTo: month, toGranularity: .month)
-                        let count = inMonth ? open(on: day) : 0
-                        RoundedRectangle(cornerRadius: 2, style: .continuous)
-                            .fill(count == 0 ? Color.primary.opacity(0.07) : Color.taskfold.opacity(min(1, 0.35 + Double(count) * 0.2)))
-                            .aspectRatio(1, contentMode: .fit)
-                            .opacity(inMonth ? 1 : 0)
-                            .overlay { if calendar.isDate(day, inSameDayAs: today) { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.taskfold, lineWidth: 1) } }
+                        miniMonthCell(day, month: month)
                     }
                 }
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .modifier(CardSurface(radius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.taskfold, lineWidth: isSelected ? 2 : 0))
             .contentShape(.rect)
         }
         .buttonStyle(PressableStyle())
         .accessibilityLabel(month.formatted(.dateTime.month(.wide).year()))
         .accessibilityValue(total == 0 ? "No tasks" : "\(total) tasks")
+        .accessibilityIdentifier("calendar-month-" + Dates.day(month))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint("Open this month's calendar. Press Down Arrow in Year view to navigate months with the arrow keys.")
+        .accessibilityAction(named: Text("Open month")) { openMonth(month) }
+    }
+
+    private func miniMonthCell(_ day: Date, month: Date) -> some View {
+        let inMonth = calendar.isDate(day, equalTo: month, toGranularity: .month)
+        let count = inMonth ? open(on: day) : 0
+        let tint: Color = count == 0 ? Color.primary.opacity(0.07) : Color.taskfold.opacity(min(1, 0.35 + Double(count) * 0.2))
+        return RoundedRectangle(cornerRadius: 2, style: .continuous)
+            .fill(tint)
+            .aspectRatio(1, contentMode: .fit)
+            .opacity(inMonth ? 1 : 0)
+            .overlay { if inMonth && calendar.isDate(day, inSameDayAs: today) { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.taskfold, lineWidth: 1) } }
+    }
+
+    private func openMonth(_ month: Date) {
+        yearNavigationActive = false
+        withAnimation(layout) {
+            workspace.calendarDay = calendar.isDate(month, equalTo: today, toGranularity: .month) ? today : month
+            workspace.calendarMode = .month
+        }
+    }
+
+    private func yearGridKey(_ press: KeyPress) -> KeyPress.Result {
+        if press.key == .return { openMonth(startOfMonth(selected)); return .handled }
+        if press.key == .escape {
+            yearNavigationActive = false
+            refocusCalendar()
+            return .handled
+        }
+        let delta: Int
+        switch press.key {
+        case .leftArrow: delta = -1
+        case .rightArrow: delta = 1
+        case .upArrow: delta = -4
+        case .downArrow: delta = 4
+        default: return .ignored
+        }
+        guard let next = calendar.date(byAdding: .month, value: delta, to: startOfMonth(selected)) else { return .ignored }
+        select(next)
+        return .handled
     }
 
     // MARK: Selected day panel
@@ -433,6 +628,9 @@ struct CalendarView: View {
 
                 DayEndRow(day: Dates.day(selected), isEmpty: items.isEmpty).selectionDisabled().listRowSeparator(.hidden)
             }
+            .focused($taskListFocused)
+            .environment(\.taskListFocused, taskListFocused)
+            .accessibilityIdentifier("calendarTaskList")
             .listStyle(.inset)
             .contextMenu(forSelectionType: String.self) { ids in
                 if let id = ids.first, ids.count == 1 {
@@ -447,6 +645,7 @@ struct CalendarView: View {
         }
         .background(Color(nsColor: .controlBackgroundColor))
         .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation).transition(.toast) } }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("calendarDayPanel")
     }
 }

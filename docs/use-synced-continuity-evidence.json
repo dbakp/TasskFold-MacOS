@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-09",
+  "scope": "Paired authenticated iOS Use synced choice preserving a later independent estimate on the same task; Mac transport read only",
+  "phases": [
+    {
+      "phase": "phone-create",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "b3b4cdf0-3549-48d4-bd55-9014c7406b48",
+      "serverTitle": "Continuity a8d00c5b"
+    },
+    {
+      "phase": "tablet-edit",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "b3b4cdf0-3549-48d4-bd55-9014c7406b48",
+      "serverTitle": "Continuity a8d00c5b revised"
+    },
+    {
+      "phase": "phone-observe",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "b3b4cdf0-3549-48d4-bd55-9014c7406b48",
+      "serverTitle": "Continuity a8d00c5b revised"
+    },
+    {
+      "phase": "phone-two-offline",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "b3b4cdf0-3549-48d4-bd55-9014c7406b48",
+      "serverTitle": "Continuity a8d00c5b revised",
+      "laterIndependentEstimateQueued": true,
+      "durablePendingEditVerified": true
+    },
+    {
+      "phase": "tablet-concurrent",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "b3b4cdf0-3549-48d4-bd55-9014c7406b48",
+      "serverTitle": "Remote device edit",
+      "independentNotesPreserved": true
+    },
+    {
+      "phase": "phone-use-synced",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "b3b4cdf0-3549-48d4-bd55-9014c7406b48",
+      "serverTitle": "Remote device edit",
+      "independentNotesPreserved": true,
+      "laterEstimateSyncedAndTaskQueueEmpty": true
+    },
+    {
+      "phase": "tablet-later-estimate",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "b3b4cdf0-3549-48d4-bd55-9014c7406b48",
+      "serverTitle": "Remote device edit",
+      "independentNotesPreserved": true,
+      "laterEstimateSyncedAndTaskQueueEmpty": true
+    }
+  ],
+  "uiExecutions": {
+    "loginPasses": 2,
+    "onlinePassesBeforeCorrection": 3,
+    "resumedPasses": 5,
+    "resumedIncludesOneRepeatedOnlineObservation": true,
+    "failedAttempts": 1,
+    "failure": "Estimate switch remained off after center-row tap; corrected to tap control and assert value before saving",
+    "passedRunsFailures": 0,
+    "passedRunsSkips": 0,
+    "passedRunsRuntimeWarnings": []
+  },
+  "macTransport": {
+    "test": "NativeContinuityTests/testMacTransportReadsSyncedChoiceAndLaterEstimate",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "capturesInIOSRepository": {
+    "use-synced-offline": {
+      "sha256": "f131d2b0a797520304bb5cc74bf4d96add66fff065196843fba2241c983bdb17",
+      "visuallyInspected": true
+    },
+    "use-synced-phone": {
+      "sha256": "01c0419cb57867f6dc53e46e785a0ed41a4cdc02273261360aa4c76cede4d43d",
+      "visuallyInspected": true
+    },
+    "use-synced-tablet": {
+      "sha256": "bccb12f56df57df5dce8492e5209f791b917efabb71c4509fc8dcbaab539b31d",
+      "visuallyInspected": true
+    }
+  },
+  "cleanup": {
+    "accounts": 0,
+    "sessions": 0,
+    "tasks": 0,
+    "profiles": 0,
+    "credentialFileRemoved": true,
+    "scopedCachesRemoved": true,
+    "isolatedSessionResetInvoked": true
+  },
+  "sourceHashes": {
+    "iosUI": "7f210a2406bfc3995955dcc3e5b5267c8d7a6d9a4dcdbac961f1ddec639862c4",
+    "iosDriver": "609c954b47fbb62d1c6421c4907e6eb880b7d50be23a99007d6ef357ee0a41ad",
+    "iosModels": "630f456e3a1300e7a1194fff2254f2ee84116dd2709b390a5dcec6ecd5e16bfd",
+    "iosStore": "584e6f67086199e3e014491e79b37a8aa5b51ba24b27254c06acc81798a1ec1c",
+    "macTest": "8fff3784a2fc4bfbd5ffe5dacc3f16a411a0c0f7c25ed2c5dba5bd392dfb8702",
+    "macModels": "630f456e3a1300e7a1194fff2254f2ee84116dd2709b390a5dcec6ecd5e16bfd"
+  },
+  "remaining": [
+    "Physical network loss/reconnection",
+    "Mac GUI and widget hosts",
+    "More task fields, multiple records, deletes, recurrence and mixed-version queues",
+    "Organization/settings and restore continuity",
+    "Membership revocation",
+    "Other P0 release gates"
+  ]
+}

@@ -1,0 +1,17 @@
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry]' passed (23.473 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5402: error: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace] : -[XCUIElementMacOSEventTarget clickWithError:]_block_invoke cannot be called with Touch Bar elements, not valid for "Discard changes" Button.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace]' failed (19.479 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn]' passed (35.307 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5422: error: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote] : Failed to click "simulateConcurrentNoteEdit" Button: No matches found for Elements matching predicate '"simulateConcurrentNoteEdit" IN identifiers' from input {(
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote]' failed (16.873 seconds).
+	 Executed 4 tests, with 2 failures (0 unexpected) in 95.131 (95.136) seconds
+	 Executed 4 tests, with 2 failures (0 unexpected) in 95.131 (95.137) seconds
+	 Executed 4 tests, with 2 failures (0 unexpected) in 95.131 (95.138) seconds

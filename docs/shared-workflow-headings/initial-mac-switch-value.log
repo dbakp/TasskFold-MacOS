@@ -1,0 +1,512 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-types-mac-native-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testHeadingWorkflowLostReplyColdRetryPreservesTypes" -resultBundlePath /tmp/taskfold-workflow-types-mac-retry.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-workflow-types-mac-retry.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 18:10:56.361464+0100 TaskfoldUITests-Runner[12835:23139386] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 18:10:56.498.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 18:10:56.499.
+Test Suite 'TeamWorkflowMacUITests' started at 2026-10-26 18:10:56.499.
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testHeadingWorkflowLostReplyColdRetryPreservesTypes]' started.
+    t =     0.00s Start Test at 2026-10-26 18:10:56.500
+    t =     0.50s Set Up
+    t =     0.51s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.52s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:10:57.129 xcodebuild[12819:23139097] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:10:57.129 xcodebuild[12819:23139097] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.73s         Wait for accessibility to load
+    t =     2.27s         Setting up automation session
+    t =     2.31s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.35s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.36s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.41s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.43s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     3.47s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     3.47s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     3.79s Click "openTeamTemplateLibraryFixture" Button
+    t =     3.79s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.81s     Find the "openTeamTemplateLibraryFixture" Button
+    t =     3.86s     Check for interrupting elements affecting "openTeamTemplateLibraryFixture" Button
+    t =     3.89s     Synthesize event
+    t =     4.64s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.66s Waiting 12.0s for "teamTemplate-ec240000-0000-4000-8000-000000000061" Button to exist
+    t =     5.70s     Checking `Expect predicate `existsNoRetry == 1` for object "teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =     5.70s         Checking existence of `"teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =     5.85s Click "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =     5.85s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.85s     Find the "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =     5.92s     Check for interrupting elements affecting "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =     5.94s     Synthesize event
+    t =     6.52s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.54s Waiting 10.0s for "runTeamTemplate" Button to exist
+    t =     7.59s     Checking `Expect predicate `existsNoRetry == 1` for object "runTeamTemplate" Button`
+    t =     7.59s         Checking existence of `"runTeamTemplate" Button`
+    t =     7.70s Click "runTeamTemplate" Button
+    t =     7.70s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.70s     Find the "runTeamTemplate" Button
+    t =     7.78s     Check for interrupting elements affecting "runTeamTemplate" Button
+    t =     7.81s     Synthesize event
+    t =     8.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.68s Waiting 12.0s for "sharedWorkflowTeam" PopUpButton to exist
+    t =     9.72s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowTeam" PopUpButton`
+    t =     9.72s         Checking existence of `"sharedWorkflowTeam" PopUpButton`
+    t =     9.82s Click "sharedWorkflowTeam" PopUpButton
+    t =     9.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.83s     Find the "sharedWorkflowTeam" PopUpButton
+    t =     9.91s     Check for interrupting elements affecting "sharedWorkflowTeam" PopUpButton
+    t =     9.92s     Synthesize event
+    t =    10.43s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.45s Waiting 5.0s for "Widget Studio" MenuItem to exist
+    t =    11.49s     Checking `Expect predicate `existsNoRetry == 1` for object "Widget Studio" MenuItem`
+    t =    11.49s         Checking existence of `"Widget Studio" MenuItem`
+    t =    11.61s Click "Widget Studio" MenuItem
+    t =    11.61s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.61s     Find the "Widget Studio" MenuItem
+    t =    11.72s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    11.73s     Synthesize event
+    t =    11.74s         Checking existence of `"menuAction:" MenuItem`
+    t =    11.80s         Hover menu item 'Widget Studio'
+    t =    11.80s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.80s             Find the "menuAction:" MenuItem
+    t =    11.87s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    11.87s             Synthesize event
+    t =    12.12s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.24s         Find the "menuAction:" MenuItem
+    t =    13.22s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.23s Waiting 12.0s for "sharedWorkflowProject" PopUpButton to exist
+    t =    14.27s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowProject" PopUpButton`
+    t =    14.27s         Checking existence of `"sharedWorkflowProject" PopUpButton`
+    t =    14.37s Click "sharedWorkflowProject" PopUpButton
+    t =    14.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.37s     Find the "sharedWorkflowProject" PopUpButton
+    t =    14.45s     Check for interrupting elements affecting "sharedWorkflowProject" PopUpButton
+    t =    14.48s     Synthesize event
+    t =    14.96s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.97s Waiting 5.0s for "Design board" MenuItem to exist
+    t =    16.01s     Checking `Expect predicate `existsNoRetry == 1` for object "Design board" MenuItem`
+    t =    16.01s         Checking existence of `"Design board" MenuItem`
+    t =    16.12s Click "Design board" MenuItem
+    t =    16.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.13s     Find the "Design board" MenuItem
+    t =    16.22s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    16.23s     Synthesize event
+    t =    16.23s         Checking existence of `"menuAction:" MenuItem`
+    t =    16.30s         Hover menu item 'Design board'
+    t =    16.31s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.32s             Find the "menuAction:" MenuItem
+    t =    16.38s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    16.39s             Synthesize event
+    t =    16.63s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.64s         Find the "menuAction:" MenuItem
+    t =    17.58s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.59s Checking existence of `"reviewSharedWorkflow" Button`
+    t =    17.68s Find the "reviewSharedWorkflow" Button
+    t =    17.78s Click "reviewSharedWorkflow" Button
+    t =    17.78s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.79s     Find the "reviewSharedWorkflow" Button
+    t =    17.86s     Check for interrupting elements affecting "reviewSharedWorkflow" Button
+    t =    17.89s     Synthesize event
+    t =    18.39s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.41s Checking existence of `"createSharedWorkflow" Button`
+    t =    18.48s Checking existence of `"sharedWorkflowForm" ScrollView`
+    t =    18.50s Scroll "sharedWorkflowForm" ScrollView by dx: 0.00, dy: -250.00
+    t =    18.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.55s     Find the "sharedWorkflowForm" ScrollView
+    t =    18.58s     Check for interrupting elements affecting "sharedWorkflowForm" ScrollView
+    t =    18.60s     Synthesize event
+    t =    18.91s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.92s Checking existence of `"createSharedWorkflow" Button`
+    t =    19.03s Find the "createSharedWorkflow" Button
+    t =    19.13s Checking existence of `"createSharedWorkflow" Button`
+    t =    19.21s Find the "createSharedWorkflow" Button
+    t =    19.30s Checking existence of `Window (First Match)`
+    t =    19.31s Find the Window (First Match)
+2026-10-26 18:11:15.813798+0100 TaskfoldUITests-Runner[12835:23139386] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    19.38s Added attachment named 'mac-heading-workflow-review'
+    t =    19.38s Checking existence of `"acknowledgeSharedWorkflow" Switch`
+    t =    19.44s Find the "acknowledgeSharedWorkflow" Switch
+    t =    19.53s Click "acknowledgeSharedWorkflow" Switch
+    t =    19.53s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.54s     Find the "acknowledgeSharedWorkflow" Switch
+    t =    19.62s     Check for interrupting elements affecting "acknowledgeSharedWorkflow" Switch
+    t =    19.67s     Synthesize event
+    t =    20.21s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.22s Find the "acknowledgeSharedWorkflow" Switch
+    t =    20.32s Requesting snapshot of accessibility hierarchy for app with pid 12839
+    t =    20.44s Requesting snapshot of accessibility hierarchy for app with pid 12839
+/tmp/taskfold-workflow-types-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:3321: error: -[TaskfoldUITests.TeamWorkflowMacUITests testHeadingWorkflowLostReplyColdRetryPreservesTypes] : XCTAssertEqual failed: ("nil") is not equal to ("Optional("1")") - Attributes: Application, 0x9dfc48a00, pid: 12839, title: 'Taskfold Workflow Test', Disabled
+Element subtree:
+ →Application, 0x9dfc48a00, pid: 12839, title: 'Taskfold Workflow Test', Disabled
+    Window (Main), 0x9dfc48640, {{338.0, 264.0}, {1380.0, 840.0}}, identifier: 'SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<Taskfold.ProjectAdoptionNativeFixtureView, Taskfold.TeamEditorNativeFixtureView>, SwiftUI._ConditionalContent<SwiftUI.NavigationStack<SwiftUI.NavigationPath, Taskfold.TeamOrganizationView>, SwiftUI.NavigationStack<SwiftUI.NavigationPath', title: 'Team templates', Disabled
+      Group, 0x9dfc49540, {{338.0, 264.0}, {1380.0, 840.0}}, Disabled
+        ScrollView, 0x9dfc483c0, {{338.0, 316.0}, {1380.0, 788.0}}, Disabled
+          Outline, 0x9dfc48780, {{337.0, 315.0}, {1382.0, 790.0}}
+            OutlineRow, 0x9dfc48c80, {{338.0, 326.0}, {1380.0, 0.0}}, Disabled
+              Cell, 0x9dfc48140, {{348.0, 326.0}, {1360.0, 0.0}}, Keyboard Focused
+                Group, 0x9dfc497c0, {{354.0, 316.0}, {1348.0, 0.0}}, Disabled
+            OutlineRow, 0x9dfc49900, {{338.0, 326.0}, {1380.0, 29.0}}, Disabled
+              Cell, 0x9dfc49680, {{348.0, 326.0}, {1360.0, 29.0}}, Keyboard Focused
+                StaticText, 0x9dfc49b80, {{346.0, 330.2}, {146.0, 20.5}}, value: Widget Studio
+            OutlineRow, 0x9dfc49cc0, {{338.0, 355.0}, {1380.0, 24.0}}, Disabled
+              Cell, 0x9dfc49e00, {{348.0, 355.0}, {1360.0, 24.0}}, Keyboard Focused
+                StaticText, 0x9dfc49f40, {{354.0, 359.5}, {658.5, 15.0}}, value: Reusable workflows...
+            OutlineRow, 0x9dfc4a080, {{338.0, 399.0}, {1380.0, 28.0}}, Disabled
+              Cell, 0x9dfc4a1c0, {{348.0, 399.0}, {1360.0, 28.0}}, Keyboard Focused
+                Group, 0x9dfc4a300, {{354.0, 399.0}, {1348.0, 28.0}}, Disabled
+                  StaticText, 0x9dfc4a440, {{354.0, 406.0}, {93.5, 14.0}}, label: 'Design review kit'
+            OutlineRow, 0x9dfc4a580, {{338.0, 427.0}, {1380.0, 24.0}}, Disabled
+              Cell, 0x9dfc4a6c0, {{348.0, 427.0}, {1360.0, 24.0}}, Keyboard Focused
+                StaticText, 0x9dfc4a800, {{354.0, 431.0}, {274.0, 16.0}}, value: 0 projects · 0 sec...
+            OutlineRow, 0x9dfc4a940, {{338.0, 451.0}, {1380.0, 63.0}}, Disabled
+              Cell, 0x9dfc4aa80, {{348.0, 451.0}, {1360.0, 63.0}}, Keyboard Focused
+                StaticText, 0x9dfc4abc0, {{354.0, 455.0}, {117.0, 16.0}}, identifier: 'templatePreview-team-library-task-0', value: Review the launch
+                StaticText, 0x9dfc4ad00, {{354.0, 476.0}, {491.0, 16.0}}, value: Compare the full l...
+                StaticText, 0x9dfc4ae40, {{354.0, 497.0}, {314.0, 13.0}}, value: Heading · stays op...
+            OutlineRow, 0x9dfc4af80, {{338.0, 514.0}, {1380.0, 42.0}}, Disabled
+              Cell, 0x9dfc4b0c0, {{348.0, 514.0}, {1360.0, 42.0}}, Keyboard Focused
+                StaticText, 0x9dfc4b200, {{364.0, 518.0}, {103.0, 16.0}}, identifier: 'templatePreview-team-library-task-0.0', value: Research phase
+                StaticText, 0x9dfc4b340, {{364.0, 539.0}, {161.5, 13.0}}, value: Heading · stays op...
+            OutlineRow, 0x9dfc4b480, {{338.0, 556.0}, {1380.0, 42.0}}, Disabled
+              Cell, 0x9dfc4b5c0, {{348.0, 556.0}, {1360.0, 42.0}}, Keyboard Focused
+                StaticText, 0x9dfc4b700, {{374.0, 560.0}, {125.5, 16.0}}, identifier: 'templatePreview-team-library-task-0.0.0', value: Approve the design
+                StaticText, 0x9dfc4b840, {{374.0, 581.0}, {51.5, 13.0}}, value: No priority
+            OutlineRow, 0x9dfc4b980, {{338.0, 618.0}, {1380.0, 0.0}}, Disabled
+              Cell, 0x9dfc4bac0, {{348.0, 618.0}, {1360.0, 0.0}}, Keyboard Focused
+                Group, 0x9dfc4bc00, {{354.0, 618.0}, {1348.0, 0.0}}, Disabled
+            OutlineRow, 0x9dfc4bd40, {{338.0, 618.0}, {1380.0, 32.0}}, Disabled
+              Cell, 0x9dfc4be80, {{348.0, 618.0}, {1360.0, 32.0}}, Keyboard Focused
+                Button, 0x9e04ef700, {{354.0, 622.0}, {208.0, 24.0}}, identifier: 'runTeamTemplate', label: 'Use in shared workspace…'
+            OutlineRow, 0x9e04ee440, {{338.0, 650.0}, {1380.0, 32.0}}, Disabled
+              Cell, 0x9e04ee580, {{348.0, 650.0}, {1360.0, 32.0}}, Keyboard Focused
+                Button, 0x9e04ed540, {{354.0, 654.0}, {163.0, 24.0}}, identifier: 'copyTeamTemplate', label: 'Save private copy…'
+            OutlineRow, 0x9e04efd40, {{338.0, 682.0}, {1380.0, 34.0}}, Disabled
+              Cell, 0x9e04ee940, {{348.0, 682.0}, {1360.0, 34.0}}, Keyboard Focused
+                Button, 0x9e04ee080, {{354.0, 686.0}, {153.0, 26.0}}, identifier: 'exportTeamTemplate', label: 'Export template…'
+            OutlineRow, 0x9e04eed00, {{338.0, 736.0}, {1380.0, 0.0}}, Disabled
+              Cell, 0x9e04eee40, {{348.0, 736.0}, {1360.0, 0.0}}, Keyboard Focused
+                Group, 0x9e04eea80, {{354.0, 736.0}, {1348.0, 0.0}}, Disabled
+            OutlineRow, 0x9e04eebc0, {{338.0, 736.0}, {1380.0, 32.0}}, Disabled
+              Cell, 0x9e04ede00, {{348.0, 736.0}, {1360.0, 32.0}}, Keyboard Focused
+                Button, 0x9e04efe80, {{354.0, 740.0}, {194.0, 24.0}}, identifier: 'editTeamTemplate', label: 'Edit or replace definition'
+            OutlineRow, 0x9e04efac0, {{338.0, 768.0}, {1380.0, 32.0}}, Disabled
+              Cell, 0x9e04ef0c0, {{348.0, 768.0}, {1360.0, 32.0}}, Keyboard Focused
+                Button, 0x9e04ee300, {{354.0, 772.0}, {146.0, 24.0}}, identifier: 'deleteTeamTemplate', label: 'Remove from library'
+            TableColumn, 0x9e04edb80, {{348.0, 316.0}, {1360.0, 788.0}}, identifier: 'ListColumn', Disabled
+          Group, 0x9e04edcc0, {{354.0, 316.0}, {1348.0, 0.0}}, Disabled
+      Toolbar, 0x9e04ed680, {{338.0, 264.0}, {1380.0, 52.0}}, Disabled
+        Button, 0x9e04ed7c0, {{430.0, 264.0}, {44.0, 52.0}}, identifier: 'chevron.backward', label: 'Back'
+        Button, 0x9e04ed900, {{1670.0, 264.0}, {44.0, 52.0}}, label: 'Refresh'
+      Button, 0x9e04ee1c0, {{356.0, 282.0}, {16.0, 16.0}}, identifier: '_XCUI:CloseWindow', Disabled
+      Button, 0x9e04eef80, {{402.0, 282.0}, {16.0, 16.0}}, identifier: '_XCUI:ZoomWindow'
+        Group, 0x9e04eda40, {{403.0, 283.0}, {14.0, 14.0}}, Disabled
+          Group, 0x9e04ee800, {{403.0, 283.0}, {14.0, 14.0}}, Disabled
+      Button, 0x9e04ef5c0, {{379.0, 282.0}, {16.0, 16.0}}, identifier: '_XCUI:MinimizeWindow'
+      StaticText, 0x9e04ef480, {{474.0, 264.0}, {1196.0, 52.0}}, value: Team templates
+      Sheet, 0x9e04ef840, {{738.0, 341.0}, {580.0, 685.0}}, Keyboard Focused, Disabled
+        Group, 0x9e04edf40, {{738.0, 341.0}, {580.0, 685.0}}, Disabled
+          StaticText, 0x9e04ee6c0, {{786.0, 357.5}, {161.5, 16.0}}, value: Use in shared work...
+          ScrollView, 0x9e04ef200, {{738.0, 388.5}, {580.0, 572.5}}, identifier: 'sharedWorkflowForm', Disabled
+            StaticText, 0x9e04efc00, {{768.0, 226.5}, {156.0, 16.0}}, label: 'Create in this workspace'
+            Group, 0x9e04ef980, {{758.0, 252.5}, {540.0, 194.0}}
+              StaticText, 0x9dfc94000, {{768.0, 262.5}, {92.0, 16.0}}, value: Widget Studio
+              StaticText, 0x9dfc94140, {{768.0, 299.5}, {81.0, 16.0}}, value: Design board
+              StaticText, 0x9dfc94280, {{768.0, 336.5}, {301.0, 16.0}}, value: Audience: people w...
+              StaticText, 0x9dfc943c0, {{768.0, 374.5}, {128.5, 14.0}}, value: 1 task · 2 checkli...
+              StaticText, 0x9dfc94500, {{768.0, 410.5}, {517.0, 26.0}}, value: New tasks are unas...
+            StaticText, 0x9dfc94640, {{768.0, 476.5}, {152.5, 16.0}}, label: 'New tasks and checklist'
+            Group, 0x9dfc94780, {{758.0, 502.5}, {540.0, 265.0}}
+              StaticText, 0x9dfc948c0, {{768.0, 512.5}, {117.0, 16.0}}, identifier: 'sharedWorkflowTask-78f8e90a-7bc3-84fb-9654-ce7c271d626b', value: Review the launch
+              StaticText, 0x9dfc94a00, {{770.5, 534.5}, {125.0, 13.0}}, value: Heading · stays open
+              StaticText, 0x9dfc94b40, {{768.0, 553.5}, {64.5, 13.0}}, value: Design board
+              StaticText, 0x9dfc94c80, {{767.0, 571.5}, {493.0, 18.0}}, value: Compare the full l...
+              StaticText, 0x9dfc94dc0, {{768.0, 594.5}, {86.0, 13.0}}, value: Priority 2 · 25 min
+              StaticText, 0x9dfc94f00, {{770.5, 613.5}, {57.0, 13.0}}, value: Design
+              StaticText, 0x9dfc95040, {{778.0, 647.5}, {103.0, 16.0}}, identifier: 'sharedWorkflowTask-4f40895f-47b7-8a3b-8603-666d83b3ff3b', value: Research phase
+              StaticText, 0x9dfc95180, {{780.5, 669.5}, {125.0, 13.0}}, value: Heading · stays open
+              StaticText, 0x9dfc952c0, {{778.0, 688.5}, {44.5, 13.0}}, value: Priority 4
+              StaticText, 0x9dfc95400, {{788.0, 722.5}, {118.0, 16.0}}, identifier: 'sharedWorkflowTask-e5b0089a-fee2-81e8-8326-3ab40e5fbcd3', value: Approve the design
+              StaticText, 0x9dfc95540, {{788.0, 744.5}, {44.5, 13.0}}, value: Priority 4
+            Group, 0x9dfc95680, {{758.0, 777.5}, {540.0, 163.5}}
+              StaticText, 0x9dfc957c0, {{768.0, 787.5}, {315.5, 16.0}}, value: I reviewed these c...
+              Switch, 0x9dfc95900, {{1251.0, 787.0}, {38.0, 18.0}}, identifier: 'acknowledgeSharedWorkflow', value: 1
+              Button, 0x9dfc95a40, {{768.0, 825.0}, {122.5, 24.0}}, identifier: 'createSharedWorkflow', label: 'Create workflow'
+              Button, 0x9dfc95b80, {{768.0, 870.0}, {140.5, 24.0}}, identifier: 'backSharedWorkflow', label: 'Back to destination'
+              StaticText, 0x9dfc95cc0, {{768.0, 916.5}, {478.5, 13.0}}, value: Create sends this ...
+            ScrollBar, 0x9dfc95e00, {{1300.0, 387.5}, {19.0, 574.5}}, value: 1
+              ValueIndicator, 0x9dfc95f40, {{1309.0, 520.5}, {6.0, 437.5}}, value: 1, Disabled
+              IncrementArrow, 0x9dfc96080, {{1301.0, 388.5}, {0.0, 0.0}}, Disabled
+              DecrementArrow, 0x9dfc961c0, {{1301.0, 388.5}, {0.0, 0.0}}, Disabled
+              Button, 0x9dfc96300, {{1309.0, 958.0}, {6.0, 0.0}}, Disabled
+              Button, 0x9dfc96440, {{1309.0, 391.5}, {6.0, 128.5}}, Disabled
+          Button, 0x9dfc96580, {{1234.0, 982.0}, {64.0, 24.0}}, label: 'Done'
+    MenuBar, 0x9dfc966c0, {{0.0, 0.0}, {2056.0, 39.0}}
+      MenuBarItem, 0x9dfc96800, {{10.0, 0.0}, {34.0, 39.0}}, title: 'Apple'
+        Menu, 0x9dfc96940, {{0.0, 1329.0}, {0.0, 0.0}}
+          MenuItem, 0x9dfc96a80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_aboutThisMacRequested:', title: 'About This Mac'
+          MenuItem, 0x9dfc96bc0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_systemInformationRequested:', title: 'System Information'
+          MenuItem, 0x9dfc96d00, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9dfc96e40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_systemSettingsRequested:', title: 'System Settings…'
+          MenuItem, 0x9dfc96f80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_appStoreRequested:', title: 'App Store'
+          MenuItem, 0x9dfc970c0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9dfc97200, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentsRequested:', title: 'Recent Items'
+            Menu, 0x9dfc97340, {{0.0, 1329.0}, {0.0, 0.0}}
+              MenuItem, 0x9dfc97480, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Applications', Disabled
+              MenuItem, 0x9dfc975c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'ChatGPT'
+              MenuItem, 0x9dfc97700, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “ChatGPT” in Finder'
+              MenuItem, 0x9dfc97840, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Device Hub'
+              MenuItem, 0x9dfc97980, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Device Hub” in Finder'
+              MenuItem, 0x9dfc97ac0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Dictionary'
+              MenuItem, 0x9dfc97c00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Dictionary” in Finder'
+              MenuItem, 0x9dfc97d40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Messages'
+              MenuItem, 0x9dfc97e80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Messages” in Finder'
+              MenuItem, 0x9e0624000, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Spotify'
+              MenuItem, 0x9e0624140, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Spotify” in Finder'
+              MenuItem, 0x9e0624280, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Taskfold'
+              MenuItem, 0x9e06243c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Taskfold” in Finder'
+              MenuItem, 0x9e0624500, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Taskfold'
+              MenuItem, 0x9e0624640, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Taskfold” in Finder'
+              MenuItem, 0x9e0624780, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Taskfold'
+              MenuItem, 0x9e06248c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Taskfold” in Finder'
+              MenuItem, 0x9e0624a00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Taskfold'
+              MenuItem, 0x9e0624b40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Taskfold” in Finder'
+              MenuItem, 0x9e0624c80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Taskfold'
+              MenuItem, 0x9e0624dc0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Taskfold” in Finder'
+              MenuItem, 0x9e0624f00, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+              MenuItem, 0x9e0625040, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Documents', Disabled
+              MenuItem, 0x9e0625180, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: '.env.local'
+              MenuItem, 0x9e06252c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “.env.local” in Finder'
+              MenuItem, 0x9e0625400, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: '/private/tmp/taskfold-import-response-secret/token.txt'
+              MenuItem, 0x9e0625540, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “/private/tmp/taskfold-import-response-secret/token.txt” in Finder'
+              MenuItem, 0x9e0625680, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Atmos.xcodeproj'
+              MenuItem, 0x9e06257c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Atmos.xcodeproj” in Finder'
+              MenuItem, 0x9e0625900, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Dinosaur Jungle Birthday Invitation.png'
+              MenuItem, 0x9e0625a40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Dinosaur Jungle Birthday Invitation.png” in Finder'
+              MenuItem, 0x9e0625b80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Lumen.xcodeproj'
+              MenuItem, 0x9e0625cc0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Lumen.xcodeproj” in Finder'
+              MenuItem, 0x9e0625e00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Security.prefPane'
+              MenuItem, 0x9e0625f40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Security.prefPane” in Finder'
+              MenuItem, 0x9e0626080, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'taskfold-live-verification.json'
+              MenuItem, 0x9e06261c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “taskfold-live-verification.json” in Finder'
+              MenuItem, 0x9e0626300, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'taskfold-provider-import-native.txt'
+              MenuItem, 0x9e0626440, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “taskfold-provider-import-native.txt” in Finder'
+              MenuItem, 0x9e0626580, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Taskfold.xcodeproj'
+              MenuItem, 0x9e06266c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Taskfold.xcodeproj” in Finder'
+              MenuItem, 0x9e0626800, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Two and a Half Men S01E04 If I Can't Write My Chocolate Song, I'm Going to Take a Nap.mkv'
+              MenuItem, 0x9e0626940, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Show “Two and a Half Men S01E04 If I Can't Write My Chocolate Song, I'm Going to Take a Nap.mkv” in Finder'
+              MenuItem, 0x9e0626a80, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+              MenuItem, 0x9e0626bc0, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Servers', Disabled
+              MenuItem, 0x9e0626d00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_recentItemRequested:', title: 'Macintosh HD'
+              MenuItem, 0x9e0626e40, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+              MenuItem, 0x9e0626f80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_clearRecentItemsRequested:', title: 'Clear Menu'
+          MenuItem, 0x9e06270c0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0627200, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_forceQuitPanelRequested:', title: 'Force Quit…'
+          MenuItem, 0x9e0627340, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_forceQuitRequested:', title: 'Force Quit Taskfold Workflow Test'
+          MenuItem, 0x9e0627480, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e06275c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_sleepRequested:', title: 'Sleep'
+          MenuItem, 0x9e0627700, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_restartRequested:', title: 'Restart…'
+          MenuItem, 0x9e0627840, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_restartNowRequested:', title: 'Restart'
+          MenuItem, 0x9e0627980, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_shutDownRequested:', title: 'Shut Down…'
+          MenuItem, 0x9e0627ac0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_shutDownNowRequested:', title: 'Shut Down'
+          MenuItem, 0x9e0627c00, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0627d40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_lockScreenRequested:', title: 'Lock Screen'
+          MenuItem, 0x9e0627e80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_logOutRequested:', title: 'Log Out David Bak Posada…'
+          MenuItem, 0x9e0634000, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_logOutNowRequested:', title: 'Log Out David Bak Posada'
+          MenuItem, 0x9e0634140, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+      MenuBarItem, 0x9e0634280, {{44.0, 0.0}, {171.0, 39.0}}, title: 'Taskfold Workflow Test'
+        Menu, 0x9e06343c0, {{0.0, 1329.0}, {0.0, 0.0}}
+          MenuItem, 0x9e0634500, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'orderFrontStandardAboutPanel:', title: 'About Taskfold Heading Test'
+          MenuItem, 0x9e0634640, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0634780, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Settings…'
+          MenuItem, 0x9e06348c0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0634a00, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Services'
+            Menu, 0x9e0634b40, {{0.0, 1329.0}, {0.0, 0.0}}
+              MenuItem, 0x9e0634c80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_processRequest:', title: 'Activity Monitor'
+              MenuItem, 0x9e0634dc0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_processRequest:', title: 'Allocations & Leaks'
+              MenuItem, 0x9e0634f00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_processRequest:', title: 'File Activity'
+              MenuItem, 0x9e0635040, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_processRequest:', title: 'System Trace'
+              MenuItem, 0x9e0635180, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_processRequest:', title: 'Time Profile Active Application'
+              MenuItem, 0x9e06352c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_processRequest:', title: 'Time Profile App Under Mouse'
+              MenuItem, 0x9e0635400, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_processRequest:', title: 'Time Profile Entire System'
+              MenuItem, 0x9e0635540, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_processRequest:', title: 'Toggle Instruments Recording'
+              MenuItem, 0x9e0635680, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_configureServicesMenu:', title: 'Services Settings…'
+          MenuItem, 0x9e06357c0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0635900, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'hide:', title: 'Hide Taskfold Heading Test'
+          MenuItem, 0x9e0635a40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'hideOtherApplications:', title: 'Hide Others'
+          MenuItem, 0x9e0635b80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'unhideAllApplications:', title: 'Show All', Disabled
+          MenuItem, 0x9e0635cc0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0635e00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'terminate:', title: 'Quit Taskfold Heading Test'
+      MenuBarItem, 0x9e0635f40, {{215.0, 0.0}, {42.0, 39.0}}, title: 'File'
+        Menu, 0x9e0636080, {{0.0, 1329.0}, {0.0, 0.0}}
+          MenuItem, 0x9e06361c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'New Task'
+          MenuItem, 0x9e0636300, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'New Project…'
+          MenuItem, 0x9e0636440, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0636580, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e06366c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'performClose:', title: 'Close', Disabled
+          MenuItem, 0x9e0636800, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'closeAll:', title: 'Close All'
+      MenuBarItem, 0x9e0636940, {{257.0, 0.0}, {44.0, 39.0}}, title: 'Edit'
+        Menu, 0x9e0636a80, {{0.0, 1329.0}, {0.0, 0.0}}
+          MenuItem, 0x9e0636bc0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'undo:', title: 'Undo', Disabled
+          MenuItem, 0x9e0636d00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'redo:', title: 'Redo', Disabled
+          MenuItem, 0x9e0636e40, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0636f80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'cut:', title: 'Cut', Disabled
+          MenuItem, 0x9e06370c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'copy:', title: 'Copy', Disabled
+          MenuItem, 0x9e0637200, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'paste:', title: 'Paste', Disabled
+          MenuItem, 0x9e0637340, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'delete:', title: 'Delete', Disabled
+          MenuItem, 0x9e0637480, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'selectAll:', title: 'Select All', Disabled
+          MenuItem, 0x9e06375c0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0637700, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Search Everywhere…'
+          MenuItem, 0x9e0637840, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Find Commands…'
+          MenuItem, 0x9e0637980, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Filter Current List'
+          MenuItem, 0x9e0637ac0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0637c00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_NSMenuItemAutoFillIdentifier', title: 'AutoFill'
+            Menu, 0x9e0637d40, {{0.0, 1329.0}, {0.0, 0.0}}
+              MenuItem, 0x9e0637e80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_handleInsertFromContactsCommand:', title: 'Contact…', Disabled
+              MenuItem, 0x9e0638000, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_handleInsertFromPasswordsCommand:', title: 'Passwords…', Disabled
+              MenuItem, 0x9e0638140, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_handleInsertFromCreditCardsCommand:', title: 'Credit Card…', Disabled
+          MenuItem, 0x9e0638280, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'startDictation:', title: 'Start Dictation…'
+          MenuItem, 0x9e06383c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'orderFrontCharacterPalette:', title: 'Emoji & Symbols'
+      MenuBarItem, 0x9e0638500, {{301.0, 0.0}, {50.0, 39.0}}, title: 'View'
+        Menu, 0x9e0638640, {{0.0, 1329.0}, {0.0, 0.0}}
+          MenuItem, 0x9e0638780, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'toggleTabBar:', title: 'Show Tab Bar'
+          MenuItem, 0x9e06388c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'toggleTabOverview:', title: 'Show All Tabs', Disabled
+          MenuItem, 0x9e0638a00, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0638b40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Today'
+          MenuItem, 0x9e0638c80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Inbox'
+          MenuItem, 0x9e0638dc0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Upcoming'
+          MenuItem, 0x9e0638f00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Calendar'
+          MenuItem, 0x9e0639040, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'All Tasks'
+          MenuItem, 0x9e0639180, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e06392c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Hide Inspector'
+          MenuItem, 0x9e0639400, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0639540, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Plan Your Day…'
+          MenuItem, 0x9e0639680, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Review This Week…'
+          MenuItem, 0x9e06397c0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0639900, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Sync Now'
+          MenuItem, 0x9e0639a40, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e0639b80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'toggleFullScreen:', title: 'Enter Full Screen', Disabled
+      MenuBarItem, 0x9e0639cc0, {{351.0, 0.0}, {70.0, 39.0}}, title: 'Account'
+        Menu, 0x9e0639e00, {{0.0, 1329.0}, {0.0, 0.0}}
+          MenuItem, 0x9e0639f40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Manage Account…'
+          MenuItem, 0x9e063a080, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Import from Todoist…'
+          MenuItem, 0x9e063a1c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Invitations…'
+      MenuBarItem, 0x9e063a300, {{421.0, 0.0}, {48.0, 39.0}}, title: 'Task'
+        Menu, 0x9e063a440, {{0.0, 1329.0}, {0.0, 0.0}}
+          MenuItem, 0x9e063a580, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Complete Task', Disabled
+          MenuItem, 0x9e063a6c0, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Edit Task', Disabled
+          MenuItem, 0x9e063a800, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e063a940, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'ID(id: 6844)', title: 'Reschedule'
+            Menu, 0x9e063aa80, {{0.0, 1329.0}, {0.0, 0.0}}
+              MenuItem, 0x9e063abc0, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Today', Disabled
+              MenuItem, 0x9e063ad00, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Tomorrow', Disabled
+              MenuItem, 0x9e063ae40, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'This Weekend', Disabled
+              MenuItem, 0x9e063af80, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Next Week', Disabled
+              MenuItem, 0x9e063b0c0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+              MenuItem, 0x9e063b200, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Remove Date', Disabled
+          MenuItem, 0x9e063b340, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Edit Deadlines…', Disabled
+          MenuItem, 0x9e063b480, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Assign Shared Tasks…', Disabled
+          MenuItem, 0x9e063b5c0, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Edit Shared Labels…', Disabled
+          MenuItem, 0x9e063b700, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Edit Estimates…', Disabled
+          MenuItem, 0x9e063b840, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'ID(id: 6898)', title: 'Move to Project'
+            Menu, 0x9e063b980, {{0.0, 1329.0}, {0.0, 0.0}}
+              MenuItem, 0x9e063bac0, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Inbox', Disabled
+              MenuItem, 0x9e063bc00, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Design workshop', Disabled
+          MenuItem, 0x9e063bd40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'ID(id: 6911)', title: 'Priority'
+            Menu, 0x9e063be80, {{0.0, 1329.0}, {0.0, 0.0}}
+              MenuItem, 0x9e063c000, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Priority 1', Disabled
+              MenuItem, 0x9e063c140, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Priority 2', Disabled
+              MenuItem, 0x9e063c280, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Priority 3', Disabled
+              MenuItem, 0x9e063c3c0, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'None', Disabled
+          MenuItem, 0x9e063c500, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Duplicate', Disabled
+          MenuItem, 0x9e063c640, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e063c780, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Delete', Disabled
+      MenuBarItem, 0x9e063c8c0, {{469.0, 0.0}, {69.0, 39.0}}, title: 'Window'
+        Menu, 0x9e063ca00, {{0.0, 1329.0}, {0.0, 0.0}}
+          MenuItem, 0x9e063cb40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'performMiniaturize:', title: 'Minimize'
+          MenuItem, 0x9e063cc80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'miniaturizeAll:', title: 'Minimize All'
+          MenuItem, 0x9e063cdc0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'performZoom:', title: 'Zoom'
+          MenuItem, 0x9e063cf00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'zoomAll:', title: 'Zoom All'
+          MenuItem, 0x9e063d040, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomFill:', title: 'Fill'
+          MenuItem, 0x9e063d180, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomCenter:', title: 'Center'
+          MenuItem, 0x9e063d2c0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e063d400, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Move & Resize'
+            Menu, 0x9e063d540, {{0.0, 1329.0}, {0.0, 0.0}}
+              MenuItem, 0x9e063d680, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Halves', Disabled
+              MenuItem, 0x9e063d7c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomLeft:', title: 'Left'
+              MenuItem, 0x9e063d900, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomRight:', title: 'Right'
+              MenuItem, 0x9e063da40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomTop:', title: 'Top'
+              MenuItem, 0x9e063db80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomBottom:', title: 'Bottom'
+              MenuItem, 0x9e063dcc0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+              MenuItem, 0x9e063de00, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Quarters', Disabled
+              MenuItem, 0x9e063df40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomTopLeft:', title: 'Top Left'
+              MenuItem, 0x9e063e080, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomTopRight:', title: 'Top Right'
+              MenuItem, 0x9e063e1c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomBottomLeft:', title: 'Bottom Left'
+              MenuItem, 0x9e063e300, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomBottomRight:', title: 'Bottom Right'
+              MenuItem, 0x9e063e440, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+              MenuItem, 0x9e063e580, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Arrange', Disabled
+              MenuItem, 0x9e063e6c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomLeftAndRight:', title: 'Left & Right'
+              MenuItem, 0x9e063e800, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomLeftThreeUp:', title: 'Left & Quarters'
+              MenuItem, 0x9e063e940, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomRightAndLeft:', title: 'Right & Left'
+              MenuItem, 0x9e063ea80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomRightThreeUp:', title: 'Right & Quarters'
+              MenuItem, 0x9e063ebc0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomTopAndBottom:', title: 'Top & Bottom'
+              MenuItem, 0x9e063ed00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomTopThreeUp:', title: 'Top & Quarters'
+              MenuItem, 0x9e063ee40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomBottomAndTop:', title: 'Bottom & Top'
+              MenuItem, 0x9e063ef80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomBottomThreeUp:', title: 'Bottom & Quarters'
+              MenuItem, 0x9e063f0c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomQuarters:', title: 'Quarters'
+              MenuItem, 0x9e063f200, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+              MenuItem, 0x9e063f340, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_zoomUntile:', title: 'Return to Previous Size', Disabled
+          MenuItem, 0x9e063f480, {{0.0, 1329.0}, {0.0, 0.0}}, title: 'Full Screen Tile', Disabled
+          MenuItem, 0x9e063f5c0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e063f700, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_removeWindowFromStageManagerSet:', title: 'Remove Window from Set', Disabled
+          MenuItem, 0x9e063f840, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e063f980, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: '_moveToDisplay:', title: 'Move to DELL S3225QC'
+          MenuItem, 0x9e063fac0, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e063fc00, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'arrangeInFront:', title: 'Bring All to Front'
+          MenuItem, 0x9e063fd40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'alternateArrangeInFront:', title: 'Arrange in Front'
+          MenuItem, 0x9e063fe80, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e09f8000, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'selectPreviousTab:', title: 'Show Previous Tab', Disabled
+          MenuItem, 0x9e09f8140, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'selectNextTab:', title: 'Show Next Tab', Disabled
+          MenuItem, 0x9e09f8280, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'moveTabToNewWindow:', title: 'Move Tab to New Window', Disabled
+          MenuItem, 0x9e09f83c0, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'mergeAllWindows:', title: 'Merge All Windows', Disabled
+          MenuItem, 0x9e09f8500, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e09f8640, {{0.0, 1329.0}, {0.0, 0.0}}, Disabled
+          MenuItem, 0x9e09f8780, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'makeKeyAndOrderFront:', title: 'Team templates'
+      MenuBarItem, 0x9e09f88c0, {{538.0, 0.0}, {48.0, 39.0}}, title: 'Help'
+        Menu, 0x9e09f8a00, {{0.0, 1329.0}, {0.0, 0.0}}
+          MenuItem, 0x9e09f8b40, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Welcome Tour'
+          MenuItem, 0x9e09f8c80, {{0.0, 1329.0}, {0.0, 0.0}}, identifier: 'menuAction:', title: 'Taskfold Help'
+    TouchBar, 0x9e09f8dc0, {{80.0, 0.0}, {685.0, 30.0}}, Disabled
+Path to element:
+ →Application, 0x9dfc48a00, pid: 12839, title: 'Taskfold Workflow Test', Disabled
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+  Output: {
+    Application, 0x9e09f8f00, pid: 12839, title: 'Taskfold Workflow Test', Disabled
+  }
+
+    t =    20.74s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testHeadingWorkflowLostReplyColdRetryPreservesTypes]' failed (21.360 seconds).
+Test Suite 'TeamWorkflowMacUITests' failed at 2026-10-26 18:11:17.861.
+	 Executed 1 test, with 1 failure (0 unexpected) in 21.360 (21.362) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 18:11:17.862.
+	 Executed 1 test, with 1 failure (0 unexpected) in 21.360 (21.363) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 18:11:17.864.
+	 Executed 1 test, with 1 failure (0 unexpected) in 21.360 (21.366) seconds
+2026-10-26 18:11:28.216 xcodebuild[12819:23139097] [MT] IDETestOperationsObserverDebug: 32.910 elapsed -- Testing started completed.
+2026-10-26 18:11:28.216 xcodebuild[12819:23139097] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 18:11:28.216 xcodebuild[12819:23139097] [MT] IDETestOperationsObserverDebug: 32.910 sec, +32.910 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-workflow-types-mac-retry.xcresult
+
+Failing tests:
+	TeamWorkflowMacUITests.testHeadingWorkflowLostReplyColdRetryPreservesTypes()
+
+** TEST EXECUTE FAILED **
+
+Testing started

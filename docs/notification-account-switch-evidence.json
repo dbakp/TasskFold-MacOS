@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual iPhone Simulator notification Complete response held across authenticated A → B → A",
+  "ownedSourceRepository": "TaskFold-iOS",
+  "productionBehaviorChanged": false,
+  "fixtureBoundary": "DEBUG, Simulator, exact com.dbakp.taskfold.widgetstatetests identity and two explicit flags; actual UNNotificationResponse before actual Store handler",
+  "nativeResult": {
+    "test": "testActualHeldReminderCompleteCannotCrossAuthenticatedAccountSwitch",
+    "durationSeconds": 321.165,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0
+  },
+  "verified": [
+    "Native account A creates independent two-occurrence reminder and receives real system Complete action",
+    "Actual callback held; A signs out with empty pending/delivered registries; native B sign-in and enable reminders",
+    "Held A callback resumes under B; exact callback account/action/receiver status observed; B tasks and pending requests stay empty",
+    "Return to A retains original open task and exact inspected planning/reminder fields; only one future target reminder remains",
+    "Native deletion of own test task; final sign-out and normal relaunch with no workspace/seed/session override retain auth screen and empty actual registry"
+  ],
+  "priorFailure": {
+    "durationSeconds": 105.433,
+    "reason": "Fixture sibling HStacks overlap: Inspect tap hits Hold; inspection remains empty. Corrected by single VStack. No account-switch result accepted from failed run.",
+    "recovery": "Native isolated cleanup test passes before final complete rerun"
+  },
+  "visualLimit": "Four selected screenshots inspected for behavioral context. DEBUG controls overlap app headings; no production toolbar visual acceptance.",
+  "preservation": "See preservation.json: B all 14 server tables exact; A other 13 tables and original activity exact, plus four expected synthetic create/delete activity rows; six protected containers/100 files exact.",
+  "cleanup": "B global logout before exact guarded SQL deletion after app endpoint returned 404; 17 scoped checks show zero records. Credentials and own empty cache removed. Disposable Simulator shut down.",
+  "productsPrunedLogicalBytes": 420849427,
+  "notAccepted": [
+    "Mac notification/account-switch runtime",
+    "Physical devices/APNs/distribution",
+    "Other stale action/account lifecycle combinations"
+  ],
+  "evidenceDirectory": "notification-account-switch"
+}

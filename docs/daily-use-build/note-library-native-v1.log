@@ -1,0 +1,297 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /tmp/taskfold-source-selection-ios-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -derivedDataPath /tmp/taskfold-prepared-undo-signed-ios-build -jobs 1 -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/WorkflowSourceSelectionUITests/testPinnedNoteLibrarySearchRefreshAndColdReturn" CONFIGURATION_BUILD_DIR=/tmp/taskfold-source-native-ios-products/Debug-iphonesimulator CODE_SIGNING_ALLOWED=YES ONLY_ACTIVE_ARCH=YES ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 2 -j 1" CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=3UZ4C73FM2 -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -resultBundlePath /private/tmp/taskfold-note-library-native-v1.xcresult -test-timeouts-enabled YES -default-test-execution-time-allowance 240 -maximum-test-execution-time-allowance 300 test-without-building
+
+Build settings from command line:
+    ARCHS = arm64
+    CODE_SIGN_IDENTITY = -
+    CODE_SIGNING_ALLOWED = YES
+    COMPILER_INDEX_STORE_ENABLE = NO
+    CONFIGURATION_BUILD_DIR = /tmp/taskfold-source-native-ios-products/Debug-iphonesimulator
+    DEVELOPMENT_TEAM = 3UZ4C73FM2
+    ONLY_ACTIVE_ARCH = YES
+    OTHER_SWIFT_FLAGS = $(inherited) -driver-batch-count 2 -j 1
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/private/tmp/taskfold-note-library-native-v1.xcresult
+
+2026-11-05 08:31:34.991090+0100 TaskfoldUITests-Runner[51218:52337112] [Default] Running tests...
+objc[51218]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x106830398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1077d8310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-05 08:31:40.701.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-11-05 08:31:40.702.
+Test Suite 'WorkflowSourceSelectionUITests' started at 2026-11-05 08:31:40.703.
+Test Case '-[TaskfoldUITests.WorkflowSourceSelectionUITests testPinnedNoteLibrarySearchRefreshAndColdReturn]' started.
+    t =     0.01s Start Test at 2026-11-05 08:31:40.714
+    t =     0.36s Set Up
+    t =     0.36s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.36s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-11-05 08:31:41.452 xcodebuild[50480:52332160] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-05 08:31:41.454 xcodebuild[50480:52332160] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.84s         Setting up automation session
+    t =     8.35s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.25s Waiting 45.0s for "workspaceReadStatus" StaticText to exist
+    t =    12.29s     Checking `Expect predicate `existsNoRetry == 1` for object "workspaceReadStatus" StaticText`
+    t =    12.29s         Checking existence of `"workspaceReadStatus" StaticText`
+    t =    13.59s Find the "workspaceReadStatus" StaticText
+    t =    13.69s Tap "openPinnedNoteLibrary" Button
+    t =    13.69s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.70s     Find the "openPinnedNoteLibrary" Button
+    t =    13.72s     Check for interrupting elements affecting "openPinnedNoteLibrary" Button
+    t =    13.94s     Synthesize event
+    t =    14.52s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.79s Waiting 12.0s for "pinnedNotesSearch" TextField to exist
+    t =    16.84s     Checking `Expect predicate `existsNoRetry == 1` for object "pinnedNotesSearch" TextField`
+    t =    16.84s         Checking existence of `"pinnedNotesSearch" TextField`
+    t =    17.17s Checking existence of `"showMorePinnedNotes" Button`
+    t =    17.22s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    17.22s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.23s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    17.28s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    17.35s     Synthesize event
+    t =    17.89s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.86s Checking existence of `"showMorePinnedNotes" Button`
+    t =    20.97s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    20.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.98s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    21.04s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    21.11s     Synthesize event
+    t =    21.54s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.64s Checking existence of `"showMorePinnedNotes" Button`
+    t =    23.70s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    23.70s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.70s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    23.75s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    23.80s     Synthesize event
+    t =    24.22s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.32s Checking existence of `"showMorePinnedNotes" Button`
+    t =    26.39s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    26.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.39s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    26.44s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    26.50s     Synthesize event
+    t =    26.92s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.04s Checking existence of `"showMorePinnedNotes" Button`
+    t =    29.12s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    29.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.12s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    29.17s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    29.22s     Synthesize event
+    t =    29.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.74s Checking existence of `"showMorePinnedNotes" Button`
+    t =    31.80s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    31.80s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.81s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    31.85s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    31.90s     Synthesize event
+    t =    32.49s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.43s Checking existence of `"showMorePinnedNotes" Button`
+    t =    34.50s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    34.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.50s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    34.56s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    34.62s     Synthesize event
+    t =    35.05s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.16s Checking existence of `"showMorePinnedNotes" Button`
+    t =    37.22s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    37.22s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.22s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    37.27s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    37.32s     Synthesize event
+    t =    37.74s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.82s Checking existence of `"showMorePinnedNotes" Button`
+    t =    39.90s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    39.90s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.90s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    39.95s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    40.01s     Synthesize event
+    t =    40.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.55s Checking existence of `"showMorePinnedNotes" Button`
+    t =    42.62s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    42.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.63s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    42.68s     Check for interrupting elements affecting "Taskfold Team Editor Test" Application
+    t =    42.75s     Synthesize event
+    t =    43.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.67s Checking existence of `"showMorePinnedNotes" Button`
+    t =    43.74s Find the "showMorePinnedNotes" Button
+    t =    43.81s Checking existence of `"showMorePinnedNotes" Button`
+    t =    43.86s Find the "showMorePinnedNotes" Button
+    t =    43.93s Checking existence of `"showMorePinnedNotes" Button`
+    t =    43.98s Find the "showMorePinnedNotes" Button
+    t =    44.05s Checking existence of `"showMorePinnedNotes" Button`
+    t =    44.11s Find the "showMorePinnedNotes" Button
+    t =    44.18s Checking existence of `"showMorePinnedNotes" Button`
+    t =    44.24s Find the "showMorePinnedNotes" Button
+    t =    44.32s Checking existence of `"showMorePinnedNotes" Button`
+    t =    44.37s Find the "showMorePinnedNotes" Button
+    t =    44.44s Checking existence of `"showMorePinnedNotes" Button`
+    t =    44.49s Find the "showMorePinnedNotes" Button
+    t =    44.56s Checking existence of `"showMorePinnedNotes" Button`
+    t =    44.61s Find the "showMorePinnedNotes" Button
+    t =    44.68s Checking existence of `"showMorePinnedNotes" Button`
+    t =    44.74s Find the "showMorePinnedNotes" Button
+    t =    44.80s Checking existence of `"showMorePinnedNotes" Button`
+    t =    44.86s Find the "showMorePinnedNotes" Button
+    t =    44.92s Checking existence of `"showMorePinnedNotes" Button`
+    t =    44.97s Find the "showMorePinnedNotes" Button
+    t =    45.04s Checking existence of `"showMorePinnedNotes" Button`
+    t =    45.09s Find the "showMorePinnedNotes" Button
+    t =    45.16s Checking existence of `"showMorePinnedNotes" Button`
+    t =    45.21s Find the "showMorePinnedNotes" Button
+    t =    45.27s Checking existence of `"showMorePinnedNotes" Button`
+    t =    45.32s Find the "showMorePinnedNotes" Button
+    t =    45.39s Checking existence of `"showMorePinnedNotes" Button`
+    t =    45.44s Find the "showMorePinnedNotes" Button
+    t =    45.51s Find the "showMorePinnedNotes" Button
+    t =    45.57s Checking existence of `"Showing 60 of 122 notes" StaticText`
+    t =    45.62s Tap "showMorePinnedNotes" Button
+    t =    45.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.62s     Find the "showMorePinnedNotes" Button
+    t =    45.68s     Check for interrupting elements affecting "showMorePinnedNotes" Button
+    t =    45.74s     Synthesize event
+    t =    46.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.38s Checking existence of `"Showing 60 of 122 notes" StaticText`
+    t =    47.44s Tap "pinnedNotesSearch" TextField
+    t =    47.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.45s     Find the "pinnedNotesSearch" TextField
+    t =    47.50s     Check for interrupting elements affecting "pinnedNotesSearch" TextField
+    t =    47.57s     Synthesize event
+    t =    47.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    49.74s Type 'handbook' into "pinnedNotesSearch" TextField
+    t =    49.74s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    50.10s     Find the "pinnedNotesSearch" TextField
+    t =    50.25s     Check for interrupting elements affecting "pinnedNotesSearch" TextField
+    t =    50.33s     Synthesize event
+    t =    50.69s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    50.89s Waiting 12.0s for "pinnedNote-ed120000-0000-4000-8000-000000000001" Button to exist
+    t =    51.94s     Checking `Expect predicate `existsNoRetry == 1` for object "pinnedNote-ed120000-0000-4000-8000-000000000001" Button`
+    t =    51.94s         Checking existence of `"pinnedNote-ed120000-0000-4000-8000-000000000001" Button`
+    t =    52.02s Checking existence of `"pinnedNote-ed120000-0000-4000-8000-000000000002" Button`
+    t =    52.08s Find the "pinnedNote-ed120000-0000-4000-8000-000000000001" Button
+    t =    52.15s Find the "pinnedNote-ed120000-0000-4000-8000-000000000001" Button
+    t =    52.21s Tap "clearPinnedNotesSearch" Button
+    t =    52.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    52.22s     Find the "clearPinnedNotesSearch" Button
+    t =    52.28s     Check for interrupting elements affecting "clearPinnedNotesSearch" Button
+    t =    52.34s     Synthesize event
+    t =    52.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    52.63s Type 'cafe personal' into "pinnedNotesSearch" TextField
+    t =    52.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    52.63s     Find the "pinnedNotesSearch" TextField
+    t =    52.70s     Check for interrupting elements affecting "pinnedNotesSearch" TextField
+    t =    52.77s     Synthesize event
+    t =    53.19s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    53.24s Waiting 12.0s for "pinnedNote-ed120000-0000-4000-8000-000000000001" Button to exist
+    t =    54.30s     Checking `Expect predicate `existsNoRetry == 1` for object "pinnedNote-ed120000-0000-4000-8000-000000000001" Button`
+    t =    54.30s         Checking existence of `"pinnedNote-ed120000-0000-4000-8000-000000000001" Button`
+    t =    55.39s Checking existence of `"pinnedNote-ed120000-0000-4000-8000-000000000002" Button`
+    t =    55.45s Tap "pinnedNotesKeyboardDone" Button
+    t =    55.45s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    55.45s     Find the "pinnedNotesKeyboardDone" Button
+    t =    55.51s     Check for interrupting elements affecting "pinnedNotesKeyboardDone" Button
+    t =    55.57s     Synthesize event
+    t =    55.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    57.65s Checking existence of `Keyboard (First Match)`
+    t =    57.75s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    57.99s Added attachment named 'Pinned notes full text and project search'
+    t =    58.03s Tap "refreshNoteLibraryFixture" Button
+    t =    58.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    58.03s     Find the "refreshNoteLibraryFixture" Button
+    t =    58.08s     Check for interrupting elements affecting "refreshNoteLibraryFixture" Button
+    t =    58.12s     Synthesize event
+    t =    58.43s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    60.26s Find the "pinnedNote-ed120000-0000-4000-8000-000000000001" Button
+    t =    60.32s Tap "pinnedNote-ed120000-0000-4000-8000-000000000001" Button
+    t =    60.32s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    60.32s     Find the "pinnedNote-ed120000-0000-4000-8000-000000000001" Button
+    t =    60.37s     Check for interrupting elements affecting "pinnedNote-ed120000-0000-4000-8000-000000000001" Button
+    t =    60.42s     Synthesize event
+    t =    60.71s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    61.11s Waiting 10.0s for "pinnedNoteTitle" StaticText to exist
+    t =    62.15s     Checking `Expect predicate `existsNoRetry == 1` for object "pinnedNoteTitle" StaticText`
+    t =    62.15s         Checking existence of `"pinnedNoteTitle" StaticText`
+    t =    62.21s Find the "pinnedNoteTitle" StaticText
+    t =    62.24s Checking existence of `"noteOriginalText" Switch`
+    t =    62.28s Tap "noteOriginalText" Switch
+    t =    62.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    62.28s     Find the "noteOriginalText" Switch
+    t =    62.32s     Check for interrupting elements affecting "noteOriginalText" Switch
+    t =    62.36s     Synthesize event
+    t =    62.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    63.98s Find the "pinnedNoteText" StaticText
+    t =    64.02s Tap "closePinnedNotes" Button
+    t =    64.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    64.02s     Find the "closePinnedNotes" Button
+    t =    64.06s     Check for interrupting elements affecting "closePinnedNotes" Button
+    t =    64.10s     Synthesize event
+    t =    64.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    64.80s Waiting 10.0s for "openPinnedNoteLibrary" Button to exist
+    t =    65.83s     Checking `Expect predicate `existsNoRetry == 1` for object "openPinnedNoteLibrary" Button`
+    t =    65.83s         Checking existence of `"openPinnedNoteLibrary" Button`
+    t =    65.87s Terminate com.dbakp.taskfold.workflowteststeameditbridge:51279
+    t =    66.88s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    66.88s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-11-05 08:32:47.597 xcodebuild[50480:52332160] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-05 08:32:47.598 xcodebuild[50480:52332160] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    67.32s         Setting up automation session
+    t =    72.02s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    74.76s Waiting 45.0s for "workspaceReadStatus" StaticText to exist
+    t =    75.77s     Checking `Expect predicate `existsNoRetry == 1` for object "workspaceReadStatus" StaticText`
+    t =    75.77s         Checking existence of `"workspaceReadStatus" StaticText`
+    t =    76.96s Find the "workspaceReadStatus" StaticText
+    t =    76.98s Tap "openPinnedNoteLibrary" Button
+    t =    76.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    76.98s     Find the "openPinnedNoteLibrary" Button
+    t =    77.00s     Check for interrupting elements affecting "openPinnedNoteLibrary" Button
+    t =    77.03s     Synthesize event
+    t =    77.37s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    77.68s Waiting 12.0s for "pinnedNotesSearch" TextField to exist
+    t =    78.72s     Checking `Expect predicate `existsNoRetry == 1` for object "pinnedNotesSearch" TextField`
+    t =    78.72s         Checking existence of `"pinnedNotesSearch" TextField`
+    t =    79.02s Tap "pinnedNotesSearch" TextField
+    t =    79.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    79.02s     Find the "pinnedNotesSearch" TextField
+    t =    79.08s     Check for interrupting elements affecting "pinnedNotesSearch" TextField
+    t =    79.14s     Synthesize event
+    t =    79.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    80.69s Type 'cafe personal' into "pinnedNotesSearch" TextField
+    t =    80.70s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    81.04s     Find the "pinnedNotesSearch" TextField
+    t =    81.15s     Check for interrupting elements affecting "pinnedNotesSearch" TextField
+    t =    81.24s     Synthesize event
+    t =    81.68s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    81.82s Waiting 12.0s for "pinnedNote-ed120000-0000-4000-8000-000000000001" Button to exist
+    t =    82.84s     Checking `Expect predicate `existsNoRetry == 1` for object "pinnedNote-ed120000-0000-4000-8000-000000000001" Button`
+    t =    82.84s         Checking existence of `"pinnedNote-ed120000-0000-4000-8000-000000000001" Button`
+    t =    82.91s Find the "pinnedNote-ed120000-0000-4000-8000-000000000001" Button
+    t =    82.97s Tap "closePinnedNotes" Button
+    t =    82.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    83.09s     Find the "closePinnedNotes" Button
+    t =    83.16s     Check for interrupting elements affecting "closePinnedNotes" Button
+    t =    83.22s     Synthesize event
+    t =    83.53s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    83.98s Terminate com.dbakp.taskfold.workflowteststeameditbridge:53146
+    t =    85.07s Tear Down
+Test Case '-[TaskfoldUITests.WorkflowSourceSelectionUITests testPinnedNoteLibrarySearchRefreshAndColdReturn]' passed (85.210 seconds).
+Test Suite 'WorkflowSourceSelectionUITests' passed at 2026-11-05 08:33:05.925.
+	 Executed 1 test, with 0 failures (0 unexpected) in 85.210 (85.223) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-11-05 08:33:05.926.
+	 Executed 1 test, with 0 failures (0 unexpected) in 85.210 (85.224) seconds
+Test Suite 'Selected tests' passed at 2026-11-05 08:33:05.927.
+	 Executed 1 test, with 0 failures (0 unexpected) in 85.210 (85.225) seconds
+2026-11-05 08:33:06.248 xcodebuild[50480:52332160] [MT] IDETestOperationsObserverDebug: 119.536 elapsed -- Testing started completed.
+2026-11-05 08:33:06.248 xcodebuild[50480:52332160] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-05 08:33:06.248 xcodebuild[50480:52332160] [MT] IDETestOperationsObserverDebug: 119.536 sec, +119.536 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-note-library-native-v1.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

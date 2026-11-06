@@ -1,0 +1,296 @@
+{
+  "milestone": "Explicit every-visit location reminders",
+  "date": "2026-10-22",
+  "repository": "TasskFold-MacOS",
+  "status": "Implemented experimental milestone; rank 5 and Px remain incomplete",
+  "parentCommit": "aca5bb52e96639742d537b1db51207ebaf673a90",
+  "sourceSHA256": {
+    "Scripts/fixtures/OldRepeatingLocationReaderTests.swift": "9fee3691fc50b64197a7dfca34c274374801823210935ca34fb74b1af5d735ac",
+    "Scripts/test_repeating_location_old_reader.py": "daefdafb17a1ea9a4c73b17642298c5f7db14933dbeb59be54c293daed830e24",
+    "Taskfold/Core/LocationPlaceStore.swift": "fa8e0a914369b8818d74bfa285320e90e152dcc42771778eea02d23f1602dcfc",
+    "Taskfold/Core/LocationReminders.swift": "58846c464d0526287a0f5f5367163c6982d709be753b7615a80dc5e08c45a9c7",
+    "Taskfold/Core/Reminders.swift": "7016255d67a1512d30fe96d66918ffaabc4962616edd5acb3b1c0ff927e474d5",
+    "Taskfold/Views/ReminderEditor.swift": "a8e81a7f046f581b72b1b9221624b0a76c0a56bce88eaf3b1cb8b992baf58e34",
+    "TaskfoldTests/Fixtures/repeating-location.json": "783119d285fae466542a2222b7b6d71684c503bfcc66958525d8c4e4161871a3",
+    "TaskfoldTests/LocationRepeatTests.swift": "e7d8f417687c79583ee5f18ea577ac480c0ba3d867d341757fbe29f7fc4ccae6"
+  },
+  "contracts": {
+    "once": "Unchanged version6/reference1/r9/native v1; ten-key ticket",
+    "everyVisit": "Version7/reference2/r10/native v2; repeats:true ticket",
+    "journal": "Version3; monotonic submission epoch only; no passive visit log",
+    "actions": "Actual delivery date required transiently for opaque per-visit source; explicit actions use bounded durable replay ledger; separate saved time snoozes"
+  },
+  "core": {
+    "reported": 1223,
+    "skipped": 33,
+    "actualPassed": 1190,
+    "failures": 0,
+    "newRepeatCases": 16,
+    "log": {
+      "file": "location-repeat-full-mac.log",
+      "sha256": "c2d1c4b20965eb07652095d6acad287bd36a62034563c8e56de2c6d77023f14e"
+    }
+  },
+  "combinedActualCorePassed": 2368,
+  "selectedPreviousReaders": [
+    {
+      "revision": "18e3a0602b2de4d8ad72f0201c52dc3d71b1f545",
+      "oldLocationSourceSHA256": "b80e98f9af594ada1bb065ea5d8db47c6d8b93a83058b6eb708da8ce87041d5f",
+      "fixtureSHA256": "9fee3691fc50b64197a7dfca34c274374801823210935ca34fb74b1af5d735ac",
+      "payloadSHA256": "783119d285fae466542a2222b7b6d71684c503bfcc66958525d8c4e4161871a3",
+      "actualPassed": 2,
+      "checks": [
+        "opaque version7 row preserved through edits/record round-trip/recurring successor",
+        "no substitute planned-time alerts",
+        "private journal3 repeat ticket refused without overwrite"
+      ],
+      "scope": "This selected previous prototype reader only; no general older-client rollout claim."
+    },
+    {
+      "revision": "aca5bb52e96639742d537b1db51207ebaf673a90",
+      "oldLocationSourceSHA256": "b80e98f9af594ada1bb065ea5d8db47c6d8b93a83058b6eb708da8ce87041d5f",
+      "fixtureSHA256": "9fee3691fc50b64197a7dfca34c274374801823210935ca34fb74b1af5d735ac",
+      "payloadSHA256": "783119d285fae466542a2222b7b6d71684c503bfcc66958525d8c4e4161871a3",
+      "actualPassed": 2,
+      "checks": [
+        "opaque version7 row preserved through edits/record round-trip/recurring successor",
+        "no substitute planned-time alerts",
+        "private journal3 repeat ticket refused without overwrite"
+      ],
+      "scope": "This selected previous prototype reader only; no general older-client rollout claim."
+    }
+  ],
+  "additionalPreviousReaderTests": 4,
+  "nativeIOS": {
+    "repository": "TaskFold-iOS",
+    "bundle": "com.dbakp.taskfold.workflowtestsp1",
+    "results": [
+      {
+        "resultBundle": "location-repeat-phone-final.xcresult",
+        "summary": {
+          "file": "location-repeat-phone-final-summary.json",
+          "sha256": "7a4e52940ab5a58f08382b59532c04e7d5cd304e79d14f8bf8b48e989af43ac5"
+        },
+        "log": {
+          "file": "location-repeat-phone-final.log",
+          "sha256": "c5e401beaf0847188732ee38d1bfba09139175ecf1c20739eddc9d020add8d3e"
+        },
+        "actualPassed": 2,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "scope": "Current final editor copy/Save/Cancel/relaunch/codec/retirement and layout checks"
+      },
+      {
+        "resultBundle": "location-repeat-ipad-final-v2.xcresult",
+        "summary": {
+          "file": "location-repeat-ipad-final-v2-summary.json",
+          "sha256": "78f62675c1bccfab930f3cbf2bdc7b0d75ea2d95e9324da23f4c440f26241333"
+        },
+        "log": {
+          "file": "location-repeat-ipad-final-v2.log",
+          "sha256": "a700d7fe52f8b3fb9ed1e823d596f575d6be3fecda95092578f76ad78e21fed3"
+        },
+        "actualPassed": 1,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "scope": "Current final editor copy/Save/Cancel/relaunch/codec/retirement and layout checks"
+      },
+      {
+        "resultBundle": "location-repeat-actions-phone.xcresult",
+        "summary": {
+          "file": "location-repeat-actions-phone-summary.json",
+          "sha256": "bd9e2553cdc1b779b9d421c2e0342a5e5612d8a54057092cc5d0d39b6fdb6870"
+        },
+        "log": {
+          "file": "location-repeat-actions-phone.log",
+          "sha256": "76668f4d8c056413123a6434d32033309617f06f9b2a315f6875cff64554905c"
+        },
+        "actualPassed": 2,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "scope": "Controlled one-shot/repeat response inputs and real OS time snooze/relaunch"
+      },
+      {
+        "resultBundle": "location-repeat-ipad.xcresult",
+        "summary": {
+          "file": "location-repeat-ipad-summary.json",
+          "sha256": "20bf4f8320ffa20f7491e300337da5d263e6acaabcc9e660e43d8603b0f97b81"
+        },
+        "log": {
+          "file": "location-repeat-ipad.log",
+          "sha256": "21693abdcdceda09ad1310c9fe1aa0e9f0928d08b5fe6d6b310c3b6f31d185e3"
+        },
+        "actualPassed": 2,
+        "failures": 1,
+        "runtimeWarnings": [],
+        "scope": "Earlier iPad batch: two passing layout/repeat-action cases; editor failed before Delete tap frame check. Superseded editor passes separately; no all-pass claim for this bundle."
+      }
+    ],
+    "scope": "Simulator request codecs and controlled response inputs; actual native time requests/relaunch. No region registered or real geofence delivery proved. Final iPad editor includes 11 codec checks, repeat response fixture 23, one-shot regression 21. Mac screenshots are copies of iOS acceptance evidence, not Mac UI proof."
+  },
+  "nativeTestSourceNote": "Final iPad rerun adds a nonvisual form accessibility identifier and form-scoped test scrolling after the accepted phone build. Reminder behavior and phone-visible copy are unchanged.",
+  "nativeMac": {
+    "result": "BUILD SUCCEEDED",
+    "scope": "Unsigned isolated Debug app and extension build; no native Mac location producer",
+    "log": {
+      "file": "location-repeat-mac-build.log",
+      "sha256": "adf1ba093b9ea2f67223445af68ba62cd379ad467ed400950820c997fa2c018f"
+    }
+  },
+  "earlierAttempts": [
+    {
+      "summary": {
+        "file": "location-repeat-phone-failed-summary.json",
+        "sha256": "87e4827e01f34a478eb9ac2fac4fa3a64693f44595b4f780fee397d818e6176b"
+      },
+      "reason": "Initial UI tests tapped the outer SwiftUI toggle and an offscreen lazy Choose place control. Tests now use the real nested switch and deliberate scroll order."
+    },
+    {
+      "summary": {
+        "file": "location-repeat-phone-v2-summary.json",
+        "sha256": "446aac365412621b8ef91a38e1428994c7bbda2780e6d588175d49b42595cb9c"
+      },
+      "reason": "Passed three cases; screenshots exposed stale one-shot footer text under the enabled repeat choice. Final sources use neutral boundary timing text and assert it; final editor run supersedes those screenshots."
+    },
+    {
+      "summary": {
+        "file": "location-repeat-ipad-final-summary.json",
+        "sha256": "0d6770d0a3e6ec6ca504a5834cda28af148c58edc1f97a4e17ea5de0eb969686"
+      },
+      "reason": "iPad initial editor tap did not remove its row; a second attempt could not reveal it using whole-screen swipes outside the inset sheet. Final test scrolls within the observed form, positions Delete below navigation and verifies disappearance before Save. Other iPad cases retained separately."
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "docs/location-repeat/location-repeat-phone-final-testLocationRepeatDraftSaveCancelAndRelaunch-0.json",
+      "sha256": "fbac176d698af80a06dd71a5631c2dd8ce8925321a43b57b904d50bc603f09ca",
+      "label": "Closed private intent survives Undo and Redo_0_E1FEB9AE-7558-4168-B73A-7B9B51C88C85.json"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-phone-final-testLocationRepeatDraftSaveCancelAndRelaunch-1.json",
+      "sha256": "b28d8419a6827a9b99ecc5862d80bd8504c7c7b962e6931055c66cbba0c8da64",
+      "label": "Repeated region request codec without native registration_0_75D2A19E-12E7-49FC-9701-2EF8797A004F.json"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-phone-final-testLocationRepeatDraftSaveCancelAndRelaunch-2.png",
+      "sha256": "882308d8af4467f285fe02e332f6181acab34452fb1f02102e98ccf25a4cfcab",
+      "label": "Location permission and draft-save explanation_0_8BE2E903-08B4-40D6-BB36-423896DE4E9B.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-phone-final-testLocationRepeatDraftSaveCancelAndRelaunch-3.png",
+      "sha256": "bc425bb1e36d3bb5c5bd609259f809657484ce1e0fe6c621c405253b3a010c07",
+      "label": "Reviewed departure draft before task Save_0_DFE76231-7C72-46F5-8271-05BCBB2170FD.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-phone-final-testLocationRepeatLargestTextDarkCancel-0.png",
+      "sha256": "103ba5e0284aa0d5c68d980073d0a89cc2c8bddecf58cd0692f8cf8b12e349f2",
+      "label": "Location permission and draft-save explanation_0_0C0A4D18-A344-413F-9009-0D42932B2BAE.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-phone-final-testLocationRepeatLargestTextDarkCancel-1.png",
+      "sha256": "2ed666837a246b513266374935d61ec8386e99fde91d3c11545d78fc00467559",
+      "label": "Location draft dark largest text_0_99D87C68-659D-4E73-94D4-7EFA8E438843.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-ipad-final-v2-testLocationRepeatDraftSaveCancelAndRelaunch-0.json",
+      "sha256": "36a872e9edee620cf88ec3d2771679172e8cab61dc0ee03cf560adee0e19adc2",
+      "label": "Closed private intent survives Undo and Redo_0_10D757ED-2468-4F5C-9F36-6DA34BC39612.json"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-ipad-final-v2-testLocationRepeatDraftSaveCancelAndRelaunch-1.json",
+      "sha256": "390027f0d99ab321540d470396e56af440ea16a5eb18596d32894488971d0bcc",
+      "label": "Repeated region request codec without native registration_0_38649BB5-4B52-4F4F-A2CB-BD597A28B846.json"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-ipad-final-v2-testLocationRepeatDraftSaveCancelAndRelaunch-2.png",
+      "sha256": "7a86afcd216f4a0bf825a5a47c5c9b94aae8126a36d5caa7dbc53f743046dfd2",
+      "label": "Location permission and draft-save explanation_0_E29B1571-B9E4-49BF-9647-F84DCF896E69.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-ipad-final-v2-testLocationRepeatDraftSaveCancelAndRelaunch-3.png",
+      "sha256": "2085f321c473894bba21115cf7cdf22b0d650d8c2ef781d62ee06908d6c07e99",
+      "label": "Reviewed departure draft before task Save_0_655F01E2-5BCF-4CBA-9D9F-FD4F3F25B91D.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-actions-phone-testLocationNotificationActionsAndSnoozeRelaunch-0.png",
+      "sha256": "5d231e23f17d539cf2ed1feb3670de48bbf249cb5ab7193dad0713c9cab513d7",
+      "label": "Saved location snooze state after relaunch_0_FE85A908-8BFC-4A61-888E-45DEFE6076E2.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-actions-phone-testLocationNotificationActionsAndSnoozeRelaunch-1.json",
+      "sha256": "e74d7121bd5aa136a60c58c212a6d8d2c30c0912c3e3a929ad9758a3853dd3a6",
+      "label": "Synthetic location responses and real native time snooze proof_0_62724172-6C8F-404E-9E01-7574281BEF2F.json"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-actions-phone-testRepeatingLocationActionsAndSnoozeRelaunch-0.png",
+      "sha256": "da2d1e88addfd9d75bd4bf000218a860d732c76d7c59457ce091f368b6817ddc",
+      "label": "Saved location snooze state after relaunch_0_99830876-264F-4332-9D18-80D5B4A96DC1.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-actions-phone-testRepeatingLocationActionsAndSnoozeRelaunch-1.json",
+      "sha256": "15bbc0ad6da1715181b7f127a59c5bda30ba46322263a8dc2a730ef860321bf7",
+      "label": "Synthetic location responses and real native time snooze proof_0_1D581F2E-90FA-4E78-AEC4-4F9C6E0191A9.json"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-ipad-testLocationRepeatLargestTextDarkCancel-0.png",
+      "sha256": "ebb62100ba630c2afa0bb06525f8d83c2b671500af9330671d0a3ee14e96a623",
+      "label": "Location permission and draft-save explanation_0_D1E0BAC2-A719-41F5-9AAA-ECDDBCB6F019.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-ipad-testLocationRepeatLargestTextDarkCancel-1.png",
+      "sha256": "4ae40847019ade1475aa65a0321f2672cd5baa5663671c5a1fb5bcf81d777f44",
+      "label": "Location draft dark largest text_0_EC63766D-95D2-4804-89AE-64131E4F9CB9.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-ipad-testRepeatingLocationActionsAndSnoozeRelaunch-0.png",
+      "sha256": "aef9059f04870fed8cb4c647a65ca8b580e610af5b21136fd202582de1889bec",
+      "label": "Saved location snooze state after relaunch_0_9EE0A66B-F7DB-415E-B7ED-D9935AC3244D.png"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-ipad-testRepeatingLocationActionsAndSnoozeRelaunch-1.json",
+      "sha256": "478b7170e6b5d377c6b86c74067dcbe2a40992a4cf0ee511167639572c823d01",
+      "label": "Synthetic location responses and real native time snooze proof_0_66799F05-76D5-4BD4-984D-B1C4DAD59608.json"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-old-ios.json",
+      "sha256": "c21395a97961efd7d95499dc4c7df3bf15f78c1502e0b6fac19fb7b859768984"
+    },
+    {
+      "file": "docs/location-repeat/location-repeat-old-mac.json",
+      "sha256": "a2ff53966bd28a354071340a08d7020a5a0da7032f6087a652df000af81a825c"
+    }
+  ],
+  "remaining": [
+    "Capable-device actual repeated geofence delivery and OS-origin callbacks/actions, including background/locked/cold-launch and permission recovery",
+    "Public setup and normal location authoring remain gated",
+    "Private desktop-to-phone authoring",
+    "Broader accessibility/native Mac acceptance and safe bounded action-history reclamation (2048 cap fails closed)",
+    "Direct iPad Search tap while typing unresolved; keyboard Search retained",
+    "Other P2_PLAN.md gates"
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution/signing/install/update acceptance",
+    "Genuine Google/Microsoft OAuth registration/provider acceptance"
+  ],
+  "cleanup": {
+    "phone": {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowtestsp1",
+      "isolatedAppAndRunnerTerminated": true,
+      "syntheticLocationFixtureRemoved": true
+    },
+    "ipad": {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowtestsp1",
+      "isolatedAppAndRunnerTerminated": true,
+      "syntheticLocationFixtureRemoved": true
+    },
+    "mainTaskfoldProcessesRemaining": 0,
+    "unsignedMacTestAppRemoved": true,
+    "reusableBuildCachesRetained": true,
+    "realAccountsAndPhysicalDeviceUntouched": true,
+    "pruning": "Superseded failed phone result/progress image removed; compact summaries/logs retained. Failed iPad snapshots and superseded result bundles pruned after exporting accepted captures."
+  }
+}

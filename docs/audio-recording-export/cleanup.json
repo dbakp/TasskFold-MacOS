@@ -1,0 +1,13 @@
+{
+  "ownedSimulatorStates": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": "Shutdown",
+    "ECE507C1-5704-4243-A7F7-232BF745FDB8": "Shutdown"
+  },
+  "MacTestAppsLaunched": 0,
+  "ownedMacHostProcesses": 0,
+  "previousArchivedResultsPrunedLogicalBytes": 406248399,
+  "finalResultsPrunedLogicalBytes": 13169122,
+  "finalAllocatedEstimateBytes": 13492224,
+  "retained": "compact evidence, original synthetic delivered JSON/PNG captures, source/binary/signature bindings; reused native build hosts and Core caches",
+  "limits": "Allocated sums are estimates, not exact APFS free-space recovery. No unrelated app, user account file or repository removed."
+}

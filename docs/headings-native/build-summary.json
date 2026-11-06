@@ -1,0 +1,9 @@
+{
+  "terminalExit": 0,
+  "status": "TEST BUILD SUCCEEDED",
+  "logSHA256": "54a1ce9dc3e387922fa5cd39930c7c8ff7ec51e4f80ade3f9f568f2863bc6a02",
+  "arm64": true,
+  "configuration": "Debug",
+  "strictAppAndRunnerSignature": true,
+  "runtimeMacAcceptance": false
+}

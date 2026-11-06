@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-20",
+  "scope": "Two named Mac spoken follow-ups with genuine running VoiceOver, human keyboard activation and sampled live native recovery picker. Retained isolated widget host v10, synthetic local workspace.",
+  "startupRepair": {
+    "initialState": "Settings On but no actual VoiceOver process; only an eight-day-old Quickstart helper, PID 74442, with no reachable welcome window.",
+    "method": "Turned setting Off. Used Activity Monitor to select exactly VoiceOver Quickstart PID 74442 and ordinary Quit, not Force Quit. Verified exit. Turned setting On and inspected the fresh welcome window through computer use.",
+    "welcomeControls": [
+      "Do not show this message again unchecked",
+      "Learn More",
+      "Use VoiceOver",
+      "Turn Off VoiceOver"
+    ],
+    "selection": "Use VoiceOver; checkbox left unchecked",
+    "actualScreenReaderVerified": "PID 53261 /System/Library/CoreServices/VoiceOver.app/Contents/MacOS/VoiceOver, plus scrod output process",
+    "earlierSilentAttemptsAccepted": false
+  },
+  "autosaveCue": {
+    "nativeControl": "Title field Keep the workshop notes; following text inspectorAutosaveHint: Changes save automatically",
+    "humanAction": "Foreground isolated Taskfold; Control\u2013Option\u2013Right Arrow from Title",
+    "humanReport": "Yes, clearly",
+    "accepted": true
+  },
+  "restoreActivation": {
+    "nativePreparation": "Account window; keyboard Tab sequence confirmed backupImport Restore from file focused without activating it",
+    "humanAction": "Shift\u2013Tab then Tab, followed by Control\u2013Option\u2013Space",
+    "humanReport": "Clear announcement; picker is open",
+    "liveNativeVerification": {
+      "window": "Open",
+      "sheet": "open-panel",
+      "cancelButton": "CancelButton enabled",
+      "openButton": "OKButton disabled",
+      "focus": "ListView"
+    },
+    "fileSelectedOrRead": false,
+    "accepted": true
+  },
+  "restoreCancellation": {
+    "humanAction": "Escape in live picker",
+    "humanReport": "Escape closed it, but taskfold announced the Restore from file button. Maybe that is the way it should be?",
+    "nativeVerification": "Account window; no picker sheet; focused backupImport Restore from file button",
+    "assessment": "Expected cancellation behavior: restore focus to the initiating control and announce its accessible name.",
+    "accepted": true
+  },
+  "cleanup": {
+    "voiceOverSettingVerified": "off",
+    "screenReaderProcessRemaining": false,
+    "testMainAppRemaining": false,
+    "temporaryActivityMonitorFilterCleared": true,
+    "temporaryActivityMonitorClosed": true,
+    "welcomePreferenceChanged": false,
+    "wholeLocalCacheCanonicalEqual": true,
+    "wholeLocalCacheByteEqual": false,
+    "baseline": "mac-voiceover-live-2026-10-20/local-before.json retained outside repos",
+    "cacheSHA256": "bdbfc4754d1d8299bb32c0303ef463a1fbe0e89022d46e29a7723553cb56ef98"
+  },
+  "limits": [
+    "No speech recording; genuine spoken evidence is the human report with actual engine and native states independently checked.",
+    "No new spoken Undo, broader phone/tablet, planning/filter speech or universal accessibility acceptance. Existing earlier human and functional native keyboard evidence retain their precise limits.",
+    "No production code or test source changed; no new XCTest case or clean-runtime pass claim.",
+    "No system widget privacy, release signing/provider/delivery/rollout acceptance; full goal incomplete."
+  ]
+}

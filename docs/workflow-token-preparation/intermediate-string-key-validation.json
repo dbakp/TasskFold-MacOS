@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-27",
+  "scope": "Per-save timestamp canonicalization and encoder reuse; token signature wire contract unchanged.",
+  "coreDistinctCasesPassed": 108,
+  "coreRounds": [
+    "52 selected widget cases",
+    "Additional heading/hierarchy cases and new heading legacy-token check",
+    "One 5,000-distinct-instant check",
+    "All six compatibility/concurrency/error-recovery cases rerun against the final test helper"
+  ],
+  "nativeDistinctPlatformCasePairsPassed": 9,
+  "native": {
+    "mac": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "startTime": 1793079231.036,
+      "finishTime": 1793079284.525
+    },
+    "phone": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "startTime": 1793079238.937,
+      "finishTime": 1793079329.448
+    },
+    "tablet": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "startTime": 1793079238.936,
+      "finishTime": 1793079331.102
+    }
+  },
+  "sampleInterpretation": "A five-second sample of the previous committed Mac native test attributes observed save stacks to WidgetCompletion.prepare/instant and formatter setup/parsing. Sampled timing includes profiler overhead; comparative timing is the prior committed stage, not that instrumented run. No precise CPU percentage claimed.",
+  "compatibility": [
+    "All 5,000 old signatures and tokens retained across mixed valid/invalid date inputs",
+    "5,000 distinct canonical timestamps preserve every signature and token after reordering",
+    "Equivalent offset/fractional spelling retains a token; changed instant rotates it",
+    "Encoder failure does not contaminate following records",
+    "Heading root and productive-child tokens remain stable",
+    "Independent simultaneous saves have separate parsers/memos"
+  ],
+  "configuration": "No normal rollout, hosted service/schema, provider credentials, release signing or user deferral changed.",
+  "remaining": [
+    "Save latency around 2.5\u20132.8s for the full case",
+    "Background widget readiness around 15\u201319s in these Debug runs",
+    "Local history scaling",
+    "Full production-screen responsiveness",
+    "Genuine paired/hosted bulk delivery",
+    "Wider ranked Px backlog"
+  ],
+  "cachePolicy": "One current native host/build per platform and source package caches retained; obsolete owned profiling/test artifacts removed after evidence retention.",
+  "scopeNote": "Superseded String-key prototype before the Unicode regression repair; not acceptance of the final byte-key implementation."
+}

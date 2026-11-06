@@ -1,0 +1,15 @@
+[
+  {
+    "date": "2026-11-06",
+    "variant": "Conditional bottom safe-area Done bar",
+    "retainedInSource": false,
+    "accepted": false,
+    "testFailures": 1,
+    "runtimeWarnings": [],
+    "reason": "The first expression Clear/type path had no keyboard focus and did not edit the initial expression. Zero warnings in a failed partial journey do not prove successful repair.",
+    "normalInstalledAppsChanged": false,
+    "simulatorRestored": true,
+    "logSHA256": "28754b066d238ffbae250cadfd4efed2ac41c0206d9a430f5826aa10a6baed5a",
+    "viewSHA256": "12e257b964ab67fc88f41b4c977bf44716f7071ec45c533b90947b89312f329f"
+  }
+]

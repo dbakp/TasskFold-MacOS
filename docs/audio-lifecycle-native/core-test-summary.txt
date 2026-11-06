@@ -1,0 +1,8 @@
+Test Case '-[TaskfoldCoreTests.TeamTaskTypeLifecycleTests testTypedSelectionUndoRetainsCapabilityAndRequiresTypedAcknowledgement]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskTypeLifecycleTests testTypedSelectionUndoRetainsCapabilityAndRequiresTypedAcknowledgement]' passed (0.001 seconds).
+Test Suite 'TeamTaskTypeLifecycleTests' passed at 2026-11-02 20:45:20.763.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.007 (0.007) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-11-02 20:45:20.763.
+	 Executed 175 tests, with 0 failures (0 unexpected) in 13.828 (13.842) seconds
+Test Suite 'Selected tests' passed at 2026-11-02 20:45:20.764.
+	 Executed 175 tests, with 0 failures (0 unexpected) in 13.828 (13.844) seconds

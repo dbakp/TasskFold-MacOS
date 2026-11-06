@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-01",
+  "repository": "TasskFold-MacOS",
+  "baselineCommit": "d1b6cb1bdd967e08d06907fee8a5f4ee1570ba50",
+  "hostedChanges": false,
+  "normalUseGatesChanged": false,
+  "nativeFileWorkflowAccepted": false,
+  "realStorageProviderTested": false,
+  "providerCleanupImplemented": false,
+  "database": {
+    "admission": {
+      "checks": 49,
+      "noAdditionalAdvisorFindings": true,
+      "containerRemoved": true,
+      "reportSHA256": "488ee9dcedf5efc820ce594b5a8328f0e4ab58fbcbc1be5b7a81d13abf8f2c08"
+    },
+    "custody-regression": {
+      "checks": 59,
+      "noAdditionalAdvisorFindings": true,
+      "containerRemoved": true,
+      "reportSHA256": "105dfb6cbc2affd518dbf2c47bbd870c0b59e2344f89eb58302f9b1bc33ef6fe"
+    }
+  },
+  "gateway": {
+    "tests": 28,
+    "failures": 0,
+    "typecheckedByDenoTest": true,
+    "injectedHTTPTransport": true,
+    "actualSQLReceiptFixture": true,
+    "logSHA256": "b01db91f47bc0076e8684b051ede394b1ed4c7c60e29d53b00b0c06b25d540ef",
+    "lintSHA256": "ff3955886a906e95785d1e49cc4d95e0db9f13b5f5312a5fa2895fe30443bab0",
+    "capturedFixtureMatchesReport": true
+  },
+  "sourcesSHA256": {
+    "supabase/migrations/20261101220633_task_file_upload_admission.sql": "b2bbfd638392b497e61f973844832e8d69dade539bba86877887b2277cb4c705",
+    "Scripts/Database/test-task-file-upload.mjs": "2d732c70b0b46849ca0570cb43e2e4b6b5a1087e3500ec174fa0b237fe304858",
+    "Scripts/Database/test-task-file-custody.mjs": "ff6a1b6ef52ba24833759091cfa550eb55f6c451b1f8849acb00d2d5c8081759",
+    "TaskfoldTests/Fixtures/task-file-upload-v1.json": "3157fe0284391cecce382933b556921ab64ed0483d2c99c7bae618380c726ed0",
+    "supabase/functions/task-files/handler.ts": "a56a8558d3f1cb41fe5b53378b8a0c5dc26ace3beef14229fbfe4180b63459d4",
+    "supabase/functions/task-files/handler_test.ts": "6f9a62fdb42ee6c514d1fa1ca7d8c5f5522ee9988214056204fca35a271b3f4a",
+    "supabase/functions/task-files/index.ts": "9b28163276c9d52f51cf64304274d1e2c9e6209afe592c0b3e9878d1e70a77be",
+    "supabase/functions/task-files/sql_contract_test.ts": "ca1a54959350883e824a5dfef32e9e5dead15b5ade7f3ef81110b0cf36893d23"
+  }
+}

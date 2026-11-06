@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-25",
+  "stage": "Captured native shared bulk completion review",
+  "platform": "mac",
+  "baseCommit": "440094b4b9a10d3ec7e6e1114771dbf2bcbe4187",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamTaskBatch.swift": "b9caf9328b5ca87a1a9248fcf47818e7e3792cd18e60398b6769333a8055ba1c",
+    "Taskfold/Core/Store.swift": "d1c6adad1373f26ef881387fdfd70a3e521b63802110099362f0df2a8befde28",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "9533de08aa3fcff979943d7ad4b251b0530208dcb4ad2e6ec54d22eedfe4268a",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "426dd70fd70688991f311e6c3c4c5426bff4e9e65b1a0b2889bf8b5c2388e087",
+    "Taskfold/Workspace.swift": "fc871482c72bb2b1446d93d2e546073c96d9245bd0a8df9e5541437345d37269",
+    "Taskfold/Views/RootView.swift": "d09b4472fb3d7f0834305cdf940cc7136eab2d6180b9ba28762846e81be861e6"
+  },
+  "core": {
+    "passed": 594,
+    "failures": 0,
+    "completionBatchCases": 43,
+    "newOpeningReviewCases": 7
+  },
+  "native": {
+    "mac": "arm64 app compiles; desktop automation still reports locked; no current native acceptance"
+  },
+  "proven": [
+    "opening-time exact source/workspace/session/access capture",
+    "stable group and member requests across revalidation",
+    "all selected roots reviewed, completed roots unchanged",
+    "repeat occurrence preview and lifecycle changes refuse stale review",
+    "one durable completion group; linked whole-group Undo",
+    "native review entry and native history bridge compile"
+  ],
+  "limits": [
+    "Teams rollout remains off",
+    "No hosted/schema/configuration or real account mutation",
+    "Native runtime fixtures are two ordinary selected roots; repeat previews covered in Core",
+    "Native Redo, current Mac window/spoken/history acceptance, visible cohort conflict recovery and large-selection responsiveness remain open",
+    "Arbitrary shared bulk Reopen and shared nested checklist completion are not introduced",
+    "Other Px, Watch/Wear OS and user-deferred release/provider/device work remain open"
+  ],
+  "retainedEvidence": "docs/native-bulk-completion",
+  "cleanup": {
+    "removedOwnedScratchBytes": 1340520127,
+    "scope": "/tmp/taskfold-native-bulk* only; reserved Simulator app and runner uninstalled on both devices",
+    "preserved": "Both repo .build caches, baseline booted devices, older ready Mac acceptance artifacts"
+  },
+  "coreLog": {
+    "originalSHA256": "76d3828c15ee48c79fcc10c212a0a3a6aa5bb24faca3c1a89baa1ea27a9089be",
+    "retained": "Trailing whitespace stripped only"
+  }
+}

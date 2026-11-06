@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-12",
+  "scope": "Installed medium Today on iPhone 17 Pro iOS 26.5 Simulator, light appearance: loaded-empty versus signed-out and signed-out normal relaunch",
+  "productionCodeChangedThisRun": false,
+  "priorProductionFix": "Today unavailable state already committed independently in both repositories",
+  "test": {
+    "case": "testInstalledTodayDistinguishesEmptyWorkspaceFromSignedOutData",
+    "resultBundle": "today-host-ios-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "seconds": 195.235
+  },
+  "accepted": [
+    "Native gallery installs medium Today from independently isolated app",
+    "Loaded empty workspace shows 0 and All clear for today",
+    "Actual Account > Leave local workspace > Continue dismisses Account settings and reaches sign-in",
+    "Installed widget changes to dash, Open Taskfold and Refresh your tasks, with Task count unavailable accessibility label",
+    "Signed-out normal relaunch without uitesting/localMode arguments retains unavailable display",
+    "Native removal of temporary widget succeeds and isolated widget count returns to zero",
+    "All four exported captures inspected; medium text and footer fit",
+    "Signed-out isolated projection contains empty account and zero tasks; localMode false; fixture cache tasks/pending empty"
+  ],
+  "isolation": {
+    "bundle": "com.dbakp.taskfold.widgetstatetests",
+    "group": "group.com.dbakp.taskfold.widgetstatetests",
+    "scheme": "taskfold-widget-state-test",
+    "keychain": "independent service namespace",
+    "stage": "today-widget-host/stage.json",
+    "signing": "today-widget-host/signing.json",
+    "preservation": "today-widget-host/preservation.json",
+    "deviceReturnedToPriorShutdownState": true
+  },
+  "builds": {
+    "debugBuildForTesting": "today-host-build-v2.log: TEST BUILD SUCCEEDED",
+    "signatureAndCatalogVerified": true,
+    "initialAttempt": "Universal x86_64/arm64 build succeeded. Single-slice signing inspector rejected its two entitlement sections before native execution. Arm64 device build and signing pass.",
+    "buildWarnings": [
+      "'changed' mutated after capture by sendable closure",
+      "Metadata extraction skipped, no AppIntents.framework dependency found",
+      "call to main actor-isolated instance method 'headerOffset' in a synchronous nonisolated context [#ActorIsolatedCall]",
+      "conformance of 'Content' to protocol 'View' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]",
+      "conformance of 'Header' to protocol 'View' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]",
+      "main actor-isolated static property 'space' can not be referenced from a Sendable closure",
+      "not stripping binary because it is signed: /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/ios-widget-state/Build/Products/Debug-iphonesimulator/TaskfoldWidgets.appex/TaskfoldWidgets (in target 'Taskfold' from project 'Taskfold')",
+      "result of call to 'withAnimation' is unused [#NoUsage]"
+    ],
+    "releaseRebuild": "Not repeated: production Today source unchanged from prior passing Debug/Release widget builds in today-widget-unavailable-evidence.json"
+  },
+  "nativeHostDiagnostics": {
+    "springBoardAnimationWaits": 2,
+    "transientHitPointRetry": 1,
+    "ignoredRemoteHierarchyDiagnostics": 18
+  },
+  "sourceSHA256": {
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "6d3056ea05c45e7418f00ce1d5f885fa8e897e7ab4785c914444fbc29ebcdec4",
+    "TaskfoldUITests/TaskfoldUITests.swift": "71d868194af0f1900b5dcff7b303897aeb40b5f3c5f78c098fe522c612486d75",
+    "Scripts/prepare_widget_state_fixture.py": "3ddab5fac0494468a038203488178424b45ed75b1dd4f9067e096722cdcf1ad6",
+    "Scripts/sign_simulator_test_products.py": "52f6d6fe2848961948ee3f62c9560859d7b71c51026ba6e79f74bff4daa0ef75"
+  },
+  "capturesSHA256": {
+    "loaded-empty.png": "f80bd2d314e8f03b1ad2a7fde85f6a271aaa4da2adf2884e8d82bb256c9eaf53",
+    "signed-out.png": "9dceda177f463532d926e9e659345be5ec338c231404fd3f7ea8e367d82bd6a2",
+    "signed-out-relaunch.png": "f6aa91832e789071faee4cc3f123d5d4949affa4a01d3bdca12df57fbca7bce4",
+    "gallery.png": "8a199f295812a18ba5c2de6e48c3b6bece6f5976a264faa80b54ea92a50d9c88"
+  },
+  "notAccepted": [
+    "Mac installed unavailable state and capture/task actions",
+    "Other Today sizes, iPad/accessory/dark/tinted/privacy variants",
+    "Authenticated A to B transition; this is local workspace exit",
+    "External provider transfer, spoken VoiceOver, Mac notification actions/APNs and distribution"
+  ],
+  "evidenceDirectory": "today-widget-host",
+  "testedSourceRepository": "TaskFold-iOS",
+  "macProductionAcceptanceThisRun": false
+}

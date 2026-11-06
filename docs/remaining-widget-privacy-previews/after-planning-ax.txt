@@ -1,0 +1,37 @@
+Window: "Taskfold widget privacy test", App: Taskfold Widget Privacy Test.
+0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<
+	1 container
+		2 Widget pair
+			3 radio button Description: Planning, Value: 1
+			4 radio button Description: Workload, Value: 0
+			5 radio button Description: Notes & Focus, Value: 0
+			6 radio button Description: Week & Pulse, Value: 0
+		7 text Normal
+		8 container normal-open
+			9 text Deadline radar 3 1 missed · next 7 days
+			10 link Description: File the expense report, Work, Deadline 2026-10-11, missed, Value: taskfold://task/preview-5
+			11 link Description: Sketch the next big idea, Studio, Deadline 2026-10-13, Value: taskfold://task/preview-1
+			12 link Description: Send the proposal, Work, Deadline 2026-10-15, Value: taskfold://task/preview-2
+			13 text TASKFOLD
+		14 container normal-completed
+			15 text A small window 25 min Today, overdue & undated
+			16 link Description: File the expense report, Work, 15m, Value: taskfold://task/preview-5
+			17 link Description: Sketch the next big idea, Studio, 25m, Value: taskfold://task/preview-1
+			18 link Description: Send the proposal, Work, 10m, Value: taskfold://task/preview-2
+			19 text TASKFOLD 1 unestimated
+		20 text Privacy redaction
+		21 text Deadline radar, Tasks are private, Open Taskfold to view your tasks., TASKFOLD
+		22 text Small window, Tasks are private, Open Taskfold to view your tasks., TASKFOLD
+	23 close button
+	24 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	25 minimize button
+	26 text Taskfold widget privacy test
+27 menu bar
+	28 Taskfold Widget Privacy Test
+	29 File
+	30 Edit
+	31 View
+	32 Window
+	33 Help
+
+The focused UI element is 0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<

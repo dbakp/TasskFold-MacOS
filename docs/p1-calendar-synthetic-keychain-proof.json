@@ -1,0 +1,18 @@
+{
+  "checks": [
+    "OS Keychain write/read",
+    "OS Keychain update/read",
+    "OS Keychain conditional removal"
+  ],
+  "credentialsRemoved": true,
+  "passed": true,
+  "providerNetworkAccess": false,
+  "syntheticOnly": true,
+  "uniqueDisposableService": true,
+  "date": "2026-10-21",
+  "runtimesVerified": [
+    "iPhone 18 Pro, iOS 27 Simulator",
+    "iPad Pro 13-inch (M5), iOS 27 Simulator"
+  ],
+  "macRuntimeVerified": false
+}

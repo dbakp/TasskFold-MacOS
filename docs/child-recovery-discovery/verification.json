@@ -1,0 +1,171 @@
+{
+  "date": "2026-10-31",
+  "scope": "Discover saved child work with all child feature switches paused",
+  "core": {
+    "distinctAccepted": 57,
+    "newDiscoveryCases": 10,
+    "relatedGroupRegressionCases": 47,
+    "failures": 0,
+    "skips": 0
+  },
+  "sourceSHA256": {
+    "Taskfold/ChildFieldNativeFixture.swift": "d333ebbcd374ffeedf3d3f1d47b40de7f69cacd86c73c884770978fe2933fd0e",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "e7c7634a6bd053a607ed356d75946341697d2954860ccc31f39021eabe3d8026",
+    "Taskfold/Core/Store.swift": "21707d922f7f6095278684fd1f8934199f9282348e02d29c62daa4f6199420c8",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "d40136b72c4b3724f31dd6387df7fb55560f4cf59ec113bf2286efcf22b36e69",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "3c854792a9927f71c273307b98ccdf10ba808d28b9d633bcc92b1c6ec7f011a3",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "fa05ea8c09bce4bce20367e9c07ea6fc3843cfcbd183a85143bb2cbb555d4983",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "064186f4d1af8e02da67410e8a89b3c27eba90ce3ea70339ae9ce59b646bea6c",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "45ac9208a32d74f6ddce13a0586d3c2f55cd80247dca026e502f14659e6d4128",
+    "TaskfoldTests/ChildTaskCompletionBatchTests.swift": "a4ffcc0eda67f85bee68769805b50882f3250c44f66f02cd14bb49d2b8ef429b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "da78ff3ebb0032be2c2bbd39f6d3ee798ce286960945d4c6b7640b4062d74754"
+  },
+  "nativeRuntime": {
+    "method": "Explicitly authorized Terminal launch and direct computer use",
+    "phase": "v3",
+    "cases": {
+      "links": {
+        "allSevenRoutesOpened": true,
+        "metadataCheckWhileSendPaused": true,
+        "coldReturnAllSevenLinks": true,
+        "readback": "mac-v3-links-readback.json"
+      },
+      "draft": {
+        "privateDraftWithoutCommand": true,
+        "coldReturnContent": true,
+        "readback": "mac-v3-draft-readback.json"
+      }
+    },
+    "finalAppClosed": true,
+    "taskWrites": 0,
+    "commandBodiesPreserved": true
+  },
+  "ordinaryChildGatesEnabled": false,
+  "hostedChanges": false,
+  "broaderMigrationCheckpoint": "To build",
+  "remaining": [
+    "Mixed root/child selections",
+    "Full Redo/shared history",
+    "Indexed/history mapping",
+    "Shared attachment/discussion custody",
+    "Broader real-account, protected-storage, window, background, spoken and workload acceptance"
+  ],
+  "isolatedChildSwitches": {
+    "TaskfoldChildAdoptionEnabled": false,
+    "TaskfoldChildCompletionBatchesEnabled": false,
+    "TaskfoldChildRecordCompletionsEnabled": false,
+    "TaskfoldChildRecordReadsEnabled": false,
+    "TaskfoldChildRecordWritesEnabled": false,
+    "TaskfoldChildRepairEnabled": false,
+    "TaskfoldChildStructureReadsEnabled": false,
+    "TaskfoldChildStructureWritesEnabled": false,
+    "TaskfoldChildTransfersEnabled": false
+  },
+  "nativeBuild": {
+    "buildForTestingPassed": true,
+    "normalizedChangedSourcesMatch": true,
+    "isolationSubstitutions": "Existing isolated identifiers only",
+    "hostSHA256": {
+      "Taskfold/ChildFieldNativeFixture.swift": "d333ebbcd374ffeedf3d3f1d47b40de7f69cacd86c73c884770978fe2933fd0e",
+      "Taskfold/Core/ChildTaskCompletionCommands.swift": "e7c7634a6bd053a607ed356d75946341697d2954860ccc31f39021eabe3d8026",
+      "Taskfold/Core/Store.swift": "e3ba0109fe06c954169e7e01e638b0916c4bed029a3d0b5a4f75f00928dad225",
+      "Taskfold/Views/ChildTaskAdoptionViews.swift": "d40136b72c4b3724f31dd6387df7fb55560f4cf59ec113bf2286efcf22b36e69",
+      "Taskfold/Views/ChildTaskCompletionViews.swift": "3c854792a9927f71c273307b98ccdf10ba808d28b9d633bcc92b1c6ec7f011a3",
+      "Taskfold/Views/ChildTaskFieldViews.swift": "fa05ea8c09bce4bce20367e9c07ea6fc3843cfcbd183a85143bb2cbb555d4983",
+      "Taskfold/Views/ChildTaskStructureViews.swift": "064186f4d1af8e02da67410e8a89b3c27eba90ce3ea70339ae9ce59b646bea6c",
+      "Taskfold/Views/ChildTaskTransferViews.swift": "45ac9208a32d74f6ddce13a0586d3c2f55cd80247dca026e502f14659e6d4128",
+      "TaskfoldUITests/AudioCommentUITests.swift": "da78ff3ebb0032be2c2bbd39f6d3ee798ce286960945d4c6b7640b4062d74754"
+    },
+    "buildLogSHA256": "93a6dd0092215c1039b430e7ae1249c6242b83cd922806c4f8f6652810587447",
+    "products": [
+      {
+        "product": "Taskfold.app",
+        "strictDevelopmentSignature": true,
+        "codeIdentity": [
+          "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge",
+          "CDHash=d7bc777bc7b0ff227f85ee53ace046f5770b24b7"
+        ]
+      },
+      {
+        "product": "TaskfoldUITests-Runner.app",
+        "strictDevelopmentSignature": true,
+        "codeIdentity": [
+          "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner",
+          "CDHash=b9210b5744468475430f85b910e28b494b113ee3"
+        ]
+      }
+    ],
+    "runtimeTestingPerformed": true,
+    "phase": "recovery-discovery-v3"
+  },
+  "earlierV2": {
+    "sourceSHA256": {
+      "Taskfold/ChildFieldNativeFixture.swift": "dedd23fc27e3c1cf5d6b92302bf1d08ef2f5bf9339854b5bcc447215e7299828",
+      "Taskfold/Core/ChildTaskCompletionCommands.swift": "e7c7634a6bd053a607ed356d75946341697d2954860ccc31f39021eabe3d8026",
+      "Taskfold/Core/Store.swift": "21707d922f7f6095278684fd1f8934199f9282348e02d29c62daa4f6199420c8",
+      "Taskfold/Views/ChildTaskAdoptionViews.swift": "5a70fd15966fdec89b9973e73bdab6b6c5be11cb203d2543837ac8f4dc312c85",
+      "Taskfold/Views/ChildTaskStructureViews.swift": "c18459cd1cc04f4f02bb9f39009e5e42dfe00538850e335ce2b81deb7cfa0522",
+      "Taskfold/Views/ChildTaskTransferViews.swift": "07bea4acb13b674152e5045911c2d109fb5d286b09738140a5251e57e0f319bf",
+      "TaskfoldTests/ChildTaskCompletionBatchTests.swift": "a4ffcc0eda67f85bee68769805b50882f3250c44f66f02cd14bb49d2b8ef429b",
+      "TaskfoldUITests/AudioCommentUITests.swift": "2728c61fcfca1b872ef717a5d8ee5c49f8153c17a5d0939d90aabf41ec41e114"
+    },
+    "nativeRuntime": {
+      "method": "Explicitly authorized Terminal launch and direct computer use",
+      "childSwitchesPaused": true,
+      "cases": {
+        "links": {
+          "allFourRoutesOpened": true,
+          "metadataCheckWhileSendPaused": true,
+          "coldReturnLinks": true,
+          "readback": "mac-links-readback.json"
+        },
+        "draft": {
+          "privateDraftWithoutCommand": true,
+          "coldReturnContent": true,
+          "readback": "mac-draft-readback.json"
+        }
+      },
+      "finalAppClosed": true
+    },
+    "nativeBuild": {
+      "buildForTestingPassed": true,
+      "normalizedChangedSourcesMatch": true,
+      "isolationSubstitutions": "Existing isolated identifiers only",
+      "hostSHA256": {
+        "Taskfold/ChildFieldNativeFixture.swift": "dedd23fc27e3c1cf5d6b92302bf1d08ef2f5bf9339854b5bcc447215e7299828",
+        "Taskfold/Core/ChildTaskCompletionCommands.swift": "e7c7634a6bd053a607ed356d75946341697d2954860ccc31f39021eabe3d8026",
+        "Taskfold/Core/Store.swift": "e3ba0109fe06c954169e7e01e638b0916c4bed029a3d0b5a4f75f00928dad225",
+        "Taskfold/Views/ChildTaskAdoptionViews.swift": "5a70fd15966fdec89b9973e73bdab6b6c5be11cb203d2543837ac8f4dc312c85",
+        "Taskfold/Views/ChildTaskStructureViews.swift": "c18459cd1cc04f4f02bb9f39009e5e42dfe00538850e335ce2b81deb7cfa0522",
+        "Taskfold/Views/ChildTaskTransferViews.swift": "07bea4acb13b674152e5045911c2d109fb5d286b09738140a5251e57e0f319bf",
+        "TaskfoldUITests/AudioCommentUITests.swift": "2728c61fcfca1b872ef717a5d8ee5c49f8153c17a5d0939d90aabf41ec41e114"
+      },
+      "buildLogSHA256": "cbaba68381fb8c7caf94804142a463a217bba453865ad70a5aceecce64166de2",
+      "products": [
+        {
+          "product": "Taskfold.app",
+          "strictDevelopmentSignature": true,
+          "codeIdentity": [
+            "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge",
+            "CDHash=6cad4ac00c9cdb68809409c3877ed7078012da00"
+          ]
+        },
+        {
+          "product": "TaskfoldUITests-Runner.app",
+          "strictDevelopmentSignature": true,
+          "codeIdentity": [
+            "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner",
+            "CDHash=a914a4191632e6a3a53f886577a3cc954a4bd7ae"
+          ]
+        }
+      ],
+      "runtimeTestingPerformed": true
+    }
+  },
+  "baselineCommit": "77e90ea5f737641b409184a85633346f094e5259",
+  "findings": [
+    "An empty conditional recovery link did not reliably start its own discovery task when feature gates were paused. Discovery now belongs to mounted screens.",
+    "The v2 phone recording shows the upgrade sheet opening and immediately closing: presentation modifiers applied to a Group were distributed across multiple children. Each saved-action button now owns exactly one sheet.",
+    "An inactive window must not clear another mounted screen's discovery; shared presence is cleared when the account workspace is unavailable. Full native multi-window/background acceptance remains separate."
+  ]
+}

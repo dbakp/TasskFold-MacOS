@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "deviceName": "iPad Pro 13-inch (M5)",
+    "modelName": "iPad Pro 13-inch (M5)",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "summarySHA256": "b2a165cd33c29b95aa42d035893aa558596a642f0d3a717dd6e22aacd61854d9",
+  "manifestSHA256": "1f25f51187d3b413dddfa9bc9584d5bda484a3d74758bbe6ec090c30ed2a7b87",
+  "scope": "Synthetic local native project/assignee controls, actual Undo/Redo and cold return; historical child assignees remain cleared; no hosted delivery or speech claim",
+  "fullRootAndExactChildValuesVerified": true,
+  "fullSnapshotColdReturnVerified": true,
+  "snapshots": [
+    {
+      "name": "original",
+      "sha256": "c7f7ca33e78f939975dd9e828fff5c829f110ec941b1b46f3ba42c1ca3e235f7",
+      "bytes": 1273
+    },
+    {
+      "name": "moved",
+      "sha256": "e0b4be4ea6e464e03d95b8bc530ce0ae7c81d8e8522f7227eb84860d3f676060",
+      "bytes": 4054
+    },
+    {
+      "name": "undone",
+      "sha256": "2c7f4fb0391e7280cfc8290a2cf819b81bca1ce669793a0c5c88a467a23462dd",
+      "bytes": 6211
+    },
+    {
+      "name": "redone",
+      "sha256": "9d2fe21b4bb819a76dbfd3bd6ddc19a53a6c27921b57ed6d13ae0c806ce6cdf2",
+      "bytes": 8368
+    },
+    {
+      "name": "cold return",
+      "sha256": "410cadaf53f274c9497c9509b5a9cec5c115bf6c93fcec783665885c6d0f9f2f",
+      "bytes": 8368
+    }
+  ]
+}

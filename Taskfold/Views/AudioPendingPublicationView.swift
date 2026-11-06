@@ -1,0 +1,217 @@
+import SwiftUI
+
+@MainActor struct AudioPendingPublicationRequest: Identifiable {
+    let journal: AudioCommentPublicationJournal
+    let controller: AudioCommentPendingLibrary
+    var id: UUID { journal.publication.operation }
+}
+@MainActor struct AudioPendingPublicationSection: View {
+    let library: AudioCommentLibraryController
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @State private var controller: AudioCommentPendingLibrary?
+    let present: (AudioPendingPublicationRequest) -> Void
+    @State private var failure: String?
+    @State private var reload = UUID()
+    private var allowed: Bool { phase == .active && library.isCurrent && store.audioPendingScope().map(library.scope.matches) == true }
+    var body: some View {
+        if store.audioPublishingEnabled, library.scope.origin != nil {
+            Section {
+                if let controller, allowed {
+                    ForEach(controller.entries, id: \.publication.operation) { journal in
+                        Button { present(.init(journal: journal, controller: controller)) } label: {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Label(journal.publication.caption.isEmpty ? "Recording" : journal.publication.caption, systemImage: journal.closedReceipt != nil ? "checkmark.shield" : (journal.isPending ? "clock.arrow.circlepath" : "checkmark.circle"))
+                                    .lineLimit(2).foregroundStyle(.primary)
+                                Text(journal.closedReceipt != nil ? "Closed · private recording kept" : (journal.isPending ? "Awaiting confirmation · original version kept" : "Confirmed · private recording kept")).font(.caption).foregroundStyle(.secondary)
+                            }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        }.buttonStyle(.plain).accessibilityIdentifier("audioPendingRow-" + journal.publication.operation.uuidString.lowercased())
+                    }
+                    if controller.entries.isEmpty, !controller.working { Text("No publication copies to review.").foregroundStyle(.secondary) }
+                    if controller.working { ProgressView("Loading publication copies…") }
+                    if let notice = controller.notice { Text(notice).font(.caption).foregroundStyle(.secondary) }
+                }
+                if let failure { Text(failure).foregroundStyle(.secondary) }
+                Button("Reload publication copies", systemImage: "arrow.clockwise") { reload = UUID() }.disabled(controller?.working == true)
+            } header: { Text("Publication copies") } footer: {
+                Text("Original versions are kept independently of edits or removal of saved drafts. Checking a send never replaces an edited draft.")
+            }
+            .task(id: String(describing: allowed) + store.backend.reminderSessionIncarnation.uuidString + reload.uuidString) {
+                controller?.close(); controller = nil; failure = nil
+                guard allowed else { return }
+                do {
+                    let value = try await store.audioPendingLibrary(scope: library.scope, player: DeviceAudioCommentPlaying())
+                    guard allowed, !Task.isCancelled else { value.close(); return }; controller = value; await value.refresh()
+                } catch { if allowed, !Task.isCancelled { failure = "Publication copies could not be opened. Existing recordings are kept." } }
+            }
+            .onChange(of: allowed) { _, value in if !value { controller?.setActive(false) } }
+            .onDisappear { if !library.presentingPublicationReview { controller?.close() } }
+        }
+    }
+}
+private enum PendingAudioAction {
+    case publishReview,resume,close,remove
+    var title:String {
+        switch self {case .publishReview:return "Publish this recording?";case .resume:return "Resume the original send?";case .close:return "Close the original send?";case .remove:return "Remove this private copy?"}
+    }
+    var button:String {switch self {case .publishReview:return "Publish recording";case .resume:return "Resume original send";case .close:return "Close original send";case .remove:return "Remove private copy"}}
+    var message:String {
+        switch self {
+        case .publishReview:return "Publish the original recording and caption using the audience you just reviewed. Your private recording stays here."
+        case .resume:return "Upload the original reviewed recording and caption to its original task. Your private recording stays here."
+        case .close:return "Prevent this send from finishing. If it was already published, its confirmation will be kept instead. This does not remove a published comment or your private recording."
+        case .remove:return "This removes only the publication recording kept on this device. Keep a private copy first if you need it. The server comment and saved drafts are not removed."
+        }
+    }
+}
+/// Uses the same current-scope controller and factories in production and isolated native tests.
+@MainActor struct AudioPendingPublicationReview: View {
+    let journal: AudioCommentPublicationJournal
+    let controller: AudioCommentPendingLibrary
+    let taskTitle: (AudioCommentTarget) -> String?
+    let canResume: (AudioCommentTarget) -> Bool
+    let checker: (AudioCommentPublicationJournal) throws -> AudioCommentPublicationFlow
+    let publisher: (AudioCommentPublicationJournal) throws -> AudioCommentPublicationFlow
+    var accessStamp: (AudioCommentTarget) -> String? = { _ in nil }
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var phase
+    @State private var operation:Task<Void,Never>?
+    @State private var flow:AudioCommentPublicationFlow?
+    @State private var confirming:PendingAudioAction?
+    @State private var notice:String?
+    @AccessibilityFocusState(for: .voiceOver) private var noticeFocused: Bool
+    @State private var resultGeneration = UUID()
+    @State private var operationGeneration = UUID()
+    @AccessibilityFocusState(for: .voiceOver) private var audienceFocused: Bool
+    private var current:Bool {phase == .active && controller.isCurrent}
+    private var busy:Bool {controller.working || operation != nil}
+    var body:some View {
+        NavigationStack {
+            ScrollViewReader { proxy in
+            Form {
+                if current,let journal=controller.selected {
+                    Section("Original recording") {
+                        Text(journal.publication.caption.isEmpty ? "No written caption":journal.publication.caption).textSelection(.enabled).fixedSize(horizontal:false,vertical:true)
+                        Text("\(Double(journal.publication.descriptor.milliseconds)/1000,specifier:"%.1f") seconds").font(.caption).foregroundStyle(.secondary)
+                        Text(taskTitle(journal.publication.target) ?? "Original task unavailable").font(.subheadline).foregroundStyle(.secondary)
+                        Button(controller.playing ? "Stop playback":"Play original recording",systemImage:controller.playing ? "stop.fill":"play.fill") {
+                            if controller.playing {controller.stopPlayback()} else {Task {await controller.play()}}
+                        }.frame(minHeight:44).disabled(busy).accessibilityIdentifier("audioPendingPlay")
+                        Button("Keep a private copy",systemImage:"square.and.arrow.down") {run {try await controller.keepPrivateCopy()}}
+                            .frame(minHeight:44).disabled(busy).accessibilityIdentifier("audioPendingKeep")
+                        Text("Keeps this original version in Saved recordings. Your edited draft stays unchanged.").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Section(journal.closedReceipt != nil ? "Original publication closed":(journal.isPending ? "Awaiting confirmation":"Confirmed previously")) {
+                        if journal.isPending {
+                            Button("Check original send",systemImage:"arrow.clockwise") {run {try await checkOriginal(journal,closing:false)}}
+                                .frame(minHeight:44).disabled(busy).accessibilityIdentifier("audioPendingRetry")
+                            Text("Checks only your original send’s status, without uploading audio or reopening the task.").font(.caption).foregroundStyle(.secondary)
+                            if canResume(journal.publication.target) {
+                                TimelineView(.periodic(from: .now, by: 1)) { context in
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        if let approval = flow?.reviewedApproval {
+                                            AudioPublicationAudienceSummary(approval: approval).id("audioPendingAudience").accessibilityFocused($audienceFocused)
+                                            if approval.permits(journal.publication, now: context.date) {
+                                                Button("Publish recording…", systemImage: "paperplane") { confirming = .publishReview }
+                                                    .buttonStyle(.borderedProminent).frame(minHeight: 44).disabled(busy).accessibilityIdentifier("audioPendingPublishReviewed")
+                                            } else { Text("This review expired. Review who can listen again.").font(.caption).foregroundStyle(.secondary) }
+                                        } else if let approval = journal.approval {
+                                            AudioPublicationAudienceSummary(approval: approval)
+                                            if approval.permits(journal.publication, now: context.date) {
+                                                Button("Resume original send…", systemImage: "paperplane") { confirming = .resume }
+                                                    .buttonStyle(.borderless).frame(minHeight: 44).disabled(busy).accessibilityIdentifier("audioPendingResume")
+                                            } else { Text("The saved review expired. Check the original result before deciding how to continue.").font(.caption).foregroundStyle(.secondary) }
+                                        }
+                                        Button("Review who can listen", systemImage: "person.2") { run { try await reviewAudience(journal) } }
+                                            .buttonStyle(.borderless).frame(minHeight: 44).disabled(busy).accessibilityIdentifier("audioPendingAudienceReview")
+                                    }
+                                }
+                            } else {Text("The original task is unavailable for publishing. Status checks and your private recording remain available.").font(.caption).foregroundStyle(.secondary)}
+                            Button("Close original send…",systemImage:"xmark.circle") {confirming = .close}
+                                .frame(minHeight:44).disabled(busy).accessibilityIdentifier("audioPendingCloseOriginal")
+                        } else {
+                            if journal.closedReceipt != nil {
+                                Label("That send can’t resume",systemImage:"checkmark.shield")
+                                Text("It may have been visible earlier. Keep this private recording; edit and save a new version if you want to publish again.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                            } else {Label("This device kept the server confirmation",systemImage:"checkmark.circle").foregroundStyle(.green)}
+                            Button("Remove private publication copy…",role:.destructive) {confirming = .remove}.frame(minHeight:44).disabled(busy).accessibilityIdentifier("audioPendingRemove")
+                        }
+                    }
+                    if busy {ProgressView("Working with the original recording…")}
+                    if let notice=notice ?? controller.notice {Section {Text(notice).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("audioPendingNotice").id("audioPendingResult").accessibilityFocused($noticeFocused)
+                            .task(id: resultGeneration) {
+                                await Task.yield()
+                                guard current, !busy, notice != nil, flow?.reviewedApproval == nil, !Task.isCancelled else { return }
+                                noticeFocused = true
+                            }}}
+                } else if controller.working {ProgressView("Opening original recording…")}
+                else {Text(current ? (controller.notice ?? "This publication changed. Reopen its current copy."):"Publication review closed.").foregroundStyle(.secondary)}
+            }.formStyle(.grouped).accessibilityIdentifier("audioPendingForm")
+                .onChange(of: resultGeneration) { _, _ in
+                    if flow?.reviewedApproval != nil { proxy.scrollTo("audioPendingAudience", anchor: .center) } else if notice != nil { proxy.scrollTo("audioPendingResult", anchor: .bottom) }
+                }
+            }.navigationTitle("Publication review")
+                .toolbar {ToolbarItem(placement:.cancellationAction) {Button("Close") {close();dismiss()}.accessibilityIdentifier("audioPendingDismiss")}}
+        }
+        #if os(macOS)
+        .frame(minWidth:520,minHeight:500)
+        #endif
+        .task {await controller.select(journal)}
+        .alert(confirming?.title ?? "",isPresented:Binding(get:{confirming != nil},set:{if !$0 {confirming=nil}}),presenting:confirming) {action in
+            Button(action.button,role:(action == .resume || action == .publishReview) ? nil:.destructive) {
+                confirming=nil
+                guard let journal=controller.selected else {return}
+                switch action {
+                case .publishReview:run {
+                    guard let publisher = flow, publisher.contextIsCurrent, publisher.reviewedApproval != nil else { throw AudioCommentFailure.changed }
+                    let source = try await controller.prepareAudienceSource(journal)
+                    try await publisher.publish(source); guard current, !Task.isCancelled else { return }
+                    try await controller.updateAfterConfirmation(); notice = outcome(publisher)
+                }
+                case .resume:run {
+                    controller.stopPlayback();let publisher=try publisher(journal);flow=publisher
+                    try await publisher.retry(journal);guard current,!Task.isCancelled else {return};try await controller.updateAfterConfirmation();notice=outcome(publisher)
+                }
+                case .close:run {try await checkOriginal(journal,closing:true)}
+                case .remove:run {try await controller.removeResolvedCopy();dismiss()}
+                }
+            }.accessibilityIdentifier("audioPendingConfirm")
+            Button("Cancel",role:.cancel) { if action == .publishReview { flow?.discardAudienceReview(); audienceFocused = false; notice = "Review cancelled. Your private copy is preserved."; resultGeneration = UUID() }; confirming=nil }
+        } message: {action in Text((action == .publishReview ? flow?.reviewedApproval : action == .resume ? controller.selected?.approval : nil)?.audienceDescription ?? action.message)}
+        .onChange(of:current) {_,value in if !value {close();dismiss()}}
+        .onChange(of: controller.selected.flatMap { accessStamp($0.publication.target) }) { _, _ in
+            operationGeneration = UUID(); operation?.cancel(); operation = nil; flow?.invalidate(); flow = nil; confirming = nil; audienceFocused = false
+        }
+        .onDisappear {close()}
+    }
+    private func outcome(_ value:AudioCommentPublicationFlow)->String {
+        switch value.state {
+        case .published:return "The original send was confirmed. This private recording is still kept here."
+        case .closed:return "Original publication closed. This private recording is still kept here."
+        default:return "Still unconfirmed. Checking did not upload audio. Your recording is preserved."
+        }
+    }
+    private func reviewAudience(_ journal: AudioCommentPublicationJournal) async throws {
+        let source = try await controller.prepareAudienceSource(journal)
+        let publisher = try publisher(journal); flow?.invalidate(); flow = publisher
+        try await publisher.reviewAudience(source)
+        guard current, publisher.contextIsCurrent, !Task.isCancelled else { throw CancellationError() }
+        if let approval = publisher.reviewedApproval { notice = "Audience reviewed. " + approval.audienceDescription; audienceFocused = true }
+        else { try await controller.updateAfterConfirmation(); notice = outcome(publisher) }
+    }
+    private func checkOriginal(_ journal:AudioCommentPublicationJournal,closing:Bool) async throws {
+        controller.stopPlayback();let checker=try checker(journal);flow=checker
+        try await checker.checkPublication(journal,closing:closing)
+        guard current,!Task.isCancelled else {return};try await controller.updateAfterConfirmation();notice=outcome(checker)
+    }
+    private func run(_ action:@escaping @MainActor () async throws -> Void) {
+        guard current,!busy else {return};notice=nil;noticeFocused=false;audienceFocused=false
+        let token = UUID(); operationGeneration = token
+        operation=Task {
+            defer {if operationGeneration == token {operation=nil;if current,notice != nil {resultGeneration=UUID()}}}
+            do {try await action()}
+            catch {if current,!Task.isCancelled {try? await controller.updateAfterConfirmation(); notice=error is AccountSessionAuthorizationRequired ? "Sign in again before checking this publication. Your recording is preserved.":error.localizedDescription}}
+        }
+    }
+    private func close() {operationGeneration=UUID();operation?.cancel();operation=nil;flow?.invalidate();flow=nil;confirming=nil;controller.clearSelection()}
+}

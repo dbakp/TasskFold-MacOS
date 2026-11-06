@@ -1,0 +1,193 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native Mac local workspace exit, signed-out relaunch, local return and Settings recovery.",
+  "actualRegistries": {
+    "beforeExit": {
+      "accountID": "local",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [
+        {
+          "accountID": "local",
+          "category": "taskfold.reminder",
+          "fireAt": 1791795271,
+          "id": "taskfold.r2.c381fa09d0a6fea220a37f242dd3bda4f689f1f226ffbbc724e5cf59b0f2dd53",
+          "originalAt": 1791795271,
+          "signature": "r4:4bed19a59f4e3885e492554647428cdb4f1396617ec3150c2bb6c7244f346b30",
+          "snoozed": false,
+          "specID": "eb14bdc2-fe2b-5e6a-a9fe-a050f85ce092",
+          "taskID": "27740264-41c6-4e14-b30b-b7c1462e1544"
+        }
+      ],
+      "observedAt": 1791795333.690665,
+      "pending": [
+        {
+          "accountID": "local",
+          "category": "taskfold.reminder",
+          "fireAt": 1791796111,
+          "id": "taskfold.r2.10c4b21379776f59d63ce92dec404c52760977a781e9bdde8cf9a22a2628998d",
+          "originalAt": 1791796111,
+          "signature": "r4:03c7cc0fe9b80eed13b198da6cdd4122dccebfa78945681c54547a6a39dd99d7",
+          "snoozed": false,
+          "specID": "6a1d722d-650d-5c17-a3bf-102393165584",
+          "taskID": "27740264-41c6-4e14-b30b-b7c1462e1544",
+          "triggerAt": 1791796111
+        }
+      ],
+      "processID": 23695
+    },
+    "afterExit": {
+      "accountID": "",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791795380.215238,
+      "pending": [],
+      "processID": 23695
+    },
+    "signedOutRelaunch": {
+      "accountID": "",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791795444.611356,
+      "pending": [],
+      "processID": 23870
+    },
+    "return": {
+      "accountID": "local",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791795590.860292,
+      "pending": [
+        {
+          "accountID": "local",
+          "category": "taskfold.reminder",
+          "fireAt": 1791796111,
+          "id": "taskfold.r2.10c4b21379776f59d63ce92dec404c52760977a781e9bdde8cf9a22a2628998d",
+          "originalAt": 1791796111,
+          "signature": "r4:03c7cc0fe9b80eed13b198da6cdd4122dccebfa78945681c54547a6a39dd99d7",
+          "snoozed": false,
+          "specID": "6a1d722d-650d-5c17-a3bf-102393165584",
+          "taskID": "27740264-41c6-4e14-b30b-b7c1462e1544",
+          "triggerAt": 1791796111
+        }
+      ],
+      "processID": 23870
+    },
+    "cleanup": {
+      "accountID": "local",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791795621.788787,
+      "pending": [],
+      "processID": 23870
+    },
+    "fixedSettingsReturn": {
+      "accountID": "local",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791795997.484086,
+      "pending": [],
+      "processID": 24695
+    }
+  },
+  "preservation": {
+    "cleanSnapshotExactAcrossV6ExitReturn": true,
+    "nonActivityTablesExact": true,
+    "priorActivityRetained": true,
+    "syntheticActivityRowsAdded": 2,
+    "protectedFilesExact": 100
+  },
+  "settingsFix": {
+    "mac": "Disable signed-out reminder toggle, show honest workspace/storage copy, remount preferences on reentry. Native v6 confirms enabled controls and usable Snooze menu.",
+    "ios": "Independent signed-out reminder-toggle guard; compile verified only.",
+    "builds": "Mac signed Debug and iOS arm64 Simulator Debug passed."
+  },
+  "cleanup": {
+    "deliveryOff": true,
+    "syntheticTaskReversiblyDeleted": true,
+    "removedInactiveBuildLogicalBytes": 273133464,
+    "retainedBuild": "v6",
+    "logsAndStagesRetained": true
+  },
+  "limits": [
+    "Authenticated Mac notification account-switch and delayed callbacks remain open.",
+    "Other named widget, VoiceOver, external-provider, continuity, APNs and distribution gates remain open."
+  ]
+}

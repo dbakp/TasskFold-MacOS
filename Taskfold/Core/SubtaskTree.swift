@@ -1,0 +1,1404 @@
+import Foundation
+
+/// Checklist operations retain every field and move whole branches by identity.
+enum SubtaskTree {
+    struct Failure: LocalizedError, Sendable {
+        let message: String
+        var errorDescription: String? { message }
+    }
+    static func hasListContainer(_ value: JSON) -> Bool { if value == .null { return true }; if case .array = value { return true }; return false }
+    static func inlineEditable(_ value: JSON) -> Bool { if case .object(let fields) = value, case .string? = fields["title"] { return true }; return false }
+    /// This read-only projection never authorizes replacing an opaque child.
+    static func inlinePresentation(_ value: JSON) -> Record {
+        if case .string(let text) = value { return Record(["title": .string(text)]) }
+        return Record((try? value.readingASCIIFields(["title", "completed", "is_heading"])) ?? [:])
+    }
+    static func inlineTitle(_ value: JSON) -> String { inlinePresentation(value).title }
+    static func childKey(_ value: JSON, index: Int) -> String { value.object["id"]?.text.isEmpty == false ? value.object["id"]!.text : "@\(index)" }
+    /// Legacy positional paths remain readable, but neither duplicated references
+    /// nor unknown/text-only nodes may become an arbitrary editable child.
+    static func uniqueChildIndex(_ value: JSON, key: String) -> Int? {
+        guard case .array(let rows) = value else { return nil }
+        var found: Int?
+        for (index, row) in rows.enumerated() where childKey(row, index: index) == key {
+            guard found == nil, inlineEditable(row) else { return nil }; found = index
+        }
+        return found
+    }
+    /// One pass for a whole rendered inspector, instead of rescanning all siblings
+    /// for each row's enabled state.
+    static func uniqueChildIndices(_ value: JSON) -> [String: Int] {
+        guard case .array(let rows) = value else { return [:] }
+        var counts: [String: Int] = [:], result: [String: Int] = [:]
+        for (index, row) in rows.enumerated() {
+            let key = childKey(row, index: index)
+            counts[key, default: 0] += 1
+            if counts[key] == 1 && inlineEditable(row) { result[key] = index } else { result[key] = nil }
+        }
+        return result
+    }
+    static let maximumDepth = 10
+    static let readableDepth = 32
+    static func referencePath(_ id: String) -> [String]? {
+        guard id.hasPrefix("subtask:"), let data = Data(base64Encoded: String(id.dropFirst(8))),
+              let path = try? TaskfoldJSONDecoder().decode([String].self, from: data), (2...readableDepth + 1).contains(path.count), path.allSatisfy({ !$0.isEmpty }) else { return nil }
+        return path
+    }
+    static func reference(parent: String, key: String) -> String {
+        let path = (referencePath(parent) ?? [parent]) + [key]
+        return "subtask:" + (try! TaskfoldJSONEncoder().encode(path)).base64EncodedString()
+    }
+    static let childQuickEntryExclusions: Set<String> = ["project_id", "section_id", "labels", "recurrence", "reminder_specs"]
+    /// Context is visible in the editor but ownership and containment remain on the parent.
+    static func detailDraft(_ child: Record, project: String) -> Record {
+        var result = child; result["project_id"] = project.isEmpty ? .null : .string(project)
+        return result
+    }
+    static func detailChanges(original: Record, edited: Record, current: Record) throws -> Record {
+        guard !original.id.isEmpty, original.id == edited.id, current.id == original.id else {
+            throw Failure(message: "This subtask changed. Reopen its current details before saving.")
+        }
+        let editable: Set<String> = ["is_heading", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "subtasks", "comments", "attachments"]
+        var fields = edited.fields.filter { editable.contains($0.key) && original.fields[$0.key] != $0.value }
+        if let title = fields["title"] {
+            let value = title.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else { throw Failure(message: "Give the subtask a name.") }
+            fields["title"] = .string(value)
+        }
+        for key in ["due_date", "deadline_date"] {
+            if let value = fields[key], value != .null, !value.text.isEmpty {
+                guard case .string = value, Dates.parse(value.text) != nil else { throw Failure(message: "Choose a valid date for the subtask.") }
+            }
+        }
+        if let estimate = fields["duration_minutes"], estimate != .null {
+            guard case .number(let minutes) = estimate, minutes.rounded() == minutes, (1...10080).contains(minutes) else { throw Failure(message: "Choose an estimate between 1 minute and 7 days.") }
+        }
+        if let priority = fields["priority"], priority != .null {
+            guard case .number(let value) = priority, value.rounded() == value, (1...4).contains(value) else { throw Failure(message: "Choose a priority between 1 and 4.") }
+        }
+        if let time = fields["due_time"], time != .null, !time.text.isEmpty {
+            let parts = time.text.split(separator: ":", omittingEmptySubsequences: false)
+            guard case .string = time, parts.count == 2, parts.allSatisfy({ $0.count == 2 }), let hour = Int(parts[0]), let minute = Int(parts[1]), (0...23).contains(hour), (0...59).contains(minute) else { throw Failure(message: "Choose a valid time for the subtask.") }
+        }
+        if let zone = fields["time_zone"], zone != .null, !zone.text.isEmpty {
+            guard case .string = zone, TimeZone(identifier: zone.text) != nil else { throw Failure(message: "Choose a valid time zone for the subtask.") }
+        }
+        try TaskKind.validateTypeEdit(original: original, edited: edited, current: current)
+        guard TaskKind.permits(Mutation(table: "tasks", recordID: current.id, method: "PATCH", fields: fields), existing: current) else {
+            throw Failure(message: "Headings stay open. Your subtask draft is unchanged.")
+        }
+        fields = TaskPlanning.fields(fields, existing: current)
+        var result = current
+        for (key, value) in fields { result[key] = value }
+        return result
+    }
+    static func path(_ value: JSON, id: String) -> [String]? {
+        let rows = Dictionary(uniqueKeysWithValues: outline(value).map { ($0.id, $0) })
+        guard var item = rows[id] else { return nil }
+        var result = [item.id], seen: Set<String> = [item.id]
+        while let parent = item.parent {
+            guard seen.insert(parent).inserted, let row = rows[parent] else { return nil }
+            result.insert(parent, at: 0); item = row
+        }
+        return result
+    }
+    struct Item: Identifiable, Equatable, Sendable {
+        let record: Record
+        let parent: String?
+        let depth: Int
+        var id: String { record.id }
+    }
+    enum Move: CaseIterable, Sendable { case up, down, indent, outdent }
+
+    static func prepared(_ value: JSON) throws -> JSON {
+        guard value == .null || { if case .array = value { return true }; return false }() else {
+            throw Failure(message: "This checklist uses an unsupported format. Your saved subtasks are unchanged.")
+        }
+        var seen = Set<String>()
+        func normalize(_ values: [JSON], depth: Int) throws -> [JSON] {
+            guard depth <= 32 else { throw Failure(message: "This checklist is too deeply nested to organize here.") }
+            return try values.map { value in
+                guard case .object(var fields) = value, case .string? = fields["title"] else {
+                    throw Failure(message: "A subtask uses an unsupported format. Your saved subtasks are unchanged.")
+                }
+                if let identity = fields["id"], identity != .null {
+                    guard case .string = identity else { throw Failure(message: "A subtask identity is malformed. Your saved subtasks are unchanged.") }
+                }
+                let id = fields["id"]?.text ?? ""
+                guard id.isEmpty || seen.insert(id).inserted else { throw Failure(message: "This checklist contains duplicate subtask identities. Your saved subtasks are unchanged.") }
+                if id.isEmpty { let fresh = UUID().uuidString.lowercased(); fields["id"] = .string(fresh); seen.insert(fresh) }
+                if let children = fields["subtasks"], children != .null {
+                    guard case .array(let rows) = children else { throw Failure(message: "A nested checklist uses an unsupported format.") }
+                    fields["subtasks"] = .array(try normalize(rows, depth: depth + 1))
+                }
+                return .object(fields)
+            }
+        }
+        return .array(try normalize(value.list, depth: 0))
+    }
+
+    static func outline(_ value: JSON) -> [Item] {
+        var result: [Item] = []
+        func visit(_ rows: [JSON], parent: String?, depth: Int) {
+            guard depth <= 32 else { return }
+            for value in rows {
+                let row = Record(value.object)
+                result.append(Item(record: row, parent: parent, depth: depth))
+                visit(row["subtasks"].list, parent: row.id, depth: depth + 1)
+            }
+        }
+        visit(value.list, parent: nil, depth: 0)
+        return result
+    }
+    static func progress(_ value: JSON) -> (completed: Int, total: Int) {
+        let result = progressReading(value)
+        return (result.completed, result.total)
+    }
+    struct ProgressReading: Equatable {
+        var completed = 0, total = 0, visited = 0
+        var truncated = false
+    }
+    /// Match outline's existing depth/type semantics without allocating every item.
+    static func progressReading(_ value: JSON) -> ProgressReading {
+        var result = ProgressReading()
+        func visit(_ rows: [JSON], depth: Int) {
+            guard depth <= 32 else { if !rows.isEmpty { result.truncated = true }; return }
+            for value in rows {
+                let row = Record(value.object)
+                result.visited += 1
+                if TaskKind.mayComplete(row) {
+                    result.total += 1
+                    if row.completed { result.completed += 1 }
+                }
+                visit(row["subtasks"].list, depth: depth + 1)
+            }
+        }
+        visit(value.list, depth: 0)
+        return result
+    }
+    static func changing(_ value: JSON, id: String, fields: [String: JSON]) -> JSON {
+        guard case .array(let values) = value else { return value }
+        return .array(values.map { value in
+            // An unrelated legacy/opaque sibling must never turn into an empty
+            // object when another row is edited. Independent writers own it.
+            guard case .object(var row) = value else { return value }
+            if row["id"]?.text == id { row.merge(fields) { _, new in new } }
+            else if case .array? = row["subtasks"] { row["subtasks"] = changing(row["subtasks"]!, id: id, fields: fields) }
+            return .object(row)
+        })
+    }
+    private static func siblings(_ value: JSON, parent: String?) -> [JSON] {
+        guard let parent else { return value.list }
+        return outline(value).first { $0.id == parent }?.record["subtasks"].list ?? []
+    }
+    private static func replacing(_ value: JSON, parent: String?, rows: [JSON]) -> JSON {
+        guard let parent else { return .array(rows) }
+        return changing(value, id: parent, fields: ["subtasks": .array(rows)])
+    }
+    static func removing(_ value: JSON, id: String) -> JSON {
+        guard let item = outline(value).first(where: { $0.id == id }) else { return value }
+        return replacing(value, parent: item.parent, rows: siblings(value, parent: item.parent).filter { $0.object["id"]?.text != id })
+    }
+    static func adding(_ value: JSON, title: String, parent: String? = nil, baseDepth: Int = 0) throws -> JSON {
+        guard hasListContainer(value) else { throw Failure(message: "Open Organize subtasks to review this checklist before adding items. Its original content is unchanged.") }
+        let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { throw Failure(message: "Give the subtask a name.") }
+        guard baseDepth >= 0, baseDepth < maximumDepth else { throw Failure(message: "Subtasks can be nested up to 10 levels.") }
+        if let parent {
+            guard let item = outline(value).first(where: { $0.id == parent }), item.depth + baseDepth + 1 < maximumDepth else {
+                throw Failure(message: "Subtasks can be nested up to 10 levels.")
+            }
+        }
+        let row: JSON = .object(["id": .string(UUID().uuidString.lowercased()), "title": .string(title), "completed": .bool(false)])
+        return replacing(value, parent: parent, rows: siblings(value, parent: parent) + [row])
+    }
+    static func moving(_ value: JSON, id: String, direction: Move, baseDepth: Int = 0) throws -> JSON {
+        let items = outline(value)
+        guard let item = items.first(where: { $0.id == id }) else { throw Failure(message: "This subtask is no longer available.") }
+        var rows = siblings(value, parent: item.parent)
+        guard let index = rows.firstIndex(where: { $0.object["id"]?.text == id }) else { return value }
+        switch direction {
+        case .up, .down:
+            let target = index + (direction == .up ? -1 : 1)
+            guard rows.indices.contains(target) else { throw Failure(message: "The subtask is already at the edge of this checklist.") }
+            rows.swapAt(index, target)
+            return replacing(value, parent: item.parent, rows: rows)
+        case .indent:
+            guard index > 0 else { throw Failure(message: "Move this subtask below another subtask before indenting it.") }
+            let height = (outline(item.record["subtasks"]).map(\.depth).max().map { $0 + 1 }) ?? 0
+            guard baseDepth + item.depth + height + 1 < maximumDepth else { throw Failure(message: "Subtasks can be nested up to 10 levels.") }
+            guard case .object(var previous) = rows[index - 1],
+                  case .string? = previous["title"], hasListContainer(previous["subtasks"] ?? .null) else {
+                throw Failure(message: "Review the preceding subtask's format before nesting here. Its saved content is unchanged.")
+            }
+            previous["subtasks"] = .array((previous["subtasks"]?.list ?? []) + [rows[index]])
+            rows[index - 1] = .object(previous); rows.remove(at: index)
+            return replacing(value, parent: item.parent, rows: rows)
+        case .outdent:
+            guard let parentID = item.parent, let parent = items.first(where: { $0.id == parentID }) else {
+                throw Failure(message: "This subtask is already at the top level.")
+            }
+            let branch = rows.remove(at: index)
+            var result = replacing(value, parent: parentID, rows: rows)
+            var uncles = siblings(result, parent: parent.parent)
+            guard let parentIndex = uncles.firstIndex(where: { $0.object["id"]?.text == parentID }) else { return value }
+            uncles.insert(branch, at: parentIndex + 1)
+            result = replacing(result, parent: parent.parent, rows: uncles)
+            return result
+        }
+    }
+
+    /// Rebase fields by identity even when a child has moved to another parent.
+    /// An explicitly reviewed local layout wins; remote-only children are retained.
+    static func rebased(base: JSON, desired: JSON, remote: JSON) -> JSON? {
+        let values = [base, desired, remote].map { $0 == .null ? JSON.array([]) : $0 }
+        guard values.allSatisfy({ (try? prepared($0)) == $0 }) else { return nil }
+        let lists = values.map(outline)
+        let maps = lists.map { Dictionary(uniqueKeysWithValues: $0.map { ($0.id, $0) }) }
+        let before = maps[0], after = maps[1], current = maps[2]
+        func layout(_ rows: [Item]) -> [String] { rows.map { ($0.parent ?? "") + ":" + $0.id } }
+        let shared = Set(before.keys).intersection(after.keys)
+        let localLayoutChanged = layout(lists[0].filter { shared.contains($0.id) }) != layout(lists[1].filter { shared.contains($0.id) })
+        let deleted = Set(before.keys).subtracting(after.keys)
+        var ids = Set(current.keys).subtracting(deleted)
+        for row in lists[1] where before[row.id] == nil || before[row.id]?.record != row.record || before[row.id]?.parent != row.parent {
+            ids.insert(row.id)
+            var parent = row.parent
+            while let id = parent, let ancestor = after[id] { ids.insert(id); parent = ancestor.parent }
+        }
+        // Follow one valid source tree for each parent chain, so competing moves
+        // cannot create a cycle or duplicate the same child under two parents.
+        let preferred = localLayoutChanged ? after : current
+        let fallback = localLayoutChanged ? current : after
+        func parent(_ id: String) -> String? {
+            var next = preferred[id]?.parent ?? (preferred[id] == nil ? fallback[id]?.parent : nil)
+            var seen: Set<String> = [id]
+            while let candidate = next {
+                guard seen.insert(candidate).inserted else { return nil }
+                if ids.contains(candidate) { return candidate }
+                next = preferred[candidate]?.parent ?? (preferred[candidate] == nil ? fallback[candidate]?.parent : nil)
+            }
+            return nil
+        }
+        var parents = Dictionary(uniqueKeysWithValues: ids.map { ($0, parent($0) ?? "") })
+        // A remote-only node may attach beneath a locally moved known node.
+        // If that combination closes a cycle, retain the node at the top level.
+        for id in ids.sorted() {
+            var cursor = id, seen = Set<String>()
+            while !cursor.isEmpty {
+                if !seen.insert(cursor).inserted { parents[id] = ""; break }
+                cursor = parents[cursor] ?? ""
+            }
+        }
+        let ordering = localLayoutChanged ? lists[1] + lists[2] : lists[2] + lists[1]
+        var order: [String] = [], seen = Set<String>()
+        for item in ordering where ids.contains(item.id) && seen.insert(item.id).inserted { order.append(item.id) }
+        func render(_ parent: String, depth: Int) -> [JSON] {
+            guard depth <= 64 else { return [] }
+            return order.filter { parents[$0] == parent }.map { id in
+                let old = before[id]?.record, local = after[id]?.record, saved = current[id]?.record
+                func fields(_ row: Record?) -> JSON { .object((row?.fields ?? [:]).filter { $0.key != "subtasks" }) }
+                let merged: JSON
+                if let local, let old, saved != nil { merged = TaskEdit.keepingLocal(base: fields(old), desired: fields(local), remote: fields(saved)) }
+                else { merged = fields(saved ?? local) }
+                var result = merged.object
+                let children = render(id, depth: depth + 1)
+                let source = (localLayoutChanged ? local ?? saved : saved ?? local)?["subtasks"] ?? .null
+                if !children.isEmpty || source != .null { result["subtasks"] = .array(children) }
+                else if (saved ?? local)?.fields["subtasks"] != nil { result["subtasks"] = .null }
+                return .object(result)
+            }
+        }
+        return .array(render("", depth: 0))
+    }
+}
+
+/// Read-only identities for independently queried checklist items. These projections
+/// never become backend task rows; every edit is translated into its current root.
+struct TaskHierarchyIndex {
+    enum Scope { case all, roots, subtasks, parents }
+    struct Item: Equatable, Sendable {
+        let source: Record
+        let root: Record
+        let path: [String]
+        let parentTitles: [String]
+        let id: String
+        /// Full authored object. The Record above is only a display/field projection
+        /// when the object contains keys a Swift dictionary cannot represent.
+        let sourceFields: JSON
+        let requiresIndependentWriter: Bool
+        init(source: Record, root: Record, path: [String], parentTitles: [String], id: String, sourceFields: JSON? = nil, requiresIndependentWriter: Bool = false) {
+            self.source = source; self.root = root; self.path = path; self.parentTitles = parentTitles; self.id = id
+            self.sourceFields = sourceFields ?? .object(source.fields)
+            self.requiresIndependentWriter = requiresIndependentWriter
+        }
+        var isSubtask: Bool { !path.isEmpty }
+        var isParent: Bool { !source["subtasks"].list.isEmpty }
+        /// Only containment is inherited. A child's dates, labels, assignment,
+        /// priority and completion remain its own recorded values.
+        var record: Record {
+            guard isSubtask else { return source }
+            var result = source; result["id"] = .string(id)
+            for field in ["project_id", "section_id", "user_id", "task_generation"] { result[field] = root[field] }
+            return result
+        }
+    }
+    struct Selection: Equatable, Sendable {
+        let item: Item
+        let workspace: WorkspaceBinding
+    }
+    enum Edit {
+        case patch(Selection, [String: JSON])
+        case delete(Selection)
+        var selection: Selection { switch self { case .patch(let value, _), .delete(let value): return value } }
+        var replacesBranch: Bool {
+            switch self { case .delete: return true; case .patch(_, let fields): return fields["subtasks"] != nil }
+        }
+        /// Native editors receive a contextual projection, never a new backend row.
+        static func editing(_ selection: Selection, draft: Record, at date: Date = Date()) throws -> Edit {
+            let original = selection.item.record
+            guard selection.item.isSubtask, draft.id == original.id else { throw TaskHierarchyIndex.failure("This subtask changed. Reopen its current details.") }
+            let keys = Set(original.fields.keys).union(draft.fields.keys).filter { original.fields[$0] != draft.fields[$0] }
+            guard keys.isSubset(of: TaskHierarchyIndex.editable) else { throw TaskHierarchyIndex.failure("A subtask keeps its parent's identity, project and section. Reopen its current details.") }
+            var fields = Dictionary(uniqueKeysWithValues: keys.map { ($0, draft[$0]) })
+            if let state = fields["completed"] {
+                guard case .bool(let completed) = state else { throw TaskHierarchyIndex.failure("Choose a valid subtask completion state.") }
+                fields["completed_at"] = completed ? .string(ISO8601DateFormatter().string(from: date)) : .null
+            }
+            return .patch(selection, fields)
+        }
+        static func completion(_ selection: Selection, completed: Bool, at date: Date = Date()) -> Edit {
+            .patch(selection, ["completed": .bool(completed), "completed_at": completed ? .string(ISO8601DateFormatter().string(from: date)) : .null])
+        }
+    }
+    static let maximumItems = 100_000
+    static let maximumEdits = 1_000
+    static let maximumReferenceBytes = 32 * 1_024 * 1_024
+    static let maximumPreservedProjectionBytes = 32 * 1_024 * 1_024
+    private(set) var items: [Item] = []
+    private(set) var excludedRootIDs = Set<String>()
+    let workspace: WorkspaceBinding
+    private var positions: [String: Int] = [:]
+    private static let editable: Set<String> = ["is_heading", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "subtasks", "comments", "attachments"]
+    private static func failure(_ message: String) -> SubtaskTree.Failure { SubtaskTree.Failure(message: message) }
+    private static func validIdentity(_ id: String) -> Bool {
+        ChecklistRecovery.validIdentity(id)
+    }
+
+    init(roots: [Record], projects: [Record], workspace: WorkspaceBinding) throws {
+        guard !workspace.account.isEmpty else { throw Self.failure("Open a workspace before filtering subtasks.") }
+        guard roots.count <= Self.maximumItems else { throw Self.failure("This task hierarchy is too large to filter here.") }
+        self.workspace = workspace
+        let projectGroups = Dictionary(grouping: projects, by: \.id)
+        let hidden = ProjectOrganization.archivedIDs(in: projects)
+        var rootIDs = Set<String>(), referenceBytes = 0, preservedProjectionBytes = 0
+        for root in roots {
+            guard Self.validIdentity(root.id), !root.id.hasPrefix("subtask:"), rootIDs.insert(root.id).inserted else {
+                throw Self.failure("Task identities are unavailable. Refresh your tasks before filtering subtasks.")
+            }
+            let project = root.string("project_id")
+            guard project.isEmpty || (projectGroups[project]?.count == 1 && !hidden.contains(project)) else {
+                excludedRootIDs.insert(root.id); continue
+            }
+            var childIDs = Set<String>()
+            func visit(_ source: Record, raw: JSON, independent: Bool, path: [String], parents: [String], reference: String) throws {
+                guard path.count <= SubtaskTree.readableDepth, items.count < Self.maximumItems, reference.utf8.count <= Self.maximumReferenceBytes - referenceBytes else {
+                    throw Self.failure("This task hierarchy is too large or deeply nested to filter here. Your saved tasks are unchanged.")
+                }
+                referenceBytes += reference.utf8.count
+                let item = Item(source: source, root: root, path: path, parentTitles: parents, id: reference, sourceFields: raw, requiresIndependentWriter: independent)
+                positions[item.id] = items.count; items.append(item)
+                let children = source["subtasks"]
+                guard children == .null || { if case .array = children { return true }; return false }() else {
+                    throw Self.failure("A checklist uses an unsupported format. Open its parent task to review it.")
+                }
+                for child in children.list {
+                    let fields: [String: JSON], opaque: Bool
+                    switch child {
+                    case .object(let values): fields = values; opaque = false
+                    case .preserved(let value) where value.kind == .object:
+                        // Nested raw objects may repeat large subtrees. Bound the
+                        // total decoding work before materializing editor fields.
+                        guard value.data.count <= Self.maximumPreservedProjectionBytes - preservedProjectionBytes else {
+                            throw Self.failure("Some task details are too large to filter here. Open their parent task. Your saved tasks are unchanged.")
+                        }
+                        preservedProjectionBytes += value.data.count
+                        fields = try child.fieldEditingProjection(); opaque = true
+                    default: throw Self.failure("A checklist uses an unsupported format. Open its parent task to review it.")
+                    }
+                    guard case .string(let id)? = fields["id"],
+                          Self.validIdentity(id),
+                          case .string? = fields["title"], childIDs.insert(id).inserted else {
+                        throw Self.failure("A checklist needs stable subtask identities. Open its parent task, save the subtask organizer, then try again.")
+                    }
+                    try visit(Record(fields), raw: child, independent: independent || opaque, path: path + [id], parents: parents + [source.title], reference: SubtaskTree.reference(parent: item.id, key: id))
+                }
+            }
+            try visit(root, raw: .object(root.fields), independent: false, path: [], parents: [], reference: root.id)
+        }
+    }
+    func item(_ id: String) -> Item? { positions[id].map { items[$0] } }
+    func selection(_ id: String) -> Selection? { item(id).map { Selection(item: $0, workspace: workspace) } }
+    func records(in scope: Scope, includeCompleted: Bool = false) -> [Record] {
+        items.filter { item in
+            guard includeCompleted || !item.source.completed else { return false }
+            switch scope { case .all: return true; case .roots: return !item.isSubtask; case .subtasks: return item.isSubtask; case .parents: return item.isParent }
+        }.map(\.record)
+    }
+
+    /// All requests validate before a mutation is returned. Siblings coalesce into
+    /// one root patch, preserving the normal durable queue and Undo transaction.
+    static func changes(_ edits: [Edit], accessibleRoots: [Record], projects: [Record], workspace: WorkspaceBinding) throws -> [Mutation] {
+        guard !edits.isEmpty else { return [] }
+        guard edits.count <= maximumEdits else { throw failure("Select up to 1,000 subtasks at a time.") }
+        guard !workspace.account.isEmpty,
+              edits.allSatisfy({ $0.selection.workspace == workspace && $0.selection.item.isSubtask }) else {
+            throw failure("This workspace changed. Reopen the subtask before editing it.")
+        }
+        let rootIDs = Set(edits.map { $0.selection.item.root.id })
+        let current = try TaskHierarchyIndex(roots: accessibleRoots.filter { rootIDs.contains($0.id) }, projects: projects, workspace: workspace)
+        var references = Set<String>()
+        for (index, edit) in edits.enumerated() {
+            let saved = edit.selection.item
+            guard references.insert(saved.id).inserted, let now = current.item(saved.id),
+                  now.root["task_generation"] == saved.root["task_generation"], now.root["created_at"] == saved.root["created_at"],
+                  now.root["project_id"] == saved.root["project_id"], now.root["section_id"] == saved.root["section_id"] else {
+                throw failure("This task moved, was replaced or is no longer accessible. Reopen its current details.")
+            }
+            for other in edits.prefix(index) where other.selection.item.root.id == saved.root.id {
+                let oldPath = other.selection.item.path
+                if (other.replacesBranch && saved.path.starts(with: oldPath)) || (edit.replacesBranch && oldPath.starts(with: saved.path)) {
+                    throw failure("Select the parent or its descendants for a branch edit, then try again.")
+                }
+            }
+            // A display projection is never a whole-object replacement. These
+            // branches use independent record commands after a fresh read.
+            guard !now.requiresIndependentWriter, !saved.requiresIndependentWriter else {
+                throw failure("This subtask needs review before it can be changed here. Your saved content is unchanged.")
+            }
+            switch edit {
+            case .delete:
+                guard AuthoredValueComparison.exactJSON(now.sourceFields, saved.sourceFields) else { throw failure("This subtask changed. Review its current content before deleting it.") }
+            case .patch(_, let fields):
+                guard Set(fields.keys).isSubset(of: editable) else { throw failure("A subtask keeps its parent's project and section. Open the parent to move the whole task.") }
+                for (field, desired) in fields where now.source[field] != saved.source[field] && now.source[field] != desired {
+                    throw failure("This subtask changed while you were editing it. Reopen its current details to keep both versions.")
+                }
+                if fields["completed"] != nil || fields["completed_at"] != nil {
+                    guard TaskKind.mayComplete(now.source) else { throw failure("Headings stay open. Select tasks to complete.") }
+                    guard case .bool(let completed)? = fields["completed"], let stamp = fields["completed_at"],
+                          completed ? (stamp.text.isEmpty == false && ISO8601DateFormatter().date(from: stamp.text) != nil) : stamp == .null else {
+                        throw failure("Choose a valid subtask completion state and timestamp.")
+                    }
+                }
+            }
+        }
+        let roots = Dictionary(current.items.filter { !$0.isSubtask }.map { ($0.root.id, $0.root) }, uniquingKeysWith: { first, _ in first })
+        var updated = roots
+        for edit in edits {
+            let item = edit.selection.item
+            guard let root = updated[item.root.id], let working = source(in: root, path: item.path) else { throw failure("This subtask is no longer accessible.") }
+            let replacement: Record?
+            switch edit {
+            case .delete: replacement = nil
+            case .patch(_, let fields):
+                var edited = item.source
+                for (field, value) in fields { edited[field] = value }
+                replacement = try SubtaskTree.detailChanges(original: item.source, edited: edited, current: working)
+            }
+            guard let changed = replacing(root, path: item.path, value: replacement) else { throw failure("This subtask moved. Reopen its current details.") }
+            updated[item.root.id] = changed
+        }
+        // A branch edit may introduce new children. Never return a mutation
+        // whose resulting identities or depth cannot be queried safely.
+        _ = try TaskHierarchyIndex(roots: Array(updated.values), projects: projects, workspace: workspace)
+        return rootIDs.sorted().compactMap { id in
+            guard let original = roots[id], let changed = updated[id], changed["subtasks"] != original["subtasks"] else { return nil }
+            let fields = ["subtasks": changed["subtasks"]]
+            return Mutation(table: "tasks", recordID: id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: original))
+        }
+    }
+    private static func source(in root: Record, path: [String]) -> Record? {
+        var value = root
+        for key in path {
+            guard let child = value["subtasks"].list.first(where: { $0.object["id"] == .string(key) }) else { return nil }
+            value = Record(child.object)
+        }
+        return value
+    }
+    private static func replacing(_ root: Record, path: [String], value: Record?) -> Record? {
+        guard let key = path.first else { return value }
+        var list = root["subtasks"].list
+        guard let index = list.firstIndex(where: { $0.object["id"] == .string(key) }) else { return nil }
+        if path.count == 1 { if let value { list[index] = .object(value.fields) } else { list.remove(at: index) } }
+        else {
+            guard let child = replacing(Record(list[index].object), path: Array(path.dropFirst()), value: value) else { return nil }
+            list[index] = .object(child.fields)
+        }
+        var result = root; result["subtasks"] = .array(list); return result
+    }
+}
+
+/// List actions use the same captured rows on both platforms. Virtual child rows
+/// become root subtree patches; overlapping destructive selections never clobber
+/// an independently requested edit, and root recurrence keeps its existing engine.
+enum TaskSelectionPlan {
+    enum Action {
+        case patch([String: JSON]), completion(Bool, Date), delete
+    }
+    struct Request {
+        var task: Record
+        var action: Action
+        var workspace: WorkspaceBinding
+    }
+    private static func failure(_ message: String) -> SubtaskTree.Failure { .init(message: message) }
+    static func changes(_ requests: [Request], accessibleRoots: [Record], projects: [Record], workspace: WorkspaceBinding, calendar: Calendar = .current) throws -> [Mutation] {
+        guard !requests.isEmpty else { return [] }
+        guard requests.count <= TaskHierarchyIndex.maximumEdits else { throw failure("Select up to 1,000 tasks at a time.") }
+        guard !workspace.account.isEmpty, requests.allSatisfy({ $0.workspace == workspace }), Set(requests.map { $0.task.id }).count == requests.count else {
+            throw failure("This selection or workspace changed. Select the tasks again.")
+        }
+        let grouped = Dictionary(grouping: accessibleRoots, by: \.id)
+        let projectGroups = Dictionary(grouping: projects, by: \.id)
+        let archived = ProjectOrganization.archivedIDs(in: projects)
+        func rootID(_ row: Record) throws -> String {
+            if let path = SubtaskTree.referencePath(row.id) { return path[0] }
+            guard !row.id.isEmpty, !row.id.hasPrefix("subtask:") else { throw failure("This task reference is unavailable. Refresh the list.") }
+            return row.id
+        }
+        var roots: [String: Record] = [:], childRootIDs = Set<String>()
+        for request in requests {
+            let id = try rootID(request.task)
+            guard let rows = grouped[id], rows.count == 1, let root = rows.first,
+                  root["task_generation"] == request.task["task_generation"] else { throw failure("A selected task was replaced or is no longer accessible. Select it again.") }
+            let project = root.string("project_id")
+            guard project.isEmpty || (projectGroups[project]?.count == 1 && !archived.contains(project)) else { throw failure("A selected project is no longer accessible. Refresh the list.") }
+            roots[id] = root
+            if SubtaskTree.referencePath(request.task.id) != nil { childRootIDs.insert(id) }
+        }
+        let index = try TaskHierarchyIndex(roots: roots.values.filter { childRootIDs.contains($0.id) }, projects: projects, workspace: workspace)
+        var selectedChildren: [String: TaskHierarchyIndex.Selection] = [:]
+        var rootRequests: [String: Request] = [:]
+        for request in requests {
+            let row = request.task
+            if case .completion = request.action {
+                let current = SubtaskTree.referencePath(row.id) != nil ? index.item(row.id)?.source : roots[row.id]
+                guard let current, TaskKind.mayComplete(current) else { throw failure("Headings stay open. Select tasks to complete.") }
+            }
+            if SubtaskTree.referencePath(row.id) != nil {
+                guard let selected = index.selection(row.id), selected.item.record == row else { throw failure("A selected subtask changed. Select its current row again.") }
+                selectedChildren[row.id] = selected
+            } else {
+                guard let root = roots[row.id], root["created_at"] == row["created_at"], root["project_id"] == row["project_id"], root["section_id"] == row["section_id"] else { throw failure("A selected task moved. Select its current row again.") }
+                if case .delete = request.action, root != row { throw failure("A selected task changed. Review its current content before deleting it.") }
+                if case .completion(let completed, _) = request.action, root.completed != completed,
+                   (root.completed != row.completed || root["completion_version"].integer != row["completion_version"].integer) {
+                    throw failure("Task completion changed. Select its current row again.")
+                }
+                rootRequests[row.id] = request
+            }
+        }
+        func isDelete(_ action: Action) -> Bool { if case .delete = action { return true }; return false }
+        var childEdits: [TaskHierarchyIndex.Edit] = []
+        for request in requests {
+            guard let selected = selectedChildren[request.task.id] else { continue }
+            if let rootRequest = rootRequests[selected.item.root.id], isDelete(rootRequest.action) {
+                guard isDelete(request.action) else { throw failure("Choose a branch deletion or an edit to its children, then try again.") }
+                continue
+            }
+            let deletingAncestor = requests.first { other in
+                guard other.task.id != request.task.id, isDelete(other.action), let parent = selectedChildren[other.task.id] else { return false }
+                return parent.item.root.id == selected.item.root.id && selected.item.path.starts(with: parent.item.path)
+            }
+            if deletingAncestor != nil {
+                guard isDelete(request.action) else { throw failure("Choose a branch deletion or an edit to its children, then try again.") }
+                continue
+            }
+            switch request.action {
+            case .delete: childEdits.append(.delete(selected))
+            case .completion(let completed, let date): childEdits.append(.completion(selected, completed: completed, at: date))
+            case .patch(let fields): childEdits.append(.patch(selected, fields))
+            }
+        }
+        let childChanges = try TaskHierarchyIndex.changes(childEdits, accessibleRoots: Array(roots.values), projects: projects, workspace: workspace)
+        var working = roots
+        for change in childChanges { working[change.recordID]?["subtasks"] = change.fields["subtasks"] ?? .null }
+        var deleted = Set<String>(), extras: [Mutation] = []
+        var completionIDs: [String: UUID] = [:]
+        var assignmentBudget = TaskAssignmentTree.Budget()
+        var prospective = accessibleRoots.map { working[$0.id] ?? $0 }
+        let allowedRootFields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "project_id", "section_id"]
+        for id in rootRequests.keys.sorted() {
+            guard let request = rootRequests[id], let original = roots[id], var value = working[id] else { continue }
+            switch request.action {
+            case .delete: deleted.insert(id)
+            case .patch(let fields):
+                guard Set(fields.keys).isSubset(of: allowedRootFields) else { throw failure("This list action needs the task's detail editor.") }
+                for (key, desired) in fields where original[key] != request.task[key] && original[key] != desired { throw failure("A selected field changed. Review the current task before applying this action.") }
+                for key in ["project_id", "section_id"] {
+                    if let field = fields[key], field != .null {
+                        guard case .string(let id) = field, !id.isEmpty else { throw failure("Choose a valid project or section.") }
+                    }
+                }
+                if let project = fields["project_id"], project != value["project_id"] {
+                    _ = try TaskAssignmentTree.cleared(value["subtasks"], removing: true, budget: &assignmentBudget)
+                }
+                var desired = value
+                for (key, field) in fields { desired[key] = field }
+                // Reuse native detail validation for common planning/priority fields.
+                value = try SubtaskTree.detailChanges(original: value, edited: desired, current: value)
+                for key in ["project_id", "section_id"] where fields[key] != nil { value[key] = desired[key] }
+                let target = value.string("project_id")
+                guard target.isEmpty || (projectGroups[target]?.count == 1 && !archived.contains(target)) else { throw failure("Choose an accessible project.") }
+                working[id] = value
+            case .completion(let completed, let date):
+                if value.completed != completed {
+                    let changes = TaskCompletion.toggle(value, tasks: prospective, at: date, calendar: calendar, account: workspace.account)
+                    for change in changes {
+                        if change.recordID == id, change.method == "PATCH" { completionIDs[id] = change.id; for (key, field) in change.fields { value[key] = field } }
+                        else { extras.append(change); if change.method == "POST" { prospective.append(Record(change.fields)) } }
+                    }
+                    working[id] = value
+                }
+            }
+            if let position = prospective.firstIndex(where: { $0.id == id }), let value = working[id] { prospective[position] = value }
+        }
+        var result: [Mutation] = []
+        for id in roots.keys.sorted() {
+            guard let before = roots[id], let after = working[id] else { continue }
+            if deleted.contains(id) { result.append(Mutation(table: "tasks", recordID: id, method: "DELETE", fields: [:], baseline: before.fields)); continue }
+            var fields = after.fields.filter { before.fields[$0.key] != $0.value }
+            if let request = rootRequests[id], case .patch(let authored) = request.action { fields = TaskAssignment.preservingAssignmentIntent(fields, authored: authored) }
+            if !fields.isEmpty {
+                var mutation = Mutation(table: "tasks", recordID: id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: before))
+                if let identity = completionIDs[id] { mutation.id = identity }
+                result.append(mutation)
+            }
+        }
+        return result + extras
+    }
+}
+
+extension TaskSelectionPlan {
+    /// A selected branch is copied once. Child copies stay beside their source;
+    /// copying a main task creates a fresh root and fresh nested identities.
+    static func duplicateChanges(_ tasks: [Record], accessibleRoots: [Record], projects: [Record], workspace: WorkspaceBinding, at date: Date = Date()) throws -> [Mutation] {
+        let requests = tasks.map { Request(task: $0, action: .patch([:]), workspace: workspace) }
+        _ = try changes(requests, accessibleRoots: accessibleRoots, projects: projects, workspace: workspace)
+        guard !tasks.isEmpty else { return [] }
+        let selectedRoots = Set(tasks.filter { SubtaskTree.referencePath($0.id) == nil }.map(\.id))
+        let wantedRoots = Set(tasks.map { SubtaskTree.referencePath($0.id)?.first ?? $0.id })
+        let roots = Dictionary(accessibleRoots.filter { wantedRoots.contains($0.id) }.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let childTasks = tasks.filter { SubtaskTree.referencePath($0.id) != nil }
+        let childRootIDs = Set(childTasks.compactMap { SubtaskTree.referencePath($0.id)?.first })
+        let index = try TaskHierarchyIndex(roots: roots.values.filter { childRootIDs.contains($0.id) }, projects: projects, workspace: workspace)
+        var working = roots, inserts: [Mutation] = [], count = 0
+        func freshChildren(_ value: JSON, depth: Int = 1) throws -> JSON {
+            guard value == .null || { if case .array = value { return true }; return false }() else { throw failure("This checklist uses an unsupported format. Open its parent before duplicating it.") }
+            return .array(try value.list.map { node in
+                guard depth <= SubtaskTree.readableDepth, case .object(let fields) = node, case .string? = fields["title"], count < TaskHierarchyIndex.maximumItems else { throw failure("This checklist is too large or uses an unsupported format to duplicate.") }
+                guard TaskKind(Record(fields)) != .unsupported else { throw failure("This subtask type cannot be duplicated yet. Its source is unchanged.") }
+                count += 1; var row = Record(fields)
+                row["id"] = .string(UUID().uuidString.lowercased()); row["completed"] = .bool(false); row["completed_at"] = .null
+                if row.fields["task_generation"] != nil { row["task_generation"] = .string(UUID().uuidString.lowercased()) }
+                row["subtasks"] = try freshChildren(row["subtasks"], depth: depth + 1)
+                return .object(row.fields)
+            })
+        }
+        func insert(_ root: Record, path: [String], copy: JSON) -> Record? {
+            guard let key = path.first else { return nil }
+            var list = root["subtasks"].list
+            guard let position = list.firstIndex(where: { $0.object["id"] == .string(key) }) else { return nil }
+            if path.count == 1 { list.insert(copy, at: position + 1) }
+            else {
+                guard let updated = insert(Record(list[position].object), path: Array(path.dropFirst()), copy: copy) else { return nil }
+                list[position] = .object(updated.fields)
+            }
+            var updated = root; updated["subtasks"] = .array(list); return updated
+        }
+        for task in tasks {
+            if let path = SubtaskTree.referencePath(task.id) {
+                if selectedRoots.contains(path[0]) { continue }
+                let selectedPath = Array(path.dropFirst())
+                if childTasks.contains(where: { other in
+                    guard other.id != task.id, let parent = SubtaskTree.referencePath(other.id), parent[0] == path[0] else { return false }
+                    return selectedPath.starts(with: parent.dropFirst())
+                }) { continue }
+                guard let original = index.item(task.id), let current = working[path[0]] else { throw failure("A selected subtask moved. Select its current row again.") }
+                let copy = try freshChildren(.array([.object(original.source.fields)]), depth: selectedPath.count).list[0]
+                guard let updated = insert(current, path: selectedPath, copy: copy) else { throw failure("A selected subtask moved. Select its current row again.") }
+                working[path[0]] = updated
+            } else {
+                guard let original = roots[task.id], original == task else { throw failure("A selected task changed. Review its current content before duplicating it.") }
+                guard TaskKind(original) != .unsupported else { throw failure("This task type cannot be duplicated yet. Its source is unchanged.") }
+                var copy = original
+                copy["id"] = .string(UUID().uuidString.lowercased()); copy["task_generation"] = .string(UUID().uuidString.lowercased())
+                copy["user_id"] = .string(workspace.account); copy["completion_version"] = .number(0)
+                copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["created_at"] = .string(ISO8601DateFormatter().string(from: date))
+                copy["notification_sent_at"] = .null; copy["recurrence_parent_id"] = .null; copy.fields.removeValue(forKey: "updated_at")
+                if case .object(var metadata) = copy["source_metadata"] { metadata.removeValue(forKey: "taskfold_recurrence_v1"); copy["source_metadata"] = .object(metadata) }
+                copy["subtasks"] = try freshChildren(original["subtasks"])
+                inserts.append(Mutation(table: "tasks", recordID: copy.id, method: "POST", fields: copy.fields, insertOnly: true))
+            }
+        }
+        _ = try TaskHierarchyIndex(roots: Array(working.values) + inserts.map { Record($0.fields) }, projects: projects, workspace: workspace)
+        let patches = working.keys.sorted().compactMap { id -> Mutation? in
+            guard let original = roots[id], let updated = working[id], original["subtasks"] != updated["subtasks"] else { return nil }
+            let fields = ["subtasks": updated["subtasks"]]
+            return Mutation(table: "tasks", recordID: id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: original))
+        }
+        return patches + inserts
+    }
+}
+
+/// Explicit, lossless recovery of recognizable checklist content. Never guesses
+/// unknown node formats or silently drops a field/branch to make a tree editable.
+enum ChecklistRecovery {
+    static let maximumItems = 10_000
+    static let maximumBytes = 2_100_000
+    enum Reason: String, Sendable { case missing, duplicate, invalid, textOnly }
+    struct Change: Identifiable, Equatable, Sendable {
+        let path: [Int]
+        let title: String
+        let reason: Reason
+        var id: String { path.map(String.init).joined(separator: ".") }
+        var depth: Int { max(0, path.count - 1) }
+    }
+    struct Review: Equatable, Sendable {
+        let source: JSON
+        let proposed: JSON
+        let changes: [Change]
+        let itemCount: Int
+        func applying(to current: JSON) throws -> JSON {
+            guard current == source else { throw SubtaskTree.Failure(message: "This checklist changed. Cancel and reopen it before recovering subtasks.") }
+            return proposed
+        }
+    }
+    static func validIdentity(_ id: String) -> Bool {
+        !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && id.unicodeScalars.count <= 400 &&
+            !id.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) }
+    }
+    /// Bound opaque metadata as well as the visible tree before rendering a review.
+    static func originalData(_ source: JSON) throws -> Data {
+        var nodes = 0, remaining = maximumBytes
+        func charge(_ count: Int) throws {
+            guard count <= remaining else { throw SubtaskTree.Failure(message: "This checklist is too large to recover here. Its original content is kept in the task and workspace backups.") }
+            remaining -= count
+        }
+        func visit(_ value: JSON, depth: Int) throws {
+            try Task.checkCancellation()
+            nodes += 1
+            guard nodes <= 100_000, depth <= 128 else { throw SubtaskTree.Failure(message: "This checklist is too complex to recover here. Your saved content is unchanged.") }
+            try charge(8)
+            switch value {
+            case .string(let text): try charge(text.utf8.count)
+            case .number(let number): guard number.isFinite else { throw SubtaskTree.Failure(message: "This checklist contains unreadable data. Your saved content is unchanged.") }
+            case .array(let values): for child in values { try visit(child, depth: depth + 1) }
+            case .object(let fields): for (key, child) in fields { try charge(key.utf8.count); try visit(child, depth: depth + 1) }
+            case .preserved(let value):
+                let count = try value.validate(maximumDepth: 128-depth, maximumValues: 100001-nodes)
+                nodes += count-1; try charge(value.data.count)
+            case .null, .bool: break
+            }
+        }
+        try visit(source, depth: 0)
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
+        let data = try encoder.encode(source)
+        guard data.count <= maximumBytes else { throw SubtaskTree.Failure(message: "This checklist is too large to recover here. Its original content is kept in the task and workspace backups.") }
+        return data
+    }
+    static func review(_ source: JSON, baseDepth: Int = 0, makeID: () -> String = { UUID().uuidString.lowercased() }) throws -> Review {
+        _ = try originalData(source)
+        guard baseDepth >= 0, baseDepth < SubtaskTree.readableDepth, source == .null || { if case .array = source { return true }; return false }() else {
+            throw SubtaskTree.Failure(message: "This checklist uses an unfamiliar format. View its original data; recovery has not changed it.")
+        }
+        var counts: [String: Int] = [:], count = 0
+        func inspect(_ values: [JSON], depth: Int) throws {
+            guard values.isEmpty || depth + baseDepth < SubtaskTree.readableDepth else { throw SubtaskTree.Failure(message: "This checklist is too deeply nested to recover here. Your saved content is unchanged.") }
+            for value in values {
+                try Task.checkCancellation()
+                count += 1
+                guard count <= maximumItems else { throw SubtaskTree.Failure(message: "Recover up to 10,000 subtasks at once. Your saved checklist is unchanged.") }
+                if case .string = value { continue } // Legacy text-only checklist item.
+                guard case .object(let fields) = value, case .string? = fields["title"] else {
+                    throw SubtaskTree.Failure(message: "A subtask uses an unfamiliar format. View its original data; recovery has not changed it.")
+                }
+                if case .string(let id)? = fields["id"], validIdentity(id) { counts[id, default: 0] += 1 }
+                if let children = fields["subtasks"], children != .null {
+                    guard case .array(let rows) = children else { throw SubtaskTree.Failure(message: "A nested checklist uses an unfamiliar format. View its original data; recovery has not changed it.") }
+                    try inspect(rows, depth: depth + 1)
+                }
+            }
+        }
+        try inspect(source.list, depth: 0)
+        var reserved = Set(counts.keys), changes: [Change] = []
+        func fresh() throws -> String {
+            for _ in 0..<64 {
+                let id = makeID()
+                guard UUID(uuidString: id)?.uuidString.lowercased() == id else { continue }
+                if reserved.insert(id).inserted { return id }
+            }
+            throw SubtaskTree.Failure(message: "New subtask references could not be prepared. Your checklist is unchanged; try again.")
+        }
+        func recover(_ values: [JSON], path: [Int]) throws -> [JSON] {
+            try values.enumerated().map { index, value in
+                try Task.checkCancellation()
+                let position = path + [index]
+                if case .string(let text) = value {
+                    changes.append(Change(path: position, title: text, reason: .textOnly))
+                    return .object(["id": .string(try fresh()), "title": .string(text), "completed": .bool(false)])
+                }
+                var fields = value.object
+                let identity = fields["id"], id = identity?.text ?? ""
+                let reason: Reason?
+                if identity == nil || identity == .null || identity == .string("") { reason = .missing }
+                else if case .string = identity, validIdentity(id) { reason = counts[id, default: 0] > 1 ? .duplicate : nil }
+                else { reason = .invalid }
+                if let reason {
+                    fields["id"] = .string(try fresh())
+                    changes.append(Change(path: position, title: fields["title"]!.text, reason: reason))
+                }
+                if case .array(let children)? = fields["subtasks"] { fields["subtasks"] = .array(try recover(children, path: position)) }
+                return .object(fields)
+            }
+        }
+        let proposed: JSON = .array(try recover(source.list, path: []))
+        _ = try originalData(proposed) // A recovered result must remain editable on its next opening.
+        let root = Record(["id": .string("checklist-recovery-root"), "title": .string("Checklist"), "subtasks": proposed])
+        _ = try TaskHierarchyIndex(roots: [root], projects: [], workspace: WorkspaceBinding(account: "checklist-review", generation: UUID()))
+        return Review(source: source, proposed: proposed, changes: changes, itemCount: count)
+    }
+}
+
+/// Independently addressed child reads remain separate from legacy mutations.
+/// A verified response is never authority to overwrite the captured task.
+enum ChildTaskRecordFailure: LocalizedError {
+    case unavailable, review, oversized
+    var errorDescription: String? {
+        switch self {
+        case .unavailable: return "Separate child records aren’t available right now. Your saved task is unchanged."
+        case .review: return "The child hierarchy changed or needs review. Reopen the task; your saved work is unchanged."
+        case .oversized: return "This hierarchy is too large to open as separate records. Your saved task is unchanged."
+        }
+    }
+}
+struct ChildTaskRecordContext: Sendable {
+    let account: String
+    let origin: String
+    let workspace: UUID
+    let session: UUID
+    let access: UUID
+    let snapshot: UUID
+    let root: Record
+    init(account: String, origin: String, workspace: UUID, session: UUID, access: UUID, snapshot: UUID, root: Record) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard TeamProjectValue.id(root.id) else { throw ChildTaskRecordFailure.review }
+        _ = try TeamProjectValue.optionalID(root.fields["task_generation"] ?? .null)
+        _ = try TeamProjectValue.optionalID(root.fields["project_id"] ?? .null)
+        self.account=account; self.origin=origin; self.workspace=workspace; self.session=session
+        self.access=access; self.snapshot=snapshot; self.root=root
+    }
+    func matches(_ other: Self) -> Bool {
+        account==other.account && origin==other.origin && workspace==other.workspace && session==other.session
+        && access==other.access && snapshot==other.snapshot
+        && AuthoredValueComparison.exactJSON(.object(root.fields), .object(other.root.fields))
+    }
+}
+struct ChildTaskRecordRead: Sendable {
+    struct Node: Sendable {
+        let key: String
+        let incarnation: String
+        let revision: Double
+        let parent: String?
+        let position: Int
+        let path: [String]
+        /// Safe UI/patch fields; sourceFields remains authoritative for full content.
+        let fields: [String: JSON]
+        let sourceFields: JSON
+        let childrenKind: String
+    }
+    static let maximumBytes = 2_000_000
+    let context: ChildTaskRecordContext
+    let projectionRevision: Double
+    /// Verified parent-first traversal in authored sibling order.
+    let orderedNodes: [Node]
+    let nodes: [String: Node]
+    let tree: JSON
+    /// Bounded syntax validation also protects strict command receipts and
+    /// encrypted command journals from duplicate JSON keys at any depth.
+    static func validateUniqueJSON(_ data: Data, maximum: Int, integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = [], preservedValuePaths: Set<[String]> = [], exactObjectPaths: Set<[String]> = []) throws {
+        guard data.count <= maximum else { throw ChildTaskRecordFailure.oversized }
+        var syntax = UniqueJSONKeys(bytes: Array(data), integerPaths: integerPaths.union(nullableIntegerPaths), nullableIntegerPaths: nullableIntegerPaths, preservedValuePaths: preservedValuePaths, exactObjectPaths: exactObjectPaths)
+        try syntax.value(depth: 0); syntax.space()
+        guard syntax.index == syntax.bytes.count else { throw ChildTaskRecordFailure.review }
+    }
+    /// Keep an original JSON value as bytes while decoding only its envelope.
+    /// Opaque numeric precision and distinct Unicode keys never pass through JSON.
+    static func separatingJSONField(_ field: String, data: Data, maximum: Int, integerPaths: Set<[String]>, nullableIntegerPaths: Set<[String]>) throws -> (metadata: Data, value: Data) {
+        let parts = try separatingJSONFields([field], data: data, maximum: maximum, integerPaths: integerPaths, nullableIntegerPaths: nullableIntegerPaths)
+        return (parts.metadata, parts.values[field]!)
+    }
+    /// Capture all opaque siblings in one syntax pass. Separating one at a time
+    /// would still decode or normalize keys in the other original/proposed tree.
+    static func separatingJSONFields(_ fields: Set<String>, data: Data, maximum: Int, integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = []) throws -> (metadata: Data, values: [String: Data]) {
+        guard data.count <= maximum else { throw ChildTaskRecordFailure.oversized }
+        guard !fields.isEmpty, fields.count <= 8, fields.allSatisfy({ !$0.isEmpty }) else { throw ChildTaskRecordFailure.review }
+        var syntax = UniqueJSONKeys(bytes: Array(data), integerPaths: integerPaths.union(nullableIntegerPaths), nullableIntegerPaths: nullableIntegerPaths, capturedPaths: Set(fields.map { [$0] }))
+        try syntax.value(depth: 0); syntax.space()
+        guard syntax.index == syntax.bytes.count, syntax.capturedRanges.count == fields.count else { throw ChildTaskRecordFailure.review }
+        var metadata = Data(), values: [String: Data] = [:], cursor = 0
+        for (path, range) in syntax.capturedRanges.sorted(by: { $0.value.lowerBound < $1.value.lowerBound }) {
+            guard path.count == 1, fields.contains(path[0]), range.lowerBound >= cursor else { throw ChildTaskRecordFailure.review }
+            metadata.append(contentsOf: syntax.bytes[cursor..<range.lowerBound]); metadata.append(contentsOf: [110,117,108,108])
+            values[path[0]] = Data(syntax.bytes[range]); cursor = range.upperBound
+        }
+        metadata.append(contentsOf: syntax.bytes[cursor...]); return (metadata, values)
+    }
+    init(data: Data, context: ChildTaskRecordContext) throws {
+        guard data.count <= Self.maximumBytes else { throw ChildTaskRecordFailure.oversized }
+        try Self.validateUniqueJSON(data, maximum: Self.maximumBytes,
+            preservedValuePaths: [["records", "[]", "fields"]], exactObjectPaths: [["records", "[]", "fields"]])
+        guard let raw=try? TaskfoldJSONDecoder().decode([String:JSON].self,from:data) else { throw ChildTaskRecordFailure.review }
+        try self.init(envelope: raw, context: context)
+    }
+    /// The caller must already validate bounded wire syntax and unique keys.
+    /// V2 uses this initializer without re-encoding a potentially near-limit tree.
+    fileprivate init(envelope raw: [String: JSON], context: ChildTaskRecordContext) throws {
+        guard Set(raw.keys)==Set(["protocol","account","project_id","task_id","task_generation","projection_revision","root_kind","records"]),
+              raw["protocol"] == .number(1), raw["account"] == .string(context.account), raw["task_id"] == .string(context.root.id),
+              raw["project_id"] == context.root["project_id"], raw["task_generation"] == context.root["task_generation"],
+              case .string(let kind)?=raw["root_kind"], ["null","array"].contains(kind),
+              case .array(let rows)?=raw["records"], rows.count<=1000 else { throw ChildTaskRecordFailure.review }
+        let revision=try Self.counter(raw["projection_revision"])
+        var nodes: [String:Node]=[:], incarnations:Set<String>=[], buckets:[String:[Node]]=[:]
+        for value in rows {
+            guard case .object(let row)=value, let sourceFields = row["fields"],
+                  let fields = try? sourceFields.fieldEditingProjection() else { throw ChildTaskRecordFailure.review }
+            guard
+                  Set(row.keys)==Set(["node_key","incarnation","revision","parent_key","sibling_order","identity_path","fields","children_kind"]),
+                  case .string(let key)?=row["node_key"], Self.key(key),
+                  case .string(let incarnation)?=row["incarnation"], TeamProjectValue.id(incarnation), incarnations.insert(incarnation).inserted,
+                  case .number(let position)?=row["sibling_order"], position.isFinite, position.rounded()==position, (0..<1000).contains(position),
+                  case .array(let rawPath)?=row["identity_path"], (1...24).contains(rawPath.count),
+                  fields["subtasks"]==nil,
+                  case .string(let id)?=fields["id"], !id.isEmpty, id.utf8.count<=128,
+                  key.utf8.elementsEqual(id.precomposedStringWithCanonicalMapping.utf8),
+                  case .string(let childKind)?=row["children_kind"], ["absent","null","array"].contains(childKind), nodes[key]==nil else { throw ChildTaskRecordFailure.review }
+            let parent: String?
+            if row["parent_key"] == .null { parent=nil }
+            else if case .string(let p)?=row["parent_key"], Self.key(p), p != key { parent=p }
+            else { throw ChildTaskRecordFailure.review }
+            var path:[String]=[]
+            for item in rawPath { guard case .string(let text)=item, !text.isEmpty, text.utf8.count<=128 else { throw ChildTaskRecordFailure.review }; path.append(text) }
+            // Ordinary numbers must remain addressable; validated opaque values
+            // retain exact content without becoming editable structural counters.
+            var pending=Array(fields.values)
+            while let field=pending.popLast() {
+                switch field {
+                case .number(let n): guard n.isFinite, abs(n)<=9_007_199_254_740_991 else { throw ChildTaskRecordFailure.review }
+                case .array(let values): pending.append(contentsOf: values)
+                case .object(let values): pending.append(contentsOf: values.values)
+                default: break
+                }
+            }
+            let node=Node(key:key,incarnation:incarnation,revision:try Self.counter(row["revision"]),parent:parent,position:Int(position),path:path,fields:fields,sourceFields:sourceFields,childrenKind:childKind)
+            nodes[key]=node; buckets[parent ?? "",default:[]].append(node)
+        }
+        for node in nodes.values {
+            if let parent=node.parent { guard nodes[parent]?.childrenKind=="array" else { throw ChildTaskRecordFailure.review } }
+        }
+        for key in Array(buckets.keys) {
+            buckets[key]!.sort { $0.position<$1.position }
+            guard buckets[key]!.enumerated().allSatisfy({$0.offset==$0.element.position}) else { throw ChildTaskRecordFailure.review }
+        }
+        var visited:Set<String>=[], orderedNodes:[Node]=[]
+        func branch(_ parent:String?, path:[String]) throws -> JSON {
+            guard path.count<24 || buckets[parent ?? "",default:[]].isEmpty else { throw ChildTaskRecordFailure.review }
+            var result:[JSON]=[]
+            for node in buckets[parent ?? "",default:[]] {
+                guard visited.insert(node.key).inserted, let id=node.fields["id"]?.text else { throw ChildTaskRecordFailure.review }
+                let actual=path+[id]
+                guard actual.count==node.path.count, zip(actual,node.path).allSatisfy({$0.utf8.elementsEqual($1.utf8)}) else { throw ChildTaskRecordFailure.review }
+                orderedNodes.append(node)
+                var fields = node.sourceFields
+                if node.childrenKind=="array" { fields = try fields.editingASCIIFields(["subtasks": branch(node.key,path:actual)]) }
+                else if node.childrenKind=="null" { fields = try fields.editingASCIIFields(["subtasks": .null]) }
+                result.append(fields)
+            }
+            return .array(result)
+        }
+        let tree:JSON
+        if kind=="null" { guard nodes.isEmpty else { throw ChildTaskRecordFailure.review }; tree = .null }
+        else { tree=try branch(nil,path:[]); guard visited.count==nodes.count else { throw ChildTaskRecordFailure.review } }
+        guard AuthoredValueComparison.exactJSON(tree,context.root["subtasks"]) else { throw ChildTaskRecordFailure.review }
+        self.context=context; self.projectionRevision=revision; self.nodes=nodes; self.orderedNodes=orderedNodes; self.tree=tree
+    }
+    /// JSONDecoder's String dictionaries otherwise collapse canonically equal
+    /// object keys. Preserving readers may admit distinct raw keys only below
+    /// declared value containers; command identities and counters remain strict.
+    private struct UniqueJSONKeys {
+        let bytes:[UInt8]
+        let integerPaths: Set<[String]>
+        let nullableIntegerPaths: Set<[String]>
+        var index=0
+        let capturedPaths: Set<[String]>
+        let preservedValuePaths: Set<[String]>
+        let exactObjectPaths: Set<[String]>
+        var capturedRanges: [[String]: Range<Int>] = [:]
+        init(bytes: [UInt8], integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = [], capturedPaths: Set<[String]> = [], preservedValuePaths: Set<[String]> = [], exactObjectPaths: Set<[String]> = []) { self.bytes = bytes; self.integerPaths = integerPaths; self.nullableIntegerPaths = nullableIntegerPaths; self.capturedPaths = capturedPaths; self.preservedValuePaths = preservedValuePaths; self.exactObjectPaths = exactObjectPaths }
+        mutating func space() {while index<bytes.count && [9,10,13,32].contains(bytes[index]) {index+=1}}
+        mutating func take(_ byte:UInt8)->Bool {space();if index<bytes.count,bytes[index]==byte {index+=1;return true};return false}
+        mutating func string() throws -> String {
+            space();let start=index
+            guard take(34) else {throw ChildTaskRecordFailure.review}
+            while index<bytes.count {
+                let byte=bytes[index];index+=1
+                if byte==92 {guard index<bytes.count else {throw ChildTaskRecordFailure.review};index+=1}
+                else if byte==34 {
+                    guard let text=try? Foundation.JSONDecoder().decode(String.self,from:Data(bytes[start..<index])) else {throw ChildTaskRecordFailure.review};return text
+                }
+            }
+            throw ChildTaskRecordFailure.review
+        }
+        private func integerToken(path: [String], start: Int) throws {
+            guard integerPaths.contains(path) else { return }
+            let token = bytes[start..<index]
+            let nullable = nullableIntegerPaths.contains(path) && token.elementsEqual([110,117,108,108])
+            guard nullable || (!token.isEmpty && token.count <= 16 && token.allSatisfy({ (48...57).contains($0) }) &&
+                              (token.count == 1 || token.first != 48)) else { throw ChildTaskRecordFailure.review }
+        }
+        mutating func value(depth:Int, path: [String] = []) throws {
+            try Task.checkCancellation()
+            guard depth <= (capturedPaths.contains(where: { path.starts(with: $0) }) ? 512 : 128) else {throw ChildTaskRecordFailure.review};space()
+            guard index<bytes.count else {throw ChildTaskRecordFailure.review}
+            if bytes[index]==34 {_=try string();return}
+            if take(123) {
+                if take(125) {return};var keys:Set<String>=[]; var rawKeys:Set<Data>=[]
+                while true {
+                    let key = try string()
+                    let opaque = exactObjectPaths.contains(where: { path.starts(with: $0) }) || capturedPaths.contains(where: { path.starts(with: $0) }) || preservedValuePaths.contains(where: { path.count > $0.count && path.starts(with: $0) })
+                    guard (opaque ? rawKeys.insert(Data(key.utf8)).inserted : keys.insert(key).inserted),take(58) else {throw ChildTaskRecordFailure.review}
+                    let childPath = integerPaths.isEmpty && capturedPaths.isEmpty && preservedValuePaths.isEmpty && exactObjectPaths.isEmpty ? [] : path + [key]
+                    space(); let start = index
+                    try value(depth:depth+1, path: childPath)
+                    if capturedPaths.contains(childPath) { capturedRanges[childPath] = start..<index }
+                    try integerToken(path: childPath, start: start)
+                    if take(125) {return};guard take(44) else {throw ChildTaskRecordFailure.review}
+                }
+            }
+            if take(91) {
+                if take(93) {return}
+                while true {
+                    let childPath = integerPaths.isEmpty && capturedPaths.isEmpty && preservedValuePaths.isEmpty && exactObjectPaths.isEmpty ? [] : path + ["[]"]
+                    space(); let start = index; try value(depth: depth + 1, path: childPath); try integerToken(path: childPath, start: start)
+                    if take(93) {return};guard take(44) else {throw ChildTaskRecordFailure.review}
+                }
+            }
+            let start=index
+            while index<bytes.count && ![9,10,13,32,44,93,125].contains(bytes[index]) {index+=1}
+            guard index>start else {throw ChildTaskRecordFailure.review}
+            let token = Array(bytes[start..<index])
+            if [Array("null".utf8), Array("true".utf8), Array("false".utf8)].contains(token) { return }
+            var position = 0
+            if token.first == 45 { position += 1 }
+            guard position < token.count else { throw ChildTaskRecordFailure.review }
+            if token[position] == 48 { position += 1 }
+            else {
+                guard (49...57).contains(token[position]) else { throw ChildTaskRecordFailure.review }
+                while position < token.count && (48...57).contains(token[position]) { position += 1 }
+            }
+            for separator in [UInt8(46), UInt8(101)] {
+                if position < token.count && (token[position] == separator || separator == 101 && token[position] == 69) {
+                    position += 1
+                    if separator == 101 && position < token.count && [43,45].contains(token[position]) { position += 1 }
+                    let digits = position
+                    while position < token.count && (48...57).contains(token[position]) { position += 1 }
+                    guard position > digits else { throw ChildTaskRecordFailure.review }
+                }
+            }
+            guard position == token.count else { throw ChildTaskRecordFailure.review }
+        }
+    }
+    private static func key(_ key:String)->Bool {
+        !key.isEmpty && key.utf8.count<=128 && key.utf8.elementsEqual(key.precomposedStringWithCanonicalMapping.utf8)
+    }
+    private static func counter(_ value:JSON?) throws -> Double {
+        guard case .number(let n)?=value,n.isFinite,n>=1,n<=9_007_199_254_740_991,n.rounded()==n else {throw ChildTaskRecordFailure.review};return n
+    }
+}
+
+
+/// A separate wire version prevents structural counters from silently changing
+/// the established v1 contract. Neither read grants permission to mutate a task.
+struct ChildTaskStructureRead: Sendable {
+    static let maximumBytes = ChildTaskRecordRead.maximumBytes
+    let records: ChildTaskRecordRead
+    let structureRevision: Double
+    var context: ChildTaskRecordContext { records.context }
+    init(data: Data, context: ChildTaskRecordContext) throws {
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes,
+            integerPaths: [["protocol"], ["structure_revision"], ["projection_revision"],
+                           ["records", "[]", "revision"], ["records", "[]", "sibling_order"]],
+            preservedValuePaths: [["records", "[]", "fields"]], exactObjectPaths: [["records", "[]", "fields"]])
+        guard var raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data),
+              Set(raw.keys) == Set(["protocol", "account", "project_id", "task_id", "task_generation",
+                                    "projection_revision", "structure_revision", "root_kind", "records"]),
+              raw["protocol"] == .number(2),
+              case .number(let revision)? = raw["structure_revision"], revision.isFinite,
+              revision >= 1, revision <= 9_007_199_254_740_991, revision.rounded() == revision else { throw ChildTaskRecordFailure.review }
+        raw.removeValue(forKey: "structure_revision"); raw["protocol"] = .number(1)
+        self.records = try ChildTaskRecordRead(envelope: raw, context: context)
+        self.structureRevision = revision
+    }
+}
+
+/// View-local row identities follow children through edits/reordering without
+/// inserting IDs into legacy data. This cache grants no write permission.
+@MainActor final class SubtaskInlineDraft {
+    struct Scope: Equatable, Sendable {
+        let root: String
+        let parent: String
+        let selection: JSON
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let generation: JSON
+    }
+    struct Request: Sendable { let token: UUID; let scope: Scope }
+    struct Row: Identifiable, Sendable {
+        let id: UUID
+        let index: Int
+        let value: JSON
+        let request: Request?
+    }
+    private var owner: Scope?
+    private var values: [JSON] = []
+    private var tokens: [UUID] = []
+    private var positions: [UUID: Int] = [:]
+    private var identities: [String: Int] = [:]
+    private func key(_ value: JSON) -> String? {
+        guard case .object(let fields) = value, case .string(let id)? = fields["id"], !id.isEmpty else { return nil }
+        return id
+    }
+    private func counts(_ rows: [JSON]) -> [String: Int] {
+        rows.compactMap(key).reduce(into: [:]) { $0[$1, default: 0] += 1 }
+    }
+    private func reconcile(_ children: JSON, scope: Scope) {
+        if owner != scope { owner = scope; values = []; tokens = []; positions = [:]; identities = [:] }
+        let current = children.list
+        if current != values {
+            let old = values, oldTokens = tokens, oldCounts = counts(values), nextCounts = counts(current)
+            let oldByID = Dictionary(uniqueKeysWithValues: old.enumerated().compactMap { index, value -> (String, Int)? in
+                guard let id = key(value), oldCounts[id] == 1 else { return nil }; return (id, index)
+            })
+            var used = Set<Int>()
+            tokens = current.map { row in
+                let match: Int?
+                if let id = key(row), oldCounts[id] == 1, nextCounts[id] == 1 {
+                    match = oldByID[id].flatMap { used.contains($0) ? nil : $0 }
+                } else { match = old.indices.first { !used.contains($0) && old[$0] == row } }
+                guard let index = match else { return UUID() }
+                used.insert(index); return oldTokens[index]
+            }
+            values = current; identities = nextCounts
+            positions = Dictionary(uniqueKeysWithValues: tokens.enumerated().map { ($0.element, $0.offset) })
+        }
+    }
+    private func editable(_ value: JSON) -> Bool {
+        SubtaskTree.inlineEditable(value) && key(value).map { identities[$0] == 1 } != false
+    }
+    func rows(_ children: JSON, scope: Scope) -> [Row] {
+        reconcile(children, scope: scope)
+        return values.enumerated().map { index, value in
+            return Row(id: tokens[index], index: index, value: value, request: editable(value) ? Request(token: tokens[index], scope: scope) : nil)
+        }
+    }
+    private func position(_ request: Request, children: JSON, scope: Scope) -> Int? {
+        guard request.scope == scope, case .array = children else { return nil }
+        reconcile(children, scope: scope)
+        guard let index = positions[request.token], editable(values[index]) else { return nil }
+        return index
+    }
+    func value(_ request: Request, children: JSON, scope: Scope) -> JSON? {
+        guard let index = position(request, children: children, scope: scope) else { return nil }
+        return values[index]
+    }
+    private func replacing(_ index: Int, with value: JSON) -> JSON {
+        values[index] = value
+        return .array(values)
+    }
+    func title(_ text: String, request: Request, children: JSON, scope: Scope) -> JSON? {
+        guard let index = position(request, children: children, scope: scope) else { return nil }
+        var fields = values[index].object; fields["title"] = .string(text)
+        return replacing(index, with: .object(fields))
+    }
+    func toggle(_ request: Request, children: JSON, scope: Scope) -> JSON? {
+        guard let index = position(request, children: children, scope: scope), TaskKind.mayComplete(SubtaskTree.inlinePresentation(values[index])) else { return nil }
+        var fields = values[index].object; fields["completed"] = .bool(!(fields["completed"]?.flag ?? false))
+        return replacing(index, with: .object(fields))
+    }
+    func remove(_ requests: [Request], children: JSON, scope: Scope) -> JSON? {
+        guard !requests.isEmpty else { return nil }
+        let indices = requests.compactMap { position($0, children: children, scope: scope) }
+        guard indices.count == requests.count, Set(indices).count == indices.count else { return nil }
+        for index in indices.sorted(by: >) { values.remove(at: index); tokens.remove(at: index) }
+        positions = Dictionary(uniqueKeysWithValues: tokens.enumerated().map { ($0.element, $0.offset) }); identities = counts(values)
+        return .array(values)
+    }
+    func details(_ request: Request, original: Record, edited: Record, children: JSON, scope: Scope) throws -> JSON {
+        guard let index = position(request, children: children, scope: scope), key(values[index]) != nil else {
+            throw SubtaskTree.Failure(message: "This subtask changed. Reopen its current details before saving.")
+        }
+        let saved = try SubtaskTree.detailChanges(original: original, edited: edited, current: Record(values[index].object))
+        return replacing(index, with: .object(saved.fields))
+    }
+}
+
+/// Read-only, workspace-bound progress reuse. Retaining the immutable array keeps
+/// its backing allocation alive; copy-on-write edits must use another allocation.
+/// No pointer escapes the comparison and no count grants editing permission.
+@MainActor final class SubtaskProgressReadCache {
+    struct Context: Equatable {
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let access: UUID
+    }
+    private struct Entry {
+        let rows: [JSON]
+        let reading: SubtaskTree.ProgressReading
+        var used: UInt64
+    }
+    private let maximumEntries: Int, maximumNodes: Int
+    private var context: Context?
+    private var entries: [String: Entry] = [:]
+    private var clock: UInt64 = 0
+    private(set) var computationCount = 0
+    private(set) var retainedNodes = 0
+    var count: Int { entries.count }
+    init(maximumEntries: Int = 128, maximumNodes: Int = 32_768) {
+        self.maximumEntries = max(0, maximumEntries); self.maximumNodes = max(0, maximumNodes)
+    }
+    func clear() { context = nil; entries.removeAll(); retainedNodes = 0; clock = 0 }
+    func read(_ value: JSON, id: String, context next: Context) -> (completed: Int, total: Int) {
+        if context != next { clear(); context = next }
+        clock &+= 1
+        if case .array(let rows) = value, var entry = entries[id], rows.count == entry.rows.count,
+           rows.withUnsafeBufferPointer({ a in entry.rows.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }) {
+            entry.used = clock; entries[id] = entry
+            return (entry.reading.completed, entry.reading.total)
+        }
+        if let old = entries.removeValue(forKey: id) { retainedNodes -= old.reading.visited }
+        let result = SubtaskTree.progressReading(value); computationCount += 1
+        if case .array(let rows) = value, maximumEntries > 0, !result.truncated, result.visited <= maximumNodes {
+            while entries.count >= maximumEntries || retainedNodes + result.visited > maximumNodes {
+                guard let key = entries.min(by: { $0.value.used < $1.value.used })?.key else { break }
+                if let old = entries.removeValue(forKey: key) { retainedNodes -= old.reading.visited }
+            }
+            entries[id] = Entry(rows: rows, reading: result, used: clock); retainedNodes += result.visited
+        }
+        return (result.completed, result.total)
+    }
+}
+
+extension SubtaskTree {
+    /// Presentation only. Actual actions still go through `moving` and editor admission.
+    struct OrganizerReading: Sendable {
+        let items: [Item]
+        let hasEmptyTitle: Bool
+        let truncated: Bool
+        private let positions: [String: Int]
+        private let moves: [MoveOptions]
+        private struct MoveOptions: Sendable {
+            var up = false, down = false, indent = false, outdent = false
+            func contains(_ direction: Move) -> Bool {
+                switch direction { case .up: up; case .down: down; case .indent: indent; case .outdent: outdent }
+            }
+        }
+        init(_ source: JSON, baseDepth: Int) {
+            let outline = SubtaskTree.outline(source)
+            items = outline
+            hasEmptyTitle = outline.contains { $0.record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            truncated = outline.contains { $0.depth == SubtaskTree.readableDepth && !$0.record["subtasks"].list.isEmpty }
+            var index: [String: Int] = [:], ambiguous = Set<String>(), supported = !truncated
+            var siblings: [String?: [Int]] = [:]
+            for (position, item) in outline.enumerated() {
+                siblings[item.parent, default: []].append(position)
+                if item.id.isEmpty || index[item.id] != nil || ambiguous.contains(item.id) {
+                    ambiguous.insert(item.id); index[item.id] = nil; supported = false
+                } else { index[item.id] = position }
+            }
+            // Only normalized editable containers can offer moves. Opaque/malformed
+            // originals remain readable, without becoming arbitrary editing targets.
+            if source != .null { if case .array = source {} else { supported = false } }
+            for (parent, children) in siblings {
+                let raw: [JSON]
+                if let parent, let position = index[parent] { raw = outline[position].record["subtasks"].list }
+                else if parent == nil { raw = source.list }
+                else { supported = false; continue }
+                guard raw.count == children.count else { supported = false; continue }
+                for (offset, position) in children.enumerated() {
+                    guard case .object(let fields) = raw[offset], case .string(let id)? = fields["id"],
+                          id == outline[position].id, case .string? = fields["title"],
+                          SubtaskTree.hasListContainer(fields["subtasks"] ?? .null) else { supported = false; continue }
+                }
+            }
+            positions = index
+            var options = Array(repeating: MoveOptions(), count: outline.count)
+            if supported {
+                var heights = Array(repeating: 0, count: outline.count)
+                for position in outline.indices.reversed() {
+                    if let parent = outline[position].parent, let parentPosition = index[parent] {
+                        heights[parentPosition] = max(heights[parentPosition], heights[position] + 1)
+                    }
+                }
+                for (_, children) in siblings {
+                    for (offset, position) in children.enumerated() {
+                        let item = outline[position]
+                        options[position].up = offset > 0
+                        options[position].down = offset + 1 < children.count
+                        options[position].outdent = item.parent != nil
+                        // Bound each operand before adding, including hostile caller depths.
+                        options[position].indent = offset > 0 && baseDepth >= 0 && baseDepth < maximumDepth &&
+                            item.depth < maximumDepth && heights[position] < maximumDepth &&
+                            baseDepth + item.depth + heights[position] + 1 < maximumDepth
+                    }
+                }
+            }
+            moves = options
+        }
+        func item(_ id: String) -> Item? { positions[id].map { items[$0] } }
+        func canMove(_ id: String, _ direction: Move) -> Bool { positions[id].map { moves[$0].contains(direction) } ?? false }
+    }
+}
+
+/// One immutable draft reading per organizer. No disk persistence or write authority.
+@MainActor final class SubtaskOrganizerReadCache {
+    struct Context: Equatable {
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let access: UUID
+        let taskID: String
+    }
+    private let maximumNodes: Int
+    private var context: Context?
+    private var baseDepth: Int?
+    private var rows: [JSON]?
+    private var reading: SubtaskTree.OrganizerReading?
+    private(set) var computationCount = 0
+    var retainedNodes: Int { reading?.items.count ?? 0 }
+    init(maximumNodes: Int = 32_768) { self.maximumNodes = max(0, maximumNodes) }
+    func clear() { context = nil; baseDepth = nil; rows = nil; reading = nil }
+    func read(_ value: JSON, baseDepth nextDepth: Int, context next: Context) -> SubtaskTree.OrganizerReading {
+        if context != next || baseDepth != nextDepth { clear(); context = next; baseDepth = nextDepth }
+        if case .array(let current) = value, let rows, let reading, current.count == rows.count,
+           current.withUnsafeBufferPointer({ a in rows.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }) { return reading }
+        // Release the prior source before building the replacement. Retaining an
+        // immutable array makes copy-on-write edits distinguishable by allocation.
+        rows = nil; reading = nil
+        let result = SubtaskTree.OrganizerReading(value, baseDepth: nextDepth)
+        computationCount += 1
+        if case .array(let current) = value, maximumNodes > 0, result.items.count <= maximumNodes, !result.truncated {
+            rows = current; reading = result
+        }
+        return result
+    }
+}

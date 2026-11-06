@@ -1,0 +1,201 @@
+{
+  "date": "2026-10-10",
+  "scope": "Installed small Pinned note and medium Focus session on isolated iPhone 17 Pro, iOS 26.5 Simulator, using real disposable cloud authentication: account A \u2192 empty B \u2192 A \u2192 logout \u2192 A.",
+  "results": [
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-account-installed-v2.xcresult",
+      "phase": "installed",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 456.971,
+      "product": "pre-polish"
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-account-foreign-v1.xcresult",
+      "phase": "foreign",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 43.449,
+      "product": "pre-polish"
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-account-returned-v1.xcresult",
+      "phase": "returned",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 44.632,
+      "product": "pre-polish"
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-account-logout-v1.xcresult",
+      "phase": "logout",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 31.361,
+      "product": "pre-polish"
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-account-final-v1.xcresult",
+      "phase": "final",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 30.868,
+      "product": "pre-polish"
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-polish-foreign-v1.xcresult",
+      "phase": "foreign",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 43.631,
+      "product": "polished"
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-polish-returned-v1.xcresult",
+      "phase": "returned",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 43.39,
+      "product": "polished"
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-polish-logout-v1.xcresult",
+      "phase": "logout",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 31.115,
+      "product": "polished"
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-polish-final-v1.xcresult",
+      "phase": "final",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 29.992,
+      "product": "polished"
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-polish-clock-v1.xcresult",
+      "phase": "clock",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 18.848,
+      "product": "polished"
+    }
+  ],
+  "actualPassedExecutions": 10,
+  "distinctNativeScenarios": 6,
+  "failures": 0,
+  "skips": 0,
+  "runtimeWarnings": 0,
+  "composition": "Five initial lifecycle phases passed on unchanged product source. Screenshots exposed two display issues. Four account transitions then passed again on the polished products, followed by the dedicated ended-clock case. Original installed configurations were retained throughout; no reconfiguration after switching accounts.",
+  "assertions": [
+    "Original selected note opens complete saved instructions; medium Focus opens the original ended session",
+    "Foreign account widgets show no A title/text/task/session; routes open only empty B notes and Focus",
+    "Returning to A restores original note selection and original session without reconfiguration, including after logout",
+    "Signed-out widget content is private and both routes require authentication",
+    "All phases retain the entire original workspace exactly, three task records and zero pending changes; seven server tables for both accounts are unchanged",
+    "Ended native session now matches widget whole seconds spent, 00:03, explicitly labelled Time spent",
+    "Inspected medium idle and signed-out refresh sentences now wrap completely"
+  ],
+  "productFixes": [
+    "Both independently owned native Focus views label the clock and show whole elapsed seconds when stopped; running/paused/finished countdown behavior and stored sessions are unchanged",
+    "Both independently owned Focus widget views allow idle/refresh copy its natural wrapping height"
+  ],
+  "state": {
+    "taskID": "101fbaab-af99-480c-97a6-4876bc3e7389",
+    "focusSessionID": "87aa5a91-718e-46ec-9010-b76f5f09eda9",
+    "originalTasks": 3,
+    "pendingChanges": 0,
+    "receipt": {
+      "phase": "clock",
+      "originalEntireCacheExactlyUnchanged": true,
+      "originalPendingChanges": 0,
+      "bothServerSevenTablesExactlyUnchanged": true,
+      "payloadAccount": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+      "notes": 1,
+      "tasks": 2
+    }
+  },
+  "cleanup": {
+    "globallyRevokedSecondAccountBeforeDeletion": true,
+    "postDeletionUsersSessionsProfilesObjectsWorkspaceRecords": 0,
+    "privateSecondCredentialsAndCacheRemoved": true,
+    "originalAccountRetainedForUnfinishedMacWork": true,
+    "allPublicUserIDTablesChecked": 14,
+    "remainingRowsAcrossAllPublicUserIDTables": 0
+  },
+  "earlierAttempts": [
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-account-installed-v1.xcresult",
+      "outcome": "Skipped at inventory guard without host mutation; SpringBoard query changed from two entries to one as the Smart Stack settled. Final tests identify visible widgets."
+    },
+    {
+      "outcome": "The private data verifier originally assumed an explicit null clock key for empty B; Codable omits the optional key. Corrected to accept missing/null, then revalidated the already passing foreign native result and continued without replaying it."
+    }
+  ],
+  "hostLimitations": "SpringBoard animation acknowledgements take repeated 60-second waits. A provisional gallery-stuck diagnosis was disproved by the same retained run passing without a navigation change. These waits are not app performance evidence.",
+  "builds": {
+    "ios": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-polish-ios-build-v1.log",
+    "macAppAndWidget": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-polish-mac-build-v1.log",
+    "iosSignature": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-polish-signing-v1.json"
+  },
+  "remaining": [
+    "Native Mac/Desktop account lifecycle and these display fixes at runtime; PID 13936 still samples in SecureSession.read / SecItemCopyMatching",
+    "Other widget sizes/hosts, long outages, system privacy redaction, VoiceOver and broader P0/provider/distribution acceptance"
+  ],
+  "nativeMacAcceptance": false,
+  "docsConsulted": [
+    "https://supabase.com/changelog",
+    "https://supabase.com/docs/guides/auth/passwords",
+    "https://supabase.com/docs/guides/auth/signout"
+  ],
+  "ownAuthenticatedProjection": {
+    "platform": "macOS",
+    "actualPassed": 1,
+    "failures": 0,
+    "skips": 0,
+    "log": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/note-focus-account-mac-core-final.log",
+    "scope": "Own Backend authentication and projection for A \u2192 B \u2192 A and logout; no Mac GUI/Keychain bypass."
+  },
+  "screenshots": {
+    "docs/widget-host-previews/phone-note-focus-cloud-installed.png": "d8a2bdecaf92e62815886996b42a07a8c6af2c0a6f95ed94410bed70a9681a1a",
+    "docs/widget-host-previews/phone-note-focus-cloud-note.png": "2580e9d18674b8a77de4892d137cdf0df76cfc34351b017a067b1071029337e0",
+    "docs/widget-host-previews/phone-focus-ended-before.png": "6e79659a3a395a84602f3c3cb6cb5befefe6023a66a204d8fb8ca30f1616d949",
+    "docs/widget-host-previews/phone-focus-empty-before.png": "a01fc99b7ee7df64ab806c4e4f48d422029f5a4bc4b96d272500e477b83926b8",
+    "docs/widget-host-previews/phone-note-focus-cloud-foreign.png": "5db46cbb98a6ca5ea535700b8135064c91c83db84fcf45bdb55ed73b0bd69ff1",
+    "docs/widget-host-previews/phone-note-focus-cloud-returned.png": "8cffc32e6a22ecb0290e2a78d7c87920bf938cfd390ca8fa14549be9de3e156b",
+    "docs/widget-host-previews/phone-note-focus-cloud-logout.png": "cac735e462c58ce815030798f374097cec34eadf0774ff67f2de4a39a08c1abe",
+    "docs/widget-host-previews/phone-focus-ended-spent.png": "7fb4d0df500f86dff7f09a58d02e01c46eef3058af30cf01f9af053008509fe3"
+  },
+  "ownSourceHashes": {
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+    "Taskfold/Views/FocusSessionView.swift": "6f4db74c75c40ddc653123cf50fa8b70b5dc390e2a86aea2aa54030f666997a6",
+    "TaskfoldTests/NoteFocusAccountIntegrationTests.swift": "cf1c8806edb5ac46342fab0b3d4d0111db1883d390bb77f1c968825d2a318d23"
+  },
+  "storageCleanup": {
+    "duplicateCaptureExportBytesPruned": 32473986,
+    "temporaryUnsignedMacBuildBytesPruned": 351047014,
+    "originalResultsAndActiveTestBuildsRetained": true
+  }
+}

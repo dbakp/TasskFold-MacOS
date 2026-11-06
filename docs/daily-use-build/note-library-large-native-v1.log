@@ -1,0 +1,106 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /tmp/taskfold-source-selection-ios-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -derivedDataPath /tmp/taskfold-prepared-undo-signed-ios-build -jobs 1 -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/WorkflowSourceSelectionUITests/testLargestTextPinnedNoteLibrarySearchAndClose" CONFIGURATION_BUILD_DIR=/tmp/taskfold-source-native-ios-products/Debug-iphonesimulator CODE_SIGNING_ALLOWED=YES ONLY_ACTIVE_ARCH=YES ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 2 -j 1" CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=3UZ4C73FM2 -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -resultBundlePath /private/tmp/taskfold-note-library-large-native-v1.xcresult -test-timeouts-enabled YES -default-test-execution-time-allowance 240 -maximum-test-execution-time-allowance 300 test-without-building
+
+Build settings from command line:
+    ARCHS = arm64
+    CODE_SIGN_IDENTITY = -
+    CODE_SIGNING_ALLOWED = YES
+    COMPILER_INDEX_STORE_ENABLE = NO
+    CONFIGURATION_BUILD_DIR = /tmp/taskfold-source-native-ios-products/Debug-iphonesimulator
+    DEVELOPMENT_TEAM = 3UZ4C73FM2
+    ONLY_ACTIVE_ARCH = YES
+    OTHER_SWIFT_FLAGS = $(inherited) -driver-batch-count 2 -j 1
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/private/tmp/taskfold-note-library-large-native-v1.xcresult
+
+2026-11-05 08:34:07.778743+0100 TaskfoldUITests-Runner[54001:52354242] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-05 08:34:13.654.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-11-05 08:34:13.662.
+Test Suite 'WorkflowSourceSelectionUITests' started at 2026-11-05 08:34:13.662.
+Test Case '-[TaskfoldUITests.WorkflowSourceSelectionUITests testLargestTextPinnedNoteLibrarySearchAndClose]' started.
+    t =     0.02s Start Test at 2026-11-05 08:34:13.680
+objc[54001]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x107568398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10ac28310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.41s Set Up
+    t =     0.41s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.42s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-11-05 08:34:14.511 xcodebuild[53735:52350918] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-05 08:34:14.512 xcodebuild[53735:52350918] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.55s         Setting up automation session
+    t =     8.62s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.55s Waiting 45.0s for "workspaceReadStatus" StaticText to exist
+    t =    12.58s     Checking `Expect predicate `existsNoRetry == 1` for object "workspaceReadStatus" StaticText`
+    t =    12.58s         Checking existence of `"workspaceReadStatus" StaticText`
+    t =    13.81s Find the "workspaceReadStatus" StaticText
+    t =    13.83s Tap "openPinnedNoteLibrary" Button
+    t =    13.83s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.84s     Find the "openPinnedNoteLibrary" Button
+    t =    13.86s     Check for interrupting elements affecting "openPinnedNoteLibrary" Button
+    t =    13.96s     Synthesize event
+    t =    14.46s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.13s Waiting 12.0s for "pinnedNotesSearch" TextField to exist
+    t =    16.20s     Checking `Expect predicate `existsNoRetry == 1` for object "pinnedNotesSearch" TextField`
+    t =    16.20s         Checking existence of `"pinnedNotesSearch" TextField`
+    t =    16.42s Tap "pinnedNotesSearch" TextField
+    t =    16.42s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.43s     Find the "pinnedNotesSearch" TextField
+    t =    16.46s     Check for interrupting elements affecting "pinnedNotesSearch" TextField
+    t =    16.51s     Synthesize event
+    t =    16.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.00s Type 'cafe personal' into "pinnedNotesSearch" TextField
+    t =    19.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.30s     Find the "pinnedNotesSearch" TextField
+    t =    19.39s     Check for interrupting elements affecting "pinnedNotesSearch" TextField
+    t =    19.45s     Synthesize event
+    t =    19.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.04s Waiting 12.0s for "pinnedNote-ed120000-0000-4000-8000-000000000001" Button to exist
+    t =    21.08s     Checking `Expect predicate `existsNoRetry == 1` for object "pinnedNote-ed120000-0000-4000-8000-000000000001" Button`
+    t =    21.08s         Checking existence of `"pinnedNote-ed120000-0000-4000-8000-000000000001" Button`
+    t =    21.15s Find the "pinnedNote-ed120000-0000-4000-8000-000000000001" Button
+    t =    21.21s Checking existence of `Keyboard (First Match)`
+    t =    21.24s Find the "closePinnedNotes" Button
+    t =    21.32s Find the "pinnedNotesKeyboardDone" Button
+    t =    21.39s Tap "pinnedNotesKeyboardDone" Button
+    t =    21.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.39s     Find the "pinnedNotesKeyboardDone" Button
+    t =    21.46s     Check for interrupting elements affecting "pinnedNotesKeyboardDone" Button
+    t =    21.52s     Synthesize event
+    t =    21.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.66s Checking existence of `Keyboard (First Match)`
+    t =    23.76s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    23.99s Added attachment named 'Largest text dark pinned notes search'
+    t =    23.99s Tap "closePinnedNotes" Button
+    t =    23.99s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.00s     Find the "closePinnedNotes" Button
+    t =    24.04s     Check for interrupting elements affecting "closePinnedNotes" Button
+    t =    24.09s     Synthesize event
+    t =    24.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.88s Waiting 10.0s for "openPinnedNoteLibrary" Button to exist
+    t =    25.96s     Checking `Expect predicate `existsNoRetry == 1` for object "openPinnedNoteLibrary" Button`
+    t =    25.97s         Checking existence of `"openPinnedNoteLibrary" Button`
+    t =    26.05s Terminate com.dbakp.taskfold.workflowteststeameditbridge:54058
+    t =    27.06s Tear Down
+Test Case '-[TaskfoldUITests.WorkflowSourceSelectionUITests testLargestTextPinnedNoteLibrarySearchAndClose]' passed (27.168 seconds).
+Test Suite 'WorkflowSourceSelectionUITests' passed at 2026-11-05 08:34:40.849.
+	 Executed 1 test, with 0 failures (0 unexpected) in 27.168 (27.187) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-11-05 08:34:40.849.
+	 Executed 1 test, with 0 failures (0 unexpected) in 27.168 (27.187) seconds
+Test Suite 'Selected tests' passed at 2026-11-05 08:34:40.849.
+	 Executed 1 test, with 0 failures (0 unexpected) in 27.168 (27.196) seconds
+2026-11-05 08:34:41.183 xcodebuild[53735:52350918] [MT] IDETestOperationsObserverDebug: 64.884 elapsed -- Testing started completed.
+2026-11-05 08:34:41.183 xcodebuild[53735:52350918] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-05 08:34:41.183 xcodebuild[53735:52350918] [MT] IDETestOperationsObserverDebug: 64.884 sec, +64.884 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-note-library-large-native-v1.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

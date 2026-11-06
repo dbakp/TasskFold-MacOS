@@ -1,0 +1,56 @@
+{
+  "ownedSimulators": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "final": "Shutdown"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "final": "Shutdown"
+    }
+  ],
+  "removed": [
+    {
+      "path": "/tmp/taskfold-field-history-native-phone-saved-v1.xcresult",
+      "logicalBytes": 103975261
+    },
+    {
+      "path": "/tmp/taskfold-field-history-native-phone-saved-v1-attachments",
+      "logicalBytes": 99726973
+    },
+    {
+      "path": "/tmp/taskfold-field-history-native-phone-saved-v2.xcresult",
+      "logicalBytes": 12478651
+    },
+    {
+      "path": "/tmp/taskfold-field-history-native-phone-saved-v2-attachments",
+      "logicalBytes": 2036099
+    },
+    {
+      "path": "/tmp/taskfold-field-history-native-ipad-saved-v1.xcresult",
+      "logicalBytes": 10434438
+    },
+    {
+      "path": "/tmp/taskfold-field-history-native-ipad-saved-v1-attachments",
+      "logicalBytes": 2416395
+    },
+    {
+      "path": "/tmp/taskfold-field-history-native-phone-menu-v1.xcresult",
+      "logicalBytes": 3968396
+    },
+    {
+      "path": "/tmp/taskfold-field-history-native-phone-menu-v1-attachments",
+      "logicalBytes": 3635659
+    },
+    {
+      "path": "/tmp/taskfold-field-history-native-phone-menu-v2.xcresult",
+      "logicalBytes": 1651135
+    },
+    {
+      "path": "/tmp/taskfold-field-history-native-phone-menu-v2-attachments",
+      "logicalBytes": 394043
+    }
+  ],
+  "retiredLogicalBytes": 240717050,
+  "currentBuildProductsRetained": true
+}

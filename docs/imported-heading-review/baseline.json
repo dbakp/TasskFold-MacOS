@@ -1,0 +1,6 @@
+{
+  "commit": "31795a5dd5e9c103b391b12f33bcc633893541c1",
+  "originalTodoistImportSHA256": "4ee5a92499cca88fa1e38f680d3968755b27dff98cd16db290c19971790eaa45",
+  "coreBefore": "New regression ran before changing the model; nine cases, two failed cases / six assertion failures, seven passing cases.",
+  "coreAfter": "62 selected Core cases, zero failures/skips; no new full-suite acceptance."
+}

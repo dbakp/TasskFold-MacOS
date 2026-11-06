@@ -1,0 +1,244 @@
+{
+  "date": "2026-10-25",
+  "removedOwnedScratch": [
+    {
+      "path": "/tmp/taskfold-order-recovery-baseline-core.log",
+      "logicalBytes": 91694
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-copy.py",
+      "logicalBytes": 1445
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-development.json",
+      "logicalBytes": 685
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-evidence.py",
+      "logicalBytes": 8310
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-first-core.log",
+      "logicalBytes": 15162
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-host",
+      "logicalBytes": 6932423
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ios-build",
+      "logicalBytes": 742442848
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ios-build.log",
+      "logicalBytes": 532152
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ios-core.log",
+      "logicalBytes": 95729
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ios-final-build.log",
+      "logicalBytes": 51685
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ios-final-core.log",
+      "logicalBytes": 72934
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ios-opaque-build.log",
+      "logicalBytes": 82345
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ios-opaque-core.log",
+      "logicalBytes": 90120
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ipad-attachments",
+      "logicalBytes": 2248415
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ipad-native.log",
+      "logicalBytes": 46437
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ipad-opaque-attachments",
+      "logicalBytes": 2287332
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ipad-opaque-native.log",
+      "logicalBytes": 46458
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ipad-opaque.xcresult",
+      "logicalBytes": 3526740
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-ipad.xcresult",
+      "logicalBytes": 3493009
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-attachment-export.log",
+      "logicalBytes": 2907
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-attachments",
+      "logicalBytes": 4229969
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-build.log",
+      "logicalBytes": 99825
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-core.log",
+      "logicalBytes": 92109
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-final-build.log",
+      "logicalBytes": 35675
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-final-core.log",
+      "logicalBytes": 72428
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-native.log",
+      "logicalBytes": 38994
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-opaque-attachments",
+      "logicalBytes": 4219006
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-opaque-build.log",
+      "logicalBytes": 69395
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-opaque-core.log",
+      "logicalBytes": 89694
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-opaque-native.log",
+      "logicalBytes": 39015
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac-opaque.xcresult",
+      "logicalBytes": 4704943
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-mac.xcresult",
+      "logicalBytes": 4717479
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-native.py",
+      "logicalBytes": 6940
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-opaque-signatures.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-opaque-signing.log",
+      "logicalBytes": 88
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-opaque.py",
+      "logicalBytes": 5678
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-phone-attachments",
+      "logicalBytes": 2056079
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-phone-native.log",
+      "logicalBytes": 40354
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-phone-opaque-attachments",
+      "logicalBytes": 2044924
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-phone-opaque-native.log",
+      "logicalBytes": 40375
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-phone-opaque.xcresult",
+      "logicalBytes": 3163754
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-phone.xcresult",
+      "logicalBytes": 3174743
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-prepare-signing.log",
+      "logicalBytes": 117
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-prepare.log",
+      "logicalBytes": 42
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-prepared-signatures.json",
+      "logicalBytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-run-opaque.py",
+      "logicalBytes": 1068
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-run.py",
+      "logicalBytes": 1054
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-session-cleanup.json",
+      "logicalBytes": 441
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-signatures.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-signing.log",
+      "logicalBytes": 88
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-stage.txt",
+      "logicalBytes": 3007
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-tests.swift",
+      "logicalBytes": 13970
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-type.swift",
+      "logicalBytes": 8416
+    },
+    {
+      "path": "/tmp/taskfold-order-recovery-wire.py",
+      "logicalBytes": 5149
+    }
+  ],
+  "logicalBytes": 791045236,
+  "sessions": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+      "com.dbakp.taskfold.workflowteststeameditbridge": "removed",
+      "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": "removed",
+      "state": "Booted"
+    },
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+      "com.dbakp.taskfold.workflowteststeameditbridge": "removed",
+      "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": "removed",
+      "state": "Booted"
+    }
+  },
+  "macTaskfoldProcesses": "none after native teardown",
+  "preserved": [
+    "Both repository .build caches",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "/tmp/taskfold-workflow-mac-native-host",
+    "/tmp/taskfold-workflow-mac-native-build"
+  ],
+  "testExportCleanup": "Each Mac synthetic export is removed in XCTest teardown; runner-owned temporary folder is reusable.",
+  "physicalBytesFreed": "Not inferred from logical sizes on APFS."
+}

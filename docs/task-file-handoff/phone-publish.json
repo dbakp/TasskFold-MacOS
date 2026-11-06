@@ -1,0 +1,158 @@
+{
+  "platform": "ios",
+  "mode": "publish",
+  "checks": {
+    "exact isolated app identifier": true,
+    "actual task generation matches native scope": true,
+    "native UI case succeeds": true,
+    "one native case accepted without skip": true,
+    "one durable server upload exists": true,
+    "native operation reached actual SQL session": true,
+    "native original hash matches independently": true,
+    "native retries do not duplicate provider POST": true,
+    "native status recovery confirms publication": true,
+    "actual task has one published attachment": true,
+    "independent provider bytes match native original": true,
+    "maintenance preserves committed native publication": true
+  },
+  "nativeAuthenticatedLocalProvider": true,
+  "genuineHostedAuth": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "xcodeExitCode": 0,
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold · Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793597845.542,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793597778.693,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "transportCounts": {
+    "uploads": 1,
+    "downloads": 1,
+    "deletes": 0,
+    "rpc": 8,
+    "auth": 3,
+    "providerErrors": []
+  },
+  "checkCount": 12,
+  "storageImage": "supabase/storage-api@sha256:0194c53a03977e8ca0194636a27172158b39e3ae7a5e12da1dca5717086dd849",
+  "serverOperations": [
+    {
+      "state": "published",
+      "intent": {
+        "name": "Native provider proof.txt",
+        "type": "text/plain",
+        "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+        "target": {
+          "task_id": "ec240000-0000-4000-8000-000000000002",
+          "team_id": "ec240000-0000-4000-8000-000000000004",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "ec240000-0000-4000-8000-000000000071"
+        },
+        "byte_count": 24,
+        "operation_id": "93a00cc1-5ce2-46df-85fe-220b7db45108"
+      },
+      "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+      "task_id": "ec240000-0000-4000-8000-000000000002",
+      "team_id": "ec240000-0000-4000-8000-000000000004",
+      "actor_id": "ec240000-0000-4000-8000-000000000001",
+      "object_id": "4104757e-da27-4129-adc5-2f0071972db3",
+      "attachment": {
+        "id": "93a00cc1-5ce2-46df-85fe-220b7db45108",
+        "name": "Native provider proof.txt",
+        "size": 24,
+        "type": "text/plain",
+        "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+        "uploadedAt": "2026-11-02T05:36:49.210002+00:00",
+        "storage_object_id": "4104757e-da27-4129-adc5-2f0071972db3"
+      },
+      "byte_count": 24,
+      "created_at": "2026-11-02T05:36:48.826249+00:00",
+      "expires_at": "2026-11-02T05:51:48.826249+00:00",
+      "generation": "ec240000-0000-4000-8000-000000000071",
+      "project_id": "ec240000-0000-4000-8000-000000000003",
+      "intent_hash": "b368d6cb767642d4d9965acd927733c9bc18da91224b4e54fec5e9bd353d6dee",
+      "object_name": "team-task-files/v1/93a00cc1-5ce2-46df-85fe-220b7db45108/e47b8ed1-4c26-4d47-95d0-b74baab355ae",
+      "object_nonce": "e47b8ed1-4c26-4d47-95d0-b74baab355ae",
+      "operation_id": "93a00cc1-5ce2-46df-85fe-220b7db45108",
+      "writer_protocol": 1,
+      "provider_cleanup_confirmed_at": null
+    }
+  ],
+  "serviceStatusObservation": {
+    "status": 200,
+    "reply": {
+      "receipt": {
+        "state": "published",
+        "target": {
+          "task_id": "ec240000-0000-4000-8000-000000000002",
+          "team_id": "ec240000-0000-4000-8000-000000000004",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "ec240000-0000-4000-8000-000000000071"
+        },
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "protocol": 1,
+        "attachment": {
+          "id": "93a00cc1-5ce2-46df-85fe-220b7db45108",
+          "name": "Native provider proof.txt",
+          "size": 24,
+          "type": "text/plain",
+          "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+          "uploadedAt": "2026-11-02T05:36:49.210002+00:00",
+          "storage_object_id": "4104757e-da27-4129-adc5-2f0071972db3"
+        },
+        "operation_id": "93a00cc1-5ce2-46df-85fe-220b7db45108"
+      }
+    }
+  },
+  "nativeTransportAudit": [
+    {
+      "action": "publish",
+      "code": 1,
+      "domain": "Taskfold.AppFailure",
+      "transportReturned": false
+    },
+    {
+      "action": "resolve",
+      "response": "{\"receipt\":{\"state\":\"published\",\"target\":{\"task_id\":\"ec240000-0000-4000-8000-000000000002\",\"team_id\":\"ec240000-0000-4000-8000-000000000004\",\"project_id\":\"ec240000-0000-4000-8000-000000000003\",\"task_generation\":\"ec240000-0000-4000-8000-000000000071\"},\"account\":\"ec240000-0000-4000-8000-000000000001\",\"protocol\":1,\"attachment\":{\"id\":\"93a00cc1-5ce2-46df-85fe-220b7db45108\",\"name\":\"Native provider proof.txt\",\"size\":24,\"type\":\"text/plain\",\"sha256\":\"f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9\",\"uploadedAt\":\"2026-11-02T05:36:49.210002+00:00\",\"storage_object_id\":\"4104757e-da27-4129-adc5-2f0071972db3\"},\"operation_id\":\"93a00cc1-5ce2-46df-85fe-220b7db45108\"}}",
+      "transportReturned": true,
+      "validatedPhase": "published"
+    }
+  ],
+  "disposableUserConfigurationRemoved": true,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "ownedSimulatorRestored": true
+}

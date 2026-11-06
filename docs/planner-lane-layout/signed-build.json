@@ -1,0 +1,21 @@
+{
+  "platform": "mac",
+  "buildOnly": true,
+  "sourceSHA256": {
+    "Taskfold/Core/Planner.swift": "5b72722ff5a9f1ecd303267c70d4aece9a3d56c88705cfa0ee412383c78305fd",
+    "Taskfold/Core/Models.swift": "2401de7289904eda44cd849dedaa3118478b935e2710e750355f531f54ba96a8",
+    "Taskfold/Core/NoteMarkup.swift": "8bc28bec74e5e525186e15d639a0147fdf4071aa6737c51c72b940a22cb9e90b",
+    "Taskfold/Views/NoteFormattingView.swift": "53192b45e4d4cb142da4b19475e4b9a1c5c7332b61226a33d2e1b84a8a9bdedd",
+    "Taskfold/Views/PinnedNotesView.swift": "c461c2787b3484fba5d57901ac5c15c415ced3d241290caa462c0bb47f7e71cb",
+    "Taskfold/Core/Backend.swift": "e96e94bb2e7eeecb60bb440c9a5ec4fe8db3ee765d7fb6fe583ad04ad7a2eddc",
+    "Taskfold/Core/Backups.swift": "f74554e10a7920d2a847093e10632c5ee51bc01662622de2d371eb9057d54824",
+    "Taskfold/Core/Store.swift": "eca6a4f0d5bb9d115c2b706f3484a4ec5dd204ef7ce09d57fb1b6834c1dcdf3f",
+    "Taskfold/TeamTemplateNativeFixture.swift": "8bacac1de13acf84512205ced304e4f569786a30935e253e12c00a3e38447ba1"
+  },
+  "xcodeExitCode": 0,
+  "ordinaryAppUnchanged": true,
+  "runtimeAccepted": false,
+  "strictSignatureVerified": true,
+  "binarySHA256": "9e3ac80a25902be58f9e46d79ea8b885895f8571fea9da2a07a6f4a050b36066",
+  "sourceUnchanged": true
+}

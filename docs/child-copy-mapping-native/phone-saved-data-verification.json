@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "scope": "Owned local PostgreSQL, native saved journal and actual exported file. No hosted/genuine-account, Mac, iPad or VoiceOver claim.",
+  "oneCommittedMapping": true,
+  "oneSavedRequestAfterLostReply": true,
+  "checkedOriginalRequest": true,
+  "allBoundIncarnationsRetained": true,
+  "priorHistoryUnchanged": true,
+  "oneNeutralHistoryEvent": true,
+  "noManufacturedWorkCredit": true,
+  "allOriginalCopiesArchived": true,
+  "exactNativeFileReadback": true,
+  "archiveSHA256": "ff4f78fab2512b466b959d7cb94d6ec31be1e5e9a736d3caf4cbc2d26423b8e9",
+  "archiveBytes": 9809,
+  "sourceSHA256": "1d220c6cb03c41ef986546957c30dbb727e8c09876575e81664a0c11f4ee526d",
+  "databaseSnapshotSHA256": "13090a33742018f54a6b439d9f97c342c80576a939df38708ec4308115a47187",
+  "traceSHA256": "d554bdbbefb633eb4830c1943a0ac3562dba1bf52f852268f81e64f675907ae2",
+  "encryptedJournalSHA256": "73ea54193900d2e9a826bbbae5c600a7999e0fe823f99522694a9faf276b7f93"
+}

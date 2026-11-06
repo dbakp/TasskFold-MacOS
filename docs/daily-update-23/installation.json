@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-06",
+  "checkedAt": "2026-11-06T10:30:26.019032+00:00",
+  "version": "1.2.0",
+  "build": "23",
+  "replacesBuild": "14",
+  "userDraftsSaved": true,
+  "installed": true,
+  "installedPath": "/Applications/Taskfold.app",
+  "launchedNormalRoot": true,
+  "sameAccountAndUpcomingContext": true,
+  "syncStatusObserved": "Synced 11.27",
+  "strictSignatureVerified": true,
+  "installedPayloadMatchesVerifiedArchive": true,
+  "cachedWorkspacesChecked": 5,
+  "allTaskAndPendingRowsUnchangedBeforeAndAfterSync": true,
+  "privateSafetyCopyRetained": true,
+  "realTaskEditsForTesting": false,
+  "scope": "Normal startup, existing workspace context, completed sync and cached task/pending preservation; no universal feature, hardware FPS or distribution acceptance."
+}

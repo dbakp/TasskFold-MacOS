@@ -1,0 +1,38 @@
+{
+  "originalAccounts": [
+    {
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "protectedFileCount": 26,
+      "fullProtectedFileSetAndHashesExact": true
+    },
+    {
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "protectedFileCount": 43,
+      "fullProtectedFileSetAndHashesExact": true
+    }
+  ],
+  "isolatedLocalFixtures": [
+    {
+      "device": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+      "tasks": 3,
+      "idsTitlesEstimatesExact": true,
+      "allOpen": true,
+      "pending": 0
+    },
+    {
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "tasks": 3,
+      "idsTitlesEstimatesExact": true,
+      "allOpen": true,
+      "pending": 0
+    },
+    {
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "tasks": 3,
+      "idsTitlesEstimatesExact": true,
+      "allOpen": true,
+      "pending": 0
+    }
+  ],
+  "backendOrTodoistOperationsPerformed": 0
+}

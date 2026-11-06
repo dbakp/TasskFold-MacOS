@@ -1,0 +1,2 @@
+Expected Command–A to select all before replacing the notes.
+Observed: Optional(Keep these instructions when saving from the keyboard.Keep these instructions when saving from the keyboard.)

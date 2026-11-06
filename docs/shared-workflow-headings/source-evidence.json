@@ -1,0 +1,46 @@
+{
+  "normalRolloutEnabled": false,
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "selectedCoreCases": 96,
+  "headingSQLChecks": 60,
+  "legacySQLChecksWithNewMigration": 89,
+  "sourceSHA256": {
+    "Taskfold/Core/TeamTemplateCommands.swift": "b9913b0623ce3d3140efd5e179a1ddfb1062aeac92d84a3622fd96acfd2012d3",
+    "Taskfold/Core/TeamWorkflowRunCommands.swift": "2b76b62934bf247937777573f0b6fe5847ef6718e8e71e7a15df0ef6e1d494ba",
+    "Taskfold/Core/ProjectWorkflows.swift": "8e02ca7769f4c69fd0f70219dd31f297e1ccf4c90f4a0bef9699a2d9ec805deb",
+    "Taskfold/Core/TeamChecklist.swift": "49f7d998c4ac0416f708232319d2133e4ece8df6d5e8eeeb5e422e09252e6729",
+    "Taskfold/Views/SubtaskOrganizer.swift": "19c9eae6f4b8668fa72bb0055636705fc637e36f486bf78a0e6ab037cecc25a2",
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "738b09fe08a1ae6557bd1ac203707c1dce147886e9a072258a321e37ee1eff66",
+    "Taskfold/Views/TeamWorkflowRunView.swift": "698de2ee46b643d2ca1003ee407fe5f455f09e5fb0e539cc886352b1994a04cc",
+    "Taskfold/TeamTemplateNativeFixture.swift": "456b1719b5a6c0ece24cc07e0d92a21ba137b857ec6209129090a291367d9024",
+    "TaskfoldTests/TeamWorkflowRunTests.swift": "4d85ff81a0ab813399288973487bf8b8092207bf9b249473a93e64cb20358c90",
+    "supabase/migrations/20261026165807_shared_workflow_task_headings.sql": "809c8f968aa69d8788326c6138ef4d5aee8bdbc50418478dc4e94ed3b4e53b7e",
+    "Scripts/Database/test-shared-workflow-types.mjs": "074d4b74f3efe95e0cdbc53f6075b17fc66467833c8743c919730551f545949c",
+    "Scripts/Database/team-workflow-run-schema.mjs": "aee16350dd2a07321dc54f0f9a04f5aff0ef400a0d7e0bf6676301997146c4ce",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "291859e6e5cf2072ffec2e0d825f222908e56afcd774b837674606610bae31f1"
+  },
+  "nativeScope": "synthetic URLProtocol peer, separately verified real isolated PostgreSQL functions",
+  "nativeVariantSHA256": {
+    "Taskfold/Core/TeamTemplateCommands.swift": "b9913b0623ce3d3140efd5e179a1ddfb1062aeac92d84a3622fd96acfd2012d3",
+    "Taskfold/Core/TeamWorkflowRunCommands.swift": "2b76b62934bf247937777573f0b6fe5847ef6718e8e71e7a15df0ef6e1d494ba",
+    "Taskfold/Core/ProjectWorkflows.swift": "8e02ca7769f4c69fd0f70219dd31f297e1ccf4c90f4a0bef9699a2d9ec805deb",
+    "Taskfold/Core/TeamChecklist.swift": "49f7d998c4ac0416f708232319d2133e4ece8df6d5e8eeeb5e422e09252e6729",
+    "Taskfold/Views/SubtaskOrganizer.swift": "19c9eae6f4b8668fa72bb0055636705fc637e36f486bf78a0e6ab037cecc25a2",
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "738b09fe08a1ae6557bd1ac203707c1dce147886e9a072258a321e37ee1eff66",
+    "Taskfold/Views/TeamWorkflowRunView.swift": "698de2ee46b643d2ca1003ee407fe5f455f09e5fb0e539cc886352b1994a04cc",
+    "Taskfold/TeamTemplateNativeFixture.swift": "456b1719b5a6c0ece24cc07e0d92a21ba137b857ec6209129090a291367d9024",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "291859e6e5cf2072ffec2e0d825f222908e56afcd774b837674606610bae31f1"
+  },
+  "isolatedInfoSHA256": "55c1550013547bcd4e7c805fa4819b369036f8461ddbeeee34ba99979f44e4fe",
+  "isolatedOnlyAuthoring": true,
+  "nativeResults": {
+    "iPhonePublicationCopyCold": true,
+    "iPadPublicationCopyCold": true,
+    "iPhoneFinalTypedRunLostReplyColdRetry": true,
+    "iPadFinalTypedRunLostReplyColdRetry": true,
+    "MacFinalTypedRunLostReplyColdRetry": true,
+    "inspectedOutputImages": 5,
+    "priorMacRootEditUndoRedoColdQueue": true
+  }
+}

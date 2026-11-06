@@ -1,0 +1,227 @@
+{
+  "date": "2026-10-21",
+  "status": "Interval reminders integrated; scoped phone/tablet and first background alert/Open accepted; remaining rank-5/native/cloud gates open",
+  "contract": [
+    "Version-3 interval spec with explicit local-only channel and nested integer millisecond settings",
+    "Independent elapsed scheduling with count/end limits and no catch-up burst",
+    "Native presets/custom fields, up-to-five preview, explicit Done/Cancel, existing task save/autosave and Undo",
+    "Workspace/task-incarnation/draft guards; canonical semantic identity and exact original-slot response validation",
+    "Same anchor/count/end preserved in recurring successors, without retargeting original task actions"
+  ],
+  "core": {
+    "ios": {
+      "reported": 1032,
+      "skipped": 13,
+      "failures": 0,
+      "newIntegrationCases": 11,
+      "existingIntervalArithmeticCases": 13,
+      "artifact": "ios-interval-reminder-verified-core.log",
+      "sha256": "e565ef8f0bbc1c6340c1471914f45c8e081f600a9ec98e23e578a662e1d12cbd",
+      "recurringSuccessorProof": "Real TaskCompletion mutations preserve original limits; old callback fails for completed original and distinct successor"
+    },
+    "mac": {
+      "reported": 1064,
+      "skipped": 33,
+      "failures": 0,
+      "newIntegrationCases": 11,
+      "existingIntervalArithmeticCases": 13,
+      "artifact": "mac-interval-reminder-verified-core.log",
+      "sha256": "f027bc3a9e7c6f62ef3d0d7cba3b4f0490b4b235295b0a150c9a113dbdf0d7be",
+      "recurringSuccessorProof": "Real TaskCompletion mutations preserve original limits; old callback fails for completed original and distinct successor"
+    }
+  },
+  "oldReaders": {
+    "ios": {
+      "revision": "f49b24405e0336368bcd086307eac16e18afa109",
+      "oldReminderSourceSHA256": "895113e2079abaef739818ad1bc0798ed92e9b76781e472ff3dde42f87f33d74",
+      "fixtureSHA256": "610de053d21e010f895356c3f1198219b35a57e7a2695a29fe04979d0a06cfcc",
+      "passed": 1,
+      "checks": [
+        "unsupported rather than planned-time reinterpretation",
+        "title/planned-toggle edits preserve opaque interval",
+        "exact saved record roundtrip",
+        "recurring successor retains anchor/count",
+        "no substitute notifications"
+      ],
+      "scope": "This selected previous native Core reader only; no claim all older versions enforce new behavior."
+    },
+    "mac": {
+      "revision": "f37bf2a76b4107b5cbf802c459bfac8ab6244345",
+      "oldReminderSourceSHA256": "895113e2079abaef739818ad1bc0798ed92e9b76781e472ff3dde42f87f33d74",
+      "fixtureSHA256": "610de053d21e010f895356c3f1198219b35a57e7a2695a29fe04979d0a06cfcc",
+      "passed": 1,
+      "checks": [
+        "unsupported rather than planned-time reinterpretation",
+        "title/planned-toggle edits preserve opaque interval",
+        "exact saved record roundtrip",
+        "recurring successor retains anchor/count",
+        "no substitute notifications"
+      ],
+      "scope": "This selected previous native Core reader only; no claim all older versions enforce new behavior."
+    }
+  },
+  "macComponentRender": {
+    "sourceSHA256": {
+      "Taskfold/Views/ReminderEditor.swift": "35c274dfa3e86a4b7da38b1a46de5c3046cb3297c6d8bf8ea100d2b071a51e6a",
+      "Taskfold/Core/ReminderIntervalSchedule.swift": "ade2b41a0c0b6a77ee1b7d04da0dd49cb7eb0a904ae80ae1ce02b5ce79c2b863",
+      "Taskfold/Core/Reminders.swift": "ae6810e68059e9d1bc7817b838fc62cbf118ccfb4ab5077cfc012b958db79d77"
+    },
+    "images": {
+      "interval-dark-bottom.png": "de494afbe3393f44c21d14d82184ea02140ed7378fbfe7c5b34c94b646765972",
+      "interval-dark-top.png": "73af9500650eb15a91f7891f5452ce566f6de211dffd9ff49af893b81b26466c",
+      "interval-light-bottom.png": "cdd6ed4eeab2d5a1edd651ed8e6faf3527600d0c08329a1fa01b9783caf8beb8",
+      "interval-light-top.png": "b723b5b5eee9e3e30fe7ae32c47846d6ef4f2be55650400c5c13c9d68450015e"
+    },
+    "scope": "Actual Mac ReminderSpecEditor compiled against this repository's tested Core. Read-only synthetic interval, offscreen top/bottom light/dark. No full app interaction, recording or notification delivery acceptance."
+  },
+  "backendReadOnly": {
+    "taskCheck": "JSON array with at most 20 reminder objects",
+    "currentServerRecognizesVersion3": false,
+    "projectionControl": {
+      "interval-v3": 0,
+      "relative-control": 1
+    },
+    "fixture": "Scripts/fixtures/IntervalReminderServerExclusion.sql",
+    "fixtureSHA256": "10f71eb2900426c7a6668103691bf896a655c2d45b42385e0fbee08aff6fffb4",
+    "mutations": 0,
+    "limit": "Read-only current schema and synthetic pure-function projection. No actual authenticated cloud save/paired-device acceptance claim."
+  },
+  "nativeRuns": [
+    {
+      "artifact": "ios-interval-reminder-phone-verified.xcresult",
+      "passed": 2,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "scope": "Validation, Cancel/source preservation, explicit save, exact relaunch and durable Undo; dark largest-text inputs/scrolling previews/Cancel"
+    },
+    {
+      "artifact": "ios-interval-reminder-tablet-final-current.xcresult",
+      "passed": 2,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "scope": "Same real native review/save/relaunch/Undo and dark largest-text flows on iPad"
+    },
+    {
+      "artifact": "ios-interval-reminder-delivery-final-current.xcresult",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "scope": "Actual local notification without a planned date, background delivery, body Open to exact task, saved settings preserved, test delivery turned off afterward"
+    }
+  ],
+  "failedIterations": [
+    {
+      "artifact": "ios-interval-reminder-phone.xcresult",
+      "accepted": false,
+      "reason": "AX form locator; attempted Undo toast instead of actual Undo menu"
+    },
+    {
+      "artifact": "ios-interval-reminder-phone-v2.xcresult",
+      "accepted": false,
+      "reason": "Background alert/Open passed, but AX form locator and Undo submenu identifier failed; no cohort pass claimed",
+      "runtimeWarnings": 0
+    },
+    {
+      "artifact": "ios-interval-reminder-phone-final.xcresult",
+      "accepted": false,
+      "reason": "Save/relaunch/Undo passed; unstable collection index failed AX case"
+    },
+    {
+      "artifact": "ios-interval-reminder-phone-current.xcresult",
+      "accepted": false,
+      "reason": "Stopped after observing squeezed AX input label and text-field interception of scroll gesture"
+    },
+    {
+      "artifact": "ios-interval-reminder-phone-accepted.xcresult",
+      "accepted": false,
+      "reason": "Stopped after AX preview check assumed the last lazy row existed before scrolling to it"
+    },
+    {
+      "artifact": "ios-interval-reminder-tablet-verified.xcresult",
+      "accepted": false,
+      "reason": "Test expected an AX field before scrolling and Hide keyboard matched both app/system labels; final run scrolls and uses an owned identifier"
+    }
+  ],
+  "openGates": [
+    "Mac native editing/Save/Undo and VoiceOver",
+    "Interval notification Complete/Tomorrow/Snooze actions through actual OS controls",
+    "Long-running queue replenishment across background/restarts",
+    "Paired cloud/offline account and concurrent-edit acceptance",
+    "Wider localization/RTL and large-system-text acceptance",
+    "Holiday policy, location and urgent presentation remain unimplemented"
+  ],
+  "userDeferralsUnchanged": [
+    "Remote server reminder delivery and device/reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution signing and real install/update",
+    "Google/Microsoft native registrations and genuine provider acceptance"
+  ],
+  "sourceSHA256": {
+    "TaskFold-iOS": {
+      "Taskfold/Core/ReminderIntervalSchedule.swift": "ade2b41a0c0b6a77ee1b7d04da0dd49cb7eb0a904ae80ae1ce02b5ce79c2b863",
+      "Taskfold/Core/Reminders.swift": "ae6810e68059e9d1bc7817b838fc62cbf118ccfb4ab5077cfc012b958db79d77",
+      "Taskfold/Views/ReminderEditor.swift": "35c274dfa3e86a4b7da38b1a46de5c3046cb3297c6d8bf8ea100d2b071a51e6a",
+      "TaskfoldTests/IntervalReminderTests.swift": "1b9c5bde9e4f441cfac5765e7729207d4d5f146f71884cf99d38afb7e5c7865a",
+      "Taskfold/TaskfoldApp.swift": "9a70aaf1e62556a8dd0a702993707a5a08ad8280c0a85edd94f73c6cf7816b44",
+      "TaskfoldUITests/IntervalReminderUITests.swift": "a594f2906ad6807b6d7803960216f0fc513774e3c12bbd25c345137a886486e7"
+    },
+    "TasskFold-MacOS": {
+      "Taskfold/Core/ReminderIntervalSchedule.swift": "ade2b41a0c0b6a77ee1b7d04da0dd49cb7eb0a904ae80ae1ce02b5ce79c2b863",
+      "Taskfold/Core/Reminders.swift": "ae6810e68059e9d1bc7817b838fc62cbf118ccfb4ab5077cfc012b958db79d77",
+      "Taskfold/Views/ReminderEditor.swift": "35c274dfa3e86a4b7da38b1a46de5c3046cb3297c6d8bf8ea100d2b071a51e6a",
+      "TaskfoldTests/IntervalReminderTests.swift": "1b9c5bde9e4f441cfac5765e7729207d4d5f146f71884cf99d38afb7e5c7865a"
+    }
+  },
+  "nativeChronology": "Phone review/layout acceptance precedes only the unique Hide keyboard identifier and iPad lazy-field test-helper follow-up. Final iPad and alert/Open runs use final production sources; these follow-ups change no visible layout or scheduling semantics.",
+  "debugBuilds": {
+    "ios": {
+      "strictDeepSignature": true,
+      "scope": "Isolated same-source debug product; not distribution acceptance",
+      "resourceRepair": {
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "reason": "Strict resource verification failed after phone/tablet test destination changes; regenerate only owned build product",
+        "removedBuildProduct": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/ios-project-workflows-native/Build/Products/Debug-iphonesimulator/Taskfold.app",
+        "deviceDataRemoved": false,
+        "buildSucceeded": true,
+        "currentBuildStrictSignature": true,
+        "phoneInstalledStrictSignature": true,
+        "sameSavedCacheAfterInstall": true,
+        "savedCacheSHA256": "ea668cdc710b699f1193e31ec6f8861fa1e4e9cd4430f9ffee163b6b527b6d55",
+        "scope": "Same-source isolated debug product and Simulator installation only; not release/distribution acceptance"
+      }
+    },
+    "mac": {
+      "strictDeepSignature": true,
+      "scope": "Isolated same-source debug product; not distribution acceptance",
+      "artifact": "mac-interval-reminder-final-current-build.log"
+    }
+  },
+  "recordedImages": {
+    "TaskFold-iOS": {
+      "docs/interval-reminders/ipad-dark-largest-input.png": "fa88335894405a2f9deac159188cd58e465aae910225859ca35296794e555a98",
+      "docs/interval-reminders/phone-dark-largest-preview.png": "13ac3afe36a531d0484d18475124814c12341fdda8548160edae454024f28c53",
+      "docs/interval-reminders/ipad-light-preview.png": "2524cabd353265f4818eeec54d99c3fb911db9ea4d0d6585f0f4b99a33592857",
+      "docs/interval-reminders/phone-light-preview.png": "e18b4ff99917e5f84d7bb4ae97f80705d79dbaf74ebca15b49998a7033468387"
+    },
+    "TasskFold-MacOS": {
+      "docs/interval-reminders/mac-light-editor-top.png": "b723b5b5eee9e3e30fe7ae32c47846d6ef4f2be55650400c5c13c9d68450015e",
+      "docs/interval-reminders/mac-dark-editor-bottom.png": "de494afbe3393f44c21d14d82184ea02140ed7378fbfe7c5b34c94b646765972"
+    }
+  },
+  "visualInspection": [
+    "Phone normal preview and AX scrolling date rows",
+    "iPad normal three-alert preview and AX stacked Minutes/30 input",
+    "Actual Mac offscreen light top/dark bottom with single field labels and complete preview; native interaction unaccepted"
+  ],
+  "cleanup": {
+    "mainTaskfoldAppsRunning": 0,
+    "isolatedSimulatorReminderDelivery": "Turned off by final native case; interval task retained",
+    "realWorkspaceChanges": 0,
+    "supersededArtifacts": "Pruned after final successful evidence; failed/interrupted run logs and summaries retained",
+    "manifest": "interval-reminders-cleanup-2026-10-21.json",
+    "reclaimedBytes": 500640169
+  }
+}

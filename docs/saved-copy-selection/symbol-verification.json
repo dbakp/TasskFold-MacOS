@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-01",
+  "observed": "The Use this copy icon was blank in the Mac native capture.",
+  "lookup": "NSImage(systemSymbolName:accessibilityDescription:) on the current Mac",
+  "previousSymbol": "doc.badge.checkmark",
+  "previousAvailable": false,
+  "replacementSymbol": "checkmark.circle",
+  "replacementAvailable": true,
+  "scope": "Single resource-name correction; button action, label, layout and repair logic unchanged",
+  "acceptedFlowSourceHead": "6d6ad40",
+  "onlyViewChangeAfterAcceptedFlowIsSymbol": true
+}

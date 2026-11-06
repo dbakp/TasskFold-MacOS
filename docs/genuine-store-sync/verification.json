@@ -1,0 +1,20 @@
+{
+  "currentOwnSourceMatchesAcceptedApp": true,
+  "actualAppChecks": 15,
+  "phases": [
+    "initial",
+    "queue",
+    "loss",
+    "replay",
+    "verify"
+  ],
+  "currentDebugAppAndRunnerBuild": true,
+  "strictSignaturesVerified": true,
+  "buildLogSHA256": "5f4d408c8c72e48cdda1a6d88b13ca8457cd7e7116ed2fb6c34c38080efed59d",
+  "normalUseGateChanges": false,
+  "hostedChanges": false,
+  "genuineTLSOrKeychainAcceptance": false,
+  "nativeViewInteractionOrSpeechAcceptance": false,
+  "driverSHA256": "50c572a8653f9f55dbeea722b48cce2f0d81c2282feb56ea6a17ad2430d605d9",
+  "recordPromotionAndRetainedAuthorityDirectlyVerified": true
+}

@@ -1,0 +1,14 @@
+{
+  "ownedObsoleteResultOrDuplicateExportPathsPruned": [
+    "/tmp/taskfold-expired-discard-phone.xcresult",
+    "/tmp/taskfold-expired-discard-ipad.xcresult",
+    "/tmp/taskfold-history-guard-phone-attachments",
+    "/tmp/taskfold-history-guard-ipad-attachments"
+  ],
+  "logicalBytesPruned": 3979347,
+  "currentNativeResultsAndReusableBuildCachesRetained": true,
+  "allSelectedNativeJobsTerminal": true,
+  "ownedSimulatorsConfirmedShutdown": true,
+  "MacNativeAppNotLaunchedWhileLocked": true,
+  "noRealTaskAudioOrPermissionChanges": true
+}

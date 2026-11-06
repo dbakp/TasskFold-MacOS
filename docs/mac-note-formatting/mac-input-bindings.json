@@ -1,0 +1,27 @@
+{
+  "repository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "scope": "Final full-snapshot four-case signed native Mac functional round; four thread-performance warnings remain. No clean-runtime acceptance.",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "2e3c17facadcb4d0437e85d2e029afc489b16e58e35de90c3d8c82c7a3808f2c",
+    "Taskfold/Views/NoteFormattingView.swift": "fae3c90f361b5a964e138e90033c2d526098e1cf936302531313f966f560ab0a",
+    "Taskfold/Views/TaskInspector.swift": "93f4faed9d74583d346788e38386c7fb72237c4eb35209d6eeb1d6031c68ca4d",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "2e282e20047b4125e1af28f293eca57571b21e2b571aee664834ac7b03f649c0",
+    "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+    "Scripts/verify_ui_result.py": "48af0dfe0f2127898e880af92425a04ea8fff86f7e7809e9a09700f1d7104d26",
+    "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd"
+  },
+  "preparedSHA256": {
+    "Taskfold/Core/Store.swift": "6bf369c818a9a80f1a7fcfc1b87b5ca951c299619efa0a6e7223cac9b0899416",
+    "Taskfold/Views/NoteFormattingView.swift": "fae3c90f361b5a964e138e90033c2d526098e1cf936302531313f966f560ab0a",
+    "Taskfold/Views/TaskInspector.swift": "93f4faed9d74583d346788e38386c7fb72237c4eb35209d6eeb1d6031c68ca4d",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "2e282e20047b4125e1af28f293eca57571b21e2b571aee664834ac7b03f649c0",
+    "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+    "Scripts/verify_ui_result.py": "48af0dfe0f2127898e880af92425a04ea8fff86f7e7809e9a09700f1d7104d26",
+    "Taskfold/Info.plist": "266e1dec43d400a089a76ec68c4a8b7b0adf6104890f71f0b428cb38530523a5"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "74dbdf7ca7e2c1302afc5971d705560a14b7916ba5447e0e809a239b9693711d",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "480e4c021320f67391d526b685d7b096a083e577c214c10f2fc0c2eba4ae1435",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "732557ca9212473020d3dae81d60e5fecbec010bc3e3c7d27e773b4445e6474d"
+  }
+}

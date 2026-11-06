@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-12",
+  "scope": "Phone-owned offline new-task creation, actual shared membership revocation, native encrypted recovery and Mac continuity",
+  "status": "Named native phone case accepted; broader P0 remains active",
+  "supersedesScope": "Closes only the phone-native creation/revocation/restore gap listed in new-task-access-recovery-evidence.json; earlier diagnostic history and Mac QoS warning remain unchanged",
+  "productCodeChanged": false,
+  "independentOwnedTestSources": {
+    "iOS": "TaskfoldUITests/TaskfoldUITests.swift",
+    "macOS": "TaskfoldUITests/TaskfoldMacUITests.swift"
+  },
+  "environment": {
+    "iOS": "Dedicated Debug app com.dbakp.taskfold.backupcanceltests on disposable iPhone 17 Pro / iOS 26.5 Simulator",
+    "macOS": "Signed sandboxed Debug app com.dbakp.taskfold.mac.backupcanceltests; deep strict signature verification passed",
+    "offlineControl": "Existing DEBUG-only continuity-offline transport gate limited to the exact isolated app IDs and disposable account; host network settings unchanged",
+    "cloud": "Actual disposable owner/member authentication and project collaboration; no service-role key, schema/RLS modification, real user task write or Todoist request"
+  },
+  "nativePhases": [
+    {
+      "resultBundle": "ios-phone-creation-offline-v1.xcresult",
+      "scope": "Fresh native phone capture/More options/save with shared project, full notes, priority 2 and 45-minute estimate; offline process relaunch reopens the task",
+      "actualPassingTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "ios-phone-creation-restore-v1.xcresult",
+      "scope": "Real membership revoked before first POST; native phone encrypted preview/apply into owned project; signed-in relaunch reopens recovered task",
+      "actualPassingTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "mac-phone-recovery-receipt-v1.xcresult",
+      "scope": "Native Mac inspector opens exact phone recovery copy; normal Quit retains sign-in and full editor values",
+      "actualPassingTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "mac-phone-recovery-cleanup-v1.xcresult",
+      "scope": "Native Mac fetches exact synthetic deletion and quits normally",
+      "actualPassingTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    }
+  ],
+  "verified": [
+    "Fresh native phone capture parsed the shared project, priority 2 and 45-minute estimate, carried them into More options, and saved full notes while offline",
+    "The original pending POST and exact task fields survived process relaunch and were reopened in the native editor",
+    "Owner read confirmed the new task did not exist on the server before membership removal; authenticated member project read was empty afterward",
+    "Native online phone recovery saved an encrypted copy before removing the denied queue; the access-removed notice opened that copy directly",
+    "Native preview showed Add 2 / Update 0 / Keep 20, with one project and one task; apply created a member-owned project/task copy",
+    "Restored title, full notes, priority 2 and 45-minute estimate survived signed-in phone relaunch and native editor reopening; the recovery notice remained until acknowledgement",
+    "Mac fetched the same mapped project/task IDs and fields, opened them in its native inspector and retained them after normal Quit/reopen",
+    "Previous disposable Mac recovery notice was explicitly acknowledged; its encrypted copy was not deleted",
+    "Final cleanup removed only the named synthetic tasks/projects and membership. All non-activity tables exactly match the baseline; all preexisting activity/epoch rows remain across 15 tables per account",
+    "All 100 protected local files stayed byte-identical"
+  ],
+  "ciphertextReceipt": {
+    "kind": "Access removed",
+    "records": 22,
+    "createdAt": 813531797.82667,
+    "ciphertextBytes": 65214,
+    "ciphertextSHA256": "8d73af5e97ec618a6e2549cd77578557bb0ed182a59e38c3d47c2f0c5398d7f3",
+    "plaintextSyntheticTitleAndNotesAbsent": true,
+    "taskAndProjectIDsMappedToOwnedCopy": true,
+    "retainedPrivateCiphertext": true
+  },
+  "limits": [
+    "This is independent phone-native new-task recovery, not just receipt of the previous Mac-created case",
+    "Organization and account-switch access-loss variants, broader concurrency, remaining installed-widget conditions and other tracked P0 gates remain separate",
+    "These four phases have zero runtime warnings; they do not resolve or suppress the earlier Mac offline-preparation QoS warning",
+    "Simulator and isolated Debug evidence does not establish signed distribution, APNs/provider delivery or physical-device acceptance; release signing remains user-deferred"
+  ],
+  "documentationReview": "Reused the current 12 October Supabase changelog and official RLS/TLS/Postgres review recorded in new-task-access-recovery-evidence.json; no schema or transport cipher change",
+  "captures": [
+    {
+      "path": "previews/phone-new-task-access-recovery/phone-encrypted-preview.png",
+      "sha256": "43399f708afb5919894573c3e62aaa855ebecea9ab1afc62caacdc2c0b00b32f",
+      "reviewed": true,
+      "scope": "App/sheet only"
+    },
+    {
+      "path": "previews/phone-new-task-access-recovery/phone-restored-relaunch.png",
+      "sha256": "22e875bc450cb17e50c8d2228bd0c405ad2daf4d1a4266a34e8510b980218396",
+      "reviewed": true,
+      "scope": "App/sheet only"
+    },
+    {
+      "path": "previews/phone-new-task-access-recovery/mac-normal-quit-receipt.png",
+      "sha256": "a21e7e84bffbc200ecc817acb1cceb7e76f7e04099a89ad99fc51ee2d40920d3",
+      "reviewed": true,
+      "scope": "App/sheet only"
+    }
+  ],
+  "finalCleanup": {
+    "protectedLocalFilesByteIdentical": 100,
+    "mainTaskfoldAppsAndTestRunnersRunning": 0,
+    "disposablePhoneAppAndRunnerUninstalled": true,
+    "disposablePhoneShutDown": true,
+    "retainedNativeResultBundles": 4,
+    "retainedPrivateEncryptedCopy": true,
+    "duplicateExportsAndCredentialCopiesPrunedBytes": 2863507,
+    "freeStorageGiB": 97.8,
+    "existingMacWidgetHostPreserved": true
+  }
+}

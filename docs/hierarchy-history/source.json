@@ -1,0 +1,24 @@
+{
+  "repository": "TasskFold-MacOS",
+  "date": "2026-10-31",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "2564b0dfadc250689ea00c5edc0920fc5c32a874b7270991e87be594f6257c2b",
+    "Taskfold/Core/ChildTaskStructureCommands.swift": "14711c80cdd786377a2619d55eac48b3296a070c4523ba3d609c924bd99c9860",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "7675ca3ca8afa81aa6103aca0dad5524a895ec0fd0daa7e461ca4c6c8e64cc10",
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": "59a0eda5bc334e21529f4bdeecd8993a2cb0236b49850e197fe8fefd8f742ebc",
+    "Taskfold/Core/ChildTaskTransfers.swift": "05285b347472fd9adada212aff044d63decc54af8c5e0b8021cd2798b48cf461",
+    "Taskfold/Core/Store.swift": "9faf30e88f50da89ccffe4f9df4ceb3d521affc63d4082da7044324308479cb2",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "7fc231b584c969e5a3349f1da9600accd4425e0208674a5e66f8cf905a34e70e",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "d4100b051fc0d6d266c06b14e9046c4363404bf28eff1c2f6ccc7fd3f6e640b7",
+    "Taskfold/Views/SubtaskOrganizer.swift": "b2efcee1542e41960fe27b65d9ea73d4850c27b5b6595de3ed6d2bb499e20344",
+    "Taskfold/Views/TaskInspector.swift": "5ed888ef18db4ea3a09d7e349a6a69ca26ec9c85bbfadedd180847345eef8048",
+    "Taskfold/Workspace.swift": "c310cdff381cfa6cb45e2799209a7d5c24b7bbc7ac692664c6c48fda9c712012",
+    "TaskfoldTests/ChildTaskStructureCommandTests.swift": "860d6ae459258bfca0cbc7c96130e7c01cb7bd2c4faec2cd6b05145f8c134b2e",
+    "TaskfoldTests/ConfirmedHistoryBridgeTests.swift": "bd207d0ef2316d4781df7a9e5def5d547345f00d11eed28d903e521f257c50a3",
+    "TaskfoldUITests/AudioCommentUITests.swift": "6441e8c7718e28af4c407f018d9cac3a8358e8b7be6b313aff5dd675bc7f7853",
+    "Scripts/Database/test-child-hierarchy-history.mjs": "ff2bce62a291753831864b9af0e7b648f98e07d85c3568301aec916d92715493",
+    "Scripts/verify_child_hierarchy_history_peer.py": "06bfb622746dfeea517b53afcaaa51b6b7e2f5cb9996cbbdb13514860a3ba1d9"
+  },
+  "productionGatesChanged": false,
+  "serverProtocolChanged": false
+}

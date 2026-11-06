@@ -1,0 +1,103 @@
+{
+  "events": [
+    {
+      "id": "82de0a2f-a44a-5806-85cb-fe49626d26c8",
+      "format_version": 1,
+      "node_key": "concept",
+      "after_state": {
+        "completed": false,
+        "recurrence_parent_id": null,
+        "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+        "scheduled_at": null,
+        "completed_at": null,
+        "due_date": null,
+        "due_time": null,
+        "section_id": null,
+        "time_zone": null,
+        "deadline_date": null
+      },
+      "effective_at": "2026-10-30T21:00:43.678Z",
+      "type_after": "task",
+      "recorded_at": "2026-10-30T21:00:43.678Z",
+      "kinds": [
+        "created"
+      ],
+      "after_path": [
+        "concept"
+      ],
+      "work_after": true,
+      "work_before": false,
+      "before_path": [],
+      "sequence": 1,
+      "actor_id": "ui-testing",
+      "before_state": {},
+      "type_before": null,
+      "completion_version": 0,
+      "user_id": "ui-testing",
+      "task_generation": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa90",
+      "task_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa75"
+    },
+    {
+      "id": "5e9b7bc8-2439-c25e-a24c-f2d2a089f28a",
+      "after_state": {
+        "completed": false,
+        "recurrence_parent_id": null,
+        "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+        "scheduled_at": null,
+        "due_date": null,
+        "due_time": null,
+        "completed_at": null,
+        "time_zone": null,
+        "section_id": null,
+        "deadline_date": null
+      },
+      "node_key": "concept",
+      "format_version": 2,
+      "effective_at": "2026-10-31T20:59:43.678Z",
+      "type_after": "task",
+      "recorded_at": "2026-10-31T20:59:43.678Z",
+      "after_path": [
+        "concept"
+      ],
+      "kinds": [
+        "edited"
+      ],
+      "work_after": true,
+      "sequence": 2,
+      "work_before": true,
+      "before_state": {
+        "deadline_date": null,
+        "recurrence_parent_id": null,
+        "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+        "scheduled_at": null,
+        "due_date": null,
+        "completed_at": null,
+        "due_time": null,
+        "section_id": null,
+        "time_zone": null,
+        "completed": false
+      },
+      "actor_id": "ui-testing",
+      "before_path": [
+        "concept"
+      ],
+      "completion_version": 0,
+      "type_before": "task",
+      "user_id": "ui-testing",
+      "task_generation": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa90",
+      "changed_fields": [
+        "description",
+        "priority"
+      ],
+      "task_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa75"
+    }
+  ],
+  "epoch": [
+    {
+      "id": "current",
+      "field_recorded_from": "2026-10-31T20:59:43.678Z",
+      "recorded_from": "2026-10-30T21:00:43.678Z"
+    }
+  ],
+  "pendingCount": 0
+}

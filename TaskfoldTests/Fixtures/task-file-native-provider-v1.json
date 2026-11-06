@@ -1,0 +1,40 @@
+{
+  "intent": {
+    "name": "Native provider proof.txt",
+    "type": "text/plain",
+    "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+    "target": {
+      "task_id": "ec240000-0000-4000-8000-000000000002",
+      "team_id": "ec240000-0000-4000-8000-000000000004",
+      "project_id": "ec240000-0000-4000-8000-000000000003",
+      "task_generation": "ec240000-0000-4000-8000-000000000071"
+    },
+    "byte_count": 24,
+    "operation_id": "b2d22aba-daa5-43ba-a509-2e07e57cd556"
+  },
+  "reply": {
+    "receipt": {
+      "state": "published",
+      "target": {
+        "task_id": "ec240000-0000-4000-8000-000000000002",
+        "team_id": "ec240000-0000-4000-8000-000000000004",
+        "project_id": "ec240000-0000-4000-8000-000000000003",
+        "task_generation": "ec240000-0000-4000-8000-000000000071"
+      },
+      "account": "ec240000-0000-4000-8000-000000000001",
+      "protocol": 1,
+      "attachment": {
+        "id": "b2d22aba-daa5-43ba-a509-2e07e57cd556",
+        "name": "Native provider proof.txt",
+        "size": 24,
+        "type": "text/plain",
+        "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+        "uploadedAt": "2026-11-02T01:55:04.13475+00:00",
+        "storage_object_id": "1b2660d4-e71d-4a1d-9861-ffd7fc4ee365"
+      },
+      "operation_id": "b2d22aba-daa5-43ba-a509-2e07e57cd556"
+    }
+  },
+  "account": "ec240000-0000-4000-8000-000000000001",
+  "origin": "https://synthetic.example"
+}

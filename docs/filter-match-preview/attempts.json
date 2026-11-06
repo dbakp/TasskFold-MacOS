@@ -1,0 +1,54 @@
+[
+  {
+    "run": "taskfold-filter-preview-native",
+    "reportSHA256": "3d56fd3cb01098820db8956f08202a376ced3720eb47d1c82a1c10e4b5ecb615",
+    "xcodeExitCode": 65,
+    "passedTests": 0,
+    "failedTests": 1,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "deviceRestored": true,
+    "assessment": "The test inserted at the beginning of the existing query instead of replacing it; no valid preview acceptance. The native Clear control and exact input assertion replaced this test path."
+  },
+  {
+    "run": "taskfold-filter-preview-native-current",
+    "reportSHA256": "c18c90ea747bb64627ab55ffbf55f87f329b05f63104c562b0de05e812da2f8b",
+    "xcodeExitCode": 65,
+    "passedTests": 0,
+    "failedTests": 1,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "deviceRestored": true,
+    "assessment": "The five-item/count and empty query checks passed, but clearing a later query exposed ambiguous shared focus: the description field received keyboard focus. Separate enum focus targets replaced the shared Bool. A keyboard layout warning was also recorded; no clean runtime acceptance."
+  },
+  {
+    "run": "taskfold-filter-preview-native-focused",
+    "xcodeExitCode": 65,
+    "reason": "All preview/edit/Use/Cancel assertions passed; first cold all-table comparison differed only by ordinary Today/Upcoming default preferences initialized on startup. The fixture baseline now includes that normal startup before assertions.",
+    "taskDataChanged": false,
+    "cleanRuntimeAccepted": false
+  },
+  {
+    "run": "taskfold-filter-preview-native-settled",
+    "xcodeExitCode": 0,
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "functionalJourneyPassed": true,
+    "cleanRuntimeAccepted": false,
+    "runtimeWarnings": [
+      {
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "scope": "Exact five-row cap/count, archived exclusion, empty/completed queries, editing invalidation, keyboard Done, Use stays draft-only, Cancel and all-table cold preservation. This predates only the final in-flight cancellation/direct freshness recheck."
+  }
+]

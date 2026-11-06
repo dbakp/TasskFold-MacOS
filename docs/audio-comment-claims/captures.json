@@ -1,0 +1,30 @@
+[
+  {
+    "file": "mac-discard.png",
+    "attachment": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "00006000-000C59161EC3801E",
+      "deviceName": "My Mac",
+      "exportedFileName": "745C0FDD-6FC1-4DF0-B76D-5D58C93E3AF4.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Finish durable discard after cold launch at largest text_0_A3B5EBC1-73C3-4938-85B8-EE5D2C20EA30.png",
+      "timestamp": 1793135846.334
+    },
+    "inspected": true,
+    "inspection": "Pending action and guidance readable without clipped text; separate Save/Discard controls visible in preservation state. Dark largest-text discard on mobile; ordinary Mac text."
+  },
+  {
+    "file": "mac-preserve.png",
+    "attachment": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "00006000-000C59161EC3801E",
+      "deviceName": "My Mac",
+      "exportedFileName": "E540218C-115F-48CA-9D40-A6ED339C8F4F.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Already saved recording cannot be discarded as pending_0_CF203DDB-B0DC-4396-A99F-316C023720ED.png",
+      "timestamp": 1793135795.674
+    },
+    "inspected": true,
+    "inspection": "Pending action and guidance readable without clipped text; separate Save/Discard controls visible in preservation state. Dark largest-text discard on mobile; ordinary Mac text."
+  }
+]

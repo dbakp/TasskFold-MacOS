@@ -194,3 +194,146 @@ extension NaturalDateTests {
         XCTAssertEqual(rule.start,"2026-10-26")
     }
 }
+
+extension NaturalDateTests {
+    func testCompoundDatesOffsetSupportedAnchorsAndNormalizeWhitespace() throws {
+        let c = calendar("UTC"), anchor = Dates.parse("2026-10-08", calendar: c)!
+        for (phrase, expected) in [("1 week after next week", "2026-10-19"), ("one day before next weekend", "2026-10-16"), ("2 weeks before 3 January 2027", "2026-12-20"), ("0 days after tomorrow", "2026-10-09"), ("2 days after end of month", "2026-11-02"), ("1 day before 2028-03-01", "2028-02-29"), ("  ONE\tweek AFTER\nnext week  ", "2026-10-19"), ("1 week after 2 days before next week", "2026-10-17")] {
+            let value = try XCTUnwrap(QuickNaturalDateText.resolve(phrase, relativeTo: anchor, calendar: c), phrase)
+            XCTAssertEqual(TaskPlanner.dayKey(value, calendar: c), expected, phrase)
+        }
+    }
+    func testCompoundDatesRejectUnsupportedUnitsCountsDepthAndOverflow() {
+        let c = calendar("UTC"), anchor = Dates.parse("2026-10-08", calendar: c)!
+        for phrase in ["two days after today", "-1 day after today", "+1 day after today", "1 month after today", "1 year before today", "3651 days after today", "522 weeks after today", "3650 days after 1 day before today", "99999999999999999999 days after today", String(repeating: "0 days after ", count: 5) + "today", "1 day before 0001-01-01", "1 day after 9999-12-31", "1 day after April 31", "1 day after next holiday"] {
+            XCTAssertNil(QuickNaturalDateText.resolve(phrase, relativeTo: anchor, calendar: c), phrase)
+        }
+        XCTAssertNotNil(QuickNaturalDateText.resolve("3650 days after today", relativeTo: anchor, calendar: c))
+        XCTAssertNotNil(QuickNaturalDateText.resolve("521 weeks before today", relativeTo: anchor, calendar: c))
+    }
+    func testCompoundDatesUseCivilDaysAcrossDSTAndViewerZones() throws {
+        for (zone, day, expected, hours) in [("Europe/Copenhagen", "2026-10-24", "2026-10-26", 49.0), ("America/New_York", "2026-03-07", "2026-03-09", 47.0), ("Australia/Lord_Howe", "2026-10-03", "2026-10-05", 47.5)] {
+            let c = calendar(zone), anchor = Dates.parse(day, calendar: c)!
+            let shifted = try XCTUnwrap(QuickNaturalDateText.resolve("2 days after today", relativeTo: anchor, calendar: c))
+            XCTAssertEqual(TaskPlanner.dayKey(shifted, calendar: c), expected); XCTAssertEqual(shifted.timeIntervalSince(anchor), hours * 3600)
+        }
+        let instant = ISO8601DateFormatter().date(from: "2026-10-08T23:30:00Z")!
+        for (zone, expected) in [("Pacific/Auckland", "2026-10-10"), ("America/Los_Angeles", "2026-10-09")] {
+            let c = calendar(zone, identifier: .buddhist)
+            let value = try XCTUnwrap(QuickNaturalDateText.resolve("1 day after today", relativeTo: instant, calendar: c))
+            XCTAssertEqual(TaskPlanner.dayKey(value, calendar: c), expected)
+        }
+    }
+    func testCompoundCaptureAndDeadlineRemainWholeIndependentChips() {
+        let parsed = quick("Review 1 week after next week {2 days before end of month} at 9am p2")
+        XCTAssertEqual(parsed.title, "Review"); XCTAssertEqual(parsed.updates["due_date"], .string("2026-10-19")); XCTAssertEqual(parsed.updates["deadline_date"], .string("2026-10-29"))
+        XCTAssertEqual(parsed.tokens.filter { $0.group == "due_date" }.map(\.text), ["1 week after next week"])
+        XCTAssertEqual(parsed.tokens.filter { $0.group == "deadline_date" }.map(\.text), ["{2 days before end of month}"])
+        XCTAssertEqual(parsed.updates["due_time"], .string("09:00")); XCTAssertEqual(parsed.updates["priority"], .number(2)); XCTAssertTrue(parsed.warnings.isEmpty)
+        for group in ["due_date", "deadline_date"] {
+            let declined = quick("Review 1 week after next week {2 days before end of month}", disabled: [group])
+            XCTAssertNil(declined.updates[group]); XCTAssertTrue(declined.title.contains(group == "due_date" ? "1 week after next week" : "{2 days before end of month}"))
+        }
+    }
+    func testCompoundInvalidDeclinedQuotedAndEscapedCaptureCannotLeakTheAnchor() {
+        for phrase in ["1 month after tomorrow", "3651 days after next week", "two days before January 3", "-2 weeks after today", "1 day after April 31", "1 day after next holiday", String(repeating: "0 days after ", count: 5) + "today"] {
+            let parsed = quick("Review " + phrase)
+            XCTAssertEqual(parsed.title, "Review " + phrase, phrase); XCTAssertNil(parsed.updates["due_date"], phrase); XCTAssertFalse(parsed.warnings.isEmpty, phrase)
+        }
+        for phrase in [#""1 week after next week""#, #"\1 week after next week"#] {
+            let parsed = quick("Review " + phrase)
+            XCTAssertNil(parsed.updates["due_date"]); XCTAssertTrue(parsed.title.contains("1 week after next week")); XCTAssertTrue(parsed.warnings.isEmpty)
+        }
+        let declined = quick("Review 1 week after next week", disabled: ["due_date"])
+        XCTAssertEqual(declined.title, "Review 1 week after next week"); XCTAssertTrue(declined.updates.isEmpty)
+    }
+    func testCompoundRepeatAndIndependentReminderBoundariesResolveTogether() throws {
+        let parsed = quick("Review every day from 1 week after next week until 2 days after 31 October 2026")
+        XCTAssertEqual(parsed.title, "Review"); XCTAssertEqual(parsed.updates["due_date"], .string("2026-10-19")); XCTAssertEqual(parsed.updates["recurrence_pattern"]?.object["endDate"], .string("2026-11-02")); XCTAssertTrue(parsed.warnings.isEmpty)
+        let declined = quick("Review every day from 1 week after next week until 2 days after 31 October 2026", disabled: ["recurrence"])
+        XCTAssertEqual(declined.title, "Review every day from 1 week after next week until 2 days after 31 October 2026"); XCTAssertTrue(declined.updates.isEmpty)
+        let reminder = quick("Review !every day 9am from 1 week after next week until 2 days after 31 October 2026")
+        XCTAssertEqual(reminder.title, "Review"); XCTAssertNil(reminder.updates["due_date"]); XCTAssertTrue(reminder.warnings.isEmpty)
+        let row = try XCTUnwrap(reminder.updates["reminder_specs"]?.list.first { $0.object["kind"] == .string("recurring") })
+        XCTAssertEqual(row.object["start_day"], .string("2026-10-19")); XCTAssertEqual(row.object["recurrence"]?.object["endDate"], .string("2026-11-02"))
+        let invalid = quick("Review every day from 1 month after tomorrow")
+        XCTAssertEqual(invalid.title, "Review every day from 1 month after tomorrow"); XCTAssertTrue(invalid.updates.isEmpty)
+    }
+    func testCompoundPreferenceChangesDoNotRewriteAcceptedTaskDates() throws {
+        let c = calendar("UTC"), anchor = Dates.parse("2026-10-08", calendar: c)!
+        let friday = QuickEntryContext(datePreferences: DatePhrasePreferences(nextWeek: 6, weekend: 1))
+        let accepted = QuickEntry("Review 1 week after next week", now: anchor, calendar: c, context: friday).applying(to: Record.task(user: "owner"))
+        XCTAssertEqual(accepted.string("due_date"), "2026-10-16")
+        var monday = friday; monday.datePreferences = DatePhrasePreferences()
+        let retained = QuickEntry(accepted.title, now: anchor, calendar: c, context: monday, task: accepted).applying(to: accepted)
+        XCTAssertEqual(retained["due_date"], accepted["due_date"])
+        var unavailable = friday; unavailable.datePreferences = nil
+        for text in ["Review 1 week after next week", "Review {1 day before this weekend}", "Review every day from 1 week after next week"] {
+            let failed = QuickEntry(text, now: anchor, calendar: c, context: unavailable)
+            XCTAssertEqual(failed.title, text); XCTAssertTrue(failed.updates.isEmpty); XCTAssertFalse(failed.warnings.isEmpty)
+        }
+    }
+}
+
+extension NaturalDateTests {
+    private func compoundRule(_ text: String, context: FilterContext = FilterContext()) throws -> FilterRule {
+        var parser = try FilterParser(text, context: context); return try parser.parse()
+    }
+    private func compoundTask(_ id: String, plan: String? = nil, deadline: String? = nil) -> Record {
+        Record(["id": .string(id), "title": .string(id), "due_date": plan.map(JSON.string) ?? .null, "deadline_date": deadline.map(JSON.string) ?? .null, "completed": .bool(false)])
+    }
+    func testCompoundFiltersPersistRelativeExpressionsAndSeparatePlanFromDeadline() throws {
+        let context = FilterContext(), rows = [compoundTask("plan", plan: "2026-10-19"), compoundTask("deadline", deadline: "2026-10-19"), compoundTask("both", plan: "2026-10-18", deadline: "2026-10-19"), compoundTask("none")]
+        for (text, expected) in [("date:1 week after next week", ["plan"]), ("effective-due:1 week after next week", ["plan", "deadline"]), ("deadline on:1 week after next week", ["deadline", "both"])] {
+            let rule = try compoundRule(text)
+            XCTAssertEqual(rows.filter { rule.resultMatches($0, context: context, today: "2026-10-08", timeZone: "UTC") }.map(\.id), expected, text)
+            XCTAssertEqual(try compoundRule(rule.expression(in: context)), rule)
+            XCTAssertEqual(try FilterRule(document: rule.document), rule)
+            XCTAssertEqual(rule.captureDefaults(in: context, today: "2026-10-08", timeZone: "UTC")[text.hasPrefix("deadline") ? "deadline_date" : "due_date"], text.hasPrefix("effective") ? nil : .string("2026-10-19"))
+        }
+        let window = try compoundRule("(date:next week OR date after:next week) AND date before:1 week after next week")
+        let days = (11...20).map { compoundTask(String($0), plan: "2026-10-\($0)") }
+        XCTAssertEqual(days.filter { window.resultMatches($0, context: context, today: "2026-10-08", timeZone: "UTC") }.map(\.id), (12...18).map(String.init))
+    }
+    func testCompoundFilterPreferenceBindingsFailClosedAndInvalidateCache() throws {
+        let rule = try compoundRule("date:1 week after next week"), cache = TaskCache()
+        cache.update([compoundTask("friday", plan: "2026-10-16"), compoundTask("monday", plan: "2026-10-19")])
+        var query = TaskQuery(scope: .all, today: "2026-10-08", filter: rule, datePreferences: DatePhrasePreferences(nextWeek: 6), timeZone: "UTC")
+        XCTAssertTrue(rule.usesDatePreferences); XCTAssertEqual(cache.matching(query).map(\.id), ["friday"])
+        let computations = cache.computationCount; query.datePreferences = DatePhrasePreferences()
+        XCTAssertEqual(cache.matching(query).map(\.id), ["monday"]); XCTAssertGreaterThan(cache.computationCount, computations)
+        var unavailable = FilterContext(); unavailable.datePreferences = nil
+        for value in [rule, .not(rule), .or([.predicate("all", ""), rule])] {
+            XCTAssertThrowsError(try value.validate(in: unavailable))
+            XCTAssertFalse(value.resultMatches(compoundTask("friday", plan: "2026-10-16"), context: unavailable, today: "2026-10-08", timeZone: "UTC"))
+        }
+        let independent = FilterRule.sections([rule, .predicate("all", "")])
+        XCTAssertTrue(independent.resultMatches(compoundTask("safe"), context: unavailable, today: "2026-10-08", timeZone: "UTC"))
+        XCTAssertFalse(try compoundRule("date:1 day after today").usesDatePreferences)
+    }
+    func testCompoundTimedAndCreationFiltersRetainBoundarySemantics() throws {
+        let c = calendar("UTC"), context = FilterContext()
+        var row = compoundTask("planned", plan: "2026-10-09"); row["due_time"] = .string("14:00"); row["time_zone"] = .string("UTC"); row["created_at"] = .string("2026-10-07T23:30:00Z")
+        XCTAssertTrue(try compoundRule("date:1 day after today at 2pm").resultMatches(row, context: context, today: "2026-10-08", timeZone: c.timeZone.identifier))
+        XCTAssertFalse(try compoundRule("date before:1 day after today at 2pm").resultMatches(row, context: context, today: "2026-10-08", timeZone: "UTC"))
+        XCTAssertFalse(try compoundRule("date after:1 day after today at 2pm").resultMatches(row, context: context, today: "2026-10-08", timeZone: "UTC"))
+        XCTAssertTrue(try compoundRule("created:1 day before today").resultMatches(row, context: context, today: "2026-10-08", timeZone: "UTC"))
+        XCTAssertTrue(try compoundRule("created:0 days after today").resultMatches(row, context: context, today: "2026-10-08", timeZone: "Pacific/Auckland"))
+        for text in ["date:3651 days after today", "date:1 month after today", "deadline on:1 day after today at 2pm", "date:1 day after next holiday"] { XCTAssertThrowsError(try compoundRule(text), text) }
+    }
+    func testCompoundWidgetDailyMembershipAndSnapshotWireRoundTrip() throws {
+        let c = calendar("UTC"), rows = (8...16).map { compoundTask(String($0), plan: "2026-10-\(String(format: "%02d", $0))") }
+        let rule = try compoundRule("date:1 day after today")
+        let view = Record(["id": .string("v"), "user_id": .string("owner"), "name": .string("Tomorrow"), "query_ast": rule.document])
+        let payload = WidgetProjection.listPayload(tasks: rows, projects: [], labels: [], sections: [], savedViews: [view], account: "owner", now: Dates.parse("2026-10-08", calendar: c)!, calendar: c)
+        let days = try XCTUnwrap(payload.first?.object["days"]?.object); XCTAssertEqual(days.count, 8)
+        for day in 8...15 { XCTAssertEqual(days["2026-10-\(String(format: "%02d", day))"]?.list.map(\.text), [String(day + 1)]) }
+        let encoded = String(data: try JSONEncoder().encode(payload), encoding: .utf8)!
+        XCTAssertFalse(encoded.contains("1 day after today")); XCTAssertFalse(encoded.contains("query_ast"))
+        var snapshot = Snapshot(); snapshot.tables["tasks"] = rows; snapshot.tables["saved_views"] = [view]; snapshot.pending = [Mutation(table: "saved_views", recordID: view.id, method: "POST", fields: view.fields)]
+        let wire = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+        XCTAssertEqual(wire.tables["saved_views"]?.first?["query_ast"], rule.document); XCTAssertEqual(wire.pending.first?.fields["query_ast"], rule.document); XCTAssertEqual(wire.tables["tasks"], rows)
+        let file = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: "owner").data())
+        XCTAssertEqual(file.tables["saved_views"]?.first?["query_ast"], rule.document)
+    }
+}

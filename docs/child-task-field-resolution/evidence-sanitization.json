@@ -1,0 +1,7 @@
+{
+  "unrelatedMacSystemMenuSubtrees": "omitted from failure logs and summaries",
+  "MacHardwareIdentifier": "replaced with isolated-mac-host in JSON reports",
+  "MacScreenshots": "only final app-window captures are repository artifacts",
+  "assertionsResultsAndCounts": "unchanged",
+  "unrelatedHistoricalSystemLog": "excluded from repository; retained privately outside the worktree"
+}

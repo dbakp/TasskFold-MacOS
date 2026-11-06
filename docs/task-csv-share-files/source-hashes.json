@@ -1,0 +1,30 @@
+{
+  "Taskfold/Views/PrintReviewView.swift": {
+    "same": true,
+    "sha256": "ceafa0ff8b68ebb701ea58001a63d45bb2f408721a3b4a1c267195152cfde13c"
+  },
+  "Taskfold/Core/ReviewedTaskOutput.swift": {
+    "same": true,
+    "sha256": "fa3f3b2482cc6aa8236e4662e31f6ca33cc8fb45811377ddcb15bec9ef2ad196"
+  },
+  "Taskfold/Core/PrintDocument.swift": {
+    "same": true,
+    "sha256": "a1a3092662a0723d392211ecf49364fcca4e1fc8eccc7539f14bf46e1c567e30"
+  },
+  "Taskfold/Core/TaskPrintRenderer.swift": {
+    "same": true,
+    "sha256": "80e56c6930100de8df179d43862f844d8a4bc9ef088b23e68ec78642f9fb99eb"
+  },
+  "Taskfold/Core/Store.swift": {
+    "same": true,
+    "sha256": "f362770cdf8fad1f4294057b072b528d07ad2d60ff82212fd86a04b8fa0de9d5"
+  },
+  "Taskfold/TaskfoldApp.swift": {
+    "same": true,
+    "sha256": "c97eadb792ada01394ab08c7d4821ba2c0c910d9d9aeb54304e3565f243bc6b5"
+  },
+  "TaskfoldUITests/TaskfoldUITests.swift": {
+    "same": true,
+    "sha256": "c6abf98e308f6ca0d838a8f0db8c1f2f20691f6e0a1beef29183590d9f3a3b78"
+  }
+}

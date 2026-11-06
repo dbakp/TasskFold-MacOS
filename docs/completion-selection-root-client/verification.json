@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-31",
+  "scope": "Typed root observations, bounded private read transport and coherent mixed-selection preparation",
+  "repository": "TasskFold-MacOS",
+  "core": {
+    "runner": "Mac-hosted Swift package from this independent repository",
+    "accepted": 143,
+    "newCases": 23,
+    "relatedRegressionCases": 120,
+    "failures": 0,
+    "durationSeconds": 13.696,
+    "testNames": [
+      "testActualPostgresWireRetainsOrderScopeAndFieldOnlyGuards",
+      "testOpaquePostgresNumbersAndDistinctUnicodeKeysSurviveClientRoundTrip",
+      "testRequestRefusesEmptyOversizedDuplicateMalformedAndNonCanonicalIDs",
+      "testEnvelopeRefusesWrongAccountProtocolUnknownKeysAndMissingRows",
+      "testRootOrderDuplicatesAndExtraRowsCannotBeReinterpreted",
+      "testBaselineMustMatchEverySourceIdentityAndCompletionValue",
+      "testHashAndObservationShapeMustBeExact",
+      "testDuplicateKeysInEnvelopeOrTaskAndFractionalCountersAreRejected",
+      "testRootAndEnvelopeSizeLimitsAreIndependent",
+      "testRootOnlyPreparationBindsTheOriginalSelectionAndRetainsNoOpGuards",
+      "testPreparationCannotCrossWorkspaceAccessOrSession",
+      "testFreshRecurringSourceCannotSilentlyReplaceCapturedUserIntent",
+      "testBackendUsesExactBoundedPrivateReadRequest",
+      "testBackendRefusesStaleSessionAccountAndOriginBeforeHTTP",
+      "testBackendMapsPausedMissingAccessAndSessionRefusals",
+      "testBackendRefusesDeclaredAndStreamingResponseOverflow",
+      "testBackendAcceptsAValidResponseAboveTheOlderChildReadLimit",
+      "testBackendRejectsLateReplyAfterSessionReplacement",
+      "testMixedRootAndChildPreparationUsesOneCoherentRootSnapshot",
+      "testMixedPreparationRejectsMissingForeignScopeOrDifferentChildSnapshots",
+      "testMixedPreparationKeepsAnIndependentChildBranchIncludingHeadingParents",
+      "testMatchingBaselineCannotMakeInvalidRootFieldsAcceptable",
+      "testLegacyNullFlagsAreKeptAsAuthoredInSourceAndGuards"
+    ],
+    "log": "accepted-core.log.gz",
+    "uncompressedLogSHA256": "412274665a2846cfc6d8206c76cbc41b42d780478ea398cce52382b151a6bd16"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "3d4a213f46b5ad61e7778d663305b9f0841a5ff5d69b490bd212fb10c77f534c",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "cf65a8da164b625c7158fc3f579029fdd8315a839afda9c48365a5ab1d238dac",
+    "TaskfoldTests/CompletionSelectionRootReadTests.swift": "9f4974f23dd2854105717cb52589354dcc1f137202574b3125b83a2a5badf603",
+    "TaskfoldTests/Fixtures/completion-selection-root-observations.json": "8c34e278af4cba0d04811141c555999496df0308b851eb4200be6b31f2ff1f0f"
+  },
+  "syntheticLargeResponseCaseSeconds": {
+    "testBackendAcceptsAValidResponseAboveTheOlderChildReadLimit": 0.653,
+    "testBackendRefusesDeclaredAndStreamingResponseOverflow": 0.603
+  },
+  "earlierPhases": [
+    {
+      "log": "initial-findings-core.log.gz",
+      "cases": 18,
+      "failures": 8,
+      "sourceSHA256": {
+        "Taskfold/Core/Backend.swift": "c56ee12c47724106a7d827f527d514af039d0ce3a1a63de4c6a4008ce6d4a2a7",
+        "Taskfold/Core/ChildTaskCompletionCommands.swift": "046a63a1bd8089fc46d0372b50c98ee7248244240603b03d2aa0b61a82409249",
+        "TaskfoldTests/CompletionSelectionRootReadTests.swift": "0917de55ceab8a8c25001c17925af131112df8a91ff1401c8fdddf12e09c65e7"
+      },
+      "findings": [
+        "Actual PostgreSQL ordinary roots can have null is_heading; preserve legacy null flags instead of rejecting them.",
+        "Known 28000 live-session refusal must reach AccountSessionAuthorizationRequired instead of attempting an irrelevant refresh.",
+        "Initial large-response case spends 34.828 seconds in the UI-actor byte path before failing metadata validation; move only this new bounded read to a nonisolated consumer."
+      ]
+    }
+  ],
+  "limits": {
+    "atomicMixedWriteImplemented": false,
+    "mixedRecoveryAndUndoImplemented": false,
+    "nativeBuildOrRuntimeRepeated": false,
+    "hostedChanges": false,
+    "normalGatesEnabled": false,
+    "curatedCheckpointCountsChanged": false,
+    "timingsAreAProductBenchmark": false
+  }
+}

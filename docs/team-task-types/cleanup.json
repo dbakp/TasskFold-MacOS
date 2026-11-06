@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-26",
+  "logicalBytesRemoved": 1284337104,
+  "removed": "Owned /tmp/taskfold-team-types-* builds, fixture outputs and three downloaded documentation files",
+  "databaseContainersRemoved": true,
+  "nativeAppsLaunched": false,
+  "retained": "Repository build caches and prior signed Mac harness; no user tasks touched."
+}

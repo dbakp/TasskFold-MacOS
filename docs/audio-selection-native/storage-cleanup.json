@@ -1,0 +1,21 @@
+{
+  "obsoleteTerminalBundles": [
+    {
+      "path": "/tmp/taskfold-audio-selection-native-phone-v1.xcresult",
+      "allocatedBytesRemoved": 7131136,
+      "reportAndLogRetained": true,
+      "exportedAttachmentsRetained": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-selection-native-phone-v2.xcresult",
+      "allocatedBytesRemoved": 3268608,
+      "reportAndLogRetained": true,
+      "exportedAttachmentsRetained": true
+    }
+  ],
+  "allocatedBytesRemoved": 10399744,
+  "acceptedResultsRetained": true,
+  "existingHostsProductsAndDevicesReused": true,
+  "newSimulators": 0,
+  "realUserDataRemoved": false
+}

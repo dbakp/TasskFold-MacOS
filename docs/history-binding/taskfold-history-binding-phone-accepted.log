@@ -1,0 +1,487 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -derivedDataPath /tmp/taskfold-history-binding-native-build -resultBundlePath /tmp/taskfold-history-binding-phone-accepted.xcresult -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TeamTaskBatchDeletionUITests/testCapturedUndoCannotRetargetAtHistoryLimit" "-only-testing:TaskfoldUITests/TeamTaskBatchDeletionUITests/testBulkSharedLabelsReviewBackCancelSaveUndoAndRelaunch" -test-timeouts-enabled YES -default-test-execution-time-allowance 150 -maximum-test-execution-time-allowance 240 test-without-building
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/tmp/taskfold-history-binding-phone-accepted.xcresult
+
+2026-10-25 13:08:43.094182+0100 TaskfoldUITests-Runner[84651:19738495] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-25 13:08:47.354.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-25 13:08:47.355.
+Test Suite 'TeamTaskBatchDeletionUITests' started at 2026-10-25 13:08:47.355.
+Test Case '-[TaskfoldUITests.TeamTaskBatchDeletionUITests testBulkSharedLabelsReviewBackCancelSaveUndoAndRelaunch]' started.
+    t =     0.00s Start Test at 2026-10-25 13:08:47.359
+    t =     0.03s Set Up
+    t =     0.04s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.05s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-25 13:08:47.515 xcodebuild[84620:19737986] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 13:08:47.515 xcodebuild[84620:19737986] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[84651]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x106600398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x109b30310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     2.47s         Setting up automation session
+    t =     6.65s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.70s Waiting 15.0s for "openTeamBatchListFixture" Button to exist
+    t =     9.78s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamBatchListFixture" Button`
+    t =     9.78s         Checking existence of `"openTeamBatchListFixture" Button`
+    t =     9.88s Tap "openTeamBatchListFixture" Button
+    t =     9.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.89s     Find the "openTeamBatchListFixture" Button
+    t =     9.91s     Check for interrupting elements affecting "openTeamBatchListFixture" Button
+    t =     9.94s     Synthesize event
+    t =    10.29s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.91s Waiting 8.0s for "Task options" Button to exist
+    t =    11.99s     Checking `Expect predicate `existsNoRetry == 1` for object "Task options" Button`
+    t =    11.99s         Checking existence of `"Task options" Button`
+    t =    12.15s Tap "Task options" Button
+    t =    12.16s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.18s     Find the "Task options" Button
+    t =    12.27s     Check for interrupting elements affecting "Task options" Button
+    t =    12.35s     Synthesize event
+    t =    12.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.56s Waiting 5.0s for "Select tasks" Button to exist
+    t =    14.64s     Checking `Expect predicate `existsNoRetry == 1` for object "Select tasks" Button`
+    t =    14.64s         Checking existence of `"Select tasks" Button`
+    t =    14.71s Tap "Select tasks" Button
+    t =    14.71s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.71s     Find the "Select tasks" Button
+    t =    14.77s     Check for interrupting elements affecting "Select tasks" Button
+    t =    14.82s     Synthesize event
+    t =    15.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.26s Waiting 8.0s for "taskRow-ec240000-0000-4000-8000-000000000002" Any to exist
+    t =    17.34s     Checking `Expect predicate `existsNoRetry == 1` for object "taskRow-ec240000-0000-4000-8000-000000000002" Any`
+    t =    17.35s         Checking existence of `"taskRow-ec240000-0000-4000-8000-000000000002" Any`
+    t =    17.46s Tap "taskRow-ec240000-0000-4000-8000-000000000002" Any
+    t =    17.46s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.46s     Find the "taskRow-ec240000-0000-4000-8000-000000000002" Any
+    t =    17.57s     Check for interrupting elements affecting "taskRow-ec240000-0000-4000-8000-000000000002" Other
+    t =    17.64s     Synthesize event
+    t =    17.93s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.93s Waiting 8.0s for "taskRow-ec240000-0000-4000-8000-000000000031" Any to exist
+    t =    19.00s     Checking `Expect predicate `existsNoRetry == 1` for object "taskRow-ec240000-0000-4000-8000-000000000031" Any`
+    t =    19.00s         Checking existence of `"taskRow-ec240000-0000-4000-8000-000000000031" Any`
+    t =    19.15s Tap "taskRow-ec240000-0000-4000-8000-000000000031" Any
+    t =    19.15s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.16s     Find the "taskRow-ec240000-0000-4000-8000-000000000031" Any
+    t =    19.28s     Check for interrupting elements affecting "taskRow-ec240000-0000-4000-8000-000000000031" Other
+    t =    19.35s     Synthesize event
+    t =    19.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.67s Tap "bulkMore" Button
+    t =    19.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.67s     Find the "bulkMore" Button
+    t =    19.73s     Check for interrupting elements affecting "bulkMore" Button
+    t =    19.79s     Synthesize event
+    t =    20.08s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.27s Waiting 5.0s for "bulkSharedLabels" Button to exist
+    t =    22.35s     Checking `Expect predicate `existsNoRetry == 1` for object "bulkSharedLabels" Button`
+    t =    22.35s         Checking existence of `"bulkSharedLabels" Button`
+    t =    22.42s Tap "bulkSharedLabels" Button
+    t =    22.42s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.43s     Find the "bulkSharedLabels" Button
+    t =    22.50s     Check for interrupting elements affecting "bulkSharedLabels" Button
+    t =    22.55s     Synthesize event
+    t =    22.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.31s Waiting 8.0s for "bulkLabelsAction" SegmentedControl to exist
+    t =    25.39s     Checking `Expect predicate `existsNoRetry == 1` for object "bulkLabelsAction" SegmentedControl`
+    t =    25.39s         Checking existence of `"bulkLabelsAction" SegmentedControl`
+    t =    25.49s Waiting 5.0s for "bulkLabelsName" TextField to exist
+    t =    26.54s     Checking `Expect predicate `existsNoRetry == 1` for object "bulkLabelsName" TextField`
+    t =    26.54s         Checking existence of `"bulkLabelsName" TextField`
+    t =    26.63s Tap "bulkLabelsName" TextField
+    t =    26.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.63s     Find the "bulkLabelsName" TextField
+    t =    26.71s     Check for interrupting elements affecting "bulkLabelsName" TextField
+    t =    26.79s     Synthesize event
+    t =    27.09s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.46s Type 'Ship' into "bulkLabelsName" TextField
+    t =    27.46s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.83s     Find the "bulkLabelsName" TextField
+    t =    27.96s     Check for interrupting elements affecting "bulkLabelsName" TextField
+    t =    28.05s     Synthesize event
+    t =    28.33s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.52s Find the "bulkLabelsForm" CollectionView
+    t =    28.62s Find the "bulkLabelsForm" CollectionView
+    t =    28.71s Find the "bulkLabelsForm" CollectionView
+    t =    28.80s Find the "bulkLabelsForm" CollectionView
+    t =    28.89s Checking existence of `"reviewBulkLabels" Button`
+    t =    28.98s Find the "reviewBulkLabels" Button
+    t =    29.09s Find the "reviewBulkLabels" Button
+    t =    29.19s Find the "reviewBulkLabels" Button
+    t =    29.39s Find the "reviewBulkLabels" Button
+    t =    29.50s Tap "reviewBulkLabels" Button
+    t =    29.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.78s     Find the "reviewBulkLabels" Button
+    t =    29.89s     Check for interrupting elements affecting "reviewBulkLabels" Button
+    t =    29.99s     Synthesize event
+    t =    30.29s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.36s Find the "teamPlanningForm" CollectionView
+    t =    30.46s Find the "teamPlanningForm" CollectionView
+    t =    30.54s Find the "teamPlanningForm" CollectionView
+    t =    30.62s Find the "teamPlanningForm" CollectionView
+    t =    30.70s Checking existence of `"confirmTeamPlanning" Button`
+    t =    30.77s Checking existence of `"confirmTeamPlanning" Button`
+    t =    30.85s Find the "teamPlanningForm" CollectionView
+    t =    30.94s Find the "teamPlanningForm" CollectionView
+    t =    31.02s Press "teamPlanningForm" CollectionView[0.00, 0.00] -> (221.1, 450.0) for 0.1 seconds, then drag to "teamPlanningForm" CollectionView[0.00, 0.00] -> (221.1, 450.0) -> (0.0, -245.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    31.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.03s     Find the "teamPlanningForm" CollectionView
+    t =    31.11s     Check for interrupting elements affecting "teamPlanningForm" CollectionView
+    t =    31.18s     Synthesize event
+    t =    31.18s         Find the "teamPlanningForm" CollectionView
+    t =    31.27s         Find the "teamPlanningForm" CollectionView
+    t =    31.35s         Find the "teamPlanningForm" CollectionView
+    t =    31.44s         Find the "teamPlanningForm" CollectionView
+    t =    31.54s         Find the "teamPlanningForm" CollectionView
+    t =    32.41s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    32.41s Find the "teamPlanningForm" CollectionView
+    t =    32.50s Find the "teamPlanningForm" CollectionView
+    t =    32.59s Find the "teamPlanningForm" CollectionView
+    t =    32.68s Find the "teamPlanningForm" CollectionView
+    t =    32.76s Checking existence of `"confirmTeamPlanning" Button`
+    t =    32.84s Find the "confirmTeamPlanning" Button
+    t =    32.94s Find the "confirmTeamPlanning" Button
+    t =    33.03s Find the "confirmTeamPlanning" Button
+    t =    33.12s Waiting 8.0s for "confirmTeamPlanning" Button to exist
+    t =    34.20s     Checking `Expect predicate `existsNoRetry == 1` for object "confirmTeamPlanning" Button`
+    t =    34.20s         Checking existence of `"confirmTeamPlanning" Button`
+    t =    34.29s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    34.47s Added attachment named 'Shared label review preserves each task set'
+    t =    34.47s Tap "editTeamPlanningChoice" Button
+    t =    34.47s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.47s     Find the "editTeamPlanningChoice" Button
+    t =    34.56s     Check for interrupting elements affecting "editTeamPlanningChoice" Button
+    t =    34.63s     Synthesize event
+    t =    34.93s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.93s Find the "bulkLabelsName" TextField
+    t =    35.02s Tap "cancelBulkLabels" Button
+    t =    35.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.03s     Find the "cancelBulkLabels" Button
+    t =    35.11s     Check for interrupting elements affecting "cancelBulkLabels" Button
+    t =    35.18s     Synthesize event
+    t =    35.47s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.89s Tap "bulkMore" Button
+    t =    35.89s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.90s     Find the "bulkMore" Button
+    t =    35.95s     Check for interrupting elements affecting "bulkMore" Button
+    t =    36.00s     Synthesize event
+    t =    36.30s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.43s Waiting 5.0s for "bulkSharedLabels" Button to exist
+    t =    38.50s     Checking `Expect predicate `existsNoRetry == 1` for object "bulkSharedLabels" Button`
+    t =    38.50s         Checking existence of `"bulkSharedLabels" Button`
+    t =    38.57s Tap "bulkSharedLabels" Button
+    t =    38.57s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    38.57s     Find the "bulkSharedLabels" Button
+    t =    38.63s     Check for interrupting elements affecting "bulkSharedLabels" Button
+    t =    38.68s     Synthesize event
+    t =    38.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    40.41s Waiting 8.0s for "bulkLabelsAction" SegmentedControl to exist
+    t =    41.49s     Checking `Expect predicate `existsNoRetry == 1` for object "bulkLabelsAction" SegmentedControl`
+    t =    41.49s         Checking existence of `"bulkLabelsAction" SegmentedControl`
+    t =    41.64s Waiting 5.0s for "bulkLabelsName" TextField to exist
+    t =    42.69s     Checking `Expect predicate `existsNoRetry == 1` for object "bulkLabelsName" TextField`
+    t =    42.70s         Checking existence of `"bulkLabelsName" TextField`
+    t =    42.80s Tap "bulkLabelsName" TextField
+    t =    42.80s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.80s     Find the "bulkLabelsName" TextField
+    t =    42.88s     Check for interrupting elements affecting "bulkLabelsName" TextField
+    t =    42.95s     Synthesize event
+    t =    43.25s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.55s Type 'Ship' into "bulkLabelsName" TextField
+    t =    43.55s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.56s     Find the "bulkLabelsName" TextField
+    t =    43.66s     Check for interrupting elements affecting "bulkLabelsName" TextField
+    t =    43.74s     Synthesize event
+    t =    44.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    44.20s Find the "bulkLabelsForm" CollectionView
+    t =    44.30s Find the "bulkLabelsForm" CollectionView
+    t =    44.39s Find the "bulkLabelsForm" CollectionView
+    t =    44.49s Find the "bulkLabelsForm" CollectionView
+    t =    44.58s Checking existence of `"reviewBulkLabels" Button`
+    t =    44.67s Find the "reviewBulkLabels" Button
+    t =    44.77s Find the "reviewBulkLabels" Button
+    t =    44.86s Find the "reviewBulkLabels" Button
+    t =    45.02s Find the "reviewBulkLabels" Button
+    t =    45.12s Tap "reviewBulkLabels" Button
+    t =    45.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.41s     Find the "reviewBulkLabels" Button
+    t =    45.51s     Check for interrupting elements affecting "reviewBulkLabels" Button
+    t =    45.59s     Synthesize event
+    t =    45.89s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.89s Find the "teamPlanningForm" CollectionView
+    t =    45.98s Find the "teamPlanningForm" CollectionView
+    t =    46.06s Find the "teamPlanningForm" CollectionView
+    t =    46.14s Find the "teamPlanningForm" CollectionView
+    t =    46.22s Checking existence of `"confirmTeamPlanning" Button`
+    t =    46.29s Checking existence of `"confirmTeamPlanning" Button`
+    t =    46.37s Find the "teamPlanningForm" CollectionView
+    t =    46.45s Find the "teamPlanningForm" CollectionView
+    t =    46.52s Press "teamPlanningForm" CollectionView[0.00, 0.00] -> (221.1, 450.0) for 0.1 seconds, then drag to "teamPlanningForm" CollectionView[0.00, 0.00] -> (221.1, 450.0) -> (0.0, -245.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    46.52s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    46.53s     Find the "teamPlanningForm" CollectionView
+    t =    46.61s     Check for interrupting elements affecting "teamPlanningForm" CollectionView
+    t =    46.67s     Synthesize event
+    t =    46.67s         Find the "teamPlanningForm" CollectionView
+    t =    46.75s         Find the "teamPlanningForm" CollectionView
+    t =    46.84s         Find the "teamPlanningForm" CollectionView
+    t =    46.92s         Find the "teamPlanningForm" CollectionView
+    t =    47.00s         Find the "teamPlanningForm" CollectionView
+    t =    47.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.57s Find the "teamPlanningForm" CollectionView
+    t =    48.67s Find the "teamPlanningForm" CollectionView
+    t =    48.76s Find the "teamPlanningForm" CollectionView
+    t =    48.85s Find the "teamPlanningForm" CollectionView
+    t =    48.92s Checking existence of `"confirmTeamPlanning" Button`
+    t =    49.01s Find the "confirmTeamPlanning" Button
+    t =    49.10s Find the "confirmTeamPlanning" Button
+    t =    49.19s Find the "confirmTeamPlanning" Button
+    t =    49.28s Waiting 8.0s for "confirmTeamPlanning" Button to exist
+    t =    50.31s     Checking `Expect predicate `existsNoRetry == 1` for object "confirmTeamPlanning" Button`
+    t =    50.31s         Checking existence of `"confirmTeamPlanning" Button`
+    t =    50.40s Find the "teamPlanningForm" CollectionView
+    t =    50.48s Find the "teamPlanningForm" CollectionView
+    t =    50.56s Find the "teamPlanningForm" CollectionView
+    t =    50.64s Find the "teamPlanningForm" CollectionView
+    t =    50.72s Checking existence of `"confirmTeamPlanning" Button`
+    t =    50.80s Find the "confirmTeamPlanning" Button
+    t =    50.89s Find the "confirmTeamPlanning" Button
+    t =    50.98s Find the "confirmTeamPlanning" Button
+    t =    51.06s Find the "confirmTeamPlanning" Button
+    t =    51.15s Tap "confirmTeamPlanning" Button
+    t =    51.15s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    51.15s     Find the "confirmTeamPlanning" Button
+    t =    51.25s     Check for interrupting elements affecting "confirmTeamPlanning" Button
+    t =    51.32s     Synthesize event
+    t =    51.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    51.85s Waiting 8.0s for "undoToast" Button to exist
+    t =    52.91s     Checking `Expect predicate `existsNoRetry == 1` for object "undoToast" Button`
+    t =    52.91s         Checking existence of `"undoToast" Button`
+    t =    52.98s Tap "undoToast" Button
+    t =    52.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    52.98s     Find the "undoToast" Button
+    t =    53.04s     Check for interrupting elements affecting "undoToast" Button
+    t =    53.08s     Synthesize event
+    t =    53.38s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    53.39s Terminate com.dbakp.taskfold.workflowteststeameditbridge:84670
+    t =    54.40s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    54.40s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-25 13:09:41.761 xcodebuild[84620:19737986] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 13:09:41.761 xcodebuild[84620:19737986] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    54.62s         Setting up automation session
+    t =    58.41s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    60.08s Waiting 15.0s for "openTeamBatchListFixture" Button to exist
+    t =    61.09s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamBatchListFixture" Button`
+    t =    61.09s         Checking existence of `"openTeamBatchListFixture" Button`
+    t =    61.20s Tap "openTeamBatchListFixture" Button
+    t =    61.20s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    61.20s     Find the "openTeamBatchListFixture" Button
+    t =    61.22s     Check for interrupting elements affecting "openTeamBatchListFixture" Button
+    t =    61.25s     Synthesize event
+    t =    61.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    62.09s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    62.30s Added attachment named 'Shared labels Undo survives relaunch'
+    t =    62.30s Terminate com.dbakp.taskfold.workflowteststeameditbridge:84886
+    t =    63.36s Tear Down
+Test Case '-[TaskfoldUITests.TeamTaskBatchDeletionUITests testBulkSharedLabelsReviewBackCancelSaveUndoAndRelaunch]' passed (63.496 seconds).
+Test Case '-[TaskfoldUITests.TeamTaskBatchDeletionUITests testCapturedUndoCannotRetargetAtHistoryLimit]' started.
+    t =     0.00s Start Test at 2026-10-25 13:09:50.856
+    t =     0.03s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-25 13:09:50.886 xcodebuild[84620:19737986] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 13:09:50.886 xcodebuild[84620:19737986] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     4.05s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.02s Waiting 15.0s for "openTeamBatchListFixture" Button to exist
+    t =     7.08s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamBatchListFixture" Button`
+    t =     7.08s         Checking existence of `"openTeamBatchListFixture" Button`
+    t =     7.17s Tap "openTeamBatchListFixture" Button
+    t =     7.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.17s     Find the "openTeamBatchListFixture" Button
+    t =     7.19s     Check for interrupting elements affecting "openTeamBatchListFixture" Button
+    t =     7.22s     Synthesize event
+    t =     7.55s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.10s Tap "Task options" Button
+    t =     8.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.55s     Find the "Task options" Button
+    t =     8.68s     Check for interrupting elements affecting "Task options" Button
+    t =     8.73s     Synthesize event
+    t =     9.04s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.99s Waiting 5.0s for "Fill test history" Button to exist
+    t =    11.04s     Checking `Expect predicate `existsNoRetry == 1` for object "Fill test history" Button`
+    t =    11.04s         Checking existence of `"Fill test history" Button`
+    t =    11.10s Tap "Fill test history" Button
+    t =    11.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.10s     Find the "Fill test history" Button
+    t =    11.15s     Check for interrupting elements affecting "Fill test history" Button
+    t =    11.19s     Synthesize event
+    t =    11.49s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.83s Waiting 8.0s for "Complete Team editor proof" Button to exist
+    t =    13.83s     Checking `Expect predicate `existsNoRetry == 1` for object "Complete Team editor proof" Button`
+    t =    13.84s         Checking existence of `"Complete Team editor proof" Button`
+    t =    13.93s Tap "Complete Team editor proof" Button
+    t =    13.93s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.93s     Find the "Complete Team editor proof" Button
+    t =    14.04s     Check for interrupting elements affecting "Complete Team editor proof" Button
+    t =    14.09s     Synthesize event
+    t =    14.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.39s Waiting 8.0s for "undoToast" Button to exist
+    t =    15.45s     Checking `Expect predicate `existsNoRetry == 1` for object "undoToast" Button`
+    t =    15.45s         Checking existence of `"undoToast" Button`
+    t =    15.50s         Capturing element debug description
+    t =    16.43s     Checking `Expect predicate `existsNoRetry == 1` for object "undoToast" Button`
+    t =    16.43s         Checking existence of `"undoToast" Button`
+    t =    16.48s         Capturing element debug description
+    t =    17.41s     Checking `Expect predicate `existsNoRetry == 1` for object "undoToast" Button`
+    t =    17.41s         Checking existence of `"undoToast" Button`
+    t =    17.46s         Capturing element debug description
+    t =    18.48s     Checking `Expect predicate `existsNoRetry == 1` for object "undoToast" Button`
+    t =    18.48s         Checking existence of `"undoToast" Button`
+    t =    18.53s         Capturing element debug description
+    t =    19.48s     Checking `Expect predicate `existsNoRetry == 1` for object "undoToast" Button`
+    t =    19.49s         Checking existence of `"undoToast" Button`
+    t =    19.55s         Capturing element debug description
+    t =    20.48s     Checking `Expect predicate `existsNoRetry == 1` for object "undoToast" Button`
+    t =    20.48s         Checking existence of `"undoToast" Button`
+    t =    20.54s         Capturing element debug description
+    t =    21.49s     Checking `Expect predicate `existsNoRetry == 1` for object "undoToast" Button`
+    t =    21.49s         Checking existence of `"undoToast" Button`
+    t =    21.53s         Capturing element debug description
+    t =    22.40s     Checking `Expect predicate `existsNoRetry == 1` for object "undoToast" Button`
+    t =    22.40s         Checking existence of `"undoToast" Button`
+    t =    22.45s         Capturing element debug description
+    t =    22.45s     Checking existence of `"undoToast" Button`
+    t =    22.49s Collecting debug information to assist test failure triage
+    t =    22.49s     Requesting snapshot of accessibility hierarchy for app with pid 84897
+    t =    22.54s Requesting snapshot of accessibility hierarchy for app with pid 84897
+    t =    22.71s Requesting snapshot of accessibility hierarchy for app with pid 84897
+/tmp/taskfold-history-binding-host/TaskfoldUITests/TeamTaskBatchDeletionUITests.swift:448: error: -[TaskfoldUITests.TeamTaskBatchDeletionUITests testCapturedUndoCannotRetargetAtHistoryLimit] : XCTAssertTrue failed - Attributes: Application, 0x1159b1680, pid: 84897, label: 'Taskfold Team Editor Test'
+Element subtree:
+ →Application, 0x1159b1680, pid: 84897, label: 'Taskfold Team Editor Test'
+    Window (Main), 0x1159b17c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1159b1900, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1159b1a40, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1159b1b80, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1159b1cc0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1159b1e00, {{0.0, 0.0}, {402.0, 874.0}}
+                NavigationBar, 0x1159b1f40, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Design workshop'
+                  Button, 0x1159b2080, {{16.0, 62.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Team editor test'
+                  Other, 0x1159b21c0, {{288.3, 66.0}, {38.0, 36.0}}
+                    Other, 0x1159b2300, {{288.3, 66.0}, {38.0, 36.0}}
+                      Button, 0x1159b2440, {{288.3, 66.0}, {38.0, 36.0}}, label: 'Task options'
+                        Button, 0x1159b2580, {{288.3, 66.0}, {38.0, 36.0}}
+                          Image, 0x1159b26c0, {{297.3, 82.0}, {20.0, 4.3}}, identifier: 'ellipsis', label: 'More'
+                  Other, 0x1159b2800, {{342.3, 66.0}, {39.7, 36.0}}
+                    Other, 0x1159b2940, {{342.3, 66.0}, {39.7, 36.0}}
+                      Button, 0x1159b2a80, {{342.3, 66.0}, {39.7, 36.0}}, identifier: 'openTaskSearch', label: 'Search'
+                  StaticText, 0x1159b2bc0, {{16.0, 119.7}, {274.0, 40.7}}, label: 'Design workshop'
+                Other, 0x1159b2d00, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1159b2e40, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1159b2f80, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1159b30c0, {{0.0, 0.0}, {402.0, 874.0}}
+                        CollectionView, 0x1159b3200, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1159b3340, {{-16.0, -1580.0}, {434.0, 1817.7}}
+                          Other, 0x1159b3480, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1159b35c0, {{0.0, 0.0}, {402.0, 156.0}}
+                          Other, 0x1159b3700, {{0.0, 0.0}, {402.0, 874.0}}
+                          Cell, 0x1159b3840, {{16.0, 168.0}, {370.0, 52.0}}
+                            Other, 0x1159b3980, {{16.0, 168.0}, {370.0, 52.0}}
+                              Other, 0x1159b3ac0, {{16.0, 168.0}, {370.0, 52.0}}
+                            Other, 0x1159b3c00, {{16.0, 168.0}, {370.0, 52.0}}
+                              Other, 0x1159b3d40, {{16.0, 168.0}, {370.0, 52.0}}
+                                Other, 0x1159b3e80, {{16.0, 168.0}, {370.0, 52.0}}
+                                  Other, 0x1159e4000, {{16.0, 168.0}, {370.0, 52.0}}, identifier: 'syncStatus', label: '30 changes waiting to sync'
+                                    StaticText, 0x1159e4140, {{34.0, 186.2}, {203.7, 15.7}}, label: '30 changes waiting to sync'
+                                    Image, 0x1159e4280, {{34.0, 187.0}, {20.3, 14.0}}, identifier: 'icloud', label: 'Icloud'
+                          Other, 0x1159e43c0, {{-16.0, 237.7}, {434.0, 2134.3}}
+                          Cell, 0x1159e4500, {{16.0, 237.7}, {370.0, 64.0}}
+                            Other, 0x1159e4640, {{16.0, 237.7}, {370.0, 64.0}}
+                            Other, 0x1159e4780, {{16.0, 237.7}, {370.0, 64.0}}
+                              Other, 0x1159e48c0, {{16.0, 237.7}, {370.0, 64.0}}
+                                Other, 0x1159e4a00, {{16.0, 237.7}, {370.0, 64.0}}
+                                  Button, 0x1159e4b40, {{16.0, 237.7}, {370.0, 64.0}}, identifier: 'sectionHeader-ec240000-0000-4000-8000-000000000003:unsectioned', label: 'Tasks, 3', value: Expanded
+                                    Image, 0x1159e4c80, {{31.2, 266.8}, {13.3, 7.7}}, identifier: 'chevron.right', label: 'Forward'
+                                    StaticText, 0x1159e4dc0, {{51.7, 260.7}, {41.0, 18.0}}, label: 'Tasks'
+                                    StaticText, 0x1159e4f00, {{100.7, 260.7}, {9.7, 18.0}}, label: '3'
+                          Cell, 0x1159e5040, {{16.0, 301.7}, {370.0, 101.0}}
+                            Other, 0x1159e5180, {{16.0, 301.7}, {370.0, 101.0}}
+                              Other, 0x1159e52c0, {{16.0, 301.7}, {370.0, 101.0}}
+                            Other, 0x1159e5400, {{16.0, 301.7}, {370.0, 101.0}}
+                              Other, 0x1159e5540, {{16.0, 301.7}, {370.0, 101.0}}
+                                Other, 0x1159e5680, {{16.0, 301.7}, {370.0, 101.0}}
+                                  Other, 0x1159e57c0, {{32.0, 316.7}, {338.0, 71.0}}, identifier: 'taskRow-ec240000-0000-4000-8000-000000000002'
+                                    Button, 0x1159e5900, {{32.0, 316.7}, {44.0, 44.0}}, label: 'Complete Team editor proof'
+                                      Image, 0x1159e5a40, {{32.0, 316.7}, {44.0, 44.0}}, identifier: 'checkmark', label: 'Selected', Selected
+                                    Button, 0x1159e5b80, {{88.0, 316.7}, {282.0, 71.0}}, identifier: 'taskDetails-ec240000-0000-4000-8000-000000000002', label: 'Team editor proof, Original team notes, Design workshop, 0 of 2 subtasks completed'
+                                      StaticText, 0x1159e5cc0, {{88.0, 320.8}, {135.0, 20.3}}, label: 'Team editor proof'
+                                      StaticText, 0x1159e5e00, {{88.0, 346.1}, {133.3, 18.0}}, identifier: 'taskNotesPreview-ec240000-0000-4000-8000-000000000002', label: 'Original team notes'
+                                      StaticText, 0x1159e5f40, {{100.0, 369.1}, {100.0, 14.3}}, label: 'Design workshop'
+                                      StaticText, 0x1159e6080, {{211.3, 369.2}, {50.3, 14.3}}, identifier: 'subtaskSummary-ec240000-0000-4000-8000-000000000002', label: '0 of 2 subtasks completed'
+                                      Image, 0x1159e61c0, {{211.3, 370.0}, {13.7, 12.0}}, identifier: 'subtaskSummary-ec240000-0000-4000-8000-000000000002', label: '0 of 2 subtasks completed'
+                          Cell, 0x1159e6300, {{16.0, 402.7}, {370.0, 100.7}}
+                            Other, 0x1159e6440, {{16.0, 402.7}, {370.0, 100.7}}
+                              Other, 0x1159e6580, {{16.0, 402.7}, {370.0, 100.7}}
+                            Other, 0x1159e66c0, {{16.0, 402.7}, {370.0, 100.7}}
+                              Other, 0x1159e6800, {{16.0, 402.7}, {370.0, 100.7}}
+                                Other, 0x1159e6940, {{16.0, 402.7}, {370.0, 100.7}}
+                                  Other, 0x1159e6a80, {{32.0, 417.7}, {338.0, 70.7}}, identifier: 'taskRow-ec240000-0000-4000-8000-000000000031'
+                                    Button, 0x1159e6bc0, {{32.0, 417.7}, {44.0, 44.0}}, label: 'Complete Next workshop review'
+                                      Image, 0x1159e6d00, {{32.0, 417.7}, {44.0, 44.0}}, identifier: 'checkmark', label: 'Selected', Selected
+                                    Button, 0x1159e6e40, {{88.0, 417.7}, {282.0, 70.7}}, identifier: 'taskDetails-ec240000-0000-4000-8000-000000000031', label: 'Next workshop review, Keep the selected occurrence notes, Design workshop'
+                                      StaticText, 0x1159e6f80, {{88.0, 421.7}, {167.7, 20.3}}, label: 'Next workshop review'
+                                      StaticText, 0x1159e70c0, {{88.0, 447.0}, {247.3, 18.0}}, identifier: 'taskNotesPreview-ec240000-0000-4000-8000-000000000031', label: 'Keep the selected occurrence notes'
+                                      StaticText, 0x1159e7200, {{100.0, 470.0}, {100.0, 14.3}}, label: 'Design workshop'
+                          Other, 0x1159e7340, {{88.0, 401.7}, {282.0, 1.0}}
+                          Cell, 0x1159e7480, {{16.0, 503.3}, {370.0, 100.7}}
+                            Other, 0x1159e75c0, {{16.0, 503.3}, {370.0, 100.7}}
+                              Other, 0x1159e7700, {{16.0, 503.3}, {370.0, 100.7}}
+                            Other, 0x1159e7840, {{16.0, 503.3}, {370.0, 100.7}}
+                              Other, 0x1159e7980, {{16.0, 503.3}, {370.0, 100.7}}
+                                Other, 0x1159e7ac0, {{16.0, 503.3}, {370.0, 100.7}}
+                                  Other, 0x1159e7c00, {{32.0, 518.3}, {338.0, 70.7}}, identifier: 'taskRow-ec240000-0000-4000-8000-000000000032'
+                                    Button, 0x1159e7d40, {{32.0, 518.3}, {44.0, 44.0}}, label: 'Complete History checkpoint 30'
+                                      Image, 0x1159e7e80, {{32.0, 518.3}, {44.0, 44.0}}, identifier: 'checkmark', label: 'Selected', Selected
+                                    Button, 0x1159ec000, {{88.0, 518.3}, {282.0, 70.7}}, identifier: 'taskDetails-ec240000-0000-4000-8000-000000000032', label: 'History checkpoint 30, Keep this unselected occurrence, Design workshop'
+                                      StaticText, 0x1159ec140, {{88.0, 522.3}, {168.3, 20.3}}, label: 'History checkpoint 30'
+                                      StaticText, 0x1159ec280, {{88.0, 547.7}, {225.0, 18.0}}, identifier: 'taskNotesPreview-ec240000-0000-4000-8000-000000000032', label: 'Keep this unselected occurrence'
+                                      StaticText, 0x1159ec3c0, {{100.0, 570.7}, {100.0, 14.3}}, label: 'Design workshop'
+                          Other, 0x1159ec500, {{88.0, 502.3}, {282.0, 1.0}}
+                          Other, 0x1159ec640, {{369.0, 116.0}, {30.0, 640.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                            Other, 0x1159ec780, {{396.0, 251.0}, {3.0, 502.0}}
+                          Other, 0x1159ec8c0, {{369.0, 116.0}, {30.0, 640.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                            Other, 0x1159eca00, {{396.0, 251.0}, {3.0, 502.0}}
+                        Button, 0x1159ecb40, {{308.0, 748.0}, {74.0, 74.0}}, identifier: 'floatingAdd', label: 'Create task or section'
+                Toolbar, 0x1159ecc80, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x1159ecdc0, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x1159b1680, pid: 84897, label: 'Taskfold Team Editor Test'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+  Output: {
+    Application, 0x1159ecf00, pid: 84897, label: 'Taskfold Team Editor Test'
+  }
+
+    t =    22.94s Tear Down
+Test Case '-[TaskfoldUITests.TeamTaskBatchDeletionUITests testCapturedUndoCannotRetargetAtHistoryLimit]' failed (23.185 seconds).
+Test Suite 'TeamTaskBatchDeletionUITests' failed at 2026-10-25 13:10:14.041.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 86.681 (86.686) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-25 13:10:14.049.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 86.681 (86.694) seconds
+Test Suite 'Selected tests' failed at 2026-10-25 13:10:14.049.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 86.681 (86.695) seconds
+2026-10-25 13:10:14.390 xcodebuild[84620:19737986] [MT] IDETestOperationsObserverDebug: 93.299 elapsed -- Testing started completed.
+2026-10-25 13:10:14.390 xcodebuild[84620:19737986] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-25 13:10:14.390 xcodebuild[84620:19737986] [MT] IDETestOperationsObserverDebug: 93.299 sec, +93.299 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-history-binding-phone-accepted.xcresult
+
+Failing tests:
+	TeamTaskBatchDeletionUITests.testCapturedUndoCannotRetargetAtHistoryLimit()
+
+** TEST EXECUTE FAILED **
+
+Testing started

@@ -1,0 +1,29 @@
+{
+  "body": {
+    "protocol": 1,
+    "account": "063c0dbe-ef5f-4a2b-bf5f-71ecd4bf0e6a",
+    "request_id": "f6207bef-b21e-4fb5-bde5-04d441228e5f",
+    "task_id": "638745d0-35fa-4636-8d68-f2d977d2b27d",
+    "task_generation": "bdcddd7f-ba83-4a12-baea-113d3855960f",
+    "project_id": "1ac24765-2b8b-4d1c-b21c-5247fbc8fda0",
+    "node_key": "parent",
+    "incarnation": "43f229e0-49e8-4818-8b48-bfcfc0644a7a",
+    "revision": 1,
+    "changes": {
+      "title": "Edited without replacing the child list"
+    }
+  },
+  "receipt": {
+    "account": "063c0dbe-ef5f-4a2b-bf5f-71ecd4bf0e6a",
+    "task_id": "638745d0-35fa-4636-8d68-f2d977d2b27d",
+    "node_key": "parent",
+    "protocol": 1,
+    "replayed": false,
+    "revision": 2,
+    "project_id": "1ac24765-2b8b-4d1c-b21c-5247fbc8fda0",
+    "request_id": "f6207bef-b21e-4fb5-bde5-04d441228e5f",
+    "incarnation": "43f229e0-49e8-4818-8b48-bfcfc0644a7a",
+    "task_generation": "bdcddd7f-ba83-4a12-baea-113d3855960f"
+  },
+  "sourceMigrationSHA256": "9cb9e5badc970b5bd9a5b031a17a776becd6e924cf178d7cc31ac3ac5603f9f2"
+}

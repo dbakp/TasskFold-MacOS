@@ -1,0 +1,176 @@
+{
+  "native": {
+    "debug": {
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v7-mac-debug-native.log",
+        "SHA256": "1edd6ecd5c545ba2d8f06b901208c8fc6eff5ee26e5644e9c9a4283aff2b2b4f"
+      },
+      "sourceDirectory": "/tmp/taskfold-assignee-save-recovery-v7-mac-native-source",
+      "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build",
+      "jobs": 2,
+      "signingAllowed": false,
+      "architectures": [
+        "arm64"
+      ],
+      "scope": "Own native compilation; Debug includes UI-test compilation. Mac runtime/install/replacement not performed. Release inputs match current app/widget code; iOS test-only navigation changed after its v7 Release build."
+    },
+    "release": {
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v7-mac-release-native.log",
+        "SHA256": "679486249665e9bce4d4f120fbbc37bb493a8ab40db091b5b25b7ec9f95e6072"
+      },
+      "sourceDirectory": "/tmp/taskfold-assignee-save-recovery-v7-mac-native-source",
+      "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build",
+      "jobs": 2,
+      "signingAllowed": false,
+      "architectures": [
+        "arm64",
+        "x86_64"
+      ],
+      "scope": "Own native compilation; Debug includes UI-test compilation. Mac runtime/install/replacement not performed. Release inputs match current app/widget code; iOS test-only navigation changed after its v7 Release build."
+    }
+  },
+  "coreInputBinding": {
+    "baselineRevision": "dd49a08acf2e5df9f638b99157c9994500dc9896",
+    "changedWholeCoreFiles": [
+      "Taskfold/Core/Store.swift"
+    ],
+    "packageExcludesStore": true,
+    "compiledPackageAndTestInputsUnchanged": true,
+    "scope": "565-test Debug and Release results remain applicable to unchanged Core package inputs. Store is excluded; new Store/editor behavior requires native compilation and iOS runtime verification."
+  },
+  "phone": {
+    "acceptedScenarios": 2,
+    "standard": {
+      "method": "testAssigneePatternBuilderExpressionResultsAndRelaunch",
+      "selectedMethodPassed": true,
+      "bundleTerminalExitCode": 65,
+      "bundlePassed": 1,
+      "bundleFailed": 1,
+      "resultBundle": "/tmp/taskfold-assignee-save-recovery-v9-phone.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v9-phone.log",
+        "SHA256": "191f6c5f0f917cb9628501ddf27508ccab12a63402eb8822493bbd033d879272"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v9-phone-summary.json",
+        "SHA256": "84287e74342c70db00351a137a4c433d63bab649f58d0fabc3c85d71b5d7f928"
+      },
+      "scope": "Passing standard method retained from v9 bundle; its failed largest case remains recorded. App/widget sources unchanged through v10; only test scrolling direction changed."
+    },
+    "darkLargest": {
+      "terminalExitCode": 0,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "resultBundle": "/tmp/taskfold-assignee-save-recovery-v10-phone.xcresult",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "log": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v10-phone.log",
+        "SHA256": "359ae28ca518cff1b328138f31465f92b1b4bf9a47fa25f376161a93d76a7dc5"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v10-phone-summary.json",
+        "SHA256": "f6967a95d20484898baa599010bbe1a48aa21b5d0dde3b1c49108710433af5f5"
+      }
+    },
+    "scope": "Two accepted phone scenarios across separate bundles; no all-passing v9 bundle claim."
+  },
+  "tablet": {
+    "terminalExitCode": 0,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "resultBundle": "/tmp/taskfold-assignee-save-recovery-v10-tablet.xcresult",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "log": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v10-tablet.log",
+      "SHA256": "20c66a9a8840cb009707d3353e0f7ff7884293e933581c98242aa85fdded46d0"
+    },
+    "summary": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v10-tablet-summary.json",
+      "SHA256": "b7499056e54e07d8641e15a02ef2f27016e52c41863aeb2db4c8cbe74ac9ac06"
+    }
+  },
+  "visualReview": {
+    "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-pattern-visual-review.json",
+    "SHA256": "d7d091be50793a6c83834ef5fb1d09476f02bd3cd6148cef7b799bba044a4a21"
+  },
+  "products": {
+    "/tmp/taskfold-assignee-pattern-final-v6-ios-debug-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold": {
+      "SHA256": "86386b2fbb5059c53b7a61c125ba93789444133a5b9dccd8df8553d38b3d823c",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-ios-debug-build/Build/Products/Debug-iphonesimulator/Taskfold.app/PlugIns/TaskfoldWidgets.appex/TaskfoldWidgets": {
+      "SHA256": "cc6f57b5a67ef41ab1d5023f2464df8cb743add30c9f89922086da88e1b344cd",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-ios-debug-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib": {
+      "SHA256": "6e2955fd6945091cd866836ac661b1d50463ae457dad4bbf920585122910d6c9",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-ios-release-build/Build/Products/Release-iphonesimulator/Taskfold.app/Taskfold": {
+      "SHA256": "7d5a184e3cc56b05936517279685e5bcc6e90ca80bae6d9cd9c66e1134b26197",
+      "architectures": [
+        "x86_64",
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-ios-release-build/Build/Products/Release-iphonesimulator/Taskfold.app/PlugIns/TaskfoldWidgets.appex/TaskfoldWidgets": {
+      "SHA256": "9c8c3ffe97b90e9db83084d323056d95a09fa6852ee8f1f4091d6dc9dc16c61d",
+      "architectures": [
+        "x86_64",
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold": {
+      "SHA256": "744dcea64df9d5dc44a40a50bc554a4a326cbd8a80c7f7ce4b85631ad86cbbc5",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets": {
+      "SHA256": "ebcde180025896bedd60b9f526c3437a69e92c4b82005cfdf86a5a3b8088fec4",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": {
+      "SHA256": "376de4b3e1613736e6dd7124e595b6d529569bcd82c17306da66f6c8ec542dac",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets.debug.dylib": {
+      "SHA256": "d5dec4e0fee0ed60977de2edf603aed65e1b68aede4540583dc5895fdefd6c84",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build/Build/Products/Release/Taskfold.app/Contents/MacOS/Taskfold": {
+      "SHA256": "23d53df51cce64c9a76a8a4032b51e3e1b1cd58a1e6052c31ccce940b147e916",
+      "architectures": [
+        "x86_64",
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build/Build/Products/Release/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets": {
+      "SHA256": "0485c09f9501951f705fc8375e0c560b9e01a11d7617a37671dddd01926aa140",
+      "architectures": [
+        "x86_64",
+        "arm64"
+      ]
+    }
+  },
+  "retention": "Completed existing build caches reused; unique logs/results/source manifests retained; full P0 unfinished."
+}

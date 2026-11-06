@@ -1,0 +1,149 @@
+{
+  "platform": "ipad",
+  "mode": "stop",
+  "checks": {
+    "exact isolated app identifier": true,
+    "actual task generation matches native scope": true,
+    "native UI case succeeds": true,
+    "one native case accepted without skip": true,
+    "one durable server upload exists": true,
+    "native operation reached actual SQL session": true,
+    "native original hash matches independently": true,
+    "native retries do not duplicate provider POST": true,
+    "native Stop commits cancellation": true,
+    "stopped native file never attaches to task": true,
+    "native stopped upload cleans through real provider": true,
+    "native stopped metadata is absent": true,
+    "native stopped allocation releases quota": true
+  },
+  "nativeAuthenticatedLocalProvider": true,
+  "genuineHostedAuth": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "xcodeExitCode": 0,
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+          "deviceName": "iPad Pro 13-inch (M5)",
+          "modelName": "iPad Pro 13-inch (M5)",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793585967.967,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793585903.193,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "transportCounts": {
+    "uploads": 1,
+    "downloads": 3,
+    "deletes": 1,
+    "rpc": 8,
+    "auth": 3,
+    "providerErrors": [
+      {
+        "method": "GET",
+        "status": 400,
+        "body": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+      }
+    ]
+  },
+  "checkCount": 13,
+  "storageImage": "supabase/storage-api@sha256:0194c53a03977e8ca0194636a27172158b39e3ae7a5e12da1dca5717086dd849",
+  "serverOperations": [
+    {
+      "state": "cancelled",
+      "intent": {
+        "name": "Native provider proof.txt",
+        "type": "text/plain",
+        "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+        "target": {
+          "task_id": "ec240000-0000-4000-8000-000000000002",
+          "team_id": "ec240000-0000-4000-8000-000000000004",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "ec240000-0000-4000-8000-000000000071"
+        },
+        "byte_count": 24,
+        "operation_id": "712ec390-40dc-4ecf-abe3-916e72ca7474"
+      },
+      "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+      "task_id": "ec240000-0000-4000-8000-000000000002",
+      "team_id": "ec240000-0000-4000-8000-000000000004",
+      "actor_id": "ec240000-0000-4000-8000-000000000001",
+      "object_id": null,
+      "attachment": null,
+      "byte_count": 24,
+      "created_at": "2026-11-02T02:18:52.476277+00:00",
+      "expires_at": "2026-11-02T02:33:52.476277+00:00",
+      "generation": "ec240000-0000-4000-8000-000000000071",
+      "project_id": "ec240000-0000-4000-8000-000000000003",
+      "intent_hash": "58d1db169c1ec95da2f0288fa49853782e9e576329127f69fc692e3a593d212f",
+      "object_name": "team-task-files/v1/712ec390-40dc-4ecf-abe3-916e72ca7474/23485d7a-65bb-484d-829f-1568eee7df30",
+      "object_nonce": "23485d7a-65bb-484d-829f-1568eee7df30",
+      "operation_id": "712ec390-40dc-4ecf-abe3-916e72ca7474",
+      "writer_protocol": 1,
+      "provider_cleanup_confirmed_at": "2026-11-02T02:19:29.018052+00:00"
+    }
+  ],
+  "serviceStatusObservation": {
+    "status": 200,
+    "reply": {
+      "receipt": {
+        "state": "cancelled",
+        "target": {
+          "task_id": "ec240000-0000-4000-8000-000000000002",
+          "team_id": "ec240000-0000-4000-8000-000000000004",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "ec240000-0000-4000-8000-000000000071"
+        },
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "protocol": 1,
+        "attachment": null,
+        "operation_id": "712ec390-40dc-4ecf-abe3-916e72ca7474"
+      }
+    }
+  },
+  "nativeTransportAudit": [
+    {
+      "action": "publish",
+      "code": 1,
+      "domain": "Taskfold.AppFailure",
+      "transportReturned": false
+    },
+    {
+      "action": "cancel",
+      "response": "{\"receipt\":{\"state\":\"cancelled\",\"target\":{\"task_id\":\"ec240000-0000-4000-8000-000000000002\",\"team_id\":\"ec240000-0000-4000-8000-000000000004\",\"project_id\":\"ec240000-0000-4000-8000-000000000003\",\"task_generation\":\"ec240000-0000-4000-8000-000000000071\"},\"account\":\"ec240000-0000-4000-8000-000000000001\",\"protocol\":1,\"attachment\":null,\"operation_id\":\"712ec390-40dc-4ecf-abe3-916e72ca7474\"}}",
+      "transportReturned": true,
+      "validatedPhase": "cancelled"
+    }
+  ],
+  "disposableUserConfigurationRemoved": true,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "ownedSimulatorRestored": true
+}

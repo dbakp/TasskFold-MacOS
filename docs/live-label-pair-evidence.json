@@ -1,0 +1,213 @@
+{
+  "date": "2026-10-13",
+  "scope": "Bounded actual Mac-offline \u2192 iPhone independent edit \u2192 Mac Keep my edit \u2192 both selected label sets/notes and normal relaunch, against the existing disposable owner account.",
+  "accepted": true,
+  "fixture": {
+    "syntheticTaskID": "aa37b8dc-aa0c-4059-8fab-a55f0e57c7cc",
+    "newTasks": 1,
+    "newLabels": 4,
+    "roles": [
+      "shared",
+      "mac",
+      "later",
+      "phone"
+    ],
+    "sourceTodoistRequests": 0,
+    "credentials": "Private host-only fixture; never committed"
+  },
+  "actualJourney": [
+    "Mac signs in through native UI, syncs shared-label task, normally quits, launches disconnected transport and uses native switches for two separately persisted label edits",
+    "Two queued Mac mutations and three local labels survive normal Quit/relaunch while still disconnected",
+    "iPhone independently adds its label and notes through the task editor; Save, real owner sync, empty queue and normal relaunch retain shared+phone labels and notes",
+    "Mac ordinary online launch shows a real overlapping-label review; comparison screenshot names Shared+Mac versus Shared+Phone",
+    "Actual Keep my edit executes; native cache settlement and real owner server read confirm all four labels plus phone notes, with empty pending queue",
+    "Initial review case then fails only because the driver casts a numeric macOS switch value to String; this is retained as a failed test, not a green run",
+    "CUA ordinary launch displays the correct Inbox task, all four selected switches and exact notes; native Inspector and screenshot inspected",
+    "iPhone receives all four selected labels and own notes and retains the whole settled cache after normal relaunch",
+    "Corrected Mac numeric-switch assertions and exact notes pass in a separate native final-state case, including whole-cache equality after normal Quit/relaunch"
+  ],
+  "nativeResults": {
+    "mac-label-queue-v2.xcresult": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "Type \"com.dbakp.taskfold.task\" was expected to be declared and exported in the Info.plist of Taskfold.app, but it was not found."
+        }
+      ]
+    },
+    "ios-label-pair-edit-v1.xcresult": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    "mac-label-review-v1.xcresult": {
+      "result": "Failed",
+      "totalTestCount": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    "ios-label-pair-receive-v1.xcresult": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    "mac-label-retained-v1.xcresult": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    }
+  },
+  "counts": {
+    "passingNativeCases": 4,
+    "failedDriverCaseRetained": 1,
+    "passingCasesWithZeroStructuredRuntimeWarnings": 3,
+    "firstQueueCaseRuntimeWarnings": 1,
+    "skips": 0
+  },
+  "driverCorrection": {
+    "file": "TaskfoldUITests/TaskfoldMacUITests.swift",
+    "change": "Read native macOS switch value as NSNumber; shared verifier used by review and standalone retained-state case",
+    "verified": "Standalone retained-state case passes all four numeric assertions, exact notes and complete cache relaunch equality",
+    "reviewCaseAllGreenClaimed": false
+  },
+  "macIsolationCorrection": {
+    "cause": "Preparation removed UTExportedTypeDeclarations while Workspace still used the production exported drag type",
+    "shippingDeclarationPresent": true,
+    "change": "Copied Workspace uses a bundle-specific exported task type; matching metadata declares only that type with public.data conformance, no file tags or document associations",
+    "verified": "One actual preparation unittest exercises all six variants; original owned Info.plist/Workspace bytes unchanged. Corrected native Mac retained-state case reports zero runtime warnings",
+    "productionTaskTypeChanged": false,
+    "pendingWidgetHostReplaced": false
+  },
+  "uxCorrection": {
+    "bothApps": "Review explanation now explicitly names retained independent labels alongside comments/subtasks",
+    "scope": "Single text change only; no merge/transport behavior change",
+    "captureTiming": "Inspected review capture precedes this footer-only text correction; final source builds succeed separately"
+  },
+  "sourceAndBuild": {
+    "macSwiftFilesComparedAfterNamespaceOnlyIsolation": 62,
+    "iosAppAndWidgetSwiftFilesComparedAfterGroupOnlyIsolation": 47,
+    "nativeMergeEngineMatchesOwnedSources": true,
+    "finalMacBuildLog": "/private/tmp/taskfold-label-pair-mac-final-build.log",
+    "finalIOSBuildLog": "/private/tmp/taskfold-label-pair-ios-final-build.log",
+    "finalBuildResults": "Both BUILD SUCCEEDED",
+    "finalIOSDevelopmentTeamSignatureVerified": true,
+    "nativeTestIdentities": "Isolated backupcanceltests identities, never shipping products",
+    "metadataScope": "Final Mac stage uses candidate 1.2.0 (3). iOS runtime stage retains pre-bump version metadata but identical owned Swift behavior; no signed release-candidate acceptance inferred."
+  },
+  "captures": [
+    {
+      "stage": "review",
+      "name": "Real phone and Mac label conflict review_0_5CB29BF7-5E32-4215-B464-5BA244A37F0E.png",
+      "path": "/private/tmp/taskfold-label-pair-captures-v1/review/008DA798-7EAB-4A47-96A6-C31FEE5883F0.png",
+      "sha256": "a18235bdf10455633000667668a696d4477df58c7897b9def00f4728eac74a77",
+      "visuallyInspected": true
+    },
+    {
+      "stage": "phone",
+      "name": "Phone receives all independent label memberships_0_BA5ED3D4-244E-480C-ABDF-EAC555E4FC96.png",
+      "path": "/private/tmp/taskfold-label-pair-captures-v1/phone/174C1EEB-FAA4-4C7D-9FD5-481162A9F3A0.png",
+      "sha256": "b35fa6b315f3150e37c955d425e729fbfd0e5d9133ae57046cd014134200ade6",
+      "visuallyInspected": true
+    },
+    {
+      "stage": "mac",
+      "name": "All independent labels preserved after Keep my edit_0_4F0BD511-F692-4262-BF66-533D6FEFC52A.png",
+      "path": "/private/tmp/taskfold-label-pair-captures-v1/mac/1FEC5F68-6611-49F1-8489-BF97A85D2689.png",
+      "sha256": "0b5d1347233aee38e4fa2387ca3d8ab101c03017236fcb38213656f32e6babcb",
+      "visuallyInspected": true
+    }
+  ],
+  "cleanup": {
+    "serverTables": {
+      "tasks": {
+        "originalRowsPreserved": 3,
+        "syntheticMetadataRemaining": 0
+      },
+      "projects": {
+        "originalRowsPreserved": 3,
+        "syntheticMetadataRemaining": 0
+      },
+      "sections": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "labels": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "profiles": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "project_collaborators": {
+        "originalRowsPreserved": 0,
+        "syntheticMetadataRemaining": 0
+      },
+      "saved_views": {
+        "originalRowsPreserved": 3,
+        "syntheticMetadataRemaining": 0
+      },
+      "favorites": {
+        "originalRowsPreserved": 2,
+        "syntheticMetadataRemaining": 0
+      },
+      "view_preferences": {
+        "originalRowsPreserved": 5,
+        "syntheticMetadataRemaining": 0
+      },
+      "view_orders": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "reminder_preferences": {
+        "originalRowsPreserved": 0,
+        "syntheticMetadataRemaining": 0
+      },
+      "focus_sessions": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "task_activity_epoch": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "task_activity": {
+        "originalRowsPreserved": 42,
+        "syntheticMetadataRemaining": 2
+      }
+    },
+    "syntheticRecordsRemoved": true,
+    "activity": "All 42 original activity rows unchanged; two additional synthetic created/deleted ledger records remain",
+    "restoredIsolatedMacFilesExact": 28,
+    "primaryFilesExact": 100,
+    "retainedIOSWidgetFilesExact": 36,
+    "pendingMacWidgetFingerprintExact": true,
+    "sessions": "Only original pending desktop-widget host remains; phone app/runner removed and disposable F7 Simulator shut down",
+    "privateFixtureArchive": "/private/tmp/taskfold-label-native-pair-completed-v1",
+    "realDataMutations": false
+  },
+  "limits": [
+    "This accepts the named additions/later-queue/Keep my edit live pair, not every possible label removal, collision or mixed-version sequence",
+    "Previous 54 regression tests per repository retain removal/Undo/Use synced/unknown-shape contract coverage; no new broad regression rerun claimed",
+    "The first queue warning and failed review-driver result remain archived; only the final named Mac case is clean-runtime proof",
+    "Historical Mac table/AttributeGraph/QoS findings are not closed by a clean label case",
+    "Desktop automatic expiry/system-selected privacy, spoken VoiceOver, actual iOS external provider and deferred remote delivery/distribution retain their separate gates",
+    "No production app replacement, release upload, schema/RLS change or Todoist source write"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "retirement": {
+    "date": "2026-11-06",
+    "initialFreeBytes": 57443713024,
+    "freeBeforeRetirement": 56151445504,
+    "removed": [
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-25-mac-development.zip",
+        "bytes": 20123772,
+        "kind": "supersededUninstalledArchive",
+        "sha256": "41e4fd5c5da880d59109e188e4d65de396fa44a55f1dbd674c7c093a72cbaef3"
+      },
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-37-iphone-development.zip",
+        "bytes": 24095331,
+        "kind": "supersededUninstalledArchive",
+        "sha256": "1bfd18e23fd912307c94b9f057f796318cb3c1bff9726c9dd20da23db5f94539"
+      },
+      {
+        "path": "/tmp/taskfold-step-header-check.xcresult",
+        "bytes": 951174,
+        "kind": "completedRawNativeResult"
+      },
+      {
+        "path": "/tmp/taskfold-step-header-review.xcresult",
+        "bytes": 1487397,
+        "kind": "completedRawNativeResult"
+      },
+      {
+        "path": "/tmp/taskfold-step-header-retry.xcresult",
+        "bytes": 984403,
+        "kind": "completedRawNativeResult"
+      },
+      {
+        "path": "/tmp/taskfold-step-header-stop.xcresult",
+        "bytes": 913265,
+        "kind": "completedRawNativeResult"
+      },
+      {
+        "path": "/tmp/taskfold-step-header-check-attachments",
+        "bytes": 432333,
+        "kind": "exportedRawAttachmentsWithReviewedCopiesRetained"
+      }
+    ],
+    "servicesRemovedForAllFourJourneys": true,
+    "normalAppsOrPrivateDataDeleted": false,
+    "retiredLogicalBytes": 48987675,
+    "freeAfterRetirement": 56156348416
+  },
+  "finalCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 56156684288,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 679190528,
+        "projectedAllocatedBytes": 679190528
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 578613248,
+        "projectedAllocatedBytes": 578613248
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 550014976,
+        "projectedAllocatedBytes": 550014976
+      }
+    ],
+    "freeAfterBytes": 56152662016,
+    "actualFreeChangeBytes": -4022272
+  },
+  "normalMacInstalledBuild": "23",
+  "physicalPhoneLastVerifiedBuild": "34",
+  "physicalPhoneInstallationDeferred": true,
+  "privateDataAndOtherProjectsUntouched": true
+}

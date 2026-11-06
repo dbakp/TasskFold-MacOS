@@ -1,0 +1,9 @@
+{
+  "date": "2026-11-06",
+  "buildOnly": true,
+  "strictSignatureVerified": true,
+  "preparedSourcesSHA256": "86c64195a9d82f6019f51150bd9c44ef68ba9d7dc0728ac1cd1050803d264c92",
+  "ownUITestsSHA256": "1e4779ba5b015ce4bc04b333ab3932a1d9af945ce31a657b15cba177d68bc73e",
+  "xcodeExitCode": 0,
+  "scope": "Current iPhone isolated-host build/sign only; real service acceptance is in ios.json"
+}

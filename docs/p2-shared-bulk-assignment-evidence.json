@@ -1,0 +1,497 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "33251edae207eda8b4951b711b1afeaba18a9762",
+  "status": "Reviewed shared bulk assignments implemented; scoped SQL/Core/build and installed phone/tablet acceptance. Wider rank 6/Px remains open.",
+  "rolloutEnabled": false,
+  "deployed": false,
+  "hostedDataChanged": false,
+  "implementation": {
+    "entry": "Shared selection menu on iOS; independently owned Task menu, list menu and inspector on Mac. Mixed/personal/nested/cross-team input is not partially admitted.",
+    "directory": "Frozen opening source/admission; one recipient catalog per distinct project per refresh; intersect all eligible recipients; refresh again on teammate choice. Missing/foreign/stale catalogs never create a review.",
+    "offline": "Unassigned and captured actor work without a directory. A previously reviewed identity can remain a frozen intent on connectivity loss. Confirmed eligibility loss in any refreshed project takes precedence over later connectivity loss.",
+    "privacy": "Directory and display names are transient; only chosen identity enters the existing guarded edit batch. Invalidation clears directory and cancels remaining project reads; late replies cannot review.",
+    "review": "Every selected task and chosen teammate/You/Unassigned appears before final Save. Back returns to choices; Cancel makes no change; already-correct members remain in the cohort.",
+    "transaction": "New source migration extends existing private planning allowlist only. Recipient values are validated before casts; canonical Auth recipient locks precede team/project/task locks. Every member delegates live recipient role/ban checks to the existing guarded editor inside one transaction.",
+    "retryUndo": "Exact receipts acknowledge original work without reassignment after a recipient leaves/is banned. Whole-group linked Undo restores each member\u2019s original recipient with fresh identities. Sparse optional assignment values clear to explicit null; original frozen source rows are not padded.",
+    "preservation": "Unselected tasks, notes, plans, deadlines, estimates, checklist/discussion and unknown task fields stay intact."
+  },
+  "sql": {
+    "checks": {
+      "disabled rollout refuses selection": true,
+      "viewer cannot plan shared selections": true,
+      "outsider cannot plan shared selections": true,
+      "anon cannot invoke planning authority": true,
+      "service_role cannot invoke planning authority": true,
+      "replaced session cannot plan": true,
+      "separate action required for title": true,
+      "separate action required for completed": true,
+      "separate action required for labels": true,
+      "separate action required for subtasks": true,
+      "separate action required for recurrence_pattern": true,
+      "separate action required for project_id": true,
+      "separate action required for section_id": true,
+      "empty selection refused": true,
+      "duplicate member refused": true,
+      "duplicate nonce refused": true,
+      "group nonce as member refused": true,
+      "unknown envelope refused": true,
+      "restore lineage on edit refused": true,
+      "empty changes refused": true,
+      "cross-team item refused": true,
+      "unrelated changed source stops entire selection": true,
+      "first row unchanged after source conflict": true,
+      "recreated identity rejected": true,
+      "busy row refuses whole selection without waiting": true,
+      "busy refusal keeps other task untouched": true,
+      "late second-row failure aborts transaction": true,
+      "late fault rolls back first task": true,
+      "late fault rolls back group and member receipts": true,
+      "late validation refuses whole selection": true,
+      "late validation preserves first task": true,
+      "planning applies": true,
+      "receipt confirms original intent": true,
+      "receipt contains every member": true,
+      "receipt is minimal": true,
+      "priority saved 62c96404-9205-4d6e-b462-074bfa33075b": true,
+      "deadline saved 62c96404-9205-4d6e-b462-074bfa33075b": true,
+      "estimate saved 62c96404-9205-4d6e-b462-074bfa33075b": true,
+      "notes retained 62c96404-9205-4d6e-b462-074bfa33075b": true,
+      "priority saved be464c2d-fbcd-4bac-9904-f4bf34ae138a": true,
+      "deadline saved be464c2d-fbcd-4bac-9904-f4bf34ae138a": true,
+      "estimate saved be464c2d-fbcd-4bac-9904-f4bf34ae138a": true,
+      "notes retained be464c2d-fbcd-4bac-9904-f4bf34ae138a": true,
+      "private member links recorded": true,
+      "lost reply replay confirms original batch": true,
+      "replay preserves later edit": true,
+      "same group nonce cannot change intent": true,
+      "member nonce cannot be reused in a new group": true,
+      "role loss prevents replay acknowledgement": true,
+      "archived project stops selection": true,
+      "waiting caller rechecks committed role loss": true,
+      "role overlap does not partially edit": true,
+      "one selected task uses the same reviewed command": true,
+      "single selection changes only its member": true,
+      "unselected task stays unchanged": true,
+      "date planning supports the complete selection": true,
+      "date saved on both selected tasks": true,
+      "already correct tasks remain explicit reviewed members": true,
+      "absent optional clock fields retain null semantics": true,
+      "sparse date removal clears every selected date": true,
+      "sparse date removal retains notes": true,
+      "assignment batch saves every project": true,
+      "assignment changes only chosen field 62c96404-9205-4d6e-b462-074bfa33075b": true,
+      "assignment changes only chosen field be464c2d-fbcd-4bac-9904-f4bf34ae138a": true,
+      "recorded assignment replay acknowledges departed recipient": true,
+      "replay never repeats assignment": true,
+      "recipient missing editing access in one project refuses whole group": true,
+      "ineligible last member leaves every task unchanged": true,
+      "recipient failure leaves no group receipt": true,
+      "clear assignment saves whole cohort": true,
+      "clear assignments only": true,
+      "assignment inverse restores recipients": true,
+      "inverse keeps unrelated fields": true,
+      "viewer recipient refused for whole cohort": true,
+      "viewer refusal keeps cohort unchanged": true,
+      "outsider recipient refused for whole cohort": true,
+      "outsider refusal keeps cohort unchanged": true,
+      "missing recipient refused for whole cohort": true,
+      "missing refusal keeps cohort unchanged": true,
+      "malformed recipient rejected \"invalid\"": true,
+      "malformed recipient rejected false": true,
+      "malformed recipient rejected 3": true,
+      "malformed recipient rejected []": true,
+      "malformed recipient rejected {}": true,
+      "banned recipient new assignment refused": true,
+      "banned recipient old receipt still acknowledged": true,
+      "waiting assignment rechecks committed recipient ban": true,
+      "waiting ban never partially changes cohort": true,
+      "late assignment failure rolls back whole group": true,
+      "late assignment fault leaves all task rows exact": true,
+      "late assignment fault leaves no receipt": true,
+      "legacy delete operation remains supported": true,
+      "anon has no private batch table access": true,
+      "authenticated has no private batch table access": true,
+      "service_role has no private batch table access": true,
+      "no new advisor findings": true
+    },
+    "deployed": false,
+    "realDataChanged": false,
+    "rolloutEnabled": false,
+    "migrationSHA256": "cb2572cff5a1c1e61aae86e76f728d60e15c5a53602010e9f540d908f2ecfb98",
+    "advisors": {
+      "ran": true,
+      "source": "supabase db advisors --type all",
+      "result": [
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "projects",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "project_collaborators",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "sections",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+        }
+      ]
+    },
+    "containerRemoved": true,
+    "checkCount": 96
+  },
+  "legacyPlanningSQL": {
+    "checks": 67,
+    "failed": 0,
+    "containerRemoved": true,
+    "report": "shared-bulk-assignment/mac-sql-legacy.json"
+  },
+  "core": {
+    "repository": "TasskFold-MacOS",
+    "focusedSuiteTests": 502,
+    "failed": 0,
+    "skipped": 0,
+    "newCases": 9,
+    "filter": "Team|EmailCapture|Webhook|Planner|SubtaskTree|TaskHierarchyIndex|MixedSelection",
+    "log": "shared-bulk-assignment/mac-core-final.log.gz",
+    "finalSparseBatchRevision": {
+      "tests": 23,
+      "failed": 0,
+      "log": "shared-bulk-assignment/mac-batch-final.log.gz",
+      "note": "After the full focused pass, the existing assignment Undo test was strengthened to start from an omitted nullable assignment key and preserve the original wire baseline. The complete batch suite was rerun on that revision."
+    }
+  },
+  "builds": {
+    "iOS": "Final isolated arm64 Debug simulator app and UI runner build-for-testing pass; ad-hoc signing.",
+    "macOS": "Final isolated arm64 Debug app build passes with signing disabled; no installed Mac runtime claim.",
+    "release": "User-deferred; not attempted."
+  },
+  "native": {
+    "scope": "Installed synthetic exact reserved iOS host, real Store/private cache, intercepted recipient HTTP and deliberately offline task sender. Native cohort contains two tasks in one project. Cross-project intersection/authorization has separate Core/SQL evidence, not a claimed multi-project live UI pass.",
+    "appID": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "runnerID": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+    "sourceRepository": "TaskFold-iOS",
+    "sourceSHA256": "dc3d038b6497dc3cc4d62e77fa1708c61c8bf864163b49832a4dfb018d83cd16",
+    "devices": {
+      "phone": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "summary": "shared-bulk-assignment/phone-verified-summary.json"
+      },
+      "ipad": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+          "deviceName": "iPad Pro 13-inch (M5)",
+          "modelName": "iPad Pro 13-inch (M5)",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "summary": "shared-bulk-assignment/ipad-verified-summary.json"
+      }
+    },
+    "cases": [
+      "Reviewed teammate assignment: combined accessible name, Back, Cancel, Save, one durable group, field-only changes, Undo and normal relaunch",
+      "You then Unassigned: explicit clear review, field preservation, linked Undo and durable queue",
+      "Recipient removal triggers fresh lookup and refusal; changed opening source pauses before creating a command"
+    ],
+    "visualScope": "Final standard-light phone/tablet assignment, clear and paused reviews inspected; not dark/large-text/spoken/Mac runtime acceptance.",
+    "screenshots": [
+      {
+        "file": "shared-bulk-assignment/phone-42E6D184-281F-49D6-B780-8438B4B8432C.png",
+        "device": "phone",
+        "case": "TeamTaskBatchDeletionUITests/testBulkSharedAssignmentRechecksRecipientAndOpeningSource()",
+        "description": "Changed task pauses shared assignment before creating a command_0_A846A5EF-B800-411C-9D46-7E180F8CDC83.png"
+      },
+      {
+        "file": "shared-bulk-assignment/phone-05589C1B-48FA-4D78-B285-E8190319D423.png",
+        "device": "phone",
+        "case": "TeamTaskBatchDeletionUITests/testBulkSharedAssignmentReviewBackCancelSaveUndoAndRelaunch()",
+        "description": "Shared assignment review names every task and the chosen teammate_0_F57929C1-71F7-4C60-97DF-F4B2F0DE3F09.png"
+      },
+      {
+        "file": "shared-bulk-assignment/phone-07E717FF-50B5-4723-9546-229F5730985F.png",
+        "device": "phone",
+        "case": "TeamTaskBatchDeletionUITests/testBulkSharedAssignmentYouClearAndUndoPreserveOtherFields()",
+        "description": "Clear shared assignments has an explicit complete selection review_0_6F6E94CF-ADC0-4033-977E-1ACD1BA50D45.png"
+      },
+      {
+        "file": "shared-bulk-assignment/ipad-B232D0B2-47E4-4E20-84B1-7A52490C1614.png",
+        "device": "ipad",
+        "case": "TeamTaskBatchDeletionUITests/testBulkSharedAssignmentRechecksRecipientAndOpeningSource()",
+        "description": "Changed task pauses shared assignment before creating a command_0_588E4249-0BFD-420A-8FE7-66DB350D7A7A.png"
+      },
+      {
+        "file": "shared-bulk-assignment/ipad-7A3CE00F-8445-4D90-A897-C73965E87968.png",
+        "device": "ipad",
+        "case": "TeamTaskBatchDeletionUITests/testBulkSharedAssignmentReviewBackCancelSaveUndoAndRelaunch()",
+        "description": "Shared assignment review names every task and the chosen teammate_0_6B94A687-4A05-4CEE-BF90-57D150736E8D.png"
+      },
+      {
+        "file": "shared-bulk-assignment/ipad-001C3FF2-80E1-42F3-994A-CEA98958DC9F.png",
+        "device": "ipad",
+        "case": "TeamTaskBatchDeletionUITests/testBulkSharedAssignmentYouClearAndUndoPreserveOtherFields()",
+        "description": "Clear shared assignments has an explicit complete selection review_0_4BCC1649-5E19-4D43-8604-F2987313399C.png"
+      }
+    ]
+  },
+  "diagnostics": [
+    "Initial native test queried Riley Chen as an independent static text. The row combines its accessibility children. Scoped descendant-label matching verifies the actual announced row content without changing product accessibility.",
+    "The next native pass reached successful Save but compared Undo against an omitted nullable assignment key byte-for-byte. Undo correctly stores explicit null. Final assertions permit only that chosen nullable-field normalization; every unrelated field and unselected row must match exactly, including after relaunch. The sparse Core test now verifies this wire/local distinction.",
+    "Code review found that confirmed ineligibility in an early project could be obscured by a later network error and cached-choice fallback. The final picker stops immediately on confirmed loss; a new Core regression proves no review/application and no further project read.",
+    "Failed-suite collectors PID 13863 (initial phone) and PID 14996 (intermediate tablet) stayed alive after every test finished. Exact owned commands were verified, then only those collectors received SIGTERM (143). Initial phone xcresult lacked Info.plist and could not export a summary; its log is retained and no green result is claimed. Other failed runs remain diagnostic only."
+  ],
+  "hostIsolation": "Feature sources match the verified candidates apart from reserved App Group/bundle/config and existing Mac debug-fixture/UTType identity substitutions. Each repository owns its code, migration, tests and build inputs; no cross-repository build dependency.",
+  "cleanup": {
+    "status": "Complete",
+    "hosts": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true,
+        "containerAbsent": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true,
+        "containerAbsent": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true,
+        "containerAbsent": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true,
+        "containerAbsent": true
+      }
+    ],
+    "reservedSimulatorAppGroupsRemoved": [],
+    "baselineSimulatorsStillBooted": [
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378"
+    ],
+    "ownedTemporaryPrefix": "/tmp/taskfold-bulk-assignment-*",
+    "temporaryEntriesRemoved": 58,
+    "removedDiskKiB": 1873268,
+    "sourceBuildCachePreserved": true,
+    "MacRuntimeLaunchedThisStage": false,
+    "ownedSQLContainersRemoved": true,
+    "unrelatedDataServicesAndCachesPreserved": true
+  },
+  "references": [
+    {
+      "url": "https://supabase.com/changelog.md",
+      "checked": "2026-10-25",
+      "finding": "Reviewed current breaking-change entries; TLS cipher deprecation does not alter these isolated SQL contracts."
+    },
+    {
+      "url": "https://supabase.com/docs/guides/database/functions",
+      "checked": "2026-10-25",
+      "finding": "Private privileged helper retains pinned search_path and explicit role grants; public entry remains the existing invoker wrapper."
+    }
+  ],
+  "remaining": [
+    "Mac installed/runtime/window and keyboard/spoken acceptance",
+    "Dark/larger-text/contrast acceptance",
+    "Genuine hosted multi-project/multi-actor/network acceptance and rollout",
+    "Remaining team field/template/file/conversation integrations and the full rank-6/Px backlog",
+    "User-deferred remote reminders, older-client rollout, distribution, OAuth/provider and physical-location dependencies"
+  ],
+  "sourceSHA256": {
+    "Scripts/Database/test-team-planning-batches.mjs": "334faf8df59a30b83f13b90d3714504fa8c5003ad8208a922c6e09e11a574823",
+    "Taskfold/Core/Store.swift": "e6da4c3a332c45e1c55c10e4a8264f169c2e6a7a1af29665277697d08bbf8349",
+    "Taskfold/Core/TeamTaskBatch.swift": "73984385d84b0dcbc33320d080a46388a82c9d42b47cbb461301ba5fa48247c4",
+    "Taskfold/Core/TeamTaskRecipients.swift": "6bab8807aece78082bd5fd76be984ca807dbce59949b5666da31fb2404ed428d",
+    "Taskfold/TaskfoldMacApp.swift": "57523ca98cbdc8c95ed32b8cff802d6d87830bfc1d1a921aaa43756f2b19e323",
+    "Taskfold/Views/BulkPlanningEditor.swift": "31baf648af365a01c7476b5909bd2821b030ae58124523b543aa38b09e2ec1ee",
+    "Taskfold/Views/RootView.swift": "cb22a248ee06358532386f34a7a76fc19225b22dd113c210d77c8b1e9713ec44",
+    "Taskfold/Views/TaskInspector.swift": "7e3b74bbf42785de69fd057605f1adf2532e149a86cd8217418a055694e4e327",
+    "Taskfold/Views/TaskListView.swift": "6f7111f4eab19aec5f9519b8fc8b18f6dac0d63421a101c98e2eaf89590a90b2",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "34509085c9b3bd8ba720bda4119295ac3ff5384b2746322500d6b6336d155360",
+    "Taskfold/Workspace.swift": "37f29f2521d776ee03cf76cc34738d7b4e05246483bf02367c322d86dbc21ad5",
+    "TaskfoldTests/TeamTaskBatchTests.swift": "8abcf31a9ab58e04949e6d8c48bd7f1abb52063346d28c8da0e16a01b3c9caf6",
+    "TaskfoldTests/TeamTaskRecipientTests.swift": "31f96a3dee59d63b606b8891f91474317b3dc86104ff86bdbad6bfa0b0224b87",
+    "Scripts/Database/team-assignment-batch-checks.mjs": "f06aee39c8b623933d1655666e7a7d61bffbc333988986a1205c5a0583759776",
+    "Scripts/Database/team-assignment-batch-schema.mjs": "35a26aca85460d1e923fb361f21d06d106d6eb3cf7df9147753e6468b79181cd",
+    "supabase/migrations/20261025060438_team_task_assignment_batches.sql": "cb2572cff5a1c1e61aae86e76f728d60e15c5a53602010e9f540d908f2ecfb98"
+  },
+  "artifactSHA256": {
+    "ios-batch-final.log.gz": "4dad771e85b1683acfe174f71e1bbbf61047002633d328ddc07f1596527ee3e8",
+    "ios-build-final.log.gz": "1be508692ce16b8036dba3975a019b76f3ad62698c030a09cb6cc437c2fb070b",
+    "ios-build.log.gz": "93ca2afc38bacd5873a1002f2bb02e5dcf87d0a7a963e3867bf1736d15cc6c7b",
+    "ios-core-final.log.gz": "0d592f15cef9895e9ab34080025cbe9919454fc182f112c9093d44b458e81aff",
+    "ios-core-full.log.gz": "9d0e86c766ef6d73ff78d2a5a4b04aa31f41468224c06e908a9d5b0a661461aa",
+    "ios-core-initial.log.gz": "4e2ee6d50cc7bf638ca2b4494281c52b9884d75f3f6421ed418b0dd73ae2ba99",
+    "ios-core.log.gz": "63cdde9a5f8a3a2d597149c2b1f943fe70fc916e3d2ac2fd9a36ccb199f6df29",
+    "ios-prepare.log.gz": "b12ea7ac7d344a2966598e6a5ab2884bb1d32d8cbcd2bd70c2baa6f130b3fc7b",
+    "ios-query-build.log.gz": "3e029b6f7424a863983f00489761a055c64ff82198cbcaef44a6f09537b6fb9e",
+    "ios-sql-final.json": "f20865ae0914fbc81231ef4cd98bff1c0931dd431d6a410775ad3fa815706e2c",
+    "ios-sql-final.log.gz": "7db8b8fc907571230b62f66df52db59a37f326177333649eb3715d9bb8b429f7",
+    "ios-sql-legacy.json": "704d4b92a9db7a039b314a1b1d569d671daa997af6ef85392b55fb65f5a0c087",
+    "ios-sql-legacy.log.gz": "3c99a6ba6be046004f8ac36ce97a6a9a383403988528869046ac2721e189164c",
+    "ios-sql.json": "164d80f6db3d065ae6f7bd0e2d052e090dd61c7bc487414ee59f446674064016",
+    "ios-sql.log.gz": "7db8b8fc907571230b62f66df52db59a37f326177333649eb3715d9bb8b429f7",
+    "ios-verified-build.log.gz": "d681228467274ecf511c8ae11ac6413fd9b21e61329be09010fa11a8b0b7240f",
+    "ipad-001C3FF2-80E1-42F3-994A-CEA98958DC9F.png": "a5690e32ccc10360a8b5c59d18de79a3ee2bda0f70e532cd701b3f1676ac5b25",
+    "ipad-7A3CE00F-8445-4D90-A897-C73965E87968.png": "1de3662b0c0062a2b8cdb0109de181279628d4b8874dfea57d2453d6da9e9d9a",
+    "ipad-B232D0B2-47E4-4E20-84B1-7A52490C1614.png": "959c85401e3ea8c818a84da0ad29479e86ac31d1d5913b06dac3f661e4957d36",
+    "ipad-accepted.log.gz": "569acbeca268519962ea73af9c284bc259cdb92af5e1c9c6f3c03a81e9c7591d",
+    "ipad-initial-summary.json": "4d25cbf04bd401636120b919a7165a7e24ac286289796e9e28f15a94eb6e37b7",
+    "ipad-verified-summary.json": "892e535ade16ed385e9d70c69c991ae25adb8c4bb72fe0bd3296af9ffa7c6b90",
+    "ipad-verified.log.gz": "05054a77219ac2052f6cc419b4bdc349ad245957b0a8aa1b38cf3008c1774586",
+    "ipad.log.gz": "136853e3912476523a03059f5f1f6a8ba384c68510f133f4100479b245abb8ef",
+    "mac-batch-final.log.gz": "b30b21cb7c2b4c7b86e179dcb319021bbe3c114bd348243b7bec979c8a09c2ed",
+    "mac-build-final.log.gz": "4c680d2264390092695a45bf2855e5e79c7cf40d108dccec83d7dd0852ac2b13",
+    "mac-build.log.gz": "939738c62fad11f7f0b623acd9a7a1abcf89bf3efb680fcc1fc2b886cd627811",
+    "mac-core-final.log.gz": "fe35a21ae1637702b70c13109025df655be4d905363b2b6e5a199d79e5757b3b",
+    "mac-core-full.log.gz": "2243a6809934323412b6f59de7e61c8dfdeaaf3ebc6d0a7e6f38ad7fa97832b2",
+    "mac-prepare.log.gz": "b11a4145941c492d378c38f3eaaa62f547dbd3b8bfe61dc1ffd948db9c63065e",
+    "mac-sql-final.json": "38724415c52a81e8d7308abdc7e587279dda93170defe1a8353b5c245856e013",
+    "mac-sql-final.log.gz": "7db8b8fc907571230b62f66df52db59a37f326177333649eb3715d9bb8b429f7",
+    "mac-sql-legacy.json": "53ea8283b941da3d5a523f016ac43ac46e7cbe3a365d48ccc030075d0a0b4a20",
+    "mac-sql-legacy.log.gz": "3c99a6ba6be046004f8ac36ce97a6a9a383403988528869046ac2721e189164c",
+    "mac-sql.json": "73b37e665fbfd334d97c4fc42723b2a3e1922a9f222820678fd8ffd394191756",
+    "mac-sql.log.gz": "7db8b8fc907571230b62f66df52db59a37f326177333649eb3715d9bb8b429f7",
+    "mac-verified-build.log.gz": "433b022364025db55af029b6ef3b0878cb0e90662c5fd478254494e0a251d614",
+    "phone-05589C1B-48FA-4D78-B285-E8190319D423.png": "ad884633b104e65dcda19ad803c460a2f83e82a62dc337e3a2d40b98d75115d1",
+    "phone-07E717FF-50B5-4723-9546-229F5730985F.png": "0cfce9a292473cb4218f968bcb5df850d7ed470dd556165361e7dd42fc643988",
+    "phone-42E6D184-281F-49D6-B780-8438B4B8432C.png": "3d477cceb7d2eae0b425e54cda626adaa794d128d21c9d56dc60b2660d9cd269",
+    "phone-accepted.log.gz": "2c65e8de9345eef7e7795da69026b48beef8e2e8a4a9f014ba171a8c1ece2728",
+    "phone-verified-summary.json": "ec9fd9b71066ab31eb271869c71ed2c18de291e6f9caeb46ad7ed46ceca9aba0",
+    "phone-verified.log.gz": "3a782b01f16ced661ad097db3b6ae2b12170eda98a30f3e3790f8eb2c7ddadef",
+    "phone.log.gz": "9cd364a9e86d89c1be24b2c8a16df920f52ed292f0ca20ece058640404d4e65b"
+  }
+}

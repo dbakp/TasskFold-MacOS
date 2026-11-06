@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-26",
+  "sources": {
+    "Taskfold/Core/PrintDocument.swift": "78770ee66c1c6c3d6d943ee53a17d3ca40ad64e09597f6f0f3bd7b2ca0137bfd",
+    "Taskfold/Core/ProjectWorkflows.swift": "5d438038c2c587ce5e3459186a65dffc4155de90ef48243fab723487d8df9044",
+    "Taskfold/Views/PrintReviewView.swift": "0f3ef286599b6cd2c4bfdf779e650c5210640c7844ef97a8787213151c4ee552",
+    "Taskfold/Views/WorkflowViews.swift": "965b3e55bd7cddfee458cc2f9214472fe1cb650ad38a5a9e31d1b8dcd7184acd",
+    "TaskfoldTests/PrintDocumentTests.swift": "f3e8d8ac830aa6790b5363f8fadb2aa5b25122e3dd083363443c170388bafb35",
+    "Taskfold/Views/TaskListView.swift": "913f8e97985173d8ff23cb3472e43f2ab7ca31b837cc77023a9f0051c0bacbf1",
+    "Taskfold/Views/PinnedNotesView.swift": "f738ab7228870af9b1488a09aca30c296afa6ad6b0e54bd3364780415480dead"
+  },
+  "hostedChanges": false,
+  "normalHeadingFlagsChanged": false
+}

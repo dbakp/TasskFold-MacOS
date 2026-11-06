@@ -1,0 +1,96 @@
+{
+  "platform": "mac-selection",
+  "checks": {
+    "compiled owning source matches Taskfold/AudioCommentNativeFixture.swift": true,
+    "compiled owning source matches Taskfold/AudioCommentCapture.swift": true,
+    "compiled owning source matches Taskfold/Core/Store.swift": true,
+    "compiled owning source matches Taskfold/Core/Models.swift": true,
+    "compiled owning source matches Taskfold/TaskfoldMacApp.swift": true,
+    "compiled owning source matches Taskfold/Views/BackupTools.swift": true,
+    "compiled owning source matches Taskfold/Views/SettingsView.swift": true,
+    "compiled owning source matches Taskfold/Core/TeamProjectAccess.swift": true,
+    "compiled owning source matches Taskfold/Core/TeamTaskBatch.swift": true,
+    "compiled owning source matches Taskfold/Core/Backend.swift": true,
+    "compiled owning source matches Taskfold/Views/TeamTaskDeletionReview.swift": true,
+    "compiled owning source matches Taskfold/Core/AudioCommentPublishing.swift": true,
+    "compiled owning source matches Taskfold/Views/TaskInspector.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentConversationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentPublicationView.swift": true,
+    "compiled owning source matches TaskfoldUITests/AudioCommentUITests.swift": true,
+    "exact isolated app identifier": true
+  },
+  "checkCount": 17,
+  "sourceSHA256": {
+    "Taskfold/AudioCommentNativeFixture.swift": "5595a932a3bf76631b82852ac9d4750aec92e26d624b706c8ade16e607b3bde7",
+    "Taskfold/AudioCommentCapture.swift": "319a02288cc32278e754f1c635aa2449207b52fd9bea01b4d29060662def6d96",
+    "Taskfold/Core/Store.swift": "bd8eebf37ffc19ccc1fc1d8350729800a206e786cab5a63c4d38b03e56498fb3",
+    "Taskfold/Core/Models.swift": "8860cb104036b8095e41ee0b739ec4e4233a911a286d344176688e76ab164985",
+    "Taskfold/TaskfoldMacApp.swift": "ab17ef9e8960fd77dd27be271f8c22511a3818cadb358fb955f59f65f088d2ae",
+    "Taskfold/Views/BackupTools.swift": "dccb772cb77478e0e0c8888c75ec95ba707552f3a737f5f3c284560c8271892e",
+    "Taskfold/Views/SettingsView.swift": "e72c9c099219ab5fc3aaa31f28ef4af5875bb098175393985c0dc1695e41fac0",
+    "Taskfold/Core/TeamProjectAccess.swift": "4a64f09f3743d1da20494ec0e8a6421981be08eef5d3bb99c22a33d2ff49262e",
+    "Taskfold/Core/TeamTaskBatch.swift": "52f28a92644e36d207d5585128036b332476cba7610ae4b1c1fcc0d2a220f3d6",
+    "Taskfold/Core/Backend.swift": "082e3cedc03e65024939fce5ecf3a544cd1bb93bc7dd474c01cfae53a89fc10d",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "9589a78034abd4ef8f668d47f307fba2a16bdbd8f0528f5f0e2f75a45a8991a7",
+    "Taskfold/Core/AudioCommentPublishing.swift": "5e49f64287069d12703142afa975a705a9bc537b9d101e9b85ef90da7168c1f9",
+    "Taskfold/Views/TaskInspector.swift": "17ed291a6b7bd6386aa3ebe023613715a3002f3f61e6b0e54954e159d1626f7f",
+    "Taskfold/Views/AudioCommentConversationView.swift": "2a8a67f23af154f2b3ca7ecce5cbc240521e98577e550c960b386ebad734c125",
+    "Taskfold/Views/AudioCommentPublicationView.swift": "94a141c326ea60b90b87396d4ae607f68c057a6f94f8429a86db4c17a78b14cd",
+    "TaskfoldUITests/AudioCommentUITests.swift": "f4e37d7cac0678e42a436fdb8ba5c3aa0424a059211f48df5516909579d181fa"
+  },
+  "xcodeExitCode": 65,
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "00006000-000C59161EC3801E",
+          "deviceName": "My Mac",
+          "modelName": "MacBook Pro",
+          "osBuildNumber": "25G83",
+          "osVersion": "26.6.2",
+          "platform": "macOS"
+        },
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "passedTests": 0,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 1,
+    "finishTime": 1793666770.862,
+    "passedTests": 0,
+    "result": "Failed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793666768.483,
+    "statistics": [],
+    "testFailures": [
+      {
+        "failureText": "The test runner failed to initialize for UI testing. (Underlying Error: Authentication cancelled. System authentication is running.)",
+        "targetName": "TaskfoldUITests",
+        "testIdentifier": 1,
+        "testIdentifierString": "TaskfoldUITests-Runner (78566) encountered an error",
+        "testName": "TaskfoldUITests-Runner (78566) encountered an error"
+      }
+    ],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "error": {
+    "message": "one native case accepted without skip\n+ actual - expected\n\n  [\n+   65,\n+   0,\n+   1,\n-   0,\n-   1,\n-   0,\n    0\n  ]",
+    "code": "ERR_ASSERTION"
+  },
+  "configRemoved": true,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "cleanupErrors": []
+}

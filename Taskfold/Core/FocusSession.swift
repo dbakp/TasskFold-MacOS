@@ -180,7 +180,7 @@ struct FocusTaskCatalog {
         var seen = Set<String>()
         choices = tasks.compactMap { task in
             let id = task.id.lowercased()
-            guard UUID(uuidString: id) != nil, !task.completed, seen.insert(id).inserted else { return nil }
+            guard UUID(uuidString: id) != nil, TaskKind.mayComplete(task), !task.completed, seen.insert(id).inserted else { return nil }
             let title = task.title.trimmingCharacters(in: .whitespacesAndNewlines)
             let choice = Choice(id: id, generation: task["task_generation"], title: title.isEmpty ? "Untitled task" : title,
                                 context: Self.context(task, projects: projects, sections: sections, parents: parents),
@@ -199,7 +199,7 @@ struct FocusTaskCatalog {
         }
     }
     static func selectable(_ choice: Choice, tasks: [Record]) -> Bool {
-        tasks.contains { $0.id.lowercased() == choice.id && !$0.completed && $0["task_generation"] == choice.generation }
+        tasks.contains { $0.id.lowercased() == choice.id && TaskKind.mayComplete($0) && !$0.completed && $0["task_generation"] == choice.generation }
     }
     static func context(_ task: Record, tasks: [Record], projects: [Record], sections: [Record]) -> String {
         context(task, projects: directory(projects), sections: directory(sections), parents: directory(tasks))

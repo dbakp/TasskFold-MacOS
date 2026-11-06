@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-31",
+  "scope": "Gated child-only bulk list completion, whole-group Undo, saved recovery and cross-operation admission",
+  "ordinaryFeatureFlagsEnabled": false,
+  "hostedChanges": false,
+  "checkpointRemains": "To build",
+  "sourceSHA256": {
+    "Taskfold/ChildFieldNativeFixture.swift": "652114fe57ff2cc1ddf8615c004d94502d46240b9efcec547b86f449add2e72c",
+    "Taskfold/Core/ChildTaskAdoption.swift": "99720d6b2d9ec0cc17fc07ffd0f692eadea1914631b52ebe2a576989ae9f4f8f",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "caa8e241e7bf6faf1bef29ccb2c36532fcb9bf6ec8d0301eb862d461e7c23422",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "be5f1ecedfe010c112ad31aa0b479ca2b3d3cd705a909bb3d0ed2c7b3d770150",
+    "Taskfold/Core/ChildTaskRepair.swift": "0e161a60393fb2a5ab26fc24429aad97344887c0621d25f880ff0518948b9d4c",
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "4bfc72ee86ef0f374f9b9611ec09c71764f3f8b53671ac2fdbd8571bbfaa8817",
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": "15a8e081870b8791bde57593ac4d3e146d6aabb84c322fb8f99f0afe51241ff0",
+    "Taskfold/Core/ChildTaskTransfers.swift": "eac88612505a7e32f08c105ca49f460fe1ab3ce3a749c1eb0d90cd2094b2ad35",
+    "Taskfold/Core/Store.swift": "f7c3c8a5d6e4ecd02bfce6e080a0731ab78ad273dd0d1ae44aa9bfd4bf08eb36",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "1bd1d6ea4836dd367bfb692105df0a745974f4b344ae2d7c8b07a3064939fc43",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "b732661b6d46be19f2d9a84322ce2449b8b0e68b4a97fef2f296df2fd0d3d04d",
+    "Taskfold/Views/RootView.swift": "87b2f0d3dd55c124e1866e1478f8761b9356c9b1155d2eaa6b28424b35bfc792",
+    "Taskfold/Views/SettingsView.swift": "0b20e222c0fe7a36eb7fd2ede4c1298a52013018c6e004cd80d9fb36392623ca",
+    "Taskfold/Views/TaskListView.swift": "5818b4d266aca2453a7b1c681921450bf67e3e887f58b793fd5c3c7d83e5529d",
+    "Taskfold/Workspace.swift": "aacb495ac5777ebbfdc808a1e1d9df99639b9fb234bf8f33c2eb62beede36fa2",
+    "TaskfoldTests/ChildTaskCompletionBatchTests.swift": "ccef9a236e2041a66b5ff7c9ddedc4ecc783f1923086a539f2ac439a28860d62",
+    "TaskfoldTests/ChildTaskListCompletionTests.swift": "d152e4560c14be2cc06178f6bb209469fec26c360a7c04c92d5f24668f78636f",
+    "TaskfoldUITests/AudioCommentUITests.swift": "eb0cf5b67e9f289784bcfac380a283eea067a4f15f5ec83c6ebbe06fbe74a548"
+  },
+  "core": {
+    "distinctAccepted": 496,
+    "singleRun": false,
+    "phases": {
+      "v1": 484,
+      "v2": 136,
+      "v3": 64,
+      "v4": 66
+    },
+    "failures": 0,
+    "skips": 0,
+    "testSources": [
+      "TaskfoldTests/ChildTaskCompletionBatchTests.swift",
+      "TaskfoldTests/ChildTaskListCompletionTests.swift"
+    ],
+    "finalFocusedCounts": {
+      "batch": 47,
+      "listIntent": 19
+    }
+  },
+  "nativeRuntime": {
+    "method": "Explicitly authorized Terminal launch and direct computer use; synthetic account only",
+    "phases": [
+      {
+        "build": "v1",
+        "actions": [
+          "Command-click two child rows",
+          "Complete in bulk inspector",
+          "Command-Z restores both",
+          "Quit verified, cold return retains both open"
+        ],
+        "readback": {
+          "batchRequests": 2,
+          "batchWrites": 2,
+          "memberWrites": 4
+        },
+        "finding": "Cold Account omitted saved-group discovery despite encrypted entries on disk; fixed on v2/v3."
+      },
+      {
+        "build": "v3",
+        "actions": [
+          "Cold Account shows Saved subtask selections",
+          "Original completed group shows Undone, no repeated Review Undo",
+          "Lost reply retains original request and offers Review",
+          "Retry original selection confirms without another write",
+          "Review Undo reads both current completed children",
+          "Undo entire selection restores both",
+          "Earlier queued single action blocks new group",
+          "Review links to preserved single action",
+          "App quit after final check"
+        ],
+        "lostReadback": {
+          "batchRequests": 2,
+          "batchWrites": 1,
+          "memberWrites": 2
+        },
+        "reviewedUndoReadback": {
+          "batchRequests": 3,
+          "batchWrites": 2,
+          "memberWrites": 4
+        },
+        "blockedReadback": {
+          "batchRequests": 0,
+          "batchWrites": 0,
+          "queuedSingles": 1
+        }
+      }
+    ],
+    "nativeXCTestRun": false,
+    "finalAppClosed": true,
+    "finalBuildNote": "v4–v6 rebuilds change UI test menu navigation only. Production Mac sources are unchanged from accepted v3; native observations remain attributed to their phases."
+  },
+  "remaining": [
+    "Mounted-screen discovery of older structural/transfer/adoption/repair recovery while their feature flags are paused; current native evidence uses enabled test gates.",
+    "Mixed root and child selection",
+    "Full Redo and shared history",
+    "Indexed/history mapping",
+    "Shared attachment/discussion custody",
+    "Broader scope, account, background, protected-storage, VoiceOver and workload acceptance"
+  ],
+  "nativeBuild": {
+    "buildForTestingPassed": true,
+    "normalizedChangedSourcesMatch": true,
+    "isolationSubstitutions": "Existing isolated identifiers only",
+    "hostSHA256": {
+      "Taskfold/ChildFieldNativeFixture.swift": "652114fe57ff2cc1ddf8615c004d94502d46240b9efcec547b86f449add2e72c",
+      "Taskfold/Core/ChildTaskAdoption.swift": "99720d6b2d9ec0cc17fc07ffd0f692eadea1914631b52ebe2a576989ae9f4f8f",
+      "Taskfold/Core/ChildTaskCompletionCommands.swift": "caa8e241e7bf6faf1bef29ccb2c36532fcb9bf6ec8d0301eb862d461e7c23422",
+      "Taskfold/Core/ChildTaskFieldCommands.swift": "be5f1ecedfe010c112ad31aa0b479ca2b3d3cd705a909bb3d0ed2c7b3d770150",
+      "Taskfold/Core/ChildTaskRepair.swift": "0e161a60393fb2a5ab26fc24429aad97344887c0621d25f880ff0518948b9d4c",
+      "Taskfold/Core/ChildTaskStructureDraft.swift": "4bfc72ee86ef0f374f9b9611ec09c71764f3f8b53671ac2fdbd8571bbfaa8817",
+      "Taskfold/Core/ChildTaskStructureRecovery.swift": "15a8e081870b8791bde57593ac4d3e146d6aabb84c322fb8f99f0afe51241ff0",
+      "Taskfold/Core/ChildTaskTransfers.swift": "eac88612505a7e32f08c105ca49f460fe1ab3ce3a749c1eb0d90cd2094b2ad35",
+      "Taskfold/Core/Store.swift": "34c0f39d5526c5b1bcdeb3fd44afacdc40b1cfa0f9ee9d8aee72db934ba73555",
+      "Taskfold/Views/ChildTaskCompletionViews.swift": "1bd1d6ea4836dd367bfb692105df0a745974f4b344ae2d7c8b07a3064939fc43",
+      "Taskfold/Views/ChildTaskFieldViews.swift": "b732661b6d46be19f2d9a84322ce2449b8b0e68b4a97fef2f296df2fd0d3d04d",
+      "Taskfold/Views/RootView.swift": "87b2f0d3dd55c124e1866e1478f8761b9356c9b1155d2eaa6b28424b35bfc792",
+      "Taskfold/Views/SettingsView.swift": "0b20e222c0fe7a36eb7fd2ede4c1298a52013018c6e004cd80d9fb36392623ca",
+      "Taskfold/Views/TaskListView.swift": "5818b4d266aca2453a7b1c681921450bf67e3e887f58b793fd5c3c7d83e5529d",
+      "Taskfold/Workspace.swift": "64d125d2f2666a1f5e51063ffcb382cfa520f1cbe63ea5ba9ab575e8a166af03",
+      "TaskfoldUITests/AudioCommentUITests.swift": "eb0cf5b67e9f289784bcfac380a283eea067a4f15f5ec83c6ebbe06fbe74a548"
+    },
+    "buildLogSHA256": "ddcd4ba70f7fca782daec1983a2805ef8f3f8723e26f98fefafc380cc9992498",
+    "products": [
+      {
+        "product": "Taskfold.app",
+        "strictDevelopmentSignature": true,
+        "codeIdentity": [
+          "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge",
+          "CDHash=39f60c28b341614b26cd4a1ce77419ff062f2b3a"
+        ]
+      },
+      {
+        "product": "TaskfoldUITests-Runner.app",
+        "strictDevelopmentSignature": true,
+        "codeIdentity": [
+          "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner",
+          "CDHash=6587102006a4828213b3a575bdc8561918b1748d"
+        ]
+      }
+    ],
+    "runtimeTestingPerformed": true,
+    "phase": "bulk-list-v6"
+  },
+  "initialSourceSHA256": {
+    "Taskfold/ChildFieldNativeFixture.swift": "652114fe57ff2cc1ddf8615c004d94502d46240b9efcec547b86f449add2e72c",
+    "Taskfold/Core/ChildTaskAdoption.swift": "99720d6b2d9ec0cc17fc07ffd0f692eadea1914631b52ebe2a576989ae9f4f8f",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "caa8e241e7bf6faf1bef29ccb2c36532fcb9bf6ec8d0301eb862d461e7c23422",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "be5f1ecedfe010c112ad31aa0b479ca2b3d3cd705a909bb3d0ed2c7b3d770150",
+    "Taskfold/Core/ChildTaskRepair.swift": "0e161a60393fb2a5ab26fc24429aad97344887c0621d25f880ff0518948b9d4c",
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "4bfc72ee86ef0f374f9b9611ec09c71764f3f8b53671ac2fdbd8571bbfaa8817",
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": "15a8e081870b8791bde57593ac4d3e146d6aabb84c322fb8f99f0afe51241ff0",
+    "Taskfold/Core/ChildTaskTransfers.swift": "eac88612505a7e32f08c105ca49f460fe1ab3ce3a749c1eb0d90cd2094b2ad35",
+    "Taskfold/Core/Store.swift": "f7c3c8a5d6e4ecd02bfce6e080a0731ab78ad273dd0d1ae44aa9bfd4bf08eb36",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "1bd1d6ea4836dd367bfb692105df0a745974f4b344ae2d7c8b07a3064939fc43",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "b732661b6d46be19f2d9a84322ce2449b8b0e68b4a97fef2f296df2fd0d3d04d",
+    "Taskfold/Views/RootView.swift": "87b2f0d3dd55c124e1866e1478f8761b9356c9b1155d2eaa6b28424b35bfc792",
+    "Taskfold/Views/SettingsView.swift": "0b20e222c0fe7a36eb7fd2ede4c1298a52013018c6e004cd80d9fb36392623ca",
+    "Taskfold/Views/TaskListView.swift": "5818b4d266aca2453a7b1c681921450bf67e3e887f58b793fd5c3c7d83e5529d",
+    "Taskfold/Workspace.swift": "aacb495ac5777ebbfdc808a1e1d9df99639b9fb234bf8f33c2eb62beede36fa2",
+    "TaskfoldTests/ChildTaskCompletionBatchTests.swift": "ccef9a236e2041a66b5ff7c9ddedc4ecc783f1923086a539f2ac439a28860d62",
+    "TaskfoldTests/ChildTaskListCompletionTests.swift": "d152e4560c14be2cc06178f6bb209469fec26c360a7c04c92d5f24668f78636f",
+    "TaskfoldUITests/AudioCommentUITests.swift": "e0d0ef454b369053221b06930795365498f6258879b62e91593f392d898a8dc0"
+  },
+  "findings": [
+    "iOS selection mode initially hid child rows; fixed gated outline selection.",
+    "Mac cold Account omitted saved recovery links because their initial conditional view was empty; discovery moved to mounted screen.",
+    "Initial iPhone UI test looked for View options outside its Task options menu; corrected test navigation.",
+    "Source audit found selection toolbar omitted outlined child rows; it now uses visible outlined records. Native bulk Reopen is not separately accepted in this milestone.",
+    "The opened iOS menu exposes Select tasks by its visible label, without its SwiftUI identifier; the test follows that observed control.",
+    "The bulk button announces Complete selected tasks; final test uses that existing spoken label."
+  ],
+  "admission": {
+    "oneAccountProcessLockAcrossEightFactories": true,
+    "overlapUnit": "root",
+    "metadataChecksBypassWriteAdmission": true,
+    "corruptJournalRefusesWithoutOverwrite": true,
+    "existingOlderClientSafetyDeferred": true
+  }
+}

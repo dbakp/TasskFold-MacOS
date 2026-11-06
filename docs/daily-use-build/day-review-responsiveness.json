@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-05",
+  "problem": "Dynamic iPhone review input reordered after each date move while its index advanced; seven decisions could target 1,3,5,7,3,5,7, moving four distinct tasks. Review also advanced without save success. Drops made a separate manual-sort save/Undo step. Ordinary mutations/sync parsed the full persisted attachment envelope and synchronously rendered widget summaries.",
+  "changes": [
+    "Capture the review queue once, count only successful decisions, keep failures on the current card, and validate workspace/session/live task before writing.",
+    "Use existing full day/time fields and selection writer, including fixed-time tasks.",
+    "Combine the iPhone drop date/order and necessary manual-sort change in one local durable commit and Undo entry; omit redundant manual-sort writes. Mac already used one drop commit.",
+    "Read actual disk bytes on every save; reuse the last validated/own-encoded Snapshot only on exact equality. One memo capped at 16 MiB; private metadata is independently decoded/validated before warming. No timestamps, skipped disk reads, delayed writes or format change. Oversize envelopes/metadata use ordinary parsing.",
+    "Queue ordinary commit/sync widget rendering through the existing serialized latest-only worker. Receipt-bearing publication and immediate privacy invalidation remain."
+  ],
+  "verification": {
+    "core": "day-review-core-checks.json",
+    "triage": "day-review-native-ios.json",
+    "drop": "day-drop-native-ios.json",
+    "continuity": "day-review-native-continuity.json",
+    "mac": "day-review-mac-build.json",
+    "installedIPhone": "phone-31-installation.json"
+  },
+  "nativeScope": "207 synthetic tasks with a synthetic 2.56 MB attachment; seven distinct Today saves, failed-save retry, fixed moment, unrelated work and cold tables. Separate real drag, actual menu Undo and Today/Upcoming navigation; final screenshot reviewed. XCTest-inclusive timings are not perceived latency or FPS.",
+  "limits": [
+    "Mac compilation/signatures only; broader native Mac/iPad/shared/account/accessibility/rendering/hardware contexts remain separate.",
+    "Initial/external cache changes still require full validation; envelopes above 16 MiB and large private metadata bypass memo warming.",
+    "No schema/provider/ordinary rollout gate change. All agreed deferrals remain."
+  ],
+  "setupCorrections": [
+    "Repair initial test helper/type errors; reject source inputs changed during preparation rather than accepting stale products.",
+    "Cancel an unaccepted compiler-optimization experiment; fix repeated parsing in ordinary development builds instead. No optimized binary/settings shipped.",
+    "Use a complete consistent fixed-time fixture; hydrate normal legacy preferences before taking the cold-return baseline.",
+    "Use observed UIKit menu labels. The Undo check exposed the real extra sort-save bug; after fixing it, allow only the established absent/null scheduled_at equivalence for the moved legacy root.",
+    "Installation occurred once. A launch argument-order error was corrected without reinstalling. Post-update comparison used the actual nested Application Support/Taskfold paths."
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "451bc7df6b60ee8a5a61d6f9e96a9ff2c8136731a87488defdd787e721f75bab",
+    "Taskfold/Core/Store.swift": "b27cdf18bc1ecac7a42f0a18978e08fc2be3f1e6af7fb99552430272f4b426cf",
+    "Taskfold/Views/PlanDayView.swift": "6b3e206a7e6dab2c8082ee99ddaec9b619aa42222eae489d620e016e4f8aca8c"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "removed": [
+    {
+      "path": "/tmp/taskfold-child-completion-core-ios",
+      "bytes": 507825862,
+      "kind": "obsolete completed Core test scratch build; no source checkout"
+    },
+    {
+      "path": "/tmp/taskfold-child-completion-core-mac",
+      "bytes": 468259396,
+      "kind": "obsolete completed Core test scratch build; no source checkout"
+    }
+  ]
+}

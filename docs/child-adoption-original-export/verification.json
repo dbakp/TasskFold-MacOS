@@ -1,0 +1,47 @@
+{
+  "reviewed": "2026-10-30",
+  "platform": "mac",
+  "status": "Native original-byte export foundation; repair/rollout and broader acceptance remain open",
+  "nativeAcceptedForEverydayUse": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "SQLChangedOrRerun": false,
+  "newCoreTestsRun": false,
+  "priorUnchangedCoreChecks": 562,
+  "priorCoreEvidence": "../reviewed-child-adoption-native/verification.json",
+  "buildAndStrictDevelopmentSignaturesPassed": true,
+  "sourceSHA256": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": "f8b9825de594c1dd29fb4d7551da20aad676d6ffcbf1f0a78cc8daaee907e5bb",
+    "Taskfold/ChildFieldNativeFixture.swift": "f34abd911a26052d2b24f1205072b8d34d50b20b705d7d4ef03c819c3d7a44a5",
+    "Taskfold/Core/Store.swift": "ba6159671a9213f5517803caeb737e983f17b76b0a62f4044c82cbd07b41eaac",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "9428938636aa67f27a774ca0aeac09386486dfa3cea99e777ee835f9a2d7494d",
+    "TaskfoldUITests/AudioCommentUITests.swift": "a46c36635ecc71e4c9d294ef6771eb1bd76b98b2ddeb0c4529ebbc15786a86d2",
+    "Taskfold/Info.plist": "e8a7f8daa65ed3d5def3e7193ae104aa87790edc0563ddde231325555ea75087"
+  },
+  "appSHA256": "8ecbf5e9bcce6bab255b1309bed9d15ae4ffd8377828ed19ab3729e927ea6b52",
+  "remaining": [
+    "Mac original-export Save/readback, lost-response and broader lifecycle checks",
+    "Metadata-first discovery and access for older payloads not representable by the regular cache",
+    "Explicit reviewed repairs and full shared attachment/discussion custody",
+    "External file providers, real accounts/secure storage, window/background/VoiceOver and larger-workflow acceptance",
+    "Normal enablement and older-client rollout remain deferred"
+  ],
+  "nativeLocalSaveAndColdReadbackAccepted": false,
+  "selectedNativeMethods": 7,
+  "runnerResults": {
+    "totalTestCount": 1,
+    "passedTests": 0,
+    "failedTests": 1,
+    "skippedTests": 0
+  },
+  "nativeBlocker": "XCTest initialization timed out before app launch; no XCTest pass. Direct Mac move/cold Undo and upgrade/cold status accepted separately in ../mac-subtask-direct/.",
+  "manualLaunchMethodApproval": "Explicit user authorization received; Terminal launch and direct CUA walkthroughs performed with synthetic data.",
+  "evidenceSHA256": {
+    "mac-test-runner.log.gz": "7e33bcb18dabbbe870427aa147a92f3e42f5a6d04203f2773a71437708de8505",
+    "mac-test-runner.phase.json": "308b4e911c134f9eda6a5da9cb6e9793e7b884ce72758a1fea990a58ce9f2387",
+    "README.md": "1c686e29de204ea2ebe6b673221c519971d055ea20e258ce3df46e748abf552e",
+    "pruned-final-results.json": "f8dcbe89f0bb12b3bcb5c2f07fc66ecaa69c2c45fe48343b298a8b73ea94d3b3",
+    "app-build.log.gz": "68fc34db0b4c26938dafc6fad31f43b3baaa6f9343c92980f8f21d89a2d8d68c",
+    "mac-test-runner.summary.json": "0349317ef2d2716ddd5be4a97825629978e7fa16b5720b050b4525659e5d9bad"
+  }
+}

@@ -1,0 +1,953 @@
+{
+  "date": "2026-10-09",
+  "test": "TaskfoldUITests/testInstalledMyListConfigurationAndTaskLink()",
+  "result": {
+    "totalTestCount": 1,
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  },
+  "scope": "One small My list widget, project configuration, scoped contents and native task route on isolated iPhone Simulator",
+  "team": "3UZ4C73FM2",
+  "buildAndInstalledSignaturesVerified": true,
+  "catalog": {
+    "configurations": 8,
+    "entities": 3,
+    "enums": 6
+  },
+  "capturesInIOSRepository": {
+    "my-list-before": {
+      "sha256": "b9b36b0da0111e19a997583bb8ff8012be8d921bcc50ccff26f2bbd9717ad5a7",
+      "visuallyInspected": true
+    },
+    "my-list-after": {
+      "sha256": "d8d6b6aa0d8c273b21d3cf1a39fd1ef84e8d557dce2ab498d3300ad5c3cf2fd4",
+      "visuallyInspected": true
+    },
+    "my-list-configuration": {
+      "sha256": "c1eb32bbec3e818ffacf15a19448f89321c3547c8ac4527b0050f00a7e3143e0",
+      "visuallyInspected": true
+    }
+  },
+  "prunedTestInstallations": {
+    "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "removed": [
+      "com.dbakp.taskfold.querytests",
+      "com.dbakp.taskfold.querytests.uitests.xctrunner",
+      "com.dbakp.taskfold.datephrasetests",
+      "com.dbakp.taskfold.datephrasetests.uitests.xctrunner",
+      "com.dbakp.taskfold.importtests",
+      "com.dbakp.taskfold.importtests.uitests.xctrunner",
+      "com.dbakp.taskfold.clocktests",
+      "com.dbakp.taskfold.clocktests.uitests.xctrunner",
+      "com.dbakp.taskfold.clockwindowtests",
+      "com.dbakp.taskfold.clockwindowtests.uitests.xctrunner",
+      "com.dbakp.taskfold.assignmenttests",
+      "com.dbakp.taskfold.assignmenttests.uitests.xctrunner",
+      "com.dbakp.taskfold.naturalclocktests",
+      "com.dbakp.taskfold.naturalclocktests.uitests.xctrunner"
+    ],
+    "retained": "com.dbakp.taskfold.assigneepatterntests"
+  },
+  "remaining": [
+    "Cloud/physical cold-launch and recurring completion, other recurrence rules, stale/repeated taps and account switching",
+    "Other widget sizes and multi-instance conditions outside the verified small Inbox/My list pairs",
+    "other configured widget families",
+    "iPad and physical devices",
+    "Mac widget host",
+    "full P0 acceptance",
+    "Privacy across other widget families and hosts"
+  ],
+  "ownedFinalInputs": {
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "6bb75f2cdb3333f0453f082fc068b608f98d1c5f38182ad4ad74269c7e37fdf1",
+    "Scripts/sign_simulator_test_products.py": "d5bfc56ef475d06d48f247031ef6ee6b0f79c4720fb62705f67e529a8fcb8d7d",
+    "TaskfoldUITests/TaskfoldUITests.swift": "eb7af8e899956d3b2d3d80518c642c93ff192a426397a945ae173f8ebbcc5fe5"
+  },
+  "interactiveCompletion": {
+    "test": "TaskfoldUITests/testInstalledMyListCompletionPersistsAndKeepsOtherTasks()",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": [],
+    "scope": "Actual installed small My list button, app backgrounded; widget updates without foregrounding app; completed task survives app relaunch; unrelated Inbox task remains open. Local isolated fixture, not cloud or killed-app execution.",
+    "capture": "widget-host-previews/my-list-completed.png",
+    "captureSHA256": "74833a7d453aa6c85635623adabc69fbb7a1a3477cfe7aa35392461b3f2ec972",
+    "visuallyInspected": true,
+    "testSourceSHA256": "af352f64d37304134900e7dd93bad331659962c65909f1466920e934bf95a729",
+    "earlierAttempt": "Stopped before tap by a floating-point assertion: 43.99999999999997 versus 44 points. Corrected with 0.001-point tolerance."
+  },
+  "livePrivacy": {
+    "test": "TaskfoldUITests/testInstalledMyListPrivacyHidesAndRestoresNames()",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": [],
+    "scope": "Actual system switch verified on/off, task and list names hidden in installed widget including accessibility labels, then restored. One isolated small My list instance on iPhone Simulator.",
+    "capturesInIOSRepository": {
+      "my-list-private": {
+        "sha256": "1a00572087591f6ed9cfe38adebad615ebb8b8df3c19276bad801b2df29be920",
+        "visuallyInspected": true
+      },
+      "my-list-restored": {
+        "sha256": "b4d6eb211f6f8456ee18c86f678d21554b9ec8719f50a06e84e17596c7504280",
+        "visuallyInspected": true
+      },
+      "privacy-enabled": {
+        "sha256": "676cdadc6494119c1670bdf177ecf6bb2bc5a6cd8071182592f7d2ab3bc473ce",
+        "visuallyInspected": true
+      },
+      "privacy-disabled": {
+        "sha256": "2e8d6008c06ac268deb6cffcbe7b6b8c057e527264e493878dc785e3a9e19d31",
+        "visuallyInspected": true
+      }
+    },
+    "testSourceSHA256": "2bea0b08e99e33c38d05a00ccb0c04d7ea6ff8a5ad19833e2f68454f117879ca",
+    "earlierAttempt": "Failed because center tap did not change the system switch. Final test taps the switch control and asserts its value before dismissing."
+  },
+  "coldCompletion": {
+    "test": "TaskfoldUITests/testInstalledMyListColdCompletionPersistsAndKeepsOtherTasks()",
+    "result": "/tmp/taskfold-cold-widget-v2.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedRuntimeWarnings": 0,
+    "scope": "Actual small My list completion after asserting the app was not running; no foreground transition; completed task survives another app relaunch and unrelated Inbox task remains open. One isolated local workspace on iPhone Simulator.",
+    "initialFailure": "/tmp/taskfold-cold-widget-v1.xcresult: system-launched app lacked --uitesting, selected local rather than ui-testing; observed projection account local with four sample tasks.",
+    "fixtureCorrection": "Exact isolated bundle in DEBUG Simulator only retains its disposable workspace for system launches. Marker resets on ordinary UI/live-auth test launch; verified false after final test. No production completion change.",
+    "capture": "widget-host-previews/my-list-cold-completed.png",
+    "captureSHA256": "dcc8754a330fc39d2d58e016495203db774623f928f1d09ed0ed04c5cca7ebd6",
+    "visuallyInspected": true,
+    "sourceHashes": {
+      "Taskfold/Core/Store.swift": "51b38cce066a6b5f350b43020fe3d9c2115f5d9c23bf847832eded032cf88d68",
+      "Taskfold/Core/WidgetActions.swift": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2",
+      "TaskfoldUITests/TaskfoldUITests.swift": "136dbe6248346baff16d2b4445ab6ebda91ca57b93e795009850788b9f49bda2"
+    },
+    "build": "/tmp/taskfold-cold-widget-build-v2.log",
+    "signatures": "/tmp/taskfold-cold-widget-signatures-v2.json",
+    "fixturePendingMutationsAfterRelaunch": 0,
+    "completionReceiptPresent": true
+  },
+  "recurringColdCompletion": {
+    "test": "TaskfoldUITests/testInstalledMyListRecurringColdCompletionShowsNextDay()",
+    "result": "/tmp/taskfold-recurring-widget-v1.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedRuntimeWarnings": 0,
+    "scope": "One daily local task, actual small My list completion from terminated app; next day displayed without foregrounding; original in Completed; next occurrence survives app relaunch.",
+    "savedState": {
+      "originalCompleted": true,
+      "nextCopies": 1,
+      "nextOpen": true,
+      "originalDay": "2026-10-09",
+      "nextDay": "2026-10-10",
+      "repeatRule": {
+        "interval": 1,
+        "type": "daily"
+      },
+      "unrelatedOpen": true,
+      "pendingMutations": 0,
+      "coldFixtureMarker": false
+    },
+    "capture": "widget-host-previews/my-list-recurring-next-day.png",
+    "captureSHA256": "aca4c7d601d0c86aafd58b46a36182bda6ad7c9bad4696e7e398f6052af5d07e",
+    "visuallyInspected": true,
+    "iosBuild": "/tmp/taskfold-recurring-widget-build-v1.log",
+    "macBuild": "/tmp/taskfold-recurring-widget-mac-build-v1.log",
+    "buildScope": "Debug arm64 app/widget; iOS UI-test products. Mac compile only.",
+    "signatures": "/tmp/taskfold-recurring-widget-signatures-v1.json",
+    "ownWidgetSourceSHA256": "ac54ccb6e800642ba77302453007814bc0aa65857505a7699b7e6c638fead162"
+  },
+  "inboxBatchConfiguration": {
+    "test": "TaskfoldUITests/testInstalledInboxResetCountBatchConfigurationAndRoute()",
+    "result": "/tmp/taskfold-inbox-host-v4.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedRuntimeWarnings": 0,
+    "scope": "Actual small Inbox reset widget on isolated iPhone Simulator: total six, five-task and all-task configurations, matching native review routes. No review action mutates tasks.",
+    "build": "/tmp/taskfold-inbox-host-build-v4.log",
+    "signatures": "/tmp/taskfold-inbox-host-signatures-v4.json",
+    "savedState": {
+      "totalTasks": 8,
+      "openInboxTasks": 6,
+      "openProjectTasks": 1,
+      "completedTasks": 1,
+      "pendingMutations": 0
+    },
+    "capturesInIOSRepository": {
+      "inbox-five-of-six": {
+        "sha256": "64217e15fb55510fadd252c75b11a2aad82268a105da67b1847f4ce806862ef8",
+        "visuallyInspected": true
+      },
+      "inbox-all-six": {
+        "sha256": "aa4ad4195cc2a1215b98fbd68e512bd9b2e69788285154a719e570457adc117c",
+        "visuallyInspected": true
+      },
+      "inbox-six-task-review": {
+        "sha256": "0093fe021004bbabf51ad1325fb88c7774251ed4711f756ee9e6f789ba2c0c28",
+        "visuallyInspected": true
+      }
+    },
+    "testSourceSHA256": "45da07576c35fcdd6ee6e72eadb836ecd8c3cfdc817568897b76176779d73e42",
+    "earlierAttempts": [
+      "v1: fixture seeded before local workspace initialization and used private widget-action storage.",
+      "v2: asserted a diagnostic panel unavailable in the real App Group mode.",
+      "v3: five-task route passed; configuration test looked for Review button instead of Five tasks value button."
+    ],
+    "retainedState": "Final run removed the exercised widget. A second fixture Inbox widget was visible in captures; no claim that all prior test widgets were removed.",
+    "visualObservation": "Two small Inbox widgets were visible; changing the first to All Inbox tasks left the second displaying Review 5 of 6. This is visual evidence of distinct settings, not complete multiple-instance acceptance.",
+    "limitations": [
+      "Medium size",
+      "Cloud/account switching",
+      "Physical devices",
+      "Mac widget host"
+    ]
+  },
+  "inboxIndependentInstances": {
+    "date": "2026-10-09",
+    "host": "Isolated iPhone 17 Pro Simulator, iOS 26.5",
+    "family": "systemSmall",
+    "configurationResult": "Both configured at five; second changed to all six without changing first",
+    "configurationBundle": "/tmp/taskfold-inbox-independent-v1.xcresult",
+    "configurationRunStatus": "Failed only final post-route child accessibility assertion; configuration and both route assertions passed",
+    "resumeBundle": "/tmp/taskfold-inbox-independent-resume-v5.xcresult",
+    "resumePassedTests": 1,
+    "resumeSkippedTests": 0,
+    "appRuntimeWarnings": 0,
+    "hostRestartPreservedConfiguration": true,
+    "routing": "five left / six left verified through native app",
+    "selectionMethod": "Known fixture left-column widget containers and normalized review-region taps after SpringBoard ceased exposing child text",
+    "retainedTaskCount": 8,
+    "pendingMutations": 0,
+    "cleanup": "Second Inbox widget removed; existing first retained",
+    "limitations": [
+      "Full configuration test not rerun from scratch after refactoring",
+      "Physical/Mac hosts",
+      "Cloud/account changes",
+      "Other families",
+      "Widget VoiceOver/accessibility acceptance"
+    ]
+  },
+  "independentMyList": {
+    "date": "2026-10-09",
+    "scope": "Two actual small My list widgets with distinct saved-filter/project choices on isolated iPhone Simulator",
+    "result": "/tmp/taskfold-independent-list-resume-v2.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": [],
+    "selections": {
+      "upper": "Widget Inbox saved filter: inbox",
+      "lower": "Widget Studio project"
+    },
+    "nativeRoutes": [
+      "Unrelated Inbox task",
+      "Sketch widget concept"
+    ],
+    "finalCache": {
+      "openTasks": 2,
+      "pendingMutations": 0,
+      "savedInboxFilter": "075d72e1-1728-46e6-bbf1-0607de7de265"
+    },
+    "capturesInIOSRepository": {
+      "list-independent-before.png": {
+        "sha256": "073d6d8c11653bb3c4c9889b7f9f2edbde30341331b5600cec853da068de5478",
+        "visuallyInspected": true
+      },
+      "list-independent-filter.png": {
+        "sha256": "679e9710805b0f7fcaa573c30d66f38f5d210dd7e1fcbd4c1b56ad7874f0d719",
+        "visuallyInspected": true
+      },
+      "list-independent-project.png": {
+        "sha256": "ba8d27fa971e2ab8b4072723dfe657ec8bb4244998529fef09532d658fd5c501",
+        "visuallyInspected": true
+      },
+      "list-independent-configured.png": {
+        "sha256": "83b6f5c5843a6f8e3fda348cd2ba9b2526632e83278eb328e02ad4b78bbb670c",
+        "visuallyInspected": true
+      },
+      "list-independent-settled.png": {
+        "sha256": "4a81e58e6684e324ff8d9a9f57d901eaf8b92f21b1abce0e6778d0251ad7500e",
+        "visuallyInspected": true
+      }
+    },
+    "sameWidgetSourceSHA256InBothRepos": "73e4c3b0a9ecf6163a7d3eabbac3a87b1acb4a3f3bac4f8491683c3378599396",
+    "initialAttempt": "/tmp/taskfold-independent-list-v1.xcresult installed the pair, then failed because the test incorrectly expected a built-in Inbox entity. Corrected to a native-created saved Inbox filter; gallery setup reused. Full setup was not rerun green.",
+    "hostLimitations": "SpringBoard exposes containers without child task text and incurs approximately 60-second menu idle waits; stale remote accessibility process warnings recur even after isolated reboot. Native route assertions and inspected captures establish scoped behavior, not VoiceOver acceptance.",
+    "relaunchCapture": "The XCTest final capture caught an animation and is excluded; a settled simctl screenshot after the completed test shows both selections retained.",
+    "retainedFixture": "Two My list widgets remain installed for rename/delete/account tests; upper Widget Inbox, lower Widget Studio. The old Inbox reset fixture was removed. Use --uitesting without reseeding to retain the new filter.",
+    "remaining": [
+      "Rename/delete/account refresh",
+      "Other sizes/surfaces",
+      "Physical/cloud/Mac hosts",
+      "VoiceOver"
+    ]
+  },
+  "myListLifecycle": {
+    "date": "2026-10-09",
+    "scope": "Two installed small My list widgets on isolated iPhone Simulator; local workspace lifecycle only",
+    "build": "/tmp/taskfold-list-lifecycle-build-v3.log",
+    "signatures": "/tmp/taskfold-list-lifecycle-sign-v3.json",
+    "results": {
+      "rename": "/tmp/taskfold-list-rename-v3.xcresult",
+      "delete": "/tmp/taskfold-list-delete-v3.xcresult",
+      "leave": "/tmp/taskfold-list-leave-v3.xcresult"
+    },
+    "passedTests": 3,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": [],
+    "rename": "Native project rename appeared in the existing widget; tapping its task opened Sketch widget concept. Cache retained original project/task IDs and zero pending mutations.",
+    "deletion": "Native project deletion preserved both original tasks as open Inbox tasks through relaunch. Existing project widget changed to Choose your list and opened All tasks. Saved Inbox widget refreshed from one to two tasks.",
+    "leaveWorkspace": "Native Leave local workspace returned to authentication, including after relaunch without test launch arguments. Widget tap returned to authentication. Both installed widgets removed private task/list names.",
+    "signedOutWidgetPayload": {
+      "account": "",
+      "version": 2,
+      "updated": 0,
+      "tasks": []
+    },
+    "capturesInIOSRepository": {
+      "list-renamed-settled.png": {
+        "sha256": "055a40989a3844be0c2614579828d8b7086a16ffc6884c87cce044403646e3ca",
+        "visuallyInspected": true
+      },
+      "list-deleted-settled.png": {
+        "sha256": "53449c7e9b00495ece75a094a91376003b141cdfffce804de4188ffc1d5183ca",
+        "visuallyInspected": true
+      },
+      "list-signedout-settled.png": {
+        "sha256": "bde0cb3782209f26e0f56e871ded36dd390522855dcd455510a4154a5c27bce6",
+        "visuallyInspected": true
+      }
+    },
+    "initialAttempt": "/tmp/taskfold-list-rename-v1.xcresult failed before mutation because the test matched two Edit buttons. Corrected to explicit Task options \u2192 projectOptions \u2192 Edit project; final three cases all pass.",
+    "renderingNote": "WidgetKit cleared the deleted entity selection and rendered Choose your list, rather than the retained-missing-entity List unavailable state. Actual installed behavior is recorded without claiming the latter branch was exercised.",
+    "finalFixture": "Phone is signed out. Two empty My list widget instances remain installed. Local test cache is retained separately by normal sign-out behavior; it is not published to widgets.",
+    "remaining": [
+      "Cloud account A to B isolation",
+      "Other widget sizes/surfaces",
+      "Physical and Mac native host checks",
+      "VoiceOver"
+    ]
+  },
+  "planningWidgets": {
+    "date": "2026-10-09",
+    "scope": "Installed small Deadline radar and A small window on isolated iPhone Simulator",
+    "passedResults": [
+      "/tmp/taskfold-deadline-resume-v2.xcresult",
+      "/tmp/taskfold-window-host-v3.xcresult",
+      "/tmp/taskfold-deadline-wrap-v3.xcresult"
+    ],
+    "passedTests": 3,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": [],
+    "initialResults": {
+      "/tmp/taskfold-deadline-host-v1.xcresult": "Created tasks natively, installed Deadline radar, verified missed-task route and completed it. Next route opened approval correctly, but test expected Today approval; quick entry had interpreted Today as the date. Corrected expectation and resumed without repeating gallery setup.",
+      "/tmp/taskfold-window-host-v2.xcresult": "Installed small-window widget, then failed because the test queried 45 minutes as static text rather than its actual menu button. Corrected native selector and reused installation."
+    },
+    "deadline": "Missed cutoff ranks first. Native completion refreshes to today\u2019s cutoff; route survives app relaunch. A subsequent missed task with a longer title becomes first and opens its correct editor.",
+    "smallWindow": {
+      "minutes": 45,
+      "scope": "All open tasks",
+      "list": "Client Work",
+      "visibleTask": "Future outline",
+      "taskEstimateMinutes": 40,
+      "taskPlannedDate": "2026-10-12",
+      "taskDeadline": "2026-10-13",
+      "routing": "Exact task editor opens before and after app relaunch; unrelated Inbox task excluded."
+    },
+    "productionFix": "Small Deadline radar uses a shorter look-ahead caption and preserves the intended two-line task title height. Both repos own the same changes. Actual before/after renders inspected.",
+    "builds": {
+      "ios": "/tmp/taskfold-planning-host-build-v3.log",
+      "macOS": "/tmp/taskfold-planning-host-mac-build-v3.log",
+      "iosTeamSignatures": "/tmp/taskfold-planning-host-sign-v3.json"
+    },
+    "finalCache": {
+      "tasks": [
+        {
+          "id": "cbf25929-6649-493e-a52a-62b109a4ab8f",
+          "title": "Missed proposal",
+          "due_date": null,
+          "deadline_date": "2026-10-08",
+          "duration_minutes": 25,
+          "project_id": "qe-work",
+          "completed": true
+        },
+        {
+          "id": "e15e92d7-bbe9-44da-a532-674597197d83",
+          "title": "approval",
+          "due_date": "2026-10-09",
+          "deadline_date": "2026-10-09",
+          "duration_minutes": 5,
+          "project_id": null,
+          "completed": false
+        },
+        {
+          "id": "cd8cbbde-0821-41c5-b548-164e3fb389af",
+          "title": "Future outline",
+          "due_date": "2026-10-12",
+          "deadline_date": "2026-10-13",
+          "duration_minutes": 40,
+          "project_id": "qe-work",
+          "completed": false
+        },
+        {
+          "id": "7b2a9a2f-e8d7-428e-a4f8-5dfffc4250a9",
+          "title": "Unestimated idea",
+          "due_date": null,
+          "deadline_date": null,
+          "duration_minutes": null,
+          "project_id": null,
+          "completed": false
+        },
+        {
+          "id": "d1fb10e6-aefd-44c8-a960-4c4fa86af2b9",
+          "title": "Submit client proposal",
+          "due_date": null,
+          "deadline_date": "2026-10-08",
+          "duration_minutes": null,
+          "project_id": null,
+          "completed": false
+        }
+      ],
+      "pendingMutations": 0
+    },
+    "capturesInIOSRepository": {
+      "deadline-missed-before.png": {
+        "sha256": "c973904386d4b4b12c2756c755be9cb1cdd02b80723522f596b504b221eeb32a",
+        "visuallyInspected": true
+      },
+      "deadline-caption-before.png": {
+        "sha256": "0b0f94b9eb1d2b626ec35c745b841ea9a4ee2fde2287867b23c8029a9ad8d7f1",
+        "visuallyInspected": true
+      },
+      "deadline-caption-after.png": {
+        "sha256": "e716af22e25ef076cf7cb16623f0d4aa485adced1f8ec66bd8b407dfe2d8dc74",
+        "visuallyInspected": true
+      },
+      "window-configured-45.png": {
+        "sha256": "9c0194b10d1a89db93f57b2fef09df4d7b91f32ac6ba0b2896950b9facd6df11",
+        "visuallyInspected": true
+      },
+      "window-45-settled.png": {
+        "sha256": "71e41f6d850ea5e00e55fcbe22d546813dd524c8c5f42e915ce0bd1a2ebe3244",
+        "visuallyInspected": true
+      },
+      "deadline-wrap-after.png": {
+        "sha256": "65084c31b06c8e7a8560a32cfa1d55e5468247c46a970519ca74a077456afc7e",
+        "visuallyInspected": true
+      }
+    },
+    "widgetSourceSHA256InBothRepos": "384e623f01ff51a454fac559d1afb138e0c5731f15f502da28619f2a4f4abed5",
+    "hostLimitations": "SpringBoard still lacks widget child text and incurs 60-second menu idle waits. Render acceptance uses inspected screenshots, while task-link outcomes are asserted natively. This does not prove VoiceOver. Wallpaper entry avoided the extra app-icon menu on the second installation.",
+    "retainedFixture": "Two small widgets are side by side, Small window left and Deadline radar right; local workspace has five tasks, one completed. No provider account created.",
+    "remaining": [
+      "Other supported widget sizes/surfaces",
+      "Physical hosts",
+      "Mac native runtime",
+      "Cloud account switching"
+    ]
+  },
+  "accountIsolation": {
+    "evidence": "account-isolation-evidence.json",
+    "scope": "Small planning widgets, cloud A \u2192 B \u2192 A, offline queue ownership and final logout on isolated iPhone Simulator",
+    "passedUITests": 7,
+    "remaining": "My list-specific cloud selection, other widgets/sizes/hosts and physical/Mac acceptance"
+  },
+  "productivityWidgets": {
+    "date": "2026-10-10",
+    "scope": "Installed small Day capacity and Project pulse in one isolated local iPhone Simulator workspace; Mac owns matching source and builds independently, with no Mac GUI claim.",
+    "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "bundle": "com.dbakp.taskfold.assigneepatterntests",
+    "workspace": "ui-testing",
+    "configuration": {
+      "capacity": "Tomorrow",
+      "projectPulse": "Studio",
+      "projectID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+      "calendar": "off",
+      "workingMinutes": 480
+    },
+    "before": {
+      "totalTasks": 6,
+      "completedTasks": 1,
+      "estimatedMinutes": 90,
+      "unestimatedTasks": 1,
+      "overdueOutsidePlan": 1,
+      "completionEvents": 2,
+      "reopenEvents": 1,
+      "attentionCount": 2
+    },
+    "after": {
+      "totalTasks": 6,
+      "completedTasks": 3,
+      "estimatedMinutes": 95,
+      "unestimatedTasks": 0,
+      "overdueOutsidePlan": 1,
+      "completionEvents": 4,
+      "reopenEvents": 1,
+      "attentionCount": 1,
+      "remainingMinutes": 385,
+      "pendingMutations": 0
+    },
+    "completedNativeChecks": [
+      {
+        "test": "testInstalledProductivityResumeCapacityAndConfigurePulse()",
+        "result": "/tmp/taskfold-productive-host-resume-v3.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "runtimeWarnings": []
+      },
+      {
+        "test": "testInstalledProductivityRefreshResumeAfterNativeChanges()",
+        "result": "/tmp/taskfold-productive-host-refresh-resume-v4.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "runtimeWarnings": []
+      },
+      {
+        "test": "testInstalledCapacityAndPulsePrivacyPreservesRoutes()",
+        "result": "/tmp/taskfold-productive-host-privacy-v4.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "runtimeWarnings": []
+      },
+      {
+        "test": "testInstalledProductivityRefreshResumeAfterNativeChanges()",
+        "result": "/tmp/taskfold-productive-host-final-v5.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "runtimeWarnings": [],
+        "purpose": "Final installed rendering and exact routes after singular-copy correction"
+      }
+    ],
+    "composition": "Initial setup created three native tasks and configured Tomorrow, then its first post-configuration tap failed. A settled fresh tap passed; no production routing change was made and the initial cause remains unproven. Native estimate/completion edits then persisted, but the refresh test encountered a transient third SpringBoard widget icon that disappeared before sorting its frame. The query now excludes missing elements. A resumed checkpoint verified the changed counts, exact routes and relaunch. This is composed evidence, not an all-green setup-to-finish driver run.",
+    "layout": "Small capacity uses a short heading with explicit Today/Tomorrow, and reserves two-line height for the budget qualifier and estimate/overdue explanation. Project pulse uses singular needs for one attention item.",
+    "remaining": [
+      "Other supported sizes, iPad, physical and Mac hosts",
+      "Cloud/account switching for these two widget kinds",
+      "Full P0 acceptance"
+    ],
+    "capturesInIOSRepository": {
+      "capacity-no-workday-readable.png": {
+        "sha256": "e0625ceb0e4644c3bc3a4783c19c762ed012034af7edb64a9679b48645e34604",
+        "visuallyInspected": true,
+        "stage": "Before final qualifier/singular-copy fixes; retained to document the observed clipping"
+      },
+      "productive-widgets-configured.png": {
+        "sha256": "5cb93a04de0a245e83bc7c49de8140fe0aec5bec414653fb6f336b4adc04f7c2",
+        "visuallyInspected": true,
+        "stage": "Before final qualifier/singular-copy fixes; retained to document the observed clipping"
+      },
+      "productive-widgets-privacy.png": {
+        "sha256": "bb8ae32b5784249a631c9fbb19fd22c7d5d0d4c72e9af19caaaa9c781666caf8",
+        "visuallyInspected": true,
+        "stage": "Both native privacy settings enabled; before singular-copy correction"
+      },
+      "productive-widgets-final.png": {
+        "sha256": "f31e30fd6fec8caa367c9c1512787024c5b819269ab0c30fb49efa51379ab302",
+        "visuallyInspected": true,
+        "stage": "Final owned source: 3/6, 1 needs attention, Tomorrow 6h25m, two-line qualifiers, calendar excluded"
+      }
+    },
+    "independentCacheInspection": {
+      "tasks": [
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa72",
+          "title": "Finish a useful draft",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": true,
+          "due_date": null,
+          "deadline_date": null,
+          "duration_minutes": null
+        },
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa73",
+          "title": "Review the launch checklist",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": true,
+          "due_date": null,
+          "deadline_date": "2026-10-10",
+          "duration_minutes": null
+        },
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa74",
+          "title": "A task without urgency",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": false,
+          "due_date": null,
+          "deadline_date": null,
+          "duration_minutes": null
+        },
+        {
+          "id": "f9bbd20b-93cf-48f0-9aa8-a0cb54e682a6",
+          "title": "Shape studio storyboard",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": false,
+          "due_date": "2026-10-11",
+          "deadline_date": null,
+          "duration_minutes": 95
+        },
+        {
+          "id": "98f5f6f9-9a91-4df7-a2d8-92b3001ad58d",
+          "title": "Collect reference images",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": true,
+          "due_date": "2026-10-11",
+          "deadline_date": null,
+          "duration_minutes": null
+        },
+        {
+          "id": "b54d011f-1b7c-44e8-8477-c0de26f5dd5e",
+          "title": "Overdue sketch",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": false,
+          "due_date": "2026-10-09",
+          "deadline_date": null,
+          "duration_minutes": null
+        }
+      ],
+      "pendingMutations": 0
+    },
+    "hostLimitations": "SpringBoard supplies container frames but not widget child text. Native configuration menus repeatedly wait 60 seconds for animation acknowledgement and report stale remote accessibility-process warnings. Use inspected pixels plus native outcomes; this does not establish VoiceOver coverage.",
+    "privacy": "Native project-name and capacity-detail privacy switches work independently. Both exact routes still open the updated fixture; both settings restore to false. Inspected hidden/restored pixels confirm Studio is concealed and capacity details are concealed. Pulse progress/attention counts intentionally remain visible when names are hidden. Small pulse does not render task titles, so task-title privacy in larger sizes remains unverified.",
+    "finalBuilds": {
+      "iOS": "/tmp/taskfold-productive-host-build-v5.log",
+      "macOS": "/tmp/taskfold-productive-mac-build-v3.log",
+      "bothPassed": true,
+      "simulatorRealTeamSignaturesVerified": "/tmp/taskfold-productive-host-sign-v5.json",
+      "macGUI": "Not launched"
+    },
+    "finalOwnedInputs": {
+      "TaskfoldWidgets/TaskfoldWidgets.swift": "27f66bf94ad1596d4cb382ff2b66e266a7502abb93291b9e53630ca824a1518e"
+    }
+  },
+  "noteAndFocusHosts": {
+    "date": "2026-10-10",
+    "scope": "Installed small Pinned note and medium Focus session on isolated iPhone Simulator, one task shared by both widgets",
+    "results": [
+      {
+        "path": "/tmp/taskfold-note-focus-host-config-v1.xcresult",
+        "selector": "testInstalledPinnedNoteAndMediumFocusConfigureAndOpen",
+        "purpose": "Native task notes/pin/timer setup, gallery installation, note entity selection, full reader route, medium size geometry, current session route and pause"
+      },
+      {
+        "path": "/tmp/taskfold-note-focus-host-refresh-v3.xcresult",
+        "selector": "testInstalledPinnedNoteNativeEditAndMediumFocusRelaunch",
+        "purpose": "Native note edit/task rename, save/relaunch, visible refresh and full reader persistence, paused session and resume"
+      }
+    ],
+    "actualPassed": 2,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0,
+    "fix": "Both owned note widget views reserve the intended title height and use smaller small-widget spacing. Before the fix, installed small title squeezed to one truncated line; final renamed title fits two lines.",
+    "visualEvidence": [
+      "Full native reader contains the original final instruction beyond widget preview",
+      "Settled host frame shows Fresh client brief in both widgets, updated note preview, Paused 15:28 and Resume in app",
+      "Following settled frame shows same renamed task, running 15:20 and Open session"
+    ],
+    "originalState": {
+      "account": "ui-testing",
+      "notes": [
+        {
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "title": "Focus on the next useful step",
+          "truncated": false,
+          "completed": false,
+          "id": "WyJ1aS10ZXN0aW5nIiwibm90ZSIsImFhYWFhYWFhLWFhYWEtNGFhYS04YWFhLWFhYWFhYWFhYWEzMSJd",
+          "text": "Start with the client brief.\nSketch two directions.\nFinal instruction: keep the original details."
+        }
+      ],
+      "focusSession": {
+        "clock": {
+          "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+          "status": "running",
+          "startedAt": 1791604194167,
+          "changedAt": 1791604194167,
+          "elapsedMilliseconds": 0,
+          "title": "Focus on the next useful step",
+          "runningSince": 1791604194167,
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "taskState": "open",
+          "durationSeconds": 1500
+        },
+        "version": 1,
+        "account": "ui-testing",
+        "conflict": false
+      }
+    },
+    "configuredState": {
+      "account": "ui-testing",
+      "notes": [
+        {
+          "truncated": false,
+          "completed": false,
+          "id": "WyJ1aS10ZXN0aW5nIiwibm90ZSIsImFhYWFhYWFhLWFhYWEtNGFhYS04YWFhLWFhYWFhYWFhYWEzMSJd",
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "title": "Focus on the next useful step",
+          "text": "Start with the client brief.\nSketch two directions.\nFinal instruction: keep the original details."
+        }
+      ],
+      "focusSession": {
+        "account": "ui-testing",
+        "conflict": false,
+        "clock": {
+          "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+          "changedAt": 1791604766887,
+          "durationSeconds": 1500,
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "startedAt": 1791604194167,
+          "taskState": "open",
+          "title": "Focus on the next useful step",
+          "elapsedMilliseconds": 572720,
+          "status": "paused"
+        },
+        "version": 1
+      }
+    },
+    "finalState": {
+      "account": "ui-testing",
+      "notes": [
+        {
+          "truncated": false,
+          "completed": false,
+          "id": "WyJ1aS10ZXN0aW5nIiwibm90ZSIsImFhYWFhYWFhLWFhYWEtNGFhYS04YWFhLWFhYWFhYWFhYWEzMSJd",
+          "text": "\nUpdated in the native reader.Start with the client brief.\nSketch two directions.\nFinal instruction: keep the original details.",
+          "title": "Fresh client brief",
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"
+        }
+      ],
+      "focusSession": {
+        "version": 1,
+        "clock": {
+          "startedAt": 1791604194167,
+          "durationSeconds": 1500,
+          "title": "Fresh client brief",
+          "status": "running",
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "elapsedMilliseconds": 572720,
+          "runningSince": 1791604929754,
+          "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+          "taskState": "open",
+          "changedAt": 1791604929754
+        },
+        "account": "ui-testing",
+        "conflict": false
+      }
+    },
+    "stateAssertions": [
+      "Original pin ID, task ID and Focus session ID are unchanged",
+      "Full original note text remains as a substring after native editing",
+      "Renamed title and inserted note text are present",
+      "Timer duration remains 1500 seconds, final state running and original task still open"
+    ],
+    "composition": "Configuration v1 passed before the note layout fix. Final v3 refresh reused its exact installed configurations after the view-only fix. No claim that the entire setup was repeated in one fresh final-source run.",
+    "initialCaptureLimit": "Immediate post-pause v1 screenshot retained the previous running frame. It is not used as paused-render proof. Final settled paused and resumed frames were inspected.",
+    "hostLimitations": "SpringBoard supplies widget container frames without reliable child text. Repeated 60-second animation acknowledgement waits and stale remote-process hierarchy warnings occur in host automation; not a functional app performance measurement. Configuration test took 610 seconds.",
+    "builds": {
+      "iOS": "/tmp/taskfold-note-focus-host-build-v3.log",
+      "macOS": "/tmp/taskfold-note-focus-host-mac-build-v1.log"
+    },
+    "signatureReceipt": "/tmp/taskfold-note-focus-host-sign-v3.json",
+    "catalogVerification": "/tmp/taskfold-note-focus-host-catalog-v3.log",
+    "screenshotsRepository": "TaskFold-iOS",
+    "screenshots": {
+      "docs/widget-host-previews/note-full-reader.png": "5f0767debbbf2d5483f71038369568880d166780f945261374c743066143c9f9",
+      "docs/widget-host-previews/note-focus-paused.png": "3d3d15d65154ac953722377b72d75fb1d156c255c5fc791e0b53bad3f5ed4159",
+      "docs/widget-host-previews/note-focus-resumed.png": "91bde658b046ba0cd8f31426e07cd33bed11c6482c8eb4ad403d7730b30b8cd2"
+    },
+    "retainedFixture": "Phone retains medium Focus above small Pinned note, selected original task aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31 named Fresh client brief. Timer running, local ui-testing workspace only. Previous capacity/pulse fixtures removed.",
+    "remaining": [
+      "Note medium/large and other instances",
+      "Cloud account switch, long outages and other-host expiry behavior",
+      "Other iPad sizes, physical and Mac widget hosts",
+      "VoiceOver and full P0 acceptance"
+    ],
+    "ownSourceHashes": {
+      "TaskfoldWidgets/TaskfoldWidgets.swift": "8f22de49c130bafa211f04d033067b949087492118ffce5b71e1269e7c728131"
+    },
+    "noteAndFocusViewBlockSHA256": "9dccd94484b6b403eee78586f24b7e19b42cd2aee277403102308f40fbe7a110",
+    "rebootColdRoutes": {
+      "date": "2026-10-10",
+      "scope": "Existing configured small Pinned note and medium Focus session; isolated iPhone Simulator reboot plus independent terminated-app route for each widget",
+      "result": "/tmp/taskfold-note-focus-reboot-v1.xcresult",
+      "test": "testInstalledNoteAndFocusColdRoutesAfterHostReboot",
+      "actualPassed": 1,
+      "failures": 0,
+      "skips": 0,
+      "reportedRuntimeWarnings": 0,
+      "bootStatus": "/tmp/taskfold-note-focus-reboot-bootstatus.log",
+      "rebootTerminalSuccess": true,
+      "beforeRebootUnix": 1791605225.219462,
+      "afterColdRoutesUnix": 1791605312.0476842,
+      "appNotRunningAssertedBeforeEachRoute": true,
+      "assertions": [
+        "Both installed widget configurations and their medium/small geometry survive reboot",
+        "Pinned note cold route opens original renamed task, inserted note text and original final instruction",
+        "Focus cold route opens same running session and renamed task",
+        "Entire saved workspace and complete published account/notes/Focus payload remain equal to pre-reboot values"
+      ],
+      "unchangedSnapshotSHA256": "ad78a950f5f5982ff6094d3385ee6d923f1ec99e20fe12fb9e3ae6f920dc67d9",
+      "unchangedPayloadSHA256": "9d144d58c05b512ea360c4e8d52df662ec7668ec616e09e4b35a7838887a0b24",
+      "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+      "pinID": "WyJ1aS10ZXN0aW5nIiwibm90ZSIsImFhYWFhYWFhLWFhYWEtNGFhYS04YWFhLWFhYWFhYWFhYWEzMSJd",
+      "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+      "runningClock": {
+        "taskState": "open",
+        "status": "running",
+        "startedAt": 1791604194167,
+        "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+        "changedAt": 1791604929754,
+        "title": "Fresh client brief",
+        "durationSeconds": 1500,
+        "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+        "elapsedMilliseconds": 572720,
+        "runningSince": 1791604929754
+      },
+      "visualClockObservations": {
+        "rebootedHost": "9:51",
+        "coldOpenedSession": "09:41"
+      },
+      "screenshotsRepository": "TaskFold-iOS",
+      "screenshots": {
+        "docs/widget-host-previews/note-focus-reboot-host.png": "524ba4d0d66b5dd2fd2fb2011c0a90843a76730bd6a9c09d33ad50c7b7ec7826",
+        "docs/widget-host-previews/note-focus-reboot-reader.png": "ec595992a2dceae6f5f825c9c58f35594d9a8c0439d14f86861c50542c97301e",
+        "docs/widget-host-previews/note-focus-reboot-focus.png": "da5332025b587fa95861cd60e60b21d8b7c58b8a120f41cd8b53c264de3d0216"
+      },
+      "build": "/tmp/taskfold-note-focus-reboot-build-v1.log",
+      "signatureReceipt": "/tmp/taskfold-note-focus-reboot-sign-v1.json",
+      "fixture": "Existing DEBUG Simulator exact-bundle widget-cold-launch marker binds system launches without XCTest arguments to ui-testing. Marker verified true before reboot and reset false afterward; no production behavior changed.",
+      "coldFixtureMarkerReset": true,
+      "productionChanges": false,
+      "limitations": [
+        "Local DEBUG Simulator account only; no cloud, account switching or physical reboot inference",
+        "No Mac GUI or Mac widget host run",
+        "Timer remained running during this short reboot; long outages and expiry not covered",
+        "No privacy/VoiceOver acceptance inferred"
+      ],
+      "ownSourceHashes": {
+        "Taskfold/Core/Store.swift": "fed42d0335cae291b6f1815ca308137acd363ae7a35a78ec1dec6df324791c32",
+        "TaskfoldWidgets/TaskfoldWidgets.swift": "8f22de49c130bafa211f04d033067b949087492118ffce5b71e1269e7c728131"
+      }
+    },
+    "privacyAndNaturalExpiry": {
+      "date": "2026-10-10",
+      "scope": "Actual privacy configuration and natural expiry of retained small Pinned note / medium Focus pair on isolated iPhone Simulator",
+      "results": [
+        {
+          "path": "/tmp/taskfold-note-focus-privacy-v1.xcresult",
+          "test": "testInstalledNoteAndMediumFocusPrivacyPreservesWorkAndRoutes",
+          "actualPassed": 1
+        },
+        {
+          "path": "/tmp/taskfold-note-focus-elapsed-v2.xcresult",
+          "test": "testInstalledElapsedMediumFocusOpensFinishedSessionAndKeepsTaskOpen",
+          "actualPassed": 1
+        }
+      ],
+      "failures": 0,
+      "skips": 0,
+      "reportedRuntimeWarnings": 0,
+      "assertions": [
+        "Actual Hide task title and Hide title and text switch values asserted on, then off",
+        "Inspected private host frame hides original task title and note text; Focus clock remains visible",
+        "Both private widgets open the original selected note/session, preserving full instructions",
+        "Restored host frame displays selected title and note preview",
+        "Natural timer expiry reaches Time well spent at 00:00 in installed medium widget",
+        "Finished widget opens original native session at 00:00; exactly one original open task remains in Inbox"
+      ],
+      "privacySnapshotSHA256": "ad78a950f5f5982ff6094d3385ee6d923f1ec99e20fe12fb9e3ae6f920dc67d9",
+      "privacyPayloadSHA256": "9d144d58c05b512ea360c4e8d52df662ec7668ec616e09e4b35a7838887a0b24",
+      "beforePrivacyUnix": 1791605521.277062,
+      "afterPrivacyUnix": 1791606161.6631029,
+      "hiddenStateComparison": {
+        "hiddenRoutesCheckedUnix": 1791605913.051627,
+        "payloadUnchanged": true,
+        "savedWorkspaceUnchanged": true
+      },
+      "elapsedStateComparison": {
+        "afterElapsedRouteUnix": 1791606328.628017,
+        "payloadUnchanged": true,
+        "savedWorkspaceUnchanged": true,
+        "originalTaskOpen": true
+      },
+      "completeSavedWorkspaceUnchanged": true,
+      "completeNotesAndFocusPayloadUnchanged": true,
+      "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+      "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+      "privacyRestoredOff": true,
+      "coldFixtureMarkerRemainsFalse": true,
+      "productionSourceChanged": false,
+      "builds": [
+        "/tmp/taskfold-note-focus-privacy-build-v1.log",
+        "/tmp/taskfold-note-focus-privacy-build-v2.log"
+      ],
+      "signatures": [
+        "/tmp/taskfold-note-focus-privacy-sign-v1.json",
+        "/tmp/taskfold-note-focus-privacy-sign-v2.json"
+      ],
+      "screenshotsRepository": "TaskFold-iOS",
+      "screenshots": {
+        "docs/widget-host-previews/note-focus-private.png": "5feec94e723789e631e9d2de2fb16fefed1d1d890a8753855efb3900f035c902",
+        "docs/widget-host-previews/note-focus-restored-finished.png": "532e8af7b18b611a4517934b7c29bb69e0746d066f082f30c1e06f1324b55aba",
+        "docs/widget-host-previews/focus-finished-native.png": "ffbd1e9883d5fd1b0a0e7cd264f069cdc5babd8632bbe1cffe3ef1939b54d2be"
+      },
+      "hostOverhead": "Privacy test took 554 seconds, mostly repeated 60-second SpringBoard animation acknowledgement waits. Native finished-session test took 18 seconds. Host stale hierarchy warnings are not treated as app performance or VoiceOver evidence.",
+      "retainedFixture": "Same original note/task/session, privacy off in both widgets, timer naturally elapsed, task still open, isolated app terminated. No real/cloud data used.",
+      "limitations": [
+        "Private rendering verified by inspected pixels plus asserted configuration values; SpringBoard child text is not reliable, so no VoiceOver claim",
+        "One installed small note and medium Focus instance only; other sizes, hosts and cloud-account lifecycle remain open",
+        "Natural expiry of this session only; long outages, notifications and physical/Mac hosts not inferred",
+        "Final test build adds the expiry check; the passing privacy case is unchanged between builds; no full setup repetition claimed"
+      ],
+      "ownSourceHashes": {
+        "TaskfoldWidgets/TaskfoldWidgets.swift": "8f22de49c130bafa211f04d033067b949087492118ffce5b71e1269e7c728131"
+      },
+      "noteAndFocusViewBlockSHA256": "9dccd94484b6b403eee78586f24b7e19b42cd2aee277403102308f40fbe7a110"
+    },
+    "iPadFollowup": "tablet-note-focus-widget-evidence.json",
+    "iPadPrivacyAndExpiryFollowup": "tablet-note-focus-widget-evidence.json / privacyAndNaturalExpiry"
+  },
+  "noteAndFocusCloudAccountLifecycle": {
+    "evidence": "docs/note-focus-account-widget-evidence.json",
+    "nativeScenarios": 6,
+    "actualPassingExecutions": 10,
+    "failures": 0,
+    "skips": 0,
+    "runtimeWarnings": 0,
+    "nativeMacAcceptance": false
+  },
+  "smallFocusSessionHost": {
+    "evidence": "small-focus-session-host-evidence.json",
+    "resultBundle": "small-focus-host-native-v4.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "scope": "Installed small ended clock, simultaneous medium instance, exact terminated-app session route and temporary-instance removal; original work unchanged."
+  },
+  "mediumInboxHost": {
+    "evidence": "medium-inbox-host-evidence.json",
+    "nativeCases": 2,
+    "scope": "Installed medium Inbox five/all-six rendering and matching cold routes; final original cloud note/Focus cold routes and unchanged work. Simulator only; Mac host remains open."
+  },
+  "mediumDeadlineHost": {
+    "evidence": "medium-deadline-host-evidence.json",
+    "scope": "Installed isolated iPhone medium Deadline radar rendering, cold routes, completion refresh and preserved original cloud widget return."
+  },
+  "mediumNoteHost": {
+    "evidence": "medium-note-host-evidence.json",
+    "installedPhoneMediumAccepted": true,
+    "previewWhitespaceOnlyFix": true,
+    "desktopAccepted": false,
+    "fullP0Accepted": false
+  },
+  "largeNoteHost": {
+    "evidence": "large-note-host-evidence.json",
+    "installedPhoneLargeAccepted": true,
+    "desktopAccepted": false,
+    "fullP0Accepted": false
+  }
+}

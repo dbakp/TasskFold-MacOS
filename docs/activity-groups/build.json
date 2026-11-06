@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "scope": "Current app build and strict development signing; Mac app-only, mobile app/test target",
+  "executableSHA256": "baced8412b9289e085716066f50b8fcf1a7a063a82e2f9cdf63185335d41b6c4",
+  "debugDylibSHA256": "d1cf772f86fc77e896523a97144588cc59c12a450e1096f34bbcf9548735ed0c",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/Core/TaskActivity.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Views/ProjectPulseView.swift": true,
+    "Taskfold/Views/WorkflowViews.swift": true,
+    "Taskfold/TeamTemplateNativeFixture.swift": true
+  }
+}

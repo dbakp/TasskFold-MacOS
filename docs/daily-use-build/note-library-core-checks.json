@@ -1,0 +1,20 @@
+{
+  "ios": {
+    "tests": 20,
+    "failures": 0,
+    "catalogCases": 7,
+    "existingPinCases": 13,
+    "logSHA256": "11c32a23401a0beb3f909adbcb631c4d6514cac0d744b33afeb51af58bbd8c88",
+    "catalog3000Seconds": 0.21313703060150146,
+    "timingScope": "Core catalog construction diagnostic; does not establish rendering or device FPS."
+  },
+  "mac": {
+    "tests": 20,
+    "failures": 0,
+    "catalogCases": 7,
+    "existingPinCases": 13,
+    "logSHA256": "13af58d2320e1ca52e9ab6d087241df9fd4284d05132c4ae100f476a42a86df1",
+    "catalog3000Seconds": 0.21950793266296387,
+    "timingScope": "Core catalog construction diagnostic; does not establish rendering or device FPS."
+  }
+}

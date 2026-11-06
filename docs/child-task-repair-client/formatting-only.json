@@ -1,0 +1,8 @@
+{
+  "file": "Taskfold/Core/ChildTaskRepair.swift",
+  "testedSourceSHA256": "29e8e05c8170d51eeadfc6da3a9d5ef4bd98f3867a2371226ad86c65db338809",
+  "currentSourceSHA256": "452907944f14ce6c7aa8a2cd81f45c9164771441eb0988397f6381f16ff5b74e",
+  "change": "Removed one trailing blank line after the final closing brace. No source tokens changed.",
+  "semanticSourceUnchanged": true,
+  "coreAndNativeProofsUseTestedSourceSHA256": true
+}

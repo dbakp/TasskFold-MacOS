@@ -1,0 +1,38 @@
+{
+  "reviewed": "2026-10-30",
+  "platform": "mac",
+  "status": "Disabled atomic repair service candidate; native integration and full migration remain open",
+  "goalCheckpointComplete": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "SQLChecks": 256,
+  "includedPreviewRegressionChecks": 133,
+  "SQLFixtureRemoved": true,
+  "baselineAdvisorFindings": 7,
+  "finalAdvisorFindings": 7,
+  "addedAdvisorFindings": 0,
+  "nativeBuildOrRuntimeRetested": false,
+  "appSourceChanged": false,
+  "localFullStackMigrationHistoryVerified": false,
+  "remaining": [
+    "Strict raw preview/receipt/original contracts and session-bound native transport",
+    "Encrypted exact-request recovery, Store/private draft admission and native before/after/export controls",
+    "Explicit indexed copies and history/attachment/discussion identity reconciliation",
+    "Larger-work repair, normal opaque editable-cache support, reviewed cleanup and restoration/Undo",
+    "Full shared client gates, accounts/secure storage, window/background/concurrent, workload and spoken acceptance; existing deferrals remain paused"
+  ],
+  "sourceSHA256": {
+    "supabase/migrations/20261030184402_child_task_repair_commits.sql": "dd725f87e55165a7e4d2af4418dcfb1a79f54d2ace747ed5a6c96ed5e08a571f",
+    "supabase/migrations/20261030183133_child_task_repair_previews.sql": "6243775ed7bc1bbcfb038762a903c9064d536f82f323f1819af576d5895c2ab6",
+    "Scripts/Database/test-child-task-repair-commits.mjs": "329ffcbea29675bb6b33063005e67d35246e42e9f7e87a3d1de5ceeff2a082d8",
+    "Scripts/Database/postgres-fixture.mjs": "75cfc46185da64e1be100680c9af3d15c5bc7fbbb9cf4cb9b9f4227f9ee14759",
+    "Scripts/Database/child-task-authority-schema.mjs": "ab0e1e07b584f66f7c2bdeb1ca4d334753c7ed70a424ef3470c01226149dda4e"
+  },
+  "evidenceSHA256": {
+    "local-migration-list.log": "51f80f996356bcc8d437c350c03cbdf512f5b48a4146394e6c7fe0de8c018a21",
+    "original-reply.json": "5c6d7abe3bdbe7e02a9dee7ee278c2a90ecb8743ba8833e72f596e73aab7745d",
+    "README.md": "ea620020bfb4b8500287ec0c57db45e12e80499c25402420a30a6d1e4abf0083",
+    "sql.json": "76f92ed26e29243b691f1056fe2401e4aeb31230ff6e402ed7a6f0dfa3f24a3c",
+    "sql.log": "8dafa69a8ca3e19f264100ab8e6b0be4c178cf9869bd32553bfa3e6e93e7fdb0"
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "date": "2026-11-05",
+  "outputRetirement": {
+    "date": "2026-11-05",
+    "freeBeforeBytes": 74072449024,
+    "freeAfterBytes": 74084806656,
+    "retired": [
+      {
+        "path": "/tmp/taskfold-library-composer-ios-native-v1.xcresult",
+        "allocatedBytes": 2809856,
+        "retained": "summary, tests tree, proof and required screenshots; final current three results kept"
+      },
+      {
+        "path": "/tmp/taskfold-library-starters-ios-native-v1.xcresult",
+        "allocatedBytes": 1552384,
+        "retained": "summary, tests tree, proof and required screenshots; final current three results kept"
+      },
+      {
+        "path": "/tmp/taskfold-library-large-ios-native-v1.xcresult",
+        "allocatedBytes": 1802240,
+        "retained": "summary, tests tree, proof and required screenshots; final current three results kept"
+      },
+      {
+        "path": "/tmp/taskfold-context-ios-native-v3.xcresult",
+        "allocatedBytes": 794624,
+        "retained": "summary, tests tree, proof and required screenshots; final current three results kept"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-v12-proof.xcresult",
+        "allocatedBytes": 2842624,
+        "retained": "summary, tests tree, proof and required screenshots; final current three results kept"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-large-v3-proof.xcresult",
+        "allocatedBytes": 1474560,
+        "retained": "summary, tests tree, proof and required screenshots; final current three results kept"
+      },
+      {
+        "path": "/tmp/taskfold-library-composer-ios-attachments",
+        "allocatedBytes": 491520,
+        "retained": "needed current normal/dark screenshots and heading-defect evidence"
+      },
+      {
+        "path": "/tmp/taskfold-library-starters-ios-attachments",
+        "allocatedBytes": 417792,
+        "retained": "needed current normal/dark screenshots and heading-defect evidence"
+      },
+      {
+        "path": "/tmp/taskfold-library-large-ios-attachments",
+        "allocatedBytes": 671744,
+        "retained": "needed current normal/dark screenshots and heading-defect evidence"
+      },
+      {
+        "path": "/tmp/taskfold-library-polish-large-ios-attachments",
+        "allocatedBytes": 643072,
+        "retained": "needed current normal/dark screenshots and heading-defect evidence"
+      },
+      {
+        "path": "/tmp/taskfold-library-final-starters-ios-attachments",
+        "allocatedBytes": 409600,
+        "retained": "needed current normal/dark screenshots and heading-defect evidence"
+      },
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-11-mac-development.zip",
+        "allocatedBytes": 32759808,
+        "retained": "verified newer candidate and installed working baseline package; prior receipt retained"
+      },
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-28-iphone-development.zip",
+        "allocatedBytes": 34414592,
+        "retained": "verified newer candidate and installed working baseline package; prior receipt retained"
+      }
+    ],
+    "retainedCurrentNativeResults": [
+      "taskfold-library-final-ios-native",
+      "taskfold-library-final-starters-ios-native",
+      "taskfold-library-polish-large-ios-native-v1"
+    ],
+    "realAppDataRemoved": false,
+    "unrelatedJobsTouched": false,
+    "workingBaselinePackagesPreserved": [
+      "Mac 10",
+      "iPhone 26"
+    ]
+  },
+  "finalCacheAudit": {
+    "apply": true,
+    "freeBeforeBytes": 74084896768,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 391909376
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 393154560
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 370995200
+      }
+    ],
+    "freeAfterBytes": 74083524608,
+    "actualFreeChangeBytes": -1372160
+  }
+}

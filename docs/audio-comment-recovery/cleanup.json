@@ -1,0 +1,94 @@
+{
+  "removed": [
+    {
+      "path": "/tmp/taskfold-audio-recovery-mac-superseded.xcresult",
+      "allocatedKiBBeforeRemoval": 8188,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-mac-prequota.xcresult",
+      "allocatedKiBBeforeRemoval": 14812,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-phone-prequota.xcresult",
+      "allocatedKiBBeforeRemoval": 4300,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-ipad-prequota.xcresult",
+      "allocatedKiBBeforeRemoval": 3748,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-mac-discard-final.xcresult",
+      "allocatedKiBBeforeRemoval": 908,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-mac-captures",
+      "allocatedKiBBeforeRemoval": 13740,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-mac-discard-captures",
+      "allocatedKiBBeforeRemoval": 436,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-mac-final-captures",
+      "allocatedKiBBeforeRemoval": 3976,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-phone-final-captures",
+      "allocatedKiBBeforeRemoval": 2488,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-ipad-final-captures",
+      "allocatedKiBBeforeRemoval": 2204,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-final.xcresult",
+      "allocatedKiBBeforeRemoval": 3288,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-ipad-final.xcresult",
+      "allocatedKiBBeforeRemoval": 2876,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-phone-final.xcresult",
+      "allocatedKiBBeforeRemoval": 25620,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-phone-replacement-final.xcresult",
+      "allocatedKiBBeforeRemoval": 956,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/x86_64",
+      "allocatedKiBBeforeRemoval": 214928,
+      "removed": true
+    }
+  ],
+  "totalAllocatedKiBBeforeRemoval": 302468,
+  "interpretation": "Allocated size before removal; APFS shared blocks mean this is not a promise of an equal change in physical free space.",
+  "retained": [
+    "/tmp/taskfold-audio-recovery-mac-final.xcresult",
+    "/tmp/taskfold-audio-recovery-phone-final.xcresult",
+    "/tmp/taskfold-audio-recovery-ipad-final.xcresult",
+    "Current signed native hosts/build products and both independent current Core caches"
+  ],
+  "simulators": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": "Shutdown",
+    "ECE507C1-5704-4243-A7F7-232BF745FDB8": "Shutdown"
+  },
+  "taskfoldAndTestRunnersClosed": true,
+  "xcodebuildStopped": true,
+  "scope": "Only owned superseded Taskfold test output, duplicate attachment exports and unused Intel Simulator objects. No real task/workspace data, user caches, SDK runtimes or unrelated builds removed."
+}

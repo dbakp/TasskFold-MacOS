@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "separateProcesses": 4,
+  "localAndCloudDraftsRestored": true,
+  "exactPendingIntentAndAudioRestored": true,
+  "crossProcessLockRefusedWithoutMutation": true,
+  "noMicrophonePlaybackOrNetwork": true,
+  "ownedTemporaryDirectoryRemovedOnExit": true
+}

@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-26",
+  "baseCommit": "49fcc6c465a105a969cc98e7f2ab180b217b314f",
+  "isolatedSourceTransforms": [
+    "Reserved bundle/app group/Keychain/drag-type namespaces",
+    "Heading and team authoring enabled only in copied Info.plist",
+    "All HTTP uses synthetic.example fixture interception"
+  ],
+  "normalHeadingAuthoringEnabled": false,
+  "realTaskDataTouched": false,
+  "nativeAcceptanceRepoSHA256": {
+    "Scripts/render_widget_previews.py": "4049f39f56e3bfa27fb0870b9329652019e4e4a40718a82f6685665f3cfa291a",
+    "Taskfold/Core/Filters.swift": "72a3da732ccded94b5874f61ba044521fdb1703750ba9d191dcf83af9f116f09",
+    "Taskfold/Core/Models.swift": "2175191d2b98d5a03afe6b05b6492c86dc944003b0c420960f3756a1018883b2",
+    "Taskfold/Core/PrintDocument.swift": "42b66c3ddc88fb13a6850136ef8faa38c5e8688a2a4c054613635b5a959c2bce",
+    "Taskfold/Core/Store.swift": "62c744ddc8c14654193b004036eb6b5927fe378a9036cd0f7e1e0d55ecb26368",
+    "Taskfold/Core/TaskActivity.swift": "5f122358abc047d23d47c44958614b795423aa00388f165fc3639ab4e76180a6",
+    "Taskfold/Core/TaskPrintRenderer.swift": "80e56c6930100de8df179d43862f844d8a4bc9ef088b23e68ec78642f9fb99eb",
+    "Taskfold/Views/SidebarView.swift": "f55aaea797b2d8cfdbf6a68e5f26cdc86bc3701832c9c60f26fe3cc5ce0fe6b2",
+    "Taskfold/Views/TaskListView.swift": "ce2623a7558a92ce64675e9f502e420e42eac414a17e888812103260eec0cfda",
+    "Taskfold/Workspace.swift": "479542b0c3e91799cc568a5717649d4640da62c76a8a207a1e24c3f444e63f34",
+    "TaskfoldTests/HeadingProjectProgressTests.swift": "305045edb178a4e84c030b278f494f212ff6b4a223832aa4074f33fdf406ab4c",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "b692c051ee09f1f4eb5e1183baafe4d6fae157d3c0c227aeff7241ad3d0f7296",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "6595ed79bd4db153c199eb8299d18b1a67c0d6597e835e9dffe1b54f8ae6bc27"
+  },
+  "nativeAcceptanceHostSHA256": {
+    "Taskfold/Core/Filters.swift": "72a3da732ccded94b5874f61ba044521fdb1703750ba9d191dcf83af9f116f09",
+    "Taskfold/Core/Models.swift": "2175191d2b98d5a03afe6b05b6492c86dc944003b0c420960f3756a1018883b2",
+    "Taskfold/Core/PrintDocument.swift": "42b66c3ddc88fb13a6850136ef8faa38c5e8688a2a4c054613635b5a959c2bce",
+    "Taskfold/Core/Store.swift": "5ed0682802c1505a98423b918ca5615c55feb6c3adc8de447d685d218ca7fb48",
+    "Taskfold/Core/TaskActivity.swift": "5f122358abc047d23d47c44958614b795423aa00388f165fc3639ab4e76180a6",
+    "Taskfold/Core/TaskPrintRenderer.swift": "80e56c6930100de8df179d43862f844d8a4bc9ef088b23e68ec78642f9fb99eb",
+    "Taskfold/Views/SidebarView.swift": "f55aaea797b2d8cfdbf6a68e5f26cdc86bc3701832c9c60f26fe3cc5ce0fe6b2",
+    "Taskfold/Views/TaskListView.swift": "ce2623a7558a92ce64675e9f502e420e42eac414a17e888812103260eec0cfda",
+    "Taskfold/Workspace.swift": "c1b2f9ecdb44484d11c6ef90d0a3e023550d56363c75d142d49b7423072a7c4c",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "7c766b92f45d2fcc24a258c6ee380fd24bcb85a89e5efb8804c1652fecacc64c",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "6595ed79bd4db153c199eb8299d18b1a67c0d6597e835e9dffe1b54f8ae6bc27"
+  },
+  "finalBuildHostSHA256": {
+    "Taskfold/Core/Filters.swift": "72a3da732ccded94b5874f61ba044521fdb1703750ba9d191dcf83af9f116f09",
+    "Taskfold/Core/Models.swift": "1a3847a7ad4798d8658d03b1fd8fc03af2fd39ef89c3a1fb796713eece4f777d",
+    "Taskfold/Core/PrintDocument.swift": "f43d654086767afb25d04a529ef899a75fe6081b1aaa14bd952e99586846c2b4",
+    "Taskfold/Core/Store.swift": "5ed0682802c1505a98423b918ca5615c55feb6c3adc8de447d685d218ca7fb48",
+    "Taskfold/Core/TaskActivity.swift": "5f122358abc047d23d47c44958614b795423aa00388f165fc3639ab4e76180a6",
+    "Taskfold/Core/TaskPrintRenderer.swift": "80e56c6930100de8df179d43862f844d8a4bc9ef088b23e68ec78642f9fb99eb",
+    "Taskfold/Views/SidebarView.swift": "f55aaea797b2d8cfdbf6a68e5f26cdc86bc3701832c9c60f26fe3cc5ce0fe6b2",
+    "Taskfold/Views/TaskListView.swift": "ce2623a7558a92ce64675e9f502e420e42eac414a17e888812103260eec0cfda",
+    "Taskfold/Workspace.swift": "c1b2f9ecdb44484d11c6ef90d0a3e023550d56363c75d142d49b7423072a7c4c",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "7c766b92f45d2fcc24a258c6ee380fd24bcb85a89e5efb8804c1652fecacc64c",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "6595ed79bd4db153c199eb8299d18b1a67c0d6597e835e9dffe1b54f8ae6bc27"
+  },
+  "finalRepoSHA256": {
+    "Scripts/render_widget_previews.py": "4049f39f56e3bfa27fb0870b9329652019e4e4a40718a82f6685665f3cfa291a",
+    "Taskfold/Core/Filters.swift": "72a3da732ccded94b5874f61ba044521fdb1703750ba9d191dcf83af9f116f09",
+    "Taskfold/Core/Models.swift": "1a3847a7ad4798d8658d03b1fd8fc03af2fd39ef89c3a1fb796713eece4f777d",
+    "Taskfold/Core/PrintDocument.swift": "f43d654086767afb25d04a529ef899a75fe6081b1aaa14bd952e99586846c2b4",
+    "Taskfold/Core/Store.swift": "62c744ddc8c14654193b004036eb6b5927fe378a9036cd0f7e1e0d55ecb26368",
+    "Taskfold/Core/TaskActivity.swift": "5f122358abc047d23d47c44958614b795423aa00388f165fc3639ab4e76180a6",
+    "Taskfold/Core/TaskPrintRenderer.swift": "80e56c6930100de8df179d43862f844d8a4bc9ef088b23e68ec78642f9fb99eb",
+    "Taskfold/Views/SidebarView.swift": "f55aaea797b2d8cfdbf6a68e5f26cdc86bc3701832c9c60f26fe3cc5ce0fe6b2",
+    "Taskfold/Views/TaskListView.swift": "ce2623a7558a92ce64675e9f502e420e42eac414a17e888812103260eec0cfda",
+    "Taskfold/Workspace.swift": "479542b0c3e91799cc568a5717649d4640da62c76a8a207a1e24c3f444e63f34",
+    "TaskfoldTests/HeadingProjectProgressTests.swift": "f14334287815a40325a6c66de7f25b756d7513be55e2a91dc37119328308e2d8",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "b692c051ee09f1f4eb5e1183baafe4d6fae157d3c0c227aeff7241ad3d0f7296",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "6595ed79bd4db153c199eb8299d18b1a67c0d6597e835e9dffe1b54f8ae6bc27"
+  },
+  "postNativeFollowups": {
+    "changes": [
+      "PrintDocument.hierarchyResults classification keeps the default Include checklists option available",
+      "DayPlacement expands saved root anchors even when search hides heading context"
+    ],
+    "verification": "Final 191/190 Core suites and independent builds/signatures; native list flows predate these two corrections. No native print or hidden-heading search-order claim."
+  }
+}

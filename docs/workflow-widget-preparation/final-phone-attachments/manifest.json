@@ -1,0 +1,47 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "AF1A3666-E27C-4756-BE78-735188D262A9.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 5000_0_18A2CA32-21A2-4B61-AF21-8EA6CBDDF46F.json",
+        "timestamp" : 1793173002.627
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "0073FF8E-2BA0-4673-8FD7-9598D00D9BD8.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 1000_0_36DDD7D9-ED27-4E07-A37E-FF1C7C187D9F.json",
+        "timestamp" : 1793173016.322
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "DF230997-381E-4A04-A356-F5C0055A88F4.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 1000_0_2197029A-E8F4-48F8-9AA4-27DCA9924E0E.json",
+        "timestamp" : 1793173029.48
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativePreparedHistoryRejectsChangedSource()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparedHistoryRejectsChangedSource"
+  }
+]

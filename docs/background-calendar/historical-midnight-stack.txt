@@ -1,0 +1,23 @@
+Historical warning: 2026-10-12 00:00:00.077303+0200
+Background thread: 2192190
+Publishing changes from background threads is not allowed; make sure to publish values from the main thread (via operators like receive(on:)) on model updates.
+Runtime UUIDs verified with dwarfdump; atos uses image offsets. Last two worker frames remain unresolved.
+
+2332EF71-3E29-3E60-9849-ACDD69B6B8EF + 0x28f0e4: ActionDispatcherSubscriber.respond(to:) (in SwiftUI) + 176
+2332EF71-3E29-3E60-9849-ACDD69B6B8EF + 0x28f1bc: ActionDispatcherSubscriber.receive(_:) (in SwiftUI) + 12
+B956B64A-AF8D-3B4B-8027-702BB1F65374 + 0x6165a0: SubscriptionLifetime.Connection.receive(_:) (in SwiftUICore) + 96
+2CC9FCE0-08F9-3A0D-8A2F-6DB229462DE5 + 0x718830: closure #1 in Notification.Subscription.init(_:_:_:_:) (in Foundation) + 260
+2CC9FCE0-08F9-3A0D-8A2F-6DB229462DE5 + 0x3d0958: thunk for @escaping @callee_guaranteed @Sendable (@in_guaranteed Notification) -> () (in Foundation) + 48
+E74D7B62-0AAC-3013-A55B-F15135D4BD2E + 0x5da38: __CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__ (in CoreFoundation) + 120
+E74D7B62-0AAC-3013-A55B-F15135D4BD2E + 0x5d970: ___CFXRegistrationPost_block_invoke (in CoreFoundation) + 88
+E74D7B62-0AAC-3013-A55B-F15135D4BD2E + 0x5ce5c: _CFXRegistrationPost (in CoreFoundation) + 408
+E74D7B62-0AAC-3013-A55B-F15135D4BD2E + 0x5c844: _CFXNotificationPost (in CoreFoundation) + 696
+E74D7B62-0AAC-3013-A55B-F15135D4BD2E + 0x5d450: CFNotificationCenterPostNotificationWithOptions (in CoreFoundation) + 128
+E74D7B62-0AAC-3013-A55B-F15135D4BD2E + 0x154e3c: __postAndResetMidnight (in CoreFoundation) + 208
+42B50931-38D5-3A5D-90EF-0FD7239C408D + 0x1be98: _dispatch_client_callout (in libdispatch.dylib) + 12
+42B50931-38D5-3A5D-90EF-0FD7239C408D + 0x6068: _dispatch_continuation_pop (in libdispatch.dylib) + 776
+42B50931-38D5-3A5D-90EF-0FD7239C408D + 0x18f44: _dispatch_source_invoke (in libdispatch.dylib) + 1800
+42B50931-38D5-3A5D-90EF-0FD7239C408D + 0x144d4: _dispatch_root_queue_drain (in libdispatch.dylib) + 328
+42B50931-38D5-3A5D-90EF-0FD7239C408D + 0x14eb0: _dispatch_worker_thread2 (in libdispatch.dylib) + 252
+85A501D2-0B0E-3DEA-B121-B24119D80CFE + 0x2bec: (unresolved worker frame)
+85A501D2-0B0E-3DEA-B121-B24119D80CFE + 0x1a28: (unresolved worker frame)

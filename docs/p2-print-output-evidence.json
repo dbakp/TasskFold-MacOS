@@ -1,0 +1,145 @@
+{
+  "updated": "2026-10-21",
+  "milestone": "Native task/note Print and PDF output",
+  "status": "Implemented in both owned apps; scoped phone/tablet native flows accepted. Mac native/error/account/VoiceOver gates and other rank-3 work remain open.",
+  "entry_points": [
+    "Task list Task options \u2192 Print or save PDF",
+    "Pinned note \u2192 Print or save PDF",
+    "Mac task-list Print action also offers Command-P"
+  ],
+  "behavior": [
+    "Captures current matching list with its actual ordering, groups and collapsed content; no screenshot export",
+    "A4/US Letter, optional notes and complete nested checklists in a separate native Options sheet",
+    "Read-only immutable review; workspace binding and current source equality checked before export or print",
+    "Native PDFKit preview, system file save and system Print panels; no job is sent automatically",
+    "Rendered settings must match current options before Save/Print enables; async rendering is cancellable",
+    "Source/workspace changes hide output and dismiss options/export/print presentations",
+    "Pinned note exports its own complete note without unrelated checklist content",
+    "Account IDs, record IDs, discussions, attachments and credentials are not included; names are resolved from available project/label/assignee data"
+  ],
+  "renderer": {
+    "frameworks": [
+      "Core Text",
+      "Core Graphics",
+      "PDFKit preview/verification"
+    ],
+    "text": "Selectable vector text, styled inline notes, complete raw fallback, code, headings and web destinations printed as text; no HTML/image/page fetch. Paragraph/span tags carry actual text; no PDF/UA conformance claim.",
+    "pagination": "Whole short paragraphs/blocks, heading chains kept with first body paragraph, long paragraph continuation, repeated title and Page N of M footer. Measurement is bounded to page height rather than repeatedly measuring the full remaining note.",
+    "unicode": "Arabic glyph-to-Unicode fallback corrected with Geeza Pro; native iPhone/iPad saved files verify Arabic, Japanese, accented text, emoji, link and final instruction.",
+    "limits": {
+      "source_bytes": 16000000,
+      "items": 10000,
+      "nested_depth": 32,
+      "text_blocks": 40000,
+      "pages": 500,
+      "pdf_bytes": 32000000
+    },
+    "limit_behavior": "Explicit refusal, never an intentionally truncated/partial successful export"
+  },
+  "core": {
+    "ios": {
+      "executed": 915,
+      "skipped": 12,
+      "failures": 0,
+      "log": "ios-p2-print-final-core.log"
+    },
+    "mac": {
+      "executed": 939,
+      "skipped": 32,
+      "failures": 0,
+      "log": "mac-p2-print-final-core.log"
+    },
+    "focused": {
+      "each_repository": 8,
+      "coverage": [
+        "Source grouping/order, unique task count, metadata and exclusion of internal/discussion data",
+        "Optional nested checklists and note-only export",
+        "Malformed/deep checklist and large-source refusal",
+        "36-section Unicode/code note on both paper sizes with every section/final sentinel, footer and media box",
+        "No orphan heading at page end",
+        "500 repetitions of every source word preserved across one long paragraph",
+        "500-page refusal before a successful partial result",
+        "Honest empty view"
+      ]
+    },
+    "execution_host": "SwiftPM suites execute on macOS. Separate iPhone/iPad Simulator saved-file proofs verify the actual iOS renderer."
+  },
+  "visual_qa": {
+    "long_fixture": "tmp/pdfs/native-ios/taskfold-review-{a4,letter}.pdf",
+    "method": "Native renderer produces seven A4 and seven Letter pages; every page inspected after Poppler rendering. Final bounded-layout output is pixel-identical to the fully inspected version. Both pages of the actual iPhone saved PDF are inspected; actual tablet output is pixel-identical.",
+    "initial_findings": [
+      "PDFKit reversed numeral-only footer reading order; now Page N of M",
+      "System Arabic fallback lost selectable characters; explicit native fallback fixes extraction",
+      "A short heading orphaned before its paragraph on US Letter; whole-chain lookahead now keeps them together",
+      "Largest-text main settings crowded the tablet preview; settings moved to their own native sheet"
+    ],
+    "receipts": [
+      "tmp/pdfs/native-ios/final-layout-comparison.json",
+      "tmp/pdfs/native-ios/device-output-comparison.json"
+    ]
+  },
+  "native_iphone": {
+    "bundles": [
+      "ios-p2-print-phone-v5.xcresult",
+      "ios-p2-print-phone-v6.xcresult"
+    ],
+    "result": "Three distinct native cases accepted across two final-source runs. v5 actual Save/readback/relaunch and largest-text Options/Print Cancel pass; the initial row-center toggle tap failed. v6 targets the real thumb and the same options/save Cancel/relaunch case passes. Do not describe the full v5 bundle as passed.",
+    "v5_accepted_cases": [
+      "testTaskPDFNativeSaveProducesCompleteReadableFileWithoutTaskMutation",
+      "testTaskPrintNativePanelCancelAtLargestText"
+    ],
+    "v5_case_details": [
+      "ios-p2-print-phone-v5.saved-case.json",
+      "ios-p2-print-phone-v5.largest-case.json"
+    ],
+    "v5_runtime_warnings": 0,
+    "v6_actual_tests_passed": 1,
+    "v6_skipped": 0,
+    "v6_runtime_warnings": 0,
+    "saved_pdf": {
+      "artifact": "/private/tmp/taskfold-print-phone-v5/8AA7CCCF-E8B3-4BDB-9546-7B7FB75B06DF.pdf",
+      "sha256": "2907e58fae6244fab8fb0544f02b9af5766cfd9461e43d33841f884c7db09430",
+      "pages": 2
+    },
+    "saved_data": "Entire persisted snapshot compared canonically before/after output and normal relaunch; every field preserved. Local Documents output is removed only after its synthetic contents are verified."
+  },
+  "native_ipad": {
+    "bundle": "ios-p2-print-tablet-v2.xcresult",
+    "actual_tests_passed": 3,
+    "skipped": 0,
+    "runtime_warnings": 0,
+    "result": "Actual local PDF Save/readback/relaunch; largest-text separate Options and native Print panel Cancel; content/paper changes and real sidebar Cancel with exact canonical snapshot preservation. All pass.",
+    "saved_pdf": {
+      "artifact": "/private/tmp/taskfold-print-tablet-v2/5AF162E6-75A9-4C17-AD01-B3100C719BC3.pdf",
+      "sha256": "13ea78e70fd99d2649094fae47887750ec8506bd9fa3eefc1ead1dc86f21c93d",
+      "pages": 2
+    },
+    "visual": "Final main/Options panels inspected at largest text; controls readable. Saved file matches the reviewed phone output pixel-for-pixel."
+  },
+  "native_mac": {
+    "result": "Final owned isolated app builds (mac-p2-print-final-build-v2.log); strict deep signature passes. Actual signed app includes sandbox, printing and user-selected read/write entitlements. Native Mac Save/Print and VoiceOver remain pending; CUA directly reports locked Mac.",
+    "entitlements": "Production app and future isolated Mac test apps declare com.apple.security.print; extensions do not receive printer access.",
+    "signed_entitlements": "mac-p2-print-signed-entitlements.plist"
+  },
+  "limits": [
+    "Mac hands-on Save/Print and VoiceOver; physical printer delivery; native source/account-switch/in-flight invalidation and denied/save-failure UI acceptance remain open",
+    "No release/distribution, remote reminders, old-client enforcement or genuine calendar-provider acceptance claim",
+    "Share-capture remaining acceptance, view/gesture controls, hierarchy grammar and other backlog ranks remain open"
+  ],
+  "cleanup": {
+    "receipt": "p2-print-output-cleanup.json",
+    "pruned_mib": 592.9,
+    "main_apps": "All main Taskfold test apps closed after teardown; required installed widget host retained."
+  },
+  "source_sha256": {
+    "Taskfold/Core/PrintDocument.swift": "513449ccff5fabbfee4a386ee8530f621fa0121fbf14709cd12b912d841ef5ef",
+    "Taskfold/Core/TaskPrintRenderer.swift": "59689ce2e7e2e98d49db1b8e23c3c253ec3b7337642fcad4f98efb0b9f7b913b",
+    "Taskfold/Views/PrintReviewView.swift": "fa554c7568e318ce2109d60f7d0e921479493309b44c716f57718ece17484948"
+  },
+  "final_builds": {
+    "ios": "ios-p2-print-final-build.log",
+    "mac": "mac-p2-print-final-build-v2.log",
+    "signatures": "Both final isolated build products pass strict deep signature verification. This is development-build verification, not distribution acceptance.",
+    "ios_build_product_note": "After alternating device test destinations, the shared iOS build product had a changed Assets.car seal. Only the owned containing-app build output was regenerated from cached objects; the final normal app build and strict deep verification pass. No source asset or app data changed."
+  }
+}

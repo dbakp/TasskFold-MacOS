@@ -1,0 +1,198 @@
+{
+  "date": "2026-10-21",
+  "status": "Mac implementation with scoped automated Core/AppKit/render verification; physical/full-app runtime acceptance open",
+  "core": {
+    "artifact": "mac-row-gestures-full-core-final.log",
+    "reported": 1028,
+    "skipped": 33,
+    "failures": 0,
+    "newCases": 13
+  },
+  "appkit": {
+    "checks": {
+      "anotherSurfaceCannotInvokeOpenRow": true,
+      "anotherWindowCannotFinishAction": true,
+      "cancelCannotCompleteArmedRow": true,
+      "completedTomorrowDisabled": true,
+      "contextCancellationCannotComplete": true,
+      "defaultsRevealWithoutExecuting": true,
+      "deferredTeardownCannotCancelNewGesture": true,
+      "disabledEdgePassesThrough": true,
+      "fullTomorrowIsNotDelete": true,
+      "markersDoNotInterceptClicks": true,
+      "onlyRevealedRegionContainsActions": true,
+      "optInFullCompletion": true,
+      "orphanChangeCannotClaim": true,
+      "outsideRowsPassesThrough": true,
+      "ownedMomentumSuppressed": true,
+      "repeatedTaskRowsHaveIndependentSurfaces": true,
+      "revealedButtonDeliversExactlyOnce": true,
+      "row-full-tomorrowPaintedOnCorrectSide": true,
+      "row-full-tomorrowSwiftUIAnchorTargets": true,
+      "row-leadingPaintedOnCorrectSide": true,
+      "row-leadingSwiftUIAnchorTargets": true,
+      "row-rtlPaintedOnCorrectSide": true,
+      "row-rtlSwiftUIAnchorTargets": true,
+      "row-trailingPaintedOnCorrectSide": true,
+      "row-trailingSwiftUIAnchorTargets": true,
+      "rtlLeadingIsMirrored": true,
+      "unavailableListNeverClaims": true,
+      "unownedMomentumPassesThrough": true,
+      "unregisteredAnchorRevokesButton": true,
+      "verticalPassesThrough": true
+    },
+    "sourceSHA256": {
+      "Taskfold/Core/RowGesture.swift": "bdafeb587de45ff22a9ea2383cbb169013979e68f93101b2f20945889d7f3b84",
+      "Taskfold/Views/RowSwipe.swift": "c11abc7e5068a65754e415d5aec3435a16e7c6b24d2ccc3896c5255ec700f616",
+      "Taskfold/Views/TaskRowView.swift": "8541094054797f997a3583425dfaab160789bb5148f9505a482142fc01cfcd4a"
+    },
+    "limits": [
+      "No event posting or physical trackpad input; route tests use real offscreen AppKit views and normalized samples.",
+      "Motion adapter is inert; production intent checks are separate Core tests.",
+      "Settings previews do not establish full main-app/native-settings-window acceptance."
+    ]
+  },
+  "nativeBuild": {
+    "artifact": "mac-row-gestures-build-final-context.log",
+    "result": "BUILD SUCCEEDED",
+    "scope": "Independent isolated Mac app, development signed; no distribution claim"
+  },
+  "inputs": {
+    "Taskfold/Core/RowGesture.swift": {
+      "productionSHA256": "bdafeb587de45ff22a9ea2383cbb169013979e68f93101b2f20945889d7f3b84",
+      "isolatedSHA256": "bdafeb587de45ff22a9ea2383cbb169013979e68f93101b2f20945889d7f3b84",
+      "namespaceOnly": true
+    },
+    "Taskfold/Views/RowSwipe.swift": {
+      "productionSHA256": "c11abc7e5068a65754e415d5aec3435a16e7c6b24d2ccc3896c5255ec700f616",
+      "isolatedSHA256": "c11abc7e5068a65754e415d5aec3435a16e7c6b24d2ccc3896c5255ec700f616",
+      "namespaceOnly": true
+    },
+    "Taskfold/Views/TaskListView.swift": {
+      "productionSHA256": "e4c5392d7141ab32a3092d91ed1aa939988aa0062e807322a48bdb43209b9478",
+      "isolatedSHA256": "e4c5392d7141ab32a3092d91ed1aa939988aa0062e807322a48bdb43209b9478",
+      "namespaceOnly": true
+    },
+    "Taskfold/Views/SettingsView.swift": {
+      "productionSHA256": "8d24634d1dba35da8f8bc4199dcc590c5529e3040dcdb803cf043e446327997b",
+      "isolatedSHA256": "8d24634d1dba35da8f8bc4199dcc590c5529e3040dcdb803cf043e446327997b",
+      "namespaceOnly": true
+    },
+    "Taskfold/Workspace.swift": {
+      "productionSHA256": "e7a25974893533833bfd8b6bbd339fb7fa0e397040fa45741ac37bd64779c34e",
+      "isolatedSHA256": "669d3678a0e4c419b9c5b25e19009cfe86c16fd4afdc5e9c3abab6b7a81e218e",
+      "namespaceOnly": true
+    },
+    "Taskfold/Views/TaskRowView.swift": {
+      "productionSHA256": "8541094054797f997a3583425dfaab160789bb5148f9505a482142fc01cfcd4a",
+      "isolatedSHA256": "8541094054797f997a3583425dfaab160789bb5148f9505a482142fc01cfcd4a",
+      "namespaceOnly": true
+    }
+  },
+  "crossPlatformRTL": {
+    "phone": {
+      "checks": {
+        "cancelRevokesDelayedAction": true,
+        "deleteRequiresExplicitButton": true,
+        "editNeverExecutesByFullSwipe": true,
+        "fullCompletionDeliveredExactlyOnce": true,
+        "fullSwipeDisabledOnlyReveals": true,
+        "newGestureRevokesOlderAction": true,
+        "noneNeitherRevealsNorActs": true,
+        "revealedButtonDeliversOnce": true,
+        "rtlMirrorsLeadingAction": true,
+        "rtlMirrorsTrailingAction": true,
+        "rtlRenderedLeadingActionIsOnRight": true,
+        "unavailableTaskCannotBegin": true
+      },
+      "sourceSHA256": {
+        "Taskfold/Views/RowSwipe.swift": "6e175ea668bb18a564afe1a51232b6bd603acdeb0988f29ae571d7610fc9f2f2",
+        "Taskfold/Core/RowGesture.swift": "67522790a73779bd45bbc3f33dca8efbc9ae0f0e41b3783bb4fb887555850cd7"
+      },
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "limits": [
+        "Inert motion/haptics; does not prove rendered layout, trackpad behavior or real touch recognition."
+      ]
+    },
+    "tablet": {
+      "checks": {
+        "cancelRevokesDelayedAction": true,
+        "deleteRequiresExplicitButton": true,
+        "editNeverExecutesByFullSwipe": true,
+        "fullCompletionDeliveredExactlyOnce": true,
+        "fullSwipeDisabledOnlyReveals": true,
+        "newGestureRevokesOlderAction": true,
+        "noneNeitherRevealsNorActs": true,
+        "revealedButtonDeliversOnce": true,
+        "rtlMirrorsLeadingAction": true,
+        "rtlMirrorsTrailingAction": true,
+        "rtlRenderedLeadingActionIsOnRight": true,
+        "unavailableTaskCannotBegin": true
+      },
+      "sourceSHA256": {
+        "Taskfold/Views/RowSwipe.swift": "6e175ea668bb18a564afe1a51232b6bd603acdeb0988f29ae571d7610fc9f2f2",
+        "Taskfold/Core/RowGesture.swift": "67522790a73779bd45bbc3f33dca8efbc9ae0f0e41b3783bb4fb887555850cd7"
+      },
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "limits": [
+        "Inert motion/haptics; does not prove rendered layout, trackpad behavior or real touch recognition."
+      ]
+    },
+    "phoneNativeLTRRegression": {
+      "artifact": "ios-row-gestures-rtl-current-actions.xcresult",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0
+    },
+    "productionRowSHA256": "6e175ea668bb18a564afe1a51232b6bd603acdeb0988f29ae571d7610fc9f2f2",
+    "scope": "Real SwiftUI ImageRenderer RTL painted-edge check on both simulators, controller cases and phone LTR scheduling/completion/Undo; not a full localized/VoiceOver walkthrough."
+  },
+  "visualReview": {
+    "artifacts": "tmp/mac-row-gesture-previews",
+    "inspected": [
+      "settings-light.png",
+      "settings-dark.png",
+      "row-leading.png",
+      "row-trailing.png",
+      "row-rtl.png",
+      "row-full-tomorrow.png"
+    ],
+    "scope": "Offscreen owned SwiftUI settings and generic row content with production gesture surfaces. Requested larger Dynamic Type did not enlarge Mac system controls; no largest-text native acceptance claimed."
+  },
+  "remaining": [
+    "Physical trackpad with Natural Scrolling on and off; native settings/preferences/relaunch",
+    "Real native list task actions and Undo including child/shared/account-switch cases",
+    "Mouse selection, multiple selection, keyboard, drag reordering and scroll-memory interoperability in the complete app",
+    "VoiceOver, larger system text, window sizes, selected/inactive/dark row cases",
+    "Broader rank-3/Px backlog"
+  ],
+  "blocker": "Mac is locked; no repeated unlock or manual-widget request was made. Other independent work remains available.",
+  "deferralsUnchanged": [
+    "Remote reminder delivery/reinstall",
+    "Older-client rollout enforcement",
+    "Distribution/signing/real installation/update",
+    "Genuine Google/Microsoft OAuth/provider acceptance"
+  ],
+  "integrity": {
+    "strictDeepDebugSignatures": {
+      "mac": true,
+      "iosPhone": true
+    },
+    "mainTaskfoldProcesses": [],
+    "ownedObsoleteArtifactsRemoved": [
+      "tmp/mac-row-gesture-previews/settings-dark-large.png",
+      "mac-row-gestures-appkit.json",
+      "mac-row-gestures-core.log",
+      "mac-row-gestures-focused.log",
+      "mac-row-gestures-full-core.log",
+      "mac-row-gestures-appkit-debug.log",
+      "mac-row-gestures-appkit.log",
+      "mac-row-gestures-build.log",
+      "mac-row-gestures-build-final.log",
+      "mac-row-gestures-build-current.log"
+    ],
+    "ownedHarnessCrashReportsRemoved": 0,
+    "scope": "Debug test bundle integrity only, not release signing/distribution acceptance."
+  }
+}

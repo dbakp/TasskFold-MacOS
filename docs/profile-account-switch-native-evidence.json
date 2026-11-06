@@ -1,0 +1,174 @@
+{
+  "date": "2026-10-10",
+  "scope": "Native iPhone original-account photo upload response held across real sign-out/sign-in to a second disposable cloud account, dirty profile drafts, relaunch and return. No new production behavior or backend policy change.",
+  "native": {
+    "bundle": "profile-switch-phone-v1.xcresult",
+    "case": "testLiveProfileUploadResponseCannotCrossAccountAndDirtyDraft",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "strictVerifier": "Passed; one actual native case, no runtime warnings."
+  },
+  "walk": [
+    "First-account unsaved name remains visible while its actual synthetic JPEG upload response is held.",
+    "Native sign-out and second-account sign-in use their real credentials; second profile starts with its own saved name and no photo.",
+    "A second-account dirty draft survives releasing the original response; no photo/busy/error appears on the second account.",
+    "Second account process relaunch retains only its saved name, with no foreign photo.",
+    "Native sign-out/return to original account restores its original empty profile and enabled photo control.",
+    "Normal launch with no override/fixture flags retains the original cloud account and Today task."
+  ],
+  "testBridge": {
+    "buildGuard": "DEBUG only; independent copy in each repo.",
+    "scopeGuard": "Only isolated app bundle IDs plus explicit launch flag, exact disposable continuity account email and UUID-named /private/tmp barrier.",
+    "authority": "Actual provider request uses the original account/path/JWT. Only delivery of its completed response to existing ownership guards is held. No fake upload result, provider override, schema or RLS change.",
+    "timeout": "180-second deadline cancels instead of applying a timed-out result.",
+    "macOS": "Same guarded bridge compiles; native Mac upload/account-switch acceptance remains open."
+  },
+  "core": {
+    "cases": [
+      "AccountTransportTests",
+      "ProfileNameDraftTests"
+    ],
+    "iOS": {
+      "log": "profile-switch-ios-core-v1.log",
+      "passed": 21,
+      "failed": 0
+    },
+    "macOS": {
+      "log": "profile-switch-mac-core-v1.log",
+      "passed": 21,
+      "failed": 0
+    }
+  },
+  "builds": {
+    "iOS": "profile-switch-phone-build-v1.log: TEST BUILD SUCCEEDED; profile-switch-phone-signing-v1.json",
+    "macOS": "profile-switch-mac-build-v1.log: BUILD SUCCEEDED; independent unsigned compile only"
+  },
+  "dataProof": {
+    "first": {
+      "taskCount": 3,
+      "pendingCount": 0,
+      "sevenTablesExactlyUnchanged": [
+        "tasks",
+        "projects",
+        "sections",
+        "labels",
+        "saved_views",
+        "view_orders",
+        "focus_sessions"
+      ],
+      "tableSHA256": {
+        "tasks": "9ddf44d634952a590108f2833c785889447e141ab89ce1f2f609e450b75b29b1",
+        "projects": "d46af7d58f75eb64c0724c27f1e9b9ffb0aa57cae6311276a6d3d2c84abc1883",
+        "sections": "e7277cb09509ff0d92a1a15b2fe81829a13530bdf1a961f99e9f69c0edfb7984",
+        "labels": "4682888c4b8c40c01728cd16af583bba8bf02c2e624797eb567ad9889477afff",
+        "saved_views": "ef1e5ee081e5c89210aaf13238e4ae5504eb648f15fe6b0cf65930281e184d0c",
+        "view_orders": "12c4325c49c4b8ec23f150b52acacfc9b9a2b55f3ff3302c7e5a75e4ab9487fc",
+        "focus_sessions": "333180b5896c968e2ddc2861bb39b612b14ecc020afe0694d1b36d978b3c3866"
+      },
+      "profilesExactlyUnchanged": true
+    },
+    "second": {
+      "taskCount": 0,
+      "pendingCount": 0
+    }
+  },
+  "serverHeldReceipt": {
+    "objects": [
+      {
+        "name": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152/2A30142A-78DA-4F9F-8202-8F0E17F3C876.jpg",
+        "owner": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "bucket": "avatars",
+        "contentType": "image/jpeg"
+      }
+    ],
+    "profiles": [
+      {
+        "id": "7300e0ce-3976-4dd4-8a2b-656e2a996113",
+        "avatarURL": null,
+        "displayName": "Profile switch test"
+      },
+      {
+        "id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "avatarURL": null,
+        "displayName": null
+      }
+    ]
+  },
+  "cleanup": {
+    "originalOwnerExactPhotoDeletionHTTP": 200,
+    "deletedObject": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152/2A30142A-78DA-4F9F-8202-8F0E17F3C876.jpg",
+    "cleanupOnlyOriginalOwnerSessionLogoutHTTP": 204,
+    "secondAccountGlobalLogoutHTTP": 204,
+    "beforeDeletion": {
+      "secondSessions": 0,
+      "secondActiveRefreshTokens": 0,
+      "exactPhotoObjects": 0,
+      "secondObjects": 0
+    },
+    "afterDeletion": {
+      "users": 0,
+      "profiles": 0,
+      "tasks": 0,
+      "projects": 0,
+      "sections": 0,
+      "labels": 0,
+      "saved_views": 0,
+      "view_orders": 0,
+      "focus_sessions": 0,
+      "sessions": 0,
+      "objects": 0,
+      "exactOriginalOwnerTestPhoto": 0
+    },
+    "originalProfile": {
+      "displayName": null,
+      "avatarURL": null
+    },
+    "privateArtifacts": "Second-account credentials, barrier files and isolated second-account cache removed. Original fixture/account retained for remaining acceptance."
+  },
+  "macGate": {
+    "sample": "mac-keychain-profile-switch.txt",
+    "result": "Current isolated app remains in SecureSession.read / SecItemCopyMatching; SecurityAgent remains live. No approval observed or bypass performed."
+  },
+  "references": [
+    "https://supabase.com/changelog.md",
+    "https://supabase.com/docs/reference/javascript/auth-signup",
+    "https://supabase.com/docs/guides/auth/signout",
+    "https://supabase.com/changelog/34270-restricting-access-on-auth-storage-and-realtime-schemas-on-april-21-2025"
+  ],
+  "remaining": [
+    "Native Mac profile picker/upload/account-switch walkthrough after Keychain approval.",
+    "Native restore/account-switch/widget/accessibility and external-provider/distribution gates remaining in P0_RELEASE_STATUS.md."
+  ],
+  "inspectedCaptures": [
+    {
+      "path": "docs/usability-previews/phone-profile-upload-held.png",
+      "provenance": "profile-switch-phone-v1-attachments/F12D04C2-F72A-4268-AD26-EB7FE8F765B4.png",
+      "sha256": "f5cb9c1f8aaaf6966dc7b59628f7db6747195bc0b1677fb377bfda51c4df7011"
+    },
+    {
+      "path": "docs/usability-previews/phone-profile-foreign-response.png",
+      "provenance": "profile-switch-phone-v1-attachments/FDFD68A9-DE9F-42A2-B902-EE1B1F288519.png",
+      "sha256": "fd9e5e051b4fa920fde1399dd16445102e07626eaff51c1a31b93d010a7317a5"
+    },
+    {
+      "path": "docs/usability-previews/phone-profile-second-relaunch.png",
+      "provenance": "profile-switch-phone-v1-attachments/28478537-B1E6-4485-90E0-48F140408364.png",
+      "sha256": "e8a51f1bda06364e945b2244c8274059026c3102724eec59c9a5261e0615e4a1"
+    },
+    {
+      "path": "docs/usability-previews/phone-profile-original-return.png",
+      "provenance": "profile-switch-phone-v1-attachments/C81E9485-DCC8-44A6-8C9C-81F8164EDD59.png",
+      "sha256": "765415ce6a7175566a9ed7b13cd2ec23988f9a1630a869ee14f7bb6a17a1e113"
+    },
+    {
+      "path": "docs/usability-previews/phone-profile-original-normal-relaunch.png",
+      "provenance": "profile-switch-original-default-relaunch.png",
+      "sha256": "fe93dc887c10e33925f51a109b38805e89caa00b32ea4e8cf87ef92129125d95"
+    }
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "3d108e13e65cc728b0fc33e77fc2a1f3fca80fd5c91bf738a4da59ce4a7cc4cd"
+  }
+}

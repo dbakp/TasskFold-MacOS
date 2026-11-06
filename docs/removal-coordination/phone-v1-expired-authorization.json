@@ -1,0 +1,24 @@
+{
+  "checks": {
+    "backupKeysExistBeforeRemoval": true,
+    "confirmedRemovalSignsOut": true,
+    "encryptedRecoveryRoundtrip": true,
+    "expiredAuthorizationRenewed": true,
+    "lateRemovedAccountCannotReopen": true,
+    "outsiderBackupKeyKept": true,
+    "outsiderCacheExact": true,
+    "outsiderRecoveryExact": true,
+    "ownedBackupKeyRemoved": true,
+    "ownedRecoveryRemoved": true,
+    "ownerCacheRemoved": true,
+    "privatePlacesScoped": true,
+    "privateSessionPersisted": true,
+    "recoveryCommandFinished": true,
+    "reservedRecoveryOnly": true,
+    "staleCacheWriteRefused": true,
+    "staleConfirmationRefused": true
+  },
+  "scenario": "expired-authorization",
+  "scope": "Real native Store and file/Keychain cleanup with synthetic accounts and simulated endpoint replies. Fixture-owned sharing directory; not live Auth/Storage or normal App Group acceptance.",
+  "status": "passed"
+}

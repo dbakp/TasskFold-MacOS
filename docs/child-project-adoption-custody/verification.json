@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamProjectAdoption.swift": "f50c3fe645d796b9554aa26433404d7595b203be5a840dbe18dbdccf7a9c6475",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "708b8554f23d00048fb323df3db355425ad9a80f9f727b9dedd321df82ccbf41",
+    "TaskfoldTests/TeamProjectAdoptionTests.swift": "698f1d21f5e3d3052a10b256976dc6b455ba6e1c78b1dcc5f3eb70d00f780eb8",
+    "TaskfoldTests/Fixtures/team-child-project-adoption-v1.json": "64e9d7bb34c6221427be15188fd5472086aa537afd4f6a028def95b25fab35fc",
+    "Scripts/Database/test-child-project-adoption.mjs": "e7ded2210621b96162b690edb66c8e028a291fd66c19eb8fcd1fda932f215068",
+    "Scripts/Database/test-project-adoption-review.mjs": "aaa8214f3c866744061ff1a6fb4fb72baa559e3ee41d5f962d8d6d8332f90921",
+    "Scripts/Database/test-project-adoption-connection-policy.mjs": "79993ddface44371514d4707af8de5f06d381ace6d7a60d43ad7b281c4f6a6b9",
+    "Scripts/Database/test-child-task-record-authority.mjs": "48f1ad70c63d2aa42bb80bd5d0df6fe8b5edd8263d0f5569389e228680934829",
+    "Scripts/Database/test-child-task-structure-commands.mjs": "750546a48ecd2b12cf0cfa6f87a90fb06f0a364f415f3deb095bbbd86d931b3e",
+    "supabase/migrations/20261030102036_child_record_project_adoption_custody.sql": "a93e6f5487b0cfbdbf2aff93abd5f92243c9bbd3454b2dccaba5058288510dc4"
+  },
+  "namespaceAdjustedBuiltHostSHA256": {
+    "Taskfold/Core/TeamProjectAdoption.swift": "f50c3fe645d796b9554aa26433404d7595b203be5a840dbe18dbdccf7a9c6475",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "708b8554f23d00048fb323df3db355425ad9a80f9f727b9dedd321df82ccbf41"
+  },
+  "compiledWireFixtureSHA256": "64e9d7bb34c6221427be15188fd5472086aa537afd4f6a028def95b25fab35fc",
+  "databaseChecks": {
+    "custody": 56,
+    "review": 148,
+    "policy": 55,
+    "authority": 96,
+    "structure": 221,
+    "totalPassed": 576
+  },
+  "corePassed": 201,
+  "coreFailed": 0,
+  "allFixturesRemoved": true,
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "developmentSignaturesVerified": true,
+  "developmentSigningReceipt": {
+    "Taskfold.app": {
+      "strictDeepSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "strictDeepSignatureVerified": true
+    }
+  },
+  "hostedMigrationApplied": false,
+  "realRootsPromoted": 0,
+  "normalFeatureGatesChanged": false,
+  "newSimulators": 0,
+  "newNativeRuntimeAccepted": false,
+  "newSpokenOrLargestTextAccepted": false,
+  "localSupabaseMigrationHistoryVerified": false,
+  "wireFixtureSource": "Actual final Mac-owned 56-case SQL custody phase; sorted immutable command, canonical migration hash, complete inspection/review and successful receipt. Both clients independently compile and decode the owned fixture.",
+  "remaining": [
+    "Individual personal task moves, cross-team/return-to-personal and cross-root transfers",
+    "Older-data tools, full-schema/provider/Storage custody, large workloads and broader native/lifecycle acceptance",
+    "All existing user deferrals remain"
+  ]
+}

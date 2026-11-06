@@ -1,0 +1,10 @@
+{
+  "Taskfold/ChildFieldNativeFixture.swift": "5e87716b166ad83e5c15c24d0c41f4af7263ea62e0714bf722f5e3396db7967e",
+  "Taskfold/Core/ChildTaskFieldCommands.swift": "7bda2061022d27c148eb9812a8f8680169bf95c9c95845cad29e26590c0fccc7",
+  "Taskfold/Views/ChildTaskFieldViews.swift": "1b9b1b8b855580351bcf5f82ec838180db6d8ccd91f0e99103635e01184e680f",
+  "Taskfold/Views/ReminderEditor.swift": "0868f5895425a29835694b7ce4fd0041654d6679b701c52c6e089b01cf651e83",
+  "Taskfold/Views/TaskInspector.swift": "91c66dbd5cbff8ef50d446adba915a33919077e8ceed9524d5edb698336abefa",
+  "Taskfold/Views/TeamTaskRemindersEditor.swift": "767548b1391fbd0ef64d31845622e8130822e5a697eae1abf910207152179d68",
+  "TaskfoldTests/ChildTaskFieldCommandTests.swift": "087891b9495e6660ffa0159c19b9b113edc64ca52951b78a33c12405639a44d0",
+  "TaskfoldUITests/AudioCommentUITests.swift": "dbb658edff9416a7f8cb807c5597e000074a15c4ec4a1436e6500467c9b79d9c"
+}

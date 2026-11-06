@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "89594261-340F-418F-822B-892F79F630FA.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Cancellable workflow preparation_0_8FF7236C-970A-4104-9E81-11F92FF2AA32.png",
+        "timestamp" : 1793050475.421
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry"
+  }
+]

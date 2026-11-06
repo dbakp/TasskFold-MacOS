@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-06",
+  "genuineCombinedServiceChecks": 82,
+  "coreTests": 3,
+  "coreTestsPassed": true,
+  "coreSourceSHA256": {
+    "Taskfold/Core/TeamProjectAdoption.swift": "1effa533fbced7a347588f4a5c41140b8bb294a318e836fd1884581501986e82",
+    "Taskfold/Core/ProjectFilePreparation.swift": "3444263a3725199c8c971b53d8747c02da4f4d965f42f0a5ad0439c0bc25741b",
+    "TaskfoldTests/CombinedProjectCustodyTests.swift": "c8041a00ce73499f8cb823ce7cc0a3ae770851876550f54a96562583d7c09687",
+    "TaskfoldTests/Fixtures/combined-project-custody-v1.json": "4d58701947602aa7fc2e68ae4984cf409960fbdd3a5b05388a69a9ec0901f012"
+  },
+  "coldCommandRoundTrip": true,
+  "receiptOmissionAndAlterationRefused": true,
+  "nativeCombinedUIAccepted": false,
+  "hostedChanges": false,
+  "normalUseGatesChanged": false,
+  "installedAppsChanged": false,
+  "allDisposableServicesRemoved": true,
+  "limits": [
+    "Loopback TLS and tmpfs Storage, not hosted S3/Edge",
+    "No combined native UI acceptance",
+    "Wider lifecycle/retention and process-death outcomes remain open"
+  ]
+}

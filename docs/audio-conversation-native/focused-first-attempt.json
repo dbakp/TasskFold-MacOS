@@ -1,0 +1,7 @@
+{
+  "device": "iPad Pro 13-inch M5, iOS 27 Simulator",
+  "result": "Failed",
+  "failedTests": 1,
+  "reason": "Scroll helper imposed a four-point navigation margin on text exactly aligned with navigation bottom. Actual screenshot/AX showed the complete notice visible (notice.minY=474; nav.maxY=474).",
+  "resolution": "Test now checks hittability, full form containment and navigation boundary directly. Product code unchanged by this test correction."
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "version": 1,
+    "reportSHA256": "fc9d84d14923d8f3452b476bcc0306b31ec6315c8d0681e60ed39e819d8db21d",
+    "nativePassedTests": 0,
+    "checksBeforeStop": 18,
+    "qualification": "wrong collection-view locator for dated scroll",
+    "error": {
+      "message": "one native case accepted without skip\n+ actual - expected\n\n  [\n+   65,\n+   0,\n+   1,\n-   0,\n-   1,\n-   0,\n    0\n  ]",
+      "code": "ERR_ASSERTION"
+    },
+    "cleanupErrors": []
+  },
+  {
+    "version": 2,
+    "reportSHA256": "c0795f26df88a96fa0b21a7f89ab3297a141bc209ef1805d181286461ea60fb6",
+    "nativePassedTests": 1,
+    "checksBeforeStop": 68,
+    "qualification": "functional proof before accent and 44-point hit-target refinement",
+    "error": null,
+    "cleanupErrors": []
+  }
+]

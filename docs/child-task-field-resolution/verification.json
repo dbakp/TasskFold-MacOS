@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "ordinaryChildFlagsEnabled": false,
+  "hostedDeploymentPerformed": false,
+  "releaseAcceptance": false,
+  "migrationSHA256": "dddfd037d9411d21fb8a5910b89cf4558432c5551c6860189a0d38d7c6ab2539",
+  "client": {
+    "selectedCases": 228,
+    "result": "passed",
+    "log": "core-preservation-final.log.gz"
+  },
+  "database": {
+    "closureCases": 35,
+    "existingEditCasesWithMigration": 95,
+    "result": "passed",
+    "noAddedAdvisorFindings": true,
+    "allOwnedFixturesRemoved": true
+  },
+  "nativeMac": {
+    "distinctCases": 4,
+    "result": "passed",
+    "phases": [
+      "mac-v9-summary.json",
+      "mac-v10-summary.json"
+    ],
+    "reportedRuntimeWarnings": 0,
+    "screenshots": "Two inspected isolated-window captures; no desktop backdrop stored."
+  },
+  "nativeMobile": {
+    "phoneDistinctCases": 4,
+    "phoneResult": "All four targeted journeys pass across v2/v3/v4; v2/v3 also contain the recorded host/intermittent-tap failures.",
+    "phonePhases": [
+      "phone-v2-interrupted-summary.json",
+      "phone-v3-summary.json",
+      "phone-v4-summary.json"
+    ],
+    "phoneStandaloneLostClose": "passed in v4 with no code change and no reported runtime warnings",
+    "remainingPhoneFinding": "One combined-run switch tap stayed off in v3; not reproduced in standalone v4, still unexplained.",
+    "tablet": {
+      "result": "passed",
+      "distinctCases": 4,
+      "phase": "ipad-v1-summary.json",
+      "reportedRuntimeWarnings": 0,
+      "visualReview": "Compared values, saved feedback and distinct request titles readable in the native scrollable sheets."
+    }
+  },
+  "remaining": [
+    "Investigate the recorded intermittent automated phone tap; its standalone case passes without a code change.",
+    "Genuine account/team/window/Keychain/hosted and spoken lifecycle.",
+    "Completion/structure/legacy child adapters and authoritative migration.",
+    "Existing explicit user deferrals remain unchanged."
+  ],
+  "cleanup": "cleanup.json"
+}

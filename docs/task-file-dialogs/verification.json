@@ -1,0 +1,75 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "sourceSHA256": {
+    "Taskfold/Views/TaskFileUploadView.swift": "6e7faf04359a719f08098c7dffa3f5dab2609af00885825c25eb36681aa6320b",
+    "Taskfold/Core/Store.swift": "bf74ce1c4f0c48d751ba673d8f0a453bac6b067b77f47b36de559af1e50fc448",
+    "Taskfold/Core/TaskFileUpload.swift": "7a87804ca69f21c7d13b050b4374c126158fdc6b68169f520bf066137e1f5f92"
+  },
+  "deployed": false,
+  "normalUseEnabled": false,
+  "providerBytesTested": false,
+  "core": {
+    "changed": false,
+    "rerunThisBatch": false,
+    "priorFocusedPasses": 66
+  },
+  "build": {
+    "phase": "file-dialogs-final",
+    "appAndRunnerStrictSignaturesVerified": true,
+    "logSHA256": "06649ecd6c61c9ff9887210a1bcda1f7e5b9d06c2fddab4109fb04641e9eef72",
+    "mainBinarySHA256": {
+      "Taskfold.app": "c5d56047a556afc199523fcb807db776ff704ef5a9e240f9a9858d3dcca274ff",
+      "TaskfoldUITests-Runner.app": "6dbbff2e71106e7153b5b702c4b371f0cbfdf70b9025e8fe3a3cea08922e4e16"
+    },
+    "appDebugDylibSHA256": "6d7a74d9673603aa3bfbad375db02c577b4c465e881fec5be693c4748aa9cd99",
+    "testBinarySHA256": "ad12e9c2ba3c81aa6da2963c42c7d6bd7fd3303bbf5969d8876721159ad1c836"
+  },
+  "nativeAcceptance": {
+    "phone": {
+      "tests": 3,
+      "failures": 0,
+      "skips": 0,
+      "logSHA256": "ea0619583c150e55f5bf55cc4490c86a0fb0d3e65e2c43391907eb84563613db"
+    },
+    "ipad": {
+      "tests": 3,
+      "failures": 0,
+      "skips": 0,
+      "logSHA256": "9d026beb60c0b941d0a2d47b78e71c85a5f0c027c9d51b367ad34bc99688ade7"
+    },
+    "mac": {
+      "result": "not accepted",
+      "reason": "prior runner initialization failure and locked direct fallback; current compilation/signatures only"
+    }
+  },
+  "acceptedMobileScope": [
+    "Actual native importer cancellation and local selection",
+    "Actual native exporter cancellation, retry, Save, returned local URL and exact byte readback",
+    "Private original remains frozen after selected source changes",
+    "Encrypted journal unchanged by copying and preserved through cold relaunch",
+    "Explicit removal of known unsent synthetic upload preserves source and task rows",
+    "Viewer cold/read-only/access-withdrawal regression"
+  ],
+  "notAccepted": [
+    "Real provider upload/download or cleanup",
+    "Mac native dialogs",
+    "Human VoiceOver and largest text",
+    "Broader account/window/background/retry cases",
+    "Other Files providers and release distribution"
+  ],
+  "screenshotsSHA256": {
+    "ipad-copy-saved.png": "4418ff704b0070f9374f839319c9015fd0801a588f234d70e41cc29859bf618c",
+    "ipad-private-original.png": "32af73165d7843ee29807c9a0373c66b295068c6042c67e07bb590c453f0bb05",
+    "phone-copy-saved.png": "43a202ba395813ee0bb549f4e4045671dc9045e65811d24848b794a0f4c7eaf1",
+    "phone-private-original.png": "5810113e7e25275a51a13fa655bf142be323f6aa9e97ad47605b3d3f928cbacd"
+  },
+  "cleanupSHA256": "795f43b43aa19d5f1cf881c23eac0d1efd6f194b034fdeb547b4d622085571cd",
+  "attemptsSHA256": "b9e350f3f70cee971555fe206618247cd1f6cee4769c595a2a6c02af8800dcd5",
+  "reportsSHA256": {
+    "ios-v3-attempt.json": "f59fff4b12b28b062aa74dc4b38f609cd927264f07d271d2c1198a5dbe9ead0b",
+    "ipad-v3-attempt.json": "71d9ced6d6095487a1c3629ba100090a98494dd7102c60d668806789396c2260",
+    "ipad.json": "590100ef1e30b2542a0524696917f3951c4c4577e1391bf6ecf2691e66a44506",
+    "phone.json": "b84339d0e3a268a447288e0fd6b3872be017ce7c36d2fd079416d895fcbf1a93"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-04",
+  "executed": 39,
+  "failures": 0,
+  "newCaptureCases": 12,
+  "logSHA256": "f2c06ab4d9d09558627d39963fedada8e0b6585daeeef2e1e25b976eb0747f4c",
+  "scope": "Capture order Undo/Redo, transport, cold queue, capability and legacy workflow/history regressions",
+  "nativeStoreAcceptance": false,
+  "includesRedoHistoryGuard": true,
+  "sources": {
+    "Taskfold/Core/Models.swift": "296c349b807cc1c3e163311305658ef9aa3ea10e3b301fe6bc21ee4b3940ed78",
+    "Taskfold/Core/ProjectWorkflows.swift": "6aea6488fb49f81ecc415f8dd71a00c378c2750c7b3ebe6891898078b4b35bf8",
+    "Taskfold/Core/Backend.swift": "cf2b7a8c93eb3ddd2a70dcfb2ba54ecb7b91ac97e2d45f03304772234f91f17a",
+    "TaskfoldTests/WorkflowCaptureUndoTests.swift": "78d19f1c61129488badcae0c36dab0c677659d55c696306b1b5213997c82058b"
+  },
+  "nativeAcceptanceRecordedSeparately": "capture-workflow-undo-native-mac.json"
+}

@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-03",
+  "project": "zqxflydiyfjeedqvyova",
+  "readOnly": true,
+  "scope": "Catalog only; no function invocation or user-record reads/writes",
+  "rows": [
+    {
+      "name": "taskfold_order_organization",
+      "installed": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "taskfold_set_focus_session",
+      "installed": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "taskfold_teams",
+      "installed": false,
+      "authenticated_execute": false
+    }
+  ]
+}

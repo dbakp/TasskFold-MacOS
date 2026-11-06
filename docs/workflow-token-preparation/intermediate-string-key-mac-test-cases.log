@@ -1,0 +1,18 @@
+Test Suite 'Selected tests' started at 2026-10-27 06:33:52.325.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 06:33:52.326.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-27 06:33:52.326.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (10.898 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale5000PublishesOnce]' passed (28.121 seconds).
+Test Suite 'SharedHeadingNativeTests' passed at 2026-10-27 06:34:31.347.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 39.019 (39.021) seconds
+Test Suite 'TaskfoldMacUITests' started at 2026-10-27 06:34:31.349.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' started.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' passed (12.817 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-10-27 06:34:44.167.
+	 Executed 1 test, with 0 failures (0 unexpected) in 12.817 (12.818) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 06:34:44.168.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 51.836 (51.842) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 06:34:44.169.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 51.836 (51.844) seconds

@@ -1,0 +1,62 @@
+{
+  "beforeIOSDebugSeparate": {
+    "cacheRows": 10101,
+    "cohortRecords": 101,
+    "exportSeconds": 16.171898666769266,
+    "queuedCommands": 102,
+    "textSeconds": 13.813435333431698,
+    "textSHA256": "33c1c5cd096e4a1fcd6a27ad2786303a7687846a3f1e016a204e630196975970"
+  },
+  "intermediateOrderReferenceIOS": {
+    "cacheRows": 10101,
+    "cohortRecords": 101,
+    "exportSeconds": 2.7506917082937434,
+    "preparedSeconds": 2.752586083370261,
+    "queuedCommands": 102,
+    "remainingOrderSHA256": "721fe042131a84dd3c585e3f6118a971d286844188c8402ba592b68012fcc4b0",
+    "separateMeasured": true,
+    "snapshotRows": 10102,
+    "textSeconds": 2.663224166724831,
+    "textSHA256": "33c1c5cd096e4a1fcd6a27ad2786303a7687846a3f1e016a204e630196975970"
+  },
+  "final": [
+    {
+      "cacheRows": 10101,
+      "cohortRecords": 101,
+      "exportSeconds": 0.7536440832773224,
+      "preparedSeconds": 0.7736672083847225,
+      "queuedCommands": 102,
+      "remainingOrderSHA256": "504f3e0e93b1f8d8c63bf7e29dd9012ca027dfa44604262514f0dd9b86572522",
+      "separateMeasured": true,
+      "snapshotRows": 10102,
+      "textSeconds": 0.666851875022985,
+      "textSHA256": "33c1c5cd096e4a1fcd6a27ad2786303a7687846a3f1e016a204e630196975970"
+    },
+    {
+      "cacheRows": 49999,
+      "cohortRecords": 101,
+      "exportSeconds": 0,
+      "preparedSeconds": 3.316774083301425,
+      "queuedCommands": 1000,
+      "remainingOrderSHA256": "e01229ccd3dee684a66bf0ace62ad95c6d5936b8002347480ff979c2da7f64c7",
+      "separateMeasured": false,
+      "snapshotRows": 50000,
+      "textSeconds": 0,
+      "textSHA256": "567cd7be3d68fab1c53cd2e7584efab49a11da1216c3588d83aa620b876a57a3"
+    },
+    {
+      "cacheRows": 49999,
+      "cohortRecords": 101,
+      "exportSeconds": 0,
+      "preparedSeconds": 2.311753625050187,
+      "queuedCommands": 102,
+      "remainingOrderSHA256": "e01229ccd3dee684a66bf0ace62ad95c6d5936b8002347480ff979c2da7f64c7",
+      "separateMeasured": false,
+      "snapshotRows": 50000,
+      "textSeconds": 0,
+      "textSHA256": "33c1c5cd096e4a1fcd6a27ad2786303a7687846a3f1e016a204e630196975970"
+    }
+  ],
+  "note": "Observed synthetic debug times on the same Mac, not a release performance guarantee. Final suites and compilers ran concurrently. Zero separate text/export timings at capacity mean not measured; separateMeasured=false. Text and recovered-order assertions are independent of elapsed time.",
+  "originalSeparateTotalSeconds": 29.985334000200965
+}

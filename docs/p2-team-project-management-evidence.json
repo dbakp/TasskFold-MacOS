@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-24",
+  "milestone": "Gated native team projects and reviewed access management",
+  "platform": "mac",
+  "baseCommit": "aff63236a801df110ba47d9d9b7a4cf6985a66ee",
+  "sourceSHA256": {
+    "Package.swift": "434836a8e244d6bb2ef1784b5a6b59fdad8d3157e110df16be4e81e331d6ca74",
+    "Taskfold.xcodeproj/project.pbxproj": "25f76e04c96318fc15eee2233b842bfc67628be025f5d346dc3acf16b0a00cd7",
+    "Scripts/Database/test-team-project-access.mjs": "8ed8fe27e037251e1ecb14d0be72b7c51ad1593addd50980386c97aadd7dee08",
+    "Taskfold/Core/Backend.swift": "663b041504409b7c827e8f41d3c8328fcc66a68b67823972959c85716537186e",
+    "Taskfold/Core/Store.swift": "665cafd544dc57ef34e22a5445f7f6a1f80e510a73e7cc5026fd3315faf7810d",
+    "Taskfold/Core/TeamOrganizationCommand.swift": "19c8ee68a5bdf18f4938f32c8bf30f9fa299ccf5b2f603ac853c4c00951b471d",
+    "Taskfold/Core/TeamProjectAccess.swift": "604d01d3a1c52d2cf802d640fd55968c865e2d57c12ed9685582e8d4f38218e8",
+    "Taskfold/Core/TeamProjectManagement.swift": "993ceb2d181fdccd696f1ac881dc309416c433409eb938d408c2da04e40c40fc",
+    "Taskfold/Views/TeamOrganizationView.swift": "a50b088ce64339dc8e0a82a78e167169e776a23cc7c629427da9e56ca2c1e360",
+    "Taskfold/Views/TeamProjectManagementView.swift": "6554c5673915d72ebf26693ae2abf4421ecec8877cd57776ccb6c2efcba12d7b",
+    "TaskfoldTests/TeamProjectManagementTests.swift": "0eb312967161a9025e4ffe54e9016f03044cb491ca6d9a4036a09c133fa29789",
+    "TaskfoldTests/Fixtures/team-project-commands-v1.json": "582771f9b5ab1ee771170e3462da9017a0eda1a4f1437c05e5945c51337a3cf3",
+    "TaskfoldTests/Fixtures/team-project-management-v1.json": "57770deb8cec27c745450a058062c0acd72bddbfe969a671b54ade1c632b4b6f",
+    "supabase/migrations/20261024163752_team_project_presentation.sql": "47c696d2212c3cb67a45ea61a7b16426354fba4d019d72e2efb25d839c294177",
+    "Scripts/Database/test-team-organization.mjs": "5c39acea87cb57d3cb025a7e6904a1ba90ced71094617276aa198fe2b84c06b7",
+    "supabase/migrations/20261024161155_team_directory_identity.sql": "30ffaaa50c427158ebca5b46040ad12737de0247221625e0f136c922f93864bd"
+  },
+  "deployed": false,
+  "teamRolloutEnabled": false,
+  "teamTaskWritesEnabled": false,
+  "realDataChanged": false,
+  "emailSent": false,
+  "core": {
+    "status": "passed",
+    "selectedTests": 109,
+    "newProjectManagementTests": 10,
+    "log": "/tmp/taskfold-projects-mac-core-final.log",
+    "scope": [
+      "Four exact command schemas and all-action PostgreSQL receipt fixtures",
+      "Distinct team/project journals and existing team recovery regressions",
+      "Lost reply/relaunch/retry, private IO write/remove failures, late account and foreign result",
+      "Manager directory/privacy and paused/reset role semantics",
+      "Access-token drift and late account response publish no project/recipient names"
+    ]
+  },
+  "database": {
+    "status": "passed",
+    "checks": 152,
+    "commandReceipts": 13,
+    "actionsCovered": 4,
+    "advisorsRan": true,
+    "containerRemoved": true,
+    "report": "p2-team-project-management-postgres-evidence.json"
+  },
+  "build": {
+    "status": "passed",
+    "target": "Independent isolated unsigned arm64 Mac app/extensions",
+    "log": "/tmp/taskfold-projects-mac-build-accepted.log"
+  },
+  "remaining": [
+    "Live authenticated service, private Keychain and broader native role/account/editor/draft-cohort acceptance",
+    "Team project rename/archive/delete, adoption/moves/templates/subprojects and remaining task/comment/file/service adapters",
+    "Broader workspace/cache/filter/widget/privacy and realtime transition acceptance before rollout",
+    "Mac runtime/spoken checks; Mac is locked and no Mac test app was launched",
+    "All existing user-deferred release, remote reminders, older-client rollout, OAuth, location and inbound email configuration remain deferred"
+  ],
+  "native": {
+    "status": "not run",
+    "reason": "Mac locked; no test app launched"
+  },
+  "canonicalMigrationRename": {
+    "from": "20261024161156_team_directory_identity.sql",
+    "to": "20261024161155_team_directory_identity.sql",
+    "exactSQLBytesUnchanged": true,
+    "historicalEvidenceCommit": "aff6323",
+    "directoryChecksRerun": 213,
+    "report": "p2-team-directory-canonical-postgres-evidence.json"
+  },
+  "cleanup": {
+    "ownedBuildsAndResultsRemoved": true,
+    "isolatedSimulatorAppsAndRunnersUninstalled": true,
+    "macTestAppNeverLaunched": true,
+    "approximateBytesReclaimedAcrossBothRepos": 1191766743,
+    "smallLogsAndCoreCachesRetained": true
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-12",
+  "scope": "Mac native creation offline in a shared project, real membership revocation before first POST, native encrypted recovery and phone continuity",
+  "status": "Named functional case accepted; complete P0 and clean-runtime acceptance remain open",
+  "productionCodeChanged": false,
+  "independentOwnedTestSources": {
+    "macOS": "TaskfoldUITests/TaskfoldMacUITests.swift",
+    "iOS": "TaskfoldUITests/TaskfoldUITests.swift"
+  },
+  "environment": {
+    "macOS": "Dedicated signed sandboxed Debug app com.dbakp.taskfold.mac.backupcanceltests",
+    "iOS": "Dedicated Debug app com.dbakp.taskfold.backupcanceltests on disposable iPhone 17 Pro / iOS 26.5 Simulator",
+    "offlineControl": "Existing DEBUG-only continuity-offline transport gate, restricted to the disposable account and exact app IDs; no Wi-Fi/system/network setting change",
+    "serverActions": "Disposable project invitation/acceptance/revocation and exact synthetic cleanup using owner/member auth; no service-role key, schema/RLS change or Todoist mutation"
+  },
+  "verified": [
+    "Native Add Task created the shared task before any server insertion; full notes and 25-minute estimate saved offline",
+    "Owner read confirmed the new task was absent before membership removal; member authenticated project read was empty afterward",
+    "Native online recovery removed the denied dependent queue only after encrypted preservation",
+    "Native preview showed Add 2 / Update 0 / Keep 20, comprising one owned project copy and one task",
+    "Native apply retained title, notes and estimate in a member-owned project with a new mapped project/task identity",
+    "Native Mac normal Quit retained the recovered task and persistent recovery notice",
+    "Native repeat restore after synthetic cleanup reused the same mapped project/task IDs",
+    "Phone native editor displayed the full recovered title, notes and 25-minute estimate; corrected normal relaunch retained sign-in and reopened that task",
+    "Final synthetic cleanup preserved all preexisting server rows across 15 tables per account; non-activity tables are exactly equal and original activity rows are retained",
+    "All 100 protected local files remained byte-identical"
+  ],
+  "ciphertextReceipt": {
+    "kind": "Access removed",
+    "createdAt": 813530050.180833,
+    "records": 22,
+    "ciphertextBytes": 60817,
+    "ciphertextSHA256": "f07d2ec3a345f0a569c44ecd5f9270e1bd466f3280c0a32f20675de16c53f161",
+    "plaintextSyntheticTitleAndNotesAbsent": true
+  },
+  "nativePhases": [
+    {
+      "resultBundle": "mac-new-task-revocation-create-v3.xcresult",
+      "scope": "Corrected native offline draft and pending POST survive normal Quit",
+      "actualPassingTests": 1,
+      "runtimeWarnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+        }
+      ],
+      "cleanRuntimeAccepted": false
+    },
+    {
+      "resultBundle": "mac-new-task-revocation-restore-v1.xcresult",
+      "scope": "Actual owner revocation followed by native encrypted preview/apply and normal Quit",
+      "actualPassingTests": 1,
+      "runtimeWarnings": [],
+      "cleanRuntimeAccepted": true
+    },
+    {
+      "resultBundle": "mac-new-task-revocation-repeat-restore-v1.xcresult",
+      "scope": "Native restore after synthetic cleanup reuses the same owned-copy identities; not a second denial",
+      "actualPassingTests": 1,
+      "runtimeWarnings": [],
+      "cleanRuntimeAccepted": true
+    },
+    {
+      "resultBundle": "ios-new-task-revocation-receipt-v6.xcresult",
+      "scope": "Native phone opens the owned recovery copy and reopens it while signed in after normal relaunch",
+      "actualPassingTests": 1,
+      "runtimeWarnings": [],
+      "cleanRuntimeAccepted": true
+    },
+    {
+      "resultBundle": "ios-new-task-revocation-cleanup-v2.xcresult",
+      "scope": "Native signed-in phone receives exact synthetic task/project deletion",
+      "actualPassingTests": 1,
+      "runtimeWarnings": [],
+      "cleanRuntimeAccepted": true
+    }
+  ],
+  "diagnosticHistory": [
+    "Mac create v1 queried an identifier not exposed by the sidebar and was interrupted; no task was created",
+    "Mac create v2 created the task but inserted a Tab into notes; v3 resumed that same unsynced draft offline, corrected notes natively and verified normal Quit. This is combined creation evidence, not a fresh v3 Add Task run",
+    "Phone receipt v1 received the correct cache but the project was below the Browse viewport; corrected driver scrolls to it",
+    "Phone receipt v2/v3 failed secure keyboard paste; v4 was interrupted after sampling a blocked UIPasteboard.items call in the runner. The final driver types into the secure field and does not access the clipboard",
+    "Phone receipt v5 machine-passed, but its inspected relaunch screenshot showed sign-in because the driver retained live-auth-ui-test. v5 is explicitly rejected as relaunch acceptance; corrected v6 asserts signed-in workspace and reopens the actual task",
+    "Cleanup v1 consequently failed before finalizing and was interrupted. Only synthetic copies were restored again through native Mac UI; cleanup v2 is the accepted receipt"
+  ],
+  "limits": [
+    "Mac offline-draft phase has one unresolved internal QoS priority-inversion warning. It is functional evidence only; strict clean-runtime verification rejects that phase",
+    "Native iOS creation followed by genuine revoked-access failure and restore remains unproved; phone receipt does not substitute for it",
+    "Organization variants, broader concurrency, remaining installed widget privacy/host conditions, OAuth, spoken VoiceOver/hardware keyboard and external-provider/device/remote-delivery gates remain tracked separately",
+    "Release signing/distribution remains deferred by the user; no Release/APNs/physical-device acceptance claimed"
+  ],
+  "documentationReview": [
+    "https://supabase.com/changelog.md",
+    "https://supabase.com/changelog/cbc-tls-ciphers-deprecated",
+    "https://supabase.com/changelog/postgres-15-19-17-11-breaking-changes",
+    "https://supabase.com/docs/guides/database/postgres/row-level-security"
+  ],
+  "documentationOutcome": "Current TLS deprecation reviewed: removal of four CBC-mode TLS 1.2 suites starts no earlier than 10 November; TLS 1.3 unchanged. No cipher pinning or schema/extension change is introduced here.",
+  "captures": [
+    {
+      "path": "previews/new-task-access-recovery/mac-offline-draft.png",
+      "sha256": "4ee480634618318e1989787c9b8bcc5e6aa4f46287b304c7e71b22de3785384e",
+      "reviewed": true,
+      "scope": "App/sheet only"
+    },
+    {
+      "path": "previews/new-task-access-recovery/mac-encrypted-preview.png",
+      "sha256": "96319944459659c59be3cfc5690f87fc5442f1ffc85ca9ddfd633602df8a6773",
+      "reviewed": true,
+      "scope": "App/sheet only"
+    },
+    {
+      "path": "previews/new-task-access-recovery/phone-signed-in-relaunch.png",
+      "sha256": "41c32a6409fbd0fbf0dd6c536496f47a7b8b9fd6f8aef67e9aeb5a84ab12797b",
+      "reviewed": true,
+      "scope": "App/sheet only"
+    }
+  ],
+  "finalCleanup": {
+    "prunedDuplicateExportAndCredentialCopyBytes": 21229154,
+    "protectedFilesByteIdentical": 100,
+    "nativeResultBundlesRetained": true,
+    "fixtureMarkedCompleted": true,
+    "originalCredentialInputsPreserved": true,
+    "mainTaskfoldAppsAndTestRunnersClosed": true,
+    "disposablePhoneAppAndRunnerUninstalled": true,
+    "disposablePhoneSimulatorShutdown": true,
+    "systemWidgetExtensionsPreserved": true,
+    "freeStorageApproxGiB": 98
+  }
+}

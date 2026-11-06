@@ -1,0 +1,24 @@
+{
+  "platform": "mac",
+  "tests": 53,
+  "failures": 0,
+  "focusedNewTests": 6,
+  "largeFixture": {
+    "tasks": 4096,
+    "projects": 128,
+    "labels": 64,
+    "retainedLookupRounds": 100,
+    "aggregateComputations": 1
+  },
+  "retainedLookupRoundsMilliseconds": 4.770994186401367,
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "f93233a2f1a98b8ac5127e08ceea76783ac54aff70d8aa761baac42de2c49837",
+    "Taskfold/Core/TaskActivity.swift": "7216b69136c1dcd4297bc3de54d27cefeea59d86cd197a9909f618b3d6246068",
+    "Taskfold/Core/Store.swift": "0c8d63c2478c9dd34017b7f2b85b27c5b8d618e584c4b412f2a21b834f8418aa",
+    "Taskfold/Views/SidebarView.swift": "ffe405dae88cebf15fb7b742c8e49d22bb835657d5cd1b3c5aecb27dc97921b7",
+    "TaskfoldTests/TaskNavigationCountsTests.swift": "30e4b6cccd20e29373bc9e643fefc32d0877e9df56269cfd81a5f27c5e7c4318"
+  },
+  "nativeInteractionAccepted": false,
+  "physicalSmoothnessAccepted": false,
+  "normalAppUnchanged": true
+}

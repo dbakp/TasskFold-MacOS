@@ -1,0 +1,31 @@
+{
+  "platform": "mac",
+  "coreTests": 93,
+  "newChildReadTests": 19,
+  "databaseChecks": 43,
+  "actualPostgresFixtureSHA256": "4781979e29d08917b102db4b595fb93458fb4b82347c28a51e8d9b609935c25f",
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "506e7e7ff67edd6be45f618b89dcbdcc1bfeebf0b7fa81d248ac8d948049a415",
+    "Taskfold/Core/Backend.swift": "6fd278fed0005c706d7359c5d92ac72d307d2613749405e1080ff19644466d0f",
+    "Taskfold/Core/Store.swift": "8b93d4d9eb51e217fad6db80f72ff73d7ee98a1459de5c38a7862cd39317ce51",
+    "TaskfoldTests/ChildTaskRecordReadTests.swift": "4e322775d69fa34c185ceeaac420a7f80a2c22f883e65320b5d421d5c645ee75",
+    "TaskfoldTests/Fixtures/child-task-record-read.json": "4781979e29d08917b102db4b595fb93458fb4b82347c28a51e8d9b609935c25f",
+    "Scripts/Database/test-child-task-record-reads.mjs": "29caa18ee2b05ee2355ac77ebcc69352c47e77d4b3fac75c47d24ac691da39a6",
+    "supabase/migrations/20261029001127_child_task_record_reads.sql": "9347c066832ea5b3e5881f5fc0884e1b7fd4697b52f8e1e0ee767095c7af2ed3"
+  },
+  "isolatedAppBuild": "TEST BUILD SUCCEEDED",
+  "strictDeepSignatureVerified": true,
+  "bundleIdentifier": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "ordinaryReadFlagPresent": false,
+  "binariesSHA256": {
+    "Taskfold": "a8bfe452666bd32de48245ab1bffeab2c2e1810a8600dc3e59709f781ec7c535",
+    "Taskfold.debug.dylib": "9518d386051d0552d5f0e2f34224a8ac779c4a3e3f42d125c1dc8962c4bb3341"
+  },
+  "coreWarningCount": 42,
+  "appBuildWarningCount": 14,
+  "warningsReferencingChangedSwiftFiles": [],
+  "StoreRuntimeAcceptanceClaimed": false,
+  "UIAdoptionClaimed": false,
+  "genuineHTTPToDatabaseClaimed": false,
+  "hostedSchemaChanged": false
+}

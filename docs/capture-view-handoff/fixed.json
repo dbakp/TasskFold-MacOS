@@ -1,0 +1,21 @@
+{
+  "appeared" : [
+    "today",
+    "inbox",
+    "today",
+    "inbox"
+  ],
+  "captures" : [
+    "inbox",
+    "inbox"
+  ],
+  "capturesAfterSwitch" : [
+    "inbox"
+  ],
+  "capturesAfterWarmRequest" : [
+    "inbox",
+    "inbox"
+  ],
+  "mode" : "fixed",
+  "requestPending" : false
+}

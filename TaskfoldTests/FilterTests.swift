@@ -1,7 +1,85 @@
 import XCTest
 @testable import TaskfoldCore
+@testable import WidgetModel
 
 final class FilterTests: XCTestCase {
+    func testDayWindowsParseRoundTripAndKeepExactOffsetsSeparate() throws {
+        for (input, expected) in [("3 days", "planned_next_days"), ("-3 days", "planned_past_days"), ("date:3 days", "planned_next_days"), ("date:-3 days", "planned_past_days"), ("effective-due:3 days", "effective_due_next_days"), ("effective-due:-3 days", "effective_due_past_days"), ("deadline:3 days", "deadline_next_days"), (#"deadline on:"-3 days""#, "deadline_past_days")] {
+            let rule = try parse(input)
+            XCTAssertEqual(rule, .predicate(expected, "3"), input)
+            XCTAssertEqual(try FilterRule(document: rule.document), rule)
+            XCTAssertEqual(try parse(rule.expression(in: context)), rule)
+            XCTAssertTrue(rule.captureDefaults(in: context, today: "2026-10-05").isEmpty)
+        }
+        XCTAssertEqual(try parse("DATE: 0003 DAYS"), .predicate("planned_next_days", "3"))
+        XCTAssertEqual(try parse("1 day"), .predicate("planned_next_days", "1"))
+        XCTAssertEqual(try parse("date:in 3 days"), .predicate("planned_on", "in 3 days"))
+        XCTAssertEqual(try parse("date:3 days ago"), .predicate("planned_on", "3 days ago"))
+        XCTAssertEqual(try parse("created:-3 days"), .predicate("created_on", "3 days ago"))
+        XCTAssertEqual(try parse("next 3 days"), .predicate("next", "3"))
+        XCTAssertEqual(try parse("deadline:next3"), .predicate("deadline_next", "3"))
+        let combined = try parse("(3 days | -3 days) & !completed, deadline:3 days")
+        XCTAssertEqual(try parse(combined.expression(in: context)), combined)
+    }
+    func testDayWindowsRejectInvalidCountsAndNonRangeOperators() throws {
+        for value in ["0", "-0", "3651", "-3651", "1.5", "+3", "--3", "999999999999999999999999999"] {
+            for prefix in ["", "date:", "effective-due:", "deadline:"] { XCTAssertThrowsError(try parse(prefix + value + " days"), prefix + value) }
+        }
+        for input in ["date before:3 days", "date after:-3 days", "3 days p1", "3 days at 14:00", "date:3 days at 14:00", "3 weeks", "due:3 days"] { XCTAssertThrowsError(try parse(input), input) }
+        for field in FilterDayWindow.expressions.keys {
+            for value in ["", "0", "-3", "3651", "+3", "3 days", "3.0"] { XCTAssertThrowsError(try FilterRule(document: FilterRule.predicate(field, value).document), field + value) }
+            XCTAssertNoThrow(try FilterRule(document: FilterRule.predicate(field, "3650").document))
+        }
+        XCTAssertEqual(try parse(#"search:"3 days""#), .predicate("search", "3 days"))
+    }
+    func testDayWindowsBoundariesMissingDatesAndEffectiveDuePrecedence() throws {
+        let rows = [task("before", ["due_date": .string("2026-10-01")]), task("past-start", ["due_date": .string("2026-10-02")]), task("yesterday", ["due_date": .string("2026-10-04")]), task("today", ["due_date": .string("2026-10-05")]), task("last", ["due_date": .string("2026-10-07")]), task("outside", ["due_date": .string("2026-10-08")]), task("deadline", ["deadline_date": .string("2026-10-06")]), task("both", ["due_date": .string("2026-10-08"), "deadline_date": .string("2026-10-06")]), task("none")]
+        for (input, ids) in [("3 days", ["today", "last"]), ("-3 days", ["past-start", "yesterday"]), ("effective-due:3 days", ["today", "last", "deadline"]), ("deadline:3 days", ["deadline", "both"]), ("1 day", ["today"]), ("-1 day", ["yesterday"])] {
+            let rule = try parse(input); XCTAssertEqual(rows.filter { matches(rule, $0) }.map(\.id), ids, input)
+        }
+        XCTAssertTrue(matches(try parse("NOT 3 days"), task("none")))
+        XCTAssertFalse(FilterDayWindow.matches("2026-10-05junk", field: "planned_next_days", value: "3", today: "2026-10-05", timeZone: "UTC"))
+    }
+    func testDayWindowsUseCivilDaysAcrossDSTLeapDaysAndViewerZones() throws {
+        for zone in ["Europe/Copenhagen", "America/New_York", "Australia/Lord_Howe", "Pacific/Auckland", "Pacific/Honolulu"] {
+            for (today, last, outside) in [("2026-03-28", "2026-03-30", "2026-03-31"), ("2026-10-24", "2026-10-26", "2026-10-27"), ("2028-02-28", "2028-03-01", "2028-03-02"), ("2026-12-30", "2027-01-01", "2027-01-02")] {
+                let rule = try parse("3 days")
+                for (day, expected) in [(today, true), (last, true), (outside, false)] {
+                    XCTAssertEqual(rule.matches(task(day, ["due_date": .string(day)]), today: today, userID: "owner", labels: [], timeZone: zone), expected, "\(zone) \(today) \(day)")
+                }
+                let past = try parse("-3 days")
+                XCTAssertTrue(past.matches(task("start", ["due_date": .string(today)]), today: outside, userID: "owner", labels: [], timeZone: zone))
+                XCTAssertFalse(past.matches(task("end", ["due_date": .string(outside)]), today: outside, userID: "owner", labels: [], timeZone: zone))
+            }
+        }
+        let fixed = task("fixed", ["due_date": .string("2026-10-05"), "due_time": .string("00:30"), "time_zone": .string("Europe/Copenhagen"), "scheduled_at": .string("2026-10-04T22:30:00Z")])
+        XCTAssertTrue(matches(try parse("1 day"), fixed))
+        XCTAssertFalse(matches(try parse("1 day"), fixed, zone: "America/New_York"))
+        XCTAssertTrue(matches(try parse("-1 day"), fixed, zone: "America/New_York"))
+    }
+    func testDayWindowsRefreshCachePersistOfflineAndProjectPrivateWidgetDays() throws {
+        let rule = try parse("effective-due:3 days")
+        var row = task("target", ["deadline_date": .string("2026-10-07")])
+        let cache = TaskCache(); cache.update([row])
+        var query = TaskQuery(scope: .saved("window"), today: "2026-10-05", filter: rule, timeZone: "UTC")
+        XCTAssertEqual(cache.matching(query).map(\.id), ["target"])
+        query.today = "2026-10-08"; XCTAssertTrue(cache.matching(query).isEmpty)
+        row["deadline_date"] = .string("2026-10-09"); cache.update([row]); XCTAssertEqual(cache.matching(query).map(\.id), ["target"])
+        let view = Record(["id": .string("window"), "name": .string("Three days"), "query_ast": rule.document])
+        let original = Snapshot(tables: ["tasks": [row], "saved_views": [view]], pending: [Mutation(table: "saved_views", recordID: view.id, method: "POST", fields: view.fields)])
+        let decoded = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(original))
+        XCTAssertEqual(decoded, original)
+        XCTAssertEqual(try FilterRule(document: decoded.tables["saved_views"]![0]["query_ast"]), rule)
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let payload = WidgetProjection.listPayload(tasks: [row], projects: [], labels: [], sections: [], savedViews: [view], account: "owner", now: Dates.parse("2026-10-05")!, calendar: calendar)
+        let days = Record(payload[0].object)["days"].object
+        XCTAssertEqual(days.count, 8)
+        XCTAssertEqual(days["2026-10-06"]?.list.map(\.text), [])
+        for day in ["2026-10-07", "2026-10-08", "2026-10-09"] { XCTAssertEqual(days[day]?.list.map(\.text), ["target"]) }
+        XCTAssertEqual(days["2026-10-10"]?.list.map(\.text), [])
+        XCTAssertFalse(String(data: try JSONEncoder().encode(payload), encoding: .utf8)!.contains("query_ast"))
+    }
+
     func testQueryHeadingsUseAvailablePeopleWithoutRetargetingStoredIdentity() throws {
         let id = "22222222-2222-4222-8222-222222222222"
         let rule = FilterRule.sections([.predicate("assignee", id), .predicate("assignee", "others"), .predicate("assigned", "")])
@@ -153,7 +231,7 @@ final class FilterTests: XCTestCase {
         }
         XCTAssertEqual(try parse(#"#"Work*""#, context: literal), .predicate("project", "literal"))
         XCTAssertEqual(try parse(#"%"home*""#, context: literal), .predicate("label", "star"))
-        XCTAssertThrowsError(try parse("##Work"))
+        XCTAssertEqual(try parse("##Work"), .predicate("project_tree", "work-id"))
         for field in FilterNamePattern.expressions.keys {
             for value: JSON in [.null, .number(1), .string("")] { XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string(field), "value": value]))) }
         }
@@ -369,7 +447,7 @@ final class FilterTests: XCTestCase {
         XCTAssertFalse(matches(try parse("date:today"), floating, zone: "America/New_York"))
     }
     func testDateGrammarRejectsAmbiguousWindowsMalformedValuesAndUnsupportedSections() throws {
-        for expression in ["date:", "date:2026-02-30", "date:2026-10-05T12:00:00Z", "date:31 February", "date:+4 hours", "date:3 days", "date:-3 days", "date:in 3651 days", "date:today at 25:00", "date:today p1", "effective-due before:"] { XCTAssertThrowsError(try parse(expression), expression) }
+        for expression in ["date:", "date:2026-02-30", "date:2026-10-05T12:00:00Z", "date:31 February", "date:+4 hours", "date:in 3651 days", "date:today at 25:00", "date:today p1", "effective-due before:"] { XCTAssertThrowsError(try parse(expression), expression) }
         for value: JSON in [.null, .number(1), .bool(true), .array([])] {
             XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("planned_on"), "value": value])))
         }
@@ -829,5 +907,488 @@ extension FilterTests {
         let rule=try parse("NOT date:next week, all")
         XCTAssertTrue(rule.matches(row,today:"2026-10-08",userID:"owner",labels:[],timeZone:"UTC",datePreferences:nil))
         XCTAssertEqual(TaskGrouping.queryGroups([row],rule:rule,by:"none",context:missing,today:"2026-10-08",timeZone:"UTC").map { $0.tasks.map(\.id) },[[],["safe"]])
+    }
+}
+
+
+extension FilterTests {
+    func testFutureSettingsOnKnownPredicateMustNotBeSilentlyDiscarded() throws {
+        let document: JSON = .object(["version": .number(1), "root": .object([
+            "op": .string("predicate"), "field": .string("search"), "value": .string("Task"),
+            "case_sensitive": .bool(true)
+        ])])
+        XCTAssertThrowsError(try FilterRule(document: document), "An older reader must refuse editing rather than erase future matching semantics")
+    }
+}
+
+extension FilterTests {
+    func testUnknownEnvelopeAndKnownOperatorSettingsRequireUpgrade() {
+        let leaf = FilterRule.predicate("today", "")
+        let nodes: [FilterRule] = [leaf, .and([leaf]), .or([leaf]), .not(leaf), .sections([leaf, .predicate("overdue", "")])]
+        for rule in nodes {
+            var fields = rule.json.object
+            fields["future_options"] = .object(["mode": .string("new semantics")])
+            XCTAssertThrowsError(try FilterRule(json: .object(fields))) { error in
+                XCTAssertTrue(error.localizedDescription.contains("Update Taskfold"))
+            }
+        }
+        var document = leaf.document.object
+        document["evaluation_zone"] = .string("UTC")
+        XCTAssertThrowsError(try FilterRule(document: .object(document)))
+    }
+
+    func testNestedUnknownSettingsCannotHideInsideSupportedGroups() {
+        var future = FilterRule.predicate("search", "email").json.object
+        future["case_sensitive"] = .bool(true)
+        let child = JSON.object(future)
+        for root: JSON in [
+            .object(["op": .string("and"), "children": .array([FilterRule.predicate("today", "").json, child])]),
+            .object(["op": .string("or"), "children": .array([child])]),
+            .object(["op": .string("not"), "child": child]),
+            .object(["op": .string("sections"), "children": .array([child, FilterRule.predicate("overdue", "").json])])
+        ] { XCTAssertThrowsError(try FilterRule(document: .object(["version": .number(1), "root": root]))) }
+    }
+
+    func testFutureQuerySurvivesCacheQueueAndExportWithoutLossyRestore() throws {
+        let document: JSON = .object(["version": .number(1), "root": .object([
+            "op": .string("predicate"), "field": .string("search"), "value": .string("email"), "case_sensitive": .bool(true)
+        ])])
+        let row = Record(["id": .string("11111111-1111-4111-8111-111111111111"), "user_id": .string("owner"), "name": .string("Future query"), "query_ast": document])
+        let mutation = Mutation(table: "saved_views", recordID: row.id, method: "POST", fields: row.fields)
+        let original = Snapshot(tables: ["saved_views": [row]], pending: [mutation])
+        let cached = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(original))
+        XCTAssertEqual(cached, original)
+        XCTAssertEqual(cached.pending[0].fields["query_ast"], document)
+        let bytes = try WorkspaceBackup.make(cached, account: "owner").data()
+        let exported = try JSONDecoder().decode(WorkspaceBackup.self, from: bytes)
+        XCTAssertEqual(exported.tables["saved_views"]?[0]["query_ast"], document)
+        XCTAssertThrowsError(try WorkspaceBackup.read(bytes), "Restore must reject unsupported semantics before remapping rather than silently discard them")
+        XCTAssertEqual(original.tables["saved_views"]?[0]["query_ast"], document)
+    }
+
+    func testSupportedDocumentsAndLegacyMissingEmptyValueStillWork() throws {
+        let today = FilterRule.predicate("today", "")
+        let rules: [FilterRule] = [today, .predicate("search", "email"), .and([today]), .or([today]), .not(today), .sections([today, .predicate("overdue", "")])]
+        for rule in rules { XCTAssertEqual(try FilterRule(document: rule.document).document, rule.document) }
+        let legacy: JSON = .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("today")])])
+        XCTAssertEqual(try FilterRule(document: legacy), today)
+    }
+}
+
+extension FilterTests {
+    private func treeProject(_ id: String, _ name: String, parent: String = "", archived: Bool = false) -> Record {
+        Record(["id": .string(id), "name": .string(name), "parent_id": parent.isEmpty ? .null : .string(parent), "is_archived": .bool(archived)])
+    }
+    private var treeProjects: [Record] {
+        [treeProject("root", "Work"), treeProject("child", "Design", parent: "root"), treeProject("leaf", "Review", parent: "child"), treeProject("other", "Personal")]
+    }
+    private func treeMatches(_ rule: FilterRule, projects: [Record], project: String) -> Bool {
+        rule.resultMatches(task("sample", ["project_id": .string(project)]), context: FilterContext(projects: projects), today: "2026-10-21", timeZone: "UTC")
+    }
+    func testProjectTreeGrammarIdentityRoundTripAndLiteralStars() throws {
+        let context = FilterContext(projects: treeProjects + [treeProject("star", "Work*"), treeProject("inbox-project", "Inbox")])
+        for input in ["##Work", "project-tree:Work", #"project-tree:"Work""#, "PROJECT-TREE: root"] {
+            let rule = try parse(input, context: context)
+            XCTAssertEqual(rule, .predicate("project_tree", "root"))
+            XCTAssertEqual(try FilterRule(document: rule.document), rule)
+            XCTAssertEqual(try parse(rule.expression(in: context), context: context), rule)
+            XCTAssertTrue(rule.captureDefaults(in: context, today: "2026-10-21").isEmpty)
+        }
+        XCTAssertEqual(try parse("#Work", context: context), .predicate("project", "root"))
+        XCTAssertEqual(try parse("#Inbox", context: context), .predicate("inbox", ""))
+        XCTAssertEqual(try parse("##Inbox", context: context), .predicate("project_tree", "inbox-project"))
+        XCTAssertEqual(try parse(#"##"Work*""#, context: context), .predicate("project_tree", "star"))
+        XCTAssertEqual(try parse(#"project-tree:"Work*""#, context: context), .predicate("project_tree", "star"))
+        for input in ["##", "##Work*", "project-tree:Work*", "project-tree:", "##Missing"] { XCTAssertThrowsError(try parse(input, context: context)) }
+        for value: JSON in [.null, .number(1), .string(""), .string(" "), .string(String(repeating: "x", count: 401))] {
+            XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("project_tree"), "value": value])))
+        }
+    }
+    func testProjectTreeTracksMovesRenamesAndCacheIdentity() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        let cache = TaskCache(); cache.update([task("root", ["project_id": .string("root")]), task("child", ["project_id": .string("child")]), task("leaf", ["project_id": .string("leaf")]), task("other", ["project_id": .string("other")])])
+        var query = TaskQuery(scope: .all, filter: rule, filterProjects: FilterReference.projects(treeProjects))
+        XCTAssertEqual(Set(cache.matching(query).map(\.id)), ["root", "child", "leaf"])
+        _ = cache.matching(query); XCTAssertEqual(cache.computationCount, 1)
+        var moved = treeProjects; moved[1]["parent_id"] = .string("other"); moved[0]["name"] = .string("Renamed")
+        query.filterProjects = FilterReference.projects(moved)
+        XCTAssertEqual(cache.matching(query).map(\.id), ["root"])
+        XCTAssertEqual(cache.computationCount, 2)
+        XCTAssertEqual(try parse(rule.expression(in: FilterContext(projects: moved)), context: FilterContext(projects: moved)), rule)
+        moved[3]["parent_id"] = .string("root"); query.filterProjects = FilterReference.projects(moved)
+        XCTAssertEqual(Set(cache.matching(query).map(\.id)), ["root", "child", "leaf", "other"])
+    }
+    func testProjectTreeUnavailableTargetsFailClosedUnderBooleanOperators() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        let rows = treeProjects.filter { $0.id != "root" }
+        for candidate in [rule, .not(rule), .or([.predicate("all", ""), rule])] {
+            XCTAssertThrowsError(try candidate.validate(in: FilterContext(projects: rows)))
+            for id in ["", "root", "child", "other"] { XCTAssertFalse(treeMatches(candidate, projects: rows, project: id)) }
+        }
+        XCTAssertFalse(treeMatches(.not(rule), projects: treeProjects, project: "unavailable"))
+        XCTAssertTrue(treeMatches(.not(rule), projects: treeProjects, project: "other"))
+        XCTAssertTrue(treeMatches(.not(rule), projects: treeProjects, project: ""))
+        XCTAssertFalse(treeMatches(.predicate("project", "root"), projects: treeProjects, project: "child"))
+    }
+    func testProjectTreeArchiveInheritanceAndCyclesNeverMatchNegation() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        var archived = treeProjects; archived[1]["is_archived"] = .bool(true)
+        for candidate in [rule, .not(rule), .or([.predicate("all", ""), rule])] {
+            XCTAssertFalse(treeMatches(candidate, projects: archived, project: "child"))
+            XCTAssertFalse(treeMatches(candidate, projects: archived, project: "leaf"))
+        }
+        XCTAssertTrue(treeMatches(rule, projects: archived, project: "root"))
+        archived[0]["is_archived"] = .bool(true)
+        XCTAssertThrowsError(try rule.validate(in: FilterContext(projects: archived)))
+        var cyclic = treeProjects; cyclic[0]["parent_id"] = .string("leaf")
+        XCTAssertThrowsError(try rule.validate(in: FilterContext(projects: cyclic)))
+        for candidate in [rule, .not(rule)] { XCTAssertFalse(treeMatches(candidate, projects: cyclic, project: "other")) }
+        let duplicates = treeProjects + [treeProject("child", "Conflicting parent", parent: "other")]
+        XCTAssertFalse(treeMatches(rule, projects: duplicates, project: "leaf"))
+        XCTAssertFalse(treeMatches(.not(rule), projects: duplicates, project: "leaf"))
+    }
+    func testProjectTreeAccessibleSharedBoundaryAndDepthLimit() throws {
+        var shared = [treeProject("root", "Shared", parent: "unshared"), treeProject("child", "Visible", parent: "root")]
+        let rule = FilterRule.predicate("project_tree", "root")
+        XCTAssertNoThrow(try rule.validate(in: FilterContext(projects: shared)))
+        XCTAssertTrue(treeMatches(rule, projects: shared, project: "child"))
+        XCTAssertFalse(treeMatches(rule, projects: shared, project: "unshared"))
+        shared[0]["ancestor_archived"] = .bool(true)
+        XCTAssertThrowsError(try rule.validate(in: FilterContext(projects: shared)))
+        var deep = [treeProject("root", "Root")]
+        for n in 1...22 { deep.append(treeProject("d\(n)", "Depth \(n)", parent: n == 1 ? "root" : "d\(n-1)")) }
+        XCTAssertTrue(treeMatches(rule, projects: deep, project: "d20"))
+        XCTAssertFalse(treeMatches(rule, projects: deep, project: "d21"))
+        XCTAssertFalse(treeMatches(.not(rule), projects: deep, project: "d21"))
+    }
+    func testProjectTreeIndependentQueriesGroupsAndCompletedVisibility() throws {
+        let tree = FilterRule.predicate("project_tree", "root")
+        let rule = FilterRule.sections([tree, .and([tree, .predicate("completed", "true")])])
+        let rows = [task("open", ["project_id": .string("leaf")]), task("done", ["project_id": .string("child"), "completed": .bool(true)])]
+        let context = FilterContext(projects: treeProjects)
+        let cache = TaskCache(); cache.update(rows)
+        let matched = cache.matching(TaskQuery(scope: .all, filter: rule, filterProjects: FilterReference.projects(treeProjects)))
+        XCTAssertEqual(Set(matched.map(\.id)), ["open", "done"])
+        let groups = TaskGrouping.queryGroups(matched, rule: rule, by: "none", context: context, today: "2026-10-21", timeZone: "UTC")
+        XCTAssertEqual(groups.map { $0.tasks.map(\.id) }, [["open"], ["done"]])
+        let partial = FilterRule.sections([.predicate("project_tree", "missing"), .predicate("project", "other")])
+        XCTAssertTrue(treeMatches(partial, projects: treeProjects, project: "other"))
+    }
+    func testProjectTreeWidgetProjectionMatchesAppAndRevocation() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        let view = Record(["id": .string("tree-view"), "name": .string("Work tree"), "query_ast": rule.document])
+        let rows = [task("child-task", ["project_id": .string("child")]), task("other-task", ["project_id": .string("other")])]
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        func projection(_ projects: [Record]) throws -> JSON {
+            try XCTUnwrap(WidgetProjection.listPayload(tasks: rows, projects: projects, labels: [], sections: [], savedViews: [view], account: "owner", now: Dates.parse("2026-10-21")!, calendar: calendar).first { $0.object["recordID"] == .string("tree-view") })
+        }
+        let payload = try projection(treeProjects)
+        XCTAssertEqual(payload.object["days"]?.object.count, 8)
+        XCTAssertTrue(payload.object["days"]!.object.values.allSatisfy { $0 == .array([.string("child-task")]) })
+        let encoded = String(data: try JSONEncoder().encode(payload), encoding: .utf8)!
+        XCTAssertFalse(encoded.contains("query_ast")); XCTAssertFalse(encoded.contains("parent_id")); XCTAssertFalse(encoded.contains("project_tree"))
+        let revoked = try projection(treeProjects.filter { $0.id != "root" })
+        XCTAssertTrue(revoked.object["days"]!.object.isEmpty)
+    }
+}
+
+
+extension FilterTests {
+    func testProjectTreeDocumentPersistsWithoutRetargetingLegacyExactFilters() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        let exact = FilterRule.predicate("project", "root")
+        let views = [rule, exact].enumerated().map { index, value in Record(["id": .string("view-\(index)"), "name": .string("View \(index)"), "query_ast": value.document]) }
+        let before = Snapshot(tables: ["saved_views": views], pending: [Mutation(table: "saved_views", recordID: views[0].id, method: "POST", fields: views[0].fields)])
+        let after = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(before))
+        XCTAssertEqual(before, after)
+        XCTAssertEqual(try FilterRule(document: after.tables["saved_views"]![0]["query_ast"]), rule)
+        XCTAssertEqual(try FilterRule(document: after.tables["saved_views"]![1]["query_ast"]), exact)
+        XCTAssertEqual(rule.document.object["version"], .number(1))
+        let duplicateNames = treeProjects + [treeProject("duplicate", "Work")]
+        XCTAssertThrowsError(try parse("##Work", context: FilterContext(projects: duplicateNames)))
+        XCTAssertEqual(try parse(rule.expression(in: FilterContext(projects: duplicateNames)), context: FilterContext(projects: duplicateNames)), rule)
+    }
+}
+
+final class HierarchyQueryTests: XCTestCase {
+    private var projects: [Record] { [Record(["id": .string("p"), "name": .string("Work")]), Record(["id": .string("q"), "name": .string("Home")])] }
+    private var labels: [Record] { [Record(["id": .string("own"), "name": .string("Own")]), Record(["id": .string("root-label"), "name": .string("Root label")])] }
+    private var context: FilterContext { FilterContext(projects: projects, labels: labels, userID: "viewer") }
+    private func node(_ id: String, priority: Int, due: String = "", children: [JSON] = []) -> JSON {
+        .object(["id": .string(id), "title": .string(id), "completed": .bool(false), "priority": .number(Double(priority)), "due_date": due.isEmpty ? .null : .string(due), "subtasks": .array(children)])
+    }
+    private var roots: [Record] {
+        var leaf = node("leaf", priority: 2, due: "2026-10-21").object; leaf["assigned_to"] = .string("viewer")
+        var b = node("b", priority: 1, due: "2026-10-22").object; b["labels"] = .array([.string("own")])
+        return [Record(["id": .string("r"), "title": .string("Root"), "completed": .bool(false), "priority": .number(1), "project_id": .string("p"), "labels": .array([.string("root-label")]), "description": .string("Root-only words"), "created_at": .string("2026-10-21T08:00:00Z"), "task_generation": .string("g"), "due_date": .string("2026-10-21"), "subtasks": .array([node("a", priority: 4, children: [.object(leaf)]), .object(b)])]), Record(["id": .string("other"), "title": .string("Other"), "priority": .number(3), "project_id": .string("q")]), Record(["id": .string("inbox"), "title": .string("Inbox")])]
+    }
+    private func parse(_ expression: String) throws -> FilterRule { var parser = try FilterParser(expression, context: context); return try parser.parse() }
+    private func query(_ rule: FilterRule, projects: [Record]? = nil) -> TaskQuery {
+        TaskQuery(scope: .all, today: "2026-10-21", filter: rule, filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: FilterReference.projects(projects ?? self.projects), userID: "viewer", timeZone: "UTC")
+    }
+    private func matching(_ expression: String, roots: [Record]? = nil) throws -> [Record] { let cache = TaskCache(); cache.update(roots ?? self.roots); return cache.matching(query(try parse(expression))) }
+    func testHierarchyGrammarRoundTripsStrictValuesAndConservativeCapture() throws {
+        for text in ["root", "subtask", "parent", "NOT subtask", "subtask & p1", "root & parent", "subtask OR today", "all, subtask, parent"] {
+            let rule = try parse(text)
+            XCTAssertTrue(rule.usesTaskHierarchy); XCTAssertEqual(try FilterRule(document: rule.document), rule)
+            XCTAssertEqual(try parse(rule.expression(in: context)), rule)
+            XCTAssertEqual(rule.captureDefaults(in: context, today: "2026-10-21"), text == "subtask & p1" ? ["priority": .number(1)] : [:], text)
+        }
+        for field in ["root", "subtask", "parent"] {
+            for value: JSON in [.null, .bool(false), .number(1), .string("yes")] { XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string(field), "value": value]))) }
+        }
+        XCTAssertFalse(try parse("all").usesTaskHierarchy)
+    }
+    func testHierarchyScopesAndBooleanPredicatesUseOwnFieldsAndGlobalPriority() throws {
+        XCTAssertEqual(try matching("all").map(\.id), ["r", "other", "inbox"])
+        XCTAssertEqual(try matching("root").map(\.id), ["r", "other", "inbox"])
+        XCTAssertEqual(try matching("NOT subtask").map(\.id), ["r", "other", "inbox"])
+        XCTAssertEqual(try matching("subtask").map(\.title), ["b", "leaf", "a"])
+        XCTAssertEqual(Set(try matching("parent").map(\.title)), ["Root", "a"])
+        XCTAssertEqual(try matching("root & parent").map(\.id), ["r"])
+        XCTAssertEqual(try matching("subtask & parent").map(\.title), ["a"])
+        XCTAssertEqual(try matching("subtask & p1").map(\.title), ["b"])
+        XCTAssertEqual(try matching("subtask & today").map(\.title), ["leaf"])
+        XCTAssertEqual(try matching("subtask & no date").map(\.title), ["a"])
+        XCTAssertEqual(try matching("subtask & label:Own").map(\.title), ["b"])
+        XCTAssertTrue(try matching(#"subtask & label:"Root label""#).isEmpty)
+        XCTAssertEqual(try matching("subtask & assignee:me").map(\.title), ["leaf"])
+        XCTAssertTrue(try matching("subtask & created:today").isEmpty)
+        XCTAssertTrue(try matching("subtask & search:Root-only").isEmpty)
+        XCTAssertEqual(try matching("root OR subtask").count, 6)
+        XCTAssertEqual(try matching("NOT root").count, 3)
+        XCTAssertTrue(try matching("root AND subtask").isEmpty)
+    }
+    func testIndependentQueriesKeepLegacyCandidateUniverseAndCompletionVisibility() throws {
+        let rule = try parse("today, subtask")
+        let cache = TaskCache(); cache.update(roots)
+        let matches = cache.matching(query(rule))
+        let groups = TaskGrouping.queryGroups(matches, rule: rule, by: "none", context: context, today: "2026-10-21", timeZone: "UTC")
+        XCTAssertEqual(groups.map { $0.tasks.map(\.title) }, [["Root"], ["b", "leaf", "a"]])
+        var completed = roots; completed[0]["subtasks"] = SubtaskTree.changing(roots[0]["subtasks"], id: "leaf", fields: ["completed": .bool(true)])
+        cache.update(completed)
+        let second = try parse("all, subtask & completed")
+        let done = cache.matching(query(second))
+        let secondGroups = TaskGrouping.queryGroups(done, rule: second, by: "none", context: context, today: "2026-10-21", timeZone: "UTC")
+        XCTAssertEqual(secondGroups.map { $0.tasks.map(\.title) }, [["Root", "Other", "Inbox"], ["leaf"]])
+        XCTAssertFalse(try parse("all").resultMatches(done.first { $0.title == "leaf" }!, context: context, today: "2026-10-21", timeZone: "UTC", includeCompleted: true))
+    }
+    func testRootOnlyProofSupportsLegacyIdentitiesAndRefusesUnknownParentShape() throws {
+        var legacy = roots; legacy[0]["subtasks"] = .array([.object(["title": .string("Legacy without ID")])])
+        for text in ["root", "NOT subtask", "root & parent", "root & subtask"] {
+            let rule = try parse(text); XCTAssertFalse(rule.needsChildCandidates)
+            let cache = TaskCache(); cache.update(legacy)
+            XCTAssertNoThrow(try cache.hierarchyCandidates(for: rule, projects: query(rule).filterProjects, userID: "viewer"))
+        }
+        XCTAssertEqual(try matching("root & parent", roots: legacy).map(\.id), ["r"])
+        let subtask = try parse("subtask"), cache = TaskCache(); cache.update(legacy)
+        XCTAssertThrowsError(try cache.hierarchyCandidates(for: subtask, projects: query(subtask).filterProjects, userID: "viewer"))
+        XCTAssertTrue(cache.matching(query(subtask)).isEmpty)
+        legacy[0]["subtasks"] = .string("new format"); cache.update(legacy)
+        let rootParent = try parse("root & parent")
+        XCTAssertThrowsError(try cache.hierarchyCandidates(for: rootParent, projects: query(rootParent).filterProjects, userID: "viewer"))
+        XCTAssertEqual(cache.matching(query(try parse("root"))).count, 3)
+        for rule in [FilterRule.not(.predicate("parent", "")), .or([.predicate("all", ""), .predicate("parent", "")])] {
+            XCTAssertFalse(rule.matches(legacy[0], today: "2026-10-21", userID: "viewer", labels: [], timeZone: "UTC"))
+        }
+    }
+    func testHierarchyCacheRefreshesForDataCatalogAndFailureRecovery() throws {
+        let rule = try parse("subtask"), cache = TaskCache(); cache.update(roots)
+        let q = query(rule); XCTAssertEqual(cache.matching(q).count, 3); _ = cache.matching(q); XCTAssertEqual(cache.computationCount, 1)
+        var archived = projects; archived[0]["is_archived"] = .bool(true)
+        XCTAssertTrue(cache.matching(query(rule, projects: archived)).isEmpty)
+        XCTAssertEqual(cache.matching(q).count, 3)
+        var malformed = roots; malformed[0]["subtasks"] = .array([.object(["title": .string("No ID")])]); cache.update(malformed)
+        XCTAssertTrue(cache.matching(q).isEmpty)
+        cache.update(roots); XCTAssertEqual(cache.matching(q).count, 3)
+        XCTAssertTrue(cache.matching(query(rule, projects: [])).isEmpty)
+    }
+    func testHierarchyDocumentsPersistAndWidgetsPublishResolvedChildMembership() throws {
+        let rootRule = try parse("root"), childRule = try parse("subtask")
+        let views = [rootRule, childRule].enumerated().map { Record(["id": .string("v\($0)"), "name": .string("View \($0)"), "query_ast": $1.document]) }
+        let snapshot = Snapshot(tables: ["tasks": roots, "saved_views": views], pending: [Mutation(table: "saved_views", recordID: "v1", method: "POST", fields: views[1].fields)])
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot)), snapshot)
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let payload = WidgetProjection.listPayload(tasks: roots, projects: projects, labels: labels, sections: [], savedViews: views, account: "viewer", now: Dates.parse("2026-10-21")!, calendar: calendar)
+        let child = try XCTUnwrap(payload.first { $0.object["recordID"] == .string("v1") })
+        XCTAssertEqual(child.object["invalid"], .bool(false)); XCTAssertEqual(child.object["days"]!.object["2026-10-21"]?.list.count, 3)
+    }
+}
+
+final class SharingFilterTests: XCTestCase {
+    private let user = "owner", peer = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+    private var projects: [Record] { [project("private", owner: user), project("shared", owner: user), project("foreign", owner: peer), project("pending", owner: user), project("subproject", owner: user, parent: "shared")] }
+    private func project(_ id: String, owner: String, parent: String = "") -> Record { Record(["id": .string(id), "name": .string(id), "user_id": .string(owner), "parent_id": parent.isEmpty ? .null : .string(parent)]) }
+    private func member(_ project: String, user: String, status: String) -> Record { Record(["id": .string(project + user), "project_id": .string(project), "user_id": .string(user), "status": .string(status), "invited_email": .string("PRIVATE-EMAIL-SENTINEL@example.invalid")]) }
+    private var members: [Record] { [member("shared", user: peer, status: "accepted"), member("foreign", user: user, status: "accepted"), member("pending", user: peer, status: "pending")] }
+    private func task(_ id: String, project: String = "", owner: String = "owner", completed: Bool = false) -> Record { Record(["id": .string(id), "title": .string(id), "project_id": project.isEmpty ? .null : .string(project), "user_id": .string(owner), "completed": .bool(completed), "priority": .number(4)]) }
+    private var tasks: [Record] { [task("inbox"), task("private-task", project: "private"), task("shared-task", project: "shared", owner: peer), task("foreign-task", project: "foreign", owner: peer), task("pending-task", project: "pending"), task("subproject-task", project: "subproject"), task("completed-shared", project: "shared", completed: true)] }
+    private var context: FilterContext { FilterContext(projects: projects, userID: user, collaborators: members) }
+    private func parse(_ value: String, context: FilterContext? = nil) throws -> FilterRule { var parser = try FilterParser(value, context: context ?? self.context); return try parser.parse() }
+    private func matching(_ value: String, context: FilterContext? = nil, tasks: [Record]? = nil) throws -> [Record] { let c = context ?? self.context, rule = try parse(value, context: c); let cache = TaskCache(); cache.update(tasks ?? self.tasks); return cache.matching(TaskQuery(scope: .all, includeCompleted: !rule.hasQuerySections && rule.includesCompletion, filter: rule, filterProjects: c.projectReferences, userID: c.userID)) }
+    func testGrammarStrictValuesRoundTripQuotedSearchAndConservativeCapture() throws {
+        for text in ["shared", "personal", "NOT shared", "shared & p1", "personal, shared", "shared & subtask"] {
+            let rule = try parse(text); XCTAssertTrue(rule.usesProjectSharing); XCTAssertEqual(try FilterRule(document: rule.document), rule); XCTAssertEqual(try parse(rule.expression(in: context)), rule)
+        }
+        for field in ["shared", "personal"] {
+            for value: JSON in [.null, .bool(true), .string("yes"), .number(1)] { XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string(field), "value": value]))) }
+        }
+        XCTAssertEqual(try parse("search:\"shared\""), .predicate("search", "shared"))
+        XCTAssertEqual(try parse("shared").captureDefaults(in: context, today: "2026-10-21"), [:])
+        XCTAssertEqual(try parse("shared & p1").captureDefaults(in: context, today: "2026-10-21"), ["priority": .number(1)])
+    }
+    func testAcceptedMembershipNotTaskAuthorshipPendingInviteOrParentDeterminesScope() throws {
+        XCTAssertEqual(Set(try matching("shared").map(\.id)), ["shared-task", "foreign-task"])
+        XCTAssertEqual(Set(try matching("personal").map(\.id)), ["inbox", "private-task", "pending-task", "subproject-task"])
+        XCTAssertEqual(Set(try matching("NOT shared").map(\.id)), Set(try matching("personal").map(\.id)))
+        XCTAssertEqual(Set(try matching("NOT personal").map(\.id)), Set(try matching("shared").map(\.id)))
+        XCTAssertEqual(Set(try matching("shared & completed").map(\.id)), ["completed-shared"])
+        XCTAssertTrue(try matching("personal & shared").isEmpty)
+        XCTAssertTrue(try parse("personal").resultMatches(task("former-collaborator", project: "private", owner: peer), context: context, today: "2026-10-21", timeZone: "UTC"))
+        var malformedTask = task("unknown-project"); malformedTask["project_id"] = .number(1)
+        XCTAssertFalse(try parse("NOT shared").resultMatches(malformedTask, context: context, today: "2026-10-21", timeZone: "UTC"))
+        XCTAssertEqual(ProjectSharing.catalog(projects: projects, collaborators: members + [member("shared", user: peer, status: "accepted")], userID: user)["shared"], true)
+        XCTAssertFalse(try parse("personal").resultMatches(task("foreign-inbox", owner: peer), context: context, today: "2026-10-21", timeZone: "UTC"))
+    }
+    func testUnknownSharingNeverInvertsToMatchAndValidationAsksForSync() throws {
+        let unknown = FilterContext(projects: projects, userID: user)
+        for text in ["shared", "personal", "NOT shared", "all OR personal"] { let rule = try parse(text); XCTAssertThrowsError(try rule.validate(in: unknown)); XCTAssertFalse(rule.resultMatches(tasks[1], context: unknown, today: "2026-10-21", timeZone: "UTC")) }
+        let inboxOnly = FilterContext(userID: user)
+        XCTAssertNoThrow(try parse("personal", context: inboxOnly).validate(in: inboxOnly))
+        XCTAssertTrue(try parse("personal", context: inboxOnly).resultMatches(task("inbox"), context: inboxOnly, today: "2026-10-21", timeZone: "UTC"))
+        XCTAssertThrowsError(try parse("shared").validate(in: FilterContext(projects: projects, collaborators: members)))
+        var malformed = members; malformed[0]["status"] = .string("unsupported")
+        let invalid = FilterContext(projects: projects, userID: user, collaborators: malformed)
+        XCTAssertThrowsError(try parse("shared").validate(in: invalid))
+        for rule in [FilterRule.not(.predicate("shared", "")), .or([.predicate("all", ""), .predicate("personal", "")])] { XCTAssertFalse(rule.resultMatches(tasks[2], context: invalid, today: "2026-10-21", timeZone: "UTC")) }
+    }
+    func testMembershipOnlyChangesInvalidateTaskCacheWithoutChangingTasks() throws {
+        let cache = TaskCache(); cache.update(tasks); let rule = try parse("shared")
+        var query = TaskQuery(scope: .all, filter: rule, filterProjects: context.projectReferences, userID: user)
+        XCTAssertEqual(cache.matching(query).count, 2); _ = cache.matching(query); XCTAssertEqual(cache.computationCount, 1)
+        var changed = members; changed[0]["status"] = .string("declined")
+        let removed = FilterContext(projects: projects, userID: user, collaborators: changed); query.filterProjects = removed.projectReferences
+        XCTAssertEqual(cache.matching(query).map(\.id), ["foreign-task"]); XCTAssertEqual(cache.computationCount, 2)
+        query.filterProjects = context.projectReferences; XCTAssertEqual(cache.matching(query).count, 2)
+        changed = members; changed[2]["status"] = .string("accepted"); query.filterProjects = FilterContext(projects: projects, userID: user, collaborators: changed).projectReferences
+        XCTAssertEqual(cache.matching(query).count, 3)
+    }
+    func testMissingDuplicateArchivedForeignAndMalformedCatalogsDoNotGuessPersonal() throws {
+        for rows in [projects + [projects[0]], projects.map { row in var value = row; if row.id == "private" { value["user_id"] = .null }; return value }] {
+            let invalid = FilterContext(projects: rows, userID: user, collaborators: members)
+            XCTAssertThrowsError(try parse("personal").validate(in: invalid))
+            XCTAssertFalse(try parse("personal").resultMatches(tasks[1], context: invalid, today: "2026-10-21", timeZone: "UTC"))
+        }
+        var archived = projects; archived[1]["is_archived"] = .bool(true)
+        let c = FilterContext(projects: archived, userID: user, collaborators: members)
+        XCTAssertFalse(try parse("NOT personal").resultMatches(tasks[2], context: c, today: "2026-10-21", timeZone: "UTC"))
+        XCTAssertNil(ProjectSharing.catalog(projects: projects, collaborators: [], userID: user)["foreign"])
+        var invalid = members; invalid[0]["user_id"] = .null
+        XCTAssertNil(ProjectSharing.catalog(projects: projects, collaborators: invalid, userID: user)["shared"])
+        invalid = members; invalid[0]["project_id"] = .number(1)
+        XCTAssertTrue(ProjectSharing.catalog(projects: projects, collaborators: invalid, userID: user).isEmpty)
+    }
+    func testHierarchyAndIndependentQueriesUseSameSharingContext() throws {
+        var roots = tasks; roots[2]["subtasks"] = .array([.object(["id": .string("child"), "title": .string("Shared child"), "completed": .bool(false)])])
+        XCTAssertEqual(try matching("subtask & shared", tasks: roots).map(\.title), ["Shared child"])
+        XCTAssertTrue(try matching("subtask & personal", tasks: roots).isEmpty)
+        let rule = try parse("personal, shared"), matches = try matching("personal, shared")
+        let groups = TaskGrouping.queryGroups(matches, rule: rule, by: "none", context: context, today: "2026-10-21", timeZone: "UTC")
+        XCTAssertEqual(groups.map { $0.tasks.count }, [4, 2])
+    }
+    func testWidgetsResolveSharingWithoutPublishingMembershipAndUnknownCatalogIsUnavailable() throws {
+        let views = try ["shared", "personal"].map { text in Record(["id": .string(text), "name": .string(text), "query_ast": try parse(text).document]) }
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let now = Dates.parse("2026-10-21", calendar: calendar)!
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: user, now: now, savedViews: views, calendar: calendar, collaborators: members)
+        let data = try JSONEncoder().encode(payload), widget = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+        let shared = try XCTUnwrap(widget.availableLists.first { $0.recordID == "shared" && $0.kind == "filter" })
+        XCTAssertEqual(widget.listStatus(shared.id, at: now, calendar: calendar), .ready)
+        XCTAssertEqual(Set(widget.listTasks(shared.id, at: now, calendar: calendar).map(\.id)), ["shared-task", "foreign-task"])
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("PRIVATE-EMAIL-SENTINEL")); XCTAssertFalse(String(decoding: data, as: UTF8.self).contains(peer))
+        let unknown = WidgetProjection.listPayload(tasks: tasks, projects: projects, labels: [], sections: [], savedViews: views, account: user, now: now, calendar: calendar)
+        XCTAssertTrue(unknown.filter { $0.object["kind"] == .string("filter") }.allSatisfy { $0.object["invalid"] == .bool(true) })
+        var changed = members; changed[0]["status"] = .string("declined")
+        let refreshed = WidgetProjection.payload(tasks: tasks, projects: projects, account: user, now: now, savedViews: views, calendar: calendar, collaborators: changed)
+        let next = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(refreshed))
+        XCTAssertEqual(next.listTasks(shared.id, at: now, calendar: calendar).map(\.id), ["foreign-task"])
+    }
+    func testSavedSharingQueriesPersistWithoutMembershipWritesAndLargeCatalogsResolveOnce() throws {
+        let rule = try parse("shared OR personal"), view = Record(["id": .string("v"), "query_ast": rule.document])
+        let change = Mutation(table: "saved_views", recordID: view.id, method: "POST", fields: view.fields)
+        let snapshot = Snapshot(tables: ["saved_views": [view]], pending: [change])
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot)), snapshot)
+        let many = (0..<5000).map { project("p\($0)", owner: user) }, collaborators = (0..<5000).map { member("p\($0)", user: peer, status: $0.isMultiple(of: 2) ? "accepted" : "pending") }
+        let c = FilterContext(projects: many, userID: user, collaborators: collaborators)
+        XCTAssertEqual(c.projectReferences.filter { $0.shared == true }.count, 2500)
+        let bindings = rule.nameBindings(projects: c.projectReferences, sections: [], labels: [])
+        XCTAssertEqual(bindings.count, 2); XCTAssertEqual(bindings[0].ids.count, 2500); XCTAssertEqual(bindings[1].ids.count, 2500)
+    }
+}
+
+final class FilterTargetCatalogTests: XCTestCase {
+    private func row(_ id: String, _ name: String, parent: String = "", archived: Bool = false) -> Record {
+        Record(["id": .string(id), "name": .string(name), "parent_id": .string(parent), "is_archived": .bool(archived)])
+    }
+    private var projects: [Record] {
+        [row("design", "Design"), row("personal", "Personal"), row("a", "Research", parent: "design"), row("b", "Research", parent: "personal")]
+    }
+    func testDuplicateNamesHaveSearchableParentLocations() throws {
+        let catalog = try FilterTargetCatalog(field: "project_tree", projects: projects, sections: [], labels: [])
+        let all = catalog.page(query: "research")
+        XCTAssertEqual(all.total, 2); XCTAssertEqual(all.options.map(\.location), ["Design", "Personal"])
+        XCTAssertEqual(catalog.page(query: "personal research").options.map(\.id), ["b"])
+        XCTAssertEqual(catalog.page(query: "research design").options.map(\.id), ["a"])
+    }
+    func testSectionUsesFullProjectPathAndExcludesUnavailableOwners() throws {
+        let sections = [Record(["id": .string("s"), "name": .string("Review"), "project_id": .string("a")]), Record(["id": .string("other"), "name": .string("Review"), "project_id": .string("missing")])]
+        let catalog = try FilterTargetCatalog(field: "section", projects: projects, sections: sections, labels: [])
+        XCTAssertEqual(catalog.page(query: "Design Research Review").options, [.init(id: "s", title: "Review", location: "Design › Research")])
+    }
+    func testArchivesAndCyclesDoNotBecomeSelectable() throws {
+        let rows = projects + [row("closed", "Closed", archived: true), row("nested", "Hidden", parent: "closed"), row("cycle1", "Loop", parent: "cycle2"), row("cycle2", "Loop", parent: "cycle1")]
+        let catalog = try FilterTargetCatalog(field: "project", projects: rows, sections: [], labels: [])
+        XCTAssertEqual(Set(catalog.options.map(\.id)), Set(projects.map(\.id)))
+        XCTAssertNil(FilterTargetCatalog.current("nested", field: "project", projects: rows, sections: [], labels: []))
+    }
+    func testRevalidationKeepsRenamedIdentityAndRejectsMissingOrAmbiguousRows() throws {
+        var renamed = projects; renamed[2]["name"] = .string("New research")
+        XCTAssertEqual(FilterTargetCatalog.current("a", field: "project_tree", projects: renamed, sections: [], labels: [])?.name, "New research")
+        XCTAssertNil(FilterTargetCatalog.current("a", field: "project", projects: projects + [projects[2]], sections: [], labels: []))
+        XCTAssertNil(FilterTargetCatalog.current("a", field: "project", projects: Array(projects.prefix(2)), sections: [], labels: []))
+        XCTAssertNil(FilterTargetCatalog.current("", field: "project", projects: projects, sections: [], labels: []))
+        XCTAssertNil(FilterTargetCatalog.current("a", field: "unsupported", projects: projects, sections: [], labels: []))
+    }
+    func testLabelsKeepLiteralNamesAndSupportAccentInsensitiveSearch() throws {
+        let labels = [row("l", "Café & Home*"), row("duplicate", "One"), row("duplicate", "Two"), row("", "Empty identity")]
+        let catalog = try FilterTargetCatalog(field: "label", projects: [], sections: [], labels: labels)
+        XCTAssertEqual(catalog.page(query: "cafe home*").options, [.init(id: "l", title: "Café & Home*", location: "Label")])
+        XCTAssertNil(FilterTargetCatalog.current("duplicate", field: "label", projects: [], sections: [], labels: labels))
+    }
+    func testPaginationIsStableAndSearchStartsAcrossWholeCatalog() throws {
+        let labels = (0..<137).map { row(String(format: "l%03d", $0), String(format: "Label %03d", $0)) }
+        let catalog = try FilterTargetCatalog(field: "label", projects: [], sections: [], labels: labels.reversed())
+        XCTAssertEqual(catalog.page(query: "").options.count, 60); XCTAssertEqual(catalog.page(query: "").total, 137)
+        XCTAssertEqual(catalog.page(query: "", limit: 120).options.map(\.id), Array(labels.prefix(120)).map(\.id))
+        XCTAssertEqual(catalog.page(query: "136").options.map(\.id), ["l136"])
+        XCTAssertEqual(catalog.page(query: "", limit: 0).options.count, 0)
+    }
+    func testCancellationAndUnsupportedFieldsDoNotYieldPartialResults() throws {
+        XCTAssertThrowsError(try FilterTargetCatalog(field: "project", projects: projects, sections: [], labels: [], checkCancellation: { throw CancellationError() })) { XCTAssertTrue($0 is CancellationError) }
+        XCTAssertThrowsError(try FilterTargetCatalog(field: "assignee", projects: projects, sections: [], labels: []))
+    }
+    func testBackgroundCatalogAndCancellation() async throws {
+        let value = try await FilterTargetCatalog.load(field: "project", projects: projects, sections: [], labels: [])
+        XCTAssertEqual(value.page(query: "Research").total, 2)
+        let rows = projects
+        let (stream, continuation) = AsyncStream<Void>.makeStream()
+        defer { continuation.finish() }
+        let worker = Task {
+            var gate = stream.makeAsyncIterator()
+            _ = await gate.next() // Cancellation releases the gate before load starts.
+            return try await FilterTargetCatalog.load(field: "project", projects: rows, sections: [], labels: [])
+        }
+        worker.cancel()
+        do { _ = try await worker.value; XCTFail("Cancelled chooser work must not publish") } catch { XCTAssertTrue(error is CancellationError) }
     }
 }

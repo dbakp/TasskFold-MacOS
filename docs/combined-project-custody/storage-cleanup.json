@@ -1,0 +1,44 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 59199016960,
+  "actions": [],
+  "skipped": [],
+  "freeAfterBytes": 59197472768,
+  "actualFreeChangeBytes": -1544192,
+  "retiredOutputs": [
+    {
+      "path": "/tmp/taskfold-combined-ios.json",
+      "logicalBytes": 38798
+    },
+    {
+      "path": "/tmp/taskfold-combined-ios.log",
+      "logicalBytes": 1056
+    },
+    {
+      "path": "/tmp/taskfold-combined-ios-v2.json",
+      "logicalBytes": 39522
+    },
+    {
+      "path": "/tmp/taskfold-combined-ios-v2.log",
+      "logicalBytes": 1656
+    },
+    {
+      "path": "/tmp/taskfold-combined-ios-v3.json",
+      "logicalBytes": 39383
+    },
+    {
+      "path": "/tmp/taskfold-combined-ios-v3.log",
+      "logicalBytes": 1703
+    },
+    {
+      "path": "/tmp/taskfold-combined-ios-v4.json",
+      "logicalBytes": 55312
+    },
+    {
+      "path": "/tmp/taskfold-combined-ios-v4.log",
+      "logicalBytes": 4363
+    }
+  ],
+  "ownedFullSchemaRuntimesRemoved": 2,
+  "freeAfterOutputRetirementBytes": 59198451712
+}

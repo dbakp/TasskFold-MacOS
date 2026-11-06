@@ -1,0 +1,808 @@
+{
+  "syntheticOnly": true,
+  "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+  "origin": "https://synthetic.example",
+  "body": {
+    "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+    "roots": [
+      "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03"
+    ],
+    "visibility": "team",
+    "folder_id": null,
+    "parent_id": null
+  },
+  "inspect": {
+    "roots": [
+      "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03"
+    ],
+    "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+    "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+    "contents": {
+      "counts": {
+        "tasks": 3,
+        "projects": 1,
+        "sections": 0,
+        "task_activity": 5,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 0,
+        "project_collaborators": 0,
+        "task_assignment_provenance": 3
+      },
+      "webhooks": 0,
+      "attachments": 0,
+      "email_routes": 1,
+      "inline_files": 0,
+      "content_bytes": 12782,
+      "external_files": 0,
+      "provider_files": 0,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "recording_custody": {
+        "pending": 1,
+        "protocol": 1,
+        "retained": 2,
+        "published": 1,
+        "unavailable": 0
+      },
+      "recording_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1,
+      "recording_unfinished_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "recording_private_history_transfer": {
+        "protocol": 1,
+        "supported": true
+      }
+    },
+    "projects": [
+      {
+        "id": "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03",
+        "name": "Recording transfer",
+        "depth": 1,
+        "root_id": "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Recording transfer workshop",
+    "visibility": "team",
+    "collaborators": [],
+    "automatic_undo": false,
+    "commit_supported": false,
+    "inspection_token": "e94083ac64549edb1f8f140e1c4e6d75ab0c7ca623ec492c5a6aa7d74a721d88",
+    "sends_invitations": false,
+    "team_member_count": 2,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "connection_pause_supported": true,
+    "child_record_custody_protocol": 1
+  },
+  "decisions": [],
+  "request": {
+    "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+    "roots": [
+      "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03"
+    ],
+    "visibility": "team",
+    "folder_id": null,
+    "parent_id": null,
+    "inspection_token": "e94083ac64549edb1f8f140e1c4e6d75ab0c7ca623ec492c5a6aa7d74a721d88",
+    "decisions": [],
+    "recording_policy": "move_recordings_keep_removed_private_v1",
+    "recording_count": 1,
+    "unfinished_recording_count": 1,
+    "retained_recording_count": 2,
+    "connection_policy": "pause"
+  },
+  "review": {
+    "roots": [
+      "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03"
+    ],
+    "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+    "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+    "contents": {
+      "counts": {
+        "tasks": 3,
+        "projects": 1,
+        "sections": 0,
+        "task_activity": 5,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 0,
+        "project_collaborators": 0,
+        "task_assignment_provenance": 3
+      },
+      "webhooks": 0,
+      "attachments": 0,
+      "email_routes": 1,
+      "inline_files": 0,
+      "content_bytes": 12782,
+      "external_files": 0,
+      "provider_files": 0,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "recording_custody": {
+        "pending": 1,
+        "protocol": 1,
+        "retained": 2,
+        "published": 1,
+        "unavailable": 0
+      },
+      "recording_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1,
+      "recording_unfinished_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "recording_private_history_transfer": {
+        "protocol": 1,
+        "supported": true
+      }
+    },
+    "projects": [
+      {
+        "id": "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03",
+        "name": "Recording transfer",
+        "depth": 1,
+        "root_id": "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "decisions": [],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Recording transfer workshop",
+    "expires_at": "2026-11-03T08:09:50.486665Z",
+    "visibility": "team",
+    "review_token": "41eee0114210a4eb94db9be0ed281e883edd706bd6cace47d686819723cfa9aa",
+    "collaborators": [],
+    "automatic_undo": false,
+    "recording_count": 1,
+    "commit_supported": false,
+    "inspection_token": "e94083ac64549edb1f8f140e1c4e6d75ab0c7ca623ec492c5a6aa7d74a721d88",
+    "recording_policy": "move_recordings_keep_removed_private_v1",
+    "connection_policy": "pause",
+    "sends_invitations": false,
+    "team_member_count": 2,
+    "connection_effects": {
+      "email_routes_paused": 1,
+      "project_webhooks_paused": 0,
+      "global_webhooks_excluded": 0,
+      "queued_updates_discarded": 0,
+      "pending_webhooks_cancelled": 0
+    },
+    "invitations_closed": 0,
+    "assignments_cleared": 0,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "retained_recording_count": 2,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "requires_provider_custody": false,
+    "connection_pause_supported": true,
+    "requires_integration_pause": false,
+    "unfinished_recording_count": 1,
+    "child_record_custody_protocol": 1
+  },
+  "command": {
+    "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+    "roots": [
+      "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03"
+    ],
+    "visibility": "team",
+    "folder_id": null,
+    "parent_id": null,
+    "inspection_token": "e94083ac64549edb1f8f140e1c4e6d75ab0c7ca623ec492c5a6aa7d74a721d88",
+    "decisions": [],
+    "review_token": "41eee0114210a4eb94db9be0ed281e883edd706bd6cace47d686819723cfa9aa",
+    "expires_at": "2026-11-03T08:09:50.486665Z",
+    "request_id": "64a70703-b8b2-43c4-bd5e-dfb0d8e60f86",
+    "recording_policy": "move_recordings_keep_removed_private_v1",
+    "recording_count": 1,
+    "unfinished_recording_count": 1,
+    "retained_recording_count": 2,
+    "connection_policy": "pause"
+  },
+  "receipt": {
+    "roots": [
+      "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03"
+    ],
+    "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+    "applied": true,
+    "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+    "replayed": false,
+    "folder_id": null,
+    "parent_id": null,
+    "request_id": "64a70703-b8b2-43c4-bd5e-dfb0d8e60f86",
+    "visibility": "team",
+    "project_ids": [
+      "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03"
+    ],
+    "automatic_undo": false,
+    "recording_count": 1,
+    "recording_policy": "move_recordings_keep_removed_private_v1",
+    "connection_policy": "pause",
+    "connection_effects": {
+      "email_routes_paused": 1,
+      "project_webhooks_paused": 0,
+      "global_webhooks_excluded": 0,
+      "queued_updates_discarded": 0,
+      "pending_webhooks_cancelled": 0
+    },
+    "invitations_closed": 0,
+    "assignments_cleared": 0,
+    "retained_recording_count": 2,
+    "project_adoption_protocol": 1,
+    "unfinished_recording_count": 1
+  },
+  "replayed": {
+    "roots": [
+      "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03"
+    ],
+    "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+    "applied": true,
+    "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+    "replayed": true,
+    "folder_id": null,
+    "parent_id": null,
+    "request_id": "64a70703-b8b2-43c4-bd5e-dfb0d8e60f86",
+    "visibility": "team",
+    "project_ids": [
+      "4e9e981d-28b9-43f2-9e93-9bfe3f3e7d03"
+    ],
+    "automatic_undo": false,
+    "recording_count": 1,
+    "recording_policy": "move_recordings_keep_removed_private_v1",
+    "connection_policy": "pause",
+    "connection_effects": {
+      "email_routes_paused": 1,
+      "project_webhooks_paused": 0,
+      "global_webhooks_excluded": 0,
+      "queued_updates_discarded": 0,
+      "pending_webhooks_cancelled": 0
+    },
+    "invitations_closed": 0,
+    "assignments_cleared": 0,
+    "retained_recording_count": 2,
+    "project_adoption_protocol": 1,
+    "unfinished_recording_count": 1
+  },
+  "removedOnly": {
+    "body": {
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "roots": [
+        "4f117e26-a0e3-4da1-ae90-3455a07a1c78"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null
+    },
+    "inspect": {
+      "roots": [
+        "4f117e26-a0e3-4da1-ae90-3455a07a1c78"
+      ],
+      "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "contents": {
+        "counts": {
+          "tasks": 1,
+          "projects": 1,
+          "sections": 0,
+          "task_activity": 1,
+          "task_comments": 0,
+          "task_mentions": 0,
+          "task_node_activity": 0,
+          "project_collaborators": 0,
+          "task_assignment_provenance": 1
+        },
+        "webhooks": 0,
+        "attachments": 0,
+        "email_routes": 0,
+        "inline_files": 0,
+        "content_bytes": 3229,
+        "external_files": 0,
+        "provider_files": 0,
+        "global_webhooks": 0,
+        "project_webhooks": 0,
+        "recording_custody": {
+          "pending": 0,
+          "protocol": 1,
+          "retained": 1,
+          "published": 0,
+          "unavailable": 0
+        },
+        "recording_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "subtask_undo_policy": "kept_private_no_restore",
+        "queued_webhook_events": 0,
+        "inflight_webhook_events": 0,
+        "pending_project_webhooks": 0,
+        "private_subtask_undo_count": 0,
+        "child_record_custody_protocol": 1,
+        "recording_unfinished_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "recording_private_history_transfer": {
+          "protocol": 1,
+          "supported": true
+        }
+      },
+      "projects": [
+        {
+          "id": "4f117e26-a0e3-4da1-ae90-3455a07a1c78",
+          "name": "Recording transfer",
+          "depth": 1,
+          "root_id": "4f117e26-a0e3-4da1-ae90-3455a07a1c78",
+          "parent_id": null,
+          "is_archived": false,
+          "source_ancestor_archived": false
+        }
+      ],
+      "folder_id": null,
+      "parent_id": null,
+      "team_name": "Recording transfer workshop",
+      "visibility": "team",
+      "collaborators": [],
+      "automatic_undo": false,
+      "commit_supported": true,
+      "inspection_token": "4b38005e0a5828cc38b6f590997e321ed021917b12bf22c810f613043da5b97c",
+      "sends_invitations": false,
+      "team_member_count": 2,
+      "creates_memberships": false,
+      "destination_archived": false,
+      "child_history_protocol": 1,
+      "history_custody_protocol": 1,
+      "connection_pause_protocol": 1,
+      "project_adoption_protocol": 1,
+      "connection_pause_supported": false,
+      "child_record_custody_protocol": 1
+    },
+    "decisions": [],
+    "request": {
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "roots": [
+        "4f117e26-a0e3-4da1-ae90-3455a07a1c78"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null,
+      "inspection_token": "4b38005e0a5828cc38b6f590997e321ed021917b12bf22c810f613043da5b97c",
+      "decisions": [],
+      "recording_policy": "move_recordings_keep_removed_private_v1",
+      "recording_count": 0,
+      "unfinished_recording_count": 0,
+      "retained_recording_count": 1
+    },
+    "review": {
+      "roots": [
+        "4f117e26-a0e3-4da1-ae90-3455a07a1c78"
+      ],
+      "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "contents": {
+        "counts": {
+          "tasks": 1,
+          "projects": 1,
+          "sections": 0,
+          "task_activity": 1,
+          "task_comments": 0,
+          "task_mentions": 0,
+          "task_node_activity": 0,
+          "project_collaborators": 0,
+          "task_assignment_provenance": 1
+        },
+        "webhooks": 0,
+        "attachments": 0,
+        "email_routes": 0,
+        "inline_files": 0,
+        "content_bytes": 3229,
+        "external_files": 0,
+        "provider_files": 0,
+        "global_webhooks": 0,
+        "project_webhooks": 0,
+        "recording_custody": {
+          "pending": 0,
+          "protocol": 1,
+          "retained": 1,
+          "published": 0,
+          "unavailable": 0
+        },
+        "recording_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "subtask_undo_policy": "kept_private_no_restore",
+        "queued_webhook_events": 0,
+        "inflight_webhook_events": 0,
+        "pending_project_webhooks": 0,
+        "private_subtask_undo_count": 0,
+        "child_record_custody_protocol": 1,
+        "recording_unfinished_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "recording_private_history_transfer": {
+          "protocol": 1,
+          "supported": true
+        }
+      },
+      "projects": [
+        {
+          "id": "4f117e26-a0e3-4da1-ae90-3455a07a1c78",
+          "name": "Recording transfer",
+          "depth": 1,
+          "root_id": "4f117e26-a0e3-4da1-ae90-3455a07a1c78",
+          "parent_id": null,
+          "is_archived": false,
+          "source_ancestor_archived": false
+        }
+      ],
+      "decisions": [],
+      "folder_id": null,
+      "parent_id": null,
+      "team_name": "Recording transfer workshop",
+      "expires_at": "2026-11-03T08:09:56.677967Z",
+      "visibility": "team",
+      "review_token": "aa6b9db7aeb589aa887999ae7787333207a1d2f52547cd0afbe2708318b455b7",
+      "collaborators": [],
+      "automatic_undo": false,
+      "recording_count": 0,
+      "commit_supported": true,
+      "inspection_token": "4b38005e0a5828cc38b6f590997e321ed021917b12bf22c810f613043da5b97c",
+      "recording_policy": "move_recordings_keep_removed_private_v1",
+      "connection_policy": null,
+      "sends_invitations": false,
+      "team_member_count": 2,
+      "connection_effects": null,
+      "invitations_closed": 0,
+      "assignments_cleared": 0,
+      "creates_memberships": false,
+      "destination_archived": false,
+      "child_history_protocol": 1,
+      "history_custody_protocol": 1,
+      "retained_recording_count": 1,
+      "connection_pause_protocol": 1,
+      "project_adoption_protocol": 1,
+      "requires_provider_custody": false,
+      "connection_pause_supported": false,
+      "requires_integration_pause": false,
+      "unfinished_recording_count": 0,
+      "child_record_custody_protocol": 1
+    },
+    "command": {
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "roots": [
+        "4f117e26-a0e3-4da1-ae90-3455a07a1c78"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null,
+      "inspection_token": "4b38005e0a5828cc38b6f590997e321ed021917b12bf22c810f613043da5b97c",
+      "decisions": [],
+      "review_token": "aa6b9db7aeb589aa887999ae7787333207a1d2f52547cd0afbe2708318b455b7",
+      "expires_at": "2026-11-03T08:09:56.677967Z",
+      "request_id": "9e29402b-97d3-4a38-88ea-462e891c8ae4",
+      "recording_policy": "move_recordings_keep_removed_private_v1",
+      "recording_count": 0,
+      "unfinished_recording_count": 0,
+      "retained_recording_count": 1
+    },
+    "receipt": {
+      "roots": [
+        "4f117e26-a0e3-4da1-ae90-3455a07a1c78"
+      ],
+      "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+      "applied": true,
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "replayed": false,
+      "folder_id": null,
+      "parent_id": null,
+      "request_id": "9e29402b-97d3-4a38-88ea-462e891c8ae4",
+      "visibility": "team",
+      "project_ids": [
+        "4f117e26-a0e3-4da1-ae90-3455a07a1c78"
+      ],
+      "automatic_undo": false,
+      "recording_count": 0,
+      "recording_policy": "move_recordings_keep_removed_private_v1",
+      "invitations_closed": 0,
+      "assignments_cleared": 0,
+      "retained_recording_count": 1,
+      "project_adoption_protocol": 1,
+      "unfinished_recording_count": 0
+    }
+  },
+  "combinedUnfinished": {
+    "body": {
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "roots": [
+        "bbfb246f-5de4-4410-b1c1-59dac45c486c"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null
+    },
+    "inspect": {
+      "roots": [
+        "bbfb246f-5de4-4410-b1c1-59dac45c486c"
+      ],
+      "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "contents": {
+        "counts": {
+          "tasks": 1,
+          "projects": 1,
+          "sections": 0,
+          "task_activity": 1,
+          "task_comments": 0,
+          "task_mentions": 0,
+          "task_node_activity": 0,
+          "project_collaborators": 0,
+          "task_assignment_provenance": 1
+        },
+        "webhooks": 0,
+        "attachments": 0,
+        "email_routes": 1,
+        "inline_files": 0,
+        "content_bytes": 3386,
+        "external_files": 0,
+        "provider_files": 0,
+        "global_webhooks": 0,
+        "project_webhooks": 0,
+        "recording_custody": {
+          "pending": 1,
+          "protocol": 1,
+          "retained": 0,
+          "published": 0,
+          "unavailable": 0
+        },
+        "recording_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "subtask_undo_policy": "kept_private_no_restore",
+        "queued_webhook_events": 0,
+        "inflight_webhook_events": 0,
+        "pending_project_webhooks": 0,
+        "private_subtask_undo_count": 0,
+        "child_record_custody_protocol": 1,
+        "recording_unfinished_transfer": {
+          "protocol": 1,
+          "supported": true
+        },
+        "recording_private_history_transfer": {
+          "protocol": 1,
+          "supported": false
+        }
+      },
+      "projects": [
+        {
+          "id": "bbfb246f-5de4-4410-b1c1-59dac45c486c",
+          "name": "Recording transfer",
+          "depth": 1,
+          "root_id": "bbfb246f-5de4-4410-b1c1-59dac45c486c",
+          "parent_id": null,
+          "is_archived": false,
+          "source_ancestor_archived": false
+        }
+      ],
+      "folder_id": null,
+      "parent_id": null,
+      "team_name": "Recording transfer workshop",
+      "visibility": "team",
+      "collaborators": [],
+      "automatic_undo": false,
+      "commit_supported": false,
+      "inspection_token": "0b7db572654a5c9fe0da7bd3ef9cfc81f420b00b9a615247c39f5ad58eae7355",
+      "sends_invitations": false,
+      "team_member_count": 2,
+      "creates_memberships": false,
+      "destination_archived": false,
+      "child_history_protocol": 1,
+      "history_custody_protocol": 1,
+      "connection_pause_protocol": 1,
+      "project_adoption_protocol": 1,
+      "connection_pause_supported": true,
+      "child_record_custody_protocol": 1
+    },
+    "decisions": [],
+    "request": {
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "roots": [
+        "bbfb246f-5de4-4410-b1c1-59dac45c486c"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null,
+      "inspection_token": "0b7db572654a5c9fe0da7bd3ef9cfc81f420b00b9a615247c39f5ad58eae7355",
+      "decisions": [],
+      "recording_policy": "move_published_stop_unfinished_v1",
+      "recording_count": 0,
+      "unfinished_recording_count": 1,
+      "connection_policy": "pause"
+    },
+    "review": {
+      "roots": [
+        "bbfb246f-5de4-4410-b1c1-59dac45c486c"
+      ],
+      "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "contents": {
+        "counts": {
+          "tasks": 1,
+          "projects": 1,
+          "sections": 0,
+          "task_activity": 1,
+          "task_comments": 0,
+          "task_mentions": 0,
+          "task_node_activity": 0,
+          "project_collaborators": 0,
+          "task_assignment_provenance": 1
+        },
+        "webhooks": 0,
+        "attachments": 0,
+        "email_routes": 1,
+        "inline_files": 0,
+        "content_bytes": 3386,
+        "external_files": 0,
+        "provider_files": 0,
+        "global_webhooks": 0,
+        "project_webhooks": 0,
+        "recording_custody": {
+          "pending": 1,
+          "protocol": 1,
+          "retained": 0,
+          "published": 0,
+          "unavailable": 0
+        },
+        "recording_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "subtask_undo_policy": "kept_private_no_restore",
+        "queued_webhook_events": 0,
+        "inflight_webhook_events": 0,
+        "pending_project_webhooks": 0,
+        "private_subtask_undo_count": 0,
+        "child_record_custody_protocol": 1,
+        "recording_unfinished_transfer": {
+          "protocol": 1,
+          "supported": true
+        },
+        "recording_private_history_transfer": {
+          "protocol": 1,
+          "supported": false
+        }
+      },
+      "projects": [
+        {
+          "id": "bbfb246f-5de4-4410-b1c1-59dac45c486c",
+          "name": "Recording transfer",
+          "depth": 1,
+          "root_id": "bbfb246f-5de4-4410-b1c1-59dac45c486c",
+          "parent_id": null,
+          "is_archived": false,
+          "source_ancestor_archived": false
+        }
+      ],
+      "decisions": [],
+      "folder_id": null,
+      "parent_id": null,
+      "team_name": "Recording transfer workshop",
+      "expires_at": "2026-11-03T08:09:58.829289Z",
+      "visibility": "team",
+      "review_token": "412f98a010bd1a052ff0d0194984f3c8265b0ed18652e4c2eb3fb8825d8af272",
+      "collaborators": [],
+      "automatic_undo": false,
+      "recording_count": 0,
+      "commit_supported": false,
+      "inspection_token": "0b7db572654a5c9fe0da7bd3ef9cfc81f420b00b9a615247c39f5ad58eae7355",
+      "recording_policy": "move_published_stop_unfinished_v1",
+      "connection_policy": "pause",
+      "sends_invitations": false,
+      "team_member_count": 2,
+      "connection_effects": {
+        "email_routes_paused": 1,
+        "project_webhooks_paused": 0,
+        "global_webhooks_excluded": 0,
+        "queued_updates_discarded": 0,
+        "pending_webhooks_cancelled": 0
+      },
+      "invitations_closed": 0,
+      "assignments_cleared": 0,
+      "creates_memberships": false,
+      "destination_archived": false,
+      "child_history_protocol": 1,
+      "history_custody_protocol": 1,
+      "connection_pause_protocol": 1,
+      "project_adoption_protocol": 1,
+      "requires_provider_custody": false,
+      "connection_pause_supported": true,
+      "requires_integration_pause": false,
+      "unfinished_recording_count": 1,
+      "child_record_custody_protocol": 1
+    },
+    "command": {
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "roots": [
+        "bbfb246f-5de4-4410-b1c1-59dac45c486c"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null,
+      "inspection_token": "0b7db572654a5c9fe0da7bd3ef9cfc81f420b00b9a615247c39f5ad58eae7355",
+      "decisions": [],
+      "review_token": "412f98a010bd1a052ff0d0194984f3c8265b0ed18652e4c2eb3fb8825d8af272",
+      "expires_at": "2026-11-03T08:09:58.829289Z",
+      "request_id": "9a54353f-659f-4e6c-8eb1-8cdfef2cf97a",
+      "recording_policy": "move_published_stop_unfinished_v1",
+      "recording_count": 0,
+      "unfinished_recording_count": 1,
+      "connection_policy": "pause"
+    },
+    "receipt": {
+      "roots": [
+        "bbfb246f-5de4-4410-b1c1-59dac45c486c"
+      ],
+      "account": "da5f5a99-f3b7-4161-b18c-80213a72d13b",
+      "applied": true,
+      "team_id": "3714b321-5901-4ec1-b0bb-a588d5da212c",
+      "replayed": false,
+      "folder_id": null,
+      "parent_id": null,
+      "request_id": "9a54353f-659f-4e6c-8eb1-8cdfef2cf97a",
+      "visibility": "team",
+      "project_ids": [
+        "bbfb246f-5de4-4410-b1c1-59dac45c486c"
+      ],
+      "automatic_undo": false,
+      "recording_count": 0,
+      "recording_policy": "move_published_stop_unfinished_v1",
+      "connection_policy": "pause",
+      "connection_effects": {
+        "email_routes_paused": 1,
+        "project_webhooks_paused": 0,
+        "global_webhooks_excluded": 0,
+        "queued_updates_discarded": 0,
+        "pending_webhooks_cancelled": 0
+      },
+      "invitations_closed": 0,
+      "assignments_cleared": 0,
+      "project_adoption_protocol": 1,
+      "unfinished_recording_count": 1
+    }
+  },
+  "containerRemoved": true
+}

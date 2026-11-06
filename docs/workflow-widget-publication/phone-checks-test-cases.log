@@ -1,0 +1,13 @@
+Test Suite 'Selected tests' started at 2026-10-27 06:16:20.371.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 06:16:20.380.
+Test Suite 'TaskfoldUITests' started at 2026-10-27 06:16:20.380.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' passed (15.845 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' passed (32.887 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-27 06:17:09.121.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 48.732 (48.741) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 06:17:09.125.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 48.732 (48.746) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 06:17:09.126.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 48.732 (48.755) seconds

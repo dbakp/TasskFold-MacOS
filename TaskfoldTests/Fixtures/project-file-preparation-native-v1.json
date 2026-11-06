@@ -1,0 +1,443 @@
+{
+  "syntheticOnly": true,
+  "containerRemoved": true,
+  "account": "ad9db02c-d499-4c95-aa17-ced3d41dfecf",
+  "origin": "https://file-native.example.invalid",
+  "scope": {
+    "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+    "roots": [
+      "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+    ],
+    "visibility": "team",
+    "folder_id": null,
+    "parent_id": null
+  },
+  "expectedCount": 1,
+  "inspection": {
+    "roots": [
+      "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+    ],
+    "account": "ad9db02c-d499-4c95-aa17-ced3d41dfecf",
+    "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+    "contents": {
+      "counts": {
+        "tasks": 1,
+        "projects": 1,
+        "sections": 0,
+        "task_activity": 1,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 1,
+        "project_collaborators": 1,
+        "task_assignment_provenance": 2
+      },
+      "webhooks": 0,
+      "attachments": 5,
+      "email_routes": 0,
+      "file_custody": {
+        "legacy": 0,
+        "stored": 1,
+        "protocol": 1,
+        "unavailable": 0
+      },
+      "inline_files": 1,
+      "content_bytes": 6997983,
+      "external_files": 0,
+      "provider_files": 4,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "recording_custody": {
+        "pending": 0,
+        "protocol": 1,
+        "retained": 0,
+        "published": 0,
+        "unavailable": 0
+      },
+      "recording_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1,
+      "recording_unfinished_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "recording_private_history_transfer": {
+        "protocol": 1,
+        "supported": false
+      }
+    },
+    "projects": [
+      {
+        "id": "dcbeb008-1a13-498f-ae14-9155f977fcf1",
+        "name": "Reviewed file workshop",
+        "depth": 1,
+        "root_id": "dcbeb008-1a13-498f-ae14-9155f977fcf1",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Reviewed file team",
+    "visibility": "team",
+    "collaborators": [
+      {
+        "id": "f8110be6-747f-4bc6-b1f1-95cda5926cdb",
+        "email": "transfer-retired@example.invalid",
+        "status": "accepted",
+        "user_id": "22691346-c6f4-4e75-af62-59f0592756ee",
+        "eligible": false,
+        "project_id": "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+      }
+    ],
+    "automatic_undo": false,
+    "commit_supported": false,
+    "file_preparation": {
+      "enabled": true,
+      "protocol": 1
+    },
+    "inspection_token": "efbd2a3a1da04a6fc13a3962e7f69281ba697e715c973e9517ba5f86edf1e986",
+    "sends_invitations": false,
+    "team_member_count": 2,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "connection_pause_supported": false,
+    "child_record_custody_protocol": 1
+  },
+  "request": {
+    "request_id": "2f479f20-2b1d-48a9-a276-0c0935c23cbf",
+    "scope": {
+      "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+      "roots": [
+        "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null
+    },
+    "inspection_token": "efbd2a3a1da04a6fc13a3962e7f69281ba697e715c973e9517ba5f86edf1e986"
+  },
+  "prepared": {
+    "next": null,
+    "items": [
+      {
+        "type": "application/pdf",
+        "label": "Discussion copy.pdf",
+        "state": "waiting",
+        "byte_count": 47,
+        "operation_id": "5774fdd5-e972-423c-b48d-441628dac2cf"
+      }
+    ],
+    "scope": {
+      "roots": [
+        "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+      ],
+      "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+      "folder_id": null,
+      "parent_id": null,
+      "visibility": "team"
+    },
+    "state": "preparing",
+    "total": 1,
+    "plan_id": "3f9d4fed-dc81-4ce7-a3c4-ad8d0538c18a",
+    "prepared": 0,
+    "protocol": 1,
+    "expires_at": "2026-11-06T22:16:22.405624Z",
+    "request_id": "2f479f20-2b1d-48a9-a276-0c0935c23cbf",
+    "project_transferred": false
+  },
+  "ready": {
+    "next": null,
+    "items": [
+      {
+        "type": "application/pdf",
+        "label": "Discussion copy.pdf",
+        "state": "ready",
+        "byte_count": 47,
+        "operation_id": "5774fdd5-e972-423c-b48d-441628dac2cf"
+      }
+    ],
+    "scope": {
+      "roots": [
+        "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+      ],
+      "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+      "folder_id": null,
+      "parent_id": null,
+      "visibility": "team"
+    },
+    "state": "ready",
+    "total": 1,
+    "plan_id": "3f9d4fed-dc81-4ce7-a3c4-ad8d0538c18a",
+    "prepared": 1,
+    "protocol": 1,
+    "expires_at": "2026-11-06T22:16:22.405624Z",
+    "request_id": "2f479f20-2b1d-48a9-a276-0c0935c23cbf",
+    "project_transferred": false
+  },
+  "review": {
+    "roots": [
+      "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+    ],
+    "account": "ad9db02c-d499-4c95-aa17-ced3d41dfecf",
+    "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+    "contents": {
+      "counts": {
+        "tasks": 1,
+        "projects": 1,
+        "sections": 0,
+        "task_activity": 1,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 1,
+        "project_collaborators": 1,
+        "task_assignment_provenance": 2
+      },
+      "webhooks": 0,
+      "attachments": 5,
+      "email_routes": 0,
+      "file_custody": {
+        "legacy": 0,
+        "stored": 1,
+        "protocol": 1,
+        "unavailable": 0
+      },
+      "inline_files": 1,
+      "content_bytes": 6997983,
+      "external_files": 0,
+      "provider_files": 4,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "recording_custody": {
+        "pending": 0,
+        "protocol": 1,
+        "retained": 0,
+        "published": 0,
+        "unavailable": 0
+      },
+      "recording_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1,
+      "recording_unfinished_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "recording_private_history_transfer": {
+        "protocol": 1,
+        "supported": false
+      }
+    },
+    "projects": [
+      {
+        "id": "dcbeb008-1a13-498f-ae14-9155f977fcf1",
+        "name": "Reviewed file workshop",
+        "depth": 1,
+        "root_id": "dcbeb008-1a13-498f-ae14-9155f977fcf1",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "decisions": [
+      {
+        "role": null,
+        "user_id": "22691346-c6f4-4e75-af62-59f0592756ee",
+        "project_id": "dcbeb008-1a13-498f-ae14-9155f977fcf1",
+        "effective_role": null
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Reviewed file team",
+    "expires_at": "2026-11-05T22:31:26.054344Z",
+    "visibility": "team",
+    "file_policy": {
+      "action": "share_copies_keep_originals",
+      "plan_id": "3f9d4fed-dc81-4ce7-a3c4-ad8d0538c18a",
+      "protocol": 1
+    },
+    "review_token": "15ae5eac8a241393838c5f5cdcc254208324aab0d8e7aecb88d47e3f2d37b22d",
+    "collaborators": [
+      {
+        "id": "f8110be6-747f-4bc6-b1f1-95cda5926cdb",
+        "email": "transfer-retired@example.invalid",
+        "status": "accepted",
+        "user_id": "22691346-c6f4-4e75-af62-59f0592756ee",
+        "eligible": false,
+        "project_id": "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+      }
+    ],
+    "file_transfer": {
+      "count": 1,
+      "action": "share_copies_keep_originals",
+      "plan_id": "3f9d4fed-dc81-4ce7-a3c4-ad8d0538c18a",
+      "protocol": 1,
+      "byte_count": 47,
+      "inventory_token": "fd5525f952296d1c6083ab90fd3368fdfff763933437c2f18e6f4a60ae074d8e",
+      "originals_kept_private": true
+    },
+    "automatic_undo": false,
+    "commit_supported": false,
+    "file_preparation": {
+      "enabled": true,
+      "protocol": 1
+    },
+    "inspection_token": "efbd2a3a1da04a6fc13a3962e7f69281ba697e715c973e9517ba5f86edf1e986",
+    "connection_policy": null,
+    "sends_invitations": false,
+    "team_member_count": 2,
+    "connection_effects": null,
+    "invitations_closed": 1,
+    "assignments_cleared": 0,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "requires_provider_custody": false,
+    "connection_pause_supported": false,
+    "requires_integration_pause": false,
+    "child_record_custody_protocol": 1
+  },
+  "command": {
+    "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+    "roots": [
+      "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+    ],
+    "visibility": "team",
+    "folder_id": null,
+    "parent_id": null,
+    "inspection_token": "efbd2a3a1da04a6fc13a3962e7f69281ba697e715c973e9517ba5f86edf1e986",
+    "decisions": [
+      {
+        "project_id": "dcbeb008-1a13-498f-ae14-9155f977fcf1",
+        "user_id": "22691346-c6f4-4e75-af62-59f0592756ee",
+        "role": null
+      }
+    ],
+    "file_policy": {
+      "protocol": 1,
+      "plan_id": "3f9d4fed-dc81-4ce7-a3c4-ad8d0538c18a",
+      "action": "share_copies_keep_originals"
+    },
+    "request_id": "a324c889-feaf-4f59-81eb-6314fcb8671e",
+    "review_token": "15ae5eac8a241393838c5f5cdcc254208324aab0d8e7aecb88d47e3f2d37b22d",
+    "expires_at": "2026-11-05T22:31:26.054344Z"
+  },
+  "receipt": {
+    "roots": [
+      "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+    ],
+    "account": "ad9db02c-d499-4c95-aa17-ced3d41dfecf",
+    "applied": true,
+    "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+    "replayed": false,
+    "folder_id": null,
+    "parent_id": null,
+    "request_id": "a324c889-feaf-4f59-81eb-6314fcb8671e",
+    "visibility": "team",
+    "project_ids": [
+      "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+    ],
+    "file_transfer": {
+      "count": 1,
+      "action": "share_copies_keep_originals",
+      "plan_id": "3f9d4fed-dc81-4ce7-a3c4-ad8d0538c18a",
+      "protocol": 1,
+      "byte_count": 47,
+      "originals_kept_private": true
+    },
+    "automatic_undo": false,
+    "invitations_closed": 1,
+    "assignments_cleared": 0,
+    "project_adoption_protocol": 1
+  },
+  "cancelledEmpty": {
+    "next": null,
+    "items": [],
+    "scope": {
+      "roots": [
+        "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+      ],
+      "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+      "folder_id": null,
+      "parent_id": null,
+      "visibility": "team"
+    },
+    "state": "cancelled",
+    "total": 0,
+    "plan_id": "7b4371f9-d5da-4962-b4d9-82a19c2576d5",
+    "prepared": 0,
+    "protocol": 1,
+    "expires_at": "2026-11-06T22:16:21.773472Z",
+    "request_id": "6802815e-36a0-4ac8-b90f-9ae9974c7baf",
+    "project_transferred": false
+  },
+  "cancelledRequest": {
+    "request_id": "6802815e-36a0-4ac8-b90f-9ae9974c7baf",
+    "scope": {
+      "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+      "roots": [
+        "dcbeb008-1a13-498f-ae14-9155f977fcf1"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null
+    },
+    "inspection_token": "efbd2a3a1da04a6fc13a3962e7f69281ba697e715c973e9517ba5f86edf1e986"
+  },
+  "taskFileResolveReceipt": {
+    "state": "published",
+    "target": {
+      "task_id": "e33b945f-3cff-4d71-9c58-05eb9fefe898",
+      "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+      "project_id": "dcbeb008-1a13-498f-ae14-9155f977fcf1",
+      "task_generation": "c6b6b5df-d2d5-4711-b159-7cdafbbad330"
+    },
+    "account": "ad9db02c-d499-4c95-aa17-ced3d41dfecf",
+    "protocol": 1,
+    "attachment": {
+      "id": "5774fdd5-e972-423c-b48d-441628dac2cf",
+      "name": "Project attachment",
+      "size": 47,
+      "type": "application/pdf",
+      "sha256": "c5cdc00c253c5bac9f90c26ee8fe3493b11b137d38b570dd4a4c915d3827ee01",
+      "uploadedAt": "2026-11-05T22:16:30.982307+00:00",
+      "storage_object_id": "8ab42660-8828-45a6-8865-596143877f8f"
+    },
+    "operation_id": "5774fdd5-e972-423c-b48d-441628dac2cf"
+  },
+  "taskFileResolveIntent": {
+    "name": "Project attachment",
+    "type": "application/pdf",
+    "sha256": "c5cdc00c253c5bac9f90c26ee8fe3493b11b137d38b570dd4a4c915d3827ee01",
+    "target": {
+      "task_id": "e33b945f-3cff-4d71-9c58-05eb9fefe898",
+      "team_id": "0a08d927-acc9-41ef-bd30-2433c2422ab6",
+      "project_id": "dcbeb008-1a13-498f-ae14-9155f977fcf1",
+      "task_generation": "c6b6b5df-d2d5-4711-b159-7cdafbbad330"
+    },
+    "byte_count": 47,
+    "operation_id": "5774fdd5-e972-423c-b48d-441628dac2cf"
+  },
+  "syntheticSourceBase64": "JVBERi0xLjcKUmV2aWV3ZWQgc3ludGhldGljIHByb2plY3QgZmlsZQolJUVPRgo="
+}

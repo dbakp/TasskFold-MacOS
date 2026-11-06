@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-09",
+  "scope": "One same-account task restored from native recovery history while offline, propagated phone to tablet after reconnection, with Mac-owned read-only transport acceptance.",
+  "ios": {
+    "passedTests": 7,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedRuntimeWarnings": 0,
+    "resultDirectory": "/tmp/taskfold-restore-continuity-v1",
+    "build": "/tmp/taskfold-restore-continuity-build-v1.log",
+    "signatures": "/tmp/taskfold-restore-continuity-signatures-v1.json",
+    "phases": [
+      {
+        "phase": "phone-login",
+        "passed": true,
+        "serverTasks": []
+      },
+      {
+        "phase": "tablet-login",
+        "passed": true,
+        "serverTasks": []
+      },
+      {
+        "phase": "phone-backup",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "d03c170f-0c92-427e-a78c-3a88bc288e4e",
+            "title": "Continuity 1eb2f1fd",
+            "completed": false,
+            "task_generation": "a0c83178-239c-45d7-9fe4-2c45a9058429",
+            "description": "",
+            "priority": 4
+          }
+        ],
+        "durableTaskQueueEmpty": true
+      },
+      {
+        "phase": "tablet-edit",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "d03c170f-0c92-427e-a78c-3a88bc288e4e",
+            "title": "Continuity 1eb2f1fd revised",
+            "completed": false,
+            "task_generation": "a0c83178-239c-45d7-9fe4-2c45a9058429",
+            "description": "",
+            "priority": 4
+          }
+        ],
+        "durableTaskQueueEmpty": true
+      },
+      {
+        "phase": "phone-offline-restore",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "d03c170f-0c92-427e-a78c-3a88bc288e4e",
+            "title": "Continuity 1eb2f1fd revised",
+            "completed": false,
+            "task_generation": "a0c83178-239c-45d7-9fe4-2c45a9058429",
+            "description": "",
+            "priority": 4
+          }
+        ],
+        "durableOfflineRestore": true
+      },
+      {
+        "phase": "phone-reconnect",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "d03c170f-0c92-427e-a78c-3a88bc288e4e",
+            "title": "Continuity 1eb2f1fd",
+            "completed": false,
+            "task_generation": "a0c83178-239c-45d7-9fe4-2c45a9058429",
+            "description": "",
+            "priority": 4
+          }
+        ],
+        "durableTaskQueueEmpty": true
+      },
+      {
+        "phase": "tablet-restored",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "d03c170f-0c92-427e-a78c-3a88bc288e4e",
+            "title": "Continuity 1eb2f1fd",
+            "completed": false,
+            "task_generation": "a0c83178-239c-45d7-9fe4-2c45a9058429",
+            "description": "",
+            "priority": 4
+          }
+        ],
+        "durableTaskQueueEmpty": true
+      }
+    ]
+  },
+  "mac": {
+    "test": "NativeContinuityTests/testMacTransportReadsTaskRestoredOfflineOnIOS",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "build": "/tmp/taskfold-restore-continuity-mac-build-v1.log",
+    "log": "/tmp/taskfold-restore-continuity-mac-test-v1.log",
+    "guiExecuted": false
+  },
+  "capturesInIOSRepository": {
+    "restore-preview": {
+      "sha256": "96563fa7fe985ace66dbfa27a7e7c1c2fa5e17d898467da8e53d840735ca5528",
+      "visuallyInspected": true
+    },
+    "restore-offline": {
+      "sha256": "fb5b7e4d50adfb532d7206e368cb5198d4f481f0bce83f4f710fd53a3838f17f",
+      "visuallyInspected": true
+    },
+    "restore-tablet": {
+      "sha256": "9aab650164c2fe520fb8a99a25fb98b48bfa889480d527a7d57121b685076edf",
+      "visuallyInspected": true
+    }
+  },
+  "cleanup": {
+    "account": "1eb2f1fd-11d3-4071-b903-f5281d3a8076",
+    "sessionsRevokedBeforeAccountDeletion": true,
+    "remainingUsers": 0,
+    "remainingSessions": 0,
+    "remainingProfiles": 0,
+    "remainingTasks": 0,
+    "remainingSavedViews": 0,
+    "deviceSessionsReset": true,
+    "scopedCachesAndRecoveryVaultsRemoved": true,
+    "privateCredentialsRemoved": true
+  },
+  "limitations": [
+    "Controlled DEBUG transport outage rather than physical network loss",
+    "One existing task title restored; broader organization/settings and missing-task restore remain open",
+    "External file-provider export/import round trips",
+    "Concurrent edit during restore, mixed versions and membership revocation",
+    "Actual Mac GUI and physical devices"
+  ]
+}

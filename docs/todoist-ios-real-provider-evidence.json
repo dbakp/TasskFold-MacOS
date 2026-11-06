@@ -1,0 +1,199 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native secondary iPhone real-provider preview and duplicate-free replay of the existing Mac-imported cloud workspace",
+  "sourcePolicy": {
+    "existingUserAuthorizedTodoistAccount": true,
+    "existingTokenCopiedThroughNativeUI": true,
+    "tokenRotated": false,
+    "providerMutationActions": 0,
+    "providerMethod": "GET only",
+    "credentialsOrPrivateContentInRepository": false,
+    "temporaryFixtureTokenRemovedAfterChecks": true,
+    "computerUseRuntimeResetToDiscardSecretMemory": true
+  },
+  "deployment": {
+    "slug": "import-todoist",
+    "version": 41,
+    "artifactSHA256": "b6705250a7ccb409b4bc680c449e3ff1b88a0f19adb708f1b91a56e3cf4f4ca2",
+    "backendChanged": false
+  },
+  "nativeRun": {
+    "resultBundle": "ios-real-provider-phone-v2.xcresult",
+    "actualPassed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "durationSeconds": 147.86,
+    "bundle": "com.dbakp.taskfold.providercontinuitytests",
+    "nativeSignIn": true,
+    "fixtureResponseRoute": false,
+    "normalRelaunches": true,
+    "tokenClearedAfterSuccessAndRelaunch": true
+  },
+  "preview": {
+    "projects": 23,
+    "sections": 88,
+    "labels": 5,
+    "tasks": 252,
+    "subtasks": 24,
+    "comments": 94
+  },
+  "receipt": {
+    "projectsImported": 0,
+    "sectionsImported": 0,
+    "labelsImported": 0,
+    "tasksImported": 0,
+    "subtasksImported": 0,
+    "commentsImported": 0,
+    "projectsSkipped": 23,
+    "sectionsSkipped": 88,
+    "labelsSkipped": 5,
+    "tasksSkipped": 252
+  },
+  "sourceComparison": {
+    "before": {
+      "projects": {
+        "count": 24,
+        "sha256": "8ba2e39e3b67b7682a2475fc431e0e3387e5da148703eab9d6abc0b2d1ce5a3f"
+      },
+      "sections": {
+        "count": 88,
+        "sha256": "f0cff4d29f874c253c39d178e16ac40a83e130bd26296cab13c003b13481576d"
+      },
+      "labels": {
+        "count": 5,
+        "sha256": "e6e96dbc92493f67d26be605fb6d8c871483e7f05b0f1ab74d0de3d043ae4dda"
+      },
+      "tasks": {
+        "count": 276,
+        "sha256": "2ee8a4e4601b2f24eae790c72fdf8113333178a4400da3758bc8815f5c360ad7"
+      }
+    },
+    "after": {
+      "projects": {
+        "count": 24,
+        "sha256": "8ba2e39e3b67b7682a2475fc431e0e3387e5da148703eab9d6abc0b2d1ce5a3f"
+      },
+      "sections": {
+        "count": 88,
+        "sha256": "f0cff4d29f874c253c39d178e16ac40a83e130bd26296cab13c003b13481576d"
+      },
+      "labels": {
+        "count": 5,
+        "sha256": "e6e96dbc92493f67d26be605fb6d8c871483e7f05b0f1ab74d0de3d043ae4dda"
+      },
+      "tasks": {
+        "count": 276,
+        "sha256": "2ee8a4e4601b2f24eae790c72fdf8113333178a4400da3758bc8815f5c360ad7"
+      }
+    },
+    "allFourCollectionsEqual": true,
+    "method": "SHA256 of ID-sorted full collection rows, canonical JSON",
+    "scope": "projects, sections, labels and tasks only; source Inbox is included in 24 provider projects and excluded from 23 destination projects; separate comment/user fingerprints were not captured"
+  },
+  "destinationComparison": {
+    "before": [
+      {
+        "entity": "tasks",
+        "count": 253,
+        "digest": "d48208c6d851e5d37e0ef9ee571cc8e7"
+      },
+      {
+        "entity": "projects",
+        "count": 23,
+        "digest": "1abf03bd9a0b8016b01454d1a30452ea"
+      },
+      {
+        "entity": "sections",
+        "count": 88,
+        "digest": "1c0e7f3665b8bda31f3fef6678008051"
+      },
+      {
+        "entity": "labels",
+        "count": 5,
+        "digest": "540104e08b78931943c339aae5aebc72"
+      },
+      {
+        "entity": "import_sources",
+        "count": 368,
+        "digest": "1d3adc8af1cd58f3e77566f163e932fc"
+      }
+    ],
+    "after": [
+      {
+        "entity": "tasks",
+        "count": 253,
+        "digest": "d48208c6d851e5d37e0ef9ee571cc8e7"
+      },
+      {
+        "entity": "projects",
+        "count": 23,
+        "digest": "1abf03bd9a0b8016b01454d1a30452ea"
+      },
+      {
+        "entity": "sections",
+        "count": 88,
+        "digest": "1c0e7f3665b8bda31f3fef6678008051"
+      },
+      {
+        "entity": "labels",
+        "count": 5,
+        "digest": "540104e08b78931943c339aae5aebc72"
+      },
+      {
+        "entity": "import_sources",
+        "count": 368,
+        "digest": "1d3adc8af1cd58f3e77566f163e932fc"
+      }
+    ],
+    "allFiveTablesEqual": true,
+    "method": "Postgres MD5 of full JSONB rows ordered by complete JSONB text",
+    "taskCountIncludesOneSyntheticMacHandoffTask": true,
+    "phoneCanonicalTasksProjectsSectionsLabelsEqualPreReplayMacCache": true,
+    "phonePendingChanges": 0
+  },
+  "validation": {
+    "iosBuildForTesting": "passed",
+    "macBuildForTesting": "passed",
+    "strictTeamAndSimulatorIdentitySigning": "passed"
+  },
+  "earlierAttempt": {
+    "resultBundle": "ios-real-provider-phone-v1.xcresult",
+    "outcome": "Failed before reaching importer; small edge drags stopped midway through the project list. Replaced test navigation with ordinary list swipes. No provider request occurred in this attempt."
+  },
+  "limitations": [
+    "This proves replay after the earlier native Mac first import, not a fresh first import on iOS or an actual lost-save-response recovery.",
+    "The refreshed imported-account Mac app is waiting for human Keychain approval at session read; native Mac return/edit receipt remains open.",
+    "No source private content, token, email, raw cache or private screenshots are included.",
+    "Full VoiceOver, physical APNs, other widget hosts and distribution acceptance remain open."
+  ],
+  "nativeImportedTaskReceipt": {
+    "resultBundle": "ios-real-provider-receipt-v2.xcresult",
+    "actualPassed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "macCreatedSyntheticTaskIDReceived": true,
+    "nativeEditorFullNotesExact": true,
+    "nativeEditorEstimateMinutes": 25,
+    "taskEdits": 0,
+    "secondaryOriginalAccountRestoredViaNativeSignInAndNormalRelaunch": true
+  },
+  "finalCacheProof": {
+    "originalPhoneAllCachedTablesEqualBaseline": true,
+    "originalMacAllCachedTablesEqualBaseline": true,
+    "originalPhonePending": 0,
+    "originalMacPending": 0,
+    "importedPhoneAllCachedTablesEqualMacBaseline": true,
+    "importedPhonePending": 0
+  },
+  "earlierReceiptAttempt": {
+    "resultBundle": "ios-real-provider-receipt-v1.xcresult",
+    "outcome": "The row-center tap hit its independent inline notes link and opened the in-app browser. Corrected the test to tap the task title for editing; no product change needed."
+  },
+  "storage": {
+    "freeGiBAtCheckpoint": 123,
+    "duplicateExportsBytesReclaimed": 100769906,
+    "allNativeResultBundlesRetained": true
+  }
+}

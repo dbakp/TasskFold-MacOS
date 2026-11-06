@@ -1,0 +1,11 @@
+{
+  "Taskfold/Core/ChildTaskRepair.swift": "d6ade1501bd925c295a13c7be05d8b0f1a3c8c7d9396070871e0c9410573a804",
+  "Taskfold/Views/ChildTaskRepairView.swift": "78990cbb25f7f3c87f28733505c0c8eb30baf8ac2e1e000a298ffea6cce7d6c1",
+  "Taskfold/ChildRepairNativeFixture.swift": "84cb233d5664f29723505e4d47ad604ce10efb7fc04568b2b96b5337b1da89b1",
+  "TaskfoldTests/ChildDuplicateHistoryTests.swift": "c9413dab843336d32b82459c004bd1f3ad83d6e4b48e1ffcbcc5ca6be5ab5f3a",
+  "TaskfoldTests/Fixtures/duplicate-history.json": "8aad8d3283d8631d496a44d698421ba7380fe2302c45c79ae33f85b47f5b4a27",
+  "Scripts/Database/test-child-repair-history-access.mjs": "211e1343687d5bf86c227b28f6ef26368daf9fee4bbd866e9107eaba3890f4fa",
+  "Scripts/Database/test-child-duplicate-history.mjs": "71c1d0cc3daea082ee991b9120bc8027d8e801baee5fd28174ff655c96f9b728",
+  "Scripts/Database/child-duplicate-history-cases.mjs": "777e328f9962a122a26b70bfa05c9ed03a7e329677f7c0c2311b8fb00062e08c",
+  "supabase/migrations/20261101071304_reviewed_duplicate_history_preservation.sql": "363e44c7ae5962e808889083c4c327236ad4cd0165a9c94d9ab04c394222a11c"
+}

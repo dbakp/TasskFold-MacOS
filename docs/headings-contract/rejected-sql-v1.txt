@@ -1,0 +1,22 @@
+Nested DML CTE was invalid in the test harness (0A000); fixed top-level statement executor.
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: direct Data API equivalent completion is blocked
++ actual - expected
+
++ '0A000'
+- '23514'
+    at check (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-task-headings.mjs:8:58)
+    at refused (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-task-headings.mjs:34:130)
+    at async file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-task-headings.mjs:45:2 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: '0A000',
+  expected: '23514',
+  operator: 'deepStrictEqual'
+}
+
+Node.js v20.19.0

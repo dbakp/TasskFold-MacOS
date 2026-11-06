@@ -1,0 +1,15 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO -collect-test-diagnostics never -resultBundlePath /tmp/taskfold-workflow-commit-mac-retry-final.xcresult "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries"
+Test Suite 'Selected tests' started at 2026-10-26 23:27:11.822.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 23:27:11.823.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-26 23:27:11.823.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' passed (15.860 seconds).
+Test Suite 'SharedHeadingNativeTests' passed at 2026-10-26 23:27:27.684.
+	 Executed 1 test, with 0 failures (0 unexpected) in 15.860 (15.861) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 23:27:27.687.
+	 Executed 1 test, with 0 failures (0 unexpected) in 15.860 (15.864) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 23:27:27.688.
+	 Executed 1 test, with 0 failures (0 unexpected) in 15.860 (15.865) seconds
+** TEST EXECUTE SUCCEEDED **
+Testing started

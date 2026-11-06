@@ -1,0 +1,70 @@
+{
+  "date": "2026-11-01",
+  "repository": "mac",
+  "scope": "Independent child-field full originals, explicit editor projection, immutable session source, exact refresh continuation and encrypted cold recovery",
+  "sourceSHA256": {
+    "Taskfold/Core/PreservingJSON.swift": "dcb23cf43766acbea3d76155683e9fc90c6749d75d0297e9dad21a43ef3f5718",
+    "Taskfold/Core/SubtaskTree.swift": "16333537788e27313aecb7bef73105d24bfe0b4fedcfae3fdfef78bf4c7aaa12",
+    "Taskfold/Core/Backups.swift": "f841e8e034ea4ea25d91d6a6b3e0aca2d2a347afc21afb69c589f23d8b9f34a8",
+    "Taskfold/Core/Store.swift": "a8819bafe52ae66e50f03440b8cdfcb6186a6a47721a25d4a1b99953380eef79",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "b63958bcf31d6515cc1cdadff59f8646bd1e0c501671c4db4917df840714096c",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "a04a0204112eaf271164f900cd0ce3fd356be42a6ec999feea1b029d53f1f826",
+    "TaskfoldTests/ExactChildFieldProjectionTests.swift": "c2dd618802347c96e01fbcc5d59c5d7929ce89f137dd645fe62396a8e51052c8"
+  },
+  "core": {
+    "passedTests": 328,
+    "failedTests": 0,
+    "newFocusedCases": 10,
+    "postExtensionGuardChecks": {
+      "passedTests": 10,
+      "failedTests": 0,
+      "logSHA256": "e25aa4b9fe55c479d3b3a789776761c685c4ec041b0761e6f3e903f524a34ddf"
+    },
+    "logSHA256": "68f02097394c543ff0b6a0016350690265d420372f0123c538b90e848538c816",
+    "filter": "ExactChildFieldProjectionTests|ChildTaskOpaqueReadTests|ChildTaskRecordReadTests|ChildTaskStructureReadTests|PreservingJSONTests|ChildTaskFieldCommandTests|BackupTests|ChildTaskStructureRecoveryTests"
+  },
+  "build": {
+    "phase": "exact-child-fields-ready",
+    "appAndRunnerSignaturesVerified": true,
+    "sourceProof": {
+      "Taskfold/Core/PreservingJSON.swift": {
+        "sourceSHA256": "dcb23cf43766acbea3d76155683e9fc90c6749d75d0297e9dad21a43ef3f5718",
+        "hostSHA256": "dcb23cf43766acbea3d76155683e9fc90c6749d75d0297e9dad21a43ef3f5718",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/SubtaskTree.swift": {
+        "sourceSHA256": "16333537788e27313aecb7bef73105d24bfe0b4fedcfae3fdfef78bf4c7aaa12",
+        "hostSHA256": "16333537788e27313aecb7bef73105d24bfe0b4fedcfae3fdfef78bf4c7aaa12",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/Backups.swift": {
+        "sourceSHA256": "f841e8e034ea4ea25d91d6a6b3e0aca2d2a347afc21afb69c589f23d8b9f34a8",
+        "hostSHA256": "493ba15f0b9c32d658dac6f25e7a375d137b2d5d593be20cd0b7855dccdc45d7",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/Store.swift": {
+        "sourceSHA256": "a8819bafe52ae66e50f03440b8cdfcb6186a6a47721a25d4a1b99953380eef79",
+        "hostSHA256": "5758ca4b6889be8786f405920c965802b96020925743770880bfdd09f0ad3156",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/ChildTaskStructurePresentation.swift": {
+        "sourceSHA256": "b63958bcf31d6515cc1cdadff59f8646bd1e0c501671c4db4917df840714096c",
+        "hostSHA256": "b63958bcf31d6515cc1cdadff59f8646bd1e0c501671c4db4917df840714096c",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Views/ChildTaskFieldViews.swift": {
+        "sourceSHA256": "a04a0204112eaf271164f900cd0ce3fd356be42a6ec999feea1b029d53f1f826",
+        "hostSHA256": "a04a0204112eaf271164f900cd0ce3fd356be42a6ec999feea1b029d53f1f826",
+        "matchesDocumentedIsolation": true
+      }
+    },
+    "appBinariesSHA256": {
+      "Contents/MacOS/Taskfold": "844acb382d45f5ef761542be67ac314deaedf4086f3446ea24d3f9ac2be111af",
+      "Contents/MacOS/Taskfold.debug.dylib": "3836e04bdaaf8643593bdc8446008181783c9a30863cb1b73b28d529e0ce7a1f"
+    }
+  },
+  "nativeRuntimeAcceptedForThisChange": false,
+  "hostedChanges": false,
+  "normalUseEnabled": false,
+  "remaining": "Full root/cache/index migration, complex history mapping, wider native acceptance and shared file/discussion custody remain open."
+}

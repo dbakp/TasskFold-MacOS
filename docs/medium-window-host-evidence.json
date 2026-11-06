@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-11",
+  "scope": "Installed medium A small window on isolated iPhone Simulator. Composed native installation/configuration and resumed privacy/completion/cleanup evidence. No new native Mac widget acceptance.",
+  "baseCommits": {
+    "TaskFold-iOS": "3045e1af116779a86c624fa4ea00cc9497bff579",
+    "TasskFold-MacOS": "e9e429f8fc092f77b8e8ef1a2a5bd359662cd2d2"
+  },
+  "productChanges": false,
+  "build": "medium-window-build-v3.log",
+  "signing": "medium-window-signing-v3.json",
+  "sourceHashes": {
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "55c62665e60ed6250fb493d7a07afa6055c70c208d644aeb9bf0afb976592dd2",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "7f66649bf55f788a67e66186cbde5a5d0333a5327cfdab511cd94966fa9caa3c",
+    "TaskFold-iOS/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+    "TasskFold-MacOS/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+    "ios-live-stage/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632"
+  },
+  "committedVersusTestedUITestWhitespaceOnly": true,
+  "finalNativeRun": {
+    "resultBundle": "medium-window-phone-v3.xcresult",
+    "testCase": "testResumeInstalledMediumSmallWindowPrivacyAndRefresh",
+    "summary": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    }
+  },
+  "accepted": [
+    "Initial v1 run captured five tasks through native UI and installed the actual medium widget beside the original note and Focus widgets. Configure 45 minutes, Client Work, All open tasks; screenshot shows future dates included.",
+    "Inspected initial layout shows matching 10/25/45-minute tasks, complete selected titles and 1 unestimated; unrelated Inbox task excluded. Terminated-app header opens Review launch notes.",
+    "Final v3 run reuses that exact installed fixture and verifies retained 45-minute/list/scope settings before each privacy change.",
+    "Native system configuration scroll reveals the fifth privacy row; toggle state changes to 1 then back to 0. Inspected private widget shows generic task/list names, all three estimates and 1 unestimated. Terminated-app widget still opens the expected first task.",
+    "Native completion removes only Review launch notes. Terminated-app header advances to Outline the next milestone; inspected editor retains tomorrow (12 October) and 25-minute estimate.",
+    "Inspected refreshed widget shows remaining 25/45-minute tasks and 1 unestimated, with restored Client Work names.",
+    "Only temporary medium widget removed. Original cloud Today task, full selected note and ended Focus routes pass; inspected Home shows the original two widgets."
+  ],
+  "dataPreservation": {
+    "fullOriginalCloudCacheParsedEqual": true,
+    "originalWidgetFieldsEqual": {
+      "account": true,
+      "focusSession": true,
+      "notes": true,
+      "pendingSync": true
+    },
+    "pendingSync": 0,
+    "localMode": false,
+    "widgetColdLaunchFixture": false,
+    "originalMacCloudCacheUnchanged": true,
+    "localTasks": 5,
+    "completedLocalTasks": [
+      "Review launch notes"
+    ],
+    "localPending": 0
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-medium-window-cleanup-host.png",
+      "sha256": "2afaecdcc831f739caebb6463c81f586ae1b9a55a55661f8037f3416faa674dc",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-window-config.png",
+      "sha256": "d00c4979942947bd92bc840204771e6d86270dd5b7f063e48cd52294fac5a57a",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-window-first-route.png",
+      "sha256": "f0ac3a260cc65ad779385879a27d11e93af65b42b07627b32dfb547bddab9cc8",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-window-future-route.png",
+      "sha256": "8ff85eb6b9abe9a4d64ec7a5656cff512cab76f31707466691fc7ce0da112a42",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-window-private.png",
+      "sha256": "bdf60c6daa07013b3752bc205e5861cd5b593b10ce4f67806210f84cfbfd88bf",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-window-three.png",
+      "sha256": "0f659c6600de05947c58e39afbe1a3e6c4c504b5eae1a0d2d6f7b74cb29d1a93",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-window-two.png",
+      "sha256": "3bf9a65999c756e722a3706e8d3a6adae352b038d21ce0c0327174e29e9d13e9",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-window-visible-privacy.png",
+      "sha256": "6d7f1f359a0d0e58f521ae97a7be303d82125eb73911abcc4b6f42aead24a98d",
+      "inspected": true
+    }
+  ],
+  "diagnostics": [
+    "Initial v1 fails at privacy: coordinate tap used a configuration switch below the initial viewport; card dismissed and switch query vanished. Native failure retained; installation/configuration/initial-route evidence is scoped to the steps before failure.",
+    "v2 reveals the switch by scrolling, then native Switch.tap targets its full-width row center; value remains 0 and expectation times out. Screenshot and switch hierarchy retained in native failure bundle. v3 targets the visible right-hand toggle after scrolling and asserts its value before continuing.",
+    "Final v3 has six 60-second SpringBoard animation-notification waits and repeated ignored stale remote-element hierarchy diagnostics. Summary reports no runtime warnings. No job restarted due to these waits.",
+    "Final committed UITest differs from compiled stage only in three lines of indentation; whitespace-token equality verified. No production app/widget code changed."
+  ],
+  "storageCleanup": {
+    "allocatedBytesRemoved": 312573952,
+    "proof": "medium-window-pruned-manifest.json",
+    "retained": "All three native result bundles, build/test/signing logs, summaries and final PNG exports."
+  },
+  "remaining": "Other named widget sizes/conditions and Mac hosts, current accessibility/VoiceOver/keyboard gaps, native Mac account/restore/ordering flows, real Todoist/provider calendars/files and remote-delivery/distribution acceptance remain open."
+}

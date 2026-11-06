@@ -1,0 +1,4 @@
+/tmp/taskfold-owner-review-mac-host/Taskfold/ChildFieldNativeFixture.swift:507:85: warning: result of call to 'enqueue(_:lease:)' is unused [#NoUsage]
+    |                                                                                     `- warning: result of call to 'enqueue(_:lease:)' is unused [#NoUsage]
+2026-10-31 03:41:43.111 appintentsmetadataprocessor[76239:34933470] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+** TEST BUILD SUCCEEDED **

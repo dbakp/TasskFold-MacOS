@@ -1,0 +1,10 @@
+{
+  "taskfold-calendar-ios-accepted-build.log": {
+    "sha256": "652e530715ea84bcc7c057f4054b01465c55b4ffc3cc8af5e71a016c4b9f71c1",
+    "success": true
+  },
+  "taskfold-calendar-mac-accepted-build.log": {
+    "sha256": "bc351a7d74e27c6840dc25ecc6b8cbcac1c595191ba83d6e694b05b94c7a80fe",
+    "success": true
+  }
+}

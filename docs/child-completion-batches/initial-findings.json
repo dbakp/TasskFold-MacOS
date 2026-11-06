@@ -1,0 +1,100 @@
+{
+  "databaseFindings": [
+    {
+      "phase": "v1",
+      "finding": "Fixture used a non-existent team grant table",
+      "fix": "Use actual team_project_grants; no production change"
+    },
+    {
+      "phase": "v2",
+      "finding": "PL/pgSQL array names collided with relation names",
+      "fix": "Use unambiguous batch_project_ids and batch_team_ids"
+    },
+    {
+      "phase": "v3",
+      "finding": "Expired-session test expected 42501; live-actor validation correctly returned 28000",
+      "fix": "Correct fixture expectation"
+    },
+    {
+      "phase": "v5",
+      "finding": "Oversized request test exceeded Docker argument-size limit before reaching PostgreSQL",
+      "fix": "Construct oversized test body inside PostgreSQL"
+    }
+  ],
+  "coreFinding": {
+    "phase": "mac-v1",
+    "finding": "Uppercase task UUID test threw during existing component construction before reaching the intended group assertion",
+    "fix": "Assert that early rejection, then test a separate valid component with duplicated target",
+    "productionChange": false
+  },
+  "originalDatabaseResults": {
+    "mac-v1": {
+      "passed": false,
+      "stage": "owned schema and advisors",
+      "error": {
+        "name": "Error",
+        "code": "42P01",
+        "message": "Owned PostgreSQL query failed"
+      },
+      "schemaDiagnostic": {
+        "code": null,
+        "reason": null,
+        "context": null
+      },
+      "containerRemoved": true,
+      "candidateSHA256": "5e62436ae581c531a03260bdbb533dfefadbc9d308f50a0b55a10a32bee4f0b3",
+      "completedChecks": 0
+    },
+    "mac-v2": {
+      "passed": false,
+      "stage": "atomic completion and original identity",
+      "error": {
+        "name": "AssertionError",
+        "code": "ERR_ASSERTION",
+        "message": "personal and Inbox batch applies\n\n'42702' !== null\n"
+      },
+      "schemaDiagnostic": {
+        "code": null,
+        "reason": null,
+        "context": null
+      },
+      "containerRemoved": true,
+      "candidateSHA256": "5e62436ae581c531a03260bdbb533dfefadbc9d308f50a0b55a10a32bee4f0b3",
+      "completedChecks": 7
+    },
+    "mac-v3": {
+      "passed": false,
+      "stage": "rollback including an earlier successful item",
+      "error": {
+        "name": "AssertionError",
+        "code": "ERR_ASSERTION",
+        "message": "expired live session refuses\n+ actual - expected\n\n+ '28000'\n- '42501'"
+      },
+      "schemaDiagnostic": {
+        "code": null,
+        "reason": null,
+        "context": null
+      },
+      "containerRemoved": true,
+      "candidateSHA256": "063b4901502904bef627d5845e1b516aad8bda4b65d53566669e243b17910192",
+      "completedChecks": 61
+    },
+    "mac-v5": {
+      "passed": false,
+      "stage": "concurrent reversed selections and recipient/project locks",
+      "error": {
+        "name": "Error",
+        "code": 255,
+        "message": "Owned PostgreSQL query failed"
+      },
+      "schemaDiagnostic": {
+        "code": null,
+        "reason": null,
+        "context": null
+      },
+      "containerRemoved": true,
+      "candidateSHA256": "972400d1864983e2cb10f92766094547c31bb406853236fcb44eb4fbbfbf8793",
+      "completedChecks": 123
+    }
+  }
+}

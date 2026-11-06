@@ -65,16 +65,34 @@ struct Confirmation: Equatable {
     var id = UUID()
     var message: String
     var undoable = true
+    var historyRequest: EditHistoryRequest?
+    var childCompletion: ChildTaskListCompletionUndo? = nil
+    var childCompletionReview = false
+    var mixedGroup: MixedTaskListUndo? = nil
+    var mixedGroupReview = false
+    var childGroup: ChildTaskListBatchUndo? = nil
+    var childGroupReview = false
 }
 
 /// Window-level state shared by the sidebar, the list, the inspector, and the menu bar commands.
 @MainActor @Observable
 final class Workspace {
+    var teamTaskMove: TeamTaskMoveRequest?
+    var teamTaskCompletion: TeamTaskCompletionRequest?
+    var teamTaskDeletion: TeamTaskDeletionRequest?
+    var teamTaskPlanning: TeamTaskPlanningRequest?
+    var bulkPlanning: BulkTaskPlanningRequest?
+    var bulkAssignment: BulkTaskAssignmentRequest?
+    var bulkLabels: BulkTaskLabelsRequest?
     let store: Store
+    #if DEBUG
+    @ObservationIgnored var fixturePrepared = false
+    #endif
     var section: SidebarItem {
         didSet {
             UserDefaults.standard.set(section.key, forKey: "macSection")
             guard section != oldValue else { return }
+            quickAddPresentation.cancel()
             finderTaskID = nil
             navigationSubtitle = ""
             recentDestinations.removeAll { $0 == section }
@@ -97,6 +115,8 @@ final class Workspace {
     var rosterCache = MemberCache()
     var rosterAccount = ""
     var search = ""
+    var teamTaskCreationText = ""
+    var teamTaskCreation: TaskEditorOpening?
     var quickAdd = ""
     private struct NavigationMemory {
         var selection = Set<String>()
@@ -141,7 +161,17 @@ final class Workspace {
     var searchPresented = false
     var inspectorShown: Bool { didSet { UserDefaults.standard.set(inspectorShown, forKey: "inspectorShown") } }
     /// Bumping these asks the matching text field to take focus.
-    var quickAddFocusRequest = 0
+    private var quickAddPresentation = CapturePresentationQueue()
+    var quickAddFocusRequest = 0 {
+        didSet {
+            quickAddPresentation.request(destination: section.key,
+                workspace: WorkspaceBinding(account: store.signedIn ? store.userID : "", generation: store.workspaceGeneration))
+        }
+    }
+    func consumeQuickAddRequest(destination: String) -> Bool {
+        guard store.signedIn else { quickAddPresentation.cancel(); return false }
+        return quickAddPresentation.take(destination: destination, account: store.userID, generation: store.workspaceGeneration)
+    }
     var titleFocusRequest = 0
     var newProjectRequest = 0
     /// Presents the planning sheet for a day or a week.
@@ -169,6 +199,7 @@ final class Workspace {
     }
 
     func clearNavigationMemory() {
+        quickAddPresentation.cancel()
         expandedTasks.removeAll()
         projectMembers.removeAll()
         rosterAccount = ""
@@ -225,6 +256,27 @@ final class Workspace {
     var primaryTask: Record? { actionSelection.count == 1 ? actionSelection.first.flatMap { taskRecord($0) } : nil }
     var selectedTasks: [Record] { actionSelection.compactMap { taskRecord($0) } }
     var scope: TaskScope { section.scope ?? .today }
+    var hierarchyFilter: Bool {
+        guard case .saved(let id) = scope, let view = store.record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]) else { return false }
+        return rule.usesTaskHierarchy
+    }
+    var hierarchyPresentation: Bool { scope.usesProductiveWork || hierarchyFilter }
+    @discardableResult
+    func runSelection(_ tasks: [Record], name: String, action: (Record) -> TaskSelectionPlan.Action) -> Bool {
+        guard !tasks.isEmpty else { return false }
+        var saved = false
+        run(name) {
+            do { saved = try withAnimation(layout) { try store.commitSelection(tasks, action: action) } }
+            catch { store.error = error.localizedDescription }
+        }
+        return saved
+    }
+    @discardableResult
+    func runSelection(_ ids: Set<String>, name: String, action: (Record) -> TaskSelectionPlan.Action) -> Bool {
+        do { return runSelection(try ids.sorted().map { try store.selectionRecord($0) }, name: name, action: action) }
+        catch { store.error = error.localizedDescription; return false }
+    }
+
 
     // MARK: Undo bridging
 
@@ -235,6 +287,7 @@ final class Workspace {
         if store.undoStack.last?.redo.map(\.id) != previous { register(name) }
     }
     private func register(_ name: String) {
+        childCompletionUndoID = nil; childGroupUndoID = nil; mixedGroupUndoID = nil
         guard let undoManager else { return }
         undoManager.setActionName(name)
         undoManager.registerUndo(withTarget: self) { workspace in
@@ -246,18 +299,161 @@ final class Workspace {
     }
 
     func confirm(_ message: String, undoable: Bool = true) {
+        childCompletionUndoID = nil; childGroupUndoID = nil; mixedGroupUndoID = nil
         confirmationTimer?.cancel()
-        withAnimation(layout) { confirmation = Confirmation(message: message, undoable: undoable) }
+        withAnimation(layout) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil) }
         confirmationTimer = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(4))
+            #if DEBUG
+            let delay = ChildFieldNativeIdentity.mainListTesting && ProcessInfo.processInfo.arguments.contains("--child-fields-list-completion") ? 90.0 : 4.0
+            #else
+            let delay = 4.0
+            #endif
+            try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled, let self else { return }
             withAnimation(self.layout) { self.confirmation = nil }
         }
     }
-    func undoFromConfirmation() {
-        confirmationTimer?.cancel()
-        withAnimation(layout) { confirmation = nil }
-        undoManager?.undo()
+    func undoFromConfirmation(_ request: EditHistoryRequest, confirmationID: UUID) {
+        guard confirmation?.id == confirmationID, store.canApplyHistory(request), let manager = undoManager, manager.canUndo else { return }
+        manager.undo()
+        guard store.redoStack.last?.id == request.entry else { return }
+        confirmationTimer?.cancel(); withAnimation(layout) { confirmation = nil }
+    }
+
+    var childGroupReview = false
+    private var childGroupUndoID: String?
+    var childCompletionReview = false
+    private var childCompletionUndoID: String?
+    func clearChildCompletion() {
+        childGroupUndoID = nil; childGroupReview = false; mixedGroupUndoID = nil; mixedGroupReview = false
+        childCompletionUndoID = nil; childCompletionReview = false
+        if confirmation?.mixedGroup != nil || confirmation?.mixedGroupReview == true || confirmation?.childCompletion != nil || confirmation?.childCompletionReview == true || confirmation?.childGroup != nil || confirmation?.childGroupReview == true { confirmationTimer?.cancel(); confirmation = nil }
+    }
+    func reviewChildCompletion() {
+        confirmationTimer?.cancel(); confirmation = nil; childCompletionReview = true
+    }
+    func canUndoChildCompletion(_ token: ChildTaskListCompletionUndo) -> Bool {
+        childCompletionUndoID == token.command.id && store.canUndoChildListCompletion(token)
+    }
+    private func showChildCompletion(_ result: ChildTaskListCompletionResult) {
+        confirm(result.message, undoable: false)
+        confirmation?.childCompletion = result.undo
+        confirmation?.childCompletionReview = result.needsReview
+        guard let token = result.undo, let manager = undoManager else { return }
+        childCompletionUndoID = token.command.id
+        manager.registerUndo(withTarget: self) { workspace in
+            guard workspace.canUndoChildCompletion(token) else { return }
+            workspace.childCompletionUndoID = nil
+            Task { [weak workspace] in
+                guard let workspace, let result = await workspace.store.undoChildFromList(token) else { return }
+                workspace.showChildCompletion(result)
+            }
+        }
+        manager.setActionName(token.command.body["action"] == .string("complete") ? "Complete Subtask" : "Reopen Subtask")
+    }
+    func undoChildCompletion(_ token: ChildTaskListCompletionUndo) {
+        guard canUndoChildCompletion(token), let manager = undoManager, manager.canUndo else { return }
+        manager.undo()
+    }
+    func reviewChildGroup() { confirmationTimer?.cancel(); confirmation = nil; childGroupReview = true }
+    func canUndoChildGroup(_ token: ChildTaskListBatchUndo) -> Bool { childGroupUndoID == token.command.id && store.canUndoChildListBatch(token) }
+    private func showChildGroup(_ result: ChildTaskListBatchResult) {
+        confirm(result.message, undoable: false); confirmation?.childGroup = result.undo; confirmation?.childGroupReview = result.needsReview
+        guard let token = result.undo, let manager = undoManager else { return }; childGroupUndoID = token.command.id
+        manager.registerUndo(withTarget: self) { workspace in
+            guard workspace.canUndoChildGroup(token) else { return }; workspace.childGroupUndoID = nil
+            Task { [weak workspace] in
+                guard let workspace, let result = await workspace.store.undoChildBatchFromList(token) else { return }; workspace.showChildGroup(result)
+            }
+        }
+        manager.setActionName(token.command.items[0].body["action"] == .string("complete") ? "Complete Subtasks" : "Reopen Subtasks")
+    }
+    func undoChildGroup(_ token: ChildTaskListBatchUndo) { guard canUndoChildGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
+    var mixedGroupReview = false
+    private var mixedGroupUndoID: String?
+    private(set) var completionHistory: ConfirmedHistoryBridge?
+    func reviewMixedGroup() { confirmationTimer?.cancel(); confirmation = nil; mixedGroupReview = true }
+    func canUndoMixedGroup(_ token: MixedTaskListUndo) -> Bool { mixedGroupUndoID == token.command.id && completionHistory?.canUndo == true && store.canUndoMixedFromList(token) }
+    private func showMixedGroup(_ result: MixedTaskListResult) {
+        confirm(result.message, undoable: false); confirmation?.mixedGroup = result.undo; confirmation?.mixedGroupReview = result.needsReview
+        guard let token = result.undo, let manager = undoManager else { return }; mixedGroupUndoID = token.command.id
+        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
+        completionHistory?.record(store.mixedHistoryStep(token) { [weak self] value in
+            guard let self else { return }
+            self.confirm(value.message, undoable: false)
+            self.confirmation?.mixedGroupReview = value.needsReview
+        })
+    }
+    func rememberReviewedTaskSteps(_ entry: ReviewedTaskStepsState.Entry, scope: ChildTaskFieldClientScope) {
+        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
+        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
+        guard let history = completionHistory, !history.contains(key: entry.command.id) else { return }
+        let step = store.reviewedTaskStepsHistoryStep(entry, scope: scope) { [weak self] notice in self?.confirm(notice.message, undoable: false) }
+        if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, history.acceptConfirmedInverse(of: parent, next: step) { return }
+        history.record(step)
+    }
+    func rememberChildStructure(_ entry: ChildTaskStructureJournalState.Entry, scope: ChildTaskFieldClientScope) {
+        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
+        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
+        guard let history = completionHistory, !history.contains(key: entry.command.id) else { return }
+        let step = store.childStructureHistoryStep(entry, scope: scope) { [weak self] notice in self?.confirm(notice.message, undoable: false) }
+        if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, history.acceptConfirmedInverse(of: parent, next: step) { return }
+        history.record(step)
+    }
+    func invokeChildFieldHistory(_ entry: ChildTaskFieldJournalState.Entry) -> Bool {
+        if completionHistory?.canUndo(key: entry.command.id) == true { completionHistory?.undo(); return true }
+        if completionHistory?.canRedo(key: entry.command.id) == true { completionHistory?.redo(); return true }
+        return false
+    }
+    func rememberChildField(_ entry: ChildTaskFieldJournalState.Entry, scope: ChildTaskFieldClientScope) {
+        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
+        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
+        guard completionHistory?.contains(key: entry.command.id) != true else { return }
+        completionHistory?.record(store.childFieldHistoryStep(entry, scope: scope) { [weak self] notice in self?.confirm(notice.message, undoable: false) })
+    }
+    func invokeChildTransferHistory(_ entry: ChildTaskTransferState.Entry) -> Bool {
+        if completionHistory?.canUndo(key: entry.command.id) == true { completionHistory?.undo(); return true }
+        if completionHistory?.canRedo(key: entry.command.id) == true { completionHistory?.redo(); return true }
+        return false
+    }
+    func rememberChildTransfer(_ entry: ChildTaskTransferState.Entry, scope: ChildTaskFieldClientScope) {
+        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
+        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
+        guard completionHistory?.contains(key: entry.command.id) != true else { return }
+        completionHistory?.record(store.childTransferHistoryStep(entry, scope: scope) { [weak self] notice in
+            self?.confirm(notice.message, undoable: false)
+        })
+    }
+    func undoMixedGroup(_ token: MixedTaskListUndo) { guard canUndoMixedGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
+    private func completeMixedGroup(_ tasks: [Record]) {
+        do {
+            let intent = try store.captureMixedListCompletion(tasks, completed: tasks.contains { !$0.completed })
+            Task { [weak self] in
+                guard let self, let result = await self.store.completeMixedFromList(intent) else { return }
+                if result.undo != nil { self.selection.subtract(tasks.map(\.id)); Feedback.complete() }
+                self.showMixedGroup(result)
+            }
+        } catch { store.error = error.localizedDescription }
+    }
+    private func completeIndependentGroup(_ tasks: [Record]) {
+        do {
+            let intent = try store.captureChildListBatch(tasks, completed: tasks.contains { !$0.completed })
+            Task { [weak self] in
+                guard let self, let result = await self.store.completeChildBatchFromList(intent) else { return }
+                if result.undo != nil { self.selection.subtract(tasks.map(\.id)); Feedback.complete() }
+                self.showChildGroup(result)
+            }
+        } catch { store.error = error.localizedDescription }
+    }
+    private func completeIndependentChild(_ task: Record) {
+        do {
+            let intent = try store.captureChildListCompletion(task)
+            Task { [weak self] in
+                guard let self, let result = await self.store.completeChildFromList(intent) else { return }
+                if result.undo != nil { self.selection.remove(task.id); if !intent.completed { Feedback.complete() } }
+                self.showChildCompletion(result)
+            }
+        } catch { store.error = error.localizedDescription }
     }
 
     // MARK: Task actions
@@ -269,32 +465,98 @@ final class Workspace {
         titleFocusRequest += 1
     }
 
-    /// Completing keeps the row for a moment so the check animation reads, then lets the list settle.
+    /// External links need a list context that agrees with the task being inspected.
+    func openExternalTask(_ id: String) {
+        guard let task = try? store.selectionRecord(id), let containing = WidgetRecordLink.containingTask(task, roots: store.activeTasks) else { return }
+        if let path = Self.subtaskPath(id) {
+            expandedTasks.insert(path[0])
+            if path.count > 2 {
+                for end in 2..<path.count { expandedTasks.insert("subtask:" + (try! TaskfoldJSONEncoder().encode(Array(path.prefix(end)))).base64EncodedString()) }
+            }
+        }
+        let project = task.string("project_id")
+        if containing.completed { section = .completed }
+        else if !project.isEmpty, store.record("projects", id: project) != nil { section = .project(project) }
+        else { section = .inbox }
+        search = ""
+        open(id)
+    }
+
+    /// Persist completion before returning from the action, including an immediate app exit.
     func complete(_ task: Record) {
+        guard TaskKind.mayComplete(task) else { store.error = "Headings stay open. Open the heading to edit its details."; return }
+        if store.childTaskCompletionEnabled, Self.subtaskPath(task.id) != nil { completeIndependentChild(task); return }
+        if Self.subtaskPath(task.id) == nil, store.hasSharedTaskSelection([task.id]) {
+            var saved = false
+            run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { saved = store.toggleNativeTask(task) } }
+            guard saved else { return }
+            completing.remove(task.id)
+            if !task.completed { Feedback.complete() }
+            confirm(task.completed ? "Reopened “\(task.title)”" : "Completed “\(task.title)”")
+            return
+        }
+        if hierarchyPresentation {
+            let now = Date()
+            guard runSelection([task], name: task.completed ? "Reopen Task" : "Complete Task", action: { _ in .completion(!task.completed, now) }) else { return }
+            if !task.completed { Feedback.complete() }
+            confirm(task.completed ? "Reopened “\(task.title)”" : "Completed “\(task.title)”")
+            return
+        }
         if Self.subtaskPath(task.id) != nil {
             var changed = task
             changed["completed"] = .bool(!task.completed)
             changed["completed_at"] = task.completed ? .null : .string(Dates.timestamp())
-            _ = save("tasks", changed, name: task.completed ? "Reopen Subtask" : "Complete Subtask")
+            guard save("tasks", changed, name: task.completed ? "Reopen Subtask" : "Complete Subtask") else { return }
             if !task.completed { Feedback.complete() }
             return
         }
-        if task.completed || completing.contains(task.id) {
-            completing.remove(task.id)
-            run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { store.toggle(task) } }
-            if !task.completed { Feedback.complete(); confirm("Completed “\(task.title)”") }
-            return
+        completing.remove(task.id)
+        var saved = false
+        run(task.completed ? "Reopen Task" : "Complete Task") {
+            withAnimation(layout) { saved = store.commit(store.toggleChanges(task)) }
         }
-        withAnimation(Motion.respecting(reduceMotion, Motion.quick)) { _ = completing.insert(task.id) }
-        Feedback.complete()
-        confirm("Completed “\(task.title)”")
-        Task {
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 200 : 420))
-            guard completing.contains(task.id), let current = taskRecord(task.id), !current.completed else { completing.remove(task.id); return }
-            run("Complete Task") { withAnimation(layout) { store.toggle(current); completing.remove(task.id) } }
-        }
+        guard saved else { return }
+        if !task.completed { Feedback.complete(); confirm("Completed “\(task.title)”") }
     }
     func toggle(_ ids: Set<String>) {
+        if store.childTaskCompletionEnabled, ids.contains(where: { Self.subtaskPath($0) != nil }) {
+            if ids.count == 1, let id = ids.first, let task = taskRecord(id) { complete(task); return }
+            guard store.childTaskCompletionBatchesEnabled else { store.error = "Bulk subtask completion is not available yet."; return }
+            do {
+                let tasks = try ids.sorted().map { try store.selectionRecord($0) }
+                if tasks.contains(where: { Self.subtaskPath($0.id) == nil }) {
+                    guard store.mixedTaskCompletionEnabled else { throw MixedTaskCompletionCommand.invalid }
+                    completeMixedGroup(tasks)
+                } else { completeIndependentGroup(tasks) }
+            } catch { store.error = error.localizedDescription }
+            return
+        }
+        guard ids.allSatisfy({ id in taskRecord(id).map(TaskKind.mayComplete) == true }) else {
+            store.error = "Headings stay open. Select tasks to complete."; return
+        }
+        if ids.count > 1, store.hasSharedTaskSelection(ids) {
+            do {
+                guard !ids.contains(where: { Self.subtaskPath($0) != nil }) else { throw TeamTaskBatch.invalid }
+                let captured = try store.captureTeamTaskCompletionSelection(ids.sorted().map { try store.selectionRecord($0) })
+                teamTaskCompletion = TeamTaskCompletionRequest(selection: captured, perform: { [weak self] in
+                    guard let self else { return false }; var saved = false
+                    self.run("Complete Shared Tasks") { saved = self.store.saveTeamTaskCompletionSelection(captured) }; return saved
+                }, completed: { [weak self] in
+                    self?.teamTaskCompletion = nil; self?.selection.subtract(ids); Feedback.complete()
+                    self?.confirm("Completed \(captured.completingCount) tasks")
+                })
+            } catch { store.error = error.localizedDescription }
+            return
+        }
+        if hierarchyPresentation {
+            do {
+                let tasks = try ids.sorted().map { try store.selectionRecord($0) }, now = Date()
+                let completed = tasks.contains { !$0.completed }
+                guard runSelection(tasks, name: completed ? "Complete Tasks" : "Reopen Tasks", action: { _ in .completion(completed, now) }) else { return }
+                Feedback.complete(); confirm(completed ? "Completed selected tasks" : "Reopened selected tasks")
+            } catch { store.error = error.localizedDescription }
+            return
+        }
         if ids.contains(where: { Self.subtaskPath($0) != nil }) {
             let tasks = ids.compactMap { taskRecord($0) }
             let complete = tasks.contains { !$0.completed }
@@ -311,6 +573,53 @@ final class Workspace {
         confirm(open.isEmpty ? "Reopened \(items.count) tasks" : "Completed \(items.count) tasks")
     }
     func delete(_ ids: Set<String>) {
+        let requested = ids.compactMap { taskRecord($0) }
+        let shared = ids.contains { id in
+            let rootID = Self.subtaskPath(id)?.first ?? id
+            let root = store.record("tasks", id: rootID)
+            return store.nativeConversationTeamCache?.knownTasks.contains(rootID) == true || root.map { store.nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
+        }
+        if shared, requested.count != ids.count { store.error = TeamTaskBatch.conflict.localizedDescription; return }
+        if shared, ids.count > 1 || ids.contains(where: { Self.subtaskPath($0) != nil }) {
+            do {
+                guard requested.count == ids.count, !ids.contains(where: { Self.subtaskPath($0) != nil }) else { throw TeamTaskBatch.invalid }
+                let captured = try store.captureTeamTaskDeletionSelection(requested)
+                teamTaskDeletion = TeamTaskDeletionRequest(selection: captured, current: { [weak self] in self.map { captured.drafts[0].workspace.matches(account: $0.store.userID, generation: $0.store.workspaceGeneration) } ?? false }, perform: { [weak self] audioReviews in
+                    guard let self else { return false }; var saved = false
+                    self.run("Delete Shared Tasks") { saved = self.store.deleteTeamTaskSelection(captured, audioReviews: audioReviews) }
+                    return saved
+                }, completed: { [weak self] in
+                    guard let self else { return }
+                    self.teamTaskDeletion = nil; self.selection.subtract(ids)
+                    if let id = self.finderTaskID, ids.contains(id) { self.finderTaskID = nil }
+                    self.confirm("Deleted \(captured.drafts.count) tasks")
+                })
+            } catch { store.error = error.localizedDescription }
+            return
+        }
+        if ids.count == 1, let id = ids.first, Self.subtaskPath(id) == nil, let task = store.record("tasks", id: id),
+           (store.nativeConversationTeamCache?.knownTasks.contains(id) == true || store.nativeConversationTeamCache?.knownTeams[task.string("project_id")] != nil) {
+            do {
+                let captured = try store.captureTeamTaskEditor(task)
+                teamTaskDeletion = TeamTaskDeletionRequest(draft: captured, current: { [weak self] in self.map { captured.workspace.matches(account: $0.store.userID, generation: $0.store.workspaceGeneration) } ?? false }, perform: { [weak self] requestID, audioReviews in
+                    guard let self else { return false }
+                    var saved = false
+                    self.run("Delete Shared Task") { saved = self.store.deleteTeamTaskEditor(captured, requestID: requestID, audioReviews: audioReviews) }
+                    return saved
+                }, completed: { [weak self] in
+                    guard let self else { return }
+                    self.teamTaskDeletion = nil; self.selection.remove(id)
+                    if self.finderTaskID == id { self.finderTaskID = nil }
+                    self.confirm("Deleted “\(captured.source.title)”")
+                })
+            } catch { store.error = error.localizedDescription }
+            return
+        }
+        if hierarchyPresentation {
+            guard runSelection(ids, name: "Delete Selected Branches", action: { _ in .delete }) else { return }
+            selection.subtract(ids); if let id = finderTaskID, ids.contains(id) { finderTaskID = nil }
+            confirm("Deleted selected branches"); return
+        }
         let nested = ids.filter { Self.subtaskPath($0) != nil }
         if !nested.isEmpty {
             var roots: [String: Record] = [:]
@@ -319,7 +628,9 @@ final class Workspace {
                 roots[root.id] = updated
             }
             let changes = roots.values.map { Mutation(table: "tasks", recordID: $0.id, method: "PATCH", fields: ["subtasks": $0["subtasks"]]) }
-            run("Delete Subtasks") { _ = store.commit(changes) }
+            var saved = false
+            run("Delete Subtasks") { saved = store.commit(changes) }
+            guard saved else { return }
             selection.subtract(nested)
             delete(ids.subtracting(nested))
             return
@@ -327,12 +638,39 @@ final class Workspace {
         let existing = ids.filter { taskRecord($0) != nil }
         guard !existing.isEmpty else { return }
         let title = existing.count == 1 ? store.record("tasks", id: existing.first!)?.title ?? "" : ""
-        run(existing.count == 1 ? "Delete Task" : "Delete Tasks") { withAnimation(layout) { store.removeAll(Array(existing)) } }
+        var saved = false
+        run(existing.count == 1 ? "Delete Task" : "Delete Tasks") { withAnimation(layout) { saved = store.commit(existing.map { Mutation(table: "tasks", recordID: $0, method: "DELETE", fields: [:]) }) } }
+        guard saved else { return }
         selection.subtract(existing)
         if let id = finderTaskID, existing.contains(id) { finderTaskID = nil }
         confirm(existing.count == 1 ? "Deleted “\(title)”" : "Deleted \(existing.count) tasks")
     }
+    /// Return true when a shared selection was handled (including a safe refusal).
+    private func reviewSharedPlanning(_ ids: Set<String>, title: String, fields: (Record) -> [String: JSON]) -> Bool {
+        let shared = ids.contains { id in
+            let root = Self.subtaskPath(id)?.first ?? id
+            return store.nativeConversationTeamCache?.knownTasks.contains(root) == true || store.record("tasks", id: root).map { store.nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
+        }
+        guard shared else { return false }
+        do {
+            let records = ids.sorted().compactMap { store.record("tasks", id: $0) }
+            guard records.count == ids.count, !ids.contains(where: { Self.subtaskPath($0) != nil }) else { throw TeamTaskBatch.invalid }
+            let captured = try store.captureTeamTaskPlanningSelection(records, changes: Dictionary(uniqueKeysWithValues: records.map { ($0.id, fields($0)) }))
+            teamTaskPlanning = TeamTaskPlanningRequest(selection: captured, title: title, perform: { [weak self] in
+                guard let self else { return false }; var saved = false
+                self.run("Edit Shared Tasks") { saved = self.store.saveTeamTaskPlanningSelection(captured) }; return saved
+            }, completed: { [weak self] in
+                self?.teamTaskPlanning = nil; self?.selection.subtract(ids); self?.confirm("Shared task changes saved")
+            })
+        } catch { store.error = error.localizedDescription }
+        return true
+    }
     func reschedule(_ ids: Set<String>, to day: String?, label: String) {
+        if reviewSharedPlanning(ids, title: day == nil ? "Remove dates" : "Move to \(label)", fields: { TeamTaskBatch.dateFields(task: $0, day: day) }) { return }
+        if hierarchyPresentation {
+            guard runSelection(ids, name: "Reschedule", action: { task in .patch(day.map { TaskPlanner.dayFields(task: task, day: $0) } ?? ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null]) }) else { return }
+            Feedback.drop(); confirm(day == nil ? "Removed dates" : "Moved to \(label)"); return
+        }
         let changes = ids.compactMap { taskRecord($0) }.map { task in
             Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: day.map { TaskPlanner.dayFields(task: task, day: $0) } ?? ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null])
         }.filter { !$0.fields.isEmpty }
@@ -341,13 +679,76 @@ final class Workspace {
         confirm(day == nil ? "Removed dates" : ids.count == 1 ? "Moved to \(label)" : "Moved \(ids.count) tasks to \(label)")
     }
     func move(_ ids: Set<String>, toProject project: String) {
-        withAnimation(layout) { updateTasks(ids, fields: ["project_id": project.isEmpty ? .null : .string(project), "section_id": .null], name: "Move to Project") }
+        let shared = ids.contains { id in store.nativeConversationTeamCache?.knownTasks.contains(id) == true || store.record("tasks", id: id).map { store.nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true }
+        if shared {
+            do {
+                guard ids.count == 1, let id = ids.first, Self.subtaskPath(id) == nil, let task = store.record("tasks", id: id) else { throw AppFailure(message: "Move one shared parent task at a time. Your selection is unchanged.") }
+                let captured = try store.captureTeamTaskEditor(task), admission = try TeamTaskMoveAdmission(captured)
+                _ = try store.teamTaskMoveScope(admission, destination: project)
+                teamTaskMove = TeamTaskMoveRequest(draft: captured, destination: project, completed: { [weak self] in self?.selection.remove(id); self?.confirm("Shared task move confirmed", undoable: false) })
+            } catch { store.error = error.localizedDescription }; return
+        }
+        guard withAnimation(layout, { updateTasks(ids, fields: ["project_id": project.isEmpty ? .null : .string(project), "section_id": .null], name: "Move to Project") }) else { return }
         Feedback.drop()
         confirm("Moved to \(project.isEmpty ? "Inbox" : store.record("projects", id: project)?.name ?? "project")")
     }
-    func editDeadlines(_ ids: Set<String>) { deadlineSelection = DeadlineSelection(account: store.userID, ids: ids) }
+    func editSharedLabels(_ ids: Set<String>) {
+        do {
+            let captured = try store.captureTeamTaskPlanningAdmission(ids.sorted().map { try store.selectionRecord($0) })
+            bulkLabels = BulkTaskLabelsRequest(admission: captured, save: { [weak self] selection in
+                guard let self else { return false }; var saved = false
+                self.run("Edit Shared Labels") { saved = self.store.saveTeamTaskPlanningSelection(selection) }; return saved
+            }, completed: { [weak self] in self?.bulkLabels = nil; self?.selection.subtract(ids); self?.confirm("Shared labels saved") })
+        } catch { store.error = error.localizedDescription }
+    }
+    func assignSharedSelection(_ ids: Set<String>) {
+        do {
+            let captured = try store.captureTeamTaskPlanningAdmission(ids.sorted().map { try store.selectionRecord($0) })
+            bulkAssignment = BulkTaskAssignmentRequest(admission: captured, save: { [weak self] selection in
+                guard let self else { return false }; var saved = false
+                self.run("Assign Shared Tasks") { saved = self.store.saveTeamTaskPlanningSelection(selection) }; return saved
+            }, completed: { [weak self] in self?.bulkAssignment = nil; self?.selection.subtract(ids); self?.confirm("Shared assignments saved") })
+        } catch { store.error = error.localizedDescription }
+    }
+    func editEstimates(_ ids: Set<String>) { _ = beginBulkPlanning(ids, field: .estimate) }
+    @discardableResult private func beginBulkPlanning(_ ids: Set<String>, field: BulkPlanningField) -> Bool {
+        let shared = ids.contains { id in
+            let root = Self.subtaskPath(id)?.first ?? id
+            return store.nativeConversationTeamCache?.knownTasks.contains(root) == true || store.record("tasks", id: root).map { store.nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
+        }
+        guard shared || field == .estimate else { return false }
+        do {
+            let records = try ids.sorted().map { try store.selectionRecord($0) }
+            if shared {
+                let admission = try store.captureTeamTaskPlanningAdmission(records)
+                bulkPlanning = .shared(store: store, admission: admission, field: field, save: { [weak self] selected in
+                    guard let self else { return false }; var saved = false
+                    self.run("Edit Shared Tasks") { saved = self.store.saveTeamTaskPlanningSelection(selected) }; return saved
+                }, completed: { [weak self] in self?.bulkPlanning = nil; self?.selection.subtract(ids); self?.confirm("Shared task changes saved") })
+            } else {
+                bulkPlanning = try .personal(store: store, records: records, field: field, apply: { [weak self] fields in
+                    guard let self else { return false }; var saved = false
+                    self.run("Edit Estimates") { do { saved = try self.store.commitSelection(records, action: { _ in .patch(fields) }) } catch { self.store.error = error.localizedDescription } }; return saved
+                }, completed: { [weak self] in self?.bulkPlanning = nil; self?.selection.subtract(ids); self?.confirm("Estimates updated") })
+            }
+        } catch { store.error = error.localizedDescription }
+        return true
+    }
+    func editDeadlines(_ ids: Set<String>) {
+        if beginBulkPlanning(ids, field: .deadline) { return }
+        do {
+            let records = hierarchyPresentation ? try ids.sorted().map { try store.selectionRecord($0) } : ids.sorted().compactMap { taskRecord($0) }
+            deadlineSelection = DeadlineSelection(account: store.userID, ids: ids, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), records: records)
+        } catch { store.error = error.localizedDescription }
+    }
     func setDeadlines(_ request: DeadlineSelection, day: String?) throws -> Bool {
-        guard request.account == store.userID else { throw PlannerFailure(message: "This workspace changed. Select tasks again.") }
+        guard request.account == store.userID, request.workspace?.matches(account: store.userID, generation: store.workspaceGeneration) != false else { throw PlannerFailure(message: "This workspace changed. Select tasks again.") }
+        if hierarchyPresentation || (!request.records.isEmpty && request.records.allSatisfy({ Self.subtaskPath($0.id) == nil || $0["task_generation"] != .null })) {
+            guard Set(request.records.map(\.id)) == request.ids else { throw PlannerFailure(message: "This selection changed. Select the tasks again.") }
+            let fields = try TaskDeadlines.fields(day: day)
+            guard runSelection(request.records, name: "Edit Deadlines", action: { _ in .patch(fields) }) else { return false }
+            Feedback.drop(); confirm(day == nil ? "Deadlines cleared" : "Deadlines set"); return true
+        }
         let changes = try TaskDeadlines.changes(tasks: request.ids.compactMap { taskRecord($0) }, day: day)
         guard !changes.isEmpty else { return true }
         let fields = try TaskDeadlines.fields(day: day)
@@ -356,10 +757,22 @@ final class Workspace {
         return true
     }
     func setPriority(_ ids: Set<String>, _ value: Int) {
-        withAnimation(layout) { updateTasks(ids, fields: ["priority": .number(Double(value))], name: "Set Priority") }
+        if reviewSharedPlanning(ids, title: value == 4 ? "Clear priority" : "Set priority \(value)", fields: { _ in ["priority": .number(Double(value))] }) { return }
+        guard withAnimation(layout, { updateTasks(ids, fields: ["priority": .number(Double(value))], name: "Set Priority") }) else { return }
         confirm(value == 4 ? "Priority cleared" : "Priority \(value) set")
     }
     func duplicate(_ ids: Set<String>) {
+        if hierarchyPresentation {
+            do {
+                let tasks = try ids.sorted().map { try store.selectionRecord($0) }; var saved = false
+                run("Duplicate Selected Branches") {
+                    do { saved = try withAnimation(layout) { try store.duplicateSelection(tasks) } }
+                    catch { store.error = error.localizedDescription }
+                }
+                guard saved else { return }; selection = []; confirm("Duplicated selected branches")
+            } catch { store.error = error.localizedDescription }
+            return
+        }
         let changes = ids.compactMap { taskRecord($0) }.map { task -> Mutation in
             var copy = task; copy["user_id"] = .string(store.userID); copy["id"] = .string(UUID().uuidString.lowercased()); copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["created_at"] = .string(Dates.timestamp())
             return Mutation(table: "tasks", recordID: copy.id, method: "POST", fields: copy.fields)
@@ -373,8 +786,21 @@ final class Workspace {
     @discardableResult
     func save(_ table: String, _ record: Record, name: String, baseline: Record? = nil) -> Bool {
         var saved = false
+        if table == "tasks", hierarchyPresentation, Self.subtaskPath(record.id) != nil {
+            run(name) {
+                do {
+                    let selected = try store.hierarchySelection(for: baseline ?? store.selectionRecord(record.id))
+                    saved = try store.commitHierarchy([TaskHierarchyIndex.Edit.editing(selected, draft: record)])
+                } catch { store.error = error.localizedDescription }
+            }
+            return saved
+        }
         if table == "tasks", let path = Self.subtaskPath(record.id) {
-            guard let root = store.record("tasks", id: path[0]), let updated = Self.replacing(root, path: Array(path.dropFirst()), value: record) else { return false }
+            guard let root = store.record("tasks", id: path[0]), let current = taskRecord(record.id) else { return false }
+            let edited: Record
+            do { edited = try SubtaskTree.detailChanges(original: baseline ?? current, edited: record, current: current) }
+            catch { store.error = error.localizedDescription; return false }
+            guard let updated = Self.replacing(root, path: Array(path.dropFirst()), value: edited) else { return false }
             let rootBaseline = baseline.flatMap { Self.replacing(root, path: Array(path.dropFirst()), value: $0) }
             run(name) { saved = store.save("tasks", updated, baseline: rootBaseline) }
             return saved
@@ -404,6 +830,17 @@ final class Workspace {
     /// Creates a task from quick-entry text. Returns the new task's id.
     @discardableResult
     func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:]) -> String? {
+        if store.nativeConversationTeamCache?.knownTeams[project] != nil {
+            do {
+                var shared = Record.task(user: store.userID, project: project, date: date)
+                shared["section_id"] = sectionID.isEmpty ? .null : .string(sectionID)
+                let excluded = SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"])
+                shared = QuickEntry(input, disabled: declined.union(excluded), context: quickEntryContext(project: project), task: shared).applying(to: shared)
+                teamTaskCreationText = input
+                teamTaskCreation = try store.teamTaskCreationOpening(shared)
+            } catch { store.error = error.localizedDescription }
+            return nil
+        }
         var task = captureTask(project: project, date: date, sectionID: sectionID)
         let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")).choosingReferences(referenceChoices), task: task)
         guard !parsed.title.isEmpty else { return nil }
@@ -413,8 +850,8 @@ final class Workspace {
         }
         var created = false
         run("Add Task") { withAnimation(layout) { created = store.save("tasks", task) } }
-        if created, case .saved = scope, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }) { confirmation = Confirmation(message: "Added · outside this filter", undoable: true) }
-        else if created, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }), let project = store.record("projects", id: task.string("project_id")) { confirmation = Confirmation(message: "Added to " + project.name, undoable: true) }
+        if created, case .saved = scope, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }) { confirmation = Confirmation(message: "Added · outside this filter", undoable: true, historyRequest: store.captureHistoryRequest()) }
+        else if created, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }), let project = store.record("projects", id: task.string("project_id")) { confirmation = Confirmation(message: "Added to " + project.name, undoable: true, historyRequest: store.captureHistoryRequest()) }
         return created ? task.id : nil
     }
 
@@ -431,7 +868,9 @@ final class Workspace {
         return rows.first { $0.id == key }?["ids"].list.map(\.text) ?? []
     }
     /// The app's default order for any list: priority bands first, the user's manual order inside each band.
-    func arranged(_ tasks: [Record], key: String) -> [Record] { DayPlacement.arranged(tasks, ids: placementIDs(key)) }
+    func arranged(_ tasks: [Record], key: String) -> [Record] {
+        key.hasPrefix("group:") ? DayPlacement.arrangedOutline(tasks, ids: placementIDs(key)) : DayPlacement.arranged(tasks, ids: placementIDs(key))
+    }
     func ordered(_ tasks: [Record], day: String) -> [Record] { arranged(tasks, key: day) }
 
     /// Moves tasks into a list at a slot. Days change the due date through the shared DayPlacement rules;
@@ -572,37 +1011,43 @@ enum CalendarMode: String, CaseIterable, Identifiable {
     var days: Int? { switch self { case .day: return 1; case .threeDay: return 3; case .fiveDay: return 5; case .week: return 7; default: return nil } }
 }
 
-enum SettingsTab: String { case general, appearance, account, imports, invitations }
+enum SettingsTab: String { case general, appearance, account, imports, invitations, swipes }
 
 extension Workspace {
     /// Paths identify embedded subtasks without creating duplicate backend task records.
     static func subtaskPath(_ id: String) -> [String]? {
-        guard id.hasPrefix("subtask:"), let data = Data(base64Encoded: String(id.dropFirst(8))),
-              let path = try? JSONDecoder().decode([String].self, from: data), (2...3).contains(path.count) else { return nil }
-        return path
+        SubtaskTree.referencePath(id)
     }
-    static func childKey(_ value: JSON, index: Int) -> String { value.object["id"]?.text.isEmpty == false ? value.object["id"]!.text : "@\(index)" }
+    static func childKey(_ value: JSON, index: Int) -> String { SubtaskTree.childKey(value, index: index) }
     func childID(parent: String, value: JSON, index: Int) -> String {
-        let path = (Self.subtaskPath(parent) ?? [parent]) + [Self.childKey(value, index: index)]
-        return "subtask:" + (try! JSONEncoder().encode(path)).base64EncodedString()
+        SubtaskTree.reference(parent: parent, key: Self.childKey(value, index: index))
     }
     func taskDepth(_ id: String) -> Int { (Self.subtaskPath(id)?.count ?? 1) - 1 }
     func taskRecord(_ id: String) -> Record? {
         guard let path = Self.subtaskPath(id) else { return store.record("tasks", id: id) }
+        if hierarchyPresentation, let projected = try? store.selectionRecord(id) { return projected }
         guard var item = store.record("tasks", id: path[0]) else { return nil }
         for key in path.dropFirst() {
-            guard let pair = item["subtasks"].list.enumerated().first(where: { Self.childKey($0.element, index: $0.offset) == key }) else { return nil }
-            item = Record(pair.element.object)
+            guard let index = SubtaskTree.uniqueChildIndex(item["subtasks"], key: key) else { return nil }
+            item = Record(item["subtasks"].list[index].object)
         }
         item["id"] = .string(id)
         return item
     }
+    func independentWorkRow(_ task: Record) -> Bool {
+        scope.usesProductiveWork && store.productiveReading.contains(task.id)
+    }
+    func canExpandTask(_ task: Record) -> Bool {
+        !hierarchyFilter && section != .assigned && taskDepth(task.id) < SubtaskTree.readableDepth && !task["subtasks"].list.isEmpty && !(TaskKind(task) == .heading && independentWorkRow(task))
+    }
     func visibleTasks(_ roots: [Record]) -> [Record] {
-        if section == .assigned { return roots }
+        if section == .assigned || hierarchyFilter { return roots }
         return roots.flatMap { task -> [Record] in
-            guard taskDepth(task.id) < 2, expandedTasks.contains(task.id) else { return [task] }
+            guard canExpandTask(task), expandedTasks.contains(task.id) else { return [task] }
             let children = task["subtasks"].list.enumerated().map { index, value -> Record in
-                var child = Record(value.object); child["id"] = .string(childID(parent: task.id, value: value, index: index)); return child
+                let id = childID(parent: task.id, value: value, index: index)
+                if hierarchyPresentation, let current = try? store.selectionRecord(id) { return current }
+                var child = Record(value.object); child["id"] = .string(id); return child
             }
             return [task] + visibleTasks(children)
         }
@@ -610,7 +1055,7 @@ extension Workspace {
     static func replacing(_ root: Record, path: [String], value: Record?) -> Record? {
         guard let key = path.first else { return value }
         var list = root["subtasks"].list
-        guard let index = list.enumerated().first(where: { childKey($0.element, index: $0.offset) == key })?.offset else { return nil }
+        guard let index = SubtaskTree.uniqueChildIndex(root["subtasks"], key: key) else { return nil }
         if path.count == 1 {
             if var value {
                 value.fields["id"] = list[index].object["id"]
@@ -624,18 +1069,24 @@ extension Workspace {
     }
     @discardableResult
     func updateTasks(_ ids: Set<String>, fields: [String: JSON], name: String) -> Bool {
+        if hierarchyPresentation { return runSelection(ids, name: name, action: { _ in .patch(fields) }) }
         var roots: [String: Record] = [:]
+        var assignmentBudget = TaskAssignmentTree.Budget()
         for id in ids.sorted(by: { taskDepth($0) < taskDepth($1) }) {
-            guard var task = taskRecord(id) else { continue }
-            if let project = fields["project_id"], project != task["project_id"] { task = Self.clearingAssignments(task) }
+            guard var task = taskRecord(id) else { store.error = "A selected task is no longer available. Select the tasks again."; return false }
+            if let project = fields["project_id"], project != task["project_id"] {
+                do { task = try TaskAssignment.movingDraft(task, to: project, budget: &assignmentBudget) }
+                catch { store.error = error.localizedDescription; return false }
+            }
             for (key, value) in fields { task[key] = value }
             if let path = Self.subtaskPath(id), let root = roots[path[0]] ?? store.record("tasks", id: path[0]) {
-                roots[path[0]] = Self.replacing(root, path: Array(path.dropFirst()), value: task)
+                guard let changed = Self.replacing(root, path: Array(path.dropFirst()), value: task) else { store.error = "A selected subtask changed. Select the tasks again."; return false }
+                roots[path[0]] = changed
             } else { roots[id] = task }
         }
         let changes = roots.values.compactMap { record -> Mutation? in
             guard let original = store.record("tasks", id: record.id) else { return nil }
-            let changed = record.fields.filter { original.fields[$0.key] != $0.value }
+            let changed = TaskAssignment.preservingAssignmentIntent(record.fields.filter { original.fields[$0.key] != $0.value }, authored: record.fields)
             return changed.isEmpty ? nil : Mutation(table: "tasks", recordID: record.id, method: "PATCH", fields: changed)
         }
         guard !changes.isEmpty else { return true }

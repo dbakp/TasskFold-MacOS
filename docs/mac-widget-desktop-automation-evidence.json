@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-14",
+  "scope": "Bounded attempt to automate installed Mac widget interactions. Desktop text reads work; no new widget click or gallery acceptance.",
+  "CUA": {
+    "directReadyChildLinkReturnedWithoutLaunch": true,
+    "desktopContextMenuAXError": "AXError.illegalArgument",
+    "desktopScreenshotOmitsWidgetLayer": true
+  },
+  "nativeAttempts": [
+    {
+      "result": "mac-desktop-widget-automation-v1.xcresult",
+      "actualPassed": 0,
+      "failures": 1,
+      "skips": 0,
+      "reason": "Finder locates widget button; XCTest treats its system-owned window as an interrupting notification and fails default banner handling before host launch.",
+      "buildPassed": true
+    },
+    {
+      "result": "mac-desktop-widget-automation-v2.xcresult",
+      "actualPassed": 0,
+      "failures": 1,
+      "skips": 0,
+      "reason": "Notification Center owner query does not expose matching task button; existence assertion fails before click.",
+      "buildPassed": true
+    }
+  ],
+  "productCodeChanged": false,
+  "experimentalRepoTestRemoved": true,
+  "privateDriverSourceAndFailedResultsRetained": true,
+  "fullLocalWorkspaceExact": true,
+  "protectedPrimaryFilesExact": 100,
+  "retainedHostBinariesExact": true,
+  "mainAppSessions": 0,
+  "inactiveIntermediatesBytesPruned": 92886218,
+  "stopAfterTwoNativeApproaches": true,
+  "next": "Keep existing accepted manual route evidence intact. Use direct desktop text for content checks. Do not repeat unchanged desktop actions or request routine user clicks; remaining distinct installed planning configuration/actions need a supported interaction surface.",
+  "directDesktopContentAfterDiagnosticsIntact": true,
+  "driverSourcesSHA256": {
+    "taskfold-desktop-widget-link-driver.swift": "b3cfa1d5f83a65171c1eea51bbef28fb4ca4603620b69b76854aafb6bc611493",
+    "taskfold-desktop-widget-link-driver-v2.swift": "4691caeb5696c56fcd0ee6c9b0c26443787230ee288035c8edc2ec70fd266eeb"
+  },
+  "duplicateProductsBytesPruned": 81915318
+}

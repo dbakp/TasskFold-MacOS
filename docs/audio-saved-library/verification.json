@@ -1,0 +1,33 @@
+{
+  "platform": "mac",
+  "baseCommit": "0eb1f16",
+  "sources": {
+    "Taskfold/Core/AudioCommentVault.swift": "bf3976f3e57b574c37376e94c4c20887f76913caeaa1d4874a23c8cf57ab1cd3",
+    "TaskfoldTests/AudioCommentVaultTests.swift": "c0532b5b471b6187d1764a0df7584bfe3baa4d0bdeb899fed9f79cb3978d340c"
+  },
+  "core": {
+    "count": 135,
+    "newCases": 12,
+    "failures": 0,
+    "command": "swift test --scratch-path /tmp/taskfold-audio-recovery-core-mac --filter 'AudioCommentTests|AudioCommentVaultTests|AudioCommentTaskAdmissionTests'",
+    "unrelatedExistingCompilerWarnings": true
+  },
+  "native": {
+    "build": "TEST BUILD SUCCEEDED",
+    "strictDeepSignature": "passed",
+    "runtimeUI": "not run; storage-only change",
+    "app": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+    "executableSHA256": "d1dce65bc2a4b062794bb844ce8f8a9dae89c43ecc7d98ddeb0720fdb6a6bac9",
+    "hostVaultSHA256": "bf3976f3e57b574c37376e94c4c20887f76913caeaa1d4874a23c8cf57ab1cd3",
+    "warnings": [
+      "/tmp/taskfold-workflow-native-mac-host/Taskfold/Workspace.swift:287:13: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+      "/tmp/taskfold-workflow-native-mac-host/Taskfold/Views/KeyRouter.swift:22:106: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used",
+      "/tmp/taskfold-workflow-native-mac-host/Taskfold/Views/Links.swift:227:23: warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode"
+    ]
+  },
+  "cleanup": {
+    "testSessionsLaunched": 0,
+    "rawResultBundlesCreated": 0,
+    "retained": "reused build hosts/Core scratch; compact evidence; no user data touched"
+  }
+}

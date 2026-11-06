@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-04",
+  "platform": "mac",
+  "build": {
+    "schema": 1,
+    "platform": "mac",
+    "bundle": "com.dbakp.taskfold.mac",
+    "version": "1.2.0",
+    "build": "7",
+    "app": "/private/tmp/taskfold-daily-mac-next-products/Taskfold.app",
+    "sourceFingerprint": "df64cba0b26244e7106654534b971a3e189c1af7ed743e0bb68fd99861527ead",
+    "sourceRevision": "4f41e2011f7b4db2e9f81d68043d109270c6120c",
+    "simulatorOnly": false,
+    "signatureVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "omittedCapabilities": [
+      "Remote push notifications",
+      "Time Sensitive notifications"
+    ],
+    "featureFlags": {
+      "TaskfoldAudioRestorationEnabled": false,
+      "TaskfoldMixedCompletionEnabled": false,
+      "TaskfoldTeamAudioPublishingEnabled": false
+    },
+    "installed": true,
+    "published": false,
+    "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-7-mac-development.zip",
+    "archiveSHA256": "1ca4359ab0f7f6abc40a46c642b3b46ad4b23c94d81f53f96809ce9c15ad44b7",
+    "archivePayloadVerified": true,
+    "sourceWasDirty": true,
+    "developmentProfileExpires": "2026-11-10T18:38:42Z",
+    "change": "Atomic multiline capture Undo/Redo with preserved existing order; native Mac capture and template workflows accepted",
+    "payloadBinarySHA256": "27de97b5aabe7e6d480bfb9a79ff99c2fba5e9604924cec272e02de3ae0c329c",
+    "nativeMacStoreAccepted": true,
+    "sourceProductRetiredForStorage": true,
+    "nativeStoreAccepted": true,
+    "installedApp": "/Applications/Taskfold.app",
+    "startupVerified": true,
+    "syncVerified": true,
+    "permissionWaitResolved": true
+  },
+  "nativeStoreProof": "capture-workflow-undo-native-mac.json",
+  "scope": "Creation/Undo/Redo/Undo of two captured tasks with existing order; fresh personal-template creation/Undo; original work, server receipts and exact saved cache verified.",
+  "ordinaryInstallation": "Mac build 7 startup and sync are verified after app-data approval, in the same preserved process. No real-task edits. Physical iPhone signing/installation remain unverified.",
+  "realTaskTestEdits": false,
+  "advancedGatesChanged": false,
+  "compilerPolicy": "Future daily and Core builds request one compiler job; existing accepted binaries predate the scheduling-only helper change."
+}

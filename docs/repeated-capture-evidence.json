@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-11",
+  "scope": "Three consecutive iPhone quick captures with keyboard open, following the earlier medium Deadline setup failure.",
+  "baseCommits": {
+    "TaskFold-iOS": "a9758d291d7deaeb7b5b0dc77cae7ca2f6ebeac6",
+    "TasskFold-MacOS": "5c957a3afb33530ff68b466c3ea4c68ddf34a11c"
+  },
+  "testCase": "testRepeatedQuickCaptureSavesWithKeyboardOpen",
+  "nativeResult": "repeated-capture-phone-v1.xcresult",
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "reportedRuntimeWarnings": 0,
+  "productChanges": false,
+  "validation": [
+    "For each of three native captures, type title and independent deadline, retain keyboard, verify Save is enabled/hittable/inside app, tap Save once and wait for the sheet to close.",
+    "Terminate/relaunch and verify all three complete saved task names.",
+    "Inspect all three keyboard-open capture screenshots and saved Inbox screenshot.",
+    "Reset local mode and cold marker, then verify the original cloud Today task."
+  ],
+  "sourceInputHashes": {
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "695eae561961f6e686d38073a11087906cf57941dab0ef2229b646c51aab4203",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "695eae561961f6e686d38073a11087906cf57941dab0ef2229b646c51aab4203",
+    "TaskFold-iOS/Taskfold/Views/QuickAdd.swift": "cd4fd4e2ad2b83006bebae3b4908556e714e118e39e134bbb0cc6f1002b23210",
+    "ios-live-stage/Taskfold/Views/QuickAdd.swift": "cd4fd4e2ad2b83006bebae3b4908556e714e118e39e134bbb0cc6f1002b23210"
+  },
+  "receipts": [
+    {
+      "path": "repeated-capture-build-v1.log",
+      "sha256": "0663f18aa6f4186e39b3a05f274d61dcd4415adb62d3fa16f346c789ce2d460f"
+    },
+    {
+      "path": "repeated-capture-signing-v1.json",
+      "sha256": "2f270b3fef64de0d7df176b3ecdc4d30b41e621a6f83ca065b86070beac6e4e7"
+    },
+    {
+      "path": "repeated-capture-phone-v1.log",
+      "sha256": "c5bda59b864e0723118e01c2e98166117a87f31e315e295e9c1d8b15dddf31a5"
+    }
+  ],
+  "dataPreservation": {
+    "fullOriginalCloudCacheParsedEqual": true,
+    "originalWidgetFieldsEqual": [
+      "account",
+      "focusSession",
+      "notes",
+      "pendingSync"
+    ],
+    "pendingSync": 0,
+    "localMode": false,
+    "widgetColdLaunchFixture": false,
+    "localTasksRetained": 3,
+    "completedLocalTasks": 0,
+    "originalCloudCacheSHA256": "ba6f6c01961f873407dcdd9191be517ea3923e47e5b2eb0e4bbd50d875d2b80a"
+  },
+  "originalMacCloudCacheUnchanged": true,
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-repeated-capture-first.png",
+      "sha256": "eed1c5e29a5be5b080276fd7b129869c663c1c0ef6647beddb78eb37ebf68fea",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-repeated-capture-second.png",
+      "sha256": "ebfb11e16bd9dd3ff235789d8d9c91e56612b2b89f9e4f20059f3a62cefa9d73",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-repeated-capture-third.png",
+      "sha256": "d19673cd584e60d84553a5883d78279d9259db606d4ca3ef3fa08c6168368ca1",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-repeated-capture-relaunch.png",
+      "sha256": "448b300cb97eba399fec7a2799ad00dbf7817ec391c4310f8258e5ec5728f4c2",
+      "inspected": true
+    }
+  ],
+  "interpretation": "The earlier second-capture save failure was not reproduced. This passing run establishes this normal/light iPhone sequence without hiding the keyboard; it does not prove the earlier failure was solely test timing or that all intermittent capture failures are resolved.",
+  "remaining": "No new Mac native, iPad, largest-text, VoiceOver or hardware-keyboard acceptance. Existing P0_RELEASE_STATUS.md remains authoritative."
+}

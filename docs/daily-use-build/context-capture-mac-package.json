@@ -1,0 +1,29 @@
+{
+  "platform": "mac",
+  "bundle": "com.dbakp.taskfold.mac",
+  "version": "1.2.0",
+  "build": "11",
+  "sourceFingerprint": "224a1985838dfe1ba284245fd1d1d4e987c3b18a67f5ff39a0a937ca71e0c5da",
+  "sourceRevision": "e1786556c54b121872d18334b1ed1911d700e206",
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "installed": false,
+  "published": false,
+  "archiveSHA256": "bf4ede973038c0d965d84ccc6ba4599e38678ba346d4891b0fec2a4e64816a51",
+  "archivePayloadVerified": true,
+  "sourceWasDirty": true,
+  "nativeInteractionAccepted": false,
+  "installedBaseline": "1.2.0 (10)",
+  "installationNote": "Prepared only; native menu interaction awaits an unlocked Mac. Normal installed app left running.",
+  "date": "2026-11-05"
+}

@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-11",
+  "scope": "Clean iPad Simulator landscape: normal Year and accessibility XXXL/dark Month and Year. Scope is calendar selection, viewport and exact-task routes; full navigation polish and spoken VoiceOver remain open.",
+  "device": {
+    "id": "3490D124-DE6F-4367-91C8-5F0A4B51BF0D",
+    "name": "Taskfold calendar rotation disposable",
+    "model": "iPad Pro 11-inch M5",
+    "runtime": "iOS 26.5",
+    "originalDevicesErasedOrReset": false
+  },
+  "build": "ios-calendar-rotation-build-v2.log: TEST BUILD SUCCEEDED. Dedicated com.dbakp.taskfold.calendaraccessibilitytests app and App Group; strict genuine Apple Development signatures verified in tablet-calendar-landscape/signing.json.",
+  "productionSource": "Unchanged from iOS 497297e. Only calendar UI test capture changed: full XCUIScreen landscape screenshots replace cropped/offset app-only captures. Orientation, viewport, hit-target and functional assertions are unchanged.",
+  "finalNativeResult": {
+    "bundle": "ios-calendar-clean-landscape-v3.xcresult",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "testMonthCalendarDayAndTaskRouteLandscapeDarkLargest",
+        "seconds": "117.953"
+      },
+      {
+        "name": "testYearCalendarMonthAndTaskRouteLandscape",
+        "seconds": "42.625"
+      },
+      {
+        "name": "testYearCalendarMonthAndTaskRouteLandscapeDarkLargest",
+        "seconds": "87.783"
+      }
+    ]
+  },
+  "accepted": [
+    "Actual landscape window assertion passes after launch and normal relaunch; device and interface rotation events are reported.",
+    "Normal Year: all twelve entire month cards fit inside the actual calendar pager and above the collapse handle; selected current month opens Month, current date is selected, exact task opens, Cancel and relaunch preserve open tasks.",
+    "Largest Year: each of twelve entire month rows is reachable inside its scroll viewport; selection and the same exact-task/relaunch route pass.",
+    "Largest Month: first/last date rows are fully reachable, selected and meet the target size; Today reveals the whole current row; collapsed Previous day/Next day returns to the original date and exact original task; Cancel and normal relaunch preserve tasks."
+  ],
+  "intermediateEvidence": [
+    "Existing iPad rotation requests remained portrait; the Control Center diagnostic opened an empty control surface with no rotation-lock state available. It establishes neither lock enabled nor disabled. No control setting was changed.",
+    "Fresh disposable iPad normal Year v1 and largest Month/Year v2 pass (three scenarios). This supports an existing-device-state problem; the precise cause of its stuck rotation is unproven.",
+    "v1/v2 app-only screenshot exports are visibly cropped/offset despite passing native landscape geometry. They are not visual acceptance. A simultaneous simctl physical-screen screenshot renders correctly.",
+    "Final v3 reruns all three scenarios with full-screen captures; representative final captures were inspected. The temporary Control Center diagnostic is removed from the final staged test source."
+  ],
+  "preservation": {
+    "originalDevices": [
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "protectedFileCount": 26,
+        "fullProtectedFileSetAndHashesExact": true
+      },
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "protectedFileCount": 43,
+        "fullProtectedFileSetAndHashesExact": true
+      }
+    ],
+    "cleanLocalFixture": {
+      "tasks": 3,
+      "idsTitlesEstimatesExact": true,
+      "allOpen": true,
+      "pending": 0
+    },
+    "sourceTodoistOrBackendMutations": 0,
+    "orientationAfterTests": "Portrait restored by native defer; app terminated."
+  },
+  "visualLimits": [
+    "At accessibility XXXL the native iPad sidebar wraps Upcoming and Calendar with hyphens and Browse across lines. This is a remaining navigation polish finding; calendar acceptance does not approve the whole sidebar.",
+    "Collapsed Month capture includes an in-progress text transition. Native date labels/targets and actual navigation pass, but the capture is not a settled-animation acceptance image.",
+    "Partially visible adjacent rows in the scrolling Month/Year viewport are expected; the selected target rows are checked in full."
+  ],
+  "remaining": [
+    "iPhone landscape and other calendar periods",
+    "Normal-text iPad Month landscape route",
+    "Largest-text iPad sidebar readability",
+    "Settled calendar transition capture/polish",
+    "Full VoiceOver and broader keyboard journeys",
+    "Other P0_RELEASE_STATUS.md gates"
+  ],
+  "artifacts": {
+    "finalCaptures": [
+      "year-normal.png",
+      "year-largest-december.png",
+      "month-largest-today.png",
+      "month-largest-collapsed-transition.png",
+      "month-largest-exact-task.png"
+    ],
+    "retainedResults": [
+      "ios-calendar-rotation-diagnostic-v1.xcresult",
+      "ios-calendar-clean-landscape-v1.xcresult",
+      "ios-calendar-clean-landscape-v2.xcresult",
+      "ios-calendar-clean-landscape-v3.xcresult"
+    ]
+  },
+  "cleanup": {
+    "duplicateExportBytesPruned": 16275519,
+    "cleanSimulator": "Shut down; retained for remaining calendar acceptance, without modifying original devices."
+  }
+}

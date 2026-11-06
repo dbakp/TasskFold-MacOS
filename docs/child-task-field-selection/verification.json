@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "macOS",
+  "sourceSHA256": {
+    "Taskfold/Views/ChildTaskFieldViews.swift": "1f2ac904512dec70ff5948185b29631e4e2a4fa9f8df76d339cb4cc76a3eaeb9",
+    "TaskfoldUITests/AudioCommentUITests.swift": "84093babcc3fd936afd6121a53db0e46cd4eb7991698b0596946995b3e432dd5",
+    "Taskfold/ChildFieldNativeFixture.swift": "3d702e28a18c061e38657d08d8c29b1f4129bce09925201f562314707c065687",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "3ef5fda59fb6069b2fd9a814bf8bdd5f13fd99c31eb7cec5015d5e6ad738235f",
+    "Taskfold/Core/Store.swift": "be8431bf7765fd2de0b3a0289731ea050b59e5193d8d1f27451301ed70d8becc"
+  },
+  "namespaceAdjustedBuiltHostSHA256": {
+    "Taskfold/Views/ChildTaskFieldViews.swift": "1f2ac904512dec70ff5948185b29631e4e2a4fa9f8df76d339cb4cc76a3eaeb9",
+    "TaskfoldUITests/AudioCommentUITests.swift": "84093babcc3fd936afd6121a53db0e46cd4eb7991698b0596946995b3e432dd5",
+    "Taskfold/ChildFieldNativeFixture.swift": "3d702e28a18c061e38657d08d8c29b1f4129bce09925201f562314707c065687",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "3ef5fda59fb6069b2fd9a814bf8bdd5f13fd99c31eb7cec5015d5e6ad738235f",
+    "Taskfold/Core/Store.swift": "7aefaa4e3f289c35d361be41bbb3c9fe70c186c8403723c00dc26dab1459ea9a"
+  },
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "strictAppAndRunnerSignatures": true,
+  "phases": [
+    {
+      "phase": "ipad",
+      "totalTestCount": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0
+    },
+    {
+      "phase": "ipad-hit",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0
+    },
+    {
+      "phase": "phone",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0
+    }
+  ],
+  "acceptedMobileScope": [
+    "full selected title and ordered choices at Accessibility XXXL",
+    "visible nesting and selected marker",
+    "44-point targets and current native hit testing",
+    "switch to nested node, Cancel, return to unchanged private draft",
+    "zero field and structural task writes"
+  ],
+  "initialFailure": "Valid first chooser row starts at y=505, exactly the navigation bottom. Generic reveal helper adds a four-point inset and refuses its frame, then times out. Final test uses native isHittable plus tap; order, target-size, Cancel, draft and zero-write assertions remain. Production UI is identical between native phases.",
+  "phoneSeconds": 90.393,
+  "iPadSeconds": 96.388,
+  "defaultAllowanceSeconds": 180,
+  "maximumAllowanceSeconds": 240,
+  "newCoreTestsClaimed": false,
+  "coreUnchangedFromPrevious60CaseEvidence": true,
+  "macRuntimeAccepted": false,
+  "spokenAccepted": false,
+  "ordinaryFlagsEnabled": false,
+  "newSQL": false,
+  "newSimulatorsCreated": false,
+  "remaining": [
+    "Mac native selection and spoken acceptance",
+    "account/window/failure/concurrent lifecycle beyond this selection journey",
+    "full independent-record migration and structural-composer draft persistence"
+  ]
+}

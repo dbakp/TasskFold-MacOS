@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""Prepare the reserved, network-isolated native team-editor acceptance app.
+
+The rollout switch is enabled only in this disposable copy. Launch with
+--team-editor-testing; add --team-editor-reset to seed synthetic test tasks.
+Add --team-library-testing for the file-backed template catalog/publication peer.
+Keychain-backed recovery tests require a consistently Apple Development-signed
+Mac build from the first launch. Unsigned builds verify compilation only.
+Normal builds retain their existing rollout and network configuration.
+"""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import plistlib
+import subprocess
+import sys
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--output", type=Path, required=True)
+parser.add_argument("--headings", action="store_true", help="Enable heading authoring only in this reserved disposable host")
+args = parser.parse_args()
+root = args.output.expanduser().resolve()
+subprocess.run([sys.executable, str(Path(__file__).with_name("prepare_workflow_ui_test.py")),
+                "--output", str(root), "--namespace", "workflowteststeameditbridge"], check=True)
+info = root / "Taskfold/Info.plist"
+value = plistlib.loads(info.read_bytes())
+value["TaskfoldTeamsEnabled"] = True
+if args.headings:
+    value["TaskfoldHeadingsEnabled"] = True
+value["CFBundleDisplayName"] = "Taskfold Team Editor Test"
+info.write_bytes(plistlib.dumps(value))
+for path in root.rglob("Backend.plist"):
+    path.write_bytes(plistlib.dumps({"URL": "https://synthetic.example", "Key": "synthetic-public"}))
+for relative in ["Taskfold/Core/Backend.swift", "Taskfold/Core/Backups.swift"]:
+    path = root / relative
+    source = path.read_text().replace("com.taskfold.ios.session", "com.taskfold.workflowteststeameditbridge.session")
+    source = source.replace("com.taskfold.recovery.v1", "com.taskfold.workflowteststeameditbridge.recovery")
+    path.write_text(source)
+
+receipt = root / "team-editor-test-receipt.json"
+files = ["Taskfold/Core/Store.swift", "Taskfold/Core/Backups.swift", "Taskfold/Core/Backend.swift", "Taskfold/TeamTemplateNativeFixture.swift", "Taskfold/Views/TeamTemplateLibraryView.swift", "Taskfold/Core/TeamWorkflowRunCommands.swift", "Taskfold/Views/TeamWorkflowRunView.swift", "Taskfold/Views/WorkflowViews.swift", "Taskfold/Info.plist"]
+receipt.write_text(json.dumps({
+    "namespace": "workflowteststeameditbridge", "teamRolloutInCopyOnly": True,
+    "headingAuthoringInCopyOnly": args.headings,
+    "network": "All HTTP requests intercepted locally; scoped synthetic recipients are answered; task moves and template libraries use separate file-backed peers only with --team-move-testing / --team-library-testing in the reserved DEBUG host",
+    "files": {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in files}
+}, indent=2) + "\n")

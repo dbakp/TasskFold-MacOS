@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-12",
+  "scope": "Classification of exactly four retained textClipped reports from accessibility-current-search-v1.xcresult, using the original full-screen captures, associated AX reports, current source and independent native workflow evidence. No new app or audit run.",
+  "sourceBase": {
+    "iOS": "a840430",
+    "macOS": "293b871"
+  },
+  "classifications": [
+    {
+      "finding": "Normal saved note preview",
+      "disposition": "Intentional compact preview truncation; not a lost-content defect.",
+      "evidence": [
+        "normal-note-preview.png explicitly ends with an ellipsis.",
+        "TaskfoldApp.swift taskNotesPreview uses lineLimit(1) at standard text sizes, unlimited wrapping at accessibility sizes.",
+        "The report retains the complete accessible string: Read the proposal before sending the estimate.",
+        "preview-details-evidence.json verifies native preview activation, exact full editor text and relaunch on normal/largest phone and largest tablet."
+      ],
+      "limit": "Full spoken reading is unverified."
+    },
+    {
+      "finding": "Normal Choose a photo",
+      "disposition": "No visible clipping in the exact audited viewport; scoped audit false positive.",
+      "evidence": [
+        "normal-photo-label.png shows the entire label and icon, with clear space within the Attachments row.",
+        "The reported StaticText bounds are 161 by 20.3 points; its parent is a PhotosPicker row, not the small text-only touch target.",
+        "Current portrait source remains PhotosPicker with Label(Choose a photo, systemImage:photo).",
+        "editor-picker-evidence.json independently verifies at least 44-point action, actual Photos picker, cancellation and draft/save/relaunch in normal/largest phone modes."
+      ],
+      "limit": "Does not clear untested device widths, localization or spoken traversal."
+    },
+    {
+      "finding": "Largest 25 min capture chip",
+      "disposition": "No visible clipping in the exact audited viewport; scoped audit false positive.",
+      "evidence": [
+        "largest-estimate-chip.png shows all digits, the space and complete min, without an ellipsis or cut glyph.",
+        "QuickEntryChips uses vertically fixed-size caption text, measured wrapping layout, 8-point vertical padding and a 48-point minimum label height.",
+        "The accessible button label includes 25 min from title; it retains a separate hint for declining the interpretation.",
+        "keyboard-capture-evidence.json verifies actual keyboard-visible Save/More and exact retained estimate 25 after relaunch."
+      ],
+      "limit": "Does not claim every token length or system font configuration is accepted."
+    },
+    {
+      "finding": "Largest wrapped saved note",
+      "disposition": "No visible clipping in the exact audited viewport; scoped audit false positive.",
+      "evidence": [
+        "largest-note-preview.png shows the entire sentence through estimate. above the floating capture button and tabs.",
+        "The reported note frame is 254.3 by 290.7 points; current source uses unlimited lines and fixedSize(horizontal:false,vertical:true) at accessibility sizes.",
+        "preview-details-evidence.json verifies native note activation and full saved editor values after relaunch."
+      ],
+      "limit": "Lower task metadata requires scrolling; the whole row is not claimed to fit one screen."
+    }
+  ],
+  "diagnosticStatus": {
+    "originalAudit": "2 failed tests, 4 unfiltered textClipped reports; retained unchanged.",
+    "auditHandlerChanged": false,
+    "warningsSuppressed": false,
+    "blanketAuditPassClaimed": false
+  },
+  "sourcesSha256": {
+    "Taskfold/TaskfoldApp.swift": "becaee5494d946f9cf2a35f913d47343ab7661b827b2d85964a52f063db1558c",
+    "Taskfold/Views/QuickAdd.swift": "aeaade2e360cc521726070f051319a38b2d4acfde4ef405a4945f15e46325cc0",
+    "Taskfold/Views/TaskEditor.swift": "45838b6134e6ae625102cdc59d763c2defc1154af1c6b912f01316c6235cf5a1"
+  },
+  "capturesSha256": {
+    "normal-photo-label.png": "83c1d5a5a6279adb8526aa94d1ef70b13ed05feb77def67ad1f9847b53408de3",
+    "normal-note-preview.png": "ad6bafca5a09b3daa3aec5f9d3532cebcd1b78d763bd64cb9f45429f3488af4e",
+    "largest-note-preview.png": "7f41a97271b021b2fd4effebe0621a264ca39d5c7a8c3a7ae1749036541d0aff",
+    "largest-estimate-chip.png": "1658939945166438b5309f13ad8bd366ccc4a15cdf5772a6013c35dafb23ded2"
+  },
+  "limits": [
+    "Classifications apply only to the retained normal/light and accessibility XXXL/dark portrait iPhone states.",
+    "Full spoken VoiceOver and other P0 gates remain open.",
+    "The native photo/account-switch and profile-pair gates were already accepted; they were not repeated during this classification.",
+    "The existing isolated Mac widget host process was confirmed live, but computer use reports Mac locked. No installed Mac widget acceptance obtained."
+  ]
+}

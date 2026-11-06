@@ -1,0 +1,11 @@
+file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/postgres-fixture.mjs:171
+    throw new Error("Worker did not reach expected database lock");
+          ^
+
+Error: Worker did not reach expected database lock
+    at Object.waitForLock (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/postgres-fixture.mjs:171:11)
+    at async Promise.all (index 1)
+    at async completionBatchChecks (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/team-completion-batch-checks.mjs:102:2)
+    at async file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-team-completion.mjs:808:25
+
+Node.js v20.19.0

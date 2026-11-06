@@ -1,0 +1,20 @@
+{
+  "pidBefore": 51605,
+  "resolvedExecutable": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+  "fixtureArgumentsVerified": true,
+  "resetAbsent": true,
+  "appSHA256": "25050ec7a38588724922c4fa86756cfb5adfa2db9393330cb8422c7fcc23fd86",
+  "debugDylibSHA256": "258ccb20454732042c8d3911b0f04cee55aeed028155748bd96db55e56c5aa26",
+  "verifiedNoOwnedProcessBeforeRelaunch": true,
+  "pidAfter": 51809,
+  "fixtureArgumentsAfterVerified": true,
+  "resetAfterAbsent": true,
+  "passed": true,
+  "coldChoiceAndPreviewVerified": true,
+  "correctedIconVisible": true,
+  "temporaryReviewCleared": true,
+  "peerBytesUnchanged": true,
+  "onePriorWritePreserved": true,
+  "finalOwnedProcessAbsent": true,
+  "scope": "Current icon build: review-only choice after an earlier applied repair; verified distinct process cold draft, then Undo; no additional task save"
+}

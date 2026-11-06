@@ -1,0 +1,61 @@
+{
+  "updated": "2026-10-21",
+  "milestone": "Portable workflow template files",
+  "status": "Portable template-file milestone accepted on Mac, iPhone and iPad; distribution/cloud-provider limits remain explicit.",
+  "isolation": "Synthetic local-mode data in separately namespaced workflowtestsp1 apps; no production tasks or account mutation.",
+  "core": {
+    "ios": {
+      "tests": 48,
+      "failures": 0
+    },
+    "mac": {
+      "tests": 48,
+      "failures": 0
+    },
+    "coverage": [
+      "strict versioned envelope and size limit",
+      "coordinated bounded file reads, large Unicode content and malformed files",
+      "source identity removal, label metadata minimization and deterministic bytes",
+      "relative scheduling, fresh run identities and legacy hierarchy ordering",
+      "minimal portable definition and unsupported repeat-field refusal"
+    ]
+  },
+  "native_mac": {
+    "result": "Passed export, actual file import review, private template persistence, Cancel and normal relaunch.",
+    "cancel_snapshot_equal": true,
+    "export_sha256": "3982256a62f2355c1d7849b3181be8f2907468217bcc298ad99b6bf7f6ed24db",
+    "limit": "Native acceptance preceded the final coordinated-read/chunk-loop change; the final helper is covered by the focused core suite."
+  },
+  "native_iphone": {
+    "result": "Two template UI cases passed in the three-case current-source run, with zero skips/failures/runtime warnings.",
+    "bundle": "ios-p2-share-phone-v1.xcresult",
+    "coverage": [
+      "native save/share menu and dismiss",
+      "coordinated JSON picker import review",
+      "Cancel without changes, explicit Save and normal relaunch"
+    ],
+    "limit": "iPad native acceptance is tracked separately; no file-provider/cloud transfer claim."
+  },
+  "native_ipad": {
+    "result": "Two template cases passed within the three-case ios-p2-tablet-acceptance-v4.xcresult run; zero skips/failures/runtime warnings.",
+    "coverage": [
+      "actual native export save/share menu and cancellation",
+      "native JSON picker selection using the file\u2019s screen-space frame",
+      "complete import review",
+      "Cancel leaves the account snapshot unchanged",
+      "explicit Add saves exactly one private template without creating tasks",
+      "normal relaunch preserves the saved template"
+    ],
+    "preflight": "The earlier Simulator had shut down. Its saved snapshot was verified unchanged before reboot/replacing the isolated app. No live preview process was interrupted.",
+    "cross_platform_file": "Earlier direct native iPad selection opened the actual Mac-exported file and showed its complete Design handoff definition; coordinated reader/file schema are covered by the focused suites."
+  },
+  "not_claimed": [
+    "cloud/file-provider end-to-end transfer",
+    "release distribution acceptance",
+    "public template catalog or hosted links"
+  ],
+  "builds": {
+    "ios": "Final-source app, widget extension and UI tests compile successfully (build-for-testing).",
+    "mac": "Final-source app/widget build succeeds; codesign --verify --deep --strict succeeds."
+  }
+}

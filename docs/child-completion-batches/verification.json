@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-31",
+  "scope": "Atomic independent-child completion group server and typed client contracts; UI integration unfinished",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "1614ec43e2f1b1f7a1b0cb96d311b5772a6a1775ccf9885fb74d25f99b2734ca",
+    "Taskfold/Core/Backend.swift": "dc2780c9bb072fc66378bc984cc8813a381b32b11d8b200aaee7dac5296bf72d",
+    "TaskfoldTests/ChildTaskCompletionBatchTests.swift": "c815b9bf0d4a39090da254645e4593080b113c2b1b88f45f66140c21807d8bc8",
+    "TaskfoldTests/Fixtures/child-task-completion-batch.json": "f19d42c4bf6d6488faeff55712d20874c2eface31bcc3e08858c430f5f2b4c46",
+    "Scripts/Database/test-child-completion-batches.mjs": "745b28075d029380c6a74286134e7a5781c492c1ac6b596a664e12bbfdb41a5c",
+    "Scripts/Database/test-child-task-completion.mjs": "00f2ffb2f7b73c2ce4061738be4561f65463a530b014543e25d7e0d347644d95",
+    "supabase/migrations/20261031001141_child_task_completion_batches.sql": "972400d1864983e2cb10f92766094547c31bb406853236fcb44eb4fbbfbf8793"
+  },
+  "database": {
+    "passed": true,
+    "checks": 151,
+    "containerRemoved": true,
+    "candidateSHA256": "972400d1864983e2cb10f92766094547c31bb406853236fcb44eb4fbbfbf8793",
+    "newAdvisorFindings": [],
+    "boundary32Milliseconds": 2084.914875000002
+  },
+  "singleCompletionRegression": {
+    "passed": true,
+    "checks": 98,
+    "candidateInstalled": true,
+    "containerRemoved": true
+  },
+  "normalChildFlagsEnabled": false,
+  "completionBatchGateDefault": false,
+  "hostedChanges": false,
+  "bulkUIRuntimeAccepted": false,
+  "broaderMigrationComplete": false,
+  "remaining": [
+    "Durable bulk group staging, receipt recovery, confirmed account-removal cleanup and scope/removal fences before real protected-storage use",
+    "Bulk list controls and group Undo",
+    "Mixed root-task/child selections",
+    "Full Redo/shared history ordering and persistence",
+    "Indexed/history mapping and shared attachment/discussion custody",
+    "Broader scope, account, protected-storage, window, background, concurrency, spoken and workload acceptance"
+  ],
+  "acceptanceLimits": [
+    "Local synthetic PostgreSQL only; no hosted migration or cloud acceptance",
+    "No bulk UI runtime acceptance; controls remain unconnected",
+    "Development signatures do not establish distribution readiness",
+    "No repeated full-product regression"
+  ],
+  "core": {
+    "firstBroad": {
+      "executed": 122,
+      "passed": 121,
+      "failed": 1,
+      "failure": "Test setup rejected uppercase ID before group assertion"
+    },
+    "finalBatch": {
+      "executed": 15,
+      "passed": 15,
+      "failed": 0,
+      "overlapWithFirstBroad": 15
+    },
+    "distinctAcceptedCases": 122,
+    "phased": true,
+    "productionUnchangedBetweenPhases": true
+  },
+  "nativeBuild": {
+    "buildForTestingPassed": true,
+    "normalizedChangedSourcesMatch": true,
+    "isolationSubstitutions": "Existing isolated identifiers only",
+    "hostSHA256": {
+      "Taskfold/Core/ChildTaskCompletionCommands.swift": "1614ec43e2f1b1f7a1b0cb96d311b5772a6a1775ccf9885fb74d25f99b2734ca",
+      "Taskfold/Core/Backend.swift": "7382e8de6389b6b37e17f9e2cb62c6a3455ab625f24775e5358c61c2459ee8d7"
+    },
+    "buildLogSHA256": "64d0ff2f02d77d43e0c2a8d3139f4e0d0c0ee4eede36d878dbaa17ba14efa90c",
+    "products": [
+      {
+        "product": "Taskfold.app",
+        "strictDevelopmentSignature": true,
+        "codeIdentity": [
+          "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge",
+          "CDHash=c8a8ca945b99aace31b67fc9dba285e564f2cf74"
+        ]
+      },
+      {
+        "product": "TaskfoldUITests-Runner.app",
+        "strictDevelopmentSignature": true,
+        "codeIdentity": [
+          "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner",
+          "CDHash=6b93494a0a204ee0efa59df9961d0ed8d534b0aa"
+        ]
+      }
+    ],
+    "runtimeTestingPerformed": false
+  },
+  "clientContractTransport": "Local PostgreSQL receipt fixture and synthetic URLProtocol responses; no deployed RPC round trip",
+  "coreLogs": {
+    "taskfold-child-batch-mac-core-v2.log": {
+      "rawSHA256": "0b6d305438f782085f6ce35612c558ce82ad62cd984a15a0fc4622e23b92bb10",
+      "trailingWhitespaceTrimmed": true,
+      "retainedSHA256": "8212e5f1556e53a0a164761e73d5d842f8f7a5805ca00bb45a1d8a3b448f3539"
+    },
+    "taskfold-child-batch-mac-core-v1.log": {
+      "rawSHA256": "a34d8a12750ec75dfcf81d78ee020e932900fde5f6cd205f1dbb6a38874edac1",
+      "trailingWhitespaceTrimmed": true,
+      "retainedSHA256": "79a32cfad8cb81cc29a12e5c1f1f5536c5f0a93f86707b11b119a0269705be63"
+    }
+  }
+}

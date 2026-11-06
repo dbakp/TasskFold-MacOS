@@ -1,0 +1,62 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "7D517D13-A8A4-4B46-A22A-D54157C14124.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Private recording and portable backup survive a cold return_0_B293B1DA-6A45-4B03-BE29-0BF782FE6C01.png",
+        "timestamp" : 1793191436.664
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "92A36993-6F6F-47A3-AE81-CD26B234D871.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Native recording backup Save confirms delivery without changing source_0_96537E06-82BD-4FE2-B00F-DCE1A6ACE6DE.png",
+        "timestamp" : 1793191396.785
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "B665BDAE-967A-4012-B349-7336B74CC194.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Portable recording delivered by native Files Save_0_4A363142-285B-4D33-A054-75B339FD13BD.json",
+        "timestamp" : 1793191387.856
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "34BEC416-8546-48E3-AC3F-ACBCA551404F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Recording backup uses the observed local Files destination_0_6FAC8D55-DEB1-4AAD-B9E4-76CA3EFE6B73.png",
+        "timestamp" : 1793191385.109
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "DDDB9851-1B75-4ED2-883F-5FA3697A4373.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Recording export cancellation preserves the private recording_0_9CD861CD-15B1-401A-9584-D407500725B4.png",
+        "timestamp" : 1793191355.174
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "7FCD3A7A-80B4-4D6E-B594-F51FA3A35887.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Recording backup candidate at largest dark text_0_CF38EE1F-2B6C-44A7-BBA6-72CF2979A4C3.png",
+        "timestamp" : 1793191322.067
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testRecordingBackupCancelSaveReadbackAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testRecordingBackupCancelSaveReadbackAndColdReturn"
+  }
+]

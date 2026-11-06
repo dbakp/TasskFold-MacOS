@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-06",
+  "owner": "TasskFold-MacOS",
+  "filter": "ReviewedTaskStepsTests",
+  "passed": 17,
+  "failed": 0,
+  "newStoppedUndoCase": true,
+  "logSHA256": "7ee3a89b4d8be57800cc5d1acaf6c45e3d1d795b69f6b96660def3b8053c94f8",
+  "sources": {
+    "Taskfold/Core/ReviewedTaskSteps.swift": "0525b06f564f4a43dfa561dbd74bff5ca9eb7574db12d454d2c7e03a7fde3013",
+    "Taskfold/Views/ReviewedTaskStepsView.swift": "5041f7c68e173df6521f96ab3c5b6cabd69e34f85a3872699f944ec2aea93452",
+    "TaskfoldTests/ReviewedTaskStepsTests.swift": "3f79ea10895cb513d32f40e551ea492b524f515dfcaf09dece6487dbdfd2f299"
+  }
+}

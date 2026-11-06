@@ -1,0 +1,17 @@
+{
+  "appSHA256": "242ef06b08ec82031c90e9367b4bdced951b639bb847361ed9283174dc14dc35",
+  "normalInboxList": true,
+  "secondChildSelected": true,
+  "oneSaveAction": true,
+  "selectionRetainedAfterSave": true,
+  "firstChildUnchanged": true,
+  "writes": 1,
+  "requests": 1,
+  "secondChildExactMetadataReadback": true,
+  "compactControlsVerified": true,
+  "savedStateAndDisabledSaveVerified": true,
+  "quitVerified": true,
+  "coldReturnCorrectChild": true,
+  "coldTitleVerified": true,
+  "finalQuitVerified": true
+}

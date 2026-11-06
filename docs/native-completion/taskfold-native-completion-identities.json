@@ -1,0 +1,20 @@
+{
+  "phone": {
+    "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "strictSignature": true,
+    "SHA256": {
+      "Taskfold": "5c355213fe10ac67f8248607b3c71363ad2f8b1f143bf40a0914e084b87536c8",
+      "Taskfold.debug.dylib": "fe4c2e47366abf5fc96494b37bad14a2d805c2a8b0d168205ce90dbdcc79226c",
+      "Info.plist": "a4c2bd9b1811756016b247954783a7c873cbf1a31dc5d7d887c5009e0004f519"
+    }
+  },
+  "tablet": {
+    "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "strictSignature": true,
+    "SHA256": {
+      "Taskfold": "5c355213fe10ac67f8248607b3c71363ad2f8b1f143bf40a0914e084b87536c8",
+      "Taskfold.debug.dylib": "fe4c2e47366abf5fc96494b37bad14a2d805c2a8b0d168205ce90dbdcc79226c",
+      "Info.plist": "a4c2bd9b1811756016b247954783a7c873cbf1a31dc5d7d887c5009e0004f519"
+    }
+  }
+}

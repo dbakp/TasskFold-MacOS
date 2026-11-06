@@ -1,0 +1,11 @@
+{
+  "phase": "v2",
+  "appSHA256": "0d2fac3c82314abf1b41fcaa59b10946994c0639b4ca353ffbaa8f0ad7c55c4f",
+  "spaceCompletedSecondChild": true,
+  "commandZRestoredSecondChild": true,
+  "completionWrites": 2,
+  "completionRequests": 2,
+  "quitVerified": true,
+  "coldReturnOpenChild": true,
+  "finalQuitVerified": true
+}

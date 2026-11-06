@@ -1,0 +1,794 @@
+{
+  "date": "2026-10-23",
+  "thisRepo": "TasskFold-MacOS",
+  "productionBehaviorChanged": true,
+  "scope": "Raw Auth refresh error-code parsing and profile hydration without session replacement; genuine hosted webhook renewal acceptance",
+  "regressions": [
+    {
+      "log": "profile-refresh-baseline.log",
+      "failedTests": 1,
+      "failedAssertions": 3,
+      "scope": "Old profile refresh invalidated current reauthentication context and pending sign-in"
+    },
+    {
+      "log": "auth-wire-baseline.log",
+      "failedTests": 1,
+      "failedAssertions": 5,
+      "scope": "Old raw wire parser missed recognized reasons and incorrectly fell back to a conflicting normalized code"
+    }
+  ],
+  "liveAuthWireProbe": {
+    "project": "dkhxrsshezkxciaqmubl",
+    "method": "Create an actual disposable password session; expire only its auth.sessions.not_after; submit that actual refresh token without printing it",
+    "httpStatus": 400,
+    "fields": [
+      "code",
+      "error_code",
+      "msg"
+    ],
+    "code": 400,
+    "error_code": "session_expired",
+    "credentialsPrinted": false
+  },
+  "core": {
+    "platform": "Mac-hosted Swift package tests",
+    "fullSuiteAfterProfileFix": {
+      "executed": 1408,
+      "passed": 1375,
+      "skipped": 33,
+      "failed": 0,
+      "log": "profile-refresh-all-core-mac.log"
+    },
+    "finalWireParserTransportSuite": {
+      "executed": 55,
+      "failed": 0,
+      "skipped": 0,
+      "log": "auth-wire-core-mac.log"
+    },
+    "newCoverage": [
+      "Metadata refresh retains session incarnation, connection scope and pending explicit sign-in",
+      "Late metadata response refused after same-account reentry",
+      "Token renewal completed during held metadata persistence is retained",
+      "Actual numeric code plus structured error_code formats",
+      "Recognized refresh reasons, conflicting fields, unknown reasons, rate limits and server failures"
+    ]
+  },
+  "native": {
+    "runtimeRepo": "TaskFold-iOS",
+    "runs": {
+      "phone": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792764553.263,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792764416.026,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "tablet": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792764861.262,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792764707.128,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      }
+    },
+    "scope": "Production app, Backend, HTTPS management, real preview password Auth, OS Keychain, native task capture and native Undo/Redo; exact Debug-only lost-create-response fixture discards one actual successful reply. No synthetic HTTP peer or memory credential vault.",
+    "checks": [
+      "Save one synthetic task through native capture and confirm its server fingerprint",
+      "Commit original connection and lose its actual success reply",
+      "Expire actual server sessions; reject management with old session",
+      "Wrong password refusal then correct same-account native renewal",
+      "New actual Auth session and identical saved task/connection fingerprints",
+      "Masked original setup reconfirmed without automatic Reveal",
+      "Native Undo removes the saved task on the server",
+      "Native Redo restores its task ID/title with a fresh valid generation",
+      "Normal relaunch uses renewed Keychain session and original private enrollment"
+    ],
+    "naturalJWTClockExpiryClaimed": false,
+    "schedulerUsed": false,
+    "MacRuntimeAccepted": false,
+    "speechAccepted": false,
+    "queuedEditRecoveryAccepted": false,
+    "passed": 2,
+    "skipped": 0,
+    "tabletTestOnlyCorrection": "Initial iPad run stopped before creating a task: the OS Save Password monitor consumed the first Add task tap. The final helper opens capture again only when no draft is visible. Same production app sources; final iPad test passed."
+  },
+  "builds": {
+    "iOS": "hosted-reauth-wire-build.log and hosted-reauth-menu-build.log: TEST BUILD SUCCEEDED",
+    "Mac": "auth-wire-mac-build.log: BUILD SUCCEEDED; unsigned compile only",
+    "iOSTestOnlyCorrection": "hosted-reauth-tablet-build.log: TEST BUILD SUCCEEDED"
+  },
+  "simulatorSigning": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "preliminaryRuns": [
+    {
+      "run": "hosted-reauth-phone",
+      "result": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792762439.157,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792762394.652,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo",
+            "testName": "testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "explanation": "Task title was queried as static text; actual task row is a button."
+    },
+    {
+      "run": "hosted-reauth-phone-retry",
+      "result": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792762597.06,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792762521.914,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo",
+            "testName": "testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "explanation": "Fixture name did not satisfy the existing Debug lost-reply guard."
+    },
+    {
+      "run": "hosted-reauth-phone-final",
+      "result": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792762910.243,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792762771.328,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo",
+            "testName": "testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "explanation": "Hosted renewal did not expose sign-in; subsequent investigation reproduced independent profile-incarnation and raw Auth wire-format defects."
+    },
+    {
+      "run": "hosted-reauth-profile-phone",
+      "result": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792763333.441,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792763181.612,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo",
+            "testName": "testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "explanation": "After profile fix, the raw Auth error_code refusal still became a generic error."
+    },
+    {
+      "run": "hosted-reauth-trace-phone",
+      "result": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792763571.074,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792763432.585,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo",
+            "testName": "testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "explanation": "Temporary print-only lifecycle tracing was not retained by Xcode; not an acceptance run."
+    },
+    {
+      "run": "hosted-reauth-expired-diagnostic",
+      "result": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792763759.294,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792763719.629,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testDebugExistingExpiredConnectionManager()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testDebugExistingExpiredConnectionManager",
+            "testName": "testDebugExistingExpiredConnectionManager()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "explanation": "Narrow diagnostic confirmed a generic AppFailure from the expired real session; not acceptance."
+    },
+    {
+      "run": "hosted-reauth-wire-phone",
+      "result": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792764080.109,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792763973.223,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "Failed to tap \"historyOptions\" Button: No matches found for Elements matching predicate '\"historyOptions\" IN identifiers' from input {(\n    Button, label: 'Add multiple tasks',\n    Button, label: 'Select tasks',\n    Button, label: 'Plan my day',\n    Button, label: 'Print or save PDF',\n    Button, label: 'View options',\n    Button, label: 'Undo & redo',\n    Button, identifier: 'sun.max', label: 'Today', Selected,\n    Button, identifier: 'tray', label: 'Inbox',\n    Button, identifier: 'calendar.day.timeline.left', label: 'Upcoming',\n    Button, identifier: 'calendar', label: 'Calendar',\n    Button, identifier: 'square.grid.2x2', label: 'Browse',\n    Button, identifier: 'openSettings', label: 'Settings and account',\n    Button, identifier: 'floatingAdd', label: 'Add task',\n    Button, label: 'Options for Native delivery proof phone c95c4984',\n    Button, label: 'Complete Native delivery proof phone c95c4984',\n    Button, identifier: 'taskDetails-7407120b-ae85-40fc-8211-9c4bb0a38055', label: 'Native delivery proof phone c95c4984',\n    Button\n)}\nPossibly caused by runtime issues:\nAutomation type mismatch: computed Button from legacy attributes vs PopUpButton from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 14;\n    \"XC_kAXXCAttributeElementBaseType\" = NSObject;\n    \"XC_kAXXCAttributeElementType\" = \"SwiftUI.AccessibilityNode\";\n    \"XC_kAXXCAttributeTraits\" = 1108101562369;\n}\nSee test report attachments for more detail.",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo",
+            "testName": "testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "explanation": "Real renewal and unchanged server fingerprints passed; Undo menu identifier selector was absent, while its visible label was present."
+    },
+    {
+      "run": "hosted-reauth-accepted-phone",
+      "result": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792764319.011,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792764230.073,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "Testing was canceled",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo",
+            "testName": "testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "explanation": "Explicitly interrupted before Redo: controller incorrectly expected the restored task generation to remain unchanged. Existing Undo recreation deliberately uses a fresh generation."
+    },
+    {
+      "run": "hosted-reauth-complete-tablet",
+      "result": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792764595.361,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792764564.996,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHostedWebhookReauthenticationPreservesSetupWorkAndUndo",
+            "testName": "testHostedWebhookReauthenticationPreservesSetupWorkAndUndo()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "explanation": "Initial iPad run stopped before creating a task: the OS Save Password monitor consumed the first Add task tap. The final helper opens capture again only when no draft is visible. Same production app sources; final iPad test passed."
+    }
+  ],
+  "sourceSha256AtCheckpoint": {
+    "Taskfold/Core/Backend.swift": "96b3aec6dd08e5e3483e23f46011a06eabb4f5fd1f39f6684f5291d501245ae0",
+    "TaskfoldTests/AccountTransportTests.swift": "4c296b58170ebbb6ec4df661118118f9b8de9b1edc88280dfc7b3ef59c436970"
+  },
+  "remaining": [
+    "Hosted native API-key session renewal",
+    "Queued-edit recovery across renewal",
+    "Real Google account selection and return",
+    "Mac UI/Keychain runtime",
+    "Wider spoken consent/history acceptance",
+    "Verified email intake",
+    "Advanced teams",
+    "Wearable clients"
+  ],
+  "userDeferrals": [
+    "Remote reminders",
+    "Older-client rollout safeguards",
+    "Distribution/signing/install-update verification",
+    "OAuth registration/provider acceptance",
+    "Physical location-reminder delivery"
+  ],
+  "normalFeatureEntriesEnabled": false,
+  "mainServiceChanged": false,
+  "realUserTasksChanged": 0,
+  "realUserAccountsChanged": 0,
+  "fullPxComplete": false,
+  "references": [
+    "https://supabase.com/docs/guides/auth/debugging/error-codes",
+    "https://supabase.com/docs/guides/auth/sessions"
+  ],
+  "hostedService": {
+    "date": "2026-10-23T14:05:58.635Z",
+    "project": "dkhxrsshezkxciaqmubl",
+    "branchId": "903521b4-470f-4ab1-8a69-b9f765255429",
+    "checks": {
+      "unsigned-worker-rejected": true,
+      "unsigned-receiver-rejected": true,
+      "private-inspection-rejected": true,
+      "two-real-auth-sessions": true,
+      "native-phone-committed-same-original-setup": true,
+      "native-phone-actual-server-sessions-expired": true,
+      "native-phone-fresh-server-session-and-unchanged-task": true,
+      "native-phone-recovered-same-original-setup": true,
+      "native-phone-task-undone-persisted": true,
+      "native-phone-task-redone-persisted": true,
+      "native-phone-reauthentication-ui-completed": true,
+      "native-tablet-committed-same-original-setup": true,
+      "native-tablet-actual-server-sessions-expired": true,
+      "native-tablet-fresh-server-session-and-unchanged-task": true,
+      "native-tablet-recovered-same-original-setup": true,
+      "native-tablet-task-undone-persisted": true,
+      "native-tablet-task-redone-persisted": true,
+      "native-tablet-reauthentication-ui-completed": true
+    },
+    "realTasksChanged": 0,
+    "mainChanged": false,
+    "scheduledInvocationClaimed": false,
+    "sourceHashes": {
+      "supabase/functions/automation-webhooks/challenge.ts": "a63e02b59c7e701216861e240d49e79eae6e79f088d3317f33758325466520fc",
+      "supabase/functions/automation-webhooks/deno.json": "e21d64e061a61d3dfaa342b09bef5fac4e19a112942e42d3770e69f972a33433",
+      "supabase/functions/automation-webhooks/deno.lock": "126a6925947d55d70530530120c55b1046acdc1fbcaea7db048ffcd489f20c04",
+      "supabase/functions/automation-webhooks/handler.ts": "f4aa19ad0382e8224ada2f6977ade9e63c55e4563b0131162f21b4bc8f445edf",
+      "supabase/functions/automation-webhooks/handler_test.ts": "9be958b21b06e72871f0bc6d6afab614ce0041ff43e81fd6e8b7b674337f2e55",
+      "supabase/functions/automation-webhooks/index.ts": "5cf334e5f4be518c0228346e82d27dbb369a4dcd5927cf1a22cf103f75ce8bd4",
+      "supabase/functions/automation-webhooks/master-config.ts": "26363393ae9ebd079f0fe8a01ee0e5d629e57be46260e68d58e0869bd854744a",
+      "supabase/functions/automation-webhooks/schedule-auth.ts": "3aa743898ca5c9dd0e80bff07cdbfca7969504d0acefc1b48cbfc4f485d414a0",
+      "supabase/functions/automation-webhooks/schedule-auth_test.ts": "59478acf50ef037e01ebefbdc044fdf00f5c88cf82a827342649a3c4d3409f71",
+      "supabase/functions/automation-webhooks/secret.ts": "2c74c7f4051aa92d1f8b7b0f92e69bfae4f07424065fa965e1ac7b6e91a64da1",
+      "supabase/functions/automation-webhooks/socket.ts": "1611d0daeffae727b529fb33c58a29bcf5fea9ebbd3d4c3a14395e781572cc37",
+      "supabase/functions/automation-webhooks/socket_test.ts": "024a9dc60706987e6d909e7eebd0b77261c1b4386c72565fe5a6f389c512ba15",
+      "supabase/functions/automation-webhooks/transport.ts": "7c3b4ef94cafa46e9bed833307261c5708a33db1ff2946703ea8b1f3f1241bdd",
+      "supabase/functions/automation-webhooks/transport_test.ts": "30c9d1ebb80455bd01ab560df2774adfc137d9b8985ced4ae7648079387777e3",
+      "supabase/functions/automation-webhooks/worker.ts": "baa08d5749b5249afbd6b20e8cd1862a18274ae5c2a97c9b2b0b36ca5eb8fda9",
+      "supabase/functions/automation-webhooks/worker_test.ts": "c09f0132c3ac4f5c0efb9698a1d6ca71c87d83679f3948d2f812e521b5d3133d",
+      "supabase/functions/automation-keys/handler.ts": "2c1529714b7df36c4a674a2d8a15d177d5a5c4f3fd4e14a2fdc7e945b3849892",
+      "supabase/functions/automation-keys/handler_test.ts": "e7dff738665a2f1a5a1a4c331c464016c478fd7f2fd41646c51b7073092f36d1",
+      "supabase/functions/automation-keys/index.ts": "fbf48999a4352372885951e49b4d60d95fea511557e2129e7f2b450196d88c6f",
+      "supabase/functions/automation-tasks/handler.ts": "f404678fd8861481bbfea8223336a3acca274a93ae38caa26eb76be851e920b3",
+      "supabase/functions/automation-tasks/handler_test.ts": "6e76322be40979249925f5a5e9c6fa174994c123266696eee069fec0d0cc3852",
+      "supabase/functions/automation-tasks/index.ts": "372ed38c911916e4ddf979a94a7528516eac1e577a67f604322993ce24fd089c",
+      "supabase/functions/_shared/automation-admission.ts": "8d8eeb3965ed33c20892b42772a3e103c8a40464c7769c9be68eadaaad735865",
+      "supabase/functions/_shared/automation-admission_test.ts": "1478d6f54d659b909f25e5c12d77b73aa8f0f920f13f4747b376586d79c789e6",
+      "supabase/functions/dispatch-webhooks/index.ts": "516827ab9c09b4a479d36c6580abe03bfbf5e431dc65b47fcd6e503874251b9a",
+      "Scripts/Diagnostics/prepare-webhook-hosted.mjs": "6c27cc832ef49f8b06290240a0f930261e3caf0370640f7db49af942d08b5e21",
+      "Scripts/Diagnostics/test-webhook-delivery-hosted.mjs": "83a103c295044738f969803f463788bb7a68ae197dd157d0cb82f98795c40432",
+      "Scripts/Diagnostics/webhook-hosted-base.sql": "922bc4b4435762b4a57b53f448ca245656dcbe36ab9deb3c1ae6eeee0837401c",
+      "Scripts/Diagnostics/webhook-hosted-receiver.sql": "e2cca4ac6f2186caf37c3282b925b7d03cac06e488abb21f01e01a558ac48080",
+      "Scripts/Diagnostics/webhook-hosted-receiver.ts": "e518e833fd09bb3a6241c944fc3b55cdd780d849884ef614947104bc27d515b1",
+      "Scripts/Diagnostics/webhook-native-hosted.mjs": "d0d073b034f521ed680763804840dde1aea088daba5522fc9eed7d1c91e1fe9d",
+      "Scripts/Diagnostics/webhook-service-recovery.mjs": "f7ce641f8eb32dc700256229190ae6aa83fceeb8b58fc649d40884dfb5645a5b"
+    },
+    "cleanup": {
+      "users": true,
+      "functions": true,
+      "secrets": true,
+      "files": true
+    },
+    "phase": "passed",
+    "passed": true
+  },
+  "visualReview": {
+    "runtimeRepo": "TaskFold-iOS",
+    "bothMaskedScreenshotsInspected": true,
+    "paths": [
+      "docs/screenshots/hosted-connection-reauthentication/phone.png",
+      "docs/screenshots/hosted-connection-reauthentication/tablet.png"
+    ]
+  },
+  "simulatorSigningAfterTabletTestCorrection": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "cleanup": {
+    "devices": {
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+        "ownedAppAndRunnerUninstalled": true
+      },
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+        "ownedAppAndRunnerUninstalled": true
+      }
+    },
+    "branch": {
+      "branchId": "903521b4-470f-4ab1-8a69-b9f765255429",
+      "project": "dkhxrsshezkxciaqmubl",
+      "deletedAndAbsenceVerified": true,
+      "remainingDefaultUntouched": true
+    },
+    "hostedUsersFunctionsSecretsCleaned": true,
+    "privateConnectionAndControllerFilesRemoved": true,
+    "ownedNativeHostRawResultsAndMacBuildRemoved": true,
+    "temporaryLifecycleTracingExcludedFromFinalSources": true,
+    "logsRedacted": true,
+    "prunedMiB": 846.1,
+    "retainedCurrentIOSBuildCache": true,
+    "noMacTestAppLaunched": true
+  }
+}

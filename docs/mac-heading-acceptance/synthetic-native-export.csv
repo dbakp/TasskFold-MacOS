@@ -1,0 +1,8 @@
+"format","document_version","workflow","name","capabilities","entity","id","parent_id","project_id","section_id","title","notes","type","priority","estimate_minutes","color","order_index","labels","planned_offset","deadline_offset","repeat_start_offset","repeat_end_offset","due_time","time_zone","is_recurring","recurrence_pattern"
+"taskfold-workflow-v1","2","task","Reference workflow","task_headings","workflow","","","","","","","","","","","","","","","","","","","",""
+"taskfold-workflow-v1","2","task","Reference workflow","task_headings","project","project-0001","","","","Design studio","","","","","#8b5cf6","1","","","","","","","","",""
+"taskfold-workflow-v1","2","task","Reference workflow","task_headings","task","task-1","","project-0001","","Prepare workflow brief","Keep the original notes.","heading","4","","","","[]","0","","","","","","false",""
+"taskfold-workflow-v1","2","task","Reference workflow","task_headings","task","task-1-1","task-1","","","Planning","Keep these checklist notes.","task","","","","","[]","70","","","","","","",""
+"taskfold-workflow-v1","2","task","Reference workflow","task_headings","task","task-1-1-1","task-1-1","","","Research","Keep these checklist notes.","heading","","","","","[]","70","","","","","","",""
+"taskfold-workflow-v1","2","task","Reference workflow","task_headings","task","task-1-1-1-1","task-1-1-1","","","Collect references","Keep these checklist notes.","task","","","","","[]","70","","","","","","",""
+"taskfold-workflow-v1","2","task","Reference workflow","task_headings","task","task-1-2","task-1","","","Review","Keep these checklist notes.","task","","","","","[]","70","","","","","","",""

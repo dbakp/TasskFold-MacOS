@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import {randomUUID,createHash} from 'node:crypto';
+import {readFile,writeFile,readdir} from 'node:fs/promises';
+import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
+import {loadWorkflowRunSchema} from './team-workflow-run-schema.mjs';
+const report={checks:{},hostedChanges:false,realDataChanged:false,rolloutChanged:false};
+const check=(name,actual,expected=true)=>{assert.deepEqual(actual,expected,name);report.checks[name]=true},json=v=>lit(JSON.stringify(v))+'::jsonb';
+const owner=randomUUID(),other=randomUUID(),task=randomUUID();let pg;
+try {
+ pg=await createPostgresFixture({advisors:true});await loadWorkflowRunSchema(pg.raw,{taskTypes:true});
+ for(const id of [owner,other])await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(id)},${lit(id+'@example.invalid')},now());insert into auth.sessions(id,user_id) values(${lit(id)},${lit(id)});`);
+ const statement=(command,{actor=owner,role='authenticated',session=actor}={})=>pg.scalar(`begin;create temp table result(value jsonb,code text) on commit drop;grant all on result to authenticated,anon;set local role ${role};set local request.jwt.claim.sub=${lit(actor)};set local request.jwt.claims=${lit(JSON.stringify({sub:actor,session_id:session}))};do $r$begin begin ${command};exception when others then insert into result values(null,sqlstate);end;end$r$;select jsonb_build_object('value',value,'code',code) from result;commit`);
+ const call=(expr,options={})=>statement(`insert into result values((${expr}),null)`,options);
+ const boundary=(options={})=>call('public.taskfold_workspace_boundary()',options);
+ const row=()=>pg.scalar(`select to_jsonb(t) from public.tasks t where id=${lit(task)}`);
+ const patch=(base,fields,options={})=>call(`to_jsonb(public.taskfold_patch_task(${lit(task)},${json(base)},${json(fields)}))`,options);
+ const policy=()=>pg.scalar("select coalesce(jsonb_agg(to_jsonb(p) order by policyname),'[]') from pg_policies p where schemaname='public' and tablename='tasks'");
+ const acl=()=>pg.scalar("select coalesce(jsonb_agg(jsonb_build_object('schema',n.nspname,'name',p.proname,'acl',p.proacl::text) order by n.nspname,p.proname),'[]') from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.proname in('workspace_boundary','taskfold_workspace_boundary','taskfold_patch_task')");
+ const oldBoundary=await boundary(),oldPolicy=await policy(),oldACL=await acl();check('pre-migration boundary is usable',oldBoundary.code,null);check('pre-migration does not advertise personal types','personal_task_types_protocol' in oldBoundary.value,false);
+ const migration=(await readdir(new URL('../../supabase/migrations/',import.meta.url))).find(x=>x.endsWith('_personal_heading_capability.sql'));const sql=await readFile(new URL('../../supabase/migrations/'+migration,import.meta.url),'utf8');report.migration=migration;report.migrationSHA256=createHash('sha256').update(sql).digest('hex');
+ await pg.raw('alter table public.tasks disable trigger taskfold_guard_task_headings');
+ let partialCode=null;try {await pg.raw(sql)}catch(error){partialCode=error.code}
+ check('partial install cannot advertise unguarded heading writes',partialCode,'P0001');
+ check('partial refusal leaves boundary unchanged',(await boundary()).value,oldBoundary.value);
+ await pg.raw('alter table public.tasks enable trigger taskfold_guard_task_headings');await pg.raw(sql);
+ check('task row policies unchanged',await policy(),oldPolicy);check('existing function ACLs unchanged',await acl(),oldACL);
+ const supported=await boundary();check('authenticated compatibility read succeeds',supported.code,null);check('personal support independent of team rollout',supported.value.personal_task_types_protocol,1);check('team heading authoring stays off',supported.value.task_types_protocol,0);check('team reads stay off',supported.value.native_team_reads_enabled,false);
+ check('new compatibility field changes boundary token',supported.value.token!==oldBoundary.value.token);check('unchanged compatibility read stays stable',(await boundary()).value,supported.value);
+ check('other actor receives only their own boundary',(await boundary({actor:other})).value.account,other);check('other actor receives no owner projects',(await boundary({actor:other})).value.projects,[]);
+ check('anonymous cannot call boundary',(await boundary({role:'anon'})).code,'42501');check('wrong session cannot certify support',(await boundary({session:randomUUID()})).code,'28000');
+ const inserted=await statement(`with inserted as(insert into public.tasks(id,user_id,title,description,is_heading,subtasks) values(${lit(task)},${lit(owner)},'Personal reference','Keep every instruction',true,${json([{id:'child',title:'Productive child',completed:false,subtasks:[]}])}) returning *) insert into result select to_jsonb(inserted),null from inserted`);
+ check('actual authenticated insert accepts heading',inserted.code,null);const initial=await row();check('new heading remains open',initial.completed,false);check('new heading type retained',initial.is_heading,true);check('new heading notes retained',initial.description,'Keep every instruction');
+ const base={task_generation:initial.task_generation,is_heading:true,completed:false,completed_at:null,completion_version:initial.completion_version};const converted=await patch(base,{is_heading:false});check('actual personal type edit succeeds',converted.code,null);check('type change advances revision',converted.value.completion_version,initial.completion_version+1);
+ const retry=await patch(base,{is_heading:false});check('lost-reply retry succeeds',retry.code,null);check('retry keeps exact row',retry.value,converted.value);
+ const newBase={...base,is_heading:false,completion_version:converted.value.completion_version};const restored=await patch(newBase,{is_heading:true});check('explicit inverse type edit succeeds',restored.code,null);check('inverse restores open heading',restored.value.is_heading,true);
+ const before=await row();check('stale ABA type change refused',(await patch(base,{is_heading:false})).code,'P0001');check('stale edit preserves whole row',await row(),before);
+ check('other owner cannot edit heading',(await patch({...base,completion_version:before.completion_version},{description:'Wrong account'},{actor:other})).code,'P0001');check('denied actor leaves row unchanged',await row(),before);
+ const child=structuredClone(before.subtasks);child[0].completed=true;const completed=await patch({task_generation:before.task_generation,subtasks:before.subtasks},{subtasks:child});check('ordinary child can complete beneath heading',completed.code,null);check('root heading stays open after child completion',completed.value.completed,false);check('child completion really persisted',completed.value.subtasks[0].completed,true);
+ check('legacy completion cannot finish heading',(await patch({task_generation:before.task_generation,completed:false},{completed:true})).code,'23514');
+ await pg.raw(sql);check('migration rerun is stable',(await boundary()).value,supported.value);
+ report.advisors=await pg.advisors();check('no new warning/error advisor findings',report.advisors.result.filter(x=>['WARN','ERROR'].includes(x.level)&&x.name!=='auth_rls_initplan'),[]);
+ report.checkCount=Object.keys(report.checks).length;report.containerRemoved=await pg.close();pg=null;if(process.argv[2])await writeFile(process.argv[2],JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({checks:report.checkCount,containerRemoved:report.containerRemoved}));
+} finally {if(pg)await pg.close()}

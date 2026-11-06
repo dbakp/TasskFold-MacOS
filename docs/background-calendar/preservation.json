@@ -1,0 +1,16 @@
+{
+  "macCloudAccounts": {
+    "9a8bfc3d-42ec-4c89-8f1d-c830b2215152": true,
+    "316d6706-449c-4ab8-8480-db12e7d92642": true
+  },
+  "protectedDevices": {
+    "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705": {
+      "files": 43,
+      "exact": true
+    },
+    "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969": {
+      "files": 26,
+      "exact": true
+    }
+  }
+}

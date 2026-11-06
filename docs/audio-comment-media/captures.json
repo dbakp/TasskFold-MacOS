@@ -1,0 +1,32 @@
+[
+  {
+    "file": "mac-dark-caption.png",
+    "source": "mac-final",
+    "title": "Mac audio caption dark"
+  },
+  {
+    "file": "mac-dark-controls.png",
+    "source": "mac-final",
+    "title": "Mac audio review controls dark"
+  },
+  {
+    "file": "mac-refused-replacement.png",
+    "source": "mac-final",
+    "title": "Refused replacement retains saved caption and duration"
+  },
+  {
+    "file": "mac-restored.png",
+    "source": "mac-final",
+    "title": "Restored audio recording after cold launch"
+  },
+  {
+    "file": "mac-saved.png",
+    "source": "mac-final",
+    "title": "Reviewed and saved audio draft"
+  },
+  {
+    "file": "mac-refusal.png",
+    "source": "mac-final",
+    "title": "Audio draft synthetic permission refusal"
+  }
+]

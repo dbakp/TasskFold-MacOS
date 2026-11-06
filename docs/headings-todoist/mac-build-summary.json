@@ -1,0 +1,7 @@
+{
+  "platform": "mac",
+  "configuration": "Debug",
+  "architecture": "arm64",
+  "strictSignatureVerified": true,
+  "binarySHA256": "b79efda5d07dc630d17bb9d8393f30eaf1243794214b3c8a10723da111b8966b"
+}

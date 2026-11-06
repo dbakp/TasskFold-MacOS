@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-26",
+  "build": "passed",
+  "configuration": "Debug",
+  "signature": "unsigned; compilation only",
+  "logSHA256": "639f8c4c488c1df56818ecce45748b47a7c29456c490c8ccdef8e3a81750019e",
+  "nativeMacAcceptance": "pending"
+}

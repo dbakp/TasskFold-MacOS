@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-11",
+  "baseCommits": {
+    "TaskFold-iOS": "88055c5",
+    "TasskFold-MacOS": "6e61a6d"
+  },
+  "scope": "Native iPhone linked-note touch journey at normal/light and largest/dark text. No production app behavior changed; no VoiceOver or Mac native acceptance.",
+  "build": "linked-notes-build-v3.log",
+  "signing": "linked-notes-signing-v3.json",
+  "sourceHashes": {
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "cb05fdbc2c2a670fb41782dc2c0490ba5a4b03aaaa01245efcc809ce478bb39b",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "cb05fdbc2c2a670fb41782dc2c0490ba5a4b03aaaa01245efcc809ce478bb39b",
+    "TaskFold-iOS/Scripts/sign_simulator_test_products.py": "622997cc0a8f642d88d12e3fe4190373dff7fec0417effc620b3efdab72fcd1b"
+  },
+  "functionalRun": {
+    "resultBundle": "linked-notes-phone-v2.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    },
+    "accepted": [
+      "Native capture saves notes containing a synthetic https://example.invalid/review link and a 25-minute estimate; task and full notes persist through termination/relaunch.",
+      "Native accessibility tree exposes an independent, hittable Link element. Actual touch opens SafariViewService and does not also open task details.",
+      "Close returns to the original still-open task. Touching the title opens details with exact complete original title and raw notes; Save leaves the task incomplete.",
+      "Both cases return to the original cloud Today task. Six final screenshots inspected: compact normal preview, wrapping largest link/notes, in-app browser with expected unavailable synthetic host, unchanged editor values. Largest paragraph needs scrolling; the editor capture is not the whole paragraph."
+    ]
+  },
+  "initialFailure": {
+    "resultBundle": "linked-notes-phone-v1.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 0,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Failed"
+    },
+    "cause": "Agent build command set CODE_SIGNING_ALLOWED=NO, omitting embedded Simulator entitlements. Real team re-signing alone cannot restore that identity. Both linked-note interactions passed their assertions but original cloud return showed nativeAuthentication and failed. Normal Xcode build restored embedded application/App Group identity and the existing session without login or session replacement. No product auth regression established.",
+    "builds": [
+      "linked-notes-build-v1.log",
+      "linked-notes-build-v2.log"
+    ],
+    "additionalSetup": "Initial source append/copy ran from the stage directory with root-relative paths and failed before changing source; build-v1 therefore used unchanged tests. Corrected paths copied source before build-v2.",
+    "retainedFailureHierarchies": [
+      "docs/accessibility-audit-reports/linked-notes-signing-return-largest.txt",
+      "docs/accessibility-audit-reports/linked-notes-signing-return-normal.txt"
+    ]
+  },
+  "signingToolChange": {
+    "path": "Scripts/sign_simulator_test_products.py",
+    "change": "Before any signing, read embedded __TEXT/__entitlements from actual app/widget Mach-O binaries and require the exact isolated application identifier/team and App Group. Verify equality after signing. Existing real-team/strict-signature checks remain. Document Xcode signing must stay enabled.",
+    "positive": "App and widget pass before/after checks in linked-notes-signing-v3.json. Native existing-session return passes.",
+    "negative": {
+      "positive": "App/widget identity and App Group verified before and after signing; linked-notes-signing-v3.json",
+      "negative": "Read-only Mach-O /usr/bin/true has no Simulator entitlement section; parser rejects it. This is a missing-section guard check, not platform or end-to-end signing coverage.",
+      "rejectedMissingSimulatorEntitlements": true,
+      "earlierProbe": "Owned Simulator preview dylib unexpectedly has embedded entitlements; it was unsuitable as missing-section input. No signing or native test was repeated for this probe."
+    }
+  },
+  "cloudCleanup": {
+    "resultBundle": "linked-notes-cloud-reset-v1.xcresult",
+    "summary": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    },
+    "checks": "Original selected full note and ended Focus cold routes pass after cloud reset."
+  },
+  "dataPreservation": {
+    "fullOriginalCloudCacheParsedEqual": true,
+    "originalWidgetFieldsEqual": {
+      "account": true,
+      "focusSession": true,
+      "notes": true,
+      "pendingSync": true
+    },
+    "pendingSync": 0,
+    "localMode": false,
+    "widgetColdLaunchFixture": false,
+    "originalMacCloudCacheUnchanged": true,
+    "localTasks": 1,
+    "completedLocalTasks": [],
+    "localPending": 0,
+    "linkedNotesAndEstimatePreserved": true
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-linked-notes-largest-browser.png",
+      "sha256": "b6cd1a325b20690c86853ceda7cea8696c59d6fbfa89c81e19021210f033e022",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-linked-notes-largest-editor.png",
+      "sha256": "ce20eccf98da0e32c9a2b2ef70a64f4cb0871ba50e841fb4c549837f951385e6",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-linked-notes-largest-list.png",
+      "sha256": "188a19962327b834b6f47d1a1fc26a2175218739ae902ee1dd441dd068479faa",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-linked-notes-normal-browser.png",
+      "sha256": "891bb7b65c287601d40806115ad29349bc763163bf50bef60deeeb90f3dd48f5",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-linked-notes-normal-editor.png",
+      "sha256": "7f7bd1306dafaa2b59b7d6a8e4dbc6437e0b34f8c74e889440054c8d777ff933",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-linked-notes-normal-list.png",
+      "sha256": "f6713c26bbc498f661dd8d859b87b3ec3d07c63f2312a55fa2a9cd3262577269",
+      "inspected": true
+    }
+  ],
+  "storage": {
+    "allocatedBytesRemoved": 74092544,
+    "manifest": "linked-notes-pruned-manifest.json",
+    "nativeBundlesRetained": true
+  },
+  "remaining": "Unfiltered audit findings remain normal 3/largest 2; no new audit or suppression. Actual VoiceOver/hardware keyboard, native Mac linked-note/current completion and other P0 provider/distribution boundaries remain open. Latest desktop observation explicitly reports locked Mac."
+}

@@ -10,13 +10,13 @@ struct FinderView: View {
     @FocusState private var searchFocused: Bool
     /// The last few searches, shared with iOS through the "recentSearches" key.
     @AppStorage("recentSearches") private var recentSearchesData = Data()
-    private var recentSearches: [String] { (try? JSONDecoder().decode([String].self, from: recentSearchesData)) ?? [] }
+    private var recentSearches: [String] { (try? TaskfoldJSONDecoder().decode([String].self, from: recentSearchesData)) ?? [] }
     private func remember(_ term: String) {
         let trimmed = term.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         var list = recentSearches.filter { $0.caseInsensitiveCompare(trimmed) != .orderedSame }
         list.insert(trimmed, at: 0)
-        recentSearchesData = (try? JSONEncoder().encode(Array(list.prefix(6)))) ?? Data()
+        recentSearchesData = (try? TaskfoldJSONEncoder().encode(Array(list.prefix(6)))) ?? Data()
     }
 
     private struct Result: Identifiable {

@@ -1,0 +1,26 @@
+{
+  "Taskfold/Core/VoiceDraft.swift": {
+    "source": "ad70d4b2593da6734f0bc6cee6634bdcf94a67cc32fae24ce6a962e943895f18",
+    "staged": "ad70d4b2593da6734f0bc6cee6634bdcf94a67cc32fae24ce6a962e943895f18"
+  },
+  "Taskfold/VoiceCapture.swift": {
+    "source": "cd67f14486a6f18d13ad720d99e2f5b21bccb8e452c784a2f4e8bf1eb3a8f172",
+    "staged": "9ea3cdafa4dcd53887605e9cb2f4354937893acbcadd5c21426e9989e3b6a1f2"
+  },
+  "Taskfold/Views/WorkflowViews.swift": {
+    "source": "ba81bdcea598e4169301a070e7fd12cb21c812a8ccf3fe57041bd7c6043be1a7",
+    "staged": "ba81bdcea598e4169301a070e7fd12cb21c812a8ccf3fe57041bd7c6043be1a7"
+  },
+  "Taskfold/Views/VoiceDraftView.swift": {
+    "source": "8feee5776531ef535269c124654f86f335bfeb8c27a66b97ce8876d222a9a6d6",
+    "staged": "8feee5776531ef535269c124654f86f335bfeb8c27a66b97ce8876d222a9a6d6"
+  },
+  "TaskfoldUITests/TaskfoldMacUITests.swift": {
+    "source": "d39bbeb755444f77e3db5b9235895a0f3fda2cea1a2048e9aed7115e714a7dcf",
+    "staged": "d39bbeb755444f77e3db5b9235895a0f3fda2cea1a2048e9aed7115e714a7dcf"
+  },
+  "TaskfoldTests/VoiceDraftTests.swift": {
+    "source": "662c762c064845c4bbbf092f9dc867f598ed95b4880d34d7f8d68a6cd9770ee7",
+    "scope": "Core runner, not native app input"
+  }
+}

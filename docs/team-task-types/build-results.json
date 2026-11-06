@@ -1,0 +1,7 @@
+{
+  "date": "2026-10-26",
+  "configuration": "Debug arm64",
+  "build": "passed",
+  "signing": "disabled; compile only",
+  "logSHA256": "018f2a3431fca57b073b5889a12b7cb28cb9003a53ebb635e6c9d99624100691"
+}

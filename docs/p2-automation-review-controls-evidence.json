@@ -1,0 +1,191 @@
+{
+  "date": "2026-10-23",
+  "scope": "Independent API-key Reveal/Copy actions and actual Simulator clipboard lifecycle",
+  "runtimeRepo": "TaskFold-iOS",
+  "productionBehaviorChanged": true,
+  "fix": "Borderless style on the two secret-review buttons prevents automatic Form row activation of both actions",
+  "normalEntryEnabled": false,
+  "fullPxComplete": false,
+  "fullAutomationComplete": false,
+  "baseline": {
+    "result": "Failed",
+    "passedTests": 0,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "failures": [
+      {
+        "test": "testAutomationClipboardExpiresAndRevealHidesOnBackground()",
+        "message": "XCTAssertEqual failed: (\"Checking clipboard expiry\") is not equal to (\"Clipboard check not started\") - Reveal must not copy the key"
+      }
+    ]
+  },
+  "acceptedCases": {
+    "passed": 4,
+    "skipped": 0,
+    "perDevice": [
+      "Reveal does not start Copy; background/suspend conceals raw value; Copy stays masked; actual one-minute expiry; acknowledgement and normal relaunch do not restore unfinished setup",
+      "Same checks while newer system clipboard content is preserved beyond the previous key expiry"
+    ]
+  },
+  "runs": {
+    "phone": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792754649.805,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792754448.241,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    },
+    "tablet": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+            "deviceName": "iPad Pro 13-inch (M5)",
+            "modelName": "iPad Pro 13-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792754885.727,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792754679.072,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    }
+  },
+  "scopeDetails": {
+    "UI": "Real native Form/button activation and all accessible labels/values checked for raw key prefix",
+    "pasteboard": "Actual UIPasteboard with real 60-second expiry; fixed result only, no copied value exported",
+    "enrollmentStorage": "Actual private Simulator Keychain API, not physical-device or Mac runtime acceptance",
+    "API": "Synthetic exact-host URLProtocol peer; no real Auth, hosted key issuance or task mutation"
+  },
+  "helper": {
+    "feature": "automation",
+    "localOnly": true,
+    "fixedNamespace": "workflowtestsp1",
+    "webhookDefaultPreserved": true,
+    "negativeChecks": [
+      "Automation with hosted connection rejected before output creation",
+      "Unsupported feature rejected before output creation"
+    ],
+    "actualPreparationAndSigningPassed": true
+  },
+  "builds": {
+    "iOS": "automation-review-fixed-build.log: TEST BUILD SUCCEEDED",
+    "Mac": "automation-review-mac-build.log: BUILD SUCCEEDED; no runtime claim"
+  },
+  "signing": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "remaining": [
+    "Mac interaction/pasteboard/Keychain runtime acceptance",
+    "Wider accessibility coverage",
+    "Hosted webhook session-expiry and server master-key recovery",
+    "Email intake, advanced teams and wearable clients"
+  ],
+  "deferred": [
+    "Remote reminders",
+    "Older-client safeguards",
+    "Distribution/signing/install-update checks",
+    "OAuth registration/provider acceptance",
+    "Physical location-reminder delivery"
+  ],
+  "realTasksChanged": 0,
+  "realAccountsChanged": 0,
+  "hostedKeysIssued": 0,
+  "cloudResourcesCreated": false,
+  "mainChanged": false,
+  "cleanup": {
+    "completed": true,
+    "devices": {
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+        "ownedAppAndRunnerUninstalled": true
+      },
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+        "ownedAppAndRunnerUninstalled": true
+      }
+    },
+    "ownedHostAndRawArchivesRemoved": true,
+    "finishedBuildCachesRemoved": true,
+    "retainedTypedInputLogsRedacted": true,
+    "prunedMiB": 1082.7,
+    "noCloudCleanupNeeded": true
+  },
+  "thisRepo": "TasskFold-MacOS",
+  "thisPlatformRuntimeAccepted": false,
+  "sourceSha256AtCheckpoint": {
+    "Taskfold/Views/AutomationAccessView.swift": "c46d0853329ae0c8ce8d751a8d3cd0c06cfa336e463eeab448b940c60d930563"
+  }
+}

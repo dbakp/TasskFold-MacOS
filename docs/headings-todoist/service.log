@@ -1,0 +1,19 @@
+Check supabase/functions/import-todoist/todoist_test.ts
+running 14 tests from ./supabase/functions/import-todoist/todoist_test.ts
+API v1 pagination follows cursor, deduplicates overlapping pages and honors rate limit ... ok (21ms)
+invalid pagination and cursor cycles fail instead of silently returning incomplete data ... ok (0ms)
+source identity separates same titles, users and source accounts ... ok (13ms)
+nested children retain planning, descriptions and their own comments; preview counts are exact ... ok (0ms)
+date-only, floating, timezone rollover and DST remain distinct from deadlines ... ok (0ms)
+supported recurrence converts; unsupported rules stay explicit and preserved ... ok (0ms)
+missing parents are recoverable, cycles fail, empty preview never estimates NaN ... ok (0ms)
+comments failure aborts snapshot; all tasks including children are queried ... ok (0ms)
+native JSON and explicit SSE both report committed result; provider identity is checked ... ok (3ms)
+unauthenticated requests never call Todoist or save; persistence failure never reports success ... ok (0ms)
+source-only heading mapping preserves identity, notes, files, dates and hierarchy ... ok (1ms)
+only exact Todoist leading asterisk-space maps, empty headings refuse, completed source state stays explicit ... ok (1ms)
+heading imports fail before write unless server, client and reviewed counts agree ... ok (5ms)
+heading nesting outside current reader capacity refuses before partial preparation ... ok (1ms)
+
+ok | 14 passed | 0 failed (55ms)
+

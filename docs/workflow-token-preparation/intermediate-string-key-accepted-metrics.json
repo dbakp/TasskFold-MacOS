@@ -1,0 +1,105 @@
+{
+  "mac": {
+    "1000": {
+      "pending": 4001,
+      "widgetIdle": true,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "widgetReadySeconds": 1.435113292,
+      "saved": true,
+      "error": null,
+      "proof": "aed70b79-b4b7-4c9c-b9d8-1043dc10bce9",
+      "commands": 4001,
+      "undoCommands": 1,
+      "count": 1000,
+      "widgetLists": 1001,
+      "tasks": 1001,
+      "seconds": 0.462880167,
+      "taskRevisionDelta": 1
+    },
+    "5000": {
+      "saved": true,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "taskRevisionDelta": 1,
+      "widgetLists": 5001,
+      "tasks": 5001,
+      "proof": "857af49e-6f16-4cb0-a6a0-739560e5f87f",
+      "widgetIdle": true,
+      "widgetReadySeconds": 18.763261541,
+      "count": 5000,
+      "error": null,
+      "commands": 20001,
+      "seconds": 2.794307875,
+      "pending": 20001,
+      "undoCommands": 1
+    }
+  },
+  "phone": {
+    "1000": {
+      "tasks": 1001,
+      "count": 1000,
+      "widgetIdle": true,
+      "pending": 4001,
+      "seconds": 0.558235791,
+      "error": null,
+      "undoCommands": 1,
+      "taskRevisionDelta": 1,
+      "saved": true,
+      "commands": 4001,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "proof": "3bc7dead-9185-4b23-9d5b-0f0b0c283d32",
+      "widgetReadySeconds": 1.507723,
+      "widgetLists": 1001
+    },
+    "5000": {
+      "error": null,
+      "commands": 20001,
+      "taskRevisionDelta": 1,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "seconds": 2.466519459,
+      "saved": true,
+      "widgetReadySeconds": 14.815837542,
+      "pending": 20001,
+      "widgetLists": 5001,
+      "undoCommands": 1,
+      "widgetIdle": true,
+      "proof": "60534df9-a13d-4234-96d1-261dc11ad4c5",
+      "tasks": 5001,
+      "count": 5000
+    }
+  },
+  "tablet": {
+    "5000": {
+      "widgetLists": 5001,
+      "commands": 20001,
+      "saved": true,
+      "pending": 20001,
+      "count": 5000,
+      "taskRevisionDelta": 1,
+      "error": null,
+      "tasks": 5001,
+      "proof": "99293569-bb75-4489-a8f6-cc171e597803",
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "widgetIdle": true,
+      "widgetReadySeconds": 14.627635292,
+      "undoCommands": 1,
+      "seconds": 2.512482292
+    },
+    "1000": {
+      "widgetIdle": true,
+      "undoCommands": 1,
+      "widgetReadySeconds": 1.470187834,
+      "count": 1000,
+      "widgetLists": 1001,
+      "proof": "c7ae8b12-c492-4cbe-aeb5-705383652476",
+      "taskRevisionDelta": 1,
+      "saved": true,
+      "pending": 4001,
+      "error": null,
+      "commands": 4001,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "tasks": 1001,
+      "seconds": 0.557729875
+    }
+  },
+  "scopeNote": "Superseded String-key prototype before the Unicode regression repair; not acceptance of the final byte-key implementation."
+}

@@ -1,0 +1,39 @@
+{
+  "status": "gated native private-draft candidate; audio comments remain unfinished",
+  "coreTests": 47,
+  "syntheticAudioControllerChecks": 19,
+  "dictationControllerChecks": 17,
+  "native": {
+    "distinctAcceptedCases": 4,
+    "runtimeWarnings": [],
+    "scope": "synthetic recorder and silent player; not genuine audio/TCC/interruptions/spoken acceptance",
+    "runs": [
+      "mac-final: 4 passes"
+    ]
+  },
+  "regression": "Refused replacement previously reset elapsed duration to zero; source before check fails only permissionRefusalRestoresEarlierDuration; final controller/native cases retain 0:01 and caption.",
+  "nativeBuildCommand": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project /tmp/taskfold-workflow-native-mac-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -derivedDataPath /tmp/taskfold-workflow-native-mac-build -destination platform=macOS,arch=arm64 CODE_SIGNING_ALLOWED=YES CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=3UZ4C73FM2 CODE_SIGN_IDENTITY=9421BFBE87503809AB8274B2B84048C65BE9D2FC",
+  "newSourceCompilerWarnings": [],
+  "sources": {
+    "Taskfold/Core/AudioComments.swift": "e4977891ee4477412d28f8f633c6eb3384f31b658462b668742da52b7aefae88",
+    "Taskfold/Core/AudioCommentDecoding.swift": "d21dbbfa6223b185b8683c4ccdfdaf685eeed894b6e83e6fc3284cf2f384213f",
+    "Taskfold/Core/AudioCommentPending.swift": "04f41819ccf9ab19c26aa6cf03eed5e4c7bfcdc5cf1f315f22ff5d2c78693b3d",
+    "Taskfold/Core/AudioCommentVault.swift": "73be0fea165cc25013b5ba69de8f7c92ef74cb24620f27cffb794a747fdbb872",
+    "Taskfold/AudioSessionLease.swift": "7f715825854059ab846148d05aaba7de0bf0349af6658b26a58f0143f80d869c",
+    "Taskfold/VoiceCapture.swift": "d6659ee19c4cd2b633a0a935d16d5dd26984b6bdad49831d8f9c8dba9522e9d1",
+    "Taskfold/AudioCommentMedia.swift": "6b1eb341287158aefe91faecb4f46d47dda8b741adc028b426bdc829024b6ad5",
+    "Taskfold/AudioCommentCapture.swift": "d720bed494d881acc420719d8a31e02485c9f5e6b992b66d86e9e8c06da55f32",
+    "Taskfold/Views/AudioCommentDraftView.swift": "b7c1ba75c8a01fe20f49fc4df19f56174644b68d7f878951d0cdc966ac4308e1",
+    "Taskfold/AudioCommentNativeFixture.swift": "67f825818d75ee035f119e06f83dc64b2047eede31d42c6c58ebe58d31738a6f",
+    "TaskfoldUITests/AudioCommentUITests.swift": "8ed5fa6228c302090b71d35a96e6f17372b83a53036430273b16ed2dcd1ca769",
+    "TaskfoldTests/AudioCommentTests.swift": "6e4d2bfe541e89dedb0bd67a611acd158c191ba8604e4257417f01a2211dcffe",
+    "Taskfold/Info.plist": "e8a7f8daa65ed3d5def3e7193ae104aa87790edc0563ddde231325555ea75087"
+  },
+  "registrationIdempotent": true,
+  "remaining": "Ordinary entry points; private server publication and access/custody lifecycle; account removal; save conflict/recovery and unsaved window/Quit/background lifecycle; real recording/playback/interruption/permission/spoken acceptance; export/backup rules.",
+  "deepStrictSignatureVerification": true,
+  "binarySHA256": {
+    "Contents/MacOS/Taskfold": "075d5db1815f91c4ecb94de03f728b3820a954c67f8aeb98f8417d58ce0f7253",
+    "Contents/MacOS/Taskfold.debug.dylib": "653274d61d46a8324c16bbdd6e00f76592d3ffd588b58f6fc3665f9c39fbc9bb"
+  }
+}

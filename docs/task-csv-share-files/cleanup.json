@@ -1,0 +1,75 @@
+{
+  "records": [
+    {
+      "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/9857E29B-ABAA-4D32-84EB-A4807C6391C4/Documents/Taskfold-tasks.csv",
+      "sha256": "a517e29c09551f01986d028a510c3525085e91f5dfce39736ba26b2b4c52a8b5",
+      "bytes": 1089,
+      "kind": "verified synthetic output/marker"
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/9857E29B-ABAA-4D32-84EB-A4807C6391C4/Documents/Taskfold-export-destination.txt",
+      "sha256": "398067069a93eeeb7485b676cf44a090a4309868797018dee84e268f96bdbec7",
+      "bytes": 46,
+      "kind": "verified synthetic output/marker"
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/ECE507C1-5704-4243-A7F7-232BF745FDB8/data/Containers/Data/Application/A4C3A421-147C-4CFF-A346-1C07545C35B8/Documents/Taskfold-tasks.csv",
+      "sha256": "a517e29c09551f01986d028a510c3525085e91f5dfce39736ba26b2b4c52a8b5",
+      "bytes": 1089,
+      "kind": "verified synthetic output/marker"
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/ECE507C1-5704-4243-A7F7-232BF745FDB8/data/Containers/Data/Application/A4C3A421-147C-4CFF-A346-1C07545C35B8/Documents/Taskfold-export-destination.txt",
+      "sha256": "398067069a93eeeb7485b676cf44a090a4309868797018dee84e268f96bdbec7",
+      "bytes": 46,
+      "kind": "verified synthetic output/marker"
+    },
+    {
+      "path": "/tmp/taskfold-csv-share-native-phone.xcresult",
+      "allocatedBytesEstimate": 93569024,
+      "kind": "owned raw test result/obsolete export; useful evidence retained"
+    },
+    {
+      "path": "/tmp/taskfold-csv-share-native-v3-phone.xcresult",
+      "allocatedBytesEstimate": 412823552,
+      "kind": "owned raw test result/obsolete export; useful evidence retained"
+    },
+    {
+      "path": "/tmp/taskfold-csv-share-native-v3-ipad.xcresult",
+      "allocatedBytesEstimate": 353517568,
+      "kind": "owned raw test result/obsolete export; useful evidence retained"
+    },
+    {
+      "path": "/tmp/taskfold-csv-share-native-v5-phone.xcresult",
+      "allocatedBytesEstimate": 91566080,
+      "kind": "owned raw test result/obsolete export; useful evidence retained"
+    },
+    {
+      "path": "/tmp/taskfold-csv-share-native-v5-ipad.xcresult",
+      "allocatedBytesEstimate": 6692864,
+      "kind": "owned raw test result/obsolete export; useful evidence retained"
+    },
+    {
+      "path": "/tmp/taskfold-csv-share-native-v8-phone.xcresult",
+      "allocatedBytesEstimate": 20119552,
+      "kind": "owned raw test result/obsolete export; useful evidence retained"
+    },
+    {
+      "path": "/tmp/taskfold-csv-share-native-v8-ipad.xcresult",
+      "allocatedBytesEstimate": 20664320,
+      "kind": "owned raw test result/obsolete export; useful evidence retained"
+    },
+    {
+      "path": "/tmp/taskfold-csv-share-native-failed-attachments",
+      "allocatedBytesEstimate": 27774976,
+      "kind": "owned raw test result/obsolete export; useful evidence retained"
+    },
+    {
+      "path": "/tmp/taskfold-csv-share-native-v5-ipad-attachments",
+      "allocatedBytesEstimate": 3252224,
+      "kind": "owned raw test result/obsolete export; useful evidence retained"
+    }
+  ],
+  "removedAllocatedBytesEstimate": 1029980160,
+  "note": "Allocated-size estimate is not a physical APFS free-space guarantee. App/Core build caches preserved for reuse; no task cache or real app data removed."
+}

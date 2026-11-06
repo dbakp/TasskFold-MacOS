@@ -1,0 +1,113 @@
+{
+  "stage": "Rank 6 project-scoped native team assignments",
+  "date": "2026-10-24",
+  "platform": "mac",
+  "teamRolloutEnabled": false,
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "database": {
+    "checks": 34,
+    "failures": 0,
+    "containerRemoved": true,
+    "report": "p2-team-assignment-database-evidence.json"
+  },
+  "core": {
+    "finalFocusedTests": 76,
+    "finalFocusedFailures": 0,
+    "finalFocusedSkips": 0,
+    "filter": "TeamTaskRecipient|TeamWorkspace|TeamTaskEdit|TeamProjectAccess",
+    "newRecipientTests": 9,
+    "logSHA256": "3b51e46056ffe22984f511fee55ec522358506f800568030bf5987a3a79c6df2",
+    "priorFullSuite": {
+      "tests": 1739,
+      "skips": 33,
+      "failures": 0,
+      "scope": "Before final private-transport refinement; final affected transport/model classes rechecked in focused suite",
+      "logSHA256": "6d44d447ea1b9ff3f20b0086e5f81a73106d3a42dfb95d1713887379e4cbce79"
+    }
+  },
+  "nativeBuild": {
+    "result": "Passed",
+    "scope": "Unsigned arm64 Mac app; isolated helper omits widgets",
+    "logSHA256": "469b77bd6cf0462cdabb401049d4a525d91d03877a49104267ef3bb4a2c25ae1"
+  },
+  "behavior": [
+    "Picker reads only current project editors/managers and sanitized display names, with no email/directory fallback",
+    "Selection rereads roster before applying; unavailable recipients cannot change task",
+    "Unassigned and self need no directory; reviewed identity may remain a frozen intent on connectivity loss only",
+    "Session/access changes and closed pickers invalidate late replies",
+    "Source-only SQL validates real actor/session/access fences; service write still checks live recipient",
+    "Private transport refuses redirects, cookies, caching and declared/streamed bodies above 350000 bytes"
+  ],
+  "initialHarnessCorrections": [
+    "Move assignment helper from presentation wrapper onto editor before native acceptance",
+    "Use measured short drag above iPad sheet edge; broad swipe overscrolled",
+    "Scope lazy child assignment query to child form instead of selecting parent control",
+    "Assert parent assignment remains absent; fixture did not store an explicit null",
+    "Bounded request-stream reader replaces test-only httpBody force unwrap",
+    "Correct unintended extra argument caught during private-transport route registration"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "d4029280665f440e62f917f18e04a44e857887d4771ac8f0a80640f5330b9f53",
+    "Taskfold/Core/Store.swift": "4f504ecfd4365df7a50c64a21e433401cdc02c2e0d3185a04d1ee6710e3f425a",
+    "Taskfold/Core/TeamWorkspace.swift": "9919473c63b878f98d359205e020def25cbed871644dcb6a060f7581aeea1f31",
+    "Taskfold/Core/TeamTaskRecipients.swift": "2d5cb0a3e0a5aa87c79be170805d2d15ef399529ed5f014436ceab1480980fe4",
+    "Taskfold/Views/TeamTaskAssigneePicker.swift": "838de9aefc11805c120abe1edab731cc511fe75580f00d755c0e7d566c9764b6",
+    "Taskfold/Views/TaskInspector.swift": "1000533c3e09aeab36f57109e67633be172c1bb760187c6280c2fff70c136e15",
+    "TaskfoldTests/TeamTaskRecipientTests.swift": "f076ad0f75ac17bde9e88aa6e1a20c2075706d5600d269ef90952ea99446d1d5",
+    "TaskfoldTests/Fixtures/team-task-recipients-v1.json": "cd60380c0be8b2525193349ec33d21ea89a565c4bea6553146b6ff73c2acb5ab",
+    "Scripts/Database/test-team-task-recipients.mjs": "95a0fedd82829ce87aaa7590a1014cf8669b68eeab6453f55e92b3032f6319ee",
+    "Scripts/prepare_team_editor_native_test.py": "5ca1e938d566258f7798ba295cfd834cf0558baf3195ed7d64ab3a1312335650",
+    "supabase/migrations/20261024204332_team_task_recipients.sql": "c72fa01559ed405a4d21b59e407c46393882e371b5f1e693576b4acf6a5abc7a",
+    "Package.swift": "7cc0a57dc819fa999ac929d4f5a857b17e12c63d60d0487149d550500e404b47",
+    "Taskfold.xcodeproj/project.pbxproj": "2b87222d500a9a40ac644875696764a5f2e1cab72d1b6484e448d533286c3100"
+  },
+  "testedNativeInputSHA256": {
+    "Taskfold/Core/Backend.swift": "3dac6de337a6f0c063793cb769a477acd6bc91d29bb27b09d7dfca63e87787fd",
+    "Taskfold/Core/Store.swift": "4f504ecfd4365df7a50c64a21e433401cdc02c2e0d3185a04d1ee6710e3f425a",
+    "Taskfold/Core/TeamWorkspace.swift": "9919473c63b878f98d359205e020def25cbed871644dcb6a060f7581aeea1f31",
+    "Taskfold/Core/TeamTaskRecipients.swift": "2d5cb0a3e0a5aa87c79be170805d2d15ef399529ed5f014436ceab1480980fe4",
+    "Taskfold/Views/TeamTaskAssigneePicker.swift": "838de9aefc11805c120abe1edab731cc511fe75580f00d755c0e7d566c9764b6",
+    "Taskfold/Views/TaskInspector.swift": "1000533c3e09aeab36f57109e67633be172c1bb760187c6280c2fff70c136e15"
+  },
+  "limitations": [
+    "Synthetic native fixture only; no hosted multi-actor acceptance",
+    "Mac interactive/VoiceOver acceptance remains open",
+    "Remaining team field adapters, independent child records and broader rank/Px scope remain open",
+    "All user-deferred provider, release and device work stays deferred"
+  ],
+  "iosSimulatorAcceptance": {
+    "phone": {
+      "result": "Passed",
+      "passedTests": 4,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "totalTestCount": 4
+    },
+    "tablet": {
+      "result": "Passed",
+      "passedTests": 4,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "totalTestCount": 4
+    }
+  },
+  "iosAcceptanceScope": "Root assignment held until Save; exact scoped assigned_to PATCH and relaunch; disappeared recipient/cancel leave saved cache unchanged; child assignment produces parent subtasks PATCH preserving parent/sibling/opaque data; prior title/notes regression",
+  "macRuntimeAccepted": false,
+  "iosScreenshotsInspected": 4,
+  "iosEvidenceFiles": {
+    "repository": "TaskFold-iOS",
+    "directory": "docs/evidence/team-assignments",
+    "scope": "Independent runtime evidence only; no build dependency",
+    "commit": "8e27b0147691d7ec3af4cf2822f2a2e05ec9ee33"
+  },
+  "cleanup": {
+    "ownedTemporaryArtifactsRemoved": true,
+    "allocatedBytesOfRemovedArtifactsAcrossBothRepos": 1318117376,
+    "isolatedAppAndRunnerUninstalledFromBothSimulators": true,
+    "remainingTaskfoldNativeAppTestProcesses": 0,
+    "macAppNotLaunched": true,
+    "baselineSimulatorBootStatesPreserved": true,
+    "persistentCoreCachesPreserved": true
+  }
+}

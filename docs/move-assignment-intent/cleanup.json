@@ -1,0 +1,48 @@
+{
+  "removedObsoleteOwnedMacNativeOutputs": [
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v1.xcresult",
+      "logicalBytes": 55869876
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v1-attachments",
+      "logicalBytes": 55371307
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v1.log",
+      "logicalBytes": 64687
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v1.summary.json",
+      "logicalBytes": 44075
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v1-control.log",
+      "logicalBytes": 4853
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v2.xcresult",
+      "logicalBytes": 21096943
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v2-attachments",
+      "logicalBytes": 20814421
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v2.log",
+      "logicalBytes": 54468
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v2.summary.json",
+      "logicalBytes": 43243
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v2-control.log",
+      "logicalBytes": 3267
+    }
+  ],
+  "reason": "Two unaccepted native attempts; concise results and original log/summary hashes retained in verification.json.",
+  "taskfoldProcessesRemaining": 0,
+  "ownedPhoneAndTabletBooted": false,
+  "unrelatedSimulatorLeftUntouched": true
+}

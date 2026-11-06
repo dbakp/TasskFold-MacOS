@@ -26,9 +26,9 @@ struct FocusSessionView: View {
     @State private var replacing = false
     @State private var replacementBase: Record?
     private var activeWorkspace: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) && store.focusAvailable }
-    private var choices: [FocusTaskCatalog.Choice] { guard activeWorkspace else { return [] }; return FocusTaskCatalog(tasks: store.tasks, projects: store.projects, sections: store.rows("sections")).choices }
+    private var choices: [FocusTaskCatalog.Choice] { guard activeWorkspace else { return [] }; return FocusTaskCatalog(tasks: store.activeTasks, projects: store.projects, sections: store.rows("sections")).choices }
     private var currentChoice: FocusTaskCatalog.Choice? { choices.first { $0.id == selectedTask?.id && $0.generation == selectedTask?.generation } }
-    private func taskContext(_ task: Record) -> String { FocusTaskCatalog.context(task, tasks: store.tasks, projects: store.projects, sections: store.rows("sections")) }
+    private func taskContext(_ task: Record) -> String { FocusTaskCatalog.context(task, tasks: store.tasks, projects: store.allProjects, sections: store.rows("sections")) }
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -70,7 +70,7 @@ struct FocusSessionView: View {
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
             .sheet(isPresented: $choosingTask) {
                 FocusTaskChooser(workspace: request.workspace, selectedID: currentChoice?.id) { task in
-                    guard activeWorkspace, FocusTaskCatalog.selectable(task, tasks: store.tasks) else { return }
+                    guard activeWorkspace, FocusTaskCatalog.selectable(task, tasks: store.activeTasks) else { return }
                     selectedTask = task; choosingTask = false; message = nil
                 }
             }
@@ -116,6 +116,10 @@ struct FocusSessionView: View {
                 guard activeWorkspace else { return }
                 if enabled { Task { await store.enableFocusAlerts() } } else { store.disableFocusAlerts() }
             })).disabled(store.requestingFocusAlerts || store.requestingNotifications).frame(minHeight: 44).accessibilityIdentifier("focusAlerts")
+            if store.requestingFocusAlerts {
+                ProgressView("Requesting permission…")
+                    .accessibilityIdentifier("focusAlertPermissionProgress")
+            }
             Text(store.focusAlertStatus).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusAlertStatus")
             Text("Enable on each device where you want a finish alert. The alert opens your session; task completion is up to you.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             ReminderSystemSettingsButton()
@@ -129,8 +133,8 @@ struct FocusSessionView: View {
                 Button { choosingTask = true } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         VStack(alignment: .leading, spacing: 5) {
-                            Text(currentChoice?.title ?? "Choose a task").font(.body.weight(.medium)).fixedSize(horizontal: false, vertical: true)
-                            if let choice = currentChoice { Text(choice.context).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                            Text(currentChoice?.title ?? "Choose a task").font(.body.weight(.medium)).foregroundStyle(Color.primary).fixedSize(horizontal: false, vertical: true)
+                            if let choice = currentChoice { Text(choice.context).font(.subheadline).foregroundStyle(Color.primary.opacity(0.75)).fixedSize(horizontal: false, vertical: true) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         Image(systemName: "chevron.up.chevron.down").font(.caption).accessibilityHidden(true)
                     }.frame(minHeight: 44).contentShape(.rect)
@@ -168,7 +172,13 @@ struct FocusSessionView: View {
                 .font(.headline).foregroundStyle(.secondary).accessibilityIdentifier("focusStatus")
             Text(task?.title ?? "Task unavailable").font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusTaskTitle")
             if let task { Text(taskContext(task)).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusTaskContext") }
-            Text(clock(session.remaining(at: now))).font(.system(.largeTitle, design: .rounded).monospacedDigit().weight(.semibold)).accessibilityIdentifier("focusRemaining")
+            VStack(alignment: .leading, spacing: 4) {
+                Text(session.status == .stopped ? "Time spent" : "Time remaining")
+                    .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("focusClockMeaning")
+                // Ended widgets show whole seconds spent; retain that meaning in the full session.
+                Text(clock(session.status == .stopped ? TimeInterval(session.elapsed(at: now) / 1000) : session.remaining(at: now)))
+                    .font(.system(.largeTitle, design: .rounded).monospacedDigit().weight(.semibold)).accessibilityIdentifier("focusRemaining")
+            }
             ProgressView(value: Double(session.elapsed(at: now)), total: Double(session.durationSeconds * 1000)).tint(.accentColor)
             if task == nil || task?.completed == true {
                 Text(task == nil ? "The task was removed or is no longer available. You can end the session and choose another task." : "This task is completed. You can end the session and choose another task.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -210,7 +220,7 @@ struct FocusSessionView: View {
         let remaining = Int(ceil(seconds)); return String(format: "%02d:%02d", remaining / 60, remaining % 60)
     }
     private func start(expected: Record?) {
-        guard activeWorkspace, let choice = currentChoice, FocusTaskCatalog.selectable(choice, tasks: store.tasks) else {
+        guard activeWorkspace, let choice = currentChoice, FocusTaskCatalog.selectable(choice, tasks: store.activeTasks) else {
             message = "Choose an open task from your current workspace."; return
         }
         change(expected: expected) { try FocusSession(taskID: choice.id, minutes: minutes) }
@@ -234,12 +244,13 @@ private struct FocusTaskChooser: View {
     @Environment(\.dismiss) private var dismiss
     @State private var search = ""
     @FocusState private var searching: Bool
+    @State private var keyboardSelection: String?
     let workspace: WorkspaceBinding
     let selectedID: String?
     let choose: (FocusTaskCatalog.Choice) -> Void
     private var choices: [FocusTaskCatalog.Choice] {
         guard workspace.matches(account: store.userID, generation: store.workspaceGeneration), store.focusAvailable else { return [] }
-        return FocusTaskCatalog(tasks: store.tasks, projects: store.projects, sections: store.rows("sections"), search: search).choices
+        return FocusTaskCatalog(tasks: store.activeTasks, projects: store.projects, sections: store.rows("sections"), search: search).choices
     }
     var body: some View {
         let choices = self.choices
@@ -248,10 +259,12 @@ private struct FocusTaskChooser: View {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
                     TextField("Search tasks", text: $search, axis: .vertical).lineLimit(1...3).autocorrectionDisabled()
-                        .focused($searching).submitLabel(.search).onSubmit { searching = false }
+                        .focused($searching).submitLabel(.search).onSubmit { activateSelection() }
+                        .onKeyPress(.downArrow) { step(1); return .handled }
+                        .onKeyPress(.upArrow) { step(-1); return .handled }
                         .onChange(of: search) { _, query in
                             if query.contains(where: { $0.isNewline }) {
-                                search = query.filter { !$0.isNewline }; searching = false
+                                search = query.filter { !$0.isNewline }
                             }
                         }
                         .accessibilityLabel("Search tasks, projects, sections or notes")
@@ -261,17 +274,28 @@ private struct FocusTaskChooser: View {
                             .buttonStyle(.plain).accessibilityLabel("Clear task search").accessibilityIdentifier("clearFocusTaskSearch")
                     }
                 }.padding(.horizontal, 12).frame(minHeight: 44).background(.quaternary, in: RoundedRectangle(cornerRadius: 14)).padding()
-                List {
-                    ForEach(choices) { choice in
-                        FocusTaskChoiceRow(choice: choice, selected: choice.id == selectedID) { choose(choice) }
+                ScrollViewReader { proxy in
+                    List(selection: $keyboardSelection) {
+                        ForEach(choices) { choice in
+                            FocusTaskChoiceRow(choice: choice, selected: choice.id == selectedID) { choose(choice) }
+                                .tag(choice.id).id(choice.id)
+                        }
                     }
-                }.listStyle(.plain).accessibilityIdentifier("focusTaskChoices")
+                    .listStyle(.plain).accessibilityIdentifier("focusTaskChoices")
+                    .onSubmit { activateSelection() }
+                    .onChange(of: keyboardSelection) { _, id in if let id { proxy.scrollTo(id) } }
                     .overlay { if choices.isEmpty { ContentUnavailableView("No matching tasks", systemImage: "magnifyingglass", description: Text("Try another task, project or section name.")) } }
+                }
             }.navigationTitle("Choose a task")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).accessibilityIdentifier("cancelFocusTaskChoice") } }
+            .onAppear { keyboardSelection = choices.first?.id; searching = true }
+            .onChange(of: search) { _, _ in keyboardSelection = self.choices.first?.id }
+            .onChange(of: choices.map(\.id)) { _, ids in
+                if keyboardSelection.map({ !ids.contains($0) }) ?? true { keyboardSelection = ids.first }
+            }
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
         }
         #if os(iOS)
@@ -279,6 +303,16 @@ private struct FocusTaskChooser: View {
         #else
         .frame(minWidth: 500, minHeight: 520)
         #endif
+    }
+    private func step(_ delta: Int) {
+        let choices = self.choices
+        guard !choices.isEmpty else { return }
+        let index = choices.firstIndex { $0.id == keyboardSelection } ?? (delta > 0 ? -1 : choices.count)
+        keyboardSelection = choices[min(max(index + delta, 0), choices.count - 1)].id
+    }
+    private func activateSelection() {
+        guard let choice = choices.first(where: { $0.id == keyboardSelection }) else { return }
+        choose(choice)
     }
 }
 

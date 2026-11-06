@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-25",
+  "platform": "macos",
+  "stage": "Individual review filesystem failure, native alert, retry and cancelled receipt cold recovery",
+  "baseCommit": "418ac81e88222cb428ac9997fa5c8b8b0d35cdf2",
+  "productionSourceUnchangedFromBase": true,
+  "testSourceSHA256": {
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "c33ffb353738c8d2862fafc5b74e7dd6f9c1bb359d128b740fe72edf6c0077d5"
+  },
+  "native": {
+    "scenarios": [
+      "Recorded acknowledgement workspace-write failure preserves authored tail",
+      "Required backup-index failure precedes individual cancellation",
+      "Remote cancellation plus failed local save; receipt read after quit/relaunch before retry"
+    ],
+    "results": {
+      "mac": {
+        "totalTestCount": 4,
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "result": "Passed"
+      }
+    },
+    "independentEvidence": "Nine scenarios checked against their complete failed, retried and relaunched snapshots, exact source restoration and frozen cancellation ledger. See individual-storage/independent-validation.json.",
+    "bytes": "Native XCTest asserts failed durable Data equals the complete original workspace Data; retained decoded snapshots are independently compared structurally.",
+    "scope": "Ordinary synthetic shared root, viewer read cache, local network-isolated protocol peer, real production filesystem writers and native review controls. Mac runner cannot modify app sandbox; reserved DEBUG app controls install/repair barriers and journal prior-vault cleanup.",
+    "limits": "No genuine hosted cancellation/delivery, actual disk exhaustion/hardware damage, provisional successor draft-vault storage failure or I/O-phase race is claimed.",
+    "visual": "Mac cancelled-cache and iPhone recorded-cache alert screenshots inspected; readable complete instructions and native OK action.",
+    "cacheArrayOrder": "Cancellation reinserts the restored source at the end of the cached tasks array, retaining its complete original fields, all unrelated row values and their relative order. Final relaunch comparisons preserve the entire exact task array. Only the two known Codable Set arrays are normalized."
+  },
+  "core": "Existing 191 passing completion checks per repo refer to unchanged production source in baseCommit. Not rerun for test-only additions.",
+  "remaining": [
+    "Authored missing-incarnation and supported cross-table recovery (next implementation)",
+    "Provisional occurrence draft-vault failures and backup/vault I/O-phase races",
+    "Native Mac recurring history and broader keyboard/spoken acceptance",
+    "Large workloads and genuine hosted multiwriter flows",
+    "Remaining advanced/wearable work; user deferrals unchanged"
+  ],
+  "hosted": "No schema/service/configuration/rollout or real account/task mutation. Production source is unchanged.",
+  "developmentCorrections": [
+    "Initial Mac native run: three new cases reached their expected failure alerts, then selected an OK Touch Bar proxy; existing viewer control passed. Scoped final OK selector to native windows.",
+    "Initial iOS UI test compile failed because a test-local cache variable shadowed the cache reader. Renamed it; final build and native cases pass."
+  ],
+  "artifactSHA256": {
+    "cleanup.json": "007a0428ec654f09e0b1c42c0e95d98eaba3cfda57718ac4ad5a7f389238a349",
+    "independent-validation.json": "57c4aa31fdb070afde848dd1ced2efd0c2d9b2c292557849e3202b44b12c9c7d",
+    "initial-mac-selector-failure.log": "497f85b92324cf311403aa0fd56d3d186d664542d2d8173c6f7d6c88f3f1409a",
+    "isolation-receipt.json": "224d9cd1b93731bb0c10f9051b49b412e8beab347f0ad30c5f787440ebbb574c",
+    "mac-alert-cancel-backup.png": "6a02a9037f8c30f23568028ea4a007337aeb47d398d27fb793081798ea19e659",
+    "mac-alert-cancel-cache.png": "7497edab5c37e7ae8dc8daa2765a855d0354dc4f484787fc2740b1ed53779d59",
+    "mac-alert-recorded-cache.png": "756eb0d073ca1e5060c9eb5ebc1432362e921dabdcd69bfcabf5a1eceba417ab",
+    "mac-cancel-backup.json": "e05ef85e4819692da3c88ffb9882356946f1b8cf5702853ab94e43b7aa335c18",
+    "mac-cancel-cache.json": "64a018093e065184c522934e4a0a48228904a4d6d6e25b73d8e1d4cca350ce73",
+    "mac-existing-viewer-control.json": "40c609b97e086498e73e27322a528fea1951a4e030145125b1a6341418d6c1ee",
+    "mac-native.log": "8e6a6a89d73cf6db634c00b09a8817d0c4ca800f950548b664ec30d5ccbfd822",
+    "mac-recorded-cache.json": "65a3668e1eb5933adae05800f4b5bf674f8347a148a7b3f854fbf0ac87d6dbb0",
+    "mac-summary.json": "827872b738595c8439fee0af026782f35766f33c08611ce74cf4d3656a1a4aed",
+    "mac-verification.txt": "3f93f6c6a3b45c3df2675abf2327e1ceded7dd89359e258a0dae9fe9a234c25a",
+    "signatures.json": "942a2f392b9fbc3ab4ad4d8b61e963b4b68f46a2d6e3cb07575f8f0a55252ee5",
+    "test-build.log": "ccc2e0be4a926cc84e25b07028254bc41134b3e3801a4f4b5f69e86d8a78e712"
+  },
+  "cleanup": {
+    "temporaryMacTaskfoldProcessesRemaining": 0,
+    "reservedSimulatorAppsUninstalled": true,
+    "originalSimulatorBootStatesPreserved": true,
+    "ownedScratchLogicalBytesRemoved": 919986902,
+    "removed": [
+      "taskfold-single-storage-mac-accepted.xcresult",
+      "taskfold-single-storage-phone-accepted.xcresult",
+      "taskfold-single-storage-mac-build-corrected.log",
+      "taskfold-single-storage-ios-build-corrected.log",
+      "taskfold-single-storage-mac-build.log",
+      "taskfold-single-storage-phone-attachments",
+      "taskfold-single-storage-mac.xcresult",
+      "taskfold-single-storage-mac.log",
+      "taskfold-single-storage-export-initial.log",
+      "taskfold-single-storage-mac-attachments",
+      "taskfold-single-storage-ipad-accepted.log",
+      "taskfold-single-storage-signatures.json",
+      "taskfold-single-storage-ios-build.log",
+      "taskfold-single-storage-host",
+      "taskfold-single-storage-ipad-accepted.xcresult",
+      "taskfold-single-storage-prepare.log",
+      "taskfold-single-storage-collect.py",
+      "taskfold-single-storage-ipad-attachments",
+      "taskfold-single-storage-phone-accepted.log",
+      "taskfold-single-storage-mac-first-attachments",
+      "taskfold-single-storage-document.py",
+      "taskfold-single-storage-mac-accepted.log",
+      "taskfold-single-storage-run.py",
+      "taskfold-single-storage-ios-build",
+      "taskfold-single-storage-edit.py",
+      "taskfold-single-storage-copy.py"
+    ],
+    "preserved": [
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/.build",
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/.build",
+      "/tmp/taskfold-mac-recovery-host",
+      "/tmp/taskfold-mac-recovery-build",
+      "/tmp/taskfold-workflow-mac-native-host",
+      "/tmp/taskfold-workflow-mac-native-build"
+    ]
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-11",
+  "scope": "Unfiltered capture/editor audit refresh; incomplete largest-text setup is a failure, not acceptance.",
+  "baseCommits": {
+    "TaskFold-iOS": "e83dbfbd7fe75ed826dd03e552141b489e6c9277",
+    "TasskFold-MacOS": "45469f065fa686cff24bdc27dd5ce78358bfb7e1"
+  },
+  "productChanges": false,
+  "harnessChanges": [
+    "Explicit local mode before fixture setup; reminders/backups off in disposable fixture.",
+    "Retain full accessibility hierarchy for each audited viewport.",
+    "Verify complete native text and settled target geometry before setup interactions; no input repair, issue filters or whitelists."
+  ],
+  "sourceInputHashes": {
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "a76d249fa9a642523b0badf8d46b38a0bf7943b2594f910981000bc8faa2bd23",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "a76d249fa9a642523b0badf8d46b38a0bf7943b2594f910981000bc8faa2bd23",
+    "TaskFold-iOS/Taskfold/Views/QuickAdd.swift": "cd4fd4e2ad2b83006bebae3b4908556e714e118e39e134bbb0cc6f1002b23210",
+    "ios-live-stage/Taskfold/Views/QuickAdd.swift": "cd4fd4e2ad2b83006bebae3b4908556e714e118e39e134bbb0cc6f1002b23210",
+    "TaskFold-iOS/Taskfold/TaskfoldApp.swift": "b770885d64fd2554d85a421cbcd284a3bae279086caa8fd3e5486836bd98719c"
+  },
+  "runs": [
+    {
+      "result": "accessibility-current-phone-v1.xcresult",
+      "tests": 2,
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    {
+      "result": "accessibility-current-phone-v2.xcresult",
+      "tests": 2,
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    }
+  ],
+  "currentNormal": {
+    "result": "accessibility-current-phone-v2.xcresult",
+    "completedViewports": [
+      "Quick capture",
+      "Editor overview",
+      "Editor subtask actions",
+      "Saved task list"
+    ],
+    "unfilteredFindings": 8,
+    "insufficientDescription": 0,
+    "hitRegion": 3,
+    "textClipped": 5,
+    "perViewport": {
+      "Quick capture": 3,
+      "Editor overview": 0,
+      "Editor subtask actions": 0,
+      "Saved task list": 5
+    },
+    "rawReport": "docs/accessibility-audit-reports/current-normal.txt",
+    "interpretation": "Editor action clipping reports from the older baseline are absent. All current capture/list findings remain unresolved; the failed final assertion is retained."
+  },
+  "largestText": {
+    "status": "incomplete",
+    "v1": "Three viewports audited with zero findings; saved-list setup saved Accessible launch brief ~25 without the trailing m, so the expected task-name assertion failed before its audit.",
+    "v2": "New complete-input assertion stopped setup before the first audit. No current full largest-text acceptance.",
+    "cause": "Not established; do not infer an app defect or a test-only cause from incomplete native input."
+  },
+  "visualInspection": {
+    "capture": "Chosen estimate preview is readable. Inbox control is partly visible in the horizontal normal-text field-control strip. This is a confirmed composing usability limitation; the three untargeted audit nodes cannot be mapped to it conclusively.",
+    "editor": "Full description wraps; estimate is 25 minutes. Reminders, photo and subtask actions are readable in the retained normal viewport.",
+    "savedList": "Full task title, deliberate one-line description preview, estimate and subtask progress appear. Preview and native-search audit findings remain open."
+  },
+  "cleanup": {
+    "result": "accessibility-current-cloud-reset-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0,
+    "scope": "Original cloud Today task plus selected full note and ended Focus routes from terminated app.",
+    "dataProof": {
+      "fullOriginalCloudCacheParsedEqual": true,
+      "originalWidgetFieldsEqual": [
+        "account",
+        "focusSession",
+        "notes",
+        "pendingSync"
+      ],
+      "pendingSync": 0,
+      "localMode": false,
+      "widgetColdLaunchFixture": false,
+      "originalMacCloudCacheUnchanged": true
+    }
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/audit-current-normal-saved-task-list.png",
+      "sha256": "8558f89d2481cf1ceeb935d12dad88d03954bdb3dcb5e031d03104b82e601fa5",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/audit-current-normal-editor-subtask-actions.png",
+      "sha256": "ed4d29811da512a72478c87a2e5378b24c389bfa42cd2d3c98eaea89d655d666",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/audit-current-normal-editor-overview.png",
+      "sha256": "d425fef869f631e0e8040ade753638d8b056352ec8ed6fd89798be8aa2bba5cb",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/audit-current-normal-quick-capture.png",
+      "sha256": "41968414f006a9316b435fedc1175ef23ff3f4b9416899e53aa24a566f1f0609",
+      "inspected": true
+    }
+  ],
+  "remaining": "Adaptive capture control visibility, saved-row semantics/VoiceOver and full largest-text setup; existing Mac/provider/notification/distribution P0 gates remain open.",
+  "storageCleanup": {
+    "allocatedBytesRemoved": 225714176,
+    "retained": "Both failed native diagnostic results, cleanup native result, logs, summaries, signing proofs and copied current normal reports/hierarchies/captures.",
+    "receipts": [
+      "accessibility-current-v1-pruned-manifest.json",
+      "accessibility-current-v2-pruned-manifest.json"
+    ]
+  }
+}

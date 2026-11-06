@@ -1,0 +1,108 @@
+[
+  {
+    "file": "taskfold-native-audio-ios-v1.log",
+    "bytes": 3434,
+    "sha256": "c3c869ddf664f9312f82ec7c72944604f1f9ffcd8a16aa3d412c56d9408dea50",
+    "tail": [
+      "passed actual native phase audio-create",
+      "passed app used the genuine account and original clip",
+      "{\"error\":{\"message\":\"Command failed: openssl req -x509 -newkey rsa:2048 -nodes -keyout /Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/75B4E8B6-B00B-43EE-8F1A-F8047AFCD378/Library/Application Support/TaskfoldFullSchemaNative-workflowteststeameditbridge/wrong-ca-86dcb519-e484-463c-9c03-9a39018ff26e/key --out /Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/75B4E8B6-B00B-43EE-8F1A-F8047AFCD378/Library/Application Support/TaskfoldFullSchemaNative-workflowteststeameditbridge/wrong-ca-86dcb519-e484-463c-9c03-9a39018ff26e/cert -days 1 -subj /CN=Unrelated disposable CA -addext basicConstraints=critical,CA:TRUE\\nusage: req [-addext ext] [-asn1-kludge] [-batch] [-config file]\\n    [-days n] [-extensions section] [-in file]\\n    [-inform der | pem] [-key keyfile] [-keyform der | pem]\\n    [-keyout file] [-md4 | -md5 | -sha1] [-modulus]\\n    [-multivalue-rdn] [-nameopt option] [-new] [-newhdr]\\n    [-newkey arg] [-no-asn1-kludge] [-nodes] [-noout]\\n    [-out file] [-outform der | pem] [-passin arg]\\n    [-passout arg] [-pkeyopt opt:value] [-pubkey]\\n    [-reqexts section] [-reqopt option] [-set_serial n]\\n    [-sigopt nm:v] [-subj arg] [-subject] [-text] [-utf8]\\n    [-verbose] [-verify] [-x509]\\n\\n -addext key=value  Additional certificate extension (may be repeated)\\n -batch             Operate in batch mode\\n -config file       Configuration file to use as request template\\n -days number       Number of days generated certificate is valid for\\n -extensions section\\n                    Config section to use for certificate extensions\\n -in file           Input file (default stdin)\\n -inform format     Input format (DER or PEM (default))\\n -key file          Private key file\\n -keyform format    Private key format (DER or PEM (default))\\n -keyout file       Private key output file\\n -modulus           Print RSA modulus\\n -multivalue-rdn    Enable support for multivalued RDNs\\n -nameopt arg       Certificate name options\\n -new               New request\\n -newhdr            Include 'NEW' in header lines\\n -newkey param      Generate a new key using given parameters\\n -nodes             Do not encrypt output private key\\n -noout             Do not output request\\n -out file          Output file (default stdout)\\n -outform format    Output format (DER or PEM (default))\\n -passin source     Private key input password source\\n -passout source    Private key output password source\\n -pkeyopt opt:val   Set the public key algorithm option opt to val\\n -pubkey            Output the public key\\n -reqexts section   Config section to use for request extensions\\n -reqopt option     Request text options\\n -set_serial serial Serial number to use for generated certificate\\n -sigopt name:val   Signature options\\n -subj name         Set or modify the request subject\\n -subject           Output the subject of the request\\n -text              Print request in text form\\n -utf8              Input characters are in UTF-8 (default ASCII)\\n -verbose           Verbose\\n -verify            Verify signature on request\\n -x509              Output an X.509 structure instead of a certificate request\\n\\n\",\"code\":1},\"appClosed\":true,\"servicesRemoved\":true}"
+    ]
+  },
+  {
+    "file": "taskfold-native-audio-ios-v2.log",
+    "bytes": 1010,
+    "sha256": "d00c34a435edb35c6edb5ca526f7cd12ded2a082f3096355e57f81033d3bf2e1",
+    "tail": [
+      "passed cold original confirmation and download use the published receipt",
+      "passed confirmation and reading do not upload a second recording",
+      "passed actual native phase audio-verify",
+      "passed published journal survives offline cold reopening",
+      "passed offline cold verification performs no requests",
+      "passed original private recording file remains byte exact",
+      "passed one original object and one publication exist",
+      "passed publication preserves unrelated canonical task data",
+      "{\"accepted\":true,\"checks\":17,\"appClosed\":true,\"servicesRemoved\":true}"
+    ]
+  },
+  {
+    "file": "taskfold-native-audio-ios-v3.log",
+    "bytes": 835,
+    "sha256": "a327b3402235816fa77303df12883c512e39f45f0a087ccd4b518f0320301e9d",
+    "tail": [
+      "                                                                                                             ^",
+      "",
+      "ReferenceError: Cannot access 'stat' before initialization",
+      "    at file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-native-audio-publication.mjs:12:110",
+      "    at ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+      "    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+      "    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)",
+      "",
+      "Node.js v20.19.0"
+    ]
+  },
+  {
+    "file": "taskfold-native-audio-ios-v4.log",
+    "bytes": 1035,
+    "sha256": "58996bc373093e62ff8afe271a6f3694868f117581e9547efc981d2f1afa1450",
+    "tail": [
+      "passed cold original confirmation and download use the published receipt",
+      "passed confirmation and reading do not upload a second recording",
+      "passed actual native phase audio-verify",
+      "passed published journal survives offline cold reopening",
+      "passed offline cold verification performs no requests",
+      "passed original private recording file remains byte exact",
+      "passed one original object and one publication exist",
+      "passed publication preserves unrelated canonical task data",
+      "{\"accepted\":true,\"checks\":17,\"appClosed\":true,\"servicesRemoved\":true,\"privateIOBlocked\":false}"
+    ]
+  },
+  {
+    "file": "taskfold-native-audio-ios-build-v2.log",
+    "bytes": 133097,
+    "sha256": "fea3df0dc33936fe2c75f3db4deaaa53a3ebfb095d0852159fee172cbd08d8a2",
+    "tail": [
+      "",
+      "PruneExplicitPrecompiledModules /tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules",
+      "",
+      "PruneExplicitPrecompiledModules /tmp/taskfold-prepared-undo-signed-ios-build/SDKExplicitPrecompiledModules",
+      "",
+      "PruneExplicitPrecompiledModules /tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex/ExplicitPrecompiledModules",
+      "",
+      "** TEST BUILD SUCCEEDED **",
+      ""
+    ]
+  },
+  {
+    "file": "taskfold-native-audio-mac-build-v1.log",
+    "bytes": 345046,
+    "sha256": "7e42d8ddad4e584ac77f13418c3dabef476028aa1195dc57fc87f60e75c67f6f",
+    "tail": [
+      "",
+      "** BUILD FAILED **",
+      "",
+      "",
+      "The following build commands failed:",
+      "\tProcessInfoPlistFile /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Info.plist /tmp/taskfold-owner-review-mac-host/Taskfold/Info.plist (in target 'Taskfold' from project 'Taskfold')",
+      "\tLd /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold normal (in target 'Taskfold' from project 'Taskfold')",
+      "\tBuilding project Taskfold with scheme Taskfold and configuration Debug",
+      "(3 failures)"
+    ]
+  },
+  {
+    "file": "taskfold-native-audio-mac-build-v2.log",
+    "bytes": 16163,
+    "sha256": "3225088d419403cae142a4980084e6026817946b9fe788de8613624ea5c8e038",
+    "tail": [
+      "",
+      "PruneExplicitPrecompiledModules /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules",
+      "",
+      "PruneExplicitPrecompiledModules /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/ExplicitPrecompiledModules",
+      "",
+      "PruneExplicitPrecompiledModules /tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules",
+      "",
+      "** BUILD SUCCEEDED **",
+      ""
+    ]
+  }
+]

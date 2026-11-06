@@ -1,0 +1,13 @@
+{
+  "platform": "mac",
+  "selectedTests": 34,
+  "failures": 0,
+  "logSHA256": "1e134ac0f21395dd54322c95ad623e4d822bfdea748274e6a1257af8105f579c",
+  "sourceSHA256": {
+    "Taskfold/Core/NoteMarkup.swift": "8bc28bec74e5e525186e15d639a0147fdf4071aa6737c51c72b940a22cb9e90b",
+    "Taskfold/Views/NoteFormattingView.swift": "53192b45e4d4cb142da4b19475e4b9a1c5c7332b61226a33d2e1b84a8a9bdedd",
+    "Taskfold/Views/PinnedNotesView.swift": "c461c2787b3484fba5d57901ac5c15c415ced3d241290caa462c0bb47f7e71cb",
+    "TaskfoldTests/NoteMarkupTests.swift": "0043b747d8932f2275395fd7b5cbc3a8d753f1a4807a0d29b616bf19b8396a37"
+  },
+  "scope": "Heading order/levels/duplicate identities, safe labels and exact fallback, plus existing formatting, note editing, compact and widget regressions."
+}

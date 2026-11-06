@@ -1,0 +1,105 @@
+{
+  "removed": [
+    {
+      "path": "/tmp/taskfold-audio-media-mac-v1.xcresult",
+      "allocatedBytesBeforeRemoval": 192897024,
+      "kind": "completed superseded synthetic XCTest result"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-v2.xcresult",
+      "allocatedBytesBeforeRemoval": 163614720,
+      "kind": "completed superseded synthetic XCTest result"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-v3.xcresult",
+      "allocatedBytesBeforeRemoval": 144068608,
+      "kind": "completed superseded synthetic XCTest result"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-refusal-v4.xcresult",
+      "allocatedBytesBeforeRemoval": 614400,
+      "kind": "completed superseded synthetic XCTest result"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-refusal-v5.xcresult",
+      "allocatedBytesBeforeRemoval": 847872,
+      "kind": "completed superseded synthetic XCTest result"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-phone-v1.xcresult",
+      "allocatedBytesBeforeRemoval": 69275648,
+      "kind": "completed superseded synthetic XCTest result"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-phone-v2.xcresult",
+      "allocatedBytesBeforeRemoval": 11317248,
+      "kind": "completed superseded synthetic XCTest result"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-ipad-v1.xcresult",
+      "allocatedBytesBeforeRemoval": 2588672,
+      "kind": "completed superseded synthetic XCTest result"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-v1-attachments",
+      "allocatedBytesBeforeRemoval": 62578688,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-v3-attachments",
+      "allocatedBytesBeforeRemoval": 11104256,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-refusal-v4-attachments",
+      "allocatedBytesBeforeRemoval": 159744,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-refusal-v5-attachments",
+      "allocatedBytesBeforeRemoval": 393216,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-phone-v2-attachments",
+      "allocatedBytesBeforeRemoval": 10342400,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-ipad-v1-attachments",
+      "allocatedBytesBeforeRemoval": 1572864,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-mac-final-attachments",
+      "allocatedBytesBeforeRemoval": 2605056,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-phone-final-attachments",
+      "allocatedBytesBeforeRemoval": 24641536,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-ipad-final-attachments",
+      "allocatedBytesBeforeRemoval": 1646592,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    },
+    {
+      "path": "/tmp/taskfold-audio-media-phone-replacement-final-attachments",
+      "allocatedBytesBeforeRemoval": 204800,
+      "kind": "duplicate attachment export; selected captures retained in repo"
+    }
+  ],
+  "allocatedBytesBeforeRemoval": 700473344,
+  "retainedResults": [
+    "/tmp/taskfold-audio-media-mac-final.xcresult",
+    "/tmp/taskfold-audio-media-phone-final.xcresult",
+    "/tmp/taskfold-audio-media-ipad-final.xcresult",
+    "/tmp/taskfold-audio-media-phone-replacement-final.xcresult"
+  ],
+  "signedProductsAndReusedHostsRetained": true,
+  "userTasksOrOtherProjectsRemoved": false,
+  "ownedNativeAppsAndRunnersClosed": true,
+  "usedSimulatorsShutdown": true
+}

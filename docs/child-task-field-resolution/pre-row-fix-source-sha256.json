@@ -1,0 +1,8 @@
+{
+  "Taskfold/ChildFieldNativeFixture.swift": "a8cf2987af124d800b154acefa944feea4887d963a2ac75055a7b14b10cfb7c9",
+  "Taskfold/Core/Backend.swift": "0b51bd07438df0f6efa3973d9cd522202199fa3294b06be1ec498826730f6b26",
+  "Taskfold/Core/ChildTaskFieldCommands.swift": "57e08be4b7d923d6a8b2323f6d8b6515ca8267fdc35ab604ee13a23bae92ccce",
+  "Taskfold/Core/Store.swift": "5701232788aa30a6441dcc7321b567151d9e70b0c42ff2b1be7ffd2f3464c687",
+  "Taskfold/Views/ChildTaskFieldViews.swift": "c04229b2f06da7b2199e8f6dc4308cfb87d752c756c35576470db58d5a1fcbdf",
+  "TaskfoldUITests/AudioCommentUITests.swift": "faf39d5a5bfb3a32912154b1e768895227df8b993290c33cc98864e80a44f5a6"
+}

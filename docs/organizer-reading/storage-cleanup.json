@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-06",
+  "initialRunFreeBytes": 54007615488,
+  "completedCacheCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 53953990656,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 680828928,
+        "projectedAllocatedBytes": 680828928
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 572043264,
+        "projectedAllocatedBytes": 572043264
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 526110720,
+        "projectedAllocatedBytes": 526110720
+      }
+    ],
+    "freeAfterBytes": 53952102400,
+    "actualFreeChangeBytes": -1888256
+  },
+  "retiredResults": [
+    {
+      "path": "/tmp/taskfold-organizer-reading-native-ios.xcresult",
+      "bytes": 9819495,
+      "summaryRetained": "/tmp/taskfold-organizer-reading-native-ios.json"
+    },
+    {
+      "path": "/tmp/taskfold-organizer-reading-native-ios-v2.xcresult",
+      "bytes": 38286971,
+      "summaryRetained": "/tmp/taskfold-organizer-reading-native-ios-v2.json"
+    },
+    {
+      "path": "/tmp/taskfold-organizer-reading-native-ios-v3.xcresult",
+      "bytes": 1194359,
+      "summaryRetained": "/tmp/taskfold-organizer-reading-native-ios-v3.json"
+    }
+  ],
+  "retiredPackages": {
+    "freeBytesBefore": 53955448832,
+    "freeBytesAfter": 53956558848,
+    "retired": [
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-39-iphone-development.zip",
+        "bytes": 24095660,
+        "replacement": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-40-iphone-development.zip",
+        "replacementSHA256": "7644ccb33b4d4a053b1f3e1502a57ef86894e29e43dc614d9605186d201411b9"
+      },
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-27-mac-development.zip",
+        "bytes": 20123651,
+        "replacement": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-28-mac-development.zip",
+        "replacementSHA256": "d2e1868edbdcbe9c31d56252946685dd381be2c828024986c7d2ba5efb5e4c4f"
+      }
+    ]
+  },
+  "coreCaches": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 676028416,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 620212224,
+      "within768MiB": true
+    }
+  ],
+  "simulatorsCreated": 0,
+  "dockerStarted": false,
+  "installedAppsChanged": false,
+  "normalMacInstalledBuild": "23",
+  "phoneLastVerifiedInstalledBuild": "34",
+  "nativeSimulatorRestored": true,
+  "note": "Free space is shared with macOS and other projects; the global delta is not a measurement of Taskfold allocation. Only explicitly listed completed Taskfold outputs were retired. Core SwiftPM caches are unmarked and were measured, not passed to the marked-cache pruner."
+}

@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-27",
+  "status": "Local date preparation verified; ranked goal active",
+  "coreDistinctCasesPassed": 164,
+  "frozenDateCorpusCases": 375,
+  "frozenDateCorpusSHA256": "901745ac563fae6de8dab06750891d3a603061398928f060dde2db55861db977",
+  "priorCreationMetadataSHA256": "b7d5c92f934e1e2af8103699b1d895b9d92f7c94fdcb0f8885e065d92c40ab4e",
+  "nativeAcceptedPlatformCasePairsPassed": 15,
+  "nativeAccepted": {
+    "mac": {
+      "result": "Passed",
+      "totalTestCount": 5,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "runtimeWarnings": [],
+      "startTime": 1793085297.181,
+      "finishTime": 1793085362.258
+    },
+    "phone": {
+      "result": "Passed",
+      "totalTestCount": 5,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "runtimeWarnings": [],
+      "startTime": 1793085355.526,
+      "finishTime": 1793085465.319
+    },
+    "tablet": {
+      "result": "Passed",
+      "totalTestCount": 5,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "runtimeWarnings": [],
+      "startTime": 1793085355.524,
+      "finishTime": 1793085466.058
+    }
+  },
+  "scope": "Per-call local date processing and lazy provenance timestamp formatting. No schema, migration, rollout, provider or release change. Native flat fixtures render counts; child-rich scale is Core-only.",
+  "compatibility": [
+    "Frozen root/child output and refusals across 375 date/state cases",
+    "Mixed-spelling batch versus ordinary metadata parity",
+    "Previous creation-history golden digest and all malformed/overflow/epoch/provenance cases retained",
+    "5000 roots and children retain complete history across encoding",
+    "Actual local save/Undo and failed-save recovery preserve prior history",
+    "Cloud-mode save and real intent completion/retry/Undo/cold return pass"
+  ],
+  "remaining": [
+    "Remaining durable save pause and encoding/I/O",
+    "Production-screen input responsiveness",
+    "Background widget readiness",
+    "Assignment-heavy workflow scaling",
+    "Child-rich native creation and hosted/paired bulk delivery",
+    "Wider ranked backlog"
+  ],
+  "measurementLimits": "Compare Debug observations with preceding same native cases; system load differs and no release or production interaction guarantee is made. The sampled control is diagnostic only. Intermediate native passes before the ordinary-assignment correction are superseded by final results.",
+  "preChangeProductionSourceSHA256": "11d461530a1f430988b087b58553e556d21d158efccf8e5e6f9ddd4b361e8338",
+  "preChangeSourceCommit": "de3d4cf0cb4ff276a68b5ff36a504ae6ca8c5a6d"
+}

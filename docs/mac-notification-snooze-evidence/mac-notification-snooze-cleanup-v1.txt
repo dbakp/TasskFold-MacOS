@@ -1,0 +1,5 @@
+The following is a diff from the previous accessibility tree for Window: "General" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~			113 text ID: systemReminderInspection, Description: {"accountID":"local","actions":[{"id":"taskfold.complete","title":"Complete"},{"id":"taskfold.snooze.minutes.60","title":"Remind me in 1 hour"},{"id":"taskfold.tomorrow","title":"Move to tomorrow"}],"delivered":[],"observedAt":1791794913.033941,"pending":[],"processID":22597}
+~		130 scroll bar (settable, float) 0
+~			131 value indicator (settable, float) 0
+The focused UI element is 103 standard window General, ID: com_apple_SwiftUI_Settings_window, Secondary Actions: Raise

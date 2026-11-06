@@ -1,0 +1,26 @@
+{
+  "platform": "mac",
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+    "-destination",
+    "platform=macOS,arch=arm64",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-background-mac-checks.xcresult",
+    "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ],
+  "tests": [
+    "testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery",
+    "testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ],
+  "started": 1793078117.6689181,
+  "returncode": 0,
+  "finished": 1793078141.549712
+}

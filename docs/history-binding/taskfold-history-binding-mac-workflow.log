@@ -1,0 +1,30 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-mac-native-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests" -parallel-testing-enabled NO -collect-test-diagnostics never -resultBundlePath /tmp/taskfold-history-binding-mac-workflow.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-history-binding-mac-workflow.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-25 13:11:47.079021+0100 TaskfoldUITests-Runner[85393:19746746] [Default] Running tests...
+2026-10-25 13:11:47.140728+0100 TaskfoldUITests-Runner[85393:19746746] [Default] Failed to initialize for UI testing: Error Domain=com.apple.LocalAuthentication Code=-4 "System authentication is running." UserInfo={NSDebugDescription=System authentication is running., NSLocalizedDescription=Authentication cancelled., BiometryType=1}
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /tmp/taskfold-history-binding-mac-workflow.xcresult
+
+2026-10-25 13:11:47.501 xcodebuild[85387:19746505] [MT] IDETestOperationsObserverDebug: 1.096 elapsed -- Testing started completed.
+2026-10-25 13:11:47.501 xcodebuild[85387:19746505] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-25 13:11:47.501 xcodebuild[85387:19746505] [MT] IDETestOperationsObserverDebug: 1.096 sec, +1.096 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-history-binding-mac-workflow.xcresult
+
+Testing failed:
+	TaskfoldUITests-Runner (85393) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Authentication cancelled. System authentication is running.))
+
+** TEST EXECUTE FAILED **
+
+Testing started

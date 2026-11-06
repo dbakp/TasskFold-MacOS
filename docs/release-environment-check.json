@@ -1,0 +1,52 @@
+{
+  "checkedAtUTC": "2026-10-11T23:42:15.016693+00:00",
+  "scope": "Mac development provisioning and signing availability; no app installed/replaced/launched by either build. Automatic provisioning refresh requested through the configured Xcode account.",
+  "signing": {
+    "appleDevelopmentIdentities": 1,
+    "developerIDApplicationIdentities": 0,
+    "appleDistributionIdentities": 0,
+    "configuredTeam": "3UZ4C73FM2",
+    "configuredTeamTypeReportedByXcode": "Personal Team",
+    "appProvisioning": "Cannot create Mac App Development profile because Personal Teams do not support Push Notifications",
+    "widgetProvisioning": "Automatic refresh obtained Mac Team Provisioning Profile for com.dbakp.taskfold.mac.widgets; expiry 2026-10-18 23:39:54 UTC. Profile availability alone is not installed-host acceptance.",
+    "nextAction": "Use an enrolled team with required app capabilities and valid distribution inputs. Do not remove production Push Notifications merely to claim release acceptance."
+  },
+  "builds": {
+    "mac-widget-provisioning-check-20261012.log": {
+      "sha256": "f2d04669d67c454b7a9bf5fd33f46160cb83ffcfe5c9383860aa1fda3d670307",
+      "exitCode": 65,
+      "errors": [
+        "No profiles for 'com.dbakp.taskfold.mac' were found: Xcode couldn't find any Mac App Development provisioning profiles matching 'com.dbakp.taskfold.mac'. Automatic signing is disabled and unable to generate a profile. To enable automatic signing, pass -allowProvisioningUpdates to xcodebuild. (in target 'Taskfold' from project 'Taskfold')",
+        "No profiles for 'com.dbakp.taskfold.mac.widgets' were found: Xcode couldn't find any Mac App Development provisioning profiles matching 'com.dbakp.taskfold.mac.widgets'. Automatic signing is disabled and unable to generate a profile. To enable automatic signing, pass -allowProvisioningUpdates to xcodebuild. (in target 'TaskfoldWidgets' from project 'Taskfold')"
+      ]
+    },
+    "mac-widget-provisioning-refresh-20261012.log": {
+      "sha256": "e4df871006d6ea560eb5e69edc564c34a642e0163d33807967c9c62efa945fd2",
+      "exitCode": 65,
+      "errors": [
+        "Cannot create a Mac App Development provisioning profile for \"com.dbakp.taskfold.mac\". Personal development teams, including \"David Clavijo Posada\", do not support the Push Notifications capability. (in target 'Taskfold' from project 'Taskfold')",
+        "No profiles for 'com.dbakp.taskfold.mac' were found: Xcode couldn't find any Mac App Development provisioning profiles matching 'com.dbakp.taskfold.mac'. (in target 'Taskfold' from project 'Taskfold')"
+      ]
+    }
+  },
+  "nativeUI": {
+    "existingFocusPID": 19758,
+    "window": "Inbox \u2013 1 task",
+    "focusSheetVisible": false,
+    "notificationOpenAccepted": false,
+    "existingSignedAcceptancePID": 28819,
+    "scope": "Existing Focus app inspected through native accessibility; no process restart or new alert."
+  },
+  "otherGates": {
+    "todoistImportRetry": "Named real-provider import/retry gate accepted; access no longer outstanding. Source remains read-only.",
+    "macLaunch": "Isolated test launch already authorized; old unlock/Keychain waits are historical.",
+    "apns": "Secret availability not inspected in this check; real delivery and rollout remain open.",
+    "externalProviders": "External calendar/file provider journeys remain open.",
+    "iosTesting": "Use Xcode Simulators for ordinary iPhone/iPad workflows, as requested."
+  },
+  "storage": {
+    "availableGiB": 101,
+    "scope": "df -h on workspace volume at this checkpoint"
+  },
+  "goal": "Active; not release-ready."
+}

@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-12",
+  "scope": "iPhone 17 Pro iOS 26.5 Simulator real local notification Complete with app terminated before delivery; no Mac/APNs/physical-device claim",
+  "productionCodeChanged": false,
+  "test": "testTerminatedProcessSystemCompleteCancelsFutureIndependentReminder",
+  "result": {
+    "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/cold-complete-ios-v1.xcresult",
+    "passed": 1,
+    "failures": 0,
+    "skips": 0,
+    "structuredRuntimeWarnings": 0,
+    "seconds": 238.045
+  },
+  "checks": [
+    "Native undated task capture with two genuine independent reminder occurrences",
+    "App terminated before delivery; actual delivery leaves it not running",
+    "Real SpringBoard Complete action starts a different process without --uitesting",
+    "Original task completes with identical ID, reminder rule and plan",
+    "Normal relaunch retains completion; actual pending registry empty before reminders disabled",
+    "Completed list opens original task editor; capture visually inspected",
+    "Native fixture cleanup retires reminders; disposable Simulator shut down"
+  ],
+  "preservation": "notification-cold-complete/preservation.json",
+  "isolation": "notification-cold-complete/isolation.json",
+  "signing": "notification-cold-complete/signing.json",
+  "builds": [
+    "cold-complete-build-v1.log",
+    "cold-complete-build-v2.log"
+  ],
+  "testInfrastructureChanges": [
+    "Shared native reminder action walk now supports exact notificationtests runner and stopped-app process assertions",
+    "Fixture copy gives app and extension an independent notificationtests App Group",
+    "Real-team Simulator signing allowlist includes only the explicit notificationtests identity"
+  ],
+  "captures": [
+    "notification-cold-complete/system-complete.png",
+    "notification-cold-complete/retained-task.png"
+  ],
+  "remaining": [
+    "Mac installed widget gallery/host acceptance",
+    "Mac actual notification Open/actions",
+    "Account A to B and callback-race native acceptance",
+    "Spoken VoiceOver, external providers and remaining named continuity boundaries",
+    "APNs/provider delivery and distribution signing"
+  ],
+  "macObservation": "Retained Focus process remains live on Today after unlock; this does not verify earlier notification Open. Notification Center computer-use surface still times out."
+}

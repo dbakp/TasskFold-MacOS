@@ -1,0 +1,12 @@
+{
+  "ownedSimulatorStates": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": "Shutdown",
+    "ECE507C1-5704-4243-A7F7-232BF745FDB8": "Shutdown"
+  },
+  "MacTestAppsLaunched": 0,
+  "previousArchivedFailuresPrunedLogicalBytes": 841805020,
+  "finalCleanupPrunedLogicalBytes": 161997089,
+  "finalCleanupAllocatedEstimateBytes": 162959360,
+  "retained": "compact summaries/logs, original PNG captures, source/binary/signature bindings; reused build hosts and Core caches",
+  "limits": "Allocated sum is an estimate, not a claim about exact APFS free-space recovery. No unrelated installed apps, account files or repositories removed."
+}

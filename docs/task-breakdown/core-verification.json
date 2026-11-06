@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-05",
+  "owningPlatform": "mac",
+  "selectedTests": 41,
+  "passed": 40,
+  "skipped": 1,
+  "failures": 0,
+  "realModelProbeRequested": true,
+  "realModelGenerated": false,
+  "realModelUnavailableReason": "Turn on Apple Intelligence in system settings to suggest steps on this device.",
+  "sourceSHA256": {
+    "Taskfold/Core/TaskBreakdown.swift": "4569b06875cfda67c5a365fbaa82e24afb296ce7a657c158e89fd0269142900c",
+    "TaskfoldTests/TaskBreakdownTests.swift": "d96be391ec79e7babae9ca149c433215ed9056f40ca1d11e0b7e445ba72d430e"
+  },
+  "testLogSHA256": "74abff170774328a48ee024cba623ef0bb30a3ec2e6dbe23bb7c147a3501a75b",
+  "syntheticOnly": true,
+  "actualTaskWrites": false,
+  "systemSettingsChanged": false
+}

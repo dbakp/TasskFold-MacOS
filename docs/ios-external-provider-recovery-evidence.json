@@ -1,0 +1,178 @@
+{
+  "date": "2026-10-14",
+  "status": "accepted_bounded_external_recovery_and_cancelled_workspace_return",
+  "scope": "Actual iPhone Simulator external File Provider unavailable/retry and delayed-response cancellation across local-workspace departure/return. Completes the named representative external-file cases alongside ios-external-provider-transfer-evidence.json. No universal production-provider or physical-device claim.",
+  "environment": {
+    "device": "iPhone 17 Pro",
+    "OS": "iOS 26.5 Simulator",
+    "SDK": "iOS 27.0",
+    "client": "com.dbakp.taskfold.backupcanceltests",
+    "provider": "com.dbakp.taskfold.fileproviderfixture.provider",
+    "network": "Loopback-only synthetic two-task backup; no real tasks, credentials or Apple-account sign-in"
+  },
+  "native": {
+    "result": "ios-external-backup-recovery-v1.xcresult",
+    "passedTests": 2,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  },
+  "offline": {
+    "test": "testExternalProviderOfflineFailureRetryPreservesEntireWorkspace",
+    "actualResponseStatuses": [
+      503,
+      200,
+      200
+    ],
+    "failureSurface": "System picker alert: device could not connect to server; OK dismisses alert, Cancel closes picker. No Taskfold error-alert claim.",
+    "sameFileIdentityOnRetry": true,
+    "noNewGenerationBetweenFailureAndRetry": true,
+    "restorePreviewAfterProviderRecovery": true,
+    "previewCancelledWithoutApplying": true,
+    "entireWorkspaceCanonicalJSONExactAfterFailureRetryCancelAndRelaunch": true
+  },
+  "delayed": {
+    "test": "testExternalProviderDelayedCancelCannotFollowWorkspaceReturn",
+    "actualProviderRequestHeld": true,
+    "cancellationSurface": "System document picker Cancel; Taskfold read-cancel control was not present.",
+    "workspaceTransition": "Real Leave local workspace \u2192 sign-in screen \u2192 release provider response \u2192 Use on this iPhone",
+    "actualResponseAfterWorkspaceDeparture": true,
+    "restoredPreviewOrWritesFromOldRequest": false,
+    "entireWorkspaceCanonicalJSONExactAfterDepartureReturnRetryAndRelaunch": true,
+    "newValidExternalFilePreviewAfterReturn": true,
+    "callbackAttributionLimit": "The provider response genuinely arrived late. No claim that UIKit delivered a late URL callback to Taskfold; cancellation at the system picker is part of the observed outcome. Existing native held-read/auth-account evidence separately covers the app-owned in-flight read guard."
+  },
+  "transportEvents": [
+    {
+      "event": "control",
+      "path": "/control/delayed/hold",
+      "at": 1791971925.2576928
+    },
+    {
+      "event": "requested",
+      "path": "/delayed",
+      "at": 1791971961.098458
+    },
+    {
+      "event": "control",
+      "path": "/control/delayed/release",
+      "at": 1791971975.500757
+    },
+    {
+      "event": "responded",
+      "path": "/delayed",
+      "status": 200,
+      "bytes": 1227,
+      "at": 1791971975.502192
+    },
+    {
+      "event": "requested",
+      "path": "/transfer",
+      "at": 1791971986.632434
+    },
+    {
+      "event": "responded",
+      "path": "/transfer",
+      "status": 200,
+      "bytes": 1227,
+      "at": 1791971986.6346471
+    },
+    {
+      "event": "requested",
+      "path": "/transfer",
+      "at": 1791971987.423299
+    },
+    {
+      "event": "responded",
+      "path": "/transfer",
+      "status": 200,
+      "bytes": 1227,
+      "at": 1791971987.424908
+    },
+    {
+      "event": "control",
+      "path": "/control/offline/offline",
+      "at": 1791972000.536578
+    },
+    {
+      "event": "requested",
+      "path": "/offline",
+      "at": 1791972034.299753
+    },
+    {
+      "event": "responded",
+      "path": "/offline",
+      "status": 503,
+      "bytes": 0,
+      "at": 1791972034.302297
+    },
+    {
+      "event": "control",
+      "path": "/control/offline/online",
+      "at": 1791972043.670414
+    },
+    {
+      "event": "requested",
+      "path": "/offline",
+      "at": 1791972050.27215
+    },
+    {
+      "event": "responded",
+      "path": "/offline",
+      "status": 200,
+      "bytes": 1227,
+      "at": 1791972050.274764
+    },
+    {
+      "event": "requested",
+      "path": "/offline",
+      "at": 1791972051.0630558
+    },
+    {
+      "event": "responded",
+      "path": "/offline",
+      "status": 200,
+      "bytes": 1227,
+      "at": 1791972051.065078
+    }
+  ],
+  "preservation": {
+    "finalTaskCount": 1,
+    "finalEntireExistingTaskRecordExact": true,
+    "pendingChanges": 0,
+    "protectedFilesByteExact": 164,
+    "humanCompletedMacFixtureByteExact": true,
+    "normalMacLocalJSONExact": true
+  },
+  "source": {
+    "file": "TaskfoldUITests/TaskfoldUITests.swift",
+    "sha256": "a475f7a2d3b0803be08c921af5af51455e5c40d42a5380bccd7cb1bf7ec5c42e",
+    "providerReadInjectionFlagsUsed": false,
+    "seedArguments": [
+      "--uitesting",
+      "--backup-fixture"
+    ],
+    "shippingCodeChanged": false,
+    "clientSigningReceipt": "taskfold-external-backup-recovery-sign-v1.json"
+  },
+  "cleanup": {
+    "testAppsClosed": true,
+    "loopbackServerStopped": true,
+    "sharedOriginalSimulatorShutdown": true,
+    "inactiveBuildBytesPruned": 112221518,
+    "finalProductsRetained": true,
+    "earlierReplicatedDeviceResidual": "Unchanged stopped residual; no permission override/delete retry"
+  },
+  "remainingGoalGroups": [
+    "Remaining representative installed Mac widget interactions/layouts",
+    "Actual system-selected widget privacy",
+    "User-deferred remaining spoken accessibility",
+    "User-deferred release signing/remote distribution and writer rollout"
+  ],
+  "limits": [
+    "Synthetic provider over loopback; no named iCloud/Dropbox compatibility claim",
+    "Local workspace departure/return, not a new authenticated-account external-provider matrix",
+    "System-picker cancellation does not prove that Taskfold received a late URL callback",
+    "The full original objective remains incomplete"
+  ]
+}

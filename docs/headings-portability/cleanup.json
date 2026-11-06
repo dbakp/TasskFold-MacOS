@@ -1,0 +1,217 @@
+{
+  "ownedScratchRemoved": [
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-final.xcresult",
+      "logicalBytes": 1957577
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone.log",
+      "logicalBytes": 26401
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone.xcresult",
+      "logicalBytes": 59099498
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ios-scoped-core.log",
+      "logicalBytes": 92640
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ipad-final-attachments",
+      "logicalBytes": 896112
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ipad-rejected-summary.json",
+      "logicalBytes": 1530
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-signing.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ios-core-v2.log",
+      "logicalBytes": 97969
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ipad-attachments.log",
+      "logicalBytes": 820
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-host",
+      "logicalBytes": 7065850
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ios-build.log",
+      "logicalBytes": 549961
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ios-candidate.log",
+      "logicalBytes": 94937
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ipad-rejected-attachments",
+      "logicalBytes": 12683770
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ipad-summary.json",
+      "logicalBytes": 1014
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-summary.json",
+      "logicalBytes": 998
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-mac-final-core.log",
+      "logicalBytes": 97620
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-final.log",
+      "logicalBytes": 30682
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-menu-attachments.log",
+      "logicalBytes": 821
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-rebuild-signing.log",
+      "logicalBytes": 117
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-mac-core.log",
+      "logicalBytes": 99974
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-attachments",
+      "logicalBytes": 743874
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-mac-current-build.log",
+      "logicalBytes": 53498
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-mac-menu-build.log",
+      "logicalBytes": 44024
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ios-build",
+      "logicalBytes": 747378309
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-edit.py",
+      "logicalBytes": 9425
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ios-final-build.log",
+      "logicalBytes": 49219
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ipad-final.log",
+      "logicalBytes": 43926
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-final-signing.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ios-menu-core.log",
+      "logicalBytes": 358890
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-menu-final-signing.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ios-final-core.log",
+      "logicalBytes": 98019
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-mac-build.log",
+      "logicalBytes": 9873
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-menu-prepare-signing.json",
+      "logicalBytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-export.log",
+      "logicalBytes": 816
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-menu-final.log",
+      "logicalBytes": 31032
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-menu-signing.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-prepare.log",
+      "logicalBytes": 47
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-mac-scoped-core.log",
+      "logicalBytes": 92252
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ipad-final.xcresult",
+      "logicalBytes": 2286552
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-menu-summary.json",
+      "logicalBytes": 999
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-tests.swift",
+      "logicalBytes": 11589
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-signing.log",
+      "logicalBytes": 88
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-menu-attachments",
+      "logicalBytes": 749989
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-iphone-menu-final.xcresult",
+      "logicalBytes": 1960715
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-mac-menu-core.log",
+      "logicalBytes": 346875
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ios-core.log",
+      "logicalBytes": 23982
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-rebuild-signing.json",
+      "logicalBytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-menu-build.log",
+      "logicalBytes": 103372
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-final-signing.log",
+      "logicalBytes": 88
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-extra-tests.txt",
+      "logicalBytes": 1443
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ipad.log",
+      "logicalBytes": 41702
+    },
+    {
+      "path": "/tmp/taskfold-heading-portability-ipad.xcresult",
+      "logicalBytes": 63204494
+    }
+  ],
+  "logicalBytesRemoved": 900446557,
+  "ownedPhoneAndTabletAppsAndRunnersRemoved": true,
+  "simulatorBootStatesPreserved": true,
+  "coreBuildCachesPreserved": true,
+  "readyMacHostAndBuildPreserved": true
+}

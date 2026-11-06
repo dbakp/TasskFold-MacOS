@@ -1,0 +1,109 @@
+{
+  "images": {
+    "phone": [
+      {
+        "file": "07CAD83E-7023-40C1-8EAB-85594BDDE709.png",
+        "sha256": "17dcb2c7f17b02598bb743c5e0314e45bef1b7ec9f8afeaeea687decffb4daac",
+        "inspected": true
+      },
+      {
+        "file": "1A419933-AAD6-4D16-BCDF-22C6BAE5915A.png",
+        "sha256": "47073f72abb26e28646242dfafc875822a3ecd5608d24ed7bf8f51e9419b9b02",
+        "inspected": true
+      },
+      {
+        "file": "1F43D03D-CC46-4C4B-873D-CF5045BA10E0.png",
+        "sha256": "4d5b22dde12b656b9992301a8858148f0fa79f176d3f1bbc4d2c0f6cba8d8326",
+        "inspected": true
+      },
+      {
+        "file": "2EDDF4DC-F561-467E-B4BC-73E038651B84.png",
+        "sha256": "2455d5cb63d6daddf79161124741073c7ee59abbbf535130a4cef638b70437a6",
+        "inspected": true
+      },
+      {
+        "file": "4C543B8B-DC3A-467C-A967-4D532B72BF44.png",
+        "sha256": "3d57c0472c00c092fd48b28adeafef7ffe3f9a1b59ac339afe26de9492f33bce",
+        "inspected": true
+      },
+      {
+        "file": "5428B650-FD07-4172-89C5-5E6ECB4B8DE2.png",
+        "sha256": "3d57c0472c00c092fd48b28adeafef7ffe3f9a1b59ac339afe26de9492f33bce",
+        "inspected": true
+      },
+      {
+        "file": "5F49E8B0-8501-4202-96F3-3401A7DAF864.png",
+        "sha256": "abf4ec73caa2e04e9153dc05b8f0f10734a5fa0c80bd62af4fb16388e4c0dbc6",
+        "inspected": true
+      },
+      {
+        "file": "8BA99F52-7B24-4E44-A9AB-00A986B692A7.png",
+        "sha256": "8107d3c2604ea1849569cbf5aa63b17b8822e5b4fa3dad452277a4528c846de7",
+        "inspected": true
+      },
+      {
+        "file": "97FE892D-2CED-4C27-BE1D-809504D63ED2.png",
+        "sha256": "5e695639332e5d1d134f1c641a50fe4110e05c677a47887e4307a19274008826",
+        "inspected": true
+      },
+      {
+        "file": "CDB0A24C-CE2D-4AF5-ACAC-A5611E0A2540.png",
+        "sha256": "7944c3241b0f9cc314a85ce282e21160fb39f2e7a0e610c2d3373f038fe36c13",
+        "inspected": true
+      }
+    ],
+    "ipad": [
+      {
+        "file": "115CB6E1-A5BC-49F2-B301-DC5465AD445E.png",
+        "sha256": "667b69e6a3d0970b19ed9c4f3e5b52a5e6bc5a4053ab23df4b783463c63fe88d",
+        "inspected": true
+      },
+      {
+        "file": "4898970D-9313-47BD-AC0D-D46F981D5B4C.png",
+        "sha256": "e4ae14e0ec0d9545f962416d2536b01bca13c5064b1d4f03071a08239aaafba6",
+        "inspected": true
+      },
+      {
+        "file": "4DEA7D24-78AB-48CA-B573-43CC51B4029B.png",
+        "sha256": "c5679a71e9341e6027ae835bfdd25ba3402a818c0049f52aaa87207de2d676e0",
+        "inspected": true
+      },
+      {
+        "file": "5925D3D5-432C-4E84-BCE3-18F6B748A643.png",
+        "sha256": "a49eff9cc147b8d7ed0555ff4f3c67b92542baf0a7a0f2ae2e64347bc7edf887",
+        "inspected": true
+      },
+      {
+        "file": "5E06F6F6-B7B0-439D-969D-04E5FACF8194.png",
+        "sha256": "e4ae14e0ec0d9545f962416d2536b01bca13c5064b1d4f03071a08239aaafba6",
+        "inspected": true
+      },
+      {
+        "file": "7E3B1624-F30C-4AA8-96BF-4A9C747A0C01.png",
+        "sha256": "44d946e0d935550381ff0dcad0039b507814a39e137f0170ba53289257b6f7f2",
+        "inspected": true
+      },
+      {
+        "file": "7E902A86-6187-4E0C-9069-7E8E71801513.png",
+        "sha256": "47c266351fb66ae7b919256593617172940e473603ca0a2705f2164e8c014ac7",
+        "inspected": true
+      },
+      {
+        "file": "9719BCC1-F23E-46C8-AB88-EBAC2917AEC2.png",
+        "sha256": "667b69e6a3d0970b19ed9c4f3e5b52a5e6bc5a4053ab23df4b783463c63fe88d",
+        "inspected": true
+      },
+      {
+        "file": "BB4CC974-B0BC-4008-A724-3A6F76A9BEDB.png",
+        "sha256": "7c2f4725fda8886ea2862183f761866e8bd3ff386d358f947837fd8d59198fd1",
+        "inspected": true
+      },
+      {
+        "file": "FE9F18B0-51EC-4534-B723-8827F4FB8040.png",
+        "sha256": "4cfee4b326e6357fbfbd1b4f2c0bcad7d3b5d338eaf073369cfbc2cc44c9526b",
+        "inspected": true
+      }
+    ]
+  },
+  "finding": "20 final images inspected. Target CSV fields wrap and remain readable when scrolled into the sheet; no application text clipping found in this fixture. Native Files may abbreviate its filename/folder title at XXXL; delivered filename and bytes verified independently."
+}

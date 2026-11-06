@@ -11,19 +11,113 @@ struct AppFailure: LocalizedError {
     var errorDescription: String? { message }
 }
 
+/// A rejected session requires explicit sign-in; never surface server details.
+struct AccountSessionAuthorizationRequired: LocalizedError {
+    var errorDescription: String? { "Sign in again to continue." }
+}
+
+/// A transient response without a service decision cannot establish whether a
+/// durable task write applied. Keep the original request for idempotent retry.
+struct SavedTaskWriteUnconfirmed: LocalizedError, Sendable {
+    var errorDescription: String? { "This change couldn’t be confirmed. Try again." }
+}
+
+/// An explicit sign-in can renew only this account, server and session incarnation.
+struct AccountReauthentication: Identifiable, Sendable {
+    let id = UUID()
+    let account: String
+    let origin: String
+    let incarnation: UUID
+}
+struct AccountReauthenticationMismatch: LocalizedError {
+    var errorDescription: String? { "Use the same Taskfold account to continue." }
+}
+
+/// Explain transport interruptions without presenting internal networking codes.
+/// This describes already-persisted sync work, not an unsaved editor draft.
+enum SyncStatus {
+    struct Presentation {
+        let title: String
+        let symbol: String
+    }
+    /// A prior successful sync never overrides a current interruption or unsent work.
+    static func presentation(local: Bool, online: Bool, syncing: Bool, needsAttention: Bool, pending: Int, lastSync: Date?) -> Presentation {
+        if local { return Presentation(title: "Saved on this device", symbol: "internaldrive") }
+        if !online { return Presentation(title: "Offline · saved on this device", symbol: "wifi.slash") }
+        if syncing { return Presentation(title: "Syncing…", symbol: "arrow.triangle.2.circlepath") }
+        if needsAttention { return Presentation(title: "Sync needs attention", symbol: "exclamationmark.icloud") }
+        if pending > 0 { return Presentation(title: "\(pending) \(pending == 1 ? "change" : "changes") waiting to sync", symbol: "icloud") }
+        if let lastSync { return Presentation(title: "Synced \(lastSync.formatted(date: .omitted, time: .shortened))", symbol: "checkmark.icloud") }
+        return Presentation(title: "Waiting to sync", symbol: "icloud")
+    }
+    static func failureMessage(_ error: Error) -> String {
+        if error is SavedTaskWriteUnconfirmed {
+            return "Sync couldn’t be confirmed. Your changes are saved on this device. Try syncing again."
+        }
+        if error is AccountSessionAuthorizationRequired {
+            return "Sign in again to sync. Your changes are saved on this device."
+        }
+        let failure = error as NSError
+        if failure.domain == NSURLErrorDomain {
+            switch failure.code {
+            case URLError.notConnectedToInternet.rawValue:
+                return "You're offline. Changes saved on this device will sync when you reconnect."
+            case URLError.networkConnectionLost.rawValue:
+                return "The connection was interrupted. Your saved changes are still on this device. Try syncing again."
+            case URLError.timedOut.rawValue:
+                return "Sync took too long. Your saved changes are still on this device. Try again."
+            default: break
+            }
+        }
+        return "Sync paused: \(error.localizedDescription)"
+    }
+}
+
+enum SessionPersistence {
+    private static let writer = DispatchQueue(label: "com.taskfold.session-persistence", qos: .utility)
+    /// Await durability without holding the UI thread. One queue orders save and sign-out.
+    static func perform(_ operation: @escaping @Sendable () throws -> Void) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            writer.async {
+                do { try operation(); continuation.resume() }
+                catch { continuation.resume(throwing: error) }
+            }
+        }
+    }
+}
+
 enum SecureSession {
+    static func saveAsync(_ session: Session?) async throws {
+        try await SessionPersistence.perform { try save(session) }
+    }
     static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
         kSecAttrService as String: "com.taskfold.ios.session", kSecAttrAccount as String: "supabase"]
+    private static var activeQuery: [String: Any] {
+        var value = query
+        #if DEBUG && !SWIFT_PACKAGE
+        if FullSchemaNativeFixture.protectedStorageRequested {
+            value[kSecAttrService as String] = FullSchemaNativeFixture.keychainService("session")
+        }
+        #endif
+        return value
+    }
     static func read() -> Session? {
-        var q = query; q[kSecReturnData as String] = true
+        var q = activeQuery; q[kSecReturnData as String] = true
         var result: CFTypeRef?
         guard SecItemCopyMatching(q as CFDictionary, &result) == errSecSuccess,
               let data = result as? Data else { return nil }
-        return try? JSONDecoder().decode(Session.self, from: data)
+        return try? Foundation.JSONDecoder().decode(Session.self, from: data)
     }
     static func save(_ session: Session?) throws {
-        guard let session else { SecItemDelete(query as CFDictionary); return }
-        let data = try JSONEncoder().encode(session)
+        let query = activeQuery
+        guard let session else {
+            let status = SecItemDelete(query as CFDictionary)
+            guard status == errSecSuccess || status == errSecItemNotFound else {
+                throw AppFailure(message: "Could not securely clear your session (\(status)).")
+            }
+            return
+        }
+        let data = try TaskfoldJSONEncoder().encode(session)
         let update = [kSecValueData as String: data]
         var status = SecItemUpdate(query as CFDictionary, update as CFDictionary)
         if status == errSecItemNotFound {
@@ -35,15 +129,85 @@ enum SecureSession {
     }
 }
 
+
+#if DEBUG
+/// A pending sign-in for isolated UI checks. No request is sent to a real service.
+private final class AuthenticationWaitingHTTP: URLProtocol, @unchecked Sendable {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {}
+    override func stopLoading() {}
+}
+/// A controlled connection outage for the isolated native Mac recovery walk.
+private final class ContinuityDisconnectedHTTP: URLProtocol, @unchecked Sendable {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() { client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet)) }
+    override func stopLoading() {}
+}
+#endif
+
+#if DEBUG
+/// Holds only a disposable account's completed upload for a native account-switch walk.
+/// The real request has already used its original owner/path/JWT; no response is fabricated.
+private enum ProfileUploadResponseTestHold {
+    static func wait(account: String, email: String?, objectPath: String) async throws {
+        let bundle = Bundle.main.bundleIdentifier
+        guard bundle == "com.dbakp.taskfold.assigneepatterntests" || bundle == "com.dbakp.taskfold.mac.p0uitests",
+              ProcessInfo.processInfo.arguments.contains("--profile-upload-response-hold"),
+              email == "taskfold-continuity-" + account + "@example.invalid",
+              let path = ProcessInfo.processInfo.environment["TASKFOLD_PROFILE_RESPONSE_HOLD"] else { return }
+        let name = URL(fileURLWithPath: path).lastPathComponent
+        let prefix = "taskfold-profile-upload-"
+        guard name.hasPrefix(prefix), UUID(uuidString: String(name.dropFirst(prefix.count))) != nil,
+              path == name || path == "/private/tmp/" + name else { return }
+        // A basename uses the app's own sandbox; legacy absolute paths serve Simulator runners.
+        let marker: URL
+        if path == name {
+            guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
+            let directory = support.appendingPathComponent("Taskfold", isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            marker = directory.appendingPathComponent(name)
+        } else { marker = URL(fileURLWithPath: path) }
+        let ready = marker.appendingPathExtension("ready")
+        let release = marker.appendingPathExtension("release")
+        let finished = marker.appendingPathExtension("finished")
+        try Data(objectPath.utf8).write(to: ready, options: .atomic)
+        defer { try? Data().write(to: finished, options: .atomic) }
+        let deadline = ContinuousClock.now.advanced(by: .seconds(180))
+        while !FileManager.default.fileExists(atPath: release.path) {
+            guard ContinuousClock.now < deadline else { throw CancellationError() }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+    }
+}
+#endif
+
+/// Private geometry RPCs never follow a redirect, including a same-host redirect.
+/// This delegate is immutable and holds no credentials or request state.
+private final class LocationHandoffRedirectRefusal: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    static let shared = LocationHandoffRedirectRefusal()
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
+}
+
 @MainActor
 final class Backend: NSObject {
     var session: Session?
+    #if DEBUG
+    private var discardedTodoistResponse = false
+    private var discardedWebhookCreateResponse = false
+    #endif
     #if canImport(UIKit)
     private var authSession: ASWebAuthenticationSession?
     #endif
     private let http: URLSession
-    private let saveSession: (Session?) throws -> Void
+    private let saveSession: (Session?) async throws -> Void
     private var sessionGeneration = UUID()
+    private var sessionTransition = false
+    private var authenticationAttempt: UUID?
+    private var reauthenticationAttempt: (context: UUID, attempt: UUID)?
+    private var cancelAuthenticationBrowser: (() -> Void)?
     /// Changes on sign-in/sign-out, and stays stable across ordinary token refresh.
     var reminderSessionIncarnation: UUID { sessionGeneration }
     private var refreshTask: Task<Session, Error>?
@@ -51,8 +215,36 @@ final class Backend: NSObject {
     private let config: [String: String]
     init(configuration: [String: String]? = nil, http: URLSession = .shared,
          session: Session? = SecureSession.read(),
-         persistSession: @escaping (Session?) throws -> Void = SecureSession.save) {
+         persistSession: @escaping (Session?) async throws -> Void = SecureSession.saveAsync) {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--auth-response-wait-testing"),
+           ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test"),
+           ["com.dbakp.taskfold.mac.backupcanceltests", "com.dbakp.taskfold.backupcanceltests"].contains(Bundle.main.bundleIdentifier ?? "") {
+            let waiting = URLSessionConfiguration.ephemeral
+            waiting.protocolClasses = [AuthenticationWaitingHTTP.self]
+            self.http = URLSession(configuration: waiting)
+        } else if ProcessInfo.processInfo.arguments.contains("--shared-capture-offline"),
+           Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowtestssharecloud",
+           let user = session?.user, UUID(uuidString: user.id) != nil,
+           let email = user.email, email.hasPrefix("taskfold-share-capture-"), email.hasSuffix("@example.invalid"),
+           UUID(uuidString: String(email.dropFirst("taskfold-share-capture-".count).dropLast("@example.invalid".count))) != nil {
+            // Only an authenticated disposable account in the exact isolated Debug app.
+            // Real Auth/HTTP is used before and after this controlled transport outage.
+            let disconnected = URLSessionConfiguration.ephemeral
+            disconnected.protocolClasses = [ContinuityDisconnectedHTTP.self]
+            self.http = URLSession(configuration: disconnected)
+        } else if ProcessInfo.processInfo.arguments.contains("--continuity-offline"),
+           ["com.dbakp.taskfold.mac.p0signeduitests", "com.dbakp.taskfold.mac.backupcanceltests"].contains(Bundle.main.bundleIdentifier ?? ""),
+           let user = session?.user,
+           user.id == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+           user.email == "taskfold-continuity-" + user.id + "@example.invalid" {
+            let disconnected = URLSessionConfiguration.ephemeral
+            disconnected.protocolClasses = [ContinuityDisconnectedHTTP.self]
+            self.http = URLSession(configuration: disconnected)
+        } else { self.http = http }
+        #else
         self.http = http
+        #endif
         self.session = session
         self.saveSession = persistSession
         if let configuration { config = configuration }
@@ -62,26 +254,107 @@ final class Backend: NSObject {
         else { config = [:] }
         super.init()
     }
-    func clearSession() throws {
-        sessionGeneration = UUID()
-        refreshTask?.cancel(); refreshTask = nil; refreshID = nil
-        try saveSession(nil); session = nil
+    /// A response belongs to the sign-in that started it, not whichever workspace is current later.
+    func beginAuthentication(cancelBrowser: (() -> Void)? = nil) -> UUID {
+        cancelAuthentication()
+        let attempt = UUID(); authenticationAttempt = attempt
+        cancelAuthenticationBrowser = cancelBrowser
+        return attempt
     }
-    private func accept(_ next: Session) throws {
-        try saveSession(next)
-        sessionGeneration = UUID(); refreshTask?.cancel(); refreshTask = nil; refreshID = nil
+    func requireAuthentication(_ attempt: UUID) throws {
+        guard authenticationAttempt == attempt else { throw CancellationError() }
+    }
+    func endAuthentication(_ attempt: UUID) {
+        guard authenticationAttempt == attempt else { return }
+        cancelAuthentication()
+    }
+    private func cancelAuthentication() {
+        authenticationAttempt = nil
+        reauthenticationAttempt = nil
+        let cancel = cancelAuthenticationBrowser; cancelAuthenticationBrowser = nil
+        cancel?()
+    }
+    func reauthenticationContext(account: String) throws -> AccountReauthentication {
+        guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account) else { throw CancellationError() }
+        return AccountReauthentication(account:account,origin:try accountRemovalOrigin,incarnation:sessionGeneration)
+    }
+    func requireReauthentication(_ context: AccountReauthentication?) throws {
+        guard let context else { return }
+        guard !sessionTransition, session?.user.id == context.account, sessionGeneration == context.incarnation,
+              context.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+    }
+    func startAuthentication(reauthenticating context: AccountReauthentication?, cancelBrowser: (() -> Void)? = nil) throws -> UUID {
+        try requireReauthentication(context)
+        let attempt = beginAuthentication(cancelBrowser:cancelBrowser)
+        if let context { reauthenticationAttempt = (context.id,attempt) }
+        return attempt
+    }
+    func cancelReauthentication(_ context: AccountReauthentication) {
+        guard let current = reauthenticationAttempt, current.context == context.id, current.attempt == authenticationAttempt else { return }
+        cancelAuthentication()
+    }
+    func acceptAuthentication(_ next: Session, attempt: UUID, reauthenticating context: AccountReauthentication?, willCommit: (() -> Void)? = nil) async throws {
+        try requireAuthentication(attempt)
+        try requireReauthentication(context)
+        if let context, next.user.id != context.account { throw AccountReauthenticationMismatch() }
+        try Task.checkCancellation()
+        // From this point the existing serialized credential write must finish.
+        // The sheet disables cancellation for that short commit phase.
+        willCommit?()
+        try await accept(next)
+    }
+    func clearSession() async throws {
+        cancelAuthentication()
+        let generation = UUID(); sessionGeneration = generation; sessionTransition = true
+        defer { if sessionGeneration == generation { sessionTransition = false } }
+        refreshTask?.cancel(); refreshTask = nil; refreshID = nil
+        try await saveSession(nil)
+        guard sessionGeneration == generation else { throw CancellationError() }
+        session = nil
+    }
+    func accept(_ next: Session) async throws {
+        cancelAuthentication()
+        let generation = UUID(); sessionGeneration = generation; sessionTransition = true
+        defer { if sessionGeneration == generation { sessionTransition = false } }
+        refreshTask?.cancel(); refreshTask = nil; refreshID = nil
+        try await saveSession(next)
+        guard sessionGeneration == generation else { throw CancellationError() }
         session = next
     }
     var baseURL: String { config["URL"] ?? "" }
     func request(_ path: String, method: String = "GET", body: [String: JSON]? = nil,
                  authenticated: Bool = true, extra: [String: String] = [:], retryAuthentication: Bool = true,
-                 expectedAccount: String? = nil) async throws -> Data {
+                 expectedAccount: String? = nil, workflowReadLimit: Int? = nil) async throws -> Data {
+        guard !authenticated || !sessionTransition else { throw CancellationError() }
         let generation = sessionGeneration, owner = expectedAccount ?? session?.user.id
+        let workflowUndoDiscovery = path == "/rest/v1/rpc/taskfold_workflow_undo_capabilities"
+        let workflowUndoRequest = workflowUndoDiscovery || ["/rest/v1/rpc/taskfold_undo_private_workflow", "/rest/v1/rpc/taskfold_undo_capture_workflow"].contains(path)
         if authenticated { try await refreshIfNeeded() }
-        if authenticated, generation != sessionGeneration || session?.user.id != owner { throw CancellationError() }
+        if authenticated, sessionTransition || generation != sessionGeneration || session?.user.id != owner { throw CancellationError() }
         guard let url = URL(string: baseURL + path), url.scheme == "https" else {
             throw AppFailure(message: "The Supabase configuration is missing.")
         }
+        if let workflowReadLimit { guard (1...4_200_000).contains(workflowReadLimit) else { throw TeamWorkflowRunCommand.invalid } }
+        let childRepair = path == "/rest/v1/rpc/taskfold_repair_children"
+        let childCopyReview = path == "/rest/v1/rpc/taskfold_review_child_copies"
+        let childRepairPreview = path == "/rest/v1/rpc/taskfold_preview_child_repair"
+        let childRepairOriginal = childRepair && body?["_operation"] == .string("original")
+        let childAdoptionWrite = path == "/rest/v1/rpc/taskfold_adopt_child_records"
+        let childAdoptionTargets = path == "/rest/v1/rpc/taskfold_child_adoption_targets"
+        let childAdoptionReview = path == "/rest/v1/rpc/taskfold_review_child_adoption"
+        let childTransfer = path == "/rest/v1/rpc/taskfold_transfer_child"
+        let childStructureArchive = path == "/rest/v1/rpc/taskfold_child_structure_undo_archives"
+        let childStructureOperation = childStructureArchive || ["/rest/v1/rpc/taskfold_edit_child_structure", "/rest/v1/rpc/taskfold_close_child_structure", "/rest/v1/rpc/taskfold_forget_child_structure_undo"].contains(path)
+        let mixedCompletion = ["/rest/v1/rpc/taskfold_complete_mixed_tasks", "/rest/v1/rpc/taskfold_undo_mixed_completion", "/rest/v1/rpc/taskfold_close_mixed_completion"].contains(path)
+        let childCompletionBatch = ["/rest/v1/rpc/taskfold_complete_child_tasks", "/rest/v1/rpc/taskfold_close_child_completion_batch"].contains(path)
+        let childCompletionWrite = ["/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_close_child_completion"].contains(path) || childCompletionBatch || mixedCompletion
+        let childRecordWrite = ["/rest/v1/rpc/taskfold_close_child_completion", "/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_edit_child_task", "/rest/v1/rpc/taskfold_close_child_task_edit"].contains(path) || childCompletionBatch || mixedCompletion || childStructureOperation || childTransfer || childAdoptionWrite || childRepair
+        let completionSelectionRead = path == "/rest/v1/rpc/taskfold_read_completion_selection_roots"
+        let childRecordRead = ["/rest/v1/rpc/taskfold_read_child_tasks", "/rest/v1/rpc/taskfold_read_child_structure"].contains(path) || childAdoptionReview || childAdoptionTargets || childRepairPreview || childCopyReview || completionSelectionRead
+        let workflowRead = workflowReadLimit != nil && !["/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery"].contains(path)
+        let workflowRun = path == "/rest/v1/rpc/taskfold_team_workflow_run"
+        let templateLibrary = path == "/rest/v1/rpc/taskfold_team_templates"
+        let projectAdoption = path == "/rest/v1/rpc/taskfold_team_project_adoption"
         var request = URLRequest(url: url); request.httpMethod = method; request.timeoutInterval = path == "/functions/v1/import-todoist" ? 240 : 30
         request.setValue(config["Key"], forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -90,26 +363,241 @@ final class Backend: NSObject {
             request.setValue("Bearer \(session.access_token)", forHTTPHeaderField: "Authorization")
         }
         extra.forEach { request.setValue($1, forHTTPHeaderField: $0) }
-        if let body { request.httpBody = try JSONEncoder().encode(body) }
-        let (data, response) = try await http.data(for: request)
+        if workflowUndoRequest || childRecordWrite || childRecordRead || workflowRead || workflowRun || projectAdoption || templateLibrary || path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
+            request.timeoutInterval = 25
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            request.httpShouldHandleCookies = false
+            request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
+        }
+        if let body { request.httpBody = try TaskfoldJSONEncoder().encode(body) }
+        let data: Data, response: URLResponse
+        if workflowUndoRequest || childRecordWrite || childRecordRead || workflowRead || workflowRun || projectAdoption || templateLibrary || path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
+            let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
+            let mappedRepairPreview = childRepairPreview && body?["_body"]?.object["changes"]?.list.first?.object["mapping"] != nil
+            let limit = workflowUndoRequest ? (workflowUndoDiscovery ? 16384 : WorkflowUndo.maximumResponseBytes) : childCopyReview ? ChildTaskCopyReview.maximumBytes : mixedCompletion ? MixedTaskCompletionCommand.maximumResponseBytes : completionSelectionRead ? CompletionSelectionRootRead.maximumBytes : childCompletionBatch ? ChildTaskCompletionBatchCommand.maximumResponseBytes : childRepairOriginal ? ChildTaskRepairOriginal.maximumBytes : childRepairPreview ? (mappedRepairPreview ? ChildTaskRepairPreview.maximumBytes : 4_300_000) : childAdoptionTargets ? ChildTaskAdoptionTargetPage.maximumBytes : childAdoptionReview ? ChildTaskAdoptionReview.maximumBytes : childStructureArchive ? 65_536 : childRecordWrite ? 16_384 : childRecordRead ? ChildTaskRecordRead.maximumBytes : ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch"].contains(path) ? 8_500_000 : path == "/rest/v1/rpc/taskfold_complete_team_tasks" ? 4_300_000 : workflowReadLimit ?? (workflowRun ? 1_000_000 : projectAdoption || templateLibrary ? 3_000_000 : path == "/rest/v1/rpc/taskfold_team_task_recipients" ? 350_000 : path == "/rest/v1/rpc/taskfold_team_projects" ? 1_000_000 : ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 4_000_000 : ["/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? 2_000_000 : ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 1_000_000 : ["/functions/v1/email-routes", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 512000 : (["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 256000 : LocationHandoffResponse.maximumBytes))
+            var body = Data()
+            do {
+                guard incoming.expectedContentLength <= Int64(limit) else { if childRepair || childRepairPreview || childCopyReview { throw ChildTaskRepairFailure(reason: .limit) }; if childAdoptionReview { throw ChildTaskAdoptionFailure(reason: .limit) }; throw AppFailure(message: workflowUndoRequest ? "The workflow response is too large. Your saved request is unchanged." : childRecordWrite ? ChildTaskFieldWriteFailure(reason:.unconfirmed).localizedDescription : childRecordRead ? ChildTaskRecordFailure.oversized.localizedDescription : templateLibrary ? "The team template response is too large. Refresh to try again." : projectAdoption ? "The project review is too large. Your saved request is unchanged." : ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                if completionSelectionRead { body = try await Self.readCompletionSelectionResponse(bytes, maximum: limit) }
+                else if childRepair || childRepairPreview || childCopyReview { body = try await Self.readRepairResponse(bytes, maximum: limit) }
+                else if childAdoptionReview || childAdoptionTargets { body = try await Self.readAdoptionResponse(bytes, maximum: limit) }
+                else {
+                for try await byte in bytes {
+                    try Task.checkCancellation()
+                    guard body.count < limit else { if childAdoptionReview { throw ChildTaskAdoptionFailure(reason: .limit) }; throw AppFailure(message: childRecordWrite ? ChildTaskFieldWriteFailure(reason:.unconfirmed).localizedDescription : childRecordRead ? ChildTaskRecordFailure.oversized.localizedDescription : templateLibrary ? "The team template response is too large. Refresh to try again." : projectAdoption ? "The project review is too large. Your saved request is unchanged." : ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                    body.append(byte)
+                }
+                }
+            } catch { bytes.task.cancel(); throw error }
+            data = body; response = incoming
+        } else { (data, response) = try await http.data(for: request) }
         if authenticated, generation != sessionGeneration || session?.user.id != owner { throw CancellationError() }
+        if completionSelectionRead, (response as? HTTPURLResponse)?.statusCode == 401,
+           (try? TaskfoldJSONDecoder().decode(Record.self, from: data))?.string("code") == "28000" {
+            throw AccountSessionAuthorizationRequired()
+        }
         if authenticated, (response as? HTTPURLResponse)?.statusCode == 401, retryAuthentication {
             try await refreshIfNeeded(force: true)
-            return try await self.request(path, method: method, body: body, authenticated: true, extra: extra, retryAuthentication: false, expectedAccount: owner)
+            return try await self.request(path, method: method, body: body, authenticated: true, extra: extra, retryAuthentication: false, expectedAccount: owner, workflowReadLimit: workflowReadLimit)
         }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            let error = (try? JSONDecoder().decode(Record.self, from: data)) ?? Record()
+            let error = (try? TaskfoldJSONDecoder().decode(Record.self, from: data)) ?? Record()
+            let status = (response as? HTTPURLResponse)?.statusCode
+            let durableTaskWrite = method == "POST" && ["/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks"].contains(path)
+            // Preserve explicit service refusals, session gates and conflicts.
+            // Gateway timeouts/overload can lose a committed reply; never turn
+            // their unstructured response into an instruction to edit the task.
+            if durableTaskWrite, let status, [408, 429].contains(status) || (500...599).contains(status), error.string("code").isEmpty {
+                throw SavedTaskWriteUnconfirmed()
+            }
+            if ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch"].contains(path) {
+                if status == 401 || error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw TeamTaskBatch.Review.invalid
+            }
+            if childRepair || childRepairPreview || childCopyReview {
+                if status == 401 || error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                let reason: ChildTaskFieldWriteFailure.Reason
+                switch error.string("code") {
+                case "PT503", "PGRST202", "PT404", "42501": reason = .unavailable
+                case "PT409", "22023": reason = .review
+                case "PT410": reason = .closed
+                case "55P03", "40P01", "40001": reason = .busy
+                case "54000", "PT413", "PT429": reason = .limit
+                default: reason = .unconfirmed
+                }
+                throw ChildTaskRepairFailure(reason: reason)
+            }
+            if childRecordWrite {
+                if status == 401 || error.string("code")=="28000" {throw AccountSessionAuthorizationRequired()}
+                let reason:ChildTaskFieldWriteFailure.Reason
+                switch error.string("code") {
+                case "PT503","PGRST202","PT404","42501":reason = .unavailable
+                case "PT409","22023":reason = .review
+                case "PT410":reason = .closed
+                case "55P03","40P01","40001":reason = .busy
+                case "54000","PT429":reason = .limit
+                default:reason = .unconfirmed
+                }
+                if childAdoptionWrite { throw ChildTaskAdoptionFailure(reason: reason) }
+                if childTransfer { throw ChildTaskTransferFailure(reason: reason) }
+                if childStructureOperation { throw ChildTaskStructureFailure(reason: reason) }
+                if childCompletionWrite { throw ChildTaskCompletionFailure(reason: reason) }
+                throw ChildTaskFieldWriteFailure(reason:reason)
+            }
+            if childRecordRead {
+                if status == 401 || error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if ["PT503","PGRST202","42501"].contains(error.string("code")) { throw ChildTaskRecordFailure.unavailable }
+                if error.string("code")=="54000" { throw ChildTaskRecordFailure.oversized }
+                throw ChildTaskRecordFailure.review
+            }
+            if workflowRun || workflowRead {
+                if status == 401 || error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw TeamWorkflowRunCommand.invalid
+            }
+            if templateLibrary {
+                if status == 401 || error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw TeamTemplateLibraryValue.invalid
+            }
+            if projectAdoption {
+                if status == 401 || error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw TeamProjectAdoptionValue.invalid
+            }
+            if path == "/rest/v1/rpc/taskfold_workflow_undo_capabilities" {
+                if ["PGRST202", "PT503", "42501"].contains(error.string("code")) { throw WorkflowUndoServiceUnavailable() }
+                if status == 401 || error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw AppFailure(message: "Couldn’t check workflow Undo support.")
+            }
+            if authenticated, status == 401,
+               ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
+                throw AccountSessionAuthorizationRequired()
+            }
+            if path == "/rest/v1/rpc/taskfold_teams", body?["_action"] != .string("list"), body?["_action"] != .string("get"), body?["_action"] != .string("invitations") {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw TeamOrganizationCommandFailure(code: error.string("code"))
+            }
+            if ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
+                if error.string("code")=="PGRST202" {throw TeamWorkspaceUnavailable()}
+                if error.string("code")=="28000" {throw AccountSessionAuthorizationRequired()}
+                throw TeamProjectValue.invalid
+            }
+            if path == "/rest/v1/rpc/taskfold_team_audio_lifecycle_review" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if ["42501", "PT404"].contains(error.string("code")) { throw AppFailure(message: "Project access changed. Reopen the task before reviewing recordings. Nothing has been removed.") }
+                if error.string("code") == "PT503" { throw AppFailure(message: "Recording recovery is unavailable right now. Nothing has been removed.") }
+                throw TeamAudioLifecycleReview.unavailable
+            }
+            if path == "/rest/v1/rpc/taskfold_audio_selection_restore_recovery" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw TeamAudioRestoreSelection.unavailable
+            }
+            if path == "/rest/v1/rpc/taskfold_audio_restore_recovery" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw TeamAudioRestoreRecoveryCommand.unavailable
+            }
+            if path == "/rest/v1/rpc/taskfold_copy_team_draft" {
+                if error.string("code") == "28000" {throw AccountSessionAuthorizationRequired()}
+                if ["42501","PT404","PT503"].contains(error.string("code")) {throw AppFailure(message:"Copying is not available in this project right now. Your saved draft and copy request are kept.")}
+                throw AppFailure(message:"The copy could not be confirmed. Check project access, assignments and reminders. Your draft and any saved copy request are kept.")
+            }
+            if path == "/rest/v1/rpc/taskfold_retire_team_provisional" {
+                if error.string("code") == "28000" {throw AccountSessionAuthorizationRequired()}
+                throw TeamCompletionDraft.invalid
+            }
+            if path == "/rest/v1/rpc/taskfold_complete_team_task" { throw TeamCompletion.conflict }
+            if ["/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if error.string("code") == "PT412" { throw TeamAudioRestoreClosed() }
+                if error.string("code") == "PT410" { throw TeamConversationRecoveryExpired() }
+                if ["/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_tasks"].contains(path), ["40P01","55P03","57014"].contains(error.string("code")) {
+                    throw AppFailure(message:"This selection is busy syncing. Your saved changes remain on this device. Try again shortly.")
+                }
+                if ["PT409", "P0001"].contains(error.string("code")) {
+                    if ["/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_tasks"].contains(path) { throw TeamTaskBatch.conflict }
+                    throw TeamTaskEditScope.conflict
+                }
+                if ["PT404", "42501"].contains(error.string("code")) {
+                    throw AppFailure(message: "Team editing access is no longer available. Your saved edit remains on this device.")
+                }
+                throw TeamTaskEditScope.invalid
+            }
+            if path == "/rest/v1/rpc/taskfold_team_task_recipients" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw TeamTaskRecipientCatalog.invalid
+            }
+            if path == "/rest/v1/rpc/taskfold_team_projects" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if error.string("code") == "PT404" { throw TeamProjectAccessUnavailable() }
+                throw TeamProjectValue.invalid
+            }
+            if ["/rest/v1/rpc/taskfold_undo_private_workflow", "/rest/v1/rpc/taskfold_undo_capture_workflow"].contains(path), error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+            if path == "/rest/v1/rpc/taskfold_assign_task_scoped" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if ["PT503", "PGRST202"].contains(error.string("code")) { throw AppFailure(message: "This server cannot apply the saved assignment yet. Your choice is kept for retry.") }
+            }
+            if ["/rest/v1/rpc/taskfold_patch_task", "/rest/v1/rpc/taskfold_delete_task", "/rest/v1/rpc/taskfold_assign_task_scoped"].contains(path), error.string("code") == "PT409" {
+                throw TeamTaskReviewRequired()
+            }
+            if path == "/rest/v1/rpc/taskfold_move_personal_task" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if error.string("code") == "PT409" { throw AppFailure(message: "TASKFOLD_CONFLICT: This project move changed. Review the current task and your saved move.") }
+                throw AppFailure(message: "The project move couldn’t be confirmed. It remains saved on this device for retry.")
+            }
+            // Raw Auth responses use error_code (code may be numeric HTTP status).
+            // Retain support for normalized string-code responses, without using msg.
+            let authCode = error.string("error_code").isEmpty ? error.string("code") : error.string("error_code")
+            if !authenticated, path == "/auth/v1/token?grant_type=refresh_token",
+               [400, 401, 422].contains(status ?? 0),
+               ["refresh_token_not_found", "refresh_token_already_used", "session_expired", "session_not_found"].contains(authCode) {
+                throw AccountSessionAuthorizationRequired()
+            }
             let message = ["msg", "message", "error_description", "error"].map { error.string($0) }.first { !$0.isEmpty }
             throw AppFailure(message: message ?? "The server could not complete this request. Please try again.")
         }
+        #if DEBUG
+        // Lose one actual successful response in the authorized disposable provider walk.
+        // Never available in Release, ordinary bundles, other accounts or previews.
+        // Later saves on this Backend instance use the real response normally.
+        let isolatedBundle = Bundle.main.bundleIdentifier
+        let replayAccount = session?.user.id == "316d6706-449c-4ab8-8480-db12e7d92642"
+            && session?.user.email?.hasPrefix("taskfold-todoist-readonly-") == true
+            && (isolatedBundle == "com.dbakp.taskfold.providercontinuitytests" || isolatedBundle == "com.dbakp.taskfold.mac.p0localuitests" || isolatedBundle == "com.dbakp.taskfold.mac.p0signeduitests")
+        let firstImportAccount = session?.user.id == "00befe6f-4ab3-4fe0-b346-3c262a298c24"
+            && session?.user.email == "taskfold-todoist-first-53c1dae7-7745-49e7-b473-7e509756047d@example.invalid"
+            && (isolatedBundle == "com.dbakp.taskfold.firstimporttests" || isolatedBundle == "com.dbakp.taskfold.mac.p0firstimporttests")
+        if !discardedTodoistResponse, path == "/functions/v1/import-todoist", method == "POST",
+           body?["preview"] == .bool(false),
+           replayAccount || firstImportAccount,
+           ProcessInfo.processInfo.arguments.contains("--todoist-discard-save-response"),
+           let marker = ProcessInfo.processInfo.environment["TASKFOLD_IMPORT_RESPONSE_RECEIPT"],
+           marker.hasPrefix("taskfold-import-response-"),
+           UUID(uuidString: String(marker.dropFirst("taskfold-import-response-".count))) != nil {
+            let receipt = try TaskfoldJSONDecoder().decode(Record.self, from: data)
+            guard receipt["success"].flag else { return data }
+            var proof: [String: JSON] = ["httpStatus": .number(Double(http.statusCode)),
+                "realResponseDiscarded": .bool(true)]
+            for key in TodoistImportFlow.resultKeys { proof[key] = receipt[key] }
+            let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Taskfold", isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try TaskfoldJSONEncoder().encode(Record(proof)).write(to: directory.appendingPathComponent(marker + ".json"), options: .atomic)
+            discardedTodoistResponse = true
+            throw URLError(.networkConnectionLost)
+        }
+        #endif
         return data
+    }
+    private func refreshResult(_ task: Task<Session, Error>, generation: UUID, account: String) async throws -> Session {
+        do { return try await task.value }
+        catch {
+            guard generation == sessionGeneration, session?.user.id == account else { throw CancellationError() }
+            throw error
+        }
     }
     func refreshIfNeeded(force: Bool = false) async throws {
         guard let current = session else { throw AppFailure(message: "Please sign in again.") }
         guard force || current.expires_at < Date().timeIntervalSince1970 + 90 else { return }
         let generation = sessionGeneration
         if let refreshTask {
-            let next = try await refreshTask.value
+            let next = try await refreshResult(refreshTask, generation:generation, account:current.user.id)
             guard generation == sessionGeneration, session?.user.id == current.user.id, next.user.id == current.user.id else { throw CancellationError() }
             session = next; return
         }
@@ -117,14 +605,15 @@ final class Backend: NSObject {
         let task = Task { @MainActor in
             let data = try await self.request("/auth/v1/token?grant_type=refresh_token", method: "POST",
                 body: ["refresh_token": .string(current.refresh_token)], authenticated: false)
-            let next = try JSONDecoder().decode(Session.self, from: data)
+            let next = try Foundation.JSONDecoder().decode(Session.self, from: data)
             guard generation == self.sessionGeneration, self.session?.user.id == current.user.id, next.user.id == current.user.id else { throw CancellationError() }
-            try self.saveSession(next)
+            try await self.saveSession(next)
+            guard generation == self.sessionGeneration, self.session?.user.id == current.user.id else { throw CancellationError() }
             return next
         }
         refreshTask = task
         defer { if refreshID == id { refreshTask = nil; refreshID = nil } }
-        let next = try await task.value
+        let next = try await refreshResult(task, generation:generation, account:current.user.id)
         guard generation == sessionGeneration, session?.user.id == current.user.id else { throw CancellationError() }
         session = next
     }
@@ -132,20 +621,31 @@ final class Backend: NSObject {
     func refreshUser() async throws {
         let generation = sessionGeneration
         let data = try await request("/auth/v1/user")
-        let user = try JSONDecoder().decode(Session.User.self, from: data)
+        let user = try Foundation.JSONDecoder().decode(Session.User.self, from: data)
         guard generation == sessionGeneration, var current = session, current.user.id == user.id else { throw CancellationError() }
         current.user = user
-        try accept(current)
+        // Profile hydration is not a new sign-in. Keep current account leases,
+        // pending browser authentication and connection recovery contexts alive.
+        // The existing credential writer orders this save with token refreshes.
+        try await saveSession(current)
+        guard generation == sessionGeneration, var live = session, live.user.id == user.id else { throw CancellationError() }
+        // A token renewal may finish while profile persistence is awaiting I/O.
+        // Update only metadata on the latest live credentials.
+        live.user = user
+        session = live
     }
 
-    func signIn(email: String, password: String, signup: Bool) async throws -> Bool {
+    func signIn(email: String, password: String, signup: Bool, reauthenticating context: AccountReauthentication? = nil, willCommit: (() -> Void)? = nil) async throws -> Bool {
+        guard context == nil || !signup else { throw CancellationError() }
+        let attempt = try startAuthentication(reauthenticating:context); defer { endAuthentication(attempt) }
         let path = signup ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password"
         let data = try await request(path, method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()), "password": .string(password)], authenticated: false)
-        guard let next = try? JSONDecoder().decode(Session.self, from: data) else {
+        try requireAuthentication(attempt)
+        guard let next = try? Foundation.JSONDecoder().decode(Session.self, from: data) else {
             if signup { return false }
             throw AppFailure(message: "The sign-in response was incomplete. Please try again.")
         }
-        try accept(next)
+        try await acceptAuthentication(next,attempt:attempt,reauthenticating:context,willCommit:willCommit)
         return true
     }
     /// Changes the signed-in user's email (Supabase sends a confirmation) or password.
@@ -159,20 +659,653 @@ final class Backend: NSObject {
     func sendPasswordReset(email: String) async throws {
         _ = try await request("/auth/v1/recover", method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())], authenticated: false)
     }
-    /// Asks the backend to delete the account and its data. Requires the `delete-account` edge function.
-    func deleteAccount() async throws {
-        _ = try await request("/functions/v1/delete-account", method: "POST", body: [:])
+    /// The organization RPC does not echo an account. Bind both ends of every
+    /// read to this exact authenticated backend, then decode its bounded value.
+    func teamOrganizationCommand(_ command: TeamOrganizationCommand) async throws -> TeamOrganizationCommandReceipt {
+        guard command.canRetry else { throw TeamOrganizationCommand.invalid }
+        try TeamOrganizationValue.scope(account: command.account, origin: command.origin)
+        guard !sessionTransition, session?.user.id == command.account, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let generation = sessionGeneration
+        let data = try await request("/rest/v1/rpc/taskfold_teams", method: "POST", body: ["_action": .string(command.action.rawValue), "_body": .object(command.body)], expectedAccount: command.account)
+        guard !sessionTransition, generation == sessionGeneration, session?.user.id == command.account, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        guard let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamOrganizationCommand.invalid }
+        return try command.confirmed(raw)
     }
+    func childTaskFieldCommand(_ command:ChildTaskFieldCommand,session expectedSession:UUID) async throws -> ChildTaskFieldReceipt {
+        guard !sessionTransition,session?.user.id==command.account,sessionGeneration==expectedSession,command.origin == (try accountRemovalOrigin) else {throw CancellationError()}
+        let data=try await request("/rest/v1/rpc/taskfold_edit_child_task",method:"POST",body:["_body":.object(command.body)],expectedAccount:command.account)
+        try Task.checkCancellation()
+        guard !sessionTransition,session?.user.id==command.account,sessionGeneration==expectedSession,command.origin == (try accountRemovalOrigin) else {throw CancellationError()}
+        guard let raw=try? TaskfoldJSONDecoder().decode([String:JSON].self,from:data),
+              let receipt=try? command.confirmed(raw) else {throw ChildTaskFieldWriteFailure(reason:.unconfirmed)}
+        return receipt
+    }
+    func closeChildTaskFieldCommand(_ command: ChildTaskFieldCommand, session expectedSession: UUID) async throws -> ChildTaskFieldResolution {
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_close_child_task_edit", method: "POST", body: ["_body": .object(command.body)], expectedAccount: command.account)
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        guard let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data), let proof = try? ChildTaskFieldResolution(command: command, raw: raw) else { throw ChildTaskFieldWriteFailure(reason: .unconfirmed) }
+        return proof
+    }
+    func childTaskCompletionCommand(_ command: ChildTaskCompletionCommand, session expectedSession: UUID) async throws -> ChildTaskCompletionReceipt {
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data: Data
+        do { data = try await request("/rest/v1/rpc/taskfold_complete_child_task", method: "POST", body: ["_body": .object(command.body)], expectedAccount: command.account) }
+        catch is CancellationError { throw CancellationError() }
+        catch let failure as ChildTaskCompletionFailure { throw failure }
+        catch let required as AccountSessionAuthorizationRequired { throw required }
+        catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        do {
+            try ChildTaskRecordRead.validateUniqueJSON(data, maximum: 16_384)
+            return try command.confirmed(TaskfoldJSONDecoder().decode([String: JSON].self, from: data))
+        } catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+    }
+    func closeChildTaskCompletionCommand(_ command: ChildTaskCompletionCommand, session expectedSession: UUID) async throws -> ChildTaskCompletionResolution {
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data: Data
+        do { data = try await request("/rest/v1/rpc/taskfold_close_child_completion", method: "POST", body: ["_body": .object(command.body)], expectedAccount: command.account) }
+        catch is CancellationError { throw CancellationError() }
+        catch let failure as ChildTaskCompletionFailure { throw failure }
+        catch let required as AccountSessionAuthorizationRequired { throw required }
+        catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        do {
+            try ChildTaskRecordRead.validateUniqueJSON(data, maximum: 16_384)
+            return try ChildTaskCompletionResolution(command: command, raw: TaskfoldJSONDecoder().decode([String: JSON].self, from: data))
+        } catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+    }
+    /// Both operations retain the exact saved group; resolution returns only
+    /// the owning actor's original receipt and grants no current task access.
+    func childTaskCompletionBatch(_ command: ChildTaskCompletionBatchCommand, session expectedSession: UUID, close: Bool = false) async throws -> ChildTaskCompletionBatchResolution {
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data: Data
+        do {
+            data = try await request(close ? "/rest/v1/rpc/taskfold_close_child_completion_batch" : "/rest/v1/rpc/taskfold_complete_child_tasks", method: "POST", body: ["_body": .object(command.body)], expectedAccount: command.account)
+        } catch is CancellationError { throw CancellationError() }
+        catch let failure as ChildTaskCompletionFailure { throw failure }
+        catch let required as AccountSessionAuthorizationRequired { throw required }
+        catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        do {
+            try ChildTaskRecordRead.validateUniqueJSON(data, maximum: ChildTaskCompletionBatchCommand.maximumResponseBytes)
+            let value = try command.resolution(TaskfoldJSONDecoder().decode([String: JSON].self, from: data))
+            guard close || value.applied else { throw ChildTaskCompletionBatchCommand.invalid }
+            return value
+        } catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+    }
+    func mixedTaskCompletion(_ command: MixedTaskCompletionCommand, session expectedSession: UUID, close: Bool = false) async throws -> MixedTaskCompletionResolution {
+        try childStructureScope(account: command.account, origin: command.origin, session: expectedSession)
+        do {
+            let path = close ? "/rest/v1/rpc/taskfold_close_mixed_completion" : command.isUndo ? "/rest/v1/rpc/taskfold_undo_mixed_completion" : "/rest/v1/rpc/taskfold_complete_mixed_tasks"
+            let data = try await request(path, method: "POST", body: ["_body": .object(command.body)], expectedAccount: command.account)
+            try childStructureScope(account: command.account, origin: command.origin, session: expectedSession)
+            try ChildTaskRecordRead.validateUniqueJSON(data, maximum: MixedTaskCompletionCommand.maximumResponseBytes,
+                integerPaths: [["receipts", "[]", "before", "completion_version"], ["receipts", "[]", "after", "completion_version"],
+                               ["receipts", "[]", "receipt", "revision"], ["receipts", "[]", "receipt", "before", TeamChecklist.key, "version"],
+                               ["receipts", "[]", "receipt", "after", TeamChecklist.key, "version"]], preservedValuePaths: [])
+            let proof = try command.resolution(TaskfoldJSONDecoder().decode([String: JSON].self, from: data))
+            guard close || proof.applied else { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+            return proof
+        } catch {
+            try childStructureScope(account: command.account, origin: command.origin, session: expectedSession)
+            throw error
+        }
+    }
+    func completionSelectionRoots(_ taskIDs: [String], scope: ChildTaskFieldClientScope) async throws -> CompletionSelectionRootRead {
+        try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
+        do {
+            let body = try CompletionSelectionRootRead.request(taskIDs: taskIDs, scope: scope)
+            let data = try await request("/rest/v1/rpc/taskfold_read_completion_selection_roots", method: "POST", body: ["_body": .object(body)], expectedAccount: scope.account)
+            try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
+            let decoding = Task.detached(priority: .userInitiated) { try CompletionSelectionRootRead(data: data, taskIDs: taskIDs, scope: scope) }
+            let outcome = await withTaskCancellationHandler(operation: { await decoding.result }, onCancel: { decoding.cancel() })
+            try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
+            return try outcome.get()
+        } catch {
+            try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
+            throw error
+        }
+    }
+    func childTaskRecords(_ context: ChildTaskRecordContext) async throws -> ChildTaskRecordRead {
+        guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
+              context.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data=try await request("/rest/v1/rpc/taskfold_read_child_tasks",method:"POST",
+            body:["_id":.string(context.root.id),"_generation":context.root["task_generation"]],expectedAccount:context.account)
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
+              context.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let decoding=Task.detached(priority:.userInitiated) {try ChildTaskRecordRead(data:data,context:context)}
+        let outcome=await withTaskCancellationHandler(operation:{await decoding.result},onCancel:{decoding.cancel()})
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
+              context.origin == (try accountRemovalOrigin) else {throw CancellationError()}
+        return try outcome.get()
+    }
+    private func childStructureScope(account: String, origin: String, session expected: UUID) throws {
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id == account, sessionGeneration == expected, origin == (try accountRemovalOrigin) else { throw CancellationError() }
+    }
+    private func childStructureData(_ path: String, body: [String: JSON], account: String, origin: String, session expected: UUID) async throws -> Data {
+        try childStructureScope(account: account, origin: origin, session: expected)
+        do {
+            let data = try await request(path, method: "POST", body: body, expectedAccount: account)
+            try childStructureScope(account: account, origin: origin, session: expected); return data
+        } catch {
+            try childStructureScope(account: account, origin: origin, session: expected)
+            if error is CancellationError || error is ChildTaskStructureFailure || error is AccountSessionAuthorizationRequired { throw error }
+            throw ChildTaskStructureFailure(reason: .unconfirmed)
+        }
+    }
+    private func childStructureDecode<T>(_ data: Data, account: String, origin: String, session expected: UUID, _ decode: (Data) throws -> T) throws -> T {
+        do {
+            try childStructureScope(account: account, origin: origin, session: expected)
+            let value = try decode(data)
+            try childStructureScope(account: account, origin: origin, session: expected); return value
+        } catch {
+            try childStructureScope(account: account, origin: origin, session: expected)
+            if error is CancellationError { throw error }
+            throw ChildTaskStructureFailure(reason: .unconfirmed)
+        }
+    }
+    // AsyncBytes iteration stays on the generic executor rather than hopping
+    // back to the UI actor for every byte of an older-work review.
+    nonisolated private static func readCompletionSelectionResponse(_ bytes: URLSession.AsyncBytes, maximum: Int) async throws -> Data {
+        var data = Data(); data.reserveCapacity(min(maximum, 65_536))
+        for try await byte in bytes { try Task.checkCancellation(); guard data.count < maximum else { throw ChildTaskRecordFailure.oversized }; data.append(byte) }
+        return data
+    }
+    nonisolated private static func readAdoptionResponse(_ bytes: URLSession.AsyncBytes, maximum: Int) async throws -> Data {
+        var data = Data(); data.reserveCapacity(min(maximum, 65_536))
+        for try await byte in bytes {
+            try Task.checkCancellation()
+            guard data.count < maximum else { throw ChildTaskAdoptionFailure(reason: .limit) }
+            data.append(byte)
+        }
+        return data
+    }
+    nonisolated private static func decodeAdoptionReview(_ data: Data, context: ChildTaskRecordContext, workspaceID: String?) async throws -> ChildTaskAdoptionReview {
+        try Task.checkCancellation()
+        return try .init(data: data, context: context, workspaceID: workspaceID)
+    }
+    nonisolated private static func readRepairResponse(_ bytes: URLSession.AsyncBytes, maximum: Int) async throws -> Data {
+        var data = Data(); data.reserveCapacity(min(maximum, 65_536))
+        for try await byte in bytes { try Task.checkCancellation(); guard data.count < maximum else { throw ChildTaskRepairFailure(reason: .limit) }; data.append(byte) }
+        return data
+    }
+    nonisolated private static func decodeRepairPreview(_ data: Data, review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange]) async throws -> ChildTaskRepairPreview {
+        try Task.checkCancellation(); return try .init(data: data, review: review, changes: changes)
+    }
+    nonisolated private static func decodeRepairOriginal(_ data: Data, command: ChildTaskRepairCommand, result: ChildTaskRepairResult) async throws -> ChildTaskRepairOriginal {
+        try Task.checkCancellation(); return try .init(data: data, command: command, result: result)
+    }
+    nonisolated private static func decodeChildCopies(_ data: Data, review: ChildTaskAdoptionReview) async throws -> ChildTaskCopyReview {
+        try Task.checkCancellation(); return try .init(data: data, review: review)
+    }
+    func childTaskCopyReview(_ review: ChildTaskAdoptionReview) async throws -> ChildTaskCopyReview {
+        let context = review.context
+        try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+        let data = try await request("/rest/v1/rpc/taskfold_review_child_copies", method: "POST", body: ["_body": .object(ChildTaskCopyReview.body(review))], expectedAccount: context.account)
+        try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+        let value = try await Self.decodeChildCopies(data, review: review)
+        try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+        return value
+    }
+    func childTaskRepairPreview(_ review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange]) async throws -> ChildTaskRepairPreview {
+        let context = review.context
+        try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+        do {
+            let body = try ChildTaskRepairPreview.body(review: review, changes: changes)
+            let data = try await request("/rest/v1/rpc/taskfold_preview_child_repair", method: "POST", body: ["_body": .object(body)], expectedAccount: context.account)
+            try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+            let preview = try await Self.decodeRepairPreview(data, review: review, changes: changes)
+            try childStructureScope(account: context.account, origin: context.origin, session: context.session); return preview
+        } catch {
+            try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+            if error is CancellationError || error is ChildTaskRepairFailure || error is AccountSessionAuthorizationRequired { throw error }
+            throw ChildTaskRepairFailure(reason: .review)
+        }
+    }
+    func childTaskRepair(_ command: ChildTaskRepairCommand, operation: ChildTaskRepairOperation, session expected: UUID) async throws -> ChildTaskRepairResult {
+        try childStructureScope(account: command.account, origin: command.origin, session: expected)
+        do {
+            let data = try await request("/rest/v1/rpc/taskfold_repair_children", method: "POST", body: ["_operation": .string(operation.rawValue), "_body": .object(command.body)], expectedAccount: command.account)
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            let result = try ChildTaskRepairResult(command: command, data: data)
+            guard operation == .check || !result.unknown else { throw ChildTaskRepairFailure(reason: .unconfirmed) }; return result
+        } catch {
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            if error is CancellationError || error is ChildTaskRepairFailure || error is AccountSessionAuthorizationRequired { throw error }
+            throw ChildTaskRepairFailure(reason: .unconfirmed)
+        }
+    }
+    func childTaskRepairOriginal(_ command: ChildTaskRepairCommand, result: ChildTaskRepairResult, session expected: UUID) async throws -> ChildTaskRepairOriginal {
+        try childStructureScope(account: command.account, origin: command.origin, session: expected)
+        _ = try command.result(result.raw); guard result.applied else { throw ChildTaskRepairCommand.invalid }
+        do {
+            let data = try await request("/rest/v1/rpc/taskfold_repair_children", method: "POST", body: ["_operation": .string("original"), "_body": .object(command.body)], expectedAccount: command.account)
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            let original = try await Self.decodeRepairOriginal(data, command: command, result: result)
+            try childStructureScope(account: command.account, origin: command.origin, session: expected); return original
+        } catch {
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            if error is CancellationError || error is ChildTaskRepairFailure || error is AccountSessionAuthorizationRequired { throw error }
+            throw ChildTaskRepairFailure(reason: .review)
+        }
+    }
+    func childTaskAdoptionTargets(scope: ChildTaskFieldClientScope, after: String? = nil, limit: Int = 100, id: String? = nil) async throws -> ChildTaskAdoptionTargetPage {
+        guard (1...100).contains(limit), id == nil || after == nil && limit == 1 else { throw ChildTaskAdoptionCommand.invalid }
+        for value in [after, id].compactMap({ $0 }) { guard UUID(uuidString: value)?.uuidString.lowercased() == value else { throw ChildTaskAdoptionCommand.invalid } }
+        try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
+        let data = try await request("/rest/v1/rpc/taskfold_child_adoption_targets", method: "POST", body: ["_after": after.map(JSON.string) ?? .null, "_limit": .number(Double(limit)), "_id": id.map(JSON.string) ?? .null], expectedAccount: scope.account)
+        try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
+        let page = try await Self.decodeAdoptionTargets(data, account: scope.account, after: after, limit: limit, id: id)
+        try childStructureScope(account: scope.account, origin: scope.origin, session: scope.session)
+        return page
+    }
+    nonisolated private static func decodeAdoptionTargets(_ data: Data, account: String, after: String?, limit: Int, id: String?) async throws -> ChildTaskAdoptionTargetPage {
+        try Task.checkCancellation()
+        return try ChildTaskAdoptionTargetPage(data: data, account: account, after: after, limit: limit, id: id)
+    }
+    /// The server determines the current workspace from the live root. Discovery
+    /// supplies only its identity; ordinary task-cache decoding is not required.
+    func childTaskAdoptionDiscoveredReview(_ context: ChildTaskRecordContext) async throws -> ChildTaskAdoptionReview {
+        try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+        let data = try await request("/rest/v1/rpc/taskfold_review_child_adoption", method: "POST", body: ["_id": .string(context.root.id), "_generation": context.root["task_generation"]], expectedAccount: context.account)
+        try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+        let review = try await Self.decodeDiscoveredAdoptionReview(data, context: context)
+        try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+        return review
+    }
+    nonisolated private static func decodeDiscoveredAdoptionReview(_ data: Data, context: ChildTaskRecordContext) async throws -> ChildTaskAdoptionReview {
+        try Task.checkCancellation()
+        let parts = try ChildTaskRecordRead.separatingJSONField("source_tree", data: data, maximum: ChildTaskAdoptionReview.maximumBytes, integerPaths: ChildTaskAdoptionReview.counters, nullableIntegerPaths: ChildTaskAdoptionReview.nullableCounters)
+        let metadata = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
+        let workspace = try TeamProjectValue.optionalID(metadata["workspace_id"])
+        return try ChildTaskAdoptionReview(data: data, context: context, workspaceID: workspace)
+    }
+    func childTaskAdoptionReview(_ context: ChildTaskRecordContext, workspaceID: String?) async throws -> ChildTaskAdoptionReview {
+        try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+        do {
+            let data = try await request("/rest/v1/rpc/taskfold_review_child_adoption", method: "POST", body: ["_id": .string(context.root.id), "_generation": context.root["task_generation"]], expectedAccount: context.account)
+            try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+            let review = try await Self.decodeAdoptionReview(data, context: context, workspaceID: workspaceID)
+            try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+            return review
+        } catch {
+            try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+            if error is CancellationError || error is AccountSessionAuthorizationRequired || error is ChildTaskAdoptionFailure { throw error }
+            if let failure = error as? ChildTaskRecordFailure {
+                switch failure { case .unavailable: throw ChildTaskAdoptionFailure(reason: .unavailable); case .oversized: throw ChildTaskAdoptionFailure(reason: .limit); case .review: throw ChildTaskAdoptionFailure(reason: .review) }
+            }
+            throw ChildTaskAdoptionFailure(reason: .review)
+        }
+    }
+    func childTaskAdoption(_ command: ChildTaskAdoptionCommand, operation: ChildTaskAdoptionOperation, session expected: UUID) async throws -> ChildTaskAdoptionResult {
+        try childStructureScope(account: command.account, origin: command.origin, session: expected)
+        do {
+            let data = try await request("/rest/v1/rpc/taskfold_adopt_child_records", method: "POST", body: ["_operation": .string(operation.rawValue), "_body": .object(command.body)], expectedAccount: command.account)
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            let result = try ChildTaskAdoptionResult(command: command, data: data)
+            guard operation == .check || !result.unknown else { throw ChildTaskAdoptionFailure(reason: .unconfirmed) }
+            return result
+        } catch {
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            if error is CancellationError || error is ChildTaskAdoptionFailure || error is AccountSessionAuthorizationRequired { throw error }
+            throw ChildTaskAdoptionFailure(reason: .unconfirmed)
+        }
+    }
+    func childTaskTransfer(_ command: ChildTaskTransferCommand, operation: ChildTaskTransferOperation, session expected: UUID) async throws -> ChildTaskTransferResult {
+        try childStructureScope(account: command.account, origin: command.origin, session: expected)
+        do {
+            let data = try await request("/rest/v1/rpc/taskfold_transfer_child", method: "POST", body: ["_operation": .string(operation.rawValue), "_body": .object(command.body)], expectedAccount: command.account)
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            return try .init(command: command, data: data)
+        } catch {
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            if error is CancellationError || error is ChildTaskTransferFailure || error is AccountSessionAuthorizationRequired { throw error }
+            throw ChildTaskTransferFailure(reason: .unconfirmed)
+        }
+    }
+    func reviewedTaskSteps(_ command: ReviewedTaskStepsCommand, operation: ReviewedTaskStepsOperation, session expected: UUID) async throws -> ReviewedTaskStepsResult {
+        let data = try await childStructureData("/rest/v1/rpc/taskfold_child_steps", body: ["_operation": .string(operation.rawValue), "_body": .object(command.body)], account: command.account, origin: command.origin, session: expected)
+        return try childStructureDecode(data, account: command.account, origin: command.origin, session: expected) { try ReviewedTaskStepsResult(data: $0, command: command, applying: operation == .apply) }
+    }
+    func reviewedTaskStepsAvailability(_ read: ChildTaskStructureRead) async throws -> ReviewedTaskStepsAvailability {
+        let c = read.context
+        let data = try await childStructureData("/rest/v1/rpc/taskfold_child_steps_available", body: ["_id": .string(c.root.id), "_generation": c.root["task_generation"]], account: c.account, origin: c.origin, session: c.session)
+        return try childStructureDecode(data, account: c.account, origin: c.origin, session: c.session) { try ReviewedTaskStepsAvailability(data: $0, read: read) }
+    }
+    func childTaskStructureCommand(_ command: ChildTaskStructureCommand, session expected: UUID) async throws -> ChildTaskStructureReceipt {
+        let data = try await childStructureData("/rest/v1/rpc/taskfold_edit_child_structure", body: ["_body": .object(command.body)], account: command.account, origin: command.origin, session: expected)
+        return try childStructureDecode(data, account: command.account, origin: command.origin, session: expected) { try ChildTaskStructureReceipt(command: command, data: $0) }
+    }
+    func closeChildTaskStructureCommand(_ command: ChildTaskStructureCommand, session expected: UUID) async throws -> ChildTaskStructureResolution {
+        let data = try await childStructureData("/rest/v1/rpc/taskfold_close_child_structure", body: ["_body": .object(command.body)], account: command.account, origin: command.origin, session: expected)
+        return try childStructureDecode(data, account: command.account, origin: command.origin, session: expected) { try ChildTaskStructureResolution(command: command, data: $0) }
+    }
+    func childTaskStructureUndoArchives(account: String, origin: String, session expected: UUID) async throws -> ChildTaskStructureUndoArchives {
+        let data = try await childStructureData("/rest/v1/rpc/taskfold_child_structure_undo_archives", body: [:], account: account, origin: origin, session: expected)
+        return try childStructureDecode(data, account: account, origin: origin, session: expected) { try ChildTaskStructureUndoArchives(account: account, data: $0) }
+    }
+    func forgetChildTaskStructureUndo(_ disposal: ChildTaskStructureUndoDisposal, session expected: UUID) async throws -> ChildTaskStructureUndoDisposalReceipt {
+        let data = try await childStructureData("/rest/v1/rpc/taskfold_forget_child_structure_undo", body: ["_request_id": .string(disposal.requestID)], account: disposal.account, origin: disposal.origin, session: expected)
+        return try childStructureDecode(data, account: disposal.account, origin: disposal.origin, session: expected) { try disposal.confirmed($0) }
+    }
+    func childTaskStructure(_ context: ChildTaskRecordContext) async throws -> ChildTaskStructureRead {
+        guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
+              context.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data=try await request("/rest/v1/rpc/taskfold_read_child_structure",method:"POST",
+            body:["_id":.string(context.root.id),"_generation":context.root["task_generation"]],expectedAccount:context.account)
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
+              context.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let decoding=Task.detached(priority:.userInitiated) {try ChildTaskStructureRead(data:data,context:context)}
+        let outcome=await withTaskCancellationHandler(operation:{await decoding.result},onCancel:{decoding.cancel()})
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
+              context.origin == (try accountRemovalOrigin) else {throw CancellationError()}
+        return try outcome.get()
+    }
+    private func teamOrganizationRead(_ action: String, body: [String: JSON] = [:], account: String, origin: String) async throws -> [String: JSON] {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard !sessionTransition, session?.user.id == account, origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let generation = sessionGeneration
+        let data = try await request("/rest/v1/rpc/taskfold_teams", method: "POST", body: ["_action": .string(action), "_body": .object(body)], expectedAccount: account)
+        guard !sessionTransition, generation == sessionGeneration, session?.user.id == account, origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        guard let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamOrganizationValue.invalid }
+        return raw
+    }
+    func teamOrganizationOverview(account: String, origin: String) async throws -> TeamOrganizationOverview {
+        let generation = sessionGeneration
+        let list = try await teamOrganizationRead("list", account: account, origin: origin)
+        let invitations = try await teamOrganizationRead("invitations", account: account, origin: origin)
+        guard generation == sessionGeneration else { throw CancellationError() }
+        return try TeamOrganizationOverview(list: list, invitations: invitations, account: account, origin: origin)
+    }
+    func teamOrganizationDetail(team: String, account: String, origin: String) async throws -> TeamOrganizationDetail {
+        guard TeamProjectValue.id(team) else { throw TeamOrganizationValue.invalid }
+        return try TeamOrganizationDetail(await teamOrganizationRead("get", body: ["team_id": .string(team)], account: account, origin: origin), team: team, account: account, origin: origin)
+    }
+
+    private func teamProjectReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, TeamProjectValue.id(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_team_projects", method: "POST", body: ["_action": .string(action), "_body": .object(body)], expectedAccount: account)
+        guard let receipt = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamProjectValue.invalid }
+        return receipt
+    }
+    func teamProjectPage(team: String, account: String, origin: String, after: String? = nil) async throws -> TeamProjectPage {
+        guard TeamProjectValue.id(team), after == nil || TeamProjectValue.id(after!) else { throw TeamProjectValue.invalid }
+        var body: [String: JSON] = ["team_id": .string(team), "limit": .number(50)]
+        if let after { body["after"] = .string(after) }
+        return try TeamProjectPage(await teamProjectReceipt(action: "list", body: body, account: account, origin: origin), account: account, origin: origin, team: team, after: after)
+    }
+    func teamProjectAccess(team: String, project: String, account: String, origin: String) async throws -> TeamProjectAccess {
+        guard TeamProjectValue.id(team), TeamProjectValue.id(project) else { throw TeamProjectValue.invalid }
+        return try TeamProjectAccess(detail: await teamProjectReceipt(action: "get", body: ["team_id": .string(team), "project_id": .string(project)], account: account, origin: origin), account: account, origin: origin, team: team, project: project)
+    }
+
+    func teamProjectManagementDetail(team: String, project: String, account: String, origin: String) async throws -> TeamProjectManagementDetail {
+        guard TeamProjectValue.id(team), TeamProjectValue.id(project) else { throw TeamProjectValue.invalid }
+        return try TeamProjectManagementDetail(await teamProjectReceipt(action: "get", body: ["team_id": .string(team), "project_id": .string(project)], account: account, origin: origin), account: account, origin: origin, team: team, project: project)
+    }
+    func teamProjectStructureReview(team: String, project: String, action: TeamProjectCommand.Action, account: String, origin: String) async throws -> TeamProjectStructureReview {
+        guard action.structural, TeamProjectValue.id(team), TeamProjectValue.id(project) else { throw TeamProjectCommand.invalid }
+        let raw = try await teamProjectReceipt(action: "review_structure", body: ["team_id": .string(team), "project_id": .string(project), "operation": .string(action.rawValue)], account: account, origin: origin)
+        return try TeamProjectStructureReview(raw, account: account, origin: origin, team: team, project: project, action: action)
+    }
+    func teamProjectHierarchyReview(team: String, project: String, parent: String?, action: TeamProjectCommand.Action, account: String, origin: String) async throws -> TeamProjectHierarchyReview {
+        guard action.hierarchical, TeamProjectValue.id(team), TeamProjectValue.id(project), parent == nil || TeamProjectValue.id(parent!) else { throw TeamProjectCommand.invalid }
+        let body: [String: JSON] = ["team_id": .string(team), "project_id": .string(project), "parent_id": parent.map(JSON.string) ?? .null, "operation": .string(action.rawValue)]
+        let reviewed = try TeamProjectHierarchyReview(await teamProjectReceipt(action: "review_hierarchy", body: body, account: account, origin: origin), account: account, origin: origin, team: team, project: project, action: action)
+        guard reviewed.parent == parent else { throw TeamProjectCommand.invalid }
+        return reviewed
+    }
+    func teamProjectCommand(_ command: TeamProjectCommand) async throws -> TeamProjectCommandReceipt {
+        try command.confirmed(await teamProjectReceipt(action: command.action.rawValue, body: command.body, account: command.account, origin: command.origin))
+    }
+
+    private func projectAdoptionReply(_ operation: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, TeamProjectValue.id(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_team_project_adoption", method: "POST", body: ["operation": .string(operation), "body": .object(body)], expectedAccount: account)
+        guard data.count <= 3_000_000, let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamProjectAdoptionValue.invalid }; return raw
+    }
+    func inspectProjectAdoption(_ scope: TeamProjectAdoptionScope) async throws -> TeamProjectAdoptionInspection {
+        try TeamProjectAdoptionInspection(await projectAdoptionReply("inspect", body: scope.body, account: scope.account, origin: scope.origin), scope: scope)
+    }
+    func reviewProjectAdoption(_ inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision]) async throws -> TeamProjectAdoptionReview {
+        try await reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil)
+    }
+    func reviewProjectAdoption(_ inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy?, recordingPolicy: TeamProjectRecordingPolicy? = nil, fileConsent: ProjectFileConsent? = nil) async throws -> TeamProjectAdoptionReview {
+        let body = try inspection.reviewBody(decisions, connectionPolicy: connectionPolicy, recordingPolicy: recordingPolicy, fileConsent: fileConsent)
+        return try TeamProjectAdoptionReview(await projectAdoptionReply("review", body: body, account: inspection.scope.account, origin: inspection.scope.origin), inspection: inspection, decisions: decisions, connectionPolicy: connectionPolicy, recordingPolicy: recordingPolicy, fileConsent: fileConsent)
+    }
+    func adoptProjects(_ command: TeamProjectAdoptionCommand) async throws -> TeamProjectAdoptionReceipt {
+        try command.confirmed(await projectAdoptionReply("adopt", body: command.body, account: command.account, origin: command.origin))
+    }
+
+    private func taskMoveReceipt(operation: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, TeamProjectValue.id(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_team_task_move", method: "POST", body: ["_operation": .string(operation), "_body": .object(body)], expectedAccount: account)
+        guard let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamTaskMoveCommand.invalid }; return raw
+    }
+    func teamAudioLifecycleReview(_ scope: TeamAudioLifecycleScope) async throws -> TeamAudioLifecycleReview {
+        guard !sessionTransition, session?.user.id == scope.account, scope.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_team_audio_lifecycle_review", method: "POST", body: ["_body": .object(scope.body)], expectedAccount: scope.account, workflowReadLimit: 4096)
+        guard let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamAudioLifecycleReview.unavailable }
+        guard !sessionTransition, session?.user.id == scope.account, scope.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        return try TeamAudioLifecycleReview(raw, scope: scope)
+    }
+    func teamAudioRestoreRecovery(_ command: TeamAudioRestoreRecoveryCommand, action: TeamAudioRestoreRecoveryCommand.Action) async throws -> TeamAudioRestoreRecoveryReceipt {
+        let scope = command.scope
+        guard !sessionTransition, session?.user.id == scope.account, scope.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_audio_restore_recovery", method: "POST", body: ["_action": .string(action.rawValue), "_body": .object(command.body)], expectedAccount: scope.account, workflowReadLimit: 4096)
+        guard let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamAudioRestoreRecoveryCommand.unavailable }
+        guard !sessionTransition, session?.user.id == scope.account, scope.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        return try TeamAudioRestoreRecoveryReceipt(raw, command: command, action: action)
+    }
+    func teamAudioRestoreSelectionRecovery(_ selection: TeamAudioRestoreSelection, action: TeamAudioRestoreSelection.Action) async throws -> TeamAudioRestoreSelectionReceipt {
+        guard let batch = selection.original.teamTaskBatch else { throw TeamAudioRestoreSelection.unavailable }
+        guard !sessionTransition, session?.user.id == batch.account, batch.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_audio_selection_restore_recovery", method: "POST", body: ["_action": .string(action.rawValue), "_body": .object(selection.body)], expectedAccount: batch.account, workflowReadLimit: 32768)
+        guard let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamAudioRestoreSelection.unavailable }
+        guard !sessionTransition, session?.user.id == batch.account, batch.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        return try TeamAudioRestoreSelectionReceipt(raw, selection: selection, action: action)
+    }
+    func teamTaskMoveReview(_ scope: TeamTaskMoveScope) async throws -> TeamTaskMoveReview {
+        try TeamTaskMoveReview(await taskMoveReceipt(operation: scope.reviewOperation, body: scope.body, account: scope.account, origin: scope.origin), scope: scope)
+    }
+    func teamTaskMove(_ command: TeamTaskMoveCommand) async throws -> TeamTaskMoveReceipt {
+        try command.confirmed(await taskMoveReceipt(operation: command.operation, body: command.body, account: command.account, origin: command.origin))
+    }
+
+    private func automationReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/functions/v1/automation-keys", method: "POST", body: ["action": .string(action), "body": .object(body)],
+                                     extra: ["X-Taskfold-Automation": "1"], expectedAccount: account)
+        guard let receipt = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data), receipt["account"] == .string(account) else { throw AutomationKey.invalid }
+        return receipt
+    }
+    #if DEBUG
+    /// Controlled faults only in the isolated native host, on a disposable Auth
+    /// account and a non-main Supabase origin. Never available in Release.
+    private func webhookRecoveryTesting(account: String, origin: String) -> Bool {
+        let args = ProcessInfo.processInfo.arguments
+        guard ["com.dbakp.taskfold.workflowtestswebhooks", "com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? ""),
+              args.contains("--webhook-management-testing"), !args.contains("--uitesting"),
+              session?.user.id == account, let email = session?.user.email,
+              email.hasPrefix("taskfold-webhook-"), email.hasSuffix("@example.invalid"),
+              UUID(uuidString:String(email.dropFirst("taskfold-webhook-".count).dropLast("@example.invalid".count))) != nil,
+              let host = URL(string:origin)?.host, host != "zqxflydiyfjeedqvyova.supabase.co",
+              host.range(of:#"^[a-z]{20}\.supabase\.co$"#,options:.regularExpression) != nil else { return false }
+        return true
+    }
+    #endif
+    func emailRouteReceipt(action: String, body: [String: JSON], domain: String?, account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, EmailCaptureValue.id(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        var headers = ["X-Taskfold-Email": "2"]
+        if let domain { guard EmailCaptureValue.domain(domain) else { throw EmailCaptureValue.invalid }; headers["X-Taskfold-Email-Domain"] = domain }
+        let data = try await request("/functions/v1/email-routes", method: "POST", body: ["action": .string(action), "body": .object(body)], extra: headers, expectedAccount: account)
+        guard let result = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data), result["protocol"] == .number(2), result["account"] == .string(account) else { throw EmailCaptureValue.invalid }; return result
+    }
+    func webhookReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        #if DEBUG
+        if webhookRecoveryTesting(account:account,origin:origin), ProcessInfo.processInfo.arguments.contains("--webhook-recovery-offline") {
+            throw URLError(.notConnectedToInternet)
+        }
+        #endif
+        let data = try await request("/functions/v1/automation-webhooks", method: "POST", body: ["action": .string(action), "body": .object(body)], extra: ["X-Taskfold-Automation": "1"], expectedAccount: account)
+        guard let receipt = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data), receipt["account"] == .string(account) else { throw WebhookValue.invalid }
+        #if DEBUG
+        if !discardedWebhookCreateResponse, action == "create", webhookRecoveryTesting(account:account,origin:origin),
+           ProcessInfo.processInfo.arguments.contains("--webhook-discard-create-response"),
+           body["name"]?.text.hasPrefix("Native recovery receiver ") == true,
+           let id = body["id"]?.text, AutomationKey.canonicalID(id),
+           case .object(let row) = receipt["subscription"], row["id"] == .string(id), row["state"] == .string("pending") {
+            // Real HTTPS and server commit have completed. Discard that actual
+            // receipt before the enrollment model receives it; no fake API peer.
+            let proof:[String:JSON] = ["account":.string(account), "id":.string(id), "realSuccessDiscarded":.bool(true)]
+            let folder = FileManager.default.urls(for:.applicationSupportDirectory,in:.userDomainMask)[0].appendingPathComponent("Taskfold",isDirectory:true)
+            try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+            try TaskfoldJSONEncoder().encode(proof).write(to:folder.appendingPathComponent("webhook-recovery-proof.json"),options:.atomic)
+            discardedWebhookCreateResponse = true
+            throw URLError(.networkConnectionLost)
+        }
+        #endif
+        return receipt
+    }
+    func automationKeyPage(account: String, origin: String, cursor: String? = nil, includeInactive: Bool = false) async throws -> AutomationKeyPage {
+        var body: [String: JSON] = ["limit": .number(50), "include_inactive": .bool(includeInactive)]
+        if let cursor { guard AutomationKey.canonicalID(cursor) else { throw AutomationKey.invalid }; body["cursor"] = .string(cursor) }
+        return try AutomationKeyPage(await automationReceipt(action: "list", body: body, account: account, origin: origin), account: account)
+    }
+    func registerAutomationKey(_ draft: AutomationKeyDraft) async throws -> AutomationKey {
+        let receipt = try await automationReceipt(action: "create", body: draft.body, account: draft.account, origin: draft.origin)
+        guard case .object(let row) = receipt["key"] else { throw AutomationKey.invalid }
+        let key = try AutomationKey(row)
+        guard key.id == draft.id, key.name == draft.name, Set(key.scopes) == Set(draft.scopes),
+              abs(key.expires.timeIntervalSince(key.created) - Double(draft.days) * 86400) < 0.01 else { throw AutomationKey.invalid }
+        guard key.active(at: Date()) else { throw AppFailure(message: "This key is no longer active. Reload your keys and create a new one.") }
+        return key
+    }
+    func revokeAutomationKey(id: String, account: String, origin: String) async throws -> AutomationKey {
+        guard AutomationKey.canonicalID(id) else { throw AutomationKey.invalid }
+        let receipt = try await automationReceipt(action: "revoke", body: ["id": .string(id)], account: account, origin: origin)
+        guard case .object(let row) = receipt["key"] else { throw AutomationKey.invalid }
+        let key = try AutomationKey(row)
+        guard key.id == id, key.revoked != nil else { throw AutomationKey.invalid }
+        return key
+    }
+    func cancelAutomationKey(id: String, account: String, origin: String) async throws {
+        guard AutomationKey.canonicalID(id) else { throw AutomationKey.invalid }
+        let receipt = try await automationReceipt(action: "cancel", body: ["id": .string(id)], account: account, origin: origin)
+        guard receipt["id"] == .string(id), receipt["cancelled"] == .bool(true) else { throw AutomationKey.invalid }
+    }
+    var accountRemovalOrigin: String {
+        get throws {
+            guard var url = URLComponents(string: baseURL), url.scheme == "https", url.host != nil,
+                  url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
+                  url.path.isEmpty || url.path == "/" else { throw AppFailure(message: "The account server configuration is unavailable.") }
+            url.path = ""; return url.string!
+        }
+    }
+    /// Refresh only before saving a new removal command. Uncertain-result retries
+    /// must keep the original token even after expiry or Auth user removal.
+    func accountRemovalCommand(forceRefresh: Bool = false) async throws -> AccountRemovalCommand {
+        guard !sessionTransition, let account = session?.user.id else { throw AppFailure(message: "Sign in to remove your account.") }
+        let incarnation = sessionGeneration
+        try await refreshIfNeeded(force: forceRefresh)
+        guard !sessionTransition, sessionGeneration == incarnation, let current = session, current.user.id == account else { throw CancellationError() }
+        return try AccountRemovalCommand(account: account, origin: accountRemovalOrigin, authorization: current.access_token)
+    }
+    /// Preparation never deletes data. Store saves the returned status proof in
+    /// its private vault before sending the separate execution request.
+    func prepareAccountRemoval(_ command: AccountRemovalCommand) async throws -> String {
+        let receipt = try await accountRemovalRequest(command, preparing: true)
+        guard receipt["prepared"] == .bool(true), receipt["account"]?.text == command.account,
+              let proof = receipt["proof"]?.text, AccountRemovalCommand.validProof(proof) else {
+            throw AppFailure(message: "The server did not confirm account removal preparation. Your local work has been kept.")
+        }
+        return proof
+    }
+    /// Resumes only an app-private, durably authorized command. It deliberately
+    /// does not refresh credentials, retarget to the current account or clear it.
+    func performAccountRemoval(_ command: AccountRemovalCommand) async throws {
+        guard command.valid, command.origin == (try accountRemovalOrigin) else { throw AppFailure(message: "Return to this account's original server to finish removal.") }
+        if command.confirmed { return }
+        guard command.statusProof != nil else { throw AppFailure(message: "Prepare account removal securely before continuing.") }
+        let receipt = try await accountRemovalRequest(command, preparing: false)
+        if command.hasRecoveryCertificate {
+            let binding = try AccountRemovalRecoveryRequest(command: command)
+            guard receipt["account"] == .string(binding.account), receipt["command"] == .string(binding.command.uuidString.lowercased()), receipt["authorization_hash"] == .string(binding.authorizationHash) else {
+                throw AppFailure(message: "The server did not verify this recovery file for the unfinished removal. Your saved work has been kept.")
+            }
+        }
+        guard receipt["deleted"] == .bool(true) else {
+            throw AppFailure(message: "The server did not confirm account removal. Your local work is still on this device. Try again.")
+        }
+        #if DEBUG && !SWIFT_PACKAGE
+        try AccountRemovalLiveReplyFault.afterConfirmed(command, currentAccount: session?.user.id, email: session?.user.email)
+        #endif
+    }
+    private func accountRemovalRequest(_ command: AccountRemovalCommand, preparing: Bool) async throws -> [String: JSON] {
+        guard command.valid, command.origin == (try accountRemovalOrigin), !command.confirmed else { throw CancellationError() }
+        var outgoing = URLRequest(url: URL(string: command.origin + "/functions/v1/delete-account")!)
+        outgoing.httpMethod = "POST"; outgoing.httpBody = Data((preparing ? #"{"action":"prepare"}"# : "{}").utf8); outgoing.timeoutInterval = 25
+        outgoing.cachePolicy = .reloadIgnoringLocalCacheData; outgoing.httpShouldHandleCookies = false
+        outgoing.setValue(config["Key"], forHTTPHeaderField: "apikey")
+        outgoing.setValue("Bearer " + command.authorization, forHTTPHeaderField: "Authorization")
+        outgoing.setValue("2", forHTTPHeaderField: "X-Taskfold-Account-Removal")
+        if !preparing {
+            outgoing.setValue(command.statusProof, forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof")
+            outgoing.setValue(command.id.uuidString.lowercased(), forHTTPHeaderField: "X-Taskfold-Account-Removal-Command")
+        }
+        outgoing.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        outgoing.setValue("no-store", forHTTPHeaderField: "Cache-Control")
+        let (bytes, response) = try await http.bytes(for: outgoing, delegate: LocationHandoffRedirectRefusal.shared)
+        var data = Data()
+        do {
+            guard response.expectedContentLength <= 4096 else { throw AppFailure(message: "The server did not confirm account removal. Try again.") }
+            for try await byte in bytes {
+                try Task.checkCancellation()
+                guard data.count < 4096 else { throw AppFailure(message: "The server did not confirm account removal. Try again.") }
+                data.append(byte)
+            }
+        } catch { bytes.task.cancel(); throw error }
+        let receipt = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        if (response as? HTTPURLResponse)?.statusCode == 401 { throw AccountRemovalAuthorizationRequired() }
+        guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
+            throw AppFailure(message: (receipt?["error"]?.text).flatMap { $0.isEmpty ? nil : String($0.prefix(500)) } ?? "Account removal could not be confirmed. Some server data may already be removed. Try again.")
+        }
+        return receipt ?? [:]
+    }
+    #if SWIFT_PACKAGE
+    /// Transport-test convenience only. Production always uses Store's vault.
+    func deleteAccount() async throws {
+        let incarnation = sessionGeneration, account = session?.user.id
+        let command = try await accountRemovalCommand()
+        let prepared = try command.prepared(with: await prepareAccountRemoval(command))
+        guard sessionGeneration == incarnation, session?.user.id == account else { throw CancellationError() }
+        try await performAccountRemoval(prepared)
+        guard sessionGeneration == incarnation, session?.user.id == account else { throw CancellationError() }
+    }
+    #endif
     #if canImport(UIKit)
-    func google() async throws {
-        guard authSession == nil else { return }
+    func google(reauthenticating context: AccountReauthentication? = nil, willCommit: (() -> Void)? = nil) async throws {
+        guard authSession == nil else { throw CancellationError() }
+        let attempt = try startAuthentication(reauthenticating:context,cancelBrowser: { [weak self] in self?.authSession?.cancel(); self?.authSession = nil })
+        defer { endAuthentication(attempt) }
         var bytes = [UInt8](repeating: 0, count: 32)
         guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { throw AppFailure(message: "Could not start secure sign-in.") }
         let verifier = Data(bytes).base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
         let challenge = Data(SHA256.hash(data: Data(verifier.utf8))).base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
         var components = URLComponents(string: baseURL + "/auth/v1/authorize")!
         components.queryItems = [URLQueryItem(name: "provider", value: "google"), URLQueryItem(name: "redirect_to", value: "taskfold://auth/callback"), URLQueryItem(name: "code_challenge", value: challenge), URLQueryItem(name: "code_challenge_method", value: "s256")]
-        defer { authSession?.cancel(); authSession = nil }
         let callback: URL = try await withCheckedThrowingContinuation { continuation in
             authSession = ASWebAuthenticationSession(url: components.url!, callbackURLScheme: "taskfold") { url, error in
                 if let url { continuation.resume(returning: url) }
@@ -181,10 +1314,12 @@ final class Backend: NSObject {
             authSession?.presentationContextProvider = self
             if authSession?.start() != true { continuation.resume(throwing: AppFailure(message: "Could not open sign-in.")) }
         }
+        try requireAuthentication(attempt)
         let code = try OAuthCallback.code(from: callback)
         let data = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": .string(code), "code_verifier": .string(verifier)], authenticated: false)
-        let next = try JSONDecoder().decode(Session.self, from: data)
-        try accept(next)
+        try requireAuthentication(attempt)
+        let next = try Foundation.JSONDecoder().decode(Session.self, from: data)
+        try await acceptAuthentication(next,attempt:attempt,reauthenticating:context,willCommit:willCommit)
     }
     #endif
     #if canImport(UIKit)
@@ -192,44 +1327,215 @@ final class Backend: NSObject {
         UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows).first(where: \.isKeyWindow) ?? UIWindow()
     }
     #endif
-    func rows(_ table: String) async throws -> [Record] {
-        if table == TaskActivity.table {
-            let owner = session?.user.id, generation = sessionGeneration
-            var result: [Record] = []; var cursor: Int64 = 0
+    func rows(_ table: String, expectedAccount:String?=nil, maximumRows:Int?=nil) async throws -> [Record] {
+        let expected=expectedAccount ?? session?.user.id,epoch=sessionGeneration
+        guard expected==session?.user.id else {throw CancellationError()}
+        if table == TaskActivity.table || table == TaskNodeActivity.table {
+            let owner = expected, generation = sessionGeneration
+            var result: [Record] = []; var cursor: Int64 = 0; var seen = Set<String>(); let nodeParser = TaskNodeActivity.Parser()
             while true {
                 guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
-                let data = try await request(TaskActivityPage.query(after: cursor), expectedAccount: owner)
+                let data = try await request(table == TaskNodeActivity.table ? TaskNodeActivity.query(after: cursor) : TaskActivityPage.query(after: cursor), expectedAccount: owner)
                 guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
-                let page = try JSONDecoder().decode([Record].self, from: data)
+                let page = try TaskfoldJSONDecoder().decode([Record].self, from: data)
+                if table == TaskNodeActivity.table {
+                    guard page.count <= 500, result.count + page.count <= (maximumRows ?? 100_000),
+                          page.allSatisfy({ nodeParser.event($0) != nil && seen.insert($0.id.lowercased()).inserted }) else { throw TeamProjectValue.invalid }
+                }
                 cursor = try TaskActivityPage.cursor(page, after: cursor); result += page
+                if let maximumRows,result.count>maximumRows {throw TeamProjectValue.invalid}
                 if page.count < 500 { return result }
             }
         }
         // PostgREST caps responses; paginate so large task libraries are not truncated.
-        var result: [Record] = []; var offset = 0
+        var result: [Record] = []; var offset = 0; var seen=Set<String>()
+        let order=table=="profiles" ? "user_id":"id"
         while true {
-            let data = try await request("/rest/v1/\(table)?select=*&order=id&offset=\(offset)&limit=500")
-            let page = try JSONDecoder().decode([Record].self, from: data)
+            guard epoch==sessionGeneration,expected==session?.user.id else {throw CancellationError()}
+            let data = try await request("/rest/v1/\(table)?select=*&order=\(order)&offset=\(offset)&limit=500",expectedAccount:expected)
+            let page = try TaskfoldJSONDecoder().decode([Record].self, from: data)
+            guard epoch==sessionGeneration,expected==session?.user.id else {throw CancellationError()}
             result += page
+            if let maximumRows {guard result.count<=maximumRows,page.count<=500,page.allSatisfy({row in let id=table=="profiles" ? row.string("user_id"):row.id;return !id.isEmpty && seen.insert(id).inserted}) else {throw TeamProjectValue.invalid}}
             if page.count < 500 { return result }; offset += page.count
         }
     }
+    /// Optional feature reads cannot stop core task sync or reuse a previous
+    /// account's evidence. A missing table, denial or transport failure is unknown.
+    func assignmentProvenanceRows() async -> [Record]? {
+        let generation = sessionGeneration, account = session?.user.id
+        guard account != nil else { return nil }
+        guard let result = try? await rows(TaskAssignmentProvenance.table), generation == sessionGeneration, session?.user.id == account else { return nil }
+        return result
+    }
+    /// Missing/denied/partial/future history is unavailable, never an empty
+    /// certified feed. A start/end epoch and session fence cover the full read.
+    func nodeActivityHistory(expectedAccount: String? = nil) async -> TaskNodeActivity.Feed? {
+        let generation = sessionGeneration, account = expectedAccount ?? session?.user.id
+        guard let account, session?.user.id == account else { return nil }
+        do {
+            let before = try await rows(TaskNodeActivity.epochTable, expectedAccount: account, maximumRows: 1)
+            guard TaskNodeActivity.validEpoch(before) else { return nil }
+            let events = try await rows(TaskNodeActivity.table, expectedAccount: account, maximumRows: 100_000)
+            let after = try await rows(TaskNodeActivity.epochTable, expectedAccount: account, maximumRows: 1)
+            guard before == after, generation == sessionGeneration, session?.user.id == account else { return nil }
+            return TaskNodeActivity.Feed(rows: events, epoch: after)
+        } catch { return nil }
+    }
+    func copyTeamDraft(_ draft:TeamCompletionDraft,command:TeamCompletionDraft.CopyCommand,commit:Bool,cancel:Bool=false,expectedAccount:String) async throws -> TeamCompletionDraft.CopyReview {
+        try draft.validate()
+        guard !commit || !cancel else {throw TeamCompletionDraft.invalid}
+        guard !sessionTransition,expectedAccount == session?.user.id,draft.scope.account == expectedAccount,
+              draft.scope.origin == (try accountRemovalOrigin) else {throw CancellationError()}
+        let data=try await request("/rest/v1/rpc/taskfold_copy_team_draft",method:"POST",body:["_body":.object(try command.body(for:draft)),"_commit":.bool(commit),"_cancel":.bool(cancel)],expectedAccount:expectedAccount)
+        let value=try TaskfoldJSONDecoder().decode([String:JSON].self,from:data)
+        let result=try TeamCompletionDraft.CopyReview(value,draft:draft,command:command)
+        guard !commit || result.recorded || result.cancelled else {throw TeamCompletionDraft.invalid}
+        guard !cancel || result.recorded || result.cancelled else {throw TeamCompletionDraft.invalid}
+        return result
+    }
+
+    func retireTeamProvisional(_ mutation:Mutation,expectedAccount:String) async throws -> TeamCompletionDraft.Retirement {
+        guard let command=mutation.teamCompletion,command.operation == .complete else {throw TeamCompletionDraft.invalid}
+        guard !sessionTransition,expectedAccount == session?.user.id,command.scope.account == expectedAccount,command.scope.origin == (try accountRemovalOrigin) else {throw CancellationError()}
+        let data=try await request("/rest/v1/rpc/taskfold_retire_team_provisional",method:"POST",body:["_body":.object(try command.body(for:mutation))],expectedAccount:expectedAccount)
+        let value=try TaskfoldJSONDecoder().decode([String:JSON].self,from:data)
+        return try TeamCompletionDraft.Retirement(value,for:mutation)
+    }
+
+    func cancelTeamCompletion(_ mutation:Mutation,expectedAccount:String) async throws -> TeamCompletion.Review {
+        guard let command=mutation.teamCompletion else {throw TeamCompletion.invalid}
+        guard !sessionTransition,expectedAccount == session?.user.id,command.scope.account == expectedAccount,
+              command.scope.origin == (try accountRemovalOrigin) else {throw CancellationError()}
+        let body=try command.body(for:mutation)
+        let data=try await request("/rest/v1/rpc/taskfold_cancel_team_completion",method:"POST",body:["_action":.string(command.operation.rawValue),"_body":.object(body)],expectedAccount:expectedAccount)
+        let value=try TaskfoldJSONDecoder().decode([String:JSON].self,from:data)
+        let result=try TeamCompletion.Review(value,for:mutation)
+        guard result.isCancelled || result.isRecorded else {throw TeamCompletion.invalid}
+        return result
+    }
+
+    func reviewTeamCompletion(_ mutation:Mutation,expectedAccount:String) async throws -> TeamCompletion.Review {
+        guard let command=mutation.teamCompletion else {throw TeamCompletion.invalid}
+        guard !sessionTransition,expectedAccount == session?.user.id,command.scope.account == expectedAccount,
+              command.scope.origin == (try accountRemovalOrigin) else {throw CancellationError()}
+        let body=try command.body(for:mutation)
+        let data=try await request("/rest/v1/rpc/taskfold_review_team_completion",method:"POST",body:["_action":.string(command.operation.rawValue),"_body":.object(body)],expectedAccount:expectedAccount)
+        let value=try TaskfoldJSONDecoder().decode([String:JSON].self,from:data)
+        return try TeamCompletion.Review(value,for:mutation)
+    }
+
+    func reviewTeamCompletionBatch(_ mutation: Mutation, expectedAccount: String, cancel: Bool = false) async throws -> TeamTaskBatch.Review {
+        guard let batch = mutation.teamTaskBatch, let action = batch.completionOperation else { throw TeamTaskBatch.Review.invalid }
+        guard !sessionTransition, expectedAccount == session?.user.id, batch.account == expectedAccount,
+              batch.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let path = cancel ? "/rest/v1/rpc/taskfold_cancel_team_completion_batch" : "/rest/v1/rpc/taskfold_review_team_completion_batch"
+        let data = try await request(path, method: "POST", body: ["_action": .string(action.rawValue), "_body": .object(try batch.body(for: mutation))], expectedAccount: expectedAccount)
+        let review = try TeamTaskBatch.Review(try TaskfoldJSONDecoder().decode([String: JSON].self, from: data), for: mutation)
+        guard !cancel || review.isRecorded || review.isCancelled else { throw TeamTaskBatch.Review.invalid }
+        return review
+    }
+
+    func confirmPersonalTaskMove(_ change: Mutation, expectedAccount: String) async throws -> Bool {
+        guard session?.user.id == expectedAccount else { throw CancellationError() }
+        let body = try PersonalTaskMove.body(change, account: expectedAccount)
+        let data = try await request("/rest/v1/rpc/taskfold_move_personal_task", method: "POST", body: ["_body": .object(body), "_confirm_only": .bool(true)], expectedAccount: expectedAccount)
+        return try PersonalTaskMove.status(TaskfoldJSONDecoder().decode([String: JSON].self, from: data), change: change, account: expectedAccount)
+    }
     @discardableResult func send(_ change: Mutation, expectedAccount: String? = nil) async throws -> Record? {
-        guard change.table != TaskActivity.table, change.table != TaskActivity.epochTable else { throw AppFailure(message: "Activity history is read-only.") }
+        guard change.table != TaskNodeActivity.table, change.table != TaskNodeActivity.epochTable, change.table != TaskActivity.table, change.table != TaskActivity.epochTable, change.table != TaskAssignmentProvenance.table else { throw AppFailure(message: "Activity history is read-only.") }
         let expectedOwner = expectedAccount ?? session?.user.id
         guard expectedOwner == session?.user.id else { throw CancellationError() }
+        if change.personalTaskMove == true {
+            guard let expectedOwner else { throw CancellationError() }
+            let body = try PersonalTaskMove.body(change, account: expectedOwner)
+            let data = try await request("/rest/v1/rpc/taskfold_move_personal_task", method: "POST", body: ["_body": .object(body)], expectedAccount: expectedOwner)
+            let reply = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+            return try PersonalTaskMove.confirmed(reply, change: change, account: expectedOwner)
+        }
+        if WorkflowUndo.matches(change) {
+            guard WorkflowUndo.items(change) != nil, WorkflowUndo.fitsBody(change), change.fields["user_id"]?.text == expectedOwner else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
+            let route = change.table == WorkflowUndo.captureTable ? "taskfold_undo_capture_workflow" : "taskfold_undo_private_workflow"
+            let data = try await request("/rest/v1/rpc/" + route, method: "POST", body: [
+                "_request": .string(change.id.uuidString.lowercased()), "_body": .object(change.fields)], expectedAccount: expectedOwner)
+            let saved = try TaskfoldJSONDecoder().decode(Record.self, from: data)
+            guard WorkflowUndo.reply(saved, change: change) != nil else { throw AppFailure(message: "The server did not confirm this workflow Undo. It remains saved on this device.") }
+            return saved
+        }
+        if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
+            guard let command=change.teamCompletion else { throw TeamCompletion.invalid }
+            guard !sessionTransition,command.scope.account == expectedOwner,command.scope.account == session?.user.id,command.scope.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+            let body=try command.body(for:change)
+            let data=try await request("/rest/v1/rpc/taskfold_complete_team_task",method:"POST",body:["_action":.string(command.operation.rawValue),"_body":.object(body)],expectedAccount:command.scope.account)
+            guard let reply=try? TaskfoldJSONDecoder().decode([String:JSON].self,from:data) else { throw TeamCompletion.invalid }
+            _=try command.receipt(reply,for:change)
+            return Record(["id":.string(change.recordID),"team_completion_reply":.object(reply)])
+        }
+        if change.method == "TEAM_BATCH" || change.teamTaskBatch != nil {
+            guard let batch=change.teamTaskBatch else { throw TeamTaskBatch.invalid }
+            guard !sessionTransition,batch.account == expectedOwner,batch.account == session?.user.id,batch.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+            let body=try batch.body(for:change)
+            let path = batch.isCompletion ? "/rest/v1/rpc/taskfold_complete_team_tasks" : "/rest/v1/rpc/taskfold_team_task_batch"
+            let operation = batch.completionOperation?.rawValue ?? batch.operation.rawValue
+            let data=try await request(path,method:"POST",body:[batch.isCompletion ? "_action" : "_operation":.string(operation),"_body":.object(body)],expectedAccount:batch.account)
+            guard let reply=try? TaskfoldJSONDecoder().decode([String:JSON].self,from:data) else { throw TeamTaskBatch.invalid }
+            try batch.confirm(reply,for:change)
+            if batch.isCompletion { return Record(["id": .string(change.recordID), "team_completion_batch_reply": .object(reply)]) }
+            return nil
+        }
+        if let scope = change.teamTaskScope {
+            guard !sessionTransition, scope.account == expectedOwner, scope.account == session?.user.id,
+                  scope.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+            if change.method != "PATCH" {
+                let action = try scope.lifecycleAction(for: change), body = try scope.lifecycleBody(for: change)
+                let data = try await request("/rest/v1/rpc/taskfold_team_task_lifecycle", method: "POST", body: ["_action":.string(action),"_body":.object(body)], expectedAccount:scope.account)
+                guard let reply = try? TaskfoldJSONDecoder().decode([String:JSON].self,from:data) else { throw TeamTaskEditScope.invalid }
+                return try scope.lifecycleSaved(reply,for:change)
+            }
+            let body = try scope.body(for: change)
+            let data = try await request("/rest/v1/rpc/taskfold_edit_team_task", method: "POST", body: ["_body": .object(body)], expectedAccount: scope.account)
+            guard let reply = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamTaskEditScope.invalid }
+            return try scope.saved(reply, for: change)
+        }
+        if change.organizationOrder != nil || change.method == "ORDER" {
+            guard OrganizationOrder.valid(change), let command = change.organizationOrder else {
+                throw AppFailure(message: "This saved ordering command needs a supported app before syncing.")
+            }
+            let data = try await request("/rest/v1/rpc/taskfold_order_organization", method: "POST", body: [
+                "_table": .string(change.table), "_ids": .array(command.ids.map(JSON.string)),
+                "_project": command.projectID.map(JSON.string) ?? .null,
+                "_action": .string(change.id.uuidString.lowercased())], expectedAccount: expectedOwner)
+            let rows = try TaskfoldJSONDecoder().decode([Record].self, from: data)
+            return Record(["organization_order_rows": .array(rows.map { .object($0.fields) })])
+        }
         if change.table == FocusSessionChange.table {
             guard let account = session?.user.id, FocusSessionChange.valid(change, account: account), let baseline = change.baseline else {
                 throw AppFailure(message: "TASKFOLD_FOCUS_CONFLICT: Review this Focus session before replacing synced state.")
             }
             let data = try await request("/rest/v1/rpc/taskfold_set_focus_session", method: "POST", body: [
                 "_base": .object(baseline), "_action": change.fields["action_id"]!, "_state": change.fields["state"]!], expectedAccount: account)
-            let saved = try JSONDecoder().decode(Record.self, from: data)
+            let saved = try TaskfoldJSONDecoder().decode(Record.self, from: data)
             guard FocusSessionChange.validRow(saved, account: account),
                   saved["revision"] == change.fields["revision"], saved["action_id"] == change.fields["action_id"],
                   saved["state"] == change.fields["state"] else {
                 throw AppFailure(message: "The server did not confirm this Focus session. It remains saved on this device.")
             }
+            return saved
+        }
+        if ProductivityGoalEdit.matches(change) {
+            guard let owner=expectedOwner,ProductivityGoalEdit.scoped(change,account:owner),let base=change.baseline?[ProductivityGoals.field],let desired=change.fields[ProductivityGoals.field] else { throw AppFailure(message:"These saved goals need a valid workspace before syncing.") }
+            guard ProductivityGoalEdit.valid(change,account:owner) else { throw AppFailure(message:"TASKFOLD_CONFLICT: These saved goals need a supported choice and review before syncing.") }
+            let data=try await request("/rest/v1/rpc/taskfold_set_productivity_goals",method:"POST",body:["_base":base,"_goals":desired],expectedAccount:owner)
+            let saved=try TaskfoldJSONDecoder().decode(Record.self,from:data)
+            guard saved.id==ProductivityGoals.recordID,saved.string("user_id").lowercased()==owner.lowercased(),saved[ProductivityGoals.field]==desired else { throw AppFailure(message:"The server did not confirm your goals. They remain saved on this device.") }
+            return saved
+        }
+        if change.table == WorkflowTemplate.table, ["PATCH","DELETE"].contains(change.method) {
+            guard let base=change.baseline,base["name"] != nil,base["document"] != nil else { throw AppFailure(message:"TASKFOLD_CONFLICT: Review this older template edit before replacing synced work.") }
+            let data=try await request("/rest/v1/rpc/taskfold_edit_template",method:"POST",body:["_id":.string(change.recordID),"_base":.object(base),"_changes":.object(change.fields),"_delete":.bool(change.method=="DELETE")],expectedAccount:expectedOwner)
+            if change.method=="DELETE" { return nil }
+            let saved=try TaskfoldJSONDecoder().decode(Record.self,from:data)
+            guard saved.id.lowercased()==change.recordID.lowercased(),change.fields.allSatisfy({saved[$0.key]==$0.value}) else { throw AppFailure(message:"The server did not confirm this template edit. It remains saved on this device.") }
             return saved
         }
         // Both native clients protect edits with the same server-side baseline merge.
@@ -244,11 +1550,18 @@ final class Backend: NSObject {
                     throw AppFailure(message: "TASKFOLD_CONFLICT: Review this older completion before replacing synced state.")
                 }
             }
-            let data = try await request("/rest/v1/rpc/taskfold_patch_task", method: "POST", body: [
+            let scopedAssignment = TaskAssignment.scopedProject(change) != nil
+            let endpoint = scopedAssignment ? "taskfold_assign_task_scoped" : "taskfold_patch_task"
+            let data = try await request("/rest/v1/rpc/" + endpoint, method: "POST", body: [
                 "_id": .string(change.recordID), "_base": .object(baseline), "_changes": .object(change.fields)], expectedAccount: expectedOwner)
-            let saved = try JSONDecoder().decode(Record.self, from: data)
+            let saved = try TaskfoldJSONDecoder().decode(Record.self, from: data)
             guard saved.id.lowercased() == change.recordID.lowercased() else {
                 throw AppFailure(message: "The server did not confirm this edit. Your change is saved on this device.")
+            }
+            if scopedAssignment {
+                guard TaskAssignment.permitsScope(change, current: saved), TaskAssignment.sameIdentity(saved["assigned_to"], change.fields["assigned_to"]!) else {
+                    throw AppFailure(message: "The server did not confirm this assignment. Your choice is saved on this device.")
+                }
             }
             return saved
         }
@@ -257,12 +1570,12 @@ final class Backend: NSObject {
                 // An old queue can outlive the task. Only visible, existing rows need review.
                 let escaped = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
                 let data = try await request("/rest/v1/tasks?id=eq.\(escaped)&select=id", expectedAccount: expectedOwner)
-                if try JSONDecoder().decode([Record].self, from: data).isEmpty { return nil }
+                if try TaskfoldJSONDecoder().decode([Record].self, from: data).isEmpty { return nil }
                 throw AppFailure(message: "TASKFOLD_CONFLICT: Review this older queued deletion before removing a synced task.")
             }
             let data = try await request("/rest/v1/rpc/taskfold_delete_task", method: "POST", body: [
                 "_id": .string(change.recordID), "_base": .object(baseline)], expectedAccount: expectedOwner)
-            guard try JSONDecoder().decode(Bool.self, from: data) else {
+            guard try TaskfoldJSONDecoder().decode(Bool.self, from: data) else {
                 throw AppFailure(message: "The server did not confirm this deletion. Your change is saved on this device.")
             }
             return nil
@@ -279,33 +1592,38 @@ final class Backend: NSObject {
             }
             let rpc = automatic ? "taskfold_set_automatic_reminder" : "taskfold_set_reminder_snooze"
             let data = try await request("/rest/v1/rpc/" + rpc, method: "POST", body: ["_minutes": .number(Double(minutes))], expectedAccount: expectedOwner)
-            let saved = try JSONDecoder().decode(Record.self, from: data)
+            let saved = try TaskfoldJSONDecoder().decode(Record.self, from: data)
             guard ReminderSnooze.row([saved], account: owner) != nil, ReminderSnooze.validDocument(saved["settings"]),
                   (automatic ? ReminderAutomatic.minutes(saved["settings"]) : ReminderSnooze.minutes(saved["settings"])) == minutes else {
                 throw AppFailure(message: "The server did not confirm this reminder preference. Your choice is saved on this device.")
             }
             return saved
         }
+        let guardedTemplateCreation = change.table == WorkflowTemplate.table && change.method == "POST"
         let conflictKey = ["favorites", "view_preferences", "view_orders", ReminderSnooze.table].contains(change.table) ? "user_id,id" : "id"
         let escapedID = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
         let query = change.method == "POST" ? "?on_conflict=\(conflictKey)" : "?id=eq.\(escapedID)"
         let data = try await request("/rest/v1/\(change.table)\(query)", method: change.method,
             body: change.method == "DELETE" ? nil : change.fields,
-            extra: ["Prefer": change.method == "POST" ? (change.insertOnly == true ? "handling=strict,resolution=ignore-duplicates,missing=default,return=representation" : "resolution=merge-duplicates,return=representation") : "return=representation"], expectedAccount: expectedOwner)
-        if change.method == "POST", change.insertOnly == true {
-            let rows = try JSONDecoder().decode([Record].self, from: data)
+            extra: ["Prefer": change.method == "POST" ? (change.insertOnly == true || guardedTemplateCreation ? "handling=strict,resolution=ignore-duplicates,missing=default,return=representation" : "resolution=merge-duplicates,return=representation") : "return=representation"], expectedAccount: expectedOwner)
+        if change.method == "POST", change.insertOnly == true || guardedTemplateCreation {
+            let rows = try TaskfoldJSONDecoder().decode([Record].self, from: data)
             if let saved = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() && $0.string("user_id") == change.fields["user_id"]?.text }) { return saved }
             let owner = (change.fields["user_id"]?.text ?? "").addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
             guard !owner.isEmpty else { throw AppFailure(message: "This new item has no workspace owner.") }
             let existing = try await request("/rest/v1/\(change.table)?id=eq.\(escapedID)&user_id=eq.\(owner)&select=*", expectedAccount: expectedOwner)
-            let found = try JSONDecoder().decode([Record].self, from: existing)
+            let found = try TaskfoldJSONDecoder().decode([Record].self, from: existing)
             guard found.contains(where: { $0.id == change.recordID && $0.string("user_id") == change.fields["user_id"]?.text }) else {
                 throw AppFailure(message: "The server could not confirm this new item. It remains saved on this device.")
+            }
+            if guardedTemplateCreation, let existing=found.first,
+               existing["name"] != change.fields["name"] || existing["document"] != change.fields["document"] {
+                throw AppFailure(message:"TASKFOLD_CONFLICT: This template already exists with different saved contents. Review before restoring it.")
             }
             return found.first
         }
         if change.method != "DELETE" {
-            let rows = try JSONDecoder().decode([Record].self, from: data)
+            let rows = try TaskfoldJSONDecoder().decode([Record].self, from: data)
             guard rows.contains(where: { $0.id == change.recordID }) else {
                 throw AppFailure(message: "This record is no longer available or you do not have permission to edit it. Your change is saved on this device.")
             }
@@ -313,8 +1631,11 @@ final class Backend: NSObject {
         }
         return nil
     }
-    func uploadAvatar(_ data: Data) async throws -> String {
+    func uploadAvatar(_ data: Data, expectedAccount: String) async throws -> String {
+        let generation = sessionGeneration
+        guard !expectedAccount.isEmpty, session?.user.id == expectedAccount else { throw CancellationError() }
         try await refreshIfNeeded()
+        guard generation == sessionGeneration, session?.user.id == expectedAccount else { throw CancellationError() }
         guard let session else { throw AppFailure(message: "Sign in to change your photo.") }
         let path = "\(session.user.id)/\(UUID().uuidString).jpg"
         guard let url = URL(string: baseURL + "/storage/v1/object/avatars/" + path) else { throw AppFailure(message: "Invalid storage URL.") }
@@ -323,6 +1644,10 @@ final class Backend: NSObject {
         request.setValue("Bearer \(session.access_token)", forHTTPHeaderField: "Authorization")
         request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
         let (_, response) = try await http.data(for: request)
+        #if DEBUG
+        try await ProfileUploadResponseTestHold.wait(account: session.user.id, email: session.user.email, objectPath: path)
+        #endif
+        guard generation == sessionGeneration, self.session?.user.id == expectedAccount else { throw CancellationError() }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw AppFailure(message: "Your photo could not be uploaded. Please try again.") }
         return baseURL + "/storage/v1/object/public/avatars/" + path
     }
@@ -339,9 +1664,9 @@ extension Backend {
         let socket = URLSession.shared.webSocketTask(with: components.url!)
         socket.resume()
         defer { socket.cancel(with: .goingAway, reason: nil) }
-        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", ReminderSnooze.table, "focus_sessions"].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
+        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", SharedComment.table, SharedMention.table].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
         let join: [String: JSON] = ["topic": .string("realtime:taskfold-ios"), "event": .string("phx_join"), "ref": .string("1"), "join_ref": .string("1"), "payload": .object(["access_token": .string(session.access_token), "config": .object(["postgres_changes": .array(subscriptions)])])]
-        try await socket.send(.string(String(decoding: JSONEncoder().encode(join), as: UTF8.self)))
+        try await socket.send(.string(String(decoding: TaskfoldJSONEncoder().encode(join), as: UTF8.self)))
         let heartbeat = Task { @MainActor in
             var reference = 2
             while !Task.isCancelled {
@@ -351,7 +1676,7 @@ extension Backend {
                     socket.cancel(with: .goingAway, reason: nil); return
                 }
                 let body: [String: JSON] = ["topic": .string("phoenix"), "event": .string("heartbeat"), "payload": .object([:]), "ref": .string("\(reference)")]
-                try await socket.send(.string(String(decoding: JSONEncoder().encode(body), as: UTF8.self))); reference += 1
+                try await socket.send(.string(String(decoding: TaskfoldJSONEncoder().encode(body), as: UTF8.self))); reference += 1
             }
         }
         defer { heartbeat.cancel() }
@@ -360,7 +1685,7 @@ extension Backend {
                 let message = try await socket.receive()
                 let data: Data
                 switch message { case .data(let bytes): data = bytes; case .string(let text): data = Data(text.utf8); @unknown default: continue }
-                let event = try JSONDecoder().decode(Record.self, from: data)
+                let event = try TaskfoldJSONDecoder().decode(Record.self, from: data)
                 if event.string("event") == "postgres_changes" { await onChange() }
                 if event.string("event") == "phx_error" { throw AppFailure(message: "Realtime connection interrupted.") }
             }
@@ -371,3 +1696,235 @@ extension Backend {
 #if canImport(UIKit)
 extension Backend: ASWebAuthenticationPresentationContextProviding {}
 #endif
+
+
+extension Backend: AudioCommentPublishingTransport {
+    private func checkAudioPublicationOwner(_ owner:String,origin:String,incarnation:UUID) throws {
+        guard !sessionTransition,sessionGeneration==incarnation,session?.user.id==owner,
+              try AudioCommentPublicationJournal.canonicalOrigin(baseURL)==origin else {throw CancellationError()}
+        try Task.checkCancellation()
+    }
+    func reviewAudioPublication(_ publication: AudioCommentPublication, origin: String, incarnation: UUID) async throws -> AudioCommentPublicationApproval {
+        let owner = publication.account.uuidString.lowercased()
+        try checkAudioPublicationOwner(owner, origin: origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioPublicationOwner(owner, origin: origin, incarnation: incarnation)
+        let body = try TaskfoldJSONEncoder().encode(Record(["intent": .object(publication.record.fields)]))
+        let data = try await audioPublicationReply(body, action: "review", owner: owner, origin: origin, incarnation: incarnation)
+        let envelope = try TaskfoldJSONDecoder().decode(Record.self, from: data)
+        guard Set(envelope.fields.keys) == ["approval"], case .object(let approval) = envelope["approval"] else { throw AudioCommentFailure.changed }
+        return try .init(record: Record(approval), publication: publication)
+    }
+    func publishAudio(_ pending: AudioCommentPending, approval: AudioCommentPublicationApproval, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt {
+        guard approval.permits(pending.publication) else { throw AudioCommentFailure.changed }
+        return try await publishingAudio(pending, approval: approval, origin: origin, incarnation: incarnation)
+    }
+    func publishAudio(_ pending:AudioCommentPending,origin:String,incarnation:UUID) async throws -> AudioCommentPublishedReceipt {
+        try await publishingAudio(pending, approval: nil, origin: origin, incarnation: incarnation)
+    }
+    private func publishingAudio(_ pending: AudioCommentPending, approval: AudioCommentPublicationApproval?, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt {
+        let owner=pending.publication.account.uuidString.lowercased()
+        try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        try await refreshIfNeeded();try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        let decoded=try await AudioCommentDecoding.validate(pending.clip.data)
+        guard decoded.descriptor.sha256==pending.publication.descriptor.sha256,decoded.descriptor.byteCount==pending.publication.descriptor.byteCount,
+              abs(decoded.descriptor.milliseconds-pending.publication.descriptor.milliseconds)<=1000 else {throw AudioCommentFailure.invalid}
+        let encoding=Task.detached(priority:.utility) {() throws -> Data in
+            try Task.checkCancellation();let encoder=TaskfoldJSONEncoder();encoder.outputFormatting=[.sortedKeys,.withoutEscapingSlashes]
+            var fields: [String: JSON] = ["intent": .object(pending.publication.record.fields), "audio_base64": .string(pending.clip.data.base64EncodedString())]
+            if let approval { guard approval.permits(pending.publication) else { throw AudioCommentFailure.changed }; fields["approval"] = .object(approval.record.fields) }
+            let data = try encoder.encode(Record(fields))
+            try Task.checkCancellation();return data
+        }
+        let body=try await withTaskCancellationHandler(operation:{try await encoding.value},onCancel:{encoding.cancel()})
+        let data=try await audioPublicationReply(body,action:"publish",owner:owner,origin:origin,incarnation:incarnation)
+        let result=try decodeAudioPublicationStatus(data,publication:pending.publication,allowPending:false)
+        switch result {
+        case .published(let receipt):return receipt
+        case .closed(let proof):throw proof
+        case .unconfirmed:throw AudioCommentFailure.invalid
+        }
+    }
+    /// Sender history/cancellation only. No clip, audio encoding or media request.
+    func checkAudioPublication(_ publication:AudioCommentPublication,closing:Bool,origin:String,incarnation:UUID) async throws -> AudioCommentPublicationStatus {
+        let owner=publication.account.uuidString.lowercased()
+        try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        try await refreshIfNeeded();try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        let encoder=TaskfoldJSONEncoder();encoder.outputFormatting=[.sortedKeys,.withoutEscapingSlashes]
+        let body=try encoder.encode(Record(["intent":.object(publication.record.fields),"close":.bool(closing)]))
+        guard body.count<=32000 else {throw AudioCommentFailure.invalid}
+        let data=try await audioPublicationReply(body,action:"resolve",owner:owner,origin:origin,incarnation:incarnation)
+        return try decodeAudioPublicationStatus(data,publication:publication,allowPending:true)
+    }
+    private var audioPublicationUnconfirmed:AudioCommentFailure {.init(message:"Publication couldn’t be confirmed. Your private recording is preserved.")}
+    private func decodeAudioPublicationStatus(_ data:Data,publication:AudioCommentPublication,allowPending:Bool) throws -> AudioCommentPublicationStatus {
+        do {return try .init(data:data,publication:publication,allowPending:allowPending)}
+        catch {throw audioPublicationUnconfirmed}
+    }
+    private func audioPublicationReply(_ body:Data,action:String,owner:String,origin:String,incarnation:UUID) async throws -> Data {
+        try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        guard ["publish","resolve","review"].contains(action),let url=URL(string:origin+"/functions/v1/audio-comments?action="+action),let session else {throw AudioCommentFailure.changed}
+        var request=URLRequest(url:url);request.httpMethod="POST";request.timeoutInterval=25
+        request.cachePolicy = .reloadIgnoringLocalCacheData;request.httpShouldHandleCookies=false
+        request.setValue(config["Key"],forHTTPHeaderField:"apikey");request.setValue("Bearer "+session.access_token,forHTTPHeaderField:"Authorization")
+        request.setValue("application/json",forHTTPHeaderField:"Content-Type");request.setValue("no-store",forHTTPHeaderField:"Cache-Control");request.httpBody=body
+        let (bytes,incoming)=try await http.bytes(for:request,delegate:LocationHandoffRedirectRefusal.shared)
+        var data=Data()
+        do {
+            for try await byte in bytes {
+                try Task.checkCancellation();guard data.count<64000 else {throw audioPublicationUnconfirmed}
+                if data.count % 4096 == 0 {try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)}
+                data.append(byte)
+            }
+            try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        } catch {bytes.task.cancel();throw error}
+        guard let response=incoming as? HTTPURLResponse,response.url==url else {throw AudioCommentFailure.invalid}
+        guard (200..<300).contains(response.statusCode) else {
+            if response.statusCode==401 {throw AccountSessionAuthorizationRequired()}
+            if response.statusCode==429 {throw AudioCommentFailure(message:"Wait briefly, then check this recording again. Your local copy is safe.")}
+            throw audioPublicationUnconfirmed
+        }
+        return data
+    }
+}
+
+extension Backend {
+    /// Local presentation may survive expired tokens, but never an in-progress
+    /// account transition or a different cached account. Server calls still do
+    /// their independent live Auth/session checks.
+    func audioPublicationSessionMatches(_ account: String) -> Bool {
+        guard !sessionTransition, let id = UUID(uuidString: account), id != AudioCommentTarget.zero,
+              id.uuidString.lowercased() == account else { return false }
+        return session?.user.id == account
+    }
+}
+
+extension Backend: AudioCommentReadingTransport {
+    private func checkAudioRead(account: UUID, origin: String, incarnation: UUID) throws {
+        guard account != AudioCommentTarget.zero, audioPublicationSessionMatches(account.uuidString.lowercased()), sessionGeneration == incarnation,
+              try AudioCommentPublicationJournal.canonicalOrigin(baseURL) == origin else { throw CancellationError() }
+        try Task.checkCancellation()
+    }
+    /// Fixed authenticated gateway only: no stored URLs, signed links, cookies or
+    /// redirect-following. Bound failed replies before interpreting any payload.
+    private func audioReadRequest(action: String, body: Record, account: UUID, origin: String, incarnation: UUID, maximum: Int) async throws -> (Data, HTTPURLResponse) {
+        try checkAudioRead(account: account, origin: origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioRead(account: account, origin: origin, incarnation: incarnation)
+        guard ["list", "page", "download", "remove"].contains(action), let session, let url = URL(string: origin + "/functions/v1/audio-comments?action=" + action) else { throw AudioCommentFailure.changed }
+        var request = URLRequest(url: url); request.httpMethod = "POST"; request.timeoutInterval = 25
+        request.cachePolicy = .reloadIgnoringLocalCacheData; request.httpShouldHandleCookies = false
+        request.setValue(config["Key"], forHTTPHeaderField: "apikey"); request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.setValue("no-store", forHTTPHeaderField: "Cache-Control"); request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
+        request.httpBody = try TaskfoldJSONEncoder().encode(body)
+        let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
+        do {
+            guard let response = incoming as? HTTPURLResponse, response.url == url else { throw AudioCommentFailure.invalid }
+            // Do not collect provider diagnostics or redirects, and do not trust
+            // them as a successful deletion or current membership evidence.
+            guard response.statusCode == 200 else {
+                if response.statusCode == 401 { throw AccountSessionAuthorizationRequired() }
+                if response.statusCode == 403 || response.statusCode == 404 { throw AudioCommentReadAccessUnavailable() }
+                throw AudioCommentFailure(message: action == "remove" ? "Removal couldn’t be confirmed. Refresh the conversation before trying again." : "Recordings couldn’t be loaded. Refresh to try again.")
+            }
+            guard response.value(forHTTPHeaderField: "Content-Type")?.split(separator: ";").first?.trimmingCharacters(in: .whitespaces).lowercased() == (action == "download" ? "audio/mp4" : "application/json") else { throw AudioCommentFailure.invalid }
+            let length = response.expectedContentLength
+            guard length <= maximum else { throw AudioCommentFailure.invalid }
+            var data = Data()
+            for try await byte in bytes {
+                try Task.checkCancellation(); guard data.count < maximum else { throw AudioCommentFailure.invalid }
+                if data.count % 4096 == 0 { try checkAudioRead(account: account, origin: origin, incarnation: incarnation) }; data.append(byte)
+            }
+            try checkAudioRead(account: account, origin: origin, incarnation: incarnation)
+            return (data, response)
+        } catch { bytes.task.cancel(); throw error }
+    }
+    func pageAudio(account: UUID, target: AudioCommentTarget, after: AudioCommentPageCursor?, origin: String, incarnation: UUID) async throws -> AudioCommentPage {
+        guard after == nil || after?.account == account && after?.target == target else { throw AudioCommentFailure.changed }
+        let body=Record(["target":.object(target.record.fields),"after":after.map { .object($0.position.fields) } ?? .null])
+        let (data,_)=try await audioReadRequest(action:"page",body:body,account:account,origin:origin,incarnation:incarnation,maximum:640_000)
+        return try AudioCommentPage(data:data,account:account,target:target,after:after)
+    }
+    func listAudio(account: UUID, target: AudioCommentTarget, origin: String, incarnation: UUID) async throws -> [AudioCommentRemote] {
+        let (data, _) = try await audioReadRequest(action: "list", body: target.record, account: account, origin: origin, incarnation: incarnation, maximum: 640_000)
+        return try AudioCommentRemote.list(data, account: account, target: target)
+    }
+    func downloadAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentClip {
+        let (data, response) = try await audioReadRequest(action: "download", body: Record(["comment_id": .string(comment.id.uuidString.lowercased())]), account: comment.publication.account, origin: origin, incarnation: incarnation, maximum: AudioCommentDescriptor.maximumBytes)
+        let expected = comment.publication.descriptor
+        guard response.value(forHTTPHeaderField: "X-Audio-SHA256") == expected.sha256 else { throw AudioCommentFailure.invalid }
+        let clip = try AudioCommentClip(restoring: data, descriptor: expected)
+        let decoded = try await AudioCommentDecoding.validate(clip.data)
+        try checkAudioRead(account: comment.publication.account, origin: origin, incarnation: incarnation)
+        guard decoded.descriptor.sha256 == expected.sha256, decoded.descriptor.byteCount == expected.byteCount, abs(decoded.descriptor.milliseconds - expected.milliseconds) <= 1000 else { throw AudioCommentFailure.invalid }
+        return clip
+    }
+    func removeAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentRemoteRemoval {
+        let (data, _) = try await audioReadRequest(action: "remove", body: Record(["comment_id": .string(comment.id.uuidString.lowercased())]), account: comment.publication.account, origin: origin, incarnation: incarnation, maximum: 64_000)
+        return try AudioCommentRemoteRemoval(data: data, expected: comment)
+    }
+}
+
+
+extension Backend: TaskFileUploadTransport {
+    func taskFileReply(_ journal: TaskFileUploadJournal, action: String, incarnation: UUID) async throws -> Data {
+        guard ["publish", "resolve", "cancel"].contains(action), journal.phase == .attempted else { throw TaskFileUploadJournal.invalid }
+        try checkAudioPublicationOwner(journal.account, origin: journal.origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioPublicationOwner(journal.account, origin: journal.origin, incarnation: incarnation)
+        let payload: Record = action == "publish" ? Record(["intent": .object(journal.intent.fields), "bytes_base64": .string(journal.bytes.base64EncodedString())]) : Record(["operation_id": .string(journal.id)])
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = TaskFileUploadJournal.encodingOptions
+        let body = try encoder.encode(payload)
+        guard body.count <= TaskFileUploadJournal.maximumStoredBytes else { throw TaskFileUploadJournal.invalid }
+        let result = try await fileRequest(body, action: action, account: journal.account, origin: journal.origin, incarnation: incarnation, maximum: 64000)
+        return result
+    }
+    private func fileRequest(_ body: Data, action: String, account: String, origin: String, incarnation: UUID, maximum: Int, endpoint: String = "task-files") async throws -> Data {
+        guard ["task-files", "project-files"].contains(endpoint) else { throw ProjectFilePreparationRequest.invalid }
+        try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
+        guard let session, let url = URL(string: origin + "/functions/v1/" + endpoint + "?action=" + action) else { throw TaskFileUploadJournal.invalid }
+        var request = URLRequest(url: url); request.httpMethod = "POST"; request.httpBody = body; request.timeoutInterval = 30
+        request.cachePolicy = .reloadIgnoringLocalCacheData; request.httpShouldHandleCookies = false
+        request.setValue(config["Key"], forHTTPHeaderField: "apikey"); request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
+        let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
+        var data = Data()
+        do {
+            for try await byte in bytes {
+                try Task.checkCancellation(); guard data.count < maximum else { throw TaskFileUploadJournal.invalid }
+                if data.count % 4096 == 0 { try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation) }
+                data.append(byte)
+            }
+            try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
+        } catch { bytes.task.cancel(); throw error }
+        guard let response = incoming as? HTTPURLResponse, response.url == url, (200..<300).contains(response.statusCode) else { throw TaskFileUploadJournal.invalid }
+        return data
+    }
+    func downloadTaskFile(_ attachment: Record, target: Record, account: String, origin: String, incarnation: UUID) async throws -> Data {
+        guard TaskFileUploadJournal.validID(attachment.string("storage_object_id")), TaskFileUploadJournal.types.contains(attachment.string("type")),
+              case .number(let size) = attachment["size"], size.isFinite, size.rounded() == size, size > 0, size <= Double(TaskFileUploadJournal.maximumBytes),
+              attachment.string("sha256").count == 64, TaskFileUploadJournal.validID(target.string("task_id")), TaskFileUploadJournal.validID(target.string("task_generation")) else { throw TaskFileUploadJournal.invalid }
+        try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
+        let body = try TaskfoldJSONEncoder().encode(Record(["object_id": attachment["storage_object_id"], "task_id": target["task_id"], "task_generation": target["task_generation"]]))
+        let bytes = try await fileRequest(body, action: "download", account: account, origin: origin, incarnation: incarnation, maximum: TaskFileUploadJournal.maximumBytes)
+        guard bytes.count == Int(size), TaskFileUploadJournal.digest(bytes) == attachment.string("sha256") else { throw TaskFileUploadJournal.invalid }
+        return bytes
+    }
+}
+
+
+extension Backend: ProjectFilePreparationService {
+    func projectFilePreparation(_ request: ProjectFilePreparationRequest, action: ProjectFilePreparationAction, incarnation: UUID) async throws -> ProjectFilePreparationPage? {
+        try checkAudioPublicationOwner(request.account, origin: request.origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioPublicationOwner(request.account, origin: request.origin, incarnation: incarnation)
+        let body = try TaskfoldJSONEncoder().encode(action.body(request))
+        guard body.count <= 20_000 else { throw ProjectFilePreparationRequest.invalid }
+        let data = try await fileRequest(body, action: action.name, account: request.account, origin: request.origin, incarnation: incarnation, maximum: 262144, endpoint: "project-files")
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        if action == .resolve && raw == ["absent": .bool(true)] { return nil }
+        guard Set(raw.keys) == ["plan"], case .object(let fields)? = raw["plan"] else { throw ProjectFilePreparationRequest.invalid }
+        switch action {
+        case .check(let plan, let after): return try ProjectFilePreparationPage(fields, request: request, plan: plan, after: after)
+        case .copy(let plan, _): return try ProjectFilePreparationPage(fields, request: request, plan: plan)
+        default: return try ProjectFilePreparationPage(fields, request: request)
+        }
+    }
+}

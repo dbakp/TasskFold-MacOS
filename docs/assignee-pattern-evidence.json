@@ -1,0 +1,469 @@
+{
+  "checkpoint": "2026-10-08 filter failed-save recovery and accessibility polish; four passing isolated iOS walks, four native builds, unchanged passing Core package inputs",
+  "repository": "mac",
+  "baseline": "e5edb3e417068d6a0c4be2274fdd922da7c4bd92",
+  "intendedBranch": "codex/assignee-name-filters",
+  "nativeInputs": {
+    "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-pattern-native-inputs-sha256.json",
+    "SHA256": "10efbb5e06876c9590e75fef7255a48eacce4bd5a3323e8396e9a1db5f68bbbe"
+  },
+  "coreInputs": {
+    "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-pattern-core-inputs-sha256.json",
+    "SHA256": "10aa5cfafd69900f97f5ca0db6a5ea157de030933718b64fdd1c5ad5359c69aa"
+  },
+  "currentCore": {
+    "debug": {
+      "terminalExitCode": 0,
+      "tests": 565,
+      "skipped": 4,
+      "failedTests": 0,
+      "log": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v5-mac-core-debug.log",
+        "SHA256": "282789b0cb6de0355028a50a66ff9c32cb675757f8bbca30e21929f42348217b"
+      },
+      "scope": "565 completed tests, four optional integration skips."
+    },
+    "release": {
+      "terminalExitCode": 0,
+      "tests": 565,
+      "skipped": 4,
+      "failedTests": 0,
+      "log": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-mac-core-release.log",
+        "SHA256": "3f78e72be65060210ba5c4cb65db968dff8bfe6043973eaa7494d1a0a639aca0"
+      },
+      "jobs": 2,
+      "scope": "Current-source optimized suite completed; 565 tests, four optional integration skips, zero failures."
+    },
+    "inputBinding": {
+      "baselineRevision": "dd49a08acf2e5df9f638b99157c9994500dc9896",
+      "changedWholeCoreFiles": [
+        "Taskfold/Core/Store.swift"
+      ],
+      "packageExcludesStore": true,
+      "compiledPackageAndTestInputsUnchanged": true,
+      "scope": "565-test Debug and Release results remain applicable to unchanged Core package inputs. Store is excluded; new Store/editor behavior requires native compilation and iOS runtime verification."
+    }
+  },
+  "currentNative": {
+    "debug": {
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v7-mac-debug-native.log",
+        "SHA256": "1edd6ecd5c545ba2d8f06b901208c8fc6eff5ee26e5644e9c9a4283aff2b2b4f"
+      },
+      "sourceDirectory": "/tmp/taskfold-assignee-save-recovery-v7-mac-native-source",
+      "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build",
+      "jobs": 2,
+      "signingAllowed": false,
+      "architectures": [
+        "arm64"
+      ],
+      "scope": "Own native compilation; Debug includes UI-test compilation. Mac runtime/install/replacement not performed. Release inputs match current app/widget code; iOS test-only navigation changed after its v7 Release build."
+    },
+    "release": {
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v7-mac-release-native.log",
+        "SHA256": "679486249665e9bce4d4f120fbbc37bb493a8ab40db091b5b25b7ec9f95e6072"
+      },
+      "sourceDirectory": "/tmp/taskfold-assignee-save-recovery-v7-mac-native-source",
+      "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build",
+      "jobs": 2,
+      "signingAllowed": false,
+      "architectures": [
+        "arm64",
+        "x86_64"
+      ],
+      "scope": "Own native compilation; Debug includes UI-test compilation. Mac runtime/install/replacement not performed. Release inputs match current app/widget code; iOS test-only navigation changed after its v7 Release build."
+    }
+  },
+  "earlierNativeIOS": {
+    "v1-phone": {
+      "terminalExitCode": 65,
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "failures": [
+        {
+          "failureText": "XCTUnwrap failed: expected non-nil value of type \"(String, Array<String>)\"",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch",
+          "testName": "testAssigneePatternBuilderExpressionResultsAndRelaunch()"
+        },
+        {
+          "failureText": "XCTUnwrap failed: expected non-nil value of type \"(String, Array<String>)\"",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 2,
+          "testIdentifierString": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch",
+          "testName": "testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()"
+        }
+      ],
+      "resultBundle": "/tmp/taskfold-assignee-pattern-final-v1-phone.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v1-phone.log",
+        "SHA256": "dee25041743931399fcd13460cbb4841eb9504b0a2361b0ffd0a41e7fa4c5b94"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v1-phone-summary.json",
+        "SHA256": "95fedf48496ed80865de83b222a166ee5dff733730ba0c7bddf0e30cc9b6b722"
+      },
+      "scope": "Earlier source/testing cohort; final current-source UI acceptance is pending."
+    },
+    "v1-tablet": {
+      "terminalExitCode": 65,
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "failures": [
+        {
+          "failureText": "XCTUnwrap failed: expected non-nil value of type \"(String, Array<String>)\"",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch",
+          "testName": "testAssigneePatternBuilderExpressionResultsAndRelaunch()"
+        },
+        {
+          "failureText": "XCTUnwrap failed: expected non-nil value of type \"(String, Array<String>)\"",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 2,
+          "testIdentifierString": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch",
+          "testName": "testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()"
+        }
+      ],
+      "resultBundle": "/tmp/taskfold-assignee-pattern-final-v1-tablet.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v1-tablet.log",
+        "SHA256": "b111468b350cf470dbd4538625fd1fa17a185e90cb1c68baac7d4680aca3f5c5"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v1-tablet-summary.json",
+        "SHA256": "6153c30389b408ce212aefbbbe293568363b0e03fc4e80e29d7658152f1f1969"
+      },
+      "scope": "Earlier source/testing cohort; final current-source UI acceptance is pending."
+    },
+    "v3-phone": {
+      "terminalExitCode": 65,
+      "passed": 1,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "failures": [
+        {
+          "failureText": "XCTAssertFalse failed",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch",
+          "testName": "testAssigneePatternBuilderExpressionResultsAndRelaunch()"
+        }
+      ],
+      "resultBundle": "/tmp/taskfold-assignee-pattern-final-v3-phone.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v3-phone.log",
+        "SHA256": "b2b14b91d6e09201933b2ab851ff5e723219747cff52ee205a81406a581c1fb2"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v3-phone-summary.json",
+        "SHA256": "173b917ad4895a3d79f74111054db95d996e0f50f6b9a308824f155cf8d6ce26"
+      },
+      "scope": "Earlier source/testing cohort; final current-source UI acceptance is pending."
+    },
+    "v3-tablet": {
+      "terminalExitCode": 65,
+      "passed": 1,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "failures": [
+        {
+          "failureText": "XCTAssertFalse failed",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch",
+          "testName": "testAssigneePatternBuilderExpressionResultsAndRelaunch()"
+        }
+      ],
+      "resultBundle": "/tmp/taskfold-assignee-pattern-final-v3-tablet.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v3-tablet.log",
+        "SHA256": "3dc0117a0a3ef06e21a3e2f5c9e08175a14c653c0ce19a24e42f9cf643cbc768"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v3-tablet-summary.json",
+        "SHA256": "cd6737e56bd20835113a6c96605fe2d3faec63b268d5a607aea7422e17a4a25b"
+      },
+      "scope": "Earlier source/testing cohort; final current-source UI acceptance is pending."
+    }
+  },
+  "finalNativeIOS": {
+    "acceptedScenarios": 2,
+    "standard": {
+      "method": "testAssigneePatternBuilderExpressionResultsAndRelaunch",
+      "selectedMethodPassed": true,
+      "bundleTerminalExitCode": 65,
+      "bundlePassed": 1,
+      "bundleFailed": 1,
+      "resultBundle": "/tmp/taskfold-assignee-save-recovery-v9-phone.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v9-phone.log",
+        "SHA256": "191f6c5f0f917cb9628501ddf27508ccab12a63402eb8822493bbd033d879272"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v9-phone-summary.json",
+        "SHA256": "84287e74342c70db00351a137a4c433d63bab649f58d0fabc3c85d71b5d7f928"
+      },
+      "scope": "Passing standard method retained from v9 bundle; its failed largest case remains recorded. App/widget sources unchanged through v10; only test scrolling direction changed."
+    },
+    "darkLargest": {
+      "terminalExitCode": 0,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "resultBundle": "/tmp/taskfold-assignee-save-recovery-v10-phone.xcresult",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "log": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v10-phone.log",
+        "SHA256": "359ae28ca518cff1b328138f31465f92b1b4bf9a47fa25f376161a93d76a7dc5"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-assignee-save-recovery-v10-phone-summary.json",
+        "SHA256": "f6967a95d20484898baa599010bbe1a48aa21b5d0dde3b1c49108710433af5f5"
+      }
+    },
+    "scope": "Two accepted phone scenarios across separate bundles; no all-passing v9 bundle claim."
+  },
+  "backend": {
+    "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-pattern-backend-evidence.json",
+    "SHA256": "baeedf343dbac1eb343e1277625df8a85cff92c17f6f953c9bb29b1d96c1a00f"
+  },
+  "fullP0": "Active and unfinished. This accepts isolated phone/tablet filter create/edit failed-save recovery, retry/cancel/relaunch and accessible sort/help. Real paired/mixed-version accounts, Mac runtime, provider, physical/provisioned-widget/distribution and broader source work remain separate.",
+  "scopeRegression": {
+    "log": {
+      "path": "/tmp/taskfold-assignee-pattern-scope-diagnostic-ios-core-debug.log",
+      "SHA256": "a49b91515c7e6d00bf1f3c02200200e5110c3fe1b9c39a312e3e0997710e42d1"
+    },
+    "terminalExitCode": 1,
+    "tests": 1,
+    "failedAssertions": 3,
+    "finding": "Cross-project cached names initially matched by global person ID. Current code binds matched names to project-scoped references; both full Debug and optimized Core suites pass the regression."
+  },
+  "retention": {
+    "earlierBinaryHashes": {
+      "path": "/tmp/taskfold-assignee-pattern-cow-base-products.json",
+      "SHA256": "fc71640eb29827053fa1553a82789ea5f857b537eda1e57480b38d159256185c"
+    },
+    "verifiedEarlierBinariesUnchanged": 8,
+    "cacheMethod": "Same-platform completed caches were copied into separate APFS clone directories, with distinct product inodes. Original products/sources/logs/results remain. No live job was killed or restarted.",
+    "diagnosticSample": {
+      "path": "/tmp/taskfold-assignee-pattern-v3-phone-finalization-sample.txt",
+      "SHA256": "6e8a253cd32d1ca937145556d3605bd7cfdbc38c120ad78dc97b563c4f1bd18d"
+    },
+    "xcodeHelp": {
+      "path": "/tmp/taskfold-assignee-pattern-xcodebuild-help.log",
+      "SHA256": "4c0f1d25c362f0cdd828783321605d0d2ced90629fc66560286284b82182dc4b"
+    },
+    "futureDiagnosticsOption": "Current CLI documents -collect-test-diagnostics never; ordinary test logs/screenshots/results will still be retained.",
+    "v6Method": "Sequential checks with two build jobs, own unchanged v5 source copies and new APFS-cloned cache directories. V5 failed logs/products and earlier artifacts remain. All jobs reached actual terminal states; no job was killed or restarted.",
+    "v10Method": "Sequential heavy commands reuse completed per-platform/configuration caches. Unique logs/results and source copies retained; no live job killed or restarted. One no-op command used the previous v7 source directory; it reached terminal 0 before the v8b build from the intended v8 source. The no-op log is retained and supplies no new-source validation."
+  },
+  "earlierChecks": {
+    "v1": "563 Core tests per configuration and four native builds passed before subsequent hardening; v1 phone/tablet walks both failed in the old menu helper.",
+    "v2": "iOS native Debug build passed with the menu-helper correction; not used for runtime.",
+    "v3": "564 Core tests per configuration and four native builds passed before the project-scoping regression was added. Each native UI cohort passed its dark-largest case and failed the standard case because the test incorrectly expected an empty default rather than *.",
+    "v4": "iOS native Debug build passed with explicit default clearing and validation checks; not used for runtime before the later project-scoping fix."
+  },
+  "retainedStorageFailuresV5": {
+    "coreRelease": {
+      "terminalExitCode": 1,
+      "tests": null,
+      "skipped": null,
+      "failedTests": null,
+      "log": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v5-mac-core-release.log",
+        "SHA256": "301856f8d0a6d02ef22926fa8f63b9b0a2ad24329c2d297f00e8683e3fd68c62"
+      },
+      "scope": "Compilation aborted because the output volume ran out of space; tests did not run."
+    },
+    "native": {
+      "debug": {
+        "terminalExitCode": 0,
+        "log": {
+          "path": "/tmp/taskfold-assignee-pattern-final-v6-mac-native-debug.log",
+          "SHA256": "5c1463ab91071d1ea6909b5ffbac89e5bb0cff6d672e1b83708a5419cc700281"
+        },
+        "signingAllowed": false,
+        "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build",
+        "sourceDirectory": "/tmp/taskfold-assignee-pattern-final-v5-mac-native-source",
+        "jobs": 2,
+        "architectures": [
+          "arm64"
+        ],
+        "scope": "Unsigned native build passed; Debug includes UI-test compilation. Mac runtime/install was not performed."
+      },
+      "release": {
+        "terminalExitCode": 0,
+        "log": {
+          "path": "/tmp/taskfold-assignee-pattern-final-v6-mac-native-release.log",
+          "SHA256": "ad9b434d59ea368cbe519f5f21a8cc6bc9547dca2882b88589d1040e0dd45a83"
+        },
+        "signingAllowed": false,
+        "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build",
+        "sourceDirectory": "/tmp/taskfold-assignee-pattern-final-v5-mac-native-source",
+        "jobs": 2,
+        "architectures": [
+          "x86_64",
+          "arm64"
+        ],
+        "scope": "Unsigned native build passed; Debug includes UI-test compilation. Mac runtime/install was not performed."
+      }
+    }
+  },
+  "finalTabletIOS": {
+    "terminalExitCode": 0,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "resultBundle": "/tmp/taskfold-assignee-save-recovery-v10-tablet.xcresult",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "log": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v10-tablet.log",
+      "SHA256": "20c66a9a8840cb009707d3353e0f7ff7884293e933581c98242aa85fdded46d0"
+    },
+    "summary": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v10-tablet-summary.json",
+      "SHA256": "b7499056e54e07d8641e15a02ef2f27016e52c41863aeb2db4c8cbe74ac9ac06"
+    }
+  },
+  "visualReview": {
+    "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-pattern-visual-review.json",
+    "SHA256": "d7d091be50793a6c83834ef5fb1d09476f02bd3cd6148cef7b799bba044a4a21"
+  },
+  "retainedNativeAndPhoneV6": {
+    "native": {
+      "debug": {
+        "terminalExitCode": 0,
+        "log": {
+          "path": "/tmp/taskfold-assignee-save-recovery-v7-mac-debug-native.log",
+          "SHA256": "1edd6ecd5c545ba2d8f06b901208c8fc6eff5ee26e5644e9c9a4283aff2b2b4f"
+        },
+        "sourceDirectory": "/tmp/taskfold-assignee-save-recovery-v7-mac-native-source",
+        "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build",
+        "jobs": 2,
+        "signingAllowed": false,
+        "architectures": [
+          "arm64"
+        ],
+        "scope": "Own native compilation; Debug includes UI-test compilation. Mac runtime/install/replacement not performed. Release inputs match current app/widget code; iOS test-only navigation changed after its v7 Release build."
+      },
+      "release": {
+        "terminalExitCode": 0,
+        "log": {
+          "path": "/tmp/taskfold-assignee-save-recovery-v7-mac-release-native.log",
+          "SHA256": "679486249665e9bce4d4f120fbbc37bb493a8ab40db091b5b25b7ec9f95e6072"
+        },
+        "sourceDirectory": "/tmp/taskfold-assignee-save-recovery-v7-mac-native-source",
+        "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build",
+        "jobs": 2,
+        "signingAllowed": false,
+        "architectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "scope": "Own native compilation; Debug includes UI-test compilation. Mac runtime/install/replacement not performed. Release inputs match current app/widget code; iOS test-only navigation changed after its v7 Release build."
+      }
+    },
+    "phone": {
+      "terminalExitCode": 65,
+      "passed": 1,
+      "failed": 1,
+      "skipped": 0,
+      "resultBundle": "/tmp/taskfold-assignee-pattern-final-v6-phone.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-phone.log",
+        "SHA256": "bc3bc8ff56d3b0b5cc4aeaa76839039289de30ed9dcfde431f758d781acb8efe"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-phone-summary.json",
+        "SHA256": "6d1e8a287babaeaf1b3dfee612832d1c273dbabe339cd93ae86344476a0903c9"
+      },
+      "darkActivities": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-phone-dark-activities.json",
+        "SHA256": "82bfb780c560298d46fa71bd177d32f1de308dbf04b69510c155c2a7fcef1b34"
+      },
+      "scope": "Standard-text walk passed. Dark-largest walk reached builder and two-task preview, then failed finding its saved filter in Browse. Cause unresolved; not attributed to storage without evidence.",
+      "fixtureCacheObservation": "Read-only inspection of this isolated app's ui-testing.json after the failure found no saved_views table. This is diagnostic evidence, not a paired-account test.",
+      "diagnosticsCollection": "never; ordinary logs, activities, screenshots and result bundle retained",
+      "saveAlertDiagnostic": {
+        "observed": "The retained largest-text activity tree records Something needs attention after Save. The default XCTest interruption handler tapped OK. The isolated fixture cache remained at its startup timestamp and contained no saved_views table.",
+        "consoleLog": "Unavailable: xcresulttool reported No console log available; the attempted output file is empty, not a valid console JSON log.",
+        "scope": "The exact alert message and save-failure cause are not established. This adds evidence about error handling; it is not a passing runtime acceptance or proof that storage caused the failure.",
+        "activityTree": {
+          "path": "/tmp/taskfold-assignee-pattern-final-v6-phone-dark-activities.json",
+          "SHA256": "82bfb780c560298d46fa71bd177d32f1de308dbf04b69510c155c2a7fcef1b34"
+        },
+        "saveEvent": {
+          "path": "/tmp/taskfold-assignee-pattern-final-v6-dark-save-event.bin",
+          "SHA256": "746372bb5c86431a1db051104b22b7af9edfbd351bf8cb072c22b2435614b875"
+        },
+        "saveSnapshot": {
+          "path": "/tmp/taskfold-assignee-pattern-final-v6-dark-save-snapshot.bin",
+          "SHA256": "79fab23d7bb5aa93585c3e9eb39421d76f3786344d73d7c44ba720b391121344"
+        },
+        "followUp": "Make the user walk fail immediately on an unexpected save alert. On an unsuccessful filter save, keep the editable draft and useful feedback inside the editor rather than allowing a global alert to interrupt its sheet. Verify retry/cancel/relaunch with a deterministic isolated failed-save fixture, then rerun the normal and largest phone/tablet walks."
+      }
+    },
+    "tablet": {
+      "status": "not launched",
+      "reason": "After sequential compilation and the phone run, storage fluctuated below 250 MiB and a shell temporary-file write failed with No space left on device. Earlier artifacts are preserved; more writable capacity is required."
+    },
+    "scope": "Historical pre-recovery builds and failed largest-phone run; logs/source/results retained. Superseded products/caches may be absent or replaced under authorized retention policy."
+  },
+  "retainedRecoveryV9": {
+    "log": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v9-phone.log",
+      "SHA256": "191f6c5f0f917cb9628501ddf27508ccab12a63402eb8822493bbd033d879272"
+    },
+    "summary": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v9-phone-summary.json",
+      "SHA256": "84287e74342c70db00351a137a4c433d63bab649f58d0fabc3c85d71b5d7f928"
+    },
+    "resultBundle": "/tmp/taskfold-assignee-save-recovery-v9-phone.xcresult",
+    "scope": "Standard phone recovery passed; largest wrong-direction scroll failed before save checks. A read-only live screenshot shows empty-pattern validation pushes the condition below the viewport. V10 corrects that direction."
+  },
+  "retainedRecoveryV8": {
+    "log": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v8-phone.log",
+      "SHA256": "be4e3a11a4e2afe438f75504ce52b162b4c56b4480a203f0d503c65fba67aff9"
+    },
+    "summary": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v8-phone-summary.json",
+      "SHA256": "9e7256403a0f9de719a50348a4670d33ec06c8fb8290e4b5398bbaac39b5884f"
+    },
+    "resultBundle": "/tmp/taskfold-assignee-save-recovery-v8-phone.xcresult",
+    "scope": "Standard phone recovery walk passed; largest failed checking an unmounted condition row after returning from chooser. V9 reveals the row before confirming selection. App source unchanged."
+  },
+  "retainedRecoveryV7Failure": {
+    "log": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v7-phone.log",
+      "SHA256": "9545ef96870f99777d3439b8e13d9bf46d120c4d3b1abdfef5097f2549eb89e0"
+    },
+    "summary": {
+      "path": "/tmp/taskfold-assignee-save-recovery-v7-phone-summary.json",
+      "SHA256": "8df43d3ff69e1e38e78e473f17921dc70f3f9c26222c268459eddc3bae96e4e7"
+    },
+    "resultBundle": "/tmp/taskfold-assignee-save-recovery-v7-phone.xcresult",
+    "scope": "Both phone tests failed before recovery checks. Standard menu tap left Planned today selected; largest helper did not reveal the whole sort control. Test selection confirmation and content drag changed before v8. No failed-save acceptance claimed from v7."
+  },
+  "storageGateResolved": true
+}

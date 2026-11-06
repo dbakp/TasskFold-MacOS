@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-25",
+  "stage": "Shared team task reminder controls",
+  "repo": "TasskFold-MacOS",
+  "rollout_enabled": false,
+  "synthetic_only": true,
+  "hosted_changes": false,
+  "new_endpoint_or_migration": false,
+  "unit_checks": {
+    "reminders": {
+      "passed": 157,
+      "failed": 0,
+      "log_sha256": "82886fa285f885cadaf82e8a3a7215a2c572ca7b27489c2abd9e3855b5e56eeb",
+      "command": "swift test --jobs 2 --filter 'TeamTaskReminders|TeamTaskEdit|ReminderTests|IntervalReminder|ReminderIntervalSchedule|TimeSensitive|Holiday'"
+    },
+    "regression": {
+      "passed": 131,
+      "failed": 0,
+      "log_sha256": "d295171db66fd017e99e39327de6e1340235909de36e000fee17ce5a5d277c1e",
+      "command": "swift test --jobs 2 --filter 'TeamTaskLabelsTests|BackupTests|TeamWorkspaceTests|TeamChecklistTests'"
+    }
+  },
+  "new_reminder_test_count": 8,
+  "native_build": {
+    "passed": true,
+    "scope": "unsigned arm64 app; widget target omitted by isolated host helper",
+    "log_sha256": "9c25d827d1cf2e12e8b5502aed71ea81bf230f5157288b9056db1f8fea816a08",
+    "repository_input_sha256": {
+      "Taskfold/Core/TeamTaskReminders.swift": "931eda139f7f65ce54ab313785fb8052dc65b842e5736ab59f46f2fda0fa5184",
+      "Taskfold/Core/Store.swift": "4fafb7ce78f1e6a40040e2d74443ca3a420502f1aef3a309fa60c031511eb61d",
+      "Taskfold/Views/TeamTaskRemindersEditor.swift": "56a28c78bd190adce769fae4225d7c3afa5c0661622a2e3cf30f011eccb00ede",
+      "Taskfold/Views/ReminderEditor.swift": "658833534c34dc9be564123a53e890d8a318207acd6fe86a1a8796f772941a09",
+      "Taskfold/Views/TeamTaskLabelsEditor.swift": "f7b45eef4d5686d4daa0f20c4042bf91e8add0d4c039f947822211a5b4bde526",
+      "Taskfold/Views/TaskInspector.swift": "98010b2c6b9aed8e5bd0721aa840d08bb605bd38f0204ce4d7515c77e38aaffc"
+    },
+    "tested_host_input_sha256": {
+      "Taskfold/Core/TeamTaskReminders.swift": "931eda139f7f65ce54ab313785fb8052dc65b842e5736ab59f46f2fda0fa5184",
+      "Taskfold/Core/Store.swift": "10eca3758ed0a112b4d7a4f26220b8f36bcf39fae0f9d716515000305002d953",
+      "Taskfold/Views/TeamTaskRemindersEditor.swift": "56a28c78bd190adce769fae4225d7c3afa5c0661622a2e3cf30f011eccb00ede",
+      "Taskfold/Views/ReminderEditor.swift": "658833534c34dc9be564123a53e890d8a318207acd6fe86a1a8796f772941a09",
+      "Taskfold/Views/TeamTaskLabelsEditor.swift": "f7b45eef4d5686d4daa0f20c4042bf91e8add0d4c039f947822211a5b4bde526",
+      "Taskfold/Views/TaskInspector.swift": "98010b2c6b9aed8e5bd0721aa840d08bb605bd38f0204ce4d7515c77e38aaffc"
+    },
+    "host_transformations": "Isolated app-group namespace in Store; Mac replaces reserved signed-test bundle allowlist entry. All other listed source matches exactly."
+  },
+  "native_acceptance": {
+    "phone": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "tablet": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mac_runtime": false,
+    "spoken_voiceover": false,
+    "evidence_location": "docs/evidence/team-reminders in iOS repository",
+    "visual_review": "Six reminder images inspected. Labels and buttons readable; long forms scroll naturally, including iPad footer/interval stop settings.",
+    "ios_evidence_commit": "f4d9d18da237afd4adb05d5bda729b37c3118d31",
+    "cross_repo_build_dependency": false
+  },
+  "verified": [
+    "Time Sensitive edit and interval addition persist through scoped save and relaunch",
+    "Only reminder_specs patched; future/private/nonlocal rows and unknown extensions preserved",
+    "Nested and parent Cancel keep saved task unchanged",
+    "Access loss preserves unsubmitted nested settings privately; Done blocked and queue unchanged",
+    "Personal reminder editor still saves without shared context",
+    "Existing shared-label cancel and private recovery regression"
+  ],
+  "harness_corrections": [
+    "Initial phone button tap intersected isolated DEBUG bottom toolbar; final helper uses larger bottom margin",
+    "Initial switch center tap did not toggle; final helper taps actual thumb and asserts value changed",
+    "First recovery-capture test fixture used NaN (encoding failure, not constructor failure); replaced with invalid task identity to exercise first-capture failure explicitly"
+  ],
+  "limitations": [
+    "Team rollout remains off",
+    "No live multi-account, broader concurrency/fault, Mac interaction or spoken acceptance claimed",
+    "Nested calendar/time-zone/holiday UI callbacks guarded but broader native acceptance remains",
+    "Private recovery record/export does not automatically replay reminder settings",
+    "Remote push, old-client rollout safeguards, distribution and configured provider delivery remain deferred"
+  ],
+  "evidence_files_sha256": {
+    "tablet-interval.png": "6572bb554861236602b313603e4f40b789e63348f20d6b5d351f78753d21bd2a",
+    "phone-list.png": "1e722d3bda4a1ae73c74184e4c49ede38734f7310f1902fd12bd126d7af7f28b",
+    "tablet-summary.json": "7fd210817f9c8f7c188e294ca240c67a28af3c3916768bb0770eb97af08d298d",
+    "tablet-recovery.png": "1596cf09f7743a20e346d02e6270c4e5644c0819718fab8475c67a379c47a6de",
+    "phone-summary.json": "8992bdb18ddbded6ff38d5885a652f2b112bc2a044bd56adb0fc4a6c5a05e0d1",
+    "phone-recovery.png": "f00f393272d81a83faef0306340d10bdd7139e5f63fef99e5c90ae655402c4b8",
+    "tablet-list.png": "62efbf590e94da99769196dd21bace80e793719e0f1d64b73116a1986b7e4aef",
+    "phone-interval.png": "a72fcf134f1f1fd9ef471673271be7d6d955de8387d4bd42c2f00709bc2df848"
+  },
+  "cleanup": {
+    "owned_temp_roots_removed": 30,
+    "allocated_bytes_removed": 1340813312,
+    "isolated_app_and_runner_uninstalled_from_both_simulators": true,
+    "native_taskfold_processes_remaining": 0,
+    "baseline_simulators_and_core_caches_preserved": true
+  }
+}

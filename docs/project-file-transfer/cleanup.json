@@ -1,0 +1,27 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 61449211904,
+  "actions": [],
+  "skipped": [],
+  "freeAfterBytes": 61449203712,
+  "actualFreeChangeBytes": -8192,
+  "runPreflightFreeBytes": 61462249472,
+  "ownedFixtureContainersRemoved": true,
+  "simulatorsBooted": 0,
+  "appleBuildsRepeated": false,
+  "retiredGeneratedOutputs": [
+    {
+      "path": "/tmp/taskfold-file-transfer-ios-full.json",
+      "bytes": 38785
+    },
+    {
+      "path": "/tmp/taskfold-file-transfer-ios-full.log",
+      "bytes": 14782
+    },
+    {
+      "path": "/tmp/taskfold-file-transfer-format.log",
+      "bytes": 0
+    }
+  ],
+  "retiredBytes": 53567
+}

@@ -1,0 +1,29 @@
+# Native project transfers with recordings · 6 November 2026
+
+The transfer sheet now creates its model through one Store factory. The same current account, origin, workspace generation, session and recovery-availability checks bind both the actual screen and the native integration flow. Fresh authoring still requires its independent current-source stamp; original recovery remains available while new transfers are paused. The current native check uses this factory, actual Keychain-backed transfer vault, Backend, Store sync, AAC decoder, private recording vault and publication journal against genuine disposable Auth, REST, the complete owning schema and Storage. No production service, migration or normal-use gate changes.
+
+The signed iPhone app passes 44 named checks. It first creates and confirms one actual native recording, with a wrong-CA refusal and a committed publication response lost across cold processes. A reviewed recording-bearing project transfer then survives an offline original send, a genuinely committed lost transfer reply, cold exact retry with new transfers paused, real Store team-boundary refresh and offline cold reopening. An old collaborator's real Storage download crossing the native commit is withheld; the retired collaborator is denied before another provider read, and the new team audience receives the original bytes. Original private recording bytes, publication ledger, Storage identities and the complete task row—including older nested/opaque content—remain exact. No second upload occurs. Official local advisors add no findings.
+
+This is programmatic app data-engine acceptance. It does not establish visual/keyboard/VoiceOver interaction with the transfer sheet, mixed files, unfinished or removed recording histories, other realm directions, wider account/window/background cases, physical protected-data enforcement or hosted S3/release trust. Existing peer-based visual results keep their own scope. Mac builds and passes strict signatures. Its actual run passes 25 partial checks through original recording recovery and audience setup, then refuses transfer preparation. The new transfer itself is not accepted on Mac. Its isolated signed app has neither an app-identifier entitlement nor an embedded profile, and available cached profiles cover only the normal app/widgets/Share. The Mac runner now stops before creating services until its own provisioned identity is present; mac-preflight.json verifies this early refusal. CalendarKeychainIO keeps its Data Protection Keychain and WhenUnlockedThisDeviceOnly behavior. No normal identity, file or weaker vault is substituted. [Apple’s provisioning guidance](https://developer.apple.com/documentation/technotes/tn3125-inside-code-signing-provisioning-profiles). The generic preparation failure did not expose an OSStatus, so it is not a complete root-cause trace of every possible refusal. Broader independent-subtask migration and the full Px goal remain open.
+
+The driver now refuses Node versions below 22 before starting services. It also verifies the actual reserved-host backup namespaces while preserving whole-file source equality, and only drops a real committed transfer response identified by its receipt. That avoids depending on a consumed URLProtocol request body. Initial source-binding/startup/drop-hook attempts are retained as rejected preparation, not product passes; the abandoned unsupported-runtime fixture's three labeled tmpfs containers and internal network were ownership-checked and removed.
+
+## Reproduce
+
+Build the current signed reserved host from this owning repository, reusing the existing caches. Use Node 22 or newer (the accepted run uses the bundled Node 24):
+
+```
+node Scripts/Database/test-native-audio-publication.mjs ios /tmp/taskfold-new-project-recording-ios.json --keychain --project-transfer
+```
+
+The same runner accepts `mac` with the existing isolated host and its nonce-matched private control/stdout bridge. No normal app, profile, trust store, real account or real task is changed. The earlier five-process protected-recording proof remains separately recorded; the new scenario integrates its actual original recording into a project transfer rather than claiming every recording policy is accepted.
+
+The actual model probe still reports Apple Intelligence unavailable, with zero generated examples; on-device quality remains pending setup. Prepared Mac28/phone40 packages are frozen earlier inputs and are not relabelled as containing this later source. Installed Mac23 and phone34 remain unchanged; phone installation and all explicit provider, rollout and distribution deferrals remain.
+
+## Mac prerequisite and next work
+
+Configure a dedicated valid development identity/profile for com.dbakp.taskfold.mac.workflowteststeameditbridge before repeating its protected transfer case. This remains an open verification prerequisite, not a newly user-deferred item or a completed distribution check. The accepted iPhone programmatic transfer does not close mixed file/unfinished/removed recording policies, native GUI acceptance or the full migration. Both owning repositories independently pass the 59 existing transfer/vault Core regressions.
+
+## Final cleanup
+
+All completed native apps, TLS handlers, five-service stacks and owned internal networks are closed/removed, including the explicitly verified abandoned startup. The used iPhone Simulator is shutdown; no device was created or erased. Both selected native compiler caches and the separately measured Core caches remain under 768 MiB. Six completed raw compiler/preparation logs were retired after compressed final logs and concise reports were retained. Free space is about 56.9 GiB; the global change is not attributed solely to Taskfold. Real data, private backups, normal Keychain items, frozen packages, shared device support and Docker user volumes were untouched.

@@ -1,0 +1,21 @@
+{
+  "audioBytes": 59439,
+  "audioSHA256": "f2c401736c61d389c5ef606498306006d67fc35415ff84b6b0adbda886fd7930",
+  "captionBytes": 61,
+  "captionSHA256": "e185c2f3e131c84ca80cfd8544c527f772d416b054469bb6356d33393ebc60f3",
+  "decodedMilliseconds": 1000,
+  "exactAudio": true,
+  "exactCaption": true,
+  "fileBytes": 79551,
+  "fileSHA256": "73360a3fc44809ebdef97cfc0bad703917064cfb599655d985eef0f104ecac81",
+  "format": "taskfold-recording-backup-v1",
+  "fullNativeDecode": true,
+  "storedMilliseconds": 1000,
+  "compilerWarnings": [],
+  "sources": {
+    "Taskfold/Core/AudioComments.swift": "aff9a7c41e379a3d01d954fb577bfc481a16ee759d26a617d2185681d1b4848c",
+    "Taskfold/Core/AudioCommentDecoding.swift": "d21dbbfa6223b185b8683c4ccdfdaf685eeed894b6e83e6fc3284cf2f384213f",
+    "Scripts/fixtures/AudioPortableFileProof.swift": "9842c839a304f6be9571581e16b6d7fdf34fce4f8321286ea1779352d60001cb"
+  },
+  "scope": "Mac executable with this independent repository Core and full native AAC decode of an actual file; no playback, microphone, permission or native import UI acceptance."
+}

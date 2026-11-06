@@ -1,0 +1,100 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "core": {
+    "tests": 73,
+    "failures": 0,
+    "newTests": 1,
+    "logSHA256": "127771410801ac6f57ea9d0f2e7e4862432816f9c6931f99718a44b6cb6b4aa3",
+    "testSourceSHA256": "2f4e4211ba6af4da84b2f56825a3d051bf95f399c300067021dd9384e217492a",
+    "actualWireSHA256": "a6c78f3e867780d20a974acc92d14c23b1787ee3db8add4e52f8b3a45e8dab40"
+  },
+  "sourceProof": {
+    "Taskfold/Core/Store.swift": {
+      "repositorySHA256": "066722e38877f3dfd9152002630a3f0c575ec262a236b9fac5b8ff35932d740a",
+      "compiledHostSHA256": "06b8b66affc3d2d5a79375134b0f2bdc90cc2e1d0adde044eee8fb3c7a06f7c5",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Core/TaskFileUpload.swift": {
+      "repositorySHA256": "38c337fdcd36773b579d4b4964279eddd1391b2befbb9e6895de556b2dc32f21",
+      "compiledHostSHA256": "38c337fdcd36773b579d4b4964279eddd1391b2befbb9e6895de556b2dc32f21",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/TaskFileUploadView.swift": {
+      "repositorySHA256": "a890e07411d775a67af6564dec35bde05ec45a88583f48ecffc42789b7547e03",
+      "compiledHostSHA256": "a890e07411d775a67af6564dec35bde05ec45a88583f48ecffc42789b7547e03",
+      "matchesAfterIsolation": true
+    },
+    "TaskfoldUITests/AudioCommentUITests.swift": {
+      "repositorySHA256": "5d5806113bae5da2ec65615f23c6a31c978222eb817302ae1c61af03a4d84e86",
+      "compiledHostSHA256": "5d5806113bae5da2ec65615f23c6a31c978222eb817302ae1c61af03a4d84e86",
+      "matchesAfterIsolation": true
+    }
+  },
+  "build": {
+    "phase": "file-provider-native-final",
+    "appAndRunnerStrictSignaturesVerified": true,
+    "logSHA256": "28ec3e330ae06c2be0557acc56b4d1604d24932890285bd1fcfe2855fb73646c",
+    "appDebugDylibSHA256": "c96df86be7c69407bd21b0ce003db3563b33896483685e34429cffeac90046d1",
+    "testBinarySHA256": "670843459d119a3b2e4c98bd1a56ed7d6aed84636dd98d71f0181b3fe2a136a1"
+  },
+  "nativeAcceptance": {
+    "distinctFlows": 4,
+    "originalBuildPhase": "file-provider-native-v3",
+    "flows": [
+      "phone lost-reply publication and cold Check status",
+      "phone interrupted publication and cold Stop",
+      "iPad lost-reply publication and cold Check status",
+      "iPad interrupted publication and cold Stop"
+    ],
+    "finalCopyOnlyRecheck": {
+      "platform": "ipad",
+      "flow": "Stop and cold recovery",
+      "tests": 1,
+      "failures": 0,
+      "skips": 0
+    },
+    "viewerRegression": {
+      "platform": "phone",
+      "tests": 1,
+      "failures": 0,
+      "skips": 0
+    },
+    "macRuntimeAccepted": false,
+    "actualAccountNavigationAccepted": false,
+    "normalTaskSynchronizationAccepted": false,
+    "systemPickerCoveredByEarlierDialogEvidence": true
+  },
+  "providerRegression": {
+    "ownChecks": 56,
+    "failures": 0,
+    "noAddedAdvisors": true,
+    "ownedResourcesRemoved": true
+  },
+  "deployed": false,
+  "normalUseEnabled": false,
+  "genuineHostedAuthAccepted": false,
+  "actualMultiWindowAccepted": false,
+  "voiceOverAccepted": false,
+  "largestTextAccepted": false,
+  "reportsSHA256": {
+    "ipad-publish.json": "8fe2ec9b59d7547253400a4eb83a7129f81a86be01a2a83e20e9b194a6874961",
+    "ipad-stop-final.json": "fcee1926b0a06882576bccda35d29d4df26e05de193b1bf5efa2f73f332b0aa7",
+    "ipad-stop.json": "515c8157bc2f401a16d550b56c657a76ccd30f8f43d733b7e6817bd85976f4f9",
+    "own-provider-regression.json": "9da505edbd0b08ba573d071ad9a6694a863534a9773b58c2662d0e53db9042c6",
+    "phone-publish.json": "9520a5d0d91c273d0823effd8980a6f0c1e80625a5ef38192ff21436d4c1a0f3",
+    "phone-stop.json": "ba680497421677db376904d1a4072eec7b981b553d0a71a864fe39791d3c8e80",
+    "viewer-regression-summary.json": "f2c5d4e26ce77c4ce654f53cf02edac20e778cb83fd6de2a4e1a89d5d8a818a2"
+  },
+  "screenshotsSHA256": {
+    "phone-publish.png": "0ef8826cef018217f6dcb01e8a07fbfbb6182594104c09a9edca4c47bf39773a",
+    "phone-stop.png": "6c33177e83dced7016f1a916cc36768406e1c18f70d67e54bd69c64a18ef6c7e",
+    "ipad-stop.png": "7d93f7da35e2b0325448035370b322e10fed6555a02f53b70fdaeff1f703521e",
+    "ipad-publish.png": "414851dcc28b3d2725a30c3d3e9451b1f8b033d6fc3e48cc345a3a83a0121035"
+  },
+  "driverFinalDifference": "Cleanup-only lint fix records unexpected audit-read errors and continues removing disposable configuration; accepted success paths unchanged.",
+  "setupSHA256": "fd833ccc010e72d054a7c385b70ac07a25019e9e987e6fb77cce52a76ee2e2d5",
+  "attemptsSHA256": "d2ca45fd9a41cb245c7187e32a80ca3cddfacc03f67416185461d451e615a46c",
+  "cleanupSHA256": "b70845ed258cb1d17536a6cf4d83ecc64f75fe94bbc333ea895236516df8d34b",
+  "progress-validationSHA256": "f85c1fb6699c3cb8507ee96a62066765c8ab42942179e43a7123784c985405b8"
+}

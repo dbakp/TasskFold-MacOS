@@ -1,0 +1,101 @@
+{
+  "team": "87c93820-5197-427a-9dc6-b0487bea376f",
+  "owner": {
+    "account": "cb07c14b-b216-42b9-a04f-e93dede3a0f9",
+    "detail": {
+      "id": "87c93820-5197-427a-9dc6-b0487bea376f",
+      "name": "Design studio",
+      "role": "owner",
+      "state": "active",
+      "folders": [],
+      "members": [
+        {
+          "role": "owner",
+          "user_id": "cb07c14b-b216-42b9-a04f-e93dede3a0f9",
+          "display_name": "Alex Rivera",
+          "verified_email": "owner@example.invalid"
+        },
+        {
+          "role": "admin",
+          "user_id": "b7035d70-66a2-4ccf-ac57-4d7821057648",
+          "display_name": "Sam Chen",
+          "verified_email": "admin@example.invalid"
+        },
+        {
+          "role": "member",
+          "user_id": "65facda0-c1cc-4507-95f1-92bf9873d5a9",
+          "display_name": "Sam Chen",
+          "verified_email": "member@example.invalid"
+        },
+        {
+          "role": "guest",
+          "user_id": "dca50bbe-a460-44d8-82d8-ef0850f90425",
+          "display_name": null,
+          "verified_email": "guest@example.invalid"
+        }
+      ],
+      "revision": 7,
+      "transfer": null,
+      "invitations": []
+    }
+  },
+  "admin": {
+    "account": "b7035d70-66a2-4ccf-ac57-4d7821057648",
+    "detail": {
+      "id": "87c93820-5197-427a-9dc6-b0487bea376f",
+      "name": "Design studio",
+      "role": "admin",
+      "state": "active",
+      "folders": [],
+      "members": [
+        {
+          "role": "owner",
+          "user_id": "cb07c14b-b216-42b9-a04f-e93dede3a0f9",
+          "display_name": "Alex Rivera",
+          "verified_email": "owner@example.invalid"
+        },
+        {
+          "role": "admin",
+          "user_id": "b7035d70-66a2-4ccf-ac57-4d7821057648",
+          "display_name": "Sam Chen",
+          "verified_email": "admin@example.invalid"
+        },
+        {
+          "role": "member",
+          "user_id": "65facda0-c1cc-4507-95f1-92bf9873d5a9",
+          "display_name": "Sam Chen",
+          "verified_email": "member@example.invalid"
+        },
+        {
+          "role": "guest",
+          "user_id": "dca50bbe-a460-44d8-82d8-ef0850f90425",
+          "display_name": null,
+          "verified_email": "guest@example.invalid"
+        }
+      ],
+      "revision": 7,
+      "invitations": []
+    }
+  },
+  "member": {
+    "account": "65facda0-c1cc-4507-95f1-92bf9873d5a9",
+    "detail": {
+      "id": "87c93820-5197-427a-9dc6-b0487bea376f",
+      "name": "Design studio",
+      "role": "member",
+      "state": "active",
+      "folders": [],
+      "revision": 7
+    }
+  },
+  "guest": {
+    "account": "dca50bbe-a460-44d8-82d8-ef0850f90425",
+    "detail": {
+      "id": "87c93820-5197-427a-9dc6-b0487bea376f",
+      "name": "Design studio",
+      "role": "guest",
+      "state": "active",
+      "revision": 7
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "date": "2026-10-13",
+  "scope": "Known-empty legacy and nested collection conflict preservation, independently repaired in both native clients. Core/guarded-request checks and local native review/relaunch acceptance; no new live paired backend walkthrough.",
+  "problem": "Supported task exports/rows may omit empty comments, attachments or subtasks or encode null. The identified-list merger required three arrays, so an explicit review or later queued edit could drop remote-only entries. Native subtask creation also omits its empty child collections; the recursive merge and inverse guard had the same loss inside child records.",
+  "before": {
+    "topLevel": {
+      "selectedPerRepo": 3,
+      "assertionFailuresPerRepo": 48,
+      "logs": [
+        "taskfold-legacy-collection-before-mac-v1.log",
+        "taskfold-legacy-collection-before-ios-v1.log"
+      ]
+    },
+    "nestedAfterInitialTopLevelFix": {
+      "selectedPerRepo": 1,
+      "assertionFailuresPerRepo": 42,
+      "logs": [
+        "taskfold-nested-empty-before-mac-v1.log",
+        "taskfold-nested-empty-before-ios-v1.log"
+      ]
+    }
+  },
+  "repair": [
+    "Treat a captured null/missing record value as known-empty only for supported collection fields; absent or malformed mutation baselines are not invented.",
+    "Apply typed membership/identified-item deltas inside recognized child fields too. Reversing an addition into an originally omitted child field retains remote-only entries and metadata.",
+    "Retain exact representations when no merge is required; keep task-generation and overlapping-edit guards. No schema/API or backup format change."
+  ],
+  "checks": {
+    "finalAffectedCorePerRepo": {
+      "selected": 120,
+      "passed": 120,
+      "failed": 0,
+      "skipped": 0,
+      "logs": [
+        "taskfold-legacy-collection-affected-mac-v5.log",
+        "taskfold-legacy-collection-affected-ios-v5.log"
+      ]
+    },
+    "newCoreMethods": 6,
+    "newParameterCasesAcrossThoseMethods": 60,
+    "guardedRequestRegression": "Existing transport case now covers both [] and null baselines: 12 scenarios / 18 URLSession-stub RPC requests, with predecessor baseline assertions, actual Backend.send encoding, acknowledgement and queue drain. These are stub requests, not live service requests.",
+    "backupBoundary": "Actual WorkspaceBackup make/read/plan accepts omitted/null legacy lists. Comments/attachments retain their empty representation; the existing child-graph restore intentionally canonicalizes empty subtasks to []. The initial new expectation wrongly required that subtask representation to remain unchanged: affected v2 logs retain two assertion failures per repo. Corrected to the existing contract, without a backup product change.",
+    "finalNative": {
+      "mac": {
+        "bundle": "mac-legacy-empty-collection-v2.xcresult",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "structuredRuntimeWarnings": 0
+      },
+      "phone": {
+        "bundle": "ios-legacy-empty-collection-v2.xcresult",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "structuredRuntimeWarnings": 0
+      },
+      "journey": "Actual Review/Later preserves the entire queue; Keep my edit retains both independent remote comments plus the local comment, while Use synced retains only both remote comments. Both retain the exact later 45-minute estimate and resolved whole workspace after normal relaunch. Saved original baseline is asserted NSNull.",
+      "priorNative": "Both v1 bundles pass the same two cases per platform on the initial top-level repair; final v2 reruns bind acceptance to the recursive repair. Not eight distinct cases.",
+      "builds": "Final Mac app/test and iOS app/widget/test builds succeed; iOS uses the existing real development team signatures.",
+      "isolatedSourceMatch": {
+        "macSwiftFiles": 63,
+        "iOSSwiftFiles": 47,
+        "difference": "Existing test namespace replacements only."
+      },
+      "metadataLimit": "iOS stage retains earlier isolated package metadata; not exported release-candidate acceptance."
+    }
+  },
+  "sourceSHA256": {
+    "TasskFold-MacOS": {
+      "Taskfold/Core/Models.swift": "c9eae96d74aa7d5c15487d016fea49fe8d145e8d33ded0d212415058cff485b9",
+      "TaskfoldTests/CollaborationTests.swift": "ba29511b800665dbc27c5ee9e38db9507f6ee417e009731cbc1e9dae58b9014e",
+      "TaskfoldTests/BackupTests.swift": "c0fc6db6f024e823bea9486514cfab79261575811c504736d20d2369466bf173"
+    },
+    "TaskFold-iOS": {
+      "Taskfold/Core/Models.swift": "c9eae96d74aa7d5c15487d016fea49fe8d145e8d33ded0d212415058cff485b9",
+      "TaskfoldTests/CollaborationTests.swift": "ba29511b800665dbc27c5ee9e38db9507f6ee417e009731cbc1e9dae58b9014e",
+      "TaskfoldTests/BackupTests.swift": "c0fc6db6f024e823bea9486514cfab79261575811c504736d20d2369466bf173"
+    }
+  },
+  "captures": {
+    "usability-previews/legacy-empty-collections/phone-keep-relaunched.png": {
+      "sha256": "6d55fc5f3428ff20284a0097be34a253bc06345869feea737a15c4a9b4d07cc7",
+      "inspected": true
+    },
+    "usability-previews/legacy-empty-collections/phone-synced-relaunched.png": {
+      "sha256": "16855584b241c48f12e7bd71166fb62bd50ab5c4fc19bbe63584c65740b04391",
+      "inspected": true
+    },
+    "usability-previews/legacy-empty-collections/mac-review.png": {
+      "sha256": "ed606203aad59d7a741ec932016cf2d441ba3922603ed082b56ae2a3a8dffd87",
+      "inspected": true
+    },
+    "usability-previews/legacy-empty-collections/mac-kept-relaunched.png": {
+      "sha256": "af8624d2afdf6349fedda68ac28ccf6856850a494c657e4dcf5a5b55f711e286",
+      "inspected": true
+    }
+  },
+  "limits": [
+    "Nested lists/labels and attachments have core/guarded-transport contract evidence; the new native user journey is top-level comments. No new actual nested editor or attachment upload journey claimed.",
+    "Mac capture shows review content and retained comment count/estimate; comment strings are asserted in its accessibility tree below the inspector fold. Phone captures visibly show the retained comments.",
+    "No new live paired native/server conflict, system widget privacy, VoiceOver or distribution acceptance. Existing separate live comment/label journeys remain scoped in their own evidence.",
+    "No real task, Todoist, server, account or security setting change. Release signing stays user-deferred."
+  ],
+  "cleanup": {
+    "macBaselineFilesExact": 28,
+    "protectedFilesExact": 100,
+    "retainedIOSFilesExact": 36,
+    "pendingWidgetDataExact": true,
+    "pendingWidgetHostUntouched": 79318,
+    "isolatedTestAppsClosed": true,
+    "disposablePhoneAppAndRunnerUninstalled": true,
+    "disposableSimulatorShutdown": true,
+    "realTodoistOrServerRequests": false
+  }
+}

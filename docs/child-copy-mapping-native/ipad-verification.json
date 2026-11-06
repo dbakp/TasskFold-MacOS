@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-01",
+  "nativeSourceRepository": "TaskFold-iOS",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "deviceName": "iPad Pro 13-inch (M5)",
+    "modelName": "iPad Pro 13-inch (M5)",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "selector": "testChildMappingSQLNativeSearchColdReviewSaveAndOriginal",
+  "phase": "ipad-v2",
+  "buildPhase": "indexed-child-routing",
+  "passedTests": 1,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "scope": "Three existing uncompleted task identities, recorded lifecycle, personal Inbox, ordinary text, dark appearance, local Documents; partial/complete cold reviews, edit/repreview, one committed save/lost reply, original-request recovery and exact native file readback",
+  "archiveBytes": 9809,
+  "archiveSHA256": "3c98e93114217b93d284c8555cef45364c20ff4962114f4f3f623d4488a1c1ce",
+  "fixtureRemoved": true,
+  "nativeSourceSHA256": {
+    "Taskfold/Views/ChildTaskRepairView.swift": "4fba6ff8b9de03af8867a546c35df6e5f426996429c347067493ca227e559450",
+    "Taskfold/ChildFieldNativeFixture.swift": "290f2c1a4718a058e58ec71300ac4194f4e0e8052e78a97ad6b5834baddba8b0",
+    "Taskfold/Core/Store.swift": "1d311477e648b9cf2ffacd2a902416b883f3bd9b907b7064df178eb917aa0bd5",
+    "Taskfold/Core/SubtaskTree.swift": "336aa889013b5d97ac32e53b29066269ff20bcfc6b1a107dffd562f934697c8b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "2136c320c17f07f6b199d304cbc917e7141cdf00c74d354fbc7e8e65e0a92bee",
+    "Scripts/Database/run-child-mapping-native.mjs": "90d8f0de81d71f5bc8675313502960e577cc6f9444e6024543ece9fae662d2e4",
+    "Scripts/Database/child-mapping-native-channel.mjs": "e590c60113be5479969dbe09e6ca0b41d684ea61c33325c241e396a53d6dd09b",
+    "Scripts/verify_child_mapping_native.mjs": "da321868df8bebc55c44208f44b819fdae6b14ba7ffa5abb87fe0293291a1456"
+  },
+  "nativeBuild": {
+    "phase": "indexed-child-routing",
+    "appAndRunnerSignaturesVerified": true,
+    "sourceProof": {
+      "Taskfold/Core/SubtaskTree.swift": {
+        "sourceSHA256": "336aa889013b5d97ac32e53b29066269ff20bcfc6b1a107dffd562f934697c8b",
+        "hostSHA256": "336aa889013b5d97ac32e53b29066269ff20bcfc6b1a107dffd562f934697c8b",
+        "matchesDocumentedIsolation": true
+      },
+      "TaskfoldUITests/AudioCommentUITests.swift": {
+        "sourceSHA256": "2136c320c17f07f6b199d304cbc917e7141cdf00c74d354fbc7e8e65e0a92bee",
+        "hostSHA256": "2136c320c17f07f6b199d304cbc917e7141cdf00c74d354fbc7e8e65e0a92bee",
+        "matchesDocumentedIsolation": true
+      }
+    },
+    "appBinariesSHA256": {
+      "Taskfold": "7b0299810722634013472b983da82b87ee6e19cedc4a53d49f296f1b092a2ff2",
+      "Taskfold.debug.dylib": "bcb5702f1ebd6edd4b486a439c53fbfbfd961ff74d6e42d42f9337c29d4b2c14"
+    }
+  },
+  "recipientRepository": "TasskFold-MacOS",
+  "filesSHA256": {
+    "trace.json": "5289aa61bcc3a01f0577b389790ff1a0b3008ce8ecb48c191857eb0a4b8cc875",
+    "server.json": "37540911e7815e18e9e94f2c0dc55a6d07d0a60178d77ed3753a9f5cc1081ae6",
+    "database-state.json": "fdd84767d8b8a208b0bfa863058d5d375afd5f9e0c6898a9a039634938c1fe7e",
+    "baseline.json": "9a1cc3fefd82bc2eaf50b484081cc7a76bca56275d26e8a99f6fae292f59af46",
+    "Repair journal/requests.taskfoldchildrepair": "8f06834b9cd2369ee303c1ea7988342a448081979993f1bacc5d1582504ba5c2",
+    "export/Taskfold-original-2026-11-01.json": "3c98e93114217b93d284c8555cef45364c20ff4962114f4f3f623d4488a1c1ce"
+  },
+  "screenshots": [
+    {
+      "file": "ipad-cold-readback.png",
+      "sourceAttachment": "097387FD-CCE3-44C3-AECE-BEE74802FFD2.png",
+      "caption": "Mapped original file survives cold return for independent database readback_0_D2FD8E6F-81C1-4C64-B1BB-3FA3057DF951.png",
+      "sha256": "8decd9bb208f4965f62e3eb228f5e99e35946e983a9980a6d4e67682899a6a34"
+    },
+    {
+      "file": "ipad-local-export.png",
+      "sourceAttachment": "CC8BEDE8-DE46-4328-848C-AD8E4454F857.png",
+      "caption": "Mapped original export uses the isolated app’s observed local Documents_0_C3BAFE47-25B5-459C-841F-B0BC7DC9E545.png",
+      "sha256": "00db97b33799b14cde127abc2250ffd7317b29a3dc0d4a30d894a1448d1c9025"
+    },
+    {
+      "file": "ipad-cold-preview.png",
+      "sourceAttachment": "231CA59A-E1FC-45E0-B954-B416548394FA.png",
+      "caption": "Complete mapped preview survives a cold launch without losing choices_0_38346E18-C724-42C6-836D-09316EEB8735.png",
+      "sha256": "361e7ae4acf28cc7c321ef73daf2ae4b4574bb9280a06eb5d29e2366f4f31bb2"
+    },
+    {
+      "file": "ipad-partial-review.png",
+      "sourceAttachment": "1C142058-54C0-478B-90BB-BEE870983C46.png",
+      "caption": "Explicit searchable history choice saved as a partial review_0_F9A38A83-D150-4B9F-B931-62476CEE1595.png",
+      "sha256": "d84396150f9bc03392c9a951b21ab7a96da454784aa2e3ef2a14b634c8fe6b0a"
+    }
+  ],
+  "macNativeRuntimeAccepted": false,
+  "opaqueIndexNativeRuntimeAccepted": false,
+  "hostedChanges": false,
+  "normalUseEnabled": false,
+  "remaining": "Mac, new/retired identities, changed lifecycle/recipients/recurrence, stale/account/access/privacy/windows, keyboard/speech/largest text/large libraries, other file destinations, broader storage migration and shared custody."
+}

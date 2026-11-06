@@ -1,0 +1,86 @@
+[
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "4AFDC598-A610-4EC1-BCB1-44F0E6E2825B.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Actual saved project change cache_0_2B52440C-A900-4C07-A1DA-EC0A8378DE9C.json",
+        "timestamp": 1793560617.3
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "4168FA9C-860E-4C86-B05E-4D840EA45577.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Actual saved project change cache_0_132C0E3D-77F3-4F39-B787-FEA306309F85.json",
+        "timestamp": 1793560603.449
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "F20EC681-D24A-4427-B7CE-7DBA936D5E37.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Native project destination chosen_0_1FDD296D-FA90-4FE3-9DB1-8B14AE62FC32.png",
+        "timestamp": 1793560601.67
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "25A3EB7E-E0DC-441A-907A-5F4DE8337FB5.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Original project change source_0_D924279C-01AB-4ECE-93A0-4468235A436F.json",
+        "timestamp": 1793560591.08
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testProjectChangePreservesExactChecklistThroughSaveAndColdReturn()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testProjectChangePreservesExactChecklistThroughSaveAndColdReturn"
+  },
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "26E94210-694C-47BC-AEB6-78EA2603947B.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported source after cold return_0_3E52B4AE-6BAB-45D8-8B22-F7778566E86C.json",
+        "timestamp": 1793560682.298
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "4AA67415-1CB5-4C0A-B81D-C8273F5773D0.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported source after refusal_0_95B9C9A9-A48F-4F52-8F8D-380FD47EEE46.json",
+        "timestamp": 1793560661.902
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "A8F2DBEF-2938-48B0-83BE-BE666F42DCA0.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported project move keeps original selection_0_0BB3812D-4C33-40C4-A5F2-A6D8546B12BC.png",
+        "timestamp": 1793560661.9
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "021542D0-D282-4EC1-9564-7B64C02F1602.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported project change source_0_FD8B1AED-AA3E-437C-A2AF-1384209DDC11.json",
+        "timestamp": 1793560649.079
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource"
+  }
+]

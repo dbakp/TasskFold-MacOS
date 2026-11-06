@@ -1,0 +1,18 @@
+{
+  "firstGenuineRun": {
+    "checksBeforeFixtureFailure": 111,
+    "error": {
+      "message": "{\"code\":\"retry\"}\n\n503 !== 200\n",
+      "code": "ERR_ASSERTION"
+    },
+    "runtimeRemoved": true,
+    "correction": "Pinned virtual HTTPS maintenance transport mapped only onto the owned loopback API; no weaker production origin validation."
+  },
+  "initialMacPreflight": {
+    "reason": "Owning migration filenames differed. Restored the Mac runner from its own HEAD and applied the new fixture imports/paths locally. No runtime was created before the missing-file error."
+  },
+  "standaloneHelperTypeCheck": {
+    "available": false,
+    "reason": "Local Deno node type package missing; no dependency installed. Production handler typechecking and actual helper runtime executions passed through their owning suites."
+  }
+}

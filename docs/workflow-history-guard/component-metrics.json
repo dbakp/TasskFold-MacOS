@@ -1,0 +1,14 @@
+{
+  "before": {
+    "currentSeconds": 0.187953,
+    "legacySeconds": 0.189803417,
+    "repetitions": 5,
+    "rows": 90000
+  },
+  "after": {
+    "currentSeconds": 1.2959e-05,
+    "legacySeconds": 0.192755209,
+    "repetitions": 5,
+    "rows": 90000
+  }
+}

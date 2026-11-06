@@ -1,0 +1,42 @@
+{
+  "account": "738c5038-c4a7-4405-b909-c02bfd403eda",
+  "team": "37231d70-73eb-45d9-af27-a04d574de345",
+  "project": "291aa11e-6f70-44be-94ae-7777a2b0130c",
+  "page": {
+    "account": "738c5038-c4a7-4405-b909-c02bfd403eda",
+    "team_id": "37231d70-73eb-45d9-af27-a04d574de345",
+    "projects": [
+      {
+        "id": "291aa11e-6f70-44be-94ae-7777a2b0130c",
+        "role": "editor",
+        "team_id": "37231d70-73eb-45d9-af27-a04d574de345",
+        "revision": 1,
+        "folder_id": null,
+        "visibility": "team",
+        "can_edit_tasks": false,
+        "can_manage_access": false
+      }
+    ],
+    "protocol": 1,
+    "team_state": "active",
+    "next_cursor": null,
+    "setup_paused": false,
+    "team_revision": 1,
+    "task_writes_enabled": false
+  },
+  "detail": {
+    "id": "291aa11e-6f70-44be-94ae-7777a2b0130c",
+    "role": "editor",
+    "account": "738c5038-c4a7-4405-b909-c02bfd403eda",
+    "team_id": "37231d70-73eb-45d9-af27-a04d574de345",
+    "protocol": 1,
+    "revision": 1,
+    "folder_id": null,
+    "team_state": "active",
+    "visibility": "team",
+    "setup_paused": false,
+    "team_revision": 1,
+    "can_edit_tasks": false,
+    "can_manage_access": false
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "removed": [
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host",
+      "bytesRemoved": 357489336
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-widget-decode-v1",
+      "bytesRemoved": 3479956
+    },
+    {
+      "path": "/private/tmp/taskfold-mac-signed-script-check-v2",
+      "bytesRemoved": 1689530
+    }
+  ],
+  "totalBytesRemoved": 362658822,
+  "liveCorrectedHostAndExtensionRetained": true,
+  "rawLogsBaselinesSourceStageAndSelectedEvidenceRetained": true
+}

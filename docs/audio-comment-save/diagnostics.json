@@ -1,0 +1,16 @@
+{
+  "beforeOwnerGuardNativeRun": {
+    "scope": "Mac four cases passed before the defensive owner binding; superseded by the current complete four-pass run."
+  },
+  "wrongOwnerRegression": {
+    "before": "owner-before-checks.json",
+    "failedChecks": [
+      "wrongStoreCannotExposeAnotherOwnersPendingOrSavedRows"
+    ],
+    "after": "controller.json",
+    "scope": "Controlled synthetic wrong-store injection. No real account/task data was used."
+  },
+  "build": "All current selected ARM64 app/test builds passed with signing enabled. Existing unrelated TaskEditorRequest Identifiable isolation warnings are not fixed by this checkpoint.",
+  "nativeLimits": "Synthetic media drivers, injected acknowledgement loss and actual app relaunch; not real microphone/speaker, mid-syscall power loss or complete concurrent-editor acceptance.",
+  "diagnosticLogNormalization": "Trailing blank lines removed from owner-before.log only; failure text unchanged."
+}

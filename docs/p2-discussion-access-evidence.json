@@ -1,0 +1,79 @@
+{
+  "verifiedAtUTC": "2026-10-24T11:55:29.271641+00:00",
+  "platform": "mac",
+  "selectedCoreTests": 105,
+  "workspaceCasesWithinCore": 29,
+  "corePassed": true,
+  "debugBuildPassed": true,
+  "buildScope": "Independent unsigned macOS Debug app/extensions",
+  "nativeAcceptance": {},
+  "earlierLegacyOfflineSendRelaunchRegressionPassed": false,
+  "legacyRegressionNote": null,
+  "heldReplyScope": "Native synthetic fixture holds a captured page while current access changes; this is not hosted network acceptance.",
+  "macNativeRuntimeTested": false,
+  "voiceOverTested": false,
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "teamEditingEnabled": false,
+  "fullRankComplete": false,
+  "sourceSHA256": {
+    "Taskfold/ConversationStore.swift": "a54244752cc398795577151c837085fa344f382c382540074162f1a96e261d61",
+    "Taskfold/Core/Store.swift": "5d93288586402242974a1eece06ff9f3152ecd256b3b12e304cb1e0509847544",
+    "Taskfold/Core/TeamWorkspace.swift": "0936720b1bf1e434ae0e0b97e1c91192a98f18ee90ef91a98a2994bf3818f4b2",
+    "Taskfold/Views/SharedConversationView.swift": "c3b2a822fc382a1ee110173659e17773cd4b43e5b07d3db3e274c0fd761fb737",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "de4ac60c5aef0660de02dcc7de9966e743f0eab59e28562ab32c989d5f140473",
+    "TaskfoldTests/Fixtures/team-workspace-boundary-v1.json": "41889afae64941b29a15ad7ef50d7e919dc80cfcbf43c01a40560ac86132d8b5"
+  },
+  "logSHA256": {
+    "taskfold-discussion-access-mac-core.log": "6748d9b771fcd881f1eea08393cc16ba85cdf08adcd82e4cdee3dcb7c97806e3",
+    "taskfold-discussion-access-mac-build-release-check.log": "d89bf1e92eea3e12504ea4c2c0ac5173b8c608724d6124d1842a564ff65f87c9"
+  },
+  "cleanup": {
+    "simulatorAppsRemoved": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsaccessguard"
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsaccessguard.uitests.xctrunner"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsaccessguard"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsaccessguard.uitests.xctrunner"
+      }
+    ],
+    "ownedPathsRemoved": [
+      "taskfold-discussion-access-ios-build",
+      "taskfold-discussion-access-mac-build",
+      "taskfold-discussion-access-ios-host",
+      "taskfold-discussion-access-iphone-accepted.xcresult",
+      "taskfold-discussion-access-iphone-complete.xcresult",
+      "taskfold-discussion-access-iphone-release-check.xcresult",
+      "taskfold-discussion-access-ipad-current.xcresult",
+      "taskfold-discussion-access-ipad.xcresult",
+      "taskfold-discussion-access-ipad-release-check.xcresult",
+      "taskfold-discussion-access-iphone.xcresult",
+      "taskfold-discussion-access-ipad-complete.xcresult",
+      "taskfold-discussion-access-iphone-current.xcresult",
+      "taskfold-discussion-access-ipad-accepted.xcresult",
+      "taskfold-discussion-access-ipad-release-check-attachments",
+      "taskfold-discussion-access-iphone-release-check-attachments",
+      "taskfold-discussion-access-ipad-current-attachments",
+      "taskfold-discussion-access-iphone-attachments",
+      "taskfold-discussion-access-ipad-accepted-attachments"
+    ],
+    "ownedBytesRemoved": 2086977886,
+    "temporaryMacRegistrationRemoved": true
+  },
+  "remaining": [
+    "Ordinary task editor/inspector invalidation and unsent edit recovery",
+    "Other team draft cohorts",
+    "Remaining scoped discussion/organization adapters and premium team UI",
+    "Mac native runtime/VoiceOver and broader native acceptance"
+  ]
+}

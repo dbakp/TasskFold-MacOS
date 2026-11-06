@@ -1,0 +1,186 @@
+--- a/Taskfold/ChildFieldNativeFixture.swift
++++ b/Taskfold/ChildFieldNativeFixture.swift
+@@ -12,6 +12,13 @@
+     static var enabled: Bool {
+         ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") &&
+         ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && ProcessInfo.processInfo.arguments.contains("--child-fields-native")
++    }
++    static func recordPresentationClose(_ id: UUID, reason: String) {
++        guard enabled else { return }
++        let url = URL.cachesDirectory.appendingPathComponent("child-reminder-presentations.json")
++        var rows = ((try? Data(contentsOf: url)).flatMap { try? JSONDecoder().decode([[String: String]].self, from: $0) }) ?? []
++        rows.append(["presentation": id.uuidString, "reason": reason])
++        if let data = try? JSONEncoder().encode(Array(rows.suffix(64))) { try? data.write(to: url, options: .atomic) }
+     }
+     static func key(_ account: String) throws -> SymmetricKey {
+         guard enabled, [Self.account, other].contains(account) else { throw CancellationError() }
+--- a/Taskfold/Views/ChildTaskFieldViews.swift
++++ b/Taskfold/Views/ChildTaskFieldViews.swift
+@@ -1,4 +1,5 @@
+ import SwiftUI
++import Observation
+ #if os(iOS)
+ import UIKit
+ #endif
+@@ -152,6 +153,25 @@
+     }
+ }
+ 
++@MainActor @Observable private final class ChildReminderPresentation {
++    let id = UUID()
++    private(set) var active = true
++    func close(_ reason: String) {
++        guard active else { return }; active = false
++        #if DEBUG
++        ChildFieldNativeIdentity.recordPresentationClose(id, reason: reason)
++        #endif
++    }
++}
++@MainActor @Observable private final class ChildReminderOwnership {
++    private(set) var current: ChildReminderPresentation?
++    var active: Bool { current?.active == true }
++    func begin() -> ChildReminderPresentation {
++        close("replacement"); let value = ChildReminderPresentation(); current = value; return value
++    }
++    func close(_ reason: String) { current?.close(reason); current = nil }
++}
++
+ private struct ChildFieldReadRequest: Hashable { let scope: ChildTaskFieldClientScope?; let retry: UUID }
+ 
+ private struct ChildFieldNoticeRequest: Equatable {
+@@ -197,6 +217,7 @@
+     @State private var personalAssignee: ChildPersonalAssigneeRequest?
+     @State private var reminders = ChildTaskRemindersDraft(original: Record())
+     @State private var reminderEditor: TeamTaskRemindersRequest?
++    @State private var reminderOwnership = ChildReminderOwnership()
+     @State private var recovery = false
+     @State private var reload = UUID()
+     @State private var draftSession: TaskEditorSession?
+@@ -355,10 +376,10 @@
+         .scrollDismissesKeyboard(.interactively)
+         .onChange(of: key) { _, _ in select() }
+         .onChange(of: sourceAvailable) { _, value in if !value { checkpoint(); _ = draftSession?.flush() } }
+-        .onChange(of: phase) { _, value in if value != .active { sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
++        .onChange(of: phase) { _, value in if value != .active { reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
+         .onChange(of: recovery) { _, value in if value { noticeRequest = nil; editingRevision = UUID() } }
+         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
+-            sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
++            reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
+             checkpoint(); for session in draftSessions.values { _ = session.flush() }; draftSession = nil; draftSessions = [:]; draftValues = [:]; labelInputs = [:]; addingLabel = ""; selectedKey = ""
+             model?.close(); model = nil; read = nil; title = ""; notes = ""; key = ""; failure = nil
+             guard let captured = scope else { return }
+@@ -373,7 +394,7 @@
+             appeared = false; noticeRequest = nil
+             // An owned composer can cover this view while continuing the same
+             // edit. Its presentation token, not parent visibility, owns Apply.
+-            if reminderEditor == nil { editingRevision = UUID() }
++            if !reminderOwnership.active { editingRevision = UUID() }
+             checkpoint(); _ = draftSession?.flush()
+         }
+         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
+@@ -385,19 +406,20 @@
+     private func openReminders() {
+         guard sourceAvailable, let read, let captured = scope, let original = read.nodes[selectedKey], TaskKind(Record(original.fields)) == .task else { return }
+         noticeRequest = nil
+-        let selected = selectedKey, revision = editingRevision, presentation = UUID()
++        let selected = selectedKey, revision = editingRevision
+         let parent = read.context.root
+         let shared = !TeamTaskLabelsDraft.usesPersonalCatalog(parent, cache: store.nativeConversationTeamCache)
+         let team = shared ? (try? store.captureTeamTaskEditor(parent)) : nil
+         guard !shared || team != nil else { failure = "Project access changed. Reopen the task before changing reminders."; return }
+-        let current = { sourceAvailable && scope == captured && selectedKey == selected && editingRevision == revision && reminderEditor?.id == presentation && phase == .active && store.editorMayWrite(source: parent, proposed: parent, teamDraft: team) }
++        let presentation = reminderOwnership.begin()
++        let current = { sourceAvailable && scope == captured && selectedKey == selected && editingRevision == revision && presentation.active && phase == .active && store.editorMayWrite(source: parent, proposed: parent, teamDraft: team) }
+         var record = reminders.applying(to: assignment.applying(to: labels.applying(to: planning.applying(to: Record(original.fields)))))
+         record["title"] = .string(title); record["description"] = .string(notes); record["priority"] = .number(Double(priority))
+         reminderEditor = TeamTaskRemindersRequest(childWorkspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), record: record, sourceIdentity: draftIdentity, current: current, apply: { settings in
+             guard current() else { return "This task changed. Your reminder settings stay in their private draft." }
+             do { try reminders.apply(settings); checkpoint(reopen: true); return nil }
+             catch { return error.localizedDescription }
+-        }, presentationID: presentation)
++        }, presentationID: presentation.id, closed: { presentation.close("composer") })
+     }
+     private var assigneeCaption: String {
+         let id = assignment.selected
+@@ -461,7 +483,8 @@
+     }
+     #endif
+     private func select() {
+-        sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; chosenAssigneeID = ""; chosenAssigneeName = nil
++        guard key != selectedKey else { return }
++        reminderOwnership.close("selection"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; chosenAssigneeID = ""; chosenAssigneeName = nil
+         noticeRequest = nil; editingRevision = UUID(); noticeBounds = .zero
+         checkpoint()
+         if draftSession?.flush() == false { key = selectedKey; failure = draftSession?.failure; return }
+@@ -478,7 +501,7 @@
+         } catch { failure = error.localizedDescription }
+     }
+     private func checkpoint(reopen: Bool = false) {
+-        if reopen { editingRevision = UUID(); noticeRequest = nil; messageKey = nil }
++        if reopen { reminderOwnership.close("edit"); editingRevision = UUID(); noticeRequest = nil; messageKey = nil }
+         guard let read, let node = read.nodes[selectedKey] else { return }
+         if draftSession?.closed == true {
+             guard reopen, ChildTaskFieldClientScope(read.context) == scope else { return }
+--- a/Taskfold/Views/TeamTaskRemindersEditor.swift
++++ b/Taskfold/Views/TeamTaskRemindersEditor.swift
+@@ -8,11 +8,12 @@
+     let sourceIdentity: JSON
+     let current: () -> Bool
+     let apply: (JSON) -> String?
++    let closed: () -> Void
+     init(teamDraft: TeamTaskEditorDraft, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?) {
+-        id = UUID(); source = .team(teamDraft); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
++        id = UUID(); closed = {}; source = .team(teamDraft); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
+     }
+-    init(childWorkspace: WorkspaceBinding, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?, presentationID: UUID = UUID()) {
+-        id = presentationID; source = .child(childWorkspace); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
++    init(childWorkspace: WorkspaceBinding, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?, presentationID: UUID = UUID(), closed: @escaping () -> Void = {}) {
++        id = presentationID; self.closed = closed; source = .child(childWorkspace); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
+     }
+     var workspace: WorkspaceBinding { switch source { case .team(let draft): draft.workspace; case .child(let workspace): workspace } }
+     var isChild: Bool { if case .child = source { return true }; return false }
+@@ -141,15 +142,15 @@
+             .toolbar {
+                 ToolbarItem(placement: .cancellationAction) {
+                     Button(available ? "Cancel" : "Close") {
+-                        if available { if session?.finish() != false { finished = true; dismiss() } }
+-                        else { checkpoint(); if session == nil || session?.flush() == true { finished = true; dismiss() } }
++                        if available { if session?.finish() != false { finished = true; request.closed(); dismiss() } }
++                        else { checkpoint(); if session == nil || session?.flush() == true { finished = true; request.closed(); dismiss() } }
+                     }.disabled(editing != nil).accessibilityIdentifier("cancelTeamReminders")
+                 }
+                 ToolbarItem(placement: .confirmationAction) {
+                     Button("Apply") {
+                         guard available, session != nil, editing == nil else { return }
+                         if let failure = request.apply(draft.changed ? draft.value : draft.original) { message = failure; return }
+-                        finished = true; _ = session?.finish(); dismiss()
++                        finished = true; _ = session?.finish(); request.closed(); dismiss()
+                     }.disabled(!available || !draft.supported || session == nil || editing != nil).accessibilityIdentifier("saveTeamReminders")
+                 }
+             }
+@@ -178,6 +179,7 @@
+             if editing != nil { checkpoint(); _ = session?.flush() }
+             else if !finished, !draft.changed && childState == .null, session?.failure == nil { _ = session?.finish(); finished = true }
+             else { checkpoint() }
++            if editing == nil { request.closed() }
+         }
+     }
+     private func begin(_ spec: ReminderSpec, index: Int?) {
+--- a/TaskfoldUITests/AudioCommentUITests.swift
++++ b/TaskfoldUITests/AudioCommentUITests.swift
+@@ -1656,6 +1656,7 @@
+         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+         childHomePress("childNativeEditor", app)
+         let open = app.buttons["childReminders"]; childReveal(open, app); childPress(open)
++        XCTAssertTrue(childField("teamReminderPlanned", app).waitForExistence(timeout: 10), app.debugDescription)
+         let initialAdd = app.buttons["addTeamReminder"]; childReveal(initialAdd, app); childPress(initialAdd)
+         XCTAssertTrue(app.buttons["reminderCancel"].waitForExistence(timeout: 10), app.debugDescription)
+         let probe = app.staticTexts["childNativeProbe"]
+@@ -1667,6 +1668,7 @@
+         childDone(app); childProbe(app, "queued=0 attempted=0 confirmed=0 writes=0"); childProbe(app, "private=0")
+         for count in 1...2 {
+             childHomePress("childNativeEditor", app); childReveal(open, app); childPress(open)
++            XCTAssertTrue(childField("teamReminderPlanned", app).waitForExistence(timeout: 10), app.debugDescription)
+             if count == 1 {
+                 childReminderToggleOff(app)
+                 let addReminder = app.buttons["addTeamReminder"]; childReveal(addReminder, app); childPress(addReminder)

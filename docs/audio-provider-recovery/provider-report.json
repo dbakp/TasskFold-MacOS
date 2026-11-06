@@ -1,0 +1,186 @@
+{
+  "checks": {
+    "ambiguous upload returns retry": true,
+    "stored upload remains pending": true,
+    "unresolved writer remains fenced": true,
+    "ambiguous upload counts quota": true,
+    "real provider committed exact bytes despite lost reply": true,
+    "metadata status remains unconfirmed": true,
+    "status does not contact Storage": true,
+    "same intent recovers after interrupted upload": true,
+    "readback recovery settles sole writer": true,
+    "recovery uploads media only once": true,
+    "exact retry retains immutable receipt": true,
+    "exact retry creates no second upload": true,
+    "lost delete acknowledgement remains unresolved": true,
+    "lost delete retains retired quota": true,
+    "active cleanup lease prevents immediate second claim": true,
+    "active lease prevents duplicate provider deletion": true,
+    "expired worker cannot release quota": true,
+    "fresh worker rotates cleanup token": true,
+    "fresh claim idempotently removes already absent real object": true,
+    "only confirmed cleanup releases quota": true,
+    "lost finalization reply returns retry": true,
+    "lost finalization still published in SQL": true,
+    "metadata resolves committed finalization": true,
+    "resolved receipt matches exact operation": true,
+    "metadata recovery never resends or downloads media": true,
+    "lost cleanup confirmation reply is reported unresolved": true,
+    "committed cleanup retains terminal state": true,
+    "next worker sees committed cleanup": true,
+    "terminal cleanup has no second Storage action": true,
+    "second interrupted upload remains retryable": true,
+    "sender can close pending intent": true,
+    "abandoned pending bytes still count quota": true,
+    "worker hashes stored bytes before settling abandoned upload": true,
+    "reconciled retired upload is purged": true,
+    "all quota released only after confirmed cleanup": true,
+    "one provider upload for each immutable operation": true,
+    "all operation identities retained": true,
+    "all operations end purged": true,
+    "no unresolved writer survives recovery": true,
+    "task content remains exact": true,
+    "all deliberate fault switches consumed": true,
+    "SQL adapter reports no unexpected errors": true
+  },
+  "maintenance": [
+    {
+      "protocol": 1,
+      "claimed": 1,
+      "recovered": 0,
+      "probe_unresolved": 0,
+      "blocked_uploads": 0,
+      "purged": 0,
+      "unresolved": 1
+    },
+    {
+      "protocol": 1,
+      "claimed": 0,
+      "recovered": 0,
+      "probe_unresolved": 0,
+      "blocked_uploads": 0,
+      "purged": 0,
+      "unresolved": 0
+    },
+    {
+      "protocol": 1,
+      "claimed": 1,
+      "recovered": 0,
+      "probe_unresolved": 0,
+      "blocked_uploads": 0,
+      "purged": 1,
+      "unresolved": 0
+    },
+    {
+      "protocol": 1,
+      "claimed": 1,
+      "recovered": 0,
+      "probe_unresolved": 0,
+      "blocked_uploads": 0,
+      "purged": 0,
+      "unresolved": 1
+    },
+    {
+      "protocol": 1,
+      "claimed": 0,
+      "recovered": 0,
+      "probe_unresolved": 0,
+      "blocked_uploads": 0,
+      "purged": 0,
+      "unresolved": 0
+    },
+    {
+      "protocol": 1,
+      "claimed": 1,
+      "recovered": 1,
+      "probe_unresolved": 0,
+      "blocked_uploads": 0,
+      "purged": 1,
+      "unresolved": 0
+    }
+  ],
+  "actualLocalStorage": true,
+  "genuineAuth": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "provider": [
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    }
+  ],
+  "checkCount": 42,
+  "cleanupErrors": [],
+  "storageRemoved": true,
+  "databaseRemoved": true
+}

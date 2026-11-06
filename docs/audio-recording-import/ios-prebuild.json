@@ -1,0 +1,6 @@
+{
+  "mode": "prepare-build",
+  "bundlePrefix": "com.dbakp.taskfold.workflowteststeameditbridge",
+  "scopeValidated": true,
+  "realTeamSigningStillRequiredBeforeTesting": true
+}

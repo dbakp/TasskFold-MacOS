@@ -1,0 +1,88 @@
+Analysis of sampling Taskfold (pid 73331) every 1 millisecond
+Process:         Taskfold [73331]
+Path:            /Users/USER/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Bundle/Application/E48A4F65-E258-4C03-A9D7-79E92F444C9C/Taskfold.app/Taskfold
+Load Address:    0x1029d4000
+Identifier:      com.dbakp.taskfold.workflowteststeameditbridge
+Version:         1.4.0 (19)
+Code Type:       ARM64
+Platform:        iOS Simulator
+Parent Process:  launchd_sim [1622]
+Target Type:     live task
+
+Date/Time:       2026-10-26 23:05:07.938 +0100
+Launch Time:     2026-10-26 23:03:49.630 +0100
+OS Version:      macOS 26.6.2 (25G83)
+Report Version:  7
+Analysis Tool:   /usr/bin/sample
+
+Physical footprint:         124.0M
+Physical footprint (peak):  253.0M
+Idle exit:                  untracked
+----
+
+Call graph:
+    2 Thread_23807987   DispatchQueue_1: com.apple.main-thread  (serial)
+    + 2 completeTaskWithClosure(swift::AsyncContext*, swift::SwiftError*)  (in libswift_Concurrency.dylib) + 1  [0x1c15650e9]
+    +   2 ???  (in Taskfold.debug.dylib)  load address 0x108a44000 + 0x38015  [0x108a7c015]
+    +     2 ???  (in Taskfold.debug.dylib)  load address 0x108a44000 + 0x4bf71  [0x108a8ff71]
+    +       2 ???  (in Taskfold.debug.dylib)  load address 0x108a44000 + 0x38015  [0x108a7c015]
+    +         2 ???  (in Taskfold.debug.dylib)  load address 0x108a44000 + 0x88639  [0x108acc639]
+    +           2 Store.refreshWidgetCapacity()  (in Taskfold.debug.dylib) + 760  [0x10a26e454]  Store.swift:1132
+    +             2 Store.publishWidgetSnapshot(scheduleCapacityRefresh:)  (in Taskfold.debug.dylib) + 3404  [0x10a1917d8]  Store.swift:1107
+    +               2 static WidgetProjection.payload(tasks:projects:account:now:labels:sections:savedViews:calendar:completionTokens:pendingSync:workingHours:calendarWindow:calendarFallback:notePins:focusRecord:focusConflict:focusReadable:pulseActivity:pulseEpoch:pulseChildren:datePreferences:people:viewPreferences:viewOrders:collaborators:assignments:)  (in Taskfold.debug.dylib) + 936  [0x10a13cfe0]  Models.swift:1810
+    +                 2 static WidgetProjection.listPayload(tasks:projects:labels:sections:savedViews:account:now:calendar:datePreferences:people:viewPreferences:viewOrders:collaborators:assignments:)  (in Taskfold.debug.dylib) + 2360  [0x10a13e8fc]  Models.swift:1921
+    +                   2 Collection.map<A, B>(_:)  (in Taskfold.debug.dylib) + 1012  [0x108a50fd4]  /<compiler-generated>:0
+    +                     2 partial apply for closure #6 in static WidgetProjection.listPayload(tasks:projects:labels:sections:savedViews:account:now:calendar:datePreferences:people:viewPreferences:viewOrders:collaborators:assignments:)  (in Taskfold.debug.dylib) + 80  [0x10a15f570]  /<compiler-generated>:0
+    +                       2 closure #6 in static WidgetProjection.listPayload(tasks:projects:labels:sections:savedViews:account:now:calendar:datePreferences:people:viewPreferences:viewOrders:collaborators:assignments:)  (in Taskfold.debug.dylib) + 2176  [0x10a147c3c]  Models.swift:1928
+    +                         2 Collection.map<A, B>(_:)  (in Taskfold.debug.dylib) + 1012  [0x108a50fd4]  /<compiler-generated>:0
+    +                           2 partial apply for closure #3 in closure #6 in static WidgetProjection.listPayload(tasks:projects:labels:sections:savedViews:account:now:calendar:datePreferences:people:viewPreferences:viewOrders:collaborators:assignments:)  (in Taskfold.debug.dylib) + 44  [0x10a1884dc]  /<compiler-generated>:0
+    +                             2 closure #3 in closure #6 in static WidgetProjection.listPayload(tasks:projects:labels:sections:savedViews:account:now:calendar:datePreferences:people:viewPreferences:viewOrders:collaborators:assignments:)  (in Taskfold.debug.dylib) + 256  [0x10a148374]  Models.swift:1928
+    +                               2 _ArrayProtocol.filter<A>(_:)  (in Taskfold.debug.dylib) + 656  [0x108a57d18]  /<compiler-generated>:0
+    +                                 2 ???  (in Taskfold.debug.dylib)  load address 0x108a44000 + 0x1744504  [0x10a188504]
+    +                                   1 ???  (in Taskfold.debug.dylib)  load address 0x108a44000 + 0x1704564  [0x10a148564]
+    +                                   ! 1 Record.string(_:)  (in Taskfold.debug.dylib) + 80  [0x10a0d4268]  Models.swift:43
+    +                                   !   1 Record.subscript.getter  (in Taskfold.debug.dylib) + 136  [0x10a0d45b4]  Models.swift:40
+    +                                   !     1 Dictionary._Variant.lookup(_:)  (in libswiftCore.dylib) + 148  [0x1c1721160]
+    +                                   !       1 __RawDictionaryStorage.find<A>(_:hashValue:)  (in libswiftCore.dylib) + 104  [0x1c17380f8]
+    +                                   1 ???  (in Taskfold.debug.dylib)  load address 0x108a44000 + 0x1704580  [0x10a148580]
+    +                                     1 Record.id.getter  (in Taskfold.debug.dylib) + 64  [0x10a0d41f0]  Models.swift:35
+    +                                       1 Record.string(_:)  (in Taskfold.debug.dylib) + 120  [0x10a0d4290]  Models.swift:43
+    +                                         1 JSON.text.getter  (in Taskfold.debug.dylib) + 60  [0x10a0d3520]  Models.swift:26
+    +                                           1 outlined copy of JSON  (in Taskfold.debug.dylib) + 76  [0x108a79e48]  /<compiler-generated>:0
+    2 Thread_23808215
+    + 2 start_wqthread  (in libsystem_pthread.dylib) + 8  [0x10357da28]
+    +   2 _pthread_wqthread  (in libsystem_pthread.dylib) + 364  [0x10357ec74]
+    +     2 __workq_kernreturn  (in libsystem_kernel.dylib) + 8  [0x1029ee698]
+    2 Thread_23810445   DispatchQueue_316: com.apple.dt.xctautomationsupport.snapshot-request  (serial)
+      2 start_wqthread  (in libsystem_pthread.dylib) + 8  [0x10357da28]
+        2 _pthread_wqthread  (in libsystem_pthread.dylib) + 288  [0x10357ec28]
+          2 _dispatch_workloop_worker_thread  (in libdispatch.dylib) + 692  [0x1e642f71c]
+            2 _dispatch_root_queue_drain_deferred_wlh  (in libdispatch.dylib) + 288  [0x1e642ffd4]
+              2 _dispatch_lane_invoke  (in libdispatch.dylib) + 396  [0x1e64250c8]
+                2 _dispatch_lane_serial_drain  (in libdispatch.dylib) + 984  [0x1e6424600]
+                  2 _dispatch_client_callout  (in libdispatch.dylib) + 12  [0x1e6435fb8]
+                    2 _dispatch_call_block_and_release  (in libdispatch.dylib) + 24  [0x1e641b6a0]
+                      2 __51-[XCTAutomationSession fetchMatchesForQuery:reply:]_block_invoke  (in XCTAutomationSupport) + 72  [0x10706b840]
+                        2 -[XCTElementQueryProcessor fetchMatchesForQuery:clientCapabilities:reply:]  (in XCTAutomationSupport) + 388  [0x10704c4fc]
+                          2 +[XCTRuntimeIssueContext captureIssuesWithContext:inScope:]  (in XCTAutomationSupport) + 176  [0x107053f40]
+                            2 __74-[XCTElementQueryProcessor fetchMatchesForQuery:clientCapabilities:reply:]_block_invoke  (in XCTAutomationSupport) + 88  [0x10704cc10]
+                              2 -[XCTElementQuery matchingSnapshotsWithRelatedElements:noMatchesMessage:error:]  (in XCTAutomationSupport) + 168  [0x107049d40]
+                                2 -[XCTElementQuery _rootElementSnapshot:]  (in XCTAutomationSupport) + 340  [0x107049874]
+                                  2 -[XCTElementQuery _snapshotForElement:error:]  (in XCTAutomationSupport) + 460  [0x107049a64]
+                                    2 __36-[XCTElementQuery evaluationContext]_block_invoke  (in XCTAutomationSupport) + 20  [0x1070492a0]
+                                      2 __45-[XCTElementQuery _snapshotForElement:error:]_block_invoke  (in XCTAutomationSupport) + 140  [0x107049c44]
+                                        2 -[XCTAutomationSession snapshotForElement:attributes:parameters:timeoutControls:error:]  (in XCTAutomationSupport) + 192  [0x10706dadc]
+                                          2 -[XCTElementSnapshotRequest loadSnapshotAndReturnError:]  (in XCTAutomationSupport) + 224  [0x10704dd9c]
+                                            2 _dispatch_lane_barrier_sync_invoke_and_complete  (in libdispatch.dylib) + 92  [0x1e642bb28]
+                                              2 _dispatch_client_callout  (in libdispatch.dylib) + 12  [0x1e6435fb8]
+                                                2 __56-[XCTElementSnapshotRequest loadSnapshotAndReturnError:]_block_invoke  (in XCTAutomationSupport) + 308  [0x10704e098]
+                                                  2 XCTPerformOnMainRunLoop  (in XCTAutomationSupport) + 624  [0x107066c34]
+                                                    2 interposed_dispatch_semaphore_wait  (in libRPAC.dylib) + 124  [0x102f504d4]
+                                                      2 _dispatch_semaphore_wait_slow  (in libdispatch.dylib) + 72  [0x1e641d384]
+                                                        2 _dispatch_sema4_timedwait  (in libdispatch.dylib) + 60  [0x1e6450934]
+                                                          2 semaphore_timedwait_trap  (in libsystem_kernel.dylib) + 8  [0x1029ecb04]
+
+Total number in stack (recursive counted multiple, when >=5):
+
+Sort by top of stack, same collapsed (when >= 5):
+

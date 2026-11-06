@@ -1,0 +1,408 @@
+{
+  "date": "2026-10-25",
+  "removedOwnedScratch": [
+    {
+      "path": "/tmp/taskfold-recorded-recovery-admission.swift",
+      "logicalBytes": 1049
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-cleanup-inventory.json",
+      "logicalBytes": 8057
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-collect.py",
+      "logicalBytes": 5449
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-combine.py",
+      "logicalBytes": 3371
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-copy.py",
+      "logicalBytes": 1452
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-core.py",
+      "logicalBytes": 6324
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-document.py",
+      "logicalBytes": 12269
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-extra-tests.swift",
+      "logicalBytes": 2940
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-final-source-check.json",
+      "logicalBytes": 1000
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-first-export.log",
+      "logicalBytes": 8592
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-host",
+      "logicalBytes": 6906223
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-initial-counts.json",
+      "logicalBytes": 3903
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-initial-vaults",
+      "logicalBytes": 85404
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-installed-check.json",
+      "logicalBytes": 1189
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-build",
+      "logicalBytes": 748840380
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-build-accepted.log",
+      "logicalBytes": 75687
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-build-complete.log",
+      "logicalBytes": 48453
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-build-final.log",
+      "logicalBytes": 78022
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-build-relaunch.log",
+      "logicalBytes": 81568
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-build-runtime.log",
+      "logicalBytes": 67893
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-build-verified.log",
+      "logicalBytes": 160915
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-build.log",
+      "logicalBytes": 541043
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-core-accepted.log",
+      "logicalBytes": 57944
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-core-bounded.log",
+      "logicalBytes": 57943
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-core-final.log",
+      "logicalBytes": 74596
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-core-initial.log",
+      "logicalBytes": 77293
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ios-core.log",
+      "logicalBytes": 74019
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ipad-final-attachments",
+      "logicalBytes": 5410803
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ipad-final.log",
+      "logicalBytes": 115802
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ipad-final.xcresult",
+      "logicalBytes": 8238314
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ipad-verified.log",
+      "logicalBytes": 115811
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ipad-verified.xcresult",
+      "logicalBytes": 7736630
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ipad.log",
+      "logicalBytes": 79131
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-accepted.log",
+      "logicalBytes": 66891
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build-accepted.log",
+      "logicalBytes": 59107
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build-cleanup.log",
+      "logicalBytes": 58490
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build-complete.log",
+      "logicalBytes": 35675
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build-final.log",
+      "logicalBytes": 61269
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build-relaunch.log",
+      "logicalBytes": 61269
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build-runtime.log",
+      "logicalBytes": 55256
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build-save-final.log",
+      "logicalBytes": 33404
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build-save.log",
+      "logicalBytes": 73162
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build-verified.log",
+      "logicalBytes": 87424
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-build.log",
+      "logicalBytes": 98123
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-combined-attachments",
+      "logicalBytes": 8673199
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-core-accepted.log",
+      "logicalBytes": 57472
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-core-bounded.log",
+      "logicalBytes": 57434
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-core-final.log",
+      "logicalBytes": 74156
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-core.log",
+      "logicalBytes": 78828
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-final-attachments",
+      "logicalBytes": 7924093
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-final.log",
+      "logicalBytes": 66516
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-final.xcresult",
+      "logicalBytes": 5841600
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-first-attachments",
+      "logicalBytes": 95078774
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-save-attachments",
+      "logicalBytes": 46695680
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-save-confirmed-attachments",
+      "logicalBytes": 2993649
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-save-confirmed.log",
+      "logicalBytes": 25971
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-save-confirmed.xcresult",
+      "logicalBytes": 2845008
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-save-group.log",
+      "logicalBytes": 22009
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-save-group.xcresult",
+      "logicalBytes": 261831063
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-save.log",
+      "logicalBytes": 89471
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-save.py",
+      "logicalBytes": 6503
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-save.xcresult",
+      "logicalBytes": 176722409
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-verified.log",
+      "logicalBytes": 66525
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac-verified.xcresult",
+      "logicalBytes": 5450522
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-mac.log",
+      "logicalBytes": 149345
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-metadata.log",
+      "logicalBytes": 101
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-native-exports",
+      "logicalBytes": 18606
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-native.py",
+      "logicalBytes": 13648
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-phone-final-attachments",
+      "logicalBytes": 4057816
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-phone-final.log",
+      "logicalBytes": 101040
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-phone-final.xcresult",
+      "logicalBytes": 6620181
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-phone-verified.log",
+      "logicalBytes": 101049
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-phone-verified.xcresult",
+      "logicalBytes": 5922163
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-phone.log",
+      "logicalBytes": 73336
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-prepare-binding.json",
+      "logicalBytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-prepare-final.json",
+      "logicalBytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-prepare-relaunch.json",
+      "logicalBytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-prepare.log",
+      "logicalBytes": 45
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-pruned-earlier.json",
+      "logicalBytes": 258
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-run-save-confirmed.py",
+      "logicalBytes": 1027
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-run-save-group.py",
+      "logicalBytes": 1019
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-run-save.py",
+      "logicalBytes": 1268
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-run.py",
+      "logicalBytes": 1270
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-session-cleanup.json",
+      "logicalBytes": 441
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-signatures-accepted.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-signatures-final.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-signatures-verified.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-signatures.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-store.swift",
+      "logicalBytes": 2887
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-tests.swift",
+      "logicalBytes": 15420
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-types.swift",
+      "logicalBytes": 13013
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-ui.py",
+      "logicalBytes": 7187
+    },
+    {
+      "path": "/tmp/taskfold-recorded-recovery-view.swift",
+      "logicalBytes": 4078
+    }
+  ],
+  "logicalBytesThisPass": 1411378970,
+  "previouslyPrunedOwnedScratch": {
+    "logicalBytesRemoved": 631762137,
+    "removed": [
+      "taskfold-recorded-recovery-mac.xcresult",
+      "taskfold-recorded-recovery-phone.xcresult",
+      "taskfold-recorded-recovery-ipad.xcresult",
+      "taskfold-recorded-recovery-mac-accepted.xcresult"
+    ]
+  },
+  "preserved": [
+    "both repository .build caches",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "/tmp/taskfold-workflow-mac-native-host",
+    "/tmp/taskfold-workflow-mac-native-build"
+  ],
+  "sessions": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+      "com.dbakp.taskfold.workflowteststeameditbridge": "removed",
+      "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": "removed",
+      "state": "Booted"
+    },
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+      "com.dbakp.taskfold.workflowteststeameditbridge": "removed",
+      "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": "removed",
+      "state": "Booted"
+    }
+  },
+  "macTaskfoldProcesses": "none after native teardown",
+  "physicalFreedSpace": "Not inferred from logical sizes; APFS clones/caches can differ."
+}

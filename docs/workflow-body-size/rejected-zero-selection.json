@@ -1,0 +1,27 @@
+{
+  "devicesAndConfigurations" : [
+
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 0,
+  "finishTime" : 1793091223.61,
+  "passedTests" : 0,
+  "result" : "unknown",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793091222.261,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 0
+}

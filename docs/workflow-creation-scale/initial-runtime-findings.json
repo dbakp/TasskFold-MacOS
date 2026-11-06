@@ -1,0 +1,22 @@
+{
+  "macRetainedBuild": {
+    "passed": 5,
+    "failed": 2,
+    "failedCases": [
+      "oversize message",
+      "unsupported-service message"
+    ],
+    "data": "No loss reported; visible fixture error handling failed"
+  },
+  "subsequentRuns": "Superseded after full-run latency and fixture isolation/receipt findings; not accepted final runs",
+  "privacy": "Full-desktop Mac screenshots, recordings and unrelated menu history are not retained in the repo",
+  "core": {
+    "iosPassed": 642,
+    "macPassed": 642,
+    "macSkipped": 2,
+    "skips": [
+      "Disposable offline organization-order handoff fixture not supplied",
+      "Disposable offline account-switch fixture not supplied"
+    ]
+  }
+}

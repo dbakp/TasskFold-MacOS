@@ -1,0 +1,125 @@
+Test Suite 'Selected tests' started at 2026-10-27 06:32:29.083.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 06:32:29.084.
+Test Suite 'HeadingProjectProgressTests' started at 2026-10-27 06:32:29.084.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testAdditiveIncompleteFlagKeepsExistingWidgetSnapshotsReadable]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testAdditiveIncompleteFlagKeepsExistingWidgetSnapshotsReadable]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testAlreadyProjectedInputsDoNotDoubleCountAndKeepNativeReferences]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testAlreadyProjectedInputsDoNotDoubleCountAndKeepNativeReferences]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testCapacityWidgetSharesChildWorkOverdueAndUnknownEstimates]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testCapacityWidgetSharesChildWorkOverdueAndUnknownEstimates]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testChildCompletionUndoAndColdRoundTripChangeCurrentTotalsWithoutInventingHistory]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testChildCompletionUndoAndColdRoundTripChangeCurrentTotalsWithoutInventingHistory]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testChildDatePlacementAndOrderShareOneRealRootTransactionAndUndo]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testChildDatePlacementAndOrderShareOneRealRootTransactionAndUndo]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testChildDatesAndCompletionDriveNativeAndWidgetAttentionWithScopedIdentities]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testChildDatesAndCompletionDriveNativeAndWidgetAttentionWithScopedIdentities]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDatedFixedChildUsesDeviceCivilDayAcrossTravelAndNeverHeadingPlan]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDatedFixedChildUsesDeviceCivilDayAcrossTravelAndNeverHeadingPlan]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDatedNestedHeadingStaysContextWithoutAddingEstimatedWork]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDatedNestedHeadingStaysContextWithoutAddingEstimatedWork]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDatedQueriesInvalidateAfterCompletionTypeConversionAndPlanChanges]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDatedQueriesInvalidateAfterCompletionTypeConversionAndPlanChanges]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDatedQueriesRetainOrdinaryChecklistAndExplicitHierarchyFilterSemantics]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDatedQueriesRetainOrdinaryChecklistAndExplicitHierarchyFilterSemantics]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDefaultSavedFiltersMatchChildMetadataAndDoNotFlattenOrdinaryChecklists]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDefaultSavedFiltersMatchChildMetadataAndDoNotFlattenOrdinaryChecklists]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDuplicateRootReplayIsDeduplicatedAndConflictingDuplicateFlagsBothProjects]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testDuplicateRootReplayIsDeduplicatedAndConflictingDuplicateFlagsBothProjects]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testEmptyHeadingsAddNoUnfinishedWorkOrAttention]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testEmptyHeadingsAddNoUnfinishedWorkOrAttention]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testExplicitSubtaskAndParentFiltersRetainChecklistAuthorityInMixedSections]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testExplicitSubtaskAndParentFiltersRetainChecklistAuthorityInMixedSections]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testGroupedFixedTimeWorkClipsAcrossMidnightAndSharesWidgetDayTotals]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testGroupedFixedTimeWorkClipsAcrossMidnightAndSharesWidgetDayTotals]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testHeadingContextDoesNotCreateWorkConflicts]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testHeadingContextDoesNotCreateWorkConflicts]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testHeadingMoveReviewRejectsSourceDestinationArchiveAndAccountRaces]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testHeadingMoveReviewRejectsSourceDestinationArchiveAndAccountRaces]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testHeadingMoveReviewRequiresExplicitWholeGroupAndPreservesChildDataAndUndo]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testHeadingMoveReviewRequiresExplicitWholeGroupAndPreservesChildDataAndUndo]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testInboxChildDecisionsRejectChangedCompletionParentConversionAndWorkspace]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testInboxChildDecisionsRejectChangedCompletionParentConversionAndWorkspace]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testInboxNativeReviewAndPrimaryWidgetsAgreeOnIndependentWork]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testInboxNativeReviewAndPrimaryWidgetsAgreeOnIndependentWork]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testIncompleteBadgesKeepKnownCountsAndScopeUncertaintyToTheirProject]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testIncompleteBadgesKeepKnownCountsAndScopeUncertaintyToTheirProject]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testKnownChildNavigationUsesExistingHierarchyProjectionWithoutInventingRootRows]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testKnownChildNavigationUsesExistingHierarchyProjectionWithoutInventingRootRows]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testLegacyAndFutureGroupedWorkNeverClaimSpareCapacity]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testLegacyAndFutureGroupedWorkNeverClaimSpareCapacity]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testLegacyTextAndMissingIdentitiesRemainCountedWithParentNavigationFallback]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testLegacyTextAndMissingIdentitiesRemainCountedWithParentNavigationFallback]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testManualProjectOutlineRetainsHeadingOrderAndOwnChecklistContainment]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testManualProjectOutlineRetainsHeadingOrderAndOwnChecklistContainment]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testMissingPublishedListMembersNeverProduceFalseAllClear]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testMissingPublishedListMembersNeverProduceFalseAllClear]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testMixedDefaultSectionsDoNotReintroduceUnavailableProjectRoots]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testMixedDefaultSectionsDoNotReintroduceUnavailableProjectRoots]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testMixedRootAndDefaultQuerySectionsKeepTheirDistinctMembership]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testMixedRootAndDefaultQuerySectionsKeepTheirDistinctMembership]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testNestedHeadingsExposeNearestOrdinaryWorkWithoutDoubleCountingChecklists]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testNestedHeadingsExposeNearestOrdinaryWorkWithoutDoubleCountingChecklists]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testOnlyContainmentIsInheritedNotHeadingDatesPriorityEstimatesOrAssignment]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testOnlyContainmentIsInheritedNotHeadingDatesPriorityEstimatesOrAssignment]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testOrdinaryParentStillCountsOnceIncludingCompletedParentWithOpenChecklist]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testOrdinaryParentStillCountsOnceIncludingCompletedParentWithOpenChecklist]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testPrimaryChildWidgetCompletesOnlyRealRootAndBindsItsExactRoute]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testPrimaryChildWidgetCompletesOnlyRealRootAndBindsItsExactRoute]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductiveCacheInvalidatesOnCompletionAndProjectVisibility]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductiveCacheInvalidatesOnCompletionAndProjectVisibility]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductiveListCacheInvalidatesAfterKindLabelsAndCompletionChanges]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductiveListCacheInvalidatesAfterKindLabelsAndCompletionChanges]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductivePlannerActionsPatchOnlyRealRootAndPreserveChildIdentity]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductivePlannerActionsPatchOnlyRealRootAndPreserveChildIdentity]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductivePlannerUsesChildPlansWithoutHeadingOrChecklistDoubleCounts]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductivePlannerUsesChildPlansWithoutHeadingOrChecklistDoubleCounts]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductivePlanningDoesNotInheritDatesOrEstimatesAndKeepsOrdinaryParentWork]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductivePlanningDoesNotInheritDatesOrEstimatesAndKeepsOrdinaryParentWork]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductivePrintKeepsOrdinaryChecklistOnceAndHeadingsOutOfWorkTotals]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProductivePrintKeepsOrdinaryChecklistOnceAndHeadingsOutOfWorkTotals]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProjectAllCompletedAndLabelQueriesReadOwnIndependentWork]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProjectAllCompletedAndLabelQueriesReadOwnIndependentWork]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProjectLabelAndDefaultFilterWidgetsResolvePublishedPrimaryChildren]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testProjectLabelAndDefaultFilterWidgetsResolvePublishedPrimaryChildren]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testRemovingChildFilterOrConvertingHeadingInvalidatesOldNonproductiveActions]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testRemovingChildFilterOrConvertingHeadingInvalidatesOldNonproductiveActions]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testSparseProjectHeadingOrderKeepsWorkTogetherAndRespectsExplicitChildOrder]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testSparseProjectHeadingOrderKeepsWorkTogetherAndRespectsExplicitChildOrder]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testTodayAndUpcomingMatchEachChildsOwnPlanAndPriorityWithDatedContext]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testTodayAndUpcomingMatchEachChildsOwnPlanAndPriorityWithDatedContext]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testUnknownTypesRemainReachableReviewContextWithoutWorkOrPrintCredit]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testUnknownTypesRemainReachableReviewContextWithoutWorkOrPrintCredit]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testUnreadableGroupedWorkNeverClaimsAnEmptyInboxOrDropsLegacyData]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testUnreadableGroupedWorkNeverClaimsAnEmptyInboxOrDropsLegacyData]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testUnsupportedMalformedAndTooDeepBranchesDoNotClaimCompleteProgress]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testUnsupportedMalformedAndTooDeepBranchesDoNotClaimCompleteProgress]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testWideHeadingPreservesEveryTaskWithoutRepeatedSiblingScans]' started.
+Test Case '-[TaskfoldCoreTests.HeadingProjectProgressTests testWideHeadingPreservesEveryTaskWithoutRepeatedSiblingScans]' passed (0.584 seconds).
+Test Suite 'HeadingProjectProgressTests' passed at 2026-10-27 06:32:29.801.
+	 Executed 47 tests, with 0 failures (0 unexpected) in 0.713 (0.718) seconds
+Test Suite 'HierarchyWidgetTests' started at 2026-10-27 06:32:29.801.
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testChildMembershipUsesSeparateCatalogAndNeverChangesDefaultCounts]' started.
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testChildMembershipUsesSeparateCatalogAndNeverChangesDefaultCounts]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testDiskHandoffCompletesOnlyRealRootSubtreeAndRetainsReceiptThroughUndo]' started.
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testDiskHandoffCompletesOnlyRealRootSubtreeAndRetainsReceiptThroughUndo]' passed (0.022 seconds).
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testEncodedPathsStayCaseSensitiveAcrossRequestsReceiptsAndDisk]' started.
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testEncodedPathsStayCaseSensitiveAcrossRequestsReceiptsAndDisk]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testIndependentDescendantCompletionKeepsParentCheckboxUsable]' started.
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testIndependentDescendantCompletionKeepsParentCheckboxUsable]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testMissingNestedCatalogCannotRenderFalseAllClearAndSignOutClearsContent]' started.
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testMissingNestedCatalogCannotRenderFalseAllClearAndSignOutClearsContent]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testScopedLinksResolveExactChildAndRejectOldIncarnationsOrMissingContext]' started.
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testScopedLinksResolveExactChildAndRejectOldIncarnationsOrMissingContext]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testStaleChangedMovedReplacedRevokedAndMalformedChildActionsRefuseAtomically]' started.
+Test Case '-[TaskfoldCoreTests.HierarchyWidgetTests testStaleChangedMovedReplacedRevokedAndMalformedChildActionsRefuseAtomically]' passed (0.005 seconds).
+Test Suite 'HierarchyWidgetTests' passed at 2026-10-27 06:32:29.856.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.054 (0.055) seconds
+Test Suite 'WidgetCompletionPreparationTests' started at 2026-10-27 06:32:29.856.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testHeadingRootRetainsLegacySignatureAndExistingChildToken]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testHeadingRootRetainsLegacySignatureAndExistingChildToken]' passed (0.005 seconds).
+Test Suite 'WidgetCompletionPreparationTests' passed at 2026-10-27 06:32:29.862.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.005 (0.005) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-27 06:32:29.862.
+	 Executed 55 tests, with 0 failures (0 unexpected) in 0.772 (0.778) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 06:32:29.862.
+	 Executed 55 tests, with 0 failures (0 unexpected) in 0.772 (0.779) seconds

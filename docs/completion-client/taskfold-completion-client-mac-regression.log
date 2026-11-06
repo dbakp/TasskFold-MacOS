@@ -1,0 +1,1223 @@
+Building for debugging...
+[1 / 1]
+Build complete! (0,71 secs)
+Test Suite 'Selected tests' started at 2026-10-25 14:04:08.266.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-25 14:04:08.267.
+Test Suite 'AccountRemovalTests' started at 2026-10-25 14:04:08.267.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testBackupWipeCannotBeRecreatedByDelayedSaveAndKeepsOtherVault]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testBackupWipeCannotBeRecreatedByDelayedSaveAndKeepsOtherVault]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testCacheRemovalIsIdempotentAndStopsDelayedWritersWithoutErasingOtherWorkspace]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testCacheRemovalIsIdempotentAndStopsDelayedWritersWithoutErasingOtherWorkspace]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testDurableOriginalAuthorizationSurvivesNewVaultAndRefusesUnconfirmedFinish]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testDurableOriginalAuthorizationSurvivesNewVaultAndRefusesUnconfirmedFinish]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testFailedSecureConfirmationAndFinishRemainRecoverableAndNeverTouchAnotherAccount]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testFailedSecureConfirmationAndFinishRemainRecoverableAndNeverTouchAnotherAccount]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testInvalidProofsCannotEnterRecoveryVault]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testInvalidProofsCannotEnterRecoveryVault]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testLegacyCommandsDecodeAndConfirmedCleanupDoesNotNeedNewProof]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testLegacyCommandsDecodeAndConfirmedCleanupDoesNotNeedNewProof]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testMalformedRecoveryAndOriginChangesPreserveStoredData]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testMalformedRecoveryAndOriginChangesPreserveStoredData]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testPrivatePlacesConsentAndReceiptsPurgeOnlyDeletedAccountAndRejectStaleJournal]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testPrivatePlacesConsentAndReceiptsPurgeOnlyDeletedAccountAndRejectStaleJournal]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testProofMustPersistBeforeConfirmationAndFailedWriteKeepsOriginal]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testProofMustPersistBeforeConfirmationAndFailedWriteKeepsOriginal]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testRenewalIsDurableAndConditionalOnExactUnconfirmedOwnerAndServer]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testRenewalIsDurableAndConditionalOnExactUnconfirmedOwnerAndServer]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testShareAndWidgetPurgeKeepCurrentOtherAccountPublicationAndDrafts]' started.
+Test Case '-[TaskfoldCoreTests.AccountRemovalTests testShareAndWidgetPurgeKeepCurrentOtherAccountPublicationAndDrafts]' passed (0.009 seconds).
+Test Suite 'AccountRemovalTests' passed at 2026-10-25 14:04:08.305.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.037 (0.038) seconds
+Test Suite 'EditHistoryRequestTests' started at 2026-10-25 14:04:08.305.
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testAccountWorkspaceAndSessionChangesRefuseTheSameEntry]' started.
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testAccountWorkspaceAndSessionChangesRefuseTheSameEntry]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testCapturesOnlyOneLogicalEntryAndDirection]' started.
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testCapturesOnlyOneLogicalEntryAndDirection]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testEmptyHistoryOrInverseCannotProduceAnUndoControl]' started.
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testEmptyHistoryOrInverseCannotProduceAnUndoControl]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testOlderRequestCanResumeOnlyWhenItsExactEntryReturnsToTheTop]' started.
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testOlderRequestCanResumeOnlyWhenItsExactEntryReturnsToTheTop]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testReverseAndFreshTransportActionsKeepLogicalIdentity]' started.
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testReverseAndFreshTransportActionsKeepLogicalIdentity]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testSameMutationAndDepthDoNotMakeTwoActionsTheSameEntry]' started.
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testSameMutationAndDepthDoNotMakeTwoActionsTheSameEntry]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testThirtyEntryCapCannotRetargetAStaleButton]' started.
+Test Case '-[TaskfoldCoreTests.EditHistoryRequestTests testThirtyEntryCapCannotRetargetAStaleButton]' passed (0.003 seconds).
+Test Suite 'EditHistoryRequestTests' passed at 2026-10-25 14:04:08.311.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.006 (0.006) seconds
+Test Suite 'InboxReviewTests' started at 2026-10-25 14:04:08.311.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testActionableCardsUseLatestContentsAndRejectObservedCompletionCyclesAndWorkspaceChanges]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testActionableCardsUseLatestContentsAndRejectObservedCompletionCyclesAndWorkspaceChanges]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testBatchSelectionAndManualPriorityBandsAreIndependent]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testBatchSelectionAndManualPriorityBandsAreIndependent]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testDuplicateIDsUseFirstLiveIdentityConsistently]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testDuplicateIDsUseFirstLiveIdentityConsistently]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testInboxMembershipIncludesPlannedFutureAndUndatedButNeverProjectsOrCompleted]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testInboxMembershipIncludesPlannedFutureAndUndatedButNeverProjectsOrCompleted]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testKeepAndCompletedDecisionsDoNotInventDatesOrReplayNewRecurringSuccessors]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testKeepAndCompletedDecisionsDoNotInventDatesOrReplayNewRecurringSuccessors]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testLegacySignedOutMissingScopeInvalidIdentityAndClockNeverClaimEmptyInbox]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testLegacySignedOutMissingScopeInvalidIdentityAndClockNeverClaimEmptyInbox]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testLiveRowsReplaceCapturedCardsWithoutResurrectingRemovedMovedCompletedOrNewWork]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testLiveRowsReplaceCapturedCardsWithoutResurrectingRemovedMovedCompletedOrNewWork]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testMoveUsesDurableContractPreservingPlansDeadlinesRemindersAndNotesAndUndo]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testMoveUsesDurableContractPreservingPlansDeadlinesRemindersAndNotesAndUndo]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testNextBatchSkipsKeptCardsAndIncludesNewArrivalsWithoutChangingTheChosenLimit]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testNextBatchSkipsKeptCardsAndIncludesNewArrivalsWithoutChangingTheChosenLimit]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testWidgetCountMatchesNativeInboxAcrossProjectMetadataAndFutureDates]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testWidgetCountMatchesNativeInboxAcrossProjectMetadataAndFutureDates]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testWidgetReviewLinksRoundTripBatchAccountEscapingAndRejectMalformedRoutes]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testWidgetReviewLinksRoundTripBatchAccountEscapingAndRejectMalformedRoutes]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testWorkspaceBindingRejectsOtherAccountAndSameAccountNewIncarnation]' started.
+Test Case '-[TaskfoldCoreTests.InboxReviewTests testWorkspaceBindingRejectsOtherAccountAndSameAccountNewIncarnation]' passed (0.000 seconds).
+Test Suite 'InboxReviewTests' passed at 2026-10-25 14:04:08.324.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.012 (0.013) seconds
+Test Suite 'PlanningTests' started at 2026-10-25 14:04:08.324.
+Test Case '-[TaskfoldCoreTests.PlanningTests testBothDSTFoldsRetainTheirExactInstantAcrossTravel]' started.
+Test Case '-[TaskfoldCoreTests.PlanningTests testBothDSTFoldsRetainTheirExactInstantAcrossTravel]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.PlanningTests testDeclinedPlanningChipsAndEscapedWordsRemainLiteral]' started.
+Test Case '-[TaskfoldCoreTests.PlanningTests testDeclinedPlanningChipsAndEscapedWordsRemainLiteral]' passed (0.024 seconds).
+Test Case '-[TaskfoldCoreTests.PlanningTests testFloatingTimeStaysAtNineInEachCalendar]' started.
+Test Case '-[TaskfoldCoreTests.PlanningTests testFloatingTimeStaysAtNineInEachCalendar]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.PlanningTests testLegacyCacheAndNewFieldsSurviveQueueRoundTrip]' started.
+Test Case '-[TaskfoldCoreTests.PlanningTests testLegacyCacheAndNewFieldsSurviveQueueRoundTrip]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.PlanningTests testNewRecurringOccurrenceClearsOneOffDeadlineAndKeepsEstimate]' started.
+Test Case '-[TaskfoldCoreTests.PlanningTests testNewRecurringOccurrenceClearsOneOffDeadlineAndKeepsEstimate]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.PlanningTests testQuickEntrySeparatesPlanDeadlineAndEstimate]' started.
+Test Case '-[TaskfoldCoreTests.PlanningTests testQuickEntrySeparatesPlanDeadlineAndEstimate]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.PlanningTests testRescheduleRebuildsInstantAndLeavesDeadlineAndDurationAlone]' started.
+Test Case '-[TaskfoldCoreTests.PlanningTests testRescheduleRebuildsInstantAndLeavesDeadlineAndDurationAlone]' passed (0.001 seconds).
+Test Suite 'PlanningTests' passed at 2026-10-25 14:04:08.371.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.046 (0.047) seconds
+Test Suite 'ProjectWorkflowsTests' started at 2026-10-25 14:04:08.371.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReadDoesNotGrantTeamRunOrRetainHistoryAndOwnership]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReadDoesNotGrantTeamRunOrRetainHistoryAndOwnership]' passed (0.002 seconds).
+Test Suite 'ProjectWorkflowsTests' passed at 2026-10-25 14:04:08.372.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'QuickPlanningCompletionTests' started at 2026-10-25 14:04:08.372.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testCompletedChoiceAndOrdinaryWhitespaceCloseMenu]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testCompletedChoiceAndOrdinaryWhitespaceCloseMenu]' passed (0.048 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testCompoundPlanningChoicePreviewsTheWholePhraseAndRetainsLaterText]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testCompoundPlanningChoicePreviewsTheWholePhraseAndRetainsLaterText]' passed (0.134 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testDatePreviewsMatchSavedCalendarDates]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testDatePreviewsMatchSavedCalendarDates]' passed (0.117 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testExistingRepeatLimitAndReminderClockAreNeverOverwritten]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testExistingRepeatLimitAndReminderClockAreNeverOverwritten]' passed (0.021 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testInheritedPlanControlsRepeatStartAndReminderPreview]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testInheritedPlanControlsRepeatStartAndReminderPreview]' passed (0.077 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testKeepLiteralAndExplicitChoiceReenabling]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testKeepLiteralAndExplicitChoiceReenabling]' passed (0.101 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testKeepOneCompleteReminderPreservesOtherAcceptedReminder]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testKeepOneCompleteReminderPreservesOtherAcceptedReminder]' passed (0.020 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testKeepPartialReminderDoesNotDisableEarlierChoice]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testKeepPartialReminderDoesNotDisableEarlierChoice]' passed (0.050 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testOtherClockHoursAndHalfHoursAreAvailable]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testOtherClockHoursAndHalfHoursAreAvailable]' passed (0.203 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testPlanningMenuDoesNotHijackLiteralReferencesAndProse]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testPlanningMenuDoesNotHijackLiteralReferencesAndProse]' passed (0.064 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testPlanningSuggestionUsesResolvedDirectoryContext]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testPlanningSuggestionUsesResolvedDirectoryContext]' passed (0.035 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testRelativeDateIntervalsAndTimeChoicesUseParser]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testRelativeDateIntervalsAndTimeChoicesUseParser]' passed (0.052 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testReminderAbsoluteBeforeAfterAndWarnings]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testReminderAbsoluteBeforeAfterAndWarnings]' passed (0.240 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testReminderDuplicatesAndCapacityAreNotOffered]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testReminderDuplicatesAndCapacityAreNotOffered]' passed (0.175 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testRepeatTemplatesAndIntervalsHaveTrueRulePreviews]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testRepeatTemplatesAndIntervalsHaveTrueRulePreviews]' passed (0.214 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testTimeOnlyChoicePreservesExistingFutureDateAndDeadline]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testTimeOnlyChoicePreservesExistingFutureDateAndDeadline]' passed (0.044 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testTimeWithoutPlanUsesInjectedCalendarDayAndRollover]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testTimeWithoutPlanUsesInjectedCalendarDayAndRollover]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testUnicodeMiddleCursorPreservesLaterTitleAndMetadata]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testUnicodeMiddleCursorPreservesLaterTitleAndMetadata]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testUnifiedMenuPrefersDirectoryAndKeepsPlanningChoicesSeparate]' started.
+Test Case '-[TaskfoldCoreTests.QuickPlanningCompletionTests testUnifiedMenuPrefersDirectoryAndKeepsPlanningChoicesSeparate]' passed (0.023 seconds).
+Test Suite 'QuickPlanningCompletionTests' passed at 2026-10-25 14:04:10.020.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 1.646 (1.648) seconds
+Test Suite 'TeamChecklistTests' started at 2026-10-25 14:04:10.020.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testCompletionPredictsNextRevisionWithoutChangingEpoch]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testCompletionPredictsNextRevisionWithoutChangingEpoch]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testLegacyItemGetsStableEpochOnFirstEdit]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testLegacyItemGetsStableEpochOnFirstEdit]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testMalformedAndExhaustedCompletionTokensStayLocal]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testMalformedAndExhaustedCompletionTokensStayLocal]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testNativeRestorationEpochMatchesActualSQLReceipt]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testNativeRestorationEpochMatchesActualSQLReceipt]' passed (0.017 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testNewItemGetsStablePersistedEpochBeforeTransport]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testNewItemGetsStablePersistedEpochBeforeTransport]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testPersonalMutationIsUnchanged]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testPersonalMutationIsUnchanged]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testPrivateHistoryAndOpaqueFieldsSurvivePreparation]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testPrivateHistoryAndOpaqueFieldsSurvivePreparation]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testRestorationAlwaysHasFreshStableIncarnation]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testRestorationAlwaysHasFreshStableIncarnation]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testRestoreContextRequiresTreeAndOldScopesDecode]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testRestoreContextRequiresTreeAndOldScopesDecode]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testSQLReplyConfirmsNestedRevisionAndRetainedHistory]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testSQLReplyConfirmsNestedRevisionAndRetainedHistory]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testSuccessorChildrenLeavePriorCompletionIncarnation]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testSuccessorChildrenLeavePriorCompletionIncarnation]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testTreeBoundsAndAmbiguousIdentitiesAreRejected]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testTreeBoundsAndAmbiguousIdentitiesAreRejected]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testUndoCarriesExactChecklistActionReceipt]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testUndoCarriesExactChecklistActionReceipt]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testWholeTaskRestorationPreservesCertifiedChecklistExactly]' started.
+Test Case '-[TaskfoldCoreTests.TeamChecklistTests testWholeTaskRestorationPreservesCertifiedChecklistExactly]' passed (0.016 seconds).
+Test Suite 'TeamChecklistTests' passed at 2026-10-25 14:04:10.089.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.068 (0.069) seconds
+Test Suite 'TeamCompletionBatchTests' started at 2026-10-25 14:04:10.089.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testAccessMaskKnowsEverySourceAndSuccessorAndBlocksWholeGroup]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testAccessMaskKnowsEverySourceAndSuccessorAndBlocksWholeGroup]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testBackendCannotSendOrAcknowledgeAnotherAccount]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testBackendCannotSendOrAcknowledgeAnotherAccount]' passed (0.072 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testBackendUsesOnePrivateBoundedRPCAndKeepsFrozenRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testBackendUsesOnePrivateBoundedRPCAndKeepsFrozenRetry]' passed (0.123 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testFrozenCommandsMatchActualSQLCompleteUndoRedoAndRecurringEnvelopes]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testFrozenCommandsMatchActualSQLCompleteUndoRedoAndRecurringEnvelopes]' passed (0.049 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testLastMemberProvisionalDraftPreventsPartialAcknowledgement]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testLastMemberProvisionalDraftPreventsPartialAcknowledgement]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testLocalProjectionIsAtomicOnMissingRecreatedAndChangedLastSource]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testLocalProjectionIsAtomicOnMissingRecreatedAndChangedLastSource]' passed (0.022 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testMalformedForeignNestedAndPartiallyGroupedCommandsAreRefused]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testMalformedForeignNestedAndPartiallyGroupedCommandsAreRefused]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testOneHistoryEntryCarriesAllMemberInverseAndFreshRedoIdentities]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testOneHistoryEntryCarriesAllMemberInverseAndFreshRedoIdentities]' passed (0.033 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testSameAccountReauthenticationRejectsInFlightBatchReply]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testSameAccountReauthenticationRejectsInFlightBatchReply]' passed (0.145 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testUnrelatedQueuedWorkIsPreservedAndTouchingCohortsStayDurable]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testUnrelatedQueuedWorkIsPreservedAndTouchingCohortsStayDurable]' passed (0.021 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testWholeReplyMustValidateBeforeAnyPendingActionIsRemoved]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionBatchTests testWholeReplyMustValidateBeforeAnyPendingActionIsRemoved]' passed (0.021 seconds).
+Test Suite 'TeamCompletionBatchTests' passed at 2026-10-25 14:04:10.615.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.525 (0.526) seconds
+Test Suite 'TeamCompletionTests' started at 2026-10-25 14:04:10.615.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testAccountRemovalStopsDelayedSavedDraftCopyPreparation]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testAccountRemovalStopsDelayedSavedDraftCopyPreparation]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testAcknowledgementPreservesLaterOfflineUndoRedo]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testAcknowledgementPreservesLaterOfflineUndoRedo]' passed (0.017 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testActualSQLCancellationRestoresSyncedRowsAndOnlyRemovesCertifiedCommand]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testActualSQLCancellationRestoresSyncedRowsAndOnlyRemovesCertifiedCommand]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testActualSQLReviewAndNativeEnvelopeAgree]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testActualSQLReviewAndNativeEnvelopeAgree]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testActualSQLUndoReviewAcknowledgesWithoutReopeningAgain]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testActualSQLUndoReviewAcknowledgesWithoutReopeningAgain]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testAlreadyCompletedOrAlreadyReopenedTaskDoesNotOfferAnotherAction]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testAlreadyCompletedOrAlreadyReopenedTaskDoesNotOfferAnotherAction]' passed (0.024 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationFindsDependenciesInsideBatchesHistoryAndPinnedNotes]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationFindsDependenciesInsideBatchesHistoryAndPinnedNotes]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationKeepsAuthoredSourceAndProvisionalEditsForSeparateReview]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationKeepsAuthoredSourceAndProvisionalEditsForSeparateReview]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationProtectsSeparateCommentDraftOutbox]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationProtectsSeparateCommentDraftOutbox]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationRetainsExistingServerOccurrenceAndNeverRewindsGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationRetainsExistingServerOccurrenceAndNeverRewindsGeneration]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationTransportRequiresDurableOutcomeAndRetriesSameBody]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationTransportRequiresDurableOutcomeAndRetriesSameBody]' passed (0.281 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancelledActionRejectsStaleQueueOrMalformedAuthority]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancelledActionRejectsStaleQueueOrMalformedAuthority]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancelledUndoRestoresCompletedRootAndExistingNextOccurrence]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancelledUndoRestoresCompletedRootAndExistingNextOccurrence]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCopiedTaskWithRemindersOffCannotFallBackToAutomaticPlannedAlert]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCopiedTaskWithRemindersOffCannotFallBackToAutomaticPlannedAlert]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDedicatedTransportKeepsNonceAndReturnsStructuredReceipt]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDedicatedTransportKeepsNonceAndReturnsStructuredReceipt]' passed (0.358 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDefaultSharedTextOmitsSupersededPrivateTextButHistoryIsRetained]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDefaultSharedTextOmitsSupersededPrivateTextButHistoryIsRetained]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDeletedProvisionalDraftPreservesLastEditedRowAndDeletionIntent]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDeletedProvisionalDraftPreservesLastEditedRowAndDeletionIntent]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDifferentServerGenerationCanReplaceOnlyUntouchedProvisional]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDifferentServerGenerationCanReplaceOnlyUntouchedProvisional]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDraftParkingDoesNotInventWorkForUntouchedOrLiveOwnOccurrences]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDraftParkingDoesNotInventWorkForUntouchedOrLiveOwnOccurrences]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDraftShelfNeverSilentlyExpiresOrEvictsOlderWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDraftShelfNeverSilentlyExpiresOrEvictsOlderWork]' passed (0.706 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDraftVaultIsEncryptedScopedAndDeduplicatesRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDraftVaultIsEncryptedScopedAndDeduplicatesRetry]' passed (0.025 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDraftVaultRejectsOversizeAndTamperingWithoutEvictingSavedWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testDraftVaultRejectsOversizeAndTamperingWithoutEvictingSavedWork]' passed (0.236 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testExistingOccurrenceIsNotLocallyDuplicated]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testExistingOccurrenceIsNotLocallyDuplicated]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testFreshSavedDraftCopyProofHonorsChoicesAndCannotInventChecklistHistory]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testFreshSavedDraftCopyProofHonorsChoicesAndCannotInventChecklistHistory]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testGenericConflictAndProjectCleanupCannotDiscardCompletion]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testGenericConflictAndProjectCleanupCannotDiscardCompletion]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testHistoryReferencesSentActionAndRedoUsesFreshGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testHistoryReferencesSentActionAndRedoUsesFreshGeneration]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testLocalCompletionAppliesSourceAndSuccessorTogether]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testLocalCompletionAppliesSourceAndSuccessorTogether]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testLosingProvisionalGenerationCannotEraseAuthoredDraft]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testLosingProvisionalGenerationCannotEraseAuthoredDraft]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testMalformedEnvelopeCannotBecomeOrdinaryTaskPatch]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testMalformedEnvelopeCannotBecomeOrdinaryTaskPatch]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testMixedBatchesRootEditsAndCompoundHistoryStayQueuedForReview]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testMixedBatchesRootEditsAndCompoundHistoryStayQueuedForReview]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testNativeForecastAndEnvelopeMatchActualSQLCompletion]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testNativeForecastAndEnvelopeMatchActualSQLCompletion]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testNewEditsDuringRetirementCannotBeDroppedFromSnapshot]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testNewEditsDuringRetirementCannotBeDroppedFromSnapshot]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testNonrecurringCompletionNeedsNoSuccessorOrParentLookup]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testNonrecurringCompletionNeedsNoSuccessorOrParentLookup]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testOversizedAndWrongAccountResponsesKeepCommand]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testOversizedAndWrongAccountResponsesKeepCommand]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testPersistedCommandKeepsClockGenerationAndNonce]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testPersistedCommandKeepsClockGenerationAndNonce]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testProjectRemovedAfterPreviewCannotQueueRebasedAction]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testProjectRemovedAfterPreviewCannotQueueRebasedAction]' passed (0.048 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseCannotApplyChangedServerObservationWithoutAnotherReview]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseCannotApplyChangedServerObservationWithoutAnotherReview]' passed (0.018 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebasedCompletionCanPersistRetryAndBuildItsOwnUndo]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebasedCompletionCanPersistRetryAndBuildItsOwnUndo]' passed (0.034 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebasedCompletionMatchesActualSQLSourceAndRecurrenceContract]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebasedCompletionMatchesActualSQLSourceAndRecurrenceContract]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseDefaultClosedOnOlderBackendAndMalformedCapabilities]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseDefaultClosedOnOlderBackendAndMalformedCapabilities]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseDoesNotOfferActionWithoutItsCachedProject]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseDoesNotOfferActionWithoutItsCachedProject]' passed (0.099 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebasedReopenMatchesSQLGuardedPatchAndPreservesExistingFuture]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebasedReopenMatchesSQLGuardedPatchAndPreservesExistingFuture]' passed (0.048 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseIndependentlyChecksSeriesParentAccessAndGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseIndependentlyChecksSeriesParentAccessAndGeneration]' passed (0.023 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebasePreservesIndependentPendingRowsAndNewQueuePosition]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebasePreservesIndependentPendingRowsAndNewQueuePosition]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseRequiresCurrentEditorCapabilityAndUntouchedProjection]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRebaseRequiresCurrentEditorCapabilityAndUntouchedProjection]' passed (0.018 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReceiptCannotRewindAlreadyFetchedGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReceiptCannotRewindAlreadyFetchedGeneration]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReceiptInstallsTwoCurrentRowsWithoutFakeHeaderTask]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReceiptInstallsTwoCurrentRowsWithoutFakeHeaderTask]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedCopyProofCannotReleaseItsRequestForDuplicateCreation]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedCopyProofCannotReleaseItsRequestForDuplicateCreation]' passed (0.035 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedOutcomeKeepsLaterAtomicDeletionCohortWaitingTogether]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedOutcomeKeepsLaterAtomicDeletionCohortWaitingTogether]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedReviewAcknowledgesSavedOutcomeWithoutNewCommand]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedReviewAcknowledgesSavedOutcomeWithoutNewCommand]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedReviewCannotAcknowledgeStaleOrNonHeadQueue]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedReviewCannotAcknowledgeStaleOrNonHeadQueue]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedWinnerCannotBeDiscardedAsCancellation]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecordedWinnerCannotBeDiscardedAsCancellation]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecoveryRotationCannotEvictDraftButAccountVaultRemovalIncludesIt]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecoveryRotationCannotEvictDraftButAccountVaultRemovalIncludesIt]' passed (0.027 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecoveryVaultPreservesEntireOriginalCompletionBeforeCancellation]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRecoveryVaultPreservesEntireOriginalCompletionBeforeCancellation]' passed (0.035 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRestoredProjectEnablesRebaseWithoutRewritingOtherWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRestoredProjectEnablesRebaseWithoutRewritingOtherWork]' passed (0.032 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRetirementProofParksOwnDraftWithoutChangingSharedOccurrence]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRetirementProofParksOwnDraftWithoutChangingSharedOccurrence]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRetirementProofRejectsWrongScopeOrLiveGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRetirementProofRejectsWrongScopeOrLiveGeneration]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRetirementTransportBindsOriginalBodyAndBoundsProof]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testRetirementTransportBindsOriginalBodyAndBoundsProof]' passed (0.719 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewMustMatchExactFrozenAuthorityAndRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewMustMatchExactFrozenAuthorityAndRequest]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewRejectsInconsistentRowsAndReplacementSource]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewRejectsInconsistentRowsAndReplacementSource]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewResolutionDoesNotReplayUnrelatedCompletionCycles]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewResolutionDoesNotReplayUnrelatedCompletionCycles]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewRetainsEditedProvisionalDraftWhenServerAdoptedAnotherGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewRetainsEditedProvisionalDraftWhenServerAdoptedAnotherGeneration]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewTransportIsReadOnlyBoundedAndAccountBound]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testReviewTransportIsReadOnlyBoundedAndAccountBound]' passed (0.257 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyAttemptRequiresExistingUnchangedArchive]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyAttemptRequiresExistingUnchangedArchive]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyAttemptSurvivesEncryptedRelaunchAndCannotChangeChoices]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyAttemptSurvivesEncryptedRelaunchAndCannotChangeChoices]' passed (0.048 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyBackendBindsAccountChoicesAndReadOnlyPreview]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyBackendBindsAccountChoicesAndReadOnlyPreview]' passed (0.381 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyBackendCapsResponsesAndDoesNotReflectServerText]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyBackendCapsResponsesAndDoesNotReflectServerText]' passed (0.075 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCancellationIsDistinctFromCreationOrUnavailableCopy]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCancellationIsDistinctFromCreationOrUnavailableCopy]' passed (0.017 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCancellationTransportRequiresDurableOutcome]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCancellationTransportRequiresDurableOutcome]' passed (0.083 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCanChangeChoicesOnlyAfterBoundDurableCancellation]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCanChangeChoicesOnlyAfterBoundDurableCancellation]' passed (0.061 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCannotClaimOldRootOrChildCompletionHistoryAsFresh]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCannotClaimOldRootOrChildCompletionHistoryAsFresh]' passed (0.041 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCommandUsesFreshIdentitiesAndBoundedFullContent]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyCommandUsesFreshIdentitiesAndBoundedFullContent]' passed (0.047 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyInstallationNeverOverwritesNewLocalWorkOrGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyInstallationNeverOverwritesNewLocalWorkOrGeneration]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyMatchesActualSQLRequestAndFreshReceipt]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyMatchesActualSQLRequestAndFreshReceipt]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyPreservesIndependentQueueAndProtectsCommentOutbox]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyPreservesIndependentQueueAndProtectsCommentOutbox]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyPreviewBindsEveryAuthoredFieldBeforeConfirmation]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyPreviewBindsEveryAuthoredFieldBeforeConfirmation]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyRejectsWrongScopeIdentityAndChoiceReceipts]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyRejectsWrongScopeIdentityAndChoiceReceipts]' passed (0.027 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyRetryAcceptsCurrentEditedRowAndUnavailableDeletion]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testSavedDraftCopyRetryAcceptsCurrentEditedRowAndUnavailableDeletion]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUndoEnvelopeAndReceiptMatchActualSQL]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUndoEnvelopeAndReceiptMatchActualSQL]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUnknownOrForeignCommentIntentsCannotBeDiscarded]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUnknownOrForeignCommentIntentsCannotBeDiscarded]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUnrecordedObservationDoesNotAuthorizeCancellationProjection]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUnrecordedObservationDoesNotAuthorizeCancellationProjection]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUnrecordedReadCannotDiscardOrAcknowledgeInFlightCommand]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUnrecordedReadCannotDiscardOrAcknowledgeInFlightCommand]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUnrecordedReviewPreviewsButCannotQueueRebaseUntilCancelled]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testUnrecordedReviewPreviewsButCannotQueueRebaseUntilCancelled]' passed (0.018 seconds).
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testWrongAuthorityIdentityAndMalformedRepliesCannotAcknowledge]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testWrongAuthorityIdentityAndMalformedRepliesCannotAcknowledge]' passed (0.014 seconds).
+Test Suite 'TeamCompletionTests' passed at 2026-10-25 14:04:15.042.
+	 Executed 84 tests, with 0 failures (0 unexpected) in 4.418 (4.427) seconds
+Test Suite 'TeamConversationRecoveryTests' started at 2026-10-25 14:04:15.042.
+Test Case '-[TaskfoldCoreTests.TeamConversationRecoveryTests testExpiredRecoveryExplainsSavedTaskWithoutExposingServerDetails]' started.
+Test Case '-[TaskfoldCoreTests.TeamConversationRecoveryTests testExpiredRecoveryExplainsSavedTaskWithoutExposingServerDetails]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamConversationRecoveryTests testLateOldGenerationCommentCannotReplaceRecoveredThread]' started.
+Test Case '-[TaskfoldCoreTests.TeamConversationRecoveryTests testLateOldGenerationCommentCannotReplaceRecoveredThread]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamConversationRecoveryTests testSQLRecoveredDiscussionHasFreshIdentityAndPreservedReadHistory]' started.
+Test Case '-[TaskfoldCoreTests.TeamConversationRecoveryTests testSQLRecoveredDiscussionHasFreshIdentityAndPreservedReadHistory]' passed (0.061 seconds).
+Test Case '-[TaskfoldCoreTests.TeamConversationRecoveryTests testUnsentFollowupSurvivesWithoutBindingToRecoveredGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamConversationRecoveryTests testUnsentFollowupSurvivesWithoutBindingToRecoveredGeneration]' passed (0.009 seconds).
+Test Suite 'TeamConversationRecoveryTests' passed at 2026-10-25 14:04:15.131.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.089 (0.089) seconds
+Test Suite 'TeamOrganizationCommandTests' started at 2026-10-25 14:04:15.131.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testActualPostgreSQLCommandReceiptsDecodeForEveryImplementedAction]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testActualPostgreSQLCommandReceiptsDecodeForEveryImplementedAction]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testAllActionsHaveExactBodiesAndRoundTripWithoutChangingRequestIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testAllActionsHaveExactBodiesAndRoundTripWithoutChangingRequestIdentity]' passed (0.044 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testBackendIsScopedAndPreservesExactCommandBody]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testBackendIsScopedAndPreservesExactCommandBody]' passed (0.174 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testCancelledLeaseCannotPersistOrClear]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testCancelledLeaseCannotPersistOrClear]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testClosingDuringSendKeepsOriginalAccountRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testClosingDuringSendKeepsOriginalAccountRecovery]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testCorruptRecoveryIsKeptAndAccountRemovalStillErasesIt]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testCorruptRecoveryIsKeptAndAccountRemovalStillErasesIt]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testDifferentServerCleanupCannotEraseOriginalRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testDifferentServerCleanupCannotEraseOriginalRequest]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testExpiredCommandCannotBeRenewedByDecodeOrRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testExpiredCommandCannotBeRenewedByDecodeOrRetry]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testExpiryNeverGeneratesReplacementOrSendsAgain]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testExpiryNeverGeneratesReplacementOrSendsAgain]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testForeignResultAndAuthenticationFailureKeepPending]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testForeignResultAndAuthenticationFailureKeepPending]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testInvalidFieldsNamesAndRevisionsCannotBecomeCommands]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testInvalidFieldsNamesAndRevisionsCannotBecomeCommands]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testLostReplyRelaunchAndRetryUseExactlyOneServerRequestIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testLostReplyRelaunchAndRetryUseExactlyOneServerRequestIdentity]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testReceiptsRejectForeignTeamStateRevisionAndMissingFolder]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testReceiptsRejectForeignTeamStateRevisionAndMissingFolder]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testRemovalFencePreventsLateRecoveryRecreationAndReads]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testRemovalFencePreventsLateRecoveryRecreationAndReads]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testStaleRetryCannotSendAnotherWindowsReplacementRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testStaleRetryCannotSendAnotherWindowsReplacementRequest]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testStorageFailurePreventsSendAndFailedClearRetainsRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testStorageFailurePreventsSendAndFailedClearRetainsRetry]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testTwoWindowsCannotReplaceEachOthersPendingCommand]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testTwoWindowsCannotReplaceEachOthersPendingCommand]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testVaultRefusesReplacementWrongOriginAndStaleAcknowledgement]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testVaultRefusesReplacementWrongOriginAndStaleAcknowledgement]' passed (0.004 seconds).
+Test Suite 'TeamOrganizationCommandTests' passed at 2026-10-25 14:04:15.477.
+	 Executed 18 tests, with 0 failures (0 unexpected) in 0.322 (0.346) seconds
+Test Suite 'TeamOrganizationMembershipTests' started at 2026-10-25 14:04:15.477.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testArchivedReviewStateIsPrivateAndSurvivesRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testArchivedReviewStateIsPrivateAndSurvivesRecovery]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testExistingMembershipCannotBeJoinedAgainThroughAnInvitation]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testExistingMembershipCannotBeJoinedAgainThroughAnInvitation]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testInvitationExpiryAndUnknownTargetsCannotBeManaged]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testInvitationExpiryAndUnknownTargetsCannotBeManaged]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testInviteAndTransferReceiptsMustProvideNewIdentifiers]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testInviteAndTransferReceiptsMustProvideNewIdentifiers]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testLegacyPendingCommandKeepsTheExactBodyWithoutNewReviewMetadata]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testLegacyPendingCommandKeepsTheExactBodyWithoutNewReviewMetadata]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testMemberAndGuestHaveNoAdministrationButCanLeave]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testMemberAndGuestHaveNoAdministrationButCanLeave]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testNewCommandsValidateRolesRecipientsAndExactTargetFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testNewCommandsValidateRolesRecipientsAndExactTargetFields]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testOwnersAndAdminsHaveDifferentRoleAndInvitationChoices]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testOwnersAndAdminsHaveDifferentRoleAndInvitationChoices]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testOwnershipRequiresAnAcceptedNonGuestAndExplicitRecipient]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testOwnershipRequiresAnAcceptedNonGuestAndExplicitRecipient]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testPausedAndArchivedTeamsKeepOnlyRecoveryActions]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationMembershipTests testPausedAndArchivedTeamsKeepOnlyRecoveryActions]' passed (0.004 seconds).
+Test Suite 'TeamOrganizationMembershipTests' passed at 2026-10-25 14:04:15.515.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.036 (0.037) seconds
+Test Suite 'TeamOrganizationTests' started at 2026-10-25 14:04:15.515.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testActualPostgreSQLDirectoryIdentityContract]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testActualPostgreSQLDirectoryIdentityContract]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testActualPostgreSQLRoleContract]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testActualPostgreSQLRoleContract]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testAllRolesAndArchivedTeamsAreRepresentedWithoutTaskPermissions]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testAllRolesAndArchivedTeamsAreRepresentedWithoutTaskPermissions]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testBackendUsesReadOnlyUncachedScopedOrganizationRPC]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testBackendUsesReadOnlyUncachedScopedOrganizationRPC]' passed (0.032 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testBrowserDiscardsDelayedAccountSwitchResponseAndClearsDirectory]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testBrowserDiscardsDelayedAccountSwitchResponseAndClearsDirectory]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoriesCannotLeakThroughLowerRoleResponses]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoriesCannotLeakThroughLowerRoleResponses]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryDuplicateNamesKeepFullDistinctReferencesAndCommands]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryDuplicateNamesKeepFullDistinctReferencesAndCommands]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryIdentityHidesMisleadingOrMalformedPresentationWithoutLosingRoster]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryIdentityHidesMisleadingOrMalformedPresentationWithoutLosingRoster]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryIdentitySupportsOldAndNewServiceWithoutGuessingNames]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryIdentitySupportsOldAndNewServiceWithoutGuessingNames]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryMustContainExactlyOneOwnerAndCurrentActorRole]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryMustContainExactlyOneOwnerAndCurrentActorRole]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryNamesDisappearWhileRefreshAndAfterRoleLoss]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testDirectoryNamesDisappearWhileRefreshAndAfterRoleLoss]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testFoldersPreserveServerOrderAndRejectDuplicatesOrOversizePosition]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testFoldersPreserveServerOrderAndRejectDuplicatesOrOversizePosition]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testInvitationsValidateIdentityRoleExpiryAndDuplicates]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testInvitationsValidateIdentityRoleExpiryAndDuplicates]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testLateDirectoryIdentityAfterAccountChangeCannotReappear]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testLateDirectoryIdentityAfterAccountChangeCannotReappear]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testLateReadAfterReauthenticationCannotPublishOrStartSecondRead]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testLateReadAfterReauthenticationCannotPublishOrStartSecondRead]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testMissingServiceAndInvalidSessionNeverPublishRawServerErrors]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testMissingServiceAndInvalidSessionNeverPublishRawServerErrors]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testRefreshClearsOldSensitiveContentBeforeFetchingAndRefusesForeignResult]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testRefreshClearsOldSensitiveContentBeforeFetchingAndRefusesForeignResult]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testServerPauseMismatchAndOriginCannotPublish]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testServerPauseMismatchAndOriginCannotPublish]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testTransferOnlyVisibleToOwnerOrRecipientAndTeamMustMatch]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testTransferOnlyVisibleToOwnerOrRecipientAndTeamMustMatch]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testUnknownRolesStatesAndInvalidRevisionFailClosed]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationTests testUnknownRolesStatesAndInvalidRevisionFailClosed]' passed (0.000 seconds).
+Test Suite 'TeamOrganizationTests' passed at 2026-10-25 14:04:15.580.
+	 Executed 20 tests, with 0 failures (0 unexpected) in 0.064 (0.066) seconds
+Test Suite 'TeamProjectAccessTests' started at 2026-10-25 14:04:15.580.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testConfirmedAccessLossIsDistinctFromUnavailableServerContract]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testConfirmedAccessLossIsDistinctFromUnavailableServerContract]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testDecodeActualOwnedPostgreSQLResponseContract]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testDecodeActualOwnedPostgreSQLResponseContract]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testHierarchyHTTPReviewChecksRequestedDestinationBeforeReturning]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testHierarchyHTTPReviewChecksRequestedDestinationBeforeReturning]' passed (0.037 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testHierarchyReviewCannotReturnAfterAccountChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testHierarchyReviewCannotReturnAfterAccountChanges]' passed (0.021 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testLateReplyCannotReachAnotherAccount]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testLateReplyCannotReachAnotherAccount]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testNativeReadUsesBoundedUncachedAccountScopedEndpoint]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testNativeReadUsesBoundedUncachedAccountScopedEndpoint]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testOversizedAndUnauthorizedRepliesRemainUnconfirmed]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testOversizedAndUnauthorizedRepliesRemainUnconfirmed]' passed (8.064 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testRoleAndContextAreExplicitAndDoNotInferTaskEditing]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testRoleAndContextAreExplicitAndDoNotInferTaskEditing]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testScopeProtocolAndPaginationCannotMisclassifyAWorkspace]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testScopeProtocolAndPaginationCannotMisclassifyAWorkspace]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testUnknownRolesContradictoryCapabilitiesAndMalformedRevisionsFailClosed]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAccessTests testUnknownRolesContradictoryCapabilitiesAndMalformedRevisionsFailClosed]' passed (0.000 seconds).
+Test Suite 'TeamProjectAccessTests' passed at 2026-10-25 14:04:23.731.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 8.149 (8.150) seconds
+Test Suite 'TeamProjectAdoptionTests' started at 2026-10-25 14:04:23.731.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testAccountSwitchDuringReplyCannotClearPrivateRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testAccountSwitchDuringReplyCannotClearPrivateRecovery]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testActualPausedConnectionStillLoadsInExistingSettingsDecoder]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testActualPausedConnectionStillLoadsInExistingSettingsDecoder]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLInspectionReviewAndReceipt]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLInspectionReviewAndReceipt]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLPausePolicyAndReceiptCounts]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLPausePolicyAndReceiptCounts]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testAppliedPauseReplyLossPreservesExactPolicyAcrossRelaunch]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testAppliedPauseReplyLossPreservesExactPolicyAcrossRelaunch]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testArchivePreviewSeparatesOwnStateFromDestinationInheritance]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testArchivePreviewSeparatesOwnStateFromDestinationInheritance]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testBackendUsesTheActualAdoptionProtocolAndSessionFence]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testBackendUsesTheActualAdoptionProtocolAndSessionFence]' passed (0.086 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testClosingAnInFlightTransferKeepsOriginalRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testClosingAnInFlightTransferKeepsOriginalRecovery]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testDifferentOriginAndAccountNeverShareRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testDifferentOriginAndAccountNeverShareRecovery]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testEveryAcceptedCollaboratorNeedsAnExplicitDecision]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testEveryAcceptedCollaboratorNeedsAnExplicitDecision]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testForeignReplyAndCleanupFailureKeepTheRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testForeignReplyAndCleanupFailureKeepTheRequest]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testFreshAuthoringAndExpiredRetryAreDifferent]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testFreshAuthoringAndExpiredRetryAreDifferent]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testLostReplyRelaunchRetriesTheExactNonce]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testLostReplyRelaunchRetriesTheExactNonce]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testNewAuthoringCannotBypassTheCleanWorkspaceGate]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testNewAuthoringCannotBypassTheCleanWorkspaceGate]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testNoNetworkWriteBeforeDurablePrivateSave]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testNoNetworkWriteBeforeDurablePrivateSave]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testOnlyIdentityAndProofFieldsEnterThePrivateRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testOnlyIdentityAndProofFieldsEnterThePrivateRetry]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testOtherWindowsCannotReplaceThePendingTransfer]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testOtherWindowsCannotReplaceThePendingTransfer]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testPausePrivateCommandKeepsOnlyActionAndBoundedCounts]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testPausePrivateCommandKeepsOnlyActionAndBoundedCounts]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testPauseReceiptCannotHideActionsOrChangeCounts]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testPauseReceiptCannotHideActionsOrChangeCounts]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testPauseRequiresExplicitConsentAndMatchingSummary]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testPauseRequiresExplicitConsentAndMatchingSummary]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testReceiptRequiresTheWholeReviewedForestAndExactCounts]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testReceiptRequiresTheWholeReviewedForestAndExactCounts]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testRemovalAndLeaseFencesProtectAdoptionRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testRemovalAndLeaseFencesProtectAdoptionRecovery]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testReviewCannotChangeAChoiceOrHideAnInvitation]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testReviewCannotChangeAChoiceOrHideAnInvitation]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testReviewedClearIsLocalAndDoesNotSendOrUndo]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testReviewedClearIsLocalAndDoesNotSendOrUndo]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testSourceForestCannotBeRetargetedOrFabricated]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testSourceForestCannotBeRetargetedOrFabricated]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testUnreadableRecoveryCannotStartAFreshTransfer]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testUnreadableRecoveryCannotStartAFreshTransfer]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testVaultCapacitySupports1000IdentityOnlyDecisions]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectAdoptionTests testVaultCapacitySupports1000IdentityOnlyDecisions]' passed (0.055 seconds).
+Test Suite 'TeamProjectAdoptionTests' passed at 2026-10-25 14:04:24.047.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.314 (0.316) seconds
+Test Suite 'TeamProjectManagementTests' started at 2026-10-25 14:04:24.047.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testAccessFenceChangeAndLateAccountReadNeverPublishProjectNames]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testAccessFenceChangeAndLateAccountReadNeverPublishProjectNames]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testActualSQLBranchReviewsAndThreeMetadataReceipts]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testActualSQLBranchReviewsAndThreeMetadataReceipts]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testActualSQLHierarchyReviewsAndReceipts]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testActualSQLHierarchyReviewsAndReceipts]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testArchiveStatusIsVersionedAndOldServicesRemainUnknown]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testArchiveStatusIsVersionedAndOldServicesRemainUnknown]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testBranchReviewRejectsWrongScopeOperationBoundsAndProjection]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testBranchReviewRejectsWrongScopeOperationBoundsAndProjection]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testHierarchyProjectionIsOptionalButCannotPublishPartialOrHiddenParentIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testHierarchyProjectionIsOptionalButCannotPublishPartialOrHiddenParentIdentity]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testHierarchyReviewCannotBeReusedAcrossAccountProjectActionOrRevision]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testHierarchyReviewCannotBeReusedAcrossAccountProjectActionOrRevision]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testHierarchyReviewRejectsPartialMalformedOrCrossScopeValues]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testHierarchyReviewRejectsPartialMalformedOrCrossScopeValues]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testLateForeignAndAccountChangedRepliesCannotClearJournal]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testLateForeignAndAccountChangedRepliesCannotClearJournal]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testLostArchiveReplyRetainsReviewedBranchAcrossRelaunch]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testLostArchiveReplyRetainsReviewedBranchAcrossRelaunch]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testLostHierarchyRepliesKeepExactDestinationAcrossRelaunch]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testLostHierarchyRepliesKeepExactDestinationAcrossRelaunch]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testLostReplySurvivesRelaunchAndReusesSameProjectRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testLostReplySurvivesRelaunchAndReusesSameProjectRequest]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testMalformedTimeScopeRoleFolderAndRevisionsCannotBecomeCommands]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testMalformedTimeScopeRoleFolderAndRevisionsCannotBecomeCommands]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testManagerDirectoryCannotLeakThroughLowerRolesOrAcceptDuplicates]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testManagerDirectoryCannotLeakThroughLowerRolesOrAcceptDuplicates]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testMoveDestinationsExcludeSourceDescendantsCurrentParentAndLowerRoles]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testMoveDestinationsExcludeSourceDescendantsCurrentParentAndLowerRoles]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testMoveDestinationsRejectKnownCyclesAndCrossScopeCatalogRows]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testMoveDestinationsRejectKnownCyclesAndCrossScopeCatalogRows]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testNineActionsHaveExactStableBodiesAndPrivateRoundTrip]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testNineActionsHaveExactStableBodiesAndPrivateRoundTrip]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testPrivateWriteFailurePreventsSendAndClearFailureRetainsIntent]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testPrivateWriteFailurePreventsSendAndClearFailureRetainsIntent]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testProjectAndTeamJournalsCannotReplaceOrClearOneAnother]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testProjectAndTeamJournalsCannotReplaceOrClearOneAnother]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testResetNeverMistakesTeamDefaultForRevocation]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testResetNeverMistakesTeamDefaultForRevocation]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testReviewedBranchCannotBeReusedForAnotherProjectAccountOrRevision]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testReviewedBranchCannotBeReusedForAnotherProjectAccountOrRevision]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testSQLLegacyReceiptsCoverFourActionsAndActualManagerDirectory]' started.
+Test Case '-[TaskfoldCoreTests.TeamProjectManagementTests testSQLLegacyReceiptsCoverFourActionsAndActualManagerDirectory]' passed (0.006 seconds).
+Test Suite 'TeamProjectManagementTests' passed at 2026-10-25 14:04:24.131.
+	 Executed 22 tests, with 0 failures (0 unexpected) in 0.082 (0.084) seconds
+Test Suite 'TeamTaskBatchTests' started at 2026-10-25 14:04:24.131.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testAcknowledgementCannotDropOnlyPartOfSelection]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testAcknowledgementCannotDropOnlyPartOfSelection]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testActualSQLAcknowledgementsAndPersistence]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testActualSQLAcknowledgementsAndPersistence]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testAssignmentBatchPreservesAllMembersAndUndoRestoresDistinctOriginalRecipients]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testAssignmentBatchPreservesAllMembersAndUndoRestoresDistinctOriginalRecipients]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsAddPreservesEachSetAndAlreadyCorrectMembers]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsAddPreservesEachSetAndAlreadyCorrectMembers]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsCapacityDoesNotRejectAnAlreadyCorrectFullTask]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsCapacityDoesNotRejectAnAlreadyCorrectFullTask]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsRejectUnsupportedRowsAndInvalidNameBeforeReview]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsRejectUnsupportedRowsAndInvalidNameBeforeReview]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsRemoveIsExactAndClearIsExplicit]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsRemoveIsExactAndClearIsExplicit]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsSuggestionsUseOnlyReadableSelectedValues]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsSuggestionsUseOnlyReadableSelectedValues]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsUndoRestoresEachOriginalSetAndProtectsLaterChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkLabelsUndoRestoresEachOriginalSetAndProtectsLaterChanges]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkPlanningChoicesValidateBoundariesAndKeepTheirOwnFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testBulkPlanningChoicesValidateBoundariesAndKeepTheirOwnFields]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testLateBatchReplyCannotReachAnotherSession]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testLateBatchReplyCannotReachAnotherSession]' passed (0.093 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testMalformedMixedAndNestedGroupsCannotSend]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testMalformedMixedAndNestedGroupsCannotSend]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testOldQueueDecodeAndIncompleteHeaderCannotCreateFakeTask]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testOldQueueDecodeAndIncompleteHeaderCannotCreateFakeTask]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testOneRecreatedTaskPreventsPartialLocalProjection]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testOneRecreatedTaskPreventsPartialLocalProjection]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningBodyRejectsUnsupportedFieldsSmallSelectionAndRestoreAuthority]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningBodyRejectsUnsupportedFieldsSmallSelectionAndRestoreAuthority]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningDateChoiceKeepsAlreadyCorrectMembersAndExplicitRemoval]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningDateChoiceKeepsAlreadyCorrectMembersAndExplicitRemoval]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningDateRemovalSupportsSavedRowsWithAbsentOptionalClockFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningDateRemovalSupportsSavedRowsWithAbsentOptionalClockFields]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningOpeningFreezesRowsWorkspaceSessionAndAccessBeforeReview]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningOpeningFreezesRowsWorkspaceSessionAndAccessBeforeReview]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningPickerClearsOnlyChosenOptionalFieldAndRetainsOtherPlans]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningPickerClearsOnlyChosenOptionalFieldAndRetainsOtherPlans]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningPickerKeepsOpeningRowsWhenChoicesAreMadeLater]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningPickerKeepsOpeningRowsWhenChoicesAreMadeLater]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningProjectionAndUndoKeepWholeRowsAndFreshRequestIdentities]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningProjectionAndUndoKeepWholeRowsAndFreshRequestIdentities]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningProjectionRejectsMissingRecreatedAndChangedMembersWithoutPartialEffect]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningProjectionRejectsMissingRecreatedAndChangedMembersWithoutPartialEffect]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningReceiptRequiresCompleteExactMemberAcknowledgement]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningReceiptRequiresCompleteExactMemberAcknowledgement]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningSenderUsesOneRPCAndPreservesWholeIntentOnConflict]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningSenderUsesOneRPCAndPreservesWholeIntentOnConflict]' passed (0.053 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningSQLCommandReceiptAndPrivatePersistence]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPlanningSQLCommandReceiptAndPrivatePersistence]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPreparationCapturesAllBeforeRemovingParents]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testPreparationCapturesAllBeforeRemovingParents]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testRedoReferencesActualNewDeletionNonces]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testRedoReferencesActualNewDeletionNonces]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testSenderUsesOneBoundedRequestAndNoSingleTaskFallback]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testSenderUsesOneBoundedRequestAndNoSingleTaskFallback]' passed (0.024 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testWholeSelectionLocalProjectionAndUndoRetainRelations]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskBatchTests testWholeSelectionLocalProjectionAndUndoRetainRelations]' passed (0.004 seconds).
+Test Suite 'TeamTaskBatchTests' passed at 2026-10-25 14:04:24.362.
+	 Executed 29 tests, with 0 failures (0 unexpected) in 0.228 (0.231) seconds
+Test Suite 'TeamTaskEditTests' started at 2026-10-25 14:04:24.362.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testActualSQLReplyConfirmsFrozenIntentAndRetainsCreator]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testActualSQLReplyConfirmsFrozenIntentAndRetainsCreator]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testHistoryRecapturesOnlyOriginalProjectAndTaskIncarnation]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testHistoryRecapturesOnlyOriginalProjectAndTaskIncarnation]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testLateReplyCannotAcknowledgeAfterSessionReplacement]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testLateReplyCannotAcknowledgeAfterSessionReplacement]' passed (0.021 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testOversizedReplyCannotAcknowledgeDraft]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testOversizedReplyCannotAcknowledgeDraft]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningActualSQLReplyAndPersistedFourFieldIntent]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningActualSQLReplyAndPersistedFourFieldIntent]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningInvalidReferenceAndListShapesStayLocal]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningInvalidReferenceAndListShapesStayLocal]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningMissingBaselineCannotBeSilentlyCaptured]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningMissingBaselineCannotBeSilentlyCaptured]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningSendsFourFieldsThroughGuardedEndpoint]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningSendsFourFieldsThroughGuardedEndpoint]' passed (0.037 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningUndoAndRedoKeepEveryFrozenField]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testPlanningUndoAndRedoKeepEveryFrozenField]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testQueuedScopeSurvivesPersistenceAndOldQueuesStayUnscoped]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testQueuedScopeSurvivesPersistenceAndOldQueuesStayUnscoped]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testReplyCannotAcknowledgeAnotherAccountProjectGenerationOrNonce]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testReplyCannotAcknowledgeAnotherAccountProjectGenerationOrNonce]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testSyncUsesDedicatedBoundedEndpointAndSameNonceForRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testSyncUsesDedicatedBoundedEndpointAndSameNonceForRetry]' passed (0.048 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testTeamFailureNeverFallsBackToPersonalWriteOrLeaksServerDetails]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testTeamFailureNeverFallsBackToPersonalWriteOrLeaksServerDetails]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testUnavailableProjectRecoveryCannotDropTeamDraft]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testUnavailableProjectRecoveryCannotDropTeamDraft]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testUndoRetainsFrozenWorkspaceAndReviewedBaseline]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testUndoRetainsFrozenWorkspaceAndReviewedBaseline]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testWrongMutationShapeCannotReachTeamAdapter]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskEditTests testWrongMutationShapeCannotReachTeamAdapter]' passed (0.002 seconds).
+Test Suite 'TeamTaskEditTests' passed at 2026-10-25 14:04:24.496.
+	 Executed 16 tests, with 0 failures (0 unexpected) in 0.134 (0.135) seconds
+Test Suite 'TeamTaskLabelsTests' started at 2026-10-25 14:04:24.496.
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testAddRemovePreservesExactLegacyValuesDuplicatesAndOrder]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testAddRemovePreservesExactLegacyValuesDuplicatesAndOrder]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testDraftCanBeReturnedToItsSourceWithoutNormalizingOrKeepingAnEdit]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testDraftCanBeReturnedToItsSourceWithoutNormalizingOrKeepingAnEdit]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testNewNamesRejectControlsBidiIDsAndOversizeWhileUnicodeWorks]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testNewNamesRejectControlsBidiIDsAndOversizeWhileUnicodeWorks]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testPersonalNormalizationStillWorksAndCatalogRenameDeleteExcludeSharedTasks]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testPersonalNormalizationStillWorksAndCatalogRenameDeleteExcludeSharedTasks]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testScopedLabelMutationNeverMapsNamesToPersonalIDsAndPersistsBaseline]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testScopedLabelMutationNeverMapsNamesToPersonalIDsAndPersistsBaseline]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testSuggestionsUseOnlyBoundedVisibleProjectTaskTextIncludingChildren]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testSuggestionsUseOnlyBoundedVisibleProjectTaskTextIncludingChildren]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testUnknownFormatsStayUntouchedAndLimitsNeverTruncate]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLabelsTests testUnknownFormatsStayUntouchedAndLimitsNeverTruncate]' passed (0.000 seconds).
+Test Suite 'TeamTaskLabelsTests' passed at 2026-10-25 14:04:24.500.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'TeamTaskLifecycleTests' started at 2026-10-25 14:04:24.501.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testActualSQLCreateDeleteRestoreContracts]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testActualSQLCreateDeleteRestoreContracts]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testCaptureAndParentIdentityNeverBindToLaterWorkspaceState]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testCaptureAndParentIdentityNeverBindToLaterWorkspaceState]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testCreatorContextGenerationAndCreateOnlyRemainExplicit]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testCreatorContextGenerationAndCreateOnlyRemainExplicit]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testLegacyTeamDenialRequiresReviewWithoutAcknowledging]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testLegacyTeamDenialRequiresReviewWithoutAcknowledging]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testLinkedDeleteBatchIsPreparedAtomically]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testLinkedDeleteBatchIsPreparedAtomically]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testReceiptCannotConfirmWrongNonceWorkspaceOrOperation]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testReceiptCannotConfirmWrongNonceWorkspaceOrOperation]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testScopedDeleteRetainsOccurrencesAndBlocksObsoleteIncarnation]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testScopedDeleteRetainsOccurrencesAndBlocksObsoleteIncarnation]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testSenderUsesLifecycleEndpointAndNeverLegacyFallback]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testSenderUsesLifecycleEndpointAndNeverLegacyFallback]' passed (0.127 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testUnavailableCreateRetryAcknowledgesWithoutRecreatingTask]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testUnavailableCreateRetryAcknowledgesWithoutRecreatingTask]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testUndoCarriesExactAcknowledgedDeletionReceipt]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskLifecycleTests testUndoCarriesExactAcknowledgedDeletionReceipt]' passed (0.001 seconds).
+Test Suite 'TeamTaskLifecycleTests' passed at 2026-10-25 14:04:24.651.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.149 (0.150) seconds
+Test Suite 'TeamTaskMoveTests' started at 2026-10-25 14:04:24.651.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testActualSQLMoveUndoRedoReviewsAndReceipts]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testActualSQLMoveUndoRedoReviewsAndReceipts]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testAdmissionFiltersDestinationsAndFreezesWholeSourceAndAccess]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testAdmissionFiltersDestinationsAndFreezesWholeSourceAndAccess]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testBackendDiscardsReplyAfterSessionSwitch]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testBackendDiscardsReplyAfterSessionSwitch]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testBackendRejectsWrongOriginOrAccountBeforeHTTP]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testBackendRejectsWrongOriginOrAccountBeforeHTTP]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testBackendSendsOneExactMoveRequestWithoutPersonalFallback]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testBackendSendsOneExactMoveRequestWithoutPersonalFallback]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testCommandsContainNoTaskOrDiscussionText]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testCommandsContainNoTaskOrDiscussionText]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testConfirmedMoveUndoRedoRemainOneHistoryChainAcrossVaults]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testConfirmedMoveUndoRedoRemainOneHistoryChainAcrossVaults]' passed (0.025 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testExpiredSavedRequestStillReachesServerForAcknowledgement]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testExpiredSavedRequestStillReachesServerForAcknowledgement]' passed (0.020 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testForeignReplyKeepsIntentAndAccountSwitchSuppressesCallback]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testForeignReplyKeepsIntentAndAccountSwitchSuppressesCallback]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testJournalClearDoesNotEraseEarlierAcceptedMove]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testJournalClearDoesNotEraseEarlierAcceptedMove]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testJournalFailureIsAtomicAndAccountRemovalErasesUndoHistory]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testJournalFailureIsAtomicAndAccountRemovalErasesUndoHistory]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testJournalMigratesOldPendingCommandWithoutLosingIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testJournalMigratesOldPendingCommandWithoutLosingIdentity]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testJournalRefusesCorruptAndForeignHistoryWithoutReplacingBytes]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testJournalRefusesCorruptAndForeignHistoryWithoutReplacingBytes]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testLostReplySurvivesModelRestartAndUsesSameNonce]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testLostReplySurvivesModelRestartAndUsesSameNonce]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testMalformedBodiesCannotSurviveDecoding]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testMalformedBodiesCannotSurviveDecoding]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testNewCommandsRequireFreshReviewsAndUniqueNonce]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testNewCommandsRequireFreshReviewsAndUniqueNonce]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testOnlyReplayCanAcknowledgeTaskThatHasMovedAgain]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testOnlyReplayCanAcknowledgeTaskThatHasMovedAgain]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testPrivateWriteFailurePreventsNetworkAndClearFailureKeepsRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testPrivateWriteFailurePreventsNetworkAndClearFailureKeepsRecovery]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testReceiptRejectsForeignAccountIdentityProjectAndGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testReceiptRejectsForeignAccountIdentityProjectAndGeneration]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testReviewsRejectForeignContentsAndInvalidCounts]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testReviewsRejectForeignContentsAndInvalidCounts]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testVaultIsolatesAccountServerAndClearsOnlyReviewedIntent]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskMoveTests testVaultIsolatesAccountServerAndClearsOnlyReviewedIntent]' passed (0.005 seconds).
+Test Suite 'TeamTaskMoveTests' passed at 2026-10-25 14:04:24.825.
+	 Executed 21 tests, with 0 failures (0 unexpected) in 0.172 (0.174) seconds
+Test Suite 'TeamTaskRecipientTests' started at 2026-10-25 14:04:24.825.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testActualSQLReplyIsProjectBoundAndDoesNotPromoteCreatorAuthority]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testActualSQLReplyIsProjectBoundAndDoesNotPromoteCreatorAuthority]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBackendUsesOnlyScopedRecipientRPCAndRejectsStaleSession]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBackendUsesOnlyScopedRecipientRPCAndRejectsStaleSession]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchActorAndClearChoicesWorkOfflineButDoNotBypassChangedSource]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchActorAndClearChoicesWorkOfflineButDoNotBypassChangedSource]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchCatalogForDifferentProjectCannotPopulateChoices]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchCatalogForDifferentProjectCannotPopulateChoices]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchChoiceRechecksAllProjectsAndRejectsDepartedRecipient]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchChoiceRechecksAllProjectsAndRejectsDepartedRecipient]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchConfirmedRecipientLossCannotBecomeCachedOfflineIntent]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchConfirmedRecipientLossCannotBecomeCachedOfflineIntent]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchConnectivityRetainsReviewedIdentityButAuthorizationFailureClearsChoices]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchConnectivityRetainsReviewedIdentityButAuthorizationFailureClearsChoices]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchDismissalStopsReadingRemainingProjects]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchDismissalStopsReadingRemainingProjects]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchIntersectionReadsEveryProjectOnceAndRefusesPartialRecipient]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchIntersectionReadsEveryProjectOnceAndRefusesPartialRecipient]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchLateReplyCannotRetainDirectoryOrCreateReview]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testBatchLateReplyCannotRetainDirectoryOrCreateReview]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testCatalogRejectsWrongContextUnsupportedProtocolExtraDataAndUnsafeRows]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testCatalogRejectsWrongContextUnsupportedProtocolExtraDataAndUnsafeRows]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testChoiceRechecksRosterAndRejectsDepartedRecipient]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testChoiceRechecksRosterAndRejectsDepartedRecipient]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testClearAndSelfRemainAvailableWithoutDirectoryOrNetwork]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testClearAndSelfRemainAvailableWithoutDirectoryOrNetwork]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testConnectivityLossKeepsReviewedIdentityAsIntentButOtherErrorsDoNot]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testConnectivityLossKeepsReviewedIdentityAsIntentButOtherErrorsDoNot]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testDifferentProjectReplyAndUnlistedIdentityNeverReachEditor]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testDifferentProjectReplyAndUnlistedIdentityNeverReachEditor]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testLateReplyAfterClosingOrRoleLossCannotApplyOrRetainNames]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testLateReplyAfterClosingOrRoleLossCannotApplyOrRetainNames]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testTransportRejectsDeclaredAndStreamedOversizeBeforeCatalogParsing]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecipientTests testTransportRejectsDeclaredAndStreamedOversizeBeforeCatalogParsing]' passed (19.626 seconds).
+Test Suite 'TeamTaskRecipientTests' passed at 2026-10-25 14:04:44.480.
+	 Executed 17 tests, with 0 failures (0 unexpected) in 19.654 (19.655) seconds
+Test Suite 'TeamTaskRecurrenceTests' started at 2026-10-25 14:04:44.480.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testActualSQLReplyConfirmsFrozenRepeatIntent]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testActualSQLReplyConfirmsFrozenRepeatIntent]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testEachConcurrentContextChangeStopsDraftButUnrelatedNotesCanMerge]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testEachConcurrentContextChangeStopsDraftButUnrelatedNotesCanMerge]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testEveryNativeRuleAndLegacyEndDateIsRepresentable]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testEveryNativeRuleAndLegacyEndDateIsRepresentable]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testMissingPlanCanBeAddedWithEnableAndDisablePreservesRule]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testMissingPlanCanBeAddedWithEnableAndDisablePreservesRule]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testPartialBaselineAndInvalidStatesCannotReachAdapter]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testPartialBaselineAndInvalidStatesCannotReachAdapter]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testReviewedChangesOnlyApplyTheAuthoredRuleAndPlanFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testReviewedChangesOnlyApplyTheAuthoredRuleAndPlanFields]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testScopeCapturesFullContextAndRejectsStaleRepeat]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testScopeCapturesFullContextAndRejectsStaleRepeat]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testTimestampSpellingAndNoRepeatBaselineRemainCompatible]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testTimestampSpellingAndNoRepeatBaselineRemainCompatible]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testUndoAndRedoHistoryRetainFullReviewedContext]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testUndoAndRedoHistoryRetainFullReviewedContext]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testUnknownAndMalformedRulesAreNeverRewritten]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRecurrenceTests testUnknownAndMalformedRulesAreNeverRewritten]' passed (0.001 seconds).
+Test Suite 'TeamTaskRecurrenceTests' passed at 2026-10-25 14:04:44.498.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.016 (0.018) seconds
+Test Suite 'TeamTaskRemindersTests' started at 2026-10-25 14:04:44.498.
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testAllPortableSchedulesAndTimeSensitiveHolidayWrappersCanBeReviewed]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testAllPortableSchedulesAndTimeSensitiveHolidayWrappersCanBeReviewed]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testChangedOpeningRowsWrongIdentityAndFabricatedOrNonlocalSpecNeverApply]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testChangedOpeningRowsWrongIdentityAndFabricatedOrNonlocalSpecNeverApply]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testExtensionsSurviveRowAndNestedSchedulePolicyKindChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testExtensionsSurviveRowAndNestedSchedulePolicyKindChanges]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testFailedFirstRecoveryCaptureCannotBeMistakenForNoUnsentEdit]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testFailedFirstRecoveryCaptureCannotBeMistakenForNoUnsentEdit]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testFutureShapesLimitsAndDuplicateIdentitiesNeverTruncateOrPartiallyChange]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testFutureShapesLimitsAndDuplicateIdentitiesNeverTruncateOrPartiallyChange]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testLegacyPlannedDefaultMaterializesAndLastRemovalCannotReactivateIt]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testLegacyPlannedDefaultMaterializesAndLastRemovalCannotReactivateIt]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testPrivateFutureAndOtherChannelRowsRemainExactAndLocked]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testPrivateFutureAndOtherChannelRowsRemainExactAndLocked]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testReservedPlannedIdentityCanBeLockedAndCannotBecomeAnAdvancedReminder]' started.
+Test Case '-[TaskfoldCoreTests.TeamTaskRemindersTests testReservedPlannedIdentityCanBeLockedAndCannotBecomeAnAdvancedReminder]' passed (0.000 seconds).
+Test Suite 'TeamTaskRemindersTests' passed at 2026-10-25 14:04:44.526.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.027 (0.027) seconds
+Test Suite 'TeamTemplateCommandTests' started at 2026-10-25 14:04:44.526.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testAccessReviewCheckedBeforeAndAfterDurableSave]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testAccessReviewCheckedBeforeAndAfterDurableSave]' passed (0.049 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testActualHTTPCommandContractAndReceiptVerification]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testActualHTTPCommandContractAndReceiptVerification]' passed (0.024 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testAllActionsRoundTripAndHaveExactReceiptSemantics]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testAllActionsRoundTripAndHaveExactReceiptSemantics]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCancelledLeaseAndRemovedAccountCannotWriteOrRecreate]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCancelledLeaseAndRemovedAccountCannotWriteOrRecreate]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testChangedRequestInAnotherWindowCannotBeRetriedOrDropped]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testChangedRequestInAnotherWindowCannotBeRetriedOrDropped]' passed (0.059 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCiphertextCannotBeReadUnderAnotherAccountOriginOrKey]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCiphertextCannotBeReadUnderAnotherAccountOriginOrKey]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testClosingOrChangingAccountDuringReplyKeepsDiskButClearsPresentation]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testClosingOrChangingAccountDuringReplyKeepsDiskButClearsPresentation]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCorruptionBlocksNewAuthoringWithoutOverwritingRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCorruptionBlocksNewAuthoringWithoutOverwritingRecovery]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testEncryptedFileRelaunchRoundTripAndPrivatePermissions]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testEncryptedFileRelaunchRoundTripAndPrivatePermissions]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testExactActionFieldsRejectExtrasAndMissingReviewedInputs]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testExactActionFieldsRejectExtrasAndMissingReviewedInputs]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testForeignReceiptAndFailedCleanupRetainExactRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testForeignReceiptAndFailedCleanupRetainExactRequest]' passed (0.025 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testInvalidScopeNamesAndRevisionsCannotRecover]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testInvalidScopeNamesAndRevisionsCannotRecover]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testKeyFailurePreservesCiphertextAndCleanupDoesNotNeedTheKey]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testKeyFailurePreservesCiphertextAndCleanupDoesNotNeedTheKey]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testLargeDefinitionUsesFileBackedVaultBeyondKeychainCommandDefault]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testLargeDefinitionUsesFileBackedVaultBeyondKeychainCommandDefault]' passed (0.060 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testLostReplyRelaunchRetriesExactOriginalCommandOnce]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testLostReplyRelaunchRetriesExactOriginalCommandOnce]' passed (0.021 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testOversizedAndNonregularCiphertextAreRejectedBeforeDecryption]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testOversizedAndNonregularCiphertextAreRejectedBeforeDecryption]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testReceiptCannotConfirmAnotherOperationIdentityOrRevision]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testReceiptCannotConfirmAnotherOperationIdentityOrRevision]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testStopRetryingLeavesAlreadyAppliedServerWorkAlone]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testStopRetryingLeavesAlreadyAppliedServerWorkAlone]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testSymlinkFileAndDirectoryCannotRedirectReadsOrWrites]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testSymlinkFileAndDirectoryCannotRedirectReadsOrWrites]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testTwoVaultsPreserveTheOriginalRequestAndConditionalClear]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testTwoVaultsPreserveTheOriginalRequestAndConditionalClear]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testUnreadableRecoveryBlocksFreshRequests]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testUnreadableRecoveryBlocksFreshRequests]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testUnsupportedDefinitionCannotBePublishedOrReplaced]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testUnsupportedDefinitionCannotBePublishedOrReplaced]' passed (0.052 seconds).
+Test Suite 'TeamTemplateCommandTests' passed at 2026-10-25 14:04:44.887.
+	 Executed 22 tests, with 0 failures (0 unexpected) in 0.358 (0.361) seconds
+Test Suite 'TeamTemplateLibraryTests' started at 2026-10-25 14:04:44.887.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testAcceptedRolesAndArchivedCapabilities]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testAcceptedRolesAndArchivedCapabilities]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testAudienceIsFencedWithCatalogAndRoleMismatchCannotPublish]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testAudienceIsFencedWithCatalogAndRoleMismatchCannotPublish]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserDetailAndSynchronousClear]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserDetailAndSynchronousClear]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserDiscardsFailedContinuation]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserDiscardsFailedContinuation]' passed (0.071 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserDiscardsLateAccountAndInvalidatedReplies]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserDiscardsLateAccountAndInvalidatedReplies]' passed (0.054 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserNewRefreshWinsOverOlderReply]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserNewRefreshWinsOverOlderReply]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserPublishesOnlyCompleteCoherentCatalog]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserPublishesOnlyCompleteCoherentCatalog]' passed (0.050 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserRejectsRoleOrRevisionChangeBetweenPages]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserRejectsRoleOrRevisionChangeBetweenPages]' passed (0.087 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserRejectsWorkspaceBoundaryChangeAndMalformedFence]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testBrowserRejectsWorkspaceBoundaryChangeAndMalformedFence]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testDetailFullyValidatesCurrentDocumentBeforeUse]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testDetailFullyValidatesCurrentDocumentBeforeUse]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testDetailPreservesOpaqueFutureDocumentWithoutUsePermission]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testDetailPreservesOpaqueFutureDocumentWithoutUsePermission]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testDetailRejectsForeignItemAndUnboundedOrInvalidEnvelope]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testDetailRejectsForeignItemAndUnboundedOrInvalidEnvelope]' passed (0.058 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testEmptyLibraryAndFullContinuation]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testEmptyLibraryAndFullContinuation]' passed (0.022 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testFutureAndMalformedDefinitionsCannotBecomePrivateArtifacts]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testFutureAndMalformedDefinitionsCannotBecomePrivateArtifacts]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPAuthorizationFailureIsRecognized]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPAuthorizationFailureIsRecognized]' passed (0.160 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPContinuationCarriesExactReviewedRevision]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPContinuationCarriesExactReviewedRevision]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPInvalidContinuationIsRejectedBeforeNetwork]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPInvalidContinuationIsRejectedBeforeNetwork]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPRejectsOversizedResponseAndSanitizesServerText]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPRejectsOversizedResponseAndSanitizesServerText]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPReplyAfterSignOutCannotPublishContent]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPReplyAfterSignOutCannotPublishContent]' passed (0.025 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPUsesExactReadContractAndPrivateRequestPolicy]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testHTTPUsesExactReadContractAndPrivateRequestPolicy]' passed (0.048 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testLargeOpaqueDocumentIsNotRejectedByOptionalSlashEscaping]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testLargeOpaqueDocumentIsNotRejectedByOptionalSlashEscaping]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testMetadataRejectsContentIdentityAndMalformedDates]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testMetadataRejectsContentIdentityAndMalformedDates]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testNamesAndExactIntegerBounds]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testNamesAndExactIntegerBounds]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testPaginationRejectsDuplicateUnorderedAndNonadvancingRows]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testPaginationRejectsDuplicateUnorderedAndNonadvancingRows]' passed (0.025 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testScopeRejectsForeignIdentityProtocolAndForgedCapability]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testScopeRejectsForeignIdentityProtocolAndForgedCapability]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferExportIsPortableAndDoesNotContainAccountOrLibraryAuthority]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferExportIsPortableAndDoesNotContainAccountOrLibraryAuthority]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferMakesOneStablePrivateIdentityWithoutSharedMetadata]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferMakesOneStablePrivateIdentityWithoutSharedMetadata]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferNameValidationCannotMakeInvalidPrivateRecordsOrFiles]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferNameValidationCannotMakeInvalidPrivateRecordsOrFiles]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferRefusesChangedDefinitionMetadataAndAccess]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferRefusesChangedDefinitionMetadataAndAccess]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferRejectsForeignWorkspaceAndReuseOfTheSharedIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferRejectsForeignWorkspaceAndReuseOfTheSharedIdentity]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferRequiresTheOriginalWorkspaceAndSessionIncarnations]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateLibraryTests testTransferRequiresTheOriginalWorkspaceAndSessionIncarnations]' passed (0.001 seconds).
+Test Suite 'TeamTemplateLibraryTests' passed at 2026-10-25 14:04:45.578.
+	 Executed 31 tests, with 0 failures (0 unexpected) in 0.678 (0.691) seconds
+Test Suite 'TeamWorkflowDestinationsTests' started at 2026-10-25 14:04:45.578.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testAccountInvalidationDuringReadPublishesNothing]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testAccountInvalidationDuringReadPublishesNothing]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testChangedFenceAndPageRevisionCannotPublishDestinations]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testChangedFenceAndPageRevisionCannotPublishDestinations]' passed (0.082 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testCompletePaginationPublishesOneCoherentCatalog]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testCompletePaginationPublishesOneCoherentCatalog]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testFreshOrderReadKeepsMissingGroupsEmptyAndRefusesForeignRows]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testFreshOrderReadKeepsMissingGroupsEmptyAndRefusesForeignRows]' passed (0.069 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testLaterPageFailurePublishesNoPartialNames]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testLaterPageFailurePublishesNoPartialNames]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testLateSourceReadAfterSignOutIsRejected]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testLateSourceReadAfterSignOutIsRejected]' passed (0.024 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testOnlyKnownActiveEditableProjectsAreEligible]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testOnlyKnownActiveEditableProjectsAreEligible]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testPrivateSourceReadIsFilteredBoundedAndScoped]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testPrivateSourceReadIsFilteredBoundedAndScoped]' passed (0.056 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testSupersededReadCannotReplaceNewerCatalog]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowDestinationsTests testSupersededReadCannotReplaceNewerCatalog]' passed (0.001 seconds).
+Test Suite 'TeamWorkflowDestinationsTests' passed at 2026-10-25 14:04:45.841.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.260 (0.263) seconds
+Test Suite 'TeamWorkflowRunCommandTests' started at 2026-10-25 14:04:45.841.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testAccessReviewRunsBeforeAndAfterDurableSave]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testAccessReviewRunsBeforeAndAfterDurableSave]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testActualHTTPIsPrivateBoundedAndUsesFrozenEnvelope]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testActualHTTPIsPrivateBoundedAndUsesFrozenEnvelope]' passed (0.030 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testActualHTTPReplyAfterSignOutIsRejected]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testActualHTTPReplyAfterSignOutIsRejected]' passed (0.092 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testCompleteFrozenCommandRoundTripAndReceiptScope]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testCompleteFrozenCommandRoundTripAndReceiptScope]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testEncryptedRelaunchAndNamespaceAuthentication]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testEncryptedRelaunchAndNamespaceAuthentication]' passed (0.017 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testExistingTemplateCiphertextKeepsOriginalAADAndFileName]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testExistingTemplateCiphertextKeepsOriginalAADAndFileName]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testLateReplyAfterAccountOrWindowChangeCannotClearSavedRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testLateReplyAfterAccountOrWindowChangeCannotClearSavedRequest]' passed (0.023 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testLostReplyAndRelaunchRetainExactOriginalRun]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testLostReplyAndRelaunchRetainExactOriginalRun]' passed (0.041 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testMalformedRecoveryCannotPreparePartialOrForeignWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testMalformedRecoveryCannotPreparePartialOrForeignWork]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testOtherWindowAndStoppedRetryCannotChangeAppliedWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testOtherWindowAndStoppedRetryCannotChangeAppliedWork]' passed (0.041 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testRemovalFenceBlocksNewWritesAndCleanupNeedsNoKey]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testRemovalFenceBlocksNewWritesAndCleanupNeedsNoKey]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testUnreadableRecoveryBlocksFreshSendWithoutOverwriting]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testUnreadableRecoveryBlocksFreshSendWithoutOverwriting]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testWrongReceiptAndFailedDiskClearKeepRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunCommandTests testWrongReceiptAndFailedDiskClearKeepRecovery]' passed (0.040 seconds).
+Test Suite 'TeamWorkflowRunCommandTests' passed at 2026-10-25 14:04:46.171.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.329 (0.330) seconds
+Test Suite 'TeamWorkflowRunTests' started at 2026-10-25 14:04:46.171.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testDestinationRefusesWrongKindViewerArchivePausedAndOldService]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testDestinationRefusesWrongKindViewerArchivePausedAndOldService]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testExportGeneratedSQLFixture]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testExportGeneratedSQLFixture]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testForeignPersonalOwnerAndUnsupportedDocumentCannotPrepare]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testForeignPersonalOwnerAndUnsupportedDocumentCannotPrepare]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testFrozenOrderEnvelopeAndParentReview]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testFrozenOrderEnvelopeAndParentReview]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testInlineLabelsKeepCaseAndChildContextWithStableChecklistTokens]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testInlineLabelsKeepCaseAndChildContextWithStableChecklistTokens]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testProjectHierarchySectionsOrderAndCleanHistory]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testProjectHierarchySectionsOrderAndCleanHistory]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testRepeatingChecklistIsRefusedWithoutChangingTemplate]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testRepeatingChecklistIsRefusedWithoutChangingTemplate]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testReviewRejectsChangedSourceDestinationScopeOrSession]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testReviewRejectsChangedSourceDestinationScopeOrSession]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSameSectionTaskOrderAndPrivateProjectAudienceArePreserved]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSameSectionTaskOrderAndPrivateProjectAudienceArePreserved]' passed (0.023 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSharedBoundsRejectOversizedTaskChecklistAndNonfiniteDates]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSharedBoundsRejectOversizedTaskChecklistAndNonfiniteDates]' passed (0.333 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSharedSourceChecksAccountOriginAndSupportedDefinition]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSharedSourceChecksAccountOriginAndSupportedDefinition]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testStableIdentityAndContentOnRetryFreshIdentityForNextRun]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testStableIdentityAndContentOnRetryFreshIdentityForNextRun]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testTaskAndSectionUseExistingProjectWithoutCopyingSourceProject]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testTaskAndSectionUseExistingProjectWithoutCopyingSourceProject]' passed (0.002 seconds).
+Test Suite 'TeamWorkflowRunTests' passed at 2026-10-25 14:04:46.562.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.383 (0.391) seconds
+Test Suite 'TeamWorkspaceTests' started at 2026-10-25 14:04:46.563.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testAccessFenceRejectsDamagedDataAndOnlyClearsItsOwnScope]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testAccessFenceRejectsDamagedDataAndOnlyClearsItsOwnScope]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testActualSQLBoundariesKeepPersonalSharingSeparateFromTeamRoles]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testActualSQLBoundariesKeepPersonalSharingSeparateFromTeamRoles]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBlockedCohortDoesNotReplayDependentEditsOrHideIndependentPersonalNotes]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBlockedCohortDoesNotReplayDependentEditsOrHideIndependentPersonalNotes]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryAndHistoricalCustodyPersistPrivatelyButDoNotExportAuthority]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryAndHistoricalCustodyPersistPrivatelyButDoNotExportAuthority]' passed (0.073 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryRejectsWrongAccountMalformedTokensAndForgedRoleCapabilities]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryRejectsWrongAccountMalformedTokensAndForgedRoleCapabilities]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryTransportIsBoundedPrivateAndAccountScoped]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryTransportIsBoundedPrivateAndAccountScoped]' passed (0.074 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundedTablePaginationRejectsRepeatedPagesAndUsesProfilePrimaryKey]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundedTablePaginationRejectsRepeatedPagesAndUsesProfilePrimaryKey]' passed (0.017 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testConversationMetadataMatchesCurrentBoundaryAndSurvivesCodec]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testConversationMetadataMatchesCurrentBoundaryAndSurvivesCodec]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationAdmissionAndNestedEditorsKeepOriginalUnpersistedIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationAdmissionAndNestedEditorsKeepOriginalUnpersistedIdentity]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationCarriesFullAuthoredTaskAsScopedInsertOnlyCommand]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationCarriesFullAuthoredTaskAsScopedInsertOnlyCommand]' passed (0.029 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRefusesCopiedBookkeepingPrivateContentAndUnknownFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRefusesCopiedBookkeepingPrivateContentAndUnknownFields]' passed (0.070 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRefusesExistingRowAndCannotBecomeEditOrDelete]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRefusesExistingRowAndCannotBecomeEditOrDelete]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRejectsUnsupportedEditsWithoutDroppingAuthoredFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRejectsUnsupportedEditsWithoutDroppingAuthoredFields]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRequiresCurrentRoleTokenSessionWorkspaceAndRollout]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRequiresCurrentRoleTokenSessionWorkspaceAndRollout]' passed (0.034 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRequiresNameAndCoherentRepeatPlan]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRequiresNameAndCoherentRepeatPlan]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewCannotAcquireNewWorkspaceSessionOrBackendAuthority]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewCannotAcquireNewWorkspaceSessionOrBackendAuthority]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewKeepsWholeSourceAndStableIntentWithRetainedCreator]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewKeepsWholeSourceAndStableIntentWithRetainedCreator]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRefusesOversizedPayloadRatherThanTruncatingSavedContents]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRefusesOversizedPayloadRatherThanTruncatingSavedContents]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsChangedAndRestoredAccessFence]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsChangedAndRestoredAccessFence]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsEveryChangedSavedFieldInsteadOfRetargetingBaseline]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsEveryChangedSavedFieldInsteadOfRetargetingBaseline]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsRecreatedRemovedMovedAndReassignedCreator]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsRecreatedRemovedMovedAndReassignedCreator]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewUndoUsesExactDeletionReceiptAndFreshGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewUndoUsesExactDeletionReceiptAndFreshGeneration]' passed (0.081 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewUsesCanonicalClockAndTimestampSpellingWithoutDroppingSource]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewUsesCanonicalClockAndTimestampSpellingWithoutDroppingSource]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAcceptsHundredUniqueTasksAndRefusesTheHundredAndFirst]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAcceptsHundredUniqueTasksAndRefusesTheHundredAndFirst]' passed (0.184 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAllowsDifferentProjectsOnlyInsideSameCurrentTeam]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAllowsDifferentProjectsOnlyInsideSameCurrentTeam]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAppliesTogetherAndUndoKeepsSelectedLinksAndUnselectedWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAppliesTogetherAndUndoKeepsSelectedLinksAndUnselectedWork]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionFreezesWholeRowsAndAllRequestIdentitiesAcrossRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionFreezesWholeRowsAndAllRequestIdentitiesAcrossRetry]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesAnotherTeamEvenWithCurrentEditorRights]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesAnotherTeamEvenWithCurrentEditorRights]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesAnyMissingChangedOrRecreatedMemberAsAWhole]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesAnyMissingChangedOrRecreatedMemberAsAWhole]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesDuplicateEmptySingleAndCreationAdmissions]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesDuplicateEmptySingleAndCreationAdmissions]' passed (0.060 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesMixedOpeningSessionAndWorkspace]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesMixedOpeningSessionAndWorkspace]' passed (0.076 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesWorkspaceSessionRoleAndRolloutChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesWorkspaceSessionRoleAndRolloutChanges]' passed (0.040 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRejectsCyclesAndOverlargeWholePayloadWithoutTruncation]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRejectsCyclesAndOverlargeWholePayloadWithoutTruncation]' passed (0.081 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDurableAccessFenceSurvivesRelaunchWithoutTaskTextAndCleanupStopsLateWrites]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDurableAccessFenceSurvivesRelaunchWithoutTaskTextAndCleanupStopsLateWrites]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testForeignInitialBoundaryCannotStartAWorkspaceRead]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testForeignInitialBoundaryCannotStartAWorkspaceRead]' passed (0.022 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testHistoricalTaskCustodyStopsOldLegacyCallbacksAfterRowsArePruned]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testHistoricalTaskCustodyStopsOldLegacyCallbacksAfterRowsArePruned]' passed (0.051 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLegacyFallbackRequiresExplicitMissingRPCAndNoKnownTeamState]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLegacyFallbackRequiresExplicitMissingRPCAndNoKnownTeamState]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLocalPersonalCaptureSurvivesBoundaryRefreshWithoutServerProjectYet]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLocalPersonalCaptureSurvivesBoundaryRefreshWithoutServerProjectYet]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLocalProjectIntentCannotExposeOldCachedSharedChildrenAtSameID]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLocalProjectIntentCannotExposeOldCachedSharedChildrenAtSameID]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLossOfReadAccessRemovesSharedCacheWithoutRemovingQueuedWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLossOfReadAccessRemovesSharedCacheWithoutRemovingQueuedWork]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testMissingLegacyProjectAlsoNeedsProtectionButNewOfflineProjectDoesNot]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testMissingLegacyProjectAlsoNeedsProtectionButNewOfflineProjectDoesNot]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeDiscussionWriteGateDoesNotInferTeamRightsFromTaskCreator]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeDiscussionWriteGateDoesNotInferTeamRightsFromTaskCreator]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorCapturesRoleAuthorityRatherThanCreatorAndKeepsOrdinaryWritesClosed]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorCapturesRoleAuthorityRatherThanCreatorAndKeepsOrdinaryWritesClosed]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorChecklistIntentRetainsConcurrentOtherChildWithoutRewritingItsBaseline]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorChecklistIntentRetainsConcurrentOtherChildWithoutRewritingItsBaseline]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorMatchesActualSQLCommandAndUsesDedicatedTransport]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorMatchesActualSQLCommandAndUsesDedicatedTransport]' passed (0.018 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorNoopDoesNotCreateARequestOrReplaceObservedWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorNoopDoesNotCreateARequestOrReplaceObservedWork]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorPreservesAuthoredBaselineAndConcurrentUntouchedFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorPreservesAuthoredBaselineAndConcurrentUntouchedFields]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRefusesArchivedTeamEvenIfCapabilityReplyContradictsItsState]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRefusesArchivedTeamEvenIfCapabilityReplyContradictsItsState]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsAccessABAAccountWorkspaceSessionAndBackendChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsAccessABAAccountWorkspaceSessionAndBackendChanges]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsRemovedRecreatedOrReboundTaskEvenWithSameVisibleTitle]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsRemovedRecreatedOrReboundTaskEvenWithSameVisibleTitle]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsUnsupportedChangesAsAWholeWithoutDiscardingDraftFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsUnsupportedChangesAsAWholeWithoutDiscardingDraftFields]' passed (0.116 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorUndoRestoresObservedStateWithFreshScopedRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorUndoRestoresObservedStateWithFreshScopedRequest]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxKeepsUnknownRepeatSemanticsUnchanged]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxKeepsUnknownRepeatSemanticsUnchanged]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxRefusesStaleOrMissingVisibleRow]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxRefusesStaleOrMissingVisibleRow]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxRefusesWorkspaceSessionRoleAndRolloutChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxRefusesWorkspaceSessionRoleAndRolloutChanges]' passed (0.025 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxUsesCapturedAtomicCompletionAndUndo]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxUsesCapturedAtomicCompletionAndUndo]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedRecurringCheckboxKeepsOneCommandAndOwnedSuccessor]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedRecurringCheckboxKeepsOneCommandAndOwnedSuccessor]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedReopenPreservesLaterOccurrenceAndUsesScopedRevision]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedReopenPreservesLaterOccurrenceAndUsesScopedRevision]' passed (0.108 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNewDependentWorkNeedsAnotherRecoveryButUnchangedQuarantineDoesNot]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNewDependentWorkNeedsAnotherRecoveryButUnchangedQuarantineDoesNot]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPartialTeamServiceCannotSilentlyFallBackToLegacySync]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPartialTeamServiceCannotSilentlyFallBackToLegacySync]' passed (0.179 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPausedSetupKeepsReadOnlyContentAndProtectsQueuedChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPausedSetupKeepsReadOnlyContentAndProtectsQueuedChanges]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionExplanationsRetainSafeControlsWithoutExposingNames]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionExplanationsRetainSafeControlsWithoutExposingNames]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsPreserveLegacyPersonalSharingWithoutInventingTeamAccess]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsPreserveLegacyPersonalSharingWithoutInventingTeamAccess]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRejectForeignAccountAndServerCaches]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRejectForeignAccountAndServerCaches]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRememberTeamCustodyAfterAccessIsLost]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRememberTeamCustodyAfterAccessIsLost]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRequireBothCurrentAccessAndAVisibleRow]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRequireBothCurrentAccessAndAVisibleRow]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsUseCertifiedPersonalProjectsAndInbox]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsUseCertifiedPersonalProjectsAndInbox]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPrefilledCreationStillCreatesAndRetryKeepsIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPrefilledCreationStillCreatesAndRetryKeepsIdentity]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPresentationMaskHidesRevokedContentBeforeMutatingOrBackingUpQueue]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPresentationMaskHidesRevokedContentBeforeMutatingOrBackingUpQueue]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRestoredRoleReplaysFrozenIntentWithoutRetargetingARecreatedTask]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRestoredRoleReplaysFrozenIntentWithoutRetargetingARecreatedTask]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedDiscussionCacheIsPrunedWhileAuthoredCommentOutboxIsRetained]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedDiscussionCacheIsPrunedWhileAuthoredCommentOutboxIsRetained]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedTaskCannotAppearInWidgetOrPinnedNotePayload]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedTaskCannotAppearInWidgetOrPinnedNotePayload]' passed (0.104 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamEditorAdmissionKeepsCapturedContextThroughSecondarySheets]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamEditorAdmissionKeepsCapturedContextThroughSecondarySheets]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamEditorAdmissionRejectsMismatchedRootAndWorkspaceContext]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamEditorAdmissionRejectsMismatchedRootAndWorkspaceContext]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamWidgetActionsAreWithheldWithoutDisablingPersonalChildActions]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamWidgetActionsAreWithheldWithoutDisablingPersonalChildActions]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testVerifiedRefreshCanRepairDamagedFenceWithoutClearingAnotherBackend]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testVerifiedRefreshCanRepairDamagedFenceWithoutClearingAnotherBackend]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testViewerSeesServerVersionWhileTheirUnsentEditsStayQueued]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testViewerSeesServerVersionWhileTheirUnsentEditsStayQueued]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceReaderRejectsContinuousAccessChurnAndNeverReturnsPartialRows]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceReaderRejectsContinuousAccessChurnAndNeverReturnsPartialRows]' passed (0.460 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceReaderRestartsEntireFetchAfterAccessChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceReaderRestartsEntireFetchAfterAccessChanges]' passed (0.070 seconds).
+Test Suite 'TeamWorkspaceTests' passed at 2026-10-25 14:04:48.938.
+	 Executed 79 tests, with 0 failures (0 unexpected) in 2.366 (2.376) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-25 14:04:48.939.
+	 Executed 562 tests, with 0 failures (0 unexpected) in 40.574 (40.672) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 14:04:48.939.
+	 Executed 562 tests, with 0 failures (0 unexpected) in 40.574 (40.673) seconds

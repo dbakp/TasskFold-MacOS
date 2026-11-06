@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual native Mac calendar denial, readable retry guidance, user-restored permission, live reconnect, real event retrieval, normal relaunch and disconnect.",
+  "completed": [
+    "System Settings shows Taskfold Calendar Test: No Access; the other Taskfold entry remains Full Access.",
+    "Normal Quit stops PID47987; relaunch reports Calendar access is unavailable and capacity explicitly says calendar data incomplete.",
+    "Disconnect then Connect returns Calendar access was not granted with readable instructions and enabled retry.",
+    "App Open System Settings button starts System Settings from stopped PID47691 to PID48448; it opens General. Manual Privacy & Security \u2192 Calendars reaches the correct isolated entry.",
+    "All workspace tables equal the private baseline; pending edits zero; 100 protected Simulator files match.",
+    "User restored Full Access in System Settings and explicitly left the app running. Connect calendars recovered immediately without restarting, exposing ten selectable calendars.",
+    "Selected only the previously verified sports calendar. The real 13 October 21:00\u201322:45 event rendered as Busy, with titles hidden and no incomplete-capacity warning. The event is outside unchanged 09:00\u201317:00 working hours.",
+    "Normal Command-Q stopped the isolated process (no matching process remained). Normal app launch retained the calendar selection; navigating to 13 October showed the same Busy event.",
+    "Disconnect cleared calendar selections and title preferences; the planner returned to Calendar busy time is not connected. Original 09:00\u201317:00 weekdays were retained.",
+    "Final verification: all workspace tables exactly equal the permission baseline, pending edits zero, and all 100 protected Simulator files match their original SHA-256 values. Calendar/event source data were not modified."
+  ],
+  "preparation": {
+    "bundleID": "com.dbakp.taskfold.mac.p0calendartests",
+    "CFBundleName": "Taskfold Calendar Test",
+    "namedAppPath": "BuildCache/mac-calendar-v3/Build/Products/Debug/Taskfold Calendar Test.app",
+    "buildLog": "/private/tmp/taskfold-mac-calendar-build-v5.log",
+    "debugBuildAndStrictSignature": "passed",
+    "scriptSyntaxAndFreshPreparation": "passed",
+    "nameScope": "Both bundle name fields now use the isolated test name. Existing System Settings labels remained cached. The stopped app wrapper was also renamed and registered; the later native permission list distinguishes it."
+  },
+  "diagnostics": [
+    "Calendar reset alone did not establish denial; app still returned full access. CalendarFullAccess reset failed. These commands are not denial evidence.",
+    "A scoped read-only TCC query returned authorization denied; no bypass or database change was attempted.",
+    "System Quit & Reopen returned a computer-use transport error and left the app alive. Dismissing its sheet and normal Quit were verified before relaunch."
+  ],
+  "productCodeChanged": false,
+  "screenshots": {
+    "denied.png": "78931bec19b40b11b3c24d1939b93bb6c79e426e65dd6136c110c8dc65dd4ba7",
+    "recovered.png": "e83d260992bb0fee5409580b1c6c3866025c66ebfbe0db94fe0c0cebcfa78c17"
+  },
+  "result": "passed: named native Mac denial/recovery gate closed",
+  "remaining": "Spoken VoiceOver, external file-provider transfer, remaining scoped widget/continuity acceptance, APNs and distribution remain separate P0 gates."
+}

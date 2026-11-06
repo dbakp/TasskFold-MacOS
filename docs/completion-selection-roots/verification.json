@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-31",
+  "repository": "TasskFold-MacOS",
+  "scope": "Root source observations and private guards for the future mixed completion transaction",
+  "acceptedDatabaseChecks": 65,
+  "addedAdvisorFindings": 0,
+  "ownedContainerRemoved": true,
+  "sourceSHA256": {
+    "supabase/migrations/20261031031909_completion_selection_root_observations.sql": "b376784c194687470687eb1783b9e3e14687350704d0a8cf2e1762df423a4d37",
+    "Scripts/Database/test-completion-selection-roots.mjs": "0f2d14ea6dda0656cac3c080dffa7b6cc556e62e3fa567a1cfdb9606a283c6e4",
+    "TaskfoldTests/Fixtures/completion-selection-root-observations.json": "8c34e278af4cba0d04811141c555999496df0308b851eb4200be6b31f2ff1f0f"
+  },
+  "databaseEvidence": "database.json",
+  "rawPostgresWireFixture": "TaskfoldTests/Fixtures/completion-selection-root-observations.json",
+  "earlierPhases": [
+    {
+      "file": "initial-v1.json",
+      "outcome": "Test expectation corrected: the existing live-session guard returns 28000, not 42501."
+    },
+    {
+      "file": "initial-v2.json",
+      "outcome": "64 checks accepted before the final added time-zone boundary case."
+    }
+  ],
+  "limits": {
+    "atomicMixedWriteImplemented": false,
+    "clientDecoderOrTransportIntegrated": false,
+    "mixedRecoveryAndUndoImplemented": false,
+    "nativeOrClientTestsRepeatedForThisSQLOnlyChange": false,
+    "hostedChanges": false,
+    "normalGatesEnabled": false,
+    "curatedCheckpointCountsChanged": false
+  }
+}

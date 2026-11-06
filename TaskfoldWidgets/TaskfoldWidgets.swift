@@ -23,6 +23,8 @@ struct WidgetTask: Codable, Identifiable {
     var scheduledAt: String? = nil
     var timeZone: String? = nil
     var completionToken: String? = nil
+    var parent: String? = nil
+    var routeContext: String? = nil
     var estimate: Int? { duration.flatMap { (1...10080).contains($0) ? $0 : nil } }
     var deadlineDay: String? { deadline.flatMap { WidgetSnapshot.validDay($0) ? $0 : nil } }
     func displayed(calendar: Calendar) -> WidgetTask {
@@ -51,10 +53,24 @@ struct WidgetTask: Codable, Identifiable {
         return local.date(bySettingHour: clock[0], minute: clock[1], second: 0, of: day, matchingPolicy: .nextTimePreservingSmallerComponents, repeatedTimePolicy: .first, direction: .forward)
     }
     var url: URL { WidgetLinks.task(id) }
+    func url(account: String) -> URL { WidgetLinks.task(id, account: account, context: routeContext) }
 }
 
 enum WidgetLinks {
     static func task(_ id: String) -> URL { scoped("task", id: id) }
+    static func task(_ id: String, account: String, context: String? = nil) -> URL {
+        let url = scoped("task", id: id, account: account)
+        guard id.hasPrefix("subtask:"), let context, !account.isEmpty else { return url }
+        var parts = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+        parts.queryItems = (parts.queryItems ?? []) + [URLQueryItem(name: "context", value: context)]
+        return parts.url ?? URL(string: "taskfold://all")!
+    }
+    static func scoped(_ host: String, id: String, account: String) -> URL {
+        guard !account.isEmpty else { return URL(string: "taskfold://all")! }
+        var parts = URLComponents(url: scoped(host, id: id), resolvingAgainstBaseURL: false)!
+        parts.queryItems = [URLQueryItem(name: "account", value: account)]
+        return parts.url ?? URL(string: "taskfold://all")!
+    }
     static func scoped(_ host: String, id: String) -> URL {
         var allowed = CharacterSet.urlPathAllowed; allowed.remove(charactersIn: "/?#%")
         let component = id.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
@@ -92,6 +108,7 @@ enum DeadlineWindow: String, CaseIterable, Codable { case week = "7", fortnight 
 enum CapacityDay: String, CaseIterable, Codable { case today, tomorrow; var offset: Int { self == .today ? 0 : 1 } }
 struct WidgetCapacityDay: Codable, Equatable {
     var working: Int, busy: Int, estimated: Int, unknown: Int, overdue: Int
+    var workIncomplete: Bool? = nil
     var afterKnownWork: Int { working - busy - estimated }
     var valid: Bool { (0...1500).contains(working) && (0...working).contains(busy) && (0...100_000_000).contains(estimated) && (0...1_000_000).contains(unknown) && (0...1_000_000).contains(overdue) }
 }
@@ -116,6 +133,8 @@ struct WidgetCapacityReading {
         case "incomplete": return "Calendar data incomplete"
         case "choose": return "Choose calendars in Taskfold"
         case "unavailable": return "Calendar access unavailable"
+        case "settings": return "Update Taskfold to read working hours"
+        case "work": return "Review grouped tasks in Taskfold"
         default: return "Open Taskfold to refresh"
         }
     }
@@ -132,6 +151,12 @@ struct WidgetDay: Identifiable {
     var id: Date { date }
 }
 
+struct WidgetListGroup: Codable, Identifiable, Sendable {
+    var id: String
+    var name: String
+    var ids: [String]
+}
+
 struct WidgetList: Codable, Identifiable, Sendable {
     var id: String
     var recordID: String
@@ -142,11 +167,16 @@ struct WidgetList: Codable, Identifiable, Sendable {
     var invalid: Bool
     var clockUpdated: Double? = nil
     var clockValidUntil: Double? = nil
+    var groups: [String: [WidgetListGroup]]? = nil
     func belongs(to account: String) -> Bool {
         guard !account.isEmpty, let data = Data(base64Encoded: id), let key = try? JSONDecoder().decode([String].self, from: data) else { return false }
         return key == [account, kind, recordID] && ["project", "label", "filter"].contains(kind)
     }
-    var url: URL { WidgetLinks.scoped(kind == "filter" ? "view" : kind, id: recordID) }
+    var url: URL {
+        guard let data = Data(base64Encoded: id), let key = try? JSONDecoder().decode([String].self, from: data),
+              key.count == 3, belongs(to: key[0]) else { return URL(string: "taskfold://all")! }
+        return WidgetLinks.scoped(kind == "filter" ? "view" : kind, id: recordID, account: key[0])
+    }
     var typeName: String { kind == "project" ? "Project" : kind == "label" ? "Label" : "Saved filter" }
 }
 
@@ -178,6 +208,8 @@ enum WidgetNoteStatus: Equatable { case ready, choose, unavailable, refresh }
 struct WidgetSnapshot: Codable {
     var updated: TimeInterval
     var tasks: [WidgetTask]
+    var nestedTasks: [WidgetTask]? = nil
+    var workIncomplete: Bool? = nil
     var version: Int
     var account: String
     var lists: [WidgetList] = []
@@ -185,18 +217,21 @@ struct WidgetSnapshot: Codable {
     var projectPulse: ProjectPulseSnapshot? = nil
     var focusSession: FocusWidgetSnapshot? = nil
     var capacity: WidgetCapacity? = nil
+    var completionFeedback: WidgetCompletionFeedback? = nil
     var pendingSync: Int = 0
     var pendingTaskIDs: [String] = [] // Derived under the same disk lock as the snapshot read.
     init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
         self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity, notes, focusSession, projectPulse }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, nestedTasks, workIncomplete, version, account, lists, pendingSync, capacity, notes, focusSession, projectPulse, completionFeedback }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
         guard (1...2).contains(version) else { throw DecodingError.dataCorruptedError(forKey: .version, in: row, debugDescription: "Unsupported widget snapshot version") }
         updated = try row.decode(TimeInterval.self, forKey: .updated)
         tasks = try row.decode([WidgetTask].self, forKey: .tasks)
+        nestedTasks = try row.decodeIfPresent([WidgetTask].self, forKey: .nestedTasks)
+        workIncomplete = try row.decodeIfPresent(Bool.self, forKey: .workIncomplete)
         account = try row.decodeIfPresent(String.self, forKey: .account) ?? ""
         lists = try row.decodeIfPresent([WidgetList].self, forKey: .lists) ?? []
         pendingSync = max(0, try row.decodeIfPresent(Int.self, forKey: .pendingSync) ?? 0)
@@ -204,6 +239,7 @@ struct WidgetSnapshot: Codable {
         capacity = try? row.decode(WidgetCapacity.self, forKey: .capacity)
         focusSession = try? row.decode(FocusWidgetSnapshot.self, forKey: .focusSession)
         projectPulse = try? row.decode(ProjectPulseSnapshot.self, forKey: .projectPulse)
+        completionFeedback = try? row.decode(WidgetCompletionFeedback.self, forKey: .completionFeedback)
     }
     var availableNotes: [WidgetNote] {
         var seen = Set<String>()
@@ -340,22 +376,45 @@ struct WidgetSnapshot: Codable {
                   date.timeIntervalSinceReferenceDate >= start, date.timeIntervalSinceReferenceDate < end else { return .refresh }
         }
         if target.kind == "filter", (target.timeZone != calendar.timeZone.identifier || target.days[Self.day(date, calendar: calendar)] == nil) { return .refresh }
+        let members = target.kind == "filter" ? target.days[Self.day(date, calendar: calendar)] ?? [] : target.days["*"] ?? []
+        let available = Set((tasks + (target.kind == "filter" ? (nestedTasks ?? []) : [])).map(\.id))
+        guard members.filter({ $0.hasPrefix("subtask:") }).allSatisfy(available.contains) else {
+            // Older child-filter snapshots may predate their optional catalog.
+            if target.kind == "filter", nestedTasks == nil, members.contains(where: { $0.hasPrefix("subtask:") && !available.contains($0) }) { return .refresh }
+            return .unavailable
+        }
         return .ready
     }
     func listTasks(_ id: String?, at date: Date, calendar: Calendar = .current) -> [WidgetTask] {
         guard listStatus(id, at: date, calendar: calendar) == .ready, let target = list(id) else { return [] }
         let ids = target.kind == "filter" ? target.days[Self.day(date, calendar: calendar)] ?? [] : target.days["*"] ?? []
-        let byID = Dictionary(tasks.map { ($0.id, $0.displayed(calendar: calendar)) }, uniquingKeysWith: { first, _ in first })
+        let byID = Dictionary((tasks + (target.kind == "filter" ? (nestedTasks ?? []) : [])).map { ($0.id, $0.displayed(calendar: calendar)) }, uniquingKeysWith: { first, _ in first })
         var seen = Set<String>()
         return ids.compactMap { seen.insert($0).inserted ? byID[$0] : nil }
     }
+    /// Group captions cannot add membership, duplicate a task, or survive a stale/account-mismatched list.
+    func listGroups(_ id: String?, at date: Date, calendar: Calendar = .current) -> [WidgetListGroup] {
+        let rows=listTasks(id,at:date,calendar:calendar)
+        guard let target=list(id), !rows.isEmpty else { return [] }
+        let key=target.kind == "filter" ? Self.day(date,calendar:calendar) : "*"
+        let canonical=rows.map(\.id), allowed=Set(canonical)
+        var seen=Set<String>(), result:[WidgetListGroup]=[]
+        for group in target.groups?[key] ?? [] {
+            let members=Set(group.ids).intersection(allowed)
+            let ids=canonical.filter{members.contains($0) && seen.insert($0).inserted}
+            if !ids.isEmpty { result.append(WidgetListGroup(id:group.id,name:group.name,ids:ids)) }
+        }
+        let rest=canonical.filter{seen.insert($0).inserted}
+        if !rest.isEmpty { result.append(WidgetListGroup(id:"ungrouped",name:"",ids:rest)) }
+        return result
+    }
     func scoped(to id: String?, at date: Date, calendar: Calendar = .current) -> WidgetSnapshot {
         guard let id else { return self }
-        var copy = self; copy.tasks = listTasks(id, at: date, calendar: calendar); return copy
+        var copy = self; copy.tasks = listTasks(id, at: date, calendar: calendar); copy.workIncomplete = nil; return copy
     }
 
     func inboxReading() -> WidgetInboxReading {
-        guard version == 2, !account.isEmpty, updated.isFinite, updated > 0,
+        guard version == 2, !account.isEmpty, updated.isFinite, updated > 0, workIncomplete != true,
               tasks.allSatisfy({ !$0.id.isEmpty && $0.projectID != nil }) else { return WidgetInboxReading(tasks: nil) }
         var seen = Set<String>()
         let inbox = tasks.filter { seen.insert($0.id).inserted }.filter { $0.projectID == "" }
@@ -372,13 +431,15 @@ struct WidgetSnapshot: Codable {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         let selected = calendar.date(byAdding: .day, value: day.offset, to: date) ?? date
         let key = Self.day(selected, calendar: calendar)
-        guard !account.isEmpty, let capacity, capacity.version == 1, capacity.timeZone == calendar.timeZone.identifier,
-              let value = capacity.days[key], value.valid else { return WidgetCapacityReading(day: nil, state: "refresh", dayKey: key) }
+        guard !account.isEmpty, let capacity, capacity.version == 1, capacity.timeZone == calendar.timeZone.identifier else { return WidgetCapacityReading(day: nil, state: "refresh", dayKey: key) }
+        if capacity.calendarState == "settings" { return WidgetCapacityReading(day: nil, state: "settings", dayKey: key) }
+        guard let value = capacity.days[key], value.valid else { return WidgetCapacityReading(day: nil, state: "refresh", dayKey: key) }
         var state = capacity.calendarState
         if !["ready", "off", "incomplete", "choose", "unavailable", "refresh"].contains(state) { state = "refresh" }
         if state == "ready" || state == "incomplete" {
             if let updated = capacity.calendarUpdated, updated.isFinite, date.timeIntervalSinceReferenceDate >= updated - 300, date.timeIntervalSinceReferenceDate < updated + 3600 {} else { state = "refresh" }
         }
+        if value.workIncomplete == true { state = "work" }
         return WidgetCapacityReading(day: value, state: state, dayKey: key, hours: capacity.hours)
     }
     func capacityTimelineDates(from now: Date, calendar: Calendar = .current) -> [Date] {
@@ -396,6 +457,15 @@ struct WidgetSnapshot: Codable {
         if let expiry = list(id)?.clockValidUntil, expiry.isFinite {
             let date = Date(timeIntervalSinceReferenceDate: expiry)
             if date > now, date < dates.last ?? now { dates.append(date) }
+        }
+        return Array(Set(dates)).sorted()
+    }
+
+    /// My list alone displays the completion acknowledgement and needs its expiry entry.
+    func completionTimelineDates(_ id: String?, from now: Date, calendar: Calendar = .current) -> [Date] {
+        var dates = listTimelineDates(id, from: now, calendar: calendar)
+        if let feedback = completionFeedback, feedback.visible(account: account, listID: id, at: now) {
+            dates.append(feedback.expiresAt)
         }
         return Array(Set(dates)).sorted()
     }
@@ -483,6 +553,8 @@ struct WidgetFooter: View {
             Link("Open Taskfold to finish", destination: URL(string: "taskfold://all")!).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         } else if entry.snapshot.pendingSync > 0 {
             Text("Saved · sync pending").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+        } else if entry.snapshot.workIncomplete == true {
+            Text("Grouped tasks need review").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         } else if entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400 {
             Label("Open app to refresh", systemImage: "arrow.clockwise").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         } else {
@@ -491,22 +563,84 @@ struct WidgetFooter: View {
     }
 }
 
+struct WidgetPrivateCard: View {
+    let title: String
+    let symbol: String
+    var message = "Tasks are private"
+    var instruction = "Open Taskfold to view your tasks."
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(title, systemImage: symbol).font(.headline).lineLimit(2)
+            Spacer(minLength: 0)
+            Label(message, systemImage: "lock.fill").font(.subheadline.weight(.semibold))
+            Text(instruction).font(.caption).foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+            Text("TASKFOLD").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(1.5).foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .combine)
+        .unredacted()
+    }
+}
+
 struct TodayWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: TodayEntry
     var tasks: [WidgetTask] { entry.snapshot.today(at: entry.date) }
+    var hasSnapshot: Bool { entry.snapshot.updated > 0 }
+    var countText: String { hasSnapshot ? (entry.snapshot.workIncomplete == true ? "≥" : "") + "\(tasks.count)" : "—" }
+    var countAccessibilityLabel: String { hasSnapshot ? (entry.snapshot.workIncomplete == true ? "At least " : "") + "\(tasks.count) scheduled \(tasks.count == 1 ? "task" : "tasks")" : "Task count unavailable" }
     var limit: Int { family == .systemLarge ? 7 : 2 }
     var body: some View {
+        Group {
+            if redactionReasons.contains(.privacy) {
+                privateContent.widgetURL(URL(string: "taskfold://today"))
+            } else {
+                normalContent
+            }
+        }
+        // Keep WidgetKit's background registration outside the privacy-dependent
+        // content tree so it stays present when the system changes redaction.
+        .containerBackground(for: .widget) { containerSurface }
+    }
+    @ViewBuilder private var containerSurface: some View {
+        #if os(iOS)
+        switch family {
+        case .accessoryCircular, .accessoryRectangular, .accessoryInline:
+            Color.clear
+        default:
+            WidgetSurface(tint: brand)
+        }
+        #else
+        WidgetSurface(tint: brand)
+        #endif
+    }
+    @ViewBuilder private var privateContent: some View {
         #if os(iOS)
         switch family {
         case .accessoryCircular:
-            ZStack { AccessoryWidgetBackground(); VStack(spacing: 0) { Text("\(tasks.count)").font(.title2.bold()).monospacedDigit(); Text("due").font(.caption2) } }
+            ZStack { AccessoryWidgetBackground(); Image(systemName: "lock.fill") }
+                .accessibilityLabel("Today, tasks are private").unredacted()
+        case .accessoryRectangular, .accessoryInline:
+            Label("Tasks are private", systemImage: "lock.fill").unredacted()
+        default:
+            WidgetPrivateCard(title: "Today", symbol: "sun.max")
+        }
+        #else
+        WidgetPrivateCard(title: "Today", symbol: "sun.max")
+        #endif
+    }
+    @ViewBuilder private var normalContent: some View {
+        #if os(iOS)
+        switch family {
+        case .accessoryCircular:
+            ZStack { AccessoryWidgetBackground(); VStack(spacing: 0) { Text(countText).font(.title2.bold()).monospacedDigit().accessibilityLabel(countAccessibilityLabel); Text(hasSnapshot ? "due" : "open").font(.caption2) } }
                 .widgetURL(URL(string: "taskfold://today"))
         case .accessoryRectangular:
-            VStack(alignment: .leading, spacing: 2) { Text(tasks.first?.title ?? "All clear").font(.headline).lineLimit(1); Text("\(tasks.count) due · including overdue").font(.caption2).lineLimit(1) }
-                .widgetURL(tasks.first?.url ?? URL(string: "taskfold://today"))
+            VStack(alignment: .leading, spacing: 2) { Text(hasSnapshot ? tasks.first?.title ?? "All clear" : "Open Taskfold").font(.headline).lineLimit(2).fixedSize(horizontal: false, vertical: true).privacySensitive(tasks.first != nil); Text(hasSnapshot ? "\(tasks.count) due · incl. overdue" : "Refresh your tasks").font(.caption2).lineLimit(1) }
+                .widgetURL(tasks.first?.url(account: entry.snapshot.account) ?? URL(string: "taskfold://today"))
         case .accessoryInline:
-            Text("Taskfold · \(tasks.count) due").widgetURL(URL(string: "taskfold://today"))
+            Text(hasSnapshot ? "Taskfold · \(tasks.count) due" : "Taskfold · Open app").widgetURL(URL(string: "taskfold://today"))
         default: content
         }
         #else
@@ -518,64 +652,97 @@ struct TodayWidgetView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) { Text("Today").font(.headline); Text(entry.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())).font(.caption2).foregroundStyle(.secondary) }
                 Spacer()
-                Text("\(tasks.count)").font(.system(.title2, design: .rounded).weight(.semibold)).monospacedDigit().foregroundStyle(brand)
+                Text(countText).font(.system(.title2, design: .rounded).weight(.semibold)).monospacedDigit().foregroundStyle(brand).accessibilityLabel(countAccessibilityLabel)
             }
-            if tasks.isEmpty {
+            if !hasSnapshot {
                 Spacer(minLength: 0)
-                Label("All clear for today", systemImage: "sun.max").font(.subheadline.weight(.medium))
-                Text("No scheduled tasks outstanding.").font(.caption).foregroundStyle(.secondary)
+                Label("Open Taskfold", systemImage: "arrow.clockwise").font(.subheadline.weight(.medium))
+                Text("Refresh your tasks.").font(.caption).foregroundStyle(.secondary)
+            } else if tasks.isEmpty {
+                Spacer(minLength: 0)
+                Label(entry.snapshot.workIncomplete == true ? "Review grouped tasks" : "All clear for today", systemImage: "sun.max").font(.subheadline.weight(.medium))
+                Text(entry.snapshot.workIncomplete == true ? "Open Taskfold to review the remaining groups." : "No scheduled tasks outstanding.").font(.caption).foregroundStyle(.secondary)
             } else {
                 ForEach(tasks.prefix(limit)) { task in
-                    Link(destination: task.url) {
+                    Link(destination: task.url(account: entry.snapshot.account)) {
                         HStack(spacing: 8) {
                             RoundedRectangle(cornerRadius: 2).fill(widgetColor(task.color)).frame(width: 3, height: 22)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(task.title).font(.caption.weight(.medium)).lineLimit(1)
-                                Text(task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : task.time.isEmpty ? "P\(task.priority)" : task.time).font(.system(size: 9)).foregroundStyle(task.due < WidgetSnapshot.day(entry.date) ? brand : .secondary).lineLimit(1)
-                            }
+                                Text([task.parent ?? "", task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : task.time.isEmpty ? "P\(task.priority)" : task.time].filter { !$0.isEmpty }.joined(separator: " · ")).font(.system(size: 9)).foregroundStyle(task.due < WidgetSnapshot.day(entry.date) ? brand : .secondary).lineLimit(1)
+                            }.privacySensitive()
                             Spacer(minLength: 0)
                         }
                     }.buttonStyle(.plain)
                 }
             }
             Spacer(minLength: 0)
-            HStack { WidgetFooter(entry: entry); Spacer(); if tasks.count > limit { Text("+\(tasks.count - limit)").font(.caption2).foregroundStyle(.secondary) }; Link(destination: URL(string: "taskfold://add")!) { Image(systemName: "plus.circle.fill").foregroundStyle(brand) }.accessibilityLabel("Add task") }
+            HStack {
+                if hasSnapshot { WidgetFooter(entry: entry) }
+                else { Text("TASKFOLD").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(1.5).foregroundStyle(.secondary) }
+                Spacer()
+                if tasks.count > limit { Text("+\(tasks.count - limit)").font(.caption2).foregroundStyle(.secondary) }
+                Link(destination: URL(string: "taskfold://add")!) { Image(systemName: "plus.circle.fill").foregroundStyle(brand) }.accessibilityLabel("Capture task in Inbox")
+            }
         }
-        .containerBackground(for: .widget) { WidgetSurface(tint: brand) }
         .widgetURL(URL(string: "taskfold://today"))
     }
 }
 
 struct FocusWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: TodayEntry
     var task: WidgetTask? { entry.snapshot.focus(at: entry.date) }
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("Focus", systemImage: "scope").font(.caption.weight(.semibold)).foregroundStyle(plum)
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Focus", symbol: "scope")
+                .containerBackground(for: .widget) { WidgetSurface(tint: plum) }
+                .widgetURL(URL(string: "taskfold://today"))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
+        VStack(alignment: .leading, spacing: family == .systemMedium ? 4 : 6) {
+            HStack {
+                Label("Focus", systemImage: "scope").font(.caption.weight(.semibold)).foregroundStyle(plum)
+                if family == .systemMedium, task != nil { Spacer(minLength: 8); WidgetFooter(entry: entry) }
+            }
             if let task {
-                Text(task.title).font(family == .systemSmall ? .headline : .title2.bold()).lineLimit(3).minimumScaleFactor(0.85)
-                Text(task.due.isEmpty ? "Unscheduled priority · P\(task.priority)" : task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : "Today · P\(task.priority)\(task.time.isEmpty ? "" : " · \(task.time)")").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                Text(task.title).font(family == .systemSmall ? .headline : .headline.bold()).lineLimit(3).minimumScaleFactor(0.85)
+                    .fixedSize(horizontal: false, vertical: family == .systemMedium).privacySensitive()
+                Text(task.due.isEmpty ? "Unscheduled priority · P\(task.priority)" : task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : "Today · P\(task.priority)\(task.time.isEmpty ? "" : " · \(task.time)")").font(.caption2).foregroundStyle(.secondary).lineLimit(2).privacySensitive()
                 Spacer(minLength: 0)
-                HStack { if entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400 { WidgetFooter(entry: entry) } else { Text(task.project.isEmpty ? "Inbox" : task.project).font(.caption2).lineLimit(1) }; Spacer(); Image(systemName: "arrow.up.right.circle.fill").font(.title2).foregroundStyle(plum) }
+                HStack { if family == .systemSmall && (entry.snapshot.workIncomplete == true || entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400) { WidgetFooter(entry: entry) } else { Text(task.parent.flatMap { $0.isEmpty ? nil : $0 } ?? (task.project.isEmpty ? "Inbox" : task.project)).font(.caption2).lineLimit(1).privacySensitive() }; Spacer(); Image(systemName: "arrow.up.right.circle.fill").font(.title2).foregroundStyle(plum) }
             } else {
-                Text("Space to focus").font(.headline)
-                Text("Nothing due or high priority. Capture your next step.").font(.caption).foregroundStyle(.secondary)
+                Text(entry.snapshot.workIncomplete == true ? "Review grouped tasks" : "Space to focus").font(.headline)
+                Text(entry.snapshot.workIncomplete == true ? "Open Taskfold to review the remaining work." : "Nothing due or high priority. Capture your next step.").font(.caption).foregroundStyle(.secondary)
                 Spacer(minLength: 0)
             }
-            if family != .systemSmall || task == nil { WidgetFooter(entry: entry) }
+            if task == nil { WidgetFooter(entry: entry) }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: plum) }
-        .widgetURL(task?.url ?? URL(string: "taskfold://add"))
+        .widgetURL(task?.url(account: entry.snapshot.account) ?? URL(string: "taskfold://add"))
     }
 }
 
 struct WeekWidgetView: View {
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: TodayEntry
     var days: [WidgetDay] { entry.snapshot.week(at: entry.date) }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Week ahead", symbol: "calendar", message: "Tasks are private", instruction: "Open Taskfold to view your tasks.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: mint) }
+                .widgetURL(URL(string: "taskfold://upcoming"))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack { Label("Next 7 days", systemImage: "calendar").font(.headline); Spacer(); Text("\(days.reduce(0) { $0 + $1.count }) scheduled").font(.caption).foregroundStyle(mint) }
+            HStack { Label("Next 7 days", systemImage: "calendar").font(.headline); Spacer(); Text((entry.snapshot.workIncomplete == true ? "≥" : "") + "\(days.reduce(0) { $0 + $1.count }) scheduled").font(.caption).foregroundStyle(mint) }
             HStack(alignment: .bottom, spacing: 8) {
                 ForEach(days) { day in
                     VStack(spacing: 4) {
@@ -627,7 +794,7 @@ struct WeekWidget: Widget {
     var body: some WidgetConfiguration { StaticConfiguration(kind: "TaskfoldWeek", provider: TodayProvider()) { WeekWidgetView(entry: $0) }.configurationDisplayName("Week ahead").description("See scheduled task counts for the next seven days. Tap to review your week.").supportedFamilies([.systemMedium]) }
 }
 struct CaptureWidget: Widget {
-    var body: some WidgetConfiguration { StaticConfiguration(kind: "TaskfoldCapture", provider: TodayProvider()) { CaptureWidgetView(entry: $0) }.configurationDisplayName("Quick capture").description("Capture a thought before it gets away.").supportedFamilies([.systemSmall]) }
+    var body: some WidgetConfiguration { StaticConfiguration(kind: "TaskfoldCapture", provider: TodayProvider()) { CaptureWidgetView(entry: $0) }.configurationDisplayName("Quick capture").description("Capture a thought in Inbox without assigning a date.").supportedFamilies([.systemSmall]) }
 }
 
 extension WindowBudget: AppEnum {
@@ -760,20 +927,30 @@ struct PlanningWidgetEmpty: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             if !compact { Image(systemName: symbol).font(.title2).foregroundStyle(.secondary) }
-            Text(snapshot.updated == 0 ? "Make it yours" : !snapshot.hasPlanningFields ? "Refresh your widgets" : title).font(compact ? .subheadline.weight(.semibold) : .headline).lineLimit(2)
-            Text(snapshot.updated == 0 ? "Open Taskfold to load your tasks." : !snapshot.hasPlanningFields ? "Open Taskfold for deadline and estimate data." : message).font(.caption2).foregroundStyle(.secondary).lineLimit(compact ? 2 : 3)
+            Text(snapshot.updated == 0 ? "Make it yours" : snapshot.workIncomplete == true ? "Review grouped tasks" : !snapshot.hasPlanningFields ? "Refresh your widgets" : title).font(compact ? .subheadline.weight(.semibold) : .headline).lineLimit(2)
+            Text(snapshot.updated == 0 ? "Open Taskfold to load your tasks." : snapshot.workIncomplete == true ? "Some grouped work needs review in Taskfold." : !snapshot.hasPlanningFields ? "Open Taskfold for deadline and estimate data." : message).font(.caption2).foregroundStyle(.secondary).lineLimit(compact ? 2 : 3)
         }
     }
 }
 
 struct DeadlineWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: DeadlineEntry
     private var tint: Color { entry.palette.color(fallback: brand) }
     private var tasks: [WidgetTask] { entry.snapshot.scoped(to: entry.listID, at: entry.date).deadlines(at: entry.date, days: entry.window.days) }
     private var today: String { WidgetSnapshot.day(entry.date) }
     private var missed: Int { tasks.filter { ($0.deadlineDay ?? "9999") < today }.count }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Deadline radar", symbol: "flag.checkered", message: "Tasks are private", instruction: "Open Taskfold to view your tasks.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.list(entry.listID)?.url ?? URL(string: "taskfold://all"))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 7 : 5) {
             HStack { Label("Deadline radar", systemImage: "flag.checkered").font(family == .systemSmall ? .caption.weight(.semibold) : .headline); Spacer(minLength: 0); if family != .systemSmall && entry.snapshot.updated > 0 && entry.snapshot.hasPlanningFields && (entry.listID == nil || entry.snapshot.listStatus(entry.listID, at: entry.date) == .ready) { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) } }
             if let listID = entry.listID, entry.snapshot.listStatus(listID, at: entry.date) != .ready {
@@ -782,12 +959,12 @@ struct DeadlineWidgetView: View {
                 Spacer(minLength: 0)
                 PlanningWidgetEmpty(snapshot: entry.snapshot, title: "Room to breathe", message: "No missed deadlines or cutoffs in the next \(entry.window.days) days.", symbol: "checkmark.seal", compact: family == .systemSmall)
             } else {
-                Text(missed > 0 ? "\(missed) missed · next \(entry.window.days) days" : "Hard cutoffs · next \(entry.window.days) days").font(.caption2).foregroundStyle(missed > 0 ? tint : .secondary).lineLimit(1)
+                Text(family == .systemSmall ? (missed > 0 ? "\(missed) missed · \(entry.window.days) days" : "Next \(entry.window.days) days") : (missed > 0 ? "\(missed) missed · next \(entry.window.days) days" : "Hard cutoffs · next \(entry.window.days) days")).font(.caption2).foregroundStyle(missed > 0 ? tint : .secondary).lineLimit(1)
                 ForEach(tasks.prefix(family == .systemSmall ? 1 : 3)) { task in
-                    Link(destination: task.url) {
+                    Link(destination: task.url(account: entry.snapshot.account)) {
                         if family == .systemSmall {
                             VStack(alignment: .leading, spacing: 5) {
-                                Text(entry.hideTitles ? "Task names hidden" : task.title).font(.headline).lineLimit(2).privacySensitive()
+                                Text(entry.hideTitles ? "Task names hidden" : task.title).font(.headline).lineLimit(2).fixedSize(horizontal: false, vertical: true).privacySensitive()
                                 deadlineBadge(task)
                             }
                         } else {
@@ -808,7 +985,7 @@ struct DeadlineWidgetView: View {
             HStack { WidgetFooter(entry: entry.footer); Spacer(minLength: 0); if family != .systemSmall && tasks.count > 3 { Text("+\(tasks.count - 3)").font(.caption2).foregroundStyle(.secondary) } }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(tasks.first?.url ?? entry.snapshot.list(entry.listID)?.url ?? URL(string: "taskfold://all"))
+        .widgetURL(tasks.first?.url(account: entry.snapshot.account) ?? entry.snapshot.list(entry.listID)?.url ?? URL(string: "taskfold://all"))
     }
     private func deadlineBadge(_ task: WidgetTask) -> some View {
         let day = task.deadlineDay ?? ""
@@ -821,11 +998,21 @@ struct DeadlineWidgetView: View {
 
 struct WindowWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: WindowEntry
     private var tint: Color { entry.palette.color(fallback: plum) }
     private var tasks: [WidgetTask] { entry.snapshot.scoped(to: entry.listID, at: entry.date).smallWindow(minutes: entry.budget.minutes, scope: entry.scope, at: entry.date) }
     private var unknown: Int { entry.snapshot.scoped(to: entry.listID, at: entry.date).windowTasks(scope: entry.scope, at: entry.date).filter { $0.estimate == nil }.count }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Small window", symbol: "hourglass", message: "Tasks are private", instruction: "Open Taskfold to view your tasks.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.list(entry.listID)?.url ?? entry.scope.url)
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 6 : 5) {
             HStack {
                 Label(family == .systemSmall ? "Small window" : "A small window", systemImage: "hourglass").font(family == .systemSmall ? .caption.weight(.semibold) : .headline).foregroundStyle(tint)
@@ -840,10 +1027,10 @@ struct WindowWidgetView: View {
                 PlanningWidgetEmpty(snapshot: entry.snapshot, title: "Nothing fits yet", message: unknown > 0 ? "\(unknown) tasks need estimates. Add one in Taskfold." : "No known estimate fits this budget and scope.", symbol: "sparkle", compact: family == .systemSmall)
             } else {
                 ForEach(tasks.prefix(family == .systemSmall ? 1 : 3)) { task in
-                    Link(destination: task.url) {
+                    Link(destination: task.url(account: entry.snapshot.account)) {
                         HStack(spacing: 8) {
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(entry.hideTitles ? "Task names hidden" : task.title).font(family == .systemSmall ? .subheadline.weight(.semibold) : .caption.weight(.medium)).lineLimit(family == .systemSmall ? 2 : 1).privacySensitive()
+                                Text(entry.hideTitles ? "Task names hidden" : task.title).font(family == .systemSmall ? .subheadline.weight(.semibold) : .caption.weight(.medium)).lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: family == .systemSmall).privacySensitive()
                                 if family != .systemSmall && !entry.hideTitles { Text(task.project.isEmpty ? "Inbox" : task.project).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).privacySensitive() }
                             }
                             Spacer(minLength: 0)
@@ -860,7 +1047,7 @@ struct WindowWidgetView: View {
             }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(tasks.first?.url ?? (entry.snapshot.updated == 0 || !entry.snapshot.hasPlanningFields ? URL(string: "taskfold://all") : entry.snapshot.list(entry.listID)?.url ?? entry.scope.url))
+        .widgetURL(tasks.first?.url(account: entry.snapshot.account) ?? (entry.snapshot.updated == 0 || !entry.snapshot.hasPlanningFields ? URL(string: "taskfold://all") : entry.snapshot.list(entry.listID)?.url ?? entry.scope.url))
     }
     private var budgetBadge: some View { Text("\(entry.budget.minutes) min").font(.subheadline.weight(.semibold)).monospacedDigit().padding(.horizontal, 9).padding(.vertical, 4).foregroundStyle(tint).background(tint.opacity(0.12), in: .capsule) }
 }
@@ -877,7 +1064,7 @@ struct ListProvider: AppIntentTimelineProvider {
     func snapshot(for configuration: ListConfiguration, in context: Context) async -> ListEntry { context.isPreview ? placeholder(in: context) : entry(Date(), snapshot: .load(), configuration: configuration) }
     func timeline(for configuration: ListConfiguration, in context: Context) async -> Timeline<ListEntry> {
         let snapshot = WidgetSnapshot.load()
-        return Timeline(entries: snapshot.listTimelineDates(configuration.list?.id, from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+        return Timeline(entries: snapshot.completionTimelineDates(configuration.list?.id, from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
     }
     private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: ListConfiguration) -> ListEntry {
         ListEntry(date: date, snapshot: snapshot, listID: configuration.list?.id, palette: configuration.palette, hideTitles: configuration.hideTitles)
@@ -894,24 +1081,84 @@ struct WidgetListEmpty: View {
 }
 struct ListWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: ListEntry
+    private var feedback: WidgetCompletionFeedback? {
+        entry.snapshot.completionFeedback.flatMap { $0.visible(account: entry.snapshot.account, listID: entry.listID, at: entry.date) ? $0 : nil }
+    }
+    private var rowLimit: Int { family == .systemSmall ? 1 : family == .systemLarge ? 5 : 2 }
     private var target: WidgetList? { entry.snapshot.list(entry.listID) }
     private var tasks: [WidgetTask] { entry.snapshot.listTasks(entry.listID, at: entry.date) }
     private var status: WidgetListStatus { entry.snapshot.listStatus(entry.listID, at: entry.date) }
+    private func detail(_ task: WidgetTask) -> String {
+        var parts:[String]=[]
+        if !entry.hideTitles, let group=entry.snapshot.listGroups(entry.listID,at:entry.date).first(where:{$0.ids.contains(task.id)}), !group.name.isEmpty { parts.append(group.name) }
+        if !entry.hideTitles, let parent = task.parent, !parent.isEmpty { parts.append(parent) }
+        if WidgetSnapshot.validDay(task.due) { parts.append("Planned \(widgetDate(task.due))") }
+        return parts.joined(separator:" · ")
+    }
     private var tint: Color { entry.palette.color(fallback: mint) }
+    private var listHeader: some View {
+        HStack {
+            Label(entry.hideTitles ? "My list" : target?.name ?? "My list", systemImage: "list.bullet.rectangle")
+                .font(family == .systemSmall ? .caption.weight(.semibold) : .headline)
+                .lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: true).privacySensitive()
+            Spacer(minLength: 0)
+            if status == .ready { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) }
+        }
+        .contentShape(Rectangle())
+    }
     var body: some View {
+        Group {
+            if redactionReasons.contains(.privacy) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("My list", systemImage: "list.bullet.rectangle").font(.headline)
+                    Spacer(minLength: 0)
+                    Label("Tasks are private", systemImage: "lock.fill").font(.subheadline.weight(.semibold))
+                    Text("Open Taskfold to view this list.").font(.caption).foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                    Text("TASKFOLD").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(1.5).foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .unredacted()
+            } else {
+                listContent
+            }
+        }
+        .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+        .widgetURL(status == .ready ? (redactionReasons.contains(.privacy) ? target?.url : family == .systemSmall ? tasks.first?.url(account: entry.snapshot.account) ?? target?.url : target?.url) : URL(string: "taskfold://all"))
+    }
+    private var listContent: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Label(entry.hideTitles ? "My list" : target?.name ?? "My list", systemImage: "list.bullet.rectangle").font(.headline).lineLimit(1).privacySensitive()
-                Spacer(minLength: 0)
-                if status == .ready { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) }
+            if family != .systemSmall, status == .ready, let url = target?.url {
+                Link(destination: url) { listHeader }.buttonStyle(.plain)
+            } else {
+                listHeader
             }
             if status != .ready { Spacer(minLength: 0); WidgetListEmpty(status: status) }
-            else if tasks.isEmpty {
+            else if tasks.isEmpty && feedback == nil {
                 Spacer(minLength: 0); Text("All clear").font(.headline)
                 Text("No open tasks in this list.").font(.caption2).foregroundStyle(.secondary)
             } else {
-                ForEach(tasks.prefix(family == .systemSmall ? 1 : family == .systemLarge ? 5 : 2)) { task in
+                if let feedback {
+                    HStack(spacing: 2) {
+                    Link(destination: WidgetLinks.task(feedback.taskID, account: feedback.account, context: feedback.routeContext)) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill").font(.system(size: 21)).foregroundStyle(tint)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Completed").font(.caption.weight(.semibold)).foregroundStyle(tint)
+                                Text(entry.hideTitles ? "Private task" : feedback.title).font(.caption2).lineLimit(2).privacySensitive()
+                            }
+                            Spacer(minLength: 0)
+                        }.frame(minHeight: 44).contentShape(Rectangle())
+                    }.buttonStyle(.plain).accessibilityHint("Open completed task")
+                    Button(intent: DismissWidgetFeedbackIntent(account: feedback.account, taskID: feedback.taskID, savedAt: feedback.savedAt.timeIntervalSinceReferenceDate)) {
+                        Image(systemName: "xmark").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                            .frame(width: 32, height: 44).contentShape(Rectangle())
+                    }.buttonStyle(.plain).accessibilityLabel("Dismiss completion message")
+                    }
+                }
+                ForEach(tasks.prefix(max(0, rowLimit - (feedback == nil ? 0 : 1)))) { task in
                     HStack(spacing: 2) {
                         if let token = task.completionToken, !entry.snapshot.account.isEmpty {
                             let pending = entry.snapshot.pendingTaskIDs.contains(task.id)
@@ -922,9 +1169,12 @@ struct ListWidgetView: View {
                             }.buttonStyle(.plain).disabled(pending)
                                 .accessibilityLabel(pending ? "Waiting to complete" : entry.hideTitles ? "Complete private task" : "Complete \(task.title)")
                         }
-                        Link(destination: task.url) {
+                        Link(destination: task.url(account: entry.snapshot.account)) {
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.semibold)).lineLimit(2).privacySensitive()
+                                Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.semibold)).lineLimit(family == .systemSmall ? 3 : 2).privacySensitive()
+                                if !detail(task).isEmpty {
+                                    Text(detail(task)).font(.caption2).foregroundStyle(.secondary).lineLimit(1).privacySensitive()
+                                }
                                 if family != .systemSmall, let day = task.deadlineDay { Text(widgetDate(day)).font(.caption2).foregroundStyle(tint).accessibilityLabel("Deadline \(day)") }
                             }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                         }.buttonStyle(.plain)
@@ -934,8 +1184,7 @@ struct ListWidgetView: View {
             Spacer(minLength: 0)
             WidgetFooter(entry: TodayEntry(date: entry.date, snapshot: entry.snapshot))
         }
-        .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(status == .ready ? (family == .systemSmall ? tasks.first?.url ?? target?.url : target?.url) : URL(string: "taskfold://all"))
+
     }
 }
 struct ListWidget: Widget {
@@ -1003,16 +1252,26 @@ struct CapacityProvider: AppIntentTimelineProvider {
 }
 struct CapacityWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: CapacityEntry
     private var reading: WidgetCapacityReading { entry.snapshot.capacityReading(at: entry.date, day: entry.day) }
     private var tint: Color { entry.palette.color(fallback: mint) }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Day capacity", symbol: "chart.bar.xaxis", message: "Plan is private", instruction: "Open Taskfold to view your plan.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(WidgetLinks.scoped("day", id: reading.dayKey))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 5) {
                 Image(systemName: "chart.bar.xaxis").foregroundStyle(tint)
-                Text(family == .systemSmall && entry.day == .tomorrow ? "Tomorrow’s capacity" : "Day capacity").font(.caption.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(family == .systemSmall ? "Capacity" : "Day capacity").font(.caption.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
                 Spacer(minLength: 2)
-                if family != .systemSmall { Text(entry.day == .today ? "Today" : "Tomorrow").font(.caption2).foregroundStyle(.secondary) }
+                Text(entry.day == .today ? "Today" : "Tomorrow").font(family == .systemSmall ? .system(size: 9) : .caption2).foregroundStyle(.secondary).lineLimit(1)
             }
             if entry.hideDetails {
                 Spacer(minLength: 0)
@@ -1024,7 +1283,7 @@ struct CapacityWidgetView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(headline(day)).font(.system(size: family == .systemSmall ? 34 : 36, weight: .semibold, design: .rounded)).monospacedDigit().minimumScaleFactor(0.55).lineLimit(1)
                             .foregroundStyle(reading.canCalculateRoom && day.afterKnownWork < 0 && day.working > 0 ? brand : .primary)
-                        Text(qualifier(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                        Text(qualifier(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(2).fixedSize(horizontal: false, vertical: family == .systemSmall)
                     }.frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
                     if family != .systemSmall {
                         VStack(alignment: .leading, spacing: 4) {
@@ -1035,13 +1294,13 @@ struct CapacityWidgetView: View {
                     }
                 }
                 capacityBar(day).padding(.vertical, 2)
-                Text(caution(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(family == .systemSmall ? 2 : 1).minimumScaleFactor(0.8).privacySensitive()
+                Text(caution(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(family == .systemSmall ? 2 : 1).minimumScaleFactor(0.8).fixedSize(horizontal: false, vertical: family == .systemSmall).privacySensitive()
                 Spacer(minLength: 0)
                 Text(reading.calendarNote).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.7)
             } else {
                 Spacer(minLength: 0)
-                Text(entry.snapshot.updated == 0 ? "Make room for your day" : "Refresh your day").font(.headline).lineLimit(2)
-                Text("Open Taskfold to load working hours and your plan.").font(.caption2).foregroundStyle(.secondary).lineLimit(3)
+                Text(reading.state == "settings" ? "Capacity unavailable" : entry.snapshot.updated == 0 ? "Make room for your day" : "Refresh your day").font(.headline).lineLimit(2)
+                Text(reading.state == "settings" ? "Update Taskfold to read your working hours." : "Open Taskfold to load working hours and your plan.").font(.caption2).foregroundStyle(.secondary).lineLimit(3)
                 Spacer(minLength: 0)
             }
             WidgetFooter(entry: TodayEntry(date: entry.date, snapshot: entry.snapshot))
@@ -1055,13 +1314,13 @@ struct CapacityWidgetView: View {
         return WidgetCapacityReading.minutes(day.afterKnownWork) + (day.afterKnownWork < 0 ? " over" : "")
     }
     private func qualifier(_ day: WidgetCapacityDay) -> String {
-        if !reading.canCalculateRoom { return "Calendar needs attention" }
+        if !reading.canCalculateRoom { return reading.state == "work" ? "Grouped tasks need review" : "Calendar needs attention" }
         if day.working == 0 { return WidgetCapacityReading.minutes(day.estimated) + " task estimates" }
         if day.afterKnownWork < 0 { return "over the day’s budget" }
         return reading.state == "off" ? "whole day after estimates" : "whole day after known work"
     }
     private func caution(_ day: WidgetCapacityDay) -> String {
-        let estimate = day.unknown == 0 ? "All planned tasks estimated" : "\(day.unknown) unestimated"
+        let estimate = day.workIncomplete == true ? "Readable estimates only" : day.unknown == 0 ? "All planned tasks estimated" : "\(day.unknown) unestimated"
         return estimate + (day.overdue == 0 ? "" : " · \(day.overdue) overdue outside plan")
     }
     private func metric(_ title: String, value: String, color: Color) -> some View {
@@ -1129,6 +1388,7 @@ struct InboxProvider: AppIntentTimelineProvider {
 }
 struct InboxWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: InboxEntry
     private var reading: WidgetInboxReading { entry.snapshot.inboxReading() }
     private var tint: Color { entry.palette.color(fallback: plum) }
@@ -1139,6 +1399,15 @@ struct InboxWidgetView: View {
         return batchCount < count ? "Review \(batchCount) of \(count)" : "Review all \(count)"
     }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Inbox reset", symbol: "tray", message: "Tasks are private", instruction: "Open Taskfold to view your tasks.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.inboxReviewURL(batch: entry.batch))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 5) {
                 Image(systemName: "tray").foregroundStyle(tint)
@@ -1173,7 +1442,7 @@ struct InboxWidgetView: View {
                 Spacer(minLength: 0)
             } else {
                 Spacer(minLength: 0)
-                Text(entry.snapshot.updated == 0 ? "A fresh start" : "Refresh Inbox").font(.headline).lineLimit(2)
+                Text(entry.snapshot.workIncomplete == true ? "Review grouped tasks" : entry.snapshot.updated == 0 ? "A fresh start" : "Refresh Inbox").font(.headline).lineLimit(2)
                 Text("Open Taskfold to load your Inbox.").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
                 Spacer(minLength: 0)
             }
@@ -1251,12 +1520,22 @@ struct NoteProvider: AppIntentTimelineProvider {
 }
 struct NoteWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: NoteEntry
     private var tint: Color { entry.palette.color(fallback: mint) }
     private var status: WidgetNoteStatus { entry.snapshot.noteStatus(entry.noteID, at: entry.date) }
     private var note: WidgetNote? { status == .ready ? entry.snapshot.note(entry.noteID) : nil }
     var body: some View {
-        VStack(alignment: .leading, spacing: family == .systemLarge ? 12 : 8) {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Pinned note", symbol: "pin.fill", message: "Note is private", instruction: "Open Taskfold to read your notes.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.notesURL)
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
+        VStack(alignment: .leading, spacing: family == .systemSmall ? 4 : family == .systemLarge ? 12 : 8) {
             HStack {
                 Label("PINNED NOTE", systemImage: "pin.fill").font(.system(size: 10, weight: .semibold, design: .rounded)).tracking(1).foregroundStyle(tint)
                 Spacer(minLength: 0)
@@ -1268,11 +1547,14 @@ struct NoteWidgetView: View {
                 Text("Open Taskfold to read it.").font(.caption).foregroundStyle(.secondary).lineLimit(2)
                 Spacer(minLength: 0)
             } else if let note {
-                Text(note.title.isEmpty ? "Your pinned note" : note.title).font(.system(.headline, design: .rounded)).lineLimit(family == .systemSmall ? 2 : 1).privacySensitive()
-                if note.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text(note.title.isEmpty ? "Your pinned note" : note.title).font(.system(.headline, design: .rounded)).lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: true).privacySensitive()
+                // Preview space is scarce; keep blank edges in the full reader,
+                // while using the widget's lines for the actual instructions.
+                let preview = note.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                if preview.isEmpty {
                     Text(note.truncated ? "Open Taskfold to read the full note." : "Add note text in task details.").font(.callout).foregroundStyle(.secondary).lineLimit(3)
                 } else {
-                    Text(note.text).font(.system(family == .systemSmall ? .caption : family == .systemLarge ? .callout : .subheadline, design: .rounded)).lineSpacing(family == .systemLarge ? 3 : 2).lineLimit(family == .systemSmall ? 3 : family == .systemLarge ? 12 : 4).frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
+                    Text(preview).font(.system(family == .systemSmall ? .caption : family == .systemLarge ? .callout : .subheadline, design: .rounded)).lineSpacing(family == .systemLarge ? 3 : 2).lineLimit(family == .systemSmall ? 3 : family == .systemLarge ? 12 : 2).fixedSize(horizontal: false, vertical: family != .systemLarge).frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
                 }
                 Spacer(minLength: 0)
             } else {
@@ -1335,6 +1617,7 @@ struct FocusSessionProvider: AppIntentTimelineProvider {
 }
 struct FocusSessionWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: FocusSessionEntry
     private var tint: Color { entry.palette.color(fallback: plum) }
     private var status: FocusWidgetStatus { entry.snapshot.focusSessionStatus(at: entry.date) }
@@ -1361,6 +1644,15 @@ struct FocusSessionWidgetView: View {
         }
     }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Focus session", symbol: "timer", message: "Session is private", instruction: "Open Taskfold to view your session.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.focusSessionURL)
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 4 : 8) {
             HStack {
                 Label(family == .systemSmall ? "FOCUS" : "FOCUS SESSION", systemImage: status == .paused ? "pause.circle" : "timer")
@@ -1410,7 +1702,7 @@ struct FocusSessionWidgetView: View {
     }
     @ViewBuilder private var taskContent: some View {
         if status == .refresh || status == .idle {
-            Text(status == .idle ? "Give one task a little time." : "Open Taskfold to update your session.").font(.subheadline.weight(.medium)).lineLimit(3)
+            Text(status == .idle ? "Give one task a little time." : "Open Taskfold to update your session.").font(.subheadline.weight(.medium)).lineLimit(3).fixedSize(horizontal: false, vertical: true)
         } else if entry.hideTitle {
             Text("A little time, just for you").font(.subheadline.weight(.medium)).lineLimit(2)
         } else {
@@ -1497,6 +1789,7 @@ struct PulseProvider: AppIntentTimelineProvider {
 }
 struct PulseWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: PulseEntry
     private var tint: Color { entry.palette.color(fallback: mint) }
     private var status: PulseWidgetStatus { entry.snapshot.pulseStatus(entry.projectID, at: entry.date) }
@@ -1505,6 +1798,15 @@ struct PulseWidgetView: View {
     private var large: Bool { family == .systemLarge }
     private var small: Bool { family == .systemSmall }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Project pulse", symbol: "chart.bar.fill", message: "Project is private", instruction: "Open Taskfold to view your projects.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.pulseURL(nil))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: small ? 5 : 8) {
             HStack {
                 Label("PROJECT PULSE", systemImage: "chart.bar.fill").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(0.8).foregroundStyle(tint)
@@ -1514,7 +1816,7 @@ struct PulseWidgetView: View {
             }
             if let project, let day {
                 Text(entry.hideNames ? "Your chosen project" : project.name).font((small ? Font.caption : Font.subheadline).weight(.semibold)).lineLimit(small ? 2 : 1).privacySensitive()
-                if small { progress(project); Text("\(day.attentionCount) need attention").font(.system(size: 10, weight: .medium)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1) }
+                if small { progress(project); Text("\(day.attentionCount) \(day.attentionCount == 1 ? "needs" : "need") attention").font(.system(size: 10, weight: .medium)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1) }
                 else {
                     HStack(alignment: .top, spacing: 20) {
                         progress(project).frame(width: large ? 124 : 115, alignment: .leading)
@@ -1545,19 +1847,19 @@ struct PulseWidgetView: View {
     }
     private func progress(_ project: PulseProject) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("\(project.completed) / \(project.total)").font(.system(size: small ? 32 : 30, weight: .semibold, design: .rounded).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.5).accessibilityLabel("\(project.completed) of \(project.total) current project tasks completed").accessibilityIdentifier("pulseWidgetProgress")
-            Text("completed · current tasks").font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.85)
+            Text(project.countsIncomplete == true ? "Review tasks" : "\(project.completed) / \(project.total)").font(.system(size: small ? 32 : 30, weight: .semibold, design: .rounded).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.5).accessibilityLabel(project.countsIncomplete == true ? "Project totals incomplete. Open the project to review its work." : "\(project.completed) of \(project.total) current project tasks completed").accessibilityIdentifier("pulseWidgetProgress")
+            Text(project.countsIncomplete == true ? "Some work unavailable" : "completed · current tasks").font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.85)
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
                     Capsule().fill(tint.opacity(0.15))
-                    Capsule().fill(tint).frame(width: project.total == 0 ? 0 : proxy.size.width * Double(project.completed) / Double(project.total))
+                    Capsule().fill(tint).frame(width: project.total == 0 || project.countsIncomplete == true ? 0 : proxy.size.width * Double(project.completed) / Double(project.total))
                 }
             }.frame(height: 5).accessibilityHidden(true)
         }
     }
     private func recent(_ day: PulseDay) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text("Recorded · last 7 days").font(.system(size: 9, weight: .semibold)).foregroundStyle(tint)
+            Text(project?.historyPartial == true ? "Partial history · last 7 days" : "Recorded · last 7 days").font(.system(size: 9, weight: .semibold)).foregroundStyle(tint)
             if entry.snapshot.projectPulse?.history == "ready" {
                 Text("\(day.completions) completion \(day.completions == 1 ? "event" : "events")").font(.system(size: 11, weight: .medium)).lineLimit(1).minimumScaleFactor(0.8).accessibilityIdentifier("pulseWidgetEvents")
                 Text("\(day.reopens) reopen \(day.reopens == 1 ? "event" : "events")").font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
@@ -1569,7 +1871,7 @@ struct PulseWidgetView: View {
     }
     private func attention(_ day: PulseDay, limit: Int) -> some View {
         VStack(alignment: .leading, spacing: large ? 8 : 3) {
-            Text("\(day.attentionCount) need attention").font(.system(size: large ? 11 : 9, weight: .semibold)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1)
+            Text("\(day.attentionCount) \(day.attentionCount == 1 ? "needs" : "need") attention").font(.system(size: large ? 11 : 9, weight: .semibold)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1)
             if !entry.hideNames {
                 ForEach(day.attention.prefix(limit)) { task in
                     HStack(alignment: .top, spacing: 6) { Circle().fill(tint).frame(width: 4, height: 4).padding(.top, 4); Text(task.title).font(.system(size: large ? 12 : 10, weight: .medium)).lineLimit(large ? 2 : 1).privacySensitive() }

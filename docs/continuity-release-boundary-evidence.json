@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-13",
+  "scope": "Name and locally enforce the first P0 candidate metadata boundary; no server or distribution rollout.",
+  "candidatePair": {
+    "macOS": {
+      "version": "1.2.0",
+      "build": 3
+    },
+    "iOS": {
+      "version": "1.4.0",
+      "build": 19
+    }
+  },
+  "independence": "Each repository owns its policy, version declarations, checker and tests. No sibling checkout dependency.",
+  "checks": {
+    "metadataTestsPerRepo": 8,
+    "metadataTestsTotal": 16,
+    "macActualDMGIntegrationTests": 5,
+    "totalFinalTestExecutions": 21,
+    "macDMGLog": "/private/tmp/taskfold-continuity-release-artifact-tests-final.log",
+    "macDMGChecks": [
+      "Inspect original immutable packaged app despite external app changes",
+      "Restore project/scheme after a forced build failure",
+      "Reject changed image bytes, inputs and modes",
+      "Reject valid signed disposable payload below minimum build inside actual mounted DMG",
+      "Reject wrong app identity inside actual mounted DMG"
+    ],
+    "xcodeReleaseBuildSettings": {
+      "macOS": {
+        "MARKETING_VERSION": "1.2.0",
+        "CURRENT_PROJECT_VERSION": "3",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.dbakp.taskfold.mac"
+      },
+      "iOS": {
+        "MARKETING_VERSION": "1.4.0",
+        "CURRENT_PROJECT_VERSION": "19",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.dbakp.taskfold"
+      }
+    },
+    "shellSyntax": "Mac publish script passes zsh -n"
+  },
+  "enforcement": {
+    "source": "All four app/widget Debug/Release declarations and Mac generator checked",
+    "exportedApp": "Production bundle identity, minimum metadata, matching widget required by explicit local checker",
+    "macPublication": "Project preflight plus minimum packaged app build in existing immutable-DMG verification; source fingerprint includes owned Config policy and checker",
+    "iosPublication": "Operator must run project and actual exported-app checks before distribution; no upload pipeline invoked",
+    "legacyServerWritesBlocked": false
+  },
+  "rolloutLimits": [
+    "Older active writers must be upgraded or retired, retaining unsent data; if inventory cannot be established, workspace remains outside P0 rollout",
+    "Server still permits legacy direct task updates; new-client guarded RPC does not prevent old writers overwriting later",
+    "Minimum versions reserve unreleased candidates, not already shipped products",
+    "Mac/phone native label collision, installed widget/system privacy, spoken accessibility, external provider and runtime gates remain",
+    "Signing is user-deferred; no APNs authority, schema, RLS, account or production data changed",
+    "No release build, archive, notarization, publication or upload performed; Xcode showBuildSettings is metadata evidence only"
+  ],
+  "preservation": {
+    "primaryFiles": 100,
+    "restoredIsolatedMacFiles": 28,
+    "retainedIOSWidgetFiles": 36,
+    "pendingMacWidgetFixture": "Exact fingerprint unchanged; pending host is the only live Taskfold process",
+    "nativeMacBoundary": "Two relevant native app reads returned cgWindowNotFound; no replacement or repeat of failing Mac XCTest attempt",
+    "disposableDMGs": "TemporaryDirectory fixture apps/DMGs removed by test teardown; no fixture executable launched"
+  }
+}

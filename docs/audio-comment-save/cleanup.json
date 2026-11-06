@@ -1,0 +1,54 @@
+{
+  "removed": [
+    {
+      "path": "/tmp/taskfold-audio-save-mac-before-owner.xcresult",
+      "allocatedKiBBeforeRemoval": 4576,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-save-mac-captures",
+      "allocatedKiBBeforeRemoval": 3612,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-save-phone-captures",
+      "allocatedKiBBeforeRemoval": 2580,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-save-ipad-captures",
+      "allocatedKiBBeforeRemoval": 2424,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-mac-final.xcresult",
+      "allocatedKiBBeforeRemoval": 5148,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-phone-final.xcresult",
+      "allocatedKiBBeforeRemoval": 4724,
+      "removed": true
+    },
+    {
+      "path": "/tmp/taskfold-audio-recovery-ipad-final.xcresult",
+      "allocatedKiBBeforeRemoval": 4176,
+      "removed": true
+    }
+  ],
+  "totalAllocatedKiBBeforeRemoval": 27240,
+  "interpretation": "Allocated size before removal, not guaranteed identical physical free space on APFS.",
+  "retained": [
+    "/tmp/taskfold-audio-save-mac-final.xcresult",
+    "/tmp/taskfold-audio-save-phone-final.xcresult",
+    "/tmp/taskfold-audio-save-ipad-final.xcresult",
+    "Current signed app/test products and both independently built Core caches"
+  ],
+  "simulators": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": "Shutdown",
+    "ECE507C1-5704-4243-A7F7-232BF745FDB8": "Shutdown"
+  },
+  "taskfoldAndTestRunnersClosed": true,
+  "xcodebuildStopped": true,
+  "scope": "Owned superseded Taskfold results and duplicate attachment exports only. No real tasks, account stores, user caches or SDK runtimes removed."
+}

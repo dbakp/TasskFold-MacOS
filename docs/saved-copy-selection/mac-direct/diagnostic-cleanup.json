@@ -1,0 +1,11 @@
+{
+  "removed": [
+    {
+      "path": "/tmp/taskfold-copy-choice-mac-quit.sample.txt",
+      "bytes": 225793,
+      "sha256": "8fa45511c227bc0066ab48a5466365dcebbf7a251adea2190533680582afee04"
+    }
+  ],
+  "retainedCompactObservation": true,
+  "appDataPreserved": true
+}

@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-11",
+  "scope": "Actual installed small Focus session widget on isolated iPhone 17 Pro / iOS 26.5 Simulator: ended clock, simultaneous small/medium instances, terminated-app route and temporary-instance cleanup.",
+  "appSourceCommits": {
+    "iOS": "d8c0040",
+    "macOS": "98217c3"
+  },
+  "native": {
+    "resultBundle": "small-focus-host-native-v4.xcresult",
+    "test": "testLiveInstalledSmallFocusEndedClockAndColdRoute",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "durationSeconds": 239.859,
+    "assertions": [
+      "Select and install the actual small Focus family in the system gallery.",
+      "Three installed Taskfold widgets coexist: small Focus, medium Focus and original selected small Pinned note.",
+      "After app termination, tapping the small Focus opens the original ended session, original task title, Time spent and 00:03.",
+      "Remove only the temporary small Focus instance; original selected note and medium Focus remain."
+    ],
+    "visualInspection": "Four captures inspected individually. Installed small and medium show matching 00:03 and Session ended, full two-line small task title, readable Start in app action and no overlap. Native session displays the original project/section and Time spent. Gallery preview is supplemental, not installed acceptance.",
+    "hostTiming": "SpringBoard cleanup contains two 60-second animation-notification waits and ignored DragUI hierarchy diagnostics. The test completes; xcresult reports no runtime warnings. These are host timing observations, not evidence of an app defect."
+  },
+  "build": {
+    "log": "small-focus-host-build-v4.log",
+    "result": "TEST BUILD SUCCEEDED",
+    "signingReceipt": "small-focus-host-signing-v4.json"
+  },
+  "dataProof": {
+    "completeWorkspaceCacheEqualsBaseline": true,
+    "baseline": "profile-switch-first-cache.json",
+    "baselineSHA256": "046048a2933280e349de4babc31a75c479590703cb03ddf8c7623157f3b4db28",
+    "afterSHA256": "684103a1310f3706e65d773ee022a1dcc6bdb43d1ce41aefb6ce0f5822660a5a",
+    "unchangedWidgetFields": [
+      "account",
+      "focusSession",
+      "notes",
+      "pendingSync"
+    ],
+    "pendingSync": 0,
+    "workspaceWrites": 0,
+    "temporarySmallWidgetRemoved": true,
+    "originalSmallNoteAndMediumFocusRetained": true
+  },
+  "harnessChange": "The active isolated gallery installer adds two lower-wallpaper candidates, checks them against visible icon bounds, snapshots the host frame once and includes bounds in failures. It preserves unexpected widget inventories.",
+  "earlierFailures": {
+    "resultBundles": [
+      "small-focus-host-native-v1.xcresult",
+      "small-focus-host-native-v2.xcresult",
+      "small-focus-host-native-v3.xcresult"
+    ],
+    "scope": "All stopped before Home Screen mutation because the four candidate wallpaper points were occupied. The first fallback edit affected another repeated helper; that unrelated edit was reverted. Diagnostic bounds confirmed free lower wallpaper; final active-helper correction passes."
+  },
+  "productionChanges": false,
+  "testSourceSHA256": "01f465523e2696befe0763ec06b87c02bc24c83070aeb6c83b9e60d00dc66031",
+  "captures": {
+    "docs/usability-previews/phone-small-focus-gallery.png": "99bad7b09618992fe00fb0722d67f3438a157e47cb2a230463bf7a8a9287e13a",
+    "docs/usability-previews/phone-small-focus-installed.png": "265b6603e24ae371696cfb38b2b85852b02dbeb28e8d0bce2c33de4000dc57f8",
+    "docs/usability-previews/phone-small-focus-cold-session.png": "e13244bec9240d75ea85b1238b8a5fe433c5b8fe9046648f30630c9163a23fc5",
+    "docs/usability-previews/phone-small-focus-restored-host.png": "c332e3e7ce7195d001aaaac0cf575169cf7b26d5692e61f0c6231138bbca07f2"
+  },
+  "remaining": "This accepts installed small ended-state rendering, coexistence and its cold route. Prior medium lifecycle/timer/ownership checks are reused; this run does not establish every small-state/account/tint/privacy/outage variant, iPad small-family acceptance, physical/Desktop hosts, VoiceOver or full P0. The live isolated Mac process still waits in SecureSession.read \u2192 SecItemCopyMatching; no new Mac native acceptance or product change is claimed."
+}

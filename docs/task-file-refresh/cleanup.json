@@ -1,0 +1,26 @@
+{
+  "ownedAppsClosed": true,
+  "ownedPhoneAndTabletRestoredToShutdown": true,
+  "otherDevicesUntouched": true,
+  "unrelatedContainersOrCachesTouched": false,
+  "reusedBuildProductsRetained": true,
+  "evidenceRetainedBeforePruning": true,
+  "prunedOwnedRawResultsAndDuplicateExports": [
+    {
+      "path": "/tmp/taskfold-file-refresh-ios-v1.xcresult",
+      "logicalBytes": 1103657
+    },
+    {
+      "path": "/tmp/taskfold-file-refresh-ios-attachments",
+      "logicalBytes": 430910
+    },
+    {
+      "path": "/tmp/taskfold-file-refresh-ipad-v1.xcresult",
+      "logicalBytes": 1216701
+    },
+    {
+      "path": "/tmp/taskfold-file-refresh-ipad-attachments",
+      "logicalBytes": 527825
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "removedGeneratedInactiveBuilds": [
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/today-state-ios",
+      "logicalBytes": 202353484
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/today-state-mac",
+      "logicalBytes": 396288683
+    }
+  ],
+  "retained": "All source, build logs, before/after renders and active mac-widget-host-v2 products",
+  "totalLogicalBytes": 598642167
+}

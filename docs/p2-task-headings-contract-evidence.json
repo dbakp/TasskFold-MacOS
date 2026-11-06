@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-26",
+  "stage": "Non-completable headings: source contract and completion safety foundation",
+  "platform": "mac",
+  "headingFeatureComplete": false,
+  "headingUIEnabled": false,
+  "hostedDeployment": false,
+  "realDataChanged": false,
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "1a9be72e41494455ed86eac29634a2b1c19e6235382cf56680749a13d2e66198",
+    "Taskfold/Core/Store.swift": "6d1f26425e2825ee69e330d3efa738270d83cc0ba4bfb77baebcf25bd827f38c",
+    "Taskfold/Core/SubtaskTree.swift": "8037086f1aad99d94895bb2447edeb5e09004eb72e0b99dfc3d603c9e99902c9",
+    "Taskfold/Core/WidgetCompletion.swift": "5b8c7463b8077237fce7f4b04fb50ff780dd6a37644adbe689752e785459a983",
+    "TaskfoldTests/TaskKindTests.swift": "0ae620d3bea301fc8f0f0b4b1c080d63d0dfab09ddbc282dfb33515385ec1c08",
+    "Scripts/Database/test-task-headings.mjs": "c6c48dbf1d505f820a41e690f6b84f7aa85ab1245acbe720ceeb520923da5a7d",
+    "supabase/migrations/20261026032336_task_headings_contract.sql": "b92bf9ea977f104e1f9b915c38019748d350f9328aa6486ab3650748719457fb"
+  },
+  "core": {
+    "executed": 355,
+    "failures": 0,
+    "skips": 1,
+    "newTaskKindCases": 18,
+    "optionalSkip": "SubtaskTransportIntegrationTests requires its separate disposable transport fixture",
+    "filter": "TaskKind|TaskCompletion|CompletionRevision|TaskGeneration|Subtask|TeamCompletion|WidgetAction",
+    "logSHA256": "2b6794fb1387e1042c6570c0afbded661d830e24c8e350783c38b27574a5c5ab",
+    "evidence": "headings-contract/core-summary.txt"
+  },
+  "database": {
+    "assertions": 58,
+    "passed": true,
+    "serverVersion": 170006,
+    "ownedContainerRemoved": true,
+    "noAdditionalAdvisorWarnings": true,
+    "evidence": "headings-contract/sql-report.json",
+    "baselineWarnings": "Existing auth_rls_initplan advisories remain; no additional WARN/ERROR allowed."
+  },
+  "build": {
+    "terminalExit": 0,
+    "forTesting": true,
+    "arm64": true,
+    "strictAppSignature": true,
+    "signing": "Apple Development, team 3UZ4C73FM2",
+    "logSHA256": "9ae35b79c680d1c47efa7f73b4642a51aaf2e94089230a4b1c1dadac0257b8ba",
+    "evidence": "headings-contract/build-summary.txt",
+    "nativeRuntimeAcceptance": false
+  },
+  "remaining": [
+    "Native heading presentation and captured type choice",
+    "All completion channels and projection/count semantics",
+    "Template/import/export/backup interoperability",
+    "Shared type command/receipt/recovery adapters and capability negotiation",
+    "Native/local/shared/cross-device/accessibility acceptance",
+    "Deferred older-client rollout before hosted exposure"
+  ],
+  "limits": [
+    "No new installed UI or spoken acceptance in this stage.",
+    "Mac controls reported locked despite the unlock reply; earlier UI Automation permission remains pending.",
+    "Global heading guards are not a full legacy-writer enforcement audit.",
+    "User-deferred release, provider, remote reminder and physical location work remains deferred."
+  ]
+}

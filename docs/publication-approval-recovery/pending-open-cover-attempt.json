@@ -1,0 +1,172 @@
+{
+  "platform": "ios-audience-pending",
+  "checks": {
+    "compiled owning source matches Taskfold/AudioCommentNativeFixture.swift": true,
+    "compiled owning source matches Taskfold/AudioCommentCapture.swift": true,
+    "compiled owning source matches Taskfold/Core/Store.swift": true,
+    "compiled owning source matches Taskfold/Core/Models.swift": true,
+    "compiled owning source matches Taskfold/TaskfoldApp.swift": true,
+    "compiled owning source matches Taskfold/Views/BackupTools.swift": true,
+    "compiled owning source matches Taskfold/Views/BrowseView.swift": true,
+    "compiled owning source matches Taskfold/Core/TeamProjectAccess.swift": true,
+    "compiled owning source matches Taskfold/Core/TeamTaskBatch.swift": true,
+    "compiled owning source matches Taskfold/Core/Backend.swift": true,
+    "compiled owning source matches Taskfold/Views/TeamTaskDeletionReview.swift": true,
+    "compiled owning source matches Taskfold/Core/AudioCommentPublishing.swift": true,
+    "compiled owning source matches Taskfold/Views/TaskEditor.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentConversationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentPublicationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioPendingPublicationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentDraftView.swift": true,
+    "compiled owning source matches TaskfoldUITests/AudioCommentUITests.swift": true,
+    "exact isolated app identifier": true
+  },
+  "genuineAuth": false,
+  "actualLocalStorage": true,
+  "fullSchemaParity": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "sourceSHA256": {
+    "Taskfold/AudioCommentNativeFixture.swift": "dc73d032e3b176cd530385c50ba14703d164179a94b85a4a1ab6ee99589a4644",
+    "Taskfold/AudioCommentCapture.swift": "5a90bab1d673e667b98b0b5dadcea459361e1ef8918a05b097a65bad82f6d2d4",
+    "Taskfold/Core/Store.swift": "7a5aeeb58f42efdb8392f112503fb422aa299e444b49cedb9b7df8c9aa6936b9",
+    "Taskfold/Core/Models.swift": "8860cb104036b8095e41ee0b739ec4e4233a911a286d344176688e76ab164985",
+    "Taskfold/TaskfoldApp.swift": "807220d457725ee58b50d6800ff4e5f141e7e2bfe97a1e02a77f77f4598da6e3",
+    "Taskfold/Views/BackupTools.swift": "3d0f6adee157186757d69d3da23b3d32bebe9a5a4f64f7b70df33e470872b9e9",
+    "Taskfold/Views/BrowseView.swift": "874fa45858bd22c838c7363f291a36b0e57d0a3b60dac1cc9f6e6c1b967d38ae",
+    "Taskfold/Core/TeamProjectAccess.swift": "4a64f09f3743d1da20494ec0e8a6421981be08eef5d3bb99c22a33d2ff49262e",
+    "Taskfold/Core/TeamTaskBatch.swift": "52f28a92644e36d207d5585128036b332476cba7610ae4b1c1fcc0d2a220f3d6",
+    "Taskfold/Core/Backend.swift": "566b6b14b63fcf6420031c8dc264407c3fb70e78595fdaa4b713884075f047d7",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "9589a78034abd4ef8f668d47f307fba2a16bdbd8f0528f5f0e2f75a45a8991a7",
+    "Taskfold/Core/AudioCommentPublishing.swift": "a53e6e108668847b1050ad9fd5c4cad7fa140e09839ebea547e42b64e0acd99d",
+    "Taskfold/Views/TaskEditor.swift": "ae18b5a76ee7acef8f612125c917e478f263f0f5b7d64be1c0a571ef2322971c",
+    "Taskfold/Views/AudioCommentConversationView.swift": "2a8a67f23af154f2b3ca7ecce5cbc240521e98577e550c960b386ebad734c125",
+    "Taskfold/Views/AudioCommentPublicationView.swift": "c04fadb478fc07a2a37e17622582d31103585fc3fd780bddcfd2ac8d8eafd307",
+    "Taskfold/Views/AudioPendingPublicationView.swift": "29716ea415894d21c3acc3061bb5ed3b4b2e591c173e5690c1ccf60b1820fb2e",
+    "Taskfold/Views/AudioCommentDraftView.swift": "2fdbbe81c0be04b62ec1473b96d0120a99c75de20ca2d9b3acc563ebbd7ad160",
+    "TaskfoldUITests/AudioCommentUITests.swift": "45cc6029271993a6db79e61e9fa07b222ff4c91f910187d8a185b23eb7540f43"
+  },
+  "xcodeExitCode": 65,
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "passedTests": 0,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold · Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 1,
+    "finishTime": 1793678222.732,
+    "passedTests": 0,
+    "result": "Failed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793678067.24,
+    "statistics": [],
+    "testFailures": [
+      {
+        "failureText": "XCTAssertTrue failed - Attributes: Application, 0x10a356bc0, pid: 60807, label: 'Taskfold Team Editor Test'\nElement subtree:\n →Application, 0x10a356bc0, pid: 60807, label: 'Taskfold Team Editor Test'\n    Window (Main), 0x10a356d00, {{0.0, 0.0}, {402.0, 874.0}}\n      Other, 0x10a356e40, {{0.0, 0.0}, {402.0, 874.0}}\n        Other, 0x10a356f80, {{0.0, 0.0}, {402.0, 874.0}}\n          Other, 0x10a3570c0, {{0.0, 0.0}, {402.0, 874.0}}\n            Other, 0x10a357200, {{0.0, 0.0}, {402.0, 874.0}}\n              Other, 0x10a357340, {{0.0, 0.0}, {402.0, 874.0}}\n                NavigationBar, 0x10a357480, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Shared recording test'\n                  StaticText, 0x10a3575c0, {{16.0, 119.7}, {341.3, 40.7}}, label: 'Shared recording test'\n                Other, 0x10a357700, {{0.0, 0.0}, {402.0, 874.0}}\n                  Other, 0x10a357840, {{0.0, 0.0}, {402.0, 874.0}}\n                    Other, 0x10a357980, {{0.0, 0.0}, {402.0, 874.0}}\n                      Other, 0x10a357ac0, {{0.0, 0.0}, {402.0, 874.0}}\n                        CollectionView, 0x10a357c00, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'audioTeamNativeForm'\n                          Other, 0x10a357d40, {{-16.0, -1580.0}, {434.0, 4171.0}}\n                          Other, 0x10a357e80, {{0.0, 0.0}, {402.0, 874.0}}\n                            Other, 0x10a33ee40, {{0.0, 0.0}, {402.0, 102.0}}\n                          Other, 0x10a33d900, {{0.0, 0.0}, {402.0, 874.0}}\n                          Cell, 0x10a358000, {{16.0, 168.0}, {370.0, 52.0}}\n                            Other, 0x10a358140, {{16.0, 168.0}, {370.0, 52.0}}\n                              Other, 0x10a358280, {{16.0, 168.0}, {370.0, 52.0}}\n                            Other, 0x10a3583c0, {{16.0, 168.0}, {370.0, 52.0}}\n                              Other, 0x10a358500, {{16.0, 168.0}, {370.0, 52.0}}\n                                Other, 0x10a358640, {{16.0, 168.0}, {370.0, 52.0}}\n                                  StaticText, 0x10a358780, {{16.0, 168.0}, {370.0, 52.0}}, identifier: 'audioTeamNativeReady', label: 'Ready'\n                          Cell, 0x10a3588c0, {{16.0, 220.0}, {370.0, 52.0}}\n                            Other, 0x10a358a00, {{16.0, 220.0}, {370.0, 52.0}}\n                              Other, 0x10a358b40, {{16.0, 220.0}, {370.0, 52.0}}\n                            Other, 0x10a358c80, {{16.0, 220.0}, {370.0, 52.0}}\n                              Other, 0x10a358dc0, {{16.0, 220.0}, {370.0, 52.0}}\n                                Other, 0x10a358f00, {{16.0, 220.0}, {370.0, 52.0}}\n                                  StaticText, 0x10a359040, {{16.0, 220.0}, {370.0, 52.0}}, identifier: 'audioTeamNativeDescription', label: 'Native audio service original'\n                          Other, 0x10a359180, {{32.0, 219.0}, {338.0, 1.0}}\n                          Cell, 0x10a3592c0, {{16.0, 272.0}, {370.0, 72.3}}\n                            Other, 0x10a359400, {{16.0, 272.0}, {370.0, 72.3}}\n                              Other, 0x10a359540, {{16.0, 272.0}, {370.0, 72.3}}\n                            Other, 0x10a359680, {{16.0, 272.0}, {370.0, 72.3}}\n                              Other, 0x10a3597c0, {{16.0, 272.0}, {370.0, 72.3}}\n                                Other, 0x10a359900, {{16.0, 272.0}, {370.0, 72.3}}\n                                  StaticText, 0x10a359a40, {{16.0, 272.0}, {370.0, 72.3}}, identifier: 'audioTeamNativeEpoch', label: '03755AA6-F0EC-4300-BDAE-21461ABBEE28'\n                          Other, 0x10a359b80, {{32.0, 271.0}, {338.0, 1.0}}\n                          Cell, 0x10a359cc0, {{16.0, 344.3}, {370.0, 52.0}}\n                            Other, 0x10a359e00, {{16.0, 344.3}, {370.0, 52.0}}\n                              Other, 0x10a359f40, {{16.0, 344.3}, {370.0, 52.0}}\n                            Other, 0x10a35a080, {{16.0, 344.3}, {370.0, 52.0}}\n                              Other, 0x10a35a1c0, {{16.0, 344.3}, {370.0, 52.0}}\n                                Other, 0x10a35a300, {{16.0, 344.3}, {370.0, 52.0}}\n                                  StaticText, 0x10a35a440, {{16.0, 344.3}, {370.0, 52.0}}, identifier: 'audioTeamNativePending', label: 'Queued edits: 0'\n                          Other, 0x10a35a580, {{32.0, 343.3}, {338.0, 1.0}}\n                          Cell, 0x10a35a6c0, {{16.0, 396.3}, {370.0, 52.0}}\n                            Other, 0x10a35a800, {{16.0, 396.3}, {370.0, 52.0}}\n                              Other, 0x10a35a940, {{16.0, 396.3}, {370.0, 52.0}}\n                            Other, 0x10a35aa80, {{16.0, 396.3}, {370.0, 52.0}}\n                              Other, 0x10a35abc0, {{16.0, 396.3}, {370.0, 52.0}}\n                                Other, 0x10a35ad00, {{16.0, 396.3}, {370.0, 52.0}}\n                                  Button, 0x10a35ae40, {{16.0, 396.3}, {370.0, 52.0}}, identifier: 'audioTeamNativeRecord', label: 'Record private note'\n                          Other, 0x10a35af80, {{32.0, 395.3}, {338.0, 1.0}}\n                          Cell, 0x10a35b0c0, {{16.0, 448.3}, {370.0, 52.0}}\n                            Other, 0x10a35b200, {{16.0, 448.3}, {370.0, 52.0}}\n                              Other, 0x10a35b340, {{16.0, 448.3}, {370.0, 52.0}}\n                            Other, 0x10a35b480, {{16.0, 448.3}, {370.0, 52.0}}\n                              Other, 0x10a35b5c0, {{16.0, 448.3}, {370.0, 52.0}}\n                                Other, 0x10a35b700, {{16.0, 448.3}, {370.0, 52.0}}\n                                  Button, 0x10a35b840, {{16.0, 448.3}, {370.0, 52.0}}, identifier: 'audioTeamNativeLibrary', label: 'Saved recordings'\n                          Other, 0x10a35b980, {{32.0, 447.3}, {338.0, 1.0}}\n                          Cell, 0x10a35bac0, {{16.0, 500.3}, {370.0, 52.0}}\n                            Other, 0x10a35bc00, {{16.0, 500.3}, {370.0, 52.0}}\n                              Other, 0x10a35bd40, {{16.0, 500.3}, {370.0, 52.0}}\n                            Other, 0x10a35be80, {{16.0, 500.3}, {370.0, 52.0}}\n                              Other, 0x10a374000, {{16.0, 500.3}, {370.0, 52.0}}\n                                Other, 0x10a374140, {{16.0, 500.3}, {370.0, 52.0}}\n                                  Button, 0x10a374280, {{16.0, 500.3}, {370.0, 52.0}}, identifier: 'audioTeamNativeConversation', label: 'Audio comments'\n                          Other, 0x10a3743c0, {{32.0, 499.3}, {338.0, 1.0}}\n                          Cell, 0x10a374500, {{16.0, 552.3}, {370.0, 72.3}}\n                            Other, 0x10a374640, {{16.0, 552.3}, {370.0, 72.3}}\n                              Other, 0x10a374780, {{16.0, 552.3}, {370.0, 72.3}}\n                            Other, 0x10a3748c0, {{16.0, 552.3}, {370.0, 72.3}}\n                              Other, 0x10a374a00, {{16.0, 552.3}, {370.0, 72.3}}\n                                Other, 0x10a374b40, {{16.0, 552.3}, {370.0, 72.3}}\n                                  StaticText, 0x10a374c80, {{16.0, 552.3}, {370.0, 72.3}}, identifier: 'audioTeamNativeGeneration', label: 'ec240000-0000-4000-8000-000000000071'\n                          Other, 0x10a374dc0, {{32.0, 551.3}, {338.0, 1.0}}\n                          Cell, 0x10a374f00, {{16.0, 624.7}, {370.0, 94.3}}\n                            Other, 0x10a375040, {{16.0, 624.7}, {370.0, 94.3}}\n                              Other, 0x10a375180, {{16.0, 624.7}, {370.0, 94.3}}\n                            Other, 0x10a3752c0, {{16.0, 624.7}, {370.0, 94.3}}\n                              Other, 0x10a375400, {{16.0, 624.7}, {370.0, 94.3}}\n                                Other, 0x10a375540, {{16.0, 624.7}, {370.0, 94.3}}\n                                  StaticText, 0x10a375680, {{16.0, 624.7}, {370.0, 94.3}}, identifier: 'audioTeamNativeLifecycleStatus', label: 'Idle · 0 queued · ec240000-0000-4000-8000-000000000071'\n                          Other, 0x10a3757c0, {{32.0, 623.7}, {338.0, 1.0}}\n                          Cell, 0x10a375900, {{16.0, 719.0}, {370.0, 52.0}}\n                            Other, 0x10a375a40, {{16.0, 719.0}, {370.0, 52.0}}\n                              Other, 0x10a375b80, {{16.0, 719.0}, {370.0, 52.0}}\n                            Other, 0x10a375cc0, {{16.0, 719.0}, {370.0, 52.0}}\n                              Other, 0x10a375e00, {{16.0, 719.0}, {370.0, 52.0}}\n                                Other, 0x10a375f40, {{16.0, 719.0}, {370.0, 52.0}}\n                                  Button, 0x10a376080, {{16.0, 719.0}, {370.0, 52.0}}, identifier: 'audioTeamNativeUndo', label: 'Undo task deletion', Disabled\n                          Other, 0x10a3761c0, {{32.0, 718.0}, {338.0, 1.0}}\n                          Cell, 0x10a376300, {{16.0, 771.0}, {370.0, 52.0}}\n                            Other, 0x10a376440, {{16.0, 771.0}, {370.0, 52.0}}\n                              Other, 0x10a376580, {{16.0, 771.0}, {370.0, 52.0}}\n                            Other, 0x10a3766c0, {{16.0, 771.0}, {370.0, 52.0}}\n                              Other, 0x10a376800, {{16.0, 771.0}, {370.0, 52.0}}\n                                Other, 0x10a376940, {{16.0, 771.0}, {370.0, 52.0}}\n                                  Button, 0x10a376a80, {{16.0, 771.0}, {370.0, 52.0}}, identifier: 'audioTeamNativeDeletion', label: 'Review task deletion'\n                          Other, 0x10a376bc0, {{32.0, 770.0}, {338.0, 1.0}}\n                          Other, 0x10a376d00, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 %\n                            Other, 0x10a376e40, {{396.0, 119.0}, {3.0, 687.7}}\n                          Other, 0x10a376f80, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 %\n                            Other, 0x10a3770c0, {{396.0, 119.0}, {3.0, 687.7}}\n                Toolbar, 0x10a377200, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'Toolbar', label: 'Toolbar'\n                  Other, 0x10a377340, {{0.0, 0.0}, {402.0, 874.0}}\nPath to element:\n →Application, 0x10a356bc0, pid: 60807, label: 'Taskfold Team Editor Test'\nQuery chain:\n →Find: Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'\n  Output: {\n    Application, 0x10a377480, pid: 60807, label: 'Taskfold Team Editor Test'\n  }\n",
+        "targetName": "TaskfoldUITests",
+        "testIdentifier": 1,
+        "testIdentifierString": "TaskfoldUITests/testTeamRecordingNativePendingAudienceResume()",
+        "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testTeamRecordingNativePendingAudienceResume",
+        "testName": "testTeamRecordingNativePendingAudienceResume()"
+      }
+    ],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "error": {
+    "message": "one native case accepted without skip\n+ actual - expected\n\n  [\n+   65,\n+   0,\n+   1,\n-   0,\n-   1,\n-   0,\n    0\n  ]",
+    "code": "ERR_ASSERTION"
+  },
+  "gatewayRequests": [
+    {
+      "action": "review",
+      "bodySHA256": "969aa635abf483e251738841e0ca37d3960e5fde5458ac1d690495d1a3c569b1",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 462
+    },
+    {
+      "action": "review",
+      "bodySHA256": "cdf40e13ef5d29090d906a9aaaab69a7a35013a529d502e304fcc795850e6d5b",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 462
+    },
+    {
+      "action": "publish",
+      "bodySHA256": "cadc72ddf9dab262bfaba758228f0aa988c26a14ee77a705f6c20e1d02e9b7f6",
+      "responseStatus": 200,
+      "deliveredStatus": 503,
+      "responseBytes": 851
+    }
+  ],
+  "workspace": {
+    "boundary": 4,
+    "auth": 2,
+    "tables": {
+      "projects": 2,
+      "sections": 2,
+      "labels": 2,
+      "tasks": 2,
+      "profiles": 2,
+      "project_collaborators": 2,
+      "saved_views": 2,
+      "favorites": 2,
+      "view_preferences": 2,
+      "view_orders": 2,
+      "project_templates": 2,
+      "reminder_preferences": 2,
+      "focus_sessions": 2,
+      "task_activity_epoch": 2,
+      "task_activity": 2,
+      "task_assignment_provenance": 2,
+      "task_node_activity_epoch": 4,
+      "task_node_activity": 2
+    },
+    "rejected": 0,
+    "errors": []
+  },
+  "provider": [
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "gatewayErrors": [],
+  "checkCount": 19,
+  "configRemoved": true,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "ownedSimulatorRestored": true,
+  "cleanupErrors": []
+}

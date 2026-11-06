@@ -1,0 +1,22 @@
+Building for debugging...
+[2 / 7] TaskfoldCoreTests-product
+[4 / 9] TaskfoldCoreTests-product
+[9 / 13] TaskfoldCoreTests-product
+Build complete! (1,78 secs)
+Test Suite 'Selected tests' started at 2026-10-12 08:08:00.610.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-12 08:08:00.611.
+Test Suite 'CapturePresentationTests' started at 2026-10-12 08:08:00.611.
+Test Case '-[TaskfoldCoreTests.CapturePresentationTests testAccountSwitchAndSameAccountReentryRetireOldRequest]' started.
+Test Case '-[TaskfoldCoreTests.CapturePresentationTests testAccountSwitchAndSameAccountReentryRetireOldRequest]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.CapturePresentationTests testLatestIntentWinsWithoutPresentingInPreviousDestination]' started.
+Test Case '-[TaskfoldCoreTests.CapturePresentationTests testLatestIntentWinsWithoutPresentingInPreviousDestination]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.CapturePresentationTests testNavigationCancellationAndSignedOutRequestDoNotReopenCapture]' started.
+Test Case '-[TaskfoldCoreTests.CapturePresentationTests testNavigationCancellationAndSignedOutRequestDoNotReopenCapture]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.CapturePresentationTests testRequestWaitsForDestinationMountAndIsConsumedOnlyOnce]' started.
+Test Case '-[TaskfoldCoreTests.CapturePresentationTests testRequestWaitsForDestinationMountAndIsConsumedOnlyOnce]' passed (0.000 seconds).
+Test Suite 'CapturePresentationTests' passed at 2026-10-12 08:08:00.612.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-12 08:08:00.612.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'Selected tests' passed at 2026-10-12 08:08:00.612.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds

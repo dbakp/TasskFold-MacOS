@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native Mac restore review full-sheet fit and action reachability in the current desktop configuration",
+  "finding": "Prior app-window screenshots cropped the sheet at the parent Settings window. A screenshot of the sheet itself shows the complete warnings, Restore and Cancel. Native display bounds and real hit-testing pass; no product layout defect is reproduced.",
+  "productionChanges": false,
+  "testChange": "The existing real Cancel/retry case now asserts Restore and Cancel are hittable, the sheet fits a visible display, and retains a full-sheet capture. It still cancels review and verifies exact full persisted workspace after normal Quit/relaunch.",
+  "result": {
+    "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-backup-review-fit-native-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0
+  },
+  "build": "Development-signed build-for-testing and deep strict signature verification pass. Initial test compilation failed on a duplicate local variable name; corrected before native execution. Existing unrelated compile warnings remain.",
+  "captureSHA256": "dba3c154083b96e5b6b122dc2047c06c62f631113599668bd52503d1bdbddd6b",
+  "cleanup": {
+    "protectedFilesExact": 100,
+    "prunedLogicalBytes": 271878484,
+    "sessions": "No Taskfold main app, UI runner or xcodebuild remains; system-managed widget extensions retained"
+  },
+  "limitations": [
+    "Current Mac display/configuration and synthetic one-task review only",
+    "No new iOS runtime claim or restore-apply claim",
+    "Authenticated read/account-switch, actual remote provider failure, installed system privacy, spoken VoiceOver, APNs and distribution gates remain open"
+  ]
+}

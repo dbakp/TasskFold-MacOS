@@ -1,0 +1,182 @@
+{
+  "date": "2026-10-11",
+  "scope": "One full-sized accessible iOS details action for non-linked task content; separate completion control.",
+  "baseCommits": {
+    "TaskFold-iOS": "c3d7d5bace64613d31744378db847a48698c2917",
+    "TasskFold-MacOS": "b2157c8c597f74538180ce236acaa62033b08109"
+  },
+  "productChange": {
+    "iOS": "Combine non-linked title, description preview and metadata into an accessible button with default details action and selection-aware hint. Retain the existing minimum 44-point area and visual layout. Linked rows use contain to retain individual link elements. Completion stays separate.",
+    "macOS": "TaskRowView uses native list selection and separate AppKit controls; its text content does not attach the iOS row-wide tap gesture to every child. No corresponding Mac production change or new native Mac acceptance."
+  },
+  "functionalRun": {
+    "resultBundle": "row-accessibility-phone-v1.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    },
+    "checks": [
+      "Normal/light and dark/largest: capture notes/estimate, save and relaunch.",
+      "Details button hittable and at least 44 points high; accessible label contains complete multi-sentence notes and 25-minute estimate.",
+      "Open full editor from preview and lower metadata area; retain original title/notes and leave task incomplete.",
+      "Return to original cloud Today. Four functional screenshots individually inspected."
+    ]
+  },
+  "captureAndCloudRegression": {
+    "resultBundle": "row-accessibility-capture-regression-v1.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    },
+    "checks": [
+      "Original selected note and ended Focus 00:03 cold routes.",
+      "Previous capture control-visibility test passes unchanged: open-keyboard bounds, actual Today/Inbox selection, More options, Save/relaunch and return to original cloud Today."
+    ]
+  },
+  "unfilteredAudits": {
+    "resultBundle": "row-accessibility-audit-v1.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 0,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Failed"
+    },
+    "findingsByViewport": {
+      "normal": {
+        "Saved task list": 2,
+        "Editor subtask actions": 1,
+        "Editor overview": 0,
+        "Quick capture": 0
+      },
+      "largest": {
+        "Saved task list": 2,
+        "Editor subtask actions": 0,
+        "Editor overview": 0,
+        "Quick capture": 1
+      }
+    },
+    "findingsByRawType": {
+      "normal": {
+        "131072": 3
+      },
+      "largest": {
+        "131072": 3
+      }
+    },
+    "interpretation": "Both modes completed all four viewports and failed the unsuppressed final assertion. Neither reports hit-region or insufficient-description findings. The prior three normal saved-row hit-region findings are absent. Largest setup completed; no causal claim about prior incomplete-input failures.",
+    "remaining": {
+      "normal": [
+        "Editor subtask actions: Choose a photo textClipped, absent in previous audit; cause unestablished.",
+        "Saved list: native Search inbox field and one-line description preview textClipped."
+      ],
+      "largest": [
+        "Quick capture: 25 min suggestion textClipped.",
+        "Saved list: native Search inbox field and one-line description preview textClipped."
+      ]
+    },
+    "visualInspection": "Inspected all four flagged viewport captures. Photo/suggestion text is legible in these captures, which does not establish a false finding. Description intentionally ends in ellipsis; full notes remain in the accessible details label and verified editor."
+  },
+  "dataPreservation": {
+    "fullOriginalCloudCacheParsedEqual": true,
+    "originalWidgetFieldsEqual": [
+      "account",
+      "focusSession",
+      "notes",
+      "pendingSync"
+    ],
+    "pendingSync": 0,
+    "localMode": false,
+    "widgetColdLaunchFixture": false,
+    "originalMacCloudCacheUnchanged": true
+  },
+  "sourceInputHashes": {
+    "TaskFold-iOS/Taskfold/TaskfoldApp.swift": "87c094f1e958c8307681e44615b96e873f84b405301a454c99bac8596956497a",
+    "ios-live-stage/Taskfold/TaskfoldApp.swift": "87c094f1e958c8307681e44615b96e873f84b405301a454c99bac8596956497a",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "e90c8486b164ab1f11db04e0ffb25ce3eb199c1c123181e9c8ed090e8300578d",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "e90c8486b164ab1f11db04e0ffb25ce3eb199c1c123181e9c8ed090e8300578d"
+  },
+  "receipts": [
+    {
+      "path": "row-accessibility-build-v1.log",
+      "sha256": "f388bf22657881c8c09ffd9b8c7765c312b2c2ad0fc7df209dc635b5d1e7afa2"
+    },
+    {
+      "path": "row-accessibility-signing-v1.json",
+      "sha256": "2f270b3fef64de0d7df176b3ecdc4d30b41e621a6f83ca065b86070beac6e4e7"
+    },
+    {
+      "path": "row-accessibility-phone-v1.log",
+      "sha256": "483254b9b8ea20bd9b73b633a22fef4443d9ec28398413978674277adbbf10d6"
+    },
+    {
+      "path": "row-accessibility-audit-v1.log",
+      "sha256": "2e2c9fb7547abb4ee7475de48bd08617ac5e8857ad09fea6c12057a0ea87e2c9"
+    },
+    {
+      "path": "row-accessibility-capture-regression-v1.log",
+      "sha256": "130f64d84398a87e4817ecc6a9889f90b1c5198c2edec3fed0e79773bd523608"
+    },
+    {
+      "path": "row-accessibility-data-proof.json",
+      "sha256": "d253d253437161e692f45a43b66ebab039fa544e57f8b185569c472e5b471ffb"
+    },
+    {
+      "path": "row-accessibility-pruned-manifest.json",
+      "sha256": "00373e28faa681cbb546cf6fdce4ff5312010b5bc5cdb2b60e3e43b64e48bb1f"
+    }
+  ],
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-row-accessibility-largest-editor.png",
+      "sha256": "a138247e6e6297590bccfb8a99810e8a064ff76f46887592e7e8ba0dd0a54ae0",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-row-accessibility-largest-preview.png",
+      "sha256": "4c45697a0940ce11975f793731ac05605b75eeb06ae5a321fe8b0d5f45a23f7d",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-row-accessibility-normal-editor.png",
+      "sha256": "a5c30f8c3fbdc05aae08196ffff527af570325c16255c7ccdb2acca435076997",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-row-accessibility-normal-preview.png",
+      "sha256": "8ca420bb6eff33e8bcbd0c9487ad7f8fab96ec2ecbf23c42321a38f804a1e86a",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/row-audit-largest-capture.png",
+      "sha256": "e3d949e7927406311cfa4ff13b6e6814a6bb67135c9e1f7929f717dcf49a3d9c",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/row-audit-largest-list.png",
+      "sha256": "40c0b6431a65441a21dea61b81bff2c710a1597182cb5dcb1c3835dd1b508bc0",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/row-audit-normal-editor-subtask.png",
+      "sha256": "2496affa37a242ad687c860c570d72479ecfffaf264e4565026480b8af407e84",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/row-audit-normal-list.png",
+      "sha256": "f34043b6810fa3fba2153f7f7c0e5bfec980a58a1b99417b1bdfeaeb2d1f59ce",
+      "inspected": true
+    }
+  ],
+  "prunedDuplicateAllocatedBytes": 3444736,
+  "remaining": "Full P0 acceptance stays open. No new iPad, native Mac, actual VoiceOver operation or linked-row interaction acceptance. Text-clipping findings remain unsuppressed. Desktop recheck returned locked. Independent repo/release/data contracts unchanged."
+}

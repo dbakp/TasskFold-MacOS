@@ -1,0 +1,8 @@
+{
+  "oldSourceSHA256": "c5d5496d807466f6fa7f24dd13a0787aaf62c2b1100aac25d9881c91aa041016",
+  "newSourceSHA256": "50adda5e40083bc3bf070c7cfa7e1de1b8387fbb34d1784f29118bccc2f021eb",
+  "exitCode": 1,
+  "selectedTests": 2,
+  "expectedFailures": 14,
+  "currentSourceRestored": true
+}

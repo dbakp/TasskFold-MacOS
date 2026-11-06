@@ -1,0 +1,387 @@
+Building for debugging...
+[Using on-disk description]
+[1 / 3] TaskfoldCore
+[2 / 18] TaskfoldCore
+[4 / 20] TaskfoldCore
+[14 / 30] TaskfoldCore
+[20 / 39] WidgetModel
+[22 / 41] WidgetModel
+[24 / 41] WidgetModel
+[25 / 41] TaskfoldCore
+[27 / 41] TaskfoldCore
+[30 / 38] TaskfoldWatchTests-product
+[39 / 47] TaskfoldWatchTests-product
+[41 / 49] TaskfoldWatchTests-product
+[43 / 49] TaskfoldCoreTests-product
+[53 / 60] TaskfoldCoreTests-product
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamCompletionBatchTests.swift:5:66: warning: 'CompletionBatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+   3 | @testable import TaskfoldCore
+   4 | 
+   5 | private final class CompletionBatchHTTP: URLProtocol, @unchecked Sendable {
+     |                     |                                            `- warning: 'CompletionBatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+     |                     `- note: 'CompletionBatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+   6 |     static var handler: ((URLRequest, CompletionBatchHTTP) -> Void)?
+   7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamCompletionTests.swift:5:61: warning: 'CompletionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+   3 | @testable import TaskfoldCore
+   4 | 
+   5 | private final class CompletionHTTP: URLProtocol, @unchecked Sendable {
+     |                     |                                       `- warning: 'CompletionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+     |                     `- note: 'CompletionHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+   6 |     static var handler: ((URLRequest,CompletionHTTP)->Void)?
+   7 |     override class func canInit(with request:URLRequest)->Bool {true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamOrganizationCommandTests.swift:30:58: warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 28 |     }
+ 29 | }
+ 30 | private final class CommandHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'CommandHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 31 |     static var handler: ((URLRequest, CommandHTTP) -> Void)?
+ 32 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamOrganizationTests.swift:8:63: warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  6 | private let orgOther = "ea300000-0000-4000-8000-000000000003"
+  7 | private let orgOrigin = "https://backend.example"
+  8 | private final class OrganizationHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                         `- warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'OrganizationHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  9 |     static var handler: ((URLRequest, OrganizationHTTP) -> Void)?
+ 10 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamProjectAccessTests.swift:7:62: warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  5 | private let tpTeam = "f07dcafe-0000-4000-8000-000000000011", tpProject = "f07dcafe-0000-4000-8000-000000000021"
+  6 | private let tpOrigin = "https://backend.example"
+  7 | private final class TeamProjectHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                        `- warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamProjectHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  8 |     static var handler: ((URLRequest, TeamProjectHTTP) -> Void)?
+  9 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamProjectAdoptionTests.swift:32:59: warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 30 |     }
+ 31 | }
+ 32 | private final class AdoptionHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'AdoptionHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 33 |     static var handler: ((URLRequest, AdoptionHTTP) -> Void)?
+ 34 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamTaskBatchTests.swift:5:54: warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 | 
+  4 | private let batchOrigin="https://backend.example"
+  5 | private final class BatchHTTP:URLProtocol,@unchecked Sendable {
+    |                     |                                `- warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'BatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler:((URLRequest,BatchHTTP)->Void)?
+  7 |     override class func canInit(with request:URLRequest)->Bool{true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamTaskEditTests.swift:5:59: warning: 'TeamEditHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 | 
+  4 | private let editOrigin = "https://backend.example"
+  5 | private final class TeamEditHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'TeamEditHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamEditHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, TeamEditHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamTaskLifecycleTests.swift:5:59: warning: 'TeamLifeHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 | 
+  4 | private let lifeOrigin = "https://backend.example"
+  5 | private final class TeamLifeHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'TeamLifeHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamLifeHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, TeamLifeHTTP) -> Void)?
+  7 |     override class func canInit(with request:URLRequest)->Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamTaskMoveTests.swift:157:55: warning: 'MoveHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+155 |     }
+156 | }
+157 | private final class MoveHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                 `- warning: 'MoveHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'MoveHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+158 |     static var handler: ((URLRequest, MoveHTTP) -> Void)?
+159 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamTaskRecipientTests.swift:4:60: warning: 'RecipientHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  2 | @testable import TaskfoldCore
+  3 | 
+  4 | private final class RecipientHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                      `- warning: 'RecipientHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'RecipientHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  5 |     static var handler: ((URLRequest, RecipientHTTP) -> Void)?
+  6 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamTemplateCommandTests.swift:35:66: warning: 'TemplateCommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 33 | }
+ 34 | private extension Int { var double: Double { Double(self) } }
+ 35 | private final class TemplateCommandHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                            `- warning: 'TemplateCommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TemplateCommandHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 36 |     static var handler: ((URLRequest, TemplateCommandHTTP) -> Void)?
+ 37 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamTemplateLibraryTests.swift:6:58: warning: 'LibraryHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  4 | private let libraryAccount = "ec250000-0000-4000-8000-000000000001", libraryTeam = "ec250000-0000-4000-8000-000000000002", libraryOrigin = "https://library.example"
+  5 | private func libraryID(_ n: Int) -> String { String(format: "ec250000-0000-4000-8001-%012d", n) }
+  6 | private final class LibraryHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'LibraryHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'LibraryHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  7 |     static var handler: ((URLRequest, LibraryHTTP) -> Void)?
+  8 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamWorkflowDestinationsTests.swift:5:63: warning: 'WorkflowReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 | 
+  4 | private func destinationID(_ n: Int) -> String { String(format: "ec270000-0000-4000-8000-%012d", n) }
+  5 | private final class WorkflowReadHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                         `- warning: 'WorkflowReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkflowReadHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, WorkflowReadHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamWorkflowRunCommandTests.swift:34:59: warning: 'WorkflowHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 32 |     func remove(key: String) throws { lock.lock(); let fail = failing; lock.unlock(); if fail { throw URLError(.cannotRemoveFile) }; try base.remove(key: key) }
+ 33 | }
+ 34 | private final class WorkflowHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'WorkflowHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkflowHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 35 |     static var handler: ((URLRequest, WorkflowHTTP) -> Void)?
+ 36 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamWorkspaceTests.swift:4:58: warning: 'WorkspaceHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  2 | @testable import TaskfoldCore
+  3 | 
+  4 | private final class WorkspaceHTTP:URLProtocol,@unchecked Sendable {
+    |                     |                                    `- warning: 'WorkspaceHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkspaceHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  5 |     static var handler:((URLRequest,WorkspaceHTTP)->Void)?
+  6 |     override class func canInit(with request:URLRequest)->Bool {true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/WebhookAccessTests.swift:135:58: warning: 'WebhookHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+133 | }
+134 | 
+135 | private final class WebhookHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'WebhookHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WebhookHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+136 |     static var handler: ((URLRequest,WebhookHTTP)->Void)?
+137 |     override class func canInit(with request:URLRequest)->Bool { true }
+
+[#UnavailableSendableConformance]: <https://docs.swift.org/compiler/documentation/diagnostics/unavailable-sendable-conformance>
+[53 / 61] TaskfoldWatchTests-product
+[57 / 61] TaskfoldCoreTests-product
+[60 / 63] TaskfoldCoreTests-product
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/EmailCaptureTests.swift:171:14: warning: concurrently-executed local function 'attempt' must be marked as '@Sendable'; this is an error in the Swift 6 language mode
+169 |         let d1 = try edraft(), d2 = try edraft(1)
+170 |         let op1 = try EmailAddressOperation(action: "create", id: d1.id, domain: d1.domain, draft: d1), op2 = try EmailAddressOperation(action: "create", id: d2.id, domain: d2.domain, draft: d2)
+171 |         func attempt(_ vault: EmailAddressVault, _ op: EmailAddressOperation) async -> Bool { do { try await vault.begin(op, account: ea, origin: eo, lease: CalendarReadLease()); return true } catch { return false } }
+    |              `- warning: concurrently-executed local function 'attempt' must be marked as '@Sendable'; this is an error in the Swift 6 language mode
+172 |         async let first = attempt(one, op1); async let second = attempt(two, op2)
+173 |         let (a, b) = await (first, second); XCTAssertNotEqual(a, b)
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamCompletionBatchTests.swift:553:21: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+ 551 |         let body = f[phase == "cancelled" ? "unrecorded_body" : phase + "_body"]!.object, raw = f[phase == "cancelled" ? "cancelled_review" : phase + "_review"]!.object
+ 552 |         let action: TeamCompletion.Operation = raw["operation"] == .string("undo") ? .undo : .complete
+ 553 |         let items = try body["items"]!.list.map { value -> Mutation in
+     |                     `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+ 554 |             let b = value.object, source = Record(b["record"]!.object), nonce = UUID(uuidString: b["request_id"]!.text)!
+ 555 |             let scope = TeamTaskEditScope(account: f["account"]!.text, origin: origin, team: body["team_id"]!.text, project: b["project_id"]!.text)
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamOrganizationCommandTests.swift:30:58: warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 28 |     }
+ 29 | }
+ 30 | private final class CommandHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'CommandHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 31 |     static var handler: ((URLRequest, CommandHTTP) -> Void)?
+ 32 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamOrganizationTests.swift:8:63: warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  6 | private let orgOther = "ea300000-0000-4000-8000-000000000003"
+  7 | private let orgOrigin = "https://backend.example"
+  8 | private final class OrganizationHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                         `- warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'OrganizationHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  9 |     static var handler: ((URLRequest, OrganizationHTTP) -> Void)?
+ 10 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamProjectAccessTests.swift:7:62: warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  5 | private let tpTeam = "f07dcafe-0000-4000-8000-000000000011", tpProject = "f07dcafe-0000-4000-8000-000000000021"
+  6 | private let tpOrigin = "https://backend.example"
+  7 | private final class TeamProjectHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                        `- warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamProjectHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  8 |     static var handler: ((URLRequest, TeamProjectHTTP) -> Void)?
+  9 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamProjectAdoptionTests.swift:32:59: warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 30 |     }
+ 31 | }
+ 32 | private final class AdoptionHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'AdoptionHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 33 |     static var handler: ((URLRequest, AdoptionHTTP) -> Void)?
+ 34 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/TeamTaskBatchTests.swift:5:54: warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 | 
+  4 | private let batchOrigin="https://backend.example"
+  5 | private final class BatchHTTP:URLProtocol,@unchecked Sendable {
+    |                     |                                `- warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'BatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler:((URLRequest,BatchHTTP)->Void)?
+  7 |     override class func canInit(with request:URLRequest)->Bool{true}
+
+[#UnavailableSendableConformance]: <https://docs.swift.org/compiler/documentation/diagnostics/unavailable-sendable-conformance>
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[62 / 66] TaskfoldCoreTests-product
+[64 / 66] TaskfoldCoreTests-product
+Build complete! (16,38 secs)
+Test Suite 'Selected tests' started at 2026-10-26 22:24:32.516.
+Test Suite 'TaskfoldWatchTests.xctest' started at 2026-10-26 22:24:32.519.
+Test Suite 'TaskfoldWatchTests.xctest' passed at 2026-10-26 22:24:32.519.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 22:24:32.519.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.003) seconds
+Test Suite 'Selected tests' started at 2026-10-26 22:24:32.583.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-26 22:24:32.584.
+Test Suite 'ProjectWorkflowsTests' started at 2026-10-26 22:24:32.584.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testArchivedProjectRejectsAnAlreadyPublishedWidgetCompletion]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testArchivedProjectRejectsAnAlreadyPublishedWidgetCompletion]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testArchiveProjectionForUnsharedAncestorAndLocalDetach]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testArchiveProjectionForUnsharedAncestorAndLocalDetach]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testBackupPreservesFutureTemplateButRefusesToRunIt]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testBackupPreservesFutureTemplateButRefusesToRunIt]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testBackupRejectsHierarchyCycleAndMissingParentBeforeAnyWrite]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testBackupRejectsHierarchyCycleAndMissingParentBeforeAnyWrite]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testBulkLiteralModeRetainsSchedulingWordsAndInputLimitFailsBeforeWriting]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testBulkLiteralModeRetainsSchedulingWordsAndInputLimitFailsBeforeWriting]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testBulkReviewStripsListMarkersButKeepsBlankLinesOutAndParsesDates]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testBulkReviewStripsListMarkersButKeepsBlankLinesOutAndParsesDates]' passed (0.018 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testCancelledTaskCannotPrepareWorkflow]' started.
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/Core/ProjectWorkflows.swift:272: error: -[TaskfoldCoreTests.ProjectWorkflowsTests testCancelledTaskCannotPrepareWorkflow] : failed: caught error: "AppFailure(message: "The template structure is incomplete.")"
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testCancelledTaskCannotPrepareWorkflow]' failed (0.570 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testCoordinatedTemplateFileReadAndOversizeRefusal]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testCoordinatedTemplateFileReadAndOversizeRefusal]' passed (0.023 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testCyclesAndDescendantMoveAreRejectedWithoutHangingOutline]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testCyclesAndDescendantMoveAreRejectedWithoutHangingOutline]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testDefinitionChildAddDeleteAndOrganizationRenameAreDraftOnly]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testDefinitionChildAddDeleteAndOrganizationRenameAreDraftOnly]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testDefinitionEditsKeepNestedIdentitiesMetadataAndExistingRuns]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testDefinitionEditsKeepNestedIdentitiesMetadataAndExistingRuns]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testDeletedTemplateRecoveryCreatesNewIdentityAndNeverRecreatesOldID]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testDeletedTemplateRecoveryCreatesNewIdentityAndNeverRecreatesOldID]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testEveryTemplateKindRetainsCreateOnlyIntentAcrossColdQueueAndHistory]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testEveryTemplateKindRetainsCreateOnlyIntentAcrossColdQueueAndHistory]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testForeignParentAndMemberOrganizationChangeAreRejected]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testForeignParentAndMemberOrganizationChangeAreRejected]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testFullSizedSectionedWorkflowKeepsOneUndoCommand]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testFullSizedSectionedWorkflowKeepsOneUndoCommand]' passed (4.766 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testLegacyTemplateReferencesCannotAliasARootWithASubtask]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testLegacyTemplateReferencesCannotAliasARootWithASubtask]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testMinimalPortableDefinitionAcceptsAbsentOptionalPlanningFields]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testMinimalPortableDefinitionAcceptsAbsentOptionalPlanningFields]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testMovingSubtreeAccountsForItsFullDepth]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testMovingSubtreeAccountsForItsFullDepth]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testNestedTemplateHeadingEditAndReturnToTaskKeepV2]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testNestedTemplateHeadingEditAndReturnToTaskKeepV2]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testNewerSyncedDefinitionCannotBeOverwrittenDuringConflictReview]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testNewerSyncedDefinitionCannotBeOverwrittenDuringConflictReview]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testOutlinePreservesTreeAndStableSiblingOrdering]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testOutlinePreservesTreeAndStableSiblingOrdering]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testParentArchiveHidesDescendantsAndRestoreKeepsExplicitChildArchive]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testParentArchiveHidesDescendantsAndRestoreKeepsExplicitChildArchive]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableBackupRestoresArchivedHierarchyAndTemplateInParentFirstOrder]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableBackupRestoresArchivedHierarchyAndTemplateInParentFirstOrder]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableSectionAndTaskFilesRemainReusableAndUnknownRepeatDetailsFailClosed]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableSectionAndTaskFilesRemainReusableAndUnknownRepeatDetailsFailClosed]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableTemplateExcludesAccountAndLabelIdentityMetadata]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableTemplateExcludesAccountAndLabelIdentityMetadata]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableTemplatePreservesLegacyOrganizationOrderAcrossDoubleDigitReferences]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableTemplatePreservesLegacyOrganizationOrderAcrossDoubleDigitReferences]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableTemplateRejectsWrongFormatFutureVersionAndMalformedDefinitions]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableTemplateRejectsWrongFormatFutureVersionAndMalformedDefinitions]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableTemplateRoundTripRemapsReferencesAndCreatesIndependentRuns]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testPortableTemplateRoundTripRemapsReferencesAndCreatesIndependentRuns]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testProjectTemplatePreservesStructureAndOffsetsButNeverHistoryOrOwnership]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testProjectTemplatePreservesStructureAndOffsetsButNeverHistoryOrOwnership]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testQueuedTemplateDraftSurvivesAuthenticatedRemoteAbsenceWithoutBecomingCreation]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testQueuedTemplateDraftSurvivesAuthenticatedRemoteAbsenceWithoutBecomingCreation]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testRecoveredTemplateRemapsLaterFullRecordIdentity]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testRecoveredTemplateRemapsLaterFullRecordIdentity]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testRecurringTemplateRebasesBoundsAndDoesNotReplayHistory]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testRecurringTemplateRebasesBoundsAndDoesNotReplayHistory]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testRefusedWorkflowUndoRestoresCurrentRowsAndReplaysLaterQueuedEdits]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testRefusedWorkflowUndoRestoresCurrentRowsAndReplaysLaterQueuedEdits]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testReviewedTemplateCreationBecomesGuardedPatchWithoutOwnershipFields]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testReviewedTemplateCreationBecomesGuardedPatchWithoutOwnershipFields]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSectionTemplateRequiresDestinationAndCreatesItsOwnSection]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSectionTemplateRequiresDestinationAndCreatesItsOwnSection]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedChildBackupPromotesUnavailableParentAndRetainsInheritedArchive]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedChildBackupPromotesUnavailableParentAndRetainsInheritedArchive]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateLabelsArePortableAndNeverResolvedThroughPersonalCatalog]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateLabelsArePortableAndNeverResolvedThroughPersonalCatalog]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplatePreservesReadableLegacyLabelLengthWithoutApplyingAdderLimit]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplatePreservesReadableLegacyLabelLengthWithoutApplyingAdderLimit]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReadDoesNotGrantTeamRunOrRetainHistoryAndOwnership]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReadDoesNotGrantTeamRunOrRetainHistoryAndOwnership]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReviewRefusesAccountSessionOriginAndAccessReplacement]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReviewRefusesAccountSessionOriginAndAccessReplacement]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReviewRefusesAddedDescendantsAndMissingSource]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReviewRefusesAddedDescendantsAndMissingSource]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReviewRetainsFullSourceNotJustCleanDefinition]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testSharedTemplateReviewRetainsFullSourceNotJustCleanDefinition]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateConflictKeepsExplicitDocumentChoiceAndIndependentRemoteName]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateConflictKeepsExplicitDocumentChoiceAndIndependentRemoteName]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplatePreservesSiblingAndManualTaskOrderWithRemappedReferences]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplatePreservesSiblingAndManualTaskOrderWithRemappedReferences]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateReviewIncludesChangedSchedulePriorityNotesAndDestinations]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateReviewIncludesChangedSchedulePriorityNotesAndDestinations]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateSaveRejectsStaleDeletedInvalidAndUnsupportedDefinitions]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateSaveRejectsStaleDeletedInvalidAndUnsupportedDefinitions]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateSiblingMovesRetainWholeBranchAndRoundTripExactly]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateSiblingMovesRetainWholeBranchAndRoundTripExactly]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateTypeEditPromotesKnownFormatAndPreservesWork]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateTypeEditPromotesKnownFormatAndPreservesWork]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateTypeEditRefusesStaleItemMalformedTypeAndFutureDefinition]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateTypeEditRefusesStaleItemMalformedTypeAndFutureDefinition]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateTypeOptInDoesNotBlockReadPreservingEdits]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateTypeOptInDoesNotBlockReadPreservingEdits]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateUseWithoutDateClearsOldScheduleAndReusesExistingLabel]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testTemplateUseWithoutDateClearsOldScheduleAndReusesExistingLabel]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testUnknownTemplateVersionAndBrokenReferencesFailClosed]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testUnknownTemplateVersionAndBrokenReferencesFailClosed]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testUnsupportedSharedLabelCannotSilentlyDisappearIntoTemplate]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testUnsupportedSharedLabelCannotSilentlyDisappearIntoTemplate]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testUseSyncedTemplateKeepsLaterOfflineWorkGuardedByItsOriginalBaseline]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testUseSyncedTemplateKeepsLaterOfflineWorkGuardedByItsOriginalBaseline]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWindowsLineEndingsKeepTheActualSourceLineNumbers]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWindowsLineEndingsKeepTheActualSourceLineNumbers]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowBulkReplayProtectsRecreatedTaskAndUnrelatedRows]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowBulkReplayProtectsRecreatedTaskAndUnrelatedRows]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowLostRepliesPreserveLaterEditsThroughBackendAndColdQueue]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowLostRepliesPreserveLaterEditsThroughBackendAndColdQueue]' passed (0.030 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowPreparationCancellationDiscardsFullSizedAndNestedWork]' started.
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/Core/ProjectWorkflows.swift:272: error: -[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowPreparationCancellationDiscardsFullSizedAndNestedWork] : failed: caught error: "AppFailure(message: "The template structure is incomplete.")"
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowPreparationCancellationDiscardsFullSizedAndNestedWork]' failed (0.044 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowPreparationRejectsChangedWorkspaceSessionSourceLabelsAndDestination]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowPreparationRejectsChangedWorkspaceSessionSourceLabelsAndDestination]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowRetryCannotAcknowledgeMissingOrForeignRows]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowRetryCannotAcknowledgeMissingOrForeignRows]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoBudgetCountsPostgresSpacesAndExpandedNumbers]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoBudgetCountsPostgresSpacesAndExpandedNumbers]' passed (0.246 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoCompatibilityIsExactAccountBoundAndNeverUsesLegacyFallback]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoCompatibilityIsExactAccountBoundAndNeverUsesLegacyFallback]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoIsOneColdDurableCommandAndRedoCreatesFreshTaskIncarnations]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoIsOneColdDurableCommandAndRedoCreatesFreshTaskIncarnations]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoRefusesObservedChangesAndIncomingDependenciesBeforeLocalDeletion]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoRefusesObservedChangesAndIncomingDependenciesBeforeLocalDeletion]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoUsesOnlyAtomicRPCAndNeverFallsBackToRowDeletion]' started.
+Test Case '-[TaskfoldCoreTests.ProjectWorkflowsTests testWorkflowUndoUsesOnlyAtomicRPCAndNeverFallsBackToRowDeletion]' passed (0.004 seconds).
+Test Suite 'ProjectWorkflowsTests' failed at 2026-10-26 22:24:38.423.
+	 Executed 65 tests, with 2 failures (2 unexpected) in 5.833 (5.839) seconds
+Test Suite 'TaskfoldCoreTests.xctest' failed at 2026-10-26 22:24:38.423.
+	 Executed 65 tests, with 2 failures (2 unexpected) in 5.833 (5.839) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 22:24:38.423.
+	 Executed 65 tests, with 2 failures (2 unexpected) in 5.833 (5.840) seconds
+Note: Some test targets reported failures:
+  - TaskfoldCoreTests (XCTest)

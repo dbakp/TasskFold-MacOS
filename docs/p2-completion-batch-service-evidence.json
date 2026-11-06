@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "status": "Atomic shared completion service source verified; native integration and rollout remain open",
+  "sourceSHA256": {
+    "supabase/migrations/20261025123326_team_completion_batches.sql": "cae8bbfb7568e931c87c6295dbf422fb188972b7758496a9db0d7a4fbb55c22b",
+    "Scripts/Database/team-completion-batch-checks.mjs": "9804092ee59d90e990e5ecedeb80cc3367d41ae990206f706e0e7e24bae8b05e",
+    "Scripts/Database/team-completion-batch-schema.mjs": "87d5078262fc5bd7db391b92e9b1a6600036a707ee3085d69f142928a542bb0d",
+    "Scripts/Database/test-team-completion.mjs": "508e1b91f0e1fdcbf17dcf08ddb5f1750199727e51cd9fab2da1698483c716a9"
+  },
+  "verification": {
+    "actualSQLChecks": 243,
+    "batchSpecificChecks": 110,
+    "advisors": {
+      "ran": true,
+      "source": "supabase db advisors --type all",
+      "baselineWarnings": [
+        {
+          "name": "auth_rls_initplan",
+          "level": "WARN"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "level": "WARN"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "level": "WARN"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "level": "WARN"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "level": "WARN"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "level": "WARN"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "level": "WARN"
+        }
+      ],
+      "additionalWarnings": []
+    },
+    "ownedContainerRemoved": true,
+    "latestSingleCompletionImplementationPreservedExceptPrivateBatchGuard": true,
+    "independentRepoSourcesAgree": true,
+    "scriptSyntaxChecks": true,
+    "acceptedRun": "docs/completion-batch-service/taskfold-completion-batch-mac-accepted.json",
+    "additionalActorChecks": "Authorized owner/manager cannot acknowledge or Undo another actor\u2019s group; private helper cannot bypass batch-member guard."
+  },
+  "initialFailures": [
+    "101 copies of a full row exceeded the test runner command argument limit before reaching SQL; count-bound test now uses 101 minimal objects",
+    "New wrapper SQL had an unqualified action name inside a completion-table query; qualified the function parameter",
+    "Concurrency probes assumed both callers directly waited on the control transaction; now verify actual direct or chained blockers before release"
+  ],
+  "documentationReviewed": [
+    "https://supabase.com/changelog.md",
+    "https://supabase.com/docs/guides/database/functions.md",
+    "https://supabase.com/changelog/postgres-15-19-17-11-breaking-changes",
+    "https://supabase.com/changelog/cbc-tls-ciphers-deprecated"
+  ],
+  "notClaimed": [
+    "Native bulk selection integration, local durable group storage/apply or UI acceptance",
+    "Genuine hosted deployment/auth/provider delivery",
+    "All rank-6 and wider Px completion"
+  ],
+  "deployed": false,
+  "teamRolloutEnabled": false,
+  "realDataChanged": false,
+  "cleanup": {
+    "ownedFixtureContainersRemoved": true,
+    "remainingFixtureInventoryEmpty": true,
+    "scratchPrefix": "/tmp/taskfold-completion-batch-",
+    "removedAllocatedBytes": 458752,
+    "repoBuildCachesAndReadyMacHostPreserved": true,
+    "noAppsLaunchedOrInstalled": true,
+    "noGlobalDockerOrSimulatorCleanup": true
+  }
+}

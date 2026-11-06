@@ -1,0 +1,2937 @@
+{
+  "cases" : [
+    {
+      "expected" : "recurring",
+      "name" : "daily",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "custom",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "interval" : 3,
+          "type" : "custom"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "weekly",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "daysOfWeek" : [
+            5,
+            1
+          ],
+          "type" : "weekly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "empty-weekdays",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "daysOfWeek" : [
+
+          ],
+          "type" : "weekly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "duplicate-weekdays",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "daysOfWeek" : [
+            5,
+            5
+          ],
+          "type" : "weekly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "wrong-weekday",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "daysOfWeek" : [
+            1
+          ],
+          "type" : "weekly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "monthly",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "dayOfMonth" : 23,
+          "type" : "monthly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "monthly-clamp",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "dayOfMonth" : 31,
+          "type" : "monthly"
+        },
+        "start_day" : "2027-02-28",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "monthly-multi",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "daysOfMonth" : [
+            1,
+            20,
+            31
+          ],
+          "type" : "monthly"
+        },
+        "start_day" : "2026-10-20",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "monthly-multi-clamp",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "daysOfMonth" : [
+            30,
+            31
+          ],
+          "type" : "monthly"
+        },
+        "start_day" : "2027-02-28",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "monthly-multi-wrong-anchor",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "daysOfMonth" : [
+            1,
+            20,
+            31
+          ],
+          "type" : "monthly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "last-weekday",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "monthly",
+          "weekday" : 3,
+          "weekdayOrdinal" : -1
+        },
+        "start_day" : "2026-10-28",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "fifth-weekday",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "monthly",
+          "weekday" : 5,
+          "weekdayOrdinal" : 5
+        },
+        "start_day" : "2026-10-30",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "absent-fifth-weekday",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "monthly",
+          "weekday" : 1,
+          "weekdayOrdinal" : 5
+        },
+        "start_day" : "2026-10-26",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "yearly-clamp",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "dayOfMonth" : 29,
+          "monthOfYear" : 2,
+          "type" : "yearly"
+        },
+        "start_day" : "2027-02-28",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "yearly-leap",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "dayOfMonth" : 29,
+          "monthOfYear" : 2,
+          "type" : "yearly"
+        },
+        "start_day" : "2028-02-29",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "unknown-rule",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "hourly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-zero",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "interval" : 0,
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-fraction",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "interval" : 1.5,
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "count-max",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "count" : 999,
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "count-over",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "count" : 1000,
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "count-null",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "count" : null,
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "count-zero",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "count" : 0,
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "from-completion",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "fromCompletion" : true,
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "from-completion-string",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "fromCompletion" : "false",
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "end-before",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "endDate" : "2026-10-22",
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "end-same",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "endDate" : "2026-10-23",
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "end-bad",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "endDate" : "2026-02-30",
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "day-type-mismatch",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "dayOfMonth" : 1,
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "weekdays-type-mismatch",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "daysOfWeek" : [
+
+          ],
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "monthly-no-days",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "monthly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "yearly-no-month",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "dayOfMonth" : 23,
+          "type" : "yearly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "month-type-mismatch",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "monthOfYear" : 1,
+          "type" : "weekly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "weekday-no-ordinal",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "dayOfMonth" : 23,
+          "type" : "monthly",
+          "weekday" : 5
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "duplicate-monthdays",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "daysOfMonth" : [
+            23,
+            23
+          ],
+          "type" : "monthly"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "rule-extension",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "future" : {
+            "unread" : true
+          },
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "invalid-day",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-02-30",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "invalid-clock",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "24:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "second-clock",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "unknown-zone",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Mars/Nope",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "fixed-gmt-zone",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "GMT+0200",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "skipped-day",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2011-12-30",
+        "time" : "09:00",
+        "time_zone" : "Pacific/Apia",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "spring-gap",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-03-29",
+        "time" : "02:30",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "fall-fold",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-25",
+        "time" : "02:30",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "lower-year",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "0001-01-01",
+        "time" : "09:00",
+        "time_zone" : "UTC",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "upper-year",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "9999-12-31",
+        "time" : "09:00",
+        "time_zone" : "UTC",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "enabled-absent",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "wrong-kind",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "absolute",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "reserved-id",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "00000000-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "row-extension",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "future" : {
+          "preserve" : true
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-normal",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-min",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 5,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-max",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 10080,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-step-low",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 4,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-step-high",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 10081,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-step-fraction",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 5.5,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-count-null",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : null,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-count-max",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 999,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-count-over",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 1000,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-count-zero",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 0,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-count-string",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : "3",
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-start-min",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : -62135596800000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-start-max",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 253402300799999,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-start-low",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : -62135596800001,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-start-high",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 253402300800000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-start-fraction",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1.5,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-until-before",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : 0
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-until-same",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : 1792742400000
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-extension",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "future" : true,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "holiday-skip",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "holiday-move",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : true,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "next-day",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "holiday-empty",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "holiday-other-year",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2027-01-01"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2027
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-mismatch-year",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2027
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-duplicate",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-01-01"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-unsorted",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-12-25",
+            "2026-01-01"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-invalid-day",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-02-30"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-null-origin",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : null,
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "holiday-origin-subdivision",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "US",
+            "provider" : "nager-v4",
+            "subdivision" : "US-CA"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-origin-other-country",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "US",
+            "provider" : "nager-v4",
+            "subdivision" : "DK-85"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-origin-bad-provider",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "unreviewed"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-source-blank",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "\t\n ",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-source-too-long",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "holiday-source-unicode",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Feriados é 🇩🇰",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-mode-bad",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "previous-day",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-digest-bad",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "holiday-extension",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "future" : {
+            "safe" : true
+          },
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : "relative",
+      "name" : "relative-base",
+      "spec" : {
+        "anchor" : "planned",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "relative",
+        "offset_minutes" : -15,
+        "version" : 1
+      }
+    },
+    {
+      "expected" : "relative",
+      "name" : "relative-sensitive",
+      "spec" : {
+        "anchor" : "planned",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "relative",
+        "offset_minutes" : -15,
+        "presentation" : "time-sensitive",
+        "schedule_version" : 1,
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "relative-null-enabled",
+      "spec" : {
+        "anchor" : "planned",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : null,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "relative",
+        "offset_minutes" : -15,
+        "version" : 1
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "relative-string-enabled",
+      "spec" : {
+        "anchor" : "planned",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : "true",
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "relative",
+        "offset_minutes" : -15,
+        "version" : 1
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "relative-bad-id",
+      "spec" : {
+        "anchor" : "planned",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "bad",
+        "kind" : "relative",
+        "offset_minutes" : -15,
+        "version" : 1
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "relative-empty-channels",
+      "spec" : {
+        "anchor" : "planned",
+        "channels" : [
+
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "relative",
+        "offset_minutes" : -15,
+        "version" : 1
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "relative-unknown-channels",
+      "spec" : {
+        "anchor" : "planned",
+        "channels" : [
+          "remote"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "relative",
+        "offset_minutes" : -15,
+        "version" : 1
+      }
+    },
+    {
+      "expected" : "absolute",
+      "name" : "absolute-base",
+      "spec" : {
+        "at" : "2026-10-23T09:00:00Z",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "absolute",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 1
+      }
+    },
+    {
+      "expected" : "absolute",
+      "name" : "absolute-sensitive",
+      "spec" : {
+        "at" : "2026-10-23T09:00:00Z",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "absolute",
+        "presentation" : "time-sensitive",
+        "schedule_version" : 1,
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "absolute-null-enabled",
+      "spec" : {
+        "at" : "2026-10-23T09:00:00Z",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : null,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "absolute",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 1
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "absolute-string-enabled",
+      "spec" : {
+        "at" : "2026-10-23T09:00:00Z",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : "true",
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "absolute",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 1
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "absolute-bad-id",
+      "spec" : {
+        "at" : "2026-10-23T09:00:00Z",
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "bad",
+        "kind" : "absolute",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 1
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "absolute-empty-channels",
+      "spec" : {
+        "at" : "2026-10-23T09:00:00Z",
+        "channels" : [
+
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "absolute",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 1
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "absolute-unknown-channels",
+      "spec" : {
+        "at" : "2026-10-23T09:00:00Z",
+        "channels" : [
+          "remote"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "absolute",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 1
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "calendar-base",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "calendar-sensitive",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "presentation" : "time-sensitive",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "schedule_version" : 2,
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "calendar-null-enabled",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : null,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "calendar-string-enabled",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : "true",
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "calendar-bad-id",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "bad",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "calendar-empty-channels",
+      "spec" : {
+        "channels" : [
+
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "calendar-unknown-channels",
+      "spec" : {
+        "channels" : [
+          "remote"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 2
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-base",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "interval",
+      "name" : "interval-sensitive",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "presentation" : "time-sensitive",
+        "schedule_version" : 3,
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-null-enabled",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : null,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-string-enabled",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : "true",
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-bad-id",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "bad",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-empty-channels",
+      "spec" : {
+        "channels" : [
+
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "interval-unknown-channels",
+      "spec" : {
+        "channels" : [
+          "remote"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "interval_schedule" : {
+          "count" : 10,
+          "every_minutes" : 15,
+          "start_ms" : 1792742400000,
+          "until_ms" : null
+        },
+        "kind" : "interval",
+        "version" : 3
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "holiday-base",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : "recurring",
+      "name" : "holiday-sensitive",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "presentation" : "time-sensitive",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "schedule_version" : 5,
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-null-enabled",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : null,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-string-enabled",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : "true",
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-bad-id",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "bad",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-empty-channels",
+      "spec" : {
+        "channels" : [
+
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "holiday-unknown-channels",
+      "spec" : {
+        "channels" : [
+          "remote"
+        ],
+        "enabled" : true,
+        "holiday_policy" : {
+          "avoid_weekends" : false,
+          "dates" : [
+            "2026-01-01",
+            "2026-12-25"
+          ],
+          "digest" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode" : "skip",
+          "origin" : {
+            "country" : "DK",
+            "provider" : "nager-v4"
+          },
+          "region" : "Denmark",
+          "source" : "Country calendar",
+          "version" : 1,
+          "year" : 2026
+        },
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 5
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "wrapped-invalid-base",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "presentation" : "time-sensitive",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "schedule_version" : 99,
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "wrapped-nesting",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "presentation" : "time-sensitive",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "schedule_version" : 4,
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "wrapped-null",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "presentation" : "time-sensitive",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "schedule_version" : null,
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "wrapped-no-presentation",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "presentation" : null,
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "schedule_version" : 2,
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "wrapped-remote",
+      "spec" : {
+        "channels" : [
+          "push"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "presentation" : "time-sensitive",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "schedule_version" : 2,
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "wrapped-reserved",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "00000000-0000-4000-8000-000000000001",
+        "kind" : "recurring",
+        "presentation" : "time-sensitive",
+        "recurrence" : {
+          "type" : "daily"
+        },
+        "schedule_version" : 2,
+        "start_day" : "2026-10-23",
+        "time" : "09:00",
+        "time_zone" : "Europe/Copenhagen",
+        "version" : 4
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "location6",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "location",
+        "version" : 6
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "location7",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "location",
+        "version" : 7
+      }
+    },
+    {
+      "expected" : null,
+      "name" : "future99",
+      "spec" : {
+        "channels" : [
+          "local"
+        ],
+        "enabled" : true,
+        "id" : "f09acafe-0000-4000-8000-000000000001",
+        "kind" : "future",
+        "version" : 99
+      }
+    }
+  ],
+  "version" : 1
+}

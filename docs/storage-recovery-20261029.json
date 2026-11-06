@@ -1,0 +1,84 @@
+{
+  "recordedAtUTC": "2026-10-29T20:01:28.705917+00:00",
+  "freeBytesNow": 60282355712,
+  "lowSpaceObserved": "Below 1 GiB, including failed writes at zero free space",
+  "measuredBeforeCleanupGiB": {
+    "allSimulatorDevices": 110,
+    "currentTaskfoldPhone": 20,
+    "currentTaskfoldTablet": 28.57,
+    "dockerData": 6.2,
+    "temporaryTaskfoldOutputsApprox": 3.2,
+    "xcodeDerivedData": 1.4
+  },
+  "cleanup": {
+    "stoppedCurrentTaskfoldTestRun": true,
+    "currentTaskfoldPhoneAndTabletShutdown": true,
+    "removedRebuildableCoreTestCachesMiBApprox": 926,
+    "removedIOSCompilerIntermediatesMiBApprox": 298,
+    "removedPhoneAndTabletSymbolicationCachesGiBApprox": 2.36,
+    "obsoleteTaskfoldLogOnlyDerivedDataDirectoriesRemoved": 1487,
+    "wallpaperScratchCachesRemoved": 219,
+    "wallpaperConfigurationAndOriginalAssetsRetained": true,
+    "approvedObsoleteSimulatorData": [
+      {
+        "name": "Taskfold synthetic provider disposable",
+        "id": "2F7686F8-CCBB-4E74-AB29-A144739399F7",
+        "dataRemoved": false,
+        "protectedRemainderCount": 21
+      },
+      {
+        "name": "Taskfold assignment iPhone",
+        "id": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "dataRemoved": true,
+        "protectedRemainderCount": 0
+      },
+      {
+        "name": "Taskfold phone calendar rotation disposable",
+        "id": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+        "dataRemoved": true,
+        "protectedRemainderCount": 0
+      },
+      {
+        "name": "Taskfold assignment iPad",
+        "id": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "dataRemoved": true,
+        "protectedRemainderCount": 0
+      },
+      {
+        "name": "Taskfold calendar rotation disposable",
+        "id": "3490D124-DE6F-4367-91C8-5F0A4B51BF0D",
+        "dataRemoved": true,
+        "protectedRemainderCount": 0
+      }
+    ],
+    "obsoleteSimulatorRecordsFullyRemoved": 4
+  },
+  "preserved": [
+    "repository source and committed verification evidence",
+    "real device contents and real tasks",
+    "current test app data and wallpaper configurations",
+    "unrelated Lumen simulator",
+    "Docker volumes and images"
+  ],
+  "prevention": {
+    "defaultFreeSpaceFloorGiB": 20,
+    "readOnlyGuard": "Scripts/check_test_storage.py",
+    "checkedAt": [
+      "child-field native host preparation",
+      "PostgreSQL fixture creation"
+    ],
+    "agentInstructionsRequireBeforeAllHeavyLocalRuns": true
+  },
+  "verification": {
+    "normalBudgetPass": true,
+    "missingOutputParentPass": true,
+    "insufficientBudgetRefusedWithExit2": true,
+    "pythonSyntaxPass": true,
+    "fixtureJavaScriptSyntaxPass": true
+  },
+  "limitations": [
+    "Per-operation free-space deltas overlap because cleanup jobs and macOS paging ran concurrently; do not add them together.",
+    "One obsolete synthetic provider simulator retains zero-size protected file-provider remnants; permissions were not changed.",
+    "This cleanup is not completion of the remaining Px work."
+  ]
+}

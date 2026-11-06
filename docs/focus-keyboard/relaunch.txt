@@ -1,0 +1,40 @@
+Window: "", App: Taskfold P0 Signed Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Focus session, Secondary Actions: Cancel
+		3 scroll area Secondary Actions: Scroll Up, Scroll Down, Cancel
+			4 text Value: Paused Review the proposal Studio · Client launch Time remaining 24:55, ID: focusStatus
+			5 progress indicator 0.003827333333333333
+			6 button Description: Resume, ID: pauseResumeFocus
+			7 button Description: End session, ID: endFocus
+			8 text Your next session
+			9 button Description: Review the proposal, Studio · Client launch, ID: focusTaskPicker
+			10 stepper 25 minutes, Value: 25, ID: focusDuration, Secondary Actions: Increment, Decrement
+				11 increment arrow button
+				12 decrement arrow button
+			13 button Description: Start Focus, ID: startFocus
+			14 text Saved on this device.
+			15 checkbox Description: Alert when Focus finishes, Value: 0, ID: focusAlerts
+			16 text ID: focusAlertStatus, Value: Finish alerts are off on this device. Enable on each device where you want a finish alert. The alert opens your session; task completion is up to you.
+			17 button Open Notification Settings…
+			18 text Value: Selected task: aaaaaaaa-aaaa-4aaa-8aaa-000000001248, ID: focusSelectedTaskFixture
+			19 button Description: Recreate selected task fixture, ID: focusRecreateSelectedFixture
+			20 scroll bar (settable, float) 0
+				21 value indicator (settable, float) 0
+				22 increment arrow button
+				23 decrement arrow button
+				24 increment page button
+				25 decrement page button
+		26 button Description: Close, ID: closeFocusSession
+27 menu bar
+	28 Taskfold
+	29 File
+	30 Edit
+	31 View
+	32 Fixture
+	33 Account
+	34 Task
+	35 Window
+	36 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

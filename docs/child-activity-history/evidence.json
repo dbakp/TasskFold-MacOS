@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-26",
+  "stage": "recording and reader foundation; inactive in app",
+  "core": {
+    "tests": 53,
+    "newTests": 22,
+    "failures": 0
+  },
+  "database": {
+    "checks": 49,
+    "independentOwnedFixture": true,
+    "fixtureRemoved": true,
+    "newObjectAdvisorFindings": 0,
+    "baselineWarning": "fixture_task_access auth_rls_initplan"
+  },
+  "macNative": {
+    "status": "not accepted",
+    "reason": "Mac locked at native launch; stopped owned test",
+    "exitCode": 75,
+    "preparedHostPreserved": true
+  },
+  "hostedChanges": false,
+  "appStoreSyncUIIntegrated": false,
+  "sources": {
+    "Taskfold/Core/TaskActivity.swift": "47ba9631ea9d847af5f34758ae584352a4330770950f3f2b1e0fca3d1082edb3",
+    "TaskfoldTests/TaskNodeActivityTests.swift": "f97beae43bfdeb36ee3213f37ea987f9adabc9f96ed7de266a8cc993edb24b33",
+    "TaskfoldTests/Fixtures/task-node-activity.json": "8e19d3b5291e4ee7b7ee47a96aeff5dfda963c68d261b04d7cd70badc741091d",
+    "Scripts/Database/task-node-activity-bootstrap.sql": "e6710171ce3d1852b55efa7e8ffbf14b612ebd56aa5c7e62e43138495e896ede",
+    "Scripts/Database/test-task-node-activity.mjs": "ed63aa3adcf6520e4ceab514cb8013e8bcefa7fd0e247c327643cecc2c524cc5",
+    "supabase/migrations/20261026095807_task_node_activity_history.sql": "6e9a067a793714db686cdd524707a140eee7f1ea05ccd1c635980f783d1c1687"
+  },
+  "runnerNote": "Final runner additionally asserts zero new-object advisor findings; identical assertion independently checked against saved results. 49 checks executed before that test-only assertion."
+}

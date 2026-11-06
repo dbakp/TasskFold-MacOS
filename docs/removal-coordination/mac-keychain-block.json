@@ -1,0 +1,7 @@
+{
+  "checks" : {
+    "reservedRecoveryOnly" : true
+  },
+  "error" : "Calendar busy time could not be refreshed. Try again.",
+  "status" : "failed"
+}

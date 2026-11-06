@@ -1,0 +1,377 @@
+{
+  "date": "2026-10-09",
+  "platform": "mac",
+  "baseCommit": "f7216a9705138f12efb01bc356e0ff15dff21c01",
+  "inputManifest": "day-window-inputs-sha256.json",
+  "checks": {
+    "mac-core-debug": {
+      "exitCode": 0,
+      "seconds": 17.32,
+      "log": "/tmp/taskfold-day-window-v1-mac-core-debug.log",
+      "logSHA256": "8ac0b767d4acbf1818e55837a1acdb1411466c69ef50d666f45f11e7120b067a",
+      "source": "/tmp/taskfold-day-window-v1-mac-native-source",
+      "arguments": [
+        "swift",
+        "test",
+        "--scratch-path",
+        "/tmp/taskfold-assignee-pattern-final-v5-mac-core-debug",
+        "--configuration",
+        "debug"
+      ]
+    },
+    "mac-core-release": {
+      "exitCode": 0,
+      "seconds": 78.15,
+      "log": "/tmp/taskfold-day-window-v1-mac-core-release.log",
+      "logSHA256": "9984eb7fd1437ab86b2be52feead28dcfe4ec976bc7080d5f42a54a426d64a74",
+      "source": "/tmp/taskfold-day-window-v1-mac-native-source",
+      "arguments": [
+        "swift",
+        "test",
+        "--scratch-path",
+        "/tmp/taskfold-assignee-pattern-final-v6-mac-core-release",
+        "--configuration",
+        "release"
+      ]
+    },
+    "mac-native-debug": {
+      "exitCode": 0,
+      "seconds": 38.94,
+      "log": "/tmp/taskfold-day-window-v1-mac-native-debug.log",
+      "logSHA256": "3a662caa4c0f3cb5f6a1aad2936d9dac6eccabd0750d7bfae9da3a2998a389fb",
+      "source": "/tmp/taskfold-day-window-v1-mac-native-source",
+      "arguments": [
+        "xcodebuild",
+        "-project",
+        "Taskfold.xcodeproj",
+        "-scheme",
+        "Taskfold",
+        "-configuration",
+        "Debug",
+        "-destination",
+        "generic/platform=macOS",
+        "-derivedDataPath",
+        "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build",
+        "-jobs",
+        "2",
+        "CODE_SIGNING_ALLOWED=NO",
+        "ARCHS=arm64",
+        "ONLY_ACTIVE_ARCH=YES",
+        "build-for-testing"
+      ]
+    },
+    "mac-native-release": {
+      "exitCode": 0,
+      "seconds": 165.09,
+      "log": "/tmp/taskfold-day-window-v1-mac-native-release.log",
+      "logSHA256": "d8c12c1dbd89beaa86b81c4613bb26c4f4760a8dc4ad2e382066c43cc026c7d1",
+      "source": "/tmp/taskfold-day-window-v1-mac-native-source",
+      "arguments": [
+        "xcodebuild",
+        "-project",
+        "Taskfold.xcodeproj",
+        "-scheme",
+        "Taskfold",
+        "-configuration",
+        "Release",
+        "-destination",
+        "generic/platform=macOS",
+        "-derivedDataPath",
+        "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build",
+        "-jobs",
+        "2",
+        "CODE_SIGNING_ALLOWED=NO",
+        "ARCHS=arm64 x86_64",
+        "ONLY_ACTIVE_ARCH=NO",
+        "build"
+      ]
+    }
+  },
+  "coreTestsPerConfiguration": {
+    "executed": 583,
+    "optionalIntegrationSkipped": 4,
+    "failed": 0
+  },
+  "nativeIOSPartnerWalks": {
+    "phone-ranges": {
+      "exitCode": 0,
+      "seconds": 246.71,
+      "log": "/tmp/taskfold-day-window-v1-phone-ranges.log",
+      "logSHA256": "f5ea676d69620cad5851127bb80291522857414921fba2bfc3f758edfe2de58a",
+      "resultBundle": "/tmp/taskfold-day-window-v1-phone-ranges.xcresult",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "arguments": [
+        "xcodebuild",
+        "test-without-building",
+        "-xctestrun",
+        "/tmp/taskfold-assignee-pattern-final-v6-ios-debug-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+        "-destination",
+        "platform=iOS Simulator,id=5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "-parallel-testing-enabled",
+        "NO",
+        "-collect-test-diagnostics",
+        "never",
+        "-resultBundlePath",
+        "/tmp/taskfold-day-window-v1-phone-ranges.xcresult",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testDayWindowBuilderExpressionAndRelaunch()",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testDayWindowDarkLargestBuilderExpressionAndRelaunch()"
+      ],
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+              "deviceName": "Taskfold assignment iPhone",
+              "modelName": "iPhone 17 Pro",
+              "osBuildNumber": "23F77",
+              "osVersion": "26.5",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1791525964.141,
+        "passedTests": 2,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1791525718.647,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      }
+    },
+    "tablet-ranges": {
+      "exitCode": 0,
+      "seconds": 241.66,
+      "log": "/tmp/taskfold-day-window-v1-tablet-ranges.log",
+      "logSHA256": "1503ff8ddb768991a9ff15dcc4f7bd04c184a696b04f82ce3111c4a7d179d1d4",
+      "resultBundle": "/tmp/taskfold-day-window-v1-tablet-ranges.xcresult",
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "arguments": [
+        "xcodebuild",
+        "test-without-building",
+        "-xctestrun",
+        "/tmp/taskfold-assignee-pattern-final-v6-ios-debug-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+        "-destination",
+        "platform=iOS Simulator,id=8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "-parallel-testing-enabled",
+        "NO",
+        "-collect-test-diagnostics",
+        "never",
+        "-resultBundlePath",
+        "/tmp/taskfold-day-window-v1-tablet-ranges.xcresult",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testDayWindowBuilderExpressionAndRelaunch()",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testDayWindowDarkLargestBuilderExpressionAndRelaunch()"
+      ],
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+              "deviceName": "Taskfold assignment iPad",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "23F77",
+              "osVersion": "26.5",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1791526205.94,
+        "passedTests": 2,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1791525966.354,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      }
+    }
+  },
+  "nativeIOSFixtureBundle": "com.dbakp.taskfold.assigneepatterntests",
+  "debugFixtureModification": "Only the six iOS product bundle identifier prefixes change in the frozen Debug project; original inputs are recorded separately. Release and Mac project IDs remain unchanged.",
+  "products": {
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold": {
+      "sha256": "744dcea64df9d5dc44a40a50bc554a4a326cbd8a80c7f7ce4b85631ad86cbbc5",
+      "architectures": "arm64"
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets": {
+      "sha256": "ebcde180025896bedd60b9f526c3437a69e92c4b82005cfdf86a5a3b8088fec4",
+      "architectures": "arm64"
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": {
+      "sha256": "6438be5c21317e6bea9c8c707f140c58f058092997681a5bdfe9f015809e3628",
+      "architectures": "arm64"
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build/Build/Products/Release/Taskfold.app/Contents/MacOS/Taskfold": {
+      "sha256": "a2f681639c3d4667ec6b0e6c0c90c8867ffafc4e9d9b0aa88b3fcc44ae170b98",
+      "architectures": "x86_64 arm64"
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build/Build/Products/Release/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets": {
+      "sha256": "b5f95b9c79f6962b5ad5e74e67aa23e28acd33ee5f83c22402d728fe71317ada",
+      "architectures": "x86_64 arm64"
+    }
+  },
+  "visualReview": {
+    "viewed": [
+      "/tmp/taskfold-day-window-v1-phone-ranges-captures/A67B5EB5-18A1-40E3-9E63-8BF15781AC63.png",
+      "/tmp/taskfold-day-window-v1-phone-ranges-captures/E5B541CC-A54D-4B35-A27A-AD7FACD5DE77.png",
+      "/tmp/taskfold-day-window-v1-phone-ranges-captures/30690FB8-140B-40EC-8AEE-FD30BEEC96A4.png",
+      "/tmp/taskfold-day-window-v1-phone-ranges-captures/1E794959-46C6-4516-B1D5-B04CEAE0193E.png",
+      "/tmp/taskfold-day-window-v1-phone-ranges-captures/B7DBE7E1-FAFE-4F90-82EF-559A1DF4BB0F.png",
+      "/tmp/taskfold-day-window-v1-phone-ranges-captures/2D331559-5349-4653-8B65-291F8CB0A035.png",
+      "/tmp/taskfold-day-window-v1-tablet-ranges-captures/6FBFD952-1C7D-42F9-B28C-6F239ACEE8A8.png",
+      "/tmp/taskfold-day-window-v1-tablet-ranges-captures/B199F180-4189-4418-8E2B-A375FEBA9C98.png",
+      "/tmp/taskfold-day-window-v1-tablet-ranges-captures/3CF256F1-F49D-4F06-9F97-543710813D10.png",
+      "/tmp/taskfold-day-window-v1-tablet-ranges-captures/D11DAB83-DE45-4262-BB70-8AAF8B9A6DA4.png",
+      "/tmp/taskfold-day-window-v1-tablet-ranges-captures/1F47EE75-3A06-484D-8598-1C9F7D53418D.png",
+      "/tmp/taskfold-day-window-v1-tablet-ranges-captures/2AA4CA22-3012-47D1-B0EA-F59889DD8072.png"
+    ],
+    "phoneReview": "Light validation, results and expression are readable. Largest dark condition/error and short expression wrap within the form; Save remains visible. Long help and the rest of the form require vertical scrolling. The existing largest navigation-title truncation and translucent toolbar underlap remain full-surface polish gaps.",
+    "tabletReview": "Light validation and expression fit the centered sheet with remaining form rows available by scrolling. Dark largest text shows readable condition/error and expression; the numeric value is partly below the captured validation viewport and is reached by scrolling in the passing walk. Both result rows are readable. Translucent toolbar underlap remains. All 12 original captures were viewed individually."
+  },
+  "captures": [
+    {
+      "source": "/tmp/taskfold-day-window-v1-phone-ranges-captures/30690FB8-140B-40EC-8AEE-FD30BEEC96A4.png",
+      "file": "docs/day-window-previews/phone-light-default-expression.png",
+      "sha256": "fc9746a337efa3ed52804e4988cf81a1a81f1b547ab23c9bb959a78e67e1c536",
+      "testIdentifier": "TaskfoldUITests/testDayWindowBuilderExpressionAndRelaunch()",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "timestamp": 1791525813.275
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-phone-ranges-captures/2D331559-5349-4653-8B65-291F8CB0A035.png",
+      "file": "docs/day-window-previews/phone-light-default-results.png",
+      "sha256": "756616d516c76dd33fe8ec0c9b244513c28167aac445cb4beaec4f0b9dc287e0",
+      "testIdentifier": "TaskfoldUITests/testDayWindowBuilderExpressionAndRelaunch()",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "timestamp": 1791525783.715
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-phone-ranges-captures/A67B5EB5-18A1-40E3-9E63-8BF15781AC63.png",
+      "file": "docs/day-window-previews/phone-light-default-validation.png",
+      "sha256": "503f60dfbfcc5f67f4a4076959f4a6566aec33d67210b76931119739d452851a",
+      "testIdentifier": "TaskfoldUITests/testDayWindowBuilderExpressionAndRelaunch()",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "timestamp": 1791525770.486
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-phone-ranges-captures/B7DBE7E1-FAFE-4F90-82EF-559A1DF4BB0F.png",
+      "file": "docs/day-window-previews/phone-dark-largest-expression.png",
+      "sha256": "e7e428008853688515d52c0c76890c617214ceca6d60f23b68e0712d30606155",
+      "testIdentifier": "TaskfoldUITests/testDayWindowDarkLargestBuilderExpressionAndRelaunch()",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "timestamp": 1791525923.801
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-phone-ranges-captures/E5B541CC-A54D-4B35-A27A-AD7FACD5DE77.png",
+      "file": "docs/day-window-previews/phone-dark-largest-results.png",
+      "sha256": "cad8dd409c8313392a271427bb8852f3e628ccb846b55047fbfdf5462ff580b7",
+      "testIdentifier": "TaskfoldUITests/testDayWindowDarkLargestBuilderExpressionAndRelaunch()",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "timestamp": 1791525904.77
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-phone-ranges-captures/1E794959-46C6-4516-B1D5-B04CEAE0193E.png",
+      "file": "docs/day-window-previews/phone-dark-largest-validation.png",
+      "sha256": "9170f3436232780603a96be8f7b3a111526ab8c216d748430c5777469840efef",
+      "testIdentifier": "TaskfoldUITests/testDayWindowDarkLargestBuilderExpressionAndRelaunch()",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "timestamp": 1791525891.692
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-tablet-ranges-captures/6FBFD952-1C7D-42F9-B28C-6F239ACEE8A8.png",
+      "file": "docs/day-window-previews/tablet-light-default-expression.png",
+      "sha256": "958534ff81441d37583885342ccbc43a0a1d980a5458511c9cb305c5759daa9c",
+      "testIdentifier": "TaskfoldUITests/testDayWindowBuilderExpressionAndRelaunch()",
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "timestamp": 1791526054.684
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-tablet-ranges-captures/B199F180-4189-4418-8E2B-A375FEBA9C98.png",
+      "file": "docs/day-window-previews/tablet-light-default-results.png",
+      "sha256": "2c32b24699212a9c1f0294a25b7d464f21424a6512733edad1dd46e85ce4e1a2",
+      "testIdentifier": "TaskfoldUITests/testDayWindowBuilderExpressionAndRelaunch()",
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "timestamp": 1791526023.799
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-tablet-ranges-captures/D11DAB83-DE45-4262-BB70-8AAF8B9A6DA4.png",
+      "file": "docs/day-window-previews/tablet-light-default-validation.png",
+      "sha256": "0b5fd4f50eeefeef63866850a860d7d6ee1e8d6f7dea054874fbe4760e1b2943",
+      "testIdentifier": "TaskfoldUITests/testDayWindowBuilderExpressionAndRelaunch()",
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "timestamp": 1791526011.074
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-tablet-ranges-captures/2AA4CA22-3012-47D1-B0EA-F59889DD8072.png",
+      "file": "docs/day-window-previews/tablet-dark-largest-expression.png",
+      "sha256": "0791d93fded0d6394f4ec105d9a52689b93601abb9f1a16e350c10efd4a3687f",
+      "testIdentifier": "TaskfoldUITests/testDayWindowDarkLargestBuilderExpressionAndRelaunch()",
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "timestamp": 1791526168.771
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-tablet-ranges-captures/1F47EE75-3A06-484D-8598-1C9F7D53418D.png",
+      "file": "docs/day-window-previews/tablet-dark-largest-results.png",
+      "sha256": "39859c9c5c535c7760ab607763c55ff79d8dbe8051c7269424e554cb8aa6d110",
+      "testIdentifier": "TaskfoldUITests/testDayWindowDarkLargestBuilderExpressionAndRelaunch()",
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "timestamp": 1791526148.88
+    },
+    {
+      "source": "/tmp/taskfold-day-window-v1-tablet-ranges-captures/3CF256F1-F49D-4F06-9F97-543710813D10.png",
+      "file": "docs/day-window-previews/tablet-dark-largest-validation.png",
+      "sha256": "23d4e9ebcdc4266f28d777989c2653ffced08c4de69074a4e08cfffa3dec1440",
+      "testIdentifier": "TaskfoldUITests/testDayWindowDarkLargestBuilderExpressionAndRelaunch()",
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "timestamp": 1791526130.426
+    }
+  ],
+  "limitations": [
+    "No Mac runtime/install; Mac evidence is compile/Core only.",
+    "Native walks test a one-day range, zero-day rejection, expression editing and relaunch. Wider/past boundaries, backup and projected widget days are Core-tested.",
+    "Largest navigation titles truncate; long help/form content requires scrolling; translucent toolbar underlap remains.",
+    "No actual paired native accounts, offline network replay, access revocation, mixed-version readers, real provider-account import, physical widgets, remote delivery or distribution acceptance."
+  ],
+  "installedIOSProductHashes": {
+    "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705": {
+      "Taskfold": "86386b2fbb5059c53b7a61c125ba93789444133a5b9dccd8df8553d38b3d823c",
+      "Taskfold.debug.dylib": "70d72175b215b385aec4cb40b540e9208edac161bba8e760cc0d6ed8c6c2a53b",
+      "PlugIns/TaskfoldWidgets.appex/TaskfoldWidgets": "4e4386bdfefe6003e5406eec59687f14462d531bcb67745cb92bbe4bb71c8844"
+    },
+    "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969": {
+      "Taskfold": "86386b2fbb5059c53b7a61c125ba93789444133a5b9dccd8df8553d38b3d823c",
+      "Taskfold.debug.dylib": "70d72175b215b385aec4cb40b540e9208edac161bba8e760cc0d6ed8c6c2a53b",
+      "PlugIns/TaskfoldWidgets.appex/TaskfoldWidgets": "4e4386bdfefe6003e5406eec59687f14462d531bcb67745cb92bbe4bb71c8844"
+    }
+  }
+}

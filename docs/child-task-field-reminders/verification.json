@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-29",
+  "source_sha256": {
+    "Taskfold/ChildFieldNativeFixture.swift": "5e87716b166ad83e5c15c24d0c41f4af7263ea62e0714bf722f5e3396db7967e",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "7bda2061022d27c148eb9812a8f8680169bf95c9c95845cad29e26590c0fccc7",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "1b9b1b8b855580351bcf5f82ec838180db6d8ccd91f0e99103635e01184e680f",
+    "Taskfold/Views/ReminderEditor.swift": "0868f5895425a29835694b7ce4fd0041654d6679b701c52c6e089b01cf651e83",
+    "Taskfold/Views/TaskInspector.swift": "91c66dbd5cbff8ef50d446adba915a33919077e8ceed9524d5edb698336abefa",
+    "Taskfold/Views/TeamTaskRemindersEditor.swift": "767548b1391fbd0ef64d31845622e8130822e5a697eae1abf910207152179d68",
+    "TaskfoldTests/ChildTaskFieldCommandTests.swift": "087891b9495e6660ffa0159c19b9b113edc64ca52951b78a33c12405639a44d0",
+    "TaskfoldUITests/AudioCommentUITests.swift": "dbb658edff9416a7f8cb807c5597e000074a15c4ec4a1436e6500467c9b79d9c"
+  },
+  "canonical_flags": {
+    "TaskfoldChildRecordReadsEnabled": "absent",
+    "TaskfoldChildRecordWritesEnabled": "absent"
+  },
+  "core": {
+    "selected_per_repo": 223,
+    "new_reminder_cases": 6,
+    "breakdown": {
+      "child_commands": 70,
+      "child_reads": 21,
+      "account_transport": 55,
+      "backup": 69,
+      "portable_reminders": 8
+    }
+  },
+  "native": {
+    "phone": {
+      "reminder_journey": {
+        "passed": 1,
+        "failed": 0
+      },
+      "heading_and_largest_regressions": {
+        "passed": 2,
+        "failed": 0
+      },
+      "reported_runtime_warnings": []
+    },
+    "tablet": {
+      "reminder_journey": {
+        "passed": 1,
+        "failed": 0
+      },
+      "heading_and_largest_regressions": {
+        "passed": 2,
+        "failed": 0
+      },
+      "reported_runtime_warnings": []
+    }
+  },
+  "native_scope": "synthetic personal Inbox owner; actual Store/encrypted files/Backend against synthetic HTTP peer; iOS runtime proof only",
+  "reminder_journey": "initial nested private capture and Cancel without saved remainder; planned-Off and add/edit ten-minute-before reminder; Apply/Save/review/Send; exact cold readback; remove added reminder and repeat with planned-Off preserved",
+  "builds": "independent final Mac/iOS app/test builds passed; all four deep strict signatures verified",
+  "visual_inspection": "four representative v7 compose/saved screenshots and both final largest-text saved confirmation screenshots inspected",
+  "historical_source_reproduction": "archived reverse patches reproduce v3 and v1 iOS runtime SHA-256 hashes exactly",
+  "mac_runtime": "unaccepted; latest computer-use state still reports locked after unlock reply",
+  "limits": [
+    "ordinary child flags absent/off; saved root JSON remains authoritative",
+    "actual alert/device/remote delivery not tested by field transport",
+    "calendar/interval/holiday/Time Sensitive native modes and interrupted nested recovery remain open",
+    "shared/member/role/account/window and genuine Keychain/custody lifecycle remain open",
+    "Mac layout/speech acceptance remains open",
+    "field-conflict review, completion/structure/legacy adapters and authoritative child migration remain open",
+    "existing user deferrals unchanged; overall Px goal active"
+  ],
+  "images_sha256": {
+    "phone-compose-1.png": "80e4c620975a784213f878530efd4f5c74c984fa0719f29c899ee083f62f4395",
+    "phone-compose-2.png": "de049e96b88d579f82aad9065b319a7e0e23781ee06a5053c91c75c2485dd17d",
+    "phone-largest-final.png": "a8ba26a0b71547400506d581db6c61be9f96cbc7b5eb5d2a34701cb9abb37a26",
+    "phone-largest-v1.png": "110f32047792baa2c6d25c642696f3ce2da8b162a13c9fc742ca8c2d9fc99935",
+    "phone-private-final.png": "082a5844967ca4516d56a2e564a6dfbaadf477ccd574232ed6b11863f91d116b",
+    "phone-private-v1.png": "c91adfb71c91a74dd782fe91fdc1cd115f034f04cf115c765f4d2d453ec6fa51",
+    "phone-saved-1.png": "5f95398f6cf4c48394a1a08a9cf27af4c92735f6bc23aaf051489e5b430a2851",
+    "phone-saved-2.png": "49932ed3f8fc2329ee52b22c8f03dac8e71262e66065953bc207dec7ec67d695",
+    "tablet-compose-1.png": "275b8efab035cccf05b25524f17f887d20af9e970966d7347a0aec3b3c7c66a5",
+    "tablet-compose-2.png": "959532502a140f353eac9818490899eace186d5ea38e1cd9247a3308e81063d7",
+    "tablet-largest-final.png": "beabe561af239eaab5d8ff2d947265a4aa7053b9792ebda89895cffe32ec1a04",
+    "tablet-largest-v1.png": "b40c0d213e716973ae99366b6b96f106fc8d91e44822f4b9f70d95c3503f50a9",
+    "tablet-private-final.png": "e8653acfa875c03098c6cd4876cd35ad2c87434e8b88ec2eeab75c7e92fe9fae",
+    "tablet-private-v1.png": "faf372e4b4c6f177778d9524d168db4c66f723fd9b57937ef9a2c6a40d80e716",
+    "tablet-saved-1.png": "bf0030ddc212908b0c4a5625297362b2d662d25482bc4033ffcba92124e00dea",
+    "tablet-saved-2.png": "769fa14f42bbc72e2cc87dd6744cb656dd778a701e091d84e47024dfcf8ff041"
+  },
+  "runtime_cleanup": {
+    "phone": {
+      "restored_VoiceOverTouchEnabled": 1,
+      "simulator": "shutdown",
+      "owned_apps": "terminated"
+    },
+    "tablet": {
+      "restored_VoiceOverTouchEnabled": 0,
+      "simulator": "shutdown",
+      "owned_apps": "terminated"
+    }
+  }
+}

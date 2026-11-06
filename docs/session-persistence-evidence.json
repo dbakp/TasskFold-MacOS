@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-12",
+  "scope": "Session credential writes and clears run on a serial background queue; native authenticated backup A \u2192 B \u2192 A and relaunch remain intact in both independent apps",
+  "productionChanges": [
+    "Await Keychain session writes, token refresh, metadata refresh, Google authentication and sign-out without blocking the UI thread",
+    "Serialize session saves and clears; invalidate stale acceptance and reject authenticated requests during a credential transition",
+    "Check Keychain deletion status; retain the current in-memory session and report failed clearing",
+    "Show Signing out\u2026 and prevent edits/workspace changes while durable clearing completes"
+  ],
+  "coreResults": {
+    "mac": {
+      "executed": 658,
+      "skipped": 26,
+      "failed": 0,
+      "log": "/private/tmp/taskfold-session-async-mac-core-final2.log"
+    },
+    "ios": {
+      "executed": 634,
+      "skipped": 6,
+      "failed": 0,
+      "log": "/private/tmp/taskfold-session-async-ios-core-final2.log"
+    },
+    "afterTransitionGuard": {
+      "macAccountTransportPassed": 22,
+      "iosAccountTransportPassed": 22,
+      "logs": [
+        "/private/tmp/taskfold-session-async-mac-core-final2.log",
+        "/private/tmp/taskfold-session-async-ios-core-final2.log"
+      ]
+    }
+  },
+  "regressions": [
+    "A suspended credential acceptance cannot resurrect after sign-out",
+    "Authenticated requests during a credential transition cannot use the previous session",
+    "A failed durable session clear leaves the current in-memory session intact and reports the error",
+    "A held save runs off the main thread, leaves the main actor responsive, and a subsequent clear wins in persisted ordering",
+    "A delayed session clear cannot erase a newer accepted account in memory; Store preserves superseding authentication instead of clearing its workspace"
+  ],
+  "nativeResults": {
+    "mac": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-session-async-native-v5.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    "iphone": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-session-async-native-v2.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    }
+  },
+  "accepted": [
+    "Both authenticated native account-switch/retry/cancel/return/relaunch workflows pass strict verify_ui_result.py without allowing runtime warnings",
+    "Both whole saved account workspace dictionaries exact after cancellation and relaunch",
+    "All 14 queried server tables per account unchanged (28 comparisons)",
+    "Six scoped journey captures inspected",
+    "Both isolated development test builds and strict Mac app signature pass"
+  ],
+  "earlierMacAttempt": "v1 failed before obtaining an application process ID. CUA exact-path launch created the current process, but its UI response timed out. A developer process sample showed AppKit event processing rather than a Keychain wait. The same unchanged build then passed v2; initial launch failure is retained, not accepted as workflow coverage.",
+  "releaseCompilation": {
+    "mac": {
+      "result": "Passed",
+      "warnings": 0,
+      "architectures": [
+        "arm64",
+        "x86_64"
+      ],
+      "log": "/private/tmp/taskfold-session-async-mac-release-v2.log"
+    },
+    "iosSimulator": {
+      "result": "Passed",
+      "warnings": 0,
+      "architectures": [
+        "arm64"
+      ],
+      "log": "/private/tmp/taskfold-session-async-ios-release-v2.log"
+    },
+    "signing": "Not distribution acceptance; signing deferred by user; unsigned Release compilation changes no production entitlements"
+  },
+  "cleanup": {
+    "protectedExact": 100,
+    "mainAppsAndRunners": 0,
+    "disposableIPhone": "Exact isolated app/runner removed; simulator shut down",
+    "installedWidgets": "System-managed extensions and installed mac-widget-host-v8 preserved",
+    "buildProducts": "Pruned 988,396,465 logical bytes of terminal unsigned Release products; current signed Debug products retained for continuing P0. Receipt: session-persistence-cleanup-v1.json in private acceptance workspace."
+  },
+  "limitations": [
+    "Synchronous startup session read and separate reminder-registration Keychain paths are outside this write/clear change; no claim that every app I/O path is asynchronous",
+    "Native journey inherits backup-account-switch-evidence.json scope: iPhone navigation cancels before sign-out, Mac signs out with a pending read; no external auth callback or remote provider-failure acceptance",
+    "No new native Google browser sign-in or actual denied Keychain-dialog acceptance; transport/clear error behavior has injected regression coverage",
+    "All broader P0 release gates remain as documented; release signing is deferred",
+    "Mac parent-window review capture crops the lower sheet; full-sheet fit is established by mac-restore-review-fit-evidence.json, not claimed as new layout coverage here"
+  ],
+  "references": [
+    "https://developer.apple.com/documentation/security/secitemcopymatching(_:_:)",
+    "https://developer.apple.com/documentation/security/updating-and-deleting-keychain-items",
+    "https://developer.apple.com/documentation/security/working-with-concurrency"
+  ],
+  "captures": {
+    "mac-held-read.png": "06d38d06d0d5aa9c30a41e9b7cf218027287cbcec488885752598691a151ced0",
+    "mac-account-b-review.png": "ad0149247925d50076e7c11c07cf719188c8835cf6a5688320af554abe136c4a",
+    "mac-account-a-relaunch.png": "a74fdd342251aaef55b567cd7158bbf2b787eff6f58b41d1d5c461de995d6033",
+    "iphone-held-read.png": "d0f8004b176f6f8fa5aab4820430e19dd6995fa15e56bf0806ed9bf64f791712",
+    "iphone-account-b-review.png": "2c691b0baa202c13647bab5019c5b8415be9f8b2d0e817d2660384b8de4ab578",
+    "iphone-account-a-relaunch.png": "3af0d6518d8dd74a28147e003ed07fa9ef83dba9f076bcee301817cdbe429c25"
+  },
+  "laterMacDriverAttempt": "v3 failed its scroll-position assertion; v4 standard element autoreveal also failed before the second file picker. The runner queried the app-wide first scroll view, which can select the task window behind Account. The final driver scopes scrolling to the Account window; actual picker and whole-account preservation assertions remain required. Product source is unchanged by these driver corrections."
+}

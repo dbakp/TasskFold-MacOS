@@ -1,0 +1,48 @@
+{
+  "status": "Gated audio-review recovery; full audio comments and the Px goal remain unfinished",
+  "core": {
+    "host": "macOS Swift Package, independently built per repo; not mobile runtime",
+    "tests": 55,
+    "failures": 0,
+    "rawLogSHA256": "514a235b145381f34d4a28a6941ba7390553201327840b744fc06534e3cd88f2",
+    "committedLogNormalization": "Trailing whitespace stripped only; diagnostics, test counts and results preserved."
+  },
+  "controller": {
+    "checks": 42,
+    "compilerWarnings": [],
+    "scope": "actual controller + private codec/vault, synthetic media only; real drivers reject false scope or occupied lease before permissions/hardware"
+  },
+  "native": {
+    "mac": {
+      "tests": 6,
+      "failures": 0,
+      "runtimeWarnings": [],
+      "scope": "synthetic recorder and silent player; native UI and acknowledged-checkpoint cold relaunch; no real microphone/speaker/TCC/spoken/background/Quit acceptance"
+    }
+  },
+  "sources": {
+    "Taskfold/AudioCommentCapture.swift": "a16b914ae7cb1bd244b4c1e94435a3795c24af8651e7735d331d55e642511cf2",
+    "Taskfold/Core/AudioCommentVault.swift": "cc7afdb5bdd655a5aaa7e245113fc1d4484408edfb8ff8d7d597bc0325481052",
+    "Taskfold/Views/AudioCommentDraftView.swift": "6a2d27428468a19b38f8c8e6883d5c554d0fc81ab68b5059a477c209df766947",
+    "TaskfoldTests/AudioCommentVaultTests.swift": "39f631fc5ebb34e80598f0e9759297949a20f7609fd1beeb2ed281023c9b5930",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "71a064ea7c1301eecae651657f52b59a9f2450b92744f9f85b579cecf2e847a5",
+    "TaskfoldUITests/AudioCommentUITests.swift": "9400400b153f050c9d06845c2959f69ac352436425d4cf84474a28a634ad6194"
+  },
+  "regression": "Four failures reproduced after restoring the pre-fix generic save-error classification and flush-before-discard path; all 42 checks pass with the fixes. The earlier exact capture hash and patch description are retained.",
+  "userDeferrals": [
+    "No genuine microphone, speech-permission or speaker test; user said Later\u2014continue other work.",
+    "Other explicit release/provider/remote-reminder deferrals remain unchanged."
+  ],
+  "remaining": [
+    "Ordinary task/conversation entry points and private server publication/access/custody",
+    "Mac normal-Quit coordination and mobile background execution; active/partially recorded audio",
+    "Crash-leftover ownership/cleanup, quota-management/cleanup UX, account removal and backup/export",
+    "Durable explicit-Save/recovery linkage across uncertain-save relaunch",
+    "Genuine microphone/playback/TCC/interruption and spoken accessibility acceptance"
+  ],
+  "binarySHA256": {
+    "Taskfold": "3222045fde192c2ce52af5967156c6b07d0cbb2df852c13a0afaaa5d4acffb93",
+    "Taskfold.debug.dylib": "babf2dc52e756df7bafd772a1ab74ac17675bed5f6e22f12058b5639b9c1a178"
+  },
+  "deepStrictSignatureVerification": true
+}

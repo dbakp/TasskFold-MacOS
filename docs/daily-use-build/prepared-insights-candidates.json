@@ -1,0 +1,66 @@
+{
+  "mac": {
+    "schema": 1,
+    "platform": "mac",
+    "bundle": "com.dbakp.taskfold.mac",
+    "version": "1.2.0",
+    "build": "21",
+    "app": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Debug/Taskfold.app",
+    "sourceFingerprint": "9901b5bf2b3c7bc288e6bb0f593839e65899799680ff3b141164d4b24c24831d",
+    "sourceRevision": "22a6cf38d2562f89e1e789ed8daf0d812a8895ba",
+    "simulatorOnly": false,
+    "signatureVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "omittedCapabilities": [
+      "Remote push notifications",
+      "Time Sensitive notifications"
+    ],
+    "featureFlags": {
+      "TaskfoldAudioRestorationEnabled": false,
+      "TaskfoldMixedCompletionEnabled": false,
+      "TaskfoldTeamAudioPublishingEnabled": false
+    },
+    "installed": false,
+    "published": false,
+    "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-21-mac-development.zip",
+    "archiveSHA256": "2800b0b9dee349ea9b8b87429132c5f4675d46d1612540c92015f68f8ab90a1b",
+    "archivePayloadVerified": true,
+    "sourceWasDirty": true,
+    "installedBaseline": "1.2.0 (14)",
+    "installationNote": "Prepared only. Existing daily-use app session preserved."
+  },
+  "ios": {
+    "schema": 1,
+    "platform": "ios",
+    "bundle": "com.dbakp.taskfold",
+    "version": "1.4.0",
+    "build": "33",
+    "app": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios/Build/Products/Debug-iphoneos/Taskfold.app",
+    "sourceFingerprint": "bfc5df680c378bf071d66d6de2a5fbd6ce8ae68c4d59f86ef9b58dcaac3ce42a",
+    "sourceRevision": "ba3ed29b644f1d357a6e8ae2eef6830d6ffabc6e",
+    "simulatorOnly": false,
+    "signatureVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": false,
+    "omittedCapabilities": [
+      "Remote push notifications",
+      "Time Sensitive notifications",
+      "Share-sheet capture: Apple free-account weekly App ID quota"
+    ],
+    "featureFlags": {
+      "TaskfoldAudioRestorationEnabled": false,
+      "TaskfoldMixedCompletionEnabled": false,
+      "TaskfoldTeamAudioPublishingEnabled": false
+    },
+    "installed": false,
+    "published": false,
+    "developmentOnlyWidgetVariant": true,
+    "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-33-iphone-development.zip",
+    "archiveSHA256": "c034d63f58c9aa18e875132873730b056d54955abde5e8a471f95311ce16afcc",
+    "archivePayloadVerified": true,
+    "sourceWasDirty": true,
+    "installedBaseline": "1.4.0 (31)",
+    "installationNote": "Prepared only. Existing daily-use app session preserved."
+  }
+}

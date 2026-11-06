@@ -1,0 +1,17 @@
+{
+  "initialLogSHA256": "e9b8ae09c070138dbe664bdcac03ef54a9db908a79fdf8dcf533ed453be12a0a",
+  "failedAssertion": "SubtaskProgressReadTests.testOnePassMatchesExistingOutlineAcrossMixedLegacyTrees compared unsorted serialized bytes",
+  "selectedTests": 55,
+  "failures": 1,
+  "fix": "Use sorted encoding keys for the byte-preservation assertion; production progress logic unchanged",
+  "newOwningRuns": {
+    "ios": {
+      "passed": 55,
+      "failed": 0
+    },
+    "mac": {
+      "passed": 55,
+      "failed": 0
+    }
+  }
+}

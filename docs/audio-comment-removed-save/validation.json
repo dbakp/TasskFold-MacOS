@@ -1,0 +1,20 @@
+{
+  "controllerChecks": 131,
+  "precedingControllerNewChecksFailed": 6,
+  "coreSourceUnchangedFromPrecedingProof": true,
+  "sources": {
+    "Taskfold/AudioCommentCapture.swift": "72c51e5cb1d8101cf11118e68113fddfe32011d7dfac1d179b6418cf1caea9c1",
+    "Taskfold/AudioCommentNativeFixture.swift": "b399017be0199adb6ff123034b3fac75bea70dd7d451404a53ce821adc353592",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "4d4fd07b99c1867e190194b459bc189cf4c16d11ee1029274fbab2972749b546",
+    "Taskfold/Core/AudioCommentVault.swift": "016a2144575a53f921e2e8dd35f375aa1a033064221d6d8d2f070ba8325a530e",
+    "Taskfold/Views/AudioCommentDraftView.swift": "f936a4ef4a0fe80c90cab7c20652bc8aa313a3a4ad9fecee653364b2098104dd",
+    "TaskfoldUITests/AudioCommentUITests.swift": "ad3c281c2b72fc4a3cd922ad72691c7c779c8952947d95ab88bc0ffc3e420008"
+  },
+  "hostAppSourcesMatch": true,
+  "strictSignatureVerified": true,
+  "binaries": {
+    "Contents/MacOS/Taskfold.debug.dylib": "bb335c0a8c6f43e900aae918a26d766657a32415af5d36e206d3b6ad809379c5",
+    "Contents/MacOS/__preview.dylib": "315b7e343280179d90a6a93cfcc710cec3b79d8c95bdcda1c86c0f6ae9b49b72",
+    "Contents/MacOS/Taskfold": "a5ec08a4cd3b406f973088e200acba67f846fcadd113f816883b6a36f8ecd084"
+  }
+}

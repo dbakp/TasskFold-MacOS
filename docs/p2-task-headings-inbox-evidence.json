@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-26",
+  "scope": "Default Inbox and Inbox review; primary Today/Inbox/Focus/Week/planning widget publication",
+  "core": {
+    "passed": 163,
+    "failed": 0,
+    "newCases": 7,
+    "log": "headings-inbox-work/core-tests.log"
+  },
+  "implementation": [
+    "Cached productive Inbox candidates, counts and parent context",
+    "Child details and completion use real-root hierarchy transactions",
+    "Moving grouped work requires review of the containing root heading, including completed work and assignment effects",
+    "Confirmation revalidates exact root, destination and workspace; Cancel is inert; one Undo restores the whole group",
+    "Primary widget children carry route context and completion tokens; ordinary checklist children require an explicit child filter",
+    "Fresh membership rejects stale completion actions after heading conversion or filter removal",
+    "Unreadable/conflicting grouped data publishes an incomplete review state instead of a false empty Inbox"
+  ],
+  "remaining": [
+    "Project/label/default saved-filter projections and wider badges/calendar periods",
+    "Separate child activity history",
+    "Actual installed widget OS route/action replay for this projection",
+    "Broader native legacy/malformed/race, large-text and spoken checks",
+    "Shared/service/cross-device adapters; normal heading authoring stays disabled",
+    "Every user-deferred release, provider and physical-device gate remains deferred"
+  ],
+  "native": {
+    "macOS": "attempted 3 prepared cases; all fail at foreground activation while Mac reports locked; no app-flow acceptance",
+    "evidence": "headings-inbox-work/mac-native-blocked.log",
+    "iPhone": "passed native Cancel, child edit/completion/Undo, whole-group move/Undo, kept card, published Inbox counts 2\u21920\u21922\u21921, cold saved-root equality",
+    "iPad": "passed native Cancel, child edit/completion/Undo, whole-group move/Undo, kept card, published Inbox counts 2\u21920\u21922\u21921, cold saved-root equality",
+    "screenshotsInspected": 4,
+    "isolationLimit": "Actual app menu used; isolated URL scheme is deliberately not the normal taskfold scheme, so no installed widget cold-launch claim"
+  },
+  "nativeBuild": "app/widget/test builds and real team signatures passed",
+  "widgetRenders": {
+    "inspected": 5,
+    "kind": "Current SwiftUI source rendering with actual app-published synthetic initial Inbox 2 payload; no installed WidgetKit host acceptance",
+    "sourceSHA256": "0a6664a5ac9e56c9778e1688b6b598f3d3a599703b0809d7048af113c861ecd0"
+  },
+  "sourceBinding": "headings-inbox-work/source-binding.json",
+  "buildValidation": "headings-inbox-work/build-validation.json"
+}

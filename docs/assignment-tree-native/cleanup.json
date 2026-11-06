@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-01",
+  "retained": "Current accepted phone/iPad/Mac bundles remain. Each repository also owns the concise native snapshots, screenshots, summaries, logs and verification. Failed/superseded attempts have concise diagnostics.",
+  "removed": [
+    {
+      "name": "taskfold-assignment-native-phone-v1.xcresult",
+      "logicalBytesRemoved": 60986996
+    },
+    {
+      "name": "taskfold-assignment-native-phone-v1-attachments",
+      "logicalBytesRemoved": 59882272
+    },
+    {
+      "name": "taskfold-assignment-native-mac-v2.xcresult",
+      "logicalBytesRemoved": 11411828
+    },
+    {
+      "name": "taskfold-assignment-native-mac-v2-attachments",
+      "logicalBytesRemoved": 11121119
+    },
+    {
+      "name": "taskfold-assignment-native-mac-v3.xcresult",
+      "logicalBytesRemoved": 33287173
+    },
+    {
+      "name": "taskfold-assignment-native-mac-v3-attachments",
+      "logicalBytesRemoved": 33103515
+    },
+    {
+      "name": "taskfold-assignment-native-mac-v4.xcresult",
+      "logicalBytesRemoved": 27203502
+    },
+    {
+      "name": "taskfold-assignment-native-mac-v4-attachments",
+      "logicalBytesRemoved": 27134241
+    },
+    {
+      "name": "taskfold-assignment-native-mac-v5.xcresult",
+      "logicalBytesRemoved": 1205513
+    },
+    {
+      "name": "taskfold-assignment-native-mac-v5-attachments",
+      "logicalBytesRemoved": 760364
+    }
+  ],
+  "totalLogicalBytesRemoved": 266096523
+}

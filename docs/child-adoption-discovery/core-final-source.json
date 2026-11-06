@@ -1,0 +1,6 @@
+{
+  "Taskfold/Core/Backend.swift": "69f7a8b20556446e0c3877f25255ff88603fd6923c43938843d6c2274dabd5b3",
+  "Taskfold/Core/ChildTaskAdoption.swift": "8cd83492b1ba8deff709a3f3f6a67292b299adbfdfbc3e867be900d4f6c63933",
+  "TaskfoldTests/ChildTaskAdoptionTests.swift": "f3127500e942ed8b20b16ffb4c60ad45cc3011e046705481d9f40278ae3c09f8",
+  "TaskfoldTests/Fixtures/child-adoption-discovery-v1.json": "1e453b21704a4e3831838ec5acf33cc6e89416dfbd24208031d9c180b7673e6e"
+}

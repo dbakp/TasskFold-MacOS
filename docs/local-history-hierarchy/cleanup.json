@@ -1,0 +1,23 @@
+{
+  "removedOwnedPaths": [
+    "/tmp/taskfold-hierarchy-mac-attachments",
+    "/tmp/taskfold-hierarchy-phone-attachments",
+    "/tmp/taskfold-hierarchy-tablet-attachments",
+    "/tmp/taskfold-body-mac-final.xcresult",
+    "/tmp/taskfold-body-phone-final.xcresult",
+    "/tmp/taskfold-body-tablet-final.xcresult",
+    "/tmp/taskfold-workflow-commit-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldUITests.build/Objects-normal/x86_64",
+    "/tmp/taskfold-workflow-commit-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/x86_64",
+    "/tmp/taskfold-workflow-commit-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldShare.build/Objects-normal/x86_64",
+    "/tmp/taskfold-workflow-commit-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldWidgets.build/Objects-normal/x86_64"
+  ],
+  "logicalBytesRemoved": 345650700,
+  "temporaryMainAppsRunning": 0,
+  "retained": [
+    "Current per-platform native results and accepted signed products",
+    "One current host/build per platform",
+    "Original profile and unprofiled baseline",
+    "Each repo Core cache"
+  ],
+  "scope": "Only obsolete owned attachment extracts, preceding results now summarized in each repo, and unused Intel Simulator object intermediates. Accepted signed products, ARM intermediates, device data and simulator runtimes unchanged. Logical bytes are not a free-space measurement."
+}

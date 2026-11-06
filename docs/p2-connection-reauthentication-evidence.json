@@ -1,0 +1,324 @@
+{
+  "date": "2026-10-23",
+  "thisRepo": "TasskFold-MacOS",
+  "productionBehaviorChanged": true,
+  "scope": "Same-account in-place connection reauthentication; retained enrollment and concealed review",
+  "core": {
+    "executed": 1404,
+    "passed": 1371,
+    "skipped": 33,
+    "failed": 0,
+    "platform": "Mac-hosted Swift package tests",
+    "log": "reauth-all-core-mac.log",
+    "subsequentFocusedChecks": [
+      {
+        "scope": "Final webhook feedback copy",
+        "passed": 12,
+        "failed": 0,
+        "log": "reauth-feedback-core-mac.log"
+      },
+      {
+        "scope": "Additional foreign-origin and signup refusal before network; unrelated sign-in remains active",
+        "passed": 1,
+        "failed": 0,
+        "log": "reauth-origin-core-mac.log"
+      }
+    ],
+    "newCoverage": [
+      "Current account/server/session context binding",
+      "Other-account response refused before credential save",
+      "Stale context rejected before network",
+      "Cancelled late response cannot commit",
+      "Old-context cancellation cannot cancel newer authentication",
+      "Commit callback precedes serialized credential save",
+      "Failed save retains prior account; fresh-context retry succeeds",
+      "Foreign origin and renewal signup refused without cancelling unrelated sign-in"
+    ]
+  },
+  "native": {
+    "runtimeRepo": "TaskFold-iOS",
+    "runs": {
+      "phone": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 7,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792761305.452,
+        "passedTests": 7,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792760997.312,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 7
+      },
+      "tabletInitial": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 6,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792761733.07,
+        "passedTests": 6,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792760997.312,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 7,
+            "testIdentifierString": "TaskfoldUITests/testWebhookInPlaceSignInRecoveryAtLargestText()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testWebhookInPlaceSignInRecoveryAtLargestText",
+            "testName": "testWebhookInPlaceSignInRecoveryAtLargestText()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 7
+      },
+      "tabletLargestTextRerun": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792761957.773,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792761892.732,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      }
+    },
+    "scope": "Production SwiftUI, Backend and real URLSession; Debug-only synthetic URLProtocol peer, memory credential persistence and enrollment vaults. No hosted Auth, real provider browser or Keychain acceptance.",
+    "checks": [
+      "API-key renewal resumes original enrollment to masked review",
+      "Webhook wrong-password retry, normal and largest text renewal",
+      "Other account rejected at largest text; Cancel retains setup",
+      "Cancel after a held request preserves setup and keeps review concealed",
+      "Existing largest-text action notice and delivery-history reload regressions"
+    ],
+    "cancellationLimit": "iPhone cancels while the request is held. iPad XCTest animation waits can exceed the network timeout, so that case establishes dismissal/setup preservation; it does not independently establish inflight cancellation on iPad. Late-response fencing and commit-phase boundaries are independently covered by Core tests.",
+    "MacUIRuntimeAccepted": false,
+    "speechAccepted": false,
+    "acceptedDistinctScenarios": 14,
+    "skipped": 0,
+    "acceptanceExplanation": "Seven passed on iPhone; six passed on the initial final iPad batch, and its one missed-tap failure passed in a narrow test-only synchronization rerun. Production sources unchanged between these runs; the initial failure remains recorded."
+  },
+  "builds": {
+    "iOS": "reauth-feedback-build.log: TEST BUILD SUCCEEDED",
+    "Mac": "reauth-feedback-mac-build.log: BUILD SUCCEEDED; unsigned compile only",
+    "iOSTestOnlySynchronization": "reauth-settle-build.log: TEST BUILD SUCCEEDED"
+  },
+  "simulatorSigning": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "corrections": [
+    "Moved interactive sign-in notice outside the Form after the original safe-area action was visible but untappable.",
+    "Moved concise sign-in errors above the Form after largest-text failures showed offscreen feedback.",
+    "Updated API-key test to use its real Revoke key control.",
+    "Updated generic notice assertion for concise setup-retention copy; history scroll helper explicitly recognizes the history List.",
+    "The final iPad largest-text case first missed its second Sign in tap while the keyboard moved the sheet. Video and hierarchy showed the password still entered, the enabled button untouched and no request feedback. The native test helper now waits for stable button and keyboard geometry before one tap; production sources are unchanged for the narrow rerun."
+  ],
+  "preliminaryRuns": [
+    {
+      "log": "reauth-first-phone.log",
+      "failedTests": 1
+    },
+    {
+      "log": "reauth-debug-phone.log",
+      "failedTests": 1
+    },
+    {
+      "log": "reauth-phone-accepted.log",
+      "executed": 7,
+      "failedTests": 4
+    },
+    {
+      "log": "reauth-tablet-accepted.log",
+      "executed": 7,
+      "failedTests": 4
+    }
+  ],
+  "diagnosticCleanup": "The earlier failed tablet run finished its cases but stalled collecting Simulator diagnostics. The exact owned simctl diagnose child was verified and terminated; the test failure result was preserved. Final runs disable bulky diagnostic collection and retain ordinary test events/screenshots.",
+  "sourceSha256AtCheckpoint": {
+    "Taskfold/Core/Backend.swift": "2a9584b2d2d1b8fe8218cb3adb5fb55884f935e96f33c638c8ff2cd73547caf3",
+    "Taskfold/Core/AutomationAccess.swift": "8feeba3ea011e5d874cff45d11e799ae3aa7de460b5f8b9b23d047e55b5a6bdd",
+    "Taskfold/Core/WebhookAccess.swift": "3ea7f30a87f1220dca41ecd6e470386c85c32135e0fd275d3c3bac28dc6ee03e",
+    "Taskfold/Views/AutomationAccessView.swift": "a621abdd8eb9e307771cf8d62ced07dfd46345b3b348d3815371574eccdacafd",
+    "Taskfold/Views/WebhookAccessView.swift": "707522327135b9fd1bc12c14556b7cf08357649d043fbb6a4e9f294276b6499c",
+    "Taskfold/Views/ConnectionSignInView.swift": "b1081d6fcd741cf4218aac103026ff99b5347d1558016f95c24ae324716dd8c9",
+    "TaskfoldTests/AccountTransportTests.swift": "65928b3910bd3edac2a2dc0d374d360b1c2cad6c314bc11228c96abc22aa6975",
+    "Taskfold.xcodeproj/project.pbxproj": "bbbdc3cc501159e91716a0db9930684ea731c8a0bea337fbd8a934c371b632e5",
+    "Taskfold/Views/AuthView.swift": "3a7489f14d77b9b4eb3e470d39d8fb2ab28d8372bfd8eaa87f15adb373aba32f"
+  },
+  "normalFeatureEntriesEnabled": false,
+  "mainServiceChanged": false,
+  "realTasksChanged": 0,
+  "realAccountsChanged": 0,
+  "fullNativeReauthenticationComplete": false,
+  "fullPxComplete": false,
+  "remaining": [
+    "Genuine hosted native expiry/refresh, Keychain save and original enrollment recovery",
+    "Cached/queued-work and Undo preservation runtime acceptance",
+    "Real Google account-selection return",
+    "Mac runtime and wider consent/history speech",
+    "Verified email intake",
+    "Advanced teams",
+    "Wearable clients"
+  ],
+  "userDeferrals": [
+    "Remote reminders",
+    "Older-client safeguards",
+    "Distribution/signing/install-update verification",
+    "OAuth registration/provider acceptance",
+    "Physical location-reminder delivery"
+  ],
+  "simulatorSigningAfterTestOnlyRebuild": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "visualReview": {
+    "runtimeRepo": "TaskFold-iOS",
+    "reviewedMaskedScreenshots": [
+      "docs/screenshots/connection-reauthentication/phone-key.png",
+      "docs/screenshots/connection-reauthentication/phone-largest.png",
+      "docs/screenshots/connection-reauthentication/phone-normal.png",
+      "docs/screenshots/connection-reauthentication/phone-other-account.png",
+      "docs/screenshots/connection-reauthentication/tablet-key.png",
+      "docs/screenshots/connection-reauthentication/tablet-largest.png",
+      "docs/screenshots/connection-reauthentication/tablet-normal.png",
+      "docs/screenshots/connection-reauthentication/tablet-other-account.png"
+    ],
+    "scope": "Normal/largest-text masked review, keys and other-account refusal on phone/tablet; screenshots inspected individually."
+  },
+  "cleanup": {
+    "devices": {
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+        "ownedAppAndRunnerUninstalled": true
+      },
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+        "ownedAppAndRunnerUninstalled": true
+      }
+    },
+    "ownedNativeHostAndRawResultsRemoved": true,
+    "ownedMacBuildRemoved": true,
+    "logsRedacted": true,
+    "retainedCurrentIOSBuildCacheForNextNativeAcceptance": true,
+    "prunedMiB": 1295.6,
+    "noMacTestAppLaunched": true,
+    "noCloudResourcesCreated": true
+  }
+}

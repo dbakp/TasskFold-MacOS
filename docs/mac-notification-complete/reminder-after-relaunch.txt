@@ -1,0 +1,33 @@
+Window: "", App: Taskfold Focus Contrast Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Reminders, Secondary Actions: Cancel
+		3 scroll area Secondary Actions: Cancel
+			4 switch At planned time, Value: on, ID: reminderPlanned
+			5 text Choose a planned date to activate reminders relative to the task. Fixed-date and repeating reminders work without one.
+			6 heading Custom reminders
+			7 container
+				8 button Description: 12 Oct 2026 at 9.44, ID: reminderEdit-1
+				9 button Description: Delete 12 Oct 2026 at 9.44, ID: reminderDelete-1
+				10 text This reminder time has passed
+				11 button Description: Add reminder, ID: reminderAdd
+			12 heading This device
+			13 container
+				14 switch Deliver reminders, Value: on, ID: reminderDelivery
+				15 text Value: 0 upcoming reminders scheduled on this device., ID: reminderStatus
+				16 button Open Notification Settings…
+				17 text Value: Sign in to prepare remote reminders., ID: remoteReminderAvailability
+			18 text Reminder choices sync with the task. Enable delivery separately on each device. Up to 60 notifications are scheduled, including one enabled Focus finish alert. Later reminders refresh while Taskfold is open.
+			19 text Changes save automatically with this task.
+		20 button Done
+21 menu bar
+	22 Taskfold Focus Contrast Test
+	23 File
+	24 Edit
+	25 View
+	26 Account
+	27 Task
+	28 Window
+	29 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

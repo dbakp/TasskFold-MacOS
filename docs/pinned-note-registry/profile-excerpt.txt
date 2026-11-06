@@ -1,0 +1,23 @@
+    2920 Thread_24936559   DispatchQueue_12: com.apple.root.utility-qos.cooperative  (concurrent)
+    + 2920 completeTaskWithClosure(swift::AsyncContext*, swift::SwiftError*)  (in libswift_Concurrency.dylib) + 1  [0x29267bec5]
+    +   2920 ???  (in Taskfold.debug.dylib)  load address 0x108b34000 + 0xe49d  [0x108b4249d]
+    +     2920 closure #1 in WidgetPublicationQueue.drain()  (in Taskfold.debug.dylib) + 1  [0x109adcc1d]  WidgetActions.swift:37
+    +       2920 ???  (in Taskfold.debug.dylib)  load address 0x108b34000 + 0xa80bd5  [0x1095b4bd5]
+    +         2920 closure #2 in Store.publishWidgetSnapshot(scheduleCapacityRefresh:background:)  (in Taskfold.debug.dylib) + 204  [0x1094bea20]  Store.swift:1018
+    +           2920 WidgetPublicationInput.encoded()  (in Taskfold.debug.dylib) + 1444  [0x109183744]  Models.swift:1864
+    +             1790 static WidgetProjection.payload(tasks:projects:account:now:labels:sections:savedViews:calendar:completionTokens:pendingSync:workingHours:calendarWindow:calendarFallback:notePins:focusRecord:focusConflict:focusReadable:pulseActivity:pulseEpoch:pulseChildren:datePreferences:people:viewPreferences:viewOrders:collaborators:assignments:)  (in Taskfold.debug.dylib) + 3612  [0x109184d3c]  Models.swift:1901
+    +             ! 1790 static PinnedNotes.payload(tasks:pins:account:)  (in Taskfold.debug.dylib) + 80  [0x1091f37ac]  PinnedNotes.swift:39
+    +             !   1790 static PinnedNotes.tasks(_:pins:account:)  (in Taskfold.debug.dylib) + 260  [0x1091f1850]  PinnedNotes.swift:14
+    +             !     1789 _ArrayProtocol.filter<A>(_:)  (in Taskfold.debug.dylib) + 768  [0x108b873a4]  /<compiler-generated>:0
+    +             !     : 1789 partial apply for closure #1 in static PinnedNotes.tasks(_:pins:account:)  (in Taskfold.debug.dylib) + 40  [0x1091f1a30]  /<compiler-generated>:0
+    +             !     :   1788 closure #1 in static PinnedNotes.tasks(_:pins:account:)  (in Taskfold.debug.dylib) + 244  [0x1091f199c]  PinnedNotes.swift:14
+    +             !     :   | 1787 static PinnedNotes.contains(_:pins:account:)  (in Taskfold.debug.dylib) + 248  [0x1091f12ac]  PinnedNotes.swift:10
+    +             !     :   | + 1268 Sequence.first(where:)  (in libswiftCore.dylib) + 760  [0x1a094b464]
+    +             !     :   | + ! 1262 ???  (in Taskfold.debug.dylib)  load address 0x108b34000 + 0x6bd500  [0x1091f1500]
+    +             !     :   | + ! : 566 ???  (in Taskfold.debug.dylib)  load address 0x108b34000 + 0x6bd480  [0x1091f1480]
+    +             !     :   | + ! : | 519 Record.id.getter  (in Taskfold.debug.dylib) + 64  [0x109114324]  Models.swift:35
+    +             !     :   | + ! : | + 395 Record.string(_:)  (in Taskfold.debug.dylib) + 80  [0x10911439c]  Models.swift:43
+    +             !     :   | + ! : | + ! 243 Record.subscript.getter  (in Taskfold.debug.dylib) + 136  [0x1091146e8]  Models.swift:40
+    +             !     :   | + ! : | + ! : 160 Dictionary._Variant.lookup(_:)  (in libswiftCore.dylib) + 188  [0x1a0884a8c]
+    +             !     :   | + ! : | + ! : | 90 __RawDictionaryStorage.find<A>(_:)  (in libswiftCore.dylib) + 60  [0x1a089f1d0]
+    +             !     :   | + ! : | + ! : | + 39 protocol witness for Hashable._rawHashValue(seed:) in conformance Character  (in libswiftCore.dylib) + 56  [0x1a09c69ec]

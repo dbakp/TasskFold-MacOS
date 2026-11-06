@@ -1,0 +1,38 @@
+{
+  "removedBytes": 773808756,
+  "removedPaths": [
+    "/tmp/taskfold-workflow-native-ios-host",
+    "/tmp/taskfold-workflow-native-ios-build",
+    "/tmp/taskfold-workflow-native-phone-final.xcresult",
+    "/tmp/taskfold-workflow-native-tablet-final.xcresult",
+    "/tmp/taskfold-workflow-native-phone-images",
+    "/tmp/taskfold-workflow-native-tablet-first.xcresult",
+    "/tmp/taskfold-workflow-native-phone-final-images",
+    "/tmp/taskfold-workflow-native-phone-first.xcresult",
+    "/tmp/taskfold-workflow-native-mac-first.xcresult",
+    "/tmp/taskfold-workflow-native-tablet-final-images"
+  ],
+  "removedSimulatorApps": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "app": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "app": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "app": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "app": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    }
+  ],
+  "testsAndBuildsTerminal": true,
+  "retainedMacHost": "/tmp/taskfold-workflow-native-mac-host",
+  "retainedMacBuild": "/tmp/taskfold-workflow-native-mac-build",
+  "reasonForRetention": "One signed host ready for the pending approved UI Automation check",
+  "sourceBuildCachesPreserved": true
+}

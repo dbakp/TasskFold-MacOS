@@ -1,0 +1,672 @@
+Building for debugging...
+[Starting]
+[1 / 2] TaskfoldCore_TaskfoldCoreTests
+[2 / 15] TaskfoldCore
+[4 / 17] TaskfoldCore
+[9 / 18] TaskfoldCore
+[11 / 16] TaskfoldCoreTests-product
+[13 / 18] TaskfoldCoreTests-product
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionBatchTests.swift:5:66: warning: 'CompletionBatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+   3 | @testable import TaskfoldCore
+   4 |
+   5 | private final class CompletionBatchHTTP: URLProtocol, @unchecked Sendable {
+     |                     |                                            `- warning: 'CompletionBatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+     |                     `- note: 'CompletionBatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+   6 |     static var handler: ((URLRequest, CompletionBatchHTTP) -> Void)?
+   7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionTests.swift:5:61: warning: 'CompletionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+   3 | @testable import TaskfoldCore
+   4 |
+   5 | private final class CompletionHTTP: URLProtocol, @unchecked Sendable {
+     |                     |                                       `- warning: 'CompletionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+     |                     `- note: 'CompletionHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+   6 |     static var handler: ((URLRequest,CompletionHTTP)->Void)?
+   7 |     override class func canInit(with request:URLRequest)->Bool {true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamOrganizationCommandTests.swift:30:58: warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 28 |     }
+ 29 | }
+ 30 | private final class CommandHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'CommandHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 31 |     static var handler: ((URLRequest, CommandHTTP) -> Void)?
+ 32 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamOrganizationTests.swift:8:63: warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  6 | private let orgOther = "ea300000-0000-4000-8000-000000000003"
+  7 | private let orgOrigin = "https://backend.example"
+  8 | private final class OrganizationHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                         `- warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'OrganizationHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  9 |     static var handler: ((URLRequest, OrganizationHTTP) -> Void)?
+ 10 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamProjectAccessTests.swift:7:62: warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  5 | private let tpTeam = "f07dcafe-0000-4000-8000-000000000011", tpProject = "f07dcafe-0000-4000-8000-000000000021"
+  6 | private let tpOrigin = "https://backend.example"
+  7 | private final class TeamProjectHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                        `- warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamProjectHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  8 |     static var handler: ((URLRequest, TeamProjectHTTP) -> Void)?
+  9 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamProjectAdoptionTests.swift:32:59: warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 30 |     }
+ 31 | }
+ 32 | private final class AdoptionHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'AdoptionHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 33 |     static var handler: ((URLRequest, AdoptionHTTP) -> Void)?
+ 34 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskBatchTests.swift:5:54: warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private let batchOrigin="https://backend.example"
+  5 | private final class BatchHTTP:URLProtocol,@unchecked Sendable {
+    |                     |                                `- warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'BatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler:((URLRequest,BatchHTTP)->Void)?
+  7 |     override class func canInit(with request:URLRequest)->Bool{true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskEditTests.swift:5:59: warning: 'TeamEditHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private let editOrigin = "https://backend.example"
+  5 | private final class TeamEditHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'TeamEditHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamEditHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, TeamEditHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskLifecycleTests.swift:5:59: warning: 'TeamLifeHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private let lifeOrigin = "https://backend.example"
+  5 | private final class TeamLifeHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'TeamLifeHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamLifeHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, TeamLifeHTTP) -> Void)?
+  7 |     override class func canInit(with request:URLRequest)->Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskMoveTests.swift:157:55: warning: 'MoveHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+155 |     }
+156 | }
+157 | private final class MoveHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                 `- warning: 'MoveHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'MoveHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+158 |     static var handler: ((URLRequest, MoveHTTP) -> Void)?
+159 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskRecipientTests.swift:4:60: warning: 'RecipientHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  2 | @testable import TaskfoldCore
+  3 |
+  4 | private final class RecipientHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                      `- warning: 'RecipientHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'RecipientHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  5 |     static var handler: ((URLRequest, RecipientHTTP) -> Void)?
+  6 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTemplateCommandTests.swift:35:66: warning: 'TemplateCommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 33 | }
+ 34 | private extension Int { var double: Double { Double(self) } }
+ 35 | private final class TemplateCommandHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                            `- warning: 'TemplateCommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TemplateCommandHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 36 |     static var handler: ((URLRequest, TemplateCommandHTTP) -> Void)?
+ 37 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTemplateLibraryTests.swift:6:58: warning: 'LibraryHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  4 | private let libraryAccount = "ec250000-0000-4000-8000-000000000001", libraryTeam = "ec250000-0000-4000-8000-000000000002", libraryOrigin = "https://library.example"
+  5 | private func libraryID(_ n: Int) -> String { String(format: "ec250000-0000-4000-8001-%012d", n) }
+  6 | private final class LibraryHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'LibraryHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'LibraryHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  7 |     static var handler: ((URLRequest, LibraryHTTP) -> Void)?
+  8 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamWorkflowDestinationsTests.swift:5:63: warning: 'WorkflowReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private func destinationID(_ n: Int) -> String { String(format: "ec270000-0000-4000-8000-%012d", n) }
+  5 | private final class WorkflowReadHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                         `- warning: 'WorkflowReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkflowReadHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, WorkflowReadHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamWorkflowRunCommandTests.swift:34:59: warning: 'WorkflowHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 32 |     func remove(key: String) throws { lock.lock(); let fail = failing; lock.unlock(); if fail { throw URLError(.cannotRemoveFile) }; try base.remove(key: key) }
+ 33 | }
+ 34 | private final class WorkflowHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'WorkflowHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkflowHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 35 |     static var handler: ((URLRequest, WorkflowHTTP) -> Void)?
+ 36 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamWorkspaceTests.swift:4:58: warning: 'WorkspaceHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  2 | @testable import TaskfoldCore
+  3 |
+  4 | private final class WorkspaceHTTP:URLProtocol,@unchecked Sendable {
+    |                     |                                    `- warning: 'WorkspaceHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkspaceHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  5 |     static var handler:((URLRequest,WorkspaceHTTP)->Void)?
+  6 |     override class func canInit(with request:URLRequest)->Bool {true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/WebhookAccessTests.swift:135:58: warning: 'WebhookHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+133 | }
+134 |
+135 | private final class WebhookHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'WebhookHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WebhookHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+136 |     static var handler: ((URLRequest,WebhookHTTP)->Void)?
+137 |     override class func canInit(with request:URLRequest)->Bool { true }
+
+[#UnavailableSendableConformance]: <https://docs.swift.org/compiler/documentation/diagnostics/unavailable-sendable-conformance>
+[19 / 23] TaskfoldCoreTests-product
+[21 / 23] TaskfoldCoreTests-product
+Build complete! (7,84 secs)
+Test Suite 'Selected tests' started at 2026-10-26 12:14:37.040.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-26 12:14:37.041.
+Test Suite 'BackupTests' started at 2026-10-26 12:14:37.041.
+Test Case '-[TaskfoldCoreTests.BackupTests testAssigneeNamePatternRestoreKeepsDynamicMeaningAndExactIdentityRules]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testAssigneeNamePatternRestoreKeepsDynamicMeaningAndExactIdentityRules]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testAssignmentStateFiltersKeepDestinationViewerSemanticsOnRestore]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testAssignmentStateFiltersKeepDestinationViewerSemanticsOnRestore]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testAutomaticPreferenceRoundTripAndCreateOnlyRestorePreserveBothChoices]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testAutomaticPreferenceRoundTripAndCreateOnlyRestorePreserveBothChoices]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testCreateOnlyTransportChecksOwnershipOnConflict]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testCreateOnlyTransportChecksOwnershipOnConflict]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testCreationFilterBackupRestorePreservesOriginalDatesAndRelativeQuery]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testCreationFilterBackupRestorePreservesOriginalDatesAndRelativeQuery]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testCrossAccountRemapsGraphFiltersScopesAndAssignments]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testCrossAccountRemapsGraphFiltersScopesAndAssignments]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testDatePreferencesExportRestoreAndOfflineRelativeQueryPreservation]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testDatePreferencesExportRestoreAndOfflineRelativeQueryPreservation]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testDayWindowBackupRestoresRelativeCountsForEveryDateSource]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testDayWindowBackupRestoresRelativeCountsForEveryDateSource]' passed (0.024 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testDuplicateIDsAndOversizedNumbersFail]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testDuplicateIDsAndOversizedNumbersFail]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testDuplicateSubtasksMalformedCollectionsAndRecurrenceRejected]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testDuplicateSubtasksMalformedCollectionsAndRecurrenceRejected]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorAdmissionCapturesAccountAndEpochBeforePresentation]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorAdmissionCapturesAccountAndEpochBeforePresentation]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorArchivePreservesFullDraftExtrasPrivatelyAndSeparatelyFromRetention]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorArchivePreservesFullDraftExtrasPrivatelyAndSeparatelyFromRetention]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorArchiveRejectsOtherAccountOriginKeyAndDamagedCiphertext]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorArchiveRejectsOtherAccountOriginKeyAndDamagedCiphertext]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorRecoveryPlansOnlyANewInboxCopyWithFreshChildrenAndRemindersOff]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorRecoveryPlansOnlyANewInboxCopyWithFreshChildrenAndRemindersOff]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorSessionRetainsLatestDraftAndQuitFlushVerifiesIt]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testEditorSessionRetainsLatestDraftAndQuitFlushVerifiesIt]' passed (0.108 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testEncryptedVaultRetainsPendingQueueAndHasNoPlaintextTitles]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testEncryptedVaultRetainsPendingQueueAndHasNoPlaintextTitles]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testExistingEditorAdmissionCannotTurnMissingOrReplacedSourceIntoANewTask]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testExistingEditorAdmissionCannotTurnMissingOrReplacedSourceIntoANewTask]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testExtendedKeywordAndMetadataFiltersKeepMeaningAcrossBackupAccounts]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testExtendedKeywordAndMetadataFiltersKeepMeaningAcrossBackupAccounts]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testFailedEditorCheckpointKeepsDraftAndRefusesQuitFlush]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testFailedEditorCheckpointKeepsDraftAndRefusesQuitFlush]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testFinishingEditorSessionPreventsLateCheckpointRecreation]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testFinishingEditorSessionPreventsLateCheckpointRecreation]' passed (0.108 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testFixedInstantRetainsSecondDSTFoldAndRejectsContradiction]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testFixedInstantRetainsSecondDSTFoldAndRejectsContradiction]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testFutureVersionsUnknownColumnsAndMalformedRootsFailClosed]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testFutureVersionsUnknownColumnsAndMalformedRootsFailClosed]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testGoalPreferencesExportRestoreAndGuardedQueueRemainAccountOwned]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testGoalPreferencesExportRestoreAndGuardedQueueRemainAccountOwned]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testGoalRestorePolicyPreservesCurrentOrUsesReviewedGoalBaselineWithoutLosingOtherFields]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testGoalRestorePolicyPreservesCurrentOrUsesReviewedGoalBaselineWithoutLosingOtherFields]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testInvalidPlanningValuesAndNullTitlesAreRejected]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testInvalidPlanningValuesAndNullTitlesAreRejected]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testLateEditorSaveCannotReplaceNewerRevisionOrCrossOrigin]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testLateEditorSaveCannotReplaceNewerRevisionOrCrossOrigin]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testLegacyDayOrdersAreRestoredWithMappedTaskIDs]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testLegacyDayOrdersAreRestoredWithMappedTaskIDs]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testLegacyExportsRemainRestorable]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testLegacyExportsRemainRestorable]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testMalformedSnoozePreferenceBackupFailsBeforeAnyRestorePlan]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testMalformedSnoozePreferenceBackupFailsBeforeAnyRestorePlan]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testMatchingPolicyPreservesEditsOrExplicitlyRestoresWithBaseline]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testMatchingPolicyPreservesEditsOrExplicitlyRestoresWithBaseline]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testMissingOrContradictoryProjectReferencesFailBeforeMutation]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testMissingOrContradictoryProjectReferencesFailBeforeMutation]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testNamePatternsRestoreAsPatternsWhileExactTargetsRemap]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testNamePatternsRestoreAsPatternsWhileExactTargetsRemap]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedAdmissionKeepsCapturedRootWhenSheetLoadsLater]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedAdmissionKeepsCapturedRootWhenSheetLoadsLater]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedEditorAllowsOrdinarySyncAndSiblingReorderWithoutRetargeting]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedEditorAllowsOrdinarySyncAndSiblingReorderWithoutRetargeting]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedEditorProjectionKeepsChildTitleNotesAndChecklistSeparateFromRoot]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedEditorProjectionKeepsChildTitleNotesAndChecklistSeparateFromRoot]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedEditorRefusesDeletedMovedAmbiguousAndRecreatedChild]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedEditorRefusesDeletedMovedAmbiguousAndRecreatedChild]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedEditorRootIncarnationOwnershipAndProjectMustStayBound]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testNestedEditorRootIncarnationOwnershipAndProjectMustStayBound]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testNewEditorAdmissionRequiresItsAuthoredAccountAndNoIdentityCollision]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testNewEditorAdmissionRequiresItsAuthoredAccountAndNoIdentityCollision]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testNewerGoalDefinitionsStayInBackupButRequireSupportedRestore]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testNewerGoalDefinitionsStayInBackupButRequireSupportedRestore]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testNewNullableGoalColumnOnOrdinaryPreferencesDoesNotBecomeAGoalCommand]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testNewNullableGoalColumnOnOrdinaryPreferencesDoesNotBecomeAGoalCommand]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testPortableVersionRoundTripExcludesExecutableQueue]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testPortableVersionRoundTripExcludesExecutableQueue]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testPreservedOriginalRejectsWrongKeyAccountTamperingAndSurvivesDailyRetention]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testPreservedOriginalRejectsWrongKeyAccountTamperingAndSurvivesDailyRetention]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testProjectMoveDoesNotRepeatAnAlreadyRestoredRootAssignment]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testProjectMoveDoesNotRepeatAnAlreadyRestoredRootAssignment]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testProjectMoveRestoresValidatedAssignmentsAfterClearing]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testProjectMoveRestoresValidatedAssignmentsAfterClearing]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testProjectSectionOrdersAndInboxBucketKeepTheirMeaning]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testProjectSectionOrdersAndInboxBucketKeepTheirMeaning]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testQueueCodecReadsHistoricalCacheAndPreservesCreateOnly]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testQueueCodecReadsHistoricalCacheAndPreservesCreateOnly]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testQueuedNewDraftCheckpointRemainsInOriginalVaultAcrossAccountSwitch]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testQueuedNewDraftCheckpointRemainsInOriginalVaultAcrossAccountSwitch]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testRecurrenceParentsAreInsertedBeforeChildrenAndCyclesFail]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testRecurrenceParentsAreInsertedBeforeChildrenAndCyclesFail]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testRelativeDateSourcesRemainRelativeAcrossBackupAccountRemapping]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testRelativeDateSourcesRemainRelativeAcrossBackupAccountRemapping]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testRemovedAccountCannotBeRecreatedByRetainedEditorSession]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testRemovedAccountCannotBeRecreatedByRetainedEditorSession]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testRemovedAccountStopsEditorWritersAndReadersBeforeKeyAccess]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testRemovedAccountStopsEditorWritersAndReadersBeforeKeyAccess]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testRepairHonorsRemovalAndCannotResurrectCacheOrVault]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testRepairHonorsRemovalAndCannotResurrectCacheOrVault]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testRepairKeyOrArchiveWriteFailureRetainsOriginal]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testRepairKeyOrArchiveWriteFailureRetainsOriginal]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testRepairNeverReplacesChangedReadableOrForeignCache]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testRepairNeverReplacesChangedReadableOrForeignCache]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testRepairRejectsSymlinkAndRechecksAfterKeyWait]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testRepairRejectsSymlinkAndRechecksAfterKeyWait]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testSeparateQueryGroupedOrdersRestoreInboxAndProjectIdentity]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testSeparateQueryGroupedOrdersRestoreInboxAndProjectIdentity]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testSeparateQueryRestoreRemapsReferencesAndRetainsEachManualOrder]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testSeparateQueryRestoreRemapsReferencesAndRetainsEachManualOrder]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testSharedProjectsBecomePersonalCopiesEvenForOwnTasks]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testSharedProjectsBecomePersonalCopiesEvenForOwnTasks]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testSnoozePreferenceBackupCrossAccountIdentityAndCreateOnlyRetry]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testSnoozePreferenceBackupCrossAccountIdentityAndCreateOnlyRetry]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testStableMappingAcrossBackupsAndDifferentClients]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testStableMappingAcrossBackupsAndDifferentClients]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testSupportedLegacyEmptyCollectionsRoundTripWithoutInventingItems]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testSupportedLegacyEmptyCollectionsRoundTripWithoutInventingItems]' passed (0.028 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testTimedFiltersSurvivePortableBackupAccountAndProjectRemapping]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testTimedFiltersSurvivePortableBackupAccountAndProjectRemapping]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testUnavailablePeopleClearedAtRootAndNestedDepth]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testUnavailablePeopleClearedAtRootAndNestedDepth]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testUncopyableEditorDraftStillRoundTripsWithoutDiscardingUnknownFields]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testUncopyableEditorDraftStillRoundTripsWithoutDiscardingUnknownFields]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testUnknownEmbeddedOrderTargetsAreNamespaced]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testUnknownEmbeddedOrderTargetsAreNamespaced]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testUnreadableRepairPreservesExactBytesEncryptedAndReopensWithoutReplayingQueue]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testUnreadableRepairPreservesExactBytesEncryptedAndReopensWithoutReplayingQueue]' passed (2.004 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testUUIDCaseIsCanonicalAndDuplicateSpellingsFail]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testUUIDCaseIsCanonicalAndDuplicateSpellingsFail]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testVaultRejectsTamperingWrongKeyAndAnotherAccount]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testVaultRejectsTamperingWrongKeyAndAnotherAccount]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.BackupTests testVaultRetainsTwentyNewestAndRemovesOlderCiphertext]' started.
+Test Case '-[TaskfoldCoreTests.BackupTests testVaultRetainsTwentyNewestAndRemovesOlderCiphertext]' passed (0.027 seconds).
+Test Suite 'BackupTests' passed at 2026-10-26 12:14:39.592.
+	 Executed 69 tests, with 0 failures (0 unexpected) in 2.545 (2.551) seconds
+Test Suite 'ProjectActivityContextTests' started at 2026-10-26 12:14:39.592.
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testActorUsesStableLedgerIdentityAndNeverTreatsDisplayNameAsAccount]' started.
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testActorUsesStableLedgerIdentityAndNeverTreatsDisplayNameAsAccount]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testCurrentIdentityAndTitleResolveFreshWithoutMutatingLedger]' started.
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testCurrentIdentityAndTitleResolveFreshWithoutMutatingLedger]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testInboxRouteRequiresCurrentOwnership]' started.
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testInboxRouteRequiresCurrentOwnership]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testRemovedProjectOrInaccessibleDestinationCannotRouteFromCachedTaskOrMember]' started.
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testRemovedProjectOrInaccessibleDestinationCannotRouteFromCachedTaskOrMember]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testScopesNormalizeIdentityButRejectMissingAccountAndOtherProject]' started.
+Test Case '-[TaskfoldCoreTests.ProjectActivityContextTests testScopesNormalizeIdentityButRejectMissingAccountAndOtherProject]' passed (0.002 seconds).
+Test Suite 'ProjectActivityContextTests' passed at 2026-10-26 12:14:39.603.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.011 (0.011) seconds
+Test Suite 'ProjectPulseWidgetTests' started at 2026-10-26 12:14:39.604.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testActualAppProjectionMatchesCurrentScopeAndNativeEventCounts]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testActualAppProjectionMatchesCurrentScopeAndNativeEventCounts]' passed (0.030 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testCatalogueBoundsAndRenameUseStableAccountProjectKeys]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testCatalogueBoundsAndRenameUseStableAccountProjectKeys]' passed (2.124 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testExactExpiryTimezoneAndMissingProjectKeepSelectedIdentity]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testExactExpiryTimezoneAndMissingProjectKeepSelectedIdentity]' passed (0.028 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testNoEpochAndMalformedHistoryHaveExplicitStatesWithoutChangingCurrentCompletion]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testNoEpochAndMalformedHistoryHaveExplicitStatesWithoutChangingCurrentCompletion]' passed (0.048 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testStrictAccountBoundLinkAndSelectionEscapingRejectForgedURLs]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testStrictAccountBoundLinkAndSelectionEscapingRejectForgedURLs]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testStrictProjectionBoundsVersionForeignOwnerDuplicateAndMalformedDays]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testStrictProjectionBoundsVersionForeignOwnerDuplicateAndMalformedDays]' passed (0.027 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testTomorrowRollsSevenLocalDaysWithoutInventingUnreceivedActivityAcrossDST]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testTomorrowRollsSevenLocalDaysWithoutInventingUnreceivedActivityAcrossDST]' passed (0.018 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testUnicodeBoundsPrivateContentAndSignedOutProjection]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testUnicodeBoundsPrivateContentAndSignedOutProjection]' passed (0.038 seconds).
+Test Suite 'ProjectPulseWidgetTests' passed at 2026-10-26 12:14:41.917.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 2.313 (2.313) seconds
+Test Suite 'TaskActivityTests' started at 2026-10-26 12:14:41.917.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testBackupRetainsValidatedArchiveWithoutReplayingItAsActivity]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testBackupRetainsValidatedArchiveWithoutReplayingItAsActivity]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testCalendarWindowCrossesDSTAndCountsEventsOnceWithFutureClockExcluded]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testCalendarWindowCrossesDSTAndCountsEventsOnceWithFutureClockExcluded]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testCompletedCreationNeverBackfillsCompletionAndDeletionRetainsMetadata]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testCompletedCreationNeverBackfillsCompletionAndDeletionRetainsMetadata]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testCompletionInstantAndRecordedInstantStaySeparateAndNotesProduceNoEvent]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testCompletionInstantAndRecordedInstantStaySeparateAndNotesProduceNoEvent]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testDurableLocalCompletionReopenUndoAndRepeatOccurrencesHaveDistinctHistory]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testDurableLocalCompletionReopenUndoAndRepeatOccurrencesHaveDistinctHistory]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testGoalCommandScopesAccountAndPreservesNullBaselineAcrossQueueEncoding]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testGoalCommandScopesAccountAndPreservesNullBaselineAcrossQueueEncoding]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testGoalReviewRejectsForeignScopeAndMissingRemoteRowKeepsCompleteDraft]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testGoalReviewRejectsForeignScopeAndMissingRemoteRowKeepsCompleteDraft]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsCachedParsingMatchesExistingActivityDecoderForOffsetsAndFractionalInstants]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsCachedParsingMatchesExistingActivityDecoderForOffsetsAndFractionalInstants]' passed (0.017 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsCompletedImportsAndTimeEditsDoNotInventHistoryAndDeletionKeepsRecordedCredit]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsCompletedImportsAndTimeEditsDoNotInventHistoryAndDeletionKeepsRecordedCredit]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsCompletionTimeCorrectionRetainsCompletingActorAndProject]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsCompletionTimeCorrectionRetainsCompletingActorAndProject]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsConflictInRepeatedHistoryIdentityMarksCountsUnreliable]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsConflictInRepeatedHistoryIdentityMarksCountsUnreliable]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsDuplicateEventsAndLaterVersionReplayNeverDoubleCredit]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsDuplicateEventsAndLaterVersionReplayNeverDoubleCredit]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsFixtureHasMatchingPersonalGoalsAndWindowsAfterCrossDeviceEncoding]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsFixtureHasMatchingPersonalGoalsAndWindowsAfterCrossDeviceEncoding]' passed (0.017 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsInvalidGoalDraftDoesNotOverflowOrInventAWindow]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsInvalidGoalDraftDoesNotOverflowOrInventAWindow]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsLargeHistoryCountsDistinctRecordedOccurrences]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsLargeHistoryCountsDistinctRecordedOccurrences]' passed (0.473 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsLateBackdatedCompletionIsObservedWithPartialCoverageAndFutureEventsAreIgnored]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsLateBackdatedCompletionIsObservedWithPartialCoverageAndFutureEventsAreIgnored]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsRecordedDeletionAndRecreationKeepSeparateCompletionLifecycles]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsRecordedDeletionAndRecreationKeepSeparateCompletionLifecycles]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsRecurringOccurrencesKeepDistinctCreditsAndUndoCorrectsOne]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsRecurringOccurrencesKeepDistinctCreditsAndUndoCorrectsOne]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsReopenCorrectsOriginalDayAndRecompletionMovesCredit]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsReopenCorrectsOriginalDayAndRecompletionMovesCredit]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsScopeExcludesForeignWorkAndCountsAccessibleCollaboratorsExplicitly]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsScopeExcludesForeignWorkAndCountsAccessibleCollaboratorsExplicitly]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsUnknownAndPartialHistoryNeverBecomesACompleteTrackingWindow]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsUnknownAndPartialHistoryNeverBecomesACompleteTrackingWindow]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsUsesSavedCivilZoneAndCalendarDaysAcrossDST]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsUsesSavedCivilZoneAndCalendarDaysAcrossDST]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsWeekStartAndRestDaysDoNotDiscardRecordedWork]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testInsightsWeekStartAndRestDaysDoNotDiscardRecordedWork]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testMovedAndRescheduledInOneWriteExplainChangingScopeWithoutChangingCompletedWork]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testMovedAndRescheduledInOneWriteExplainChangingScopeWithoutChangingCompletedWork]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testProductivityGoalsValidateRestDaysPreserveMetadataAndSurviveEncoding]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testProductivityGoalsValidateRestDaysPreserveMetadataAndSurviveEncoding]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testReviewedGoalChoiceKeepsIndependentSyncedMetadataAndTaskHistory]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testReviewedGoalChoiceKeepsIndependentSyncedMetadataAndTaskHistory]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testSemanticTimeSpellingsDoNotCreateFalseLocalReschedules]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testSemanticTimeSpellingsDoNotCreateFalseLocalReschedules]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testSequencePaginationBeyondOnePageRejectsNonadvancingOrFractionalCursors]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testSequencePaginationBeyondOnePageRejectsNonadvancingOrFractionalCursors]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testStrictDecoderRejectsMalformedHistoryAndReportsIncompleteCounts]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testStrictDecoderRejectsMalformedHistoryAndReportsIncompleteCounts]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testUnknownGoalVersionsCanBeKeptSyncedButCannotBeOverwrittenByAnOlderDraft]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testUnknownGoalVersionsCanBeKeptSyncedButCannotBeOverwrittenByAnOlderDraft]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testUseSyncedGoalChoiceRetainsLaterDraftAndItsGuard]' started.
+Test Case '-[TaskfoldCoreTests.TaskActivityTests testUseSyncedGoalChoiceRetainsLaterDraftAndItsGuard]' passed (0.000 seconds).
+Test Suite 'TaskActivityTests' passed at 2026-10-26 12:14:42.591.
+	 Executed 31 tests, with 0 failures (0 unexpected) in 0.671 (0.674) seconds
+Test Suite 'TaskNodeActivityTests' started at 2026-10-26 12:14:42.591.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testActualEditHistoryRedoIsNewActionWhileTransportRetryStaysIdempotent]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testActualEditHistoryRedoIsNewActionWhileTransportRetryStaysIdempotent]' passed (0.021 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testActualPostgresRowsDecodeWithSameWorkAndIdentityContract]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testActualPostgresRowsDecodeWithSameWorkAndIdentityContract]' passed (0.037 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testBackupPreservesChildArchiveWithoutReplayingOrRemappingHistory]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testBackupPreservesChildArchiveWithoutReplayingOrRemappingHistory]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testBackupRejectsFutureDuplicateOrInvalidChildHistoryWithoutChangingSource]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testBackupRejectsFutureDuplicateOrInvalidChildHistoryWithoutChangingSource]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testCachedParserRetainsExactValidationAndTimestampSemantics]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testCachedParserRetainsExactValidationAndTimestampSemantics]' passed (0.044 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testChildHistoryAndEpochRejectAllClientWritesBeforeNetwork]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testChildHistoryAndEpochRejectAllClientWritesBeforeNetwork]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testCreationIncludesHeadingContextButNeverInventsPastCompletion]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testCreationIncludesHeadingContextButNeverInventsPastCompletion]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testEquivalentTimestampSpellingsDoNotInventCompletionTimeEvent]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testEquivalentTimestampSpellingsDoNotInventCompletionTimeEvent]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testFreshTasksDiscardUnavailableArchiveButKeepQueueAndOtherHistory]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testFreshTasksDiscardUnavailableArchiveButKeepQueueAndOtherHistory]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testFutureExistingLedgerIsPreservedWithoutResettingItsCursor]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testFutureExistingLedgerIsPreservedWithoutResettingItsCursor]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testGroupingChangeDoesNotInventCompletionForAlreadyCompletedChild]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testGroupingChangeDoesNotInventCompletionForAlreadyCompletedChild]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testIndependentChildCompletionRetainsChosenTimeWithoutCreditingHeading]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testIndependentChildCompletionRetainsChosenTimeWithoutCreditingHeading]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testInvalidTypeBooleanCounterAndDateProduceGap]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testInvalidTypeBooleanCounterAndDateProduceGap]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testLegacyGenerationCanBeReadButCannotRouteIntoCurrentData]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testLegacyGenerationCanBeReadButCannotRouteIntoCurrentData]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testLocalAppendValidatesFiveThousandExistingEventsWithoutLosingCoverage]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testLocalAppendValidatesFiveThousandExistingEventsWithoutLosingCoverage]' passed (1.363 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testLocalRecorderIsAtomicRetrySafeAndDoesNotRewriteParentLedgerOrTasks]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testLocalRecorderIsAtomicRetrySafeAndDoesNotRewriteParentLedgerOrTasks]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testMalformedAndLegacyTreesRecordExplicitGapWithoutInventingOrRepairingNodes]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testMalformedAndLegacyTreesRecordExplicitGapWithoutInventingOrRepairingNodes]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testMovingAChildUsesStableSubjectAndFreshCurrentPath]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testMovingAChildUsesStableSubjectAndFreshCurrentPath]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testNetworkHistoryDiscardsSameAccountSessionCycle]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testNetworkHistoryDiscardsSameAccountSessionCycle]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testNetworkHistoryPagesBySequenceAndRejectsPartialFutureDuplicateOrUnorderedFeed]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testNetworkHistoryPagesBySequenceAndRejectsPartialFutureDuplicateOrUnorderedFeed]' passed (0.776 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testNotesTitlesPriorityAndUnknownOpaqueFieldsDoNotInventTransitions]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testNotesTitlesPriorityAndUnknownOpaqueFieldsDoNotInventTransitions]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testOptionalNetworkHistoryRequiresCompleteStableEpochAndPreservesEmpty]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testOptionalNetworkHistoryRequiresCompleteStableEpochAndPreservesEmpty]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testOrdinaryChecklistRecordsActivityWithoutIndependentWorkCredit]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testOrdinaryChecklistRecordsActivityWithoutIndependentWorkCredit]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testPrivateOwnerAndIncarnationAreRequiredForHistoryRoute]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testPrivateOwnerAndIncarnationAreRequiredForHistoryRoute]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testRecreatedRootIsAnotherOccurrenceAndOldHistoryCannotOpenIt]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testRecreatedRootIsAnotherOccurrenceAndOldHistoryCannotOpenIt]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testRootProjectMoveIsInheritedButNodeEmbeddedDestinationsAreIgnored]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testRootProjectMoveIsInheritedButNodeEmbeddedDestinationsAreIgnored]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testSequenceExhaustionNeverWritesHalfAMultiNodeTransition]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testSequenceExhaustionNeverWritesHalfAMultiNodeTransition]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testTaskHeadingConversionRetainsIdentityAndPromotesDescendantsWithoutCreation]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testTaskHeadingConversionRetainsIdentityAndPromotesDescendantsWithoutCreation]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testTwoSiblingChangesHaveDistinctStableRetryIdentities]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testTwoSiblingChangesHaveDistinctStableRetryIdentities]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testUndoAndRedoAreObservedRealTransitions]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testUndoAndRedoAreObservedRealTransitions]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testUnsupportedEnvelopePathsAndWorkFlagsFailClosed]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testUnsupportedEnvelopePathsAndWorkFlagsFailClosed]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testWrongAccountAndRootCannotManufactureLocalHistory]' started.
+Test Case '-[TaskfoldCoreTests.TaskNodeActivityTests testWrongAccountAndRootCannotManufactureLocalHistory]' passed (0.000 seconds).
+Test Suite 'TaskNodeActivityTests' passed at 2026-10-26 12:14:44.986.
+	 Executed 32 tests, with 0 failures (0 unexpected) in 2.392 (2.395) seconds
+Test Suite 'TaskRootActivityContextTests' started at 2026-10-26 12:14:44.986.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testActualPostgresUpgradeRowsDecodeAsLegacyOrObservedContext]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testActualPostgresUpgradeRowsDecodeAsLegacyOrObservedContext]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testCapturedTypeIsNotReinterpretedWhenCurrentRootChanges]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testCapturedTypeIsNotReinterpretedWhenCurrentRootChanges]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testHeadingEventsAreRetainedWithoutWorkCreditOrAdditions]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testHeadingEventsAreRetainedWithoutWorkCreditOrAdditions]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testKnownNewIncarnationResetsCountersAndRetainsEarlierRecordedWorkOnce]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testKnownNewIncarnationResetsCountersAndRetainsEarlierRecordedWorkOnce]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testMetadataIsArchivedLosslesslyButNeverReplayedOrRemapped]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testMetadataIsArchivedLosslesslyButNeverReplayedOrRemapped]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testMetadataVersionShapeTypesAndIncarnationsFailClosed]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testMetadataVersionShapeTypesAndIncarnationsFailClosed]' passed (0.020 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testMissingMetadataKeepsLegacyCreditsWithoutReadingCurrentType]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testMissingMetadataKeepsLegacyCreditsWithoutReadingCurrentType]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testNewEventsCaptureOnlyActualTypeAndIncarnationWithoutPrivateText]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testNewEventsCaptureOnlyActualTypeAndIncarnationWithoutPrivateText]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testTypedRootRouteCannotOpenRecreatedTransferredDuplicateOrLegacyOccurrence]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testTypedRootRouteCannotOpenRecreatedTransferredDuplicateOrLegacyOccurrence]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testTypeOnlyEditCreatesNoFictionalLegacyEventAndKeepsSourceIntact]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testTypeOnlyEditCreatesNoFictionalLegacyEventAndKeepsSourceIntact]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testUnknownTypeIsUnreliableAndIncarnationResetIsNotACompletion]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testUnknownTypeIsUnreliableAndIncarnationResetIsNotACompletion]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testUnsupportedSourceIdentityRetainsTheActualEventWithoutInventedWorkOrRepair]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testUnsupportedSourceIdentityRetainsTheActualEventWithoutInventedWorkOrRepair]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testWidgetHistoryUsesObservedWorkAndFlagsUnclassifiableRows]' started.
+Test Case '-[TaskfoldCoreTests.TaskRootActivityContextTests testWidgetHistoryUsesObservedWorkAndFlagsUnclassifiableRows]' passed (0.017 seconds).
+Test Suite 'TaskRootActivityContextTests' passed at 2026-10-26 12:14:45.102.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.115 (0.116) seconds
+Test Suite 'TeamWorkspaceTests' started at 2026-10-26 12:14:45.102.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testAccessFenceRejectsDamagedDataAndOnlyClearsItsOwnScope]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testAccessFenceRejectsDamagedDataAndOnlyClearsItsOwnScope]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testActualSQLBoundariesKeepPersonalSharingSeparateFromTeamRoles]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testActualSQLBoundariesKeepPersonalSharingSeparateFromTeamRoles]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBlockedCohortDoesNotReplayDependentEditsOrHideIndependentPersonalNotes]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBlockedCohortDoesNotReplayDependentEditsOrHideIndependentPersonalNotes]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryAndHistoricalCustodyPersistPrivatelyButDoNotExportAuthority]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryAndHistoricalCustodyPersistPrivatelyButDoNotExportAuthority]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryRejectsWrongAccountMalformedTokensAndForgedRoleCapabilities]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryRejectsWrongAccountMalformedTokensAndForgedRoleCapabilities]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryTransportIsBoundedPrivateAndAccountScoped]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundaryTransportIsBoundedPrivateAndAccountScoped]' passed (0.023 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundedTablePaginationRejectsRepeatedPagesAndUsesProfilePrimaryKey]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testBoundedTablePaginationRejectsRepeatedPagesAndUsesProfilePrimaryKey]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testChildHistoryUsesSameScopeMaskAndPrunesActorsAfterRevocation]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testChildHistoryUsesSameScopeMaskAndPrunesActorsAfterRevocation]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testConversationMetadataMatchesCurrentBoundaryAndSurvivesCodec]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testConversationMetadataMatchesCurrentBoundaryAndSurvivesCodec]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationAdmissionAndNestedEditorsKeepOriginalUnpersistedIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationAdmissionAndNestedEditorsKeepOriginalUnpersistedIdentity]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationCarriesFullAuthoredTaskAsScopedInsertOnlyCommand]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationCarriesFullAuthoredTaskAsScopedInsertOnlyCommand]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRefusesCopiedBookkeepingPrivateContentAndUnknownFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRefusesCopiedBookkeepingPrivateContentAndUnknownFields]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRefusesExistingRowAndCannotBecomeEditOrDelete]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRefusesExistingRowAndCannotBecomeEditOrDelete]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRejectsUnsupportedEditsWithoutDroppingAuthoredFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRejectsUnsupportedEditsWithoutDroppingAuthoredFields]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRequiresCurrentRoleTokenSessionWorkspaceAndRollout]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRequiresCurrentRoleTokenSessionWorkspaceAndRollout]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRequiresNameAndCoherentRepeatPlan]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testCreationRequiresNameAndCoherentRepeatPlan]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewCannotAcquireNewWorkspaceSessionOrBackendAuthority]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewCannotAcquireNewWorkspaceSessionOrBackendAuthority]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewKeepsWholeSourceAndStableIntentWithRetainedCreator]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewKeepsWholeSourceAndStableIntentWithRetainedCreator]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRefusesOversizedPayloadRatherThanTruncatingSavedContents]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRefusesOversizedPayloadRatherThanTruncatingSavedContents]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsChangedAndRestoredAccessFence]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsChangedAndRestoredAccessFence]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsEveryChangedSavedFieldInsteadOfRetargetingBaseline]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsEveryChangedSavedFieldInsteadOfRetargetingBaseline]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsRecreatedRemovedMovedAndReassignedCreator]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewRejectsRecreatedRemovedMovedAndReassignedCreator]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewUndoUsesExactDeletionReceiptAndFreshGeneration]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewUndoUsesExactDeletionReceiptAndFreshGeneration]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewUsesCanonicalClockAndTimestampSpellingWithoutDroppingSource]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionReviewUsesCanonicalClockAndTimestampSpellingWithoutDroppingSource]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAcceptsHundredUniqueTasksAndRefusesTheHundredAndFirst]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAcceptsHundredUniqueTasksAndRefusesTheHundredAndFirst]' passed (0.082 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAllowsDifferentProjectsOnlyInsideSameCurrentTeam]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAllowsDifferentProjectsOnlyInsideSameCurrentTeam]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAppliesTogetherAndUndoKeepsSelectedLinksAndUnselectedWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionAppliesTogetherAndUndoKeepsSelectedLinksAndUnselectedWork]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionFreezesWholeRowsAndAllRequestIdentitiesAcrossRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionFreezesWholeRowsAndAllRequestIdentitiesAcrossRetry]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesAnotherTeamEvenWithCurrentEditorRights]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesAnotherTeamEvenWithCurrentEditorRights]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesAnyMissingChangedOrRecreatedMemberAsAWhole]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesAnyMissingChangedOrRecreatedMemberAsAWhole]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesDuplicateEmptySingleAndCreationAdmissions]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesDuplicateEmptySingleAndCreationAdmissions]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesMixedOpeningSessionAndWorkspace]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesMixedOpeningSessionAndWorkspace]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesWorkspaceSessionRoleAndRolloutChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRefusesWorkspaceSessionRoleAndRolloutChanges]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRejectsCyclesAndOverlargeWholePayloadWithoutTruncation]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDeletionSelectionRejectsCyclesAndOverlargeWholePayloadWithoutTruncation]' passed (0.052 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDurableAccessFenceSurvivesRelaunchWithoutTaskTextAndCleanupStopsLateWrites]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testDurableAccessFenceSurvivesRelaunchWithoutTaskTextAndCleanupStopsLateWrites]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testForeignInitialBoundaryCannotStartAWorkspaceRead]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testForeignInitialBoundaryCannotStartAWorkspaceRead]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testHistoricalTaskCustodyStopsOldLegacyCallbacksAfterRowsArePruned]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testHistoricalTaskCustodyStopsOldLegacyCallbacksAfterRowsArePruned]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLegacyFallbackRequiresExplicitMissingRPCAndNoKnownTeamState]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLegacyFallbackRequiresExplicitMissingRPCAndNoKnownTeamState]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLocalPersonalCaptureSurvivesBoundaryRefreshWithoutServerProjectYet]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLocalPersonalCaptureSurvivesBoundaryRefreshWithoutServerProjectYet]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLocalProjectIntentCannotExposeOldCachedSharedChildrenAtSameID]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLocalProjectIntentCannotExposeOldCachedSharedChildrenAtSameID]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLossOfReadAccessRemovesSharedCacheWithoutRemovingQueuedWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testLossOfReadAccessRemovesSharedCacheWithoutRemovingQueuedWork]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testMissingLegacyProjectAlsoNeedsProtectionButNewOfflineProjectDoesNot]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testMissingLegacyProjectAlsoNeedsProtectionButNewOfflineProjectDoesNot]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeDiscussionWriteGateDoesNotInferTeamRightsFromTaskCreator]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeDiscussionWriteGateDoesNotInferTeamRightsFromTaskCreator]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorCapturesRoleAuthorityRatherThanCreatorAndKeepsOrdinaryWritesClosed]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorCapturesRoleAuthorityRatherThanCreatorAndKeepsOrdinaryWritesClosed]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorChecklistIntentRetainsConcurrentOtherChildWithoutRewritingItsBaseline]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorChecklistIntentRetainsConcurrentOtherChildWithoutRewritingItsBaseline]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorMatchesActualSQLCommandAndUsesDedicatedTransport]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorMatchesActualSQLCommandAndUsesDedicatedTransport]' passed (0.036 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorNoopDoesNotCreateARequestOrReplaceObservedWork]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorNoopDoesNotCreateARequestOrReplaceObservedWork]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorPreservesAuthoredBaselineAndConcurrentUntouchedFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorPreservesAuthoredBaselineAndConcurrentUntouchedFields]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRefusesArchivedTeamEvenIfCapabilityReplyContradictsItsState]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRefusesArchivedTeamEvenIfCapabilityReplyContradictsItsState]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsAccessABAAccountWorkspaceSessionAndBackendChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsAccessABAAccountWorkspaceSessionAndBackendChanges]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsRemovedRecreatedOrReboundTaskEvenWithSameVisibleTitle]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsRemovedRecreatedOrReboundTaskEvenWithSameVisibleTitle]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsUnsupportedChangesAsAWholeWithoutDiscardingDraftFields]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorRejectsUnsupportedChangesAsAWholeWithoutDiscardingDraftFields]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorUndoRestoresObservedStateWithFreshScopedRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeEditorUndoRestoresObservedStateWithFreshScopedRequest]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxKeepsUnknownRepeatSemanticsUnchanged]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxKeepsUnknownRepeatSemanticsUnchanged]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxRefusesStaleOrMissingVisibleRow]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxRefusesStaleOrMissingVisibleRow]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxRefusesWorkspaceSessionRoleAndRolloutChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxRefusesWorkspaceSessionRoleAndRolloutChanges]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxUsesCapturedAtomicCompletionAndUndo]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedCheckboxUsesCapturedAtomicCompletionAndUndo]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedRecurringCheckboxKeepsOneCommandAndOwnedSuccessor]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedRecurringCheckboxKeepsOneCommandAndOwnedSuccessor]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedReopenPreservesLaterOccurrenceAndUsesScopedRevision]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNativeSharedReopenPreservesLaterOccurrenceAndUsesScopedRevision]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNewDependentWorkNeedsAnotherRecoveryButUnchangedQuarantineDoesNot]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testNewDependentWorkNeedsAnotherRecoveryButUnchangedQuarantineDoesNot]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPartialTeamServiceCannotSilentlyFallBackToLegacySync]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPartialTeamServiceCannotSilentlyFallBackToLegacySync]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPausedSetupKeepsReadOnlyContentAndProtectsQueuedChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPausedSetupKeepsReadOnlyContentAndProtectsQueuedChanges]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionExplanationsRetainSafeControlsWithoutExposingNames]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionExplanationsRetainSafeControlsWithoutExposingNames]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsPreserveLegacyPersonalSharingWithoutInventingTeamAccess]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsPreserveLegacyPersonalSharingWithoutInventingTeamAccess]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRejectForeignAccountAndServerCaches]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRejectForeignAccountAndServerCaches]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRememberTeamCustodyAfterAccessIsLost]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRememberTeamCustodyAfterAccessIsLost]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRequireBothCurrentAccessAndAVisibleRow]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsRequireBothCurrentAccessAndAVisibleRow]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsUseCertifiedPersonalProjectsAndInbox]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPersonalConnectionsUseCertifiedPersonalProjectsAndInbox]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPrefilledCreationStillCreatesAndRetryKeepsIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPrefilledCreationStillCreatesAndRetryKeepsIdentity]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPresentationMaskHidesRevokedContentBeforeMutatingOrBackingUpQueue]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testPresentationMaskHidesRevokedContentBeforeMutatingOrBackingUpQueue]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRestoredRoleReplaysFrozenIntentWithoutRetargetingARecreatedTask]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRestoredRoleReplaysFrozenIntentWithoutRetargetingARecreatedTask]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedDiscussionCacheIsPrunedWhileAuthoredCommentOutboxIsRetained]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedDiscussionCacheIsPrunedWhileAuthoredCommentOutboxIsRetained]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedTaskCannotAppearInWidgetOrPinnedNotePayload]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedTaskCannotAppearInWidgetOrPinnedNotePayload]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamEditorAdmissionKeepsCapturedContextThroughSecondarySheets]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamEditorAdmissionKeepsCapturedContextThroughSecondarySheets]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamEditorAdmissionRejectsMismatchedRootAndWorkspaceContext]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamEditorAdmissionRejectsMismatchedRootAndWorkspaceContext]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamWidgetActionsAreWithheldWithoutDisablingPersonalChildActions]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testTeamWidgetActionsAreWithheldWithoutDisablingPersonalChildActions]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testVerifiedRefreshCanRepairDamagedFenceWithoutClearingAnotherBackend]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testVerifiedRefreshCanRepairDamagedFenceWithoutClearingAnotherBackend]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testViewerSeesServerVersionWhileTheirUnsentEditsStayQueued]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testViewerSeesServerVersionWhileTheirUnsentEditsStayQueued]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceReaderRejectsContinuousAccessChurnAndNeverReturnsPartialRows]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceReaderRejectsContinuousAccessChurnAndNeverReturnsPartialRows]' passed (0.099 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceReaderRestartsEntireFetchAfterAccessChanges]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceReaderRestartsEntireFetchAfterAccessChanges]' passed (0.046 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceStillRefreshesTasksWhenOptionalChildHistoryFails]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testWorkspaceStillRefreshesTasksWhenOptionalChildHistoryFails]' passed (0.038 seconds).
+Test Suite 'TeamWorkspaceTests' passed at 2026-10-26 12:14:45.900.
+	 Executed 81 tests, with 0 failures (0 unexpected) in 0.791 (0.798) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-26 12:14:45.901.
+	 Executed 239 tests, with 0 failures (0 unexpected) in 8.838 (8.860) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 12:14:45.901.
+	 Executed 239 tests, with 0 failures (0 unexpected) in 8.838 (8.860) seconds
+INSIGHTS_HISTORY_5000_SECONDS=0.43798089027404785
+CHILD_HISTORY_APPEND_5000_SECONDS=0.3778160810470581

@@ -1,0 +1,23 @@
+{
+  "phone": {
+    "actualPassingTests": 4,
+    "strictVerifier": "Verified 4 actual passing UI tests; no runtime warnings.",
+    "resultBundle": "/tmp/taskfold-widget-preparation-final-phone.xcresult"
+  },
+  "ipad": {
+    "actualPassingTests": 1,
+    "strictVerifier": "Verified 1 actual passing UI tests; no runtime warnings.",
+    "resultBundle": "/tmp/taskfold-widget-preparation-final-ipad.xcresult"
+  },
+  "core": {
+    "mac": 114,
+    "ios": 114,
+    "failures": 0
+  },
+  "builds": {
+    "mac": "current build-for-testing and deep strict signature passed; desktop runtime not run",
+    "ios": "current build-for-testing and real-team simulator signing plus deep strict signature passed"
+  },
+  "source": "Final host Store, Models, TaskActivity and fixture byte-equal to their repositories, no workflowSaveProfile markers. See final-clean-host-source-hashes.json.",
+  "scope": "Five final mobile functional cases and two separate instrumented diagnostic cases; neither is release, physical-device or Mac runtime acceptance."
+}

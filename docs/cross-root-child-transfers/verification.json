@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/TaskActivity.swift": "d5e80fe93851e398538b11b68a017d4d3ac8505ba7e19d13d0ab000dc8ad8743",
+    "TaskfoldTests/ChildTaskTransferHistoryTests.swift": "5a075eefd8f949c3712d070c4df7d893c7dcefd312bdb52b893ecdcef0923766",
+    "TaskfoldTests/Fixtures/cross-root-transfer-history-v1.json": "0cf8c5451a9b3ace989b31147f12b7e5b70236e9c2aa318311dc9c77534f6396",
+    "Taskfold/Info.plist": "e8a7f8daa65ed3d5def3e7193ae104aa87790edc0563ddde231325555ea75087",
+    "Scripts/Database/test-cross-root-child-transfers.mjs": "ef0c822cf70066b1ab2078983f5debeda5fc096455a934e57ce322860bb6c4bc",
+    "Scripts/Database/child-task-authority-schema.mjs": "ab0e1e07b584f66f7c2bdeb1ca4d334753c7ed70a424ef3470c01226149dda4e",
+    "Scripts/Database/test-personal-child-moves.mjs": "b5ac0767f380825d7e47987360aff152040a3e7182e66162f30d86ff601906ca",
+    "Scripts/Database/test-child-task-record-authority.mjs": "c829653443503cb92f8d69596637f7cdb0885e0c03c51ab9c869001fc416ba41",
+    "Scripts/Database/test-child-task-structure-commands.mjs": "b62418057422e7d1de0c0e3d48b51073f20352614902ad16a7c880ce60ec185a",
+    "Scripts/Database/test-team-task-moves.mjs": "9939e286262c62722eacc5b10eb373bb482a5a90d5a8a5fe7efcfbcbec6dedcf",
+    "Scripts/Database/test-child-project-adoption.mjs": "ec513fb6df0ef4b388bc28673024d7ed3c0ae82495750aefed26175212e059e7",
+    "supabase/migrations/20261030114138_cross_root_child_task_transfers.sql": "e3006f881dbd13ed52f5f7db5d5e125b9f5b7c424ad288ad2bb18782db9cb6cc"
+  },
+  "builtHistorySourceSHA256": "d5e80fe93851e398538b11b68a017d4d3ac8505ba7e19d13d0ab000dc8ad8743",
+  "compiledSQLHistoryFixtureSHA256": "0cf8c5451a9b3ace989b31147f12b7e5b70236e9c2aa318311dc9c77534f6396",
+  "databaseChecks": {
+    "cross-root": 77,
+    "personal": 75,
+    "authority": 96,
+    "structure": 221,
+    "team": 90,
+    "adoption": 56,
+    "totalPassed": 615
+  },
+  "corePassed": 521,
+  "newTransferHistoryCases": 14,
+  "coreFailed": 0,
+  "allDatabaseFixturesRemoved": true,
+  "officialAdvisorsAddedFindings": 0,
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "developmentSignaturesVerified": true,
+  "developmentSigningReceipt": {
+    "Taskfold.app": {
+      "strictDeepSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "strictDeepSignatureVerified": true
+    }
+  },
+  "normalFeatureFlags": {
+    "TaskfoldChildRecordReadsEnabled": null,
+    "TaskfoldChildRecordWritesEnabled": null,
+    "TaskfoldChildRecordCompletionsEnabled": null,
+    "TaskfoldChildStructureReadsEnabled": null,
+    "TaskfoldChildStructureWritesEnabled": null
+  },
+  "newServerGate": "transfers_enabled defaults false",
+  "hostedMigrationApplied": false,
+  "realDataChanged": false,
+  "newSimulators": 0,
+  "newNativeRuntimeAccepted": false,
+  "newSpokenOrLargestTextAccepted": false,
+  "localSupabaseMigrationHistoryVerified": false,
+  "wireFixtureSource": "Actual completion/transfer/reopen history from this repository-owned final SQL fixture; compiled and decoded independently in this app suite.",
+  "scope": "Atomic personal/same-team cross-root subtask transfer service, metadata-only exact retry/status/closure, certified one-use Undo, stable incarnation/completion epochs, field-revision ABA fences, and client history/Insights continuity. This is a disabled service/history milestone, not a completed native transfer feature.",
+  "remaining": [
+    "Typed client transfer commands, two-root durable journals and premium destination/review/Undo/recovery UI",
+    "Cross-team/personal-team custody adapters and complete discussion/provider/Storage handling",
+    "Older-data tools, workload and broader native/account/window/background/spoken acceptance",
+    "Existing user deferrals remain paused"
+  ]
+}

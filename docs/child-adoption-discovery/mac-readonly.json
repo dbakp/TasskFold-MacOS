@@ -1,0 +1,16 @@
+{
+  "build": "adoption-discovery-v5",
+  "method": "Direct CUA after explicitly authorized Terminal launch; not XCTest",
+  "verified": [
+    "Live task selection and correct heading with undecodable workspace flag",
+    "All three original nested subtasks visible",
+    "Upgrade button visibly disabled; workspace-recovery explanation and export control visible",
+    "Direct production model.queue refused upgrade: Unverified saved edits protected; journal empty",
+    "No adoption request or write; test app quit"
+  ],
+  "fullyAcceptedForEverydayUse": false,
+  "normalUseEnabled": false,
+  "adoptionWrites": 0,
+  "adoptionRequests": 0,
+  "appQuit": true
+}

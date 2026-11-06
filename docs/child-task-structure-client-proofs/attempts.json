@@ -1,0 +1,17 @@
+{
+  "firstMac": {
+    "tests": 140,
+    "unexpectedFailures": 2,
+    "cause": "Receipt and read fixtures from different independent accounts; strict product scope guard refused them."
+  },
+  "pairedFixtureMac": {
+    "tests": 140,
+    "failures": 0
+  },
+  "addedRecoveryCaseMac": {
+    "tests": 146,
+    "unexpectedFailures": 1,
+    "cause": "Synthetic survivor-only read kept its former sibling index; strict record reader refused it."
+  },
+  "correction": "Reindex the synthetic survivor at zero; keep product validation unchanged."
+}

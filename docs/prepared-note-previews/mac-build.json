@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-05",
+  "platform": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/NoteMarkup.swift": "4f210192d89fff95b68b88ab18a704a4f5e1eb4217cfbaaa51d8dac220b22ba0",
+    "Taskfold/Views/NoteFormattingView.swift": "bd9cc4e8887347f1d9723155dfa223541ecaedc90c9c318ce12266423e563095",
+    "Taskfold/Views/PinnedNotesView.swift": "60869512de83e346e590edc24491cfaccb685963ff85742631c0fb4b574b05a7"
+  },
+  "xcodeExitCode": 0,
+  "buildOnly": true,
+  "runtimeAccepted": false,
+  "normalSessionsReplaced": false,
+  "logSHA256": "149f09b6e7999cdb14b23f56c34da52a4d44fc1a4339b51756c54ae568f10a44",
+  "strictSignatureVerified": true,
+  "binarySHA256": "89a92594ad94cebfeb69d89dd487cfc2f594f9236576434a120e80090f96c156",
+  "sourceUnchanged": true,
+  "acceptedBuild": true
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "9EC10F82-F14E-4008-86B6-2D480DA1E182.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment cold return_0_6E836051-3C6C-42DD-ABC9-F776A32FEFD0.json",
+        "timestamp" : 1793567447.649
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "AC0A8C94-7C91-4648-BEF2-5F3D3CDEED58.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment redone_0_C1696EE5-2E6E-4980-88AC-C4E02812CBC5.json",
+        "timestamp" : 1793567433.265
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "F871CD0F-B4A5-4B85-83EC-A1608163BB56.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment undone_0_17BDB207-3D57-475C-A0F8-EDF32919C663.json",
+        "timestamp" : 1793567428.204
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "11734E01-54A6-4D85-AF5B-43666172B246.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment moved_0_59750984-BBD8-40D2-AACB-49FF223D5A3C.json",
+        "timestamp" : 1793567423.17
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "19C15F29-DE8A-4D0A-A1AB-97D4AC8AEFDD.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Exact preserved subtask title is readable_0_2165F263-90EC-4CA2-933B-66FB9A5C60A0.png",
+        "timestamp" : 1793567408.44
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "5CC9D5D1-F7D5-43D5-9A48-1392FCF841F2.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment original_0_F4699C0C-EB6D-4C05-84CF-1E1A30450E82.json",
+        "timestamp" : 1793567404.752
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn"
+  }
+]

@@ -1,0 +1,52 @@
+{
+  "stage": "Rank 6 team hierarchy service and native typed-command foundation",
+  "date": "2026-10-24",
+  "platform": "mac",
+  "migration": "supabase/migrations/20261024182336_team_project_hierarchy.sql",
+  "deployed": false,
+  "rolloutEnabled": false,
+  "taskWritesEnabled": false,
+  "uiControlsImplemented": false,
+  "realDataChanged": false,
+  "independentRepositoryInputs": true,
+  "verification": {
+    "swiftFocusedTests": 121,
+    "swiftFailures": 0,
+    "postgresHierarchyChecks": 95,
+    "archiveRegressionChecksWithHierarchy": 93,
+    "accessRegressionChecksWithHierarchy": 152,
+    "debugAppAndExtensionBuild": "passed, arm64, signing disabled; no app installed or launched",
+    "sqlNativeFixture": "TaskfoldTests/Fixtures/team-project-hierarchy-v1.json",
+    "swiftLogSHA256": "b3cadb0312ec11924d0adde4122fd77d3195abeb40ecb1a444680e72e028f3ef",
+    "buildLogSHA256": "e50303d91d11c3b218398e25870fe28f51f90b8081811a2fcf920572825000ab"
+  },
+  "scope": [
+    "review_hierarchy / move / create_subproject",
+    "mixed creators and departed creators",
+    "private unreadable parent projection",
+    "exact source/destination review and receipt validation",
+    "lost-response journal recovery",
+    "archive preservation and whole-operation rollback",
+    "team-lock concurrency and live permission recheck",
+    "hierarchy/team bounds and operation budget",
+    "per-project mutation scope and unchanged personal guard",
+    "real task/section/discussion/Storage/custody/grant preservation"
+  ],
+  "intermediateTrials": [
+    "The expanded personal-isolation assertion initially expected 22023. Inspection confirmed the unchanged original guard raises P0001; only that harness expectation was corrected. The final 95-check runs pass independently in both repositories."
+  ],
+  "limitations": [
+    "New hierarchy destination picker/review controls and synthetic UI peer remain the next stage; current controls decline both new actions.",
+    "No hierarchy native interaction, VoiceOver, hosted Auth/Keychain, real-team sync/Realtime or release acceptance is claimed.",
+    "The owned minimal-schema runtime runs PostgreSQL 17.6 and unchanged inspected migrations; hosted migration rehearsal/advisors remain required before rollout.",
+    "Existing source-only team rollout and task-write gates remain closed; user-deferred remote push, old-client rollout, release, OAuth, physical location and inbound email acceptance stay deferred.",
+    "Watch native controls/spoken/system-launch/hardware and remaining ranked Px work stay open."
+  ],
+  "cleanup": {
+    "ownedPostgresContainersRemoved": true,
+    "nativeAppsInstalledOrLaunched": false,
+    "remainingTaskfoldProcessesObserved": 0,
+    "ownedPreparedCopiesAndNativeCachesRemoved": true,
+    "combinedOwnedArtifactsAllocatedBytes": 1081507840
+  }
+}

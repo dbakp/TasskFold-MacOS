@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-12",
+  "scope": "My list privacy redaction in the owned SwiftUI view; synthetic native macOS host, not installed WidgetKit system acceptance",
+  "finding": "Text redaction concealed titles visually but native accessibility still exposed list/task/completion names; dates and mutation controls remained visible.",
+  "fix": "Replace private content with a generic accessible card, omit task/completion controls, and route the root to its list instead of a hidden first task. Normal content is unchanged.",
+  "verification": {
+    "normalMediumAccessibility": "byte-identical content subtree before/after",
+    "privateSmallAndMediumAccessibility": "No list/task/completed title, planned/deadline text, Complete or Dismiss controls; two generic private cards in each capture",
+    "screenshots": "before, medium after and small after visually inspected",
+    "builds": {
+      "mac-debug": {
+        "path": "/private/tmp/taskfold-widget-list-privacy-mac-debug.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "f20759f0bf8dc5047d54ff4400557cceee1b305646b0d8f4a3103d7d748e5b3d"
+      },
+      "mac-release": {
+        "path": "/private/tmp/taskfold-widget-list-privacy-mac-release.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "2590d7e137bcd454234364c87ca5bd9e911a30bb010ef5667bbf800d7fe78254"
+      },
+      "ios-debug": {
+        "path": "/private/tmp/taskfold-widget-list-privacy-ios-debug.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "5be7647139b6d14e58c857cbf83497a49afd068f595f81912108f7af4e39ffd8"
+      },
+      "ios-release": {
+        "path": "/private/tmp/taskfold-widget-list-privacy-ios-release.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "c3decec6dbc11c7545bf707c07e7c5d2fa10fe3d22b83ade89d92fac0db9ae9a"
+      }
+    },
+    "script": "Python AST syntax passes in both repositories"
+  },
+  "limitations": [
+    "Native host explicitly injects SwiftUI privacy redaction and widget size.",
+    "No installed system privacy trigger or spoken VoiceOver acceptance.",
+    "No new native iOS privacy UI acceptance; iOS widget target Debug and Release compile.",
+    "Other widget families and existing release gates remain separately open."
+  ],
+  "dataSafety": "Synthetic in-memory snapshots only; no task buttons or links clicked, no real app or installed widget replaced. Preview hosts quit before pruning.",
+  "cleanup": {
+    "prunedBytes": 309451775,
+    "paths": [
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/widget-list-privacy-mac",
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/widget-list-privacy-ios",
+      "/private/tmp/taskfold-widget-privacy-before-v1/Taskfold Widget Privacy Test.app",
+      "/private/tmp/taskfold-widget-privacy-after-v1/Taskfold Widget Privacy Test.app",
+      "/private/tmp/taskfold-widget-privacy-after-v2/Taskfold Widget Privacy Test.app",
+      "/private/tmp/taskfold-widget-privacy-small-v1/Taskfold Widget Privacy Test.app"
+    ],
+    "retained": "Source, logs, captures and evidence"
+  },
+  "reference": "https://developer.apple.com/documentation/swiftui/view/privacysensitive(_:)",
+  "captures": {
+    "before-ax.txt": "acaf55a260579cb5348d808e9a8763a6330b7ad05d651c6337d95f1abdbf21d5",
+    "before.png": "a2d4dbe88a6e76edc8e090b62461f42b275210356857574d5ecb511a75538141",
+    "after.png": "aa52241e16892d9402db28d24e589f43f040a2c889945ec5acefb04e58de8928",
+    "small-ax.txt": "8bd1988e1afa114cd56a3077d90cd73b914239f98603b957844eb9f18d39c6a6",
+    "after-ax.txt": "7fc804c32141f53a2743edf491ccc9dec1a973fa7735084a4e1aa83f1f7426c6",
+    "small.png": "4dfdbf854ecbc9c3d6268c7ec4fa7715d1bbefd73b1551a9dd53ce86d1cb6bbc"
+  }
+}

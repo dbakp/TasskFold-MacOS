@@ -1,0 +1,126 @@
+{
+  "date": "2026-10-11",
+  "scope": "Installed medium Tomorrow Day capacity on isolated iPhone Simulator, with composed initial installation/privacy and final completion/Undo/cleanup evidence. Mac completion change build-verified; native acceptance remains open.",
+  "baseCommits": {
+    "TaskFold-iOS": "5ca5a9b",
+    "TasskFold-MacOS": "eaed0fb"
+  },
+  "productChange": "Both native list completion actions synchronously commit before reporting success. Remove deferred 520 ms iOS / 420 ms Mac persistence; retain animated list updates and existing Undo. No schema or widget source changes.",
+  "builds": [
+    "medium-capacity-build-v3.log",
+    "medium-capacity-mac-build-v2.log"
+  ],
+  "signing": "medium-capacity-signing-v3.json",
+  "sourceHashes": {
+    "TaskFold-iOS/Taskfold/TaskfoldApp.swift": "19fbe3c64f9a17ab63b188d484e7d81880b9931dd37b1fbd3d4d3da3635984b3",
+    "ios-live-stage/Taskfold/TaskfoldApp.swift": "19fbe3c64f9a17ab63b188d484e7d81880b9931dd37b1fbd3d4d3da3635984b3",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "44622761295952a1ecea09c2e2fc94a8d13593d31497d83ca7417f42d98ec20d",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "44622761295952a1ecea09c2e2fc94a8d13593d31497d83ca7417f42d98ec20d",
+    "TasskFold-MacOS/Taskfold/Workspace.swift": "00650e58f8261c717fb3668ff4818b4e66a4e20fc0699bcc55acf0ea9cf6bd8a",
+    "/private/tmp/taskfold-isolated-mac-local-ui-workspace/Taskfold/Workspace.swift": "00650e58f8261c717fb3668ff4818b4e66a4e20fc0699bcc55acf0ea9cf6bd8a",
+    "TaskFold-iOS/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+    "TasskFold-MacOS/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632"
+  },
+  "finalNativeRun": {
+    "resultBundle": "medium-capacity-phone-v3.xcresult",
+    "testCase": "testResumeMediumCapacityImmediateCompletionAndUndo",
+    "summary": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    }
+  },
+  "accepted": [
+    "v1 native capture of four isolated tasks and actual medium widget installation alongside retained note/Focus instances; native Tomorrow configuration and 570 estimated / 1 unknown cold route against 480-minute working day.",
+    "Inspected initial medium host shows 1h 30m over, Working 8h, Calendar \u2014, Tasks 9h 30m, 1 unestimated, 1 overdue outside plan and Calendar not included.",
+    "v1 native privacy switch changes to 1 then 0; inspected hidden state shows generic plan copy with workload details absent; hidden widget cold route retains correct Tomorrow plan.",
+    "v3 native completion immediately updates the row; test captures/asserts that state before termination, then exact installed-widget cold route confirms 30 minutes / 1 unknown and 450 remaining after relaunch. The screenshot/assertion adds observation time before termination; this is not proof of arbitrary forced-kill timing. Source inspection proves the deferred write was removed.",
+    "v3 completion and Undo of the second task restore its row and 30-minute planner total; inspected refreshed widget shows 7h 30m, Tasks 30m, original unknown/overdue counts and disconnected-calendar note.",
+    "v3 removes only temporary capacity widget; original cloud Today task/full selected note/ended Focus cold routes pass. Original host restored."
+  ],
+  "historicalRuns": [
+    {
+      "bundle": "medium-capacity-phone-v1.xcresult",
+      "result": "Failed",
+      "reason": "Initial native completion followed immediately by termination left the original 570-minute plan. Both source implementations delayed durable completion for an animation; removed that delay."
+    },
+    {
+      "bundle": "medium-capacity-phone-v2.xcresult",
+      "result": "Failed",
+      "reason": "Test opened Calendar normally after relaunch, which selected Today (0/0), then compared against Tomorrow. Corrected to the installed widget route; this run does not prove Tomorrow persistence."
+    }
+  ],
+  "dataPreservation": {
+    "fullOriginalCloudCacheParsedEqual": true,
+    "originalWidgetFieldsEqual": {
+      "account": true,
+      "focusSession": true,
+      "notes": true,
+      "pendingSync": true
+    },
+    "pendingSync": 0,
+    "localMode": false,
+    "widgetColdLaunchFixture": false,
+    "originalMacCloudCacheUnchanged": true,
+    "localTasks": 4,
+    "completedLocalTasks": [
+      "Prepare the client handoff"
+    ],
+    "localPending": 0
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-medium-capacity-cleanup-host.png",
+      "sha256": "d16317bf6dd28b39bcde6fd1beb41144551c9beeaf429668aacf61543c39e70b",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-capacity-completion.png",
+      "sha256": "7b2afb5a4962ba2ec8393f1f4a48232aae04ef9927cd7ee0e9e92a337502968a",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-capacity-config.png",
+      "sha256": "a2008c75f59e14c309366b64462ede9edbdc1539c8fb04ba1e5b93bbb8a1bd60",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-capacity-initial-route.png",
+      "sha256": "257d84bd6f035e08a4cb0b767a3f8954ad1840f88f9a160bd6e8da1079a4e890",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-capacity-overrun.png",
+      "sha256": "e1376d5fa33704e56b548958a42c99356cd371dfa96c179d2a9ef5f07027696d",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-capacity-private.png",
+      "sha256": "2fc00e7ba2f4a3c80d6e954ed7d8f3b0853100e10c30fe56adf7fdbb9e7433cc",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-capacity-remaining-route.png",
+      "sha256": "d60c6cb66df2d866754929a2d3a1678f946b0547484126e910797507232db560",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-capacity-remaining.png",
+      "sha256": "256753a500aec23180ea54be62793bd4505265ca9387ac9ee4fbbbdb27ef5155",
+      "inspected": true
+    }
+  ],
+  "diagnostics": {
+    "finalSpringBoardAnimationNotificationWaits": 2,
+    "initialSpringBoardAnimationNotificationWaits": 6,
+    "remoteHierarchyDiagnosticsRetained": true
+  },
+  "remaining": [
+    "Native Mac changed completion/Undo/exit interaction requires unlocked desktop; latest computer-use selection explicitly reports locked.",
+    "Medium Project pulse, other supported widget hosts/conditions and system redaction.",
+    "Existing accessibility findings/VoiceOver/keyboard, native Mac account/order/restore, actual Todoist provider, external calendars/files and notification/distribution gates."
+  ]
+}

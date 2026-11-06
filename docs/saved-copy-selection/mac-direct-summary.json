@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-01",
+  "passed": true,
+  "method": "Direct native computer use with actual controls; not XCTest",
+  "scope": "Personal same-Inbox synthetic saved-copy workflow at normal Mac text size",
+  "checks": {
+    "compareThreeCopies": true,
+    "storedInstructionsVisible": true,
+    "chooseStoredCopy": true,
+    "undoChoice": true,
+    "reselect": true,
+    "fullProcessQuitBeforeColdDraft": true,
+    "coldDraftRestoresChoiceAndPreview": true,
+    "explicitSaveConfirmation": true,
+    "oneWriteWithCompleteOriginals": true,
+    "coldSavedConfirmation": true,
+    "actualNativeOriginalExport": true,
+    "exactExportedArchiveBytes": true
+  },
+  "compiledSourceHead": "6d6ad40fcdb2ab8047f727f8444aca8fdf7549f2",
+  "appSHA256": "cf338dfdfed8847bdab4c05f8a883fa16dc6a5f6af36fc57b1a3257c719da2fd",
+  "debugDylibSHA256": "fa456b0e3edaf96804812dab0877a93cd8554e16399ce901e93d19d223ba3019",
+  "beforeSaveProof": {
+    "passed": true,
+    "rootAndNestedOriginalUnchanged": true,
+    "originalUnknownFieldsPreserved": true,
+    "noFieldAdoptionOrRepairWrites": true,
+    "noNewReceiptsOrArchives": true,
+    "comparisonContentNotPersisted": true,
+    "peerSHA256": "11bb9266f0b89a59aa2ec397b978b5437c406a8ba02761ae5570a4ec9a5daa5f",
+    "scope": "Synthetic file-backed native peer; database access and exact SQL exports verified separately"
+  },
+  "afterColdSaveProof": {
+    "passed": true,
+    "oneAppliedRepair": true,
+    "selectedStoredCopyExact": true,
+    "allThreeOriginalCopiesRetained": true,
+    "originalHashAndLengthVerified": true,
+    "nestedAndUnknownFieldsPreserved": true,
+    "noUnrelatedWrites": true,
+    "peerSHA256": "fc06c1e5ff57821987de13e0b928774ed41617c5ec57a9e784e04087c9e8345a",
+    "scope": "Synthetic file-backed native controls and persistence; real SQL authorization/atomicity and historical custody verified separately"
+  },
+  "nativeFileExportProof": {
+    "passed": true,
+    "writtenByNativeSavePanel": true,
+    "localDestination": "/tmp",
+    "exactArchivedBytes": true,
+    "bytes": 2459,
+    "sha256": "50cd130b15298d070b86a0bd5da8b79b391b514310fd4e32fd0d8823ecef07f9",
+    "oneRepairWrite": true,
+    "source": "Actual native export after saved confirmation cold launch",
+    "noCloudUpload": true
+  },
+  "limits": [
+    "Synthetic file-backed HTTP peer, not hosted or genuine-account acceptance",
+    "Other Mac hierarchy/keyboard/inspector/move workflows, full largest-text recovery and speech remain open"
+  ],
+  "ownedAppFullyQuit": true,
+  "evidenceStoredInMacRepository": "docs/saved-copy-selection/mac-direct",
+  "currentIconMacCheck": {
+    "passed": true,
+    "coldChoiceAndPreviewVerified": true,
+    "correctedIconVisible": true,
+    "temporaryReviewCleared": true,
+    "peerBytesUnchanged": true,
+    "onePriorWritePreserved": true,
+    "finalOwnedProcessAbsent": true,
+    "scope": "Current icon build: review-only choice after an earlier applied repair; verified distinct process cold draft, then Undo; no additional task save"
+  }
+}

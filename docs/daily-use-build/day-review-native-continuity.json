@@ -1,0 +1,11 @@
+{
+  "triageRelevantProductionInputsUnchanged": [
+    "Taskfold/Views/PlanDayView.swift",
+    "Taskfold/Core/Store.swift",
+    "Taskfold/Core/Models.swift",
+    "Taskfold/TeamTemplateNativeFixture.swift"
+  ],
+  "acceptedTriageCaseUnchanged": true,
+  "testChangesOnlyInSeparateDragCase": "Use observed UIKit menu labels; normalize absent/null only for the moved legacy root scheduled_at field after ordinary PATCH Undo. All other fields/rows retain exact shape.",
+  "appDifference": "Only TaskScreen drop commit grouping was added after the accepted triage case; final native drop/Undo/navigation accepts that change. Same final binary is not claimed for both cases."
+}

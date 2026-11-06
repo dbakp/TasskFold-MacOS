@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual macOS local Focus delivery after normal Quit, plus normal process relaunch and retained finished-session UI. Documentation/evidence only; no production changes.",
+  "bundle": "com.dbakp.taskfold.mac.p0focuscontrasttests",
+  "binary": "BuildCache/mac-focus-alert-products/Taskfold.app",
+  "binarySHA256": "ea961253ff0935c57f536c1655771deff85aec54ddac7a9c15cb2baa8b77de96",
+  "sourceScope": {
+    "matchingOwnedSectionsSHA256": {
+      "Taskfold/Core/FocusSession.swift": "b1b2a4405fa036fe297f9b9c27273fe9e1b7880c06481e2b3644fe7578b15e62",
+      "Taskfold/Core/Reminders.swift": "b288f26c0cdcd482a86de666f4711525f6083ffa22c6dc8800dfe0f5921423bf",
+      "Taskfold/Views/FocusSessionView.swift": "c3a317368dccd1227feb93f6b77f6bfa9cd09c435d6ec644418c7fc87f1e3dc0",
+      "Taskfold/Core/Store.swift (notification section)": "d9a32e6cf70010b80c0360812542633d6b3225034efab12bbd0832dba4bfa583",
+      "Taskfold/TaskfoldMacApp.swift (notification section)": "d9927c1a94b9efdc5b9a6ac913c0f26a7c005feaeb034ae2f85251a9ed45780a",
+      "Taskfold/Views/RootView.swift (notification section)": "87aa3710a35f51dda198fc2fbf4a447bedaa8017c12ff6904b107eae61d1fd26"
+    },
+    "limits": "Reused existing authorized binary, not a fresh full-current-source build. The newer pending-inspector Quit-save protocol and unrelated changes are absent from this app; no inspector edits were made."
+  },
+  "steps": [
+    "Existing isolated ui-testing task; finish-alert preference already enabled.",
+    "Native Finish soon fixture creates a real one-minute session started 45 seconds earlier; no OS clock change.",
+    "Native UN pending count 1 and scheduled status observed.",
+    "Normal Command-Q; macOS appDeath at 02:56:17.546, before Focus end 02:56:25.236 and rounded notification fire at 02:56:26.",
+    "macOS delivery at 02:56:26.116; Notification Center stores notification and adds it to history.",
+    "App remains absent after delivery; explicit relaunch with --uitesting --focus-finish-testing, without seeding.",
+    "Native Focus panel shows Time well spent / 00:00, same task, enabled alerts and pending count 0.",
+    "Closed panel; same relaunched process left alive for the pending human Open test."
+  ],
+  "process": {
+    "quitConfirmedAt": "2026-10-12T02:56:25.317767",
+    "processPresent": false,
+    "stillStoppedAfterDeliveryAt": "2026-10-12T02:56:55.288800",
+    "appAutoLaunched": false
+  },
+  "delivery": {
+    "time": "2026-10-12 02:56:26.116 +0200",
+    "requestID": "taskfold.f1.eb272d0424132c6f5a5b0a60b9eb3d0e7166fb0d4ee01146b978db608decc73b",
+    "storedInNotificationCenterHistory": true,
+    "visibleBannerAccepted": false,
+    "systemDND": "Existing active Do Not Disturb delays banner and mutes sound. No system setting changed.",
+    "openActionAccepted": false
+  },
+  "preservation": {
+    "otherWorkspaceFiles": {
+      "local.json": true
+    },
+    "taskTableExact": true,
+    "nonFocusTablesExact": {
+      "tasks": true
+    },
+    "pending": 0,
+    "sessionAfterRelaunch": {
+      "changed_at_ms": 1791766525236,
+      "status": "running",
+      "running_since_ms": 1791766525236,
+      "task_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+      "session_id": "ab82c4a6-1b15-423a-96f1-b7f15eacc3bd",
+      "elapsed_ms": 0,
+      "started_at_ms": 1791766525236,
+      "duration_seconds": 60
+    }
+  },
+  "remaining": [
+    "Actual notification Open, Complete/Snooze/Move to tomorrow on Mac, account-change action rejection and broader terminated-action variants.",
+    "APNs, remote/provider, distribution and full P0 gates remain open.",
+    "Relaunch uses isolated fixture arguments; this does not accept cold OS Open without arguments.",
+    "No iOS runtime pass is claimed by this Mac walk. Existing phone/tablet cold-notification evidence is retained."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+    "-destination",
+    "platform=macOS,arch=arm64",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-workflow-native-mac-build/Validation/approved-retry.xcresult",
+    "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale1000PublishesOnce",
+    "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale5000PublishesOnce",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ],
+  "cases": [
+    "SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale1000PublishesOnce",
+    "SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale5000PublishesOnce",
+    "TaskfoldMacUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ],
+  "returncode": 0,
+  "started": 1793083073.31,
+  "finished": 1793083122.047,
+  "sourceCommit": "5b78af49c13dba20ca6e9ab6d2c17f20dcfb3c8f",
+  "widgetCompletionSourceSHA256": "5433588dbec27535fbfa887dd41c10c528c7ee1c368714e4309d0322d3f0b439",
+  "note": "User explicitly confirmed automation prompt approved before this retry; no rebuild, security or production change."
+}

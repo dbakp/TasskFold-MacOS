@@ -1,0 +1,81 @@
+{
+  "reviewed": "2026-11-03",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "b7a17d241b4fbd115af087a4b919a6c5a3fefad3",
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "9c25868dc3f12eedec7de228569d63e8cee29375997586139014519d0b7b20eb",
+    "Taskfold/Core/ProjectWorkflows.swift": "662ce18e8b8a7b1ac64fb6c8c4af8b476c202d3d28099b0b9a962ae71407fc00",
+    "Taskfold/TeamTemplateNativeFixture.swift": "08f47810d616bdd5144ae7dd11fa2347dd6ceb3ed21011d8888ecc23887ef1d0",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "b5938a23e62864091a35c5970e8846b368a617bb8450842807e2f4a3ec6d2fe0"
+  },
+  "ownCoreTests": 109,
+  "newCoreCases": 2,
+  "ownCoreFailures": 0,
+  "ownAppRunnerBuildAndStrictSignatures": true,
+  "nativeEvidenceOwner": "TaskFold-iOS",
+  "afterNativeTests": 2,
+  "afterNativeFailures": 0,
+  "afterNativeSkips": 0,
+  "afterNativeRuntimeWarnings": [],
+  "beforeFullNativeAccepted": false,
+  "beforeQualification": "Creation, field/graph/history and warm Undo assertions passed; cold Saved tasks label was below the lazy viewport. Before timing is a partial diagnostic, not full cold acceptance.",
+  "afterActualTemplateSheetAccepted": true,
+  "afterActualStoreDiagnosticAccepted": true,
+  "sourceTemplateUnchanged": true,
+  "undoAndColdStateAccepted": true,
+  "richShape": {
+    "roots": 1000,
+    "checklistChildren": 6000,
+    "commands": 4001
+  },
+  "diagnosticHistory": {
+    "priorRootRows": 100,
+    "priorChildRows": 200,
+    "newRootRows": 1000,
+    "newChildRows": 6000
+  },
+  "beforeInstantiationSeconds": 1.236494042,
+  "afterInstantiationSeconds": 0.306090459,
+  "beforePreparationSeconds": 1.416191959,
+  "afterPreparationSeconds": 1.514101667,
+  "beforeSynchronousCommitSeconds": 0.112885708,
+  "afterSynchronousCommitSeconds": 0.115051834,
+  "beforeWidgetReadySeconds": 3.269912459,
+  "afterWidgetReadySeconds": 3.444904417,
+  "mainActorPreparationPulses": 787,
+  "timingScope": "One before/after Debug Simulator diagnostic; generated identities/time differ; host activity uncontrolled; not statistical/hardware/Release/FPS evidence",
+  "actualTemplateUIFrameTimingClaim": false,
+  "nativeMacOrIPadAccepted": false,
+  "genuineAuthOrProviderAccepted": false,
+  "audibleVoiceOverAccepted": false,
+  "freshCoreCompileRecreatedIndexes": false,
+  "deployed": false,
+  "rolloutFlagsChanged": false,
+  "ownIsolatedHostSourceBinding": {
+    "Taskfold/Core/Models.swift": {
+      "sourceSHA256": "9c25868dc3f12eedec7de228569d63e8cee29375997586139014519d0b7b20eb",
+      "isolatedHostSHA256": "9c25868dc3f12eedec7de228569d63e8cee29375997586139014519d0b7b20eb",
+      "matchesWithNamespaceIsolation": true
+    },
+    "Taskfold/Core/ProjectWorkflows.swift": {
+      "sourceSHA256": "662ce18e8b8a7b1ac64fb6c8c4af8b476c202d3d28099b0b9a962ae71407fc00",
+      "isolatedHostSHA256": "662ce18e8b8a7b1ac64fb6c8c4af8b476c202d3d28099b0b9a962ae71407fc00",
+      "matchesWithNamespaceIsolation": true
+    },
+    "Taskfold/TeamTemplateNativeFixture.swift": {
+      "sourceSHA256": "08f47810d616bdd5144ae7dd11fa2347dd6ceb3ed21011d8888ecc23887ef1d0",
+      "isolatedHostSHA256": "08f47810d616bdd5144ae7dd11fa2347dd6ceb3ed21011d8888ecc23887ef1d0",
+      "matchesWithNamespaceIsolation": true
+    },
+    "Taskfold/Views/WorkflowViews.swift": {
+      "sourceSHA256": "a15c643185ce6cfc40acc873c9f5dbf252f3d837781fe7e87e400c1833c9bd08",
+      "isolatedHostSHA256": "a15c643185ce6cfc40acc873c9f5dbf252f3d837781fe7e87e400c1833c9bd08",
+      "matchesWithNamespaceIsolation": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "sourceSHA256": "f5947d4db285ea07973d301063da484112fe780738d7718924b3dda7663b600c",
+      "isolatedHostSHA256": "0295fe381c2c996c8efcb0956f0a39e9d8884e3d173312fe9274aec885994f1f",
+      "matchesWithNamespaceIsolation": true
+    }
+  }
+}

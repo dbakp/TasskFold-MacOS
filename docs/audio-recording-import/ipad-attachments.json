@@ -1,0 +1,42 @@
+[
+  {
+    "configurationName": "Test Scheme Action",
+    "deviceId": "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+    "deviceName": "iPad Air 13-inch (M4)",
+    "exportedFileName": "97CF8366-9054-4013-8FE4-7E606F6CA617.png",
+    "isAssociatedWithFailure": false,
+    "suggestedHumanReadableName": "Both saved recordings survive a cold return_0_AAA3D044-5228-4F26-AAE3-D7EE85A71CE4.png",
+    "timestamp": 1793194148.76,
+    "retainedFile": "ipad-cold-return.png"
+  },
+  {
+    "configurationName": "Test Scheme Action",
+    "deviceId": "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+    "deviceName": "iPad Air 13-inch (M4)",
+    "exportedFileName": "DB1CEB7D-36E0-4A49-98C5-AC0CFD48F528.png",
+    "isAssociatedWithFailure": false,
+    "suggestedHumanReadableName": "Imported recording saved as an independent private draft_0_05724C4E-33D6-40BF-8E3C-583D74F13126.png",
+    "timestamp": 1793194102.292,
+    "retainedFile": "ipad-saved.png"
+  },
+  {
+    "configurationName": "Test Scheme Action",
+    "deviceId": "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+    "deviceName": "iPad Air 13-inch (M4)",
+    "exportedFileName": "4B410F50-5B85-4168-9158-799EDA778404.png",
+    "isAssociatedWithFailure": false,
+    "suggestedHumanReadableName": "Cancel leaves source and existing recording untouched_0_27100D05-7AE7-4706-A3C7-E6724104DD92.png",
+    "timestamp": 1793194080.967,
+    "retainedFile": "ipad-cancelled.png"
+  },
+  {
+    "configurationName": "Test Scheme Action",
+    "deviceId": "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+    "deviceName": "iPad Air 13-inch (M4)",
+    "exportedFileName": "21BA94A5-A212-442F-92A5-BFE202B0C441.png",
+    "isAssociatedWithFailure": false,
+    "suggestedHumanReadableName": "Recording import reviews the complete caption before Save_0_EADB7F77-4CA4-498C-9A27-329D48B30CAA.png",
+    "timestamp": 1793194078.407,
+    "retainedFile": "ipad-review.png"
+  }
+]

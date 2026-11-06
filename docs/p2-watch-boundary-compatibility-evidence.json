@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-26",
+  "status": "Mac receipt contract unchanged and independently accepted; scoped iOS-owned paired acceptance recorded separately",
+  "tests": {
+    "WearableReceiptTests": 9,
+    "failed": 0,
+    "skipped": 0
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/WearableReceipts.swift": "d06365b025a65dbe9be7e81ec38e5fff5766a9133649a3da71bb256d5a9e973c"
+  },
+  "watchOwnership": "No Mac Watch target, receiver or iOS build dependency added. All companion changes live in iOS repository.",
+  "iOSEvidence": "https://github.com/dbakp/TaskFold-iOS/blob/codex/account-removal-service/docs/p2-watch-boundary-evidence.json",
+  "scope": "17 real paired local-workspace assertions plus 16+3 separate current phone Store/driver checks. Not cloud Auth, hardware/reinstall, background/system launch, native input/spoken or Mac runtime proof.",
+  "remaining": [
+    "Genuine cloud-account/queued-write paired acceptance and physical phone/reinstall changes",
+    "Background/system launch, hardware protected storage and real-device delivery",
+    "Native controls, dictation/VoiceOver, wider Watch sizes/layouts and shipping embedding",
+    "Broader remaining rank3/6 features and acceptance, Wear OS in separate ownership, full Px",
+    "All user-deferred release/distribution, remote reminders, old-client rollout, OAuth/provider and physical location gates"
+  ],
+  "artifactSHA256": {
+    "cleanup.json": "51471e81d07f2ff7ceb0900e825b294d1f7c35a48a7ec357d92b818441e904cb",
+    "core.log": "7ce368da89d6d2ca9ca7473df80afce9b25a5aa8e3571be18fe1b986f4a42b46",
+    "paired-scope-summary.json": "5ed6a5907b4e8f5a4f8c3dc72113bb6b10ec543d926dc72e4a5139fc81ac7e17"
+  },
+  "cleanup": "watch-boundary/cleanup.json"
+}

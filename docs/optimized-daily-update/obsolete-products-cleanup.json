@@ -1,0 +1,36 @@
+{
+  "freeBeforeBytes": 64378880000,
+  "actions": [
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-21-mac-development.zip",
+      "kind": "supersededUninstalledCandidate",
+      "allocatedBytes": 33259520
+    },
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/build-21.json",
+      "kind": "supersededUninstalledCandidate",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Debug",
+      "kind": "supersededDebugProducts",
+      "allocatedBytes": 146059264
+    },
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-33-iphone-development.zip",
+      "kind": "supersededUninstalledCandidate",
+      "allocatedBytes": 37486592
+    },
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/build-33-iphone.json",
+      "kind": "supersededUninstalledCandidate",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios/Build/Products/Debug-iphoneos",
+      "kind": "supersededDebugProducts",
+      "allocatedBytes": 272695296
+    }
+  ],
+  "freeAfterBytes": 64792256512
+}

@@ -1,0 +1,31 @@
+{
+  "project": "zqxflydiyfjeedqvyova",
+  "sourceMigration": "supabase/migrations/20261101201038_scoped_task_assignment_guard.sql",
+  "candidateSHA256": "3e6a6f8653c55851f7ad9a0d33db83f832b7c06444b8e30c87a2933f944f19f9",
+  "expectedBeforePatchMD5": "83d5f48c06902d43648e941acbacf7c3",
+  "expectedAfterPatchMD5": "7ee251352383bd82460a1a231d938f73",
+  "expectedEndpointBodyMD5": "dbbedd4d2b27c54dc4c60395db5ae2da",
+  "changes": [
+    "Insert scoped assignment preconditions into the existing task patch function",
+    "Add invoker RPC executable by authenticated only"
+  ],
+  "unchanged": [
+    "Task rows",
+    "Table grants and policies",
+    "Assignment triggers",
+    "Existing patch privileges and owner",
+    "Advanced feature gates",
+    "Workspace boundary and team APIs"
+  ],
+  "rollback": "Scripts/Database/fixtures/scoped-assignment-daily-rollback.sql",
+  "deployed": true,
+  "appliedMigration": {
+    "version": "20261103201254",
+    "name": "taskfold_daily_scoped_assignment_guard"
+  },
+  "historyMigration": "supabase/migrations/20261103201254_taskfold_daily_scoped_assignment_guard.sql",
+  "historyMigrationSHA256": "3e6a6f8653c55851f7ad9a0d33db83f832b7c06444b8e30c87a2933f944f19f9",
+  "deploymentBundle": "Scripts/Database/fixtures/scoped-assignment-daily-deploy.sql",
+  "deploymentBundleSHA256": "fe916e774ea79524616acf2826be9e190d5a2f230365bf5f4fc0e8b1fb5e5c3b",
+  "historyNote": "CLI-created file aligned to the authoritative applied remote version. Canonical history replays the idempotent candidate; the one-time reviewed live baseline precondition is retained in the deployment bundle, not replayed after earlier migrations."
+}

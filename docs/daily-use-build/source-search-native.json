@@ -1,0 +1,99 @@
+{
+  "date": "2026-11-05",
+  "localStartedAt": "2026-11-05T00:36:01+01:00",
+  "syntheticOnly": true,
+  "ordinaryGatesChanged": false,
+  "genuineAuthOrProvider": false,
+  "hardwareOrLargeLibraryRenderingAccepted": false,
+  "buildOnly": false,
+  "largestText": false,
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "46eb90a97a57a108fadb813b088925003a0a07ef8fb1e61d35a24e120274c0a0",
+    "Taskfold/Views/WorkflowViews.swift": "91ab0091404e7acab4ece3589438b6e8f6386863f4299c8f46c8c05fb0c786e3",
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "9a2bd6f1c6666f3e8aa19abcaa267143034de7f74f6107a08199f10db3e51f49"
+  },
+  "preparedUITestSourceCount": 1,
+  "simulatorInitialState": "Shutdown",
+  "xcodeExitCode": 0,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793835543.993,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793835368.607,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "actualStoreAndProductionSourceChooser": {
+    "accepted": true,
+    "captureAndRunPreservedOtherWork": true,
+    "explicitDefinitionSave": true,
+    "explicitSyntheticRemoval": true,
+    "freshRun": true,
+    "liveTaskAndProjectRefresh": true,
+    "queryHiddenWhileUnreadable": true,
+    "removedSourceDisappears": true,
+    "searchAndCancel": true,
+    "unreadableAndReturn": true
+  },
+  "productSHA256": {
+    "Taskfold": "56e1ee33f008a4b20986ec3ce5f6f4dee9b8bebdda6ba7dc76bf88df3b124e03",
+    "Taskfold.debug.dylib": "b5b5e89261d16e46b1604a874c0ad1f80ef52e2063bc302ce833711eaa025e71"
+  },
+  "accepted": true,
+  "simulatorFinalState": "Shutdown",
+  "ownedSimulatorRestored": true,
+  "storageCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 75438804992,
+    "actions": [
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PhotosUIPrivate.PhotosAmbientPosterProvider/descriptors/80938E9E-EBBE-4039-B20B-4EAE6C2D618E/versions/380/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 0
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Library/Application Support/PRBPosterExtensionDataStore/61/Extensions/com.apple.PhotosUIPrivate.PhotosAmbientPosterProvider/descriptors/95B4719F-A8F6-4317-BC87-1622AD695017/versions/363/scratch/SnapshotCache.cachedb",
+        "kind": "wallpaperScratch",
+        "allocatedBytes": 0
+      }
+    ],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 389804032
+      }
+    ],
+    "freeAfterBytes": 75438510080,
+    "actualFreeChangeBytes": -294912
+  }
+}

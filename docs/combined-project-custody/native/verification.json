@@ -1,0 +1,23 @@
+{
+  "platform": "mac",
+  "date": "2026-11-06",
+  "nativeSyntheticPeer": true,
+  "integratedSQLGatewayStorage": false,
+  "nativeCombinedUIAccepted": false,
+  "normalAppUnchanged": true,
+  "isolatedAppClosed": true,
+  "blockedAt": "Before review: private fixture recovery could not be prepared",
+  "normalIdentityOrKeychainReused": false,
+  "fallbackRecoveryIOAdded": false,
+  "sourceSHA256": {
+    "Scripts/build_project_custody_native.py": "f76612461dcadbcb7a71597b31c8c27d365df6e20b4a24a427a54d4da3372ce2",
+    "Scripts/prepare_project_adoption_native_test.py": "cb810f59f75b6497aa600c4020ce469e4f594cbc150f601f678018a69f6b9c1e",
+    "Taskfold/ProjectAdoptionNativeFixture.swift": "0434f412bf41258dba19e55c4f98a64da1fa98ae11de8e7b8df20e72b400c1d9",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "be471585024c1d0af216706d723e458d795a3d0adec9551fe3b33cd52933357e"
+  },
+  "next": "Configure an own isolated development profile, then run the protected combined Mac walkthrough. Do not treat a strict signature alone as runtime Keychain acceptance.",
+  "verifiedSigningGap": "The isolated signed app has no application identifier / private Keychain group. Normal Taskfold declares its own group. An own development-profile build fails with No Accounts and no matching Mac profile.",
+  "preparedEntitlementsRestoredByController": true,
+  "restoredPreparedEntitlementsSHA256": "e6b2104b6c5cd5229647509a962454e8d205cb8292dc5d6374017fc00f7943d5",
+  "currentBuilderSyntaxAndHelpVerified": true
+}

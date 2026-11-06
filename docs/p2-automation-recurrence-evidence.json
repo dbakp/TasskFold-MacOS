@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-23",
+  "milestone": "Private recurring-task planner for automation; full feature still in progress",
+  "platform": "macOS",
+  "baseCommit": "08355b8f3ee1427580395e33d9a83e8c92bfd98f",
+  "featureEnabled": false,
+  "migrationApplied": false,
+  "edgeFunctionDeployed": false,
+  "nativeManagementScreensExposed": false,
+  "liveKeysIssued": 0,
+  "taskWritesImplemented": false,
+  "fullPxComplete": false,
+  "candidateMigration": "20261022215836_automation_recurrence_plan.sql",
+  "sharedGoldenCases": 316,
+  "verification": {
+    "nativeRelatedCore": {
+      "tests": 40,
+      "failures": 0,
+      "skips": 0,
+      "command": "swift test --filter 'AutomationRecurrenceParityTests|TaskCompletionTests|RecurrenceTests'",
+      "note": "One case loops all 316 golden inputs through actual native TaskCompletion."
+    },
+    "actualLocalPostgreSQLPlanner": {
+      "passed": true,
+      "runtime": "PGlite 0.5.11 with real pgcrypto",
+      "cases": 316,
+      "additionalChecks": [
+        "All seven helpers are SECURITY INVOKER with empty search_path",
+        "No public/anon/authenticated/service_role EXECUTE grants",
+        "Missing/non-finite clocks and missing/invalid zones refuse",
+        "Explicit-clock timezone cases repeat identically after connection TimeZone changes"
+      ]
+    },
+    "combinedCredentialAndPlannerMigrations": {
+      "passed": true,
+      "note": "Existing credential/removal/Auth/role/quota/revocation rollback fixture also passes after loading both candidates."
+    }
+  },
+  "implemented": [
+    "Strict native-compatible recurrence validation and inclusive end/count boundaries",
+    "Schedule- and completion-based civil-date planning with explicit clock/input zone and fixed-time saved-zone preference",
+    "Month-end clamping, selected month dates, absent fifth weekday, and stable carried legacy day/month fields",
+    "Stable native SHA-256 successor identity; original parent and rule-extension fields preserved",
+    "Explicit-zone day arithmetic including ordinary DST and tested historical whole-day skip"
+  ],
+  "remaining": [
+    "Task gateway, actual access and membership fencing",
+    "Full successor copy/checklist/reminder reset and insertion",
+    "Default reminder application on create/update",
+    "Immutable operation claims, replay authorization and generation/completion conflict handling",
+    "Native one-time key review/revoke/recovery screens",
+    "Real disposable Auth/HTTP scope/quota/concurrency tests and actual Simulator management flow"
+  ],
+  "failedIterations": [
+    "Initial new Swift assertion treated an optional insertOnly as non-optional; fixed test compilation",
+    "A newly appended historical fixture had an overlong expected hash UUID; corrected only that expected value",
+    "Historical skipped-day check exposed civil-date arithmetic mismatch; added explicit-zone native-calendar day arithmetic and verified both languages"
+  ],
+  "scopeLimits": [
+    "No app runtime source changed and no new native app build or UI/speech acceptance claimed",
+    "No task mutation, recurring successor creation, deletion, duplicate suppression or request replay acceptance",
+    "Shared cases cover selected supported rules/boundaries, not exhaustive historical timezone equivalence",
+    "No hosted change: candidate remains private and unapplied; existing deployed account-removal service unchanged",
+    "User-deferred physical iPhone location delivery, remote reminders, old-client enforcement, distribution and OAuth registrations remain deferred"
+  ],
+  "sources": {
+    "supabase/migrations/20261022215836_automation_recurrence_plan.sql": "519093c056e7267cfb3d33dce69fd3b4e6dc969b4783b7dc6dd19ef324bd45bb",
+    "Scripts/Database/test-automation-recurrence.mjs": "1ef904f24f2b0516a9b30bb3434adfec05f206a795aa6e0b90c907e65906d857",
+    "Scripts/Database/test-automation.mjs": "9da948e4d83a97038140cd0f92c2be75e997cfb55d5a44729393ae37dd89b9c4",
+    "TaskfoldTests/AutomationRecurrenceParityTests.swift": "d687b921891d5e1c9f65c31ddcff641903ea956b46237ec71e92103fc24744fc",
+    "TaskfoldTests/Fixtures/automation-recurrence.json": "64e51b27c93406f31c1eef0f3151bdb9020c0f78d983be9072eb48569f414ef3"
+  }
+}

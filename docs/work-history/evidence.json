@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-26",
+  "repository": "TasskFold-MacOS",
+  "sources": {
+    "Taskfold/Core/TaskActivity.swift": "5823e561e56e2d2c8d4991e7a0f829c2d98c9ea08e127b1f82f7ec8d73e60ec1",
+    "Taskfold/Core/ProjectPulseWidget.swift": "aec8f56e06eed41c165e26a402d071ac678c705d9766de2fb225964d515bddcb",
+    "Taskfold/Core/Models.swift": "abd0d0fd66e48d2a9c9fb7f2cadce88fed36c9733d16655f66e72550e4f5e2e4",
+    "Taskfold/Core/Store.swift": "feaec75e6e131d654cf7773a1a597832d57daf54b577aba76e9f66be47517df9",
+    "Taskfold/Views/ProjectPulseView.swift": "246ec8fa67d781f494e68fa907f7dedf569c5ba3a11072ca06f2813eb5a2f3e3",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "7eaa1fa5ba37641dca3df7dbf411f74c60eb629b2b035124428271e0b42a8f43",
+    "TaskfoldTests/WorkHistoryTests.swift": "e8f6574e4614183f82d9df92bb83a043a9fa5a6f7bbed7f41938d21e7051c48c",
+    "Scripts/render_pulse_widget_previews.py": "a9fbcd883365bca7ec7796a1cb2b0f3f0097f1cb692ca90da462761a573efcb9"
+  },
+  "focusedCoreChecks": 257,
+  "newWorkHistoryCases": 20,
+  "appBuild": {
+    "passed": true,
+    "architecture": "arm64",
+    "platform": "macOS",
+    "configuration": "Debug",
+    "warnings": [],
+    "signatureVerified": false,
+    "releaseSigningAcceptance": false
+  },
+  "nativeIOSCases": {
+    "phone": "passed",
+    "tablet": "passed",
+    "test": "testHeadingProjectWorkCountsChildRouteCompletionAndColdReturn",
+    "sourceRepository": "TaskFold-iOS",
+    "scope": [
+      "productive child completion",
+      "current progress 1/3 to 2/3",
+      "published widget progress prefix",
+      "one recorded completion event",
+      "cold saved-root equality",
+      "exact current child route from history",
+      "one Insights completion",
+      "no task changes after viewing/cancelling"
+    ]
+  },
+  "macRuntimeAcceptance": false,
+  "installedWidgetAcceptance": false,
+  "voiceOverAcceptance": false,
+  "largestTextAcceptance": false,
+  "normalHeadingAuthoringEnabled": false,
+  "hostedChanges": false,
+  "eventWireChanged": false,
+  "widgetAdditiveField": "PulseProject.historyPartial",
+  "goalComplete": false,
+  "remaining": [
+    "broader calendar periods and heading/adapters acceptance",
+    "Mac runtime and installed widget replay",
+    "spoken and largest text checks",
+    "hosted/migration-chain/shared-device acceptance and explicit historical orphan repair",
+    "user-deferred release/provider gates"
+  ],
+  "iosNativeEvidenceIsPeerAcceptanceNotMacRuntime": true
+}

@@ -1,0 +1,158 @@
+{
+  "date": "2026-10-21",
+  "status": "Named-zone choice and read-only travel comparison implemented; scoped phone/tablet acceptance passed, wider rank-5 gates open",
+  "behavior": [
+    "Explicit searchable named-zone selection; Cancel preserves source and task data",
+    "Civil day/clock/rule/limits preserved while selected zone intentionally moves alert instants",
+    "Up to five saved-zone/device clock comparisons and offset-change cue",
+    "Existing version-2 data/signatures; no migration, provider/calendar-event access or server delivery"
+  ],
+  "core": {
+    "ios": {
+      "reported": 1043,
+      "skipped": 13,
+      "failures": 0,
+      "newCases": 11,
+      "artifact": "ios-reminder-travel-full-core.log",
+      "sha256": "9a39e509fe3afd750b204cb807c9967cacc758e8846001df22e9ff9015967567"
+    },
+    "mac": {
+      "reported": 1075,
+      "skipped": 33,
+      "failures": 0,
+      "newCases": 11,
+      "artifact": "mac-reminder-travel-full-core.log",
+      "sha256": "d7cd1fe7d751bf40a7dfd9c6b17aaf154b33a8fb613cec464b39e5ca9cf6af77"
+    }
+  },
+  "native": [
+    {
+      "artifact": "ios-reminder-travel-phone.xcresult",
+      "passed": 2,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": [],
+      "scope": "Picker Cancel/search, dual-clock review, saved civil day/clock/rule/count and task-plan preservation, explicit Save/relaunch, Use current followed by Cancel; dark largest-text chooser and all five previews"
+    },
+    {
+      "artifact": "ios-reminder-travel-tablet.xcresult",
+      "passed": 2,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": [],
+      "scope": "Same real native flows on iPad"
+    },
+    {
+      "artifact": "ios-reminder-travel-calendar-regression.xcresult",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": [],
+      "scope": "Existing calendar-rule validation, cancellation, save/relaunch, removing plan and deletion workflow; resumed through host sleeps"
+    }
+  ],
+  "macComponents": {
+    "sourceSHA256": {
+      "Taskfold/Core/Reminders.swift": "a8bd8e420287eaddff5b6448b897cd72c5918af011500e2ec9faa62d99396e8a",
+      "Taskfold/Views/ReminderEditor.swift": "4572921205afb38f86356f6ac5cf0f6ca2c0387635841d789ac62d1cab1eb6c2"
+    },
+    "images": {
+      "travel-dark-bottom.png": "b3f6cb5ca6bf07eade98d0ddc95ab89733b47f4713eb4be3ecdf27bee74fa511",
+      "travel-dark-top.png": "bf973df25c4135fb909d8d901046fe25864e69c655806402a12900c55bf0b2bd",
+      "travel-light-bottom.png": "ff656991b2577124be68f483bdb3527f58e5b1ea01c701b13a3ade6bd1de6250",
+      "travel-light-top.png": "e26d1daf222af0402544914743f045209dbcbc33c32ab4daa3f23776267cac9e",
+      "zone-picker-dark-top.png": "99da04c9ed948ac0212cdc269f2b3aff11ae9f95fb523b2190dcab7110098c62",
+      "zone-picker-light-top.png": "c4b5d852c35d1fd9464fc33d2c07d70dce03e182a45fc7fd726b5cf5ba7c5595"
+    },
+    "scope": "Production Mac editor/picker bodies with read-only synthetic state, tested owned Core, offscreen light/dark rendering. Picker query seeded by fixture-only extension. Window chrome/native interaction/VoiceOver/notification delivery not accepted by these components."
+  },
+  "sourceSHA256": {
+    "TaskFold-iOS": {
+      "Taskfold/Core/Reminders.swift": "a8bd8e420287eaddff5b6448b897cd72c5918af011500e2ec9faa62d99396e8a",
+      "Taskfold/Views/ReminderEditor.swift": "4572921205afb38f86356f6ac5cf0f6ca2c0387635841d789ac62d1cab1eb6c2",
+      "TaskfoldTests/ReminderTravelTests.swift": "20742b161d01a217470086781471ac4b2e34829aa5f698e76f49973b7fe5ccf4",
+      "TaskfoldUITests/ReminderTravelUITests.swift": "54268f8ef2da777d0b14d48fccf2c82a2de11a42698f45441686339aed8a9eba"
+    },
+    "TasskFold-MacOS": {
+      "Taskfold/Core/Reminders.swift": "a8bd8e420287eaddff5b6448b897cd72c5918af011500e2ec9faa62d99396e8a",
+      "Taskfold/Views/ReminderEditor.swift": "4572921205afb38f86356f6ac5cf0f6ca2c0387635841d789ac62d1cab1eb6c2",
+      "TaskfoldTests/ReminderTravelTests.swift": "20742b161d01a217470086781471ac4b2e34829aa5f698e76f49973b7fe5ccf4"
+    }
+  },
+  "initialFailure": {
+    "artifact": "ios-reminder-travel-focused.log",
+    "accepted": false,
+    "case": "testDomainEdgesKeepTheirCivilYear",
+    "fix": "Keep date-picker calendar representation separate from the proleptic notification resolver; final focused/full suites pass"
+  },
+  "chronology": "Phone acceptance precedes only the date-only 08:00 device-zone footer clarification. Tablet and existing calendar regression use final app source; no scheduling behavior changed in that clarification.",
+  "regressionTiming": {
+    "scope": "Read-only power-log correlation; no performance pass inferred",
+    "regressionWallSeconds": 2277.556,
+    "sleepIntervals": [
+      {
+        "at": "2026-10-21 18:43:52 +0200",
+        "durationSeconds": 300
+      },
+      {
+        "at": "2026-10-21 18:49:38 +0200",
+        "durationSeconds": 919
+      },
+      {
+        "at": "2026-10-21 19:05:43 +0200",
+        "durationSeconds": 937
+      }
+    ],
+    "observedTestGapsSeconds": [
+      298.56,
+      919.33,
+      936.15
+    ],
+    "afterward": "Temporary five-minute keep-awake process used for final checks; no persistent power setting changed"
+  },
+  "debugResourceRepair": {
+    "scope": "Same-source isolated debug/Simulator product only, not distribution acceptance",
+    "reason": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/ios-project-workflows-native/Build/Products/Debug-iphonesimulator/Taskfold.app: a sealed resource is missing or invalid\n",
+    "removedProduct": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/ios-project-workflows-native/Build/Products/Debug-iphonesimulator/Taskfold.app",
+    "regeneratedProductValid": true,
+    "installedPhoneCopyValid": true,
+    "fixtureCacheIdenticalAfterInstall": true,
+    "cacheSHA256": "3026b3f45b0164a206bc8e80d8cd3730e9f3091ed94226522198b31dc8104c0c"
+  },
+  "remaining": [
+    "Full Mac keyboard/VoiceOver native interaction (current native surface is locked)",
+    "Real OS time-zone changes while foreground/background",
+    "Paired cloud/offline and broader localization/RTL acceptance",
+    "Existing interval notification actions/replenishment gates",
+    "Holiday, location, urgent presentation and the rest of Px"
+  ],
+  "userDeferralsUnchanged": [
+    "Remote reminders/device recovery",
+    "General older-client rollout enforcement",
+    "Distribution signing/real install-update",
+    "Google/Microsoft registration and genuine provider acceptance"
+  ],
+  "dataScope": "Synthetic local fixtures only; no real workspace/backend mutation",
+  "debugBuilds": {
+    "ios": {
+      "strictDeepSignature": true,
+      "scope": "Current isolated debug product only; no distribution acceptance"
+    },
+    "mac": {
+      "strictDeepSignature": true,
+      "scope": "Current isolated debug product only; no distribution acceptance"
+    }
+  },
+  "recordedImages": {
+    "TaskFold-iOS": {
+      "docs/reminder-time-zones/phone-dark-largest-chooser.png": "9bcad75234fbafdfe945ec3b1013b4f5e607f0a6efb06cd022ad4180b0943c1c",
+      "docs/reminder-time-zones/phone-dark-largest-clocks.png": "6c36b129ef0a1c3fdd25cccf28122a13606eacebd4843a99a82c9a4f2348810a",
+      "docs/reminder-time-zones/ipad-light-clocks.png": "53ff7bf1a052072245ca7bba80063141bc93314a09bebe111dab34bde5ad2e11"
+    },
+    "TasskFold-MacOS": {
+      "docs/reminder-time-zones/mac-dark-clocks.png": "b3f6cb5ca6bf07eade98d0ddc95ab89733b47f4713eb4be3ecdf27bee74fa511",
+      "docs/reminder-time-zones/mac-light-editor.png": "e26d1daf222af0402544914743f045209dbcbc33c32ab4daa3f23776267cac9e"
+    }
+  },
+  "mainTaskfoldAppsRunning": 0
+}

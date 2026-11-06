@@ -1,0 +1,30 @@
+{
+  "scope": "Completed isolated Taskfold field-activity outputs only; concise native evidence and selected captures retained in both repos / iOS respectively",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-field-activity-native-phone-v1.xcresult",
+      "logicalBytes": 268066
+    },
+    {
+      "path": "/tmp/taskfold-field-activity-native-phone-v1-attachments",
+      "logicalBytes": 4
+    },
+    {
+      "path": "/tmp/taskfold-field-activity-native-phone-v2.xcresult",
+      "logicalBytes": 1858932
+    },
+    {
+      "path": "/tmp/taskfold-field-activity-native-phone-v2-attachments",
+      "logicalBytes": 651275
+    },
+    {
+      "path": "/tmp/taskfold-field-activity-native-ipad-v2.xcresult",
+      "logicalBytes": 2870870
+    },
+    {
+      "path": "/tmp/taskfold-field-activity-native-ipad-v2-attachments",
+      "logicalBytes": 1075801
+    }
+  ],
+  "logicalBytes": 6724948
+}

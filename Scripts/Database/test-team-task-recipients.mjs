@@ -1,0 +1,63 @@
+import assert from 'node:assert/strict';
+import {randomUUID,createHash} from 'node:crypto';
+import {readFile,writeFile} from 'node:fs/promises';
+import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
+import {loadTeamWorkspaceSchema} from './team-workspace-schema.mjs';
+const migration='20261024204332_team_task_recipients.sql';
+const report={checks:{},deployed:false,realDataChanged:false,nativeTeamUIEnabled:false};
+const check=(name,a,b=true)=>{assert.deepEqual(a,b,name);report.checks[name]=true};
+const users=Object.fromEntries(['owner','editor','viewer','guest','excluded','unconfirmed','banned','outsider'].map(name=>[name,{id:randomUUID(),session:randomUUID()}]));
+const team=randomUUID(),project=randomUUID(),hidden=randomUUID();let pg;
+try {
+ pg=await createPostgresFixture({advisors:true});await loadTeamWorkspaceSchema(pg.raw);
+ const sql=await readFile(new URL('../../supabase/migrations/'+migration,import.meta.url),'utf8');await pg.raw(sql);
+ report.migrationSHA256=createHash('sha256').update(sql).digest('hex');
+ for(const [name,u]of Object.entries(users))await pg.raw(`insert into auth.users(id,email,email_confirmed_at,banned_until) values(${lit(u.id)},${lit(name+'@example.invalid')},${name==='unconfirmed'?'null':'now()'},${name==='banned'?"now()+interval '1 day'":'null'});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});insert into public.profiles(user_id,display_name) values(${lit(u.id)},${lit(name==='editor'?'Unsafe\nname':name==='guest'?'Élodie':name)})`);
+ await pg.raw(`insert into taskfold_private.teams(id,owner_id,name) values(${lit(team)},${lit(users.owner.id)},'Recipient workshop');`+Object.entries(users).filter(([n])=>n!=='outsider').map(([n,u])=>`insert into taskfold_private.team_members(team_id,user_id,role) values(${lit(team)},${lit(u.id)},${lit(n==='owner'?'admin':['guest','excluded'].includes(n)?'guest':'member')});`).join(''));
+ await pg.raw(`insert into public.projects(id,user_id,name) values(${lit(project)},${lit(users.owner.id)},'Shared workshop'),(${lit(hidden)},${lit(users.owner.id)},'Private workshop');insert into taskfold_private.team_content_projects(project_id,team_id,visibility) values(${lit(project)},${lit(team)},'team'),(${lit(hidden)},${lit(team)},'private');insert into taskfold_private.team_project_grants values(${lit(project)},${lit(team)},${lit(users.viewer.id)},'viewer'),(${lit(project)},${lit(team)},${lit(users.guest.id)},'editor')`);
+ const run=(name='editor',p=project,t=team,opts={})=>{
+  const u=users[name];return pg.scalar(`begin;set application_name=${lit(opts.app??"recipient-"+randomUUID().slice(0,8))};create temp table result(value jsonb,code text) on commit drop;grant all on result to authenticated,anon,service_role;set local role ${opts.role??'authenticated'};set local request.jwt.claim.sub=${lit(u.id)};set local request.jwt.claims=${lit(JSON.stringify({sub:u.id,session_id:opts.session??u.session,...opts.claims}))};do $r$begin begin insert into result values(public.taskfold_team_task_recipients(${lit(t)},${lit(p)}),null);exception when others then insert into result values(null,sqlstate);end;end$r$;select jsonb_build_object('value',value,'code',code) from result;commit;`);
+ };
+ const denied=async(name,...args)=>check(name,(await run(...args)).code,'42501');
+ await denied('closed rollout denies directory','editor');
+ await pg.raw('update taskfold_private.team_config set enabled=true;update taskfold_private.team_project_config set native_reads_enabled=true,native_task_edits_enabled=true');
+ const active=await run();check('editor lookup succeeds',active.code,null);const reply=active.value;
+ check('exact context envelope',Object.keys(reply).sort(),['recipient_protocol','account','team_id','project_id','access_token','recipients'].sort());
+ check('actor binding',reply.account,users.editor.id);check('project binding',reply.project_id,project);check('team binding',reply.team_id,team);check('supported protocol',reply.recipient_protocol,1);check('opaque access fence',/^[0-9a-f]{64}$/.test(reply.access_token));
+ const expected=['owner','editor','guest'].map(n=>users[n].id).sort();check('only current project editors and managers',reply.recipients.map(p=>p.user_id),expected);
+ check('directory fields are minimal',reply.recipients.every(p=>Object.keys(p).sort().join(',')==='display_name,role,user_id'));
+ check('unsafe display name withheld',reply.recipients.find(p=>p.user_id===users.editor.id).display_name,null);
+ check('unicode display name retained',reply.recipients.find(p=>p.user_id===users.guest.id).display_name,'Élodie');
+ check('owner uses current project manager role',reply.recipients.find(p=>p.user_id===users.owner.id).role,'manager');
+ await denied('viewer cannot read recipient directory','viewer');await denied('forged role metadata cannot expand directory','viewer',project,team,{claims:{user_metadata:{role:'admin'},app_metadata:{role:'admin'}}});await denied('outsider cannot read recipient directory','outsider');await denied('private project excluded','editor',hidden);await denied('wrong team excluded','editor',project,randomUUID());await denied('missing project excluded','editor',randomUUID());
+ await denied('anonymous cannot execute','editor',project,team,{role:'anon'});await denied('service role cannot execute','editor',project,team,{role:'service_role'});
+ check('guest with explicit editor grant can choose recipients',(await run('guest')).code,null);
+ check('expired session rejected',(await run('editor',project,team,{session:randomUUID()})).code,'28000');
+ await pg.raw(`update public.profiles set display_name=U&'Spoof\\202Ename' where user_id=${lit(users.owner.id)}`);
+ check('directional display spoof is withheld',(await run()).value.recipients.find(p=>p.user_id===users.owner.id).display_name,null);
+ await pg.raw(`update auth.users set banned_until=now()+interval '1 day' where id=${lit(users.guest.id)}`);
+ check('new read excludes newly banned recipient',(await run()).value.recipients.some(p=>p.user_id===users.guest.id),false);
+ await pg.raw(`update auth.users set banned_until=null where id=${lit(users.guest.id)};insert into taskfold_private.account_removal_receipts(token_hash,account_id) values(${lit('a'.repeat(64))},${lit(users.guest.id)})`);
+ check('unfinished removal recipient excluded',(await run()).value.recipients.some(p=>p.user_id===users.guest.id),false);
+ await pg.raw(`delete from taskfold_private.account_removal_receipts;update taskfold_private.team_project_grants set role='editor' where user_id=${lit(users.viewer.id)}`);
+ const changed=(await run()).value;check('new grant allows recipient',changed.recipients.some(p=>p.user_id===users.viewer.id));check('grant changes access fence',changed.access_token!==reply.access_token);
+ await pg.raw(`update taskfold_private.team_project_grants set role='viewer' where user_id=${lit(users.viewer.id)}`);
+ check('remove restore access cannot reuse old fence',(await run()).value.access_token!==reply.access_token);
+ await pg.raw(`update taskfold_private.team_project_config set native_task_edits_enabled=false`);await denied('task edit pause denies directory','editor');
+ await pg.raw(`update taskfold_private.team_project_config set native_task_edits_enabled=true;update taskfold_private.teams set state='archived' where id=${lit(team)}`);await denied('archived team denies directory','editor');
+
+ await pg.raw(`update taskfold_private.teams set state='active' where id=${lit(team)};update auth.sessions set not_after=clock_timestamp()+interval '0.5 seconds' where id=${lit(users.editor.session)}`);
+ const held=await pg.hold(`begin;select id from taskfold_private.teams where id=${lit(team)} for update;`);
+ const app='recipient-expiry-'+randomUUID().slice(0,8),waiting=run('editor',project,team,{app});
+ await pg.waitForLock(app,held.pid);await pg.raw('select pg_sleep(0.7)');await held.release('rollback');
+ check('live session rechecked after team lock wait',(await waiting).code,'28000');
+ await pg.raw(`update auth.sessions set not_after=null where id=${lit(users.editor.session)};
+ with ids as materialized(select gen_random_uuid() id from generate_series(1,494)), added as(insert into auth.users(id,email,email_confirmed_at) select id,id::text||'@example.invalid',now() from ids returning id)
+ insert into taskfold_private.team_members(team_id,user_id,role) select ${lit(team)},id,'member' from added`);
+ check('oversized directory refuses whole result',(await run()).code,'54000');
+ report.advisors=await pg.advisors();check('no new advisor warnings',report.advisors.result.filter(x=>['WARN','ERROR'].includes(x.level)&&x.name!=='auth_rls_initplan'),[]);
+ report.containerRemoved=await pg.close();pg=null;report.checkCount=Object.keys(report.checks).length;
+ if(process.argv[2])await writeFile(process.argv[2],JSON.stringify(report,null,2)+'\n');
+ if(process.argv[3])await writeFile(process.argv[3],JSON.stringify({account:users.editor.id,team,project,origin:'https://backend.example',reply},null,2)+'\n');
+ console.log(JSON.stringify({checks:report.checkCount,containerRemoved:report.containerRemoved}));
+}finally {if(pg)await pg.close();}

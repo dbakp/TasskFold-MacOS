@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-01",
+  "repository": "TasskFold-MacOS",
+  "database": {
+    "custody": {
+      "checks": 59,
+      "containerRemoved": true,
+      "reportSHA256": "07b6158e3b16edd01316a16b44396430750e3e6b6572bb801fada006f14313d0"
+    },
+    "transfer-regression": {
+      "checks": 68,
+      "containerRemoved": true,
+      "reportSHA256": "e98e07c3606a6ad556eff9f1b50ed5fec2da90be775e02376577eed2c2ed66c5"
+    }
+  },
+  "core": {
+    "tests": 90,
+    "failures": 0,
+    "logSHA256": "cbadff7d28a61694111dca1bf6747e56c0900947798361a98deb70af66b62abb",
+    "rawLogSHA256": "945bb6ece9017666950531d58ccc687ae98a0f57965ab2b99c6be6c215d68098",
+    "retainedLogNormalization": "Trailing whitespace stripped only"
+  },
+  "sourcesSHA256": {
+    "supabase/migrations/20261101212844_task_bound_file_custody.sql": "c713005f967a4ba9a290d00942543c79f583fb2e8aaa83b37c6f31a828f8fca1",
+    "Taskfold/Core/TeamTaskMove.swift": "37966c7719a2e71bfb28f08ac947a6044fc7cb4c2f7e067b0c7435544e161d10",
+    "Taskfold/Views/TeamTaskMoveView.swift": "8cf02b1e3df0aeffe6fffb03054260bfe11b57be2311cd6b5bb239f33dfcf10e",
+    "TaskfoldTests/TeamTaskMoveTests.swift": "55bf68b30b4aa55e9e8add2076b4140de4ab8f7f22242a01f5839675e94eddce",
+    "TaskfoldTests/Fixtures/team-task-file-custody-v1.json": "c090f86030ecbd650c36eb3acc22c639e4aa4a628e60db6d7e3ca1c5f2b145bc",
+    "Scripts/Database/test-task-file-custody.mjs": "1a16b3b1639eb70b03d644da8b3a6831e4a5a27a57c8f6097ce397f7790d171e",
+    "Scripts/Database/test-child-record-transfers.mjs": "ebf55dbede916f78bc866e1399dcb5dba625e24113424430b6267ff0ecd32d17"
+  },
+  "hostedChanges": false,
+  "normalUseGatesChanged": false,
+  "providerBytesTested": false,
+  "nativeFileWorkflowAccepted": false,
+  "uploadAdmissionImplemented": false,
+  "build": {
+    "phase": "task-file-custody",
+    "appAndRunnerSignaturesVerified": true,
+    "logSHA256": "39b233222c5f467f39f4e979228ef8d95fa4969835535b140986534783f9ee6e",
+    "sourceProof": {
+      "Taskfold/Core/TeamTaskMove.swift": {
+        "repositorySHA256": "37966c7719a2e71bfb28f08ac947a6044fc7cb4c2f7e067b0c7435544e161d10",
+        "compiledHostSHA256": "37966c7719a2e71bfb28f08ac947a6044fc7cb4c2f7e067b0c7435544e161d10",
+        "matchesAfterIsolation": true
+      },
+      "Taskfold/Views/TeamTaskMoveView.swift": {
+        "repositorySHA256": "8cf02b1e3df0aeffe6fffb03054260bfe11b57be2311cd6b5bb239f33dfcf10e",
+        "compiledHostSHA256": "8cf02b1e3df0aeffe6fffb03054260bfe11b57be2311cd6b5bb239f33dfcf10e",
+        "matchesAfterIsolation": true
+      }
+    },
+    "appBinariesSHA256": {
+      "Taskfold": "5060cddfb5f2854c87047f6df0cc53c125840c2403fa76ab0217ebbb706ff41d",
+      "Taskfold.debug.dylib": "f35da27040729635346e629c71dc4d3397e2e71bb55fb603da83e0e58a0eed6c"
+    }
+  }
+}

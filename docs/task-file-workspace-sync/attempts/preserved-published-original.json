@@ -1,0 +1,12 @@
+{
+  "reason": "Failed synthetic native run after published receipt; backend disposed. Preserve encrypted known original before resetting only this generated fixture slot. This is not product Clear acceptance.",
+  "account": "ec240000-0000-4000-8000-000000000001",
+  "sampleName": "Native provider proof.txt",
+  "operation": "4193edfa-e48f-4d51-944b-eb4a4915fa7c",
+  "task": "ec240000-0000-4000-8000-000000000002",
+  "expectedOriginalSHA256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+  "ciphertextSHA256": "4c9e8e84764b9458b0994569821c1ee76c417a3a6f8f4c7f4d6c96cce7e14537",
+  "failedReportSHA256": "74860e0e1572b99cefdf372f12b4cdb7d0f50f113ba64638e46dff0c9afb3b70",
+  "realDataTouched": false,
+  "relativeJournal": "Library/Application Support/Taskfold/Backups/d2be2d54-84e6-8f3d-8850-546d0835535a/Shared file uploads/1d019528-c5bc-8e72-8e2a-1305600e9a82/upload.taskfoldfile"
+}

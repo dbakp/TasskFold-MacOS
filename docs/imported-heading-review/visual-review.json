@@ -1,0 +1,10 @@
+{
+  "reviewed": [
+    "Mac normal review and long source/current wording",
+    "Mac explicit marker-choice capture",
+    "Phone adaptive Review header and fully visible marker switch at dark accessibility XXXL",
+    "iPad adaptive Review header, wrapped marker choice and physically reachable child checkbox"
+  ],
+  "observations": "Representative captures keep wrapping, contrast and explicit full action labels. Long content scrolls; accessibility text size is preserved.",
+  "limitation": "Mac edited-choice screenshot catches switch animation; its knob is not treated as steady-state off proof. The stable default-off long-source capture and actual title/durable Save assertions establish the intended choice. No spoken or every-viewport acceptance inferred."
+}

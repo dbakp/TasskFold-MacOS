@@ -1,0 +1,9 @@
+{
+  "selected": [
+    "testChildStructureDiscardConfirmationKeepsConcurrentDraftUpdate",
+    "testChildStructureDraftDiscardCancelAndConfirmation"
+  ],
+  "defaultAllowanceSeconds": 180,
+  "maximumAllowanceSeconds": 240,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
+}

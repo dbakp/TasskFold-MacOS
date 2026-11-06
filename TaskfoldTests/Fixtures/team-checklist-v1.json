@@ -1,0 +1,2258 @@
+{
+  "body": {
+    "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+    "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+    "task_id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+    "request_id": "54998a4b-3f68-42be-b07e-1a63be206471",
+    "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+    "base": {
+      "title": "Original",
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37"
+    },
+    "changes": {
+      "title": "Edited"
+    }
+  },
+  "reply": {
+    "task": {
+      "id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+      "title": "Edited",
+      "labels": [],
+      "user_id": "594b9795-7562-4a60-b868-871e940dc645",
+      "comments": [],
+      "due_date": null,
+      "due_time": null,
+      "priority": 4,
+      "subtasks": [],
+      "completed": false,
+      "reminders": [],
+      "time_zone": null,
+      "created_at": "2026-10-24T06:23:52.26003+00:00",
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [],
+      "description": null,
+      "completed_at": null,
+      "is_recurring": false,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {},
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": null,
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e",
+    "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+    "protocol": 1,
+    "replayed": false,
+    "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+    "request_id": "54998a4b-3f68-42be-b07e-1a63be206471",
+    "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64"
+  },
+  "account": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e",
+  "planning": {
+    "body": {
+      "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "task_id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+      "request_id": "f51a0c3b-15d8-4c9f-b000-2537995c2535",
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+      "base": {
+        "assigned_to": null,
+        "section_id": null,
+        "labels": [],
+        "reminder_specs": [],
+        "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+        "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37"
+      },
+      "changes": {
+        "assigned_to": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e",
+        "section_id": "244550cc-3ed9-4d3c-9a44-dd0154bc4adf",
+        "labels": [
+          "Design",
+          "Review"
+        ],
+        "reminder_specs": [
+          {
+            "id": "d7317029-4987-4ef5-8038-77c97f6ab836",
+            "version": 1,
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": -15,
+            "channels": [
+              "local"
+            ],
+            "future_choice": {
+              "retain": true
+            }
+          }
+        ]
+      }
+    },
+    "reply": {
+      "task": {
+        "id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+        "title": "Concurrent remote",
+        "labels": [
+          "Design",
+          "Review"
+        ],
+        "user_id": "594b9795-7562-4a60-b868-871e940dc645",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-24T06:23:52.26003+00:00",
+        "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+        "section_id": "244550cc-3ed9-4d3c-9a44-dd0154bc4adf",
+        "assigned_to": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e",
+        "attachments": [],
+        "description": "Guest reviewed edit",
+        "completed_at": null,
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [
+          {
+            "id": "d7317029-4987-4ef5-8038-77c97f6ab836",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "future_choice": {
+              "retain": true
+            },
+            "offset_minutes": -15
+          }
+        ],
+        "source_metadata": {},
+        "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+        "duration_minutes": null,
+        "completion_version": 2,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "account": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e",
+      "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+      "protocol": 1,
+      "replayed": false,
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "request_id": "f51a0c3b-15d8-4c9f-b000-2537995c2535",
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64"
+    },
+    "before": {
+      "id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+      "title": "Concurrent remote",
+      "labels": [],
+      "user_id": "594b9795-7562-4a60-b868-871e940dc645",
+      "comments": [],
+      "due_date": null,
+      "due_time": null,
+      "priority": 4,
+      "subtasks": [],
+      "completed": false,
+      "reminders": [],
+      "time_zone": null,
+      "created_at": "2026-10-24T06:23:52.26003+00:00",
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [],
+      "description": "Guest reviewed edit",
+      "completed_at": null,
+      "is_recurring": false,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {},
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+      "duration_minutes": null,
+      "completion_version": 2,
+      "recurrence_pattern": null,
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e"
+  },
+  "checklist": {
+    "body": {
+      "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "task_id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+      "request_id": "fb1f98a9-13ac-46a8-950d-0b097c8c384f",
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+      "base": {
+        "subtasks": [
+          {
+            "id": "parent-check",
+            "title": "Checklist parent",
+            "subtasks": [
+              {
+                "id": "child-check",
+                "title": "Keep original history",
+                "comments": [
+                  {
+                    "id": "legacy-comment",
+                    "text": "Original discussion"
+                  }
+                ],
+                "subtasks": [],
+                "completed": true,
+                "attachments": [
+                  {
+                    "id": "legacy-file",
+                    "url": "https://files.example.invalid/original"
+                  }
+                ],
+                "completed_at": "2026-10-01T09:00:00+00:00",
+                "future_state": {
+                  "keep": true
+                },
+                "reminder_specs": [
+                  {
+                    "id": "e63714bb-50b4-45a2-b50b-7c68f475f4a9",
+                    "kind": "private-device-setting",
+                    "opaque": {
+                      "keep": true
+                    },
+                    "version": 99
+                  },
+                  {
+                    "id": "18cf1651-d9e4-4b6a-b976-b5a38d00aa4d",
+                    "kind": "relative",
+                    "anchor": "planned",
+                    "version": 1,
+                    "channels": [
+                      "local"
+                    ],
+                    "future_choice": {
+                      "keep": true
+                    },
+                    "offset_minutes": -15
+                  }
+                ],
+                "source_metadata": {
+                  "legacy": "original"
+                },
+                "taskfold_completion_v1": {
+                  "epoch": "2be34f47-e43e-499e-b3de-5875a6d04d0d",
+                  "version": 0
+                }
+              }
+            ],
+            "completed": false,
+            "taskfold_completion_v1": {
+              "epoch": "4fea34e0-b89c-4540-be5e-9033e5f38339",
+              "version": 0
+            }
+          }
+        ],
+        "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+        "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37"
+      },
+      "changes": {
+        "subtasks": [
+          {
+            "id": "parent-check",
+            "title": "Reviewed checklist",
+            "subtasks": [
+              {
+                "id": "child-check",
+                "title": "Keep original history",
+                "comments": [
+                  {
+                    "id": "legacy-comment",
+                    "text": "Original discussion"
+                  }
+                ],
+                "subtasks": [],
+                "completed": false,
+                "attachments": [
+                  {
+                    "id": "legacy-file",
+                    "url": "https://files.example.invalid/original"
+                  }
+                ],
+                "completed_at": null,
+                "future_state": {
+                  "keep": true
+                },
+                "reminder_specs": [
+                  {
+                    "id": "e63714bb-50b4-45a2-b50b-7c68f475f4a9",
+                    "kind": "private-device-setting",
+                    "opaque": {
+                      "keep": true
+                    },
+                    "version": 99
+                  },
+                  {
+                    "id": "18cf1651-d9e4-4b6a-b976-b5a38d00aa4d",
+                    "kind": "relative",
+                    "anchor": "planned",
+                    "version": 1,
+                    "channels": [
+                      "local"
+                    ],
+                    "future_choice": {
+                      "keep": true
+                    },
+                    "offset_minutes": -15
+                  }
+                ],
+                "source_metadata": {
+                  "legacy": "original"
+                },
+                "taskfold_completion_v1": {
+                  "epoch": "2be34f47-e43e-499e-b3de-5875a6d04d0d",
+                  "version": 1
+                }
+              }
+            ],
+            "completed": false,
+            "taskfold_completion_v1": {
+              "epoch": "4fea34e0-b89c-4540-be5e-9033e5f38339",
+              "version": 0
+            }
+          },
+          {
+            "id": "next-check",
+            "title": "Next step",
+            "completed": false,
+            "subtasks": [],
+            "taskfold_completion_v1": {
+              "epoch": "666b9799-2c7d-43bf-a95d-09087af8e21a",
+              "version": 0
+            }
+          }
+        ]
+      }
+    },
+    "reply": {
+      "task": {
+        "id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+        "title": "Concurrent remote",
+        "labels": [
+          "remote-0",
+          "remote-1",
+          "remote-2",
+          "remote-3",
+          "remote-4",
+          "remote-5",
+          "remote-6",
+          "remote-7",
+          "remote-8",
+          "remote-9",
+          "remote-10",
+          "remote-11",
+          "remote-12",
+          "remote-13",
+          "remote-14",
+          "remote-15",
+          "remote-16",
+          "remote-17",
+          "remote-18",
+          "remote-19",
+          "remote-20",
+          "remote-21",
+          "remote-22",
+          "remote-23",
+          "remote-24",
+          "remote-25",
+          "remote-26",
+          "remote-27",
+          "remote-28",
+          "remote-29",
+          "remote-30",
+          "remote-31",
+          "remote-32",
+          "remote-33",
+          "remote-34",
+          "remote-35",
+          "remote-36",
+          "remote-37",
+          "remote-38",
+          "remote-39",
+          "remote-40",
+          "remote-41",
+          "remote-42",
+          "remote-43",
+          "remote-44",
+          "remote-45",
+          "remote-46",
+          "remote-47",
+          "remote-48",
+          "remote-49",
+          "remote-50",
+          "remote-51",
+          "remote-52",
+          "remote-53",
+          "remote-54",
+          "remote-55",
+          "remote-56",
+          "remote-57",
+          "remote-58",
+          "remote-59",
+          "remote-60",
+          "remote-61",
+          "remote-62",
+          "remote-63",
+          "remote-64",
+          "remote-65",
+          "remote-66",
+          "remote-67",
+          "remote-68",
+          "remote-69",
+          "remote-70",
+          "remote-71",
+          "remote-72",
+          "remote-73",
+          "remote-74",
+          "remote-75",
+          "remote-76",
+          "remote-77",
+          "remote-78",
+          "remote-79",
+          "remote-80",
+          "remote-81",
+          "remote-82",
+          "remote-83",
+          "remote-84",
+          "remote-85",
+          "remote-86",
+          "remote-87",
+          "remote-88",
+          "remote-89",
+          "remote-90",
+          "remote-91",
+          "remote-92",
+          "remote-93",
+          "remote-94",
+          "remote-95",
+          "remote-96",
+          "remote-97",
+          "remote-98",
+          "remote-99",
+          "remote-100",
+          "remote-101",
+          "remote-102",
+          "remote-103",
+          "remote-104",
+          "remote-105",
+          "remote-106",
+          "remote-107",
+          "remote-108",
+          "remote-109",
+          "remote-110",
+          "remote-111",
+          "remote-112",
+          "remote-113",
+          "remote-114",
+          "remote-115",
+          "remote-116",
+          "remote-117",
+          "remote-118",
+          "remote-119",
+          "remote-120",
+          "remote-121",
+          "remote-122",
+          "remote-123",
+          "remote-124",
+          "remote-125",
+          "remote-126",
+          "remote-127",
+          "remote-128",
+          "remote-129"
+        ],
+        "user_id": "594b9795-7562-4a60-b868-871e940dc645",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [
+          {
+            "id": "parent-check",
+            "title": "Reviewed checklist",
+            "subtasks": [
+              {
+                "id": "child-check",
+                "title": "Keep original history",
+                "comments": [
+                  {
+                    "id": "legacy-comment",
+                    "text": "Original discussion"
+                  }
+                ],
+                "subtasks": [],
+                "completed": false,
+                "attachments": [
+                  {
+                    "id": "legacy-file",
+                    "url": "https://files.example.invalid/original"
+                  }
+                ],
+                "completed_at": null,
+                "future_state": {
+                  "keep": true
+                },
+                "reminder_specs": [
+                  {
+                    "id": "e63714bb-50b4-45a2-b50b-7c68f475f4a9",
+                    "kind": "private-device-setting",
+                    "opaque": {
+                      "keep": true
+                    },
+                    "version": 99
+                  },
+                  {
+                    "id": "18cf1651-d9e4-4b6a-b976-b5a38d00aa4d",
+                    "kind": "relative",
+                    "anchor": "planned",
+                    "version": 1,
+                    "channels": [
+                      "local"
+                    ],
+                    "future_choice": {
+                      "keep": true
+                    },
+                    "offset_minutes": -15
+                  }
+                ],
+                "source_metadata": {
+                  "legacy": "original"
+                },
+                "taskfold_completion_v1": {
+                  "epoch": "2be34f47-e43e-499e-b3de-5875a6d04d0d",
+                  "version": 1
+                }
+              }
+            ],
+            "completed": false,
+            "taskfold_completion_v1": {
+              "epoch": "4fea34e0-b89c-4540-be5e-9033e5f38339",
+              "version": 0
+            }
+          },
+          {
+            "id": "next-check",
+            "title": "Next step",
+            "subtasks": [],
+            "completed": false,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "666b9799-2c7d-43bf-a95d-09087af8e21a",
+              "version": 0
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-24T06:23:52.26003+00:00",
+        "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+        "section_id": "81e1ee1d-f9eb-4645-8db4-2e799433b005",
+        "assigned_to": null,
+        "attachments": [],
+        "description": "Guest reviewed edit",
+        "completed_at": null,
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [
+          {
+            "id": "d7317029-4987-4ef5-8038-77c97f6ab836",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "future_choice": {
+              "retain": true
+            },
+            "offset_minutes": -45
+          },
+          {
+            "id": "0b2fe618-fedc-4401-a839-10a7a2e63cff",
+            "kind": "private-device-setting",
+            "opaque": {
+              "keep": true
+            },
+            "version": 99
+          },
+          {
+            "id": "da5697c1-cd01-483b-b84a-a02cd50fcf2b",
+            "opaque": "arrived later",
+            "version": 101
+          },
+          {
+            "id": "f01dc96a-4154-48db-ade2-c7f63370b13a",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "45a82996-d374-42fd-a52d-e59e04ffc8b5",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "103d0531-77be-4a5c-ab26-fb6eca5951eb",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "f5a058fe-b08f-46e4-8987-8cad847fa195",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "e987248a-8291-4ad1-846e-26750e0fed88",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "39aa31df-a5a0-426d-9203-9840403f919d",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "97239291-1b23-4541-b3c4-94648cc42e00",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "276fb806-c0c7-4fe1-8ac8-3689bcc40886",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "0f3b11ed-21f7-4b15-b7da-3fc37d0e6750",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          }
+        ],
+        "source_metadata": {},
+        "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+        "duration_minutes": null,
+        "completion_version": 2,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "account": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e",
+      "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+      "protocol": 1,
+      "replayed": false,
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "request_id": "fb1f98a9-13ac-46a8-950d-0b097c8c384f",
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64"
+    },
+    "before": {
+      "id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+      "title": "Concurrent remote",
+      "labels": [
+        "remote-0",
+        "remote-1",
+        "remote-2",
+        "remote-3",
+        "remote-4",
+        "remote-5",
+        "remote-6",
+        "remote-7",
+        "remote-8",
+        "remote-9",
+        "remote-10",
+        "remote-11",
+        "remote-12",
+        "remote-13",
+        "remote-14",
+        "remote-15",
+        "remote-16",
+        "remote-17",
+        "remote-18",
+        "remote-19",
+        "remote-20",
+        "remote-21",
+        "remote-22",
+        "remote-23",
+        "remote-24",
+        "remote-25",
+        "remote-26",
+        "remote-27",
+        "remote-28",
+        "remote-29",
+        "remote-30",
+        "remote-31",
+        "remote-32",
+        "remote-33",
+        "remote-34",
+        "remote-35",
+        "remote-36",
+        "remote-37",
+        "remote-38",
+        "remote-39",
+        "remote-40",
+        "remote-41",
+        "remote-42",
+        "remote-43",
+        "remote-44",
+        "remote-45",
+        "remote-46",
+        "remote-47",
+        "remote-48",
+        "remote-49",
+        "remote-50",
+        "remote-51",
+        "remote-52",
+        "remote-53",
+        "remote-54",
+        "remote-55",
+        "remote-56",
+        "remote-57",
+        "remote-58",
+        "remote-59",
+        "remote-60",
+        "remote-61",
+        "remote-62",
+        "remote-63",
+        "remote-64",
+        "remote-65",
+        "remote-66",
+        "remote-67",
+        "remote-68",
+        "remote-69",
+        "remote-70",
+        "remote-71",
+        "remote-72",
+        "remote-73",
+        "remote-74",
+        "remote-75",
+        "remote-76",
+        "remote-77",
+        "remote-78",
+        "remote-79",
+        "remote-80",
+        "remote-81",
+        "remote-82",
+        "remote-83",
+        "remote-84",
+        "remote-85",
+        "remote-86",
+        "remote-87",
+        "remote-88",
+        "remote-89",
+        "remote-90",
+        "remote-91",
+        "remote-92",
+        "remote-93",
+        "remote-94",
+        "remote-95",
+        "remote-96",
+        "remote-97",
+        "remote-98",
+        "remote-99",
+        "remote-100",
+        "remote-101",
+        "remote-102",
+        "remote-103",
+        "remote-104",
+        "remote-105",
+        "remote-106",
+        "remote-107",
+        "remote-108",
+        "remote-109",
+        "remote-110",
+        "remote-111",
+        "remote-112",
+        "remote-113",
+        "remote-114",
+        "remote-115",
+        "remote-116",
+        "remote-117",
+        "remote-118",
+        "remote-119",
+        "remote-120",
+        "remote-121",
+        "remote-122",
+        "remote-123",
+        "remote-124",
+        "remote-125",
+        "remote-126",
+        "remote-127",
+        "remote-128",
+        "remote-129"
+      ],
+      "user_id": "594b9795-7562-4a60-b868-871e940dc645",
+      "comments": [],
+      "due_date": null,
+      "due_time": null,
+      "priority": 4,
+      "subtasks": [
+        {
+          "id": "parent-check",
+          "title": "Checklist parent",
+          "subtasks": [
+            {
+              "id": "child-check",
+              "title": "Keep original history",
+              "comments": [
+                {
+                  "id": "legacy-comment",
+                  "text": "Original discussion"
+                }
+              ],
+              "subtasks": [],
+              "completed": true,
+              "attachments": [
+                {
+                  "id": "legacy-file",
+                  "url": "https://files.example.invalid/original"
+                }
+              ],
+              "completed_at": "2026-10-01T09:00:00+00:00",
+              "future_state": {
+                "keep": true
+              },
+              "reminder_specs": [
+                {
+                  "id": "e63714bb-50b4-45a2-b50b-7c68f475f4a9",
+                  "kind": "private-device-setting",
+                  "opaque": {
+                    "keep": true
+                  },
+                  "version": 99
+                },
+                {
+                  "id": "18cf1651-d9e4-4b6a-b976-b5a38d00aa4d",
+                  "kind": "relative",
+                  "anchor": "planned",
+                  "version": 1,
+                  "channels": [
+                    "local"
+                  ],
+                  "future_choice": {
+                    "keep": true
+                  },
+                  "offset_minutes": -15
+                }
+              ],
+              "source_metadata": {
+                "legacy": "original"
+              },
+              "taskfold_completion_v1": {
+                "epoch": "2be34f47-e43e-499e-b3de-5875a6d04d0d",
+                "version": 0
+              }
+            }
+          ],
+          "completed": false,
+          "taskfold_completion_v1": {
+            "epoch": "4fea34e0-b89c-4540-be5e-9033e5f38339",
+            "version": 0
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": null,
+      "created_at": "2026-10-24T06:23:52.26003+00:00",
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "section_id": "81e1ee1d-f9eb-4645-8db4-2e799433b005",
+      "assigned_to": null,
+      "attachments": [],
+      "description": "Guest reviewed edit",
+      "completed_at": null,
+      "is_recurring": false,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "reminder_specs": [
+        {
+          "id": "d7317029-4987-4ef5-8038-77c97f6ab836",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "future_choice": {
+            "retain": true
+          },
+          "offset_minutes": -45
+        },
+        {
+          "id": "0b2fe618-fedc-4401-a839-10a7a2e63cff",
+          "kind": "private-device-setting",
+          "opaque": {
+            "keep": true
+          },
+          "version": 99
+        },
+        {
+          "id": "da5697c1-cd01-483b-b84a-a02cd50fcf2b",
+          "opaque": "arrived later",
+          "version": 101
+        },
+        {
+          "id": "f01dc96a-4154-48db-ade2-c7f63370b13a",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": -5
+        },
+        {
+          "id": "45a82996-d374-42fd-a52d-e59e04ffc8b5",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": -5
+        },
+        {
+          "id": "103d0531-77be-4a5c-ab26-fb6eca5951eb",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": -5
+        },
+        {
+          "id": "f5a058fe-b08f-46e4-8987-8cad847fa195",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": -5
+        },
+        {
+          "id": "e987248a-8291-4ad1-846e-26750e0fed88",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": -5
+        },
+        {
+          "id": "39aa31df-a5a0-426d-9203-9840403f919d",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": -5
+        },
+        {
+          "id": "97239291-1b23-4541-b3c4-94648cc42e00",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": -5
+        },
+        {
+          "id": "276fb806-c0c7-4fe1-8ac8-3689bcc40886",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": -5
+        },
+        {
+          "id": "0f3b11ed-21f7-4b15-b7da-3fc37d0e6750",
+          "kind": "relative",
+          "anchor": "planned",
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": -5
+        }
+      ],
+      "source_metadata": {},
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+      "duration_minutes": null,
+      "completion_version": 2,
+      "recurrence_pattern": null,
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e",
+    "recovery_body": {
+      "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "task_id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+      "request_id": "1b836e85-fbf2-408a-8432-f92e00949ce4",
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+      "base": {
+        "subtasks": [
+          {
+            "id": "parent-check",
+            "title": "Local parent",
+            "subtasks": [],
+            "completed": false,
+            "taskfold_completion_v1": {
+              "epoch": "4fea34e0-b89c-4540-be5e-9033e5f38339",
+              "version": 0
+            }
+          },
+          {
+            "id": "next-check",
+            "title": "Remote next",
+            "subtasks": [],
+            "completed": false,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "666b9799-2c7d-43bf-a95d-09087af8e21a",
+              "version": 0
+            }
+          },
+          {
+            "id": "remote-added",
+            "title": "Remote added",
+            "subtasks": [],
+            "completed": false,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "1722bc1e-17e8-4000-bf95-8f70b96537f4",
+              "version": 0
+            }
+          }
+        ],
+        "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+        "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37"
+      },
+      "changes": {
+        "subtasks": [
+          {
+            "id": "parent-check",
+            "title": "Local parent",
+            "subtasks": [
+              {
+                "id": "child-check",
+                "title": "Keep original history",
+                "comments": [
+                  {
+                    "id": "legacy-comment",
+                    "text": "Original discussion"
+                  }
+                ],
+                "subtasks": [],
+                "completed": false,
+                "attachments": [
+                  {
+                    "id": "legacy-file",
+                    "url": "https://files.example.invalid/original"
+                  }
+                ],
+                "completed_at": null,
+                "future_state": {
+                  "keep": true
+                },
+                "reminder_specs": [
+                  {
+                    "id": "e63714bb-50b4-45a2-b50b-7c68f475f4a9",
+                    "kind": "private-device-setting",
+                    "opaque": {
+                      "keep": true
+                    },
+                    "version": 99
+                  },
+                  {
+                    "id": "18cf1651-d9e4-4b6a-b976-b5a38d00aa4d",
+                    "kind": "relative",
+                    "anchor": "planned",
+                    "version": 1,
+                    "channels": [
+                      "local"
+                    ],
+                    "future_choice": {
+                      "keep": true
+                    },
+                    "offset_minutes": -15
+                  }
+                ],
+                "source_metadata": {
+                  "legacy": "original"
+                },
+                "taskfold_completion_v1": {
+                  "epoch": "9e9ddd46-fb2b-57d2-aa42-d4e230f16222",
+                  "version": 0
+                }
+              }
+            ],
+            "completed": false,
+            "taskfold_completion_v1": {
+              "epoch": "4fea34e0-b89c-4540-be5e-9033e5f38339",
+              "version": 0
+            }
+          },
+          {
+            "id": "next-check",
+            "title": "Remote next",
+            "subtasks": [],
+            "completed": false,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "666b9799-2c7d-43bf-a95d-09087af8e21a",
+              "version": 0
+            }
+          },
+          {
+            "id": "remote-added",
+            "title": "Remote added",
+            "subtasks": [],
+            "completed": false,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "1722bc1e-17e8-4000-bf95-8f70b96537f4",
+              "version": 0
+            }
+          }
+        ]
+      },
+      "checklist_restore_from": "d0aeaaa9-bc7e-4341-b2f6-e89fa70867f3"
+    },
+    "recovery_reply": {
+      "task": {
+        "id": "1f2e9ea3-2699-4c1a-89ad-ae6fd323830d",
+        "title": "Concurrent remote",
+        "labels": [
+          "remote-0",
+          "remote-1",
+          "remote-2",
+          "remote-3",
+          "remote-4",
+          "remote-5",
+          "remote-6",
+          "remote-7",
+          "remote-8",
+          "remote-9",
+          "remote-10",
+          "remote-11",
+          "remote-12",
+          "remote-13",
+          "remote-14",
+          "remote-15",
+          "remote-16",
+          "remote-17",
+          "remote-18",
+          "remote-19",
+          "remote-20",
+          "remote-21",
+          "remote-22",
+          "remote-23",
+          "remote-24",
+          "remote-25",
+          "remote-26",
+          "remote-27",
+          "remote-28",
+          "remote-29",
+          "remote-30",
+          "remote-31",
+          "remote-32",
+          "remote-33",
+          "remote-34",
+          "remote-35",
+          "remote-36",
+          "remote-37",
+          "remote-38",
+          "remote-39",
+          "remote-40",
+          "remote-41",
+          "remote-42",
+          "remote-43",
+          "remote-44",
+          "remote-45",
+          "remote-46",
+          "remote-47",
+          "remote-48",
+          "remote-49",
+          "remote-50",
+          "remote-51",
+          "remote-52",
+          "remote-53",
+          "remote-54",
+          "remote-55",
+          "remote-56",
+          "remote-57",
+          "remote-58",
+          "remote-59",
+          "remote-60",
+          "remote-61",
+          "remote-62",
+          "remote-63",
+          "remote-64",
+          "remote-65",
+          "remote-66",
+          "remote-67",
+          "remote-68",
+          "remote-69",
+          "remote-70",
+          "remote-71",
+          "remote-72",
+          "remote-73",
+          "remote-74",
+          "remote-75",
+          "remote-76",
+          "remote-77",
+          "remote-78",
+          "remote-79",
+          "remote-80",
+          "remote-81",
+          "remote-82",
+          "remote-83",
+          "remote-84",
+          "remote-85",
+          "remote-86",
+          "remote-87",
+          "remote-88",
+          "remote-89",
+          "remote-90",
+          "remote-91",
+          "remote-92",
+          "remote-93",
+          "remote-94",
+          "remote-95",
+          "remote-96",
+          "remote-97",
+          "remote-98",
+          "remote-99",
+          "remote-100",
+          "remote-101",
+          "remote-102",
+          "remote-103",
+          "remote-104",
+          "remote-105",
+          "remote-106",
+          "remote-107",
+          "remote-108",
+          "remote-109",
+          "remote-110",
+          "remote-111",
+          "remote-112",
+          "remote-113",
+          "remote-114",
+          "remote-115",
+          "remote-116",
+          "remote-117",
+          "remote-118",
+          "remote-119",
+          "remote-120",
+          "remote-121",
+          "remote-122",
+          "remote-123",
+          "remote-124",
+          "remote-125",
+          "remote-126",
+          "remote-127",
+          "remote-128",
+          "remote-129"
+        ],
+        "user_id": "594b9795-7562-4a60-b868-871e940dc645",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [
+          {
+            "id": "parent-check",
+            "title": "Local parent",
+            "subtasks": [
+              {
+                "id": "child-check",
+                "title": "Keep original history",
+                "comments": [
+                  {
+                    "id": "legacy-comment",
+                    "text": "Original discussion"
+                  }
+                ],
+                "subtasks": [],
+                "completed": false,
+                "attachments": [
+                  {
+                    "id": "legacy-file",
+                    "url": "https://files.example.invalid/original"
+                  }
+                ],
+                "completed_at": null,
+                "future_state": {
+                  "keep": true
+                },
+                "reminder_specs": [
+                  {
+                    "id": "e63714bb-50b4-45a2-b50b-7c68f475f4a9",
+                    "kind": "private-device-setting",
+                    "opaque": {
+                      "keep": true
+                    },
+                    "version": 99
+                  },
+                  {
+                    "id": "18cf1651-d9e4-4b6a-b976-b5a38d00aa4d",
+                    "kind": "relative",
+                    "anchor": "planned",
+                    "version": 1,
+                    "channels": [
+                      "local"
+                    ],
+                    "future_choice": {
+                      "keep": true
+                    },
+                    "offset_minutes": -15
+                  }
+                ],
+                "source_metadata": {
+                  "legacy": "original"
+                },
+                "taskfold_completion_v1": {
+                  "epoch": "9e9ddd46-fb2b-57d2-aa42-d4e230f16222",
+                  "version": 0
+                }
+              }
+            ],
+            "completed": false,
+            "taskfold_completion_v1": {
+              "epoch": "4fea34e0-b89c-4540-be5e-9033e5f38339",
+              "version": 0
+            }
+          },
+          {
+            "id": "next-check",
+            "title": "Remote next",
+            "subtasks": [],
+            "completed": false,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "666b9799-2c7d-43bf-a95d-09087af8e21a",
+              "version": 0
+            }
+          },
+          {
+            "id": "remote-added",
+            "title": "Remote added",
+            "subtasks": [],
+            "completed": false,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "1722bc1e-17e8-4000-bf95-8f70b96537f4",
+              "version": 0
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-24T06:23:52.26003+00:00",
+        "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+        "section_id": "81e1ee1d-f9eb-4645-8db4-2e799433b005",
+        "assigned_to": null,
+        "attachments": [],
+        "description": "Guest reviewed edit",
+        "completed_at": null,
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [
+          {
+            "id": "d7317029-4987-4ef5-8038-77c97f6ab836",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "future_choice": {
+              "retain": true
+            },
+            "offset_minutes": -45
+          },
+          {
+            "id": "0b2fe618-fedc-4401-a839-10a7a2e63cff",
+            "kind": "private-device-setting",
+            "opaque": {
+              "keep": true
+            },
+            "version": 99
+          },
+          {
+            "id": "da5697c1-cd01-483b-b84a-a02cd50fcf2b",
+            "opaque": "arrived later",
+            "version": 101
+          },
+          {
+            "id": "f01dc96a-4154-48db-ade2-c7f63370b13a",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "45a82996-d374-42fd-a52d-e59e04ffc8b5",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "103d0531-77be-4a5c-ab26-fb6eca5951eb",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "f5a058fe-b08f-46e4-8987-8cad847fa195",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "e987248a-8291-4ad1-846e-26750e0fed88",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "39aa31df-a5a0-426d-9203-9840403f919d",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "97239291-1b23-4541-b3c4-94648cc42e00",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "276fb806-c0c7-4fe1-8ac8-3689bcc40886",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "0f3b11ed-21f7-4b15-b7da-3fc37d0e6750",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          }
+        ],
+        "source_metadata": {},
+        "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64",
+        "duration_minutes": null,
+        "completion_version": 2,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "account": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e",
+      "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+      "protocol": 1,
+      "replayed": false,
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "request_id": "1b836e85-fbf2-408a-8432-f92e00949ce4",
+      "task_generation": "8b5b5631-3ca9-42f7-8439-137296e04d64"
+    },
+    "root_recovery_body": {
+      "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "task_id": "ede067ff-f0af-4ff6-9146-4d24346dbb11",
+      "task_generation": "279bf424-f566-460f-a94a-afec2dbd798c",
+      "request_id": "04523dfd-8934-43c6-8b6a-6527e4a246d9",
+      "record": {
+        "id": "ede067ff-f0af-4ff6-9146-4d24346dbb11",
+        "title": "Concurrent remote",
+        "labels": [
+          "remote-0",
+          "remote-1",
+          "remote-2",
+          "remote-3",
+          "remote-4",
+          "remote-5",
+          "remote-6",
+          "remote-7",
+          "remote-8",
+          "remote-9",
+          "remote-10",
+          "remote-11",
+          "remote-12",
+          "remote-13",
+          "remote-14",
+          "remote-15",
+          "remote-16",
+          "remote-17",
+          "remote-18",
+          "remote-19",
+          "remote-20",
+          "remote-21",
+          "remote-22",
+          "remote-23",
+          "remote-24",
+          "remote-25",
+          "remote-26",
+          "remote-27",
+          "remote-28",
+          "remote-29",
+          "remote-30",
+          "remote-31",
+          "remote-32",
+          "remote-33",
+          "remote-34",
+          "remote-35",
+          "remote-36",
+          "remote-37",
+          "remote-38",
+          "remote-39",
+          "remote-40",
+          "remote-41",
+          "remote-42",
+          "remote-43",
+          "remote-44",
+          "remote-45",
+          "remote-46",
+          "remote-47",
+          "remote-48",
+          "remote-49",
+          "remote-50",
+          "remote-51",
+          "remote-52",
+          "remote-53",
+          "remote-54",
+          "remote-55",
+          "remote-56",
+          "remote-57",
+          "remote-58",
+          "remote-59",
+          "remote-60",
+          "remote-61",
+          "remote-62",
+          "remote-63",
+          "remote-64",
+          "remote-65",
+          "remote-66",
+          "remote-67",
+          "remote-68",
+          "remote-69",
+          "remote-70",
+          "remote-71",
+          "remote-72",
+          "remote-73",
+          "remote-74",
+          "remote-75",
+          "remote-76",
+          "remote-77",
+          "remote-78",
+          "remote-79",
+          "remote-80",
+          "remote-81",
+          "remote-82",
+          "remote-83",
+          "remote-84",
+          "remote-85",
+          "remote-86",
+          "remote-87",
+          "remote-88",
+          "remote-89",
+          "remote-90",
+          "remote-91",
+          "remote-92",
+          "remote-93",
+          "remote-94",
+          "remote-95",
+          "remote-96",
+          "remote-97",
+          "remote-98",
+          "remote-99",
+          "remote-100",
+          "remote-101",
+          "remote-102",
+          "remote-103",
+          "remote-104",
+          "remote-105",
+          "remote-106",
+          "remote-107",
+          "remote-108",
+          "remote-109",
+          "remote-110",
+          "remote-111",
+          "remote-112",
+          "remote-113",
+          "remote-114",
+          "remote-115",
+          "remote-116",
+          "remote-117",
+          "remote-118",
+          "remote-119",
+          "remote-120",
+          "remote-121",
+          "remote-122",
+          "remote-123",
+          "remote-124",
+          "remote-125",
+          "remote-126",
+          "remote-127",
+          "remote-128",
+          "remote-129"
+        ],
+        "user_id": "594b9795-7562-4a60-b868-871e940dc645",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [
+          {
+            "id": "child-check",
+            "title": "Keep original history",
+            "comments": [
+              {
+                "id": "legacy-comment",
+                "text": "Original discussion"
+              }
+            ],
+            "subtasks": [],
+            "completed": true,
+            "attachments": [
+              {
+                "id": "legacy-file",
+                "url": "https://files.example.invalid/original"
+              }
+            ],
+            "completed_at": "2026-10-01T09:00:00+00:00",
+            "future_state": {
+              "keep": true
+            },
+            "reminder_specs": [
+              {
+                "id": "e63714bb-50b4-45a2-b50b-7c68f475f4a9",
+                "kind": "private-device-setting",
+                "opaque": {
+                  "keep": true
+                },
+                "version": 99
+              },
+              {
+                "id": "18cf1651-d9e4-4b6a-b976-b5a38d00aa4d",
+                "kind": "relative",
+                "anchor": "planned",
+                "version": 1,
+                "channels": [
+                  "local"
+                ],
+                "future_choice": {
+                  "keep": true
+                },
+                "offset_minutes": -15
+              }
+            ],
+            "source_metadata": {
+              "legacy": "original"
+            },
+            "taskfold_completion_v1": {
+              "epoch": "c26ae92a-1ae0-46ab-a6c6-9b0989729cc1",
+              "version": 3
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-24T06:23:52.26003+00:00",
+        "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+        "section_id": "81e1ee1d-f9eb-4645-8db4-2e799433b005",
+        "assigned_to": null,
+        "attachments": [],
+        "description": "Guest reviewed edit",
+        "completed_at": null,
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [
+          {
+            "id": "d7317029-4987-4ef5-8038-77c97f6ab836",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "future_choice": {
+              "retain": true
+            },
+            "offset_minutes": -45
+          },
+          {
+            "id": "0b2fe618-fedc-4401-a839-10a7a2e63cff",
+            "kind": "private-device-setting",
+            "opaque": {
+              "keep": true
+            },
+            "version": 99
+          },
+          {
+            "id": "da5697c1-cd01-483b-b84a-a02cd50fcf2b",
+            "opaque": "arrived later",
+            "version": 101
+          },
+          {
+            "id": "f01dc96a-4154-48db-ade2-c7f63370b13a",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "45a82996-d374-42fd-a52d-e59e04ffc8b5",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "103d0531-77be-4a5c-ab26-fb6eca5951eb",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "f5a058fe-b08f-46e4-8987-8cad847fa195",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "e987248a-8291-4ad1-846e-26750e0fed88",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "39aa31df-a5a0-426d-9203-9840403f919d",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "97239291-1b23-4541-b3c4-94648cc42e00",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "276fb806-c0c7-4fe1-8ac8-3689bcc40886",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "0f3b11ed-21f7-4b15-b7da-3fc37d0e6750",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          }
+        ],
+        "source_metadata": {},
+        "task_generation": "279bf424-f566-460f-a94a-afec2dbd798c",
+        "duration_minutes": null,
+        "completion_version": 0,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "restore_from": "28f81662-1254-43c6-b488-8fd7c4078b11"
+    },
+    "root_recovery_reply": {
+      "task": {
+        "id": "ede067ff-f0af-4ff6-9146-4d24346dbb11",
+        "title": "Concurrent remote",
+        "labels": [
+          "remote-0",
+          "remote-1",
+          "remote-2",
+          "remote-3",
+          "remote-4",
+          "remote-5",
+          "remote-6",
+          "remote-7",
+          "remote-8",
+          "remote-9",
+          "remote-10",
+          "remote-11",
+          "remote-12",
+          "remote-13",
+          "remote-14",
+          "remote-15",
+          "remote-16",
+          "remote-17",
+          "remote-18",
+          "remote-19",
+          "remote-20",
+          "remote-21",
+          "remote-22",
+          "remote-23",
+          "remote-24",
+          "remote-25",
+          "remote-26",
+          "remote-27",
+          "remote-28",
+          "remote-29",
+          "remote-30",
+          "remote-31",
+          "remote-32",
+          "remote-33",
+          "remote-34",
+          "remote-35",
+          "remote-36",
+          "remote-37",
+          "remote-38",
+          "remote-39",
+          "remote-40",
+          "remote-41",
+          "remote-42",
+          "remote-43",
+          "remote-44",
+          "remote-45",
+          "remote-46",
+          "remote-47",
+          "remote-48",
+          "remote-49",
+          "remote-50",
+          "remote-51",
+          "remote-52",
+          "remote-53",
+          "remote-54",
+          "remote-55",
+          "remote-56",
+          "remote-57",
+          "remote-58",
+          "remote-59",
+          "remote-60",
+          "remote-61",
+          "remote-62",
+          "remote-63",
+          "remote-64",
+          "remote-65",
+          "remote-66",
+          "remote-67",
+          "remote-68",
+          "remote-69",
+          "remote-70",
+          "remote-71",
+          "remote-72",
+          "remote-73",
+          "remote-74",
+          "remote-75",
+          "remote-76",
+          "remote-77",
+          "remote-78",
+          "remote-79",
+          "remote-80",
+          "remote-81",
+          "remote-82",
+          "remote-83",
+          "remote-84",
+          "remote-85",
+          "remote-86",
+          "remote-87",
+          "remote-88",
+          "remote-89",
+          "remote-90",
+          "remote-91",
+          "remote-92",
+          "remote-93",
+          "remote-94",
+          "remote-95",
+          "remote-96",
+          "remote-97",
+          "remote-98",
+          "remote-99",
+          "remote-100",
+          "remote-101",
+          "remote-102",
+          "remote-103",
+          "remote-104",
+          "remote-105",
+          "remote-106",
+          "remote-107",
+          "remote-108",
+          "remote-109",
+          "remote-110",
+          "remote-111",
+          "remote-112",
+          "remote-113",
+          "remote-114",
+          "remote-115",
+          "remote-116",
+          "remote-117",
+          "remote-118",
+          "remote-119",
+          "remote-120",
+          "remote-121",
+          "remote-122",
+          "remote-123",
+          "remote-124",
+          "remote-125",
+          "remote-126",
+          "remote-127",
+          "remote-128",
+          "remote-129"
+        ],
+        "user_id": "594b9795-7562-4a60-b868-871e940dc645",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [
+          {
+            "id": "child-check",
+            "title": "Keep original history",
+            "comments": [
+              {
+                "id": "legacy-comment",
+                "text": "Original discussion"
+              }
+            ],
+            "subtasks": [],
+            "completed": true,
+            "attachments": [
+              {
+                "id": "legacy-file",
+                "url": "https://files.example.invalid/original"
+              }
+            ],
+            "completed_at": "2026-10-01T09:00:00+00:00",
+            "future_state": {
+              "keep": true
+            },
+            "reminder_specs": [
+              {
+                "id": "e63714bb-50b4-45a2-b50b-7c68f475f4a9",
+                "kind": "private-device-setting",
+                "opaque": {
+                  "keep": true
+                },
+                "version": 99
+              },
+              {
+                "id": "18cf1651-d9e4-4b6a-b976-b5a38d00aa4d",
+                "kind": "relative",
+                "anchor": "planned",
+                "version": 1,
+                "channels": [
+                  "local"
+                ],
+                "future_choice": {
+                  "keep": true
+                },
+                "offset_minutes": -15
+              }
+            ],
+            "source_metadata": {
+              "legacy": "original"
+            },
+            "taskfold_completion_v1": {
+              "epoch": "c26ae92a-1ae0-46ab-a6c6-9b0989729cc1",
+              "version": 3
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-24T06:23:52.26003+00:00",
+        "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+        "section_id": "81e1ee1d-f9eb-4645-8db4-2e799433b005",
+        "assigned_to": null,
+        "attachments": [],
+        "description": "Guest reviewed edit",
+        "completed_at": null,
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [
+          {
+            "id": "d7317029-4987-4ef5-8038-77c97f6ab836",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "future_choice": {
+              "retain": true
+            },
+            "offset_minutes": -45
+          },
+          {
+            "id": "0b2fe618-fedc-4401-a839-10a7a2e63cff",
+            "kind": "private-device-setting",
+            "opaque": {
+              "keep": true
+            },
+            "version": 99
+          },
+          {
+            "id": "da5697c1-cd01-483b-b84a-a02cd50fcf2b",
+            "opaque": "arrived later",
+            "version": 101
+          },
+          {
+            "id": "f01dc96a-4154-48db-ade2-c7f63370b13a",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "45a82996-d374-42fd-a52d-e59e04ffc8b5",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "103d0531-77be-4a5c-ab26-fb6eca5951eb",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "f5a058fe-b08f-46e4-8987-8cad847fa195",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "e987248a-8291-4ad1-846e-26750e0fed88",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "39aa31df-a5a0-426d-9203-9840403f919d",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "97239291-1b23-4541-b3c4-94648cc42e00",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "276fb806-c0c7-4fe1-8ac8-3689bcc40886",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          },
+          {
+            "id": "0f3b11ed-21f7-4b15-b7da-3fc37d0e6750",
+            "kind": "relative",
+            "anchor": "planned",
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": -5
+          }
+        ],
+        "source_metadata": {},
+        "task_generation": "279bf424-f566-460f-a94a-afec2dbd798c",
+        "duration_minutes": null,
+        "completion_version": 0,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "account": "cf8ff7a6-1721-4fa0-8b91-d636271fb25e",
+      "task_id": "ede067ff-f0af-4ff6-9146-4d24346dbb11",
+      "team_id": "45de82c2-7e08-44f2-b255-7cc7b65a6514",
+      "protocol": 1,
+      "replayed": false,
+      "operation": "restore",
+      "project_id": "f13a5755-226a-4ebf-8966-1bf09e8daf37",
+      "request_id": "04523dfd-8934-43c6-8b6a-6527e4a246d9",
+      "unavailable": false,
+      "task_generation": "279bf424-f566-460f-a94a-afec2dbd798c"
+    }
+  }
+}

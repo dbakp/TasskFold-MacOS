@@ -1,0 +1,8 @@
+{
+  "macInitialLaunch": "First test driver launched without a visible window; driver now sends the normal reopen event to the existing isolated process.",
+  "macNoticeAssertion": "macOS static text exposes the refusal in value; the corrected assertion inspects label or value. Save feedback now updates the save button immediately.",
+  "phoneLargeText": "Offscreen Form rows are virtualized. Driver now scrolls before querying and uses enabled Done as decode readiness, then verifies complete target bounds. Compact accessibility status/time now stack; explanatory text is shorter.",
+  "phoneReplacementNavigation": "Three phone cases passed in the final main run. The remaining case required explicit upward navigation from the caption notice to the virtualized timer. Its targeted rerun passes without changing app code or relaxing the duration/caption assertions.",
+  "durationRegression": "The new controller duration check fails before elapsed restoration and passes after the refused replacement restores the old clip duration.",
+  "verboseDiagnostics": "The first failed phone run completed its cases but Xcode waited on simctl diagnose --timeout=600. Only that owned optional diagnostic subprocess was interrupted; xcodebuild then finalized with the genuine failure. Later runs use -collect-test-diagnostics never, preserving normal result/warning records."
+}

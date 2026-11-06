@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-30",
+  "scope": "Fresh v1/v2 read and exact authored-content comparison for nested unfamiliar values",
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "c840bd1fc006652fbaf3ae2e56e8e0824b7c14502ce0466643c7bd789f9be443",
+    "Taskfold/Core/PreservingJSON.swift": "c53940978a54d0f813cb81f5cc60d9a17349c8426119d87940fea1bd01cd71a8",
+    "Taskfold/Core/Models.swift": "cf11f7fa95668998ad435ce4dbd1f0ce88ab892063f154c6366c657ef581a9c5",
+    "Taskfold/ChildFieldNativeFixture.swift": "d8aa09f8077b0405e932e6e223f9a6a9b21e7fb70d65379caf58fcc22b430e9a",
+    "TaskfoldUITests/AudioCommentUITests.swift": "159293f7d8f7d2255e27cb401516beab023e71ba0160c16899204d1ba82a3458",
+    "TaskfoldTests/ChildTaskOpaqueReadTests.swift": "d8c7e05498e36c47a6c97d4e27e9c5a14474e8ef8a1b160f1ee3dee2a0126c69"
+  },
+  "normalChildFeatureGatesEnabled": false,
+  "hostedChanges": false,
+  "broaderMigrationComplete": false,
+  "selectedCore": {
+    "executed": 497,
+    "passed": 496,
+    "skipped": 1,
+    "failures": 0
+  },
+  "finalNewControlCases": {
+    "passed": 7,
+    "failures": 0,
+    "scope": "Final source adds an allowed-new-task control before refusing copied unknown metadata; no production change after broad run"
+  },
+  "initialTestFinding": "The first run used String inequality to check two raw Unicode spellings; Swift considers them equal. The fixture assertion now compares UTF-8 bytes. Production comparison already distinguished them.",
+  "native": {
+    "buildForTesting": "passed",
+    "strictDevelopmentSignatures": "passed",
+    "method": "Authorized Terminal launch and direct computer use",
+    "saveSendColdReturn": "passed",
+    "syntheticOnly": true
+  },
+  "nativeHostSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "c840bd1fc006652fbaf3ae2e56e8e0824b7c14502ce0466643c7bd789f9be443",
+    "Taskfold/Core/PreservingJSON.swift": "c53940978a54d0f813cb81f5cc60d9a17349c8426119d87940fea1bd01cd71a8",
+    "Taskfold/Core/Models.swift": "cf11f7fa95668998ad435ce4dbd1f0ce88ab892063f154c6366c657ef581a9c5",
+    "Taskfold/ChildFieldNativeFixture.swift": "d8aa09f8077b0405e932e6e223f9a6a9b21e7fb70d65379caf58fcc22b430e9a"
+  },
+  "newReadAndComparisonCases": 7,
+  "skips": [
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/SubtaskTransportIntegrationTests.swift:6: -[TaskfoldCoreTests.SubtaskTransportIntegrationTests testMovedChildAndReviewedOrderKeepSecondClientWork] : Test skipped - Disposable subtask fixture required"
+  ]
+}

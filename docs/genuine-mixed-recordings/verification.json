@@ -1,0 +1,14 @@
+{
+  "reviewed": "2026-11-05",
+  "owner": "TasskFold-MacOS",
+  "genuineMixedServiceChecks": 58,
+  "actualStorageMaintenance": true,
+  "ownMigrations": 206,
+  "sourceUnchanged": true,
+  "normalGatesChanged": false,
+  "hostedChanges": false,
+  "nativeAdoptionAccepted": false,
+  "protectedKeychainAccepted": false,
+  "hostedS3Accepted": false,
+  "allOwnedServicesRemoved": true
+}

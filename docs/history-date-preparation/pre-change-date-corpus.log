@@ -1,0 +1,10 @@
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.003) seconds
+Test Case '-[TaskfoldCoreTests.ActivityDateCompatibilityTests testCreationBatchDatesMatchOrdinaryRecordsAcrossAllSpellings]' started.
+Test Case '-[TaskfoldCoreTests.ActivityDateCompatibilityTests testCreationBatchDatesMatchOrdinaryRecordsAcrossAllSpellings]' passed (0.131 seconds).
+Test Case '-[TaskfoldCoreTests.ActivityDateCompatibilityTests testHistoryDateCorpusRetainsFrozenLegacyBytesAndRefusals]' started.
+Test Case '-[TaskfoldCoreTests.ActivityDateCompatibilityTests testHistoryDateCorpusRetainsFrozenLegacyBytesAndRefusals]' passed (1.703 seconds).
+	 Executed 2 tests, with 0 failures (0 unexpected) in 1.834 (1.835) seconds
+	 Executed 2 tests, with 0 failures (0 unexpected) in 1.834 (1.835) seconds
+	 Executed 2 tests, with 0 failures (0 unexpected) in 1.834 (1.836) seconds
+HISTORY_DATE_CORPUS_SHA 901745ac563fae6de8dab06750891d3a603061398928f060dde2db55861db977

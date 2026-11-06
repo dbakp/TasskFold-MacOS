@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-06",
+  "tests": 7,
+  "selectionCases": 6,
+  "staleReceiptFailureCase": 1,
+  "passed": true,
+  "testSourceSHA256": "a0536af0a1fe701a8aa881ec82b2df89df45797101c75e935eb68d5e130ef700",
+  "helperSourceSHA256": "319da92eff45402826db9d8a5e9c54cb64a754f3abafe67585719261bcfa54a9",
+  "currentBuildToolSHA256": "82c77051f4845176d305f8ef0f5df039e51ce318ff0b5947dd23c74ed6579b58",
+  "genuineProfileBuildAcceptedSeparately": true,
+  "frozenBuildTools": "build-tools-used/",
+  "frozenBuildToolsMatchReceipt": true
+}

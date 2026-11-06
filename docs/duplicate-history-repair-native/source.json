@@ -1,0 +1,10 @@
+{
+  "Taskfold/ChildRepairNativeFixture.swift": "435883cd99f6fbef3cae02980ed6fc9ed8feb1bdeaaf19d0e2800473124d83d5",
+  "Taskfold/ChildAdoptionNativeFixture.swift": "0c39af9b7676a66c1dfae959745e170e0ca8b14d8ed10c6f71cff8d75d0fc0a2",
+  "Taskfold/ChildFieldNativeFixture.swift": "1797e370ca54814518f0e3198619ecb57c3f30a8e11a68cb2945d9768f42e67d",
+  "Taskfold/Views/ChildTaskRepairView.swift": "a8c5b76d32b4c43fff42d8534b7509fca23cf71160de1b577d54130d7e2b0392",
+  "Taskfold/Core/ChildTaskRepair.swift": "d6ade1501bd925c295a13c7be05d8b0f1a3c8c7d9396070871e0c9410573a804",
+  "Taskfold/Core/TaskActivity.swift": "8a291c8659da2e4984a6e036e1efb480e17784e4a5567d52ba1e074571084512",
+  "TaskfoldUITests/AudioCommentUITests.swift": "a7ce07ba8a9504d7d505998646aed5964c282d26588f9393ab17cb5768fbb735",
+  "Scripts/verify_duplicate_history_native.py": "75aa3ed3c86bdf00b691bb4414b312af150d2147940e676ee97674f0787cd158"
+}

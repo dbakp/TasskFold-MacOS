@@ -1,0 +1,31 @@
+{
+  "recordedAtUTC": "2026-10-28T07:15:56.860272+00:00",
+  "selectedCoreTests": 102,
+  "newCoreCases": 5,
+  "legacyPredicateComparisons": 3240,
+  "beforeExpectedFailures": 1,
+  "phonePassingNativeTests": 3,
+  "ipadPassingNativeTests": 1,
+  "MacNativeRuntimeAccepted": false,
+  "listedNativeSourcesMatchHost": true,
+  "strictSignatureVerified": true,
+  "sources": {
+    "Taskfold/Core/ProjectWorkflows.swift": "89180b22640c4674213bcb08708fe5d44a54fa5a3b9006773bfe02ebf05f8cd0",
+    "Taskfold/Core/Store.swift": "95f97993a1cc80f8bac244b00bc170f8c3405767faa5841b8dbe990070679ffc",
+    "Taskfold/Core/Models.swift": "0225790ac361bed3e823c8d2e2eced3186bdd470287186a88a5cc9d386e445a6",
+    "Taskfold/Core/TaskActivity.swift": "a7021ae66938cb78f5fdb53fe16694f97644930b75d1872f0cd726c3cfa4f5cd",
+    "Taskfold/Views/WorkflowViews.swift": "ba81bdcea598e4169301a070e7fd12cb21c812a8ccf3fe57041bd7c6043be1a7",
+    "Taskfold/TeamTemplateNativeFixture.swift": "deeca137aa192c2303b74e6dc1141c5eb7f074014e529e0c382c6138c2170560",
+    "TaskfoldTests/WorkflowHistoryGuardTests.swift": "3b316426fa2ac00272d7971e89befe7e2590b595cbc23de73bb46db72f89c9f1",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "e25764f3013234f1213624299c090b801a6652742a86b349d4100641dec16b20"
+  },
+  "aggregateCoreObjectSHA256": "8bdcba1ad83fe6fecd2cf4bb8b98d6544d5fc650c85853d671e9ef7d4f8b70a0",
+  "coreTestExecutables": {
+    "Contents/MacOS/TaskfoldCoreTests": "faf76b1f5856bb79e94ceb0059b4048255023dd18c6779431bc64c60143bebb8"
+  },
+  "binaries": {
+    "Contents/MacOS/Taskfold.debug.dylib": "d148b0eb14e79a7e020ed0580fee3bbc428eb9f8cf37315c1b8de2177479538c",
+    "Contents/MacOS/__preview.dylib": "03d863402f068af3a205875fce6d6a1d491be048f1bbfe486911a03b02cc226f",
+    "Contents/MacOS/Taskfold": "ae935bee1085d768368c0f3c249af77540212ad4bc8b125f68a1f053fe718b04"
+  }
+}

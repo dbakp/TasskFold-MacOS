@@ -1,0 +1,647 @@
+import SwiftUI
+import CryptoKit
+
+#if DEBUG
+/// No production bundle/account can opt into this peer or its synthetic key.
+enum ChildFieldNativeIdentity {
+    static let account = "ec990000-0000-4000-8000-000000000001"
+    static let other = "ec990000-0000-4000-8000-000000000009"
+    static let rootID = "ec990000-0000-4000-8000-000000000002"
+    static let generation = "ec990000-0000-4000-8000-000000000003"
+    static let origin = "https://synthetic.example"
+    static var enabled: Bool {
+        ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") &&
+        ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && ProcessInfo.processInfo.arguments.contains("--child-fields-native")
+    }
+    static var mainListTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--child-fields-main-list") }
+    static func recordPresentationClose(_ id: UUID, reason: String) {
+        guard enabled else { return }
+        let url = URL.cachesDirectory.appendingPathComponent("child-reminder-presentations.json")
+        var rows = ((try? Data(contentsOf: url)).flatMap { try? TaskfoldJSONDecoder().decode([[String: String]].self, from: $0) }) ?? []
+        rows.append(["presentation": id.uuidString, "reason": reason])
+        if let data = try? TaskfoldJSONEncoder().encode(Array(rows.suffix(64))) { try? data.write(to: url, options: .atomic) }
+    }
+    static func key(_ account: String) throws -> SymmetricKey {
+        guard enabled, [Self.account, other].contains(account) else { throw CancellationError() }
+        return SymmetricKey(data: Data(repeating: account == Self.account ? 88 : 89, count: 32))
+    }
+}
+
+struct ChildFieldNativeRefusal: Error { let code: String }
+
+/// A synthetic file-backed HTTP peer, not a substitute for the PostgreSQL suite.
+/// Reserved DEBUG-only file channel into an owned local PostgreSQL fixture.
+/// It never opens a port, reads hosted credentials or substitutes normal HTTP.
+@MainActor enum ChildMappingSQLNativePeer {
+    static var enabled: Bool { ChildFieldNativeIdentity.enabled && ProcessInfo.processInfo.arguments.contains("--child-mapping-sql-native") }
+    private struct Configuration: Decodable { let `protocol`: Int; let nonce: UUID; let account: String; let root: String; let generation: String }
+    private struct Reply: Decodable { let `protocol`: Int; let id: String; let code: String?; let data: String; let lose: Bool }
+    private static func read(_ url: URL, limit: Int) throws -> Data {
+        let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        guard values.isRegularFile == true, values.isSymbolicLink != true, let size = values.fileSize, size <= limit else { throw URLError(.cannotDecodeContentData) }
+        let data = try Data(contentsOf: url)
+        guard data.count <= limit else { throw URLError(.dataLengthExceedsMaximum) }
+        return data
+    }
+    static func response(path: String, body: Data) async throws -> (Data, Bool) {
+        guard enabled, Store.shared.userID == ChildFieldNativeIdentity.account, body.count <= 600_000 else { throw CancellationError() }
+        let folder = ChildFieldNativePeer.folder
+        let configuration = try JSONDecoder().decode(Configuration.self, from: read(folder.appendingPathComponent("channel.json"), limit: 2_048))
+        guard configuration.protocol == 1, configuration.account == ChildFieldNativeIdentity.account,
+              configuration.root == ChildFieldNativeIdentity.rootID, configuration.generation == ChildFieldNativeIdentity.generation else { throw CancellationError() }
+        let id = UUID().uuidString.lowercased(), request = folder.appendingPathComponent(id + ".request"), reply = folder.appendingPathComponent(id + ".reply")
+        let envelope: [String: Any] = ["protocol": 1, "nonce": configuration.nonce.uuidString.lowercased(), "id": id, "path": path, "body": body.base64EncodedString()]
+        try JSONSerialization.data(withJSONObject: envelope, options: [.sortedKeys]).write(to: request, options: [.atomic])
+        defer { try? FileManager.default.removeItem(at: request); try? FileManager.default.removeItem(at: reply) }
+        for _ in 0..<300 {
+            try Task.checkCancellation()
+            if FileManager.default.fileExists(atPath: reply.path) {
+                let value = try JSONDecoder().decode(Reply.self, from: read(reply, limit: 14_000_000))
+                guard value.protocol == 1, value.id == id, Store.shared.userID == configuration.account else { throw CancellationError() }
+                if let code = value.code { throw ChildFieldNativeRefusal(code: code) }
+                guard let data = Data(base64Encoded: value.data), data.count <= 10_000_000 else { throw URLError(.cannotDecodeContentData) }
+                return (data, value.lose)
+            }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        throw URLError(.timedOut)
+    }
+}
+
+@MainActor enum ChildFieldNativePeer {
+    static var folder: URL { URL.applicationSupportDirectory.appendingPathComponent(ChildMappingSQLNativePeer.enabled ? "Child mapping SQL native peer" : "Child field native peer", isDirectory: true) }
+    static var file: URL { folder.appendingPathComponent("server.json") }
+    static var root: Record {
+        get throws { Record(try state()["root"]!.object) }
+    }
+    static var opaqueTesting: Bool { ChildFieldNativeIdentity.enabled && ProcessInfo.processInfo.arguments.contains("--child-fields-opaque") }
+    static let opaqueMetadata = Data(#"{"exact":9007199254740993,"large":1e1000,"keys":{"é":1,"e\u0301":2},"nested":[false,null,{"keep":"Café 🪴"}]}"#.utf8)
+    static func initial() -> [String: JSON] {
+        let child: (String, String) -> JSON = { id, title in
+            var fields: [String: JSON] = ["id": .string(id), "title": .string(title), "description": .string("Original saved notes"), "priority": .number(4), "completed": .bool(false), "future": .object(["keep": .bool(true)])]
+            if id == "concept", ProcessInfo.processInfo.arguments.contains("--child-fields-native-heading") { fields["is_heading"] = .bool(true) }
+            return .object(fields)
+        }
+        var initialChildren = [child("concept", "Prepare the review"), child("review", "Publish the summary")]
+        if ProcessInfo.processInfo.arguments.contains("--child-structure-nested") || ChildTransferNativePeer.enabled || ChildAdoptionNativePeer.enabled {
+            var first = initialChildren[0].object
+            first["subtasks"] = .array([.object(["id": .string("nested"), "title": .string("Collect supporting notes"), "description": .string("Keep these nested instructions"), "future": .object(["keep": .bool(true)])])])
+            initialChildren[0] = .object(first)
+        }
+        if ChildAdoptionNativePeer.enabled, (ProcessInfo.processInfo.arguments.contains("--child-adoption-malformed") || ChildAdoptionNativePeer.exportTesting) { initialChildren[0] = .string("Keep this older text unchanged") }
+        if ChildRepairNativePeer.enabled, !ChildAdoptionNativePeer.copyTesting { initialChildren = [.object(["id":.number(7),"title":.string("Plan the workshop"),"future":.object(["keep":.bool(true)])]), .string("Keep the workshop notes")] }
+        var state: [String: JSON] = ["root": .object(["id": .string(ChildFieldNativeIdentity.rootID), "user_id": .string(ChildFieldNativeIdentity.account), "task_generation": .string(ChildFieldNativeIdentity.generation), "project_id": .null, "title": .string("Native child workspace"), "subtasks": .array(initialChildren)]), "receipts": .object([:]), "versions": .object(["concept": .number(1), "review": .number(1)]), "writes": .number(0), "requests": .number(0), "lost": .bool(false)]
+        if opaqueTesting {
+            var root = state["root"]!.object, rows = root["subtasks"]!.list, first = rows[0].object
+            root["source_metadata"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: opaqueMetadata)
+            first["future_exact"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: opaqueMetadata)
+            first["future_number"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: Data("1e1000".utf8)); rows[0] = .object(first); root["subtasks"] = .array(rows); state["root"] = .object(root)
+        }
+        if ChildFieldNativeIdentity.mainListTesting, opaqueTesting {
+            var root = state["root"]!.object, rows = root["subtasks"]!.list, second = rows[1].object
+            second["future_exact"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: opaqueMetadata)
+            rows[1] = .object(second); root["subtasks"] = .array(rows); state["root"] = .object(root)
+        }
+        if ProcessInfo.processInfo.arguments.contains("--mixed-completion-native") {
+            var root = state["root"]!.object
+            root.merge(["title": .string("Plan the workshop"), "section_id": .null, "completed": .bool(false), "completed_at": .null, "completion_version": .number(0), "is_heading": .bool(false), "is_recurring": .bool(false)]) { _, new in new }
+            state["root"] = .object(root)
+        }
+        ChildRepairNativePeer.seedDuplicateHistory(&state)
+        return state
+    }
+    static func save(_ state: [String: JSON]) throws {
+        guard ChildFieldNativeIdentity.enabled, !ChildMappingSQLNativePeer.enabled else { throw CancellationError() }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try TaskfoldJSONEncoder().encode(state).write(to: file, options: .atomic)
+    }
+    static func state() throws -> [String: JSON] {
+        guard ChildFieldNativeIdentity.enabled else { throw CancellationError() }
+        if !FileManager.default.fileExists(atPath: file.path) {
+            guard !ChildMappingSQLNativePeer.enabled else { throw URLError(.notConnectedToInternet) }
+            try save(initial())
+        }
+        let bytes = try Data(contentsOf: file); guard bytes.count < 1_000_000 else { throw CancellationError() }
+        return try TaskfoldJSONDecoder().decode([String: JSON].self, from: bytes)
+    }
+    static func completionResponse(_ body: [String: JSON], closing: Bool, state: inout [String: JSON], persist: Bool = true) throws -> (Data, Bool) {
+        guard Set(body.keys) == ["_body"], Store.shared.userID == ChildFieldNativeIdentity.account else { throw CancellationError() }
+        let raw = body["_body"]!.object
+        var receipts = state["completionReceipts"]?.object ?? [:]
+        let original: ChildTaskCompletionCommand.Original?
+        if raw["action"] == .string("undo") {
+            guard let saved = receipts[raw["undo_of"]?.text ?? ""]?.object else { throw ChildFieldNativeRefusal(code: "PT409") }
+            original = .init(body: saved["body"]!.object, receipt: saved["receipt"]!.object)
+        } else { original = nil }
+        let command = try ChildTaskCompletionCommand(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, body: raw, original: original)
+        if closing {
+            var result = raw.filter { !["baseline", "revision"].contains($0.key) }; result["undo_of"] = raw["undo_of"] ?? .null
+            state["completionCloses"] = .number(Double((state["completionCloses"]?.integer ?? 0) + 1))
+            if let old = receipts[command.id]?.object {
+                guard AuthoredValueComparison.exactJSON(old["body"]!, .object(raw)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+                var proof = old["receipt"]!.object; proof["replayed"] = .bool(true)
+                result["outcome"] = .string("applied"); result["receipt"] = .object(proof)
+            } else {
+                var closed = state["completionClosures"]?.object ?? [:]
+                if let old = closed[command.id], !AuthoredValueComparison.exactJSON(old, .object(raw)) { throw ChildFieldNativeRefusal(code: "PT409") }
+                closed[command.id] = .object(raw); state["completionClosures"] = .object(closed)
+                result["outcome"] = .string("closed"); result["receipt"] = .null
+            }
+            _ = try ChildTaskCompletionResolution(command: command, raw: result); if persist { try save(state) }
+            return (try TaskfoldJSONEncoder().encode(result), false)
+        }
+        state["completionRequests"] = .number(Double((state["completionRequests"]?.integer ?? 0) + 1))
+        if state["completionClosures"]?.object[command.id] != nil { if persist { try save(state) }; throw ChildFieldNativeRefusal(code: "PT410") }
+        if let saved = receipts[command.id]?.object {
+            guard AuthoredValueComparison.exactJSON(saved["body"]!, .object(raw)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+            var proof = saved["receipt"]!.object; proof["replayed"] = .bool(true); if persist { try save(state) }
+            return (try TaskfoldJSONEncoder().encode(proof), false)
+        }
+        var root = Record(state["root"]!.object), rows = root["subtasks"].list
+        let key = raw["node_key"]!.text
+        guard raw["task_id"] == .string(root.id), raw["task_generation"] == root["task_generation"], raw["project_id"] == root["project_id"],
+              let index = rows.firstIndex(where: { $0.object["id"] == .string(key) }),
+              raw["incarnation"] == .string(index == 0 ? "ec990000-0000-4000-8000-000000000005" : "ec990000-0000-4000-8000-000000000006") else { throw ChildFieldNativeRefusal(code: "PT409") }
+        var fields = rows[index].object, versions = state["versions"]!.object
+        let before = fields.filter { ChildTaskCompletionDraft.cohort.contains($0.key) }
+        let expected = original?.receipt["after"] ?? raw["baseline"]!
+        guard AuthoredValueComparison.exactJSON(.object(before), expected), raw["revision"]!.integer <= versions[key]!.integer,
+              before[TeamChecklist.key] != nil || raw["revision"] == versions[key] else { if persist { try save(state) }; throw ChildFieldNativeRefusal(code: "PT409") }
+        var after = original?.receipt["before"]?.object ?? before
+        let token = TeamChecklist.token(before[TeamChecklist.key])
+        after[TeamChecklist.key] = .object(["epoch": .string(token?.epoch ?? "ec990000-0000-4000-8000-000000000010"), "version": .number((token?.version ?? 0) + 1)])
+        if original == nil {
+            let complete = raw["action"] == .string("complete")
+            after["completed"] = .bool(complete); after["completed_at"] = complete ? .string(ISO8601DateFormatter().string(from: Date())) : .null
+        }
+        for field in ChildTaskCompletionDraft.cohort { fields.removeValue(forKey: field) }
+        fields.merge(after) { _, new in new }; rows[index] = .object(fields); root["subtasks"] = .array(rows)
+        versions[key] = .number(Double(versions[key]!.integer + 1))
+        var proof = raw.filter { !["baseline", "undo_of"].contains($0.key) }
+        proof["undo_of"] = raw["undo_of"] ?? .null; proof["revision"] = versions[key]
+        proof["before"] = .object(before); proof["after"] = .object(after); proof["replayed"] = .bool(false)
+        _ = try command.confirmed(proof)
+        receipts[command.id] = .object(["body": .object(raw), "receipt": .object(proof)])
+        state["root"] = .object(root.fields); state["versions"] = .object(versions); state["completionReceipts"] = .object(receipts)
+        state["completionWrites"] = .number(Double((state["completionWrites"]?.integer ?? 0) + 1)); state["writes"] = .number(Double(state["writes"]!.integer + 1))
+        let lose = ProcessInfo.processInfo.arguments.contains("--child-completion-lose-reply") && state["completionLost"]?.flag != true
+        if lose { state["completionLost"] = .bool(true) }; if persist { try save(state) }
+        return (try TaskfoldJSONEncoder().encode(proof), lose)
+    }
+    static func batchResponse(_ body: [String: JSON], closing: Bool, state: inout [String: JSON]) throws -> (Data, Bool) {
+        guard Set(body.keys) == ["_body"] else { throw CancellationError() }
+        let raw = body["_body"]!.object
+        let items = try raw["items"]!.list.map { value -> ChildTaskCompletionCommand in
+            let b = value.object
+            let source = b["undo_of"].flatMap { state["completionReceipts"]?.object[$0.text]?.object }
+            let original = source.map { ChildTaskCompletionCommand.Original(body: $0["body"]!.object, receipt: $0["receipt"]!.object) }
+            return try .init(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, body: b, original: original)
+        }
+        guard let id = UUID(uuidString: raw["batch_id"]!.text) else { throw CancellationError() }
+        let command = try ChildTaskCompletionBatchCommand(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, items: items, batchID: id)
+        guard AuthoredValueComparison.exactJSON(.object(command.body), .object(raw)) else { throw CancellationError() }
+        state["batchRequests"] = .number(Double((state["batchRequests"]?.integer ?? 0) + 1))
+        if let old = state["batchDecisions"]?.object[command.id]?.object {
+            guard AuthoredValueComparison.exactJSON(old["body"]!, .object(raw)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+            var proof = old["proof"]!.object
+            if !closing, proof["outcome"] == .string("closed") { try save(state); throw ChildFieldNativeRefusal(code: "PT410") }
+            proof["replayed"] = .bool(true)
+            proof["receipts"] = .array(proof["receipts"]!.list.map { value in var r = value.object; r["replayed"] = .bool(true); return .object(r) })
+            _ = try command.resolution(proof); try save(state); return (try TaskfoldJSONEncoder().encode(proof), false)
+        }
+        guard items.allSatisfy({ state["completionReceipts"]?.object[$0.id] == nil && state["completionClosures"]?.object[$0.id] == nil }) else { throw ChildFieldNativeRefusal(code: "PT409") }
+        var working = state, proofs: [JSON] = []
+        for item in items {
+            let result = try completionResponse(["_body": .object(item.body)], closing: closing, state: &working, persist: false)
+            let value = try TaskfoldJSONDecoder().decode([String: JSON].self, from: result.0)
+            if !closing { proofs.append(.object(value)) }
+        }
+        let proof: [String: JSON] = ["protocol": .number(1), "account": .string(command.account), "batch_id": .string(command.id), "outcome": .string(closing ? "closed" : "applied"), "replayed": .bool(false), "receipts": .array(proofs)]
+        _ = try command.resolution(proof)
+        var decisions = working["batchDecisions"]?.object ?? [:]; decisions[command.id] = .object(["body": .object(raw), "proof": .object(proof)]); working["batchDecisions"] = .object(decisions)
+        if !closing { working["batchWrites"] = .number(Double((working["batchWrites"]?.integer ?? 0) + 1)) }
+        let lose = !closing && ProcessInfo.processInfo.arguments.contains("--child-batch-lose-reply") && working["batchLost"]?.flag != true
+        if lose { working["batchLost"] = .bool(true) }; state = working; try save(state)
+        return (try TaskfoldJSONEncoder().encode(proof), lose)
+    }
+    static func mixedResponse(_ body: [String: JSON], path: String, state: inout [String: JSON]) throws -> (Data, Bool) {
+        guard Store.shared.userID == ChildFieldNativeIdentity.account, let raw = body["_body"]?.object else { throw CancellationError() }
+        func baseline(_ root: [String: JSON]) -> [String: JSON] { root.filter { CompletionSelectionRootRead.baselineKeys.contains($0.key) } }
+        func replay(_ value: JSON) -> JSON {
+            switch value {
+            case .object(let object): return .object(object.mapValues(replay).merging(object["replayed"] != nil ? ["replayed": .bool(true)] : [:]) { _, new in new })
+            case .array(let values): return .array(values.map(replay))
+            default: return value
+            }
+        }
+        if path.hasSuffix("taskfold_read_completion_selection_roots") {
+            let root = state["root"]!.object
+            guard raw["task_ids"] == .array([root["id"]!]) else { throw ChildFieldNativeRefusal(code: "PT409") }
+            let hash = SHA256.hash(data: try TaskfoldJSONEncoder().encode(root)).map { String(format: "%02x", $0) }.joined()
+            return (try TaskfoldJSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "roots": .array([.object(["task": .object(root), "baseline": .object(baseline(root)), "source_hash": .string(hash)])])]), false)
+        }
+        let saved = raw["undo_of"].flatMap { state["mixedDecisions"]?.object[$0.text]?.object }
+        let original = saved.map { MixedTaskCompletionCommand.Original(body: $0["body"]!.object, receipt: $0["proof"]!.object) }
+        let command = try MixedTaskCompletionCommand(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, body: raw, original: original)
+        let closing = path.hasSuffix("taskfold_close_mixed_completion")
+        state["mixedRequests"] = .number(Double((state["mixedRequests"]?.integer ?? 0) + 1))
+        if let saved = state["mixedDecisions"]?.object[command.id]?.object {
+            guard AuthoredValueComparison.exactJSON(saved["body"]!, .object(raw)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+            let proof = replay(saved["proof"]!).object
+            if !closing, proof["outcome"] == .string("closed") { throw ChildFieldNativeRefusal(code: "PT410") }
+            _ = try command.resolution(proof); try save(state); return (try TaskfoldJSONEncoder().encode(proof), false)
+        }
+        var working = state, proofs: [JSON] = []
+        if !closing {
+            for (index, item) in command.items.enumerated() {
+                if item.kind == "child" {
+                    let result = try completionResponse(["_body": .object(item.body)], closing: false, state: &working, persist: false)
+                    proofs.append(.object(["kind": .string("child"), "request_id": .string(item.id), "receipt": .object(try TaskfoldJSONDecoder().decode([String: JSON].self, from: result.0)), "replayed": .bool(false)]))
+                } else {
+                    var root = working["root"]!.object; let before = baseline(root)
+                    let expected = original == nil ? raw["roots"]!.list.first { $0.object["task_id"] == root["id"] }!.object["baseline"]! : original!.receipt["receipts"]!.list[index].object["after"]!
+                    guard AuthoredValueComparison.exactJSON(.object(before), expected) else { throw ChildFieldNativeRefusal(code: "PT409") }
+                    if let original {
+                        let restored = original.receipt["receipts"]!.list[index].object["before"]!.object
+                        root["completed"] = restored["completed"]; root["completed_at"] = restored["completed_at"]
+                    } else { root["completed"] = .bool(raw["action"] == .string("complete")); root["completed_at"] = root["completed"] == .bool(true) ? raw["completed_at"] : .null }
+                    root["completion_version"] = .number(Double(before["completion_version"]!.integer + 1)); working["root"] = .object(root)
+                    proofs.append(.object(["kind": .string("root"), "request_id": .string(item.id), "task_id": root["id"]!, "task_generation": root["task_generation"]!, "project_id": root["project_id"]!, "action": command.isUndo ? .string("undo") : raw["action"]!, "before": .object(before), "after": .object(baseline(root)), "successor": .object(["state": .string("none"), "planned_id": .null, "id": .null, "generation": .null, "created": .bool(false), "hash": .null]), "replayed": .bool(false)]))
+                    working["writes"] = .number(Double(working["writes"]!.integer + 1))
+                }
+            }
+            working["mixedWrites"] = .number(Double((working["mixedWrites"]?.integer ?? 0) + 1))
+        }
+        let proof: [String: JSON] = ["protocol": .number(1), "account": .string(command.account), "batch_id": .string(command.id), "outcome": .string(closing ? "closed" : "applied"), "replayed": .bool(false), "receipts": .array(proofs)]
+        _ = try command.resolution(proof)
+        var decisions = working["mixedDecisions"]?.object ?? [:]; decisions[command.id] = .object(["body": .object(raw), "proof": .object(proof)]); working["mixedDecisions"] = .object(decisions)
+        let lose = !closing && ProcessInfo.processInfo.arguments.contains("--mixed-completion-lose-reply") && working["mixedLost"]?.flag != true
+        if lose { working["mixedLost"] = .bool(true) }; state = working; try save(state)
+        return (try TaskfoldJSONEncoder().encode(proof), lose)
+    }
+    static func response(_ request: URLRequest) async throws -> (Data, Bool) {
+        guard ChildFieldNativeIdentity.enabled, request.url?.host == "synthetic.example", request.httpMethod == "POST" else { throw URLError(.unsupportedURL) }
+        var data = request.httpBody ?? Data()
+        if let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable {
+                let count = stream.read(&buffer, maxLength: buffer.count); if count <= 0 { break }
+                guard data.count + count <= (ChildMappingSQLNativePeer.enabled ? 600_000 : 140_000) else { throw CancellationError() }; data.append(contentsOf: buffer.prefix(count))
+            }
+        }
+        if ChildMappingSQLNativePeer.enabled {
+            return try await ChildMappingSQLNativePeer.response(path: request.url!.path, body: data)
+        }
+        let body = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        var state = try state(); let root = Record(state["root"]!.object)
+        if ChildRepairNativePeer.enabled, ChildRepairNativePeer.paths.contains(request.url?.path ?? "") { return try ChildRepairNativePeer.response(path:request.url!.path,body:body,state:&state) }
+        if ChildAdoptionNativePeer.enabled, ChildAdoptionNativePeer.paths.contains(request.url?.path ?? "") {
+            return try ChildAdoptionNativePeer.response(path: request.url!.path, body: body, state: &state)
+        }
+        if ChildTransferNativePeer.enabled, ChildTransferNativePeer.paths.contains(request.url?.path ?? "") {
+            return try ChildTransferNativePeer.response(path: request.url!.path, body: body, state: &state)
+        }
+        if ChildStructureNativePeer.enabled, ChildStructureNativePeer.paths.contains(request.url?.path ?? "") {
+            return try ChildStructureNativePeer.response(path: request.url!.path, body: body, state: &state)
+        }
+        if ProcessInfo.processInfo.arguments.contains("--mixed-completion-native"),
+           ["/rest/v1/rpc/taskfold_read_completion_selection_roots", "/rest/v1/rpc/taskfold_complete_mixed_tasks", "/rest/v1/rpc/taskfold_undo_mixed_completion", "/rest/v1/rpc/taskfold_close_mixed_completion"].contains(request.url?.path ?? "") {
+            return try mixedResponse(body, path: request.url!.path, state: &state)
+        }
+        if request.url?.path == "/rest/v1/rpc/taskfold_read_child_tasks" {
+            guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"], Store.shared.userID == ChildFieldNativeIdentity.account else { throw CancellationError() }
+            state["childReads"] = .number(Double((state["childReads"]?.integer ?? 0) + 1)); try save(state)
+            let records = root["subtasks"].list.enumerated().map { i, value -> JSON in
+                let key = value.object["id"]!.text
+                return .object(["node_key": .string(key), "incarnation": .string(i == 0 ? "ec990000-0000-4000-8000-000000000005" : "ec990000-0000-4000-8000-000000000006"), "revision": state["versions"]!.object[key]!, "parent_key": .null, "sibling_order": .number(Double(i)), "identity_path": .array([.string(key)]), "fields": value, "children_kind": .string("absent")])
+            }
+            return (try TaskfoldJSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": .null, "projection_revision": .number(Double(state["writes"]!.integer + 1)), "root_kind": .string("array"), "records": .array(records)]), false)
+        }
+        if ["/rest/v1/rpc/taskfold_complete_child_tasks", "/rest/v1/rpc/taskfold_close_child_completion_batch"].contains(request.url?.path ?? "") {
+            return try batchResponse(body, closing: request.url?.path == "/rest/v1/rpc/taskfold_close_child_completion_batch", state: &state)
+        }
+        if ["/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_close_child_completion"].contains(request.url?.path ?? "") {
+            return try completionResponse(body, closing: request.url?.path == "/rest/v1/rpc/taskfold_close_child_completion", state: &state)
+        }
+        let closing = request.url?.path == "/rest/v1/rpc/taskfold_close_child_task_edit"
+        guard closing || request.url?.path == "/rest/v1/rpc/taskfold_edit_child_task", Set(body.keys) == ["_body"] else { throw URLError(.unsupportedURL) }
+        let command = try ChildTaskFieldCommand(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, body: body["_body"]!.object)
+        guard command.body["task_id"] == .string(root.id), command.body["task_generation"] == root["task_generation"], command.body["project_id"] == .null, Store.shared.userID == command.account else { throw CancellationError() }
+        var receipts = state["receipts"]!.object
+        if closing {
+            var result = command.body.filter { !["changes", "revision", "remove_fields"].contains($0.key) }
+            state["closeRequests"] = .number(Double((state["closeRequests"]?.integer ?? 0) + 1))
+            if let prior = receipts[command.id]?.object {
+                guard AuthoredValueComparison.exactJSON(prior["body"]!, .object(command.body)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+                var proof = prior["receipt"]!.object; proof["replayed"] = .bool(true)
+                result["outcome"] = .string("applied"); result["receipt"] = .object(proof)
+            } else {
+                var closed = state["closures"]?.object ?? [:]
+                if let prior = closed[command.id], !AuthoredValueComparison.exactJSON(prior, .object(command.body)) { throw ChildFieldNativeRefusal(code: "PT409") }
+                closed[command.id] = .object(command.body); state["closures"] = .object(closed)
+                result["outcome"] = .string("closed"); result["receipt"] = .null
+            }
+            let lose = ProcessInfo.processInfo.arguments.contains("--child-fields-lose-close-reply") && state["lostClose"]?.flag != true
+            if lose { state["lostClose"] = .bool(true) }; try save(state)
+            return (try TaskfoldJSONEncoder().encode(result), lose)
+        }
+        state["requests"] = .number(Double(state["requests"]!.integer + 1))
+        if state["closures"]?.object[command.id] != nil { try save(state); throw ChildFieldNativeRefusal(code: "PT410") }
+        if let old = receipts[command.id]?.object {
+            guard AuthoredValueComparison.exactJSON(old["body"]!, .object(command.body)) else { throw CancellationError() }
+            var proof = old["receipt"]!.object; proof["replayed"] = .bool(true); try save(state)
+            return (try TaskfoldJSONEncoder().encode(proof), false)
+        }
+        let key = command.body["node_key"]!.text
+        guard let index = root["subtasks"].list.firstIndex(where: { $0.object["id"] == .string(key) }),
+              command.body["incarnation"] == .string(index == 0 ? "ec990000-0000-4000-8000-000000000005" : "ec990000-0000-4000-8000-000000000006") else { throw CancellationError() }
+        var fieldVersions: [String: Int] = [:]
+        for saved in receipts.values {
+            let prior = saved.object["body"]!.object
+            guard prior["node_key"] == .string(key) else { continue }
+            let revision = saved.object["receipt"]!.object["revision"]!.integer
+            let touched = Set(prior["changes"]!.object.keys).union(prior["remove_fields"]?.list.map(\.text) ?? [])
+            for field in touched { fieldVersions[field] = max(fieldVersions[field] ?? 1, revision) }
+        }
+        if command.body["revision"]!.integer > state["versions"]!.object[key]!.integer || command.touchedFields.contains(where: { (fieldVersions[$0] ?? 1) > command.body["revision"]!.integer }) { try save(state); throw ChildFieldNativeRefusal(code: "PT409") }
+        var changed = root, rows = root["subtasks"].list, fields = rows[index].object
+        fields.merge(command.body["changes"]!.object) { _, new in new }; for field in command.removedFields { fields.removeValue(forKey: field) }; rows[index] = .object(fields); changed["subtasks"] = .array(rows)
+        var versions = state["versions"]!.object; versions[key] = .number(Double(versions[key]!.integer + 1))
+        var proof = command.body.filter { !["changes", "remove_fields"].contains($0.key) }; proof["revision"] = versions[key]; proof["replayed"] = .bool(false)
+        _ = try command.confirmed(proof)
+        receipts[command.id] = .object(["body": .object(command.body), "receipt": .object(proof)])
+        state["root"] = .object(changed.fields); state["versions"] = .object(versions); state["receipts"] = .object(receipts); state["writes"] = .number(Double(state["writes"]!.integer + 1))
+        let lose = ProcessInfo.processInfo.arguments.contains("--child-fields-lose-reply") && !state["lost"]!.flag
+        if lose { state["lost"] = .bool(true) }; try save(state)
+        if ProcessInfo.processInfo.arguments.contains("--child-fields-switch-on-send") { try await Store.shared.childFieldNativeSwitchAccount() }
+        return (try TaskfoldJSONEncoder().encode(proof), lose)
+    }
+}
+
+struct ChildFieldMainListNativeFixtureView: View {
+    @Environment(Store.self) private var store
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
+    @State private var ready = false
+    @State private var failure: String?
+    var body: some View {
+        Group {
+            if ready { RootView() }
+            else if let failure { Text(failure) }
+            else { ProgressView("Preparing synthetic workspace…") }
+        }.task {
+            guard ChildFieldNativeIdentity.mainListTesting else { return }
+            do {
+                try await store.childFieldNativeStart()
+                try await ChildRecoveryNativeSeed.prepare(store: store)
+                if ProcessInfo.processInfo.arguments.contains("--child-batch-blocking-single"), ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") {
+                    let read = try await store.readChildTaskRecords(ChildFieldNativeIdentity.rootID)
+                    let command = try ChildTaskCompletionCommand(ChildTaskCompletionDraft(read: read, key: "concept", action: .complete))
+                    try await store.childTaskCompletionJournal(account: command.account, origin: command.origin).enqueue(command, lease: CalendarReadLease())
+                }
+                #if os(macOS)
+                workspace.section = .inbox
+                workspace.expandedTasks.insert(ChildFieldNativeIdentity.rootID)
+                #else
+                UserDefaults.standard.set("inbox", forKey: "defaultView")
+                #endif
+                ready = true
+            } catch { failure = error.localizedDescription }
+        }
+    }
+}
+
+struct ChildFieldNativeFixtureView: View {
+    @Environment(Store.self) private var store
+    @State private var ready = false
+    @State private var opening: String?
+    @State private var problem: String?
+    @State private var probe = "Preparing"
+    @State private var adoptionAdmission = ""
+    @State private var privateTitle = ""
+    @State private var queueingCompletion = false
+    @State private var historyProgress = 0
+    private var structureProbe: String {
+        guard let start = probe.range(of: " structureDrafts=") else { return "Reading current hierarchy diagnostics…" }
+        return String(probe[probe.index(after: start.lowerBound)...])
+    }
+    var body: some View {
+        NavigationStack {
+            List {
+                Text("Synthetic child field acceptance").font(.headline)
+                if let problem { Text(problem).accessibilityIdentifier("childNativeProblem") }
+                if ready {
+                    if ChildStructureNativePeer.enabled {
+                        Button("Open saved hierarchy") { opening = "structure" }.accessibilityIdentifier("childNativeStructure")
+                        Button("Open hierarchy actions") { opening = "structureRecovery" }.accessibilityIdentifier("childNativeStructureRecovery")
+                        if ChildTransferNativePeer.enabled { Button("Open saved subtask moves") { opening = "transfers" }.accessibilityIdentifier("childNativeTransfers") }
+                        Text(structureProbe).accessibilityIdentifier("childNativeStructureProbe")
+                        Button("Forget only the local hierarchy test journal") {
+                            Task { do { try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount(); await inspect() } catch { problem = error.localizedDescription } }
+                        }.accessibilityIdentifier("childNativeLoseStructureJournal")
+                    }
+                    if ChildRepairNativePeer.enabled || ChildAdoptionNativePeer.copyTesting { Button("Review older subtasks") { opening = "repair" }.accessibilityIdentifier("childNativeRepair"); Button("Open saved repairs") { opening = "repairRecovery" }.accessibilityIdentifier("childNativeRepairRecovery") }
+                    if ChildAdoptionNativePeer.enabled {
+                        Button("Review subtask storage") { opening = "adoption" }.accessibilityIdentifier("childNativeAdoption")
+                        Button("Open saved upgrades") { opening = "adoptionRecovery" }.accessibilityIdentifier("childNativeAdoptionRecovery")
+                        Button("Preserve a synthetic private edit") {
+                            do {
+                                let root = try ChildFieldNativePeer.root; var draft = root; draft["title"] = .string("Private migration draft")
+                                let edit = try TaskEditorRecovery(id: ChildAdoptionNativePeer.privateID, account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, original: root, draft: draft, extras: ["source_identity": TaskEditorSourceContext(record: root, root: root).identity])
+                                try store.backupVault.saveEditorDraft(edit)
+                            } catch { problem = "Synthetic private edit failed" }
+                        }.accessibilityIdentifier("childNativeAdoptionPrivate")
+                        if ProcessInfo.processInfo.arguments.contains("--child-adoption-unreadable-cache") {
+                            Button("Test direct upgrade admission") {
+                                Task {
+                                    do {
+                                        let review = try await store.readChildTaskAdoption(ChildFieldNativeIdentity.rootID)
+                                        let model = try store.childTaskAdoptionModel(); defer { model.close() }; await model.load()
+                                        let accepted = await model.queue(try ChildTaskAdoptionCommand(review: review), review: review)
+                                        adoptionAdmission = !accepted && model.loaded && model.entries.isEmpty ? "Unverified saved edits protected" : "Unexpected admission result"
+                                    } catch { adoptionAdmission = "Admission check could not run" }
+                                }
+                            }.accessibilityIdentifier("childNativeAdoptionDirectAdmission")
+                            if !adoptionAdmission.isEmpty { Text(adoptionAdmission).accessibilityIdentifier("childNativeAdoptionAdmissionResult") }
+                        }
+                        Button("Remove only the synthetic private edit") { do { try store.backupVault.closeEditorDraft(ChildAdoptionNativePeer.privateID) } catch { problem = "Synthetic edit cleanup failed" } }.accessibilityIdentifier("childNativeAdoptionRemovePrivate")
+                    }
+                    Button("Open subtask editor") { opening = "editor" }.accessibilityIdentifier("childNativeEditor")
+                    Button("Open saved actions") { opening = "completion" }.accessibilityIdentifier("childNativeCompletionRecovery")
+                    Button("Save an offline test completion") { Task { await queueCompletion() } }
+                        .disabled(queueingCompletion || !store.online).accessibilityIdentifier("childNativeQueueCompletion")
+                    Button("Exercise completion history") { Task { await exerciseHistory() } }
+                        .disabled(queueingCompletion || !store.online).accessibilityIdentifier("childNativeExerciseHistory")
+                    if queueingCompletion { Text("Preparing synthetic history: \(historyProgress)").accessibilityIdentifier("childNativeHistoryProgress") }
+                    Button("Open saved changes") { opening = "recovery" }.accessibilityIdentifier("childNativeRecovery")
+                    Button("Change test title on server") {
+                        do {
+                            var state = try ChildFieldNativePeer.state(), root = Record(state["root"]!.object), rows = root["subtasks"].list, first = rows[0].object
+                            first["title"] = .string("Updated on another device"); rows[0] = .object(first); root["subtasks"] = .array(rows)
+                            var versions = state["versions"]!.object; versions["concept"] = .number(Double(versions["concept"]!.integer + 1))
+                            state["root"] = .object(root.fields); state["versions"] = .object(versions); try ChildFieldNativePeer.save(state)
+                        } catch { problem = error.localizedDescription }
+                    }.accessibilityIdentifier("childNativeForeignEdit")
+                    Button(store.online ? "Go offline" : "Go online") { store.online.toggle() }.accessibilityIdentifier("childNativeConnection")
+                    Text(probe).accessibilityIdentifier("childNativeProbe")
+                    if !privateTitle.isEmpty { Text(privateTitle).accessibilityIdentifier("childNativePrivateTitle") }
+                } else { ProgressView("Preparing synthetic workspace…") }
+            }.navigationTitle("Subtask acceptance")
+        }
+        .task {
+            guard ChildFieldNativeIdentity.enabled else { return }
+            do {
+                try await store.childFieldNativeStart(); try await ChildStructureNativePeer.seedDuplicateDraftForNativeTest(); await inspect(); ready = true
+                while !Task.isCancelled { try await Task.sleep(nanoseconds: 400_000_000); await inspect() }
+            } catch is CancellationError { } catch { problem = error.localizedDescription }
+        }
+        .sheet(isPresented: Binding(get: { opening != nil }, set: { if !$0 { opening = nil } })) {
+            if opening == "repair" { ChildTaskRepairView(rootID: ChildFieldNativeIdentity.rootID) }
+            else if opening == "repairRecovery" { ChildTaskRepairView() }
+            else { WorkflowShell(title: opening == "adoption" || opening == "adoptionRecovery" ? "Subtask storage" : opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : opening == "structure" ? "Organize subtasks" : opening == "structureRecovery" ? "Saved hierarchy actions" : opening == "transfers" ? "Saved subtask moves" : "Saved subtask changes") {
+                if opening == "adoption" { ChildTaskAdoptionView(rootID: ChildFieldNativeIdentity.rootID) }
+                else if opening == "adoptionRecovery" { ChildTaskAdoptionView() }
+                else if opening == "editor" { ChildTaskFieldEditorView(rootID: ChildFieldNativeIdentity.rootID) }
+                else if opening == "structure" { ChildTaskStructureView(rootID: ChildFieldNativeIdentity.rootID) }
+                else if opening == "structureRecovery" { ChildTaskStructureRecoveryView() }
+                else if opening == "transfers" { ChildTaskTransferRecoveryView() }
+                else if opening == "completion" { ChildTaskCompletionRecoveryView() }
+                else { ChildTaskFieldRecoveryView() }
+            }
+            }
+        }
+    }
+    private func exerciseHistory() async {
+        guard ChildFieldNativeIdentity.enabled, store.online, let scope = store.childTaskFieldRecoveryScope else { return }
+        queueingCompletion = true; historyProgress = 0; defer { queueingCompletion = false }
+        do {
+            let model = try store.childTaskCompletionRecoveryModel(); defer { model.close() }
+            for index in 0..<70 {
+                guard store.childTaskFieldRecoveryScope == scope else { throw CancellationError() }
+                let read = try await store.readChildTaskRecords(ChildFieldNativeIdentity.rootID)
+                guard await model.perform(read: read, key: "concept", action: index.isMultiple(of: 2) ? .complete : .reopen) != nil else {
+                    throw AppFailure(message: "Synthetic completion history could not be confirmed.")
+                }
+                historyProgress = index + 1
+            }
+        } catch { problem = error.localizedDescription }
+    }
+    private func queueCompletion() async {
+        guard ChildFieldNativeIdentity.enabled, store.online, let scope = store.childTaskFieldRecoveryScope else { return }
+        queueingCompletion = true; defer { queueingCompletion = false }
+        do {
+            let read = try await store.readChildTaskRecords(ChildFieldNativeIdentity.rootID)
+            guard store.childTaskFieldRecoveryScope == scope else { return }
+            let model = try store.childTaskCompletionRecoveryModel()
+            store.online = false
+            defer { model.close(); if store.childTaskFieldRecoveryScope == scope { store.online = true } }
+            guard await model.perform(read: read, key: "concept", action: .complete) != nil else {
+                throw AppFailure(message: "The synthetic offline action could not be saved.")
+            }
+        } catch { problem = error.localizedDescription }
+    }
+    private func inspect() async {
+        do {
+            guard ChildFieldNativeIdentity.enabled else { return }
+            let captured = store.childTaskFieldRecoveryScope
+            let state = try ChildFieldNativePeer.state()
+            let journal = try store.childTaskFieldJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin)
+            let entries = try await journal.load().entries
+            let counts = ["queued", "attempted", "confirmed"].map { name in "\(name)=\(entries.filter { $0.phase.rawValue == name }.count)" }.joined(separator: " ")
+            let current = store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["title"]?.text ?? "hidden"
+            let drafts = try store.backupVault.editorEntries().compactMap { entry -> TaskEditorRecovery? in
+                guard let value = try? store.backupVault.editorDraft(entry.id, origin: ChildFieldNativeIdentity.origin), value.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) else { return nil }; return value
+            }
+            let nextTitle = drafts.first?.draft.title ?? ""
+            let child = store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object ?? [:]
+            let labelValues = child["labels"]?.list.map(\.text).joined(separator: ",") ?? ""
+            let pendingLabel = drafts.first?.extras["unsubmitted_child_label"]?.text ?? ""
+            let reminderDrafts = drafts.filter { $0.extras["unsubmitted_reminder_settings"].map { $0 != .null } == true }.count
+            let schedules = child["reminder_specs"]?.list ?? []
+            let localSpecs = schedules.compactMap { ReminderSpec(row: $0) }
+            let enabledSchedules = localSpecs.filter(\.enabled).count
+            let beforeTen = localSpecs.filter { $0.enabled && $0.kind == "relative" && $0.offset == -10 }.count
+            var nextProbe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) reminderDraft=\(reminderDrafts) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") closed=\(entries.filter { $0.phase == .closed }.count) closes=\(state["closeRequests"]?.integer ?? 0) labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
+            if store.userID == ChildFieldNativeIdentity.account {
+                let completionEntries = try await store.childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load().entries
+                nextProbe += " completionQueued=\(completionEntries.filter { $0.phase == .queued }.count) completionAttempted=\(completionEntries.filter { $0.phase == .attempted }.count) completionConfirmed=\(completionEntries.filter { $0.phase == .confirmed }.count) completionClosed=\(completionEntries.filter { $0.phase == .closed }.count) completionWrites=\(state["completionWrites"]?.integer ?? 0) completionRequests=\(state["completionRequests"]?.integer ?? 0) done=\(child["completed"]?.flag == true) notes=\(child["description"]?.text ?? "")"
+                nextProbe += " completionCloses=\(state["completionCloses"]?.integer ?? 0) childReads=\(state["childReads"]?.integer ?? 0) history=\(historyProgress) stamp=\(child["completed_at"]?.text.isEmpty == false ? child["completed_at"]!.text : "none")"
+            }
+            if ChildFieldNativePeer.opaqueTesting {
+                let source = try TaskfoldJSONDecoder().decode(JSON.self, from: ChildFieldNativePeer.opaqueMetadata)
+                let root = store.record("tasks", id: ChildFieldNativeIdentity.rootID)
+                let server = Record(state["root"]!.object)
+                let expected = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("1e1000".utf8))
+                nextProbe += " opaqueRoot=\(root?["source_metadata"] == source && server["source_metadata"] == source) opaqueChild=\(child["future_number"] == expected && server["subtasks"].list.first?.object["future_number"] == expected)"
+                nextProbe += " opaqueChildMetadata=\(child["future_exact"] == source && server["subtasks"].list.first?.object["future_exact"] == source)"
+            }
+            if ChildAdoptionNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
+                let saved = try await store.childTaskAdoptionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()
+                let file = store.backupVault.editorFile(ChildAdoptionNativePeer.privateID)
+                let privateBytes = try? Data(contentsOf: file)
+                let privateHash = privateBytes.map { SHA256.hash(data: $0).map { String(format: "%02x", $0) }.joined() } ?? "none"
+                nextProbe += " adoptionQueued=\(saved.entries.filter { $0.phase == .queued }.count) adoptionAttempted=\(saved.entries.filter { $0.phase == .attempted }.count) adoptionApplied=\(saved.entries.filter { $0.phase == .applied }.count) adoptionClosed=\(saved.entries.filter { $0.phase == .closed }.count) adoptionWrites=\(state["adoptionWrites"]?.integer ?? 0) adoptionRequests=\(state["adoptionRequests"]?.integer ?? 0) adoptionRootHash=\(try ChildAdoptionNativePeer.hash(state["root"]!)) adoptionPrivateHash=\(privateHash)"
+            }
+            if ChildRepairNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
+                let repairs = try await store.childTaskRepairJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()
+                let originals = state["repairReceipts"]?.object.values.compactMap { $0.object["original"]?.text }.filter { !$0.isEmpty } ?? []
+                let originalRoot = originals.first.flatMap { try? TaskfoldJSONDecoder().decode([String:JSON].self,from:Data($0.utf8))["root"] }
+                let originalHash = try originalRoot.map { try ChildAdoptionNativePeer.hash($0) } ?? "none"
+                nextProbe += " repairWrites=\(state["repairWrites"]?.integer ?? 0) repairApplied=\(repairs.entries.filter { $0.phase == .applied }.count) repairPending=\(repairs.entries.filter { $0.phase == .queued || $0.phase == .attempted }.count) repairOriginalRootHash=\(originalHash)"
+
+            }
+            if ChildTransferNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
+                let transfers = try await store.childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()
+                nextProbe += " transferQueued=\(transfers.entries.filter { $0.phase == .queued }.count) transferAttempted=\(transfers.entries.filter { $0.phase == .attempted }.count) transferApplied=\(transfers.entries.filter { $0.phase == .applied }.count) transferClosed=\(transfers.entries.filter { $0.phase == .closed }.count) transferWrites=\(state["transferWrites"]?.integer ?? 0) transferRequests=\(state["transferRequests"]?.integer ?? 0) transferSource=\(ChildStructureNativePeer.flatKeys(Record(state["root"]!.object)["subtasks"]).joined(separator: ">")) transferDestination=\(ChildStructureNativePeer.flatKeys(Record(state["transferDestination"]?.object ?? [:])["subtasks"]).joined(separator: ">"))"
+            }
+            if ChildStructureNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
+                let structural = try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()
+                let organizerDrafts = try await store.childTaskStructureDraftJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load().entries
+                nextProbe += " structureDrafts=\(organizerDrafts.count) structureDraftPending=\(organizerDrafts.filter { $0.pendingCommand != nil }.count)"
+                nextProbe += " structureQueued=\(structural.entries.filter { $0.phase == .queued }.count) structureAttempted=\(structural.entries.filter { $0.phase == .attempted }.count) structureConfirmed=\(structural.entries.filter { $0.phase == .confirmed }.count) structureClosed=\(structural.entries.filter { $0.phase == .closed }.count) structureWrites=\(state["structureWrites"]?.integer ?? 0) structureRequests=\(state["structureRequests"]?.integer ?? 0) structureArchives=\(state["structureArchives"]?.object.count ?? 0) structureOrder=\(ChildStructureNativePeer.flatKeys(Record(state["root"]!.object)["subtasks"]).joined(separator: ">")) structureDisposals=\(structural.disposals.filter { $0.phase == .confirmed }.count)"
+                nextProbe += " structureReadUnavailable=\(state["structureReadUnavailable"]?.flag == true)"
+            }
+            // Publish one complete snapshot. A partial label across the journal
+            // await can make accessibility reads observe missing count fields.
+            guard captured == store.childTaskFieldRecoveryScope, !Task.isCancelled else { return }
+            if privateTitle != nextTitle { privateTitle = nextTitle }
+            if probe != nextProbe { probe = nextProbe }
+        } catch { problem = error.localizedDescription }
+    }
+}
+
+
+/// Simulates work saved before gates were paused; reserved synthetic identity only.
+@MainActor enum ChildRecoveryNativeSeed {
+    static var enabled: Bool { ChildFieldNativeIdentity.mainListTesting && ProcessInfo.processInfo.arguments.contains("--child-recovery-paused") }
+    static func prepare(store: Store) async throws {
+        guard enabled, ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") else { return }
+        let account = ChildFieldNativeIdentity.account, origin = ChildFieldNativeIdentity.origin
+        let rows = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(#"{"structure":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"970f669e-d37a-4820-9ded-bef75ca1abb7","task_id":"7758f5b1-ae00-4cf0-af1d-3fbf1cf91c48","task_generation":"809a2a88-4af3-4d78-b63a-8e67d7b47462","project_id":"4f450387-1db1-48bf-b8f6-b48e832db62a","structure_revision":1,"action":"insert","parent_key":null,"index":0,"node":{"id":"fresh","title":"Fresh subtask"}},"transfer":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"8011c74b-2156-4441-8590-732b47fe490b","source":{"task_id":"4f15d1cf-d316-4b32-a617-be91132c05e9","task_generation":"900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd","project_id":"ea9f44c2-cee0-4942-8bac-5097a6bfec17","structure_revision":1},"destination":{"task_id":"76ab089c-953b-47a3-99fb-562e7ff4ee30","task_generation":"8580c483-c9f7-47dc-8b26-d52e944a7552","project_id":"ea9f44c2-cee0-4942-8bac-5097a6bfec17","structure_revision":1,"parent_key":"heading","parent_incarnation":"813bf7ab-6aba-4894-ac3a-a65efcaac1a1","index":0},"action":"transfer","node_key":"branch","incarnation":"e1429dad-42ba-47ca-ae8b-33f0609f1d05","subtree_versions":{"branch":{"incarnation":"e1429dad-42ba-47ca-ae8b-33f0609f1d05","revision":1},"é":{"incarnation":"0debf56c-7122-4910-bd50-23c5061e05e7","revision":1}}},"adoption":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","task_id":"3b75ba52-8e73-4c22-9dc0-fdcf1aeea417","task_generation":"5a007aeb-cf39-4741-bcf7-712c1300ccab","project_id":"077685c9-cd55-461c-a80f-45cdcdf4ed4e","workspace_id":null,"review_digest":"53316036ee9625c55957c0b2cb24415088df5753c40c2385c6559e63763ff625","request_id":"5c31b0b9-5b90-4a62-95f8-c795401b809c"},"adoptionCount":3,"repair":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","task_id":"2f52833a-020b-458b-b1a2-7ba68f8949fa","task_generation":"22f32836-61d1-4f4d-9e77-90262e2c944f","project_id":null,"workspace_id":null,"review_digest":"869359a687385a3eab9dbce4b8421b554b1957f6d4c2135d906388ee1e2f1699","changes":[{"kind":"assign_reference","path":[0],"reference":"repaired-reference"}],"request_id":"60c4ee41-38e0-4d01-940b-7c9539ac0f49","repair_digest":"9ff959aec957734e3f1266a2871b67c24f87756a1c65c027467762b4ad4a3e2a"},"repairCount":1,"fields":{"account":"ec990000-0000-4000-8000-000000000001","protocol":1,"request_id":"ec990000-0000-4000-8000-000000000060","task_id":"ec990000-0000-4000-8000-000000000040","task_generation":"17d75cdd-e638-43d5-9489-a814d0198dd0","project_id":"5fa27333-e733-4342-8549-bcd3978db3a2","node_key":"a","incarnation":"467c4fad-2694-496d-8416-eb1a497a93b9","revision":2,"changes":{"title":"Edited title"}},"completion":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"ec990000-0000-4000-8000-000000000061","task_id":"ec990000-0000-4000-8000-000000000041","task_generation":"afed6b9f-6fe5-4a56-85f4-89c4441f8f33","project_id":"755a2c2b-f35f-482c-9b1c-f6ef9780338f","node_key":"child","incarnation":"2e35063e-e344-478b-9950-0ac8b3fba65f","revision":1,"action":"complete","baseline":{"completed":false,"completed_at":null,"taskfold_completion_v1":{"epoch":"203c512a-d0e4-4af7-a51c-f31a2c4d8391","version":0}}},"group":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","batch_id":"ec990000-0000-4000-8000-000000000080","items":[{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"ec990000-0000-4000-8000-000000000070","task_id":"ec990000-0000-4000-8000-000000000050","task_generation":"820cfffc-27b2-4fbf-9d29-18a0a7a6e6c1","project_id":"82d0e197-3f90-48c4-8989-b9c205740a72","node_key":"child-0","incarnation":"95686182-49cb-4530-b0cc-d96ba9123e85","revision":1,"action":"complete","baseline":{"completed":false,"completed_at":null,"taskfold_completion_v1":{"epoch":"6a01aa21-4abf-4444-bb1d-b811cf866bf7","version":0}}},{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"ec990000-0000-4000-8000-000000000071","task_id":"ec990000-0000-4000-8000-000000000051","task_generation":"b22b4ab7-9235-48f2-a4cd-5d38e292ae5a","project_id":null,"node_key":"child-1","incarnation":"bee17567-0a15-4564-bbbc-c1163d46738e","revision":1,"action":"complete","baseline":{"completed":false,"completed_at":null,"taskfold_completion_v1":{"epoch":"e82a4f60-47d6-405a-abb1-f66d91b69ce8","version":0}}}]}}"#.utf8))
+        let body = rows["structure"]!.object
+        if !ProcessInfo.processInfo.arguments.contains("--child-recovery-draft-only") {
+            let fields = try ChildTaskFieldCommand(account: account, origin: origin, body: rows["fields"]!.object)
+            try await store.childTaskFieldJournal(account: account, origin: origin).enqueue(fields, lease: CalendarReadLease())
+            let completion = try ChildTaskCompletionCommand(account: account, origin: origin, body: rows["completion"]!.object)
+            try await store.childTaskCompletionJournal(account: account, origin: origin).enqueue(completion, lease: CalendarReadLease())
+            let hierarchy = try ChildTaskStructureCommand(account: account, origin: origin, body: body)
+            try await store.childTaskStructureJournal(account: account, origin: origin).enqueue(hierarchy, lease: CalendarReadLease())
+            let transfer = try ChildTaskTransferCommand(account: account, origin: origin, body: rows["transfer"]!.object)
+            try await store.childTaskTransferJournal(account: account, origin: origin).enqueue(transfer, lease: CalendarReadLease())
+            let adoption = try ChildTaskAdoptionCommand(account: account, origin: origin, body: rows["adoption"]!.object, nodeCount: rows["adoptionCount"]!.integer)
+            try await store.childTaskAdoptionJournal(account: account, origin: origin).enqueue(adoption, lease: CalendarReadLease())
+            let repair = try ChildTaskRepairCommand(account: account, origin: origin, body: rows["repair"]!.object, nodeCount: rows["repairCount"]!.integer)
+            try await store.childTaskRepairJournal(account: account, origin: origin).enqueue(repair, lease: CalendarReadLease())
+            let items = try rows["group"]!.object["items"]!.list.map { try ChildTaskCompletionCommand(account: account, origin: origin, body: $0.object) }
+            let group = try ChildTaskCompletionBatchCommand(account: account, origin: origin, items: items, batchID: UUID(uuidString: rows["group"]!.object["batch_id"]!.text)!)
+            try await store.childTaskCompletionBatchJournal(account: account, origin: origin).enqueue(group, lease: CalendarReadLease())
+        }
+        let draft = try ChildTaskStructureDraft(account: account, origin: origin, body: ["account": .string(account), "request_id": .string("ec990000-0000-4000-8000-000000000099"), "task_id": body["task_id"]!, "task_generation": body["task_generation"]!, "project_id": body["project_id"]!, "action": .string("insert"), "node_key": .null, "incarnation": .null, "structure_revision": .number(1), "parent_key": .null, "parent_incarnation": .null, "index": .number(0), "title": .string("Saved recovery draft")])
+        try await store.childTaskStructureDraftJournal(account: account, origin: origin).save(draft, replacing: nil, lease: CalendarReadLease())
+        var manifest = rows; manifest["root"] = try ChildFieldNativePeer.state()["root"]
+        manifest["draftOnly"] = .bool(ProcessInfo.processInfo.arguments.contains("--child-recovery-draft-only"))
+        try TaskfoldJSONEncoder().encode(manifest).write(to: ChildFieldNativePeer.folder.appendingPathComponent("paused-recovery-seed.json"), options: .atomic)
+    }
+}
+#endif

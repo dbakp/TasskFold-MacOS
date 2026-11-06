@@ -1,0 +1,25 @@
+{
+  "removed_obsolete_generated_outputs": [
+    "/tmp/taskfold-prepared-undo-phone-v1.xcresult",
+    "/tmp/taskfold-prepared-undo-phone-v2.xcresult",
+    "/tmp/taskfold-prepared-undo-ipad-v1.xcresult",
+    "/tmp/taskfold-prepared-undo-ipad-v2.xcresult",
+    "/tmp/taskfold-prepared-undo-mac-v2.xcresult",
+    "/tmp/taskfold-prepared-undo-mac-v3.xcresult",
+    "/tmp/taskfold-output-release-phone-system.log",
+    "/tmp/taskfold-voice-raw-mac-v1.xcresult",
+    "/tmp/taskfold-heading-review-tablet-accepted.xcresult",
+    "/tmp/taskfold-heading-review-phone-initial.xcresult",
+    "/tmp/taskfold-heading-review-mac-initial.xcresult",
+    "/tmp/taskfold-mac-print-accepted.xcresult",
+    "/tmp/taskfold-audio-recovery-core-mac/out/v5",
+    "/tmp/taskfold-audio-recovery-core-ios/out/v5",
+    "/tmp/taskfold-workflow-native-mac-build/Index.noindex",
+    "/tmp/taskfold-prepared-undo-signed-ios-build/Index.noindex",
+    "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex"
+  ],
+  "preserved": "current app/test executables, object/module outputs, source/hosts, encrypted fixtures and Core build caches; no compiler was using the pruned index stores",
+  "archive_scope": "result summaries and one compressed old system log; older result bundles no longer retained",
+  "disk_full_during_phone_phase": "Shell could not create a here-document temporary file; app native assertions still passed. Lost-close case will be repeated separately after cleanup."
+}

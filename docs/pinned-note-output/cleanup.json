@@ -1,0 +1,80 @@
+{
+  "removed": [
+    {
+      "path": "/tmp/taskfold-note-output-mac.xcresult",
+      "allocatedBytes": 352256
+    },
+    {
+      "path": "/tmp/taskfold-note-output-mac-retry.xcresult",
+      "allocatedBytes": 352256
+    },
+    {
+      "path": "/tmp/taskfold-note-output-phone.xcresult",
+      "allocatedBytes": 13537280
+    },
+    {
+      "path": "/tmp/taskfold-note-output-ipad.xcresult",
+      "allocatedBytes": 13139968
+    },
+    {
+      "path": "/tmp/taskfold-note-output-route-phone.xcresult",
+      "allocatedBytes": 10547200
+    },
+    {
+      "path": "/tmp/taskfold-note-output-route-ipad.xcresult",
+      "allocatedBytes": 11616256
+    },
+    {
+      "path": "/tmp/taskfold-note-output-hitarea-phone.xcresult",
+      "allocatedBytes": 10883072
+    },
+    {
+      "path": "/tmp/taskfold-note-output-hitarea-ipad.xcresult",
+      "allocatedBytes": 13418496
+    },
+    {
+      "path": "/tmp/taskfold-note-output-trace-phone.xcresult",
+      "allocatedBytes": 9068544
+    },
+    {
+      "path": "/tmp/taskfold-note-output-route-phone-captures",
+      "allocatedBytes": 20480
+    },
+    {
+      "path": "/tmp/taskfold-note-output-route-ipad-captures",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/tmp/taskfold-note-output-route-phone-all",
+      "allocatedBytes": 167936
+    },
+    {
+      "path": "/tmp/taskfold-note-output-route-ipad-all",
+      "allocatedBytes": 368640
+    },
+    {
+      "path": "/tmp/taskfold-note-output-trace-phone-captures",
+      "allocatedBytes": 8613888
+    },
+    {
+      "path": "/tmp/taskfold-note-output-final-phone-captures",
+      "allocatedBytes": 823296
+    },
+    {
+      "path": "/tmp/taskfold-note-output-final-ipad-captures",
+      "allocatedBytes": 1294336
+    },
+    {
+      "path": "/tmp/taskfold-note-output-cua-20261027.pdf",
+      "allocatedBytes": 86016,
+      "verifiedRetainedSHA256": "da80ca8f84c20dcbc30adac0511b2e8b3575145376fe39c099df3da94fd130a9"
+    }
+  ],
+  "allocatedBytesRemoved": 94318592,
+  "retainedFinalResults": [
+    "/tmp/taskfold-note-output-library-phone.xcresult",
+    "/tmp/taskfold-note-output-library-ipad.xcresult"
+  ],
+  "closed": "Both used Simulators shut down. No Taskfold app or xcodebuild test process remained before cleanup. Reused signed hosts/builds retained.",
+  "qualification": "Allocated bytes removed are not a guarantee of physical APFS space recovered."
+}

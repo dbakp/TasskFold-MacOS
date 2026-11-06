@@ -1,0 +1,19 @@
+{
+  "platform": "mac",
+  "sourceSHA256": {
+    "supabase/migrations/20261029001127_child_task_record_reads.sql": "9347c066832ea5b3e5881f5fc0884e1b7fd4697b52f8e1e0ee767095c7af2ed3",
+    "Scripts/Database/test-child-task-record-reads.mjs": "cf567820cd20f7a78fe8b28c57c68fe27e74a73ae3b1861745b08bc7c7cccb30",
+    "Scripts/Database/child-task-records-schema.mjs": "070a0dcb346b1a25f08767bb5c82fcb6249b5736a6912cf0ae4b14d7a9a86568",
+    "Scripts/Database/team-task-schema.mjs": "e3b74ef47b226e792e0b5b32f0403361c59a4cdf32b3aff433dbedeb7852844d",
+    "Scripts/Database/team-checklist-schema.mjs": "5472b4e399f74fbe16ba2e5ab7123a5ad98b03d273f792b208bc7f45938859a6"
+  },
+  "checks": 43,
+  "baselineAdvisorFindings": 7,
+  "addedAdvisorFindings": [],
+  "containerRemoved": true,
+  "hostedSchemaChanged": false,
+  "fullLocalStackHistoryVerified": false,
+  "clientReadAdoptionAccepted": false,
+  "independentWritesAccepted": false,
+  "nativeUIAcceptanceClaimed": false
+}

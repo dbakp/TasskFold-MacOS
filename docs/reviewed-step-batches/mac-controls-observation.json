@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-06",
+  "observedWith": "Actual CUA controls in the already-running isolated signed Mac app",
+  "bundle": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "rawDataDriverSelfCertifiesUI": false,
+  "combinedScopedReviewAccepted": true,
+  "seededProposals": true,
+  "realGenerationAccepted": false,
+  "actions": [
+    {
+      "action": "Edit first title",
+      "observed": "Tomorrow #work @Pat; third Include switch Off; Add selected value 2 steps"
+    },
+    {
+      "action": "Add selected",
+      "observed": "2 steps added. Add 2 steps Confirmed; Undo added steps available"
+    },
+    {
+      "action": "Undo added steps",
+      "observed": "Added steps removed. Undo step addition Confirmed; Redo added steps available"
+    },
+    {
+      "action": "Redo added steps",
+      "observed": "2 steps added. New Add 2 steps Confirmed; prior Undo/Add entries retained"
+    },
+    {
+      "action": "Expand newest saved addition",
+      "observed": "Tomorrow #work @Pat Review workshop layout"
+    }
+  ],
+  "dataChecks": {
+    "actual Store step-ui": true,
+    "only selected edited literal steps added": true,
+    "Add preserves original children notes and generation": true,
+    "Undo restores exact original children": true,
+    "Redo restores selected literal titles": true,
+    "Redo uses fresh child identities": true,
+    "exactly three original Add Undo Redo receipts": true,
+    "saved cache agrees without root edits": true
+  },
+  "savedCacheWaitMilliseconds": 145,
+  "binarySHA256": "fe4feb89f135f39335c59e4bd11b07c60883ce1c56896d0862dbd6439c7e1a31",
+  "rawResultSHA256": "ae27f267814c8434be073fbd75558c5ead09a138c56a046eb365aa0c94d0f9d7",
+  "screenshot": "Observed inline during the CUA walkthrough; no durable PNG export claimed",
+  "limits": [
+    "No actual inference",
+    "No cold UI relaunch or native speech/keyboard/multiwindow/account-race acceptance",
+    "The separate iPhone layout warnings are unchanged"
+  ]
+}

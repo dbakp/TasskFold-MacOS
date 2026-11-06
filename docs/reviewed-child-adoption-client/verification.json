@@ -1,0 +1,56 @@
+{
+  "reviewed": "2026-10-30",
+  "platform": "mac",
+  "status": "Typed client/recovery foundation tested; Store and native integration unfinished",
+  "coreChecks": 558,
+  "newAdoptionCases": 18,
+  "failures": 0,
+  "ownSQLFixtureSHA256": "e2b9d9852712266f260a54a9bac876dc2ccdc25dfc7278d1eab58ee5e3fae20b",
+  "SQLNotRerun": true,
+  "priorSQLReference": "../reviewed-child-adoption/verification.json",
+  "build": "Isolated app/test build and strict development signatures passed",
+  "appSHA256": "cb22470794aaa9ada85a0e5b634b59c41730ccd7ae0f870f07136dfb216294a4",
+  "sourceSHA256": {
+    "Package.swift": "44896c53ef2f14074f941d5843fc0c3b8d7755a6a1bd64b592b71d12910337eb",
+    "Taskfold.xcodeproj/project.pbxproj": "8d3661bf4346c059457c1dc759f40fda9b5f3b14dee2d7bd1e7b7166ae178336",
+    "Taskfold/Core/ChildTaskAdoption.swift": "3c8bc6fabc929b9bec5c7e9371ecab5ec250d460bd38b1c79257c75bb9a2ef84",
+    "Taskfold/Core/SubtaskTree.swift": "b684b3ca74faac7d7de66f7668f1760526faa29cd10524e08597d20e12342d8d",
+    "Taskfold/Core/Backend.swift": "0c63261248abbbdfdc8e473a9fbe2684ef9d6b7c59f4ebd93a11cd470b028a39",
+    "TaskfoldTests/ChildTaskAdoptionTests.swift": "44dde2eb9fe4a6b2c9cbb81833012ed8cc573d038d5f1eb54b196c77f429f26e",
+    "TaskfoldTests/Fixtures/child-adoption-contract-v1.json": "e2b9d9852712266f260a54a9bac876dc2ccdc25dfc7278d1eab58ee5e3fae20b",
+    "Taskfold/Info.plist": "e8a7f8daa65ed3d5def3e7193ae104aa87790edc0563ddde231325555ea75087"
+  },
+  "builtHostSHA256": {
+    "Taskfold/Core/ChildTaskAdoption.swift": "3c8bc6fabc929b9bec5c7e9371ecab5ec250d460bd38b1c79257c75bb9a2ef84",
+    "Taskfold/Core/SubtaskTree.swift": "b684b3ca74faac7d7de66f7668f1760526faa29cd10524e08597d20e12342d8d",
+    "Taskfold/Core/Backend.swift": "8b4907a09e3d2ad78085238d698e2d4722aabb3b070f608935e834e1b26b4fbd"
+  },
+  "evidenceSHA256": {
+    "core.log.gz": "c44215dbb7f9ab475a1e107ec36da9c12599028dcf8329188fe88bafcb0231fc",
+    "app-build.log.gz": "bd9ad2ef5c7f6b4c84de458eb9f574944ba07b3ba8340f253c5bd2c2ea284eac"
+  },
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "StoreAdmissionIntegrated": false,
+  "nativeAccepted": false,
+  "realKeychainAccepted": false,
+  "verifiedScope": [
+    "Typed account/root/generation/project/workspace/digest and receipt count binding; strict known integer lexemes and unique metadata keys",
+    "Original source retained as raw bytes, including large numeric lexemes and distinct Unicode keys in opaque fields; null/empty/omitted sources distinguished",
+    "Encrypted bounded saved requests; persist attempt before network; cold retry uses original identity; uncertain attempts cannot be silently discarded",
+    "Denied sends preserve status/stop recovery; late scope replies ignored; write-before/write-after-error and account-removal tombstone guards",
+    "Actual Backend routes through synthetic URLProtocol: private headers, bounded reads, sanitized errors and unknown-send refusal",
+    "Large adoption response iteration and review decoding run outside the main actor"
+  ],
+  "limits": [
+    "At most 2.1 MB per review response, 1000 child nodes, 24 child levels and 128 JSON syntax levels",
+    "Saved history: 64 decisions, 1 MB maximum encrypted plaintext; metadata request body <=2000 bytes",
+    "Original raw content is ephemeral and not persisted inside recovery commands"
+  ],
+  "remaining": [
+    "Store factory, actual private-draft/pending-action admission, current-context checks and account-removal cleanup wiring",
+    "Premium native review/diagnostic/recovery screens and original export/malformed repair",
+    "Native/VoiceOver/real secure-storage/account/window/background acceptance, full custody and larger workloads",
+    "Normal rollout and older-client transition remain deferred"
+  ]
+}

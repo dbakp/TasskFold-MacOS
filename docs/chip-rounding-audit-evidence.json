@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-11",
+  "experiment": "Round custom chip layout allocation up to complete points in both independent repos.",
+  "resultBundle": "chip-rounding-audit-v1.xcresult",
+  "executed": 1,
+  "passed": 0,
+  "failed": 1,
+  "skipped": 0,
+  "durationSeconds": 201.049,
+  "runtimeWarnings": [],
+  "remainingFindings": [
+    "Quick capture estimate 25 min text clipping",
+    "Saved list native Search inbox clipping"
+  ],
+  "report": "accessibility-audit-reports/chip-rounding-largest.txt",
+  "disposition": "Rounding did not remove either finding. Reverted in both repos and rebuilt original layout; no clipping fix shipped and no warning suppressed.",
+  "restoredBuilds": [
+    "chip-rounding-ios-restored-build-v1.log",
+    "mac-task-surface-keyboard-build-v3.log"
+  ],
+  "strictSimulatorSigning": "chip-rounding-ios-restored-signing-v1.json",
+  "cloudReturn": {
+    "resultBundle": "chip-rounding-cloud-return-v1.xcresult",
+    "case": "testAuthorizedAccessibilityAuditRestoresPrimaryCloudWorkspace",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "preservation": {
+      "comparedTables": 14,
+      "changedTables": [],
+      "pending": 0
+    }
+  },
+  "currentCounts": {
+    "latestNormal": 2,
+    "latestLargest": 2
+  },
+  "remaining": "Resolve/classify actual clipping with appropriate evidence; full VoiceOver/keyboard and other P0 gates remain open."
+}

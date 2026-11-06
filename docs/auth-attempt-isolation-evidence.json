@@ -1,0 +1,116 @@
+{
+  "date": "2026-10-12",
+  "scope": "Reject obsolete password/Google authentication attempts; prevent local workspace entry while native sign-in is pending",
+  "reproduction": {
+    "result": "Two controlled password transport cases failed before production fix with six assertions: old sign-in revived a cleared session and replaced a newer sign-in",
+    "log": "/private/tmp/taskfold-auth-attempt-before.log"
+  },
+  "changes": [
+    "Authentication-attempt identity captured before password HTTP request and Google browser presentation",
+    "Sign-out and accepted sessions invalidate earlier attempts; Google checks identity before token exchange and before accepting response",
+    "Browser cancellation belongs to the current attempt; stale cleanup cannot cancel a newer browser session",
+    "Use locally is disabled while sign-in is busy; obsolete CancellationError does not display as a new sign-in failure"
+  ],
+  "core": {
+    "mac": {
+      "executed": 660,
+      "skipped": 26,
+      "failed": 0,
+      "log": "/private/tmp/taskfold-auth-attempt-mac-core-final.log"
+    },
+    "ios": {
+      "executed": 636,
+      "skipped": 6,
+      "failed": 0,
+      "log": "/private/tmp/taskfold-auth-attempt-ios-core-final.log"
+    },
+    "accountTransportCasesPerRepo": 24
+  },
+  "native": {
+    "mac": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-auth-attempt-native-v4.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    "iphone": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-auth-attempt-native-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    "fixture": "Exact isolated Debug bundle and --live-auth-ui-test plus --auth-response-wait-testing intercept all URLSession requests locally; no credential is sent to a real service. Synthetic example.invalid input. Native checks observe disabled local/Google/Sign In controls and recovery after process relaunch."
+  },
+  "releaseCompilation": {
+    "mac": {
+      "result": "Passed",
+      "log": "/private/tmp/taskfold-auth-attempt-mac-release.log",
+      "sourceWarningOccurrences": 8,
+      "warnings": [
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Views/KeyRouter.swift:22:106: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Views/Links.swift:197:23: warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Views/KeyRouter.swift:22:106: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Views/Links.swift:197:23: warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Workspace.swift:363:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Workspace.swift:378:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Workspace.swift:363:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Workspace.swift:378:9: warning: result of call to 'withAnimation' is unused [#NoUsage]"
+      ],
+      "signing": "Unsigned compilation only, not distribution acceptance"
+    },
+    "ios": {
+      "result": "Passed",
+      "log": "/private/tmp/taskfold-auth-attempt-ios-release.log",
+      "sourceWarningOccurrences": 7,
+      "warnings": [
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/TaskfoldApp.swift:1267:242: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/TaskfoldApp.swift:1432:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/Views/Motion.swift:133:65: warning: main actor-isolated static property 'space' can not be referenced from a Sendable closure",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/Views/Motion.swift:135:66: warning: conformance of 'Header' to protocol 'View' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/Views/Motion.swift:135:66: warning: conformance of 'Content' to protocol 'View' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/Views/Motion.swift:135:66: warning: call to main actor-isolated instance method 'headerOffset' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/Views/DayDrag.swift:389:92: warning: main actor-isolated static property 'space' can not be referenced from a Sendable closure"
+      ],
+      "signing": "Unsigned compilation only, not distribution acceptance"
+    }
+  },
+  "earlierAttempts": [
+    "iOS first fixture build failed because the independent Simulator-only HTTP stub declaration was missing; corrected before native execution",
+    "Mac v1 queried a Button where the native control is a Link",
+    "Mac v2 launched with no visible app window; recording ruled out lock. Final driver sets ApplePersistenceIgnoreState for this fixture, following existing fixture launch behavior",
+    "Mac v3 reached and verified the pending state, then queried a Button that becomes an ActivityIndicator when busy. Corrected native role in final driver; no product change for driver corrections"
+  ],
+  "cleanup": {
+    "protectedExact": 100,
+    "mainAppsAndRunners": 0,
+    "disposableSimulator": "Exact isolated app/runner removed; shut down",
+    "prunedLogicalBytes": 988316033,
+    "buildProducts": "Only terminal unsigned Release products pruned; current signed isolated Debug products retained for continuing P0; installed mac-widget-host-v8 preserved",
+    "readOnlyServerTablesExact": 28,
+    "serverTablesChanged": []
+  },
+  "captures": {
+    "mac-pending.png": "fa87e6f0f7567eaea1a3a702f73b5f03f46214b85e010f1122408c632e08224e",
+    "mac-relaunch.png": "ba2b0488d59046d858823b0d93798676aeaaa77c590f02e379d63392937e2f9a",
+    "iphone-pending.png": "9a5231faa9a53862919a03870682456b8323f6de832f4d2b9114155f17e99ea0",
+    "iphone-relaunch.png": "3ba3eac757c56c5145b77b6037f17b9511ca87b3aff46701856eebf42f7c4aa5"
+  },
+  "limitations": [
+    "Two deterministic delayed-password transport cases prove the response isolation. Native busy/relaunch cases use a controlled pending transport, not a real provider outage.",
+    "Google browser presentation, actual external OAuth callbacks and remote backup-provider failures remain unaccepted. Google guards compile in both production platform targets.",
+    "No native successful password sign-in was repeated in this checkpoint; prior session-persistence evidence retains its scoped real account-switch acceptance.",
+    "Installed Mac widget host still times out through computer use; no new installed-host or spoken VoiceOver acceptance.",
+    "Distribution signing remains user-deferred; full P0 acceptance is incomplete."
+  ],
+  "references": [
+    "https://supabase.com/docs/guides/auth/sessions",
+    "https://supabase.com/changelog/cbc-tls-ciphers-deprecated"
+  ],
+  "sourceHashes": {
+    "Taskfold/Core/Backend.swift": "14078607f3d5958726f7691c2e31838194f6dba1e8bcc4912ca3e964808e3b67",
+    "Taskfold/Views/AuthView.swift": "24bd5abba22d4f50157c8d5499c2010c6074dfeb79ca755b8c18512cb9c9d3ef",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "681720dde4fc30deb6e6f11918f50466df01ac009a64438fe7aa2b7248e611f4"
+  }
+}

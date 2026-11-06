@@ -1,0 +1,52 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "deviceName" : "Taskfold assignment iPhone",
+        "modelName" : "iPhone 17 Pro",
+        "osBuildNumber" : "23F77",
+        "osVersion" : "26.5",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1791616738.107,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1791616692.53,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Failed to tap \"Cancel\" Button: No matches found for Element at index 1 from input {(\n    Button, identifier: 'Cancel', label: 'Cancel'\n)}\nPossibly caused by runtime issues:\nAutomation type mismatch: computed Button from legacy attributes vs PopUpButton from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 14;\n    \"XC_kAXXCAttributeElementBaseType\" = UIResponder;\n    \"XC_kAXXCAttributeElementType\" = \"SwiftUI.AccessibilityNode\";\n    \"XC_kAXXCAttributeTraits\" = 1108101562369;\n}\nSee test report attachments for more detail.",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "TaskfoldUITests/testEditorReminderAndPhotoCancelPreserveDraft()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testEditorReminderAndPhotoCancelPreserveDraft",
+      "testName" : "testEditorReminderAndPhotoCancelPreserveDraft()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}

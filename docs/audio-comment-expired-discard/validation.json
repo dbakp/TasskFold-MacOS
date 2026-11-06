@@ -1,0 +1,31 @@
+{
+  "recordedAtUTC": "2026-10-28T06:43:06.676170+00:00",
+  "selectedCoreTests": 96,
+  "controllerChecks": 136,
+  "separateStorageProcesses": 16,
+  "phoneNativePassingTests": 2,
+  "ipadNativePassingTests": 1,
+  "MacNativeDialogRuntimeAccepted": false,
+  "sources": {
+    "Taskfold/Core/AudioCommentVault.swift": "0cc2193a0995c701ba1c56ebfe43c29e0ea985cef845b2c5aaadd255c3375d2d",
+    "Taskfold/AudioCommentCapture.swift": "f3f88b85334c64e04811c563aa23dee188d0626f598a600df9b708db34589682",
+    "Taskfold/AudioCommentMedia.swift": "6b1eb341287158aefe91faecb4f46d47dda8b741adc028b426bdc829024b6ad5",
+    "Taskfold/AudioCommentNativeFixture.swift": "b399017be0199adb6ff123034b3fac75bea70dd7d451404a53ce821adc353592",
+    "Taskfold/Views/AudioCommentDraftView.swift": "026390e02ab629de378e537fd412d50da5ef4516dee8431f98a170af850e2ee7",
+    "Taskfold/TaskfoldMacApp.swift": "32646857a0cb7aae3705109678d9a1c85437a2531e89a88f655c0ce88695486f",
+    "TaskfoldTests/AudioCommentVaultTests.swift": "95d65a6d2dec5fac6bb7fe76ffa9776c30b457e76086420ad3c0ef3ebbf9e056",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "10ce725e55d3312cd164baccf3d532e77b4a6a7a8b00b9bc4c4039946da68511",
+    "Scripts/AudioCommentVaultProbe.swift": "042dc1f997a2f3430040b62bc4336361e5e19a7c141cc556a6f81412eddd0f1d",
+    "Scripts/test_audio_comment_vault_processes.py": "7bc959efd57d1ee046a682e623cd3f85128b3c1a57c744495d5dadbd088d1cb7",
+    "TaskfoldUITests/AudioCommentUITests.swift": "ad3c281c2b72fc4a3cd922ad72691c7c779c8952947d95ab88bc0ffc3e420008"
+  },
+  "listedApplicationSourcesMatchHost": true,
+  "strictSignatureVerified": true,
+  "coreAggregateObjectSHA256": "27e6fda7739477ba9f1291129991cf6c2881922fc56ea5fa819c36c2fdf7662c",
+  "coreArchiveSHA256": "326dd209317cd9f1e7efc2fd38acabea8c02884bc634e51506191f36cdf94bd8",
+  "binaries": {
+    "Contents/MacOS/Taskfold.debug.dylib": "e9d3dd908852a3704ec86b95300ce9c2561acfeca8dd0464e743e4a6d78a8b72",
+    "Contents/MacOS/__preview.dylib": "65017d613284b9d14a2c3140e23191ac4e8c5a88050e87fa5632bc4791832c96",
+    "Contents/MacOS/Taskfold": "ba88fd9e0b44efac3e7111e31ad730f514dbb988b75b30efbef66ec6104d2a84"
+  }
+}

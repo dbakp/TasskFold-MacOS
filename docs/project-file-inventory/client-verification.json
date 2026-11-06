@@ -1,0 +1,14 @@
+{
+  "platform": "mac",
+  "tests": 64,
+  "failures": 0,
+  "newTests": 5,
+  "sourceSHA256": {
+    "Taskfold/Core/TeamProjectAdoption.swift": "e14ac1d877c468b09f9b6ae5bda4cbba148e082399d7c71d15081071c0045c12",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "b5cc579bf4aeb92c466fdb7b5bba49d3f752b117cafd3e478a8f6a2f58c1ea47",
+    "TaskfoldTests/TeamProjectFileInventoryTests.swift": "04bce5ba71d8ba3db650cafd5709abb08a05a4962c98deee7c36331dd642d436",
+    "TaskfoldTests/Fixtures/team-project-file-inventory-v1.json": "24db7bcc4bfe87ea128346255d919e1b02ed3640d880867cfe34900693c1bef6"
+  },
+  "nativeUIAccepted": false,
+  "normalAppUnchanged": true
+}

@@ -1,0 +1,79 @@
+{
+  "protocol": 1,
+  "account": "732810f3-6dec-40ce-b7b3-2cb7ccac7cd0",
+  "root": {
+    "id": "2f52833a-020b-458b-b1a2-7ba68f8949fa",
+    "task_generation": "22f32836-61d1-4f4d-9e77-90262e2c944f",
+    "project_id": null,
+    "title": "Exact repair original"
+  },
+  "command": {
+    "protocol": 1,
+    "account": "732810f3-6dec-40ce-b7b3-2cb7ccac7cd0",
+    "task_id": "2f52833a-020b-458b-b1a2-7ba68f8949fa",
+    "task_generation": "22f32836-61d1-4f4d-9e77-90262e2c944f",
+    "project_id": null,
+    "workspace_id": null,
+    "review_digest": "869359a687385a3eab9dbce4b8421b554b1957f6d4c2135d906388ee1e2f1699",
+    "changes": [
+      {
+        "kind": "assign_reference",
+        "path": [
+          0
+        ],
+        "reference": "repaired-reference"
+      }
+    ],
+    "request_id": "60c4ee41-38e0-4d01-940b-7c9539ac0f49",
+    "repair_digest": "9ff959aec957734e3f1266a2871b67c24f87756a1c65c027467762b4ad4a3e2a"
+  },
+  "closedCommand": {
+    "protocol": 1,
+    "account": "732810f3-6dec-40ce-b7b3-2cb7ccac7cd0",
+    "task_id": "2f52833a-020b-458b-b1a2-7ba68f8949fa",
+    "task_generation": "22f32836-61d1-4f4d-9e77-90262e2c944f",
+    "project_id": null,
+    "workspace_id": null,
+    "review_digest": "869359a687385a3eab9dbce4b8421b554b1957f6d4c2135d906388ee1e2f1699",
+    "changes": [
+      {
+        "kind": "assign_reference",
+        "path": [
+          0
+        ],
+        "reference": "repaired-reference"
+      }
+    ],
+    "request_id": "58c9a75e-00bb-4705-a439-6ba5841d78eb",
+    "repair_digest": "9ff959aec957734e3f1266a2871b67c24f87756a1c65c027467762b4ad4a3e2a"
+  },
+  "unknownCommand": {
+    "protocol": 1,
+    "account": "732810f3-6dec-40ce-b7b3-2cb7ccac7cd0",
+    "task_id": "2f52833a-020b-458b-b1a2-7ba68f8949fa",
+    "task_generation": "22f32836-61d1-4f4d-9e77-90262e2c944f",
+    "project_id": null,
+    "workspace_id": null,
+    "review_digest": "869359a687385a3eab9dbce4b8421b554b1957f6d4c2135d906388ee1e2f1699",
+    "changes": [
+      {
+        "kind": "assign_reference",
+        "path": [
+          0
+        ],
+        "reference": "repaired-reference"
+      }
+    ],
+    "request_id": "208482c3-f6e6-45e1-bb8f-e02b240ddb20",
+    "repair_digest": "9ff959aec957734e3f1266a2871b67c24f87756a1c65c027467762b4ad4a3e2a"
+  },
+  "nodeCount": 1,
+  "hashes": {
+    "review": "ce64683d5cea2cb8a233818601ac32dcf1c633f175a38343f3ba8662ff632c05",
+    "preview": "56f123d601edaa0aec864fd718eb6e20bcac26636424e033e28751a7efdd5636",
+    "receipt": "4f9172b708904fe991751a30420e08aa56afbef4d7e58667b1a75d3ed82edc5a",
+    "closed": "3464352aae265c62a385c68d2a947d69777a15e516b6f4672557423785a6bf15",
+    "unknown": "82cf5cc08a19fda91e60474fef0f43ff438404cab72617d53605f62c0a3db09c",
+    "original": "db8d07f07705fbd924cb5a9efdff2668271eac3685d4756d824d8d59a89bd859"
+  }
+}

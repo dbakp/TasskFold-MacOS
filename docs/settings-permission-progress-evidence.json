@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-12",
+  "scope": "Task reminder Settings permission progress in both independently owned apps. Source/build proof; transient pending-state rendering not yet accepted.",
+  "finding": "Current native Mac Settings Task reminders stays off without progress while actual authorization request is awaiting system approval. Both apps settings lack the feedback already present in ReminderEditor.",
+  "change": "Show Requesting permission\u2026 during requestingNotifications; disable toggle during either task or Focus permission request. Reuse existing observable state; no permission/persistence contract changes.",
+  "builds": {
+    "mac": {
+      "debug": "PASS",
+      "strictDeepDevelopmentSignature": "PASS",
+      "team": "3UZ4C73FM2",
+      "binarySHA256": "292de5f08f3e06dec31077a56289c85c1e2fdee71ad559834c94fa092ab1ec33",
+      "logSHA256": "228bddc5aa5ecad38f2368fe1b28f23e7f03bdca1996c3ab18af8b03d74968dc",
+      "stage": "/private/tmp/taskfold-isolated-mac-notification-v3",
+      "runtime": "Unlaunched; active v2 PID15247 preserved with pending permission."
+    },
+    "ios": {
+      "arm64SimulatorDebug": "PASS",
+      "codeSigningAllowed": false,
+      "logSHA256": "6729ab48d9c4dedd72406b44d7cf17f9f4ac80c6d713a463feeafc11f9fabce3",
+      "stage": "/private/tmp/taskfold-settings-permission-ios-v1",
+      "runtime": "No Simulator boot/install/launch; no native/physical acceptance."
+    }
+  },
+  "preservation": {
+    "macActivePID": 15247,
+    "macParsedStarterSnapshotExact": true,
+    "protectedContainers": 6,
+    "protectedFiles": 100,
+    "protectedFileSetsAndHashesExact": true
+  },
+  "remaining": [
+    "Current native pending-state rendering and notification permission approval.",
+    "Mac Move to tomorrow/Snooze/Open/account actions and other named P0 gates."
+  ],
+  "storageCleanup": {
+    "inactiveIOSCompileProductsPrunedLogicalBytes": 163940056,
+    "sourcesAndBuildLogRetained": true,
+    "macV2AndV3ProductsKept": true
+  }
+}

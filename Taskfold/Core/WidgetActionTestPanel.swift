@@ -22,6 +22,20 @@ struct CalendarContextFixtureControls: ViewModifier {
                         Button("Fixture silent next day") { store.setCalendarFixtureClock(1) }
                         Button("Fixture next day") { store.setCalendarFixtureClock(1); NotificationCenter.default.post(name: .NSCalendarDayChanged, object: nil) }
                         Button("Fixture Honolulu") { store.setCalendarFixtureClock(2); NotificationCenter.default.post(name: .NSSystemTimeZoneDidChange, object: nil) }
+                        Button("Fixture background next day") {
+                            store.setCalendarFixtureClock(1)
+                            DispatchQueue.global(qos: .utility).async {
+                                precondition(!Thread.isMainThread)
+                                NotificationCenter.default.post(name: .NSCalendarDayChanged, object: nil)
+                            }
+                        }
+                        Button("Fixture background Honolulu") {
+                            store.setCalendarFixtureClock(2)
+                            DispatchQueue.global(qos: .utility).async {
+                                precondition(!Thread.isMainThread)
+                                NotificationCenter.default.post(name: .NSSystemTimeZoneDidChange, object: nil)
+                            }
+                        }
                         Button("Prepare fixture resume") { store.setCalendarFixtureClock(3) }
                     }.accessibilityIdentifier(prefix + "Clock").frame(minHeight: 44)
                     Text(store.calendarContext.today + " · " + store.calendarContext.timeZone).font(.caption2).accessibilityIdentifier(prefix + "Context")
@@ -84,7 +98,12 @@ struct WidgetActionTestPanel: View {
                     Link("Missing note", destination: noteLink(account: store.userID, id: "missing-note")).accessibilityIdentifier("noteOpenMissing")
                     Link("Other workspace", destination: noteLink(account: "other-workspace", id: "note-first")).accessibilityIdentifier("noteOtherWorkspace")
                 }.font(.system(size: 12))
-                Button("Fail next save") { store.inboxFixtureFailSave = true }.accessibilityIdentifier("noteFailSave")
+                HStack {
+                    Button("Fail saves") { store.inboxFixtureFailSave = true }.accessibilityIdentifier("noteFailSave")
+                    if store.inboxFixtureFailSave {
+                        Button("Allow saves") { store.inboxFixtureFailSave = false }.accessibilityIdentifier("noteAllowSave")
+                    }
+                }
             }
         } else if ProcessInfo.processInfo.arguments.contains("--inbox-review-testing") {
             VStack(spacing: 4) {
@@ -106,13 +125,14 @@ struct WidgetActionTestPanel: View {
         } else {
             VStack(spacing: 4) {
                 HStack {
-                    Text("Original: \(store.record("tasks", id: rootID)?.completed == true ? "completed" : "open")").accessibilityIdentifier("widgetRootState")
+                    Text("Original: \(store.record("tasks", id: rootID).map { $0.completed ? "completed" : "open" } ?? "unavailable")").accessibilityIdentifier("widgetRootState")
                     Text("Next copies: \(store.tasks.filter { $0.string("recurrence_parent_id") == rootID }.count)").accessibilityIdentifier("widgetCopyCount")
                     Text("Queued: \(pending)").accessibilityIdentifier("widgetPendingCount")
                 }.font(.caption)
                 Text("Drafts: \(store.tasks.filter { $0.title == "Saved occurrence draft" }.count)").font(.caption).accessibilityIdentifier("widgetDraftCount")
+                Text(store.notice ?? "No widget warning").font(.caption).accessibilityIdentifier("widgetNoticeFixture")
                 HStack {
-                    Button("Complete via intent") { perform(captured) }.accessibilityIdentifier("widgetCompleteFixture")
+                    Button("Complete via intent") { perform(captured) }.accessibilityIdentifier("widgetCompleteFixture").disabled(captured == nil)
                     Button("Queue only") {
                         do { if let captured { try store.queueWidgetActionFixture(captured) }; pending = store.widgetActionFixturePending() }
                         catch { message = error.localizedDescription }
@@ -124,6 +144,13 @@ struct WidgetActionTestPanel: View {
                     Button("Other workspace") {
                         if var request = captured { request.account = "other-workspace"; perform(request) }
                     }.accessibilityIdentifier("widgetWrongAccountFixture")
+                }
+                HStack {
+                    Button("Consume queue") { store.consumeWidgetCompletions(); pending = store.widgetActionFixturePending() }.accessibilityIdentifier("widgetConsumeFixture")
+                    Button("Allow saves and retry") {
+                        store.widgetFixtureFailSave = false
+                        Task { await store.sync(); pending = store.widgetActionFixturePending() }
+                    }.accessibilityIdentifier("widgetRecoverFixture")
                 }
             }.buttonStyle(.bordered).controlSize(.regular).padding(8).background(.regularMaterial)
             .task(id: "\(store.taskRevision)-\(store.widgetFixtureReady)") {

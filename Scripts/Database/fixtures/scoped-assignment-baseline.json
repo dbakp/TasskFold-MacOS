@@ -1,0 +1,225 @@
+{
+  "capturedOn": "2026-11-03",
+  "project": "zqxflydiyfjeedqvyova",
+  "scope": "Catalog/function definitions only; no user rows. Local compatibility fixture deliberately excludes live policies and triggers.",
+  "functions": [
+    {
+      "identity": "taskfold_private.merge_edit(jsonb,jsonb,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION taskfold_private.merge_edit(b jsonb, d jsonb, c jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\n IMMUTABLE\n SET search_path TO ''\nAS $function$\ndeclare r jsonb; k text; v jsonb; bv jsonb; dv jsonb; cv jsonb;\nbegin\n if d is not distinct from b then return c; end if;\n if c is not distinct from b or c is not distinct from d then return d; end if;\n if jsonb_typeof(b) = 'object' and jsonb_typeof(d) = 'object' and jsonb_typeof(c) = 'object' then\n   r := c;\n   for k in select jsonb_object_keys(b || d) loop\n     if d->k is distinct from b->k then\n       v := taskfold_private.merge_edit(b->k, d->k, c->k);\n       if v is null then r := r - k; else r := jsonb_set(r, array[k], v); end if;\n     end if;\n   end loop;\n   return r;\n end if;\n if jsonb_typeof(b) = 'array' and jsonb_typeof(d) = 'array' and jsonb_typeof(c) = 'array'\n and not exists(select 1 from jsonb_array_elements(b || d || c) x where jsonb_typeof(x) <> 'object' or coalesce(x->>'id', '') = '')\n and not exists(select 1 from (values(b),(d),(c)) q(a) where jsonb_array_length(a) <> (select count(distinct x->>'id') from jsonb_array_elements(a) x)) then\n   r := '[]';\n   for cv in select * from jsonb_array_elements(c) loop\n     select x into bv from jsonb_array_elements(b) x where x->>'id' = cv->>'id';\n     select x into dv from jsonb_array_elements(d) x where x->>'id' = cv->>'id';\n     if bv is null then\n       if dv is not null and dv <> cv then raise exception 'TASKFOLD_CONFLICT: An item changed on another device. Review the conflicting change.'; end if;\n       r := r || jsonb_build_array(cv);\n     else\n       v := taskfold_private.merge_edit(bv, dv, cv);\n       if v is not null then r := r || jsonb_build_array(v); end if;\n     end if;\n   end loop;\n   for dv in select * from jsonb_array_elements(d) loop\n     select x into bv from jsonb_array_elements(b) x where x->>'id' = dv->>'id';\n     if not exists(select 1 from jsonb_array_elements(c) x where x->>'id' = dv->>'id') then\n       if bv is null then r := r || jsonb_build_array(dv);\n       elsif bv <> dv then raise exception 'TASKFOLD_CONFLICT: This item was deleted on another device. Your edit is saved locally.'; end if;\n     end if;\n   end loop;\n   return r;\n end if;\n raise exception 'TASKFOLD_CONFLICT: The same field changed on another device. Your edit is saved locally.';\nend $function$\n",
+      "security_definer": false,
+      "settings": [
+        "search_path=\"\""
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "definition_md5": "2ade68a54d06b46c865536bcde6125d6"
+    },
+    {
+      "identity": "taskfold_patch_task(uuid,jsonb,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.taskfold_patch_task(_id uuid, _base jsonb, _changes jsonb)\n RETURNS tasks\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\ndeclare t public.tasks; merged jsonb; k text; base_value jsonb; desired_value jsonb; remote_value jsonb; allowed text[] := array['title','description','completed','priority','due_date','due_time','project_id','section_id','labels','subtasks','reminders','attachments','comments','completed_at','recurrence_pattern','is_recurring','recurrence_parent_id','recurrence_end_date','notification_sent_at','assigned_to','deadline_date','duration_minutes','time_zone','reminder_specs','source_metadata','scheduled_at'];\nbegin\n if auth.uid() is null then raise exception 'Sign in to edit tasks'; end if;\n select * into t from public.tasks where id = _id for update;\n if not found then raise exception 'This task is no longer available or you no longer have access. Your edit is saved locally.'; end if;\n if _changes is null or _base is null or jsonb_typeof(_changes) <> 'object' or jsonb_typeof(_base) <> 'object' then raise exception 'Invalid edit'; end if;\n if t.task_generation is distinct from (_base->>'task_generation')::uuid then\n  raise exception 'TASKFOLD_CONFLICT: This edit belongs to an earlier task. Review the synced version';\n end if;\n merged := to_jsonb(t);\n -- Completion revisions detect an intervening complete/reopen cycle even when\n -- the visible values returned to their baseline. Old clients remain compatible;\n -- new native queues require the revision and send it only in the baseline.\n if _changes ?| array['completed','completed_at'] and _base ? 'completion_version' then\n  if jsonb_typeof(_base->'completion_version') <> 'number'\n     or (_base->>'completion_version')::numeric <> trunc((_base->>'completion_version')::numeric)\n     or (_base->>'completion_version')::numeric < 0 then\n   raise exception 'TASKFOLD_CONFLICT: Review this completion before replacing synced state';\n  end if;\n  if t.completion_version <> (_base->>'completion_version')::bigint then\n   -- Only the immediately following revision with identical desired completion\n   -- values is a lost-response retry. A later cycle can never be mistaken for it.\n   if t.completion_version <> (_base->>'completion_version')::bigint + 1\n      or (_changes ? 'completed' and t.completed is distinct from (_changes->>'completed')::boolean)\n      or (_changes ? 'completed_at' and t.completed_at is distinct from (_changes->>'completed_at')::timestamptz) then\n    raise exception 'TASKFOLD_CONFLICT: Completion changed on another device. Review the synced task';\n   end if;\n  end if;\n end if;\n\n for k in select jsonb_object_keys(_changes) loop\n   if not k = any(allowed) then raise exception 'This task field cannot be edited'; end if;\n   if not _base ? k then raise exception 'An edit baseline is required'; end if;\n   base_value := _base->k; desired_value := _changes->k; remote_value := merged->k;\n   -- Native queues use Z, PostgREST returns +00:00. Compare instants, not JSON spelling.\n   -- Real concurrent changes (including different DST folds) must still conflict.\n   if k = any(array['scheduled_at','completed_at','notification_sent_at']) then\n    if jsonb_typeof(base_value) = 'string' then base_value := to_jsonb((base_value#>>'{}')::timestamptz); end if;\n    if jsonb_typeof(desired_value) = 'string' then desired_value := to_jsonb((desired_value#>>'{}')::timestamptz); end if;\n    if jsonb_typeof(remote_value) = 'string' then remote_value := to_jsonb((remote_value#>>'{}')::timestamptz); end if;\n   elsif k = 'due_time' then\n    if jsonb_typeof(base_value) = 'string' then base_value := to_jsonb((base_value#>>'{}')::time); end if;\n    if jsonb_typeof(desired_value) = 'string' then desired_value := to_jsonb((desired_value#>>'{}')::time); end if;\n    if jsonb_typeof(remote_value) = 'string' then remote_value := to_jsonb((remote_value#>>'{}')::time); end if;\n   end if;\n   if k = 'subtasks' and desired_value is distinct from base_value\n      and remote_value is distinct from base_value and remote_value is distinct from desired_value\n      and (taskfold_private.subtask_layout(desired_value) is distinct from taskfold_private.subtask_layout(base_value)\n        or taskfold_private.subtask_layout(remote_value) is distinct from taskfold_private.subtask_layout(base_value)) then\n     raise exception 'TASKFOLD_CONFLICT: The checklist structure changed on another device. Review the layout and saved edits.';\n   end if;\n   merged := jsonb_set(merged, array[k], coalesce(taskfold_private.merge_edit(base_value, desired_value, remote_value), 'null'));\n end loop;\n t := jsonb_populate_record(t, merged);\n update public.tasks set title=t.title,description=t.description,completed=t.completed,priority=t.priority,due_date=t.due_date,due_time=t.due_time,project_id=t.project_id,section_id=t.section_id,labels=t.labels,subtasks=t.subtasks,reminders=t.reminders,attachments=t.attachments,comments=t.comments,completed_at=t.completed_at,recurrence_pattern=t.recurrence_pattern,is_recurring=t.is_recurring,recurrence_parent_id=t.recurrence_parent_id,recurrence_end_date=t.recurrence_end_date,notification_sent_at=t.notification_sent_at,assigned_to=t.assigned_to,deadline_date=t.deadline_date,duration_minutes=t.duration_minutes,time_zone=t.time_zone,reminder_specs=t.reminder_specs,source_metadata=t.source_metadata,scheduled_at=t.scheduled_at where id=_id returning * into t;\n return t;\nend $function$\n",
+      "security_definer": false,
+      "settings": [
+        "search_path=\"\""
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "definition_md5": "83d5f48c06902d43648e941acbacf7c3"
+    },
+    {
+      "identity": "taskfold_private.subtask_layout(jsonb,integer)",
+      "definition": "CREATE OR REPLACE FUNCTION taskfold_private.subtask_layout(_tree jsonb, _depth integer DEFAULT 0)\n RETURNS jsonb\n LANGUAGE plpgsql\n IMMUTABLE\n SET search_path TO ''\nAS $function$\ndeclare result jsonb := '[]'::jsonb; child jsonb;\nbegin\n if _depth > 32 then raise exception 'TASKFOLD_CONFLICT: This checklist is too deeply nested. Review the synced version.'; end if;\n if _tree is null or _tree = 'null'::jsonb then return '[]'::jsonb; end if;\n if jsonb_typeof(_tree) <> 'array' then return jsonb_build_object('unsupported', _tree); end if;\n for child in select value from jsonb_array_elements(_tree) loop\n  if jsonb_typeof(child) = 'object' then\n   result := result || jsonb_build_array(jsonb_build_object('id', child->'id',\n     'children', taskfold_private.subtask_layout(child->'subtasks', _depth + 1)));\n  else result := result || jsonb_build_array(jsonb_build_object('unsupported', child));\n  end if;\n end loop;\n return result;\nend $function$\n",
+      "security_definer": false,
+      "settings": [
+        "search_path=\"\""
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "definition_md5": "4071a998aff35cebe23fc1cdc982cc3d"
+    }
+  ],
+  "columns": [
+    {
+      "name": "id",
+      "type": "uuid",
+      "default_expression": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "user_id",
+      "type": "uuid",
+      "default_expression": null,
+      "not_null": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "default_expression": null,
+      "not_null": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "completed",
+      "type": "boolean",
+      "default_expression": "false",
+      "not_null": true
+    },
+    {
+      "name": "priority",
+      "type": "integer",
+      "default_expression": "4",
+      "not_null": true
+    },
+    {
+      "name": "due_date",
+      "type": "date",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "due_time",
+      "type": "time without time zone",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "project_id",
+      "type": "uuid",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "section_id",
+      "type": "uuid",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "labels",
+      "type": "text[]",
+      "default_expression": "'{}'::text[]",
+      "not_null": false
+    },
+    {
+      "name": "subtasks",
+      "type": "jsonb",
+      "default_expression": "'[]'::jsonb",
+      "not_null": false
+    },
+    {
+      "name": "reminders",
+      "type": "text[]",
+      "default_expression": "'{}'::text[]",
+      "not_null": false
+    },
+    {
+      "name": "attachments",
+      "type": "jsonb",
+      "default_expression": "'[]'::jsonb",
+      "not_null": false
+    },
+    {
+      "name": "comments",
+      "type": "jsonb",
+      "default_expression": "'[]'::jsonb",
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default_expression": "now()",
+      "not_null": true
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "recurrence_pattern",
+      "type": "jsonb",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "is_recurring",
+      "type": "boolean",
+      "default_expression": "false",
+      "not_null": true
+    },
+    {
+      "name": "recurrence_parent_id",
+      "type": "uuid",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "recurrence_end_date",
+      "type": "date",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "notification_sent_at",
+      "type": "timestamp with time zone",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "assigned_to",
+      "type": "uuid",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "deadline_date",
+      "type": "date",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "duration_minutes",
+      "type": "integer",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "time_zone",
+      "type": "text",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "reminder_specs",
+      "type": "jsonb",
+      "default_expression": "'[]'::jsonb",
+      "not_null": true
+    },
+    {
+      "name": "source_metadata",
+      "type": "jsonb",
+      "default_expression": "'{}'::jsonb",
+      "not_null": true
+    },
+    {
+      "name": "scheduled_at",
+      "type": "timestamp with time zone",
+      "default_expression": null,
+      "not_null": false
+    },
+    {
+      "name": "completion_version",
+      "type": "bigint",
+      "default_expression": "0",
+      "not_null": true
+    },
+    {
+      "name": "task_generation",
+      "type": "uuid",
+      "default_expression": null,
+      "not_null": false
+    }
+  ]
+}

@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Taskfold progress</title><style>
+:root { color-scheme: light dark; --background: Canvas; --foreground: CanvasText; --muted: color-mix(in srgb, CanvasText 10%, Canvas); --muted-foreground: color-mix(in srgb, CanvasText 72%, Canvas); --border: color-mix(in srgb, CanvasText 18%, Canvas); --viz-series-1: Highlight; --viz-series-2: color-mix(in srgb, Mark 55%, CanvasText); --viz-series-3: GrayText; }
+* { box-sizing: border-box; }
+body { margin: 0 auto; padding: 24px; max-width: 880px; background: var(--background); color: var(--foreground); font: 14px/1.5 system-ui, sans-serif; }
+h1 { font-size: 1.4em; font-weight: 500; }
+.text-small { font-size: 12px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.text-muted { color: var(--muted-foreground); }
+.viz-badge { background: var(--muted); border-radius: 6px; padding: 2px 7px; font-size: 12px; }
+a { color: LinkText; }
+@media (max-width: 480px) { body { padding: 16px; } }
+</style><script>
+if (!window.openai) {
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem('taskfold-px-ui') || 'null'); } catch (_) {}
+  window.openai = { widgetState: saved, setWidgetState(state) {
+    this.widgetState = state;
+    try { localStorage.setItem('taskfold-px-ui', JSON.stringify(state)); } catch (_) {}
+    return Promise.resolve();
+  }};
+}
+</script></head><body>
+<style>
+#taskfold-px-progress { color: var(--foreground); min-width: 0; }
+#taskfold-px-progress .px-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
+#taskfold-px-progress .px-head h1 { margin: 0; }
+#taskfold-px-progress .px-intro { margin: 12px 0; }
+#taskfold-px-progress .px-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 12px 0 8px; }
+#taskfold-px-progress .px-key { display: inline-flex; align-items: center; gap: 6px; }
+#taskfold-px-progress .px-swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+#taskfold-px-progress summary { padding: 12px 0; min-height: 44px; }
+#taskfold-px-progress .px-summary { display: inline-grid; vertical-align: top; width: calc(100% - 1.4em); gap: 6px; }
+#taskfold-px-progress .px-heading { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+#taskfold-px-progress .px-title { font-weight: 500; }
+#taskfold-px-progress .px-meter { display: block; width: 100%; height: 8px; border-radius: 4px; }
+#taskfold-px-progress .px-stage { border-top: 1px solid var(--border); margin-top: 12px; }
+#taskfold-px-progress .px-group { margin-left: 16px; }
+#taskfold-px-progress .px-items { list-style: none; padding: 0; margin: 0 0 12px 16px; }
+#taskfold-px-progress .px-item { display: grid; grid-template-columns: 1.2em minmax(0, 1fr); column-gap: 8px; margin: 14px 0; }
+#taskfold-px-progress .px-item-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+#taskfold-px-progress .px-item-title { flex: 1 1 220px; }
+#taskfold-px-progress .px-item-detail { margin-top: 4px; }
+#taskfold-px-progress .px-steps { list-style: none; padding: 0; margin: 10px 0 0; }
+#taskfold-px-progress .px-step { display: grid; grid-template-columns: 1.2em minmax(0, 1fr); gap: 8px; margin: 6px 0; }
+#taskfold-px-progress .px-sources { margin: 0 0 12px 16px; }
+#taskfold-px-progress .px-source-list { padding-left: 20px; overflow-wrap: anywhere; }
+#taskfold-px-progress .px-footer { border-top: 1px solid var(--border); margin-top: 16px; }
+#taskfold-px-progress .px-footer ol { padding-left: 24px; }
+#taskfold-px-progress .px-footer li { margin-bottom: 8px; }
+@media (max-width: 480px) { #taskfold-px-progress .px-group { margin-left: 8px; } }
+</style>
+<div id="taskfold-px-progress">
+<header class="px-head"><h1>Taskfold · progress</h1><span class="text-small text-muted">Reviewed <time datetime="2026-11-06">06 Nov 2026</time></span></header>
+<div class="px-intro">Daily-use build first. Remaining Px follow in small feature updates.</div>
+<div class="px-legend" aria-label="Milestone states">
+<span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-1)" aria-hidden="true"></span>Verified</span>
+<span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-2)" aria-hidden="true"></span>Built · checks left</span>
+<span class="px-key text-small"><span class="px-swatch" style="background:var(--muted)" aria-hidden="true"></span>To build</span>
+<span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-3)" aria-hidden="true"></span>Deferred</span>
+</div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope. Substeps show progress within a checkpoint and do not change bar totals.</div>
+<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · Project recordings · Recoverable transfers</summary><div>Genuine iPhone recording-bearing project transfers now pass 44 app/Keychain/Backend/Auth/REST/Storage checks: exact original recovery after a committed lost reply, refreshed team access, old-audience denial and unchanged media/task content. Each owner passes 59 Core regressions. Mac compiles/signs, but its transfer case is unaccepted: the isolated protected-vault identity/profile is missing, and the new preflight stops before services. No normal app, gate or hosted service changed. Apple Intelligence is still unavailable to the actual model probe; no real AI quality is accepted. Installed Mac23/phone34 and frozen prepared Mac28/phone40 stay unchanged; this later integration source is separate. App/services are closed, used Simulator shutdown, and cleanup leaves about 56.9 GiB free.</div></details>
+<details class="px-stage" id="px-p0" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P0 · Foundations</span></span><span class="text-small text-muted" aria-hidden="true">11 verified · 2 built / checks left · 3 deferred</span><svg class="px-meter" viewBox="0 0 16 1" preserveAspectRatio="none" role="img" aria-label="11 verified · 2 built / checks left · 3 deferred"><rect x="0" y="0" width="11" height="1" fill="var(--viz-series-1)"/><rect x="11" y="0" width="2" height="1" fill="var(--viz-series-2)"/><rect x="13" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">Core workflows accepted in recorded scope. Deletion recovery and three paused rollout gates remain.</div>
+<details class="px-group" id="p0-core" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Everyday task foundations</span></span><span class="text-small text-muted" aria-hidden="true">6 verified</span><svg class="px-meter" viewBox="0 0 6 1" preserveAspectRatio="none" role="img" aria-label="6 verified"><rect x="0" y="0" width="6" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p0-core-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Todoist import and safe retry</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Real read-only provider import, replay/retry and imported-workspace handoff; source tasks preserved.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Quick capture and planning grammar</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Supported dates, priorities, estimates, repeat/reminder tokens and durable edits. Multiline context inheritance/section selection now builds with six focused checks per repo; its new native visual journey remains pending.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Saved filters, favorites and ordering</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Supported query contract, account boundaries, offline changes and representative handoffs.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-3"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Deadlines, estimates and day planning</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Independent deadline/date behavior, recurrence boundaries and calendar capacity in recorded flows. Day review now retains its original queue and counts only successful saves; the seven-task/failure-retry/fixed-time/cold case passes with a large synthetic attachment.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-4"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Local reminders and actions</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Closed-app Open, Complete, Tomorrow and Snooze in recorded Mac/Simulator flows. Remote delivery is separate.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-5"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Work continuity</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Representative task, note, Focus, label/comment and access-loss recovery journeys.</div>
+</div></li>
+</ul><details class="px-sources" id="p0-core-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="P0_PROGRESS.md" target="_blank" rel="noopener">P0_PROGRESS.md</a></li>
+<li><a href="p0-requirements-audit.json" target="_blank" rel="noopener">p0-requirements-audit.json</a></li>
+</ul></details></details>
+<details class="px-group" id="p0-surface" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Widgets, recovery and accessibility</span></span><span class="text-small text-muted" aria-hidden="true">4 verified</span><svg class="px-meter" viewBox="0 0 4 1" preserveAspectRatio="none" role="img" aria-label="4 verified"><rect x="0" y="0" width="4" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p0-surface-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Twelve productive widget kinds</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Representative installed routes, configuration, completion feedback, account isolation and physical Lock Screen privacy.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-surface-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Backup and restore</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Portable/encrypted restore, relationships, Cancel/retry and recorded external-provider transfer. Current child-history recording metadata also passes core backup round-trip.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-surface-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Named VoiceOver workflows</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Representative capture, edit, completion, Undo, validation and restore-picker speech; not a universal accessibility audit.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-surface-item-3"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Independent Mac and iOS repositories</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Each app owns its source, widgets, tests and release inputs.</div>
+</div></li>
+</ul><details class="px-sources" id="p0-surface-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="P0_PROGRESS.md" target="_blank" rel="noopener">P0_PROGRESS.md</a></li>
+<li><a href="p0-requirements-audit.json" target="_blank" rel="noopener">p0-requirements-audit.json</a></li>
+<li><a href="child-copy-mapping-apply/README.md" target="_blank" rel="noopener">child-copy-mapping-apply/README.md</a></li>
+<li><a href="child-copy-mapping-apply/client-verification.json" target="_blank" rel="noopener">child-copy-mapping-apply/client-verification.json</a></li>
+</ul></details></details>
+<details class="px-group" id="p0-removal" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Account deletion follow-up</span></span><span class="text-small text-muted" aria-hidden="true">1 verified · 2 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="1 verified · 2 built / checks left"><rect x="0" y="0" width="1" height="1" fill="var(--viz-series-1)"/><rect x="1" y="0" width="2" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p0-removal-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Deployed deletion service and iPhone recovery proof</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Normal deletion, lost response/retry and proof-based recovery after synthetic receipt expiry.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p0-removal-item-1"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Mac deletion and secure-storage walkthrough</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">The full Mac app builds and signs, but its isolated runtime attempt stopped at the first protected-session Keychain write. Genuine Mac profile/Auth/Storage acceptance remains open.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p0-removal-item-2"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Finish recovery of older attempts and leftover files</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Current-client coordination and disabled reviewed residual-file repair are accepted in recorded scope. Reviewed legacy recovery now has passing local issuer/verifier/Storage checks and iPhone completion/cold-return proof; both app builds/signatures pass. Largest-text picker/refusal, hosted activation, Mac runtime and wider fault directions remain. No valid bound confirmation means no device-copy erasure.</div>
+<ul class="px-steps text-small" aria-label="Progress within this checkpoint">
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Coordinate current-client removal journals and preserve other accounts during recovery</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Implement and locally verify reviewed administrator repair of residual owned files</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Verify and activate repair on disposable hosted files; finish wider provider/failure directions</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Accept reviewed legacy recovery: iPhone completion/cold return and local service pass; largest-text and hosted checks remain</span></li>
+</ul>
+</div></li>
+</ul><details class="px-sources" id="p0-removal-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="ACCOUNT_REMOVAL.md" target="_blank" rel="noopener">ACCOUNT_REMOVAL.md</a></li>
+<li><a href="P0_PROGRESS.md" target="_blank" rel="noopener">P0_PROGRESS.md</a></li>
+<li><a href="removal-coordination/README.md" target="_blank" rel="noopener">removal-coordination/README.md</a></li>
+<li><a href="removal-coordination/verification.json" target="_blank" rel="noopener">removal-coordination/verification.json</a></li>
+<li><a href="account-removal-residual-repair/README.md" target="_blank" rel="noopener">account-removal-residual-repair/README.md</a></li>
+<li><a href="account-removal-residual-repair/verification.json" target="_blank" rel="noopener">account-removal-residual-repair/verification.json</a></li>
+<li><a href="account-removal-residual-repair/provider.json" target="_blank" rel="noopener">account-removal-residual-repair/provider.json</a></li>
+<li><a href="account-removal-legacy-recovery/README.md" target="_blank" rel="noopener">account-removal-legacy-recovery/README.md</a></li>
+<li><a href="account-removal-legacy-recovery/checks.json" target="_blank" rel="noopener">account-removal-legacy-recovery/checks.json</a></li>
+<li><a href="account-removal-legacy-recovery/provider.json" target="_blank" rel="noopener">account-removal-legacy-recovery/provider.json</a></li>
+<li><a href="account-removal-legacy-recovery/verification.json" target="_blank" rel="noopener">account-removal-legacy-recovery/verification.json</a></li>
+<li><a href="account-removal-legacy-recovery/iphone-completion.json" target="_blank" rel="noopener">account-removal-legacy-recovery/iphone-completion.json</a></li>
+</ul></details></details>
+<details class="px-group" id="p0-paused" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Rollout work you paused</span></span><span class="text-small text-muted" aria-hidden="true">3 deferred</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 deferred"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="deferred" id="p0-paused-item-0"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Remote reminders</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Real server-delivered notifications, registration/reinstall recovery and actual delivery checks.</div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p0-paused-item-1"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Safe upgrades for older app versions</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Older active writers can bypass newer safeguards; coordinated upgrade/retirement is still required.</div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p0-paused-item-2"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Distribution verification</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Release signing, install/update checks, Mac distribution/notarization and App Store submission.</div>
+</div></li>
+</ul><details class="px-sources" id="p0-paused-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="PX_CHECKLIST.md" target="_blank" rel="noopener">PX_CHECKLIST.md</a></li>
+<li><a href="P0_PROGRESS.md" target="_blank" rel="noopener">P0_PROGRESS.md</a></li>
+</ul></details></details>
+</details>
+<details class="px-stage" id="px-p1" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P1 · Agreed expansion</span></span><span class="text-small text-muted" aria-hidden="true">20 verified · 1 deferred</span><svg class="px-meter" viewBox="0 0 21 1" preserveAspectRatio="none" role="img" aria-label="20 verified · 1 deferred"><rect x="0" y="0" width="20" height="1" fill="var(--viz-series-1)"/><rect x="20" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">7 of 7 agreed feature packages accepted within the recorded scope. Live calendar-provider setup is deferred.</div>
+<details class="px-group" id="p1-subtasks" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">1 · Nested subtask editing</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-subtasks-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Edit nested children, notes and planning</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">The original nested editor remains accepted. New one-tap iPhone details, parent-draft Cancel/Save/cold behavior, continued legacy-row typing after predecessor removal and dark/largest-text Cancel now pass. Twelve focused Core checks pass independently per app; the Mac inspector compile is recorded separately from native interaction. Wider cases remain scoped.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-subtasks-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Add, reorder and indent whole branches</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-subtasks-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Save/relaunch and concurrent move/edit preservation</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">The original nested-task editor is accepted. Moving subtasks into their own storage records is additional P2 work below.</div>
+</div></li>
+</ul><details class="px-sources" id="p1-subtasks-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="p1-completion-audit.json" target="_blank" rel="noopener">p1-completion-audit.json</a></li>
+<li><a href="P1_PLAN.md" target="_blank" rel="noopener">P1_PLAN.md</a></li>
+<li><a href="daily-use-build/inline-subtasks.json" target="_blank" rel="noopener">daily-use-build/inline-subtasks.json</a></li>
+</ul></details></details>
+<details class="px-group" id="p1-templates" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">2 · Saved template management</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-templates-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Rename and edit saved definitions</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Template/capture Undo and existing scoped Store proofs remain accepted. Four starters and contextual source search keep thirteen prior Core checks per app. Current iPhone Simulator journeys accept library source/review/cancel/save/fresh run, Weekly reset preview/save/separate run and dark/largest-text selection; old tasks/definitions stay preserved and no tasks are created by saving. Mac 12 and phone 29 packages are prepared; installed Mac 10 and phone 26 stay unchanged. Mac native menu/library and wider provider/hardware/speech checks remain open.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-templates-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Review source refresh; preserve existing runs</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-templates-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Unsupported-version and cross-device review</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+</ul><details class="px-sources" id="p1-templates-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="p1-completion-audit.json" target="_blank" rel="noopener">p1-completion-audit.json</a></li>
+<li><a href="P1_PLAN.md" target="_blank" rel="noopener">P1_PLAN.md</a></li>
+<li><a href="daily-use-build/workflow-starters-core.json" target="_blank" rel="noopener">daily-use-build/workflow-starters-core.json</a></li>
+<li><a href="daily-use-build/workflow-starters-build.json" target="_blank" rel="noopener">daily-use-build/workflow-starters-build.json</a></li>
+<li><a href="daily-use-build/workflow-starters-storage-cleanup.json" target="_blank" rel="noopener">daily-use-build/workflow-starters-storage-cleanup.json</a></li>
+<li><a href="daily-use-build/source-search-native.json" target="_blank" rel="noopener">daily-use-build/source-search-native.json</a></li>
+<li><a href="daily-use-build/source-search-largest-text.json" target="_blank" rel="noopener">daily-use-build/source-search-largest-text.json</a></li>
+<li><a href="daily-use-build/source-search-bootstrap.json" target="_blank" rel="noopener">daily-use-build/source-search-bootstrap.json</a></li>
+<li><a href="daily-use-build/source-search-package.json" target="_blank" rel="noopener">daily-use-build/source-search-package.json</a></li>
+<li><a href="daily-use-build/source-search-storage.json" target="_blank" rel="noopener">daily-use-build/source-search-storage.json</a></li>
+<li><a href="daily-use-build/context-capture-native.json" target="_blank" rel="noopener">daily-use-build/context-capture-native.json</a></li>
+<li><a href="daily-use-build/context-capture-mac-package.json" target="_blank" rel="noopener">daily-use-build/context-capture-mac-package.json</a></li>
+<li><a href="daily-use-build/context-capture-storage.json" target="_blank" rel="noopener">daily-use-build/context-capture-storage.json</a></li>
+<li><a href="daily-use-build/context-capture-ios-build.json" target="_blank" rel="noopener">daily-use-build/context-capture-ios-build.json</a></li>
+<li><a href="daily-use-build/library-composer-native.json" target="_blank" rel="noopener">daily-use-build/library-composer-native.json</a></li>
+<li><a href="daily-use-build/workflow-starters-native.json" target="_blank" rel="noopener">daily-use-build/workflow-starters-native.json</a></li>
+<li><a href="daily-use-build/library-composer-largest-text.json" target="_blank" rel="noopener">daily-use-build/library-composer-largest-text.json</a></li>
+<li><a href="daily-use-build/workflow-ux-packages.json" target="_blank" rel="noopener">daily-use-build/workflow-ux-packages.json</a></li>
+<li><a href="daily-use-build/library-composer-storage.json" target="_blank" rel="noopener">daily-use-build/library-composer-storage.json</a></li>
+</ul></details></details>
+<details class="px-group" id="p1-widgets" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">3 · Widget ordering</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-widgets-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Saved manual order and grouping</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-widgets-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Honest completion, retry and empty states</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-widgets-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Representative installed-host and relaunch proof</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+</ul><details class="px-sources" id="p1-widgets-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="p1-completion-audit.json" target="_blank" rel="noopener">p1-completion-audit.json</a></li>
+<li><a href="P1_PLAN.md" target="_blank" rel="noopener">P1_PLAN.md</a></li>
+</ul></details></details>
+<details class="px-group" id="p1-insights" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">4 · Insights and goals</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-insights-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Daily/weekly progress with explicit history coverage</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-insights-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Rest days, deduplication and reopen corrections</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-insights-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Matching settings and results in recorded native scopes</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+</ul><details class="px-sources" id="p1-insights-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="p1-completion-audit.json" target="_blank" rel="noopener">p1-completion-audit.json</a></li>
+<li><a href="P1_PLAN.md" target="_blank" rel="noopener">P1_PLAN.md</a></li>
+</ul></details></details>
+<details class="px-group" id="p1-recurrence" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">5 · Multiple monthly dates</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-recurrence-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Date sets and occurrence previews</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-recurrence-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Month-end, time-zone and count/end boundaries</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-recurrence-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Persistence, completion, Undo and compatibility checks</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+</ul><details class="px-sources" id="p1-recurrence-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="p1-completion-audit.json" target="_blank" rel="noopener">p1-completion-audit.json</a></li>
+<li><a href="P1_PLAN.md" target="_blank" rel="noopener">P1_PLAN.md</a></li>
+</ul></details></details>
+<details class="px-group" id="p1-calendar" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">6 · Google / Outlook calendars</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 deferred</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 deferred"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-calendar-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Read-only authorization bridge and configuration guards</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Implementation and synthetic/native acceptance; no provider write-back.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-calendar-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Account selection and planner integration</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Private-event handling, selection, reconnect/disconnect and timeline controls in recorded scopes. Planner task selection now searches names and full project/section/parent paths in bounded pages. Eight Core checks per app and three final signed iPhone journeys pass, including current names, actual Store scheduling/reminder/Undo/cold state, changed-schedule refusal and largest-text keyboard/Cancel. Mac18 compiles/signs; other native contexts remain separate.</div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p1-calendar-item-2"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Real provider registrations and consent</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">You will configure native client IDs later. Genuine refresh/revocation and provider credentials remain unverified.</div>
+</div></li>
+</ul><details class="px-sources" id="p1-calendar-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="p1-completion-audit.json" target="_blank" rel="noopener">p1-completion-audit.json</a></li>
+<li><a href="P1_PLAN.md" target="_blank" rel="noopener">P1_PLAN.md</a></li>
+</ul></details></details>
+<details class="px-group" id="p1-mentions" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">7 · Project activity and mentions</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-mentions-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Current-project activity and authenticated authorship</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-mentions-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Permission-checked mentions and durable outbox/inbox</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-mentions-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Departed-member and honest-delivery checks</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Accepted in recorded native-fixture and genuine HTTP/server scopes; remote push remains deferred.</div>
+</div></li>
+</ul><details class="px-sources" id="p1-mentions-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="p1-completion-audit.json" target="_blank" rel="noopener">p1-completion-audit.json</a></li>
+<li><a href="P1_PLAN.md" target="_blank" rel="noopener">P1_PLAN.md</a></li>
+</ul></details></details>
+</details>
+<details class="px-stage" id="px-p2" data-remember open><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P2 · Advanced work</span></span><span class="text-small text-muted" aria-hidden="true">17 verified · 14 built / checks left · 3 to build · 3 deferred</span><svg class="px-meter" viewBox="0 0 37 1" preserveAspectRatio="none" role="img" aria-label="17 verified · 14 built / checks left · 3 to build · 3 deferred"><rect x="0" y="0" width="17" height="1" fill="var(--viz-series-1)"/><rect x="17" y="0" width="14" height="1" fill="var(--viz-series-2)"/><rect x="31" y="0" width="3" height="1" fill="var(--muted)"/><rect x="34" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">In progress. Much of the implementation exists; integration, real-account recovery checks and checks before everyday use remain.</div>
+<details class="px-group" id="p2-portable" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">1 · Portable templates</span></span><span class="text-small text-muted" aria-hidden="true">3 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 4 1" preserveAspectRatio="none" role="img" aria-label="3 verified · 1 built / checks left"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/><rect x="3" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-portable-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Versioned workflow import/export and private copies</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-portable-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Bounded reads and incompatible-file refusal</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-portable-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">App wait, Cancel, retry and relaunch</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded Mac/phone/tablet scopes; Mac platform warning remains documented.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-portable-item-3"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">External file-provider transfer and recovery</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Controlled provider tests are not universal cloud-provider acceptance.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-portable-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="PX_CHECKLIST.md" target="_blank" rel="noopener">PX_CHECKLIST.md</a></li>
+<li><a href="P2_PLAN.md" target="_blank" rel="noopener">P2_PLAN.md</a></li>
+</ul></details></details>
+<details class="px-group" id="p2-share" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">2 · Share and browser capture</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-share-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Reviewed share-extension text/link capture</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Account-bound drafts, offline/relaunch and isolation checks.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-share-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Mac Safari/TextEdit capture and Undo/Redo</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded local review, Cancel/Add and cold return; temporary extension setting restored.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-share-item-2"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Broader Mac cloud/account/speech and source apps</span><span class="text-small text-muted">Built · checks left</span></div>
+</div></li>
+</ul><details class="px-sources" id="p2-share-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="PX_CHECKLIST.md" target="_blank" rel="noopener">PX_CHECKLIST.md</a></li>
+<li><a href="P2_PLAN.md" target="_blank" rel="noopener">P2_PLAN.md</a></li>
+</ul></details></details>
+<details class="px-group" id="p2-views" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">3 · Notes, output and view control</span></span><span class="text-small text-muted" aria-hidden="true">4 verified · 4 built / checks left · 1 to build</span><svg class="px-meter" viewBox="0 0 9 1" preserveAspectRatio="none" role="img" aria-label="4 verified · 4 built / checks left · 1 to build"><rect x="0" y="0" width="4" height="1" fill="var(--viz-series-1)"/><rect x="4" y="0" width="4" height="1" fill="var(--viz-series-2)"/><rect x="8" y="0" width="1" height="1" fill="var(--muted)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="verify" id="p2-views-item-0"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Rich-note formatting and heading authoring</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Focused pinned-note Edit note now uses the existing Write/Preview tools and guarded text-only Save. Six Core intent checks pass per app. Current signed iPhone tests accept Cancel/Save, unchanged pin/completion/children/opaque/unrelated work, external title/priority preservation, actual Store Undo/Redo, cold content, conflicting-note refusal and separate largest-text preview/Cancel. Native Mac/iPad, wider shared/cloud/speech/accessibility and heading contexts remain open; no ordinary rollout gate changes. Block/inline note previews now prepare off the interface thread and retain source-bound render models. Both repos pass 30 focused note checks; current iPhone tests accept revised preview content, exact original toggle and largest-text Preview/Cancel, plus unchanged Save/history/cold preservation. Mac builds/signs; wider runtime and heading acceptance remain. New section navigation and lazy formatted-block layout are implemented in both readers/previews. Normal text uses a menu; accessibility sizes use a full-height list, with source-bound headings, separate content anchors and routing after dismissal. A reproduced largest-text reverse-jump failure is fixed with explicit lazy scroll targets. Current normal iPhone reader/editor-preview and largest-text reader journeys pass first/last navigation, exact original-text toggles, unchanged all-table snapshots and cold return. Each owner passes 47 focused checks and current build/sign verification. Exact UTF-8 source guards distinguish canonically equal Unicode URL paths. Mac/iPad interaction, speech, wider contexts and physical FPS remain open; no broad acceptance promotion. Note paragraphs now support explicit Body and H1/H2/H3 styles, exact level replacement and distinct scalable preview sizes. Each owner passes 37 focused checks (8 new paragraph cases); the current normal-text iPhone menu/preview/Save/Store Undo/Redo/cold flow passes. Mac compiles/signs; new Mac/iPad, hardware-keyboard, speech and wider shared/lifecycle acceptance remain. Task-heading rollout is unchanged. List style conversion now replaces recognized bullet/number markers rather than stacking them, matches the reader grammar and preserves every supported source line ending. Both owners pass 48 focused checks including 11 new cases; optimized signed Mac24/phone36 packages are prepared. Native gestures/keyboard/speech and hardware smoothness remain separate; installed apps are unchanged.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-views-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Print/PDF and pinned-note output</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Representative output and native Save/Cancel/readback scopes.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-views-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Phone/iPad CSV Share → local Files</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Actual readback and cold preservation at largest text.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-views-item-3"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Expanded filters, grouping and gesture foundations</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Ordinary filter editors now request member lists only for person conditions; concurrent reads share one operation with cancellation and account/session/provider/access fences. Each owning suite passes six focused coordinator/demand tests plus existing filter regression checks. Native interaction, live delivery and physical smoothness remain unaccepted; this follow-up is not in installed phone34 or Mac14.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-views-item-4"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Background workflow and local-history foundations</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Preservation, cancellation and changed-source checks; remaining pauses are tracked separately.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-views-item-5"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Heading support and compatibility on both devices</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Independent child-record migration is tracked in section 6.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-views-item-6"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Remaining native/speech/large-text acceptance</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Recorded Mac system warnings still need assessment; clean behavior is not established for every screen.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-views-item-7"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">External-provider output and wider device cases</span><span class="text-small text-muted">Built · checks left</span></div>
+</div></li>
+<li class="px-item" data-state="build" id="p2-views-item-8"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Reduce remaining workflow and browsing pauses</span><span class="text-small text-muted">To build</span></div>
+<div class="px-item-detail text-small text-muted">Read reuse/background preparation now covers filters and assignment captions, rich workflows, template previews/captions, project/parent catalogs, filter/task/note searches and Insights. Exact-byte durable reads avoid repeated attachment parsing; dated-list drops use one commit/Undo. Recorded iPhone journeys accept bounded scrolling, source refresh, draft/save/cold preservation, seven-task review and the new scope/range/persistent-day interactions. Insights has owning Core71 and independent Mac21 build proof. Optimized phone34 is now installed from its frozen archive, with launch and all 205 prior task IDs/titles/notes/attachments/children preserved. Mac23 is installed; signed prepared Mac25/iPhone37 include later personal-workflow improvements but remain uninstalled. Broader editor/rendering/FPS, actual sibling drag, native Mac/iPad/speech, shared/cloud/account/window/access and overnight-clock contexts remain open. Pinned-note readers and editor previews now remove repeated synchronous markup parsing from their view bodies. Current signed iPhone content/toggle/history/cold and largest-text checks pass; Mac source builds/signs. This is not a physical FPS or long-note layout claim. Daily builds now select optimized Release code by default, with actual main-app compiler flags, signatures, profile validity and ZIP payloads verified. Mac compilation is host-only. Phone34 launch and critical task-field preservation now pass separately; Mac25 is prepared while Mac23 stays installed and physical FPS remains unaccepted. Formatted readers now use lazy blocks and prepared heading captions. Current 12-section iPhone normal reader/editor-preview and largest-text reader navigation pass after explicit lazy scroll-target routing. Exact original/cold/all-table preservation passes; the largest-text opening realizes three blocks. Mac/iPad interaction, VoiceOver and physical FPS remain unaccepted. Shared nested-array exact reads now skip redundant walks for the same immutable backing storage. Own Debug diagnostics on this Mac drop about 20 ms to under 0.01 ms for a 4,096-entry retained payload; 116 selected Core cases per repo and current signed app builds pass, with edited-buffer invalidation and exact Unicode/numeric/opaque preservation. Actual rendering/FPS and the pending note-navigation screen checks remain open. Dense planner columns now use temporary end/free heaps while retaining exact existing placement. Both owning Core suites pass 32 selected checks, including 240 equivalence inputs and a 4,096-overlap diagnostic (about 527–538 ms to 14 ms in Debug on this Mac). Current source is not in the frozen daily packages; native rendering/FPS remains open. Navigation badges now aggregate once per task/catalog/archive change; project rows and Mac label rows no longer rescan the work library individually. ID/name overlap counts once, headings and incomplete markers are preserved. Six new checks per repo plus existing heading regressions pass (54 iOS, 53 Mac), including 4,096 tasks and 100 retained read rounds with one computation. Full native/physical acceptance and packaging this follow-up remain separate. Task-row and planning-card checklist progress now uses scoped retained reads and a direct cold count instead of allocating full descendant/filter arrays. Each owner passes 167 selected checks including eight new equivalence/invalidation/budget cases. The 4,096-item, 100-read Debug diagnostic drops about 326–333 ms to 2 ms with one computation. Current owning builds/signatures are recorded separately; native rendering, Store boundary hooks in a live account-switch flow and physical FPS remain unaccepted. Cache limits are 128 readings/32,768 visited nodes, with no disk persistence; all existing rollout/install deferrals remain. Task-row compact/full note previews now reuse exact-source readings within workspace/session/access scope; rendered links are detected once per displayed text and shared by renderer/accessibility. Each owner passes 55 selected checks, including nine new preview cases. Debug diagnostics for 100 reads drop about 100 ms to 1 ms compact and 368–385 ms to 4 ms full; this is not device rendering/FPS acceptance. Cache limits are 128 readings/8 MiB of source/result UTF-8 content, with no disk persistence. Full-text accessibility conversion, native link/speech/layout cases and broader responsiveness remain open. Cold compact-note preparation now avoids whole-source copying/normalization, with 52 focused checks per owner and a 12-call 708 KB Debug diagnostic dropping about 202 ms to 5.4–5.6 ms on this Mac. Current iPhone library paging/search/text-refresh/original-toggle/cold preservation passes. Full accessibility conversion, broader rendering and physical FPS remain open.</div>
+<ul class="px-steps text-small" aria-label="Progress within this checkpoint">
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Reuse filtered task reads and assignment display names with scoped invalidation proof</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Construct rich workflows efficiently; verify real Create, Undo and cold saved state</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Prepare one cancellable background template preview and reuse it while editing options</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Reuse current project catalogs; verify archive/reparent/readability refresh and bounded iPhone scrolling</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Search project parents efficiently; verify iPhone draft Cancel, Save, cold return and original hierarchy restoration</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Prepare and reuse library captions off the main thread; verify iPhone scrolling, current-source refresh, unreadable/return and cold reopening</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Cache account identity once per database statement; preserve all 14 policy rules and verify real Auth/REST isolation and query plans</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Wait for an existing workspace sync before field conflict review; verify blocked read and refreshed values in actual iPhone/Mac apps</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Finish actual scrolling/rendering, multiple-project scaling and wider platform/account/accessibility acceptance</span></li>
+</ul>
+</div></li>
+</ul><details class="px-sources" id="p2-views-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="PX_CHECKLIST.md" target="_blank" rel="noopener">PX_CHECKLIST.md</a></li>
+<li><a href="P2_PLAN.md" target="_blank" rel="noopener">P2_PLAN.md</a></li>
+<li><a href="workspace-read-reuse/README.md" target="_blank" rel="noopener">workspace-read-reuse/README.md</a></li>
+<li><a href="workspace-read-reuse/verification.json" target="_blank" rel="noopener">workspace-read-reuse/verification.json</a></li>
+<li><a href="workspace-read-reuse/iphone-before.json" target="_blank" rel="noopener">workspace-read-reuse/iphone-before.json</a></li>
+<li><a href="workspace-read-reuse/iphone-after.json" target="_blank" rel="noopener">workspace-read-reuse/iphone-after.json</a></li>
+<li><a href="assignment-display-reads/README.md" target="_blank" rel="noopener">assignment-display-reads/README.md</a></li>
+<li><a href="assignment-display-reads/verification.json" target="_blank" rel="noopener">assignment-display-reads/verification.json</a></li>
+<li><a href="assignment-display-reads/iphone-before.json" target="_blank" rel="noopener">assignment-display-reads/iphone-before.json</a></li>
+<li><a href="assignment-display-reads/iphone-after.json" target="_blank" rel="noopener">assignment-display-reads/iphone-after.json</a></li>
+<li><a href="assignment-display-reads/storage-cleanup.json" target="_blank" rel="noopener">assignment-display-reads/storage-cleanup.json</a></li>
+<li><a href="assignment-display-reads/index-cleanup.json" target="_blank" rel="noopener">assignment-display-reads/index-cleanup.json</a></li>
+<li><a href="rich-workflow-creation/README.md" target="_blank" rel="noopener">rich-workflow-creation/README.md</a></li>
+<li><a href="rich-workflow-creation/verification.json" target="_blank" rel="noopener">rich-workflow-creation/verification.json</a></li>
+<li><a href="rich-workflow-creation/iphone-after.json" target="_blank" rel="noopener">rich-workflow-creation/iphone-after.json</a></li>
+<li><a href="rich-workflow-creation/before-partial-diagnostic.json" target="_blank" rel="noopener">rich-workflow-creation/before-partial-diagnostic.json</a></li>
+<li><a href="rich-workflow-creation/before-failed-native.json" target="_blank" rel="noopener">rich-workflow-creation/before-failed-native.json</a></li>
+<li><a href="workflow-definition-preview/README.md" target="_blank" rel="noopener">workflow-definition-preview/README.md</a></li>
+<li><a href="workflow-definition-preview/verification.json" target="_blank" rel="noopener">workflow-definition-preview/verification.json</a></li>
+<li><a href="workflow-definition-preview/iphone-after.json" target="_blank" rel="noopener">workflow-definition-preview/iphone-after.json</a></li>
+<li><a href="project-catalog-reads/README.md" target="_blank" rel="noopener">project-catalog-reads/README.md</a></li>
+<li><a href="project-catalog-reads/verification.json" target="_blank" rel="noopener">project-catalog-reads/verification.json</a></li>
+<li><a href="project-catalog-reads/iphone-after.json" target="_blank" rel="noopener">project-catalog-reads/iphone-after.json</a></li>
+<li><a href="project-catalog-reads/core-after.json" target="_blank" rel="noopener">project-catalog-reads/core-after.json</a></li>
+<li><a href="project-catalog-reads/ios-core-before.json" target="_blank" rel="noopener">project-catalog-reads/ios-core-before.json</a></li>
+<li><a href="project-parent-choices/README.md" target="_blank" rel="noopener">project-parent-choices/README.md</a></li>
+<li><a href="project-parent-choices/core-checks.json" target="_blank" rel="noopener">project-parent-choices/core-checks.json</a></li>
+<li><a href="project-parent-choices/core-after.json" target="_blank" rel="noopener">project-parent-choices/core-after.json</a></li>
+<li><a href="project-parent-choices/iphone-after.json" target="_blank" rel="noopener">project-parent-choices/iphone-after.json</a></li>
+<li><a href="project-parent-choices/build-verification.json" target="_blank" rel="noopener">project-parent-choices/build-verification.json</a></li>
+<li><a href="template-library-summaries/README.md" target="_blank" rel="noopener">template-library-summaries/README.md</a></li>
+<li><a href="template-library-summaries/core-checks.json" target="_blank" rel="noopener">template-library-summaries/core-checks.json</a></li>
+<li><a href="template-library-summaries/core-diagnostic.json" target="_blank" rel="noopener">template-library-summaries/core-diagnostic.json</a></li>
+<li><a href="template-library-summaries/iphone-after.json" target="_blank" rel="noopener">template-library-summaries/iphone-after.json</a></li>
+<li><a href="template-library-summaries/build-verification.json" target="_blank" rel="noopener">template-library-summaries/build-verification.json</a></li>
+<li><a href="rls-identity-plans/README.md" target="_blank" rel="noopener">rls-identity-plans/README.md</a></li>
+<li><a href="rls-identity-plans/verification.json" target="_blank" rel="noopener">rls-identity-plans/verification.json</a></li>
+<li><a href="rls-identity-plans/local-service.json" target="_blank" rel="noopener">rls-identity-plans/local-service.json</a></li>
+<li><a href="rls-identity-plans/attempts.json" target="_blank" rel="noopener">rls-identity-plans/attempts.json</a></li>
+<li><a href="genuine-conflict-review/README.md" target="_blank" rel="noopener">genuine-conflict-review/README.md</a></li>
+<li><a href="genuine-conflict-review/verification.json" target="_blank" rel="noopener">genuine-conflict-review/verification.json</a></li>
+<li><a href="genuine-conflict-review/field.json" target="_blank" rel="noopener">genuine-conflict-review/field.json</a></li>
+<li><a href="genuine-conflict-review/attempts.json" target="_blank" rel="noopener">genuine-conflict-review/attempts.json</a></li>
+<li><a href="daily-use-build/direct-note-editing.json" target="_blank" rel="noopener">daily-use-build/direct-note-editing.json</a></li>
+<li><a href="daily-use-build/direct-note-native-ios.json" target="_blank" rel="noopener">daily-use-build/direct-note-native-ios.json</a></li>
+<li><a href="daily-use-build/direct-note-conflict-ios.json" target="_blank" rel="noopener">daily-use-build/direct-note-conflict-ios.json</a></li>
+<li><a href="daily-use-build/direct-note-largest-text.json" target="_blank" rel="noopener">daily-use-build/direct-note-largest-text.json</a></li>
+<li><a href="daily-use-build/direct-note-mac-build.json" target="_blank" rel="noopener">daily-use-build/direct-note-mac-build.json</a></li>
+<li><a href="daily-use-build/direct-note-storage.json" target="_blank" rel="noopener">daily-use-build/direct-note-storage.json</a></li>
+<li><a href="daily-use-build/direct-note-core-checks.json" target="_blank" rel="noopener">daily-use-build/direct-note-core-checks.json</a></li>
+<li><a href="prepared-note-previews/README.md" target="_blank" rel="noopener">prepared-note-previews/README.md</a></li>
+<li><a href="prepared-note-previews/verification.json" target="_blank" rel="noopener">prepared-note-previews/verification.json</a></li>
+<li><a href="prepared-note-previews/core.json" target="_blank" rel="noopener">prepared-note-previews/core.json</a></li>
+<li><a href="prepared-note-previews/iphone.json" target="_blank" rel="noopener">prepared-note-previews/iphone.json</a></li>
+<li><a href="prepared-note-previews/iphone-largest-text.json" target="_blank" rel="noopener">prepared-note-previews/iphone-largest-text.json</a></li>
+<li><a href="prepared-note-previews/mac-build.json" target="_blank" rel="noopener">prepared-note-previews/mac-build.json</a></li>
+<li><a href="prepared-note-previews/storage.json" target="_blank" rel="noopener">prepared-note-previews/storage.json</a></li>
+<li><a href="optimized-daily-update/README.md" target="_blank" rel="noopener">optimized-daily-update/README.md</a></li>
+<li><a href="optimized-daily-update/verification.json" target="_blank" rel="noopener">optimized-daily-update/verification.json</a></li>
+<li><a href="optimized-daily-update/packages.json" target="_blank" rel="noopener">optimized-daily-update/packages.json</a></li>
+<li><a href="optimized-daily-update/mac-verification.json" target="_blank" rel="noopener">optimized-daily-update/mac-verification.json</a></li>
+<li><a href="optimized-daily-update/iphone-verification.json" target="_blank" rel="noopener">optimized-daily-update/iphone-verification.json</a></li>
+<li><a href="optimized-daily-update/storage.json" target="_blank" rel="noopener">optimized-daily-update/storage.json</a></li>
+<li><a href="planner-lane-layout/README.md" target="_blank" rel="noopener">planner-lane-layout/README.md</a></li>
+<li><a href="filter-directory-responsiveness/README.md" target="_blank" rel="noopener">filter-directory-responsiveness/README.md</a></li>
+<li><a href="filter-directory-responsiveness/core-verification.json" target="_blank" rel="noopener">filter-directory-responsiveness/core-verification.json</a></li>
+<li><a href="filter-directory-responsiveness/signed-build.json" target="_blank" rel="noopener">filter-directory-responsiveness/signed-build.json</a></li>
+<li><a href="navigation-counts/README.md" target="_blank" rel="noopener">navigation-counts/README.md</a></li>
+<li><a href="navigation-counts/core-verification.json" target="_blank" rel="noopener">navigation-counts/core-verification.json</a></li>
+<li><a href="navigation-counts/signed-build.json" target="_blank" rel="noopener">navigation-counts/signed-build.json</a></li>
+<li><a href="subtask-progress-reading/README.md" target="_blank" rel="noopener">subtask-progress-reading/README.md</a></li>
+<li><a href="task-row-note-reading/README.md" target="_blank" rel="noopener">task-row-note-reading/README.md</a></li>
+<li><a href="note-section-navigation/README.md" target="_blank" rel="noopener">note-section-navigation/README.md</a></li>
+<li><a href="note-section-navigation/routing-diagnosis.json" target="_blank" rel="noopener">note-section-navigation/routing-diagnosis.json</a></li>
+<li><a href="note-section-navigation/current-normal-iphone.json" target="_blank" rel="noopener">note-section-navigation/current-normal-iphone.json</a></li>
+<li><a href="note-section-navigation/current-largest-iphone.json" target="_blank" rel="noopener">note-section-navigation/current-largest-iphone.json</a></li>
+<li><a href="note-section-navigation/current-core.json" target="_blank" rel="noopener">note-section-navigation/current-core.json</a></li>
+<li><a href="note-section-navigation/current-owning-build.json" target="_blank" rel="noopener">note-section-navigation/current-owning-build.json</a></li>
+<li><a href="note-section-navigation/current-cleanup.json" target="_blank" rel="noopener">note-section-navigation/current-cleanup.json</a></li>
+<li><a href="note-section-navigation/current-progress-validation.json" target="_blank" rel="noopener">note-section-navigation/current-progress-validation.json</a></li>
+<li><a href="cold-note-excerpts/README.md" target="_blank" rel="noopener">cold-note-excerpts/README.md</a></li>
+<li><a href="cold-note-excerpts/core.json" target="_blank" rel="noopener">cold-note-excerpts/core.json</a></li>
+<li><a href="cold-note-excerpts/owning-build.json" target="_blank" rel="noopener">cold-note-excerpts/owning-build.json</a></li>
+<li><a href="cold-note-excerpts/iphone-library.json" target="_blank" rel="noopener">cold-note-excerpts/iphone-library.json</a></li>
+<li><a href="cold-note-excerpts/storage-cleanup.json" target="_blank" rel="noopener">cold-note-excerpts/storage-cleanup.json</a></li>
+<li><a href="cold-note-excerpts/mac-controls-final-locked.json" target="_blank" rel="noopener">cold-note-excerpts/mac-controls-final-locked.json</a></li>
+<li><a href="note-paragraph-styles/README.md" target="_blank" rel="noopener">note-paragraph-styles/README.md</a></li>
+<li><a href="note-paragraph-styles/verification.json" target="_blank" rel="noopener">note-paragraph-styles/verification.json</a></li>
+<li><a href="note-paragraph-styles/signed-build.json" target="_blank" rel="noopener">note-paragraph-styles/signed-build.json</a></li>
+<li><a href="note-paragraph-styles/storage-cleanup.json" target="_blank" rel="noopener">note-paragraph-styles/storage-cleanup.json</a></li>
+<li><a href="daily-update-23/README.md" target="_blank" rel="noopener">daily-update-23/README.md</a></li>
+<li><a href="daily-update-23/build.json" target="_blank" rel="noopener">daily-update-23/build.json</a></li>
+<li><a href="daily-update-23/package.json" target="_blank" rel="noopener">daily-update-23/package.json</a></li>
+<li><a href="daily-update-23/selection-tests.json" target="_blank" rel="noopener">daily-update-23/selection-tests.json</a></li>
+<li><a href="daily-update-23/storage-cleanup.json" target="_blank" rel="noopener">daily-update-23/storage-cleanup.json</a></li>
+<li><a href="daily-update-23/installation.json" target="_blank" rel="noopener">daily-update-23/installation.json</a></li>
+<li><a href="note-list-styles/README.md" target="_blank" rel="noopener">note-list-styles/README.md</a></li>
+<li><a href="note-list-styles/core.json" target="_blank" rel="noopener">note-list-styles/core.json</a></li>
+<li><a href="note-list-styles/before.json" target="_blank" rel="noopener">note-list-styles/before.json</a></li>
+<li><a href="note-list-styles/build.json" target="_blank" rel="noopener">note-list-styles/build.json</a></li>
+<li><a href="note-list-styles/package.json" target="_blank" rel="noopener">note-list-styles/package.json</a></li>
+<li><a href="note-list-styles/storage-cleanup.json" target="_blank" rel="noopener">note-list-styles/storage-cleanup.json</a></li>
+</ul></details></details>
+<details class="px-group" id="p2-voice" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">4 · Voice and on-device assistance</span></span><span class="text-small text-muted" aria-hidden="true">1 verified · 2 built / checks left · 1 deferred</span><svg class="px-meter" viewBox="0 0 4 1" preserveAspectRatio="none" role="img" aria-label="1 verified · 2 built / checks left · 1 deferred"><rect x="0" y="0" width="1" height="1" fill="var(--viz-series-1)"/><rect x="1" y="0" width="2" height="1" fill="var(--viz-series-2)"/><rect x="3" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-voice-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Correction, review and explicit Apply</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded app flows with simulated recording preserve the parent draft.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-voice-item-1"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Remaining speech, recording and recovery checks</span><span class="text-small text-muted">Built · checks left</span></div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p2-voice-item-2"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Real microphone, dictation and permissions</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">You asked to do genuine audio testing later.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-voice-item-3"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Reviewed task and filter assistance</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Both apps own on-device task-step and filter-expression review with no cloud inference fallback. Saved root/nested additions support editable literal titles, selected atomic Add, source/access checks, encrypted exact Check/Retry/Stop and guarded Undo/Redo with fresh original-slot identities. Four current signed iPhone journeys against genuine local Auth/REST now pass with zero runtime warnings: editable Add/Undo/Redo/cold history, committed lost-response Check, original Retry and unsent Stop/cold reopening. The 35 named UI/API/cache checks preserve original task fields/children, one exact addition receipt without duplicates and a durable closure that refuses later resend. Header Done removes the formerly observed pending-to-settled keyboard-toolbar warning in these named paths; broader layout or speech is not inferred. Filter review has an exact count and five read-only task samples, empty/completed guidance, Clear, header Done and fresh source/date/destination checks. Its complete current iPhone typing/preview/Use/Cancel/cold journey passes without runtime warnings and preserves all saved tables. Use updates only the draft; the filter editor still requires Save. A scoped Mac root edit/exclusion/Add/Undo/Redo walkthrough also has recorded literal-title, fresh-identity and disk/receipt proof; current Mac/iPad wider interactions remain separate. These journeys use seeded proposals. Actual on-device inference quality/latency, filter live task/access/date races, wider nesting, sharing, accounts, windows, background use, keyboard, speech and largest text and hosted acceptance remain open. Existing core/service proofs are retained; they were not rerun for this view-only repair. Prepared Mac26/phone38 are uninstalled, installed Mac23/phone34 are unchanged, phone installation remains deferred and ordinary advanced gates stay off. Cancellation now wins before input/setup checks; both owners pass 26 ordinary checks plus two intentionally skipped default model tests. Explicit on-device model selection and a six-example output/timing probe are implemented. The semantic oracle independently rejects plausible wrong date/deadline/project queries. A final real probe found Apple Intelligence Off and generated nothing; the user intends to enable it. Actual generation quality and latency remain unaccepted.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-voice-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="PX_CHECKLIST.md" target="_blank" rel="noopener">PX_CHECKLIST.md</a></li>
+<li><a href="P2_PLAN.md" target="_blank" rel="noopener">P2_PLAN.md</a></li>
+<li><a href="task-breakdown/README.md" target="_blank" rel="noopener">task-breakdown/README.md</a></li>
+<li><a href="filter-assistance/README.md" target="_blank" rel="noopener">filter-assistance/README.md</a></li>
+<li><a href="reviewed-step-batches/README.md" target="_blank" rel="noopener">reviewed-step-batches/README.md</a></li>
+<li><a href="reviewed-step-batches/full-schema.json" target="_blank" rel="noopener">reviewed-step-batches/full-schema.json</a></li>
+<li><a href="reviewed-step-batches/cleanup.json" target="_blank" rel="noopener">reviewed-step-batches/cleanup.json</a></li>
+<li><a href="reviewed-step-batches/client-verification.json" target="_blank" rel="noopener">reviewed-step-batches/client-verification.json</a></li>
+<li><a href="reviewed-step-batches/signed-build.json" target="_blank" rel="noopener">reviewed-step-batches/signed-build.json</a></li>
+<li><a href="reviewed-step-batches/core-cache-storage.json" target="_blank" rel="noopener">reviewed-step-batches/core-cache-storage.json</a></li>
+<li><a href="reviewed-step-batches/history-verification.json" target="_blank" rel="noopener">reviewed-step-batches/history-verification.json</a></li>
+<li><a href="reviewed-step-batches/native-store-verification.json" target="_blank" rel="noopener">reviewed-step-batches/native-store-verification.json</a></li>
+<li><a href="reviewed-step-batches/ios-recovery-check.json" target="_blank" rel="noopener">reviewed-step-batches/ios-recovery-check.json</a></li>
+<li><a href="reviewed-step-batches/ios-recovery-retry.json" target="_blank" rel="noopener">reviewed-step-batches/ios-recovery-retry.json</a></li>
+<li><a href="reviewed-step-batches/ios-recovery-stop.json" target="_blank" rel="noopener">reviewed-step-batches/ios-recovery-stop.json</a></li>
+<li><a href="reviewed-step-batches/recovery-core.json" target="_blank" rel="noopener">reviewed-step-batches/recovery-core.json</a></li>
+<li><a href="reviewed-step-batches/recovery-signed-build.json" target="_blank" rel="noopener">reviewed-step-batches/recovery-signed-build.json</a></li>
+<li><a href="reviewed-step-batches/recovery-layout-warning.json" target="_blank" rel="noopener">reviewed-step-batches/recovery-layout-warning.json</a></li>
+<li><a href="reviewed-step-batches/recovery-cleanup.json" target="_blank" rel="noopener">reviewed-step-batches/recovery-cleanup.json</a></li>
+<li><a href="reviewed-step-batches/recovery-progress-validation.json" target="_blank" rel="noopener">reviewed-step-batches/recovery-progress-validation.json</a></li>
+<li><a href="filter-match-preview/README.md" target="_blank" rel="noopener">filter-match-preview/README.md</a></li>
+<li><a href="filter-match-preview/source.json" target="_blank" rel="noopener">filter-match-preview/source.json</a></li>
+<li><a href="filter-match-preview/owning-build.json" target="_blank" rel="noopener">filter-match-preview/owning-build.json</a></li>
+<li><a href="filter-match-preview/iphone-functional.json" target="_blank" rel="noopener">filter-match-preview/iphone-functional.json</a></li>
+<li><a href="filter-match-preview/iphone-strict-run.json" target="_blank" rel="noopener">filter-match-preview/iphone-strict-run.json</a></li>
+<li><a href="filter-match-preview/layout-warning.json" target="_blank" rel="noopener">filter-match-preview/layout-warning.json</a></li>
+<li><a href="filter-match-preview/storage-cleanup.json" target="_blank" rel="noopener">filter-match-preview/storage-cleanup.json</a></li>
+<li><a href="reviewed-step-batches/mac-controls-data.json" target="_blank" rel="noopener">reviewed-step-batches/mac-controls-data.json</a></li>
+<li><a href="reviewed-step-batches/mac-controls-observation.json" target="_blank" rel="noopener">reviewed-step-batches/mac-controls-observation.json</a></li>
+<li><a href="reviewed-step-batches/mac-controls-build.json" target="_blank" rel="noopener">reviewed-step-batches/mac-controls-build.json</a></li>
+<li><a href="filter-keyboard-layout/README.md" target="_blank" rel="noopener">filter-keyboard-layout/README.md</a></li>
+<li><a href="filter-keyboard-layout/before.json" target="_blank" rel="noopener">filter-keyboard-layout/before.json</a></li>
+<li><a href="filter-keyboard-layout/attempts.json" target="_blank" rel="noopener">filter-keyboard-layout/attempts.json</a></li>
+<li><a href="filter-keyboard-layout/source.json" target="_blank" rel="noopener">filter-keyboard-layout/source.json</a></li>
+<li><a href="filter-keyboard-layout/iphone.json" target="_blank" rel="noopener">filter-keyboard-layout/iphone.json</a></li>
+<li><a href="filter-keyboard-layout/iphone-build.json" target="_blank" rel="noopener">filter-keyboard-layout/iphone-build.json</a></li>
+<li><a href="filter-keyboard-layout/build.json" target="_blank" rel="noopener">filter-keyboard-layout/build.json</a></li>
+<li><a href="filter-keyboard-layout/package.json" target="_blank" rel="noopener">filter-keyboard-layout/package.json</a></li>
+<li><a href="filter-keyboard-layout/storage-cleanup.json" target="_blank" rel="noopener">filter-keyboard-layout/storage-cleanup.json</a></li>
+<li><a href="step-recovery-layout/README.md" target="_blank" rel="noopener">step-recovery-layout/README.md</a></li>
+<li><a href="step-recovery-layout/before.json" target="_blank" rel="noopener">step-recovery-layout/before.json</a></li>
+<li><a href="step-recovery-layout/verification.json" target="_blank" rel="noopener">step-recovery-layout/verification.json</a></li>
+<li><a href="step-recovery-layout/iphone-build.json" target="_blank" rel="noopener">step-recovery-layout/iphone-build.json</a></li>
+<li><a href="step-recovery-layout/check.json" target="_blank" rel="noopener">step-recovery-layout/check.json</a></li>
+<li><a href="step-recovery-layout/review.json" target="_blank" rel="noopener">step-recovery-layout/review.json</a></li>
+<li><a href="step-recovery-layout/retry.json" target="_blank" rel="noopener">step-recovery-layout/retry.json</a></li>
+<li><a href="step-recovery-layout/stop.json" target="_blank" rel="noopener">step-recovery-layout/stop.json</a></li>
+<li><a href="step-recovery-layout/build.json" target="_blank" rel="noopener">step-recovery-layout/build.json</a></li>
+<li><a href="step-recovery-layout/package.json" target="_blank" rel="noopener">step-recovery-layout/package.json</a></li>
+<li><a href="step-recovery-layout/storage-cleanup.json" target="_blank" rel="noopener">step-recovery-layout/storage-cleanup.json</a></li>
+<li><a href="ondevice-quality/README.md" target="_blank" rel="noopener">ondevice-quality/README.md</a></li>
+<li><a href="ondevice-quality/core.json" target="_blank" rel="noopener">ondevice-quality/core.json</a></li>
+<li><a href="ondevice-quality/before.json" target="_blank" rel="noopener">ondevice-quality/before.json</a></li>
+<li><a href="ondevice-quality/model-probe.json" target="_blank" rel="noopener">ondevice-quality/model-probe.json</a></li>
+<li><a href="ondevice-quality/build.json" target="_blank" rel="noopener">ondevice-quality/build.json</a></li>
+<li><a href="ondevice-quality/package.json" target="_blank" rel="noopener">ondevice-quality/package.json</a></li>
+<li><a href="ondevice-quality/storage-cleanup.json" target="_blank" rel="noopener">ondevice-quality/storage-cleanup.json</a></li>
+</ul></details></details>
+<details class="px-group" id="p2-reminders" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">5 · Advanced reminders</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left · 1 deferred</span><svg class="px-meter" viewBox="0 0 4 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left · 1 deferred"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="3" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-reminders-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Interval, time-zone and holiday-policy foundations</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-reminders-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Private places and native reminder setup</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded Simulator/Core setup, snooze/cancellation and recovery scopes.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-reminders-item-2"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Travel and Time Sensitive delivery</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Ordinary notifications do not establish urgent or critical delivery guarantees.</div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p2-reminders-item-3"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Physical geofence delivery</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Awaiting a suitable real-device session. Server/assigned-recipient delivery is paused under P0.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-reminders-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="PX_CHECKLIST.md" target="_blank" rel="noopener">PX_CHECKLIST.md</a></li>
+<li><a href="P2_PLAN.md" target="_blank" rel="noopener">P2_PLAN.md</a></li>
+</ul></details></details>
+<details class="px-group" id="p2-teams" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">6 · Automation, teams and subtask storage</span><span class="viz-badge">Working here</span></span><span class="text-small text-muted" aria-hidden="true">3 verified · 4 built / checks left · 2 to build · 1 deferred</span><svg class="px-meter" viewBox="0 0 10 1" preserveAspectRatio="none" role="img" aria-label="3 verified · 4 built / checks left · 2 to build · 1 deferred"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/><rect x="3" y="0" width="4" height="1" fill="var(--viz-series-2)"/><rect x="7" y="0" width="2" height="1" fill="var(--muted)"/><rect x="9" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-teams-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Scoped credentials and webhooks</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded local, hosted and native permission/recovery scopes.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-teams-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Team-management candidate foundations</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Roles, folders and guarded operation/selection/template recovery foundations.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-teams-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Subtask data and safe-retry foundations</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Tests cover separate subtasks, edits, completion, reordering, retry and Undo. Storage migration and everyday use remain unfinished.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-teams-item-3"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">New subtask organizer and recovery</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Phone/iPad checks cover organizer drafts and cross-task destination/placement review, retained confirmation, cold-launch Undo and lost-reply retry without duplicate writes. Direct Mac personal move/cold Undo now passes. Spoken, shared-account/window lifecycle and wider acceptance remain; normal use stays gated. Ordinary organizer rows now reuse a bounded draft index. Each owner passes 47 focused checks; current iPhone recovery, edit, move, Cancel, Save and cold state pass with zero runtime warnings. Mac28 and phone40 are signed, archived and uninstalled. Wider rendering, speech and lifecycle acceptance remains.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-teams-item-4"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Team permissions, account switching and secure storage</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Scoped native Keychain session/encrypted-backup recording recovery now passes on both apps. Real shared-account, multiple-window, wider lifecycle and VoiceOver checks remain.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-teams-item-5"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Audio comments: full app and recovery integration</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Actual own iPhone/Mac Store/AAC/vault/publication-flow/Backend pass 24/23 genuine local Auth/REST/Storage/TLS checks. Native Keychain sessions, the same encrypted BackupVault copy and exact original recording survive five cold processes, wrong-CA refusal, a committed lost reply, original confirmation/download and offline return. Current test apps/services/control files are cleaned; test Keychain namespaces are retained. Simulator hardware file protection, interactive controls, iPad and wider lifecycle/access/adoption remain unaccepted; normal gates stay off.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-teams-item-6"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Real cloud-media and provider checks</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Complete own Auth/REST schemas and actual Storage now support published-only (49 checks) and mixed published/in-flight/removed project transfer (58 checks) through production handlers over validated loopback TLS. Real maintenance deletes only retired media while private fences, original closure proofs and surviving bytes remain. Native iPhone/Mac publication and protected-session recovery have separate scoped proof; native adoption and wider protected-journal integration, legacy/other realms, hosted S3 and broader migration remain open. Ordinary gates stay off. Current genuine native iPhone recording-bearing project transfer passes 44 checks with actual Keychain-backed original recovery, paused-gate retry, Store refresh, crossed-download audience denial and exact media/task preservation. Mac builds/signs but its transfer is unaccepted pending its own provisioned protected-vault identity; the preflight now stops before services. Mixed files, unfinished/removed policies, GUI and broader lifecycle remain open.</div>
+</div></li>
+<li class="px-item" data-state="build" id="p2-teams-item-7"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Move subtask storage and preserve older work</span><span class="text-small text-muted">To build</span></div>
+<div class="px-item-detail text-small text-muted">Independent subtask editing, conflict review and cold retry have scoped iPhone/Mac proof. Legacy-tree review preserves supported older work and refuses malformed/stale requests. Project files pass inventory, private preparation and the reviewed atomic local service move. Production-screen iPhone and iPad peer journeys now verify explicit consent, exact cold transfer retry, lost preparation/cancellation and held-copy Stop/cold Continue through real saved-request storage. Accessible file counts and a saved-transfer file summary are fixed; both apps build/sign. Mac native screens, wider iPad sizes, wider accessibility/account/window/locked-storage, combined policies, wider legacy/history/lifecycle/ownership and hosted acceptance remain. Advanced gates stay off. Known stopped project-copy producers now have service-only no-POST/terminal/verified observations and exact private ticket binding. Each owner passes 141 genuine transfer/producer checks, 69 copy regressions and 34 handler tests. A closed producer refuses late reservations; another verifier cannot settle its writer. Actual maintenance releases charges only after provider cleanup, including logout and paused gates. Indeterminate POSTs or process death without proof remain fenced; wider lifecycle, combined policies, native and hosted acceptance remain open. Combined file/recording/connection custody now passes 82 genuine local service checks per owner and saved client-contract recovery: one review, atomic rollback, exact paused replay, selected connection isolation and actual audio cleanup preserving private originals/published file copies. Combined normal-text iPhone/iPad peer walkthroughs now pass separate consent, Back with unchanged source, cold summaries and exact retry without another copy. Mac protected review awaits its own development profile/Xcode account. Integrated native APIs, hosted and wider lifecycle acceptance remain open; curated status stays unchanged. Current genuine native iPhone recording-bearing project transfer passes 44 checks with actual Keychain-backed original recovery, paused-gate retry, Store refresh, crossed-download audience denial and exact media/task preservation. Mac builds/signs but its transfer is unaccepted pending its own provisioned protected-vault identity; the preflight now stops before services. Mixed files, unfinished/removed policies, GUI and broader lifecycle remain open.</div>
+<ul class="px-steps text-small" aria-label="Progress within this checkpoint">
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Separate subtask records and guarded editing foundations</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Complete tasks and subtasks together, then Undo the whole selection</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Keep repair-review choices across closing and relaunch</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Redo a combined task/subtask selection through normal history controls</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Redo cross-task subtask moves; accept Mac keyboard history and cold persistence</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Implement field Undo/Redo and verify saved/native history in isolated clients</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Implement hierarchy Undo/Redo and verify saved/mobile history with cold return</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Mac repair shortcuts and saved-insertion keyboard/inspector pass; branch-move/removal keyboard remain</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Record private field-name activity and verify mobile captions/coverage</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Record true sibling-list reorders and verify saved/mobile history</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Group shared/local action history and preserve individual completion times</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Separate duplicate references with an explicit history keeper; verify mobile saved/cold use</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Compare conflicting saved copies and export exact readable originals; accept iPhone review</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Archive and apply a saved copy on the server when identity and completion history agree</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Choose a saved copy with durable review/recovery; verify Mac and iPhone cold use</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Validate explicit older-task identity/lifecycle choices without changing saved work (private database planner only)</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Save explicit history mappings atomically and preserve earned work credit (database/core)</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Accept existing-history phone/iPad matching, cold recovery and exact export; finish Mac and wider cases</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Keep exact child-field originals through indexing, refresh and encrypted cold recovery (core)</span></li>
+<li class="px-step" data-state="build"><span aria-hidden="true">○</span><span><span class="sr-only">To build: </span>Carry older tasks/history into new storage: native valid-tree recovery and genuine malformed/stale/closed-request API boundaries pass; wider identities/history remain</span></li>
+<li class="px-step" data-state="build"><span aria-hidden="true">○</span><span><span class="sr-only">To build: </span>Keep shared files and discussions with the right workspace: atomic service and phone/tablet consent/cold recovery pass; Mac, wider ownership and hosted acceptance remain</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Replay complete own schema with genuine local Auth/REST; verify reviewed synthetic root edits/retry, session isolation and recording regressions</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Verify actual iPhone/Mac recovery with genuine APIs: cold retries, confirmations, branch Undo/Redo and reviewed competing edits</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Finish account, privacy, window, speech and large-library checks</span></li>
+</ul>
+</div></li>
+<li class="px-item" data-state="build" id="p2-teams-item-8"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Shared audio publishing and storage permissions</span><span class="text-small text-muted">To build</span></div>
+<div class="px-item-detail text-small text-muted">Published, stopped-unfinished and removed-private histories have explicit reviewed choices and recovery contracts. Each repo passes 49 published-only and 58 mixed genuine local Auth/REST/Storage/TLS checks, including atomic rollback, exact bytes/receipts, private audience fences, paused replay and production maintenance with real deletes. Scoped native protected-session publication now has 24 iPhone and 23 Mac cold-flow checks with actual Keychain/session and encrypted backup recovery. Native project adoption/custody, legacy/other realms, hosted S3, physical locked-storage protection and wider lifecycle remain. Normal use stays gated. Current genuine native iPhone recording-bearing project transfer passes 44 checks with actual Keychain-backed original recovery, paused-gate retry, Store refresh, crossed-download audience denial and exact media/task preservation. Mac builds/signs but its transfer is unaccepted pending its own provisioned protected-vault identity; the preflight now stops before services. Mixed files, unfinished/removed policies, GUI and broader lifecycle remain open.</div>
+<ul class="px-steps text-small" aria-label="Progress within this checkpoint">
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Current-role publishing/removal: local service verified</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Reviewed same-generation project move/Undo: local service verified</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Native controls and Store recovery: mobile local service verified</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Interrupted uploads and cleanup: local service verified</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Certified generation restore: local service verified</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Native retention and Undo: iPhone local flow verified; iPad/Mac remain</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Close uncertain single-task Undo before changing policy: local service verified</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Single-task recovery: iPhone expired cold retry and recorded confirmation verified</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Whole-selection closure and competing retries: local service verified</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Selection recovery: iPhone entry checks and iPad cold, history and confirmation verified; Mac pending</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Newer selection changes stay intact while earlier edits sync</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Whole-project recording inventory and signed review: local SQL/Core verified</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Published recordings: genuine iPhone Store/Keychain transfer and cold retry verified; mixed unfinished/private histories, GUI and provisioned Mac remain</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Publication approval stays bound to its reviewed audience: local service/client verified</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Native approval controls: iPhone Review/Cancel, Resume, expired-local Check and Close accepted; other platforms remain</span></li>
+<li class="px-step" data-state="build"><span aria-hidden="true">○</span><span><span class="sr-only">To build: </span>Whole-project recording transfers: genuine published and mixed Auth/Storage/TLS services pass; native, legacy and other realms remain</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Real provider, shared accounts and wider recovery</span></li>
+</ul>
+</div></li>
+<li class="px-item" data-state="deferred" id="p2-teams-item-9"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Inbound email domain/provider and real delivery</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Prepared for later configuration, as requested.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-teams-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="PX_CHECKLIST.md" target="_blank" rel="noopener">PX_CHECKLIST.md</a></li>
+<li><a href="P2_PLAN.md" target="_blank" rel="noopener">P2_PLAN.md</a></li>
+<li><a href="child-task-structure-native/verification.json" target="_blank" rel="noopener">child-task-structure-native/verification.json</a></li>
+<li><a href="child-task-field-selection/verification.json" target="_blank" rel="noopener">child-task-field-selection/verification.json</a></li>
+<li><a href="child-task-structure-drafts/verification.json" target="_blank" rel="noopener">child-task-structure-drafts/verification.json</a></li>
+<li><a href="child-task-structure-draft-native/verification.json" target="_blank" rel="noopener">child-task-structure-draft-native/verification.json</a></li>
+<li><a href="child-task-move-draft-native/verification.json" target="_blank" rel="noopener">child-task-move-draft-native/verification.json</a></li>
+<li><a href="child-task-discard-intent/verification.json" target="_blank" rel="noopener">child-task-discard-intent/verification.json</a></li>
+<li><a href="child-task-frozen-recovery/verification.json" target="_blank" rel="noopener">child-task-frozen-recovery/verification.json</a></li>
+<li><a href="child-task-record-authority/verification.json" target="_blank" rel="noopener">child-task-record-authority/verification.json</a></li>
+<li><a href="child-task-record-transfers/verification.json" target="_blank" rel="noopener">child-task-record-transfers/verification.json</a></li>
+<li><a href="child-project-adoption-custody/verification.json" target="_blank" rel="noopener">child-project-adoption-custody/verification.json</a></li>
+<li><a href="personal-child-record-moves/verification.json" target="_blank" rel="noopener">personal-child-record-moves/verification.json</a></li>
+<li><a href="cross-root-child-transfers/verification.json" target="_blank" rel="noopener">cross-root-child-transfers/verification.json</a></li>
+<li><a href="cross-root-transfer-client/verification.json" target="_blank" rel="noopener">cross-root-transfer-client/verification.json</a></li>
+<li><a href="cross-root-transfer-layout/verification.json" target="_blank" rel="noopener">cross-root-transfer-layout/verification.json</a></li>
+<li><a href="reviewed-child-adoption/verification.json" target="_blank" rel="noopener">reviewed-child-adoption/verification.json</a></li>
+<li><a href="reviewed-child-adoption-client/verification.json" target="_blank" rel="noopener">reviewed-child-adoption-client/verification.json</a></li>
+<li><a href="reviewed-child-adoption-native/verification.json" target="_blank" rel="noopener">reviewed-child-adoption-native/verification.json</a></li>
+<li><a href="child-adoption-original-export/verification.json" target="_blank" rel="noopener">child-adoption-original-export/verification.json</a></li>
+<li><a href="child-adoption-discovery/verification.json" target="_blank" rel="noopener">child-adoption-discovery/verification.json</a></li>
+<li><a href="child-task-repair-preview/verification.json" target="_blank" rel="noopener">child-task-repair-preview/verification.json</a></li>
+<li><a href="child-task-repair-commits/verification.json" target="_blank" rel="noopener">child-task-repair-commits/verification.json</a></li>
+<li><a href="child-task-repair-client/verification.json" target="_blank" rel="noopener">child-task-repair-client/verification.json</a></li>
+<li><a href="preserving-json/verification.json" target="_blank" rel="noopener">preserving-json/verification.json</a></li>
+<li><a href="child-task-opaque-read/verification.json" target="_blank" rel="noopener">child-task-opaque-read/verification.json</a></li>
+<li><a href="child-task-list-fields/verification.json" target="_blank" rel="noopener">child-task-list-fields/verification.json</a></li>
+<li><a href="child-list-completion/verification.json" target="_blank" rel="noopener">child-list-completion/verification.json</a></li>
+<li><a href="child-completion-batches/verification.json" target="_blank" rel="noopener">child-completion-batches/verification.json</a></li>
+<li><a href="child-completion-group-recovery/verification.json" target="_blank" rel="noopener">child-completion-group-recovery/verification.json</a></li>
+<li><a href="child-bulk-list-completion/verification.json" target="_blank" rel="noopener">child-bulk-list-completion/verification.json</a></li>
+<li><a href="child-recovery-discovery/README.md" target="_blank" rel="noopener">child-recovery-discovery/README.md</a></li>
+<li><a href="child-recovery-discovery/verification.json" target="_blank" rel="noopener">child-recovery-discovery/verification.json</a></li>
+<li><a href="child-mixed-selection-preflight/verification.json" target="_blank" rel="noopener">child-mixed-selection-preflight/verification.json</a></li>
+<li><a href="child-mixed-selection-preflight/README.md" target="_blank" rel="noopener">child-mixed-selection-preflight/README.md</a></li>
+<li><a href="completion-selection-roots/verification.json" target="_blank" rel="noopener">completion-selection-roots/verification.json</a></li>
+<li><a href="completion-selection-roots/README.md" target="_blank" rel="noopener">completion-selection-roots/README.md</a></li>
+<li><a href="completion-selection-root-client/verification.json" target="_blank" rel="noopener">completion-selection-root-client/verification.json</a></li>
+<li><a href="completion-selection-root-client/README.md" target="_blank" rel="noopener">completion-selection-root-client/README.md</a></li>
+<li><a href="mixed-task-completion/verification.json" target="_blank" rel="noopener">mixed-task-completion/verification.json</a></li>
+<li><a href="mixed-task-completion/README.md" target="_blank" rel="noopener">mixed-task-completion/README.md</a></li>
+<li><a href="mixed-task-completion-native/verification.json" target="_blank" rel="noopener">mixed-task-completion-native/verification.json</a></li>
+<li><a href="mixed-task-completion-native/README.md" target="_blank" rel="noopener">mixed-task-completion-native/README.md</a></li>
+<li><a href="child-repair-drafts/verification.json" target="_blank" rel="noopener">child-repair-drafts/verification.json</a></li>
+<li><a href="child-repair-drafts/README.md" target="_blank" rel="noopener">child-repair-drafts/README.md</a></li>
+<li><a href="completion-redo/verification.json" target="_blank" rel="noopener">completion-redo/verification.json</a></li>
+<li><a href="completion-redo/README.md" target="_blank" rel="noopener">completion-redo/README.md</a></li>
+<li><a href="transfer-redo/README.md" target="_blank" rel="noopener">transfer-redo/README.md</a></li>
+<li><a href="transfer-redo/verification.json" target="_blank" rel="noopener">transfer-redo/verification.json</a></li>
+<li><a href="field-history/README.md" target="_blank" rel="noopener">field-history/README.md</a></li>
+<li><a href="field-history/verification.json" target="_blank" rel="noopener">field-history/verification.json</a></li>
+<li><a href="hierarchy-history/README.md" target="_blank" rel="noopener">hierarchy-history/README.md</a></li>
+<li><a href="hierarchy-history/verification.json" target="_blank" rel="noopener">hierarchy-history/verification.json</a></li>
+<li><a href="field-activity/README.md" target="_blank" rel="noopener">field-activity/README.md</a></li>
+<li><a href="field-activity/verification.json" target="_blank" rel="noopener">field-activity/verification.json</a></li>
+<li><a href="order-activity/README.md" target="_blank" rel="noopener">order-activity/README.md</a></li>
+<li><a href="order-activity/verification.json" target="_blank" rel="noopener">order-activity/verification.json</a></li>
+<li><a href="activity-groups/README.md" target="_blank" rel="noopener">activity-groups/README.md</a></li>
+<li><a href="activity-groups/verification.json" target="_blank" rel="noopener">activity-groups/verification.json</a></li>
+<li><a href="saved-copy-comparison/README.md" target="_blank" rel="noopener">saved-copy-comparison/README.md</a></li>
+<li><a href="saved-copy-comparison/database-verification.json" target="_blank" rel="noopener">saved-copy-comparison/database-verification.json</a></li>
+<li><a href="saved-copy-comparison/client-verification.json" target="_blank" rel="noopener">saved-copy-comparison/client-verification.json</a></li>
+<li><a href="saved-copy-comparison/native-verification.json" target="_blank" rel="noopener">saved-copy-comparison/native-verification.json</a></li>
+<li><a href="saved-copy-comparison/build-verification.json" target="_blank" rel="noopener">saved-copy-comparison/build-verification.json</a></li>
+<li><a href="copy-choice-reconciliation/README.md" target="_blank" rel="noopener">copy-choice-reconciliation/README.md</a></li>
+<li><a href="copy-choice-reconciliation/workflow-verification.json" target="_blank" rel="noopener">copy-choice-reconciliation/workflow-verification.json</a></li>
+<li><a href="copy-choice-reconciliation/repair-regression-verification.json" target="_blank" rel="noopener">copy-choice-reconciliation/repair-regression-verification.json</a></li>
+<li><a href="copy-choice-reconciliation/completed-build-cleanup.json" target="_blank" rel="noopener">copy-choice-reconciliation/completed-build-cleanup.json</a></li>
+<li><a href="copy-choice-reconciliation/older-results-cleanup.json" target="_blank" rel="noopener">copy-choice-reconciliation/older-results-cleanup.json</a></li>
+<li><a href="saved-copy-selection/README.md" target="_blank" rel="noopener">saved-copy-selection/README.md</a></li>
+<li><a href="saved-copy-selection/client-verification.json" target="_blank" rel="noopener">saved-copy-selection/client-verification.json</a></li>
+<li><a href="saved-copy-selection/native-verification.json" target="_blank" rel="noopener">saved-copy-selection/native-verification.json</a></li>
+<li><a href="saved-copy-selection/phone-proof.json" target="_blank" rel="noopener">saved-copy-selection/phone-proof.json</a></li>
+<li><a href="saved-copy-selection/build-verification.json" target="_blank" rel="noopener">saved-copy-selection/build-verification.json</a></li>
+<li><a href="saved-copy-selection/mac-direct-summary.json" target="_blank" rel="noopener">saved-copy-selection/mac-direct-summary.json</a></li>
+<li><a href="saved-copy-selection/icon-build-verification.json" target="_blank" rel="noopener">saved-copy-selection/icon-build-verification.json</a></li>
+<li><a href="saved-copy-selection/symbol-verification.json" target="_blank" rel="noopener">saved-copy-selection/symbol-verification.json</a></li>
+<li><a href="child-copy-mapping-plan/README.md" target="_blank" rel="noopener">child-copy-mapping-plan/README.md</a></li>
+<li><a href="child-copy-mapping-plan/verification.json" target="_blank" rel="noopener">child-copy-mapping-plan/verification.json</a></li>
+<li><a href="child-copy-mapping-apply/README.md" target="_blank" rel="noopener">child-copy-mapping-apply/README.md</a></li>
+<li><a href="child-copy-mapping-apply/verification.json" target="_blank" rel="noopener">child-copy-mapping-apply/verification.json</a></li>
+<li><a href="child-copy-mapping-apply/client-verification.json" target="_blank" rel="noopener">child-copy-mapping-apply/client-verification.json</a></li>
+<li><a href="child-copy-mapping-apply/regressions.json" target="_blank" rel="noopener">child-copy-mapping-apply/regressions.json</a></li>
+<li><a href="child-copy-mapping-client/README.md" target="_blank" rel="noopener">child-copy-mapping-client/README.md</a></li>
+<li><a href="child-copy-mapping-client/client-verification.json" target="_blank" rel="noopener">child-copy-mapping-client/client-verification.json</a></li>
+<li><a href="child-copy-mapping-client/database-contract-verification.json" target="_blank" rel="noopener">child-copy-mapping-client/database-contract-verification.json</a></li>
+<li><a href="child-copy-mapping-client/build-verification.json" target="_blank" rel="noopener">child-copy-mapping-client/build-verification.json</a></li>
+<li><a href="child-copy-mapping-client/runtime-status.json" target="_blank" rel="noopener">child-copy-mapping-client/runtime-status.json</a></li>
+<li><a href="child-copy-mapping-native-channel/README.md" target="_blank" rel="noopener">child-copy-mapping-native-channel/README.md</a></li>
+<li><a href="child-copy-mapping-native/README.md" target="_blank" rel="noopener">child-copy-mapping-native/README.md</a></li>
+<li><a href="child-copy-mapping-native/verification.json" target="_blank" rel="noopener">child-copy-mapping-native/verification.json</a></li>
+<li><a href="child-copy-mapping-native/phone-saved-data-verification.json" target="_blank" rel="noopener">child-copy-mapping-native/phone-saved-data-verification.json</a></li>
+<li><a href="child-copy-mapping-native/verifier-refusal-checks.json" target="_blank" rel="noopener">child-copy-mapping-native/verifier-refusal-checks.json</a></li>
+<li><a href="move-assignment-intent/README.md" target="_blank" rel="noopener">move-assignment-intent/README.md</a></li>
+<li><a href="move-assignment-intent/verification.json" target="_blank" rel="noopener">move-assignment-intent/verification.json</a></li>
+<li><a href="inline-subtask-preview/README.md" target="_blank" rel="noopener">inline-subtask-preview/README.md</a></li>
+<li><a href="inline-subtask-preview/verification.json" target="_blank" rel="noopener">inline-subtask-preview/verification.json</a></li>
+<li><a href="task-file-custody/verification.json" target="_blank" rel="noopener">task-file-custody/verification.json</a></li>
+<li><a href="task-file-upload/verification.json" target="_blank" rel="noopener">task-file-upload/verification.json</a></li>
+<li><a href="task-file-client/verification.json" target="_blank" rel="noopener">task-file-client/verification.json</a></li>
+<li><a href="task-file-sender-stop/verification.json" target="_blank" rel="noopener">task-file-sender-stop/verification.json</a></li>
+<li><a href="task-file-cleanup/verification.json" target="_blank" rel="noopener">task-file-cleanup/verification.json</a></li>
+<li><a href="task-file-viewer/verification.json" target="_blank" rel="noopener">task-file-viewer/verification.json</a></li>
+<li><a href="task-file-dialogs/verification.json" target="_blank" rel="noopener">task-file-dialogs/verification.json</a></li>
+<li><a href="task-file-refresh/verification.json" target="_blank" rel="noopener">task-file-refresh/verification.json</a></li>
+<li><a href="task-file-provider/verification.json" target="_blank" rel="noopener">task-file-provider/verification.json</a></li>
+<li><a href="task-file-native-provider/README.md" target="_blank" rel="noopener">task-file-native-provider/README.md</a></li>
+<li><a href="task-file-native-provider/verification.json" target="_blank" rel="noopener">task-file-native-provider/verification.json</a></li>
+<li><a href="task-file-handoff/README.md" target="_blank" rel="noopener">task-file-handoff/README.md</a></li>
+<li><a href="task-file-handoff/verification.json" target="_blank" rel="noopener">task-file-handoff/verification.json</a></li>
+<li><a href="task-file-workspace-sync/README.md" target="_blank" rel="noopener">task-file-workspace-sync/README.md</a></li>
+<li><a href="task-file-workspace-sync/oracle-audit.json" target="_blank" rel="noopener">task-file-workspace-sync/oracle-audit.json</a></li>
+<li><a href="team-audio-authority/README.md" target="_blank" rel="noopener">team-audio-authority/README.md</a></li>
+<li><a href="team-audio-authority/verification.json" target="_blank" rel="noopener">team-audio-authority/verification.json</a></li>
+<li><a href="reviewed-audio-custody/README.md" target="_blank" rel="noopener">reviewed-audio-custody/README.md</a></li>
+<li><a href="reviewed-audio-custody/verification.json" target="_blank" rel="noopener">reviewed-audio-custody/verification.json</a></li>
+<li><a href="team-audio-client/README.md" target="_blank" rel="noopener">team-audio-client/README.md</a></li>
+<li><a href="team-audio-client/verification.json" target="_blank" rel="noopener">team-audio-client/verification.json</a></li>
+<li><a href="audio-real-provider-native/README.md" target="_blank" rel="noopener">audio-real-provider-native/README.md</a></li>
+<li><a href="audio-real-provider-native/verification.json" target="_blank" rel="noopener">audio-real-provider-native/verification.json</a></li>
+<li><a href="audio-provider-recovery/README.md" target="_blank" rel="noopener">audio-provider-recovery/README.md</a></li>
+<li><a href="audio-provider-recovery/verification.json" target="_blank" rel="noopener">audio-provider-recovery/verification.json</a></li>
+<li><a href="audio-generation-restore/README.md" target="_blank" rel="noopener">audio-generation-restore/README.md</a></li>
+<li><a href="audio-generation-restore/verification.json" target="_blank" rel="noopener">audio-generation-restore/verification.json</a></li>
+<li><a href="audio-lifecycle-native/README.md" target="_blank" rel="noopener">audio-lifecycle-native/README.md</a></li>
+<li><a href="audio-lifecycle-native/verification.json" target="_blank" rel="noopener">audio-lifecycle-native/verification.json</a></li>
+<li><a href="audio-expired-recovery/README.md" target="_blank" rel="noopener">audio-expired-recovery/README.md</a></li>
+<li><a href="audio-expired-recovery/verification.json" target="_blank" rel="noopener">audio-expired-recovery/verification.json</a></li>
+<li><a href="audio-expired-native/README.md" target="_blank" rel="noopener">audio-expired-native/README.md</a></li>
+<li><a href="audio-expired-native/verification.json" target="_blank" rel="noopener">audio-expired-native/verification.json</a></li>
+<li><a href="audio-history-rebinding/README.md" target="_blank" rel="noopener">audio-history-rebinding/README.md</a></li>
+<li><a href="audio-history-rebinding/verification.json" target="_blank" rel="noopener">audio-history-rebinding/verification.json</a></li>
+<li><a href="audio-selection-history-native/README.md" target="_blank" rel="noopener">audio-selection-history-native/README.md</a></li>
+<li><a href="audio-selection-history-native/verification.json" target="_blank" rel="noopener">audio-selection-history-native/verification.json</a></li>
+<li><a href="audio-queued-settings-recovery/README.md" target="_blank" rel="noopener">audio-queued-settings-recovery/README.md</a></li>
+<li><a href="audio-queued-settings-recovery/verification.json" target="_blank" rel="noopener">audio-queued-settings-recovery/verification.json</a></li>
+<li><a href="audio-sync-attention-recovery/README.md" target="_blank" rel="noopener">audio-sync-attention-recovery/README.md</a></li>
+<li><a href="audio-sync-attention-recovery/verification.json" target="_blank" rel="noopener">audio-sync-attention-recovery/verification.json</a></li>
+<li><a href="audio-selection-platform-native/README.md" target="_blank" rel="noopener">audio-selection-platform-native/README.md</a></li>
+<li><a href="audio-selection-platform-native/verification.json" target="_blank" rel="noopener">audio-selection-platform-native/verification.json</a></li>
+<li><a href="project-recording-inventory/README.md" target="_blank" rel="noopener">project-recording-inventory/README.md</a></li>
+<li><a href="project-recording-inventory/verification.json" target="_blank" rel="noopener">project-recording-inventory/verification.json</a></li>
+<li><a href="project-recording-transfer/README.md" target="_blank" rel="noopener">project-recording-transfer/README.md</a></li>
+<li><a href="project-recording-transfer/verification.json" target="_blank" rel="noopener">project-recording-transfer/verification.json</a></li>
+<li><a href="project-recording-transfer/database-verification.json" target="_blank" rel="noopener">project-recording-transfer/database-verification.json</a></li>
+<li><a href="audio-publication-audience/README.md" target="_blank" rel="noopener">audio-publication-audience/README.md</a></li>
+<li><a href="audio-publication-audience/verification.json" target="_blank" rel="noopener">audio-publication-audience/verification.json</a></li>
+<li><a href="audio-publication-audience/database-verification.json" target="_blank" rel="noopener">audio-publication-audience/database-verification.json</a></li>
+<li><a href="native-audience-approval/README.md" target="_blank" rel="noopener">native-audience-approval/README.md</a></li>
+<li><a href="native-audience-approval/verification.json" target="_blank" rel="noopener">native-audience-approval/verification.json</a></li>
+<li><a href="native-audience-approval/phone-verification.json" target="_blank" rel="noopener">native-audience-approval/phone-verification.json</a></li>
+<li><a href="native-audience-approval/controller-verification.json" target="_blank" rel="noopener">native-audience-approval/controller-verification.json</a></li>
+<li><a href="publication-approval-recovery/README.md" target="_blank" rel="noopener">publication-approval-recovery/README.md</a></li>
+<li><a href="publication-approval-recovery/verification.json" target="_blank" rel="noopener">publication-approval-recovery/verification.json</a></li>
+<li><a href="publication-approval-recovery/phone-verification.json" target="_blank" rel="noopener">publication-approval-recovery/phone-verification.json</a></li>
+<li><a href="publication-approval-recovery/controller-verification.json" target="_blank" rel="noopener">publication-approval-recovery/controller-verification.json</a></li>
+<li><a href="pending-approval-boundaries/README.md" target="_blank" rel="noopener">pending-approval-boundaries/README.md</a></li>
+<li><a href="pending-approval-boundaries/verification.json" target="_blank" rel="noopener">pending-approval-boundaries/verification.json</a></li>
+<li><a href="pending-approval-boundaries/phone-verification.json" target="_blank" rel="noopener">pending-approval-boundaries/phone-verification.json</a></li>
+<li><a href="project-unfinished-recordings/README.md" target="_blank" rel="noopener">project-unfinished-recordings/README.md</a></li>
+<li><a href="project-unfinished-recordings/verification.json" target="_blank" rel="noopener">project-unfinished-recordings/verification.json</a></li>
+<li><a href="project-recording-native/README.md" target="_blank" rel="noopener">project-recording-native/README.md</a></li>
+<li><a href="project-recording-native/verification.json" target="_blank" rel="noopener">project-recording-native/verification.json</a></li>
+<li><a href="project-recording-native/failed-attempts.json" target="_blank" rel="noopener">project-recording-native/failed-attempts.json</a></li>
+<li><a href="project-recording-native/phone-retry-verification.json" target="_blank" rel="noopener">project-recording-native/phone-retry-verification.json</a></li>
+<li><a href="project-recording-native/phone-consent-verification.json" target="_blank" rel="noopener">project-recording-native/phone-consent-verification.json</a></li>
+<li><a href="project-private-history/README.md" target="_blank" rel="noopener">project-private-history/README.md</a></li>
+<li><a href="project-private-history/verification.json" target="_blank" rel="noopener">project-private-history/verification.json</a></li>
+<li><a href="project-private-history/local-service.json" target="_blank" rel="noopener">project-private-history/local-service.json</a></li>
+<li><a href="project-private-history/phone-verification.json" target="_blank" rel="noopener">project-private-history/phone-verification.json</a></li>
+<li><a href="project-private-history/initial-interaction-verification.json" target="_blank" rel="noopener">project-private-history/initial-interaction-verification.json</a></li>
+<li><a href="full-schema-sync/README.md" target="_blank" rel="noopener">full-schema-sync/README.md</a></li>
+<li><a href="full-schema-sync/verification.json" target="_blank" rel="noopener">full-schema-sync/verification.json</a></li>
+<li><a href="full-schema-sync/full-schema.json" target="_blank" rel="noopener">full-schema-sync/full-schema.json</a></li>
+<li><a href="full-schema-sync/recording-regression.json" target="_blank" rel="noopener">full-schema-sync/recording-regression.json</a></li>
+<li><a href="full-schema-sync/historical-provenance.json" target="_blank" rel="noopener">full-schema-sync/historical-provenance.json</a></li>
+<li><a href="genuine-store-sync/README.md" target="_blank" rel="noopener">genuine-store-sync/README.md</a></li>
+<li><a href="genuine-store-sync/verification.json" target="_blank" rel="noopener">genuine-store-sync/verification.json</a></li>
+<li><a href="genuine-store-sync/native.json" target="_blank" rel="noopener">genuine-store-sync/native.json</a></li>
+<li><a href="genuine-store-sync/attempts.json" target="_blank" rel="noopener">genuine-store-sync/attempts.json</a></li>
+<li><a href="genuine-child-field-recovery/README.md" target="_blank" rel="noopener">genuine-child-field-recovery/README.md</a></li>
+<li><a href="genuine-child-field-recovery/verification.json" target="_blank" rel="noopener">genuine-child-field-recovery/verification.json</a></li>
+<li><a href="genuine-child-field-recovery/native.json" target="_blank" rel="noopener">genuine-child-field-recovery/native.json</a></li>
+<li><a href="genuine-structure-recovery/README.md" target="_blank" rel="noopener">genuine-structure-recovery/README.md</a></li>
+<li><a href="genuine-structure-recovery/verification.json" target="_blank" rel="noopener">genuine-structure-recovery/verification.json</a></li>
+<li><a href="genuine-structure-recovery/native.json" target="_blank" rel="noopener">genuine-structure-recovery/native.json</a></li>
+<li><a href="genuine-conflict-review/README.md" target="_blank" rel="noopener">genuine-conflict-review/README.md</a></li>
+<li><a href="genuine-conflict-review/verification.json" target="_blank" rel="noopener">genuine-conflict-review/verification.json</a></li>
+<li><a href="genuine-conflict-review/field.json" target="_blank" rel="noopener">genuine-conflict-review/field.json</a></li>
+<li><a href="genuine-conflict-review/structure.json" target="_blank" rel="noopener">genuine-conflict-review/structure.json</a></li>
+<li><a href="genuine-conflict-review/attempts.json" target="_blank" rel="noopener">genuine-conflict-review/attempts.json</a></li>
+<li><a href="genuine-native-adoption/README.md" target="_blank" rel="noopener">genuine-native-adoption/README.md</a></li>
+<li><a href="genuine-native-adoption/verification.json" target="_blank" rel="noopener">genuine-native-adoption/verification.json</a></li>
+<li><a href="genuine-native-adoption/native.json" target="_blank" rel="noopener">genuine-native-adoption/native.json</a></li>
+<li><a href="legacy-adoption-boundaries/README.md" target="_blank" rel="noopener">legacy-adoption-boundaries/README.md</a></li>
+<li><a href="legacy-adoption-boundaries/verification.json" target="_blank" rel="noopener">legacy-adoption-boundaries/verification.json</a></li>
+<li><a href="legacy-adoption-boundaries/local-service.json" target="_blank" rel="noopener">legacy-adoption-boundaries/local-service.json</a></li>
+<li><a href="genuine-mixed-recordings/README.md" target="_blank" rel="noopener">genuine-mixed-recordings/README.md</a></li>
+<li><a href="genuine-mixed-recordings/verification.json" target="_blank" rel="noopener">genuine-mixed-recordings/verification.json</a></li>
+<li><a href="genuine-mixed-recordings/service.json" target="_blank" rel="noopener">genuine-mixed-recordings/service.json</a></li>
+<li><a href="genuine-mixed-recordings/storage.json" target="_blank" rel="noopener">genuine-mixed-recordings/storage.json</a></li>
+<li><a href="project-file-inventory/README.md" target="_blank" rel="noopener">project-file-inventory/README.md</a></li>
+<li><a href="project-file-inventory/database.json" target="_blank" rel="noopener">project-file-inventory/database.json</a></li>
+<li><a href="project-file-inventory/full-schema.json" target="_blank" rel="noopener">project-file-inventory/full-schema.json</a></li>
+<li><a href="project-file-inventory/client-verification.json" target="_blank" rel="noopener">project-file-inventory/client-verification.json</a></li>
+<li><a href="project-file-inventory/signed-build.json" target="_blank" rel="noopener">project-file-inventory/signed-build.json</a></li>
+<li><a href="project-file-copy/README.md" target="_blank" rel="noopener">project-file-copy/README.md</a></li>
+<li><a href="project-file-copy/verification.json" target="_blank" rel="noopener">project-file-copy/verification.json</a></li>
+<li><a href="project-file-copy/full-schema.json" target="_blank" rel="noopener">project-file-copy/full-schema.json</a></li>
+<li><a href="project-file-copy/cleanup.json" target="_blank" rel="noopener">project-file-copy/cleanup.json</a></li>
+<li><a href="project-file-copy/progress-validation.json" target="_blank" rel="noopener">project-file-copy/progress-validation.json</a></li>
+<li><a href="project-file-transfer/README.md" target="_blank" rel="noopener">project-file-transfer/README.md</a></li>
+<li><a href="project-file-transfer/verification.json" target="_blank" rel="noopener">project-file-transfer/verification.json</a></li>
+<li><a href="project-file-transfer/full-schema.json" target="_blank" rel="noopener">project-file-transfer/full-schema.json</a></li>
+<li><a href="project-file-transfer/cleanup.json" target="_blank" rel="noopener">project-file-transfer/cleanup.json</a></li>
+<li><a href="project-file-transfer/progress-validation.json" target="_blank" rel="noopener">project-file-transfer/progress-validation.json</a></li>
+<li><a href="native-project-files/README.md" target="_blank" rel="noopener">native-project-files/README.md</a></li>
+<li><a href="native-project-files/verification.json" target="_blank" rel="noopener">native-project-files/verification.json</a></li>
+<li><a href="native-project-files/full-schema.json" target="_blank" rel="noopener">native-project-files/full-schema.json</a></li>
+<li><a href="native-project-files/signed-build.json" target="_blank" rel="noopener">native-project-files/signed-build.json</a></li>
+<li><a href="native-project-files/cleanup.json" target="_blank" rel="noopener">native-project-files/cleanup.json</a></li>
+<li><a href="native-project-files/progress-validation.json" target="_blank" rel="noopener">native-project-files/progress-validation.json</a></li>
+<li><a href="native-project-files/core-cases.json" target="_blank" rel="noopener">native-project-files/core-cases.json</a></li>
+<li><a href="native-project-files/native-ui-verification.json" target="_blank" rel="noopener">native-project-files/native-ui-verification.json</a></li>
+<li><a href="native-project-files/tablet-native-verification.json" target="_blank" rel="noopener">native-project-files/tablet-native-verification.json</a></li>
+<li><a href="project-file-producers/README.md" target="_blank" rel="noopener">project-file-producers/README.md</a></li>
+<li><a href="project-file-producers/verification.json" target="_blank" rel="noopener">project-file-producers/verification.json</a></li>
+<li><a href="project-file-producers/full-schema.json" target="_blank" rel="noopener">project-file-producers/full-schema.json</a></li>
+<li><a href="project-file-producers/copy-regressions.json" target="_blank" rel="noopener">project-file-producers/copy-regressions.json</a></li>
+<li><a href="project-file-producers/handler-checks.json" target="_blank" rel="noopener">project-file-producers/handler-checks.json</a></li>
+<li><a href="project-file-producers/storage-cleanup.json" target="_blank" rel="noopener">project-file-producers/storage-cleanup.json</a></li>
+<li><a href="combined-project-custody/README.md" target="_blank" rel="noopener">combined-project-custody/README.md</a></li>
+<li><a href="combined-project-custody/full-schema.json" target="_blank" rel="noopener">combined-project-custody/full-schema.json</a></li>
+<li><a href="combined-project-custody/verification.json" target="_blank" rel="noopener">combined-project-custody/verification.json</a></li>
+<li><a href="combined-project-custody/storage-cleanup.json" target="_blank" rel="noopener">combined-project-custody/storage-cleanup.json</a></li>
+<li><a href="combined-project-custody/native/README.md" target="_blank" rel="noopener">combined-project-custody/native/README.md</a></li>
+<li><a href="combined-project-custody/native/verification.json" target="_blank" rel="noopener">combined-project-custody/native/verification.json</a></li>
+<li><a href="combined-project-custody/native/storage-cleanup.json" target="_blank" rel="noopener">combined-project-custody/native/storage-cleanup.json</a></li>
+<li><a href="organizer-reading/README.md" target="_blank" rel="noopener">organizer-reading/README.md</a></li>
+<li><a href="organizer-reading/core.json" target="_blank" rel="noopener">organizer-reading/core.json</a></li>
+<li><a href="organizer-reading/native-ios.json" target="_blank" rel="noopener">organizer-reading/native-ios.json</a></li>
+<li><a href="organizer-reading/build.json" target="_blank" rel="noopener">organizer-reading/build.json</a></li>
+<li><a href="organizer-reading/package.json" target="_blank" rel="noopener">organizer-reading/package.json</a></li>
+<li><a href="organizer-reading/storage-cleanup.json" target="_blank" rel="noopener">organizer-reading/storage-cleanup.json</a></li>
+<li><a href="native-project-recordings/README.md" target="_blank" rel="noopener">native-project-recordings/README.md</a></li>
+<li><a href="native-project-recordings/core.json" target="_blank" rel="noopener">native-project-recordings/core.json</a></li>
+<li><a href="native-project-recordings/ios.json" target="_blank" rel="noopener">native-project-recordings/ios.json</a></li>
+<li><a href="native-project-recordings/ios-build.json" target="_blank" rel="noopener">native-project-recordings/ios-build.json</a></li>
+<li><a href="native-project-recordings/mac-attempt.json" target="_blank" rel="noopener">native-project-recordings/mac-attempt.json</a></li>
+<li><a href="native-project-recordings/mac-preflight.json" target="_blank" rel="noopener">native-project-recordings/mac-preflight.json</a></li>
+<li><a href="native-project-recordings/mac-build.json" target="_blank" rel="noopener">native-project-recordings/mac-build.json</a></li>
+<li><a href="native-project-recordings/attempts.json" target="_blank" rel="noopener">native-project-recordings/attempts.json</a></li>
+<li><a href="native-project-recordings/runtime-guard.json" target="_blank" rel="noopener">native-project-recordings/runtime-guard.json</a></li>
+<li><a href="native-project-recordings/startup-cleanup.json" target="_blank" rel="noopener">native-project-recordings/startup-cleanup.json</a></li>
+<li><a href="native-project-recordings/ondevice-probe.json" target="_blank" rel="noopener">native-project-recordings/ondevice-probe.json</a></li>
+<li><a href="native-project-recordings/storage-cleanup.json" target="_blank" rel="noopener">native-project-recordings/storage-cleanup.json</a></li>
+</ul></details></details>
+<details class="px-group" id="p2-watch" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">7 · Apple Watch</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-watch-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Today, reviewed capture and offline completion implementation</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-watch-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Recorded paired Watch/iPhone Simulator journeys</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-watch-item-2"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Real-device, background, account/reinstall and speech checks</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Android/Wear OS are future separately owned clients, outside this Apple-app batch.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-watch-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li><a href="PX_CHECKLIST.md" target="_blank" rel="noopener">PX_CHECKLIST.md</a></li>
+<li><a href="P2_PLAN.md" target="_blank" rel="noopener">P2_PLAN.md</a></li>
+</ul></details></details>
+</details>
+<footer class="px-footer"><details id="px-next" data-remember><summary class="cursor-interaction">Next in the active work</summary><ol>
+<li>FIRST: keep the signed optimized Mac28/iPhone40 daily-use candidates and their earlier source receipts frozen; neither is installed. Installed Mac23 and phone34 remain unchanged, and phone installation is deferred. The new gated recording-transfer integration and test-only bridge changes are later source, not substituted into those archives.</li>
+<li>NEXT: extend genuine native integration into mixed files, unfinished/removed recordings, remaining legacy/history/realm and lifecycle cases. iPhone published-recording transfer with actual Store/Keychain/full local services now passes. Mac transfer requires its own provisioned isolated app identity/profile; its new preflight records that prerequisite without starting services. Do not repeat unchanged blocked Mac matrices or use the normal app identity. Run the six-example on-device quality probe once Apple Intelligence is ready; current follow-up remains unavailable, with no cloud inference fallback.</li>
+<li>Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.</li>
+<li>THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.</li>
+<li>Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.</li>
+<li>Continue wider catalog/editor scaling, actual rendering across other workloads, and wider Mac/iPad/accessibility/account/cloud contexts. Current project-catalog reuse now has scoped iPhone Store/scrolling acceptance; do not repeat unchanged accepted cases.</li>
+<li>Finish legacy/foreign-custody histories and other recording realm directions. Normalized mixed published/in-flight/removed project transfer and actual Storage maintenance now pass 58 genuine local checks per repo. Accept remaining native/Keychain/hosted and broader lifecycle cases separately.</li>
+<li>Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.</li>
+<li>Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.</li>
+<li>Extend the genuine full-schema native Store proof into wider legacy/history/cache migration and further conflict/access races and shared-account/window/background/access-loss directions. Root-description, child-field and whole-branch hierarchy offline/cold exact retry now pass on iPhone and Mac, with cold hierarchy Undo/Redo plus scoped field/hierarchy conflict review; do not repeat it unchanged. Wider protected-journal adoption, file/audio lifecycle integration and pg_net placement review remains.</li>
+<li>Complete remaining Mac branch-move/removal keyboard acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals.</li>
+</ol></details><div class="text-small text-muted">Both apps own their dashboard and sources. Reviewed snapshot; no live telemetry or completion-date estimate.</div></footer>
+</div>
+<script>
+(() => {
+  const root = document.getElementById('taskfold-px-progress');
+  const details = [...root.querySelectorAll('details[data-remember]')];
+  function restore(state) {
+    const saved = state?.privateContent;
+    if (saved?.kind !== 'taskfold-px-progress' || !Array.isArray(saved.expanded)) return;
+    for (const detail of details) detail.open = saved.expanded.includes(detail.id);
+  }
+  restore(window.openai?.widgetState);
+  window.addEventListener('openai:set_globals', event => restore(event.detail?.globals?.widgetState));
+  root.addEventListener('click', event => {
+    const summary = event.target instanceof Element ? event.target.closest('summary') : null;
+    if (!summary || !root.contains(summary)) return;
+    requestAnimationFrame(() => {
+      const expanded = details.filter(detail => detail.open).map(detail => detail.id);
+      const saved = window.openai?.setWidgetState?.({
+        modelContent: { openPriorities: expanded.filter(id => /^px-p[012]$/.test(id)) },
+        privateContent: { kind: 'taskfold-px-progress', expanded }
+      });
+      saved?.catch?.(() => {});
+    });
+  });
+})();
+</script>
+
+</body></html>

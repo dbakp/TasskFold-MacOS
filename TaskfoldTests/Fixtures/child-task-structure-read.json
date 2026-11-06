@@ -1,0 +1,206 @@
+{
+  "account": "bf81210d-aab7-4d6a-af11-cdd8f995ea3f",
+  "root": {
+    "id": "5f26e082-70eb-4ad6-abbc-4ae2ba686cce",
+    "title": "Synthetic structure root",
+    "labels": [],
+    "user_id": "bf81210d-aab7-4d6a-af11-cdd8f995ea3f",
+    "comments": [],
+    "due_date": null,
+    "due_time": null,
+    "priority": 4,
+    "subtasks": [
+      {
+        "id": "fresh",
+        "title": "Fresh subtask",
+        "completed": false,
+        "completed_at": null,
+        "taskfold_completion_v1": {
+          "epoch": "f2753b89-3795-4c74-9b6a-a4d43bdeaf07",
+          "version": 0
+        }
+      },
+      {
+        "id": "a",
+        "title": "Synthetic parent",
+        "future": {
+          "opaque": [
+            null,
+            false
+          ]
+        },
+        "comments": [
+          {
+            "id": "synthetic-discussion",
+            "text": "Keep discussion"
+          }
+        ],
+        "subtasks": [
+          {
+            "id": "nested",
+            "title": "Historical child",
+            "subtasks": null,
+            "completed": true,
+            "completed_at": "2026-10-01T09:30:00Z",
+            "taskfold_completion_v1": {
+              "epoch": "4e80a7a6-c14a-48c2-975e-39ba30837f0c",
+              "version": 7
+            }
+          }
+        ],
+        "completed": false,
+        "attachments": [
+          {
+            "id": "legacy-file",
+            "url": "https://files.example.invalid/legacy"
+          }
+        ],
+        "description": "Preserved notes",
+        "completed_at": null,
+        "taskfold_completion_v1": {
+          "epoch": "bb8183cf-3c14-4dcd-81ca-919c1b65c4cb",
+          "version": 0
+        }
+      },
+      {
+        "id": "b",
+        "title": "Destination",
+        "subtasks": null
+      }
+    ],
+    "completed": false,
+    "reminders": [],
+    "time_zone": null,
+    "created_at": "2026-10-30T01:10:54.083847+00:00",
+    "is_heading": null,
+    "project_id": "a96dbdf6-2673-4975-b53a-31f49a85890a",
+    "section_id": null,
+    "assigned_to": null,
+    "attachments": [],
+    "description": null,
+    "completed_at": null,
+    "is_recurring": false,
+    "scheduled_at": null,
+    "deadline_date": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "task_generation": "2d01e9c1-d479-4798-a735-a4f04dba3124",
+    "duration_minutes": null,
+    "completion_version": 0,
+    "recurrence_pattern": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "recurrence_parent_id": null
+  },
+  "response": {
+    "account": "bf81210d-aab7-4d6a-af11-cdd8f995ea3f",
+    "records": [
+      {
+        "fields": {
+          "id": "a",
+          "title": "Synthetic parent",
+          "future": {
+            "opaque": [
+              null,
+              false
+            ]
+          },
+          "comments": [
+            {
+              "id": "synthetic-discussion",
+              "text": "Keep discussion"
+            }
+          ],
+          "completed": false,
+          "attachments": [
+            {
+              "id": "legacy-file",
+              "url": "https://files.example.invalid/legacy"
+            }
+          ],
+          "description": "Preserved notes",
+          "completed_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "bb8183cf-3c14-4dcd-81ca-919c1b65c4cb",
+            "version": 0
+          }
+        },
+        "node_key": "a",
+        "revision": 2,
+        "parent_key": null,
+        "incarnation": "5a2e99cf-c683-4062-b121-45fd421b380b",
+        "children_kind": "array",
+        "identity_path": [
+          "a"
+        ],
+        "sibling_order": 1
+      },
+      {
+        "fields": {
+          "id": "nested",
+          "title": "Historical child",
+          "completed": true,
+          "completed_at": "2026-10-01T09:30:00Z",
+          "taskfold_completion_v1": {
+            "epoch": "4e80a7a6-c14a-48c2-975e-39ba30837f0c",
+            "version": 7
+          }
+        },
+        "node_key": "nested",
+        "revision": 1,
+        "parent_key": "a",
+        "incarnation": "1fca0955-44b6-4f5f-a28d-7e2a1355ed14",
+        "children_kind": "null",
+        "identity_path": [
+          "a",
+          "nested"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "b",
+          "title": "Destination"
+        },
+        "node_key": "b",
+        "revision": 2,
+        "parent_key": null,
+        "incarnation": "33ea79eb-02f6-48e4-8c33-d566906bd2dc",
+        "children_kind": "null",
+        "identity_path": [
+          "b"
+        ],
+        "sibling_order": 2
+      },
+      {
+        "fields": {
+          "id": "fresh",
+          "title": "Fresh subtask",
+          "completed": false,
+          "completed_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "f2753b89-3795-4c74-9b6a-a4d43bdeaf07",
+            "version": 0
+          }
+        },
+        "node_key": "fresh",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "c2caea3f-e063-4af7-a29b-55e0f9ebc812",
+        "children_kind": "absent",
+        "identity_path": [
+          "fresh"
+        ],
+        "sibling_order": 0
+      }
+    ],
+    "task_id": "5f26e082-70eb-4ad6-abbc-4ae2ba686cce",
+    "protocol": 2,
+    "root_kind": "array",
+    "project_id": "a96dbdf6-2673-4975-b53a-31f49a85890a",
+    "task_generation": "2d01e9c1-d479-4798-a735-a4f04dba3124",
+    "structure_revision": 2,
+    "projection_revision": 2
+  },
+  "sourceMigrationSHA256": "5a3d0bb095dade20a78427bb5a9615718c7acff21e6e36bd54d8878f14b35686"
+}

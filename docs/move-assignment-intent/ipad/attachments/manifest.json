@@ -1,0 +1,53 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "CDD5FD36-2EB2-48D9-87F6-F0BE80396DA5.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment cold return_0_FD9EBF70-D0B4-4336-BA7F-43C7B373253C.json",
+        "timestamp" : 1793565811.748
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "4976FB6A-0FE2-4D51-961E-5CFB4D3F00A5.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment redone_0_AC4797F2-6336-476F-B18D-80EBA38B0198.json",
+        "timestamp" : 1793565796.627
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "AA6B91CE-6569-4674-8BFD-1EF615D54B30.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment undone_0_B51E3C5E-8259-4F99-B972-25C042788C0C.json",
+        "timestamp" : 1793565791.629
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "90FD5B2B-C6D9-40C1-8BAC-C93399A977B6.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment moved_0_26CF612C-22C8-4FC2-9A94-D59EA0937DE3.json",
+        "timestamp" : 1793565786.599
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "041CF66C-ABCF-47AD-B8B1-865F58E9EA89.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment original_0_FED8C58D-7B21-4C08-9ADB-2740F77BF1D7.json",
+        "timestamp" : 1793565771.759
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn"
+  }
+]

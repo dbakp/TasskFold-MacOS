@@ -1,0 +1,6 @@
+{
+  "Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "71ae99a1364ba578473144c61d1648c2e7882b1c25942799dd2ca49d0a029579",
+  "Taskfold.app/Contents/MacOS/Taskfold": "2bbec62a2f1ae11638a5000d3d075afe5189e1b167025c31570a8195e8dad4bb",
+  "TaskfoldUITests-Runner.app/Contents/MacOS/TaskfoldUITests-Runner": "f5dee7a0ae6b6ac6d20ad02f248b957108561f4b9d7c9e11b1cb1444ddb6f6bc",
+  "TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "287df0e85fb1dc32f4092aa231d0d032e374ce77bf6817562a45a282421457ea"
+}

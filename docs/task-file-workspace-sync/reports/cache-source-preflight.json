@@ -1,0 +1,9 @@
+{
+  "reviewed": "2026-11-02",
+  "currentOwningAndHostSourceMatches": true,
+  "expectedSourceSHA256": "b82ad362dc5e902cc01a3dc0be07a6ddf60c3e27774065c4844ddd07e6b25af7",
+  "staleIsolatedSourceRejected": true,
+  "temporaryProofRemoved": true,
+  "runnerSourceSHA256": "911522cbe3622110b559528654570a098506743efeac272a203a5b8a7a3b91cb",
+  "scope": "Preflight was added after native runs began. The same owning/host comparison is independently applied by the final evidence verifier; native test results keep their original source phases."
+}

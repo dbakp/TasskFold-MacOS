@@ -1,0 +1,122 @@
+Quick capture | 131072 | Text clipped | Text of this element may be clipped at larger Dynamic Type sizes. | No associated element
+
+Quick capture | 131072 | Text clipped | Text of this element may be clipped at larger Dynamic Type sizes. | No associated element
+
+Quick capture | 131072 | Text clipped | Text of this element may be clipped at larger Dynamic Type sizes. | No associated element
+
+
+
+
+
+Saved task list | 4 | Hit area is too small | The size of this SwiftUI.AccessibilityNode is too small for user to interact. | Attributes: StaticText, 0x116472d00, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'
+Element subtree:
+ →StaticText, 0x116472d00, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'
+Path to element:
+ →Application, 0x1165e66c0, pid: 46786, label: 'Taskfold'
+  ↳Window (Main), 0x1165e6440, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1165e5cc0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x1165e5f40, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x1165e7840, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x1165e6940, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳Other, 0x1165e5e00, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'nativeWorkspace'
+        ↳Other, 0x1165e5b80, {{0.0, 0.0}, {402.0, 874.0}}
+         ↳Other, 0x1165e5a40, {{0.0, 0.0}, {402.0, 874.0}}
+          ↳Other, 0x1165e6d00, {{0.0, 0.0}, {402.0, 874.0}}
+           ↳Other, 0x1165e6bc0, {{0.0, 0.0}, {402.0, 874.0}}
+            ↳Other, 0x1165e6a80, {{0.0, 0.0}, {402.0, 874.0}}
+             ↳Other, 0x1165e5680, {{0.0, 0.0}, {402.0, 874.0}}
+              ↳Other, 0x116473c00, {{0.0, 0.0}, {402.0, 874.0}}
+               ↳Other, 0x116473d40, {{0.0, 0.0}, {402.0, 874.0}}
+                ↳Other, 0x116470f00, {{0.0, 0.0}, {402.0, 874.0}}
+                 ↳Other, 0x116471040, {{0.0, 0.0}, {402.0, 874.0}}
+                  ↳CollectionView, 0x116470c80, {{0.0, 0.0}, {402.0, 874.0}}
+                   ↳Cell, 0x116472940, {{16.0, 298.0}, {370.0, 101.0}}
+                    ↳Other, 0x116473e80, {{16.0, 298.0}, {370.0, 101.0}}
+                     ↳Other, 0x1164726c0, {{16.0, 298.0}, {370.0, 101.0}}
+                      ↳Other, 0x116472800, {{16.0, 298.0}, {370.0, 101.0}}
+                       ↳Other, 0x1164721c0, {{32.0, 313.0}, {338.0, 71.0}}, identifier: 'taskRow-3aaca90f-cfe4-4ee3-baa2-310b2c2174df'
+                        ↳StaticText, 0x116472d00, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.assigneepatterntests'
+  Output: {
+    Application, 0x117030640, pid: 46786, label: 'Taskfold'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 46786, elementOrHash.elementID: 4463440128.608
+    Output: {
+      StaticText, 0x11661cdc0, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'
+    }
+
+
+Saved task list | 4 | Hit area is too small | The size of this SwiftUI.AccessibilityNode is too small for user to interact. | No associated element
+
+Saved task list | 4 | Hit area is too small | The size of this SwiftUI.AccessibilityNode is too small for user to interact. | No associated element
+
+Saved task list | 131072 | Text clipped | Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes. | Attributes: StaticText, 0x1165d9900, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'
+Element subtree:
+ →StaticText, 0x1165d9900, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'
+Path to element:
+ →Application, 0x11661ef80, pid: 46786, label: 'Taskfold'
+  ↳Window (Main), 0x11661d680, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11661d7c0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11661df40, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x11661c3c0, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x11661c8c0, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳Other, 0x11661c780, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'nativeWorkspace'
+        ↳Other, 0x11661e080, {{0.0, 0.0}, {402.0, 874.0}}
+         ↳Other, 0x11661de00, {{0.0, 0.0}, {402.0, 874.0}}
+          ↳Other, 0x11661d040, {{0.0, 0.0}, {402.0, 874.0}}
+           ↳Other, 0x11661e940, {{0.0, 0.0}, {402.0, 874.0}}
+            ↳Other, 0x11661cf00, {{0.0, 0.0}, {402.0, 874.0}}
+             ↳Other, 0x11661d180, {{0.0, 0.0}, {402.0, 874.0}}
+              ↳Other, 0x1165d83c0, {{0.0, 0.0}, {402.0, 874.0}}
+               ↳Other, 0x1165d97c0, {{0.0, 0.0}, {402.0, 874.0}}
+                ↳Other, 0x1165dbd40, {{0.0, 0.0}, {402.0, 874.0}}
+                 ↳Other, 0x1165dbe80, {{0.0, 0.0}, {402.0, 874.0}}
+                  ↳CollectionView, 0x1165daa80, {{0.0, 0.0}, {402.0, 874.0}}
+                   ↳Cell, 0x1165d88c0, {{16.0, 298.0}, {370.0, 101.0}}
+                    ↳Other, 0x1165db0c0, {{16.0, 298.0}, {370.0, 101.0}}
+                     ↳Other, 0x1165db200, {{16.0, 298.0}, {370.0, 101.0}}
+                      ↳Other, 0x1165da080, {{16.0, 298.0}, {370.0, 101.0}}
+                       ↳Other, 0x1165d9540, {{32.0, 313.0}, {338.0, 71.0}}, identifier: 'taskRow-3aaca90f-cfe4-4ee3-baa2-310b2c2174df'
+                        ↳StaticText, 0x1165d9900, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.assigneepatterntests'
+  Output: {
+    Application, 0x117030640, pid: 46786, label: 'Taskfold'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 46786, elementOrHash.elementID: 4463440128.608
+    Output: {
+      StaticText, 0x116470f00, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'
+    }
+
+
+Saved task list | 131072 | Text clipped | Text of this UISearchBarTextField may be clipped at larger Dynamic Type sizes. | Attributes: SearchField, 0x116471900, {{16.0, 169.0}, {370.0, 44.0}}, label: 'Search inbox', placeholderValue: 'Search inbox'
+Element subtree:
+ →SearchField, 0x116471900, {{16.0, 169.0}, {370.0, 44.0}}, label: 'Search inbox', placeholderValue: 'Search inbox'
+    Image, 0x1164717c0, {{28.0, 181.3}, {20.3, 18.7}}, identifier: 'magnifyingglass', label: 'Search'
+Path to element:
+ →Application, 0x116473480, pid: 46786, label: 'Taskfold'
+  ↳Window (Main), 0x116472f80, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x116471e00, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x116473200, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x1164712c0, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x116472bc0, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳Other, 0x116472580, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'nativeWorkspace'
+        ↳Other, 0x1164735c0, {{0.0, 0.0}, {402.0, 874.0}}
+         ↳Other, 0x116472080, {{0.0, 0.0}, {402.0, 874.0}}
+          ↳Other, 0x116470a00, {{0.0, 0.0}, {402.0, 874.0}}
+           ↳Other, 0x1164708c0, {{0.0, 0.0}, {402.0, 874.0}}
+            ↳Other, 0x116472a80, {{0.0, 0.0}, {402.0, 874.0}}
+             ↳Other, 0x116470780, {{0.0, 0.0}, {402.0, 874.0}}
+              ↳NavigationBar, 0x116471b80, {{0.0, 62.0}, {402.0, 166.0}}, identifier: 'Inbox'
+               ↳SearchField, 0x116471900, {{16.0, 169.0}, {370.0, 44.0}}, label: 'Search inbox', placeholderValue: 'Search inbox'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.assigneepatterntests'
+  Output: {
+    Application, 0x117030640, pid: 46786, label: 'Taskfold'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 46786, elementOrHash.elementID: 4473662720.92
+    Output: {
+      SearchField, 0x1165db700, {{16.0, 169.0}, {370.0, 44.0}}, label: 'Search inbox', placeholderValue: 'Search inbox'
+    }
+

@@ -1,0 +1,23 @@
+{
+  "expectedFailures": 0,
+  "failedTests": 2,
+  "finishTime": 1793077855.939,
+  "passedTests": 10,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1793077431.34,
+  "totalTestCount": 12,
+  "testFailures": [
+    {
+      "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+      "testIdentifierString": "TaskfoldUITests/testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery()",
+      "testName": "testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery()"
+    },
+    {
+      "failureText": "XCTAssertEqual failed: (\"Original: open\") is not equal to (\"Original: completed\")",
+      "testIdentifierString": "TaskfoldUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap()",
+      "testName": "testWidgetIntentRecurringCompletionRetryUndoAndOldTap()"
+    }
+  ]
+}

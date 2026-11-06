@@ -1,0 +1,6 @@
+{
+  "buildForTesting": "Passed",
+  "signedDebugHost": true,
+  "warningDiagnosticsPresent": true,
+  "note": "Compilation diagnostics are distinct from runtime warnings. Reserved Mac UI host does not embed a widget extension; no new installed-desktop-widget acceptance."
+}

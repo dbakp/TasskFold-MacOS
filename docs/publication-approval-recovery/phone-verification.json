@@ -1,0 +1,230 @@
+{
+  "platform": "ios-audience-pending",
+  "checks": {
+    "compiled owning source matches Taskfold/AudioCommentNativeFixture.swift": true,
+    "compiled owning source matches Taskfold/AudioCommentCapture.swift": true,
+    "compiled owning source matches Taskfold/Core/Store.swift": true,
+    "compiled owning source matches Taskfold/Core/Models.swift": true,
+    "compiled owning source matches Taskfold/TaskfoldApp.swift": true,
+    "compiled owning source matches Taskfold/Views/BackupTools.swift": true,
+    "compiled owning source matches Taskfold/Views/BrowseView.swift": true,
+    "compiled owning source matches Taskfold/Core/TeamProjectAccess.swift": true,
+    "compiled owning source matches Taskfold/Core/TeamTaskBatch.swift": true,
+    "compiled owning source matches Taskfold/Core/Backend.swift": true,
+    "compiled owning source matches Taskfold/Views/TeamTaskDeletionReview.swift": true,
+    "compiled owning source matches Taskfold/Core/AudioCommentPublishing.swift": true,
+    "compiled owning source matches Taskfold/Views/TaskEditor.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentConversationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentPublicationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioPendingPublicationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentDraftView.swift": true,
+    "compiled owning source matches TaskfoldUITests/AudioCommentUITests.swift": true,
+    "exact isolated app identifier": true,
+    "one native case accepted without skip": true,
+    "audience journey preserves original task and generation": true,
+    "audience cold cache matches original task": true,
+    "audience native flow leaves no queued edits": true,
+    "two deliberate audience reviews succeed": true,
+    "pending Resume replays after the lost committed reply": true,
+    "pending Resume repeats the exact saved approval and original intent": true,
+    "pending Resume does not replace approval with a status request": true,
+    "one exact private audience binding": true,
+    "no native task lifecycle mutation": true,
+    "native audience publication is actually published": true,
+    "synthetic publication retires after native proof": true,
+    "one immutable publication identity": true,
+    "actor is current editor rather than task creator": true,
+    "recording retired by actual removal or expired cleanup": true,
+    "provider received one media upload": true,
+    "task content remains exact apart from certified generation renewal": true,
+    "maintenance request succeeds": true,
+    "actual fenced cleanup releases ledger quota": true,
+    "removed bytes absent from real provider": true
+  },
+  "genuineAuth": false,
+  "actualLocalStorage": true,
+  "fullSchemaParity": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "sourceSHA256": {
+    "Taskfold/AudioCommentNativeFixture.swift": "dc73d032e3b176cd530385c50ba14703d164179a94b85a4a1ab6ee99589a4644",
+    "Taskfold/AudioCommentCapture.swift": "5a90bab1d673e667b98b0b5dadcea459361e1ef8918a05b097a65bad82f6d2d4",
+    "Taskfold/Core/Store.swift": "7a5aeeb58f42efdb8392f112503fb422aa299e444b49cedb9b7df8c9aa6936b9",
+    "Taskfold/Core/Models.swift": "8860cb104036b8095e41ee0b739ec4e4233a911a286d344176688e76ab164985",
+    "Taskfold/TaskfoldApp.swift": "807220d457725ee58b50d6800ff4e5f141e7e2bfe97a1e02a77f77f4598da6e3",
+    "Taskfold/Views/BackupTools.swift": "3d0f6adee157186757d69d3da23b3d32bebe9a5a4f64f7b70df33e470872b9e9",
+    "Taskfold/Views/BrowseView.swift": "874fa45858bd22c838c7363f291a36b0e57d0a3b60dac1cc9f6e6c1b967d38ae",
+    "Taskfold/Core/TeamProjectAccess.swift": "4a64f09f3743d1da20494ec0e8a6421981be08eef5d3bb99c22a33d2ff49262e",
+    "Taskfold/Core/TeamTaskBatch.swift": "52f28a92644e36d207d5585128036b332476cba7610ae4b1c1fcc0d2a220f3d6",
+    "Taskfold/Core/Backend.swift": "566b6b14b63fcf6420031c8dc264407c3fb70e78595fdaa4b713884075f047d7",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "9589a78034abd4ef8f668d47f307fba2a16bdbd8f0528f5f0e2f75a45a8991a7",
+    "Taskfold/Core/AudioCommentPublishing.swift": "a53e6e108668847b1050ad9fd5c4cad7fa140e09839ebea547e42b64e0acd99d",
+    "Taskfold/Views/TaskEditor.swift": "ae18b5a76ee7acef8f612125c917e478f263f0f5b7d64be1c0a571ef2322971c",
+    "Taskfold/Views/AudioCommentConversationView.swift": "2a8a67f23af154f2b3ca7ecce5cbc240521e98577e550c960b386ebad734c125",
+    "Taskfold/Views/AudioCommentPublicationView.swift": "c04fadb478fc07a2a37e17622582d31103585fc3fd780bddcfd2ac8d8eafd307",
+    "Taskfold/Views/AudioPendingPublicationView.swift": "4891b07f73a4a44503a841ef968351683354e845ca4e0a02b329f0910abd74e7",
+    "Taskfold/Views/AudioCommentDraftView.swift": "ccf09a888363122207d9545cefa7eefa65fba7389c20c760eaec3c2c9fbe0879",
+    "TaskfoldUITests/AudioCommentUITests.swift": "0982a61053475cc90d3e30c88c8c462e4c998a3d2d78f3065a6a273fcf5fd104"
+  },
+  "xcodeExitCode": 0,
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold · Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793679862.987,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793679674.177,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "uniqueOwnedContainerVerified": true,
+  "maintenance": {
+    "protocol": 1,
+    "claimed": 1,
+    "recovered": 0,
+    "probe_unresolved": 0,
+    "blocked_uploads": 0,
+    "purged": 1,
+    "unresolved": 0
+  },
+  "terminal": {
+    "state": "purged",
+    "sha256": "8882372c699c4abedf86e8dc707e365028897ef88470fa77e4409b573d56baf7",
+    "caption": null,
+    "task_id": "ec240000-0000-4000-8000-000000000002",
+    "asset_id": "0ecd95bf-a6d3-4db4-a97d-6ef95da66b54",
+    "author_id": "ec240000-0000-4000-8000-000000000001",
+    "byte_count": 59439,
+    "comment_id": "003696fb-5854-49fb-b8e6-17ba25bcd55a",
+    "created_at": "2026-11-03T04:22:56.595421+00:00",
+    "expires_at": "2026-11-04T04:22:56.595421+00:00",
+    "project_id": "ec240000-0000-4000-8000-000000000003",
+    "object_name": "audio-comments/v1/ec240000-0000-4000-8000-000000000002/ec240000-0000-4000-8000-000000000071/0ecd95bf-a6d3-4db4-a97d-6ef95da66b54.m4a",
+    "operation_id": "d0727444-df16-410a-a4c7-0ad77670891e",
+    "published_at": "2026-11-03T04:22:57.087272+00:00",
+    "request_hash": "\\xe921e2b862994570df18ddda0d47409ea307e179538b64e4ddf65bc44411e20b",
+    "cleanup_after": "2026-11-03T04:24:24.271246+00:00",
+    "last_cleanup_at": "2026-11-03T04:24:25.864966+00:00",
+    "task_generation": "ec240000-0000-4000-8000-000000000071",
+    "audio_descriptor": null
+  },
+  "checkCount": 39,
+  "gatewayRequests": [
+    {
+      "action": "review",
+      "bodySHA256": "93221c7345890f6a4351d4d7b5a925f5fd3677b5070d3e87b6b6b799ab87a8a4",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 462
+    },
+    {
+      "action": "review",
+      "bodySHA256": "c1bd40160d120421d961f7c148539e48467a1c8a49b94e741d7da3986601b8d5",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 462
+    },
+    {
+      "action": "publish",
+      "bodySHA256": "9d75db9b3b4b1cfe2841526b17c99500ab3e46065e67c8537e6e0bea7db138ab",
+      "responseStatus": 200,
+      "deliveredStatus": 503,
+      "responseBytes": 851
+    },
+    {
+      "action": "publish",
+      "bodySHA256": "9d75db9b3b4b1cfe2841526b17c99500ab3e46065e67c8537e6e0bea7db138ab",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 851
+    }
+  ],
+  "workspace": {
+    "boundary": 6,
+    "auth": 2,
+    "tables": {
+      "projects": 3,
+      "sections": 3,
+      "labels": 3,
+      "tasks": 3,
+      "profiles": 3,
+      "project_collaborators": 3,
+      "saved_views": 3,
+      "favorites": 3,
+      "view_preferences": 3,
+      "view_orders": 3,
+      "project_templates": 3,
+      "reminder_preferences": 3,
+      "focus_sessions": 3,
+      "task_activity_epoch": 3,
+      "task_activity": 3,
+      "task_assignment_provenance": 3,
+      "task_node_activity_epoch": 6,
+      "task_node_activity": 3
+    },
+    "rejected": 0,
+    "errors": []
+  },
+  "provider": [
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    }
+  ],
+  "gatewayErrors": [],
+  "configRemoved": true,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "ownedSimulatorRestored": true,
+  "cleanupErrors": []
+}

@@ -1,0 +1,26 @@
+{
+  "Taskfold.app": {
+    "strictDeepVerified": true,
+    "details": [
+      "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge",
+      "CDHash=2d92e1be757f8a69d817331c2b50e1a8e5d2f464",
+      "Authority=Apple Development: davidbakposada@gmail.com (ZTJYVDSQ3S)",
+      "Authority=Apple Worldwide Developer Relations Certification Authority",
+      "Authority=Apple Root CA",
+      "TeamIdentifier=3UZ4C73FM2"
+    ],
+    "executableSHA256": "5ff38123c346d764163030ad6327357a380cf56b641dc270a0d0533f61063b0b"
+  },
+  "TaskfoldUITests-Runner.app": {
+    "strictDeepVerified": true,
+    "details": [
+      "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner",
+      "CDHash=c123aef9bff8fb306f25fc1f52fba83e8a719dff",
+      "Authority=Apple Development: davidbakposada@gmail.com (ZTJYVDSQ3S)",
+      "Authority=Apple Worldwide Developer Relations Certification Authority",
+      "Authority=Apple Root CA",
+      "TeamIdentifier=3UZ4C73FM2"
+    ],
+    "executableSHA256": "8afae23f7a4e9d5f7ab060ce37a48391d49000628b5cab232acb3ff74c5f7d9d"
+  }
+}

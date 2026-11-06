@@ -1,0 +1,25 @@
+{
+  "reason": "Mac locked; private test-container file IO did not finish. No Mac phase accepted.",
+  "driverPID": 5871,
+  "owner": "375c2a78-eb20-46f4-bacb-72f1700a6ac0",
+  "resources": [
+    "taskfold-full-schema-375c2a78-db",
+    "taskfold-full-schema-375c2a78-auth",
+    "taskfold-full-schema-375c2a78-rest",
+    "taskfold-full-schema-375c2a78-storage",
+    "taskfold-full-schema-375c2a78-gateway"
+  ],
+  "syntheticAccount": "4e76822e-a477-4923-8221-d2fb0efdb4b1",
+  "nonce": "a2eb1f94-74f6-469f-a9ee-32f430c49c3b",
+  "pendingMacFiles": "Exact run config/session/cache/media cleanup requires private test-container access; no bypass or trust/system-setting changes attempted.",
+  "privateTLSDirectoryRemoved": true,
+  "ownedServicesRemoved": true,
+  "pendingPrivatePaths": [
+    "/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/TaskfoldFullSchemaNative-workflowteststeameditbridge/config.json",
+    "/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/TaskfoldFullSchemaNative-workflowteststeameditbridge/session.json",
+    "/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/TaskfoldFullSchemaNative-workflowteststeameditbridge/audio-a2eb1f94-74f6-469f-a9ee-32f430c49c3b",
+    "/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/TaskfoldFullSchemaNative-workflowteststeameditbridge/audio-media-a2eb1f94-74f6-469f-a9ee-32f430c49c3b.m4a",
+    "/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/4e76822e-a477-4923-8221-d2fb0efdb4b1.json"
+  ],
+  "cleanupCondition": "When private test-container access is available, verify config/session nonce before removal; remove only this nonce/account, never the whole sandbox."
+}

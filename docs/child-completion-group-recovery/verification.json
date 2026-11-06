@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-31",
+  "scope": "Saved atomic child-completion group journal, sender, observable recovery model and Store storage/cleanup factories; no bulk UI runtime acceptance",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "1e0ffb12a9c5403190bfd5b8be397456fa1c6b2d65cd42593cc3826f73b38377",
+    "Taskfold/Core/Store.swift": "91aba1512914d6af940807573986b2fd8e38c9b2f84bb0f719b65be799de775e",
+    "TaskfoldTests/ChildTaskCompletionBatchTests.swift": "0401b416d692f1ada98195e3ac1a4e13a5f9750dee8ee626005b2961dc43422a"
+  },
+  "coreLogs": {
+    "taskfold-group-recovery-mac-v1.log": {
+      "executed": 28,
+      "passed": 27,
+      "failed": 1,
+      "rawSHA256": "89bc7077e7f4ce785ba9187114aa4b57a5c7ed1e5fdad7b110475524989f748f",
+      "retainedSHA256": "d7c9f97a2fd325b226ad70df88ef8cf5f97bf45c6a7964c1e7421eea983c577c",
+      "trailingWhitespaceTrimmed": true
+    },
+    "taskfold-group-recovery-mac-v3.log": {
+      "executed": 77,
+      "passed": 77,
+      "failed": 0,
+      "rawSHA256": "2f78aa5f2327d419702f41162ef52815187dba9bfd246d335cec213e55d88e69",
+      "retainedSHA256": "d13d0c5ab8249e103e898e228222b9770edf306b21a4a3d91eee9915c94c86a4",
+      "trailingWhitespaceTrimmed": true
+    },
+    "taskfold-group-recovery-mac-v5.log": {
+      "executed": 39,
+      "passed": 39,
+      "failed": 0,
+      "rawSHA256": "0db9d15f67867f14fd53ae514b5feb0129c3d157b82f4cd2f0b848ea6edf25c9",
+      "retainedSHA256": "c80baadafa239c798071d8dc898876e6ea41b7fc39799e0a380acd751f5a4157",
+      "trailingWhitespaceTrimmed": true
+    }
+  },
+  "core": {
+    "acceptedDistinctCases": 78,
+    "phased": true,
+    "broadCases": 77,
+    "finalGroupCases": 39,
+    "overlap": 38,
+    "finalFailed": 0,
+    "finalSkipped": 0
+  },
+  "databaseRepeated": false,
+  "unchangedDatabaseSHA256": "972400d1864983e2cb10f92766094547c31bb406853236fcb44eb4fbbfbf8793",
+  "historicalProtocolEvidence": "../child-completion-batches/verification.json",
+  "normalChildFlagsEnabled": false,
+  "bulkGateEnabled": false,
+  "hostedChanges": false,
+  "bulkUIRuntimeAccepted": false,
+  "broaderMigrationComplete": false,
+  "verificationScope": [
+    "Synthetic memory and encrypted temporary file IO",
+    "Typed synthetic service peer and committed actual PostgreSQL receipt fixture",
+    "New disk cleanup factory registered in confirmed account-removal and fixture reset paths; no whole-account UI deletion acceptance claimed"
+  ],
+  "remaining": [
+    "Fresh list-selection preparation and visible bulk/recovery controls",
+    "Coordinate queued single/group actions and structural/custody operations before enabling bulk use",
+    "Mixed root/child completion",
+    "Full Redo/shared history ordering and persistence",
+    "Indexed/history mapping, shared attachment/discussion custody and broader lifecycle/spoken/workload acceptance"
+  ],
+  "acceptanceLimits": [
+    "No deployed RPC round trip or real task data",
+    "No protected-data/Keychain/device-lock lifecycle acceptance",
+    "No native bulk UI, whole-account removal or full-product regression acceptance",
+    "Development signing is not distribution acceptance"
+  ],
+  "nativeBuild": {
+    "buildForTestingPassed": true,
+    "normalizedChangedSourcesMatch": true,
+    "isolationSubstitutions": "Existing isolated identifiers only",
+    "hostSHA256": {
+      "Taskfold/Core/ChildTaskCompletionCommands.swift": "1e0ffb12a9c5403190bfd5b8be397456fa1c6b2d65cd42593cc3826f73b38377",
+      "Taskfold/Core/Backend.swift": "7382e8de6389b6b37e17f9e2cb62c6a3455ab625f24775e5358c61c2459ee8d7",
+      "Taskfold/Core/Store.swift": "dd904ee03f089c6618cfb0ff888cb2f0a69bf113febeeee971fa8efec1058912"
+    },
+    "buildLogSHA256": "f88acfd9008c27b5530b413e20bb5d78187846608b6fb1a4e5c7bb209892a52c",
+    "products": [
+      {
+        "product": "Taskfold.app",
+        "strictDevelopmentSignature": true,
+        "codeIdentity": [
+          "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge",
+          "CDHash=bb03e32f713168908c6452872e3daa6a302ddc90"
+        ]
+      },
+      {
+        "product": "TaskfoldUITests-Runner.app",
+        "strictDevelopmentSignature": true,
+        "codeIdentity": [
+          "Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner",
+          "CDHash=6b93494a0a204ee0efa59df9961d0ed8d534b0aa"
+        ]
+      }
+    ],
+    "runtimeTestingPerformed": false
+  }
+}

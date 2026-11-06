@@ -1,0 +1,1 @@
+{"checks":["first put commits but response is lost","retry confirms same immutable proposal","list recovers one pending proposal","retry uploads one logical draft","stale workspace refused before upload","discard removes geometry without task mutation","send retry list discard leave task cache unchanged"],"passed":true}

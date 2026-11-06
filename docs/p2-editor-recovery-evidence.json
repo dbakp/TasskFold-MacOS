@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-24",
+  "platform": "macOS",
+  "scope": "Encrypted editor-recovery foundation and reviewed independent Inbox copy",
+  "rank": 6,
+  "rankComplete": false,
+  "liveEditorCaptureEnabled": false,
+  "macRuntimeAccepted": false,
+  "voiceOverAccepted": false,
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "coreTests": {
+    "passed": 111,
+    "failed": 0,
+    "logSHA256": "50ba52cefa5dd3ca038acaafb885a33931ef826a4c2ef0af893a7a7c9cfcb9df"
+  },
+  "build": {
+    "passed": true,
+    "configuration": "Debug unsigned generic macOS",
+    "logSHA256": "8f821ae4dfd354623e42893c17e36a4a971add073cc8de1ca14e5a7dc55c3273"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Backups.swift": "43308f347098c0d052b8d2fa442f743077f28f59aea64a22c3ada9d1ad6baa48",
+    "Taskfold/Core/Store.swift": "dcfd41fd5e4279d8dbbafbec50454dff455bbaf414dd461ff4856de7825e5003",
+    "Taskfold/Views/BackupTools.swift": "843ee4bc4122e04ebff5afa862b89b477ba5bcfdc4b7f97e6704f5bbde6d2931",
+    "TaskfoldTests/BackupTests.swift": "46776cc9e7d168619463420e943c339ff32e65de136d89a8f6b0eb0f94b1a76c"
+  },
+  "remaining": [
+    "Live editor and inspector capture/invalidation",
+    "Pending autosave handoff and quit protection",
+    "Child editor integration",
+    "Native Mac and spoken acceptance"
+  ],
+  "nativeSimulator": {
+    "accepted": false,
+    "reason": "No native Mac test this stage; Simulator results are not Mac runtime proof."
+  },
+  "knownTestCorrections": [
+    "Largest-text preview requires scrolling to create the title accessibility element",
+    "Returning to the archive menu can require scrolling upward; initial forward-only test navigation corrected",
+    "One test rebuild omitted arm64-only settings and failed on an unsupported x86_64 dependency; corrected build passed"
+  ],
+  "cleanup": {
+    "temporaryApps": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "app": "com.dbakp.taskfold.workflowtestseditorrecovery",
+        "uninstallExitCode": 0
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "app": "com.dbakp.taskfold.workflowtestseditorrecovery.uitests.xctrunner",
+        "uninstallExitCode": 0
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "app": "com.dbakp.taskfold.workflowtestseditorrecovery",
+        "uninstallExitCode": 0
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "app": "com.dbakp.taskfold.workflowtestseditorrecovery.uitests.xctrunner",
+        "uninstallExitCode": 0
+      }
+    ],
+    "macRegistrationRemovalExitCode": 0,
+    "removedOwnedBuildBytes": 2411871076,
+    "removedPaths": [
+      "/tmp/taskfold-editor-recovery-ios-build",
+      "/tmp/taskfold-editor-recovery-ios-host",
+      "/tmp/taskfold-editor-recovery-mac-build",
+      "/tmp/taskfold-editor-recovery-ipad.xcresult",
+      "/tmp/taskfold-editor-recovery-ipad-final.xcresult",
+      "/tmp/taskfold-editor-recovery-iphone.xcresult",
+      "/tmp/taskfold-editor-recovery-ipad-accepted.xcresult",
+      "/tmp/taskfold-editor-recovery-iphone-attachments",
+      "/tmp/taskfold-editor-recovery-ipad-preview-attachments",
+      "/tmp/taskfold-editor-recovery-ipad-final-attachments"
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "recordedAtUTC": "2026-10-30T00:27:17.601494+00:00",
+  "reports": {
+    "structure": {
+      "file": "structure.json",
+      "checks": 61,
+      "containerRemoved": true,
+      "noAddedAdvisorFindings": true
+    },
+    "fields": {
+      "file": "fields.json",
+      "checks": 95,
+      "containerRemoved": true,
+      "noAddedAdvisorFindings": true
+    },
+    "completion": {
+      "file": "completion.json",
+      "checks": 98,
+      "containerRemoved": true,
+      "noAddedAdvisorFindings": true
+    },
+    "resolution": {
+      "file": "resolution.json",
+      "checks": 63,
+      "containerRemoved": true,
+      "noAddedAdvisorFindings": true
+    }
+  },
+  "totalChecks": 317,
+  "sourceSHA256": {
+    "supabase/migrations/20261030002245_child_structure_revision_and_assignment_bridge.sql": "949dd0ea6e5d9300a55cfeb81c4b3239aef112e5e2b6cc3f5923b6381ab0e682",
+    "Scripts/Database/test-child-task-structure-revision.mjs": "9a1d287781f6ea6097abde03865afa34cfbb1c4b900cac51dadcbc5f31ea53ef",
+    "Scripts/Database/test-child-task-field-edits.mjs": "d1de4e7f39269fe8a3b5c9c130172fa1cf7ae38ac3f3b79a9cc9455faff20ebf",
+    "Scripts/Database/test-child-task-completion.mjs": "9b47477457ed67b07d2ded47b067c023b3cbf0c0d149e16882efa4499ac9db36",
+    "Scripts/Database/test-child-completion-resolution.mjs": "30294f93e16bd27a2f7fe1aeb7df0b9703862961f29efa49615a0bdb79a2bc4d"
+  },
+  "localFullStackMigrationList": "Failed to connect; full Supabase stack is not running.",
+  "hostedDeployment": false,
+  "independentStructuralCommands": false,
+  "coreOrAppChangesInThisStage": false
+}

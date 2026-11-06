@@ -9,6 +9,7 @@ struct AuthView: View {
     @State private var password = ""
     @State private var signup = false
     @State private var busy = false
+    @State private var switchingLocal = false
     @State private var message: String?
     @State private var shake = 0
     @FocusState private var focus: Field?
@@ -40,15 +41,16 @@ struct AuthView: View {
                     HStack { Spacer(); if busy { ProgressView().controlSize(.small) } else { Text(signup ? "Create Account" : "Sign In") }; Spacer() }
                 }
                 .buttonStyle(.borderedProminent).controlSize(.large).keyboardShortcut(.defaultAction)
-                .disabled(busy || !canSubmit).accessibilityIdentifier("nativeSignIn")
+                .disabled(busy || switchingLocal || !canSubmit).accessibilityIdentifier("nativeSignIn")
                 Button {
+                    guard !busy, !switchingLocal else { return }
                     busy = true; message = nil
-                    Task { defer { busy = false }; do { try await store.backend.googleOnMac(); await store.authenticated() } catch { message = error.localizedDescription } }
+                    Task { defer { busy = false }; do { try await store.backend.googleOnMac(); await store.authenticated() } catch is CancellationError { } catch { message = error.localizedDescription } }
                 } label: { HStack { Spacer(); Label("Continue with Google", systemImage: "globe"); Spacer() } }
-                .buttonStyle(.bordered).controlSize(.large).disabled(busy).accessibilityIdentifier("googleSignIn")
+                .buttonStyle(.bordered).controlSize(.large).disabled(busy || switchingLocal).accessibilityIdentifier("googleSignIn")
                 if let message { Text(message).font(.callout).foregroundStyle(.secondary).transition(.textSwap).textSelection(.enabled) }
                 Divider().padding(.vertical, 4)
-                Button("Use on this Mac without an account") { store.startLocal() }.buttonStyle(.link).accessibilityIdentifier("useLocally")
+                Button(switchingLocal ? "Opening local workspace…" : "Use on this Mac without an account", action: useLocally).buttonStyle(.link).disabled(switchingLocal).accessibilityIdentifier("useLocally")
                 Text("Local tasks stay on this Mac. Sign in to access your existing Taskfold projects and sync across devices.").font(.caption).foregroundStyle(.secondary)
             }
             .padding(40).frame(maxWidth: 420)
@@ -62,14 +64,31 @@ struct AuthView: View {
         .accessibilityElement(children: .contain)
     }
     private var canSubmit: Bool { email.contains("@") && (signup ? password.count >= 6 : !password.isEmpty) }
+    private func useLocally() {
+        guard !switchingLocal else { return }
+        switchingLocal = true; message = nil
+        let needsCredentialClear = busy || store.backend.session != nil
+        password = "" // Local entry is not a successful password sign-in.
+        Task {
+            defer { switchingLocal = false }
+            do {
+                // Clear is ordered after any in-flight credential save and invalidates its response.
+                // Enter local mode only after that clear succeeds.
+                if needsCredentialClear { try await store.backend.clearSession() }
+                store.startLocal()
+            } catch is CancellationError { }
+            catch { message = error.localizedDescription }
+        }
+    }
     private func authenticate() {
+        guard !busy, !switchingLocal else { return }
         busy = true; message = nil
         Task {
             defer { busy = false }
             do {
                 if try await store.backend.signIn(email: email.trimmingCharacters(in: .whitespaces), password: password, signup: signup) { await store.authenticated() }
                 else { message = "Check your email to confirm your account, then sign in."; signup = false }
-            } catch { message = error.localizedDescription; shake += 1 }
+            } catch is CancellationError { } catch { message = error.localizedDescription; shake += 1 }
         }
     }
 }
@@ -85,9 +104,11 @@ final class WebAuthAnchor: NSObject, ASWebAuthenticationPresentationContextProvi
 }
 
 extension Backend {
-    func googleOnMac() async throws {
+    func googleOnMac(reauthenticating context: AccountReauthentication? = nil, willCommit: (() -> Void)? = nil) async throws {
         let anchor = WebAuthAnchor.shared
-        guard anchor.session == nil else { return }
+        guard anchor.session == nil else { throw CancellationError() }
+        let attempt = try startAuthentication(reauthenticating:context,cancelBrowser: { anchor.session?.cancel(); anchor.session = nil })
+        defer { endAuthentication(attempt) }
         var bytes = [UInt8](repeating: 0, count: 32)
         guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { throw AppFailure(message: "Could not start secure sign-in.") }
         func encode(_ data: Data) -> String { data.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "") }
@@ -95,7 +116,6 @@ extension Backend {
         let challenge = encode(Data(SHA256.hash(data: Data(verifier.utf8))))
         guard var components = URLComponents(string: baseURL + "/auth/v1/authorize") else { throw AppFailure(message: "The Supabase configuration is missing.") }
         components.queryItems = [URLQueryItem(name: "provider", value: "google"), URLQueryItem(name: "redirect_to", value: "taskfold://auth/callback"), URLQueryItem(name: "code_challenge", value: challenge), URLQueryItem(name: "code_challenge_method", value: "s256")]
-        defer { anchor.session?.cancel(); anchor.session = nil }
         let callback: URL = try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(url: components.url!, callbackURLScheme: "taskfold") { url, error in
                 if let url { continuation.resume(returning: url) }
@@ -106,10 +126,11 @@ extension Backend {
             anchor.session = session
             if !session.start() { continuation.resume(throwing: AppFailure(message: "Could not open sign-in.")) }
         }
+        try requireAuthentication(attempt)
         let code = try OAuthCallback.code(from: callback)
         let data = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": .string(code), "code_verifier": .string(verifier)], authenticated: false)
-        let next = try JSONDecoder().decode(Session.self, from: data)
-        try SecureSession.save(next)
-        session = next
+        try requireAuthentication(attempt)
+        let next = try Foundation.JSONDecoder().decode(Session.self, from: data)
+        try await acceptAuthentication(next,attempt:attempt,reauthenticating:context,willCommit:willCommit)
     }
 }

@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-01",
+  "repository": "TasskFold-MacOS",
+  "baselineCommit": "4bcbb2ac33789823349e714608032f4d1cce09f9",
+  "core": {
+    "tests": 58,
+    "failures": 0,
+    "newFileTests": 18,
+    "logSHA256": "24196d49dac7c741e3dea8ffecc20233e1902b7d500102b9a901c98f16f89354",
+    "rawLogSHA256": "efe0a4bb1341065d18f0afdad59c4618577ca3c66901f4d72009318f44448405",
+    "retainedLogNormalization": "Trailing whitespace stripped"
+  },
+  "build": {
+    "phase": "file-upload-client-final",
+    "appAndRunnerSignaturesVerified": true,
+    "logSHA256": "20e80a53a2b9ef6e4798597da16cf8fd39f8284a5a811e55ddfc7d388457d24a",
+    "sourceProof": {
+      "Taskfold/Core/TaskFileUpload.swift": {
+        "repositorySHA256": "0489c8b775245a277aa9e5149b1e95c5056ec4c4cc39a4f11495da62adfcf15f",
+        "compiledHostSHA256": "0489c8b775245a277aa9e5149b1e95c5056ec4c4cc39a4f11495da62adfcf15f",
+        "matchesAfterIsolation": true
+      },
+      "Taskfold/Core/TeamOrganizationCommand.swift": {
+        "repositorySHA256": "242b0a2f026dafb9d98770e1fe0a91b6b978af795eb6865530f912d119bf034e",
+        "compiledHostSHA256": "242b0a2f026dafb9d98770e1fe0a91b6b978af795eb6865530f912d119bf034e",
+        "matchesAfterIsolation": true
+      },
+      "Taskfold/Core/Backend.swift": {
+        "repositorySHA256": "1c8ef6005d7061284496b3a52dcd38ea160983de4dfa2262eee13209f488bb2c",
+        "compiledHostSHA256": "7c4e974dffc9a63e82fb49a15d3d6586d2e76871160ada9bee131999af0e4e74",
+        "matchesAfterIsolation": true
+      },
+      "Taskfold/Views/TaskFileUploadView.swift": {
+        "repositorySHA256": "4aab098c1d3740ed7693fa424c82abea4f962919e58c200ac505cd528e0d52c9",
+        "compiledHostSHA256": "4aab098c1d3740ed7693fa424c82abea4f962919e58c200ac505cd528e0d52c9",
+        "matchesAfterIsolation": true
+      },
+      "Taskfold/Views/BackupTools.swift": {
+        "repositorySHA256": "bd1510308df68e986ffc59604b5f797ce466d11db3294b5797eb41bd49cded8d",
+        "compiledHostSHA256": "bd1510308df68e986ffc59604b5f797ce466d11db3294b5797eb41bd49cded8d",
+        "matchesAfterIsolation": true
+      },
+      "Taskfold/Views/TaskInspector.swift": {
+        "repositorySHA256": "c91bc6c993f538e3acd1ca3ba9497686c4730f9cc74e7562f1ebe759ee360afe",
+        "compiledHostSHA256": "c91bc6c993f538e3acd1ca3ba9497686c4730f9cc74e7562f1ebe759ee360afe",
+        "matchesAfterIsolation": true
+      }
+    },
+    "appBinariesSHA256": {
+      "Taskfold": "4126ebc89c6e8ec1392915ccc710f8c995c4e8564c891b481347a8c0afe7f1e8",
+      "Taskfold.debug.dylib": "2ee9fbfe8488c287b6af8c4d5fd969f2cb0d8fda73c800b54b60585d998e759d"
+    }
+  },
+  "hostedChanges": false,
+  "databaseChanged": false,
+  "normalUseEnabled": false,
+  "nativeFilePickerAccepted": false,
+  "nativeVoiceOverAccepted": false,
+  "realProviderDeliveryAccepted": false,
+  "providerCleanupImplemented": false,
+  "normalUseFlag": "TaskfoldTaskFilesEnabled absent or false",
+  "sourcesSHA256": {
+    "Taskfold/Core/TaskFileUpload.swift": "0489c8b775245a277aa9e5149b1e95c5056ec4c4cc39a4f11495da62adfcf15f",
+    "Taskfold/Core/TeamOrganizationCommand.swift": "242b0a2f026dafb9d98770e1fe0a91b6b978af795eb6865530f912d119bf034e",
+    "Taskfold/Core/Backend.swift": "1c8ef6005d7061284496b3a52dcd38ea160983de4dfa2262eee13209f488bb2c",
+    "Taskfold/Views/TaskFileUploadView.swift": "4aab098c1d3740ed7693fa424c82abea4f962919e58c200ac505cd528e0d52c9",
+    "Taskfold/Views/BackupTools.swift": "bd1510308df68e986ffc59604b5f797ce466d11db3294b5797eb41bd49cded8d",
+    "Taskfold/Views/TaskInspector.swift": "c91bc6c993f538e3acd1ca3ba9497686c4730f9cc74e7562f1ebe759ee360afe",
+    "Package.swift": "2e0c2842f4b19dde637fa323febb331126e647472104ddf2d5f1def677f5fe99",
+    "Taskfold.xcodeproj/project.pbxproj": "47f530d65317360ab8ec98b17bf91f956effe7098fa5306ac82fe5b3c478384a",
+    "TaskfoldTests/TaskFileUploadTests.swift": "7f586e5e34e0eb360c91e2cf1bea99c4bf76ccd1af36b6ce1ee0275611b1962e",
+    "TaskfoldTests/Fixtures/task-file-upload-v1.json": "3157fe0284391cecce382933b556921ab64ed0483d2c99c7bae618380c726ed0"
+  }
+}

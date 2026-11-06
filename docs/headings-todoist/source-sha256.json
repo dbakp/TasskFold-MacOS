@@ -1,0 +1,13 @@
+{
+  "Taskfold/Core/TodoistImport.swift": "8313da450e30eed210c930807948711b22a38da5174e66de9e2403793a944823",
+  "Taskfold/Views/Editors.swift": "95d027b314b26a12f77ebf10883744b039f71a9e65b783254d2a1cb2163db203",
+  "TaskfoldTests/TodoistImportTests.swift": "c5122029444bef86163b64e31c1d52b8955074b685f174a3e0e9f7f2a17199a8",
+  "TaskfoldUITests/TaskfoldMacUITests.swift": "b9e4e4b23a0008939c16e23309c34cd6239be526b89dc6ab50cdc3f84041bafe",
+  "Scripts/Database/test-todoist-headings.mjs": "348249b2fd95236f8618e984a188dc53ce1cc1ebece445b48bab89644751b996",
+  "Scripts/Database/todoist-heading-fixture.ts": "feea138dbcf4e014dec33c1873fd70a5e79a21b2f840ccf1f89e8bca0642708a",
+  "supabase/functions/import-todoist/handler.ts": "769c8cb555ba571b175b3ac31ae0c85b56d3fd01e027ff334b18b641dd96464d",
+  "supabase/functions/import-todoist/index.ts": "8ac14ef248b57baffcb75cb38a2b8d8dbac02e2644cb7a4db69254bd618896c0",
+  "supabase/functions/import-todoist/todoist.ts": "ac6834410227e8a8790809854fc75cf67043afb0a5c1a5e5b5862e3123a267c4",
+  "supabase/functions/import-todoist/todoist_test.ts": "2330adcd2c31ce0f2a4a4011167335f151ae416a61f3a1d867dce48f6501e331",
+  "supabase/migrations/20261026053029_todoist_heading_import.sql": "64f9abfac0570fcb3ebb917935a2a744972b4b71b5ec55ad887c91c3b3783058"
+}

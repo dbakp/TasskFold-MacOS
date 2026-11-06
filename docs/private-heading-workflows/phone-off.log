@@ -1,0 +1,118 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-private-headings-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testHeadingClientGateKeepsDefinitionsAndTransferAvailable" -resultBundlePath /tmp/taskfold-private-headings-phone-off-final.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-private-headings-phone-off-final.xcresult
+
+2026-10-26 18:46:40.850185+0100 TaskfoldUITests-Runner[18259:23201790] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 18:46:45.391.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 18:46:45.392.
+Test Suite 'TeamTemplateLibraryUITests' started at 2026-10-26 18:46:45.392.
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testHeadingClientGateKeepsDefinitionsAndTransferAvailable]' started.
+    t =     0.00s Start Test at 2026-10-26 18:46:45.394
+    t =     0.04s Set Up
+    t =     0.11s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.11s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 18:46:45.570 xcodebuild[18246:23201545] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:46:45.570 xcodebuild[18246:23201545] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.85s         Setting up automation session
+objc[18259]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10610c398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x106264310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     6.00s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.03s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     9.08s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     9.08s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     9.21s Tap "openPrivateWorkflowRunFixture" Button
+    t =     9.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.21s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     9.24s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     9.27s     Synthesize event
+    t =     9.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.81s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =    10.85s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =    10.85s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =    10.93s Find the "runPrivateTemplateShared" Button
+    t =    10.97s Checking existence of `"privateWorkflowHeadingUnavailable" StaticText`
+    t =    11.02s Terminate com.dbakp.taskfold.workflowteststeameditbridge:18282
+    t =    12.11s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    12.12s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 18:46:57.511 xcodebuild[18246:23201545] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:46:57.511 xcodebuild[18246:23201545] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    12.33s         Setting up automation session
+    t =    16.30s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.31s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    19.35s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    19.35s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    19.45s Tap "openTeamTemplateLibraryFixture" Button
+    t =    19.46s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.46s     Find the "openTeamTemplateLibraryFixture" Button
+    t =    19.49s     Check for interrupting elements affecting "openTeamTemplateLibraryFixture" Button
+    t =    19.52s     Synthesize event
+    t =    19.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.00s Waiting 12.0s for "teamTemplate-ec240000-0000-4000-8000-000000000061" Button to exist
+    t =    21.04s     Checking `Expect predicate `existsNoRetry == 1` for object "teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =    21.04s         Checking existence of `"teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =    21.10s Tap "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =    21.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.10s     Find the "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =    21.14s     Check for interrupting elements affecting "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =    21.18s     Synthesize event
+    t =    21.48s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.80s Waiting 10.0s for "copyTeamTemplate" Button to exist
+    t =    22.84s     Checking `Expect predicate `existsNoRetry == 1` for object "copyTeamTemplate" Button`
+    t =    22.84s         Checking existence of `"copyTeamTemplate" Button`
+    t =    22.92s Find the "runTeamTemplate" Button
+    t =    22.96s Checking existence of `"teamWorkflowHeadingUnavailable" StaticText`
+    t =    22.99s Checking existence of `"exportTeamTemplate" Button`
+    t =    23.03s Swipe up CollectionView (First Match)
+    t =    23.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.03s     Find the CollectionView (First Match)
+    t =    23.06s     Check for interrupting elements affecting CollectionView
+    t =    23.09s     Synthesize event
+    t =    23.54s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.10s Checking existence of `"exportTeamTemplate" Button`
+    t =    24.15s Find the "exportTeamTemplate" Button
+    t =    24.21s Checking existence of `"exportTeamTemplate" Button`
+    t =    24.25s Find the "exportTeamTemplate" Button
+    t =    24.29s Find the "copyTeamTemplate" Button
+    t =    24.33s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    24.47s Added attachment named 'heading-client-support-unavailable'
+    t =    24.49s Tap "copyTeamTemplate" Button
+    t =    24.49s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.49s     Find the "copyTeamTemplate" Button
+    t =    24.54s     Check for interrupting elements affecting "copyTeamTemplate" Button
+    t =    24.58s     Synthesize event
+    t =    24.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.93s Waiting 8.0s for "saveTeamTemplateCopy" Button to exist
+    t =    25.97s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTeamTemplateCopy" Button`
+    t =    25.97s         Checking existence of `"saveTeamTemplateCopy" Button`
+    t =    26.07s Tap "saveTeamTemplateCopy" Button
+    t =    26.07s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.07s     Find the "saveTeamTemplateCopy" Button
+    t =    26.14s     Check for interrupting elements affecting "saveTeamTemplateCopy" Button
+    t =    26.20s     Synthesize event
+    t =    26.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.97s Waiting 10.0s for "copyTeamTemplate" Button to exist
+    t =    28.02s     Checking `Expect predicate `existsNoRetry == 1` for object "copyTeamTemplate" Button`
+    t =    28.02s         Checking existence of `"copyTeamTemplate" Button`
+    t =    28.09s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    28.25s Added attachment named 'heading-client-private-copy'
+    t =    28.25s Terminate com.dbakp.taskfold.workflowteststeameditbridge:18305
+    t =    29.31s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testHeadingClientGateKeepsDefinitionsAndTransferAvailable]' passed (29.433 seconds).
+Test Suite 'TeamTemplateLibraryUITests' passed at 2026-10-26 18:47:14.827.
+	 Executed 1 test, with 0 failures (0 unexpected) in 29.433 (29.435) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 18:47:14.827.
+	 Executed 1 test, with 0 failures (0 unexpected) in 29.433 (29.435) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 18:47:14.827.
+	 Executed 1 test, with 0 failures (0 unexpected) in 29.433 (29.436) seconds
+2026-10-26 18:47:15.142 xcodebuild[18246:23201545] [MT] IDETestOperationsObserverDebug: 36.453 elapsed -- Testing started completed.
+2026-10-26 18:47:15.142 xcodebuild[18246:23201545] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 18:47:15.142 xcodebuild[18246:23201545] [MT] IDETestOperationsObserverDebug: 36.453 sec, +36.453 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-private-headings-phone-off-final.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

@@ -1,0 +1,82 @@
+{
+  "removedSupersededOwnedNativeOutputs": [
+    {
+      "path": "/tmp/taskfold-assignment-history-native-phone-v1.xcresult",
+      "logicalBytes": 717659
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-phone-v1-attachments",
+      "logicalBytes": 30745
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-phone-v1.log",
+      "logicalBytes": 14154
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-phone-v1.summary.json",
+      "logicalBytes": 999
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-phone-v1-control.log",
+      "logicalBytes": 1070
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-phone-v1.verification.json",
+      "logicalBytes": 1454
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-ipad-v1.xcresult",
+      "logicalBytes": 784990
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-ipad-v1-attachments",
+      "logicalBytes": 30786
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-ipad-v1.log",
+      "logicalBytes": 20614
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-ipad-v1.summary.json",
+      "logicalBytes": 1015
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-ipad-v1-control.log",
+      "logicalBytes": 1069
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-ipad-v1.verification.json",
+      "logicalBytes": 1470
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v3.xcresult",
+      "logicalBytes": 449127
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v3-attachments",
+      "logicalBytes": 30661
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v3.log",
+      "logicalBytes": 23040
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v3.summary.json",
+      "logicalBytes": 1234
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v3-control.log",
+      "logicalBytes": 1071
+    },
+    {
+      "path": "/tmp/taskfold-assignment-history-native-mac-v3.verification.json",
+      "logicalBytes": 1427
+    }
+  ],
+  "reason": "Current Mac/iPhone/iPad native flow covers the earlier root-assignee proof plus the read-only preview; current exports and independent checks are retained in each repository. Earlier mobile phase evidence also remains in move-assignment-intent.",
+  "taskfoldProcessesRemaining": 0,
+  "ownedPhoneAndTabletBooted": false,
+  "unrelatedDevicesUntouched": true,
+  "freeBytesBefore": 39160041472,
+  "freeBytesAfter": 39161417728
+}

@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-01",
+  "status": "explicit duplicate/history keeper implemented; corrected mobile saved/cold use accepted; wider migration and Mac runtime remain open",
+  "focusedClientCases": 117,
+  "newDuplicateHistoryCases": 5,
+  "ownedSQLChecks": 332,
+  "migration": "20261101071304_reviewed_duplicate_history_preservation.sql",
+  "migrationDeployed": false,
+  "normalMigrationGatesEnabled": false,
+  "newRPCGrants": false,
+  "nativeInteraction": "final v5 normal iPhone and largest-text iPad choice/Undo/cold/save/recovery and saved-data proofs passed; Mac runtime open",
+  "widerOlderDataCheckpoint": "open: indexed copies, other identity/lifecycle mapping, opaque editable cache, shared content custody",
+  "retainedOriginalEvents": "ids, values and dates unchanged; no copied completion events",
+  "fixtureRemoved": true,
+  "newAdvisorFindings": false,
+  "appBuild": "passed",
+  "nativeEvidence": "../duplicate-history-repair-native/verification.json"
+}

@@ -1,0 +1,15 @@
+/tmp/taskfold-owner-review-mac-host/Taskfold/Workspace.swift:290:13: warning: result of call to 'withAnimation' is unused [#NoUsage]
+    |             `- warning: result of call to 'withAnimation' is unused [#NoUsage]
+/tmp/taskfold-owner-review-mac-host/Taskfold/AudioCommentNativeFixture.swift:382:42: warning: 'weak' ownership of capture 'self' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                          |- warning: 'weak' ownership of capture 'self' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+/tmp/taskfold-owner-review-mac-host/Taskfold/AudioCommentNativeFixture.swift:383:46: warning: 'weak' ownership of capture 'self' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                              |- warning: 'weak' ownership of capture 'self' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+/tmp/taskfold-owner-review-mac-host/Taskfold/AudioCommentNativeFixture.swift:384:46: warning: 'weak' ownership of capture 'self' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                              |- warning: 'weak' ownership of capture 'self' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+/tmp/taskfold-owner-review-mac-host/Taskfold/Views/AudioPendingPublicationView.swift:125:62: warning: comparing non-optional value of type 'String' to 'nil' always returns true
+    |                                                              `- warning: comparing non-optional value of type 'String' to 'nil' always returns true
+/tmp/taskfold-owner-review-mac-host/Taskfold/Views/KeyRouter.swift:22:106: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used
+   |                                                                                                          `- warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used
+/tmp/taskfold-owner-review-mac-host/Taskfold/Views/Links.swift:227:23: warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+    |                       `- warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+** TEST BUILD SUCCEEDED **

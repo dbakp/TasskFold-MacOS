@@ -1,0 +1,165 @@
+{
+  "scope": "Observed phases; draft phases are Mac-only unless labelled iOS. Counts before failures are not suite passes.",
+  "phases": [
+    {
+      "report": "taskfold-child-structure-commands-canonical-mac-null.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 190,
+      "suitePassed": true,
+      "candidateSHA256": "b9b73a6ee730bb36ad8444aa8aa6ce12a1f1997aa4fd205fb3943f716b4d96ea",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    },
+    {
+      "report": "taskfold-child-structure-commands-canonical-mac.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 144,
+      "suitePassed": false,
+      "candidateSHA256": "b9b73a6ee730bb36ad8444aa8aa6ce12a1f1997aa4fd205fb3943f716b4d96ea",
+      "stage": "sparse Undo, heading creation and result limits",
+      "containerRemoved": true,
+      "error": "root SQL null restored exactly\n+ actual - expected\n\n+ []\n- null"
+    },
+    {
+      "report": "taskfold-child-structure-commands-capacity-ios.json",
+      "repository": "TaskFold-iOS",
+      "successfulChecksBeforeStop": 212,
+      "suitePassed": true,
+      "candidateSHA256": "b6811bf1fe4dd5780e152824d27888161794ed018418a3553dae92dff9df25f9",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    },
+    {
+      "report": "taskfold-child-structure-commands-capacity-mac.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 212,
+      "suitePassed": true,
+      "candidateSHA256": "b6811bf1fe4dd5780e152824d27888161794ed018418a3553dae92dff9df25f9",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    },
+    {
+      "report": "taskfold-child-structure-commands-complete-ios.json",
+      "repository": "TaskFold-iOS",
+      "successfulChecksBeforeStop": 220,
+      "suitePassed": true,
+      "candidateSHA256": "5a3d0bb095dade20a78427bb5a9615718c7acff21e6e36bd54d8878f14b35686",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    },
+    {
+      "report": "taskfold-child-structure-commands-complete-mac.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 220,
+      "suitePassed": true,
+      "candidateSHA256": "5a3d0bb095dade20a78427bb5a9615718c7acff21e6e36bd54d8878f14b35686",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    },
+    {
+      "report": "taskfold-child-structure-commands-draft-mac-behavior.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 115,
+      "suitePassed": false,
+      "candidateSHA256": "b9b73a6ee730bb36ad8444aa8aa6ce12a1f1997aa4fd205fb3943f716b4d96ea",
+      "stage": "concurrent duplicate and stale structure requests",
+      "containerRemoved": true,
+      "error": "expired actor after root wait denied\n+ actual - expected\n\n+ '55P03'\n- '28000'"
+    },
+    {
+      "report": "taskfold-child-structure-commands-draft-mac-legacy.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 166,
+      "suitePassed": true,
+      "candidateSHA256": "b9b73a6ee730bb36ad8444aa8aa6ce12a1f1997aa4fd205fb3943f716b4d96ea",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    },
+    {
+      "report": "taskfold-child-structure-commands-draft-mac-parse.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 18,
+      "suitePassed": false,
+      "candidateSHA256": "b9b73a6ee730bb36ad8444aa8aa6ce12a1f1997aa4fd205fb3943f716b4d96ea",
+      "stage": "insert, exact replay and save-only unrelated edits",
+      "containerRemoved": true,
+      "error": "Unexpected end of JSON input"
+    },
+    {
+      "report": "taskfold-child-structure-commands-draft-mac-races.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 98,
+      "suitePassed": false,
+      "candidateSHA256": "b9b73a6ee730bb36ad8444aa8aa6ce12a1f1997aa4fd205fb3943f716b4d96ea",
+      "stage": "team roles and atomic post-write boundaries",
+      "containerRemoved": true,
+      "error": "restored epoch rejects supported old team completion\n+ actual - expected\n\n+ '22023'\n- 'PT409'"
+    },
+    {
+      "report": "taskfold-child-structure-commands-draft-mac.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 0,
+      "suitePassed": false,
+      "candidateSHA256": "2e2a37f572f719ad4501569c801c3e4c1c51418c58d4dce109e8374f831ad9ce",
+      "stage": "direct candidate SQL",
+      "containerRemoved": true,
+      "error": "syntax error at or near \"position\""
+    },
+    {
+      "report": "taskfold-child-structure-commands-final-ios-own.json",
+      "repository": "TaskFold-iOS",
+      "successfulChecksBeforeStop": 197,
+      "suitePassed": true,
+      "candidateSHA256": "da3f9ddaa299e319b5730c96cac7cd1d09d885722a56922d762b19e9e920cd80",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    },
+    {
+      "report": "taskfold-child-structure-commands-final-ios.json",
+      "repository": "TaskFold-iOS",
+      "successfulChecksBeforeStop": 0,
+      "suitePassed": false,
+      "candidateSHA256": "da3f9ddaa299e319b5730c96cac7cd1d09d885722a56922d762b19e9e920cd80",
+      "stage": null,
+      "containerRemoved": true,
+      "error": "ENOENT: no such file or directory, open '/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/supabase/migrations/20261026121332_task_node_project_adoption_review.sql'"
+    },
+    {
+      "report": "taskfold-child-structure-commands-final-mac.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 197,
+      "suitePassed": true,
+      "candidateSHA256": "da3f9ddaa299e319b5730c96cac7cd1d09d885722a56922d762b19e9e920cd80",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    },
+    {
+      "report": "taskfold-child-structure-commands-verified-ios.json",
+      "repository": "TaskFold-iOS",
+      "successfulChecksBeforeStop": 198,
+      "suitePassed": true,
+      "candidateSHA256": "da3f9ddaa299e319b5730c96cac7cd1d09d885722a56922d762b19e9e920cd80",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    },
+    {
+      "report": "taskfold-child-structure-commands-verified-mac.json",
+      "repository": "TasskFold-MacOS",
+      "successfulChecksBeforeStop": 198,
+      "suitePassed": true,
+      "candidateSHA256": "da3f9ddaa299e319b5730c96cac7cd1d09d885722a56922d762b19e9e920cd80",
+      "stage": "private grants, RLS and final advisors",
+      "containerRemoved": true,
+      "error": ""
+    }
+  ]
+}

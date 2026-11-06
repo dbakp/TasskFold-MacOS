@@ -1,0 +1,69 @@
+{
+  "migration": "20261026104450_task_activity_root_context.sql",
+  "migrationSHA256": "9ed35d72212eff58ebe25cd9ec2da9ddf909bcc70dcf8f34bf1924a2ebb78831",
+  "checks": {
+    "new writer preserves entire existing custody body": true,
+    "old event has no invented type": true,
+    "upgrade preserves every existing event field": true,
+    "ordinary completion keeps original event kind": true,
+    "actual observed root types": true,
+    "only bounded classification metadata": true,
+    "private content absent from context": true,
+    "untracked edit invents no event": true,
+    "heading creation remains creation for old clients": true,
+    "heading classified at creation": true,
+    "creation has no prior occurrence": true,
+    "creation has no prior generation": true,
+    "independent child trigger still records real child": true,
+    "legacy bad heading write stays visibly classified": true,
+    "legacy event kind not rewritten": true,
+    "type-only edit does not fabricate an old event kind": true,
+    "private prior scope not exposed by new metadata": true,
+    "outsider cannot read metadata": true,
+    "actual caller remains actor": true,
+    "collaborator sees same-scope event": true,
+    "revocation still removes read access": true,
+    "prior generation retained independently": true,
+    "next generation retained independently": true,
+    "generation change invents no completion": true,
+    "delete retains actual prior type": true,
+    "delete has no next type or generation": true,
+    "client cannot mutate ledger": true,
+    "private writer not callable": true,
+    "authorized project cascade preserves type annotation": true,
+    "project cascade still records real move": true,
+    "deleted actor becomes unknown": true,
+    "actor deletion retains every event": true,
+    "actor deletion retains root classification": true,
+    "account cascade never resurrects history": true,
+    "official advisors ran": true,
+    "new private trigger has no advisor finding": true
+  },
+  "hostedChanged": false,
+  "serverVersion": 170006,
+  "advisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_task_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_task_access"
+      }
+    ]
+  },
+  "ownedFixtureRemoved": true
+}

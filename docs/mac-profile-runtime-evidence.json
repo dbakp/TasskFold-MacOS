@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-13",
+  "scope": "Mac native local Account -> cloud Account, unsaved name through live sync and normal Quit/relaunch; no product behavior change",
+  "accepted": {
+    "test": "testLiveLocalAccountDirtyProfileSyncAndRelaunchReadOnly",
+    "result": "mac-profile-runtime-v3.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "strictVerifier": "passed",
+    "durationSeconds": 34.717,
+    "rawAttributeGraphCycles": 0,
+    "rawTableReentrancyWarnings": 0,
+    "journey": [
+      "Isolated local workspace; Account sign-in sheet",
+      "Existing disposable continuity account sign-in and metadata name rendered",
+      "Type unsaved profile name without Return or Save Profile",
+      "Sync Now completes; draft remains exact",
+      "Whole cache tables remain exact, including cached project rosters",
+      "Normal Quit/relaunch without local fixture seed",
+      "Saved cloud identity returns; no unsaved draft persisted"
+    ],
+    "serverTablesUnchanged": 14
+  },
+  "attempts": [
+    {
+      "result": "mac-profile-runtime-v1.xcresult",
+      "failed": 1,
+      "scope": "Stopped before app launch",
+      "cause": "Test assumed nullable profile display_name was a string; corrected fixture expectation to include its known sign-in metadata fallback"
+    },
+    {
+      "result": "mac-profile-runtime-v2.xcresult",
+      "failed": 1,
+      "scope": "Successful Account sign-in, before profile editing",
+      "cause": "Test required exactly 14 cache tables, excluding two legitimate cached project rosters. Corrected to require synchronized tables and preserve the whole cache."
+    }
+  ],
+  "visualInspection": {
+    "relaunch": "Account screenshot shows Native Handoff Test, placeholder avatar and readable account/security controls",
+    "afterSync": "Capture is scrolled to Data: zero pending changes and Sync Now are visible; offscreen name retention is proved by native assertion, not screenshot"
+  },
+  "preservation": {
+    "protectedPrimaryFilesExact": 100,
+    "originalIsolatedMacFilesRestoredExact": 28,
+    "retainedIOSFilesExact": 36,
+    "pendingWidgetFingerprintExact": true,
+    "extraTaskfoldTestAppClosed": true,
+    "availableStorageGiBApprox": 94
+  },
+  "limits": [
+    "Historical profile/cloud-restore AttributeGraph cycles have no causal stacks and are not relabeled fixed",
+    "This current native local/cloud/dirty-draft/relaunch flow does not reproduce those warnings; no speculative production fix",
+    "No avatar upload/removal, cloud restore application or concurrent profile mutation in this case",
+    "Mac-only native acceptance; iOS receives scoped evidence, not a new native test claim",
+    "No real Todoist requests, backend schema changes or release-signing changes"
+  ],
+  "captures": [
+    {
+      "path": "/private/tmp/taskfold-profile-runtime-captures-v3/8E8B0A99-05BB-41EF-BBB7-EE35D966D454.png",
+      "sha256": "19a926b503c33b600fae63a81aa7258f7d5f41d5bd82703b45ec7ddc844e8dec",
+      "inspected": true
+    },
+    {
+      "path": "/private/tmp/taskfold-profile-runtime-captures-v3/1D3233DA-4087-4268-B3C9-E7A306A9186E.png",
+      "sha256": "1f1f53c71efd9fc3af33fcfeee75b174485fd8437a121c88fec4a300d4d5afdf",
+      "inspected": true
+    }
+  ]
+}

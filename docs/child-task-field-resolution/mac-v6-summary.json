@@ -1,0 +1,76 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "isolated-mac-host",
+        "deviceName": "My Mac",
+        "modelName": "MacBook Pro",
+        "osBuildNumber": "25G83",
+        "osVersion": "26.6.2",
+        "platform": "macOS"
+      },
+      "expectedFailures": 0,
+      "failedTests": 4,
+      "passedTests": 0,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+  "expectedFailures": 0,
+  "failedTests": 4,
+  "finishTime": 1793302696.813,
+  "passedTests": 0,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1793302630.564,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "XCTAssertTrue failed - Attributes: Application, 0xba64af340, pid: 69315, title: 'Taskfold Workflow Test', Disabled\nElement subtree:\n \u2192Application, 0xba64af340, pid: 69315, title: 'Taskfold Workflow Test', Disabled\n    Window (Main), 0xba64ade00, {{338.0, 264.0}, {1380.0, 840.0}}, identifier: 'SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<Taskfold.ChildFieldNativeFixtureView, Taskfold.AudioOwnerReviewNativeFixtureView>, SwiftUI._ConditionalContent<Taskfold.AudioConversationNativeFixtureView, Taskfold.AudioCommentNativeFixtureView>>, SwiftUI._C', title: 'Subtask acceptance', Disabled\n      Group, 0xba64aee40, {{338.0, 264.0}, {1380.0, 840.0}}, Disabled\n        ScrollView, 0xba64af0c0, {{338.0, 296.0}, {1380.0, 808.0}}, Disabled\n          Outline, 0xba64adf40, {{337.0, 295.0}, {1382.0, 810.0}}\n            OutlineRow, 0xba6933c00, {{338.0, 306.0}, {1380.0, 24.0}}, Disabled\n              Cell, 0xba6933340, {{348.0, 306.0}, {1360.0, 24.0}}, Keyboard Focused\n                StaticText, 0xba69312c0, {{354.0, 310.0}, {207.5, 16.0}}, value: Synthetic child fi...\n            OutlineRow, 0xba6932e40, {{338.0, 330.0}, {1380.0, 32.0}}, Disabled\n              Cell, 0xba6931e00, {{348.0, 330.0}, {1360.0, 32.0}}, Keyboard Focused\n                Button, 0xba65ac000, {{354.0, 334.0}, {147.0, 24.0}}, identifier: 'childNativeEditor', label: 'Open subtask editor'\n            OutlineRow, 0xba65ac140, {{338.0, 362.0}, {1380.0, 32.0}}, Disabled\n              Cell, 0xba65ac280, {{348.0, 362.0}, {1360.0, 32.0}}, Keyboard Focused\n                Button, 0xba65ac3c0, {{354.0, 366.0}, {151.0, 24.0}}, identifier: 'childNativeRecovery', label: 'Open saved changes'\n            OutlineRow, 0xba65ac500, {{338.0, 394.0}, {1380.0, 32.0}}, Disabled\n              Cell, 0xba65ac640, {{348.0, 394.0}, {1360.0, 32.0}}, Keyboard Focused\n                Button, 0xba65ac780, {{354.0, 398.0}, {184.5, 24.0}}, identifier: 'childNativeForeignEdit', label: 'Change test title on server'\n            OutlineRow, 0xba65ac8c0, {{338.0, 426.0}, {1380.0, 32.0}}, Disabled\n              Cell, 0xba65aca00, {{348.0, 426.0}, {1360.0, 32.0}}, Keyboard Focused\n                Button, 0xba65acb40, {{354.0, 430.0}, {83.0, 24.0}}, identifier: 'childNativeConnection', label: 'Go offline'\n            OutlineRow, 0xba65acc80, {{338.0, 458.0}, {1380.0, 40.0}}, Disabled\n              Cell, 0xba65acdc0, {{348.0, 458.0}, {1360.0, 40.0}}, Keyboard Focused\n                StaticText, 0xba65acf00, {{354.0, 462.0}, {1334.5, 32.0}}, identifier: 'childNativeProbe', value: queued=0 attempted...\n            TableColumn, 0xba65ad040, {{348.0, 296.0}, {1360.0, 808.0}}, identifier: 'ListColumn', Disabled\n      Button, 0xba65ad180, {{346.0, 272.0}, {16.0, 16.0}}, identifier: '_XCUI:CloseWindow', Disabled\n      Button, 0xba65ad2c0, {{392.0, 272.0}, {16.0, 16.0}}, identifier: '_XCUI:ZoomWindow'\n        Group, 0xba65ad400, {{393.0, 273.0}, {14.0, 14.0}}, Disabled\n          Group, 0xba65ad540, {{393.0, 273.0}, {14.0, 14.0}}, Disabled\n      Button, 0xba65ad680, {{369.0, 272.0}, {16.0, 16.0}}, identifier: '_XCUI:MinimizeWindow'\n      StaticText, 0xba65ad7c0, {{420.0, 272.0}, {136.0, 16.0}}, value: Subtask acceptance\n      Sheet, 0xba65ad900, {{738.0, 341.0}, {580.0, 685.0}}, Disabled\n        Group, 0xba65ada40, {{738.0, 341.0}, {580.0, 685.0}}, Disabled\n          StaticText, 0xba65adb80, {{786.0, 357.5}, {152.5, 16.0}}, value: Saved subtask chan...\n          ScrollView, 0xba65adcc0, {{738.0, 388.5}, {580.0, 572.5}}, Disabled\n            Outline, 0xba65ade00, {{737.0, 387.5}, {582.0, 574.5}}\n              OutlineRow, 0xba65adf40, {{738.0, 398.5}, {580.0, 0.0}}, Disabled\n                Cell, 0xba65ae080, {{748.0, 398.5}, {560.0, 0.0}}, Keyboard Focused\n                  Group, 0xba65ae1c0, {{754.0, 388.5}, {548.0, 0.0}}, Disabled\n              OutlineRow, 0xba65ae300, {{738.0, 398.5}, {580.0, 24.0}}, Disabled\n                Cell, 0xba65ae440, {{748.0, 398.5}, {560.0, 24.0}}, Keyboard Focused\n                  StaticText, 0xba65ae580, {{754.0, 402.5}, {359.0, 16.0}}, value: Review saved chang...\n              OutlineRow, 0xba65ae6c0, {{738.0, 442.5}, {580.0, 0.0}}, Disabled\n                Cell, 0xba65ae800, {{748.0, 442.5}, {560.0, 0.0}}, Keyboard Focused\n                  Group, 0xba65ae940, {{754.0, 442.5}, {548.0, 0.0}}, Disabled\n              OutlineRow, 0xba65aea80, {{738.0, 442.5}, {580.0, 24.0}}, Disabled\n                Cell, 0xba65aebc0, {{748.0, 442.5}, {560.0, 24.0}}, Keyboard Focused\n                  StaticText, 0xba65aed00, {{754.0, 446.5}, {417.0, 16.0}}, identifier: 'childFieldRecoveryStatus', value: The result couldn\u2019...\n              OutlineRow, 0xba65aee40, {{738.0, 486.5}, {580.0, 0.0}}, Disabled\n                Cell, 0xba65aef80, {{748.0, 486.5}, {560.0, 0.0}}, Keyboard Focused\n                  Group, 0xba65af0c0, {{754.0, 486.5}, {548.0, 0.0}}, Disabled\n              OutlineRow, 0xba65af200, {{738.0, 486.5}, {580.0, 25.0}}, Disabled\n                Cell, 0xba65af340, {{748.0, 486.5}, {560.0, 25.0}}, Keyboard Focused\n                  StaticText, 0xba65af480, {{755.0, 490.5}, {250.0, 16.0}}, identifier: 'childFieldPhase-52ac95d6-55d1-4c25-9390-ac7501fde54a', value: Unconfirmed \u00b7 orig...\n              OutlineRow, 0xba65af5c0, {{738.0, 511.5}, {580.0, 41.0}}, Disabled\n                Cell, 0xba65af700, {{748.0, 511.5}, {560.0, 41.0}}, Keyboard Focused\n                  StaticText, 0xba65af840, {{754.0, 515.5}, {21.5, 13.0}}, value: Title\n                  StaticText, 0xba65af980, {{753.0, 531.5}, {177.0, 18.0}}, identifier: 'childFieldValue-52ac95d6-55d1-4c25-9390-ac7501fde54a-title', value: Already applied ch...\n              OutlineRow, 0xba65afac0, {{738.0, 552.5}, {580.0, 32.0}}, Disabled\n                Cell, 0xba65afc00, {{748.0, 552.5}, {560.0, 32.0}}, Keyboard Focused\n                  Button, 0xba65afd40, {{754.0, 556.5}, {176.0, 24.0}}, identifier: 'sendChildField-52ac95d6-55d1-4c25-9390-ac7501fde54a', label: 'Retry original request'\n              OutlineRow, 0xba65afe80, {{738.0, 584.5}, {580.0, 33.0}}, Disabled\n                Cell, 0xba6e10000, {{748.0, 584.5}, {560.0, 33.0}}, Keyboard Focused\n                  Button, 0xba6e10140, {{754.0, 588.5}, {220.0, 25.0}}, identifier: 'compareChildField-52ac95d6-55d1-4c25-9390-ac7501fde54a', label: 'Compare with current values'\n              OutlineRow, 0xba6e10280, {{738.0, 617.5}, {580.0, 32.0}}, Disabled\n                Cell, 0xba6e103c0, {{748.0, 617.5}, {560.0, 32.0}}, Keyboard Focused\n                  Button, 0xba6e10500, {{754.0, 621.5}, {159.0, 24.0}}, identifier: 'discardChildField-52ac95d6-55d1-4c25-9390-ac7501fde54a', label: 'Discard saved request'\n              TableColumn, 0xba6e10640, {{748.0, 388.5}, {560.0, 572.5}}, identifier: 'ListColumn', Disabled\n            Group, 0xba6e10780, {{754.0, 388.5}, {548.0, 0.0}}, Disabled\n          Button, 0xba6e108c0, {{1234.0, 982.0}, {64.0, 24.0}}, label: 'Done'\n        Sheet, 0xba6e10a00, {{793.0, 407.0}, {470.0, 552.0}}, Disabled\n          Group, 0xba6e10b40, {{793.0, 407.0}, {470.0, 552.0}}, Disabled\n            StaticText, 0xba6e10c80, {{841.0, 423.5}, {138.0, 16.0}}, value: Review saved change\n            ScrollView, 0xba6e10dc0, {{793.0, 454.5}, {470.0, 439.5}}, Disabled\n              Group, 0xba6e10f00, {{813.0, 474.5}, {430.0, 150.0}}\n                StaticText, 0xba6e11040, {{823.0, 484.5}, {410.0, 32.0}}, value: Choose which saved...\n                StaticText, 0xba6e11180, {{823.0, 537.5}, {410.0, 32.0}}, value: Before saving a re...\n                Button, 0xba6e112c0, {{823.0, 590.5}, {192.5, 24.0}}, identifier: 'closeOriginalChildField', label: 'Close original request\u2026'\n              StaticText, 0xba6e11400, {{823.0, 654.5}, {28.0, 16.0}}, label: 'Title'\n              Group, 0xba6e11540, {{813.0, 680.5}, {430.0, 139.0}}\n                StaticText, 0xba6e11680, {{823.0, 690.5}, {37.0, 13.0}}, value: Current\n                StaticText, 0xba6e117c0, {{822.0, 710.5}, {177.0, 18.0}}, value: Already applied ch...\n                StaticText, 0xba6e11900, {{823.0, 735.5}, {91.5, 13.0}}, value: Your saved change\n                StaticText, 0xba6e11a40, {{822.0, 755.5}, {177.0, 18.0}}, value: Already applied ch...\n                StaticText, 0xba6e11b80, {{825.5, 793.5}, {125.0, 16.0}}, value: Already matches\n              Group, 0xba6e11cc0, {{813.0, 829.5}, {430.0, 44.0}}\n                Button, 0xba6e11e00, {{823.0, 839.5}, {186.5, 24.0}}, identifier: 'refreshChildComparison', label: 'Refresh current values'\n            Button, 0xba6e11f40, {{1179.0, 915.0}, {64.0, 24.0}}, label: 'Done'\n          Sheet, 0xba6e12080, {{898.0, 574.0}, {260.0, 220.0}}, identifier: '_NS:87', label: 'alert', Keyboard Focused, Disabled\n            StaticText, 0xba6e121c0, {{919.0, 593.0}, {218.0, 18.0}}, identifier: '_NS:74', value: Close the original...\n            StaticText, 0xba6e12300, {{919.0, 619.0}, {218.0, 82.0}}, identifier: '_NS:58', value: The service will p...\n            Button, 0xba6e12440, {{913.0, 715.0}, {230.0, 30.0}}, identifier: 'action-button-1', label: 'Close original request'\n            Button, 0xba6e12580, {{913.0, 749.0}, {230.0, 30.0}}, identifier: 'action-button-2', label: 'Cancel'\n[Unrelated macOS menu subtree omitted]\n    TouchBar, 0xba6e29040, {{80.0, 0.0}, {685.0, 30.0}}, Disabled\n      Button, 0xba6e29180, {{321.5, -1.0}, {218.0, 32.0}}, title: 'Cancel'\n      Button, 0xba6e292c0, {{545.5, -1.0}, {218.0, 32.0}}, title: 'Close original request'\nPath to element:\n \u2192Application, 0xba64af340, pid: 69315, title: 'Taskfold Workflow Test', Disabled\nQuery chain:\n \u2192Find: Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'\n  Output: {\n    Application, 0xba6e29400, pid: 69315, title: 'Taskfold Workflow Test', Disabled\n  }\n",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 1,
+      "testIdentifierString": "TaskfoldMacUITests/testChildFieldsNativeCloseRecoversAlreadyAppliedOriginal()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testChildFieldsNativeCloseRecoversAlreadyAppliedOriginal",
+      "testName": "testChildFieldsNativeCloseRecoversAlreadyAppliedOriginal()"
+    },
+    {
+      "failureText": "XCTAssertEqual failed: (\"2\") is not equal to (\"1\")",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 2,
+      "testIdentifierString": "TaskfoldMacUITests/testChildFieldsNativeConflictReplacementAndColdProof()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testChildFieldsNativeConflictReplacementAndColdProof",
+      "testName": "testChildFieldsNativeConflictReplacementAndColdProof()"
+    },
+    {
+      "failureText": "XCTAssertEqual failed: (\"2\") is not equal to (\"1\")",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 3,
+      "testIdentifierString": "TaskfoldMacUITests/testChildFieldsNativeDistinctSavedValues()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testChildFieldsNativeDistinctSavedValues",
+      "testName": "testChildFieldsNativeDistinctSavedValues()"
+    },
+    {
+      "failureText": "XCTAssertEqual failed: (\"2\") is not equal to (\"1\")",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 4,
+      "testIdentifierString": "TaskfoldMacUITests/testChildFieldsNativeLostCloseReplyAndColdProof()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testChildFieldsNativeLostCloseReplyAndColdProof",
+      "testName": "testChildFieldsNativeLostCloseReplyAndColdProof()"
+    }
+  ],
+  "title": "Test - Taskfold",
+  "topInsights": [
+    {
+      "category": "Common Failures",
+      "impact": "75% of failures",
+      "text": "3 runs of 3 tests failed with XCTAssertEqual failed: (\"2\") is not equal to (\"1\")"
+    }
+  ],
+  "totalTestCount": 4
+}

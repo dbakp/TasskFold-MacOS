@@ -1,0 +1,116 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "0DEF9828-5D4A-4976-B68D-8E0900E5667F.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "CSV field visibility within the actual sheet_0_69C04D2C-D2D0-4F15-B29A-A0D624848EAA.json",
+        "timestamp" : 1793176357.874
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "8BA99F52-7B24-4E44-A9AB-00A986B692A7.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 4 field 4_0_5DC9CDA7-BC8B-4C76-A1C3-122DC7643DB8.png",
+        "timestamp" : 1793176357.872
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "07CAD83E-7023-40C1-8EAB-85594BDDE709.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 4 field 0_0_1A53339A-F854-43AE-8892-9392F1335648.png",
+        "timestamp" : 1793176312.851
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "2EDDF4DC-F561-467E-B4BC-73E038651B84.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 3 field 5_0_D0EC73D5-42B8-436C-A04B-4FE0829F9BC0.png",
+        "timestamp" : 1793176297.044
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "1A419933-AAD6-4D16-BCDF-22C6BAE5915A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 3 field 0_0_EB1EDE3E-71CC-4F6D-8549-CDB2568265DF.png",
+        "timestamp" : 1793176270.542
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "CDB0A24C-CE2D-4AF5-ACAC-A5611E0A2540.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 2 field 5_0_2C7F1896-12B8-43A0-A92B-167437CB78C0.png",
+        "timestamp" : 1793176259.558
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "5428B650-FD07-4172-89C5-5E6ECB4B8DE2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 2 field 0_0_1841CAF5-C61B-44AA-9166-6A666C11E40D.png",
+        "timestamp" : 1793176232.65
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "4C543B8B-DC3A-467C-A967-4D532B72BF44.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 1 field 5_0_BE088B9F-9020-4DE8-9A77-AF504B257B31.png",
+        "timestamp" : 1793176226.408
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "5F49E8B0-8501-4202-96F3-3401A7DAF864.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 1 field 0_0_99F9C224-FF6B-4568-BBBE-0177BB4F0921.png",
+        "timestamp" : 1793176192.819
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "7DB52125-47B4-48F2-BCA5-30AE81249A47.csv",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "CSV delivered by Share to local Files_0_70F99D60-FEAA-411A-8CC2-1F1B0554C9AE.csv",
+        "timestamp" : 1793176181.186
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "1F43D03D-CC46-4C4B-873D-CF5045BA10E0.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "CSV Share local Files destination_0_CDB6C2B2-7E31-4EED-8382-742838A91D1A.png",
+        "timestamp" : 1793176175.56
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "97FE892D-2CED-4C27-BE1D-809504D63ED2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Task CSV controls at largest dark text_0_45CC244F-9EDE-4BF5-9637-5771730E1122.png",
+        "timestamp" : 1793176129.577
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testTaskCSVLargestTextShareToLocalFilesReadbackAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testTaskCSVLargestTextShareToLocalFilesReadbackAndColdReturn"
+  }
+]

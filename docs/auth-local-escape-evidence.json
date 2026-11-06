@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-12",
+  "scope": "Safely leave a pending native sign-in for local work and preserve that work after normal relaunch",
+  "supersedes": "The disabled Use locally behavior in auth-attempt-isolation-evidence.json. Existing obsolete-response guards remain in force.",
+  "changes": [
+    "Keep local entry available while authentication is pending; await serial credential clearing before starting local mode",
+    "Skip Keychain clearing for ordinary local entry with no pending authentication or loaded session",
+    "Block duplicate sign-in submissions during authentication or local transition",
+    "Clear the password before leaving the form; the initial iPhone run otherwise presented Save Password over local task capture"
+  ],
+  "core": {
+    "mac": {
+      "accountTransportCases": 24,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/taskfold-auth-local-mac-core.log"
+    },
+    "ios": {
+      "accountTransportCases": 24,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/taskfold-auth-local-ios-core.log"
+    }
+  },
+  "native": {
+    "mac": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-auth-local-native-v4.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    "ios": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-auth-local-native-v4.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    }
+  },
+  "acceptance": [
+    "Controlled HTTP transport holds a synthetic example.invalid sign-in locally; no credential reaches an external service",
+    "Native local control remains enabled during sign-in; choosing it opens the local workspace",
+    "Create a task through the real composer, then normal Mac Quit / iPhone termination and ordinary launch without auth-test flags",
+    "The task remains visible and the entire persisted workspace dictionary equals the saved dictionary after relaunch",
+    "Six final captures individually visually inspected"
+  ],
+  "builds": {
+    "mac": "Independent signed Debug build-for-testing succeeds; deep strict app signature passes",
+    "ios": "Independent iOS Simulator Debug build-for-testing succeeds",
+    "release": "Not repeated for this UI-only checkpoint. Earlier Release receipts predate this local-entry change; distribution signing remains user-deferred."
+  },
+  "failedOrSupersededRuns": [
+    "iPhone v1: Save Password prompt obstructed task capture; password clearing added in product",
+    "iPhone v2: task saved, but driver queried StaticText instead of the exposed Button; role corrected",
+    "iPhone v3: passes, superseded only by final external-cleanup driver",
+    "Mac v1/v2: workflow passes but runner fixture-write errors were silently ignored",
+    "Mac v3: strengthened cleanup exposes sandbox error513. Runner can read but cannot write the other app container. Removed cross-container writes; final test leaves app signed out for external fixture cleanup"
+  ],
+  "cleanup": {
+    "macSyntheticLocalCacheRemoved": true,
+    "macSyntheticTasks": 8,
+    "macLogicalCacheBytesRemoved": 9713,
+    "note": "Runner cleanup failed with sandbox error513; externally removed only the verified synthetic isolated local cache. No claim of original cache byte restoration.",
+    "protectedExact": 100,
+    "mainAppsAndRunners": 0,
+    "disposableSimulator": "Exact isolated app and runner uninstalled; device shut down",
+    "installedWidgetHosts": "Preserved",
+    "releaseProductsPrunedThisCheckpoint": 0
+  },
+  "captures": {
+    "mac-pending.png": "b939593889c890115b8915aa5eb557eca49b2478c97fd41ca966475a9a378ff9",
+    "mac-saved.png": "2cce949388f1c5c138c6ca29485b4dde1865dae4c5434cab2bc7295be2588f4b",
+    "mac-relaunch.png": "478a894f7835c26367b2e3d008eee513de8bcfefeebc66621e3472116a2488bb",
+    "iphone-pending.png": "4c07688c034cdc777a1282d7669194fd54fc9499c8639a824c9b10635fe27d51",
+    "iphone-saved.png": "a425f1561a485456784de3bf929715d69382fd622d11e610bd27e10cbf8f588c",
+    "iphone-relaunch.png": "516278461e5dd308c0c7ec3328d783bdde2db8c02dd4b6458288d70098be21b7"
+  },
+  "limitations": [
+    "Controlled pending transport is not real Google/external OAuth or remote backup-provider failure acceptance",
+    "No native Keychain-denial prompt tested; account transport regressions cover failed clearing separately",
+    "No new iPad, installed Mac widget-host or spoken VoiceOver acceptance",
+    "Broader P0 remains active; no new real service or Todoist operation performed"
+  ],
+  "sourceHashes": {
+    "Taskfold/Views/AuthView.swift": "28b7b5af7d81f0a9eb8eb6284ad5cc936fb944a5560e764b9e7302c6ba156987",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "e4088151d19e91b62620f4ab9b99e6a869584a09aae8ae0b13824f8fc78b84ae"
+  }
+}

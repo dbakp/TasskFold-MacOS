@@ -1,0 +1,27 @@
+{
+  "method": "Direct computer-use walkthrough after authorized Terminal launch",
+  "launch": {
+    "time": "2026-10-30T18:21:57.682526",
+    "appSHA256": "b790371d1fa38a21fa9d9dce14b01bc44dc026f4f46b3248a5994ed5aafca380",
+    "args": [
+      "--uitesting",
+      "--team-editor-testing",
+      "--child-fields-native",
+      "--child-fields-native-reset",
+      "--child-adoption-empty-cache",
+      "-ApplePersistenceIgnoreState",
+      "YES"
+    ],
+    "explicitTerminalLaunchAuthorization": true,
+    "processAbsentBeforeLaunch": true
+  },
+  "observed": [
+    "Home showed current=hidden with empty/unreadable fixture cache",
+    "Open saved upgrades listed Native child workspace from metadata",
+    "Selecting it loaded the three original nested subtasks and the explicit Upgrade action",
+    "Review heading incorrectly said Task unavailable; no upgrade performed in this preliminary round"
+  ],
+  "nativeAccepted": false,
+  "fix": "Review heading now uses current reviewed name; native regression asserts that exact heading",
+  "appClosedAfterCheck": true
+}

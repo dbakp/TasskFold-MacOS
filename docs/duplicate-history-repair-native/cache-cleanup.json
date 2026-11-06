@@ -1,0 +1,14 @@
+{
+  "removed": [
+    {
+      "removed": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/.build",
+      "bytes": 557964866,
+      "kind": "generated unit-test build cache; prior 117-case evidence retained; native test hosts/products retained"
+    },
+    {
+      "removed": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/.build",
+      "bytes": 621046558,
+      "kind": "completed generated unit-test build cache; prior client evidence retained"
+    }
+  ]
+}

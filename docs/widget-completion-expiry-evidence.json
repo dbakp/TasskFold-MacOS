@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-13",
+  "issue": "Completed acknowledgement remains visible in installed My list after last task completion",
+  "rootCause": "Completion expiry was appended to WindowProvider, which never displays the acknowledgement. ListProvider, which displays it, scheduled only ordinary list transitions.",
+  "fix": "Independently owned My list providers now use completionTimelineDates: retain list day/clock transitions and add the visible account/list-scoped acknowledgement expiry. Remove the unused acknowledgement expiry from A small window.",
+  "durationSeconds": 8,
+  "verification": {
+    "macWidgetListTests": 20,
+    "iosWidgetListTests": 20,
+    "failures": 0,
+    "newTests": [
+      "Last-task feedback has an expiry entry and becomes invisible exactly at the boundary; ordinary list transitions remain",
+      "Wrong account/list, unselected list, future feedback and already elapsed feedback do not add an expiry entry"
+    ],
+    "actualProviderWiringInspected": true,
+    "sourceCopiesByteIdentical": true,
+    "builds": {
+      "taskfold-expiry-mac-debug.log": {
+        "sha256": "46aa4837585f95fd76f76e4e10370c47b9cd0e2bd66d062098170250b4ad929c",
+        "result": "BUILD SUCCEEDED",
+        "warnings": [
+          "warning: ONLY_ACTIVE_ARCH=YES requested with multiple ARCHS and no active architecture could be computed; building for all applicable architectures (in target 'TaskfoldWidgets' from project 'Taskfold')"
+        ]
+      },
+      "taskfold-expiry-mac-release.log": {
+        "sha256": "07b8952eec3bfd68a176bb80085e7ca566876a91b36f7ee3151476009cd21a9b",
+        "result": "BUILD SUCCEEDED",
+        "warnings": []
+      },
+      "taskfold-expiry-ios-debug.log": {
+        "sha256": "86257615a5d2d4ce55ea502cf79573aa95f9c56ebb7c545beee2933630bd5975",
+        "result": "BUILD SUCCEEDED",
+        "warnings": []
+      },
+      "taskfold-expiry-ios-release.log": {
+        "sha256": "77cba0d3d9dff0a134d3261b73ced77e1f0fa4cc5b71d4277363e085dd7a2ff4",
+        "result": "BUILD SUCCEEDED",
+        "warnings": []
+      }
+    }
+  },
+  "acceptanceLimit": "Installed medium iPhone automatic expiry is accepted on iOS 26.2 and properly team-signed iOS 26.5 by the named native journeys. Installed Mac My list last-task automatic clear is accepted by human observation with durable completed-state verification after normal Quit. No exact duration or Mac relaunch claim.",
+  "cleanup": {
+    "newUnsignedBuildProductsAndIntermediatesPruned": true,
+    "protectedFilesExact": 100,
+    "taskfoldMainSessionsOpen": false,
+    "freeGiB": 96.8
+  },
+  "productionSigning": "Not changed; distribution remains user-deferred",
+  "installedAttempt20261013": {
+    "status": "FAILED BEFORE COMPLETION; automatic expiry remains unaccepted",
+    "evidence": "widget-selection-registration-evidence.json",
+    "runs": 2
+  },
+  "installedAcceptance20261013": {
+    "resultBundle": "ios-widget-expiry-26-2-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "evidence": "widget-configuration-control-evidence.json",
+    "scope": "Installed medium iPhone My list, last-task completion, automatic clear without dismiss, unrelated task preservation and completed-state normal relaunch on fresh iOS 26.2 Simulator"
+  },
+  "installedAcceptanceIOS26_5": {
+    "evidence": "widget-team-signing-evidence.json",
+    "resultBundle": "ios-widget-team-signed-expiry-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0
+  },
+  "installedAcceptanceMac20261013": {
+    "date": "2026-10-13",
+    "scope": "Installed Mac My list last-task completion acknowledgement automatically clears to All clear without dismiss",
+    "method": "Human observation of the existing isolated desktop widget; read-only durable cache verification before and after normal app Quit",
+    "host": "Taskfold Widget Host Test",
+    "bundleIdentifier": "com.dbakp.taskfold.mac.p0widgethosts",
+    "configuration": {
+      "list": "Widget Studio",
+      "task": "Sketch widget concept"
+    },
+    "setupFinding": "The widget was still configured for the earlier list. User selected Widget Studio and confirmed the new task appeared; no rebuild, replacement or reseeding occurred.",
+    "humanReport": "It clears automatically to All clear",
+    "savedResult": {
+      "taskID": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee04",
+      "completed": true,
+      "completedAt": "2026-10-13T20:10:56Z",
+      "completionVersion": 1,
+      "pendingMutations": 0,
+      "cacheSHA256": "48e5f7128b39c30654634e4b0f750685fb6c2437b6e351a5ada5d1bddfcd7b32"
+    },
+    "cleanup": {
+      "normalQuit": true,
+      "remainingTaskfoldMainProcesses": 0,
+      "installedWidgetAndBuildRetained": true
+    },
+    "limits": [
+      "No measured exact duration claim",
+      "No normal relaunch performed in this observation",
+      "Does not establish other Mac widget kinds, privacy, account transitions or distribution acceptance"
+    ]
+  }
+}

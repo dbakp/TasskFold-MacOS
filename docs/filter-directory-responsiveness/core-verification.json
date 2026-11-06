@@ -1,0 +1,20 @@
+{
+  "platform": "mac",
+  "tests": 109,
+  "passed": 108,
+  "skipped": 1,
+  "failures": 0,
+  "focusedNewTests": 6,
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectMemberReads.swift": "42646cb9c8da6eda2106358a65d083e76e5bd099eb91a9d769a6e8873259fc3e",
+    "Taskfold/Core/Filters.swift": "9b13361359443c94da2eb089aaea52dca8e353a69fff4dadf211fdc6e61f97c7",
+    "Taskfold/Core/Store.swift": "f3891794a3e9d872e558afd9edf920b566fa98e45f42e0f95140d5864f812451",
+    "Taskfold/Views/SavedViews.swift": "d1d1296fac4330e02309090017e283d1ecbab88db938b4d184a587457627ba39",
+    "TaskfoldTests/ProjectMemberReadsTests.swift": "5bc0e11e9bdfdf39fba5f4d15dbc359a233d9560d4d6c89bf22e1d98e482c1a2"
+  },
+  "liveDirectoryAccepted": false,
+  "nativeControlsAccepted": false,
+  "physicalSmoothnessAccepted": false,
+  "testFixtureRaceFixed": true,
+  "productionRPCUnchanged": true
+}

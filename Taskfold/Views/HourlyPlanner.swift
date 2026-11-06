@@ -17,22 +17,26 @@ struct HourlyPlannerView: View {
         #endif
     }
     let day: Date
-    let tasks: [Record]
+    let work: ProductiveTaskReading
+    private var tasks: [Record] { work.presentation }
     var calendarHeader: AnyView? = nil
     @State private var busy = CalendarBusyStore.shared
     @State private var settings = false
     @State private var largeTextTimeline = false
-    private var usesAgenda: Bool { textSize.isAccessibilitySize && !largeTextTimeline }
+    @State private var preferList = false
+    @State private var selectedEvent:PlannerCalendarRequest?
+    private var usesAgenda: Bool { preferList || (textSize.isAccessibilitySize && !largeTextTimeline) }
+    private var allDayEvents:[PlannerEvent] {events.filter{$0.allDay && $0.start<bounds.end && $0.end>bounds.start}.sorted{$0.start == $1.start ? $0.id<$1.id:$0.start<$1.start}}
+    private func changeLayout() {if usesAgenda {preferList=false;largeTextTimeline=textSize.isAccessibilitySize} else {preferList=true;largeTextTimeline=false}}
     private var events: [PlannerEvent] { busy.events }
-    private var hours: WorkingHours { store.workingHours }
+    private var hours: WorkingHours? { store.workingHours }
     let open: (Record) -> Void
     let complete: (Record) -> Void
     let save: (Record, [String: JSON]) -> Bool
-    let undo: () -> Void
-    let undoDepth: Int
+    let undo: (EditHistoryRequest) -> Bool
     @State private var request: PlannerScheduleRequest?
     @State private var feedback: String?
-    @State private var feedbackDepth: Int?
+    @State private var feedbackRequest: EditHistoryRequest?
     @State private var error: String?
     @State private var allDayRequest = 0
     @State private var timelineRequest: Int?
@@ -44,10 +48,13 @@ struct HourlyPlannerView: View {
     private var bounds: DateInterval { calendar.dateInterval(of: .day, for: day)! }
     private var blocks: [PlannerBlock] { TaskPlanner.blocks(tasks, on: day) }
     private var allDay: [Record] { TaskPlanner.allDay(tasks, on: day) }
-    private var capacity: PlannerCapacity { TaskPlanner.capacity(tasks, events: events, on: day, hours: hours) }
+    private var capacity: PlannerCapacity { TaskPlanner.capacity(tasks, events: events, on: day, hours: hours, reading: work) }
     private func clock(_ date: Date) -> String { date.formatted(.dateTime.hour().minute()) }
+    private func showCalendar(_ event:PlannerEvent) {
+        selectedEvent=PlannerCalendarRequest(eventID:event.id,workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))
+    }
     private func choose(_ task: Record?, at start: Date? = nil) {
-        request = PlannerScheduleRequest(task: task, start: start ?? task.flatMap { TaskPlanning.start($0) } ?? calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day)
+        request = PlannerScheduleRequest(task: task, start: start ?? task.flatMap { TaskPlanning.start($0) } ?? calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day, workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, roots: store.activeTasks)
     }
     var body: some View {
         VStack(spacing: 0) {
@@ -73,9 +80,11 @@ struct HourlyPlannerView: View {
                     reader.scrollTo(summaryScrolls ? "summary" : "hour-\(initialHourIndex)", anchor: .top)
                 }
                 .onChange(of: TaskPlanner.dayKey(day)) { _, _ in reader.scrollTo(summaryScrolls ? "summary" : "hour-\(initialHourIndex)", anchor: .top) }
+                .onChange(of:usesAgenda) { _,_ in
+                    reader.scrollTo(summaryScrolls ? "summary":usesAgenda ? "all-day":"hour-\(initialHourIndex)",anchor:.top)
+                }
                 .onChange(of: allDayRequest) { _, _ in
-                    if let first = allDay.first { reader.scrollTo("all-day-action-" + first.id, anchor: .center) }
-                    else { reader.scrollTo("all-day", anchor: .top) }
+                    reader.scrollTo("all-day", anchor: .top)
                 }
                 .onChange(of: timelineRequest) { _, index in if !usesAgenda, let index { reader.scrollTo("hour-\(index)", anchor: .top) } }
                 .onChange(of: agendaRequest) { _, id in if usesAgenda, let id { reader.scrollTo("agenda-" + id, anchor: .top) } }
@@ -84,7 +93,7 @@ struct HourlyPlannerView: View {
                 HStack {
                     Text(feedback).font(.callout).lineLimit(3)
                     Spacer()
-                    if feedbackDepth == undoDepth { Button("Undo") { undo(); self.feedback = nil; feedbackDepth = nil }.accessibilityIdentifier("plannerUndo") }
+                    if let request = feedbackRequest, store.canApplyHistory(request) { Button("Undo") { if undo(request) { self.feedback = nil; feedbackRequest = nil } }.accessibilityIdentifier("plannerUndo") }
                     Button { self.feedback = nil } label: { Image(systemName: "xmark") }.accessibilityLabel("Dismiss scheduling message")
                 }.padding(12).background(.regularMaterial)
             }
@@ -95,13 +104,15 @@ struct HourlyPlannerView: View {
             busy.bind(account: store.signedIn ? store.userID : "")
             await busy.refresh(on: day)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged)) { _ in Task { await busy.refresh(on: day) } }
-        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await busy.refresh(on: day) } }
+        .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged).receive(on: DispatchQueue.main)) { _ in Task { await busy.refresh(on: day) } }
+        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await busy.refresh(on: day) } }
         .onChange(of: phase) { _, value in if value == .active { Task { await busy.refresh(on: day) } } }
         .sheet(isPresented: $settings) { PlannerSettingsView(busy: busy) }
+        .sheet(item:$selectedEvent) {request in PlannerCalendarDetails(request:request,busy:busy)}
         .sheet(item: $request) { request in
-            PlannerSchedulingSheet(request: request, tasks: tasks, events: events) { task, fields in
-                if apply(task, fields: fields, message: "Scheduled") { self.request = nil }
+            PlannerSchedulingSheet(request: request, events: events) { task, fields in
+                let saved = apply(task, fields: fields, message: "Scheduled")
+                if saved { self.request = nil }; return saved
             }
             #if os(macOS)
             .frame(minWidth: 460, idealWidth: 520, minHeight: 430)
@@ -122,7 +133,7 @@ struct HourlyPlannerView: View {
                 estimateSummary
                 VStack(alignment: .leading, spacing: 4) {
                     allDayButton
-                    Button(largeTextTimeline ? "Show readable list" : "Show timeline") { largeTextTimeline.toggle() }.font(.caption).frame(minHeight: 44).accessibilityIdentifier("plannerLargeTextLayout")
+                    Button(usesAgenda ? "Show timeline" : "Show readable list") { changeLayout() }.font(.caption).frame(minHeight: 44).accessibilityIdentifier("plannerLargeTextLayout")
                 }
             } else {
                 HStack(alignment: .firstTextBaseline) {
@@ -130,10 +141,21 @@ struct HourlyPlannerView: View {
                     Spacer(minLength: 8)
                     scheduleButton; settingsButton
                 }
-                HStack { estimateSummary; Spacer(minLength: 4); allDayButton }
+                HStack { estimateSummary; Spacer(minLength: 4); allDayButton
+                    Button {changeLayout()} label: {Image(systemName:usesAgenda ? "calendar.day.timeline.left":"list.bullet").frame(width:44,height:44)}
+                        .accessibilityLabel(usesAgenda ? "Show timeline":"Show readable list").accessibilityIdentifier("plannerLayoutToggle")
+                }
             }
             Text(workingSummary).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerWorkingCapacity")
+            if work.incomplete {
+                Label("Some grouped tasks need review. Capacity includes readable estimates only.", systemImage: "exclamationmark.circle")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerGroupedWorkReview")
+            }
             Text(busy.status).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            if !usesAgenda,(PlannerTimelineItem.layout(blocks:blocks,events:events,on:day,calendar:calendar).map(\.laneCount).max() ?? 1)>1 {
+                Label("Overlapping plans sit side by side. Scroll sideways if needed.",systemImage:"arrow.left.and.right")
+                    .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("plannerOverlapHint")
+            }
         }.padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial)
@@ -143,9 +165,15 @@ struct HourlyPlannerView: View {
             .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerCapacity")
     }
     private var workingSummary: String {
-        if busy.ready { return "\(capacity.workingMinutes) min working day · \(capacity.busyMinutes) min calendar busy · \(capacity.afterKnownWork) min after known work" }
-        if busy.connected { return "\(capacity.workingMinutes) min working day · calendar data incomplete" }
-        return "\(capacity.workingMinutes) min working day · \(capacity.workingMinutes - capacity.estimatedMinutes) min after task estimates"
+        if capacity.incomplete { return "Review grouped tasks before relying on remaining capacity." }
+        guard hours != nil else { return "Capacity unavailable. Update Taskfold to read these working hours." }
+        if busy.ready {
+            let remaining=capacity.afterKnownWork>=0 ? "\(capacity.afterKnownWork) min after known work":"\(capacity.afterKnownWork.magnitude) min over capacity"
+            return "\(capacity.workingMinutes) min working day · \(capacity.busyMinutes) min calendar busy · \(remaining)"
+        }
+        if busy.anyConnected { return "\(capacity.workingMinutes) min working day · calendar data incomplete" }
+        let remaining=capacity.workingMinutes-capacity.estimatedMinutes
+        return "\(capacity.workingMinutes) min working day · "+(remaining>=0 ? "\(remaining) min after task estimates":"\(remaining.magnitude) min over capacity")
     }
     private var scheduleButton: some View {
         Button { choose(nil) } label: { Label("Schedule", systemImage: "clock.badge.plus").frame(minHeight: 44) }.accessibilityIdentifier("plannerSchedule")
@@ -154,12 +182,19 @@ struct HourlyPlannerView: View {
         Button { settings = true } label: { Image(systemName: "slider.horizontal.3").font(.system(size: 20)).frame(width: 44, height: 44) }.accessibilityLabel("Planner settings").accessibilityIdentifier("plannerSettings")
     }
     private var allDayButton: some View {
-        Button { allDayRequest += 1 } label: { Text("All day (\(allDay.count))").font(.caption).frame(minHeight: 44) }.accessibilityIdentifier("plannerShowAllDay")
+        Button { allDayRequest += 1 } label: { Text("All day (\(allDay.count+allDayEvents.count))").font(.caption).frame(minHeight: 44) }.accessibilityIdentifier("plannerShowAllDay")
     }
     private var allDayLane: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("ALL DAY").font(.caption2.weight(.semibold)).foregroundStyle(.secondary).tracking(0.8)
-            if allDay.isEmpty { Text("Tasks with a date and no time appear here.").font(.caption).foregroundStyle(.secondary) }
+            if allDay.isEmpty && allDayEvents.isEmpty { Text("Tasks with a date and no time appear here.").font(.caption).foregroundStyle(.secondary) }
+            ForEach(allDayEvents) {event in
+                Button {showCalendar(event)} label: {
+                    VStack(alignment:.leading,spacing:6) {Label(event.title,systemImage:"calendar").font(.callout);Text("Calendar · All day · "+event.source).font(.caption).foregroundStyle(.secondary)}
+                        .fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,minHeight:44,alignment:.leading).padding(10)
+                        .background(Color.secondary.opacity(0.09),in:RoundedRectangle(cornerRadius:12))
+                }.buttonStyle(.plain).foregroundStyle(.primary).accessibilityIdentifier("plannerCalendarAllDay-"+event.id)
+            }
             ForEach(allDay) { task in
                 Group {
                     if textSize.isAccessibilitySize {
@@ -175,16 +210,25 @@ struct HourlyPlannerView: View {
         }.padding(.top, 12)
     }
     private func taskTitle(_ task: Record) -> some View {
-        Button { open(task) } label: { Text(task.title).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.buttonStyle(.plain)
+        Button { open(task) } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(task.title).fixedSize(horizontal: false, vertical: true)
+                if let parent = work.parents[task.id] { Text(parent).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+            }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        }.buttonStyle(.plain)
     }
     private func completeButton(_ task: Record) -> some View {
-        Button { complete(task) } label: { Image(systemName: "circle").font(.system(size: 24)).foregroundStyle(Color.taskfold).frame(width: 44, height: 44).contentShape(Rectangle()) }.buttonStyle(.plain).accessibilityLabel("Complete " + task.title)
+        Group {
+            if TaskKind.mayComplete(task) {
+                Button { complete(task) } label: { Image(systemName: "circle").font(.system(size: 24)).foregroundStyle(Color.taskfold).frame(width: 44, height: 44).contentShape(Rectangle()) }.buttonStyle(.plain).accessibilityLabel("Complete " + task.title).accessibilityIdentifier("plannerComplete-" + task.id)
+            } else { Image(systemName: "text.alignleft").foregroundStyle(.secondary).frame(width: 44, height: 44).accessibilityLabel("Heading") }
+        }
     }
     private func taskScheduleButton(_ task: Record) -> some View {
         Button { choose(task) } label: { Image(systemName: "clock").font(.system(size: 20)).frame(width: 44, height: 44) }.accessibilityLabel("Schedule " + task.title).accessibilityIdentifier("plannerAllDay-" + task.id).id("all-day-action-" + task.id)
     }
     private func estimate(_ task: Record) -> some View {
-        Text(task.durationMinutes.map { "\($0)m" } ?? "No estimate").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        Text(TaskKind(task) == .heading ? "Heading" : task.durationMinutes.map { "\($0)m" } ?? "No estimate").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
     }
     /// Fixed-height blocks cannot contain full accessibility-size text. Keep the same plans and
     /// mutations in a readable agenda, with the graphical timeline available as a view choice.
@@ -197,6 +241,7 @@ struct HourlyPlannerView: View {
                     Button { open(block.task) } label: {
                         Text(block.task.title).font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     }.buttonStyle(.plain).accessibilityIdentifier("plannerOpen-" + block.id)
+                    if let parent = work.parents[block.id] { Text(parent).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                     Text((block.start < block.clippedStart ? "Continues from an earlier day · " : "") + clock(block.start) + (block.end.map { " – " + $0.formatted(.dateTime.month(.abbreviated).day().hour().minute()) } ?? "") + " · " + (block.task.durationMinutes.map { "\($0) min" } ?? "No estimate"))
                         .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     if let deadline = block.task.deadline { Text("Deadline: " + deadline.formatted(date: .abbreviated, time: .omitted)).font(.callout).fixedSize(horizontal: false, vertical: true) }
@@ -220,60 +265,89 @@ struct HourlyPlannerView: View {
                     .background(Color.taskfold.opacity(0.09), in: RoundedRectangle(cornerRadius: 12))
                     .accessibilityElement(children: .contain).accessibilityIdentifier("plannerBlock-" + block.id).id("agenda-" + block.id)
             }
-            let visibleEvents = events.filter { $0.start < bounds.end && $0.end > bounds.start }.sorted { $0.start < $1.start }
+            let visibleEvents = events.filter { !$0.allDay && $0.start < bounds.end && $0.end > bounds.start }.sorted { $0.start < $1.start }
             if !visibleEvents.isEmpty {
                 Text("Calendar busy time").font(.headline)
                 ForEach(visibleEvents) { event in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(event.title).font(.headline)
-                        Text(clock(max(event.start, bounds.start)) + " – " + clock(min(event.end, bounds.end))).font(.callout).foregroundStyle(.secondary)
-                    }.fixedSize(horizontal: false, vertical: true).padding(14).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.secondary.opacity(0.09), in: RoundedRectangle(cornerRadius: 12))
+                    Button {showCalendar(event)} label: {
+                        VStack(alignment:.leading,spacing:8) {
+                            Label(event.title,systemImage:"calendar").font(.headline)
+                            Text(clock(max(event.start,bounds.start))+" – "+clock(min(event.end,bounds.end))).font(.callout).foregroundStyle(.secondary)
+                            Text(event.source).font(.caption).foregroundStyle(.secondary)
+                        }.fixedSize(horizontal:false,vertical:true).padding(14).frame(maxWidth:.infinity,minHeight:44,alignment:.leading)
+                            .background(Color.secondary.opacity(0.09),in:RoundedRectangle(cornerRadius:12))
+                    }.buttonStyle(.plain).foregroundStyle(.primary).accessibilityIdentifier("plannerAgendaCalendar-"+event.id)
                 }
             }
         }
     }
-    private var timeline: some View {
-        let ticks = TaskPlanner.slots(on: day, every: 60)
-        let minutes = bounds.duration / 60
+    private var timeline:some View {
+        let ticks=TaskPlanner.slots(on:day,every:60),minutes=bounds.duration/60
+        let items=PlannerTimelineItem.layout(blocks:blocks,events:events,on:day,calendar:calendar)
+        let lanes=items.map(\.laneCount).max() ?? 1,height=CGFloat(minutes)*scale+44
         return GeometryReader { geometry in
-            let available = max(1, geometry.size.width - gutter)
-            ZStack(alignment: .topLeading) {
-                VStack(spacing: 0) {
-                    ForEach(ticks.indices, id: \.self) { index in Color.clear.frame(height: 60 * scale).id("hour-\(index)") }
-                }.allowsHitTesting(false).accessibilityHidden(true)
-                ForEach(Array(ticks.enumerated()), id: \.offset) { index, date in
-                    HStack(alignment: .top, spacing: 8) {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(clock(date)).font(.caption).monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
-                            if bounds.duration != 86400 { Text(calendar.timeZone.abbreviation(for: date) ?? calendar.timeZone.identifier).font(.system(size: 9)) }
-                        }.foregroundStyle(.secondary).frame(width: gutter - 10, alignment: .trailing)
-                        Button { choose(nil, at: date) } label: {
-                            Rectangle().fill(Color.primary.opacity(0.09)).frame(height: 1).frame(maxWidth: .infinity, minHeight: 44, alignment: .top)
-                        }.buttonStyle(.plain).accessibilityLabel("Schedule a task at \(clock(date))").accessibilityIdentifier("plannerSlot-\(index)")
-                    }.offset(y: CGFloat(date.timeIntervalSince(bounds.start) / 60) * scale)
-                }
-                ForEach(events.filter { $0.start < bounds.end && $0.end > bounds.start }) { event in
-                    let start = max(event.start, bounds.start), end = min(event.end, bounds.end)
-                    VStack(alignment: .leading) { Text(event.title).font(.caption).lineLimit(1) }
-                        .padding(4).frame(width: available, height: max(6, CGFloat(end.timeIntervalSince(start) / 60) * scale), alignment: .topLeading)
-                        .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
-                        .offset(x: gutter, y: CGFloat(start.timeIntervalSince(bounds.start) / 60) * scale)
-                        .accessibilityLabel("Calendar: \(event.title), \(clock(start)) to \(clock(end))")
-                        .allowsHitTesting(false)
-                }
-                ForEach(blocks) { block in
-                    let width = max(1, available / CGFloat(block.laneCount) - 4)
-                    PlannerBlockCard(block: block, width: width, scale: scale, maxLength: minutes - block.minute,
-                        open: { open(block.task) }, complete: { complete(block.task) }, schedule: { choose(block.task) },
-                        move: { delta in shift(block, minutes: delta) }, resize: { delta in resize(block, minutes: delta) },
-                        removeTime: { _ = apply(block.task, fields: ["due_time": .null, "time_zone": .null, "scheduled_at": .null, "due_date": .string(TaskPlanner.dayKey(day))], message: "Moved to all day") })
-                        .offset(x: gutter + CGFloat(block.lane) * (width + 4), y: CGFloat(block.minute) * scale)
+            let viewport=max(1,geometry.size.width-gutter),contentWidth=max(viewport,CGFloat(lanes)*140)
+            VStack(alignment:.leading,spacing:0) {
+                HStack(alignment:.top,spacing:0) {
+                    ZStack(alignment:.topTrailing) {
+                        Color.clear.frame(width:gutter,height:height)
+                        VStack(spacing:0) {
+                            ForEach(ticks.indices,id:\.self) {index in Color.clear.frame(width:gutter,height:60*scale).id("hour-\(index)")}
+                        }.allowsHitTesting(false).accessibilityHidden(true)
+                        ForEach(Array(ticks.enumerated()),id:\.offset) { index,date in
+                            VStack(alignment:.trailing,spacing:2) {
+                                Text(clock(date)).font(.caption).monospacedDigit().lineLimit(1).minimumScaleFactor(0.5).accessibilityIdentifier("plannerClock-"+String(index))
+                                if bounds.duration != 86400 {Text(calendar.timeZone.abbreviation(for:date) ?? calendar.timeZone.identifier).font(.system(size:9))}
+                            }.foregroundStyle(.secondary).frame(width:gutter-10,alignment:.trailing)
+                                .padding(.trailing,10).offset(y:CGFloat(date.timeIntervalSince(bounds.start)/60)*scale)
+                        }
+                    }.frame(width:gutter,height:height)
+                    ScrollView(.horizontal,showsIndicators:true) {
+                        ZStack(alignment:.topLeading) {
+                            Color.clear.frame(width:contentWidth,height:height).allowsHitTesting(false)
+                            ForEach(Array(ticks.enumerated()),id:\.offset) { index,date in
+                                Button {choose(nil,at:date)} label: {
+                                    Rectangle().fill(Color.primary.opacity(0.09)).frame(height:1).frame(width:contentWidth,height:44,alignment:.top)
+                                }.buttonStyle(.plain).accessibilityLabel("Schedule a task at \(clock(date))").accessibilityIdentifier("plannerSlot-\(index)")
+                                    .offset(y:CGFloat(date.timeIntervalSince(bounds.start)/60)*scale)
+                            }
+                            ForEach(items) {item in
+                                timelineCard(item,viewport:viewport,minutes:minutes)
+                                    .offset(x:CGFloat(item.lane)*(CGFloat(item.width(in:Double(viewport)))+4),y:CGFloat(item.minute)*scale)
+                            }
+                        }.frame(width:contentWidth,height:height).coordinateSpace(name:"planner-timeline")
+                    }.frame(width:viewport,height:height).scrollDisabled(contentWidth<=viewport+1)
+                        .accessibilityIdentifier("plannerTimelinePlans")
                 }
             }
-        }.frame(height: CGFloat(minutes) * scale + 44).coordinateSpace(name: "planner-timeline")
+        }.frame(height:height).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+    @ViewBuilder private func timelineCard(_ item:PlannerTimelineItem,viewport:CGFloat,minutes:Double)->some View {
+        let width=CGFloat(item.width(in:Double(viewport)))
+        switch item.content {
+        case .task(let original):
+            let block=original
+            PlannerBlockCard(block:block,width:width,scale:scale,maxLength:minutes-block.minute,
+                open:{open(block.task)},complete:{complete(block.task)},schedule:{choose(block.task)},
+                move:{delta in shift(block,minutes:delta)},resize:{delta in resize(block,minutes:delta)},
+                removeTime:{_ = apply(block.task,fields:["due_time":.null,"time_zone":.null,"scheduled_at":.null,"due_date":.string(TaskPlanner.dayKey(day))],message:"Moved to all day")})
+        case .event(let event):
+            Button {showCalendar(event)} label: {
+                VStack(alignment:.leading,spacing:2) {
+                    Label(event.title,systemImage:"calendar").font(.caption.weight(.medium)).lineLimit(item.renderLength<40 ? 1:2)
+                    Text(clock(event.start)+"–"+clock(event.end)).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                    if item.length>=50 {Text(event.source).font(.caption2).foregroundStyle(.secondary).lineLimit(1)}
+                }.padding(6).frame(width:width,height:max(44,min(CGFloat(minutes-item.minute)*scale,CGFloat(item.renderLength)*scale)),alignment:.topLeading)
+                    .background(Color.secondary.opacity(0.10),in:RoundedRectangle(cornerRadius:9))
+                    .overlay{RoundedRectangle(cornerRadius:9).strokeBorder(Color.secondary.opacity(0.4),lineWidth:1)}
+            }.buttonStyle(.plain).foregroundStyle(.primary)
+                .accessibilityLabel("Calendar: \(event.title), \(event.source), \(clock(event.start)) to \(clock(event.end))")
+                .accessibilityHint("View this calendar event")
+                .accessibilityIdentifier("plannerCalendar-"+event.id)
+        }
     }
     @discardableResult private func apply(_ task: Record, fields: [String: JSON], message: String) -> Bool {
+        let previousHistory = store.undoStack.last?.id
         guard save(task, fields) else { return false }
         var changed = task; for (key, value) in fields { changed[key] = value }
         if let start = TaskPlanning.start(changed), start >= bounds.start && start < bounds.end {
@@ -282,8 +356,8 @@ struct HourlyPlannerView: View {
         }
         let overlaps = TaskPlanning.start(changed).map { TaskPlanner.conflicts(task: changed, start: $0, minutes: changed.durationMinutes, tasks: tasks, events: events) } ?? []
         feedback = overlaps.isEmpty ? message : message + " · overlaps " + overlaps.prefix(3).joined(separator: ", ")
-        // The parent updates its undo depth on the next render.
-        feedbackDepth = undoDepth + 1
+        // Read the actual committed entry, including at the 30-entry cap.
+        feedbackRequest = store.undoStack.last?.id != previousHistory ? store.captureHistoryRequest() : nil
         return true
     }
     private func shift(_ block: PlannerBlock, minutes: Int) {
@@ -297,43 +371,177 @@ struct HourlyPlannerView: View {
     }
 }
 
-private struct PlannerScheduleRequest: Identifiable {
-    var id = UUID()
-    var task: Record?
-    var start: Date
+struct PlannerScheduleRequest: Identifiable {
+    let id = UUID()
+    let task: Record?
+    let start: Date
+    let workspace: WorkspaceBinding
+    let session: UUID
+    let selection: PlannerTaskSelection?
+    init(task: Record?, start: Date, workspace: WorkspaceBinding, session: UUID, roots: [Record]) {
+        self.task = task; self.start = start; self.workspace = workspace; self.session = session
+        selection = task.flatMap { try? PlannerTaskSelection(task: $0, roots: roots, workspace: workspace, session: session) }
+    }
 }
 
-private struct PlannerSchedulingSheet: View {
+struct PlannerSchedulingSheet: View {
+    @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     let request: PlannerScheduleRequest
-    let tasks: [Record]
     let events: [PlannerEvent]
-    let save: (Record, [String: JSON]) -> Void
-    @State private var chosen: Record?
-    init(request: PlannerScheduleRequest, tasks: [Record], events: [PlannerEvent], save: @escaping (Record, [String: JSON]) -> Void) {
-        self.request = request; self.tasks = tasks; self.events = events; self.save = save
-        _chosen = State(initialValue: request.task)
+    let save: (Record, [String: JSON]) -> Bool
+    @State private var chosen: PlannerTaskSelection?
+    @State private var query = ""
+    @State private var limit = PlannerTaskCatalog.pageSize
+    @State private var catalog: PlannerTaskCatalog?
+    @State private var loaded: Version?
+    @State private var token: UUID?
+    @State private var result: SearchResult?
+    @State private var message: String?
+    @State private var searching = false
+    @FocusState private var searchFocused: Bool
+    private struct Version: Equatable {
+        let readable: Bool
+        let tasks: [Record]
+        let projects: [Record]
+        let sections: [Record]
+        let parents: [String: String]
+        let calendar: Calendar
+    }
+    private struct SearchKey: Equatable { let token: UUID?; let query: String; let limit: Int }
+    private struct SearchResult { let key: SearchKey; let page: PlannerTaskCatalog.Page }
+    init(request: PlannerScheduleRequest, events: [PlannerEvent], save: @escaping (Record, [String: JSON]) -> Bool) {
+        self.request = request; self.events = events; self.save = save
+        _chosen = State(initialValue: request.selection)
+    }
+    private var readable: Bool { store.workflowPreviewReady(request.workspace) && request.session == store.backend.reminderSessionIncarnation }
+    private var workspace: WorkspaceBinding { .init(account: store.userID, generation: store.workspaceGeneration) }
+    private var tasks: [Record] { store.productiveReading.presentation }
+    private var version: Version {
+        let reading = store.productiveReading
+        return Version(readable: readable, tasks: readable ? reading.presentation : [], projects: readable ? store.allProjects : [], sections: readable ? store.rows("sections") : [], parents: readable ? reading.parents : [:], calendar: .current)
+    }
+    private func current(_ selection: PlannerTaskSelection, fields: [String: JSON]? = nil) -> Record? {
+        guard readable else { return nil }
+        return selection.current(tasks: tasks, roots: store.activeTasks, workspace: workspace, session: store.backend.reminderSessionIncarnation, fields: fields)
+    }
+    private func choose(_ option: PlannerTaskCatalog.Option) {
+        guard readable, loaded == version,
+              let task = PlannerTaskCatalog.current(option, tasks: tasks, projects: store.allProjects) else {
+            message = "This task changed. Choose an available task."; return
+        }
+        do {
+            let selection = try PlannerTaskSelection(task: task, roots: store.activeTasks, workspace: request.workspace, session: request.session)
+            guard current(selection) != nil else { throw PlannerFailure(message: "This task changed. Choose an available task.") }
+            searchFocused = false; chosen = selection
+        } catch { message = error.localizedDescription }
     }
     var body: some View {
         NavigationStack {
-            if let task = chosen {
-                PlannerScheduleForm(task: task, start: request.start, tasks: tasks, events: events) { save(task, $0) }
-            } else {
-                List {
-                    Section { Text("Choose a task for " + request.start.formatted(.dateTime.hour().minute()) + ". Its deadline will stay the same.").foregroundStyle(.secondary) }
-                    ForEach(tasks.filter { !$0.completed }.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }) { task in
-                        Button { chosen = task } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(task.title).foregroundStyle(.primary)
-                                Text(task.durationMinutes.map { "\($0) min" } ?? "No estimate").font(.caption).foregroundStyle(.secondary)
-                            }
-                        }.accessibilityIdentifier("plannerChoose-" + task.id)
-                    }
-                    if tasks.allSatisfy(\.completed) { Text("Add a task to start planning your day.").foregroundStyle(.secondary) }
-                }
-                .navigationTitle("Schedule a task")
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            Group {
+                if !readable {
+                    ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Close this planner and reopen it in your current workspace."))
+                } else if let chosen {
+                    if current(chosen) != nil {
+                        PlannerScheduleForm(task: chosen.task, start: request.start, tasks: tasks, events: events) { fields in
+                            guard let current = current(chosen, fields: fields) else { return "This task or its schedule changed. Your choices are still here; reopen the current task before scheduling." }
+                            if fields.allSatisfy({ current[$0.key] == $0.value }) { dismiss(); return nil }
+                            if save(chosen.task, fields) { return nil }
+                            let message = store.error ?? "The task could not be scheduled. Your choices are still here; try again."
+                            store.error = nil
+                            return message
+                        }
+                    } else { changedTask }
+                } else if request.task != nil { changedTask }
+                else { chooser }
             }
+            .toolbar {
+                if !readable || (chosen != nil && current(chosen!) == nil) || (request.task != nil && chosen == nil) {
+                    ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
+                }
+            }
+        }
+    }
+    private var changedTask: some View {
+        ContentUnavailableView {
+            Label("Task changed", systemImage: "arrow.triangle.2.circlepath")
+        } description: {
+            Text("This task was completed, moved or is no longer available. Close this planner and choose its current entry.")
+        } actions: {
+            if request.task == nil { Button("Back to tasks") { chosen = nil; message = nil } }
+        }
+    }
+    private var chooser: some View {
+        let currentVersion = version
+        let key = SearchKey(token: token, query: query, limit: limit)
+        return VStack(spacing: 0) {
+            HStack {
+                Image(systemName: "magnifyingglass").font(.system(size: 20)).foregroundStyle(.secondary).accessibilityHidden(true)
+                TextField("Find a task or project", text: $query).focused($searchFocused).onSubmit { searchFocused = false }
+                    .textFieldStyle(.plain).frame(minHeight: 44).accessibilityLabel("Search tasks to schedule").accessibilityIdentifier("plannerTaskSearch")
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.search)
+                    #endif
+                if !query.isEmpty {
+                    Button { query = "" } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 20)).foregroundStyle(.secondary).frame(width: 44, height: 44).contentShape(Rectangle()) }
+                        .buttonStyle(.borderless).accessibilityLabel("Clear search").accessibilityIdentifier("clearPlannerTaskSearch")
+                }
+            }.padding().background(.bar)
+            if loaded == currentVersion, let result, result.key.token == token, result.key.query == query {
+                List {
+                    Section { Text("For " + request.start.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerTaskTargetTime") }
+                    if result.page.total == 0 {
+                        ContentUnavailableView(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "No open tasks" : "No tasks found", systemImage: "magnifyingglass", description: Text(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Add a task to start planning your day." : "Try another task or project name."))
+                    }
+                    ForEach(result.page.options) { option in
+                        Button { choose(option) } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(option.title).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
+                                Text(option.location).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                Text(option.summary).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel(option.title).accessibilityValue(option.location + ", " + option.summary)
+                            .accessibilityIdentifier("plannerChoose-" + option.id)
+                    }
+                    if result.page.options.count < result.page.total {
+                        Text("Showing \(result.page.options.count) of \(result.page.total) tasks").font(.caption).foregroundStyle(.secondary)
+                        Button("Show more") { limit += PlannerTaskCatalog.pageSize }.disabled(searching).accessibilityIdentifier("showMorePlannerTasks")
+                    }
+                    if searching { ProgressView("Searching tasks…") }
+                    if let message { Text(message).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerTaskSearchError") }
+                }.accessibilityIdentifier("plannerTaskChoices")
+            } else if let message { ContentUnavailableView("Tasks unavailable", systemImage: "exclamationmark.triangle", description: Text(message)) }
+            else { ProgressView("Finding tasks…").frame(maxWidth: .infinity, maxHeight: .infinity) }
+        }
+        .navigationTitle("Schedule a task")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelPlannerTaskSearch") }
+            ToolbarItem(placement: .confirmationAction) { Button("Done") { searchFocused = false }.accessibilityIdentifier("dismissPlannerTaskKeyboard") }
+        }
+        .onChange(of: query) { _, _ in limit = PlannerTaskCatalog.pageSize; message = nil }
+        .task(id: currentVersion) {
+            catalog = nil; loaded = nil; token = nil; result = nil; message = nil
+            guard readable else { return }
+            do {
+                let value = try await PlannerTaskCatalog.load(tasks: currentVersion.tasks, projects: currentVersion.projects, sections: currentVersion.sections, parents: currentVersion.parents, calendar: currentVersion.calendar)
+                try Task.checkCancellation(); guard readable, version == currentVersion else { return }
+                catalog = value; loaded = currentVersion; token = UUID()
+            } catch is CancellationError { }
+            catch { guard readable, version == currentVersion else { return }; message = error.localizedDescription }
+        }
+        .task(id: key) {
+            guard readable, let catalog, loaded == currentVersion, key.token != nil else { return }
+            searching = true
+            do {
+                let page = try await catalog.search(query: key.query, limit: key.limit)
+                try Task.checkCancellation()
+                guard readable, loaded == version, key == SearchKey(token: token, query: query, limit: limit) else { return }
+                result = SearchResult(key: key, page: page); searching = false
+            } catch is CancellationError { }
+            catch { guard key == SearchKey(token: token, query: query, limit: limit) else { return }; searching = false; message = error.localizedDescription }
         }
     }
 }
@@ -352,7 +560,9 @@ private struct PlannerBlockCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(alignment: .top, spacing: 6) {
-                Button(action: complete) { Image(systemName: "circle").font(.caption) }.buttonStyle(.plain).accessibilityLabel("Complete " + block.task.title)
+                if TaskKind.mayComplete(block.task) {
+                    Button(action: complete) { Image(systemName: "circle").font(.caption) }.buttonStyle(.plain).accessibilityLabel("Complete " + block.task.title)
+                } else { Image(systemName: "text.alignleft").font(.caption).foregroundStyle(.secondary).accessibilityLabel("Heading") }
                 Text(block.task.title).font(.subheadline.weight(.medium)).lineLimit(block.renderLength < 40 ? 1 : 2)
                     .frame(maxWidth: .infinity, alignment: .leading).layoutPriority(1)
             }
@@ -402,7 +612,7 @@ private struct PlannerScheduleForm: View {
     let task: Record
     let tasks: [Record]
     let events: [PlannerEvent]
-    let save: ([String: JSON]) -> Void
+    let save: ([String: JSON]) -> String?
     @State private var start: Date
     @State private var fixed: Bool
     @State private var estimated: Bool
@@ -415,7 +625,7 @@ private struct PlannerScheduleForm: View {
         guard let minutes = validatedEstimate, (1...10080).contains(minutes) else { return "Choose an estimate between 1 minute and 7 days." }
         return nil
     }
-    init(task: Record, start: Date, tasks: [Record], events: [PlannerEvent], save: @escaping ([String: JSON]) -> Void) {
+    init(task: Record, start: Date, tasks: [Record], events: [PlannerEvent], save: @escaping ([String: JSON]) -> String?) {
         self.task = task; self.tasks = tasks; self.events = events; self.save = save
         _start = State(initialValue: start); _fixed = State(initialValue: !task.string("time_zone").isEmpty || task.string("due_time").isEmpty)
         _estimated = State(initialValue: task.durationMinutes != nil); _estimate = State(initialValue: task.durationMinutes.map(String.init) ?? "")
@@ -430,8 +640,9 @@ private struct PlannerScheduleForm: View {
                 Text(fixed ? "Keeps the same moment when you travel. Displayed in \(TimeZone.current.identifier)." : "Keeps this clock time when you travel.").font(.caption).foregroundStyle(.secondary)
             }
             Section("Estimate") {
+                if TaskKind(task) == .heading { Text("Headings keep their date as context. Their estimates do not count toward capacity.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                 Toggle("Set an estimate", isOn: $estimated).accessibilityIdentifier("plannerHasEstimate")
-                if estimated { TextField("Minutes", text: $estimate).focused($estimateFocused).accessibilityIdentifier("plannerEstimate")
+                if estimated { TextField("Minutes", text: $estimate).focused($estimateFocused).accessibilityLabel("Minutes").accessibilityIdentifier("plannerEstimate")
                     #if os(iOS)
                     .keyboardType(.numberPad)
                     #endif
@@ -474,7 +685,7 @@ private struct PlannerScheduleForm: View {
             let zone = fixed ? (task.string("time_zone").isEmpty ? TimeZone.current.identifier : task.string("time_zone")) : ""
             var fields = try TaskPlanner.fields(task: task, start: rounded, minutes: minutes, timeZone: zone)
             if !estimated { fields["duration_minutes"] = .null }
-            save(fields)
+            if let failure = save(fields) { error = failure }
         } catch { self.error = error.localizedDescription }
     }
 }
@@ -496,8 +707,8 @@ struct CivilDayRefresh: ViewModifier {
                     do { try await Task.sleep(for: .seconds(store.calendarRefreshDelay)) } catch { return }
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in store.refreshCalendarContext() }
-            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in store.refreshCalendarContext() }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in store.refreshCalendarContext() }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in store.refreshCalendarContext() }
     }
 }
 
@@ -508,15 +719,61 @@ struct WidgetCapacityRefresh: ViewModifier {
     func body(content: Content) -> some View {
         content
             .task(id: "\(store.userID)-\(CalendarBusyStore.shared.revision)-\(phase == .active)") {
-                guard store.signedIn, phase == .active else { return }
+                guard store.signedIn || store.localMode, phase == .active else { return }
                 await store.refreshWidgetCapacity()
                 while !Task.isCancelled {
                     do { try await Task.sleep(for: .seconds(900)) } catch { return }
                     await store.refreshWidgetCapacity()
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged)) { _ in Task { await store.refreshWidgetCapacity() } }
-            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await store.refreshWidgetCapacity() } }
-            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in Task { await store.refreshWidgetCapacity() } }
+            .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.refreshWidgetCapacity() } }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await store.refreshWidgetCapacity() } }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.refreshWidgetCapacity() } }
+    }
+}
+
+private struct PlannerCalendarRequest:Identifiable {
+    let id=UUID()
+    let eventID:String
+    let workspace:WorkspaceBinding
+}
+/// Read-only details resolve current data and never retain another workspace's event content.
+private struct PlannerCalendarDetails:View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(Store.self) private var store
+    let request:PlannerCalendarRequest
+    let busy:CalendarBusyStore
+    private var event:PlannerEvent? {
+        guard request.workspace.matches(account:store.userID,generation:store.workspaceGeneration),busy.account==store.userID else {return nil}
+        return busy.events.first{$0.id==request.eventID}
+    }
+    var body:some View {
+        NavigationStack {
+            Form {
+                if let event {
+                    Section {
+                        Text(event.title).font(.headline).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("plannerCalendarTitle")
+                        Text(event.source).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                        Text("Read-only calendar event").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Section("When") {
+                        LabeledContent("Starts",value:event.start.formatted(date:.abbreviated,time:.shortened))
+                        LabeledContent("Ends",value:event.end.formatted(date:.abbreviated,time:.shortened))
+                        if event.allDay {Text("All day")}
+                    }
+                } else {
+                    Text("This calendar event is unavailable. Refresh your calendars or choose another event.")
+                        .fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("plannerCalendarUnavailable")
+                }
+            }.formStyle(.grouped).navigationTitle("Calendar event")
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .toolbar {ToolbarItem(placement:.confirmationAction) {Button("Done") {dismiss()}.accessibilityIdentifier("plannerCalendarDone")}}
+        }
+        .onChange(of:store.workspaceGeneration) {_,_ in dismiss()}
+        #if os(macOS)
+        .frame(minWidth:400,minHeight:330)
+        #endif
     }
 }

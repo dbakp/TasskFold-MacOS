@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-11",
+  "scope": "Remove duplicate delivery-off guidance from quick capture in each independently owned app; verify the existing iPhone guidance action preserves the draft and reaches Reminders.",
+  "changes": [
+    "ReminderAutomaticPreview accepts an optional delivery-guidance flag, defaulting to the existing behavior.",
+    "Quick capture suppresses only the automatic delivery-off line when its explicit custom-reminder guidance is already present. Automatic reminder meaning and ordinary editor guidance remain.",
+    "No persistence, reminder scheduling, permission or authentication contracts change."
+  ],
+  "nativePhone": {
+    "resultBundle": "capture-delivery-guide-phone-v1.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "cases": [
+      "testLiveLongPlanningSuggestionIsVisibleWithoutScrolling",
+      "testLiveLongPlanningSuggestionIsVisibleDarkLargest"
+    ],
+    "coverage": "Normal/light and AccessibilityXXXL/dark: complete suggestion above keyboard controls, select reminder, preserve resolved section/chips, exactly one delivery guide fully inside the scrolling capture viewport, tap guide, preserve Preview title, navigate to Reminders. Draft never saved; delivery not enabled.",
+    "visualInspection": "Four captures inspected individually. Normal guidance wraps in two lines; largest guidance wraps fully after scrolling. Both destinations show Reminders and the selected 30-minute reminder. Largest destination needs scrolling for device delivery controls; this run does not claim those controls were tested."
+  },
+  "builds": {
+    "iOS": {
+      "log": "capture-delivery-guide-ios-build-v1.log",
+      "result": "TEST BUILD SUCCEEDED",
+      "signingReceipt": "capture-delivery-guide-signing-v1.json"
+    },
+    "macOS": {
+      "log": "capture-delivery-guide-mac-build-v1.log",
+      "result": "TEST BUILD SUCCEEDED",
+      "scope": "Independent Mac app/native-test products in local-only isolated stage. Widget extension omitted; no widget source changed. Native changed-copy verification pending."
+    }
+  },
+  "dataProof": {
+    "originalMacCacheUnchanged": true,
+    "originalMacCacheSHA256": "fa5afd731333a5aa33977d5bf2f199c66d32f9fc114a3a48e77032de95b3c831",
+    "phoneCompleteCacheEqualsBaseline": true,
+    "baseline": "profile-switch-first-cache.json",
+    "phoneAfterSHA256": "a8919c091b411e4e7f75829bcb281a5c9d5c88b86bf7029b421cfab2921d1e90",
+    "draftSubmitted": false,
+    "checkedAfterNativeRunCompleted": true
+  },
+  "macIsolation": {
+    "bundle": "com.dbakp.taskfold.mac.p0localuitests",
+    "receipt": "mac-local-isolation-receipt.json",
+    "startup": "Manual local-only app launch loads its private fixture/cache; sampled main thread is in ordinary AppKit event loop, without protected cloud-session read.",
+    "failedNativeResult": "mac-local-bulk-deadline-v1.xcresult",
+    "failure": "Initial app activation failed: Running Background. No bulk interaction occurred. Later computer-use inspection explicitly reported a locked desktop. This is not native acceptance.",
+    "currentLaunch": "User-authorized separate local test app launched again and confirmed running; window inspection reports locked Mac. Original cloud app/cache preserved.",
+    "productionStartupChanged": false
+  },
+  "limitations": "Mac native interaction, iPad/VoiceOver follow-up and broader provider, notification and distribution P0 gates remain open. This accepts the scoped phone capture route, not notification delivery.",
+  "sourceSHA256": {
+    "TaskFold-iOS/Taskfold/Views/QuickAdd.swift": "cd4fd4e2ad2b83006bebae3b4908556e714e118e39e134bbb0cc6f1002b23210",
+    "TaskFold-iOS/Taskfold/Views/ReminderEditor.swift": "71c868d3beda9655189823af8b69f705141f58a76e314b0e03f26e6ca128cbba",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "0ef7a7c089952b867141f18c88e8e35faadfc46ca8e1a32c6bd772d9616b134a",
+    "TasskFold-MacOS/Taskfold/Views/TaskListView.swift": "d957831fcb9b8e21c8a7d96a976ca9b416c5742ce08cda5001f2ca998f985df6",
+    "TasskFold-MacOS/Taskfold/Views/ReminderEditor.swift": "71c868d3beda9655189823af8b69f705141f58a76e314b0e03f26e6ca128cbba"
+  },
+  "captures": {
+    "docs/usability-previews/phone-capture-delivery-guide-normal.png": "8cf04091178670846b52610be83e5f8aefa6fca1ebe696aa49ca2cc72173ba54",
+    "docs/usability-previews/phone-capture-delivery-guide-largest.png": "a6b66faec9440c38bfb10a3af0ea2a9d3db8004838e38cc2241c1436b81d3b6d",
+    "docs/usability-previews/phone-capture-reminders-route-normal.png": "bff3c27a1be2e249995bb04422d9774af2742b34fb4626aca41d964499994e07",
+    "docs/usability-previews/phone-capture-reminders-route-largest.png": "424e68711ed8f6697cb9464c70696ae94c1ffa69a23639d4501feaba9faf6f98"
+  }
+}

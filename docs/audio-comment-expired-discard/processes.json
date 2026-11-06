@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "separateProcesses": 16,
+  "expiredReviewDiscardSurvivesProcessExitWithoutTouchingOtherDrafts": true,
+  "staleAutomaticCheckpointRefusedAfterExpiredDiscard": true,
+  "completedDiscardCannotBeRevivedByAnOlderProcessFence": true,
+  "departureJournalSurvivesProcessExitWithoutCompletingDraft": true,
+  "explicitFinishUsesOriginalIDsAndAudioAcrossProcesses": true,
+  "localAndCloudDraftsRestored": true,
+  "exactPendingIntentAndAudioRestored": true,
+  "crossProcessLockRefusedWithoutMutation": true,
+  "noMicrophonePlaybackOrNetwork": true,
+  "ownedTemporaryDirectoryRemovedOnExit": true
+}

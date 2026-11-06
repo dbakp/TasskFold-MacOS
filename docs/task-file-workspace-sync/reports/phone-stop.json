@@ -1,0 +1,204 @@
+{
+  "platform": "ios",
+  "mode": "workspace-stop",
+  "checks": {
+    "exact isolated app identifier": true,
+    "actual task generation matches native scope": true,
+    "native UI case succeeds": true,
+    "one native case accepted without skip": true,
+    "one durable server upload exists": true,
+    "native operation reached actual SQL session": true,
+    "native original hash matches independently": true,
+    "native retries do not duplicate provider POST": true,
+    "native Stop commits cancellation": true,
+    "stopped native file never attaches to task": true,
+    "native stopped upload cleans through real provider": true,
+    "native stopped metadata is absent": true,
+    "native stopped allocation releases quota": true,
+    "saved workspace contains only the RLS-visible task": true,
+    "saved workspace attachment equals actual SQL publication": true,
+    "saved workspace preserves the server description": true,
+    "saved workspace has no invented queued edits": true,
+    "saved workspace carries the actual account boundary": true,
+    "actual boundary read brackets workspace refresh": true,
+    "native Store reads actual table: projects": true,
+    "native Store reads actual table: sections": true,
+    "native Store reads actual table: labels": true,
+    "native Store reads actual table: tasks": true,
+    "native Store reads actual table: profiles": true,
+    "native Store reads actual table: project_collaborators": true,
+    "native Store reads actual table: saved_views": true,
+    "native Store reads actual table: favorites": true,
+    "native Store reads actual table: view_preferences": true,
+    "native Store reads actual table: view_orders": true,
+    "native Store reads actual table: project_templates": true,
+    "native Store reads actual table: reminder_preferences": true,
+    "native Store reads actual table: focus_sessions": true,
+    "native Store reads actual table: task_activity_epoch": true,
+    "native Store reads actual table: task_activity": true
+  },
+  "nativeAuthenticatedLocalProvider": true,
+  "genuineHostedAuth": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "xcodeExitCode": 0,
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold · Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793600586.492,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793600503.087,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "clientWorkspaceProof": {
+    "taskIDs": [
+      "ec240000-0000-4000-8000-000000000002"
+    ],
+    "attachments": [],
+    "pendingCount": 0
+  },
+  "workspaceCounts": {
+    "boundary": 10,
+    "auth": 2,
+    "tables": {
+      "projects": 5,
+      "sections": 5,
+      "labels": 5,
+      "tasks": 5,
+      "profiles": 5,
+      "project_collaborators": 5,
+      "saved_views": 5,
+      "favorites": 5,
+      "view_preferences": 5,
+      "view_orders": 5,
+      "project_templates": 5,
+      "reminder_preferences": 5,
+      "focus_sessions": 5,
+      "task_activity_epoch": 5,
+      "task_activity": 5,
+      "task_assignment_provenance": 5,
+      "task_node_activity_epoch": 10,
+      "task_node_activity": 5
+    },
+    "rejected": 0,
+    "errors": []
+  },
+  "normalStoreSyncInIsolatedFixture": true,
+  "transportCounts": {
+    "uploads": 1,
+    "downloads": 3,
+    "deletes": 1,
+    "rpc": 8,
+    "auth": 3,
+    "providerErrors": [
+      {
+        "method": "GET",
+        "status": 400,
+        "body": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+      }
+    ]
+  },
+  "checkCount": 34,
+  "storageImage": "supabase/storage-api@sha256:0194c53a03977e8ca0194636a27172158b39e3ae7a5e12da1dca5717086dd849",
+  "serverOperations": [
+    {
+      "state": "cancelled",
+      "intent": {
+        "name": "Native provider proof.txt",
+        "type": "text/plain",
+        "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+        "target": {
+          "task_id": "ec240000-0000-4000-8000-000000000002",
+          "team_id": "ec240000-0000-4000-8000-000000000004",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "ec240000-0000-4000-8000-000000000071"
+        },
+        "byte_count": 24,
+        "operation_id": "5e7ba121-a43b-4395-9feb-3352495df2bb"
+      },
+      "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+      "task_id": "ec240000-0000-4000-8000-000000000002",
+      "team_id": "ec240000-0000-4000-8000-000000000004",
+      "actor_id": "ec240000-0000-4000-8000-000000000001",
+      "object_id": null,
+      "attachment": null,
+      "byte_count": 24,
+      "created_at": "2026-11-02T06:22:30.794724+00:00",
+      "expires_at": "2026-11-02T06:37:30.794724+00:00",
+      "generation": "ec240000-0000-4000-8000-000000000071",
+      "project_id": "ec240000-0000-4000-8000-000000000003",
+      "intent_hash": "4099742c1e77090321b197f1b635e2c382a3731024c1f233c1c945e4001954c9",
+      "object_name": "team-task-files/v1/5e7ba121-a43b-4395-9feb-3352495df2bb/bf4407b0-751b-4dba-8672-2d3e6ada8056",
+      "object_nonce": "bf4407b0-751b-4dba-8672-2d3e6ada8056",
+      "operation_id": "5e7ba121-a43b-4395-9feb-3352495df2bb",
+      "writer_protocol": 1,
+      "provider_cleanup_confirmed_at": "2026-11-02T06:23:07.604783+00:00"
+    }
+  ],
+  "serviceStatusObservation": {
+    "status": 200,
+    "reply": {
+      "receipt": {
+        "state": "cancelled",
+        "target": {
+          "task_id": "ec240000-0000-4000-8000-000000000002",
+          "team_id": "ec240000-0000-4000-8000-000000000004",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "ec240000-0000-4000-8000-000000000071"
+        },
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "protocol": 1,
+        "attachment": null,
+        "operation_id": "5e7ba121-a43b-4395-9feb-3352495df2bb"
+      }
+    }
+  },
+  "nativeTransportAudit": [
+    {
+      "action": "publish",
+      "code": 1,
+      "domain": "Taskfold.AppFailure",
+      "transportReturned": false
+    },
+    {
+      "action": "cancel",
+      "response": "{\"receipt\":{\"state\":\"cancelled\",\"target\":{\"task_id\":\"ec240000-0000-4000-8000-000000000002\",\"team_id\":\"ec240000-0000-4000-8000-000000000004\",\"project_id\":\"ec240000-0000-4000-8000-000000000003\",\"task_generation\":\"ec240000-0000-4000-8000-000000000071\"},\"account\":\"ec240000-0000-4000-8000-000000000001\",\"protocol\":1,\"attachment\":null,\"operation_id\":\"5e7ba121-a43b-4395-9feb-3352495df2bb\"}}",
+      "transportReturned": true,
+      "validatedPhase": "cancelled"
+    }
+  ],
+  "disposableUserConfigurationRemoved": true,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "ownedSimulatorRestored": true
+}

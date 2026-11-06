@@ -1,0 +1,22 @@
+Test Suite 'Selected tests' started at 2026-10-27 11:05:24.319.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 11:05:24.320.
+Test Suite 'TaskfoldUITests' started at 2026-10-27 11:05:24.320.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' passed (13.573 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (13.093 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' passed (14.559 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' passed (16.237 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' passed (12.714 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' passed (31.697 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-27 11:07:06.219.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 101.874 (101.899) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 11:07:06.226.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 101.874 (101.906) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 11:07:06.227.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 101.874 (101.908) seconds
+** TEST EXECUTE SUCCEEDED **

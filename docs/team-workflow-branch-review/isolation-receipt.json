@@ -1,0 +1,61 @@
+{
+  "sourceRepository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "workspace": "/private/tmp/taskfold-workflow-mac-native-host",
+  "bundleID": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "sandbox": true,
+  "productionURLAndFileRegistrationsRemoved": true,
+  "embeddedWidgetExtension": false,
+  "embeddedShareExtension": false,
+  "isolatedURLScheme": null,
+  "recordRouteTesting": false,
+  "isolatedAppGroup": null,
+  "signingTeam": null,
+  "namespaceOnlySourceChanges": {
+    "Taskfold/Workspace.swift": {
+      "originalSHA256": "37f29f2521d776ee03cf76cc34738d7b4e05246483bf02367c322d86dbc21ad5",
+      "isolatedSHA256": "3648d42f34a4bd41c2745986279f7d28b97fd0512e285458a355d8ace254b585"
+    },
+    "Taskfold/AccountRemovalNativeFixture.swift": {
+      "originalSHA256": "9bf9004ba79bacd0c2370b1d6af5d99c6b05f63c8d3aeea5c7f4ffe67bee9587",
+      "isolatedSHA256": "fdcbf1de811af736e1df888a492e5c86bacb92bc175ede94956a8f81d9187446"
+    },
+    "Taskfold/Core/Backups.swift": {
+      "originalSHA256": "147c4a0c0bd29978d0a85aeea1c9d863fe6d1b85d8db36031811b245120eb86b",
+      "isolatedSHA256": "5f777122a215c02967c48fb7c4e2b9d6e1f95b4004728976e1ef7f7164faec21"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "originalSHA256": "97800eb4fcae39f180ee41627e1948dc414b2889c5849ae2b411cdb9041d1e73",
+      "isolatedSHA256": "26a0c64016de618dc4c34493d0610bd8471a316b05105087b295c1a51d248efe"
+    },
+    "Taskfold/Core/Store.swift": {
+      "originalSHA256": "ebd030a383fc01afa58f101b895c1f9657a7639b1b582e5ea4ea472785493cf0",
+      "isolatedSHA256": "8a6d22cc7bce35c568b718648ae21ddba5d47490da388a7f7f20f3e1db079213"
+    },
+    "Taskfold/Core/WidgetActions.swift": {
+      "originalSHA256": "9c0aa4ccbe6808e8ecb8c1cf5f5be32d65d94f0ea230f60444fbd8a16e6add8a",
+      "isolatedSHA256": "35a9ad129483bf504778b969d0ab6934c46217f23f163bcd3f5189c6caf058da"
+    },
+    "Taskfold/Core/SharedCapture.swift": {
+      "originalSHA256": "6c818d7a4aadef3997d41a36cab14e3bc6305394df838b75186c126d121e2fbf",
+      "isolatedSHA256": "fce120945b1d285af94c48c01af67b1ffd32514aa770019e6b619c364a99f832"
+    }
+  },
+  "replacements": {
+    "com.dbakp.taskfold.task": "com.dbakp.taskfold.mac.workflowteststeameditbridge.task",
+    "com.taskfold.ios.session": "com.taskfold.mac.workflowteststeameditbridge.session",
+    "com.taskfold.recovery.v1": "com.taskfold.mac.workflowteststeameditbridge.recovery.v1",
+    "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.mac.workflowteststeameditbridge"
+  },
+  "launchArguments": [
+    "--uitesting"
+  ],
+  "limitations": [
+    "Preparation only; no launch/install/runtime acceptance.",
+    "Unique keychain services; no production credential migration.",
+    "Production Push Notifications and keychain-group entitlements are absent only from the copied test app.",
+    "No signed-distribution, APNs or provider acceptance.",
+    "Cold OS launches omit --uitesting and use the isolated local workspace; fixture continuity must be verified separately."
+  ],
+  "workflowNamespace": "workflowteststeameditbridge",
+  "privateKeychainProfileRequired": false
+}

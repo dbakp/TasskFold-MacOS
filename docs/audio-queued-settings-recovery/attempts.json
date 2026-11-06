@@ -1,0 +1,148 @@
+[
+  {
+    "version": 1,
+    "reportSHA256": "afb349dba5b83c4fd872326888cfe2dffc3f5b0582dc4c820c06300a226f1dff",
+    "nativePassedTests": 0,
+    "checksBeforeStop": 17,
+    "failure": {
+      "message": "one native case accepted without skip\n+ actual - expected\n\n  [\n+   65,\n+   0,\n+   1,\n-   0,\n-   1,\n-   0,\n    0\n  ]",
+      "code": "ERR_ASSERTION"
+    },
+    "rpcOutcomes": [
+      {
+        "action": "selection_delete",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_restore_refused",
+        "status": 409,
+        "sqlCode": "PT409"
+      },
+      {
+        "action": "selection_restore_refused",
+        "status": 409,
+        "sqlCode": "PT409"
+      },
+      {
+        "action": "selection_restore_refused",
+        "status": 409,
+        "sqlCode": "PT409"
+      },
+      {
+        "action": "selection_recovery_inspect",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_recovery_inspect",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_recovery_close",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_restore",
+        "status": 503,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_restore",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "task_edit",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_edit_refused",
+        "status": 400,
+        "sqlCode": "22023"
+      },
+      {
+        "action": "selection_edit_refused",
+        "status": 400,
+        "sqlCode": "22023"
+      }
+    ],
+    "ownedCleanupComplete": true
+  },
+  {
+    "version": 2,
+    "reportSHA256": "20f9635a4d4b1d6a8093f4cb41532b83cc8b20f692aeb85a4aa3e3f03a025c67",
+    "nativePassedTests": 1,
+    "checksBeforeStop": 46,
+    "failure": {
+      "message": "queued single and selection record three distinct edits\n\n0 !== 3\n",
+      "code": "ERR_ASSERTION"
+    },
+    "rpcOutcomes": [
+      {
+        "action": "selection_delete",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_restore_refused",
+        "status": 409,
+        "sqlCode": "PT409"
+      },
+      {
+        "action": "selection_restore_refused",
+        "status": 409,
+        "sqlCode": "PT409"
+      },
+      {
+        "action": "selection_restore_refused",
+        "status": 409,
+        "sqlCode": "PT409"
+      },
+      {
+        "action": "selection_recovery_inspect",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_recovery_inspect",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_recovery_close",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_restore",
+        "status": 503,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_restore",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "task_edit",
+        "status": 200,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_edit",
+        "status": 503,
+        "sqlCode": null
+      },
+      {
+        "action": "selection_edit",
+        "status": 200,
+        "sqlCode": null
+      }
+    ],
+    "ownedCleanupComplete": true
+  }
+]

@@ -1,0 +1,191 @@
+{
+  "milestone": "Private account-only location draft transport foundation",
+  "date": "2026-10-22",
+  "repository": "TasskFold-MacOS",
+  "status": "Transport/schema implemented; native sending/review/save/relaunch integration NOT implemented; rank 5 and Px incomplete",
+  "parentCommit": "4b86aa75d6f799c0537626fb543ca617a458dc85",
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "693172a2984476c0acc3e3ca02830fb16e36b12710ad241402c4bb3deddb7e24",
+    "Taskfold/Core/LocationReminders.swift": "4a5048a0691268b8b82d61576d42c3758b1b999620e5e9dcb9e3aafe8ac8388d",
+    "TaskfoldTests/LocationHandoffTests.swift": "e8f526bb83213dfba15e0ed7586034acd996b3cfbe9494ddaf80606ab6572472",
+    "Scripts/Database/package.json": "2c1e81820e59459f19c77b4be9f650ef12894ef19109933dba1ac259335848c5",
+    "Scripts/Database/location-handoff-bootstrap.sql": "477dd283a8d80ddd928e39ece3b39b161566c162c2e21a2c4527aa8109ae7468",
+    "Scripts/Database/test-location-handoff.mjs": "a74ba220d582b4841c23bf4aafad9a12819bf2dc27642ab385d0b74269a4d34a",
+    "supabase/migrations/20261022145128_private_location_handoffs.sql": "a987e8a30d0c8c647fcde039141bb0983ed3e6a72d6ac1c6f52298c3c3803e07",
+    "supabase/tests/private_location_handoffs.sql": "30ba4704716c3998ba5de34558add56bead5dfd15432a266e3838d87098cd2e6"
+  },
+  "goldenSHA256": {
+    "TaskfoldTests/Fixtures/location-handoff-claimed.json": "89e6416c3b1c0e00be600b25c4bd8f5df4257dc2de1b72aee375056d95059a6a",
+    "TaskfoldTests/Fixtures/location-handoff-imported.json": "5f02bf00e3b764e7b538c46edf926e030a08e38f2757c4eace88444947a433be",
+    "TaskfoldTests/Fixtures/location-handoff-other-device.json": "f02a98f9549168c0c8e520ff209164bad1815f6dfbccd00484fc94a9b437f4da",
+    "TaskfoldTests/Fixtures/location-handoff-pending.json": "bbdad99c9c6b9376857e117e04213bfb2ec3e150af8303a41145c0309d4df285"
+  },
+  "core": {
+    "reported": 1283,
+    "skipped": 33,
+    "actualPassed": 1250,
+    "failures": 0,
+    "newHandoffCases": 16,
+    "log": {
+      "file": "location-handoff-full-mac.log",
+      "sha256": "ea28e1aafdbb575bd3f248f81771aa3d6e81439276041f2de720a4ee4f432310"
+    },
+    "transport": "In-memory URLProtocol with real production URLSession/Backend; fixed RPC, workspace/session fencing, cookie/cache policy, redirect refusal and declared/streamed response limits. No real JWT HTTP acceptance."
+  },
+  "localSQL": {
+    "passed": true,
+    "checks": 28,
+    "rollbackVerified": true,
+    "log": {
+      "file": "location-handoff-sql-mac-final.log",
+      "sha256": "5705c1a72f14e915b95ae871d12cccf23e52356e0eba7578d0fc8a5217ce5a8b"
+    },
+    "limitation": "Pinned PGlite0.5.11 minimal bootstrap; complete production policies separately tested by hosted fixture. No real credentials/network/app data."
+  },
+  "hostedSQL": {
+    "checks": [
+      "256 retained metadata bound enforced without forgetting tombstones",
+      "30-day metadata retention and configured hourly geometry cleanup",
+      "32 active private drafts bound enforced",
+      "accepted collaborator cannot read or claim another account handoff",
+      "account deletion removes private drafts",
+      "anonymous RPC denied",
+      "another device cannot retarget a claim and sender cannot discard an active device review",
+      "authenticated direct table read denied",
+      "changed-content retry cannot extend or replace a draft",
+      "completed task cannot be reviewed or reveal geometry",
+      "completion reversal cannot revive old draft authority",
+      "discarded draft cannot be resurrected by put or claim",
+      "expiry clears coordinates for inactive owners",
+      "finish cannot substitute a nonce",
+      "finish purges geometry and replay never rearms an imported draft",
+      "handoff lifecycle never mutates shared or private task rows",
+      "lost project membership redacts a fresh private draft",
+      "old authored time cannot resurrect a pruned draft",
+      "other-device list redacts claimed geometry and never exposes claim nonce",
+      "outsider and user-editable metadata cannot authorize task handoff",
+      "own device may abandon a claim and clear geometry",
+      "private geometry is not published to Realtime",
+      "private table grants, RLS and maintenance isolation",
+      "put is idempotent, including equivalent integral numeric representations",
+      "same device and nonce recover a lost claim response",
+      "same draft UUID is independently owned per account",
+      "stale task generation refuses a new draft",
+      "strict version, fields, numeric, name, transition and UUID validation"
+    ],
+    "actual_check_count": 28,
+    "private_handoff_fixture_passed": true,
+    "project": "TaskFold",
+    "migrationVersion": "20261022145128",
+    "migrationName": "private_location_handoffs",
+    "deployedAndSourceMD5": "9b137af32fd4550b8423216ec9fb8d6c",
+    "postRollback": {
+      "fixtureAccounts": 0,
+      "fixtureTasks": 0,
+      "totalPrivateDrafts": 0,
+      "ownRetentionJobs": 1
+    },
+    "limitation": "Postgres role and JWT-claim simulation inside a rolled-back synthetic transaction, not actual Auth token/PostgREST/native installation."
+  },
+  "advisors": {
+    "securityBeforeAfterSameNamesAndCounts": true,
+    "security": [
+      {
+        "name": "extension_in_public",
+        "count": 1,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public"
+      },
+      {
+        "name": "pg_graphql_anon_table_exposed",
+        "count": 6,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0026_pg_graphql_anon_table_exposed"
+      },
+      {
+        "name": "pg_graphql_authenticated_table_exposed",
+        "count": 20,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0027_pg_graphql_authenticated_table_exposed"
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "count": 8,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable"
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "count": 9,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "count": 1,
+        "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+      }
+    ],
+    "performance": [
+      {
+        "name": "unindexed_foreign_keys",
+        "count": 4,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "count": 14,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan"
+      },
+      {
+        "name": "unused_index",
+        "count": 6,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index"
+      },
+      {
+        "name": "table_bloat",
+        "count": 1,
+        "remediation": "Consider running vacuum full (WARNING: incurs downtime) and tweaking autovacuum settings to reduce bloat."
+      },
+      {
+        "name": "auth_db_connections_absolute",
+        "count": 1,
+        "remediation": "https://supabase.com/docs/guides/deployment/going-into-prod"
+      }
+    ],
+    "newPerformanceInfo": "location_handoffs_task FK-supporting index is currently unused on the empty table. Retained intentionally for task-delete cascading; not evidence to remove it. Other unrelated advisories left unchanged."
+  },
+  "nativeBuild": {
+    "passed": true,
+    "log": {
+      "file": "location-handoff-native-mac.log",
+      "sha256": "236094f15aeec69cede94c95ac74cc51a1e8ddc13003875da8ac3219290fe42a"
+    },
+    "scope": "App and extensions from isolated owned staging. Production Swift matches canonical except existing isolation-only app-group/keychain and test bundle guards. Simulator Debug only for iOS; unsigned Debug only for Mac. No new UI/Store integration to accept.",
+    "changedProductionInputs": [
+      "Taskfold/Core/Backend.swift",
+      "Taskfold/Core/LocationReminders.swift"
+    ]
+  },
+  "previousFailures": [
+    "First focused Core compile used nonexistent Session memberwise initializer; corrected test to actual Session JSON decoder with fake session and noop persistence before passing focused/full suites.",
+    "First local harness lacked node_modules; restored pinned npm lock. Fixture lacked temp-table anon grant; changed fixture-only grant. Integral JSON representations failed bigint casts; canonical numeric normalization corrected before deployed migration.",
+    "Hosted fixtures first failed production invitation rules (missing auth user context, then direct accepted insertion). Read actual prepare_invitation trigger and changed fixture to owner-invites/member-accepts. Third hosted run passed all28 and rolled back."
+  ],
+  "privacy": "No real task/account/location data used. No existing pins uploaded. Coordinates only in account-private transport payload, never shared tasks/app groups/widgets/backups. Administrator-readable storage, not E2E encryption. Header ticket model contains no name/geometry and is not yet durably stored.",
+  "cleanup": {
+    "mainTaskfoldAppsRunning": [],
+    "unsignedIsolatedMacProductRemoved": true,
+    "noNativeAppLaunchedThisMilestone": true,
+    "realInstallationsAndData": "Untouched",
+    "retained": "Current logs, reusable build caches, pinned database development tooling and synthetic golden fixtures."
+  },
+  "remaining": [
+    "Explicit Mac upload disclosure/send/status UI and phone inbox/review UI.",
+    "Durable private nonce before Claim; account/device reset and interrupted-claim recovery.",
+    "Reviewed private place plus normal task Save/private intent; atomic monotonic import receipt protected against Undo/restore/sync replay; Finish retry/relaunch.",
+    "Real Auth/PostgREST paired-device/offline/account-switch and spoken/native acceptance.",
+    "Observed scheduled retention tick, real capable-device region delivery/background/locked/cold callback acceptance and wider Px."
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall delivery recovery",
+    "General older-client rollout safeguards",
+    "Release signing/distribution/install/update acceptance",
+    "Genuine Google/Microsoft OAuth registration/provider acceptance"
+  ]
+}

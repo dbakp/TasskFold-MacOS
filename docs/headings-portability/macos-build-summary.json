@@ -1,0 +1,10 @@
+{
+  "platform": "macos",
+  "configuration": "Debug",
+  "architecture": "arm64",
+  "strictSignatureVerified": true,
+  "nativeMacRuntimeAccepted": false,
+  "binarySHA256": "04abcda6c22e509ad270d7f8c6aa28b62d69a2be06ac58e90b0fff513bce9601",
+  "nativeAuthoringOptIn": true,
+  "normalAppAuthoringEnabled": false
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "7A776CF7-F167-44B5-BD27-4D9EAE1EF88B.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment cold return_0_A9C4A303-3F5D-493D-BACE-3D8A5B9E832A.json",
+        "timestamp" : 1793567310.42
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "1FD905CE-2FA0-464A-B84D-8BB49B5690FC.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment redone_0_8C0501E7-419A-469C-9695-862D4C22F220.json",
+        "timestamp" : 1793567292.18
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "EA9114A1-4AC0-434E-80FC-EC912349BE82.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment undone_0_2077400C-9FF6-48F7-9453-7216E52A8843.json",
+        "timestamp" : 1793567286.669
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "617000B5-36E0-4AA6-BDFA-82761F34E280.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment moved_0_9F55CA04-4B49-4435-A880-9BFE223A995E.json",
+        "timestamp" : 1793567280.297
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "61B8B0BF-E0FC-4038-8625-8DDD58CFD4E4.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Exact preserved subtask title is readable_0_B27787E1-09A3-4893-9E9F-CEED29F792C5.png",
+        "timestamp" : 1793567265.014
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "387D131A-49C3-4880-8912-1814CAC7CA9F.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment original_0_5B81CF1B-8B2F-4088-B31E-30BC31A03317.json",
+        "timestamp" : 1793567261.308
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn"
+  }
+]

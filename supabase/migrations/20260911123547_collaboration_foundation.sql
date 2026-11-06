@@ -8,6 +8,8 @@ create index if not exists tasks_assigned_to_idx on public.tasks(assigned_to) wh
 
 -- Owners can create projects through the native offline queue as well as create_project().
 drop policy if exists projects_no_direct_insert on public.projects;
+-- Replace the earlier owner-insert policy when replaying the complete history.
+drop policy if exists projects_insert_owner on public.projects;
 create policy projects_insert_owner on public.projects for insert to authenticated with check (user_id = (select auth.uid()));
 alter policy projects_update_access on public.projects using (public.has_project_access((select auth.uid()), id)) with check (public.has_project_access((select auth.uid()), id));
 

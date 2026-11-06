@@ -1,0 +1,7 @@
+{
+  "rawSHA256": {
+    "core.log": "9973e689f9c581870fdd68350d592a946f860d238e251d09438f4760c949ed99",
+    "mac-native.log": "ca58d98fb09869dd738da7d7f5b45c8ba0849261ba5a8ac779117d8b1901f8e2"
+  },
+  "normalization": "Trailing whitespace and trailing blank lines removed only from repository log copies; original raw results/logs remain authoritative."
+}

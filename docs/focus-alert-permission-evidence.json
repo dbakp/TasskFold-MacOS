@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-11",
+  "issue": "Focus alert permission request disabled the toggle without visible explanation while macOS authorization remained pending.",
+  "change": "Both independently owned Focus views display Requesting permission\u2026 while Store.requestingFocusAlerts is true; existing ownership guards, per-device preference and OS permission flow remain unchanged.",
+  "sources": {
+    "TaskFold-iOS": "c3a317368dccd1227feb93f6b77f6bfa9cd09c435d6ec644418c7fc87f1e3dc0",
+    "TasskFold-MacOS": "c3a317368dccd1227feb93f6b77f6bfa9cd09c435d6ec644418c7fc87f1e3dc0"
+  },
+  "builds": {
+    "ios": "focus-alert-progress-ios-build-v1.log",
+    "mac": "focus-alert-progress-mac-build-v1.log",
+    "bothPassed": true,
+    "iosStrictSigningReceipt": "focus-alert-progress-ios-signing-v1.json"
+  },
+  "ios": {
+    "result": "focus-alert-progress-ios-v1.xcresult",
+    "test": "testFocusFinishPreferenceSchedulingPauseResumeRelaunchAndEnd",
+    "seconds": 60.674,
+    "actualPassingTests": 1,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0,
+    "verified": [
+      "Schedule one finish alert",
+      "Pause removes it",
+      "Resume reschedules it",
+      "Normal relaunch retains it",
+      "End removes it",
+      "Disable preference remains off"
+    ]
+  },
+  "cloudPreservation": {
+    "a": {
+      "macCacheExactlyUnchanged": true,
+      "phoneSharedTablesUnchanged": {
+        "focus_sessions": true,
+        "saved_views": true,
+        "tasks": true,
+        "labels": true,
+        "projects": true,
+        "favorites": true,
+        "task_activity_epoch": true,
+        "view_orders": true,
+        "sections": true,
+        "project_collaborators": true,
+        "reminder_preferences": true,
+        "profiles": true,
+        "task_activity": true,
+        "view_preferences": true
+      },
+      "phonePendingMutations": 0
+    },
+    "b": {
+      "macCacheExactlyUnchanged": true,
+      "phoneSharedTablesUnchanged": {
+        "focus_sessions": true,
+        "saved_views": true,
+        "tasks": true,
+        "labels": true,
+        "projects": true,
+        "favorites": true,
+        "task_activity_epoch": true,
+        "view_orders": true,
+        "sections": true,
+        "project_collaborators": true,
+        "reminder_preferences": true,
+        "profiles": true,
+        "task_activity": true,
+        "view_preferences": true
+      },
+      "phonePendingMutations": 0
+    },
+    "phoneCloudMode": true
+  },
+  "mac": {
+    "bundle": "com.dbakp.taskfold.mac.p0focuscontrasttests",
+    "fixture": "Local ui-testing workspace, focus-session-seed and focus-finish-testing",
+    "authorizationRequestObserved": true,
+    "requestStillPendingAtCheckpoint": true,
+    "systemDialogComputerUseBlocked": true,
+    "humanHandoffRequested": true,
+    "scheduledDeliveryProven": false,
+    "notificationActionProven": false,
+    "updatedProgressIndicatorNativeCaptureVerified": false
+  },
+  "limits": [
+    "Mac runtime delivery/actions remain open until system permission completes.",
+    "The permission indicator compiles on both platforms; its pending-state appearance has not been inspected in the updated binary.",
+    "No full VoiceOver/keyboard or physical/APNs acceptance claimed.",
+    "No Todoist requests or real user task mutations."
+  ]
+}

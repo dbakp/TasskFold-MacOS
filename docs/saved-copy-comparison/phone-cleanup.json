@@ -1,0 +1,16 @@
+{
+  "retainedScreenshots": 4,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-copy-comparison-native-phone-v3.xcresult",
+      "bytes": 4606186
+    },
+    {
+      "path": "/tmp/taskfold-copy-comparison-native-phone-v3-attachments",
+      "bytes": 1628238
+    }
+  ],
+  "deviceRestoredTo": "Shutdown",
+  "newSimulatorCreated": false,
+  "proof": "passed"
+}

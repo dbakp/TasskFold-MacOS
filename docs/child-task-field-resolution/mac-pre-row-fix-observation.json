@@ -1,0 +1,17 @@
+{
+  "source": "direct native computer use, pre-row-fix build; screenshots shown in conversation, not archived as original files here",
+  "observations": [
+    "Expanded Plan exposes planned day, time, zone, deadline and estimate; scrolling reveals estimate and Save controls",
+    "Saved message is readable after native Save",
+    "First synthetic request confirms with writes=1 requests=1 and current=Mac reviewed child title",
+    "A later saved intent is Mac conflict replacement; current comparison reads Updated on another device",
+    "Comparison explicitly closes original and saves a replacement, leaving Send separate",
+    "Recovery list incorrectly shows Mac reviewed child title for the later request and replacement; comparison uses correct stored Mac conflict replacement"
+  ],
+  "acceptance": "mixed; review-row defect reproduced; full Mac runtime/speech and final correction acceptance remain open",
+  "automation": {
+    "mac-v1": "wrong test-class selector, zero tests; not accepted",
+    "mac-v2": "one real test fails finding initial fixture button/no window; direct launch with explicit ApplePersistenceIgnoreState opens fixture"
+  },
+  "cleanup": "normal Quit followed by a computer-use query caused a new process without test arguments; that exact owned relaunch was terminated. No credentials inspected."
+}

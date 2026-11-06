@@ -1,0 +1,193 @@
+{
+  "date": "2026-10-22",
+  "platform": "mac",
+  "status": "native_recovery_implemented_server_not_deployed_p0_open",
+  "sourceSHA256": {
+    "Package.swift": "d2b3d08443ebf6470c672d46771b6e37fe83bf41c855210f181a8a6ae16c6d84",
+    "Taskfold.xcodeproj/project.pbxproj": "25fce217467f750a328d5e97380fa58027f0d698c73c0ad9aeca6dc6e7151794",
+    "Taskfold/AccountRemovalNativeFixture.swift": "7f2e5428ff7dbe987f6b3bda465cdd06c65601c9927ab1fc7130e75f03b34b3f",
+    "Taskfold/Core/AccountRemoval.swift": "c5395a08ace44e55ce98f3ab021e3a01e0508c4bcf250b82be9436303d5dd015",
+    "Taskfold/Core/Store.swift": "3bae7a12f1fdd35828145d94d383e3443cf53091e598b95bd31eeccce63ee325",
+    "Taskfold/Core/Backend.swift": "04028d0de7adb71bdc25a6372240fed363604f215643f1bbd26cce4a84e56750",
+    "Taskfold/Core/Backups.swift": "dec82374276d684945b129da54f00305eb7c656e8865a1925073c30580be4885",
+    "Taskfold/Core/LocationPlaceStore.swift": "a39de5c3e3b6f5c5ddac36bcef31cbad20ac0db5c59ab5794db0a22a839dfad4",
+    "Taskfold/Core/WidgetActions.swift": "9c0aa4ccbe6808e8ecb8c1cf5f5be32d65d94f0ea230f60444fbd8a16e6add8a",
+    "Taskfold/Core/SharedCapture.swift": "6c818d7a4aadef3997d41a36cab14e3bc6305394df838b75186c126d121e2fbf",
+    "Taskfold/SharedCaptureStore.swift": "566bf5e7e024af31a1bbd0e31417b59de65f6d07828a55a9fdfd84167aa197ba",
+    "Taskfold/Core/CalendarEvents.swift": "e45b03e7ad8711c8379b2016171b4355650533b04a40fde6d5208b8d256dbbf7",
+    "Taskfold/Core/CloudCalendars.swift": "5608abad585b85a4b14be409b037918ccdb62c75f168c50bd808de423775f69c",
+    "Taskfold/CalendarAuthorization.swift": "35ee5f107973d982bc8aabbe5fb74d8bc8de557da9afc1fb5623f0a3533151a9",
+    "TaskfoldTests/AccountRemovalTests.swift": "f5c81e91cfb7998ed5ae528da5d41cfb7afc2d20a33000b0695338de8bb16c00",
+    "TaskfoldTests/AccountTransportTests.swift": "922176b2cff4a4a9eeb75986b172d472593441c5cde3c781834fc2a2337fdf7c",
+    "Scripts/test_account_removal_native.py": "b6f248b1c6df7acd531ed4615209f9448abde72cbc3d4979da5eb1d80ced76a0",
+    "Taskfold/TaskfoldMacApp.swift": "90279df2c28ae99e5ea7ece888ad1b09d887000c865ccacbb5487f8592bb43f6",
+    "Taskfold/Views/SettingsView.swift": "ee65b2c2722434b22ba0f4ec4fd020894e481b9f324e59c7e3675c0860766438",
+    "Taskfold/Views/AccountSecurityViews.swift": "f784a011b52ebd000558e48fa490341c197cb029d3fe09ee019d10fd41c94f7e",
+    "Scripts/prepare_workflow_ui_test.py": "b64187467792d1372a235a45f464c46c1ffdf59f848895ea236ae578ea6040ff"
+  },
+  "Core": {
+    "reported": 1335,
+    "skipped": 33,
+    "actual": 1302,
+    "failed": 0,
+    "accountTransportPassed": 37,
+    "accountRemovalPassed": 8,
+    "accountRemovalSkipped": 0,
+    "logSHA256": "a8b3849d23836b41e82167e53629a73ec93aef45a507620474fd7afbe6017f46"
+  },
+  "nativeBuild": {
+    "passed": true,
+    "signing": "disabled for compile verification only",
+    "logSHA256": "1fbfb34ec93f638165039b71f6ae0dc723443ba109493402e022419aa44114a3",
+    "log": "account-removal-recovery-build-mac-final.log"
+  },
+  "nativeSimulator": {
+    "scope": "Actual iOS Store, production HTTP transport with simulated URLProtocol endpoint replies, protected file transactions, Keychain persistence, real AES-GCM backups and backup-key deletion. Fixture-owned sharing directory; no live Auth/Storage or normal App Group/UI confirmation proof. Original booted Simulator state retained.",
+    "cases": {
+      "failed-reply-retry": {
+        "passed": true,
+        "checks": {
+          "backupKeysExistBeforeRemoval": true,
+          "confirmedRemovalSignsOut": true,
+          "encryptedRecoveryRoundtrip": true,
+          "failedRequestKeepsCache": true,
+          "failedRequestKeepsSession": true,
+          "interruptedResultRefused": true,
+          "lateRemovedAccountCannotReopen": true,
+          "originalAuthorizationDurable": true,
+          "outsiderBackupKeyKept": true,
+          "outsiderCacheExact": true,
+          "outsiderRecoveryExact": true,
+          "ownedBackupKeyRemoved": true,
+          "ownedRecoveryRemoved": true,
+          "ownerCacheRemoved": true,
+          "pendingWidgetPrivate": true,
+          "pendingWorkspaceQuiescent": true,
+          "privatePlacesScoped": true,
+          "recoveryCommandFinished": true,
+          "reservedRecoveryOnly": true,
+          "sameAuthorizationRetried": true,
+          "staleCacheWriteRefused": true,
+          "staleConfirmationRefused": true
+        },
+        "artifactSHA256": "3a01de350a8645ec50b3c2b02ea715e4bcd285fb3011f8efb6c6d5b9ea305401"
+      },
+      "late-account-switch": {
+        "passed": true,
+        "checks": {
+          "backupKeysExistBeforeRemoval": true,
+          "encryptedRecoveryRoundtrip": true,
+          "heldOriginalRequest": true,
+          "otherMemoryKept": true,
+          "otherSessionKept": true,
+          "otherShareKept": true,
+          "otherWidgetKept": true,
+          "outsiderBackupKeyKept": true,
+          "outsiderCacheExact": true,
+          "outsiderRecoveryExact": true,
+          "ownedBackupKeyRemoved": true,
+          "ownedRecoveryRemoved": true,
+          "ownerCacheRemoved": true,
+          "privatePlacesScoped": true,
+          "recoveryCommandFinished": true,
+          "reservedRecoveryOnly": true,
+          "staleCacheWriteRefused": true,
+          "staleConfirmationRefused": true
+        },
+        "artifactSHA256": "28208967dda82516e0eeaf3ca15a271a787559218426b5879fb10fb32c49dad0"
+      },
+      "expired-authorization": {
+        "passed": true,
+        "checks": {
+          "backupKeysExistBeforeRemoval": true,
+          "confirmedRemovalSignsOut": true,
+          "encryptedRecoveryRoundtrip": true,
+          "expiredAuthorizationRenewed": true,
+          "lateRemovedAccountCannotReopen": true,
+          "outsiderBackupKeyKept": true,
+          "outsiderCacheExact": true,
+          "outsiderRecoveryExact": true,
+          "ownedBackupKeyRemoved": true,
+          "ownedRecoveryRemoved": true,
+          "ownerCacheRemoved": true,
+          "privatePlacesScoped": true,
+          "recoveryCommandFinished": true,
+          "reservedRecoveryOnly": true,
+          "staleCacheWriteRefused": true,
+          "staleConfirmationRefused": true
+        },
+        "artifactSHA256": "d4234b51b604b4195fa7c17a7c7766e8f8dcdb6fcf4434e8f44baa8fd22f738e"
+      }
+    },
+    "runtime": "iPhone 18 Pro / iOS 27 Simulator",
+    "runner": "Scripts/test_account_removal_native.py in iOS repo",
+    "sourceOwnership": "Mac independently owns the same compatible lifecycle with its platform-specific Store/UI. iOS runtime evidence is not a Mac runtime pass.",
+    "artifactDirectory": "account-removal-native-ios-final-team-verified",
+    "teamSignatures": {
+      "com.dbakp.taskfold.workflowtestsremoval.share": {
+        "linkedIdentityVerified": true,
+        "signatureVerified": true,
+        "realTeamSignatureVerified": true,
+        "team": "3UZ4C73FM2"
+      },
+      "com.dbakp.taskfold.workflowtestsremoval.widgets": {
+        "linkedIdentityVerified": true,
+        "signatureVerified": true,
+        "realTeamSignatureVerified": true,
+        "team": "3UZ4C73FM2"
+      },
+      "com.dbakp.taskfold.workflowtestsremoval": {
+        "linkedIdentityVerified": true,
+        "signatureVerified": true,
+        "realTeamSignatureVerified": true,
+        "team": "3UZ4C73FM2"
+      }
+    },
+    "signatureArtifactSHA256": "28940e33fba42ff24ca2d0cce907bac8e3e86e6de5ab30e2b305d11763e710e1",
+    "runnerLogSHA256": "027091c6c04aed64a78749993dd433ccd0d888150af887bb382ae5f8f3b4eee1"
+  },
+  "MacRuntime": {
+    "passed": false,
+    "result": "The isolated copy omitted its private Keychain entitlement. Opt-in identity then required an unavailable development profile; no removal authorization occurred. Provisioning/signing remains user-deferred.",
+    "proofArtifactSHA256": "92c20faccdbe046192bf2f20326da4684c9f594b199460c21a630fee706c0018",
+    "provisioningLogSHA256": "ed517112d82fe72980e327b813376bfb2e9ab9a5e1903cb24ffb5d54a5b355f0",
+    "preparation": "Mac prepare_workflow_ui_test.py --private-keychain is opt-in and preserves existing defaults."
+  },
+  "failedIterations": [
+    "Explicit returns/protocol default/SPM source registration and non-Equatable test-entry compile corrections",
+    "Unsigned Simulator build lacked linked identity; corrected Xcode signing and verified existing team signatures",
+    "Raw JSON bytes are not a semantic snapshot comparison; use entire decoded Snapshot",
+    "Runner read previous result before reset; now removes exact previous synthetic result before launch and requires matching scenario plus all named checks",
+    "B-sharing fixture label differed from actual publication; use actual current account label while retaining full workspace/draft equality",
+    "Mac private Keychain capability requires unavailable profile; retained as a deferred gate, no fallback store substituted"
+  ],
+  "remaining": [
+    "controlled server migration/function deployment and genuine Auth/Storage HTTP byte cleanup",
+    "actual native account confirmation UI and live disposable-account relaunch/removal acceptance",
+    "Mac profile/private-Keychain runtime acceptance",
+    "new UI visual/spoken acceptance",
+    "simultaneous hosted upload/removal race and versioned storage if enabled"
+  ],
+  "realAccountOrTaskDeletion": false,
+  "persistentHostedChange": false,
+  "scope": "Does not close full P0/Px, Mac runtime, distribution, remote delivery or physical region-monitoring acceptance.",
+  "cleanup": {
+    "removedOwnedStagingAndCompileProducts": {
+      "/private/tmp/taskfold-removal-ios": 4915140,
+      "/private/tmp/taskfold-removal-mac": 28601350,
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-project-workflows-native-v2/Build/Products/Debug/Taskfold.app": 56745740
+    },
+    "logicalBytesPruned": 90262230,
+    "MacCompileProductSHA256": {
+      "Contents/Info.plist": "87894b4dfca850f33d83714a941882452681fa9619655f1a2fb8867490498ffd",
+      "Contents/MacOS/Taskfold": "581e5529298a1e1b3500909b1c4f21b5a6d640548d1788188cab47f6b07d1c2a"
+    },
+    "retained": "Current isolated iOS preparation, reusable compiled objects/dependencies and final evidence. Existing user apps/data/desktop widgets untouched."
+  },
+  "hostedRecheck": {
+    "functionInventoryContainsDeleteAccount": false,
+    "candidateReceiptTablePresent": false,
+    "readOnly": true,
+    "persistentHostedChange": false
+  }
+}

@@ -1,0 +1,93 @@
+--- a/Taskfold/Views/ChildTaskFieldViews.swift
++++ b/Taskfold/Views/ChildTaskFieldViews.swift
+@@ -281,8 +281,8 @@
+                             }
+                         }
+                     }
+-                    Section {
+-                        Button("Reminders", systemImage: "bell") { openReminders() }.accessibilityIdentifier("childReminders")
++                    if TaskKind(Record(read.nodes[key]?.fields ?? [:])) == .task {
++                        Section { Button("Reminders", systemImage: "bell") { openReminders() }.accessibilityIdentifier("childReminders") }
+                     }
+                     Section {
+                         Button("Save on this device", systemImage: "tray.and.arrow.down") {
+@@ -373,11 +373,11 @@
+         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
+         .sheet(item: $sharedAssignee) { TeamTaskAssigneePicker(request: $0) }
+         .sheet(item: $personalAssignee) { ChildPersonalAssigneeView(request: $0) }
+-        .sheet(item: $reminderEditor) { TeamTaskRemindersEditor(request: $0) }
++        .sheet(item: $reminderEditor) { TeamTaskRemindersEditor(request: $0).id($0.id) }
+         }
+     }
+     private func openReminders() {
+-        guard sourceAvailable, let read, let captured = scope, let original = read.nodes[selectedKey] else { return }
++        guard sourceAvailable, let read, let captured = scope, let original = read.nodes[selectedKey], TaskKind(Record(original.fields)) == .task else { return }
+         noticeRequest = nil
+         let selected = selectedKey, revision = editingRevision
+         let parent = read.context.root
+--- a/Taskfold/Views/TeamTaskRemindersEditor.swift
++++ b/Taskfold/Views/TeamTaskRemindersEditor.swift
+@@ -128,7 +128,7 @@
+                 } else {
+                     ScrollView { VStack(alignment: .leading, spacing: 16) {
+                         Label("Reminder editing paused", systemImage: "lock.shield").font(.title2)
+-                        Text("Project access changed. Reopen this task’s current details before editing again.")
++                        Text(request.isChild ? "This task or workspace changed. Close these settings and reopen the task before editing again." : "Project access changed. Reopen this task’s current details before editing again.")
+                         if session?.latest != nil { Text(recoveryStatus).accessibilityIdentifier("teamReminderRecoveryStatus") }
+                         if let failure = session?.failure { Text(failure).foregroundStyle(.red); Button("Retry preserving edit") { checkpoint(); _ = session?.flush() } }
+                     }.frame(maxWidth: .infinity, alignment: .leading).padding(24) }.accessibilityIdentifier("teamRemindersPaused")
+--- a/Taskfold/ChildFieldNativeFixture.swift
++++ b/Taskfold/ChildFieldNativeFixture.swift
+@@ -27,7 +27,11 @@
+         get throws { Record(try state()["root"]!.object) }
+     }
+     static func initial() -> [String: JSON] {
+-        let child: (String, String) -> JSON = { id, title in .object(["id": .string(id), "title": .string(title), "description": .string("Original saved notes"), "priority": .number(4), "completed": .bool(false), "future": .object(["keep": .bool(true)])]) }
++        let child: (String, String) -> JSON = { id, title in
++            var fields: [String: JSON] = ["id": .string(id), "title": .string(title), "description": .string("Original saved notes"), "priority": .number(4), "completed": .bool(false), "future": .object(["keep": .bool(true)])]
++            if id == "concept", ProcessInfo.processInfo.arguments.contains("--child-fields-native-heading") { fields["is_heading"] = .bool(true) }
++            return .object(fields)
++        }
+         return ["root": .object(["id": .string(ChildFieldNativeIdentity.rootID), "user_id": .string(ChildFieldNativeIdentity.account), "task_generation": .string(ChildFieldNativeIdentity.generation), "project_id": .null, "title": .string("Native child workspace"), "subtasks": .array([child("concept", "Prepare the review"), child("review", "Publish the summary")])]), "receipts": .object([:]), "versions": .object(["concept": .number(1), "review": .number(1)]), "writes": .number(0), "requests": .number(0), "lost": .bool(false)]
+     }
+     static func save(_ state: [String: JSON]) throws {
+@@ -142,7 +146,7 @@
+             let localSpecs = schedules.compactMap { ReminderSpec(row: $0) }
+             let enabledSchedules = localSpecs.filter(\.enabled).count
+             let beforeTen = localSpecs.filter { $0.enabled && $0.kind == "relative" && $0.offset == -10 }.count
+-            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
++            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
+         } catch { problem = error.localizedDescription }
+     }
+ }
+--- a/TaskfoldUITests/AudioCommentUITests.swift
++++ b/TaskfoldUITests/AudioCommentUITests.swift
+@@ -1687,4 +1687,17 @@
+         }
+     }
+ 
++    @MainActor func testChildFieldsHeadingDoesNotOfferReminderOrPlan() throws {
++        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
++        try childOpen(app, extra: "--child-fields-native-heading")
++        childHomePress("childNativeEditor", app)
++        let title = childField("independentChildTitle", app)
++        XCTAssertTrue(title.waitForExistence(timeout: 10))
++        childReveal(app.buttons["saveIndependentChildFields"], app)
++        XCTAssertFalse(app.buttons["childReminders"].exists)
++        childReveal(title, app, towardTop: true)
++        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label == %@", "Plan")).firstMatch.exists)
++        childDone(app); childProbe(app, "queued=0 attempted=0 confirmed=0 writes=0"); childProbe(app, "private=0"); childProbe(app, "kind=heading")
++    }
++
+ }
+--- a/Taskfold/Views/TaskEditor.swift
++++ b/Taskfold/Views/TaskEditor.swift
+@@ -239,7 +239,7 @@
+         .sheet(item: $teamMove) { TeamTaskMoveView(request: $0) }
+         .sheet(item: $teamDeletion) { TeamTaskDeletionReview(request: $0) }
+         .sheet(item: $teamRepeat) { TeamTaskRecurrenceEditor(request: $0) }
+-        .sheet(item: $teamReminders) { TeamTaskRemindersEditor(request: $0) }
++        .sheet(item: $teamReminders) { TeamTaskRemindersEditor(request: $0).id($0.id) }
+         .sheet(item: $teamLabels) { TeamTaskLabelsEditor(request: $0) }
+         .sheet(item: $teamAssignee) { TeamTaskAssigneePicker(request: $0) }
+         .sheet(item: $headingConversion) { request in

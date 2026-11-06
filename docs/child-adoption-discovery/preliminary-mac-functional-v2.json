@@ -1,0 +1,15 @@
+{
+  "nativeAcceptedScope": [
+    "Live discovery and selection with no editable task cache and unreadable flag",
+    "Correct live task heading; all 3 original nodes and nested order",
+    "Explicit upgrade retains original root; one request/write",
+    "Verified process absence and cold relaunch without reset retains named applied decision"
+  ],
+  "method": "Direct CUA after explicitly authorized Terminal launch; not XCTest",
+  "fullyAcceptedForEverydayUse": false,
+  "normalUseEnabled": false,
+  "appQuit": true,
+  "rootSHA256": "44fdb71339793306601b5892890960e42b0b530aa55332b553360fefa8b63e0e",
+  "supersededForAcceptance": true,
+  "reason": "Audit found unreadable saved workspace must block writes; this pre-fix functional run is not final admission acceptance"
+}

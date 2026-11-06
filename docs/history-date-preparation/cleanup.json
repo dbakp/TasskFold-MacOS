@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-27",
+  "allBuildAndTestJobsTerminal": true,
+  "testAppsTerminatedByTeardown": true,
+  "uninstalledReservedSimulatorBundles": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    }
+  ],
+  "ownedStageDirectoriesRemoved": 15,
+  "logicalBytesRemoved": 81498435,
+  "retained": [
+    "One current native source/build cache per platform",
+    "Own source package caches",
+    "Compact control diagnosis, final tests/metrics, golden corpora and source/binary bindings in each repo"
+  ],
+  "note": "Logical bytes, not a measured physical free-space delta. No real workspace, unrelated app/build, Simulator runtime or security setting removed."
+}

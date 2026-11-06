@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native Mac Month-grid keyboard navigation in isolated grammar workspace; iOS receives status/evidence only.",
+  "bundle": "com.dbakp.taskfold.mac.p0grammaruitests",
+  "initialGap": "Clicking 11 November followed by Right Arrow paged to December and selected December 1. Date cells had no date-level keyboard navigation.",
+  "implementation": [
+    "Month cells own focused-date state, selected trait, complete date/task-count label and explicit primary/Open day actions.",
+    "Down from calendar focus enters date navigation; Left/Right move one day and Up/Down one week.",
+    "Return opens the exact selected day; Escape explicitly restores period navigation.",
+    "Calendar-level handling covers native collection focus; period changes request focus after the old cell is recreated.",
+    "Command, Option, Control and Shift combinations are ignored; platform arrow-key flags do not reject ordinary arrows."
+  ],
+  "nativeChecks": {
+    "finalBuild": "month-keyboard-mac-build-v8.log: TEST BUILD SUCCEEDED",
+    "normalLightWideWindow": true,
+    "keyboardEntryThenOctober11To12": true,
+    "weekMovement": true,
+    "october31ToNovember1AndBack": true,
+    "escapeThenPeriodRightFromOctober12ToNovember1": true,
+    "returnOpensExactDay": true,
+    "populatedDayHasExpectedTaskAnd25MinuteEstimate": true,
+    "completeDateSelectedCountAndOpenActionInNativeAccessibilityTree": true,
+    "rawCachePreservation": {
+      "unchangedTables": 9,
+      "unchangedTasks": 5,
+      "pending": 0,
+      "allRawTableRowsExactlyUnchanged": true
+    },
+    "normalQuitAndRelaunchTodayThreeTasks": true
+  },
+  "regression": {
+    "name": "testMonthGridKeyboardMovesDatesAcrossBoundary",
+    "compiled": true,
+    "executedByXCTest": false
+  },
+  "intermediateFindings": [
+    "First handler rejected platform arrow-key flags.",
+    "Changing a button into a focused cell required applying its semantic labels after accessibilityElement(children: .ignore).",
+    "Collection focus needed calendar-level date handling.",
+    "Recreating the month grid lost focus; explicit deferred calendar refocus preserves boundary movement.",
+    "Escape required a new focus request even when the parent binding still read true."
+  ],
+  "limits": [
+    "Final native acceptance is scoped to the named normal/light wide-window workflow.",
+    "Compact pointer routing, Year-grid keyboard, actual VoiceOver, iOS/iPad hardware keyboard and broader accessibility acceptance remain open.",
+    "No sync/data-contract changes or iOS production changes. No new Mac XCTest runtime pass.",
+    "Full P0 acceptance remains open."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "bundleIdentifier": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "result": "TEST BUILD SUCCEEDED",
+  "strictSignature": true,
+  "ordinaryAudioFlags": {},
+  "binaries": {
+    "Taskfold": {
+      "sha256": "420ce30ecd62df2e9e7dbcd1f808e019080812f833728474dc47acd39476bd86",
+      "architectures": "arm64"
+    },
+    "Taskfold.debug.dylib": {
+      "sha256": "4ea222b6885cb1b0611d4eb6fe909bf6ede2b45cd26bfa926c0d98ff6213dc7b",
+      "architectures": "arm64"
+    }
+  },
+  "tests": {
+    "TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "878c2a0e8d7676a5913635286b250c34e076f5650d6a5d611bfc9250b3d12615"
+  },
+  "lastChange": "Exact runner guard moved before VoiceOver state access; compiled both. Accepted loaded production debug code is unchanged.",
+  "acceptedLoadedDebugCodeUnchanged": true,
+  "launcherStubChangedSincePreQueryFixBuild": false
+}

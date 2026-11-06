@@ -1,0 +1,10 @@
+{
+  "host": "/tmp/taskfold-source-csv-mac-host",
+  "build": "/tmp/taskfold-source-csv-mac-native-build",
+  "nativeStatus": "Awaiting Xcode Enable UI Automation approval; no app case ran",
+  "appStrictDeepSignature": "passed",
+  "appExecutableSHA256": "fb586929e1c2cc340704ee5308662819128771786b8202d929265d20fc93b391",
+  "allTestAppProcessesClosed": true,
+  "debuggerHelperCancelled": true,
+  "developerModeUnchanged": "disabled"
+}

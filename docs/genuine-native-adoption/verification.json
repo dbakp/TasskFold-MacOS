@@ -1,0 +1,15 @@
+{
+  "accepted": true,
+  "actualAppChecks": 16,
+  "coldAppProcesses": 4,
+  "currentOwnSourceMatchesAcceptedApp": true,
+  "strictSignaturesVerified": true,
+  "buildLogSHA256": "d5409a999c4a7fa9de44a2e9d917f474275eec75fc3728676041286bd15bd76d",
+  "driverSHA256": "73fc468b53823c8bdd6b1a9ff9bee447b90cd967fd3f8b514069701a86479ead",
+  "administrativeAdoptionOrPromotionBypass": false,
+  "preservedEditorDraftRefusedAndKept": true,
+  "hostedChanges": false,
+  "normalUseGateChanges": false,
+  "genuineTLSOrKeychainAcceptance": false,
+  "nativeViewInteractionOrSpeechAcceptance": false
+}

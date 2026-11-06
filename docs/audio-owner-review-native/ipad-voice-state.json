@@ -1,0 +1,5 @@
+{
+  "before": "0",
+  "after": "0",
+  "source": "simctl spawn defaults read com.apple.Accessibility VoiceOverTouchEnabled; read-only"
+}

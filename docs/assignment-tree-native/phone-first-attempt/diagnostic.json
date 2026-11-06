@@ -1,0 +1,11 @@
+{
+  "accepted": false,
+  "reason": "Both native cases reached only their final whole-file cold-return equality assertion. JSON object-key order varies by process. The supported saved/cold exported snapshots have exactly equal values under the independent lossless comparison; byte ordering differs. The later v2 tests compare complete values and separately require exact opaque tokens, with six exported snapshots and an external verifier.",
+  "supportedSavedColdValuesIdentical": true,
+  "sourceSHA256": [
+    "dc75d2a311b414e4420d2aa38a6d3be5a0546aa80e2924bf9704b7638b660aee",
+    "fb2c98cb6468072aecbc1710341f9b027e7c8ba2297e76f901ef3fd53084b992"
+  ],
+  "logSHA256": "3be226b7b51dd75f2b3de001729e2a96c0c0a9637f73ed87b65230e4c0ebbc1e",
+  "supersededBy": "../phone/test-summary.json"
+}

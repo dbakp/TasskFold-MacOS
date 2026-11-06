@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-04",
+  "syntheticOnly": true,
+  "accepted": false,
+  "productionChooserCompiled": true,
+  "buildEvidence": "/tmp/taskfold-source-ui-build-ios-v4.json",
+  "nativeRunExitCode": 65,
+  "nativeRun": "/tmp/taskfold-source-native-ios-v6-proof.json",
+  "failure": "The correct source search accepts text and renders No Results, but the Choose a source navigation bar does not return while the test leaves search; assertion failed before cancellation/save/run.",
+  "testLocatorCorrected": true,
+  "correctedLocatorRecompiledOrRerun": true,
+  "ownedSimulatorRestored": true,
+  "nextNormalSimulatorBuild": "25",
+  "nextNormalSimulatorBuildProduced": false,
+  "reasonPending": "Source search/toolbar transition still needs scoped acceptance; phone installation and startup crash fix were prioritized as requested.",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "46eb90a97a57a108fadb813b088925003a0a07ef8fb1e61d35a24e120274c0a0",
+    "Taskfold/Views/WorkflowViews.swift": "6bcad797b5811bc54037ab72d4013ac499583b7ebff25d02b90405100121c6d0",
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "ab131cf4e4b9f5244b6636af051124ab5202069a3aff2298e8c636da340bc535"
+  },
+  "genuineAuthOrProvider": false,
+  "hardwareOrLargeLibraryRenderingAccepted": false,
+  "cleanupApplied": true,
+  "ordinaryPhoneBuildProduced": "26",
+  "ordinaryPhoneStartupAccepted": true,
+  "sourceChooserNativeJourneyAccepted": false
+}

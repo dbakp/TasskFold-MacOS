@@ -1,0 +1,41 @@
+{
+  "configuration": "Release",
+  "mainAppOptimized": true,
+  "mainAppDebugDefine": false,
+  "uncheckedOptimization": false,
+  "architectures": [
+    "arm64"
+  ],
+  "appSignatureVerified": true,
+  "archivePayloadVerified": true,
+  "archiveSHA256": "4cfdb8069d7102090dd3e7809538324c4bfe33a6ce27a443698df0ee8318e2ae",
+  "archiveBytes": 19507689,
+  "buildLogSHA256": "cd8206974193616eed7302d869d2b971466e310ffe95171aa23c329688217191",
+  "ordinaryFeatureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "developmentProfileValid": true,
+  "profileExpiresUTC": "2026-11-10T18:38:42+00:00",
+  "runtimeAccepted": false,
+  "installed": false,
+  "buildRecipeSHA256": "16427c677a40e74b8cf8dffeb85b3c654bf485ff0a996674bc5e49a4629353fa",
+  "profiles": [
+    {
+      "product": "Taskfold.app",
+      "expiresUTC": "2026-11-10T18:38:42+00:00",
+      "validNow": true
+    },
+    {
+      "product": "TaskfoldShare.appex",
+      "expiresUTC": "2026-11-10T18:32:07+00:00",
+      "validNow": true
+    },
+    {
+      "product": "TaskfoldWidgets.appex",
+      "expiresUTC": "2026-11-10T18:32:04+00:00",
+      "validNow": true
+    }
+  ]
+}

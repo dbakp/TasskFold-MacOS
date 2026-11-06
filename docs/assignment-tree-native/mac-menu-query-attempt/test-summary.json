@@ -1,0 +1,67 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "modelName" : "MacBook Pro",
+        "osBuildNumber" : "25G83",
+        "osVersion" : "26.6.2",
+        "platform" : "macOS"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1793561209.346,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    }
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793561177.785,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Failed to click \"Assignment destination\" MenuItem: Find single matching element. Multiple matching elements found for <XCUIElementQuery: 0xbb5409fe0>.\nSparse tree of matches:\n→Application, pid: 95773, title: 'Taskfold Workflow Test'\n  ↳MenuBar\n  ⋅ ↳MenuBarItem, title: 'Task'\n  ⋅   ↳Menu\n  ⋅     ↳MenuItem, identifier: 'ID(id: 7969)', title: 'Move to Project'\n  ⋅       ↳Menu\n  ⋅         ↳MenuItem, identifier: 'menuAction:', title: 'Assignment destination'\n  ↳Window, identifier: 'SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<Taskfold.ChildFieldMainListNativeFixtureView, Taskfold.ChildFieldNativeFixtureView>, Taskfold.AudioOwnerReviewNativeFixtureView>, SwiftUI._ConditionalContent<Taskfold.AudioConversa', title: 'Today – Sunday, 1 November · 1 task'\n    ↳Group\n      ↳SplitGroup, identifier: 'SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<Taskfold.ChildFieldMainListNativeFixtureView, Taskfold.ChildFieldNativeFixtureView>, Taskfold.AudioOwnerReviewNativeFixtureView>, SwiftUI._ConditionalContent<Taskfold.AudioConversa'\n        ↳Group\n          ↳SplitGroup\n            ↳Group\n              ↳ScrollView, identifier: 'inspector'\n                ↳Group\n                  ↳PopUpButton, identifier: 'taskProjectPicker', value: Assignment origin\n                    ↳Menu\n                      ↳MenuItem, identifier: 'menuAction:', title: 'Assignment destination'",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "TaskfoldMacUITests/testProjectChangePreservesExactChecklistThroughSaveAndColdReturn()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testProjectChangePreservesExactChecklistThroughSaveAndColdReturn",
+      "testName" : "testProjectChangePreservesExactChecklistThroughSaveAndColdReturn()"
+    },
+    {
+      "failureText" : "Failed to click \"Assignment destination\" MenuItem: Find single matching element. Multiple matching elements found for <XCUIElementQuery: 0xbb540a440>.\nSparse tree of matches:\n→Application, pid: 95818, title: 'Taskfold Workflow Test'\n  ↳MenuBar\n  ⋅ ↳MenuBarItem, title: 'Task'\n  ⋅   ↳Menu\n  ⋅     ↳MenuItem, identifier: 'ID(id: 7968)', title: 'Move to Project'\n  ⋅       ↳Menu\n  ⋅         ↳MenuItem, identifier: 'menuAction:', title: 'Assignment destination'\n  ↳Window, identifier: 'SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<Taskfold.ChildFieldMainListNativeFixtureView, Taskfold.ChildFieldNativeFixtureView>, Taskfold.AudioOwnerReviewNativeFixtureView>, SwiftUI._ConditionalContent<Taskfold.AudioConversa', title: 'Today – Sunday, 1 November · 1 task'\n    ↳Group\n      ↳SplitGroup, identifier: 'SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<Taskfold.ChildFieldMainListNativeFixtureView, Taskfold.ChildFieldNativeFixtureView>, Taskfold.AudioOwnerReviewNativeFixtureView>, SwiftUI._ConditionalContent<Taskfold.AudioConversa'\n        ↳Group\n          ↳SplitGroup\n            ↳Group\n              ↳ScrollView, identifier: 'inspector'\n                ↳Group\n                  ↳PopUpButton, identifier: 'taskProjectPicker', value: Assignment origin\n                    ↳Menu\n                      ↳MenuItem, identifier: 'menuAction:', title: 'Assignment destination'",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 2,
+      "testIdentifierString" : "TaskfoldMacUITests/testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource",
+      "testName" : "testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 2
+}

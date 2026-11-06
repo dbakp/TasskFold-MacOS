@@ -1,0 +1,133 @@
+{
+  "date": "2026-10-10",
+  "scope": "Cloud A \u2192 B \u2192 A on isolated iPhone Simulator, with offline edit, tasks/projects/saved views/favorites and two installed small planning widgets. Mac authenticated transport only.",
+  "fullWorkflow": {
+    "resultDirectory": "/tmp/taskfold-account-isolation-v4",
+    "passedUITests": 5,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": 0,
+    "checkpoints": [
+      {
+        "phase": "login",
+        "passed": true,
+        "accountAPendingCount": 0,
+        "accountBUnchanged": true,
+        "widgetAccount": "d25ed62f-0465-4de2-9c46-35bbca322ae6",
+        "widgetTaskCount": 1
+      },
+      {
+        "phase": "offline",
+        "passed": true,
+        "accountAPendingCount": 1,
+        "accountBUnchanged": true,
+        "widgetAccount": "",
+        "widgetTaskCount": 0
+      },
+      {
+        "phase": "second",
+        "passed": true,
+        "accountAPendingCount": 1,
+        "accountBUnchanged": true,
+        "widgetAccount": "fe985b56-4f00-4f73-b5c1-0e73efa27a46",
+        "widgetTaskCount": 1
+      },
+      {
+        "phase": "return",
+        "passed": true,
+        "accountAPendingCount": 0,
+        "accountBUnchanged": true,
+        "widgetAccount": "d25ed62f-0465-4de2-9c46-35bbca322ae6",
+        "widgetTaskCount": 1
+      },
+      {
+        "phase": "signout",
+        "passed": true,
+        "accountAPendingCount": 0,
+        "accountBUnchanged": true,
+        "widgetAccount": "",
+        "widgetTaskCount": 0
+      }
+    ]
+  },
+  "finalWidgetFollowups": {
+    "results": [
+      "/tmp/taskfold-account-isolation-window-v6.xcresult",
+      "/tmp/taskfold-account-isolation-signout-v6.xcresult"
+    ],
+    "passedUITests": 2,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": 0,
+    "outcomes": [
+      "Both B widgets open the exact B task; small-window title wraps to two lines",
+      "Native final logout/relaunch and empty widget payload"
+    ]
+  },
+  "macTransport": {
+    "log": "/tmp/taskfold-account-isolation-mac-live-v4.log",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "nativeGUI": false
+  },
+  "productionChanges": [
+    "Reset iOS tab identity, navigation paths, task presentations and links when workspace generation changes",
+    "Clear Mac navigation memory and return to Today when workspace generation changes",
+    "Preserve small-window task title two-line height in both independently owned widget sources"
+  ],
+  "builds": {
+    "ios": "/tmp/taskfold-account-isolation-build-v6.log",
+    "iosSignatures": "/tmp/taskfold-account-isolation-sign-v6.json",
+    "mac": "/tmp/taskfold-account-isolation-mac-build-v5.log",
+    "passed": true
+  },
+  "earlierAttempts": "Earlier runs failed on Browse navigation after successful account authentication. The v5 screen recording shows a system Save Password prompt covering the app. Tests now handle Not Now when present; v6 did not log a dismissal. Do not attribute blocked taps to the navigation reset. An earlier failure bundle also contains a SpringBoard automation crash; this is not a Taskfold crash. The fresh v4 five-phase pass and latest v6 followups establish the scoped results.",
+  "capturesInIOSRepository": {
+    "account-a-offline.png": {
+      "path": "native-continuity-previews/account-a-offline.png",
+      "sha256": "5d51b526574c61f80eb9132ae46f15c4b34ef1712ab967accf5f2208073c69de",
+      "visuallyInspected": true
+    },
+    "account-a-returned.png": {
+      "path": "native-continuity-previews/account-a-returned.png",
+      "sha256": "24f5993aec8f30f591e347b760fffcdf0b93e156f19af44725ad35d42feb2aac",
+      "visuallyInspected": true
+    },
+    "account-b-widgets.png": {
+      "path": "native-continuity-previews/account-b-widgets.png",
+      "sha256": "d8075ef75f9b968feea0b77ab0ab4fdfb765f1d5325ee0c8671ea95ca8f4f54d",
+      "visuallyInspected": true
+    },
+    "account-signed-out.png": {
+      "path": "native-continuity-previews/account-signed-out.png",
+      "sha256": "135f6c28655df93c0fbefb6524a15d3a9f2ddeea2a9578c2e3e521e4ec67a0ed",
+      "visuallyInspected": true
+    }
+  },
+  "cleanup": {
+    "disposableAccountsDeleted": 2,
+    "verifiedRemaining": {
+      "users": 0,
+      "sessions": 0,
+      "profiles": 0,
+      "tasks": 0,
+      "projects": 0,
+      "saved_views": 0,
+      "favorites": 0,
+      "labels": 0
+    },
+    "scopedCachesAndVaultsRemoved": 4,
+    "privateCredentialFilesRemoved": 2,
+    "signedOutWidgetAccount": "",
+    "signedOutWidgetTaskCount": 0
+  },
+  "remaining": [
+    "Organization ordering",
+    "My list-specific cloud selection switching",
+    "Other widget kinds/sizes/hosts",
+    "Physical notification delivery and APNs",
+    "Mac native GUI, providers and distribution",
+    "Critical keyboard/VoiceOver journeys"
+  ]
+}

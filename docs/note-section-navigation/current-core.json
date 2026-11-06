@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-06",
+  "owner": "TasskFold-MacOS",
+  "passed": 47,
+  "failed": 0,
+  "newSourceBindingCases": 4,
+  "filter": "NoteSourceBindingTests|NoteMarkupTests|NoteFormattingTests|FormattedNoteWidgetTests|CompactNotePreviewTests|PinnedNoteTextEditTests|TaskNotePreviewReadTests",
+  "logSHA256": "4f4b6ac11d3e5264f9516773ded62fedf191528fb8ddbe835c6def4adb51b745",
+  "sourceSHA256": {
+    "Taskfold/Core/NoteMarkup.swift": "823b1cc50930f9235727c9b2dce86fa2c4e9dac33334064193eb4a24faeb1ee3",
+    "TaskfoldTests/NoteSourceBindingTests.swift": "e06fc579bdbbae3e5603001686e34047cc67dd032f74d3a2022c64d7675de7db"
+  }
+}

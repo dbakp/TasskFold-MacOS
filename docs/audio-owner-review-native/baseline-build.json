@@ -1,0 +1,12 @@
+{
+  "phase": "phone v3 before shortening unconfirmed result",
+  "sourceHashes": {
+    "Taskfold/Views/AudioPendingPublicationView.swift": "d684f4c6fbad226eaf4f342845c806b293f2a34c5ccf630422f2019fb3a177c0",
+    "Taskfold/AudioCommentNativeFixture.swift": "ef6383a5a60a28c3f9297818d788c4fbb483b396eaca6bf552010d8d998f80c9",
+    "TaskfoldUITests/AudioCommentUITests.swift": "9298b7cbacf9ba692d7f1eb5770432199263f4ae5396f1bffec4b0e3ab45a48a"
+  },
+  "binaryHashes": {
+    "Taskfold": "cc2ae5d2b4da9fa045c80649cdd01ce8fdac63a26b1324230f76b724160197f4",
+    "Taskfold.debug.dylib": "2e44298b1003721b754df9579a44c1da8801b7168ca729a6f5a61f2875f24411"
+  }
+}

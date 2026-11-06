@@ -1,0 +1,26 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "CC75A632-4590-4A7F-91F8-AE65B76A8ECB.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Exact original Undo remains usable when its action returns_0_D1D6D4F2-609C-4C02-8684-BFA0081A9DD6.png",
+        "timestamp" : 1793433920.107
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "AF644BA3-D1E3-4C52-909B-6F15FAC2F247.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Stale Undo at thirty entries cannot undo the newer edit_0_6BAAA6C2-2E79-4DF0-A349-B6CA9D387383.png",
+        "timestamp" : 1793433915.529
+      }
+    ],
+    "testIdentifier" : "TeamTaskBatchDeletionUITests/testCapturedUndoCannotRetargetAtHistoryLimit()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamTaskBatchDeletionUITests/testCapturedUndoCannotRetargetAtHistoryLimit"
+  }
+]

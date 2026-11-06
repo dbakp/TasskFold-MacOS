@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "owner": "TasskFold-MacOS",
+  "execution": "Mac-hosted owning Core",
+  "syntheticOnly": true,
+  "savedTaskOrFilterWrites": false,
+  "cloudInferenceFallback": false,
+  "realGenerationAccepted": false,
+  "sourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/FilterAssistance.swift": "0ff467a2806b19dbbcdbeb822f94942c2a50a72f52de367e326073feb7bebe7e",
+    "TaskfoldTests/TaskBreakdownTests.swift": "5ed3135445a4d38e1087f521f321553c328e4c67153b9535cb73cb1a0b8792c3",
+    "TaskfoldTests/FilterAssistanceTests.swift": "10a46dc70470252b5092d33369f885d87e2cac759cb155c505ae66501177303b"
+  },
+  "driverSHA256": "a1df9baa4b3d9c7e5baafd3784cb199ac2caeaf03b0683ef89f4bef3d7d3d214",
+  "observations": [],
+  "testExitCode": 0,
+  "logSHA256": "acfeea18f661bf4c6b00e316ef2a1d6c794321e8351c4131ead0ff29ad6c7f27",
+  "sourcesUnchanged": true,
+  "unavailableReasons": [
+    "Turn on Apple Intelligence in system settings to use on-device suggestions."
+  ],
+  "semanticAndShapeChecksPassed": false,
+  "taskTitleQualityReviewed": false
+}

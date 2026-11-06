@@ -1,0 +1,19 @@
+{
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "c96c619018fd9039f45a8e85210900d5ebcb3e03044988be7d85c73b284021a2",
+    "Taskfold/Core/ProjectWorkflows.swift": "6826fb75888c33f1ba4a2538d6ebdeb7eb502d85c6f5543bab485c9db02d0b60",
+    "Taskfold/TeamTemplateNativeFixture.swift": "7aa60172bd1608ebca0ef2435b659770098c1d3a0f9483956d2321db03e1ad9d",
+    "TaskfoldUITests/TaskfoldUITests.swift": "52d9570c8aa8e442c28c6a63d7b384c62a5acd40fc8a337951437b277caf96ae"
+  },
+  "binarySHA256": {
+    "Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib": "75476ba12345d721a1fdda1c084991598bd3dfdc1279482445034ab921c3980c",
+    "Debug-iphonesimulator/Taskfold.app/Taskfold": "e24f0325a689677abdb61210bae07fe0e555a2acff37db8d5becd2ae9f40e646",
+    "Debug-iphonesimulator/Taskfold.app.dSYM/Contents/Resources/DWARF/Taskfold.debug.dylib": "0aff1376b63801940022fd93712d14580ca6e02ec899ead3192d220de6cc1203",
+    "Debug-iphonesimulator/Taskfold.app.dSYM/Contents/Resources/DWARF/Taskfold": "527eab58f6826197a1db80a6be600bd877b1996d1d423ea0b7fbdb6059267853",
+    "Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest.dSYM/Contents/Resources/DWARF/TaskfoldUITests": "add3db6a1d7f57b97fdf6bcc9e31ad1641588d858c3861da96e8be9cdbfa585e",
+    "Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/TaskfoldUITests": "019a30b3b4d35d31e1e14f9cabbdcab292ff6ddf086882af4189ef04395894dc"
+  },
+  "baselineModelsSHA256": "79abdcfcedf00947bd658d89e5ac2084a0da79462871a4dcf4b047c7b3ce2058",
+  "baselineRepository": "TaskFold-iOS",
+  "baselineDevice": "iPhone 18 Pro Simulator"
+}

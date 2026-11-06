@@ -1,0 +1,29 @@
+{
+  "tests": 167,
+  "newRecoveryTests": 4,
+  "failures": 0,
+  "skips": 0,
+  "independentlyRun": true,
+  "databaseChecks": 240,
+  "realCronWorkerChecks": 11,
+  "appSourceRegistered": true,
+  "xcodeProjectLint": true,
+  "newAppBuildClaimed": false,
+  "nativeRuntimeClaimed": false,
+  "hostedAcceptanceClaimed": false,
+  "realDataChanged": false,
+  "nativeTeamUIEnabled": false,
+  "sourceSHA256": {
+    "supabase/migrations/20261024043412_team_conversation_recovery.sql": "02baf514bd24859d6520c6dcf00914fccb00f8e82395f6e6b58bf03845aba079",
+    "Scripts/Database/team-conversation-schema.mjs": "d1ae6efa13079d5d84df2380f4457b7e4cd395a14fd242b3ebd0fe8d8383ad77",
+    "Scripts/Database/test-team-conversation-recovery.mjs": "7ce9d091ad2b4bb10f63c8f2d0b33308eeb2629b972c692821dfdb5200a95875",
+    "Scripts/Database/test-team-conversation-cron.mjs": "b1474710aea5f445980bf34a0a46dbf8294451ec8c191ce2d43a01fe77a4e6e5",
+    "Scripts/Database/test-team-task-lifecycle.mjs": "4151cd74b37e2b3799166492574c23177f6d12acb2347675cbb36c9deba7ac2e",
+    "Scripts/Database/test-team-task-edits.mjs": "87fa2c24e46df5c74626f6a749de8e4035c0c50a006133930148797c2e7f2ad6",
+    "Taskfold/Core/Backend.swift": "0ae22ca19abeb52b8dcd434b8226a03a785792e965c603e39db01eb274f2a244",
+    "Taskfold/Core/TeamProjectAccess.swift": "1f6e7534d8ee4febd6c601310d9308c1101e418d46296fa63c31d518a7946e5f",
+    "TaskfoldTests/TeamConversationRecoveryTests.swift": "7dc203667d25dc9a9c1d90630c437c6efdac8d3d1247fbe9c460d07c03e59496",
+    "TaskfoldTests/Fixtures/team-conversation-recovery-v1.json": "92ab0067c29e0dd6d3f0824e720c5dd3a3fab8322e80b5b4770c6ba274585037"
+  },
+  "testLogSHA256": "9fb149c39d71b2466f0e7cd8bba0bf62f0947194eac3439d5ac342599fdc795b"
+}

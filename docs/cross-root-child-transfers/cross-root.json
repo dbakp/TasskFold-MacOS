@@ -1,0 +1,1411 @@
+{
+  "checks": {
+    "unknown check has no task data": true,
+    "check does not move work": true,
+    "first transfer applied": true,
+    "first transfer not replay": true,
+    "receipt counts whole branch": true,
+    "source loses only moved branch": true,
+    "destination preserves entire branch": true,
+    "incarnations preserved": true,
+    "canonical key keeps original raw ID": true,
+    "null nested children retained": true,
+    "source reconstructs from records": true,
+    "destination reconstructs from records": true,
+    "retry certifies without moving twice": true,
+    "retry preserves source": true,
+    "retry preserves destination": true,
+    "status returns receipt": true,
+    "cannot close an applied transfer": true,
+    "no durable task text in receipt": true,
+    "both history sides tagged": true,
+    "history contains no task text": true,
+    "raw Unicode identity is linked": true,
+    "Undo is a separate action": true,
+    "Undo restores source exact tree": true,
+    "Undo restores missing destination container": true,
+    "old retry after Undo is harmless": true,
+    "old retry cannot re-move branch": true,
+    "one-use Undo cannot apply again": true,
+    "nonce cannot change body": true,
+    "other actor cannot replay receipt": true,
+    "unsent action closes permanently": true,
+    "late send remains closed": true,
+    "closed action leaves branch exact": true,
+    "transfer nonce fences older field writer": true,
+    "field nonce fences new transfer": true,
+    "stale branch versions preserve newer edits": true,
+    "destination collision refuses whole move": true,
+    "unknown command fields refused": true,
+    "same-root move uses separate organizer": true,
+    "changed generation refused": true,
+    "recreated destination parent refused": true,
+    "canonical Unicode identity collision refused": true,
+    "missing destination refuses source removal": true,
+    "opposite writer produces bounded retry": true,
+    "late failure aborts both updates": true,
+    "source rollback exact": true,
+    "destination rollback exact": true,
+    "records rollback exact": true,
+    "history rollback exact": true,
+    "null Inbox transfer applies": true,
+    "null project boundary clears assignments": true,
+    "null Undo restores original destination container": true,
+    "null Undo restores original assignment shape": true,
+    "empty Inbox transfer applies": true,
+    "empty project boundary clears assignments": true,
+    "empty Undo restores original destination container": true,
+    "empty Undo restores original assignment shape": true,
+    "legacy Inbox transfer applies": true,
+    "legacy project boundary clears assignments": true,
+    "legacy Undo restores original destination container": true,
+    "legacy Undo restores original assignment shape": true,
+    "transfer then reopen preserves completion version progression": true,
+    "reopen emits real corrected event": true,
+    "shared viewer cannot transfer": true,
+    "same-team cross-project move applies": true,
+    "same-team destination preserves raw subtree": true,
+    "same-team receipt binds workspace": true,
+    "same-team Undo restores exact tree": true,
+    "personal-team custody needs separate review": true,
+    "Undo preserves newer destination field work": true,
+    "receipt recovery survives disabled rollout": true,
+    "fresh transfer obeys disabled gate": true,
+    "history scope retired": true,
+    "team scopes retired": true,
+    "receipt remains after roots deleted": true,
+    "anonymous cannot call RPC": true,
+    "clients cannot read private receipts": true,
+    "no added advisor findings": true
+  },
+  "candidateSHA256": "e3006f881dbd13ed52f5f7db5d5e125b9f5b7c424ad288ad2bb18782db9cb6cc",
+  "deployed": false,
+  "baselineAdvisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+      }
+    ]
+  },
+  "sourceRoot": {
+    "id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+    "title": "Transfer proof",
+    "labels": [],
+    "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+    "comments": [],
+    "due_date": null,
+    "due_time": null,
+    "priority": 4,
+    "subtasks": [
+      {
+        "id": "branch",
+        "title": "Private design branch",
+        "subtasks": [
+          {
+            "id": "é",
+            "title": "Private nested work",
+            "future": {
+              "preserved": [
+                null,
+                false
+              ]
+            },
+            "subtasks": null,
+            "assigned_to": null,
+            "description": "Keep exact notes"
+          }
+        ],
+        "completed": false,
+        "assigned_to": "f678edca-7d5e-4eac-9725-793cca489811",
+        "taskfold_completion_v1": {
+          "epoch": "4ec5c35d-8491-48de-a09d-33ae250875c0",
+          "version": 0
+        }
+      },
+      {
+        "id": "stay",
+        "title": "Unmoved sibling"
+      }
+    ],
+    "completed": false,
+    "reminders": [],
+    "time_zone": null,
+    "created_at": "2026-10-30T12:00:44.786188+00:00",
+    "is_heading": true,
+    "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+    "section_id": null,
+    "assigned_to": null,
+    "attachments": [],
+    "description": null,
+    "completed_at": null,
+    "is_recurring": false,
+    "scheduled_at": null,
+    "deadline_date": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "task_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c",
+    "duration_minutes": null,
+    "completion_version": 0,
+    "recurrence_pattern": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "recurrence_parent_id": null
+  },
+  "destinationRoot": {
+    "id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+    "title": "Transfer proof",
+    "labels": [],
+    "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+    "comments": [],
+    "due_date": null,
+    "due_time": null,
+    "priority": 4,
+    "subtasks": [
+      {
+        "id": "heading",
+        "title": "Destination heading",
+        "completed": false,
+        "is_heading": true,
+        "completed_at": null
+      }
+    ],
+    "completed": false,
+    "reminders": [],
+    "time_zone": null,
+    "created_at": "2026-10-30T12:00:44.901319+00:00",
+    "is_heading": true,
+    "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+    "section_id": null,
+    "assigned_to": null,
+    "attachments": [],
+    "description": null,
+    "completed_at": null,
+    "is_recurring": false,
+    "scheduled_at": null,
+    "deadline_date": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "task_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287",
+    "duration_minutes": null,
+    "completion_version": 0,
+    "recurrence_pattern": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "recurrence_parent_id": null
+  },
+  "sourceRead": {
+    "account": "f678edca-7d5e-4eac-9725-793cca489811",
+    "records": [
+      {
+        "fields": {
+          "id": "branch",
+          "title": "Private design branch",
+          "completed": false,
+          "assigned_to": "f678edca-7d5e-4eac-9725-793cca489811",
+          "taskfold_completion_v1": {
+            "epoch": "4ec5c35d-8491-48de-a09d-33ae250875c0",
+            "version": 0
+          }
+        },
+        "node_key": "branch",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "aa378aed-fa7a-4657-bb7c-9bd7c390383f",
+        "children_kind": "array",
+        "identity_path": [
+          "branch"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "é",
+          "title": "Private nested work",
+          "future": {
+            "preserved": [
+              null,
+              false
+            ]
+          },
+          "assigned_to": null,
+          "description": "Keep exact notes"
+        },
+        "node_key": "é",
+        "revision": 1,
+        "parent_key": "branch",
+        "incarnation": "71e5bd52-2e18-4795-8f3e-d9904013dd44",
+        "children_kind": "null",
+        "identity_path": [
+          "branch",
+          "é"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "stay",
+          "title": "Unmoved sibling"
+        },
+        "node_key": "stay",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "8fb44675-3a33-4326-bbc7-e9334dc7c6d6",
+        "children_kind": "absent",
+        "identity_path": [
+          "stay"
+        ],
+        "sibling_order": 1
+      }
+    ],
+    "task_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+    "protocol": 2,
+    "root_kind": "array",
+    "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+    "task_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c",
+    "structure_revision": 1,
+    "projection_revision": 1
+  },
+  "destinationRead": {
+    "account": "f678edca-7d5e-4eac-9725-793cca489811",
+    "records": [
+      {
+        "fields": {
+          "id": "heading",
+          "title": "Destination heading",
+          "completed": false,
+          "is_heading": true,
+          "completed_at": null
+        },
+        "node_key": "heading",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "818af1c6-4eff-43bc-824e-a794a7d3cf64",
+        "children_kind": "absent",
+        "identity_path": [
+          "heading"
+        ],
+        "sibling_order": 0
+      }
+    ],
+    "task_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+    "protocol": 2,
+    "root_kind": "array",
+    "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+    "task_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287",
+    "structure_revision": 1,
+    "projection_revision": 1
+  },
+  "command": {
+    "protocol": 1,
+    "account": "f678edca-7d5e-4eac-9725-793cca489811",
+    "request_id": "5f2b9b60-0b63-4153-845f-421dcfb81344",
+    "source": {
+      "task_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+      "task_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c",
+      "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+      "structure_revision": 1
+    },
+    "destination": {
+      "task_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+      "task_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287",
+      "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+      "structure_revision": 1,
+      "parent_key": "heading",
+      "parent_incarnation": "818af1c6-4eff-43bc-824e-a794a7d3cf64",
+      "index": 0
+    },
+    "action": "transfer",
+    "node_key": "branch",
+    "incarnation": "aa378aed-fa7a-4657-bb7c-9bd7c390383f",
+    "subtree_versions": {
+      "branch": {
+        "incarnation": "aa378aed-fa7a-4657-bb7c-9bd7c390383f",
+        "revision": 1
+      },
+      "é": {
+        "incarnation": "71e5bd52-2e18-4795-8f3e-d9904013dd44",
+        "revision": 1
+      }
+    }
+  },
+  "receipt": {
+    "state": "applied",
+    "action": "transfer",
+    "account": "f678edca-7d5e-4eac-9725-793cca489811",
+    "undo_of": null,
+    "node_key": "branch",
+    "protocol": 1,
+    "replayed": false,
+    "source_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+    "request_id": "5f2b9b60-0b63-4153-845f-421dcfb81344",
+    "incarnation": "aa378aed-fa7a-4657-bb7c-9bd7c390383f",
+    "moved_count": 2,
+    "return_index": 0,
+    "return_parent": null,
+    "destination_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+    "source_project": "2e1901e0-e510-40b6-862d-00591024d087",
+    "source_revision": 1,
+    "source_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c",
+    "destination_project": "2e1901e0-e510-40b6-862d-00591024d087",
+    "destination_revision": 1,
+    "destination_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287"
+  },
+  "history": [
+    {
+      "id": "f177613b-612f-440f-b972-0f4cc359674c",
+      "kinds": [
+        "deleted"
+      ],
+      "task_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+      "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+      "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+      "node_key": "branch",
+      "sequence": 5,
+      "after_path": [],
+      "type_after": null,
+      "work_after": false,
+      "after_state": {},
+      "before_path": [
+        "branch"
+      ],
+      "recorded_at": "2026-10-30T12:00:45.859138+00:00",
+      "type_before": "task",
+      "work_before": true,
+      "before_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "effective_at": "2026-10-30T12:00:45.859138+00:00",
+      "format_version": 1,
+      "task_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c",
+      "transfer_context": {
+        "source": {
+          "task_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+          "node_key": "branch",
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "task_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c"
+        },
+        "version": 1,
+        "request_id": "5f2b9b60-0b63-4153-845f-421dcfb81344",
+        "destination": {
+          "task_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+          "node_key": "branch",
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "task_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287"
+        },
+        "incarnation": "aa378aed-fa7a-4657-bb7c-9bd7c390383f"
+      },
+      "completion_version": 0
+    },
+    {
+      "id": "cdb5962a-38fd-410d-a4be-1671952e7d74",
+      "kinds": [
+        "deleted"
+      ],
+      "task_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+      "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+      "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+      "node_key": "é",
+      "sequence": 6,
+      "after_path": [],
+      "type_after": null,
+      "work_after": false,
+      "after_state": {},
+      "before_path": [
+        "branch",
+        "é"
+      ],
+      "recorded_at": "2026-10-30T12:00:45.859138+00:00",
+      "type_before": "task",
+      "work_before": false,
+      "before_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "effective_at": "2026-10-30T12:00:45.859138+00:00",
+      "format_version": 1,
+      "task_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c",
+      "transfer_context": {
+        "source": {
+          "task_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+          "node_key": "é",
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "task_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c"
+        },
+        "version": 1,
+        "request_id": "5f2b9b60-0b63-4153-845f-421dcfb81344",
+        "destination": {
+          "task_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+          "node_key": "é",
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "task_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287"
+        },
+        "incarnation": "71e5bd52-2e18-4795-8f3e-d9904013dd44"
+      },
+      "completion_version": 0
+    },
+    {
+      "id": "e2462551-2532-4b2a-8e39-51dc002c821f",
+      "kinds": [
+        "created"
+      ],
+      "task_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+      "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+      "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+      "node_key": "branch",
+      "sequence": 7,
+      "after_path": [
+        "heading",
+        "branch"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [],
+      "recorded_at": "2026-10-30T12:00:45.859138+00:00",
+      "type_before": null,
+      "work_before": false,
+      "before_state": {},
+      "effective_at": "2026-10-30T12:00:45.859138+00:00",
+      "format_version": 1,
+      "task_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287",
+      "transfer_context": {
+        "source": {
+          "task_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+          "node_key": "branch",
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "task_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c"
+        },
+        "version": 1,
+        "request_id": "5f2b9b60-0b63-4153-845f-421dcfb81344",
+        "destination": {
+          "task_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+          "node_key": "branch",
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "task_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287"
+        },
+        "incarnation": "aa378aed-fa7a-4657-bb7c-9bd7c390383f"
+      },
+      "completion_version": 0
+    },
+    {
+      "id": "32453747-d9b9-4342-92c7-3781e7c3d2ff",
+      "kinds": [
+        "created"
+      ],
+      "task_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+      "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+      "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+      "node_key": "é",
+      "sequence": 8,
+      "after_path": [
+        "heading",
+        "branch",
+        "é"
+      ],
+      "type_after": "task",
+      "work_after": false,
+      "after_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [],
+      "recorded_at": "2026-10-30T12:00:45.859138+00:00",
+      "type_before": null,
+      "work_before": false,
+      "before_state": {},
+      "effective_at": "2026-10-30T12:00:45.859138+00:00",
+      "format_version": 1,
+      "task_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287",
+      "transfer_context": {
+        "source": {
+          "task_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+          "node_key": "é",
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "task_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c"
+        },
+        "version": 1,
+        "request_id": "5f2b9b60-0b63-4153-845f-421dcfb81344",
+        "destination": {
+          "task_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+          "node_key": "é",
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "task_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287"
+        },
+        "incarnation": "71e5bd52-2e18-4795-8f3e-d9904013dd44"
+      },
+      "completion_version": 0
+    }
+  ],
+  "undo": {
+    "state": "applied",
+    "action": "undo",
+    "account": "f678edca-7d5e-4eac-9725-793cca489811",
+    "undo_of": "5f2b9b60-0b63-4153-845f-421dcfb81344",
+    "node_key": "branch",
+    "protocol": 1,
+    "replayed": false,
+    "source_id": "9c7e5812-ab23-4867-b187-7f23088b720d",
+    "request_id": "d02dfa56-9c52-44d7-aa0a-461f23e4b698",
+    "incarnation": "aa378aed-fa7a-4657-bb7c-9bd7c390383f",
+    "moved_count": 2,
+    "return_index": 0,
+    "return_parent": "heading",
+    "destination_id": "e0a7523b-d17a-4133-b93d-47235e013e57",
+    "source_project": "2e1901e0-e510-40b6-862d-00591024d087",
+    "source_revision": 2,
+    "source_generation": "c96a3f8e-943f-4f2b-ab0e-172a27ec0287",
+    "destination_project": "2e1901e0-e510-40b6-862d-00591024d087",
+    "destination_revision": 2,
+    "destination_generation": "1212dd4e-4a0d-4756-aca7-64850156c34c"
+  },
+  "lastDiagnostic": {
+    "code": "PT503",
+    "value": null,
+    "reason": "Subtask transfers are not enabled",
+    "context": "PL/pgSQL function taskfold_private.transfer_child(text,jsonb) line 64 at RAISE\nPL/pgSQL function public.taskfold_transfer_child(text,jsonb) line 3 at assignment\nSQL statement \"insert into fixture_result values(to_jsonb(public.taskfold_transfer_child('send','{\"protocol\":1,\"account\":\"f678edca-7d5e-4eac-9725-793cca489811\",\"request_id\":\"1e783ec3-27e8-4ebc-9d05-3e15feccd83a\",\"source\":{\"task_id\":\"9c7e5812-ab23-4867-b187-7f23088b720d\",\"task_generation\":\"c96a3f8e-943f-4f2b-ab0e-172a27ec0287\",\"project_id\":\"2e1901e0-e510-40b6-862d-00591024d087\",\"structure_revision\":4},\"destination\":{\"task_id\":\"e0a7523b-d17a-4133-b93d-47235e013e57\",\"task_generation\":\"1212dd4e-4a0d-4756-aca7-64850156c34c\",\"project_id\":\"2e1901e0-e510-40b6-862d-00591024d087\",\"structure_revision\":4,\"parent_key\":null,\"parent_incarnation\":null,\"index\":0},\"action\":\"transfer\",\"node_key\":\"branch\",\"incarnation\":\"aa378aed-fa7a-4657-bb7c-9bd7c390383f\",\"subtree_versions\":{\"branch\":{\"incarnation\":\"aa378aed-fa7a-4657-bb7c-9bd7c390383f\",\"revision\":7},\"é\":{\"incarnation\":\"71e5bd52-2e18-4795-8f3e-d9904013dd44\",\"revision\":4}}}'::jsonb)),null,null,null)\"\nPL/pgSQL function inline_code_block line 1 at SQL statement"
+  },
+  "historyScenario": {
+    "beforeTransfer": [
+      {
+        "id": "e7720e4a-7173-4999-bd2a-22cd70e2bc28",
+        "kinds": [
+          "created"
+        ],
+        "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": null,
+        "node_key": "credit",
+        "sequence": 50,
+        "after_path": [
+          "credit"
+        ],
+        "type_after": "task",
+        "work_after": true,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "before_path": [],
+        "recorded_at": "2026-10-30T12:00:59.185695+00:00",
+        "type_before": null,
+        "work_before": false,
+        "before_state": {},
+        "effective_at": "2026-10-30T12:00:59.185695+00:00",
+        "format_version": 1,
+        "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3",
+        "transfer_context": null,
+        "completion_version": 0
+      },
+      {
+        "id": "ceff3d2d-f07a-400f-830d-64fbf12e1c16",
+        "kinds": [
+          "completed"
+        ],
+        "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "node_key": "credit",
+        "sequence": 51,
+        "after_path": [
+          "credit"
+        ],
+        "type_after": "task",
+        "work_after": true,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": "2026-10-30T12:00:59.620808Z",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "before_path": [
+          "credit"
+        ],
+        "recorded_at": "2026-10-30T12:00:59.607695+00:00",
+        "type_before": "task",
+        "work_before": true,
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-30T12:00:59.620808+00:00",
+        "format_version": 1,
+        "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3",
+        "transfer_context": null,
+        "completion_version": 1
+      }
+    ],
+    "afterTransfer": [
+      {
+        "id": "e7720e4a-7173-4999-bd2a-22cd70e2bc28",
+        "kinds": [
+          "created"
+        ],
+        "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": null,
+        "node_key": "credit",
+        "sequence": 50,
+        "after_path": [
+          "credit"
+        ],
+        "type_after": "task",
+        "work_after": true,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "before_path": [],
+        "recorded_at": "2026-10-30T12:00:59.185695+00:00",
+        "type_before": null,
+        "work_before": false,
+        "before_state": {},
+        "effective_at": "2026-10-30T12:00:59.185695+00:00",
+        "format_version": 1,
+        "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3",
+        "transfer_context": null,
+        "completion_version": 0
+      },
+      {
+        "id": "ceff3d2d-f07a-400f-830d-64fbf12e1c16",
+        "kinds": [
+          "completed"
+        ],
+        "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "node_key": "credit",
+        "sequence": 51,
+        "after_path": [
+          "credit"
+        ],
+        "type_after": "task",
+        "work_after": true,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": "2026-10-30T12:00:59.620808Z",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "before_path": [
+          "credit"
+        ],
+        "recorded_at": "2026-10-30T12:00:59.607695+00:00",
+        "type_before": "task",
+        "work_before": true,
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-30T12:00:59.620808+00:00",
+        "format_version": 1,
+        "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3",
+        "transfer_context": null,
+        "completion_version": 1
+      },
+      {
+        "id": "b2cb8e7a-7c5b-4b00-b575-128eba0b131b",
+        "kinds": [
+          "deleted"
+        ],
+        "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "node_key": "credit",
+        "sequence": 52,
+        "after_path": [],
+        "type_after": null,
+        "work_after": false,
+        "after_state": {},
+        "before_path": [
+          "credit"
+        ],
+        "recorded_at": "2026-10-30T12:01:00.170488+00:00",
+        "type_before": "task",
+        "work_before": true,
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": "2026-10-30T12:00:59.620808Z",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-30T12:01:00.170488+00:00",
+        "format_version": 1,
+        "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3",
+        "transfer_context": {
+          "source": {
+            "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+            "node_key": "credit",
+            "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+            "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3"
+          },
+          "version": 1,
+          "request_id": "ab02f8f0-7abe-4e37-aba5-972ddf0ee402",
+          "destination": {
+            "task_id": "ed94ecac-d328-41a5-8335-74965154369d",
+            "node_key": "credit",
+            "project_id": "7e351c13-6b2b-4f2a-abc3-d9d56013610e",
+            "task_generation": "eef4eab5-c70b-4b45-8975-0719c04b4e76"
+          },
+          "incarnation": "26c9233b-0f4d-470e-aab2-5d7baaeb69e9"
+        },
+        "completion_version": 1
+      },
+      {
+        "id": "9df92549-6dbb-4082-a1f8-99583f85f468",
+        "kinds": [
+          "created"
+        ],
+        "task_id": "ed94ecac-d328-41a5-8335-74965154369d",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "node_key": "credit",
+        "sequence": 53,
+        "after_path": [
+          "credit"
+        ],
+        "type_after": "task",
+        "work_after": true,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "7e351c13-6b2b-4f2a-abc3-d9d56013610e",
+          "section_id": null,
+          "completed_at": "2026-10-30T12:00:59.620808Z",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "before_path": [],
+        "recorded_at": "2026-10-30T12:01:00.170488+00:00",
+        "type_before": null,
+        "work_before": false,
+        "before_state": {},
+        "effective_at": "2026-10-30T12:01:00.170488+00:00",
+        "format_version": 1,
+        "task_generation": "eef4eab5-c70b-4b45-8975-0719c04b4e76",
+        "transfer_context": {
+          "source": {
+            "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+            "node_key": "credit",
+            "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+            "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3"
+          },
+          "version": 1,
+          "request_id": "ab02f8f0-7abe-4e37-aba5-972ddf0ee402",
+          "destination": {
+            "task_id": "ed94ecac-d328-41a5-8335-74965154369d",
+            "node_key": "credit",
+            "project_id": "7e351c13-6b2b-4f2a-abc3-d9d56013610e",
+            "task_generation": "eef4eab5-c70b-4b45-8975-0719c04b4e76"
+          },
+          "incarnation": "26c9233b-0f4d-470e-aab2-5d7baaeb69e9"
+        },
+        "completion_version": 1
+      }
+    ],
+    "afterReopen": [
+      {
+        "id": "e7720e4a-7173-4999-bd2a-22cd70e2bc28",
+        "kinds": [
+          "created"
+        ],
+        "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": null,
+        "node_key": "credit",
+        "sequence": 50,
+        "after_path": [
+          "credit"
+        ],
+        "type_after": "task",
+        "work_after": true,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "before_path": [],
+        "recorded_at": "2026-10-30T12:00:59.185695+00:00",
+        "type_before": null,
+        "work_before": false,
+        "before_state": {},
+        "effective_at": "2026-10-30T12:00:59.185695+00:00",
+        "format_version": 1,
+        "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3",
+        "transfer_context": null,
+        "completion_version": 0
+      },
+      {
+        "id": "ceff3d2d-f07a-400f-830d-64fbf12e1c16",
+        "kinds": [
+          "completed"
+        ],
+        "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "node_key": "credit",
+        "sequence": 51,
+        "after_path": [
+          "credit"
+        ],
+        "type_after": "task",
+        "work_after": true,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": "2026-10-30T12:00:59.620808Z",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "before_path": [
+          "credit"
+        ],
+        "recorded_at": "2026-10-30T12:00:59.607695+00:00",
+        "type_before": "task",
+        "work_before": true,
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-30T12:00:59.620808+00:00",
+        "format_version": 1,
+        "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3",
+        "transfer_context": null,
+        "completion_version": 1
+      },
+      {
+        "id": "b2cb8e7a-7c5b-4b00-b575-128eba0b131b",
+        "kinds": [
+          "deleted"
+        ],
+        "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "node_key": "credit",
+        "sequence": 52,
+        "after_path": [],
+        "type_after": null,
+        "work_after": false,
+        "after_state": {},
+        "before_path": [
+          "credit"
+        ],
+        "recorded_at": "2026-10-30T12:01:00.170488+00:00",
+        "type_before": "task",
+        "work_before": true,
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+          "section_id": null,
+          "completed_at": "2026-10-30T12:00:59.620808Z",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-30T12:01:00.170488+00:00",
+        "format_version": 1,
+        "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3",
+        "transfer_context": {
+          "source": {
+            "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+            "node_key": "credit",
+            "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+            "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3"
+          },
+          "version": 1,
+          "request_id": "ab02f8f0-7abe-4e37-aba5-972ddf0ee402",
+          "destination": {
+            "task_id": "ed94ecac-d328-41a5-8335-74965154369d",
+            "node_key": "credit",
+            "project_id": "7e351c13-6b2b-4f2a-abc3-d9d56013610e",
+            "task_generation": "eef4eab5-c70b-4b45-8975-0719c04b4e76"
+          },
+          "incarnation": "26c9233b-0f4d-470e-aab2-5d7baaeb69e9"
+        },
+        "completion_version": 1
+      },
+      {
+        "id": "9df92549-6dbb-4082-a1f8-99583f85f468",
+        "kinds": [
+          "created"
+        ],
+        "task_id": "ed94ecac-d328-41a5-8335-74965154369d",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "node_key": "credit",
+        "sequence": 53,
+        "after_path": [
+          "credit"
+        ],
+        "type_after": "task",
+        "work_after": true,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "7e351c13-6b2b-4f2a-abc3-d9d56013610e",
+          "section_id": null,
+          "completed_at": "2026-10-30T12:00:59.620808Z",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "before_path": [],
+        "recorded_at": "2026-10-30T12:01:00.170488+00:00",
+        "type_before": null,
+        "work_before": false,
+        "before_state": {},
+        "effective_at": "2026-10-30T12:01:00.170488+00:00",
+        "format_version": 1,
+        "task_generation": "eef4eab5-c70b-4b45-8975-0719c04b4e76",
+        "transfer_context": {
+          "source": {
+            "task_id": "b28006e6-3fb2-4738-bce6-fb28de53ff11",
+            "node_key": "credit",
+            "project_id": "2e1901e0-e510-40b6-862d-00591024d087",
+            "task_generation": "6e6ccae1-8f98-43fc-9c02-3d4de6f20da3"
+          },
+          "version": 1,
+          "request_id": "ab02f8f0-7abe-4e37-aba5-972ddf0ee402",
+          "destination": {
+            "task_id": "ed94ecac-d328-41a5-8335-74965154369d",
+            "node_key": "credit",
+            "project_id": "7e351c13-6b2b-4f2a-abc3-d9d56013610e",
+            "task_generation": "eef4eab5-c70b-4b45-8975-0719c04b4e76"
+          },
+          "incarnation": "26c9233b-0f4d-470e-aab2-5d7baaeb69e9"
+        },
+        "completion_version": 1
+      },
+      {
+        "id": "26de9b7d-a1e6-445f-a592-16c3e34bc1df",
+        "kinds": [
+          "reopened"
+        ],
+        "task_id": "ed94ecac-d328-41a5-8335-74965154369d",
+        "user_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "actor_id": "f678edca-7d5e-4eac-9725-793cca489811",
+        "node_key": "credit",
+        "sequence": 54,
+        "after_path": [
+          "credit"
+        ],
+        "type_after": "task",
+        "work_after": true,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "7e351c13-6b2b-4f2a-abc3-d9d56013610e",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "before_path": [
+          "credit"
+        ],
+        "recorded_at": "2026-10-30T12:01:00.586199+00:00",
+        "type_before": "task",
+        "work_before": true,
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "7e351c13-6b2b-4f2a-abc3-d9d56013610e",
+          "section_id": null,
+          "completed_at": "2026-10-30T12:00:59.620808Z",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-30T12:01:00.586199+00:00",
+        "format_version": 1,
+        "task_generation": "eef4eab5-c70b-4b45-8975-0719c04b4e76",
+        "transfer_context": null,
+        "completion_version": 2
+      }
+    ],
+    "epoch": [
+      {
+        "id": "current",
+        "recorded_from": "2026-10-30T12:00:42.380969+00:00"
+      }
+    ]
+  },
+  "advisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+      }
+    ]
+  },
+  "serverVersion": 170006,
+  "containerRemoved": true,
+  "checkCount": 77
+}

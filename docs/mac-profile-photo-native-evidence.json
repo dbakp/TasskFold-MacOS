@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native isolated Mac account photo picker cancel, real synthetic upload, removal and normal process relaunch; no account switch or iPhone receipt in this phase",
+  "native": {
+    "bundle": "com.dbakp.taskfold.mac.p0localuitests",
+    "pickerCancellationPreservesUnsavedDisplayName": true,
+    "pickerCancelReturnsWithoutErrorAlert": true,
+    "syntheticImageSelectedThroughNativeOpenPanel": true,
+    "nativeUploadingStateObserved": true,
+    "uploadPreservesUnsavedDisplayName": true,
+    "checkerAvatarVisuallyInspected": true,
+    "loadedAvatarSurvivesNormalQuitAndRelaunch": true,
+    "unsubmittedNameDiscardedOnRelaunch": true,
+    "nativeRemovePhotoSaved": true,
+    "placeholderAndAbsentRemoveButtonAfterSecondRelaunch": true
+  },
+  "cacheProof": {
+    "allNonProfileTablesEqual": true,
+    "comparedNonProfileTables": 13,
+    "finalProfileEqualsBaseline": true,
+    "finalProfileChangedFields": [],
+    "uploadOnlyChangedAvatar": true,
+    "pending": 0,
+    "publicImageBytes": 10724,
+    "publicImageSHA256": "dd239209c27b7989325380cdadddd8d600044fffa4281e3b3b40dc119903d198",
+    "uploadedObjectOwnedByFixture": true
+  },
+  "storageCleanup": {
+    "exactSyntheticObjectDeleted": true,
+    "exactSyntheticObjectAbsent": true,
+    "cleanupOnlySessionRevoked": true
+  },
+  "originalAccount": {
+    "allMacCachedTablesUnchanged": true,
+    "pending": 0
+  },
+  "validation": {
+    "macBinarySHA256": "6d5027b82a2435b55c0aa3a8c6c2ed2a1b270afc85f293ead6a76aca2716ecf3",
+    "settingsViewSHA256": "416b1b287e056a3b82b765925d3df06ec26277c290add9273cb6e67cb59e2acc",
+    "stagedSettingsViewEqualsOwnedSource": true,
+    "stagedBackendEqualsOwnedSourceAfterTwoIsolationSubstitutions": true,
+    "backendIsolationSubstitutions": [
+      "Separate Keychain service",
+      "Separate debug upload-hold bundle guard; hold launch flag not used"
+    ],
+    "syntheticSourceImageSHA256": "a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2",
+    "publicUploadedJPEGVisuallyInspected": true,
+    "newProductionSourceChanges": false,
+    "automatedMacXCTestClaimed": false
+  },
+  "diagnostics": {
+    "attributeGraphCycleWarningsInTerminatedProcess": 7,
+    "visibleFailureDuringTestedActions": false,
+    "rootCauseEstablished": false,
+    "macLockedAfterFinalNativeAcceptance": true
+  },
+  "limitations": [
+    "Mac native account switch during in-flight upload and dirty-draft ownership remain open.",
+    "No new iPhone/tablet receipt or VoiceOver/keyboard acceptance is claimed; previously accepted phone profile workflows retain their separate scope.",
+    "Seven SwiftUI AttributeGraph cycle warnings remain an unresolved runtime diagnostic; this is not a warning-free run.",
+    "No source Todoist requests, imported task edits, primary app replacement, credentials or private raw caches are included."
+  ]
+}

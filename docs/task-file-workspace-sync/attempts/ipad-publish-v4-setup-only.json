@@ -1,0 +1,16 @@
+{
+  "platform": "ipad",
+  "mode": "workspace",
+  "checks": {
+    "exact isolated app identifier": true
+  },
+  "nativeAuthenticatedLocalProvider": true,
+  "genuineHostedAuth": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "error": {
+    "message": "Command failed: docker info --format {{.ServerVersion}}\n",
+    "code": null
+  },
+  "ownedSimulatorRestored": true
+}

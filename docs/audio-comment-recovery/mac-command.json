@@ -1,0 +1,20 @@
+[
+  "xcodebuild",
+  "test-without-building",
+  "-xctestrun",
+  "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+  "-destination",
+  "platform=macOS,arch=arm64",
+  "-resultBundlePath",
+  "/tmp/taskfold-audio-recovery-mac-final.xcresult",
+  "-parallel-testing-enabled",
+  "NO",
+  "-collect-test-diagnostics",
+  "never",
+  "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioDraftReviewSavePlaybackAndColdReturn",
+  "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioDraftSyntheticPermissionRefusalDoesNotCreateRecording",
+  "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioDraftDarkReviewControlsRemainReachable",
+  "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioDraftReplacementRefusalPreservesSavedCaptionAndDuration",
+  "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioInterruptedReviewRecoversAfterColdLaunchWithoutExplicitSave",
+  "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioExplicitDiscardRemovesRecoveryWithoutCreatingSavedDraft"
+]

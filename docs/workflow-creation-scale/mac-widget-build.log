@@ -1,0 +1,542 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project /tmp/taskfold-workflow-native-mac-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=macOS,arch=arm64 -derivedDataPath /tmp/taskfold-workflow-native-mac-build DEVELOPMENT_TEAM=3UZ4C73FM2 "CODE_SIGN_IDENTITY=Apple Development"
+
+Build settings from command line:
+    CODE_SIGN_IDENTITY = Apple Development
+    DEVELOPMENT_TEAM = 3UZ4C73FM2
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+note: Using codesigning identity override: Apple Development
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (5 targets)
+    Target 'TaskfoldUITests' in project 'Taskfold'
+        ➜ Explicit dependency on target 'Taskfold' in project 'Taskfold'
+    Target 'Taskfold' in project 'Taskfold'
+        ➜ Explicit dependency on target 'AppAuthCore-product' in project 'AppAuth'
+    Target 'AppAuthCore-product' in project 'AppAuth'
+        ➜ Explicit dependency on target 'AppAuthCore' in project 'AppAuth'
+        ➜ Explicit dependency on target 'AppAuth_AppAuthCore' in project 'AppAuth'
+    Target 'AppAuthCore' in project 'AppAuth'
+        ➜ Explicit dependency on target 'AppAuth_AppAuthCore' in project 'AppAuth'
+    Target 'AppAuth_AppAuthCore' in project 'AppAuth' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -x objective-c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 4d92fbdf4b631d83f38fbb5c4a77d35f
+Build description path: /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/XCBuildData/4d92fbdf4b631d83f38fbb5c4a77d35f.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk /tmp/taskfold-workflow-native-mac-build/SDKStatCaches.noindex/macosx27.0-26A425-7231f6df4def33e022ae2eb8f782df1a.sdkstatcache
+    cd /tmp/taskfold-workflow-native-mac-host/Taskfold.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -o /tmp/taskfold-workflow-native-mac-build/SDKStatCaches.noindex/macosx27.0-26A425-7231f6df4def33e022ae2eb8f782df1a.sdkstatcache
+
+ProcessInfoPlistFile /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/AppAuth_AppAuthCore.bundle/Contents/Info.plist /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/AppAuth.build/Debug/AppAuth_AppAuthCore-b.build/empty-AppAuth_AppAuthCore.plist (in target 'AppAuth_AppAuthCore' from project 'AppAuth')
+    cd /tmp/taskfold-workflow-native-mac-build/SourcePackages/checkouts/AppAuth-iOS
+    builtin-infoPlistUtility /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/AppAuth.build/Debug/AppAuth_AppAuthCore-b.build/empty-AppAuth_AppAuthCore.plist -producttype com.apple.product-type.bundle -expandbuildsettings -platform macosx -o /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/AppAuth_AppAuthCore.bundle/Contents/Info.plist
+
+SwiftDriver Taskfold normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Taskfold -Onone @/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftFileList -DDEBUG -Xcc -fmodule-map-file\=/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/GeneratedModuleMaps/AppAuthCore.modulemap -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -target arm64-apple-macos15.0 -g -module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -index-store-path /tmp/taskfold-workflow-native-mac-build/Index.noindex/DataStore -swift-version 5 -I /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -F /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/PackageFrameworks -F /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/taskfold-workflow-native-mac-build/SDKStatCaches.noindex/macosx27.0-26A425-7231f6df4def33e022ae2eb8f782df1a.sdkstatcache -output-file-map /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -sdk-module-cache-path /tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-generated-files.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-own-target-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold-d9bb5bf2a2df43b51bd562026dd319cf-VFS/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-project-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/include -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/DerivedSources-normal/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/DerivedSources/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold-Swift.h -working-directory /tmp/taskfold-workflow-native-mac-host -experimental-emit-module-separately -disable-cmo
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Taskfold (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    
+
+SwiftCompile normal arm64 Compiling\ ProjectWorkflows.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Core/ProjectWorkflows.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Core/ProjectWorkflows.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile ProjectWorkflows.swift
+
+SwiftCompile normal arm64 Compiling\ Models.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Core/Models.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Core/Models.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile Models.swift
+
+SwiftCompile normal arm64 Compiling\ TeamTemplateNativeFixture.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/TeamTemplateNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/TeamTemplateNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamTemplateNativeFixture.swift
+
+SwiftCompile normal arm64 Compiling\ Store.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Core/Store.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Core/Store.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile Store.swift
+
+SwiftCompile normal arm64 Compiling\ TaskfoldMacApp.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/TaskfoldMacApp.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/TaskfoldMacApp.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TaskfoldMacApp.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling ProjectWorkflows.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TeamTemplateNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Models.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 Compiling\ CalendarView.swift,\ ConnectionSignInView.swift,\ DragDrop.swift,\ Editors.swift,\ EmailCaptureKeychainFixture.swift,\ EmailCaptureView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/CalendarView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/ConnectionSignInView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/DragDrop.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/Editors.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/EmailCaptureKeychainFixture.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/EmailCaptureView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/CalendarView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile CalendarView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/ConnectionSignInView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile ConnectionSignInView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/DragDrop.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile DragDrop.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/Editors.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile Editors.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/EmailCaptureKeychainFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile EmailCaptureKeychainFixture.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/EmailCaptureView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile EmailCaptureView.swift
+
+SwiftCompile normal arm64 Compiling\ AccountRemovalNativeFixture.swift,\ Collaboration.swift,\ ConversationStore.swift,\ WidgetActionTestPanel.swift,\ Identity.swift,\ ProjectAdoptionNativeFixture.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/AccountRemovalNativeFixture.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Collaboration.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/ConversationStore.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Core/WidgetActionTestPanel.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Identity.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/ProjectAdoptionNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/AccountRemovalNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile AccountRemovalNativeFixture.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Collaboration.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile Collaboration.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/ConversationStore.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile ConversationStore.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Core/WidgetActionTestPanel.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile WidgetActionTestPanel.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Identity.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile Identity.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/ProjectAdoptionNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile ProjectAdoptionNativeFixture.swift
+
+SwiftCompile normal arm64 Compiling\ PinnedNotesView.swift,\ PlanDayView.swift,\ PlannerSettings.swift,\ PrintReviewView.swift,\ ProjectPulseView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/PinnedNotesView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/PlanDayView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/PlannerSettings.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/PrintReviewView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/ProjectPulseView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/PinnedNotesView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile PinnedNotesView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/PlanDayView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile PlanDayView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/PlannerSettings.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile PlannerSettings.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/PrintReviewView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile PrintReviewView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/ProjectPulseView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile ProjectPulseView.swift
+
+SwiftCompile normal arm64 Compiling\ TaskRowView.swift,\ TeamOrganizationView.swift,\ TeamProjectAdoptionView.swift,\ TeamProjectManagementView.swift,\ TeamTaskAssigneePicker.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TaskRowView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamOrganizationView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamProjectAdoptionView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamProjectManagementView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskAssigneePicker.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TaskRowView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TaskRowView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamOrganizationView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamOrganizationView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamProjectAdoptionView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamProjectAdoptionView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamProjectManagementView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamProjectManagementView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskAssigneePicker.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamTaskAssigneePicker.swift
+
+SwiftCompile normal arm64 Compiling\ TeamTemplateLibraryView.swift,\ TeamWorkflowRunView.swift,\ VoiceDraftView.swift,\ WebhookAccessView.swift,\ WorkflowViews.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTemplateLibraryView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamWorkflowRunView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/VoiceDraftView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/WebhookAccessView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/WorkflowViews.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTemplateLibraryView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamTemplateLibraryView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamWorkflowRunView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamWorkflowRunView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/VoiceDraftView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile VoiceDraftView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/WebhookAccessView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile WebhookAccessView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/WorkflowViews.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile WorkflowViews.swift
+
+SwiftCompile normal arm64 Compiling\ SharedDraftsView.swift,\ SidebarView.swift,\ SubtaskOrganizer.swift,\ TaskInspector.swift,\ TaskListView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SharedDraftsView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SidebarView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SubtaskOrganizer.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TaskInspector.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TaskListView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SharedDraftsView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile SharedDraftsView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SidebarView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile SidebarView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SubtaskOrganizer.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile SubtaskOrganizer.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TaskInspector.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TaskInspector.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TaskListView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TaskListView.swift
+
+SwiftCompile normal arm64 Compiling\ FinderView.swift,\ FocusSessionView.swift,\ HourlyPlanner.swift,\ InboxReviewView.swift,\ NoteFormattingView.swift,\ OnboardingView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/FinderView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/FocusSessionView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/HourlyPlanner.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/InboxReviewView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/NoteFormattingView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/OnboardingView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/FinderView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile FinderView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/FocusSessionView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile FocusSessionView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/HourlyPlanner.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile HourlyPlanner.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/InboxReviewView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile InboxReviewView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/NoteFormattingView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile NoteFormattingView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/OnboardingView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile OnboardingView.swift
+
+SwiftCompile normal arm64 Compiling\ ReminderEditor.swift,\ RootView.swift,\ SavedViews.swift,\ SettingsView.swift,\ SharedConversationView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/ReminderEditor.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/RootView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SavedViews.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SettingsView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SharedConversationView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/ReminderEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile ReminderEditor.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/RootView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile RootView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SavedViews.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile SavedViews.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SettingsView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile SettingsView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/SharedConversationView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile SharedConversationView.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling TaskfoldMacApp.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 Compiling\ SharedCaptureStore.swift,\ AccountSecurityViews.swift,\ AuthView.swift,\ AutomationAccessView.swift,\ BackupTools.swift,\ BulkPlanningEditor.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/SharedCaptureStore.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/AccountSecurityViews.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/AuthView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/AutomationAccessView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/BackupTools.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/BulkPlanningEditor.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/SharedCaptureStore.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile SharedCaptureStore.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/AccountSecurityViews.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile AccountSecurityViews.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/AuthView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile AuthView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/AutomationAccessView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile AutomationAccessView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/BackupTools.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile BackupTools.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/BulkPlanningEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile BulkPlanningEditor.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling Store.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 Compiling\ TeamTaskDeletionReview.swift,\ TeamTaskLabelsEditor.swift,\ TeamTaskMoveView.swift,\ TeamTaskRecurrenceEditor.swift,\ TeamTaskRemindersEditor.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskDeletionReview.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskLabelsEditor.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskMoveView.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskRecurrenceEditor.swift /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskRemindersEditor.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskDeletionReview.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamTaskDeletionReview.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskLabelsEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamTaskLabelsEditor.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskMoveView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamTaskMoveView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskRecurrenceEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamTaskRecurrenceEditor.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/Taskfold/Views/TeamTaskRemindersEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TeamTaskRemindersEditor.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling AccountRemovalNativeFixture.swift, Collaboration.swift, ConversationStore.swift, WidgetActionTestPanel.swift, Identity.swift, ProjectAdoptionNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling PinnedNotesView.swift, PlanDayView.swift, PlannerSettings.swift, PrintReviewView.swift, ProjectPulseView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TaskRowView.swift, TeamOrganizationView.swift, TeamProjectAdoptionView.swift, TeamProjectManagementView.swift, TeamTaskAssigneePicker.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling FinderView.swift, FocusSessionView.swift, HourlyPlanner.swift, InboxReviewView.swift, NoteFormattingView.swift, OnboardingView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TeamTaskDeletionReview.swift, TeamTaskLabelsEditor.swift, TeamTaskMoveView.swift, TeamTaskRecurrenceEditor.swift, TeamTaskRemindersEditor.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TeamTemplateLibraryView.swift, TeamWorkflowRunView.swift, VoiceDraftView.swift, WebhookAccessView.swift, WorkflowViews.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SharedCaptureStore.swift, AccountSecurityViews.swift, AuthView.swift, AutomationAccessView.swift, BackupTools.swift, BulkPlanningEditor.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SharedDraftsView.swift, SidebarView.swift, SubtaskOrganizer.swift, TaskInspector.swift, TaskListView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ReminderEditor.swift, RootView.swift, SavedViews.swift, SettingsView.swift, SharedConversationView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling CalendarView.swift, ConnectionSignInView.swift, DragDrop.swift, Editors.swift, EmailCaptureKeychainFixture.swift, EmailCaptureView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriver\ Compilation Taskfold normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Taskfold -Onone @/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftFileList -DDEBUG -Xcc -fmodule-map-file\=/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/GeneratedModuleMaps/AppAuthCore.modulemap -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -target arm64-apple-macos15.0 -g -module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -index-store-path /tmp/taskfold-workflow-native-mac-build/Index.noindex/DataStore -swift-version 5 -I /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -F /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/PackageFrameworks -F /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/taskfold-workflow-native-mac-build/SDKStatCaches.noindex/macosx27.0-26A425-7231f6df4def33e022ae2eb8f782df1a.sdkstatcache -output-file-map /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -sdk-module-cache-path /tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-generated-files.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-own-target-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold-d9bb5bf2a2df43b51bd562026dd319cf-VFS/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-project-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/include -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/DerivedSources-normal/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/DerivedSources/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold-Swift.h -working-directory /tmp/taskfold-workflow-native-mac-host -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for Taskfold (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriver\ Compilation\ Requirements Taskfold normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Taskfold -Onone @/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftFileList -DDEBUG -Xcc -fmodule-map-file\=/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/GeneratedModuleMaps/AppAuthCore.modulemap -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -target arm64-apple-macos15.0 -g -module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -index-store-path /tmp/taskfold-workflow-native-mac-build/Index.noindex/DataStore -swift-version 5 -I /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -F /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/PackageFrameworks -F /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/taskfold-workflow-native-mac-build/SDKStatCaches.noindex/macosx27.0-26A425-7231f6df4def33e022ae2eb8f782df1a.sdkstatcache -output-file-map /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -sdk-module-cache-path /tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-generated-files.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-own-target-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold-d9bb5bf2a2df43b51bd562026dd319cf-VFS/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-project-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/include -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/DerivedSources-normal/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/DerivedSources/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold-Swift.h -working-directory /tmp/taskfold-workflow-native-mac-host -experimental-emit-module-separately -disable-cmo
+
+Copy /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.swiftmodule/arm64-apple-macos.swiftmodule /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.swiftmodule/arm64-apple-macos.swiftmodule
+
+Copy /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.swiftmodule/arm64-apple-macos.abi.json /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.abi.json (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.abi.json /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.swiftmodule/arm64-apple-macos.abi.json
+
+Copy /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.swiftsourceinfo (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.swiftsourceinfo /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo
+
+Ld /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib normal (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-macos15.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -Os -Xlinker -no_warn_duplicate_libraries -L/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -L/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -F/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -F/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/PackageFrameworks -F/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -filelist /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.LinkFileList -install_name @rpath/Taskfold.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path -Xlinker -rpath -Xlinker /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/../Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold_lto.o -rdynamic -Xlinker -dependency_info -Xlinker /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -Xlinker -no_adhoc_codesign -o /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-ExecutorLinkFileList-normal-arm64.txt (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    construct-stub-executor-link-file-list /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'Taskfold' from project 'Taskfold')
+
+Ld /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold normal (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-macos15.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -Os -Xlinker -no_warn_duplicate_libraries -L/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -F/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/PackageFrameworks -F/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @loader_path -Xlinker -rpath -Xlinker /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/../Frameworks -rdynamic -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold-ExecutorLinkFileList-normal-arm64.txt /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib -Xlinker -no_adhoc_codesign -o /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold
+
+ExtractAppIntentsMetadata (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name Taskfold --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk --xcode-version 27A266a --platform-family macOS --deployment-target 15.0 --bundle-identifier com.dbakp.taskfold.mac.workflowteststeameditbridge --output /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Resources --target-triple arm64-apple-macos15.0 --binary-file /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold --dependency-file /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold_dependency_info.dat --stringsdata-file /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftFileList --metadata-file-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold.DependencyMetadataFileList --static-metadata-file-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-10-26 23:15:01.041 appintentsmetadataprocessor[75162:23829398] Starting appintentsmetadataprocessor export
+2026-10-26 23:15:01.129 appintentsmetadataprocessor[75162:23829398] Writing Metadata.appintents
+2026-10-26 23:15:01.129 appintentsmetadataprocessor[75162:23829398] Metadata root: /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Resources/Metadata.appintents
+
+ProcessInfoPlistFile /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Info.plist /tmp/taskfold-workflow-native-mac-host/Taskfold/Info.plist (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-infoPlistUtility /tmp/taskfold-workflow-native-mac-host/Taskfold/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/PkgInfo -expandbuildsettings -platform macosx -additionalcontentfile /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/assetcatalog_generated_info.plist -scanforprivacyfile /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Resources/AppAuth_AppAuthCore.bundle -o /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Info.plist
+
+SwiftDriver TaskfoldUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name TaskfoldUITests -Onone @/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -target arm64-apple-macos15.0 -g -module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -index-store-path /tmp/taskfold-workflow-native-mac-build/Index.noindex/DataStore -swift-version 5 -I /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -F /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -parse-as-library -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/taskfold-workflow-native-mac-build/SDKStatCaches.noindex/macosx27.0-26A425-7231f6df4def33e022ae2eb8f782df1a.sdkstatcache -output-file-map /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -sdk-module-cache-path /tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-generated-files.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-own-target-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold-d9bb5bf2a2df43b51bd562026dd319cf-VFS/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-project-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/include -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/DerivedSources/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests-Swift.h -working-directory /tmp/taskfold-workflow-native-mac-host -experimental-emit-module-separately -disable-cmo
+
+CopySwiftLibs /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-swiftStdLibTool --copy --verbose --sign 9421BFBE87503809AB8274B2B84048C65BE9D2FC --scan-executable /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib --scan-folder /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Frameworks --scan-folder /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/PlugIns --scan-folder /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Library/SystemExtensions --scan-folder /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Extensions --platform macosx --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+
+CodeSign /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    
+    Signing Identity:     "Apple Development: davidbakposada@gmail.com (ZTJYVDSQ3S)"
+    
+    /usr/bin/codesign --force --sign 9421BFBE87503809AB8274B2B84048C65BE9D2FC -o runtime --timestamp\=none --generate-entitlement-der /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib
+
+SwiftCompile normal arm64 Compiling\ TaskfoldMacUITests.swift /tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift (in target 'TaskfoldUITests' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-SwiftPerFileCompile TaskfoldMacUITests.swift
+
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:3749:13: warning: initialization of immutable value 'vault' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+3747 |         let fm = FileManager.default, support = try support()
+3748 |         let cacheFile = support.appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json")
+3749 |         let vault = cacheFile.deletingLastPathComponent().appendingPathComponent("Backups/d2be2d54-84e6-8f3d-8850-546d0835535a")
+     |             `- warning: initialization of immutable value 'vault' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+3750 |         defer {
+3751 |             app.terminate(); app.launchArguments = ["--team-editor-testing", "--team-recovery-storage-cleanup"]
+
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4041:52: warning: will never be executed
+4039 |             }
+4040 |         }
+4041 |         let later = app.buttons[single ? "Later" : "laterTeamBatchRecovery"]
+     |                                 |                  `- warning: will never be executed
+     |                                 `- note: condition always evaluates to true
+4042 |         XCTAssertTrue(later.waitForExistence(timeout: 10)); later.click()
+4043 |         let admission = app.buttons["checkRecordedDraftAdmission"]; XCTAssertTrue(admission.waitForExistence(timeout: 10)); admission.click()
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+SwiftEmitModule normal arm64 Emitting\ module\ for\ TaskfoldUITests (in target 'TaskfoldUITests' from project 'Taskfold')
+
+SwiftCompile normal arm64 (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    
+
+CodeSign /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/__preview.dylib (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    
+    Signing Identity:     "Apple Development: davidbakposada@gmail.com (ZTJYVDSQ3S)"
+    
+    /usr/bin/codesign --force --sign 9421BFBE87503809AB8274B2B84048C65BE9D2FC -o runtime --timestamp\=none --generate-entitlement-der /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/__preview.dylib
+/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/__preview.dylib: replacing existing signature
+
+CodeSign /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    
+    Signing Identity:     "Apple Development: davidbakposada@gmail.com (ZTJYVDSQ3S)"
+    
+    /usr/bin/codesign --force --sign 9421BFBE87503809AB8274B2B84048C65BE9D2FC -o runtime --entitlements /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Taskfold.app.xcent --timestamp\=none --generate-entitlement-der /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app
+
+Validate /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-validationUtility /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app -no-validate-extension -infoplist-subpath Contents/Info.plist
+
+RegisterWithLaunchServices /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-lsregisterurl --record-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/XCBuildData/registered-launchservices.txt -- /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app
+
+ProcessInfoPlistFile /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/Info.plist /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/empty-TaskfoldUITests.plist (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-infoPlistUtility /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/empty-TaskfoldUITests.plist -producttype com.apple.product-type.bundle.ui-testing -expandbuildsettings -platform macosx -additionalcontentfile /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/ProductTypeInfoPlistAdditions.plist -o /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/Info.plist
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for TaskfoldUITests (in target 'TaskfoldUITests' from project 'Taskfold')
+
+SwiftDriver\ Compilation\ Requirements TaskfoldUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name TaskfoldUITests -Onone @/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -target arm64-apple-macos15.0 -g -module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -index-store-path /tmp/taskfold-workflow-native-mac-build/Index.noindex/DataStore -swift-version 5 -I /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -F /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -parse-as-library -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/taskfold-workflow-native-mac-build/SDKStatCaches.noindex/macosx27.0-26A425-7231f6df4def33e022ae2eb8f782df1a.sdkstatcache -output-file-map /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -sdk-module-cache-path /tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-generated-files.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-own-target-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold-d9bb5bf2a2df43b51bd562026dd319cf-VFS/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-project-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/include -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/DerivedSources/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests-Swift.h -working-directory /tmp/taskfold-workflow-native-mac-host -experimental-emit-module-separately -disable-cmo
+
+Copy /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.swiftsourceinfo (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.swiftsourceinfo /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo
+
+Copy /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests.swiftmodule/arm64-apple-macos.abi.json /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.abi.json (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.abi.json /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests.swiftmodule/arm64-apple-macos.abi.json
+
+SwiftDriverJobDiscovery normal arm64 Compiling TaskfoldMacUITests.swift (in target 'TaskfoldUITests' from project 'Taskfold')
+
+SwiftDriver\ Compilation TaskfoldUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name TaskfoldUITests -Onone @/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -target arm64-apple-macos15.0 -g -module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -index-store-path /tmp/taskfold-workflow-native-mac-build/Index.noindex/DataStore -swift-version 5 -I /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug -F /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -parse-as-library -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/taskfold-workflow-native-mac-build/SDKStatCaches.noindex/macosx27.0-26A425-7231f6df4def33e022ae2eb8f782df1a.sdkstatcache -output-file-map /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex -sdk-module-cache-path /tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-generated-files.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-own-target-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold-d9bb5bf2a2df43b51bd562026dd319cf-VFS/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests-project-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/include -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/DerivedSources/arm64 -Xcc -I/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests-Swift.h -working-directory /tmp/taskfold-workflow-native-mac-host -experimental-emit-module-separately -disable-cmo
+
+CopySwiftLibs /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    builtin-swiftStdLibTool --copy --verbose --sign 9421BFBE87503809AB8274B2B84048C65BE9D2FC --scan-executable /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests --scan-folder /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/Frameworks --scan-folder /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/PlugIns --scan-folder /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/Library/SystemExtensions --scan-folder /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/Extensions --platform macosx --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/Frameworks --strip-bitcode --scan-executable /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+
+ExtractAppIntentsMetadata (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name TaskfoldUITests --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk --xcode-version 27A266a --platform-family macOS --deployment-target 15.0 --bundle-identifier com.dbakp.taskfold.mac.workflowteststeameditbridge.runner --output /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/Resources --target-triple arm64-apple-macos15.0 --binary-file /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests --dependency-file /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests_dependency_info.dat --stringsdata-file /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.SwiftFileList --metadata-file-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests.DependencyMetadataFileList --static-metadata-file-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/Objects-normal/arm64/TaskfoldUITests.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-10-26 23:15:05.560 appintentsmetadataprocessor[75174:23829600] Starting appintentsmetadataprocessor export
+2026-10-26 23:15:05.562 appintentsmetadataprocessor[75174:23829600] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+
+CodeSign /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    
+    Signing Identity:     "Apple Development: davidbakposada@gmail.com (ZTJYVDSQ3S)"
+    
+    /usr/bin/codesign --force --sign 9421BFBE87503809AB8274B2B84048C65BE9D2FC --entitlements /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests.xctest.xcent --timestamp\=none --generate-entitlement-der /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest
+/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest: replacing existing signature
+
+CodeSign /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-mac-host
+    
+    Signing Identity:     "Apple Development: davidbakposada@gmail.com (ZTJYVDSQ3S)"
+    
+    /usr/bin/codesign --force --sign 9421BFBE87503809AB8274B2B84048C65BE9D2FC --entitlements /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/TaskfoldUITests.build/TaskfoldUITests.xctest.xcent --timestamp\=none --generate-entitlement-der /tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app
+/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app: replacing existing signature
+
+PruneExplicitPrecompiledModules /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules
+
+** TEST BUILD SUCCEEDED **
+

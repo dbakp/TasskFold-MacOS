@@ -1,0 +1,56 @@
+{
+  "observedOn": "2026-10-20",
+  "project": "TaskFold",
+  "projectRef": "zqxflydiyfjeedqvyova",
+  "migrationVersion": "20261020174132",
+  "migrationName": "project_workflow_foundation",
+  "migrationSHA256": "4a5318d040a080d0fe7860b46c13f5a757180bc2411cc5dbcd115f898dbb3588",
+  "applied": true,
+  "templateRLS": true,
+  "templateAnonymousSelect": false,
+  "templateAuthenticatedSelect": true,
+  "templateRealtime": true,
+  "actualRoleRollbackFixture": "supabase/tests/project_workflows.sql",
+  "actualRoleFixtureResult": "passed",
+  "fixtureUsersRemaining": 0,
+  "covered": [
+    "owner hierarchy moves",
+    "20-level insertion/subtree bounds",
+    "cycle rejection",
+    "inherited archive and explicit child restore",
+    "hidden-parent projection without parent row visibility",
+    "member metadata edit with inaccessible parent",
+    "member organization denial",
+    "foreign-parent denial",
+    "private template reads/writes",
+    "owner template update/delete",
+    "future definition retention",
+    "malformed definition rejection",
+    "parent deletion promotes children"
+  ],
+  "advisors": {
+    "securityBefore": {
+      "extension_in_public": 1,
+      "pg_graphql_anon_table_exposed": 6,
+      "pg_graphql_authenticated_table_exposed": 16,
+      "anon_security_definer_function_executable": 8,
+      "authenticated_security_definer_function_executable": 9,
+      "auth_leaked_password_protection": 1
+    },
+    "securityAfter": {
+      "extension_in_public": 1,
+      "pg_graphql_anon_table_exposed": 6,
+      "pg_graphql_authenticated_table_exposed": 17,
+      "anon_security_definer_function_executable": 8,
+      "authenticated_security_definer_function_executable": 9,
+      "auth_leaked_password_protection": 1
+    },
+    "performanceCountsUnchanged": true,
+    "newSchemaVisibilityNotice": "The authenticated role can discover the new table schema. Owner-only row security was tested with actual roles; no anonymous grant was added. Existing advisories were not changed in this feature scope."
+  },
+  "references": {
+    "rls": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+    "schemaVisibilityNotice": "https://supabase.com/docs/guides/database/database-linter?lint=0027_pg_graphql_authenticated_table_exposed",
+    "existingAdvisories": "https://supabase.com/dashboard/project/zqxflydiyfjeedqvyova/database/security-advisor"
+  }
+}

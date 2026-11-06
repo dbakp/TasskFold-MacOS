@@ -1,0 +1,21 @@
+# Background workflow definition preview
+
+Reviewed 3 November 2026. Both independent apps prepare each Use template definition once in a presentation-bound background task. Name, start-date and destination changes reuse that validated definition. The loading screen keeps Done available; dismissing it cancels the worker. Cancellation is checked before validation, after bounded encoding, within organization/hierarchy checks and throughout the nested task walk. The original synchronous initializer and all validation rules remain available unchanged for existing callers.
+
+A read-only Store guard admits preview reads without setting an error while rendering. Exact source record, workspace generation, current account, readable cache and session identity bind the result. Changed/removed sources or unavailable workspaces hide old preview content. A worker result is checked again before publication. Existing Create workflow source/context/destination/heading checks, preparation, write and Undo paths remain. These preview results never confer sharing permissions. Headed previews and summaries can reuse the validated definition rather than revalidating it during rendering; other document-based preview callers retain validation.
+
+## Measurement and acceptance
+
+The original initializer took 0.119 seconds for one validation and 0.233 seconds for two in a single Debug macOS Core-harness diagnostic using iOS-owned sources and a 1,000-root/6,000-child fixture. The two-read case models the shared-enabled body path. It is not a screen-opening, Simulator, statistical, hardware, Release or FPS benchmark. Validation itself has not become faster: the change moves it off rendering and reuses the result.
+
+The owning iPhone native selection passes two tests, no failures/skips/reported runtime warnings:
+
+- Actual Use template: validate once; edit the project name and enable scheduling; confirm one preview load; dismiss without creating. The normal-load diagnostic may record zero heartbeat ticks and is not used as evidence of frame-rate or main-actor latency. Saved task, organization, history and template tables are unchanged.
+- The same test also dismisses a deliberately held preview and replaces its synthetic source during a held load. Both record main-actor heartbeat ticks during the hold, cancel, publish no usable definition and leave task/history tables unchanged. Replacement shows the unavailable state and no Create action. The hold is a DEBUG-only reserved-host flag; it is not an artificial production delay.
+- The second test uses the real template screen to create 1,000 roots/6,000 nested items, Undo, quit and reopen the saved local workspace. It preserves the reusable source and saved history. This accepts the changed screen's existing production creation flow, not merely an isolated helper.
+
+Both own Core suites pass 113 focused workflow/history/encoding tests, including direct nested-validation cancellation, rejected definitions, background loading and changed workspace/session/source admission. Both own app/runner builds and strict signatures pass. The initial iOS build failed at an attempted private Store property read; a dedicated read-only Store guard fixed that compile error. The first native selection also failed before loading: its Boolean-sheet fixture captured the fallback source, and the exact-source guard refused it. The fixture now presents the selected saved Record directly with sheet(item:). A second selection reached option editing with one load and passed rich creation/Undo/cold return, but its normal-load heartbeat assertion observed zero ticks over 0.347 seconds. That assertion now applies only to deliberately held loading cases; the normal-load value is retained without a responsiveness claim. Only the final complete successful selection is counted as acceptance for both cases.
+
+## Remaining scope
+
+No audible VoiceOver, physical-device, Mac/iPad runtime, genuine cloud/session-transition, frame-rate or full scroll/rendering claim is made. Headed preview row construction, template catalog/editor scaling, actual large-list rendering, richer assignments/multiple-project creation and broader lifecycle/accessibility/shared contexts remain separate work. Existing user deferrals and normal-use service gates remain unchanged. Full Px completion remains unproven.

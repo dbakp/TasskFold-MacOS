@@ -1,0 +1,124 @@
+{
+  "date": "2026-10-25",
+  "stage": "Reviewed shared-task recurrence controls",
+  "repo": "TasskFold-MacOS",
+  "team_rollout_enabled": false,
+  "migration_deployed": false,
+  "hosted_or_real_data_changed": false,
+  "independent_repo_owned_inputs": true,
+  "database": {
+    "db": {
+      "checks": 53,
+      "report": "p2-team-repeat-db-evidence.json",
+      "report_sha256": "e6b8b702df822296fb783a0d87d47d00a6b37710f5989647bfa582442fe0b3b5"
+    },
+    "regression": {
+      "checks": 221,
+      "report": "p2-team-repeat-regression-evidence.json",
+      "report_sha256": "1dc6fcc0187b0e121ec55028ff4cbef676321e4426c6c6b6143ce4a5d589220b"
+    }
+  },
+  "core_tests": {
+    "full_core_executed": 1764,
+    "full_core_skipped": 33,
+    "watch_tests_additional": 0,
+    "full_failures": 0,
+    "full_log_sha256": "a2a52d0e66b324dee2d248d332e7203c1ba6b292aeab8c7958d042c8fbe6e799",
+    "final_focused_executed": 191,
+    "final_focused_skipped": 1,
+    "final_focused_failures": 0,
+    "new_repeat_cases": 10,
+    "final_focused_log_sha256": "03b1a7f6947479d855a919059171a2e98c0a08dec9a46ea65ae4039b8eaea98c",
+    "note": "Full suite ran before one additional review-boundary test was added; the final focused run includes all ten repeat cases. Production Core inputs did not change between these runs. Optional live/native fixtures remain skipped."
+  },
+  "native_build": {
+    "passed": true,
+    "scope": "unsigned arm64 app; isolated helper omits widget target",
+    "log_sha256": "430d15b2757c8827010c76453be7264892811e1cc02eaa974bd6a38717a594db",
+    "repository_input_sha256": {
+      "Taskfold/Core/TeamTaskRecurrence.swift": "9b40288eaa74f624a0799705cbfde6964fa47032066c855a37458bd4d51bbd9a",
+      "Taskfold/Core/Models.swift": "93f151e2b77b9fda5ab0fef77b2ec89fe6028d9cd754f292f8dbf661c780849f",
+      "Taskfold/Core/TeamProjectAccess.swift": "4f9107543d994e6cfcf50d2da353948f466a2464cb7857236515c64c2168dadc",
+      "Taskfold/Core/Store.swift": "0a18c008f70a265b25c2c8fc9568af616e00cdce6c5d9a003bd2432f09e01bff",
+      "Taskfold/Views/TeamTaskRecurrenceEditor.swift": "a52ea2591424c8df4a37ad6dd313c54c287ef0ee633792f0834c1eecc9282362",
+      "Taskfold/Views/TaskInspector.swift": "cbdbf08d627d4424e3dde5c91278e2d538e972e68ab0bf536810815ec9f35499"
+    },
+    "tested_host_input_sha256": {
+      "Taskfold/Core/TeamTaskRecurrence.swift": "9b40288eaa74f624a0799705cbfde6964fa47032066c855a37458bd4d51bbd9a",
+      "Taskfold/Core/Models.swift": "93f151e2b77b9fda5ab0fef77b2ec89fe6028d9cd754f292f8dbf661c780849f",
+      "Taskfold/Core/TeamProjectAccess.swift": "4f9107543d994e6cfcf50d2da353948f466a2464cb7857236515c64c2168dadc",
+      "Taskfold/Core/Store.swift": "b52077245cff7bbd207fed824d645105eea23b1cbe1efa3ed6a6389a650d76fc",
+      "Taskfold/Views/TeamTaskRecurrenceEditor.swift": "a52ea2591424c8df4a37ad6dd313c54c287ef0ee633792f0834c1eecc9282362",
+      "Taskfold/Views/TaskInspector.swift": "cbdbf08d627d4424e3dde5c91278e2d538e972e68ab0bf536810815ec9f35499"
+    },
+    "isolation_transformations": "Store app-group namespace; reserved signed-test bundle entry also replaced on Mac. All other listed native input text matches exactly."
+  },
+  "native_acceptance": {
+    "phone": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "tablet": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mac_runtime": false,
+    "spoken_voiceover": false,
+    "evidence_location": "docs/evidence/team-repeat in iOS repository",
+    "ios_evidence_commit": "c853fb2a91f70fca4d5ffdf851e80eb0c0d2e0ef",
+    "cross_repo_build_dependency": false
+  },
+  "verified": [
+    "Full native repeat controls reused behind explicit shared-task Apply",
+    "Legacy end date moves into effective rule without loss",
+    "Apply changes only parent draft; Save queues scoped repeat fields and frozen plan/completion baseline",
+    "Normal relaunch preserves exact saved cache and queue",
+    "Cancel keeps task and queue exact",
+    "Role loss blocks Apply and verifies encrypted private preservation without a team mutation",
+    "Unfamiliar source rules stay read-only and exact",
+    "Existing shared-reminder Cancel regression"
+  ],
+  "harness_corrections": [
+    "Initial iPad helper required first-row y>=468 while actual visible switch began at467; shared Repeat top margin corrected from100 to80. All initial saved-state assertions passed; three helper reveal assertions failed. Initial phone five cases passed.",
+    "After all five initial tablet cases finished, Xcode remained in collectSimulatorDiagnostics (confirmed by a process sample). Optional diagnostic collection was interrupted and driver terminated before the corrected tablet run. Final acceptance uses fresh complete result bundles."
+  ],
+  "limits": [
+    "Migration and team controls remain gated; no hosted deployment or live release claim",
+    "Mac interaction, spoken accessibility, all native frequency/large-text variants and wider live concurrency/account/fault acceptance remain open",
+    "Visible repeat/plan context and completion revision are captured; historical change-and-return cycles for noncompletion fields do not gain a new version protocol",
+    "Recovery record/export does not automatically restore authority or replay repeat edits",
+    "Independent child task records and remaining team adapters remain open",
+    "All user-deferred remote delivery, old-client rollout, distribution, provider and hardware dependencies remain deferred"
+  ],
+  "evidence_files_sha256": {
+    "tablet-summary.json": "0e5e2e506167c47a6187421ddce64cc9d9b4ce9ed86584a36f6256677465b0b6",
+    "tablet-recovery.png": "25c0dd4f23a4b44321d18ae15c4eb6b90c4125d0da6d4b9c463fea39e17b704a",
+    "phone-controls.png": "e574d1411d53a1c38e6bb2fef93f0d8147d98ef63e8d8614ee1e8d804b6c8662",
+    "phone-summary.json": "35b587532e488e737c9b0a86a244fd07f61ae1a7b4620b3cc99b83862ef59018",
+    "phone-recovery.png": "f20c6fda273e59ca32f2eabb05c08d6ee45d95f1c7c91338565189428322f77a",
+    "tablet-unavailable.png": "413f3e006fc5d95d9032ab74785dbf6114b696b0f8a04d487058c77b2cbfcc98",
+    "phone-unavailable.png": "877969cd2f82f77b56d7a137c83236425a817cddfbb59152a152cfa3f26a475f",
+    "tablet-controls.png": "d48cb320341471bea180ce9f8efaf7c8b7d8cc56af96bc882416b80c85a0425f"
+  },
+  "visual_review": {
+    "images_inspected": 6,
+    "phone_and_tablet": true,
+    "appearance": "default light",
+    "result": "Controls and messages are readable. Longer rules, help and occurrence previews remain in the native scrolling Form; the iPad viewport shows only its current portion."
+  },
+  "initial_harness_log_sha256": {
+    "phone.log": "12b989e08769c4e6acf7bf290af9ae4ff2ef08db8f72e0104b7488a7183a58d5",
+    "tablet.log": "6b726776784d724f8b14f320438ba0f0bd156876d35959b729f8ba5c9e27c36b",
+    "tablet-driver-sample.txt": "cb9d5cb4fc0ee8036b3736b5fd08dae82d57a42c7b78b49295c3ab1ec75f4db5"
+  },
+  "cleanup": {
+    "owned_temp_roots_removed": 57,
+    "allocated_bytes_removed": 1596248064,
+    "both_isolated_apps_and_runners_uninstalled": true,
+    "native_taskfold_processes_remaining": 0,
+    "owned_postgres_containers_removed": true,
+    "baseline_simulators_and_core_caches_preserved": true
+  }
+}

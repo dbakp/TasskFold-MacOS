@@ -1,0 +1,18 @@
+{
+  "scope": "Five-second sample of the synthetic full-capacity Core test, before temporary analysis partitioning",
+  "hotFrames": [
+    "+                                                                                                                                                         3208 CompletionBatchReconciliation.confirmed()  (in TaskfoldCoreTests) + 29224  [0x10de298e4]  TeamTaskBatch.swift:583",
+    "+                                                                                                                                                           1736 CompletionBatchReconciliation.replay(_:into:)  (in TaskfoldCoreTests) + 3232  [0x10de3b3e8]  TeamTaskBatch.swift:476",
+    "+                                                                                                                                                           ! : 260 Snapshot.apply(_:)  (in TaskfoldCoreTests) + 4200  [0x10d94b524]  Models.swift:432",
+    "+                                                                                                                                                           ! : | + 132 partial apply for closure #2 in Snapshot.apply(_:)  (in TaskfoldCoreTests) + 24  [0x10d9bbc4c]  /<compiler-generated>:0",
+    "+                                                                                                                                                           ! : | + ! 107 closure #2 in Snapshot.apply(_:)  (in TaskfoldCoreTests) + 44  [0x10d94fb24]  Models.swift:432",
+    "+                                                                                                                                                           ! : | + ! 16 closure #2 in Snapshot.apply(_:)  (in TaskfoldCoreTests) + 112  [0x10d94fb68]  Models.swift:432",
+    "+                                                                                                                                                           ! : | + ! 3 closure #2 in Snapshot.apply(_:)  (in TaskfoldCoreTests) + 92  [0x10d94fb54]  Models.swift:432",
+    "+                                                                                                                                                           ! : | + ! 3 closure #2 in Snapshot.apply(_:)  (in TaskfoldCoreTests) + 128  [0x10d94fb78]  Models.swift:432",
+    "+                                                                                                                                                           ! : | + ! 1 closure #2 in Snapshot.apply(_:)  (in TaskfoldCoreTests) + 136  [0x10d94fb80]  Models.swift:432",
+    "+                                                                                                                                                           ! : | + ! 1 closure #2 in Snapshot.apply(_:)  (in TaskfoldCoreTests) + 48  [0x10d94fb28]  Models.swift:432",
+    "+                                                                                                                                                           ! : | + 1 partial apply for closure #2 in Snapshot.apply(_:)  (in TaskfoldCoreTests) + 0  [0x10d9bbc34]  /<compiler-generated>:0",
+    "+                                                                                                                                                           ! : 259 Snapshot.apply(_:)  (in TaskfoldCoreTests) + 4048  [0x10d94b48c]  Models.swift:430"
+  ],
+  "decision": "Keep every cache row and the existing validations, bring affected rows to the front of the private replay copy, and compute the returned initial workspace independently in its original order."
+}

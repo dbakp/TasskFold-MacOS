@@ -10,6 +10,7 @@ struct TaskListView: View {
     @Environment(\.openProjectPulse) private var openProjectPulse
     @Environment(\.startInboxReview) private var startInboxReview
     @Environment(Workspace.self) private var workspace
+    @Environment(TaskPrintCommand.self) private var printCommand
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let scope: TaskScope
     let preferenceKey: String
@@ -24,11 +25,21 @@ struct TaskListView: View {
     }
     @AppStorage("mac.collapsedProjectSections") private var collapsedSections = ""
     private var projectLayout: String { get { store.viewValue(scope, field: "layout", fallback: .string("list")).text } nonmutating set { store.setViewValue(scope, field: "layout", value: .string(newValue)) } }
+    @State private var multiLinePresented = false
+    @State private var printReview: PrintReviewRequest?
+    @State private var printOwner = UUID()
+    @State private var printFailure: String?
     @State private var captureSection = ""
     @State private var nativeList = ListNativeHandle()
+    @State private var rowSwipe = MacRowSwipeController()
+    @AppStorage("mac.rowGesture.leading") private var leadingGesture = "complete"
+    @AppStorage("mac.rowGesture.trailing") private var trailingGesture = "tomorrow"
+    @AppStorage("mac.rowGesture.fullSwipe") private var fullSwipe = false
+    @Environment(\.layoutDirection) private var gestureLayoutDirection
     @State private var bulkDatePicker = false
     @State private var bulkDate = Date()
     @State private var projectEditor: Record?
+    @State private var workflowCapture: WorkflowCaptureRequest?
     @State private var collaborationProject: Record?
     @State private var sectionsEditor = false
     @State private var filterEditor: Record?
@@ -36,6 +47,7 @@ struct TaskListView: View {
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
     @FocusState private var filterFocused: Bool
+    @FocusState private var taskListFocused: Bool
 
     init(scope: TaskScope, preferenceKey: String? = nil) {
         self.scope = scope
@@ -94,7 +106,7 @@ struct TaskListView: View {
             return store.filterGroups(scope, tasks: filtered, includeCompleted: showCompleted).map { Group(title: $0.name, key: "scope:" + scope.preferenceKey + ":group:" + $0.id, tasks: ordered($0.tasks, day: "scope:" + scope.preferenceKey + ":group:" + $0.id)) }
         }
         if !projectID.isEmpty {
-            let sections = store.rows("sections").filter { $0.string("project_id") == projectID }.sorted { $0["order_index"].integer < $1["order_index"].integer }
+            let sections = OrganizationOrder.sorted(store.rows("sections").filter { $0.string("project_id") == projectID })
             let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(regularTasks.filter { $0.string("section_id").isEmpty }, day: groupKey(section: nil)))
             return [loose] + sections.map { section in
                 let key = groupKey(section: section.id)
@@ -128,7 +140,7 @@ struct TaskListView: View {
         if dated { return dayGroups.map { (day: $0.0 == "Overdue" ? overdueKey : $0.0, ids: $0.1.map(\.id)) } }
         return [(day: overdueKey, ids: overdueTasks.map(\.id))] + groups.map { (day: $0.key, ids: $0.tasks.map(\.id)) }
     }
-    private var remaining: Int { filtered.filter { !$0.completed && !workspace.completing.contains($0.id) }.count }
+    private var remaining: Int { filtered.filter { TaskKind.mayComplete($0) && !$0.completed && !workspace.completing.contains($0.id) }.count }
 
     var body: some View {
         @Bindable var workspace = workspace
@@ -151,8 +163,16 @@ struct TaskListView: View {
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
-            if let failure = store.filterError(scope) { VStack(alignment: .leading, spacing: 8) { Label(failure, systemImage: "exclamationmark.triangle"); if case .saved(let id) = scope, let view = store.record("saved_views", id: id) { Button("Edit Filter…") { filterEditor = view } } }.padding().accessibilityIdentifier("savedFilterError") }
-            if case .saved = scope, projectLayout == "board" { SavedFilterBoard(scope: scope, tasks: filtered, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
+            if let failure = store.filterError(scope) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Label("Filter unavailable", systemImage: "exclamationmark.triangle").font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                        Text(failure).fixedSize(horizontal: false, vertical: true)
+                        Text("Your saved filter is preserved. Its results cannot be shown in this version of Taskfold.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        if case .saved(let id) = scope, let view = store.record("saved_views", id: id) { Button("Edit Filter…") { filterEditor = view } }
+                    }.padding(24).frame(maxWidth: ReadingColumn.width, alignment: .leading).frame(maxWidth: .infinity, alignment: .center)
+                }.accessibilityIdentifier("savedFilterError")
+            } else if case .saved = scope, projectLayout == "board" { SavedFilterBoard(scope: scope, tasks: filtered, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
             else if !projectID.isEmpty && projectLayout == "board" {
                 ProjectBoard(columns: boardColumns) { section in captureSection = section; quickAddVisible = true }
             } else {
@@ -160,7 +180,12 @@ struct TaskListView: View {
                 guard workspace.section.scope == scope else { return }
                 workspace.selection = selection
             })) {
-                if !store.online || store.notice != nil { statusRow }
+                if workspace.scope.usesProductiveWork && store.productiveReading.incomplete {
+                    Label("Some grouped tasks need review. Open their heading in All Tasks.", systemImage: "exclamationmark.circle")
+                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("datedGroupedWorkReview").selectionDisabled()
+                }
+                if !store.online || (store.notice != nil && store.syncConflict == nil && store.focusSyncConflict == nil) { statusRow }
                 if store.syncing && store.tasks.isEmpty && store.lastSync == nil && !store.localMode { SkeletonRows().padding(.vertical, 12).selectionDisabled().listRowSeparator(.hidden).transition(.skeletonReveal) }
                 if filtered.isEmpty && !dated { emptyState }
                 if dated {
@@ -184,7 +209,7 @@ struct TaskListView: View {
                                 }
                             } header: {
                                 if !projectID.isEmpty {
-                                    ProjectSectionHeader(key: group.key, title: group.title, count: group.tasks.count, collapsed: collapseBinding(group.key)) {
+                                    ProjectSectionHeader(key: group.key, title: group.title, count: TaskKind.listCountLabel(group.tasks), collapsed: collapseBinding(group.key)) {
                                         captureSection = group.key.split(separator: ":").last.map(String.init).flatMap { $0 == "none" ? nil : $0 } ?? ""
                                         quickAddVisible = true
                                     }
@@ -194,7 +219,10 @@ struct TaskListView: View {
                     }
                 }
             }
+            .background(MacSwipeEventHost(controller: rowSwipe))
             .background(ListScrollMemory(key: preferenceKey, workspace: workspace, taskIDs: displayedTaskIDs, handle: nativeList))
+            .focused($taskListFocused)
+            .environment(\.taskListFocused, taskListFocused)
             .accessibilityIdentifier("taskList")
             .listStyle(.inset)
             .scrollContentBackground(.hidden)
@@ -213,20 +241,43 @@ struct TaskListView: View {
         .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
+        .onAppear {
+            printCommand.install(owner: printOwner, enabled: canPrint, action: { preparePrint() })
+        }
+        .onChange(of: canPrint) { _, enabled in printCommand.update(owner: printOwner, enabled: enabled) }
+        .onDisappear { printCommand.remove(owner: printOwner) }
+        .sheet(item: $printReview) { PrintReviewView(request: $0) }
+        .alert("Could not prepare document", isPresented: Binding(get: { printFailure != nil }, set: { if !$0 { printFailure = nil } })) { Button("OK") { printFailure = nil } } message: { Text(printFailure ?? "") }
+        .onChange(of: store.workspaceGeneration) { _, _ in printReview = nil; printFailure = nil; rowSwipe.cancel() }
+        .onAppear { configureRowSwipes() }
+        .onChange(of: leadingGesture) { _, _ in configureRowSwipes() }
+        .onChange(of: trailingGesture) { _, _ in configureRowSwipes() }
+        .onChange(of: fullSwipe) { _, _ in configureRowSwipes() }
+        .onChange(of: gestureLayoutDirection) { _, _ in configureRowSwipes() }
+        .onChange(of: reduceMotion) { _, _ in configureRowSwipes() }
+        .onChange(of: workspace.section.key) { _, _ in configureRowSwipes() }
+        .onChange(of: preferenceKey) { _, _ in configureRowSwipes() }
+        .onChange(of: workspace.search) { _, _ in rowSwipe.cancel() }
+        .onChange(of: workspace.selection) { _, _ in rowSwipe.cancel() }
+        .onChange(of: workspace.drag.active) { _, _ in rowSwipe.cancel() }
+        .sheet(isPresented: $multiLinePresented) { MultiLineCaptureView(text: workspace.quickAdd, project: captureDraft.string("project_id"), section: captureDraft.string("section_id"), defaults: captureDraft.fields, onSaved: { workspace.quickAdd = "" }) }
         .sheet(isPresented: $quickAddVisible) {
             TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, choices: $referenceChoices, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
                 context: workspace.quickEntryContext(project: captureDraft.string("project_id")), task: captureDraft, submit: submitQuickAdd)
         }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
+        .sheet(item: $workflowCapture) { WorkflowCaptureSheet(request: $0) }
         .sheet(item: $filterEditor) { SavedViewEditor(record: $0) }
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
         .sheet(isPresented: $bulkDatePicker) { DatePickSheet(date: $bulkDate, count: workspace.selection.count) { workspace.reschedule(workspace.selection, to: Dates.day(bulkDate), label: bulkDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())) } }
-        .onChange(of: workspace.quickAddFocusRequest) { _, _ in if workspace.section.scope == scope { revealQuickAdd() } }
+        .onChange(of: workspace.quickAddFocusRequest, initial: true) { _, _ in
+            if workspace.section.key == preferenceKey, workspace.consumeQuickAddRequest(destination: preferenceKey) { revealQuickAdd() }
+        }
         .onChange(of: workspace.searchPresented) { _, requested in
             if requested && workspace.section.scope == scope { filterFocused = true; workspace.searchPresented = false }
         }
-        .onDisappear { quickAddVisible = false }
+        .onDisappear { quickAddVisible = false; rowSwipe.cancel(); rowSwipe.isAvailable = { false } }
         .onChange(of: displayedTaskIDs) { _, ids in
             // Assign only when something actually left the list; re-setting selection during a table update is reentrant.
             guard workspace.section.scope == scope else { return }
@@ -243,8 +294,10 @@ struct TaskListView: View {
 
     /// A date line and a count; no tagline copy.
     private var subtitle: String {
+        if store.filterError(scope) != nil { return "Filter unavailable" }
         if scope == .completed { return "\(filtered.count) completed" }
-        let count = remaining == 1 ? "1 task" : "\(remaining) tasks"
+        let headings = filtered.filter { TaskKind($0) == .heading }.count
+        let count = (remaining == 1 ? "1 task" : "\(remaining) tasks") + (headings == 0 ? "" : headings == 1 ? " · 1 heading" : " · \(headings) headings")
         if scope == .today { return Date().formatted(.dateTime.weekday(.wide).day().month(.wide)) + " · " + count }
         return count
     }
@@ -259,8 +312,15 @@ struct TaskListView: View {
     private func revealQuickAdd() { captureSection = ""; quickAddVisible = true }
 
     private var captureDate: Date? { scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil }
-    private var captureDraft: Record { workspace.captureTask(project: projectID, date: captureDate, sectionID: captureSection) }
+    private var captureDraft: Record {
+        var task = workspace.captureTask(project: projectID, date: captureDate, sectionID: captureSection)
+        if case .label(let id) = scope, store.record("labels", id: id) != nil {
+            task["labels"] = .array(TaskLabels.normalized(task["labels"].list + [.string(id)], labels: store.labels))
+        }
+        return task
+    }
     private func submitQuickAdd() {
+        if workspace.quickAdd.contains(where: { $0.isNewline }) { quickAddVisible = false; multiLinePresented = true; return }
         let date = captureDate
         let labelName: String? = { if case .label(let id) = scope { return store.record("labels", id: id)?.name }; return nil }()
         guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups, sectionID: captureSection, referenceChoices: referenceChoices) else { return }
@@ -278,22 +338,24 @@ struct TaskListView: View {
 
     @ViewBuilder private var statusRow: some View {
         HStack(spacing: 8) {
-            Image(systemName: store.online ? "exclamationmark.icloud" : "wifi.slash").foregroundStyle(.orange)
+            Image(systemName: store.online ? (store.localMode ? "exclamationmark.triangle" : "exclamationmark.icloud") : "wifi.slash").foregroundStyle(.orange).accessibilityHidden(true)
             Text(!store.online ? "Offline · changes are saved on this Mac and sync later." : store.notice ?? "")
             Spacer()
-            if store.notice != nil && store.online { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link) }
+            if store.notice != nil && store.online && store.syncConflict == nil && store.focusSyncConflict == nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link) }
         }.font(.callout).foregroundStyle(.secondary).selectionDisabled().listRowSeparator(.hidden)
     }
+    private var isSavedFilterScope: Bool { if case .saved = scope { return true }; return false }
     private var emptyState: some View {
         ContentUnavailableView {
-            Label(workspace.search.isEmpty ? "All clear" : "No matching tasks", systemImage: workspace.search.isEmpty ? "checkmark.seal" : "magnifyingglass")
+            Label(workspace.search.isEmpty && !isSavedFilterScope ? "All clear" : "No matching tasks", systemImage: workspace.search.isEmpty && !isSavedFilterScope ? "checkmark.seal" : "magnifyingglass")
         } description: {
-            Text(workspace.search.isEmpty ? "Press ⌘N to add something new." : "Try a different search or filter.")
+            Text(isSavedFilterScope ? "Edit the filter or add a task that matches." : workspace.search.isEmpty ? "Press ⌘N to add something new." : "Try a different search or filter.")
         }
         .selectionDisabled().listRowSeparator(.hidden).frame(minHeight: 260)
     }
     private func overdueSection(_ tasks: [Record]) -> some View {
-        Section {
+        let count = tasks.filter(TaskKind.mayComplete).count
+        return Section {
             if !overdueCollapsed {
                 ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: overdueKey, orderProvider: { order })).tag(task.id) }
                     .onMove { DayDropHandling(workspace: workspace, day: overdueKey, tasks: tasks).move(from: $0, to: $1) }
@@ -303,14 +365,16 @@ struct TaskListView: View {
             Button { withAnimation(layout) { overdueCollapsed.toggle() } } label: {
             HStack(spacing: 8) {
                 Image(systemName: overdueCollapsed ? "chevron.right" : "chevron.down").font(.caption.weight(.semibold))
-                Text("Overdue")
-                Text("\(tasks.count)").font(.caption.weight(.semibold)).monospacedDigit().padding(.horizontal, 6).padding(.vertical, 1)
-                    .background(Color.red.opacity(0.14), in: .capsule).foregroundStyle(.red).contentTransition(.numericText())
-                    .transition(reduceMotion ? .opacity : .badgePop)
+                Text(count == 0 ? "Earlier" : "Overdue")
+                if count > 0 {
+                    Text("\(count)").font(.caption.weight(.semibold)).monospacedDigit().padding(.horizontal, 6).padding(.vertical, 1)
+                        .background(Color.red.opacity(0.14), in: .capsule).foregroundStyle(.red).contentTransition(.numericText())
+                        .transition(reduceMotion ? .opacity : .badgePop)
+                }
             }
             }.buttonStyle(.plain)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Overdue, \(tasks.count) tasks")
+            .accessibilityLabel(count == 0 ? "Earlier dates" : "Overdue, \(count) \(count == 1 ? "task" : "tasks")")
             .accessibilityValue(overdueCollapsed ? "Collapsed" : "Expanded")
             .accessibilityIdentifier("overdueToggle")
         }
@@ -321,7 +385,7 @@ struct TaskListView: View {
         let date = Dates.parse(day)
         let name = day == today ? "Today" : day == tomorrow ? "Tomorrow" : date?.formatted(.dateTime.weekday(.wide)) ?? day
         let detail = date?.formatted(.dateTime.month(.abbreviated).day()) ?? ""
-        let open = tasks.filter { !$0.completed && !workspace.completing.contains($0.id) }.count
+        let open = tasks.filter { TaskKind.mayComplete($0) && !$0.completed && !workspace.completing.contains($0.id) }.count
         return Section {
             ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: day, orderProvider: { order })).tag(task.id) }
                 .onMove { DayDropHandling(workspace: workspace, day: day, tasks: tasks).move(from: $0, to: $1) }
@@ -341,7 +405,64 @@ struct TaskListView: View {
     }
     /// The selection tag must sit on the outermost row view, after any drag wrapper, or clicks cannot select.
     private func row(_ task: Record) -> some View {
-        TaskRowView(task: task, compactDate: dated).background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
+        let intent = rowGestureIntent(task)
+        return MacSwipeRow(controller: rowSwipe, completed: task.completed, canComplete: TaskKind.mayComplete(task), selected: workspace.selection.contains(task.id), prepare: {
+            guard let intent else { return nil }
+            return { command in performRowGesture(command, intent: intent) }
+        }) { TaskRowView(task: task, compactDate: dated) }
+        .background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
+        .accessibilityActions { if TaskKind.mayComplete(task) { Button(task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } } } }
+        .accessibilityAction(named: "Move to tomorrow") { if let intent { performRowGesture(.tomorrow, intent: intent) } }
+        .accessibilityAction(named: "Edit") { if let intent { performRowGesture(.edit, intent: intent) } }
+        .accessibilityAction(named: "Delete") { if let intent { performRowGesture(.delete, intent: intent) } }
+    }
+    private func configureRowSwipes() {
+        rowSwipe.reduceMotion = reduceMotion
+        rowSwipe.configure(leading: RowGestureAction(rawValue: leadingGesture) ?? .none, trailing: RowGestureAction(rawValue: trailingGesture) ?? .none, fullSwipe: fullSwipe, rightToLeft: gestureLayoutDirection == .rightToLeft)
+        rowSwipe.isAvailable = { store.signedIn && workspace.section.key == preferenceKey && workspace.selection.count <= 1 && !workspace.drag.active && !quickAddVisible }
+    }
+    private func rowGestureIntent(_ task: Record) -> RowGestureIntent? {
+        let rootID = SubtaskTree.referencePath(task.id)?.first ?? task.id
+        guard let root = store.activeTasks.first(where: { $0.id == rootID }) else { return nil }
+        return RowGestureIntent(task: task, root: root, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+    }
+    private func performRowGesture(_ command: RowGestureCommand, intent: RowGestureIntent) {
+        let root = store.activeTasks.first { $0.id == intent.root.id }
+        let current = workspace.hierarchyPresentation ? try? store.selectionRecord(intent.task.id) : workspace.taskRecord(intent.task.id)
+        guard store.signedIn, workspace.section.key == preferenceKey, !workspace.drag.active, workspace.selection.count <= 1,
+              intent.matches(current, root: root, account: store.userID, generation: store.workspaceGeneration) else { return }
+        switch command {
+        case .complete: workspace.complete(intent.task)
+        case .tomorrow:
+            guard !intent.task.completed, let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) else { return }
+            if workspace.updateTasks([intent.task.id], fields: TaskPlanner.dayFields(task: intent.task, day: Dates.day(tomorrow)), name: "Reschedule") {
+                Feedback.drop(); workspace.confirm("Moved to tomorrow")
+            }
+        case .edit: workspace.open(intent.task.id)
+        case .delete: workspace.delete([intent.task.id])
+        }
+    }
+
+    private func printableDocument() throws -> PrintDocument {
+        if let error = store.filterError(scope) { throw AppFailure(message: error) }
+        let sections: [(String, [Record])]
+        if !projectID.isEmpty && projectLayout == "board" { sections = boardColumns.map { ($0.title, $0.tasks) } }
+        else if dated { sections = dayGroups }
+        else { sections = (overdueTasks.isEmpty ? [] : [("Overdue", overdueTasks)]) + groups.map { ($0.title, $0.tasks) } }
+        let named = sections.map { name, tasks in (Dates.parse(name)?.formatted(.dateTime.weekday(.wide).day().month(.wide).year()) ?? name, tasks) }
+        let detail = Date().formatted(.dateTime.day().month(.wide).year()) + (workspace.search.isEmpty ? "" : " · Search: " + workspace.search) + (priorityFilter == 0 ? "" : " · Priority \(priorityFilter)")
+        return try PrintDocument.capture(title: workspace.section == .assigned ? "Assigned to me" : title, subtitle: detail, groups: named, projects: store.allProjects, labels: store.labels, hierarchyRoots: workspace.hierarchyPresentation ? store.tasks : nil, expandOrdinaryChecklists: !workspace.hierarchyFilter, assigneeName: store.assigneeName)
+    }
+    private var canPrint: Bool { printReview == nil && store.filterError(scope) == nil }
+    private func preparePrint() {
+        do {
+            let document = try printableDocument(), binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+            printReview = PrintReviewRequest(document: document, workspace: binding, isCurrent: { (try? printableDocument()) == document })
+        } catch { printFailure = error.localizedDescription }
+    }
+    private func captureWorkflow(_ kind: WorkflowTemplate.Kind, _ source: Record) {
+        do { workflowCapture = try WorkflowCaptureRequest(kind: kind, source: source, store: store) }
+        catch { store.error = error.localizedDescription }
     }
 
     // MARK: Menus
@@ -353,7 +474,7 @@ struct TaskListView: View {
             Button("New Task") { revealQuickAdd() }
         } else {
             if tasks.count == 1, let task = tasks.first { Button("Edit “\(task.title)”") { workspace.open(task.id) } }
-            Button(tasks.allSatisfy(\.completed) ? "Reopen" : "Complete") { workspace.toggle(targets) }
+            Button(tasks.allSatisfy(\.completed) ? "Reopen" : "Complete") { workspace.toggle(targets) }.disabled(!tasks.allSatisfy(TaskKind.mayComplete))
             Divider()
             Menu("Reschedule") {
                 Button("Today", systemImage: "sun.max") { workspace.reschedule(targets, to: Dates.day(Date()), label: "today") }
@@ -365,12 +486,23 @@ struct TaskListView: View {
                 Button("Remove Date", systemImage: "calendar.badge.minus") { workspace.reschedule(targets, to: nil, label: "") }
             }
             Button("Edit Deadlines…", systemImage: "flag.checkered") { workspace.editDeadlines(targets) }.accessibilityIdentifier("bulkDeadlines")
+            Button("Edit Estimates…", systemImage: "hourglass") { workspace.editEstimates(targets) }.accessibilityIdentifier("bulkEstimates")
+            if store.hasSharedTaskSelection(targets) {
+                Button("Assign Shared Tasks…", systemImage: "person.crop.circle.badge.checkmark") { workspace.assignSharedSelection(targets) }.accessibilityIdentifier("bulkAssignShared")
+                Button("Edit Shared Labels…", systemImage: "tag") { workspace.editSharedLabels(targets) }.accessibilityIdentifier("bulkSharedLabels")
+            }
             Menu("Move to") {
                 Button("Inbox", systemImage: "tray") { workspace.move(targets, toProject: "") }
                 ForEach(store.projects) { project in Button(project.name, systemImage: "folder") { workspace.move(targets, toProject: project.id) } }
             }
+            .disabled(workspace.hierarchyPresentation && targets.contains { Workspace.subtaskPath($0) != nil })
+            .help("Subtasks stay in their parent's project")
             Menu("Priority") { ForEach(1...4, id: \.self) { n in Button(n == 4 ? "None" : "Priority \(n)", systemImage: "flag") { workspace.setPriority(targets, n) } } }
             Button("Duplicate", systemImage: "doc.on.doc") { workspace.duplicate(targets) }
+            if tasks.count == 1, let task = tasks.first, Workspace.subtaskPath(task.id) == nil {
+                Button("Save as Template…", systemImage: "square.stack.3d.up") { captureWorkflow(.task, task) }
+                    .accessibilityIdentifier("captureTaskTemplate")
+            }
             if tasks.count == 1, let task = tasks.first {
                 Button("Copy Title", systemImage: "doc.on.clipboard") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(task.title + (task.string("description").isEmpty ? "" : "\n" + task.string("description")), forType: .string) }
             }
@@ -381,6 +513,9 @@ struct TaskListView: View {
 
     private var viewOptions: some View {
             Menu {
+                Button("Print or Export…", systemImage: "printer") { preparePrint() }.disabled(store.filterError(scope) != nil).accessibilityIdentifier("openPrintReview")
+                if store.teamTaskMovesAvailable { Button("Recent Shared Task Moves", systemImage: "arrow.left.arrow.right") { workspace.teamTaskMove = TeamTaskMoveRequest() }.accessibilityIdentifier("openRecentTeamTaskMoves") }
+                Divider()
                 Button(store.isFavorite(scope) ? "Remove Favorite" : "Add Favorite", systemImage: "star") { store.toggleFavorite(scope) }.accessibilityIdentifier("toggleFavorite")
                 if case .saved(let id) = scope { Button("Edit Filter…") { filterEditor = store.record("saved_views", id: id) } }
                 Button(defaultView == preferenceKey ? "Default View ✓" : "Make Default View", systemImage: "house") { defaultView = preferenceKey }
@@ -394,6 +529,10 @@ struct TaskListView: View {
                     if !projectID.isEmpty {
                     Divider()
                     Button("Edit Project…", systemImage: "pencil") { projectEditor = store.record("projects", id: projectID) }
+                    if let project = store.record("projects", id: projectID) {
+                        Button("Save as Template…", systemImage: "square.stack.3d.up") { captureWorkflow(.project, project) }
+                            .accessibilityIdentifier("captureProjectTemplate")
+                    }
                     Button("Sections…", systemImage: "rectangle.split.3x1") { sectionsEditor = true }
                     Button("Collaborators…", systemImage: "person.2") { collaborationProject = store.record("projects", id: projectID) }.disabled(store.localMode)
                     }
@@ -417,6 +556,7 @@ struct TaskListView: View {
                     .disabled(workspace.planQueue(scope == .today ? .day : .week).isEmpty)
                     .accessibilityIdentifier("planButton")
             }
+            Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCaptureInList")
             Button { revealQuickAdd() } label: { Label("New Task", systemImage: "plus") }
                 .help("New Task (⌘N)").accessibilityIdentifier("addTask")
 
@@ -471,14 +611,12 @@ struct TaskCapturePanel: View {
                 .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.taskfold.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
                 .referenceCompletions(text: $text, selection: $titleSelection, choices: $choices, declined: $declined, context: context, focused: focused, task: task, onChoose: { focused = true }, submit: submitInWorkspace, submitsFromKeyboard: true)
             if !parsed.tokens.isEmpty {
-                ScrollView(.horizontal) {
-                    QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused = true })
-                }.scrollIndicators(.hidden)
+                QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: resumeDraftFromChip)
             }
             if let rule = parsed.updates["recurrence_pattern"] {
                 Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
             }
-            ReminderAutomaticPreview(task: parsed.applying(to: task))
+            ReminderAutomaticPreview(task: parsed.fieldPreview(to: task), showDeliveryGuidance: parsed.updates["reminder_specs"] == nil)
             ForEach(parsed.warnings, id: \.self) { warning in Text(warning).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickEntryWarning") }
             if parsed.updates["reminder_specs"] != nil && !store.remindersEnabled {
                 Text("Reminders are off on this device. Enable delivery in the task’s Reminders after saving.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickReminderDeliveryOff")
@@ -496,6 +634,17 @@ struct TaskCapturePanel: View {
         .onExitCommand { dismiss() }
         .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
     }
+    private func resumeDraftFromChip() {
+        let draft = text
+        focused = true
+        // AppKit selects the entire field when it becomes first responder again.
+        // Restore an insertion point after that update so typing keeps the draft.
+        DispatchQueue.main.async {
+            guard focused, text == draft else { return }
+            titleSelection = TextSelection(insertionPoint: text.endIndex)
+        }
+    }
+
     private func submitInWorkspace() {
         guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "The workspace changed. Close this capture and open it in the current workspace."; return }
         submit()
@@ -504,15 +653,32 @@ struct TaskCapturePanel: View {
 
 /// A brief confirmation at the foot of the list. It never blocks; it just names what happened and offers Undo.
 struct ConfirmationBar: View {
+    @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     let confirmation: Confirmation
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.taskfold).id(confirmation.id).transition(.iconSwap)
+            Image(systemName: confirmation.mixedGroupReview ? "clock.arrow.circlepath" : "checkmark.circle.fill").foregroundStyle(Color.taskfold).id(confirmation.id).transition(.iconSwap)
             Text(confirmation.message).lineLimit(1).id(confirmation.id).transition(.textSwap)
             Spacer()
-            if confirmation.undoable {
-                Button("Undo") { workspace.undoFromConfirmation() }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
+            if confirmation.mixedGroupReview { Button("Review") { workspace.reviewMixedGroup() }.buttonStyle(.link).accessibilityIdentifier("reviewListMixedGroup") }
+            if confirmation.childGroupReview {
+                Button("Review") { workspace.reviewChildGroup() }.buttonStyle(.link).accessibilityIdentifier("reviewListChildGroup")
+            }
+            if confirmation.childCompletionReview {
+                Button("Review") { workspace.reviewChildCompletion() }.buttonStyle(.link).accessibilityIdentifier("reviewListChildCompletion")
+            }
+            if let token = confirmation.mixedGroup, workspace.canUndoMixedGroup(token) {
+                Button("Undo") { workspace.undoMixedGroup(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
+                Text("⌘Z").foregroundStyle(.tertiary)
+            } else if let token = confirmation.childGroup, workspace.canUndoChildGroup(token) {
+                Button("Undo") { workspace.undoChildGroup(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
+                Text("⌘Z").foregroundStyle(.tertiary)
+            } else if let token = confirmation.childCompletion, workspace.canUndoChildCompletion(token) {
+                Button("Undo") { workspace.undoChildCompletion(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
+                Text("⌘Z").foregroundStyle(.tertiary)
+            } else if confirmation.undoable, let request = confirmation.historyRequest, store.canApplyHistory(request) {
+                Button("Undo") { workspace.undoFromConfirmation(request, confirmationID: confirmation.id) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
                 Text("⌘Z").foregroundStyle(.tertiary)
             }
         }
@@ -521,6 +687,13 @@ struct ConfirmationBar: View {
         .background(.bar)
         .overlay(alignment: .top) { Divider() }
         .accessibilityElement(children: .contain)
+        .task(id: confirmation.id) {
+            guard NSApp.isActive, NSWorkspace.shared.isVoiceOverEnabled else { return }
+            // A removed row can announce “no row selected”; keep the action's result audible.
+            var announcement = AttributedString(confirmation.message)
+            announcement.accessibilitySpeechAnnouncementPriority = .high
+            AccessibilityNotification.Announcement(announcement).post()
+        }
     }
 }
 
@@ -558,6 +731,7 @@ struct QuickReferenceCompletionModifier: ViewModifier {
     var onChoose: () -> Void = {}
     var submit: () -> Void = {}
     var submitsFromKeyboard = false
+    @State private var optionListHeight: CGFloat = 44
     @State private var highlighted = 0
     @State private var dismissedText: String?
     private var completion: QuickEntryCompletion {
@@ -596,7 +770,8 @@ struct QuickReferenceCompletionModifier: ViewModifier {
                                         QuickReferenceOptionRow(option: option, highlighted: menu.options.firstIndex(of: option) == highlighted) { choose(option) }.id(option.id)
                                     }
                                 }
-                            }.frame(maxHeight: 190).scrollIndicators(.visible).accessibilityIdentifier("referenceSuggestionList")
+                                .onGeometryChange(for: CGFloat.self) { ceil($0.size.height) } action: { optionListHeight = $0 }
+                            }.frame(height: min(190, max(44, optionListHeight))).scrollIndicators(.visible).accessibilityIdentifier("referenceSuggestionList")
                                 .onChange(of: highlighted) { _, value in
                                     if menu.options.indices.contains(value) { proxy.scrollTo(menu.options[value].id, anchor: .center) }
                                 }
@@ -655,7 +830,13 @@ struct QuickReferenceCompletionModifier: ViewModifier {
             for token in accepted.tokens where token.text.lowercased() == option.reference && token.group.hasPrefix("reminder_specs:") { declined.remove(token.group) }
         }
         text = result.text
-        if let caret = Range(NSRange(location: result.caretUTF16, length: 0), in: text)?.lowerBound { selection = TextSelection(insertionPoint: caret) }
+        // Native text storage updates after the binding. Apply the caret on the
+        // next main-loop turn so that update cannot restore the old insertion point.
+        DispatchQueue.main.async {
+            guard text == result.text,
+                  let caret = Range(NSRange(location: result.caretUTF16, length: 0), in: text)?.lowerBound else { return }
+            selection = TextSelection(insertionPoint: caret)
+        }
         onChoose()
     }
     private func symbol(_ group: String) -> String {

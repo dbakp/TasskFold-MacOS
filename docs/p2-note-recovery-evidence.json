@@ -1,0 +1,151 @@
+{
+  "date": "2026-10-22",
+  "milestone": "Note-save recovery and complete error controls",
+  "platform": "macOS",
+  "baseCommit": "b397a9901b753cf5d53e5377383b3035e171f0fb",
+  "fullPxComplete": false,
+  "behavior": {
+    "iOSTaskSaveFailure": "Editor-owned alert retains live draft; failure keeps complete saved cache exact; Retry persists one edited task and normal relaunch preserves it",
+    "bothFormatters": "Keyboard dismissed on refused Apply; complete scrollable warning with reserved space and a reachable Copy action; tools return when writing resumes",
+    "staleApply": "Refuses overwrite of a newer saved note, retains formatted draft and leaves newer saved state exact through Cancel/relaunch"
+  },
+  "nativePlatform": "iPhone 18 Pro and iPad Pro 13-inch (M5) Simulators, iOS 27",
+  "acceptedNativeBatches": {
+    "task_save_phone": {
+      "artifact": "notes-recovery-final-phone.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    "task_save_tablet": {
+      "artifact": "notes-recovery-final-tablet.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "stale_apply_phone": {
+      "artifact": "notes-recovery-reserved-phone.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "stale_apply_tablet": {
+      "artifact": "notes-recovery-reserved-tablet.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "acceptedNativeCaseCount": 5,
+  "nativeFailuresInAcceptedBatches": 0,
+  "nativeSkipsInAcceptedBatches": 0,
+  "builds": {
+    "iOS": "notes-recovery-reserved-build-ios.log: TEST BUILD SUCCEEDED",
+    "macOS": "notes-recovery-reserved-build-mac.log: BUILD SUCCEEDED, signing disabled"
+  },
+  "visualReview": [
+    "Normal phone editor-owned save alert and retained formatted note",
+    "Native largest-text dark iPad task-save alert, complete message and reachable OK",
+    "Final normal phone complete stale-edit warning",
+    "Final largest-text dark iPad reserved warning area before/after scrolling, with Copy text reachable"
+  ],
+  "failedIterations": [
+    {
+      "artifact": "notes-recovery-baseline.xcresult",
+      "failed": 1,
+      "finding": "Expected editor-owned feedback absent; actual screenshot shows Today behind workspace-wide Something needs attention alert. Permanent post-alert draft loss was not separately established."
+    },
+    {
+      "artifact": "notes-recovery-readability-tablet.xcresult",
+      "failed": 1,
+      "finding": "Copy text failed hittability at largest text after an initial full-warning expansion."
+    }
+  ],
+  "visualIterations": [
+    "Initial passing phone stale-Apply flow still displayed an ellipsis in the warning above the keyboard",
+    "A first bounded scrolling layout passed functionally but left too little warning space at largest text; final layout reserves space and yields formatting tools while warning is present"
+  ],
+  "sourceScope": {
+    "taskSaveCases": "These precede only formatting-error presentation refinements; TaskEditor save-failure implementation is identical in the accepted task-save and final builds",
+    "staleApplyCases": "Final reserved-warning implementation and test helpers",
+    "macOS": "Current owned formatter source builds; no new native Mac runtime or failure/Undo acceptance",
+    "coreModelsChanged": false,
+    "coreSuiteRerun": false
+  },
+  "limits": [
+    "Live draft retention on a failed write is in-memory until a successful Save; no force-quit unsaved-draft guarantee",
+    "Concurrent saved-state change uses an exact Debug bundle, ui-testing local account and explicit test flag; not real two-account/device/network acceptance",
+    "Copy control reachability checked; clipboard contents were not changed/tested",
+    "Workspace-change, broader concurrency, VoiceOver and native Mac editing/Undo/failure acceptance remain open",
+    "Simulator duplicate WebKit class messages remain in logs; no strict clean-runtime claim",
+    "Remote reminders, older-client rollout enforcement, distribution signing, provider OAuth and physical location delivery remain user-deferred"
+  ],
+  "noRealTaskDataOrHostedMutation": true,
+  "sourcesSHA256": {
+    "Taskfold/Views/NoteFormattingView.swift": "e3dee0838e1a09e49f3a57aee70f6014beca216945d23cbfd8729129f025a98b"
+  },
+  "artifactsRoot": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance",
+  "cleanup": {
+    "isolatedAppsAndRunners": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "uninstalled": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "uninstalled": true
+      }
+    ],
+    "remainingTaskfoldAppHostsOrBuilds": [],
+    "pruned": [
+      {
+        "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/notes-recovery-fixed-phone.xcresult",
+        "logicalBytes": 1666003,
+        "reason": "Superseded successful bundle; summary/logs and existing exported visual evidence retained"
+      },
+      {
+        "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/notes-recovery-readability-phone.xcresult",
+        "logicalBytes": 838112,
+        "reason": "Superseded successful bundle; summary/logs and existing exported visual evidence retained"
+      },
+      {
+        "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/notes-recovery-bounded-phone.xcresult",
+        "logicalBytes": 822240,
+        "reason": "Superseded successful bundle; summary/logs and existing exported visual evidence retained"
+      },
+      {
+        "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/notes-recovery-bounded-tablet.xcresult",
+        "logicalBytes": 1306703,
+        "reason": "Superseded successful bundle; summary/logs and existing exported visual evidence retained"
+      },
+      {
+        "path": "/private/tmp/taskfold-note-recovery-mac",
+        "logicalBytes": 28637557
+      },
+      {
+        "path": "/private/tmp/taskfold-removal-ui",
+        "logicalBytes": 4955130
+      },
+      {
+        "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-project-workflows-native-v2/Build/Products/Debug/Taskfold.app",
+        "logicalBytes": 52178321
+      }
+    ],
+    "logicalBytesPruned": 90404066,
+    "preserved": "Final accepted and failed result bundles, summaries, exported diagnostics, current iOS staging/build inputs, reusable dependencies, user apps/data and existing desktop widget extensions",
+    "authCredentialsCreated": false,
+    "hostedMutation": false
+  }
+}

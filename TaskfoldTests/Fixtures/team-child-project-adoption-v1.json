@@ -1,0 +1,340 @@
+{
+  "syntheticOnly": true,
+  "containerRemoved": true,
+  "origin": "https://example.invalid",
+  "account": "3e3d8902-21b9-4247-9680-70aaebd5c17f",
+  "body": {
+    "team_id": "d516c0fd-f004-4663-8e16-79943d5ff46d",
+    "roots": [
+      "8a212f8e-1061-4ef0-b168-d063f164911e"
+    ],
+    "visibility": "private",
+    "folder_id": null,
+    "parent_id": null
+  },
+  "decisions": [
+    {
+      "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+      "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+      "role": "viewer"
+    },
+    {
+      "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+      "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+      "role": "editor"
+    },
+    {
+      "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5",
+      "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+      "role": "viewer"
+    },
+    {
+      "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5",
+      "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+      "role": "editor"
+    }
+  ],
+  "inspect": {
+    "roots": [
+      "8a212f8e-1061-4ef0-b168-d063f164911e"
+    ],
+    "account": "3e3d8902-21b9-4247-9680-70aaebd5c17f",
+    "team_id": "d516c0fd-f004-4663-8e16-79943d5ff46d",
+    "contents": {
+      "counts": {
+        "tasks": 3,
+        "projects": 2,
+        "sections": 0,
+        "task_activity": 3,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 7,
+        "project_collaborators": 4,
+        "task_assignment_provenance": 8
+      },
+      "webhooks": 0,
+      "attachments": 0,
+      "email_routes": 0,
+      "inline_files": 0,
+      "content_bytes": 16180,
+      "external_files": 0,
+      "provider_files": 0,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 1,
+      "child_record_custody_protocol": 1
+    },
+    "projects": [
+      {
+        "id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "name": "Design workshop",
+        "depth": 1,
+        "root_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      },
+      {
+        "id": "8ea52633-c8d2-46af-ac80-b9c573c635c5",
+        "name": "Design workshop",
+        "depth": 2,
+        "root_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "parent_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Project custody workshop",
+    "visibility": "private",
+    "collaborators": [
+      {
+        "id": "2f15e638-3c02-4ff3-8edd-fcabf87009df",
+        "email": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0@example.invalid",
+        "status": "accepted",
+        "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+        "eligible": true,
+        "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e"
+      },
+      {
+        "id": "f360b9ef-d582-4926-98bc-11b9d473b8cd",
+        "email": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5@example.invalid",
+        "status": "accepted",
+        "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+        "eligible": true,
+        "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e"
+      },
+      {
+        "id": "38534a62-9f31-439d-baf4-91f460c03075",
+        "email": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0@example.invalid",
+        "status": "accepted",
+        "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+        "eligible": true,
+        "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5"
+      },
+      {
+        "id": "7c68d55d-cfac-4796-8504-547d89a02187",
+        "email": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5@example.invalid",
+        "status": "accepted",
+        "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+        "eligible": true,
+        "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5"
+      }
+    ],
+    "automatic_undo": false,
+    "commit_supported": true,
+    "inspection_token": "8ae8f659464ad39111e5e9fac2080c4bbb652751c0c2fbc3b076d6b1f1f7eeae",
+    "sends_invitations": false,
+    "team_member_count": 3,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "connection_pause_supported": false,
+    "child_record_custody_protocol": 1
+  },
+  "review": {
+    "roots": [
+      "8a212f8e-1061-4ef0-b168-d063f164911e"
+    ],
+    "account": "3e3d8902-21b9-4247-9680-70aaebd5c17f",
+    "team_id": "d516c0fd-f004-4663-8e16-79943d5ff46d",
+    "contents": {
+      "counts": {
+        "tasks": 3,
+        "projects": 2,
+        "sections": 0,
+        "task_activity": 3,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 7,
+        "project_collaborators": 4,
+        "task_assignment_provenance": 8
+      },
+      "webhooks": 0,
+      "attachments": 0,
+      "email_routes": 0,
+      "inline_files": 0,
+      "content_bytes": 16180,
+      "external_files": 0,
+      "provider_files": 0,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 1,
+      "child_record_custody_protocol": 1
+    },
+    "projects": [
+      {
+        "id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "name": "Design workshop",
+        "depth": 1,
+        "root_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      },
+      {
+        "id": "8ea52633-c8d2-46af-ac80-b9c573c635c5",
+        "name": "Design workshop",
+        "depth": 2,
+        "root_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "parent_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "decisions": [
+      {
+        "role": "viewer",
+        "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+        "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "effective_role": "viewer"
+      },
+      {
+        "role": "editor",
+        "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+        "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "effective_role": "editor"
+      },
+      {
+        "role": "viewer",
+        "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+        "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5",
+        "effective_role": "viewer"
+      },
+      {
+        "role": "editor",
+        "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+        "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5",
+        "effective_role": "editor"
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Project custody workshop",
+    "expires_at": "2026-10-30T10:42:11.466707Z",
+    "visibility": "private",
+    "review_token": "4857ae468a9a6d557b2fea123b0ddd0d62de18552eca2ce4a2d33a3f0db2f3a1",
+    "collaborators": [
+      {
+        "id": "2f15e638-3c02-4ff3-8edd-fcabf87009df",
+        "email": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0@example.invalid",
+        "status": "accepted",
+        "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+        "eligible": true,
+        "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e"
+      },
+      {
+        "id": "f360b9ef-d582-4926-98bc-11b9d473b8cd",
+        "email": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5@example.invalid",
+        "status": "accepted",
+        "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+        "eligible": true,
+        "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e"
+      },
+      {
+        "id": "38534a62-9f31-439d-baf4-91f460c03075",
+        "email": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0@example.invalid",
+        "status": "accepted",
+        "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+        "eligible": true,
+        "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5"
+      },
+      {
+        "id": "7c68d55d-cfac-4796-8504-547d89a02187",
+        "email": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5@example.invalid",
+        "status": "accepted",
+        "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+        "eligible": true,
+        "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5"
+      }
+    ],
+    "automatic_undo": false,
+    "commit_supported": true,
+    "inspection_token": "8ae8f659464ad39111e5e9fac2080c4bbb652751c0c2fbc3b076d6b1f1f7eeae",
+    "connection_policy": null,
+    "sends_invitations": false,
+    "team_member_count": 3,
+    "connection_effects": null,
+    "invitations_closed": 4,
+    "assignments_cleared": 1,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "requires_provider_custody": false,
+    "connection_pause_supported": false,
+    "requires_integration_pause": false,
+    "child_record_custody_protocol": 1
+  },
+  "command": {
+    "team_id": "d516c0fd-f004-4663-8e16-79943d5ff46d",
+    "roots": [
+      "8a212f8e-1061-4ef0-b168-d063f164911e"
+    ],
+    "visibility": "private",
+    "folder_id": null,
+    "parent_id": null,
+    "inspection_token": "8ae8f659464ad39111e5e9fac2080c4bbb652751c0c2fbc3b076d6b1f1f7eeae",
+    "decisions": [
+      {
+        "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+        "role": "viewer"
+      },
+      {
+        "project_id": "8a212f8e-1061-4ef0-b168-d063f164911e",
+        "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+        "role": "editor"
+      },
+      {
+        "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5",
+        "user_id": "94d08d86-ad1e-4fbf-8ab4-3734989c5ba5",
+        "role": "viewer"
+      },
+      {
+        "project_id": "8ea52633-c8d2-46af-ac80-b9c573c635c5",
+        "user_id": "d4e1874e-34a5-4252-b3c4-53c1ec0372f0",
+        "role": "editor"
+      }
+    ],
+    "review_token": "4857ae468a9a6d557b2fea123b0ddd0d62de18552eca2ce4a2d33a3f0db2f3a1",
+    "expires_at": "2026-10-30T10:42:11.466707Z",
+    "request_id": "4f772da7-ee1f-4c71-bbf7-67ff92049552"
+  },
+  "receipt": {
+    "roots": [
+      "8a212f8e-1061-4ef0-b168-d063f164911e"
+    ],
+    "account": "3e3d8902-21b9-4247-9680-70aaebd5c17f",
+    "applied": true,
+    "team_id": "d516c0fd-f004-4663-8e16-79943d5ff46d",
+    "replayed": false,
+    "folder_id": null,
+    "parent_id": null,
+    "request_id": "4f772da7-ee1f-4c71-bbf7-67ff92049552",
+    "visibility": "private",
+    "project_ids": [
+      "8a212f8e-1061-4ef0-b168-d063f164911e",
+      "8ea52633-c8d2-46af-ac80-b9c573c635c5"
+    ],
+    "automatic_undo": false,
+    "invitations_closed": 4,
+    "assignments_cleared": 1,
+    "project_adoption_protocol": 1
+  },
+  "migrationSHA256": "a93e6f5487b0cfbdbf2aff93abd5f92243c9bbd3454b2dccaba5058288510dc4"
+}

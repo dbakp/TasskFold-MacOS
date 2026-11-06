@@ -1,0 +1,35 @@
+{
+  "removedDuplicateAttachmentExports": [
+    {
+      "path": "/tmp/taskfold-heading-review-mac-initial-attachments",
+      "logicalBytes": 15531205
+    },
+    {
+      "path": "/tmp/taskfold-heading-review-phone-initial-attachments",
+      "logicalBytes": 52286721
+    },
+    {
+      "path": "/tmp/taskfold-heading-review-phone-final-attachments",
+      "logicalBytes": 1845648
+    },
+    {
+      "path": "/tmp/taskfold-heading-review-tablet-accepted-attachments",
+      "logicalBytes": 84776167
+    },
+    {
+      "path": "/tmp/taskfold-heading-review-mac-final-attachments",
+      "logicalBytes": 2490138
+    },
+    {
+      "path": "/tmp/taskfold-heading-review-phone-accepted-attachments",
+      "logicalBytes": 1831959
+    },
+    {
+      "path": "/tmp/taskfold-heading-review-tablet-verified-attachments",
+      "logicalBytes": 3287531
+    }
+  ],
+  "logicalBytesRemoved": 162049369,
+  "retained": "Final and failed xcresult bundles, owned current app builds, compressed build logs, summaries, source bindings, relevant screenshots/failure frames and exact test code. No user data/cache/runtime removed.",
+  "sessions": "Every native test terminates its host. Final shutdown requests found both owned acceptance Simulators already Shutdown; final inventory is rechecked before commit."
+}

@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-10",
+  "scope": "Installed iPhone small original one-task Focus widget, distinct from Focus session timer. No production change.",
+  "native": {
+    "bundle": "/tmp/taskfold-focus-recommendation-phone-v1.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": 0,
+    "checks": [
+      "Native creation of overdue P4, today P4, undated P1 and future P1 tasks",
+      "Installed small Focus recommends overdue work; after explicit app termination its tap opens the exact overdue task editor",
+      "Completing each current recommendation in Inbox refreshes installed Focus to today, then undated P1; exact native routes verify each identity",
+      "After these completions future P1 remains open but Focus becomes empty; tapping opens an undated Inbox composer",
+      "Inspected four Home Screen captures retain complete titles, status and Inbox/action footer; empty explanatory copy is readable"
+    ]
+  },
+  "mac": {
+    "report": "focus-recommendation-mac-model.txt",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "case": "WidgetTests.testFocusRespectsScheduledWorkAndExcludesFuturePriorities",
+    "scope": "Independently owned WidgetModel ranking implementation; no Mac GUI or installed host acceptance"
+  },
+  "data": {
+    "snapshotSHA256": "e0e3374847285c76a57da1f2827c93d243119f2f2e895e1bc863e864bb95bdd2",
+    "pendingCount": 0,
+    "tasks": [
+      {
+        "id": "377cd42c-39db-4685-a498-f3be903fe726",
+        "title": "Clear the overdue proposal",
+        "completed": true,
+        "priority": 4,
+        "plannedDate": "2026-10-09"
+      },
+      {
+        "id": "78eef607-622b-4ebc-aabc-fb54593ae1d0",
+        "title": "Send the client brief",
+        "completed": true,
+        "priority": 4,
+        "plannedDate": "2026-10-10"
+      },
+      {
+        "id": "4144b74a-3c4a-45a6-8f3c-df27d2722d6f",
+        "title": "Outline the next direction",
+        "completed": true,
+        "priority": 1,
+        "plannedDate": null
+      },
+      {
+        "id": "3fb93ebd-7483-4876-80f9-ccd70a06f6c5",
+        "title": "Future priority",
+        "completed": false,
+        "priority": 1,
+        "plannedDate": "2026-10-13"
+      }
+    ]
+  },
+  "build": "iOS build-for-testing and real team signature verification pass; Mac widget model rebuild passes. Previous native app builds reused because production unchanged.",
+  "retainedHost": "Only one small Focus installed on isolated iPhone second page. Existing first-page widgets and tablet fixture preserved.",
+  "limits": [
+    "Phone portrait normal/light, small Focus only. Only initial overdue route launches a terminated app; subsequent routes are warm.",
+    "No physical/Desktop/Lock Screen, tinted-host, account lifecycle or full VoiceOver/keyboard acceptance in this checkpoint.",
+    "No live cloud account or sync-contract changes. Existing continuity evidence reused.",
+    "The gallery still logs SpringBoard remote accessibility lookup diagnostics; xcresult reports no runtime warnings."
+  ],
+  "sources": {
+    "iosUITestSHA256": "661a9519deae65521b31b6a547717dd2b7b46997848c2237e98684f916c94de1",
+    "iosWidgetSHA256": "67e559cfdd00bc79bc5b1193932c3c29555ce884b7c1c8d519d5ca2340f57587",
+    "macWidgetSHA256": "67e559cfdd00bc79bc5b1193932c3c29555ce884b7c1c8d519d5ca2340f57587"
+  }
+}

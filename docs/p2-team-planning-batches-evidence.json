@@ -1,0 +1,294 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "status": "Atomic reviewed shared planning source and date/priority native entry implemented; installed acceptance and wider rank-6/Px remain open",
+  "baseCommit": "e3fe3e9ff9c2b02e0ae59748477b00903cd97806",
+  "rolloutEnabled": false,
+  "sql": {
+    "checks": {
+      "disabled rollout refuses selection": true,
+      "viewer cannot plan shared selections": true,
+      "outsider cannot plan shared selections": true,
+      "anon cannot invoke planning authority": true,
+      "service_role cannot invoke planning authority": true,
+      "replaced session cannot plan": true,
+      "separate action required for title": true,
+      "separate action required for completed": true,
+      "separate action required for assigned_to": true,
+      "separate action required for labels": true,
+      "separate action required for subtasks": true,
+      "separate action required for recurrence_pattern": true,
+      "separate action required for project_id": true,
+      "separate action required for section_id": true,
+      "empty selection refused": true,
+      "duplicate member refused": true,
+      "duplicate nonce refused": true,
+      "group nonce as member refused": true,
+      "unknown envelope refused": true,
+      "restore lineage on edit refused": true,
+      "empty changes refused": true,
+      "cross-team item refused": true,
+      "unrelated changed source stops entire selection": true,
+      "first row unchanged after source conflict": true,
+      "recreated identity rejected": true,
+      "busy row refuses whole selection without waiting": true,
+      "busy refusal keeps other task untouched": true,
+      "late second-row failure aborts transaction": true,
+      "late fault rolls back first task": true,
+      "late fault rolls back group and member receipts": true,
+      "late validation refuses whole selection": true,
+      "late validation preserves first task": true,
+      "planning applies": true,
+      "receipt confirms original intent": true,
+      "receipt contains every member": true,
+      "receipt is minimal": true,
+      "priority saved 42403a28-beda-4bb0-9e28-da4621d6ce11": true,
+      "deadline saved 42403a28-beda-4bb0-9e28-da4621d6ce11": true,
+      "estimate saved 42403a28-beda-4bb0-9e28-da4621d6ce11": true,
+      "notes retained 42403a28-beda-4bb0-9e28-da4621d6ce11": true,
+      "priority saved cc06c027-686e-4733-b217-99d64f87c30b": true,
+      "deadline saved cc06c027-686e-4733-b217-99d64f87c30b": true,
+      "estimate saved cc06c027-686e-4733-b217-99d64f87c30b": true,
+      "notes retained cc06c027-686e-4733-b217-99d64f87c30b": true,
+      "private member links recorded": true,
+      "lost reply replay confirms original batch": true,
+      "replay preserves later edit": true,
+      "same group nonce cannot change intent": true,
+      "member nonce cannot be reused in a new group": true,
+      "role loss prevents replay acknowledgement": true,
+      "archived project stops selection": true,
+      "waiting caller rechecks committed role loss": true,
+      "role overlap does not partially edit": true,
+      "one selected task uses the same reviewed command": true,
+      "single selection changes only its member": true,
+      "unselected task stays unchanged": true,
+      "date planning supports the complete selection": true,
+      "date saved on both selected tasks": true,
+      "already correct tasks remain explicit reviewed members": true,
+      "legacy delete operation remains supported": true,
+      "anon has no private batch table access": true,
+      "authenticated has no private batch table access": true,
+      "service_role has no private batch table access": true,
+      "no new advisor findings": true
+    },
+    "deployed": false,
+    "realDataChanged": false,
+    "rolloutEnabled": false,
+    "migrationSHA256": "a5170773f5390b856bc2304f5f4e91050cec0e461ad0e23e4bb4a4d21d565f60",
+    "advisors": {
+      "ran": true,
+      "source": "supabase db advisors --type all",
+      "result": [
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "projects",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "sections",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "project_collaborators",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+        }
+      ]
+    },
+    "containerRemoved": true,
+    "checkCount": 64
+  },
+  "legacyBatchRegression": {
+    "passed": 72,
+    "newPlanningBatchLayerLoaded": true,
+    "containerRemoved": true,
+    "reportSHA256": "65f21898443435d39278dfc9aab05841e65b1da4a4d5ceba9d86611868427111"
+  },
+  "core": {
+    "passed": 421,
+    "failed": 0,
+    "skipped": 0,
+    "batchCases": 18,
+    "newPlanningCases": 8,
+    "filter": "Team|EmailCapture|Webhook"
+  },
+  "appBuild": {
+    "platform": "macOS arm64",
+    "configuration": "Debug",
+    "result": "passed",
+    "namespace": "workflowteststeameditbridge",
+    "scope": "Prepared isolated app/widget compile; no app installed or launched",
+    "signing": "Disabled"
+  },
+  "logs": {
+    "core": {
+      "retainedLog": "team-planning-batches/core.log.gz",
+      "originalSHA256": "30cf978ef532efb2dd8881eb1b279de1dbbc93b9fa1cea6ab2ac6a74a353420b",
+      "compressedSHA256": "e06a3c9026ab824583dfc2bb0a93cddff63b001bd5530748cda9d08df0d27ee3"
+    },
+    "build": {
+      "retainedLog": "team-planning-batches/build.log.gz",
+      "originalSHA256": "048e3240a26b41d27cb6428156179babc56c99a3e9eb53c82eca9fbd8d5877c5",
+      "compressedSHA256": "1f4c20672402bc70fc0a7dffb9dd89c61957535425a2406b28bca30d39c159df"
+    },
+    "sql": {
+      "retainedLog": "team-planning-batches/sql.log.gz",
+      "originalSHA256": "585b08729074d03118da05e99646e3ee67a2f2d4eadbfe07ead53cd6ca0cb2bf",
+      "compressedSHA256": "acda072c9d858d0cd10c9b19677066ecd2e7b111c2029861f340eee297b46b6b"
+    },
+    "legacyBatchRegression": {
+      "retainedLog": "team-planning-batches/legacyBatchRegression.log.gz",
+      "originalSHA256": "8eb3e8eaa002e07e880e9caded8948aab77484dfb5f85d2515ea36410fd60174",
+      "compressedSHA256": "b888b99519e6c034673e64b29935fe0d993de39169ef4148f672a0d9a14dfaa2"
+    }
+  },
+  "sourceSHA256": {
+    "Scripts/Database/team-planning-batch-schema.mjs": "fab998b9a6db878809807fb683d1b3423e7e734b46e67d41956e19808d6ca786",
+    "Scripts/Database/test-team-planning-batches.mjs": "2191da48e0e8a30aafec54458b083efaba54255fac8a9f75c5d3df2bee1a5a13",
+    "Scripts/Database/test-team-task-batches.mjs": "7b59cf70f644bb5061771bd251089ebcb49ee7bd806055143d6ac7e01a909c0f",
+    "supabase/migrations/20261025044350_team_task_planning_batches.sql": "a5170773f5390b856bc2304f5f4e91050cec0e461ad0e23e4bb4a4d21d565f60",
+    "Taskfold/Core/TeamTaskBatch.swift": "4165cd66e61f8ea3b209c128d959e869023f8da19b1e42ab26359827b744f194",
+    "Taskfold/Core/Store.swift": "3e0e71de00df60e1389c9d75bd44590fcf2a01db346a4df49b3ab73599b2143a",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "d78cc317c9183c5e3ecd30272ba27f9845a6a6592edff7f803e2e8fe92003f3a",
+    "TaskfoldTests/TeamTaskBatchTests.swift": "b8aedcf76308a8d01dead706640a0fc3ff96cf46addbe7d45ef4cb59e4f10eac",
+    "TaskfoldTests/Fixtures/team-planning-batch-v1.json": "e78985244dc48545be559128b743d1f62ca925b296255dcbb9956342568f32ab",
+    "Taskfold/Workspace.swift": "2f1798c778b5421dba1cec3de0ee353b8800f7022183cb79b0aeea32021b57a5",
+    "Taskfold/Views/RootView.swift": "d4da1b7302acb63328784b9a962d01ee6abca51728f8fed2aee31dcc11be6a0e"
+  },
+  "verificationScope": [
+    "64 real PostgreSQL checks load each repo\u2019s current adoption/ownership/connection stack and new planning migration, including synthetic live Auth sessions, per-project roles, current archive/config switches, row contention, real waiting transaction role change, late second-member rollback, exact replay preserving later work and private table grants",
+    "72 existing delete/restore batch cases run with the new planning layer; no fallback or replacement test schema",
+    "Core consumes each repo\u2019s independently exported SQL request/reply; covers private persistence, complete acknowledgement, whole-row projection, missing/recreated/changed sources, Undo/Redo identities, immutable opening workspace/session/access and one RPC with conflict preservation",
+    "Source native date and priority entry intercepts shared selections before personal writers; lists every member/effect and keeps Cancel and save refusal explicit",
+    "Already-correct date members stay in the source review; selected missing identities, nested/root or personal/team mixtures cannot be silently omitted"
+  ],
+  "diagnostics": [
+    "The initial new async sender assertion used await inside an XCTest autoclosure. The test now awaits the response before asserting it; no production behavior changed.",
+    "Adding the Mac presentation sheet to the large root expression exceeded the compiler\u2019s type-checking budget. The final presentation uses a small ViewModifier and a typed binding; both independent final app builds pass."
+  ],
+  "limits": [
+    "No new installed iPhone/iPad/Mac UI, native OS relaunch/Keychain, visual layout, large-text/dark/contrast, keyboard/spoken or hosted multi-actor acceptance claimed",
+    "Bulk deadline/estimate native entry, other shared batch operations, persistent connection preparation, file/provider custody and remaining rank-6/Watch/Wear OS/Px work remain open",
+    "No hosted schema, real task/account/provider or rollout changed; all user-deferred release/signing/distribution, older-client rollout, remote notification, OAuth/provider/domain and physical location dependencies remain deferred"
+  ],
+  "cleanup": {
+    "ownedTemporaryEntriesRemoved": 39,
+    "allocatedBytesRemoved": 1177415680,
+    "ownedFixtureContainersRemaining": 0,
+    "testAppsInstalledOrLaunched": false,
+    "baselineSimulatorsPreserved": true,
+    "sourceBuildCachesPreserved": true
+  }
+}

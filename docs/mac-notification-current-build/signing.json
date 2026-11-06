@@ -1,0 +1,16 @@
+{
+  "build": "PASS",
+  "strictDeepSignature": "PASS",
+  "team": "3UZ4C73FM2",
+  "bundle": "com.dbakp.taskfold.mac.p0notificationtests",
+  "binarySHA256": "9d33b608c4a9880a1f47649e233e3308c0abddbf27d0b89c6f2552f910d79cd7",
+  "entitlements": {
+    "com.apple.security.app-sandbox": true,
+    "com.apple.security.files.user-selected.read-write": true,
+    "com.apple.security.get-task-allow": true,
+    "com.apple.security.network.client": true,
+    "com.apple.security.personal-information.calendars": true
+  },
+  "launched": false,
+  "scope": "Current-source independently staged Debug app; build/signing only, not notification action/distribution/APNs acceptance."
+}

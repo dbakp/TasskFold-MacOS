@@ -1,0 +1,39 @@
+Window: "", App: Taskfold Widget Host Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Restore backup, Secondary Actions: Cancel
+		3 button Description: Restore 9 records, ID: restoreApply, Secondary Actions: Cancel
+		4 scroll area Secondary Actions: Scroll Up, Scroll Down, Cancel
+			5 container
+				6 text Review your restore 12 Oct 2026 at 7.02
+				7 pop up button Matching records, Value: Keep current edits, ID: restorePolicy
+				8 text Add missing work and keep the records already in this workspace.
+			9 text Changes
+			10 container
+				11 unknown Description: Add, Details: 9, ID: restoreAdded
+				12 unknown Description: Update, Details: 0, ID: restoreUpdated
+				13 unknown Description: Keep, Details: 0, ID: restoreKept
+				14 unknown Description: Projects, Details: 1, ID: restoreCount-projects
+				15 unknown Description: Tasks, Details: 8, ID: restoreCount-tasks
+			16 heading Before you restore
+			17 container
+				18 text An encrypted recovery copy will be saved first. Existing work outside the backup stays in your workspace. Existing work outside this backup is kept. Sign-in, profile identity and device calendar permissions are not changed.
+			19 scroll bar (settable, float) 0
+				20 value indicator (settable, float) 0
+				21 increment arrow button
+				22 decrement arrow button
+				23 increment page button
+				24 decrement page button
+		25 button Cancel
+26 menu bar
+	27 Taskfold
+	28 File
+	29 Edit
+	30 View
+	31 Fixture
+	32 Account
+	33 Task
+	34 Window
+	35 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

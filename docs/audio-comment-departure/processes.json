@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "separateProcesses": 12,
+  "completedDiscardCannotBeRevivedByAnOlderProcessFence": true,
+  "departureJournalSurvivesProcessExitWithoutCompletingDraft": true,
+  "explicitFinishUsesOriginalIDsAndAudioAcrossProcesses": true,
+  "localAndCloudDraftsRestored": true,
+  "exactPendingIntentAndAudioRestored": true,
+  "crossProcessLockRefusedWithoutMutation": true,
+  "noMicrophonePlaybackOrNetwork": true,
+  "ownedTemporaryDirectoryRemovedOnExit": true
+}

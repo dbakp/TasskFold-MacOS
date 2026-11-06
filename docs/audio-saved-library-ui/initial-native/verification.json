@@ -1,0 +1,30 @@
+{
+  "platform": "mac",
+  "baseCommit": "10d6985",
+  "sources": {
+    "Taskfold/AudioCommentCapture.swift": "306ef86cf112936cc38cfd862573e12b8a49542781c96c2bc0456335e526d981",
+    "Taskfold/AudioCommentNativeFixture.swift": "22b154296dd8c49254af3ba8c08301912c1b6636cae180a43b7d5632ae183147",
+    "Taskfold/Views/AudioCommentDraftView.swift": "e6236bc7ad28a0c271cc91ba713046451e80ebc6fb6cbd4b5ff360f2e39c6021",
+    "Taskfold/Views/BackupTools.swift": "9d2949c1e667d64ce848bb1603b3e4324e4f09da4284b7aec709f8c18f7f5133",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "fbc1faeaacc7778345e467e7338874296c1ba2e340cd199a0e7be05c2d52f7de",
+    "Taskfold/Core/AudioCommentVault.swift": "bf3976f3e57b574c37376e94c4c20887f76913caeaa1d4874a23c8cf57ab1cd3",
+    "Taskfold/Core/AudioCommentDecoding.swift": "d21dbbfa6223b185b8683c4ccdfdaf685eeed894b6e83e6fc3284cf2f384213f"
+  },
+  "controller": {
+    "checks": 191,
+    "newChecks": 21,
+    "compilerWarnings": 0
+  },
+  "nativeBuild": "TEST BUILD SUCCEEDED",
+  "strictDeepSignature": "passed",
+  "normalAudioExposureFlag": "absent",
+  "binarySHA256": "af39a384d55a2ecc6a7b861a3c19345f926dba5264d3356f83c4af007a2f7b92",
+  "nativeRuntime": "Simulator test pending; Mac runtime not run",
+  "warnings": [],
+  "developmentCorrections": [
+    "Initial proof fixture omitted the required departure fence; its setup was corrected.",
+    "Initial strict duration equality rejected valid older container-measured recordings; full native decode and exact audio bytes now admit those recordings without changing saved metadata.",
+    "One Mac proof compile was invalidated by a concurrent source edit and was rerun from final sources.",
+    "Review caught permanent library closure in the shared background-preservation hook; it now suspends and requires fresh selection on return, covered by the actual-hook proof."
+  ]
+}

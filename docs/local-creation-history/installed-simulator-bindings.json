@@ -1,0 +1,20 @@
+{
+  "phone": {
+    "reservedBundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "matchesAcceptedBuild": true,
+    "SHA256": {
+      "Taskfold": "e508fe42246aaa7eabcf45d6709b20d4a3fa3a5dfe38ada96d106bdcdc2dfdc0",
+      "Taskfold.debug.dylib": "f7cb78b689f11ada0bc1db69168d76c1df9c8be8b61777dc809c087951f961c5",
+      "PlugIns/TaskfoldWidgets.appex/TaskfoldWidgets": "d0f10834b860b94ed224a2bae96f4b19f061fcf9bf1f6f01937161afceaba960"
+    }
+  },
+  "tablet": {
+    "reservedBundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "matchesAcceptedBuild": true,
+    "SHA256": {
+      "Taskfold": "e508fe42246aaa7eabcf45d6709b20d4a3fa3a5dfe38ada96d106bdcdc2dfdc0",
+      "Taskfold.debug.dylib": "f7cb78b689f11ada0bc1db69168d76c1df9c8be8b61777dc809c087951f961c5",
+      "PlugIns/TaskfoldWidgets.appex/TaskfoldWidgets": "d0f10834b860b94ed224a2bae96f4b19f061fcf9bf1f6f01937161afceaba960"
+    }
+  }
+}

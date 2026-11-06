@@ -1,0 +1,8 @@
+Test Suite 'Selected tests' started at 2026-10-26 04:51:01.764.
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/SubtaskTransportIntegrationTests.swift:6: -[TaskfoldCoreTests.SubtaskTransportIntegrationTests testMovedChildAndReviewedOrderKeepSecondClientWork] : Test skipped - Disposable subtask fixture required
+	 Executed 355 tests, with 1 test skipped and 0 failures (0 unexpected) in 91.555 (91.603) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 04:52:33.368.
+	 Executed 355 tests, with 1 test skipped and 0 failures (0 unexpected) in 91.555 (91.603) seconds
+LARGE_DRAFT_METRICS {"cacheRows":10101,"cohortRecords":101,"exportSeconds":0.91452270839363337,"preparedSeconds":0.93724716664291918,"queuedCommands":102,"remainingOrderSHA256":"504f3e0e93b1f8d8c63bf7e29dd9012ca027dfa44604262514f0dd9b86572522","separateMeasured":true,"snapshotRows":10102,"textSeconds":0.72600270842667669,"textSHA256":"33c1c5cd096e4a1fcd6a27ad2786303a7687846a3f1e016a204e630196975970"}
+LARGE_DRAFT_METRICS {"cacheRows":49999,"cohortRecords":101,"exportSeconds":0,"preparedSeconds":3.1720462084049359,"queuedCommands":1000,"remainingOrderSHA256":"e01229ccd3dee684a66bf0ace62ad95c6d5936b8002347480ff979c2da7f64c7","separateMeasured":false,"snapshotRows":50000,"textSeconds":0,"textSHA256":"567cd7be3d68fab1c53cd2e7584efab49a11da1216c3588d83aa620b876a57a3"}
+LARGE_DRAFT_METRICS {"cacheRows":49999,"cohortRecords":101,"exportSeconds":0,"preparedSeconds":2.2743248332990333,"queuedCommands":102,"remainingOrderSHA256":"e01229ccd3dee684a66bf0ace62ad95c6d5936b8002347480ff979c2da7f64c7","separateMeasured":false,"snapshotRows":50000,"textSeconds":0,"textSHA256":"33c1c5cd096e4a1fcd6a27ad2786303a7687846a3f1e016a204e630196975970"}

@@ -74,34 +74,43 @@ struct ChangePasswordSheet: View {
 }
 
 struct DeleteAccountSheet: View {
+    let workspace: WorkspaceBinding
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var understood = false
     @State private var busy = false
     @State private var message: String?
+    private var recovering: Bool { store.userID == workspace.account && store.accountRemovalBlocked }
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Label("Delete Account", systemImage: "exclamationmark.triangle.fill").font(.headline).foregroundStyle(.red)
-            Text("This permanently deletes your Taskfold account and every task, project, label, comment, and attachment stored for it. It cannot be undone, and nothing is kept for recovery.").font(.callout)
-            Text("Tasks cached on this Mac are removed from the app when you are signed out. Export your workspace first if you want a copy.").font(.callout).foregroundStyle(.secondary)
+            Text("This permanently removes your Taskfold account, profile, owned projects and tasks, and uploaded files. Other people’s tasks stay; comments on surviving shared tasks may remain anonymously.").font(.callout)
+            Text("Saved account data and recovery backups on this Mac are erased after server confirmation. Exported files and copies on other devices are not erased. If the connection is interrupted, reopen Taskfold to finish checking removal. You may need to sign in again if removal is unfinished. Export your workspace first if you want a copy.").font(.callout).foregroundStyle(.secondary)
             Toggle("I understand this is permanent", isOn: $understood).accessibilityIdentifier("deleteUnderstood")
             if let message { Text(message).font(.callout).foregroundStyle(.red).textSelection(.enabled).accessibilityIdentifier("accountMessage") }
             HStack {
                 if busy { ProgressView().controlSize(.small) }
                 Spacer()
-                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Delete Account", role: .destructive) { submit() }.buttonStyle(.borderedProminent).tint(.red)
-                    .disabled(!understood || busy).accessibilityIdentifier("confirmDeleteAccount")
+                Button(recovering ? "Close" : "Cancel") { dismiss() }.keyboardShortcut(.cancelAction).disabled(busy)
+                Button(recovering ? "Retry removal" : "Delete Account", role: .destructive) { submit() }.buttonStyle(.borderedProminent).tint(.red)
+                    .disabled((!understood && !recovering) || busy || store.accountRemovalBusy).accessibilityIdentifier("confirmDeleteAccount")
             }
-        }.padding(20).frame(width: 440)
+        }.padding(20).frame(width: 440).interactiveDismissDisabled(busy)
     }
     private func submit() {
         busy = true; message = nil
         Task {
             defer { busy = false }
             do {
-                try await store.backend.deleteAccount()
-                store.signOut()
+                if recovering {
+                    await store.resumeAccountRemovals()
+                    if store.userID == workspace.account && store.accountRemovalBlocked {
+                        message = store.accountRemovalStatus ?? "Account removal still needs attention. Your remaining device copies are kept."
+                        return
+                    }
+                } else {
+                    try await store.deleteAccount(expected: workspace)
+                }
                 dismiss()
             } catch { message = error.localizedDescription }
         }

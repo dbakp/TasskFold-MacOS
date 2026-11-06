@@ -1,0 +1,41 @@
+{
+  "expectedFailures": 0,
+  "failedTests": 10,
+  "finishTime": 1793056068.263,
+  "passedTests": 2,
+  "result": "Failed",
+  "runtimeWarnings": [
+    {
+      "issueType": "Runtime Warning",
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    }
+  ],
+  "skippedTests": 0,
+  "startTime": 1793055812.256,
+  "totalTestCount": 12,
+  "note": "Missing isolated heading opt-in (seven cases), wrong expected synthetic account (two scale cases), Cocoa accessibility label/value assumption (one intent case); final and targeted coverage below correct these setup/assertion issues."
+}

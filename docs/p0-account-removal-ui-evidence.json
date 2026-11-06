@@ -1,0 +1,356 @@
+{
+  "date": "2026-10-22",
+  "status": "scoped_native_ui_accepted_server_and_mac_runtime_open",
+  "nativeUI": {
+    "phone": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 4,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792697524.678,
+      "passedTests": 4,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792697375.856,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 4
+    },
+    "tablet": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+            "deviceName": "iPad Pro 13-inch (M5)",
+            "modelName": "iPad Pro 13-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792697426.512,
+      "passedTests": 1,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792697375.857,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "scope": "Actual production RootView, Account, native confirmation sheet, alert, Store deletion/recovery and signed-out route. Reserved synthetic identities and device-private files only; URLProtocol simulates server replies. No real Auth/Storage/account removal or normal App Group acceptance."
+  },
+  "voiceOver": {
+    "source": "XCUIVoiceOverService.Output.utterance",
+    "warningAndDeleteButton": true,
+    "recoveryAndRetryButton": true,
+    "priorAndFinalEnabled": false,
+    "scope": "Actual returned speech for the explicit permanence warning, Delete action, recovery message and Retry action. Long paragraph outputs are partial; full legal-copy speech is not claimed.",
+    "utterances": {
+      "confirmation": [
+        "Taskfold Workflow Test Cancel Button",
+        "Delete account? Heading",
+        "This cannot be undone",
+        "Your account, profile, owned projects and tasks, uploaded files,",
+        "What stays Heading",
+        "Other people\u2019s tasks stay. Comments on surviving shared tasks ma",
+        "Exports and copies on other devices are not erased.",
+        "Delete account and data Button"
+      ],
+      "recovery": [
+        "Taskfold Workflow Test Account removal needs attention. Your rem",
+        "Retry Button"
+      ],
+      "source": "XCUIVoiceOverService.Output.utterance"
+    }
+  },
+  "nativeBuilds": {
+    "ios": {
+      "log": "account-removal-ui-layout-build.log",
+      "SHA256": "860a242ee62b8e9509b0158f32231201bdddcdb46363afcce329a3fb7dce397f",
+      "passed": true,
+      "existingDevelopmentIdentity": true,
+      "architecture": "arm64 Simulator"
+    },
+    "mac": {
+      "log": "account-removal-ui-mac-layout-build.log",
+      "SHA256": "8499942913d6149b46f431cd13f0a5f0319024de4c42de58b6864780a1017dd5",
+      "passed": true,
+      "signingDisabled": true,
+      "runtimePass": false
+    }
+  },
+  "signatures": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "finalArtifacts": {
+    "account-removal-ui-layout-phone.log": "5d0ed9d86d04bec9773cc421b9e749dfb666416a866e9c2e7ce02b9fde7b31a5",
+    "account-removal-ui-layout-phone-attachments": {
+      "27C23385-C3F4-4EF5-9479-7378092F2E8A.png": "29d641dd941a03a2ac85163ef8099ebf79c42ed1f621b82607e53d38418bbf8e",
+      "7B3D4435-9075-424C-8711-3E66E2C2D298.png": "99f29dbc3818392e61861ac8b03c0df2f9627be8fb17ba92735d5ece99db8f32",
+      "E411B509-7BAF-43CA-B022-56FC2B6AE4A3.png": "29d641dd941a03a2ac85163ef8099ebf79c42ed1f621b82607e53d38418bbf8e",
+      "B5FBBEDB-4958-488F-AB22-77D416F1D6C3.png": "2f1d3f7865f3cdab8ba979d8510057ee80c802097d58b18c63cc6a89425a0344",
+      "ED304375-BE11-4078-BFCC-F6D78DEE804F.png": "99f29dbc3818392e61861ac8b03c0df2f9627be8fb17ba92735d5ece99db8f32",
+      "32C9C17D-B9F3-444D-8E51-680241337F8C.png": "29d641dd941a03a2ac85163ef8099ebf79c42ed1f621b82607e53d38418bbf8e",
+      "22783C8C-E633-4294-BDCC-303992CE7E20.png": "767e609a55cb5993475d38b4e0832ac73a50688a2ee926018e42dea5213418eb",
+      "E7FECA82-9FB9-4808-AD35-D74F5CC2AD92.json": "26831424ec984705b44a4be40338dc20e5cb390ff46292866d00d0d593f6e7fa",
+      "A7A0D6E5-9989-4918-B141-6AC9AD55E920.png": "99f29dbc3818392e61861ac8b03c0df2f9627be8fb17ba92735d5ece99db8f32",
+      "3909D883-BBC2-4139-8EDD-DE4A25BC1EE2.png": "2d92384dbc8cd956c127d884833de2d90193cd6d29c763614c74567a0b2f60f5",
+      "manifest.json": "e25834fd4c3df3d6b492fa0533d35a6e38f09102596f92893aa94095b8fb949a",
+      "22685498-D012-4774-B74F-8D3B5DFACC8A.json": "51a3f3d422b0e4fb0049f1efabbcf230a682b84c4999f823ab5b9e60aebc9b9c",
+      "A269AEE7-B671-49C3-B2FD-16BEAF2FF31B.png": "99f29dbc3818392e61861ac8b03c0df2f9627be8fb17ba92735d5ece99db8f32",
+      "6FB2B06B-37EE-4EE6-A63A-F3D72041B966.png": "29d641dd941a03a2ac85163ef8099ebf79c42ed1f621b82607e53d38418bbf8e",
+      "2E19B188-EC55-4DEB-AE80-E20B22CE0CA1.png": "9a86a00b3d0820e796c8c8e9ef653a9fe1844a111c765cb321b1c6c75f14858e"
+    },
+    "account-removal-ui-layout-ipad.log": "4f603775e90d8611d533376dc6558f6035f2b1425fadffcc7ec3e8edaffb2a43",
+    "account-removal-ui-layout-ipad-attachments": {
+      "89B122DF-5887-4829-A832-90AC6E9ECE30.png": "444b84b19b54cfab70712fa2ccb58337cb635180456e7304e5823354f1b70934",
+      "18B979B5-AE07-4597-99D9-357B32BAF598.png": "3a4c38de64111cb2a24c8fbbf35c6dfadaf0fc2df4ea85bcb7d44ba99cb1d3a3",
+      "4C6DCC4D-8C49-465C-AEB1-7E8D9A70CD0D.png": "86640f3f7506973fdb4f89c998846f99603b7599c90384c83728b88d4fb84069",
+      "manifest.json": "e0d078026aadbb29f38f5af0837596eec4e0de6c27f4fd6066060ee340c545e9"
+    }
+  },
+  "failedIterations": [
+    {
+      "scope": "Initial optional x86_64 Simulator link failed on existing AppAuth symbols; actual arm64 target builds successfully",
+      "logSHA256": "ebe74b9d8410a30a9fb3d15496326cc4f05cd802dbfbce09103f9db702765fcc"
+    },
+    {
+      "scope": "Initial UI run: two failing cases; no Cancel in confirmation popover and error/recovery presentation unavailable. Text logs/live screenshot retained; unfinished diagnostic bundle was unreadable and pruned.",
+      "logSHA256": "a955752a3bda10af9fde54f61059c5efcb278b0688895d481e72cc5c92b26699"
+    },
+    {
+      "scope": "First correction: one pass, three failures. A local error vanished with the intentionally invalidated workspace; largest text needed actual form scrolling. Results, logs and exported attachments retained; redundant raw bundle pruned.",
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 3,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 3,
+        "finishTime": 1792697005.6,
+        "passedTests": 1,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792696768.233,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed - Attributes: Application, 0x10b593c00, pid: 24259, label: 'Taskfold Workflow Test'\nElement subtree:\n \u2192Application, 0x10b593c00, pid: 24259, label: 'Taskfold Workflow Test'\n    Window (Main), 0x10b593d40, {{0.0, 0.0}, {402.0, 874.0}}\n      Other, 0x10b593e80, {{0.0, 0.0}, {402.0, 874.0}}\n      Other, 0x10a4012c0, {{0.0, 0.0}, {402.0, 874.0}}\n        Other, 0x10b794000, {{0.0, 0.0}, {402.0, 874.0}}\n          Other, 0x10b794140, {{0.0, 0.0}, {402.0, 874.0}}\n            Other, 0x10b794280, {{0.0, 0.0}, {402.0, 874.0}}\n              Other, 0x10b7943c0, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'nativeWorkspace'\n                Other, 0x10b794500, {{0.0, 0.0}, {402.0, 874.0}}\n                  Other, 0x10b794640, {{0.0, 0.0}, {402.0, 874.0}}\n                    Other, 0x10b794780, {{0.0, 0.0}, {402.0, 874.0}}\n                      Other, 0x10b7948c0, {{0.0, 0.0}, {402.0, 874.0}}\n                        Other, 0x10b794a00, {{0.0, 0.0}, {402.0, 874.0}}\n                          Other, 0x10b794b40, {{0.0, 0.0}, {402.0, 874.0}}\n                            NavigationBar, 0x10b794c80, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Today'\n                              Other, 0x10b794dc0, {{20.0, 69.0}, {36.0, 30.0}}\n                                Other, 0x10b794f00, {{20.0, 69.0}, {36.0, 30.0}}\n                                  Button, 0x10b795040, {{23.0, 69.0}, {30.0, 30.0}}, identifier: 'openSettings', label: 'Settings and account'\n                              Other, 0x10b795180, {{288.3, 66.0}, {38.0, 36.0}}\n                                Other, 0x10b7952c0, {{288.3, 66.0}, {38.0, 36.0}}\n                                  Button, 0x10b795400, {{288.3, 66.0}, {38.0, 36.0}}, label: 'Task options'\n                                    Button, 0x10b795540, {{288.3, 66.0}, {38.0, 36.0}}\n                                      Image, 0x10b795680, {{297.3, 82.0}, {20.0, 4.3}}, identifier: 'ellipsis', label: 'More'\n                              Other, 0x10b7957c0, {{342.3, 66.0}, {39.7, 36.0}}\n                                Other, 0x10b795900, {{342.3, 66.0}, {39.7, 36.0}}\n                                  Button, 0x10b795a40, {{342.3, 66.0}, {39.7, 36.0}}, identifier: 'openTaskSearch', label: 'Search'\n                              StaticText, 0x10b795b80, {{16.0, 119.7}, {95.3, 40.7}}, label: 'Today'\n                            Other, 0x10b795cc0, {{0.0, 0.0}, {402.0, 874.0}}\n                              Other, 0x10b795e00, {{0.0, 0.0}, {402.0, 874.0}}\n                                Other, 0x10b795f40, {{0.0, 0.0}, {402.0, 874.0}}\n                                  Other, 0x10b796080, {{0.0, 0.0}, {402.0, 874.0}}\n                                    ScrollView, 0x10b7961c0, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'datedTasksScroll'\n                                      Other, 0x10b796300, {{0.0, 0.0}, {402.0, 874.0}}\n                                        Other, 0x10b796440, {{0.0, 0.0}, {402.0, 156.0}}\n                                        Other, 0x10b796580, {{0.0, 741.0}, {402.0, 133.0}}\n                                      Other, 0x10b7966c0, {{0.0, 0.0}, {402.0, 874.0}}\n                                      Other, 0x10b796800, {{0.0, 168.0}, {402.0, 254.3}}\n                                        StaticText, 0x10b796940, {{16.0, 172.0}, {175.3, 14.3}}, label: 'THURSDAY, 22 OCTOBER'\n                                        Other, 0x10b796a80, {{17.0, 206.3}, {118.0, 15.7}}, identifier: 'syncStatus', label: 'Waiting to sync'\n                                          StaticText, 0x10b796bc0, {{17.0, 206.3}, {118.0, 15.7}}, label: 'Waiting to sync'\n                                          Image, 0x10b796d00, {{17.0, 207.7}, {16.0, 11.3}}, identifier: 'icloud', label: 'Icloud'\n                                        StaticText, 0x10b796e40, {{16.0, 246.0}, {48.0, 20.3}}, identifier: 'createDay-2026-10-22', label: 'Today'\n                                        StaticText, 0x10b796f80, {{16.0, 278.3}, {370.0, 48.0}}, identifier: 'day-end-2026-10-22', label: 'Nothing planned'\n                                        Other, 0x10b7970c0, {{0.0, 168.0}, {402.0, 254.3}}\n                                      Other, 0x10b797200, {{369.0, 116.0}, {30.0, 675.0}}, label: 'Vertical scroll bar, 1 page', value: 0\u00a0%\n                                        Other, 0x10b797340, {{396.0, 487.7}, {3.0, 300.3}}\n                                      Other, 0x10b797480, {{369.0, 116.0}, {30.0, 675.0}}, label: 'Vertical scroll bar, 1 page', value: 0\u00a0%\n                                        Other, 0x10b7975c0, {{396.0, 487.7}, {3.0, 300.3}}\n                                    Button, 0x10b797700, {{308.0, 699.0}, {74.0, 74.0}}, identifier: 'floatingAdd', label: 'Add task'\n                            Toolbar, 0x10b797840, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'Toolbar', label: 'Toolbar'\n                              Other, 0x10b797980, {{0.0, 0.0}, {402.0, 874.0}}\n                Other, 0x10b797ac0, {{0.0, 0.0}, {402.0, 874.0}}\n                  Other, 0x10b797c00, {{0.0, 791.0}, {402.0, 83.0}}\n                    Other, 0x10b797d40, {{0.0, 0.0}, {402.0, 874.0}}\n                      TabBar, 0x10b797e80, {{0.0, 791.0}, {402.0, 83.0}}, label: 'Tab Bar'\n                        Other, 0x10b798000, {{21.0, 791.0}, {360.0, 62.0}}\n                          Other, 0x10b798140, {{21.0, 791.0}, {83.9, 54.0}}\n                          Other, 0x10b798280, {{21.0, 791.0}, {360.0, 62.0}}\n                            Button, 0x10b7983c0, {{25.0, 795.0}, {83.9, 54.0}}, identifier: 'sun.max', label: 'Today', Selected\n                              Image, 0x10b798500, {{52.3, 800.0}, {29.0, 29.3}}, identifier: 'sun.max.fill', label: 'brightness higher'\n                            Button, 0x10b798640, {{88.9, 795.0}, {83.9, 54.0}}, identifier: 'tray', label: 'Inbox'\n                              Image, 0x10b798780, {{114.2, 803.0}, {33.0, 23.7}}, identifier: 'tray.fill', label: 'inbox'\n                            Button, 0x10b7988c0, {{152.8, 795.0}, {93.7, 54.0}}, identifier: 'calendar.day.timeline.left', label: 'Upcoming'\n                              Image, 0x10b798a00, {{182.8, 802.3}, {34.3, 25.3}}, identifier: 'calendar.day.timeline.left', label: 'Calendar day with a left timeline'\n                            Button, 0x10b798b40, {{226.5, 795.0}, {86.6, 54.0}}, identifier: 'calendar', label: 'Calendar'\n                              Image, 0x10b798c80, {{255.2, 802.3}, {29.0, 25.0}}, identifier: 'calendar', label: 'calendar'\n                            Button, 0x10b798dc0, {{293.1, 795.0}, {83.9, 54.0}}, identifier: 'square.grid.2x2', label: 'Browse'\n                              Image, 0x10b798f00, {{321.5, 802.3}, {27.0, 25.0}}, identifier: 'square.grid.2x2.fill', label: 'grid 2x2'\n                          Other, 0x10b799040, {{21.0, 791.0}, {360.0, 62.0}}\n                          Other, 0x10b799180, {{25.0, 795.0}, {83.9, 54.0}}\n                            Other, 0x10b7992c0, {{25.0, 795.0}, {83.7, 54.0}}\n                              Other, 0x10b799400, {{25.0, 795.0}, {83.7, 54.0}}\n                              Other, 0x10b799540, {{25.0, 795.0}, {83.7, 54.0}}\n                                Other, 0x10b799680, {{25.0, 795.0}, {83.7, 54.0}}\n                                  Other, 0x10b7997c0, {{25.0, 795.0}, {83.7, 54.0}}\n                                    Other, 0x10b799900, {{25.0, 795.0}, {83.7, 54.0}}\n                                  Other, 0x10b799a40, {{25.0, 795.0}, {83.7, 54.0}}\n                                Other, 0x10b799b80, {{25.0, 795.0}, {83.7, 54.0}}\n                    Other, 0x10b799cc0, {{0.0, 791.0}, {402.0, 83.0}}\n                      Other, 0x10b799e00, {{0.0, 791.0}, {402.0, 83.0}}\n                        Other, 0x10b799f40, {{0.0, 791.0}, {402.0, 83.0}}\n                          Other, 0x10b79a080, {{0.0, 791.0}, {402.0, 83.0}}\n                            Other, 0x10b79a1c0, {{0.0, 791.0}, {402.0, 83.0}}\n                              Other, 0x10b79a300, {{0.0, 791.0}, {402.0, 83.0}}\n                          Other, 0x10b79a440, {{0.0, 791.0}, {402.0, 83.0}}\n                            Other, 0x10b79a580, {{0.0, 791.0}, {402.0, 83.0}}\n              StaticText, 0x10b79a6c0, {{13.3, 78.0}, {313.7, 61.3}}, identifier: 'accountRemovalStatus', label: 'Account removal needs attention. Your remaining device copies are kept until cleanup can finish.'\n              Image, 0x10b79a800, {{13.3, 79.3}, {20.0, 17.3}}, identifier: 'accountRemovalStatus', label: 'Account removal needs attention. Your remaining device copies are kept until cleanup can finish.'\n              Button, 0x10b79a940, {{343.7, 98.7}, {40.7, 20.3}}, identifier: 'retryAccountRemoval', label: 'Retry'\nPath to element:\n \u2192Application, 0x10b593c00, pid: 24259, label: 'Taskfold Workflow Test'\nQuery chain:\n \u2192Find: Target Application 'com.dbakp.taskfold.workflowtestsremoval'\n  Output: {\n    Application, 0x10b79aa80, pid: 24259, label: 'Taskfold Workflow Test'\n  }\n",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 2,
+            "testIdentifierString": "TaskfoldUITests/testAccountRemovalUIFailureRetryAndErasure()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAccountRemovalUIFailureRetryAndErasure",
+            "testName": "testAccountRemovalUIFailureRetryAndErasure()"
+          },
+          {
+            "failureText": "XCTAssertTrue failed - Attributes: Application, 0x118065900, pid: 24345, label: 'Taskfold Workflow Test'\nElement subtree:\n \u2192Application, 0x118065900, pid: 24345, label: 'Taskfold Workflow Test'\n    Window (Main), 0x118065a40, {{0.0, 0.0}, {402.0, 874.0}}\n      Other, 0x118065b80, {{0.0, 0.0}, {402.0, 874.0}}\n      Other, 0x118065cc0, {{0.0, 0.0}, {402.0, 874.0}}\n        Other, 0x118065e00, {{0.0, 0.0}, {402.0, 874.0}}\n          Other, 0x118065f40, {{-402.0, -874.0}, {1206.0, 2622.0}}\n          Other, 0x118066080, {{0.0, 0.0}, {402.0, 874.0}}\n            Other, 0x1180661c0, {{0.0, 0.0}, {402.0, 874.0}}\n              Other, 0x118066300, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'nativeWorkspace'\n                Other, 0x118066440, {{0.0, 0.0}, {402.0, 874.0}}\n                  Other, 0x118066580, {{0.0, 0.0}, {402.0, 874.0}}\n                    Other, 0x1180666c0, {{0.0, 0.0}, {402.0, 874.0}}\n                      Other, 0x118066800, {{0.0, 0.0}, {402.0, 874.0}}\n                        Other, 0x118066940, {{0.0, 0.0}, {402.0, 874.0}}\n                          Other, 0x118066a80, {{0.0, 0.0}, {402.0, 874.0}}\n                            NavigationBar, 0x118066bc0, {{0.0, 62.0}, {402.0, 127.0}}, identifier: 'Today'\n                              Other, 0x118066d00, {{20.0, 69.0}, {36.0, 30.0}}\n                                Other, 0x118066e40, {{20.0, 69.0}, {36.0, 30.0}}\n                                  Button, 0x118066f80, {{23.0, 69.0}, {30.0, 30.0}}, identifier: 'openSettings', label: 'Settings and account'\n                              Other, 0x1180670c0, {{276.7, 66.0}, {43.3, 36.0}}\n                                Other, 0x118067200, {{276.7, 66.0}, {43.3, 36.0}}\n                                  Button, 0x118067340, {{276.7, 66.0}, {43.3, 36.0}}, label: 'Task options'\n                                    Button, 0x118067480, {{276.7, 66.0}, {43.3, 36.0}}\n                                      Image, 0x1180675c0, {{286.0, 81.3}, {24.7, 5.3}}, identifier: 'ellipsis', label: 'More'\n                              Other, 0x118067700, {{336.0, 66.0}, {46.0, 36.0}}\n                                Other, 0x118067840, {{336.0, 66.0}, {46.0, 36.0}}\n                                  Button, 0x118067980, {{336.0, 66.0}, {46.0, 36.0}}, identifier: 'openTaskSearch', label: 'Search'\n                              StaticText, 0x118067ac0, {{16.0, 116.0}, {165.7, 71.7}}, label: 'Today'\n                            Other, 0x118067c00, {{0.0, 0.0}, {402.0, 874.0}}\n                              Other, 0x118067d40, {{0.0, 0.0}, {402.0, 874.0}}\n                                Other, 0x118067e80, {{0.0, 0.0}, {402.0, 874.0}}\n                                  Other, 0x10b591540, {{0.0, 0.0}, {402.0, 874.0}}\n                                    ScrollView, 0x10b591900, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'datedTasksScroll'\n                                      Other, 0x1180c0000, {{0.0, 0.0}, {402.0, 874.0}}\n                                        Other, 0x1180c0140, {{0.0, 0.0}, {402.0, 156.0}}\n                                        Other, 0x1180c0280, {{0.0, 741.0}, {402.0, 133.0}}\n                                      Other, 0x1180c03c0, {{0.0, 0.0}, {402.0, 874.0}}\n                                      Other, 0x1180c0500, {{0.0, 189.0}, {402.0, 431.0}}\n                                        StaticText, 0x1180c0640, {{16.0, 193.0}, {269.7, 102.3}}, label: 'THURSDAY, 22 OCTOBER'\n                                        Other, 0x1180c0780, {{20.0, 315.3}, {351.7, 52.7}}, identifier: 'syncStatus', label: 'Waiting to sync'\n                                          StaticText, 0x1180c08c0, {{20.0, 315.3}, {351.7, 52.7}}, label: 'Waiting to sync'\n                                          Image, 0x1180c0a00, {{20.0, 321.0}, {54.3, 37.7}}, identifier: 'icloud', label: 'Icloud'\n                                        StaticText, 0x1180c0b40, {{16.0, 392.0}, {142.7, 63.3}}, identifier: 'createDay-2026-10-22', label: 'Today'\n                                        StaticText, 0x1180c0c80, {{16.0, 471.3}, {370.0, 52.7}}, identifier: 'day-end-2026-10-22', label: 'Nothing planned'\n                                        Other, 0x1180c0dc0, {{0.0, 189.0}, {402.0, 431.0}}\n                                      Other, 0x1180c0f00, {{369.0, 116.0}, {30.0, 675.0}}, label: 'Vertical scroll bar, 1 page', value: 0\u00a0%\n                                        Other, 0x1180c1040, {{396.0, 290.0}, {3.0, 498.0}}\n                                      Other, 0x1180c1180, {{369.0, 116.0}, {30.0, 675.0}}, label: 'Vertical scroll bar, 1 page', value: 0\u00a0%\n                                        Other, 0x1180c12c0, {{396.0, 290.0}, {3.0, 498.0}}\n                                    Button, 0x1180c1400, {{308.0, 699.0}, {74.0, 74.0}}, identifier: 'floatingAdd', label: 'Add task'\n                            Toolbar, 0x1180c1540, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'Toolbar', label: 'Toolbar'\n                              Other, 0x1180c1680, {{0.0, 0.0}, {402.0, 874.0}}\n                Other, 0x1180c17c0, {{0.0, 0.0}, {402.0, 874.0}}\n                  Other, 0x1180c1900, {{0.0, 791.0}, {402.0, 83.0}}\n                    Other, 0x1180c1a40, {{0.0, 0.0}, {402.0, 874.0}}\n                      TabBar, 0x1180c1b80, {{0.0, 791.0}, {402.0, 83.0}}, label: 'Tab Bar'\n                        Other, 0x1180c1cc0, {{21.0, 791.0}, {360.0, 62.0}}\n                          Other, 0x1180c1e00, {{21.0, 791.0}, {83.9, 54.0}}\n                          Other, 0x1180c1f40, {{21.0, 791.0}, {360.0, 62.0}}\n                            Button, 0x1180c2080, {{25.0, 795.0}, {83.9, 54.0}}, identifier: 'sun.max', label: 'Today', Selected\n                              Image, 0x1180c21c0, {{52.3, 800.0}, {29.0, 29.3}}, identifier: 'sun.max.fill', label: 'brightness higher'\n                            Button, 0x1180c2300, {{88.9, 795.0}, {83.9, 54.0}}, identifier: 'tray', label: 'Inbox'\n                              Image, 0x1180c2440, {{114.2, 803.0}, {33.0, 23.7}}, identifier: 'tray.fill', label: 'inbox'\n                            Button, 0x1180c2580, {{152.8, 795.0}, {93.7, 54.0}}, identifier: 'calendar.day.timeline.left', label: 'Upcoming'\n                              Image, 0x1180c26c0, {{182.8, 802.3}, {34.3, 25.3}}, identifier: 'calendar.day.timeline.left', label: 'Calendar day with a left timeline'\n                            Button, 0x1180c2800, {{226.5, 795.0}, {86.6, 54.0}}, identifier: 'calendar', label: 'Calendar'\n                              Image, 0x1180c2940, {{255.2, 802.3}, {29.0, 25.0}}, identifier: 'calendar', label: 'calendar'\n                            Button, 0x1180c2a80, {{293.1, 795.0}, {83.9, 54.0}}, identifier: 'square.grid.2x2', label: 'Browse'\n                              Image, 0x1180c2bc0, {{321.5, 802.3}, {27.0, 25.0}}, identifier: 'square.grid.2x2.fill', label: 'grid 2x2'\n                          Other, 0x1180c2d00, {{21.0, 791.0}, {360.0, 62.0}}\n                          Other, 0x1180c2e40, {{25.0, 795.0}, {83.9, 54.0}}\n                            Other, 0x1180c2f80, {{25.0, 795.0}, {83.7, 54.0}}\n                              Other, 0x1180c30c0, {{25.0, 795.0}, {83.7, 54.0}}\n                              Other, 0x1180c3200, {{25.0, 795.0}, {83.7, 54.0}}\n                                Other, 0x1180c3340, {{25.0, 795.0}, {83.7, 54.0}}\n                                  Other, 0x1180c3480, {{25.0, 795.0}, {83.7, 54.0}}\n                                    Other, 0x1180c35c0, {{25.0, 795.0}, {83.7, 54.0}}\n                                  Other, 0x1180c3700, {{25.0, 795.0}, {83.7, 54.0}}\n                                Other, 0x1180c3840, {{25.0, 795.0}, {83.7, 54.0}}\n                    Other, 0x1180c3980, {{0.0, 791.0}, {402.0, 83.0}}\n                      Other, 0x1180c3ac0, {{0.0, 791.0}, {402.0, 83.0}}\n                        Other, 0x1180c3c00, {{0.0, 791.0}, {402.0, 83.0}}\n                          Other, 0x1180c3d40, {{0.0, 791.0}, {402.0, 83.0}}\n                            Other, 0x1180c3e80, {{0.0, 791.0}, {402.0, 83.0}}\n                              Other, 0x1180c4000, {{0.0, 791.0}, {402.0, 83.0}}\n      Other, 0x1180c4140, {{0.0, 0.0}, {402.0, 874.0}}\n        Other, 0x1180c4280, {{-402.0, -874.0}, {1206.0, 2622.0}}\n        Other, 0x1180c43c0, {{16.0, 62.0}, {370.0, 747.4}}\n          Other, 0x1180c4500, {{16.0, 62.0}, {370.0, 747.4}}\n            Other, 0x1180c4640, {{-354.0, -685.4}, {1110.0, 2242.1}}\n            Other, 0x1180c4780, {{16.0, 62.0}, {370.0, 747.4}}\n              Other, 0x1180c48c0, {{16.0, 62.0}, {370.0, 747.4}}\n                Other, 0x1180c4a00, {{16.0, 62.0}, {370.0, 747.4}}\n                  NavigationBar, 0x1180c4b40, {{16.0, 76.7}, {370.0, 49.7}}, identifier: 'Account'\n                    Button, 0x1180c4c80, {{30.7, 76.7}, {40.5, 40.5}}, identifier: 'BackButton', label: 'Settings'\n                    StaticText, 0x1180c4dc0, {{163.9, 85.3}, {73.9, 23.3}}, label: 'Account'\n                  Other, 0x1180c4f00, {{16.0, 62.0}, {370.0, 747.4}}\n                    Other, 0x1180c5040, {{16.0, 62.0}, {370.0, 747.4}}\n                      Other, 0x1180c5180, {{16.0, 62.0}, {370.0, 747.4}}\n                        Other, 0x1180c52c0, {{16.0, 62.0}, {370.0, 747.4}}\n                          CollectionView, 0x1180c5400, {{16.0, 62.0}, {370.0, 747.4}}\n                            Other, 0x1180c5540, {{1.3, -413.2}, {399.5, 898.0}}\n                            Cell, 0x1180c5680, {{30.7, -17.5}, {340.5, 143.0}}\n                              Other, 0x1180c57c0, {{30.7, -17.5}, {340.5, 143.0}}\n                                Other, 0x1180c5900, {{30.7, -17.5}, {340.5, 143.0}}\n                              Other, 0x1180c5a40, {{30.7, -17.5}, {340.5, 143.0}}\n                                Other, 0x1180c5b80, {{30.7, -17.5}, {340.5, 143.0}}\n                                  Other, 0x1180c5cc0, {{30.7, -17.5}, {340.5, 143.0}}\n                                    Button, 0x1180c5e00, {{30.7, -17.5}, {340.5, 143.0}}, label: 'Change email'\n                                      StaticText, 0x1180c5f40, {{53.4, -3.7}, {243.0, 115.4}}, label: 'Change email'\n                                      Image, 0x1180c6080, {{53.4, 8.9}, {46.3, 33.1}}, identifier: 'envelope', label: 'Get Mail'\n                            Other, 0x1180c61c0, {{16.0, 62.0}, {370.0, 747.4}}\n                              Other, 0x1180c6300, {{16.0, 62.0}, {370.0, 101.2}}\n                            Other, 0x1180c6440, {{16.0, 62.0}, {370.0, 747.4}}\n                              Other, 0x1180c6580, {{16.0, 62.0}, {370.0, 101.2}}\n                            Cell, 0x1180c66c0, {{30.7, 125.5}, {340.5, 143.0}}\n                              Other, 0x1180c6800, {{30.7, 125.5}, {340.5, 143.0}}\n                                Other, 0x1180c6940, {{30.7, 125.5}, {340.5, 143.0}}\n                              Other, 0x1180c6a80, {{30.7, 125.5}, {340.5, 143.0}}\n                                Other, 0x1180c6bc0, {{30.7, 125.5}, {340.5, 143.0}}\n                                  Other, 0x1180c6d00, {{30.7, 125.5}, {340.5, 143.0}}\n                                    Button, 0x1180c6e40, {{30.7, 125.5}, {340.5, 143.0}}, label: 'Change password'\n                                      Image, 0x1180c6f80, {{63.6, 144.5}, {26.1, 47.9}}, identifier: 'key', label: 'Passwords'\n                                      StaticText, 0x1180c70c0, {{63.6, 139.3}, {232.9, 115.4}}, label: 'Change password'\n                            Other, 0x1180c7200, {{45.5, 124.6}, {311.1, 0.9}}\n                            Cell, 0x1180c7340, {{30.7, 268.5}, {340.5, 200.0}}\n                              Other, 0x1180c7480, {{30.7, 268.5}, {340.5, 200.0}}\n                                Other, 0x1180c75c0, {{30.7, 268.5}, {340.5, 200.0}}\n                              Other, 0x1180c7700, {{30.7, 268.5}, {340.5, 200.0}}\n                                Other, 0x1180c7840, {{30.7, 268.5}, {340.5, 200.0}}\n                                  Other, 0x1180c7980, {{30.7, 268.5}, {340.5, 200.0}}\n                                    Button, 0x1180c7ac0, {{30.7, 268.5}, {340.5, 200.0}}, label: 'Send password reset email'\n                                      Image, 0x1180c7c00, {{53.4, 287.8}, {46.3, 46.6}}, identifier: 'envelope.arrow.triangle.branch', label: 'Envelope With A Branching Arrow'\n                                      StaticText, 0x1180c7d40, {{53.4, 282.3}, {215.1, 172.4}}, label: 'Send password reset email'\n                            Other, 0x1180c7e80, {{45.5, 267.6}, {311.1, 0.9}}\n                            Other, 0x1180c8000, {{1.3, 484.8}, {399.5, 2123.4}}\n                            Cell, 0x1180c8140, {{30.7, 500.7}, {340.5, 85.9}}\n                              Other, 0x1180c8280, {{30.7, 500.7}, {340.5, 85.9}}\n                                Other, 0x1180c83c0, {{30.7, 500.7}, {340.5, 85.9}}\n                              Other, 0x1180c8500, {{30.7, 500.7}, {340.5, 85.9}}\n                                Other, 0x1180c8640, {{30.7, 500.7}, {340.5, 85.9}}\n                                  Other, 0x1180c8780, {{30.7, 500.7}, {340.5, 85.9}}\n                                    Button, 0x1180c88c0, {{30.7, 500.7}, {340.5, 85.9}}, label: 'Sign out'\n                            Cell, 0x1180c8a00, {{30.7, 586.6}, {340.5, 143.0}}\n                              Other, 0x1180c8b40, {{30.7, 586.6}, {340.5, 143.0}}\n                                Other, 0x1180c8c80, {{30.7, 586.6}, {340.5, 143.0}}\n                              Other, 0x1180c8dc0, {{30.7, 586.6}, {340.5, 143.0}}\n                                Other, 0x1180c8f00, {{30.7, 586.6}, {340.5, 143.0}}\n                                  Other, 0x1180c9040, {{30.7, 586.6}, {340.5, 143.0}}\n                                    Button, 0x1180c9180, {{30.7, 586.6}, {340.5, 143.0}}, label: 'Delete account'\n                            Other, 0x1180c92c0, {{45.5, 585.7}, {311.1, 0.9}}\n                            Cell, 0x1180c9400, {{30.7, 729.6}, {340.5, 383.5}}\n                              Other, 0x1180c9540, {{30.7, 729.6}, {340.5, 383.5}}\n                              Other, 0x1180c9680, {{30.7, 729.6}, {340.5, 383.5}}\n                                Other, 0x1180c97c0, {{30.7, 729.6}, {340.5, 383.5}}\n                                  Other, 0x1180c9900, {{30.7, 729.6}, {340.5, 383.5}}\n                                    StaticText, 0x1180c9a40, {{30.7, 729.6}, {340.5, 383.5}}, label: 'Deleting your account removes your tasks, projects, and profile from Taskfold\u2019s servers. This cannot be undone.'\n                            Other, 0x1180c9b80, {{355.6, 126.4}, {27.6, 625.9}}, label: 'Vertical scroll bar, 4 pages', value: 79\u00a0%\n                              Other, 0x1180c9cc0, {{380.5, 458.4}, {2.8, 201.0}}\n                            Other, 0x1180c9e00, {{355.6, 126.4}, {27.6, 625.9}}, label: 'Vertical scroll bar, 4 pages', value: 79\u00a0%\n                              Other, 0x1180c9f40, {{380.5, 458.4}, {2.8, 201.0}}\n                  Toolbar, 0x1180ca080, {{16.0, 62.0}, {370.0, 747.4}}, identifier: 'Toolbar', label: 'Toolbar'\n                    Other, 0x1180ca1c0, {{16.0, 62.0}, {370.0, 747.4}}\n      Other, 0x1180ca300, {{0.0, 0.0}, {402.0, 874.0}}\n        Other, 0x1180ca440, {{-402.0, -874.0}, {1206.0, 2622.0}}\n        Other, 0x1180ca580, {{0.0, 72.0}, {402.0, 802.0}}\n          Other, 0x1180ca6c0, {{0.0, 72.0}, {402.0, 802.0}}\n            Other, 0x1180ca800, {{0.0, 72.0}, {402.0, 802.0}}\n              Other, 0x1180ca940, {{0.0, 72.0}, {402.0, 802.0}}\n                Other, 0x1180caa80, {{0.0, 72.0}, {402.0, 802.0}}\n                  NavigationBar, 0x1180cabc0, {{0.0, 88.0}, {402.0, 54.0}}, identifier: 'Delete account?'\n                    Other, 0x1180cad00, {{20.0, 92.0}, {87.7, 36.0}}\n                      Other, 0x1180cae40, {{20.0, 92.0}, {87.7, 36.0}}\n                        Button, 0x1180caf80, {{20.0, 92.0}, {87.7, 36.0}}, label: 'Cancel'\n                    StaticText, 0x1180cb0c0, {{123.7, 97.3}, {155.3, 25.3}}, label: 'Delete account?'\n                  Other, 0x1180cb200, {{0.0, 72.0}, {402.0, 802.0}}\n                    Other, 0x1180cb340, {{0.0, 72.0}, {402.0, 802.0}}\n                      Other, 0x1180cb480, {{0.0, 72.0}, {402.0, 802.0}}\n                        Other, 0x1180cb5c0, {{0.0, 72.0}, {402.0, 802.0}}\n                          CollectionView, 0x1180cb700, {{0.0, 72.0}, {402.0, 802.0}}\n                            Other, 0x1180cb840, {{-16.0, -1462.0}, {434.0, 2711.3}}\n                            Other, 0x1180cb980, {{0.0, 72.0}, {402.0, 802.0}}\n                              Other, 0x1180cbac0, {{0.0, 72.0}, {402.0, 110.0}}\n                            Other, 0x1180cbc00, {{0.0, 72.0}, {402.0, 802.0}}\n                            Cell, 0x1180cbd40, {{16.0, 177.0}, {370.0, 217.3}}\n                              Other, 0x1180cbe80, {{16.0, 177.0}, {370.0, 217.3}}\n                                Other, 0x1180cc000, {{16.0, 177.0}, {370.0, 217.3}}\n                              Other, 0x1180cc140, {{16.0, 177.0}, {370.0, 217.3}}\n                                Other, 0x1180cc280, {{16.0, 177.0}, {370.0, 217.3}}\n                                  Other, 0x1180cc3c0, {{16.0, 177.0}, {370.0, 217.3}}\n                                    StaticText, 0x1180cc500, {{16.0, 177.0}, {370.0, 217.3}}, label: 'This cannot be undone'\n                                    Image, 0x1180cc640, {{44.0, 203.7}, {43.3, 39.7}}, identifier: 'exclamationmark.triangle', label: 'Warning'\n                            Cell, 0x1180cc780, {{16.0, 394.3}, {370.0, 837.3}}\n                              Other, 0x1180cc8c0, {{16.0, 394.3}, {370.0, 837.3}}\n                                Other, 0x1180cca00, {{16.0, 394.3}, {370.0, 837.3}}\n                              Other, 0x1180ccb40, {{16.0, 394.3}, {370.0, 837.3}}\n                                Other, 0x1180ccc80, {{16.0, 394.3}, {370.0, 837.3}}\n                                  Other, 0x1180ccdc0, {{16.0, 394.3}, {370.0, 837.3}}\n                                    StaticText, 0x1180ccf00, {{16.0, 394.3}, {370.0, 837.3}}, label: 'Your account, profile, owned projects and tasks, uploaded files, and this device\u2019s saved account data and recovery backups will be permanently removed.'\n                            Other, 0x1180cd040, {{32.0, 393.3}, {338.0, 1.0}}\n                            Other, 0x1180cd180, {{369.0, 142.0}, {30.0, 670.0}}, label: 'Vertical scroll bar, 2 pages', value: 0\u00a0%\n                              Other, 0x1180cd2c0, {{396.0, 802.0}, {3.0, 7.0}}\n                            Other, 0x1180cd400, {{369.0, 142.0}, {30.0, 670.0}}, label: 'Vertical scroll bar, 2 pages', value: 0\u00a0%\n                              Other, 0x1180cd540, {{396.0, 802.0}, {3.0, 7.0}}\n                  Toolbar, 0x1180cd680, {{0.0, 72.0}, {402.0, 802.0}}, identifier: 'Toolbar', label: 'Toolbar'\n                    Other, 0x1180cd7c0, {{0.0, 72.0}, {402.0, 802.0}}\nPath to element:\n \u2192Application, 0x118065900, pid: 24345, label: 'Taskfold Workflow Test'\nQuery chain:\n \u2192Find: Target Application 'com.dbakp.taskfold.workflowtestsremoval'\n  Output: {\n    Application, 0x1180cd900, pid: 24345, label: 'Taskfold Workflow Test'\n  }\n",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 3,
+            "testIdentifierString": "TaskfoldUITests/testAccountRemovalUIRelaunchResumesWithoutAnotherConfirmation()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAccountRemovalUIRelaunchResumesWithoutAnotherConfirmation",
+            "testName": "testAccountRemovalUIRelaunchResumesWithoutAnotherConfirmation()"
+          },
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 4,
+            "testIdentifierString": "TaskfoldUITests/testAccountRemovalVoiceOverReadsConfirmationAndRecovery()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAccountRemovalVoiceOverReadsConfirmationAndRecovery",
+            "testName": "testAccountRemovalVoiceOverReadsConfirmationAndRecovery()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 4
+      },
+      "logSHA256": "5eced22e05edf29e57db331c4cb0c96ed99e9bc0e8f52832ad0b05be14d2aa5f"
+    },
+    {
+      "scope": "VoiceOver traversal initially expected the ending of a long paragraph absent from returned partial output. Failed speech/log retained. Current check requires the dedicated explicit irreversible warning and button roles; it does not assert full-paragraph speech.",
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792697266.168,
+        "passedTests": 0,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792697212.555,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "TaskfoldUITests/testAccountRemovalVoiceOverReadsConfirmationAndRecovery()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAccountRemovalVoiceOverReadsConfirmationAndRecovery",
+            "testName": "testAccountRemovalVoiceOverReadsConfirmationAndRecovery()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "logSHA256": "7f6a16d1a5db6f7da382077ae331082e317eda57170a24dd29e3b4a16e6ace7b"
+    },
+    {
+      "scope": "Earlier interaction passes exposed visible banner/navigation overlap and excessive phone text height in screenshot review. Final separate vertical layout and compact visible copy supersede those captures."
+    }
+  ],
+  "cleanup": {
+    "simulators": {
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+        "com.dbakp.taskfold.workflowtestsremoval": {
+          "absentAfterCleanup": true
+        },
+        "com.dbakp.taskfold.workflowtestsremoval.uitests.xctrunner": {
+          "absentAfterCleanup": true
+        }
+      },
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+        "com.dbakp.taskfold.workflowtestsremoval": {
+          "absentAfterCleanup": true
+        },
+        "com.dbakp.taskfold.workflowtestsremoval.uitests.xctrunner": {
+          "absentAfterCleanup": true
+        }
+      }
+    },
+    "removedOwnedArtifacts": {
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/account-removal-ui-first.xcresult": 189228290,
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/account-removal-ui-fixed.xcresult": 100324767,
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/account-removal-ui-voice.xcresult": 11604664,
+      "/private/tmp/taskfold-removal-ios-final": 4921297,
+      "/private/tmp/taskfold-removal-ui-mac": 28613530,
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-project-workflows-native-v2/Build/Products/Debug/Taskfold.app": 52049035
+    },
+    "retained": "Final raw result bundles, all exported speech/screenshots, failed-run summaries/logs/exports, current iOS isolated source and reusable build/dependency caches.",
+    "voiceOverRestoredOff": true,
+    "removedMacCompileProductInfoSHA256": "9338bb7e7d8272ae815c58ca6d816cff227b7376d5b6ec6712954ad783759e90",
+    "logicalBytesPruned": 386741583
+  },
+  "realAccountsOrTasksDeleted": false,
+  "persistentHostedChange": false,
+  "remaining": [
+    "Matching server protocol/deployment and genuine disposable Auth/Storage HTTP acceptance",
+    "Actual Mac private-Keychain/runtime and spoken interaction acceptance with a matching development profile",
+    "Live simultaneous upload/removal race and versioned Storage if enabled",
+    "Wider Px requirements; user-deferred physical location, release, remote delivery, general older-client editing safeguards and calendar-provider registration remain deferred"
+  ],
+  "scope": "Does not close full P0, rank 5, Px or release gates. Previous full Core and native Store proofs remain historical evidence; no new full Core run was needed for these app-only views/DEBUG harness changes.",
+  "platform": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "ffdfbb9a51d4bfbb698e01d62ff5c5329ca24eef50939623e9ffc58a921befa4",
+    "Taskfold/Views/AccountSecurityViews.swift": "4ade5c57452405305489b72789b4268ec83a62bf03515e3183ae257952aeba8f",
+    "Taskfold/Views/SettingsView.swift": "3df92d96024bcbab48ed2cc69b66dadc282c28e135b4efa29859d0453a88ea5c"
+  },
+  "visuallyInspectedFinalCaptures": [
+    "account-removal-ui-layout-phone-attachments/2E19B188-EC55-4DEB-AE80-E20B22CE0CA1.png",
+    "account-removal-ui-layout-phone-attachments/22783C8C-E633-4294-BDCC-303992CE7E20.png",
+    "account-removal-ui-layout-phone-attachments/7B3D4435-9075-424C-8711-3E66E2C2D298.png",
+    "account-removal-ui-layout-ipad-attachments/89B122DF-5887-4829-A832-90AC6E9ECE30.png",
+    "account-removal-ui-layout-ipad-attachments/18B979B5-AE07-4597-99D9-357B32BAF598.png"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "buildOnly": true,
+  "nativeCombinedUIAccepted": false,
+  "normalAppUnchanged": true,
+  "networkBlockedSyntheticPeer": true,
+  "protectedRecoveryRequested": true,
+  "xcodeExitCode": 65,
+  "error": "AssertionError: "
+}

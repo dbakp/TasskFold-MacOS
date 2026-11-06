@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "requests": 4,
+  "writes": 4,
+  "freshIdentities": 4,
+  "sequence": [
+    "delete",
+    "undo",
+    "redo",
+    "undo"
+  ],
+  "finalAuthoredTreeExact": true,
+  "latestArchiveConsumed": true,
+  "scope": "Synthetic native HTTP peer; not hosted SQL or real shared-account acceptance",
+  "peerSHA256": "8f752579ee8f78ab6a8fa37490cd496df539c49d751cb12243ba18e6e47da792"
+}

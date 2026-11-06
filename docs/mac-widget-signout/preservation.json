@@ -1,0 +1,17 @@
+{
+  "fixtureSnapshotExact": true,
+  "originalTasksExact": 8,
+  "isolatedFileSetExact": 6,
+  "isolatedByteHashesDifferentOnly": [
+    "ui-testing.json"
+  ],
+  "protectedContainers": 6,
+  "protectedFilesExact": 100,
+  "signedOutProjectionExact": true,
+  "repeatFixtureProcess": "10174 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v5/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold --uitesting --inbox-review-batches -localMode YES -appearance light",
+  "finalNormalProcess": "10361 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v5/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+  "repeatFixtureNativeQuitExited": true,
+  "finalLaunchHasOverrides": false,
+  "finalNativeAuthScreen": true,
+  "finalHostUnavailableAX": true
+}

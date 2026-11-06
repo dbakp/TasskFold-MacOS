@@ -1,0 +1,104 @@
+{
+  "date": "2026-11-05",
+  "retirement": {
+    "freeBeforeBytes": 70300532736,
+    "retired": [
+      {
+        "path": "/tmp/taskfold-direct-note-ios-native-v1.xcresult",
+        "allocatedBytes": 14508032,
+        "reason": "Completed/superseded result or duplicate export; portable outcomes and necessary evidence retained"
+      },
+      {
+        "path": "/tmp/taskfold-direct-note-ios-native-v2.xcresult",
+        "allocatedBytes": 786432,
+        "reason": "Completed/superseded result or duplicate export; portable outcomes and necessary evidence retained"
+      },
+      {
+        "path": "/tmp/taskfold-direct-note-conflict-ios-native-v2.xcresult",
+        "allocatedBytes": 11919360,
+        "reason": "Completed/superseded result or duplicate export; portable outcomes and necessary evidence retained"
+      },
+      {
+        "path": "/tmp/taskfold-direct-note-v1-failure",
+        "allocatedBytes": 14082048,
+        "reason": "Completed/superseded result or duplicate export; portable outcomes and necessary evidence retained"
+      },
+      {
+        "path": "/tmp/taskfold-inline-subtasks-ios-native-v5.xcresult",
+        "allocatedBytes": 2658304,
+        "reason": "Completed/superseded result or duplicate export; portable outcomes and necessary evidence retained"
+      },
+      {
+        "path": "/tmp/taskfold-inline-subtasks-large-ios-native-v5.xcresult",
+        "allocatedBytes": 987136,
+        "reason": "Completed/superseded result or duplicate export; portable outcomes and necessary evidence retained"
+      },
+      {
+        "path": "/tmp/taskfold-direct-note-v3-shots",
+        "allocatedBytes": 143360,
+        "reason": "Reviewed PNG retained privately and in final result; duplicate export removed"
+      },
+      {
+        "path": "/tmp/taskfold-direct-note-conflict-v3-shots",
+        "allocatedBytes": 163840,
+        "reason": "Reviewed PNG retained privately and in final result; duplicate export removed"
+      },
+      {
+        "path": "/tmp/taskfold-direct-note-large-v3-shots",
+        "allocatedBytes": 151552,
+        "reason": "Reviewed PNG retained privately and in final result; duplicate export removed"
+      }
+    ],
+    "preserved": "Final direct-note native results remain; portable outcomes, needed failure text/hierarchy and reviewed images are retained. Pending Mac14/phone30 and working Mac10/phone26 packages and private backup remain intact.",
+    "freeAfterBytes": 70421082112
+  },
+  "nativeCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 70420709376,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 420823040
+      }
+    ],
+    "freeAfterBytes": 70420688896,
+    "actualFreeChangeBytes": -20480
+  },
+  "finalCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 70353268736,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 420823040
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 402554880
+      }
+    ],
+    "freeAfterBytes": 70352564224,
+    "actualFreeChangeBytes": -704512
+  },
+  "coreCaches": {
+    "ios": {
+      "cacheAllocatedBytes": 578990080,
+      "within768MiB": true
+    },
+    "mac": {
+      "cacheAllocatedBytes": 531009536,
+      "within768MiB": true
+    }
+  },
+  "preservedPackagesSHA256": {
+    "Taskfold-1.2.0-14-mac-development.zip": "92a74a61ae2c04d12cfaf13edd2cc2b127e0eed8026b015ebd5e9c948aff5651",
+    "Taskfold-1.4.0-30-iphone-development.zip": "64ac268cb80a7473dc10b2ac953cac0167f7b37fd2cbb6b35572e89f26c6816c"
+  },
+  "finalFreeBytes": 70322642944,
+  "limits": "System-wide free-space changes include other system writes; selected retired allocated bytes measure only this Taskfold cleanup. No real task/app/device data, Keychain, Docker, shared support files or unrelated jobs/devices removed."
+}

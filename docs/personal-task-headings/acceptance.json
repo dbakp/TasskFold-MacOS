@@ -1,0 +1,38 @@
+{
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "19d99e83001b997158dc1e108b76a9f5dd557fa276c84c2dfbae4bcba5334f4d",
+    "Taskfold/Core/TeamWorkspace.swift": "c6992f99952891a113d00f0dc320131093ddbbed004d4b1762849b7a289b9f0e",
+    "Taskfold/TeamTemplateNativeFixture.swift": "1bee4505bacf452354175e5b763d3c2313744d6b7d16db5bcdc2b119c1ccc385",
+    "Taskfold/Views/TaskInspector.swift": "93f4faed9d74583d346788e38386c7fb72237c4eb35209d6eeb1d6031c68ca4d",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "11df55f299f3beb1120fb1e6d708ccec714391ce2bbf8ceefe9f7c6000ecd4aa",
+    "TaskfoldTests/PersonalHeadingCapabilityTests.swift": "6de9999de38088e68d72bbb40d0c1fb51f9cbfc4f0c5129bab75fa93d935ad1c",
+    "Scripts/Database/test-personal-heading-capability.mjs": "975171b001c62fa29a122640ec323b79a5156cc5949f399b90fb10d8d9d67f94",
+    "supabase/migrations/20261026185357_personal_heading_capability.sql": "e9b8b3de8b1136b577445e8b192bb544242f89bf2e1676f87a4809d9c4d02ddb"
+  },
+  "nativeSHA256": {
+    "Taskfold/Core/Store.swift": "df174fe3e2bcd4e81de0b088864d046bbd126f5089a37a1a948eb6e9a2a83d7e",
+    "Taskfold/Core/TeamWorkspace.swift": "c6992f99952891a113d00f0dc320131093ddbbed004d4b1762849b7a289b9f0e",
+    "Taskfold/TeamTemplateNativeFixture.swift": "1bee4505bacf452354175e5b763d3c2313744d6b7d16db5bcdc2b119c1ccc385",
+    "Taskfold/Views/TaskInspector.swift": "93f4faed9d74583d346788e38386c7fb72237c4eb35209d6eeb1d6031c68ca4d",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "11df55f299f3beb1120fb1e6d708ccec714391ce2bbf8ceefe9f7c6000ecd4aa"
+  },
+  "nativeInfoSHA256": "55c1550013547bcd4e7c805fa4819b369036f8461ddbeeee34ba99979f44e4fe",
+  "normalHeadingOptIn": false,
+  "coreTests": 119,
+  "databaseChecks": 36,
+  "nativeScenarios": {
+    "Mac": 3,
+    "iPhoneSimulator": 3,
+    "iPadSimulator": 3
+  },
+  "hostedChanges": false,
+  "normalRolloutChanged": false,
+  "realTaskDataChanged": false,
+  "transport": "native Store/Backend with reserved local URLProtocol peer; actual SQL checked independently",
+  "initialHarnessFailures": [
+    "SQL default expected-undefined argument fixed",
+    "Swift throwing predicate syntax corrected",
+    "lost reply requires cold/explicit refresh before observing the new boundary",
+    "Mac runner fixture-file write denied; mutations moved to app-owned test controls"
+  ]
+}

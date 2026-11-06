@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 import UserNotifications
 @testable import TaskfoldCore
 
@@ -29,6 +30,25 @@ private actor TestReminderCenter: ReminderCenter {
 }
 
 final class ReminderTests: XCTestCase {
+    func testStableDigestEncodingMatchesLegacyForEveryByte() {
+        let values = ["", "abc", "é", "e\u{301}", "\u{0}\n\r\t\"\\", String(repeating: "👩🏽‍💻", count: 10000)] + (0..<2048).map { "widget-signature-\($0)|2026-10-27T10:00:00Z|\u{0}|café" }
+        let clock = ContinuousClock(), start = clock.now
+        let actual = values.map(DueReminder.digest)
+        let elapsed = start.duration(to: clock.now)
+        var seen = Set<UInt8>()
+        for (value, result) in zip(values, actual) {
+            let bytes = SHA256.hash(data: Data(value.utf8)); seen.formUnion(bytes)
+            let legacy = bytes.map { String(format: "%02x", $0) }.joined()
+            XCTAssertEqual(result, legacy)
+            XCTAssertEqual(result.utf8.count, 64)
+        }
+        XCTAssertEqual(seen.count, 256, "The corpus exercises every possible digest-byte value")
+        XCTAssertNotEqual(actual[2], actual[3], "Canonical Unicode equivalents keep their distinct raw UTF-8 identity")
+        XCTAssertEqual(actual[0], "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        XCTAssertEqual(actual[1], "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        print("DIGEST_ENCODING_CORPUS \(values.count) BYTES \(seen.count) SECONDS \(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18)")
+    }
+
     var calendar: Calendar { var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "Europe/Copenhagen")!; return c }
     var now: Date { TaskPlanning.instant("2026-10-24T00:00:00Z")! }
     func task(_ id: String = "task", specs: [ReminderSpec] = []) -> Record {
@@ -109,8 +129,16 @@ final class ReminderTests: XCTestCase {
         XCTAssertEqual(trigger.dateComponents.timeZone?.secondsFromGMT(for: instant), 0)
         XCTAssertEqual(trigger.dateComponents.calendar?.date(from: trigger.dateComponents), instant)
         XCTAssertFalse(trigger.repeats)
-        // The native trigger calculates the same instant, independent of the Mac's local zone.
-        XCTAssertEqual(trigger.nextTriggerDate(), instant > Date() ? instant : nil)
+        // Keep the historical second-fold component check above deterministic.
+        // nextTriggerDate consults the real clock; use next year's final October
+        // Sunday so this check never asks the OS to interpret a past trigger.
+        var utc = Calendar(identifier: .gregorian); utc.timeZone = .gmt
+        let year = utc.component(.year, from: Date()) + 1
+        let lastOctoberDay = try XCTUnwrap(utc.date(from: DateComponents(year: year, month: 10, day: 31, hour: 1, minute: 30)))
+        let futureFold = try XCTUnwrap(utc.date(byAdding: .day, value: -(utc.component(.weekday, from: lastOctoberDay) - 1), to: lastOctoberDay))
+        let futureTrigger = SystemReminderCenter.trigger(at: futureFold)
+        XCTAssertEqual(futureTrigger.dateComponents.calendar?.date(from: futureTrigger.dateComponents), futureFold)
+        XCTAssertEqual(futureTrigger.nextTriggerDate(), futureFold)
         var reserved = ReminderSpec.relative(0, id: ReminderSpec.plannedID).raw
         reserved["offset_minutes"] = .number(5)
         XCTAssertNil(ReminderSpec(row: .object(reserved)))
@@ -771,5 +799,44 @@ extension ReminderTests {
         let saved = ReminderAutomatic.applying(to: manual, previous: original, minutes: 15, calendar: calendar)
         XCTAssertEqual(Set(ReminderSpec.rows(saved).compactMap(ReminderSpec.init(row:)).compactMap(\.offset)), [0, -30])
         XCTAssertFalse(ReminderSpec.rows(saved).contains { $0.object[ReminderAutomatic.placeholder] != nil })
+    }
+}
+
+extension ReminderTests {
+    func testMonthlyDateSetCalendarScheduleCountsClampedDatesOnce() throws {
+        let spec=try calendarSpec("every month on 30 and 31 for 5 occurrences",start:"2027-01-31")
+        let schedule=try XCTUnwrap(spec.schedule)
+        XCTAssertEqual(schedule.dates(after:now).map{TaskPlanner.dayKey($0,calendar:calendar)},["2027-01-31","2027-02-28","2027-03-30","2027-03-31","2027-04-30"])
+        XCTAssertEqual(ReminderCalendarSchedule.make(schedule.expression,time:schedule.time,start:schedule.startDay,zone:schedule.timeZone),schedule)
+    }
+    func testMonthlySetIndependentCalendarIntervalsCatchupAndSignatures() throws {
+        let spec=try calendarSpec("every 2 months on 1, 15 and 31",start:"2026-01-01")
+        let schedule=try XCTUnwrap(spec.schedule)
+        let dates=schedule.dates(after:TaskPlanning.instant("2026-03-10T00:00:00Z")!,limit:4)
+        XCTAssertEqual(dates.map{TaskPlanner.dayKey($0,calendar:calendar)},["2026-03-15","2026-03-31","2026-05-01","2026-05-15"])
+        let changed=try calendarSpec("every 2 months on 1 and 31",start:"2026-01-01")
+        XCTAssertNotEqual(spec.semanticKey,changed.semanticKey)
+        var shuffled=schedule.raw;var rule=schedule.rule.fields;rule["daysOfMonth"] = .array([.number(31),.number(1),.number(15)]);shuffled["recurrence"] = .object(rule)
+        let reversed=try XCTUnwrap(ReminderCalendarSchedule(raw:shuffled));XCTAssertEqual(reversed.semanticFields,schedule.semanticFields)
+        XCTAssertEqual(reversed.dates(after:now,limit:4),schedule.dates(after:now,limit:4))
+    }
+    func testReplacingReminderCalendarRuleDoesNotRetainOldMonthSet() throws {
+        let old=try calendarSpec("every month on 1 and 15")
+        let replacement=try calendarSpec("every month on 31")
+        let merged=old.mergingSettings(from:replacement)
+        XCTAssertNil(merged.raw["recurrence"]?.object["daysOfMonth"])
+        XCTAssertEqual(merged.schedule?.rule["dayOfMonth"],.number(31))
+    }
+}
+
+
+extension ReminderTests {
+    func testMonthlySetSignatureMatchesServerCanonicalFixture() throws {
+        let schedule=try XCTUnwrap(ReminderCalendarSchedule.make("every month on 15 and 31 for 3 occurrences",time:"09:00",start:"2026-10-15",zone:"Europe/Copenhagen"))
+        let spec=ReminderSpec.recurring(schedule,id:"f1751000-0000-4000-8000-000000000002")
+        let row=Record(["id":.string("f1751000-0000-4000-8000-000000000001"),"task_generation":.string("f1751000-0000-4000-8000-000000000003"),"completion_version":.number(7)])
+        let date=try XCTUnwrap(TaskPlanning.instant("2026-10-31T08:00:00Z"))
+        XCTAssertTrue(schedule.contains(date))
+        XCTAssertEqual(ReminderSignature.make(task:row,spec:spec,date:date),"r5:9ed0659acab62189add81d4608ef6c8fc2cae2304c6404d2bcea7fa4db90a4b2")
     }
 }

@@ -1,0 +1,317 @@
+{
+  "date": "2026-10-21",
+  "status": "assigned-by implementation connected in both apps; scoped core/HTTP/phone/tablet acceptance passed; broader gates remain open",
+  "contract": "ASSIGNED_BY_FILTERS.md",
+  "recording_foundation": "p2-assignment-provenance-evidence.json",
+  "implemented": [
+    "Strict assigned_by Me/Others/Unknown/UUID predicates and exact-name/email resolution through existing accessible member directory",
+    "Native grouped-condition picker, expression syntax/help, preview and stable saved definitions",
+    "Three-state authorship Boolean evaluation; unknown never becomes another person through a simple exclusion",
+    "Root/own-child actor matching with generation/current-recipient/path guards and metadata-aware query cache",
+    "Optional complete-page account-incarnation-fenced read, unavailable-vs-empty and freshness invalidation without blocking core task sync",
+    "Pending cache markers for existing/new assignments and A\u2192B\u2192A through acknowledge, queue replay and persistence",
+    "Local-only explicitly scoped action recording; legacy normalization, case-only UUID spelling and empty/null clears do not invent actors",
+    "Current-assignment events retained through unrelated edits, stable moves and deletion/Undo semantics",
+    "Widget publication uses resolved membership, without raw provenance or other members actor identifiers",
+    "Ordinary imports/copies represent their new Taskfold assignment action, not an inferred external historical actor; recognized recurring successors remain unknown"
+  ],
+  "checks": {
+    "core": {
+      "macOS": {
+        "reported": 1015,
+        "skipped": 33,
+        "failures": 0,
+        "log": "mac-p2-assigned-by-canonical-core.log",
+        "five_thousand_catalog_and_matching_seconds": 0.34405505657196045,
+        "skip_note": "Includes the new credential-gated HTTP case, separately genuinely passed as recorded above."
+      },
+      "iOS": {
+        "reported": 991,
+        "skipped": 13,
+        "failures": 0,
+        "log": "ios-p2-assigned-by-canonical-core.log",
+        "five_thousand_catalog_and_matching_seconds": 0.34668898582458496,
+        "skip_note": "Includes the new credential-gated HTTP case, separately genuinely passed as recorded above."
+      }
+    },
+    "pure_feature_cases": 19,
+    "genuine_authenticated_http": {
+      "macOS": {
+        "log": "mac-p2-assigned-by-http-v2.log",
+        "actual_passed": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      "iOS_owned_core": {
+        "log": "ios-p2-assigned-by-http.log",
+        "actual_passed": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      "scope": "Independently owned Swift Backend/Catalog/Filter code against real Auth/PostgREST, using three disposable accounts; not on-device native sign-in acceptance",
+      "verified": [
+        "real root and child creation actor",
+        "member reassignment independent of creator/recipient",
+        "same-assignment retry by another client retains event and actor",
+        "A\u2192B\u2192A creates a distinct actual assignment event",
+        "exact-person saved predicate matches genuine returned metadata",
+        "authenticated HTTP provenance forgery denied by database privileges",
+        "outsider task/history exclusion",
+        "revoked member history exclusion; owner still reads historical actor"
+      ],
+      "fixture_setup_note": "Initial manually provisioned synthetic users returned an Auth schema error. Setting their missing identity timestamps/admin flag resolved it without changing app code. Only those three disposable accounts were modified. See official Auth NULL guidance.",
+      "fixture_guidance": "https://supabase.com/docs/guides/troubleshooting/auth-error-500-database-error-querying-schema-eb6b44",
+      "cleanup_artifact": "p2-assigned-by-http-cleanup.json",
+      "before_account_deletion": {
+        "active_sessions": 0,
+        "unrevoked_refresh_tokens": 0,
+        "remaining_fixture_tasks": 0,
+        "remaining_fixture_projects": 0
+      },
+      "after_cleanup": {
+        "fixture_accounts": 0,
+        "active_sessions": 0,
+        "unrevoked_refresh_tokens": 0,
+        "remaining_fixture_tasks": 0,
+        "remaining_fixture_projects": 0
+      },
+      "credentials": "Generated privately; never committed/printed; local password/hash/setup files removed"
+    },
+    "native": {
+      "phone": {
+        "result": "ios-p2-assigned-by-phone-final.xcresult",
+        "actual_passed": 1,
+        "skipped": 0,
+        "failures": 0,
+        "runtime_warnings": 0,
+        "flow": "Real grouped Assigned by picker/default Me; Unknown/Others expressions; correct exclusions; Save and ordinary relaunch of all three views",
+        "data_scope": "Exact namespace DEBUG local fixture; not genuine on-device cloud sign-in",
+        "persistence_artifact": "ios-p2-assigned-by-phone-persistence.json",
+        "persistence": {
+          "tasks": 4,
+          "all_open": true,
+          "saved_views": 3,
+          "pending": 0,
+          "provenance_rows": 2,
+          "normal_relaunch_preserved": true,
+          "views": {
+            "Assigned by me": {
+              "predicate": "me",
+              "widget_members": 1,
+              "task": "Plan the calm handoff"
+            },
+            "Unknown handoffs": {
+              "predicate": "unknown",
+              "widget_members": 1,
+              "task": "Review earlier assignment"
+            },
+            "Assigned by others": {
+              "predicate": "others",
+              "widget_members": 1,
+              "task": "Follow the team handoff"
+            }
+          },
+          "raw_actor_metadata_absent_from_widget": true,
+          "snapshot_sha256": "70872185c0818420ae514e5004739d70a55dbf6ff9510a798561182c92a7c1b8",
+          "widget_sha256": "2e589361af8876567ccb774b98f4f633749ec9d4f5f00e1b65934b04c7a9fee2"
+        },
+        "visual_qa": "All four first-run editor/result captures visually inspected. Same SavedViews UI source as final flows. Standard light portrait only.",
+        "visual_artifacts": "tmp/assigned-by-phone/",
+        "source_scope": {
+          "Taskfold/Core/TaskActivity.swift": {
+            "sourceSHA256": "928f68bdd5c8c0eba33da8e24104e9b65022dccf97ae9281f41fe981b301823b",
+            "stagedSHA256": "928f68bdd5c8c0eba33da8e24104e9b65022dccf97ae9281f41fe981b301823b"
+          },
+          "Taskfold/Core/Backend.swift": {
+            "sourceSHA256": "2feb1bc5141a5b82b7df1593e594a7a95ad295cc78aa6af8cc08f39ef50ebf20",
+            "stagedSHA256": "cc7cbd926c6b45711878ca5bb3dba321505b17cfa3ab66e9ebf8f42ff2268f85"
+          },
+          "Taskfold/Core/Filters.swift": {
+            "sourceSHA256": "b4db2d9e93e6b0b0407f4b593dae0fbe4942f4238e6a382dc5a865d09db75717",
+            "stagedSHA256": "b4db2d9e93e6b0b0407f4b593dae0fbe4942f4238e6a382dc5a865d09db75717"
+          },
+          "Taskfold/Core/Models.swift": {
+            "sourceSHA256": "271e58dcab54837ae667b70be6b1e9025302d0866ee3af15442a9cefe4a1d9ae",
+            "stagedSHA256": "271e58dcab54837ae667b70be6b1e9025302d0866ee3af15442a9cefe4a1d9ae"
+          },
+          "Taskfold/Core/Store.swift": {
+            "sourceSHA256": "5432a139010f80dc0476e5720a617cfdfceb0df3dbe3f812515cb491db0168bf",
+            "stagedSHA256": "469c82610f12d51cbc6b7c10d9ec72159d181f0a0d68fecec590940b532c74f6"
+          },
+          "Taskfold/Views/SavedViews.swift": {
+            "sourceSHA256": "c644b4b66dd972c0116a847acb9bf2bb2b8956882aaea73e8e3cfe346fdb3c43",
+            "stagedSHA256": "c644b4b66dd972c0116a847acb9bf2bb2b8956882aaea73e8e3cfe346fdb3c43"
+          },
+          "TaskfoldUITests/HierarchyTaskUITests.swift": {
+            "sourceSHA256": "5da8c87ce3b890b5b2dec3d38aaa180ced1f2b7a16b6ef66219ce0c85b9f576a",
+            "stagedSHA256": "5da8c87ce3b890b5b2dec3d38aaa180ced1f2b7a16b6ef66219ce0c85b9f576a"
+          },
+          "TaskfoldUITests/TaskfoldUITests.swift": {
+            "sourceSHA256": "bd6b7d069d3004cd446d77f1c912b4fc8d50e558e2dee9203a80e039927b1b19",
+            "stagedSHA256": "9240a3225347f4545017d9a4a928319bd9223065e501f8fbbc1b8ca5e9869ce7"
+          }
+        }
+      },
+      "tablet": {
+        "result": "ios-p2-assigned-by-tablet-final.xcresult",
+        "actual_passed": 1,
+        "skipped": 0,
+        "failures": 0,
+        "runtime_warnings": 0,
+        "flow": "Real grouped Assigned by picker/default Me; Unknown/Others expressions; correct exclusions; Save and ordinary relaunch of all three views",
+        "data_scope": "Exact namespace DEBUG local fixture; not genuine on-device cloud sign-in",
+        "persistence_artifact": "ios-p2-assigned-by-tablet-persistence.json",
+        "persistence": {
+          "tasks": 4,
+          "all_open": true,
+          "saved_views": 3,
+          "pending": 0,
+          "provenance_rows": 2,
+          "normal_relaunch_preserved": true,
+          "views": {
+            "Assigned by me": {
+              "predicate": "me",
+              "widget_members": 1,
+              "task": "Plan the calm handoff"
+            },
+            "Unknown handoffs": {
+              "predicate": "unknown",
+              "widget_members": 1,
+              "task": "Review earlier assignment"
+            },
+            "Assigned by others": {
+              "predicate": "others",
+              "widget_members": 1,
+              "task": "Follow the team handoff"
+            }
+          },
+          "raw_actor_metadata_absent_from_widget": true,
+          "snapshot_sha256": "cd657cbf3db673a0b065969850810a51c6809fcaf4dabfee122e90ce9d631cc1",
+          "widget_sha256": "32429223ef8183ec5ddf5f17b6f9d13eb5348337cdcf884a1b1b7edad518e62e"
+        },
+        "visual_qa": "All four first-run editor/result captures visually inspected. Same SavedViews UI source as final flows. Standard light portrait only.",
+        "visual_artifacts": "tmp/assigned-by-tablet/",
+        "source_scope": {
+          "Taskfold/Core/TaskActivity.swift": {
+            "sourceSHA256": "928f68bdd5c8c0eba33da8e24104e9b65022dccf97ae9281f41fe981b301823b",
+            "stagedSHA256": "928f68bdd5c8c0eba33da8e24104e9b65022dccf97ae9281f41fe981b301823b"
+          },
+          "Taskfold/Core/Backend.swift": {
+            "sourceSHA256": "2feb1bc5141a5b82b7df1593e594a7a95ad295cc78aa6af8cc08f39ef50ebf20",
+            "stagedSHA256": "cc7cbd926c6b45711878ca5bb3dba321505b17cfa3ab66e9ebf8f42ff2268f85"
+          },
+          "Taskfold/Core/Filters.swift": {
+            "sourceSHA256": "b4db2d9e93e6b0b0407f4b593dae0fbe4942f4238e6a382dc5a865d09db75717",
+            "stagedSHA256": "b4db2d9e93e6b0b0407f4b593dae0fbe4942f4238e6a382dc5a865d09db75717"
+          },
+          "Taskfold/Core/Models.swift": {
+            "sourceSHA256": "271e58dcab54837ae667b70be6b1e9025302d0866ee3af15442a9cefe4a1d9ae",
+            "stagedSHA256": "271e58dcab54837ae667b70be6b1e9025302d0866ee3af15442a9cefe4a1d9ae"
+          },
+          "Taskfold/Core/Store.swift": {
+            "sourceSHA256": "5432a139010f80dc0476e5720a617cfdfceb0df3dbe3f812515cb491db0168bf",
+            "stagedSHA256": "469c82610f12d51cbc6b7c10d9ec72159d181f0a0d68fecec590940b532c74f6"
+          },
+          "Taskfold/Views/SavedViews.swift": {
+            "sourceSHA256": "c644b4b66dd972c0116a847acb9bf2bb2b8956882aaea73e8e3cfe346fdb3c43",
+            "stagedSHA256": "c644b4b66dd972c0116a847acb9bf2bb2b8956882aaea73e8e3cfe346fdb3c43"
+          },
+          "TaskfoldUITests/HierarchyTaskUITests.swift": {
+            "sourceSHA256": "5da8c87ce3b890b5b2dec3d38aaa180ced1f2b7a16b6ef66219ce0c85b9f576a",
+            "stagedSHA256": "5da8c87ce3b890b5b2dec3d38aaa180ced1f2b7a16b6ef66219ce0c85b9f576a"
+          },
+          "TaskfoldUITests/TaskfoldUITests.swift": {
+            "sourceSHA256": "bd6b7d069d3004cd446d77f1c912b4fc8d50e558e2dee9203a80e039927b1b19",
+            "stagedSHA256": "9240a3225347f4545017d9a4a928319bd9223065e501f8fbbc1b8ca5e9869ce7"
+          }
+        }
+      }
+    },
+    "resource_signing": {
+      "issue": "Alternating Simulator device builds left a stale Assets.car seal in the generated product; the installed tablet copy also failed strict resource verification after its passing UI run.",
+      "repair": "Deleted only the owned generated app product and rebuilt/reinstalled each device-specific isolated copy. No data container or source asset was deleted.",
+      "logs": [
+        "ios-p2-assigned-by-canonical-build.log",
+        "ios-p2-assigned-by-canonical-tablet-build.log",
+        "mac-p2-assigned-by-canonical-build.log"
+      ],
+      "scope": "Debug build/resource signature verification only; no distribution acceptance claim",
+      "final_installed_signatures": {
+        "phone": {
+          "installed_strict_deep_signature": "passed"
+        },
+        "tablet": {
+          "installed_strict_deep_signature": "passed"
+        }
+      },
+      "canonical_artifacts": "p2-assigned-by-signatures.json; p2-assigned-by-current-smoke.json"
+    },
+    "case_canonicalization_followup": "After the recorded full native flows, a client-only follow-up normalized recipient UUID spelling and empty/null comparisons. No editor, parser, matcher, catalog resolver or widget membership code changed. Full core regression plus current-source native builds/cold-launch/persistence/signature checks cover that follow-up; the two input manifests preserve the distinction.",
+    "saved_view_server_contract": "Current constraint inspected read-only: version-1 object envelope/root object accepts the strict new field. No additional schema/permission migration this milestone.",
+    "current_source_smoke": {
+      "phone": {
+        "current_source_cold_launch": "passed",
+        "critical_tables_unchanged": true,
+        "pending": 0,
+        "installed_strict_deep_signature": "passed",
+        "app_closed": true,
+        "current_source_widget_memberships": "three exact one-task lists; no raw other-member actor metadata"
+      },
+      "tablet": {
+        "current_source_cold_launch": "passed",
+        "critical_tables_unchanged": true,
+        "pending": 0,
+        "installed_strict_deep_signature": "passed",
+        "app_closed": true,
+        "current_source_widget_memberships": "three exact one-task lists; no raw other-member actor metadata"
+      }
+    }
+  },
+  "source_manifests": {
+    "current": "p2-assigned-by-native-inputs.json",
+    "native_flow_run": "p2-assigned-by-ui-run-inputs.json"
+  },
+  "remaining": [
+    "Native Mac runtime, layout and save/relaunch acceptance",
+    "Largest-text/dark appearance and VoiceOver for the added controls/results",
+    "Individual collaborator picker/directory interactions",
+    "Installed-widget acceptance for assigned-by filters and broader pending/offline states",
+    "Wider simultaneous native/cloud and account-change/offline acceptance",
+    "Trusted recurring-successor inheritance; copies remain unknown until it is verifiable"
+  ],
+  "deferrals_unchanged": [
+    "Genuine Google/Microsoft registrations/provider acceptance",
+    "Server reminder delivery and reinstall/device recovery",
+    "Broader older-client rollout enforcement",
+    "Distribution/signing/real install and update acceptance"
+  ],
+  "ownership": "Each app owns source/tests/fixtures/widgets/docs/release inputs. No sibling build dependency introduced.",
+  "current_source_hashes": {
+    "macOS": {
+      "Taskfold/Core/TaskActivity.swift": "0b6fedaea9239e7cc9655e9daaa32d7b6d5bcddbace405845aece123f735ed80",
+      "Taskfold/Core/Backend.swift": "0ea8412d9c302ac9d94c99d65a22f5da44a4688216d0a9d4f6881a1c96163777",
+      "Taskfold/Core/Filters.swift": "b4db2d9e93e6b0b0407f4b593dae0fbe4942f4238e6a382dc5a865d09db75717",
+      "Taskfold/Core/Models.swift": "271e58dcab54837ae667b70be6b1e9025302d0866ee3af15442a9cefe4a1d9ae",
+      "Taskfold/Core/Store.swift": "7d1190a70e42ca3919f3a80bfffda9907400680dc6b3b1d50e5009815165bb67",
+      "Taskfold/Views/SavedViews.swift": "3d271a36723de91b5444c053840be1490c44c323ce8a8d4648336a32d8648da7",
+      "TaskfoldTests/TaskAssignmentProvenanceTests.swift": "b3df3cde0733c5081a4d05263ca21ed7e57c96db6e2dfb581b5a04ba853c9114",
+      "TaskfoldTests/AssignmentProvenanceHTTPIntegrationTests.swift": "0e2420ef6eb3e8c2f582e875eab1fe396388f863c8f61fe5977278d2b141ad48"
+    },
+    "iOS": {
+      "Taskfold/Core/TaskActivity.swift": "0b6fedaea9239e7cc9655e9daaa32d7b6d5bcddbace405845aece123f735ed80",
+      "Taskfold/Core/Backend.swift": "2feb1bc5141a5b82b7df1593e594a7a95ad295cc78aa6af8cc08f39ef50ebf20",
+      "Taskfold/Core/Filters.swift": "b4db2d9e93e6b0b0407f4b593dae0fbe4942f4238e6a382dc5a865d09db75717",
+      "Taskfold/Core/Models.swift": "271e58dcab54837ae667b70be6b1e9025302d0866ee3af15442a9cefe4a1d9ae",
+      "Taskfold/Core/Store.swift": "5432a139010f80dc0476e5720a617cfdfceb0df3dbe3f812515cb491db0168bf",
+      "Taskfold/Views/SavedViews.swift": "c644b4b66dd972c0116a847acb9bf2bb2b8956882aaea73e8e3cfe346fdb3c43",
+      "TaskfoldTests/TaskAssignmentProvenanceTests.swift": "b3df3cde0733c5081a4d05263ca21ed7e57c96db6e2dfb581b5a04ba853c9114",
+      "TaskfoldTests/AssignmentProvenanceHTTPIntegrationTests.swift": "0e2420ef6eb3e8c2f582e875eab1fe396388f863c8f61fe5977278d2b141ad48"
+    }
+  },
+  "cleanup": {
+    "disposable_accounts_and_sessions": "removed; verified zero",
+    "credential_files": "removed",
+    "main_test_apps": "closed",
+    "system_widget_extension": "macOS-managed installed widget extension retained; no main Taskfold test app left running"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-20",
+  "scope": "Read-only actual Settings diagnostic on previously shut-down iPhone 18 Pro, iOS 27.0 (24A434). No new system-selected widget privacy acceptance.",
+  "reason": "A newly available runtime is a distinct environment from the previous iOS 26.5 diagnostic.",
+  "resultBundle": "ios27-system-privacy-prerequisite-v1.xcresult",
+  "nativePassed": 1,
+  "nativeFailed": 0,
+  "nativeSkipped": 0,
+  "structuredRuntimeWarnings": 0,
+  "consoleWarning": "UIAccessibilityLoaderWebShared exists in both system WebKit.axbundle and WebCore.axbundle; retained, not a warning-free runtime claim.",
+  "observation": {
+    "authenticationErrorCode": 0,
+    "authenticationErrorDomain": "",
+    "canEvaluateDeviceOwnerAuthentication": true,
+    "diagnosticOnly": true,
+    "passcodePageButtonLabels": [
+      "Settings"
+    ],
+    "passcodePageHasStaticText": false,
+    "passcodePageLabels": [],
+    "passcodePageSwitches": [],
+    "rootButtonLabels": [
+      "Apple Account, Sign in to access your iCloud data, the App Store, Apple services and more.",
+      "Optimising Search and Siri",
+      "General",
+      "Accessibility",
+      "Action Button",
+      "Appearance",
+      "Camera",
+      "Home Screen & App Library",
+      "Search",
+      "Siri",
+      "StandBy",
+      "Dictate"
+    ],
+    "settingsChanged": false,
+    "systemVersion": "27.0",
+    "widgetPrivacyAccepted": false
+  },
+  "screenshot": "ios27-system-privacy-attachments/73A941EC-B7CF-4F72-99AA-B7329E382C41.png",
+  "screenshotSHA256": "2443e656806ebcb79a0d204bc1724558485e0df606e6fb2223e5cc5b17f46dca",
+  "finding": "Actual Passcode row opens a visually blank page containing only the Settings back button, with no static text or switches. canEvaluatePolicy true is not evidence of usable privacy controls.",
+  "settingsChanged": false,
+  "widgetPrivacyAccepted": false,
+  "cleanup": {
+    "isolatedAppAndRunnerUninstalled": true,
+    "inspectedSimulatorShutdown": true,
+    "otherAlreadyBootedSimulatorsUntouched": true,
+    "noNewBuildDirectory": true
+  },
+  "next": "Do not repeat the same search/page test on either recorded runtime. Genuine host-selected privacy still requires an environment with supported controls and a verifiable locked/unlocked transition. Other remaining system-widget interactions and user-deferred speech/signing retain their existing boundaries."
+}

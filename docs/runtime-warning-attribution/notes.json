@@ -1,0 +1,15 @@
+{
+  "resultBundle": "mac-multiline-notes-v3.xcresult",
+  "referencePID": 79318,
+  "method": "UUID-matched current image base plus archived image offset; atos reads the live process only. Missing images remain unresolved.",
+  "reportedQoSWarningCount": 1,
+  "archivedQoSEventCount": 0,
+  "archiveCoversReportedWarnings": false,
+  "events": [],
+  "limits": [
+    "Historical runtime warnings remain recorded; no clean-runtime pass is inferred.",
+    "Zero matching archived events does not mean zero reported warnings. Missing archival coverage remains unclassified.",
+    "A known system stack is evidence of the observed trigger, not proof that every hang has this cause.",
+    "No app launch, input, network request or persistent data mutation occurs."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "maxResidentBytes" : 33914880,
+  "opaque" : {
+    "bytes" : 657781,
+    "decodeSeconds" : 0.097741007804870605,
+    "encodeSeconds" : 0.1170039176940918,
+    "exactRoundTrip" : true,
+    "records" : 5000
+  },
+  "ordinary" : {
+    "bytes" : 502781,
+    "decodeSeconds" : 0.062414050102233887,
+    "encodeSeconds" : 0.020838022232055664,
+    "exactRoundTrip" : true,
+    "foundationDecodeSeconds" : 0.048809051513671875,
+    "foundationEncodeSeconds" : 0.019891977310180664,
+    "records" : 5000
+  },
+  "scope" : "Release-optimized component benchmark; not full Store\/UI latency"
+}

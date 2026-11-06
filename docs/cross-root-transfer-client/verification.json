@@ -1,0 +1,61 @@
+{
+  "reviewed": "2026-10-30",
+  "platform": "mac",
+  "status": "Built; wider acceptance remains",
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "core": {
+    "passed": 540,
+    "newTransferCases": 19,
+    "failures": 0
+  },
+  "sql": {
+    "passed": 77,
+    "failures": 0,
+    "isolatedContainerRemoved": true,
+    "canonicalMigrationUnchanged": true,
+    "prior615ChecksNotRerun": true
+  },
+  "appBuild": "Build for testing passed with isolated development signing; not release distribution acceptance.",
+  "native": [],
+  "macNativeAccepted": false,
+  "remaining": [
+    "Largest-text iPhone confirmation: Undo label clipping needs polish; passing interaction tests are not full visual acceptance",
+    "Mac native move/recovery and VoiceOver",
+    "Shared-account, window/background and access-change lifecycle",
+    "Real Keychain and hosted integration",
+    "Older-data migration and attachment/discussion custody",
+    "Broader workloads; normal-use gate remains off"
+  ],
+  "sourceSHA256": {
+    "Package.swift": "e5025f2b8780c3adac22c831707cd696e55830578da360b253694026045999aa",
+    "Taskfold.xcodeproj/project.pbxproj": "d2276271e2fbae4ebdce759a59e1d546411fbe6cdbdc79f6a8291cdecf217ab7",
+    "Taskfold/Core/ChildTaskTransfers.swift": "49301ebb9734b793044b419c7c3802891b8fdd165d425e25955bffc6e2aacc7c",
+    "Taskfold/Core/SubtaskTree.swift": "657d8b87c19ff853c66ace81d9cfac296d9de26227c1e55ce6b2b277a5889b59",
+    "Taskfold/Core/Backend.swift": "f5919632db580a450d7271899909bcd002e812e969093ec993456c4ce7763a1e",
+    "Taskfold/Core/Store.swift": "7fb74e864dbb44509effbdcf872d9a668e6b81ce25768d2c57052d28b390b832",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "8294a140cb13a4f74119162b222c44394c1994164528124b11834088d3688599",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "7915f36613fda52e6cfbb2a5cc5bb75c49c9c1e3c5314b848cc214c10f98471d",
+    "Taskfold/ChildTransferNativeFixture.swift": "5c365e4d0d813e8c60ec7e2c37bd746931d7d75d0d9b58a25cac4f61cd86198b",
+    "Taskfold/ChildFieldNativeFixture.swift": "4e10c5a6217cf799d633fd187910d6a426f5d2d3468cd440092c2e6fe843fda4",
+    "Taskfold/ChildStructureNativeFixture.swift": "0d4176a1abe2568025edfb0f4858b9f17dc383e8ffa6e1f093923f985a1a74c3",
+    "TaskfoldUITests/AudioCommentUITests.swift": "ff4670e63f3e345a1d6e62a69fa72ae623443d7c8c2320b00483787eda274397",
+    "TaskfoldTests/ChildTaskTransferTests.swift": "af2ef63734128ee4aabad38541362e2b0cbd916530d91aebb76df351a6d3884d",
+    "TaskfoldTests/Fixtures/cross-root-transfer-client-v1.json": "59cfb336fa0f0939a1ced83bfc826abacf550a0e399f3ad42fa6129842617677",
+    "Scripts/Database/test-cross-root-child-transfers.mjs": "0eeb88cc673bcb58deebb579936ab9074c19dcf82f1981d92c292ab7693ff3e8",
+    "Scripts/prepare_child_fields_native_test.py": "635ab68fe60070559608e1eb987dbabdae78af7e087e55e7c9908bf0f3c12e30",
+    "Taskfold/Info.plist": "e8a7f8daa65ed3d5def3e7193ae104aa87790edc0563ddde231325555ea75087"
+  },
+  "evidenceSHA256": {
+    "core.log.gz": "7e5c5f475117b49d0bc033bf74604e9c409c179ae929806ad109cfd4c4cf6a0f",
+    "sql.json": "e7ac9ce25e6b738c6d0b54950af78d4372023463d471be6dc9f3790182532992",
+    "sql.log.gz": "450a466ed72d8a5c23ffbf7db2ae6863e6278a4e70384f25e8372e2a51ffcae5",
+    "app-build.log.gz": "e90685779ce64cf0f9925d8f81e41dbf4a7f8aa2bce4c01642edf6f66407bb77"
+  },
+  "phaseNotes": [
+    "First phone selection ran zero tests and is excluded.",
+    "Intermediate phone helper waits failed; final phone-v4 and ipad-v1 each passed two tests.",
+    "Cleanup reported an already-shutdown Simulator after the passing phone run; proof-bound continuation passed iPad and both Core suites.",
+    "The final preparation-script change only corrects test-host display text and printed launch arguments."
+  ]
+}

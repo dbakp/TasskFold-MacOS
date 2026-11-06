@@ -1,0 +1,17 @@
+{
+  "productionSHA256": {
+    "Taskfold/TaskfoldMacApp.swift": "9e5a4a0228b3a13878079d8be82eb849bde337b5bbe3dbf022adca2f275f393c",
+    "Taskfold/Views/PrintReviewView.swift": "31fb8d9485a4287fd832f3b3afd57f8b2963a0eae2c91bc2b5cbc9be1d9f5c6d",
+    "Taskfold/Views/TaskListView.swift": "6f8db9804b1d829466e1152408a1188a7dfd9ba5cb7f82983209ad7ddd01d528",
+    "Taskfold/Views/RootView.swift": "7f4bab3686bde8386c254a4f9f7f2ca008c92cdebc52d32ee5b8e252b91ea638"
+  },
+  "preparedSHA256": {
+    "Taskfold/TaskfoldMacApp.swift": "9e5a4a0228b3a13878079d8be82eb849bde337b5bbe3dbf022adca2f275f393c",
+    "Taskfold/Views/PrintReviewView.swift": "31fb8d9485a4287fd832f3b3afd57f8b2963a0eae2c91bc2b5cbc9be1d9f5c6d",
+    "Taskfold/Views/TaskListView.swift": "6f8db9804b1d829466e1152408a1188a7dfd9ba5cb7f82983209ad7ddd01d528",
+    "Taskfold/Views/RootView.swift": "7f4bab3686bde8386c254a4f9f7f2ca008c92cdebc52d32ee5b8e252b91ea638"
+  },
+  "testPreparedSHA256": "abfaa656f369696413b692f2e1d2c6d8191ddb0592afdffba9803beafeac67b1",
+  "appDylibSHA256": "c43df3a4425848cccb6ff83440e3329c3e93579c89b327554199f5bed4d04ddb",
+  "scope": "Two accepted print cases, before adding the separate Calendar regression; production sources unchanged by that test-only addition"
+}

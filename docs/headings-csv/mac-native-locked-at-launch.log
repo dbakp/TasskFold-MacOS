@@ -1,0 +1,44 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-mac-recovery-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -resultBundlePath /tmp/taskfold-workflow-csv-mac-ui-v1.xcresult -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 180 "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testWorkflowCSVClipboardReviewCancelSaveAndColdReturn"
+
+Writing result bundle at path:
+	/tmp/taskfold-workflow-csv-mac-ui-v1.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 07:12:13.440034+0100 TaskfoldUITests-Runner[83247:21852746] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 07:12:13.548.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 07:12:13.549.
+Test Suite 'TaskfoldMacUITests' started at 2026-10-26 07:12:13.549.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWorkflowCSVClipboardReviewCancelSaveAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 07:12:13.550
+    t =     0.26s Set Up
+    t =     0.28s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.29s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 07:12:14.224 xcodebuild[83232:21852336] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 07:12:14.224 xcodebuild[83232:21852336] [MT] IDELaunchParametersSnapshot: no debugger version
+/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:4296: error: -[TaskfoldUITests.TaskfoldMacUITests testWorkflowCSVClipboardReviewCancelSaveAndColdReturn] : Failed to activate application 'com.dbakp.taskfold.mac.workflowteststeameditbridge at /private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app' (current state: Running Background)
+    t =    62.40s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWorkflowCSVClipboardReviewCancelSaveAndColdReturn]' failed (65.380 seconds).
+Test Suite 'TaskfoldMacUITests' failed at 2026-10-26 07:13:18.931.
+	 Executed 1 test, with 1 failure (0 unexpected) in 65.380 (65.382) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 07:13:18.933.
+	 Executed 1 test, with 1 failure (0 unexpected) in 65.380 (65.384) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 07:13:18.934.
+	 Executed 1 test, with 1 failure (0 unexpected) in 65.380 (65.386) seconds
+2026-10-26 07:13:30.758 xcodebuild[83232:21852336] [MT] IDETestOperationsObserverDebug: 78.317 elapsed -- Testing started completed.
+2026-10-26 07:13:30.758 xcodebuild[83232:21852336] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 07:13:30.758 xcodebuild[83232:21852336] [MT] IDETestOperationsObserverDebug: 78.317 sec, +78.317 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-workflow-csv-mac-ui-v1.xcresult
+
+Failing tests:
+	TaskfoldMacUITests.testWorkflowCSVClipboardReviewCancelSaveAndColdReturn()
+
+** TEST EXECUTE FAILED **
+
+Testing started

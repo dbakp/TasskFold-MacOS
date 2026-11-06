@@ -1,0 +1,10 @@
+Test Suite 'Selected tests' started at 2026-10-27 12:00:18.908.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 12:00:18.909.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-27 12:00:18.909.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4748: error: -[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo] : Failed to activate application 'com.dbakp.taskfold.mac.workflowteststeameditbridge at /private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app' (current state: Running Background)
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo]' failed (64.985 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4748: error: -[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery] : Failed to activate application 'com.dbakp.taskfold.mac.workflowteststeameditbridge at /private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app' (current state: Running Background)
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' failed (66.719 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.

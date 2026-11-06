@@ -1,0 +1,89 @@
+{
+  "owner": "TaskFold-iOS",
+  "attempts": [
+    {
+      "attempt": 1,
+      "xcodeExitCode": 65,
+      "testsFailed": 1,
+      "reason": "Native navigation helper did not recheck the final allowed swipe; no consent/transfer acceptance",
+      "ownedSimulatorRestored": true,
+      "reportSHA256": "f2d53d90d2c941ab34fdfbb4f8a9889df5cb4454b2341f4b4b606222a7de4417",
+      "failureHeadingFrame": "StaticText, 0x1115c6300, {{32.0, 275.3}, {287.7, 199.0}}, label: 'Make room for shared work'"
+    },
+    {
+      "attempt": 2,
+      "xcodeExitCode": 65,
+      "testsFailed": 1,
+      "reason": "Native navigation helper did not recheck the final allowed swipe; no consent/transfer acceptance",
+      "ownedSimulatorRestored": true,
+      "reportSHA256": "390f724d0df0a9588b31f5a9655f617e94a98b5fdc128ce85628d72cb94e050d",
+      "failureHeadingFrame": "StaticText, 0x11519a1c0, {{32.0, 275.3}, {287.7, 199.0}}, label: 'Make room for shared work'"
+    },
+    {
+      "attempt": 3,
+      "xcodeExitCode": 65,
+      "testsFailed": 1,
+      "reason": "Native navigation helper did not recheck the final allowed swipe; no consent/transfer acceptance",
+      "ownedSimulatorRestored": true,
+      "reportSHA256": "daf0f355a27958753bf07c392270064d6b3ca3b5e71321105608a56b2cf70ea3",
+      "failureHeadingFrame": "StaticText, 0x110d8a1c0, {{32.0, 275.3}, {287.7, 199.0}}, identifier: 'projectTransferHeading', label: 'Make room for shared work'"
+    },
+    {
+      "attempt": 4,
+      "xcodeExitCode": 65,
+      "testsFailed": 1,
+      "reason": "Heading navigation passed; reveal() did not recheck its final allowed drag. First collaborator picker fits in failure snapshot. No consent/transfer acceptance.",
+      "ownedSimulatorRestored": true,
+      "reportSHA256": "43ae3e05a8f41731c5e2f7c602d1f218159c431564b60e82381189cb985fd726",
+      "targetFrame": "Button, 0x111132800, {{32.0, 483.0}, {338.0, 206.7}}, identifier: 'transferAccess-fdad0000-0000-4000-8000-000000000005-fdad0000-0000-4000-8000-000000000002', label: 'Resulting personal grant, Choose access\u2026'"
+    },
+    {
+      "attempt": 5,
+      "xcodeExitCode": 65,
+      "testsFailed": 1,
+      "reason": "Reached disabled Review; helper searched down at the end of the form for a lazy recording toggle above the viewport. Added upward search once an end action is visible.",
+      "ownedSimulatorRestored": true,
+      "reportSHA256": "71a49534240dbcf0f8c273721e6a6ac02a07299dfc759a54e023ffff181c6cc6",
+      "contentSize": "accessibility-extra-extra-extra-large",
+      "screenshotRetained": "/tmp/taskfold-project-recording-native-ios-v5-images/9C6D3BE5-8F8E-4FE2-93BC-778C2624DA1C.png"
+    },
+    {
+      "attempt": 6,
+      "xcodeExitCode": 65,
+      "testsFailed": 1,
+      "reason": "Fixed swipe budget ended with heading13 points under its safe viewport boundary; use target geometry and allow complete large-text traversal. Upward search now detects the actual end indicator, preserving controls after Review.",
+      "ownedSimulatorRestored": true,
+      "reportSHA256": "da50dbe2dde987098e7b9f8eaf1794a1e02c880a22b896d63b93859885366299",
+      "targetFrame": "StaticText, 0x11556a080, {{32.0, 114.0}, {287.7, 199.0}}, identifier: 'projectTransferHeading', label: 'Make room for shared work'"
+    },
+    {
+      "attempt": 7,
+      "xcodeExitCode": 65,
+      "testsFailed": 1,
+      "reason": "Reached final review after consent-state checks; selected unfinished-count AX element had an empty value. Added explicit accessible recording-count labels/values; split cancellation and cold retry into separate cases. No cold retry acceptance.",
+      "ownedSimulatorRestored": true,
+      "reportSHA256": "175cc362d9889779c7b3734c600ad78096cf1dc62b7ea126143e6bd358073399",
+      "failure": "XCTAssertEqual failed: (\"Optional(\"\")\") is not equal to (\"Optional(\"2\")\")"
+    },
+    {
+      "attempt": "retry-v8",
+      "xcodeExitCode": 65,
+      "testsFailed": 1,
+      "reason": "Large labelled Toggle row contained a small nested UISwitch; row-relative coordinate tap left the value Off. Target the actual nested switch and verify its value.",
+      "ownedSimulatorRestored": true,
+      "reportSHA256": "3284e6062247272c19fd03ee2d1e27395f7266fa7ac7621292719694fcd16c91",
+      "failure": "XCTAssertEqual failed: (\"Optional(\"0\")\") is not equal to (\"Optional(\"1\")\") - Attributes: Application, 0x113e09180, pid: 24375, label: 'Taskfold Project Transfer Test'\nElement subtree:\n \u2192Application, 0x113e09180, pid: 24375, label: 'Taskfold"
+    },
+    {
+      "attempt": "retry-v9",
+      "xcodeExitCode": 65,
+      "testsFailed": 1,
+      "reason": "Cold retry reached success and preserved count2; case then checked the refresh footer without revealing its offscreen row. Added explicit final count/status scrolling and an independent destination-boundary/empty-queue check.",
+      "ownedSimulatorRestored": true,
+      "reportSHA256": "b2c05f8c2c71a7004630d4fd325b7a99b44641310bed34aa78fa862f254974d8",
+      "failure": "XCTAssertTrue failed",
+      "observedAfterFailure": "One applied command, two matching attempt IDs, destination team boundary and no queued edits were observed read-only; this failed case is not acceptance."
+    }
+  ],
+  "qualification": "Failed exploratory native runs are not acceptance. Scroll helpers now check final results, use target geometry and actual end-of-form detection. Final-review counts now have explicit accessible labels/values."
+}

@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-12",
+  "scope": "Preparation and successful development signing of an isolated Mac app plus embedded widget extension. Installed-host acceptance remains open.",
+  "appBundle": "com.dbakp.taskfold.mac.p0widgethosts",
+  "extensionBundle": "com.dbakp.taskfold.mac.p0widgethosts.widgets",
+  "appGroup": "group.com.dbakp.taskfold.mac.p0widgethosts",
+  "URLScheme": "taskfold-widget-host-test",
+  "team": "3UZ4C73FM2",
+  "checks": {
+    "initialManualBuild": "Failed: profiles missing for both isolated targets.",
+    "automaticProvisioningBuild": "Passed with configured Xcode account; app and extension independently provisioned.",
+    "strictDeepSignature": "Passed",
+    "scriptedStage": "Both p0widgethosts and existing p0signeduitests stage assertions pass; scripted widget Swift sources exactly match the built stage.",
+    "nativeLaunch": "Process 49815 started with disposable Inbox fixture arguments; computer use reports Mac locked. No window or installed widget verified.",
+    "processSample": "Live main thread in WidgetActionDisk.publish -> locked -> open during Store initialization; startup completion and product defect are not established."
+  },
+  "isolation": {
+    "productionSourceOrEntitlementsChanged": false,
+    "productionURLSchemeRegistered": false,
+    "productionAppGroupUsed": false,
+    "copiedTestAppAPNsEntitlement": false,
+    "copiedTestAppProductionKeychainGroup": false,
+    "sourceBehaviorChanges": "Namespace replacements only; embedded extension retained. File exports omitted by reusable script."
+  },
+  "remaining": [
+    "Unlock Mac and inspect initial isolated launch; handle any visible test-group permission within its exact scope.",
+    "Install widgets through native gallery, verify rendering, configuration, routes and completion.",
+    "Use native-created isolated local tasks for cold OS launches, which omit --uitesting; do not assume fixture continuity.",
+    "Production app still requires enrolled team for Push Notifications; this does not accept APNs, distribution or notarization."
+  ],
+  "signedEntitlements": {
+    "app": {
+      "com.apple.application-identifier": "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts",
+      "com.apple.developer.team-identifier": "3UZ4C73FM2",
+      "com.apple.security.application-groups": [
+        "group.com.dbakp.taskfold.mac.p0widgethosts"
+      ],
+      "com.apple.security.app-sandbox": true
+    },
+    "extension": {
+      "com.apple.application-identifier": "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts.widgets",
+      "com.apple.developer.team-identifier": "3UZ4C73FM2",
+      "com.apple.security.application-groups": [
+        "group.com.dbakp.taskfold.mac.p0widgethosts"
+      ],
+      "com.apple.security.app-sandbox": true
+    }
+  },
+  "buildLogs": {
+    "mac-widget-host-build-v1.log": "e4438ad387f70613a3e72fa62f5ef04388537b7c0a2f4c6e4eda8b841658d198",
+    "mac-widget-host-provision-v1.log": "1807c6dd031f13c04724a9d45720cccc9f11cc283c4a7366c192d8da50ddb940"
+  }
+}

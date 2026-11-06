@@ -1,0 +1,150 @@
+{
+  "date": "2026-10-21",
+  "status": "Reviewed voice drafts implemented independently in both apps; real audio acceptance remains open",
+  "behavior": [
+    "Explicit Start; requires on-device recognition; no cloud transcription fallback",
+    "Correct transcript before Apply; Apply only appends to unchanged workspace-bound source",
+    "Existing multiline review and explicit Add own all saved task mutations",
+    "Cancellation, callback identities, workspace incarnation and bounded text protect draft edits"
+  ],
+  "core": {
+    "ios": {
+      "reported": 1008,
+      "skipped": 13,
+      "failures": 0,
+      "newVoiceCases": 12,
+      "artifact": "ios-voice-drafts-full-core.log",
+      "sha256": "a13086754c4a7c2c84dab87a406180ea92a3b9ea5b1502dcb0e17e70b45436a6"
+    },
+    "mac": {
+      "reported": 1040,
+      "skipped": 33,
+      "failures": 0,
+      "newVoiceCases": 12,
+      "artifact": "mac-voice-drafts-full-core.log",
+      "sha256": "7ae0df09ac975c08b12358de732c417331a69b6f53497403219b9c40e93bac9c"
+    }
+  },
+  "nativeController": {
+    "checks": {
+      "accountChangeClosesAndReleasesRecorder": true,
+      "closeReleasesContextClosureAndController": true,
+      "finalCorrectionAcceptedBeforeReview": true,
+      "finalizationTimeoutKeepsPartial": true,
+      "finalResultStopsInputAndAllowsReview": true,
+      "latePermissionGrantCannotStartCancelledDraft": true,
+      "lateResultCannotOverwriteManualCorrection": true,
+      "oneMinuteLimitStopsInputAndKeepsDraft": true,
+      "oversizeEventStopsWithoutLosingEarlierText": true,
+      "permissionFailurePreservesEditableText": true,
+      "permissionPendingCannotApplyOrOverwrite": true,
+      "providerContextGuardChangesImmediately": true,
+      "realDriverRejectsStaleContextBeforePermissions": true,
+      "stopEndsAudioBeforeFinalization": true,
+      "supersededCallbackCannotRetargetNewRecording": true,
+      "typingRemainsAvailableAfterFailure": true,
+      "unboundPresentationCannotStart": true
+    },
+    "sourceSHA256": {
+      "Taskfold/Core/VoiceDraft.swift": "6371d2088a70c8bac95e302ffcaa2a0147109818f3b9311109ef67bb06473774",
+      "Taskfold/VoiceCapture.swift": "cd67f14486a6f18d13ad720d99e2f5b21bccb8e452c784a2f4e8bf1eb3a8f172",
+      "Scripts/fixtures/VoiceCaptureControllerProof.swift": "3ee60681890a2f7b0e7955faf84acdf74b694037526598829ba49bfc5d1e005f"
+    },
+    "limits": [
+      "Mac-native controller with a synthetic recorder; no microphone or permission prompt was opened.",
+      "The real recorder is invoked only with a false context gate to verify rejection before permission access.",
+      "No genuine speech-recognition accuracy, audio interruption or TCC recovery acceptance."
+    ]
+  },
+  "macComponentRender": {
+    "images": {
+      "voice-ready-light.png": "98451c4b22133f57f55cc7166813f9ca8d070ae2253b2dd7e4bd340919166506",
+      "voice-ready-dark.png": "6c71079dcb2d1584f9400decb8de3aea761229aea3f357817a6d16cc1925933f"
+    },
+    "sourceSHA256": {
+      "Taskfold/Core/VoiceDraft.swift": "6371d2088a70c8bac95e302ffcaa2a0147109818f3b9311109ef67bb06473774",
+      "Taskfold/VoiceCapture.swift": "cd67f14486a6f18d13ad720d99e2f5b21bccb8e452c784a2f4e8bf1eb3a8f172",
+      "Taskfold/Views/VoiceDraftView.swift": "8feee5776531ef535269c124654f86f335bfeb8c27a66b97ce8876d222a9a6d6"
+    },
+    "scope": "Real production voice view, minimal read-only Store fixture, offscreen AppKit light/dark layout; no recording, permission request or full-app interaction."
+  },
+  "uiRuns": [
+    {
+      "artifact": "ios-voice-drafts-phone-final.xcresult",
+      "passed": 3,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "scope": "Full synthetic recorder/refusal/review/save/relaunch plus dark largest text",
+      "syntheticSpeechOnly": true
+    },
+    {
+      "artifact": "ios-voice-drafts-tablet-final.xcresult",
+      "passed": 3,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "scope": "Same full cohort on iPad",
+      "syntheticSpeechOnly": true
+    },
+    {
+      "artifact": "ios-voice-drafts-phone-accessible.xcresult",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "scope": "Final Apply and wrapping-language visual follow-up",
+      "syntheticSpeechOnly": true
+    },
+    {
+      "artifact": "ios-voice-drafts-tablet-accessible.xcresult",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "scope": "Same final accessibility visual follow-up on iPad",
+      "syntheticSpeechOnly": true
+    },
+    {
+      "artifact": "ios-voice-drafts-phone-current-save.xcresult",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "scope": "Current sources after context lifetime cleanup: correction/cancel/apply/save/relaunch",
+      "syntheticSpeechOnly": true
+    }
+  ],
+  "chronology": "Full phone/tablet cohorts precede the shorter Apply label and wrapping accessibility language control. Separate accessibility follow-ups cover those visual changes. Final phone save/relaunch and Mac build/controller/render cover the later nonvisual context-closure cleanup. Core sources did not change between these runs.",
+  "debugSignatures": "Current isolated Mac and iOS build products pass codesign --verify --deep --strict. This is not distribution acceptance.",
+  "openGates": [
+    "Genuine microphone/on-device recognition and supported languages/models",
+    "Real OS permission denial/recovery and microphone/call/route interruptions",
+    "Actual iOS audio-session restoration and simultaneous windows/background/account transitions",
+    "Mac native keyboard/selection/Undo and VoiceOver acceptance while desktop unavailable",
+    "Broader localization/RTL and large system text"
+  ],
+  "userDeferralsUnchanged": [
+    "Remote reminders",
+    "Older-client rollout enforcement",
+    "Release distribution/signing/install-update",
+    "Google/Microsoft OAuth registrations and provider acceptance"
+  ],
+  "cloudAI": "Disabled",
+  "sourceSHA256": {
+    "TaskFold-iOS": {
+      "Taskfold/Core/VoiceDraft.swift": "6371d2088a70c8bac95e302ffcaa2a0147109818f3b9311109ef67bb06473774",
+      "Taskfold/VoiceCapture.swift": "cd67f14486a6f18d13ad720d99e2f5b21bccb8e452c784a2f4e8bf1eb3a8f172",
+      "Taskfold/Views/VoiceDraftView.swift": "8feee5776531ef535269c124654f86f335bfeb8c27a66b97ce8876d222a9a6d6",
+      "Taskfold/Views/WorkflowViews.swift": "6c31ee883aa527c711f16c34eccf5ffec3cb8a5160e79589282e748b5db84f86",
+      "TaskfoldTests/VoiceDraftTests.swift": "9bae6298bebf3d7eb80d9e0e5ef4f5c28a0c582cb69c3042c2b1e0125bbf7ab1"
+    },
+    "TasskFold-MacOS": {
+      "Taskfold/Core/VoiceDraft.swift": "6371d2088a70c8bac95e302ffcaa2a0147109818f3b9311109ef67bb06473774",
+      "Taskfold/VoiceCapture.swift": "cd67f14486a6f18d13ad720d99e2f5b21bccb8e452c784a2f4e8bf1eb3a8f172",
+      "Taskfold/Views/VoiceDraftView.swift": "8feee5776531ef535269c124654f86f335bfeb8c27a66b97ce8876d222a9a6d6",
+      "Taskfold/Views/WorkflowViews.swift": "e3e2e5b8baae9833015d1d61da31d5aab21cd45d37484e23a3a5b15057136c4a",
+      "TaskfoldTests/VoiceDraftTests.swift": "9bae6298bebf3d7eb80d9e0e5ef4f5c28a0c582cb69c3042c2b1e0125bbf7ab1"
+    }
+  }
+}

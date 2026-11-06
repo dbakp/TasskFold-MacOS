@@ -1,0 +1,103 @@
+{
+  "date": "2026-11-03",
+  "scope": "Independent personal-template cloud Undo; atomic multiline capture Undo remains separate.",
+  "mac": {
+    "schema": 1,
+    "platform": "mac",
+    "bundle": "com.dbakp.taskfold.mac",
+    "version": "1.2.0",
+    "build": "6",
+    "app": "/private/tmp/taskfold-daily-mac-next-products/Taskfold.app",
+    "sourceFingerprint": "fa5eef9ba3252dcb23829dde9a8096bbb4a69dea3eed4fc011d4f1a95100b0de",
+    "sourceRevision": "86c832df429336579c9d81b69f1ce831e9435dd9",
+    "simulatorOnly": false,
+    "signatureVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "omittedCapabilities": [
+      "Remote push notifications",
+      "Time Sensitive notifications"
+    ],
+    "featureFlags": {
+      "TaskfoldAudioRestorationEnabled": false,
+      "TaskfoldMixedCompletionEnabled": false,
+      "TaskfoldTeamAudioPublishingEnabled": false
+    },
+    "installed": false,
+    "published": false,
+    "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-6-mac-development.zip",
+    "archiveSHA256": "98223e7c3d7689c406a09162a4d8734783b85b6c4cfba054db37c549a4602156",
+    "archivePayloadVerified": true,
+    "sourceWasDirty": true,
+    "developmentProfileExpires": "2026-11-10T18:38:42Z",
+    "change": "Independent personal-template cloud workflow Undo; includes capture context and template search"
+  },
+  "iosSimulator": {
+    "schema": 1,
+    "platform": "ios",
+    "bundle": "com.dbakp.taskfold",
+    "version": "1.4.0",
+    "build": "21",
+    "app": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app",
+    "sourceFingerprint": "9f47c1f150c42317dcd6f482b9707f34b49a8236ed0526eca6889ae1f1dcb22f",
+    "sourceRevision": "f7cb8132116b4d6d70358648aee2823e66626590",
+    "simulatorOnly": true,
+    "signatureVerified": false,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "omittedCapabilities": [
+      "Remote push notifications",
+      "Time Sensitive notifications"
+    ],
+    "featureFlags": {
+      "TaskfoldAudioRestorationEnabled": false,
+      "TaskfoldMixedCompletionEnabled": false,
+      "TaskfoldTeamAudioPublishingEnabled": false
+    },
+    "installed": false,
+    "published": false
+  },
+  "macInstallation": {
+    "build": "6",
+    "installedApp": "/Applications/Taskfold.app",
+    "signatureVerified": true,
+    "previousBuild5StartupAndSyncVerified": true,
+    "fileCount": 10,
+    "keychainExported": false,
+    "taskEditsForTesting": false,
+    "startupVerified": true,
+    "syncVerified": true,
+    "templateLibraryOpened": true,
+    "multilineDraftReviewedAndDiscarded": true,
+    "realTaskEdits": false,
+    "onlyNormalAppRunning": true
+  },
+  "physicalPhone": "User configuring Xcode development signing; installation not yet verified.",
+  "nativeTemplateUndo": "Pending isolated end-to-end acceptance. Service/Auth/REST and client compatibility are verified separately.",
+  "noNewSimulators": true,
+  "curatedCheckpointCountsUnchanged": true,
+  "completedOutputCleanup": [
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+      "bytes": 128224320
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex",
+      "bytes": 429918762
+    }
+  ],
+  "earlierCoreOutputCleanup": {
+    "completedTestOutputsRemoved": [
+      {
+        "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac/out",
+        "bytes": 517381590
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios/out",
+        "bytes": 565485280
+      }
+    ],
+    "testLogsRetained": true,
+    "unrelatedProjectsTouched": false
+  }
+}

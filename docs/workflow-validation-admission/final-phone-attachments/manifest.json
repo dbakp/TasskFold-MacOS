@@ -1,0 +1,77 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "E5B65A95-6871-411F-B77D-686957E1F481.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 5000_0_BF547B5B-6C32-4738-B391-500DCCF42F24.json",
+        "timestamp" : 1793173959.627
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "3EE675DF-6D75-4818-9306-15F77AFE9C8E.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 1000_0_61019770-7A7D-45BC-95E2-C0BF5A3E6D62.json",
+        "timestamp" : 1793173973.482
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "7D7B7E0D-1559-4C12-BDA4-AB4C2C8B4885.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 1000_0_9EA7E208-E9DC-4A81-9E6A-F0751F844E2D.json",
+        "timestamp" : 1793173986.765
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativePreparedHistoryRejectsChangedSource()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparedHistoryRejectsChangedSource"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "62B6EC6F-9CAC-47A9-9386-A401922CF4A3.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 1000_0_EE24FF02-0C1E-4FDE-BD38-8EDF697A8F35.json",
+        "timestamp" : 1793174001.465
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeRejectedProjectionReplaysEveryOrdinaryRow()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeRejectedProjectionReplaysEveryOrdinaryRow"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "610BB7CF-235B-4B18-8FC6-17A2B52A7FAE.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 0_0_33E7597A-0D5F-4AF5-B904-B02878E0B9D3.json",
+        "timestamp" : 1793174016.036
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeRejectedProjectOnlyProjectionCreatesItsProject()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeRejectedProjectOnlyProjectionCreatesItsProject"
+  }
+]

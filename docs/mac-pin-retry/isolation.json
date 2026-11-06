@@ -1,0 +1,43 @@
+{
+  "sourceRepository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "workspace": "/private/tmp/taskfold-isolated-mac-pin-retry-v1",
+  "bundleID": "com.dbakp.taskfold.mac.p0signeduitests",
+  "sandbox": true,
+  "productionURLAndFileRegistrationsRemoved": true,
+  "embeddedWidgetExtension": false,
+  "isolatedURLScheme": null,
+  "isolatedAppGroup": null,
+  "namespaceOnlySourceChanges": {
+    "Taskfold/Core/Backups.swift": {
+      "originalSHA256": "5bc30bf8c4a8b61b5746e870d89e34739393b89e642d5a4c9719519a9d4d8c8f",
+      "isolatedSHA256": "94ba3e3b08dcf4e4849343687d0a7641cc21d51686ad9649c12e884f69ffc8cf"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "originalSHA256": "564ade4799562e459427efc3e5d087e0df589259ac8ede9ffd33507b06f4f14c",
+      "isolatedSHA256": "ad5b050e38ef1b1e6a5aa881623a27160bfbe820adf3fa8e99c7a554ee3bdfb6"
+    },
+    "Taskfold/Core/Store.swift": {
+      "originalSHA256": "e4c503bdf36b5e192a8ebed78904e9f09c0bb99dc3630b6a88beb4c8bd98cc75",
+      "isolatedSHA256": "1d398681f285471b907223341c932586f3998ccc88e417bb71b8b32e8f2d3b80"
+    },
+    "Taskfold/Core/WidgetActions.swift": {
+      "originalSHA256": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2",
+      "isolatedSHA256": "42892785ed23f4f131e310e972b76f7a31f1e1a6e1c7a08e2335b656e380c289"
+    }
+  },
+  "replacements": {
+    "com.taskfold.ios.session": "com.taskfold.mac.p0signeduitests.session",
+    "com.taskfold.recovery.v1": "com.taskfold.mac.p0signeduitests.recovery.v1",
+    "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.mac.p0signeduitests"
+  },
+  "launchArguments": [
+    "--uitesting"
+  ],
+  "limitations": [
+    "Preparation only; no launch/install/runtime acceptance.",
+    "Unique keychain services; no production credential migration.",
+    "Production Push Notifications and keychain-group entitlements are absent only from the copied test app.",
+    "No signed-distribution, APNs or provider acceptance.",
+    "Cold OS launches omit --uitesting and use the isolated local workspace; fixture continuity must be verified separately."
+  ]
+}

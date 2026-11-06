@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "00006000-000C59161EC3801E",
+    "deviceName": "My Mac",
+    "modelName": "MacBook Pro",
+    "osBuildNumber": "25G83",
+    "osVersion": "26.6.2",
+    "platform": "macOS"
+  },
+  "summarySHA256": "f5142e44d253b881326e68ac59ec6cb7ce84f959d12c60a011d14d2f2a9928e7",
+  "manifestSHA256": "29e3f3fd4c072a6c39ddd0c27b560f96d726c991a9aa5af532511e82949d7748",
+  "scope": "Synthetic local native project/assignee controls, actual Undo/Redo and cold return; historical child assignees remain cleared; no hosted delivery or speech claim",
+  "fullRootAndExactChildValuesVerified": true,
+  "fullSnapshotColdReturnVerified": true,
+  "snapshots": [
+    {
+      "name": "original",
+      "sha256": "2783db25cc5b457f5b148170795c165bd58bed2b6ab7e610cca79b05625b095d",
+      "bytes": 1273
+    },
+    {
+      "name": "moved",
+      "sha256": "aca2e0f7d5ffab1f7a2f3dccf2844267dd3d9d2d72af2143094e078820860c4e",
+      "bytes": 4054
+    },
+    {
+      "name": "undone",
+      "sha256": "e26133cb832f1f01a49be728f3477d5f549c35e6d60d56adde9590d9923c7962",
+      "bytes": 6211
+    },
+    {
+      "name": "redone",
+      "sha256": "a85ecd410f2f5a01afb4c1976636647f8f61537607dd2c5ff36f37dc22853d5b",
+      "bytes": 8368
+    },
+    {
+      "name": "cold return",
+      "sha256": "2ba014038df291894fe2e661db89f3081720a3ad9401ee6c97883eda98b2a353",
+      "bytes": 8368
+    }
+  ]
+}

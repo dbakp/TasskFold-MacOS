@@ -1,0 +1,12 @@
+Test Suite 'Selected tests' started at 2026-10-10 09:49:06.537.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-10 09:49:06.539.
+Test Suite 'NativePhotoAttachmentTests' started at 2026-10-10 09:49:06.539.
+Test Case '-[TaskfoldCoreTests.NativePhotoAttachmentTests testMacReadsNativePhotoAttachmentAndRetainsItThroughPortableRestore]' started.
+Test Case '-[TaskfoldCoreTests.NativePhotoAttachmentTests testMacReadsNativePhotoAttachmentAndRetainsItThroughPortableRestore]' passed (0.016 seconds).
+Test Suite 'NativePhotoAttachmentTests' passed at 2026-10-10 09:49:06.555.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.016 (0.016) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-10 09:49:06.555.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.016 (0.016) seconds
+Test Suite 'Selected tests' passed at 2026-10-10 09:49:06.555.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.016 (0.018) seconds
+NATIVE_PHOTO_SHA256 a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2

@@ -1,0 +1,35 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "312E0EF0-A640-4B57-81F7-AC2F672DAD7D.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Completion Undo Redo Undo preserves work after cold return_0_E199CC91-CBA0-4E8E-9304-82C5C7D1E4E7.png",
+        "timestamp" : 1793433513.019
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "933D49C7-1A8D-4EFB-8F44-17A1D0619C48.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Undo after Redo restores both tasks_0_792E873A-822E-47F5-B77F-F76EEED7AF4C.png",
+        "timestamp" : 1793433494.941
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "E3EB3E97-35BE-45F8-9FEC-3A668CF45FC6.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Redo completes the parent and subtask again_0_381F2564-58AD-4F67-9460-37EEC5543DC9.png",
+        "timestamp" : 1793433479.378
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testMixedSelectionNativeUndoRedoUndoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testMixedSelectionNativeUndoRedoUndoAndColdReturn"
+  }
+]

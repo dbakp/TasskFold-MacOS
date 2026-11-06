@@ -1,0 +1,54 @@
+{
+  "verifiedUTC": "2026-10-24T05:52:58.647847+00:00",
+  "platform": "mac",
+  "hostedDeployment": false,
+  "realDataChanged": false,
+  "nativeTeamUIEnabled": false,
+  "nativeRuntimeAcceptanceClaimed": false,
+  "distributionAcceptanceClaimed": false,
+  "databaseChecks": 363,
+  "databaseReports": {
+    "p2-team-planning-evidence.json": {
+      "sha256": "19380ba46cecb32d859b38951c4f3db3b9c207af9fc0d397ff6d0a92968b8e64",
+      "checks": 132
+    },
+    "p2-team-planning-batch-regression.json": {
+      "sha256": "bb2030ecf4ebdfa3430b51c70ef843363a920b89edebc20b451a6c12ddeb929a",
+      "checks": 72
+    },
+    "p2-team-planning-lifecycle-regression.json": {
+      "sha256": "edcb93e13fc2f1b1ad5fca0d92977d2a18b146988f1545430a92dc707ccab6bb",
+      "checks": 89
+    },
+    "p2-team-planning-conversation-regression.json": {
+      "sha256": "9548c6dae002a562ec882ad4eeabb93e71535900c3dad70ec80be0587b9f3e01",
+      "checks": 70
+    }
+  },
+  "selectedSwiftTests": 182,
+  "swiftFailures": 0,
+  "swiftSkipped": 0,
+  "swiftLogSHA256": "bac5ba6a0fa3174188aa74343ff6bb65cf3b7a974eb2acea96d7286d1b23f851",
+  "unsignedDebugAppAndExtensionsBuild": true,
+  "appBuildLogSHA256": "92df79ed32d1e31842a4080b99fbd325f6aee5fa7606aaf10d1e51aa3cb3d4ee",
+  "sources": {
+    "Taskfold/Core/TeamProjectAccess.swift": "a4101b1a1c395a4ab7f61e08e793b4b182ea143beb1939cc71d28fa9633df7a6",
+    "Taskfold/Core/Models.swift": "b56acddff4c2b212c69f0a7a044d687264e937519a24c7a7af3d7fd8433f18e8",
+    "Taskfold/Core/Backend.swift": "aaad1b2bddd110732ced07f633ddda8881ec9175538cd2a2d3c7b8c142157f0f",
+    "TaskfoldTests/TeamTaskEditTests.swift": "d019f5fa936f85ee85e8c886d1b457da002cfcde67b121b33982453f4cb78765",
+    "TaskfoldTests/Fixtures/team-task-planning-v1.json": "679cf46bce4e526a0045832164724317b2073cdfe882f74bc53d46f3b935a749",
+    "Scripts/Database/team-planning-checks.mjs": "37a205c9d9b815121f358dae84e679d714ade62de9c406705567230cd91fef57",
+    "Scripts/Database/team-planning-schema.mjs": "0eb5fcad38589debbd6c6bcdbde3859865eafee798184066717d8b3862e13f9f",
+    "Scripts/Database/test-team-task-edits.mjs": "e552d83e3d473ee72895ff320fd0181e5ccad80614a5ab31afec0946a92a45f2",
+    "Scripts/Database/test-team-task-batches.mjs": "ed079196ee1a3e5fd3a7dd06070d513fa5df54132df4aca4dc56d57b4f2a6043",
+    "Scripts/Database/test-team-task-lifecycle.mjs": "78929421cceccf5a86f7bca74d897ebdbaf6dcd81b70eb8eb551bef99c46ce96",
+    "Scripts/Database/test-team-conversation-recovery.mjs": "bb24cd1bef8122f3e91b3cdf0a8982f61c026cca696ebb88f13f9a7786a88c8a",
+    "supabase/migrations/20261024054229_team_task_planning_edits.sql": "ede5ac910a422aa139488308a8ce5dc4ff084a1207b8ca7ee847dfdd57c41b99"
+  },
+  "cleanup": {
+    "temporaryAppLaunched": false,
+    "temporaryBuildRemoved": true,
+    "temporaryMacRegistrationUnregistered": true,
+    "removedBuildBytes": 1129147174
+  }
+}

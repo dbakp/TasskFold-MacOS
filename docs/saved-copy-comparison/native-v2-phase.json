@@ -1,0 +1,34 @@
+{
+  "platform": "phone",
+  "sourceSHA256": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": "2c54752c83098ed8a1cad5d3b62a09fc8e517a7c5343594af9fa5d7d7a6a1f2f",
+    "Taskfold/ChildFieldNativeFixture.swift": "b643b77c93645ffc37f292a8ddabda7eab68f22405be92922d2f1cc01e28e4d2",
+    "Taskfold/Core/Backend.swift": "4745da4612d8967caf54e1c0f8fdc7c092e12c439314dcbc025c9af84c444432",
+    "Taskfold/Core/ChildTaskRepair.swift": "b02276e0e75367aebf249cb3ab4e55ccc87fbe8304320070f39f71edeb1c2e31",
+    "Taskfold/Core/Store.swift": "8798eb820508e7f4e4e17fd663e4373b8cd81028db9a89e45e76ae9863f61893",
+    "Taskfold/Views/ChildTaskRepairView.swift": "f5b646762cc321f90b1ba7b2f64fe694bfd3c852ab147cf34adbb2c2695d8373",
+    "TaskfoldUITests/AudioCommentUITests.swift": "64d2d5a5a88cac569af3d17522d43048cba94913d22865c1c632a272a53a8d7f"
+  },
+  "builtHostSHA256": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": "2c54752c83098ed8a1cad5d3b62a09fc8e517a7c5343594af9fa5d7d7a6a1f2f",
+    "Taskfold/ChildFieldNativeFixture.swift": "b643b77c93645ffc37f292a8ddabda7eab68f22405be92922d2f1cc01e28e4d2",
+    "Taskfold/Core/Backend.swift": "078ac0e0c60dfba9933e8b87f63a8b12b40422cf197bcadff2c655baa6518f51",
+    "Taskfold/Core/ChildTaskRepair.swift": "b02276e0e75367aebf249cb3ab4e55ccc87fbe8304320070f39f71edeb1c2e31",
+    "Taskfold/Core/Store.swift": "fa81e742fd8d122070a1969ef5b65d08f1ed8b41ed2fbb0bceaf1e10d7eb81dc",
+    "Taskfold/Views/ChildTaskRepairView.swift": "f5b646762cc321f90b1ba7b2f64fe694bfd3c852ab147cf34adbb2c2695d8373",
+    "TaskfoldUITests/AudioCommentUITests.swift": "64d2d5a5a88cac569af3d17522d43048cba94913d22865c1c632a272a53a8d7f"
+  },
+  "appSHA256": "1c9626f6b2848043a24ead730aed039af2d789423c1a2acdeca2af52960d141e",
+  "debugDylibSHA256": "4372d320af37439f94938c7aef4d54c7c2da62d8a4ae19397d8465df31b5d263",
+  "newSimulator": false,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": true,
+    "Taskfold/ChildFieldNativeFixture.swift": true,
+    "Taskfold/Core/Backend.swift": true,
+    "Taskfold/Core/ChildTaskRepair.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Views/ChildTaskRepairView.swift": true,
+    "TaskfoldUITests/AudioCommentUITests.swift": true
+  }
+}

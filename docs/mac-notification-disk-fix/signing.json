@@ -1,0 +1,15 @@
+{
+  "build": "PASS",
+  "strictDeepSignature": "PASS",
+  "team": "3UZ4C73FM2",
+  "bundle": "com.dbakp.taskfold.mac.p0notificationtests",
+  "binarySHA256": "99ebb7f789e87eee2291129a5c1868b67b789fe065054fb1156f1b622e354ca7",
+  "entitlements": {
+    "com.apple.security.app-sandbox": true,
+    "com.apple.security.files.user-selected.read-write": true,
+    "com.apple.security.get-task-allow": true,
+    "com.apple.security.network.client": true,
+    "com.apple.security.personal-information.calendars": true
+  },
+  "scope": "Corrected DEBUG isolated bundle disk path; no runtime/action acceptance yet."
+}

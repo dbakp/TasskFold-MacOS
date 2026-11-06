@@ -1,0 +1,115 @@
+[
+  {
+    "phase": "v1",
+    "report": "earlier-v1.json.gz",
+    "checksPassedBeforeStop": 1,
+    "passed": false,
+    "candidateSHA256": "d401377b942efa5d7cae08549b4e61a32a601f954ac286944ebc6b4a662a675b",
+    "stage": "default gate and first atomic mixed completion",
+    "error": {
+      "name": "AssertionError",
+      "code": "ERR_ASSERTION",
+      "message": "root and children apply atomically\n\n'42P01' !== null\n"
+    },
+    "containerRemoved": true
+  },
+  {
+    "phase": "v2",
+    "report": "earlier-v2.json.gz",
+    "checksPassedBeforeStop": 19,
+    "passed": true,
+    "candidateSHA256": "1185e0997a0e3b8566bcfec0af29d151d97297b5b041851a63d2eca34c71d932",
+    "stage": "advisors",
+    "error": null,
+    "containerRemoved": true
+  },
+  {
+    "phase": "v3",
+    "report": "earlier-v3.json.gz",
+    "checksPassedBeforeStop": 74,
+    "passed": false,
+    "candidateSHA256": "110dc470fa739505a15e74de13c642d947549b24278ca35b78a5330616c5916a",
+    "stage": "recurring families, successors and source preservation",
+    "error": {
+      "name": "SyntaxError",
+      "code": null,
+      "message": "Unexpected end of JSON input"
+    },
+    "containerRemoved": true
+  },
+  {
+    "phase": "v4",
+    "report": "earlier-v4.json.gz",
+    "checksPassedBeforeStop": 75,
+    "passed": false,
+    "candidateSHA256": "bec6fbe2f4e51150a6850ee6edb0ff596dbe5a6f837c25f4aa5b75c842788cab",
+    "stage": "recurring families, successors and source preservation",
+    "error": {
+      "name": "SyntaxError",
+      "code": null,
+      "message": "Unexpected end of JSON input"
+    },
+    "containerRemoved": true
+  },
+  {
+    "phase": "v5",
+    "report": "earlier-v5.json.gz",
+    "checksPassedBeforeStop": 76,
+    "passed": false,
+    "candidateSHA256": "bec6fbe2f4e51150a6850ee6edb0ff596dbe5a6f837c25f4aa5b75c842788cab",
+    "stage": "legacy roots and rollback after root writes",
+    "error": {
+      "name": "Error",
+      "code": "23502",
+      "message": "Owned PostgreSQL query failed"
+    },
+    "containerRemoved": true
+  },
+  {
+    "phase": "v6",
+    "report": "earlier-v6.json.gz",
+    "checksPassedBeforeStop": 137,
+    "passed": true,
+    "candidateSHA256": "bec6fbe2f4e51150a6850ee6edb0ff596dbe5a6f837c25f4aa5b75c842788cab",
+    "stage": "advisors",
+    "error": null,
+    "containerRemoved": true
+  },
+  {
+    "phase": "final",
+    "report": "earlier-final.json.gz",
+    "checksPassedBeforeStop": 115,
+    "passed": false,
+    "candidateSHA256": "bec6fbe2f4e51150a6850ee6edb0ff596dbe5a6f837c25f4aa5b75c842788cab",
+    "stage": "aggregate recurring effect budget",
+    "error": {
+      "name": "SyntaxError",
+      "code": null,
+      "message": "Unexpected end of JSON input"
+    },
+    "containerRemoved": true
+  },
+  {
+    "phase": "effect-diagnostic",
+    "report": "effect-diagnostic.json.gz",
+    "checksPassedBeforeStop": 20,
+    "passed": false,
+    "stage": "aggregate effect send",
+    "error": {
+      "name": "SyntaxError",
+      "code": null,
+      "message": "Unexpected end of JSON input",
+      "stack": "SyntaxError: Unexpected end of JSON input\n    at JSON.parse (<anonymous>)\n    at scalar (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Scripts/Database/postgres-fixture.mjs:47:40)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async pg.scalar (file:///private/tmp/taskfold-effect-diagnostic.mjs:12:68)\n    at async file:///private/tmp/taskfold-effect-diagnostic.mjs:79:208"
+    },
+    "containerRemoved": true
+  },
+  {
+    "phase": "effect-diagnostic-v2",
+    "report": "effect-diagnostic-v2.json.gz",
+    "checksPassedBeforeStop": 71,
+    "passed": true,
+    "stage": "advisors",
+    "error": null,
+    "containerRemoved": true
+  }
+]

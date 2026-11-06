@@ -1,0 +1,17 @@
+[
+  {
+    "file": "mac-edited-choice.png",
+    "test": "TaskfoldMacUITests/testMacImportedHeadingLongEditedTitleReviewAndColdReturn()",
+    "title": "Mac long edited heading explicit marker choice_0_35A06D76-2537-4C3F-8C97-FA4E23330AEC.png"
+  },
+  {
+    "file": "mac-long-source.png",
+    "test": "TaskfoldMacUITests/testMacImportedHeadingLongEditedTitleReviewAndColdReturn()",
+    "title": "Mac long imported heading source and current wording_0_DD6F3166-431E-425E-9214-ECAD8485BFB1.png"
+  },
+  {
+    "file": "mac-review.png",
+    "test": "TaskfoldMacUITests/testMacImportedHeadingReviewCancelUndoRedoChildAndColdReturn()",
+    "title": "Mac imported heading complete review_0_2C278609-AFE7-4035-A252-CB66B5911EF2.png"
+  }
+]

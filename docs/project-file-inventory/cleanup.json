@@ -1,0 +1,174 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 60384567296,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 669753344,
+      "projectedAllocatedBytes": 669753344
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 528609280,
+      "projectedAllocatedBytes": 528609280
+    }
+  ],
+  "freeAfterBytes": 60384567296,
+  "actualFreeChangeBytes": 0,
+  "retiredSupersededOutputs": [
+    {
+      "name": "taskfold-project-file-inventory-ios-v1.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v1.json",
+      "allocatedBytes": 12288
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v2.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v2.json",
+      "allocatedBytes": 12288
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v3.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v3.json",
+      "allocatedBytes": 12288
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v4.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v4.json",
+      "allocatedBytes": 20480
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v5.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v5.json",
+      "allocatedBytes": 20480
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v6.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-v6.json",
+      "allocatedBytes": 20480
+    },
+    {
+      "name": "taskfold-project-file-inventory-mac-v1.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-mac-v1.json",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-mac-v2.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-mac-v2.json",
+      "allocatedBytes": 20480
+    },
+    {
+      "name": "taskfold-project-file-inventory-mac-v3.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-mac-v3.json",
+      "allocatedBytes": 20480
+    },
+    {
+      "name": "taskfold-project-file-inventory-mac-v4.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-project-file-inventory-mac-v4.json",
+      "allocatedBytes": 20480
+    },
+    {
+      "name": "taskfold-project-file-full-ios-v1.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "name": "taskfold-project-file-full-ios-v1.json",
+      "allocatedBytes": 36864
+    },
+    {
+      "name": "taskfold-project-file-full-ios-v2.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "name": "taskfold-project-file-full-ios-v2.json",
+      "allocatedBytes": 40960
+    },
+    {
+      "name": "taskfold-project-file-full-ios-v3.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "name": "taskfold-project-file-full-ios-v3.json",
+      "allocatedBytes": 40960
+    },
+    {
+      "name": "taskfold-project-file-full-mac-v1.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "name": "taskfold-project-file-full-mac-v1.json",
+      "allocatedBytes": 40960
+    },
+    {
+      "name": "taskfold-project-file-full-mac-v2.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "name": "taskfold-project-file-full-mac-v2.json",
+      "allocatedBytes": 40960
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-core.log",
+      "allocatedBytes": 61440
+    },
+    {
+      "name": "taskfold-project-file-inventory-ios-final-core.log",
+      "allocatedBytes": 20480
+    },
+    {
+      "name": "taskfold-project-file-inventory-mac-core.log",
+      "allocatedBytes": 61440
+    },
+    {
+      "name": "taskfold-project-file-inventory.sql",
+      "allocatedBytes": 12288
+    },
+    {
+      "name": "taskfold-project-file-client-tests.swift",
+      "allocatedBytes": 8192
+    }
+  ],
+  "freeAfterRetiringOutputsBytes": 60384669696,
+  "coreCompilerCaches": [
+    {
+      "name": "core-ios",
+      "allocatedBytes": 661094400
+    },
+    {
+      "name": "core-mac",
+      "allocatedBytes": 606887936
+    }
+  ]
+}

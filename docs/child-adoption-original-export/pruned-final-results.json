@@ -1,0 +1,32 @@
+{
+  "reviewed": "2026-10-30",
+  "retained": "Own summaries, logs, source receipts, delivered originals and focused screenshots retained before removal; Mac direct proof is owned by Mac repo.",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-adoption-export-phone-v2.xcresult",
+      "allocatedKiB": 9252
+    },
+    {
+      "path": "/tmp/taskfold-adoption-export-phone-v2-attachments",
+      "allocatedKiB": 2040
+    },
+    {
+      "path": "/tmp/taskfold-adoption-export-ipad-v1.xcresult",
+      "allocatedKiB": 8572
+    },
+    {
+      "path": "/tmp/taskfold-adoption-export-ipad-v1-attachments",
+      "allocatedKiB": 3560
+    },
+    {
+      "path": "/tmp/taskfold-mac-px-native-v1.xcresult",
+      "allocatedKiB": 344
+    },
+    {
+      "path": "/tmp/taskfold-mac-px-native-v1-attachments",
+      "allocatedKiB": 4
+    }
+  ],
+  "temporaryDisplayAwakeAssertionStopped": true,
+  "isolatedMacAppQuit": true
+}

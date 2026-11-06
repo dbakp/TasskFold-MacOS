@@ -1,0 +1,32 @@
+{
+  "appSHA256": "f3e50c372694becae89439a6faf874737455074d1941d6f4f4b5f227183a9bb5",
+  "normalInboxList": true,
+  "secondChildSelected": true,
+  "oneSaveAction": true,
+  "selectionRetainedAfterSave": true,
+  "firstChildUnchanged": true,
+  "writes": 1,
+  "requests": 1,
+  "secondChildExactMetadataReadback": true,
+  "compactControlsVerified": true,
+  "savedStateAndDisabledSaveVerified": true,
+  "quitVerified": true,
+  "coldReturnCorrectChild": true,
+  "coldTitleVerified": true,
+  "finalQuitVerified": true,
+  "confirmationBesideTitleVerified": true,
+  "phase": "final-v5",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "f618e032cf629dec6d01144c66d1f0033dff7fb1a4053210aac34b489883ed70",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "bccb0bf21e2f71a436dc2ffec10c7dce096ef332af6d7160ce8b15fc1ddbf1b7",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "cbf135881444845aa0f405de1841a9c128d0eabd16f47fb93ce8272dbeae1d6f",
+    "Taskfold/Views/SubtaskOrganizer.swift": "537b1ff96bc3e15516bd02c8a5cf04bc88cb0efc70c7a48be8f4239c7aa6a446",
+    "Taskfold/ChildFieldNativeFixture.swift": "e7c49f8e3113c861d20021307cd529784ab86322f8a935e810ff4491cb3060a4",
+    "TaskfoldUITests/AudioCommentUITests.swift": "6bf9a84c9cb568aff65ce00fc037b0e6dbf6bc489aa32f17209d3f85f34c0363",
+    "TaskfoldTests/ChildTaskFieldOpeningTests.swift": "6efc15f9b16f805dcd734657d5047b77da1641bfa33856ce069d0dd3c4868f6c",
+    "Taskfold/TaskfoldMacApp.swift": "dfcd701c4960d9ecd84bf2978a308b0d1a9b17dcd61967ea460bec0f4ae555a4",
+    "Taskfold/Views/TaskInspector.swift": "54a6c2b638fad6f6abd7b4b10dd72f07585a6ba8801b20a04c3fd4ceb22afe04",
+    "Taskfold/Views/RootView.swift": "f22558e76fb25874de05afeacfcb520aab6323c76b2cabaece8616e01c4ce23a"
+  },
+  "serverSHA256": "b679233c3ed65927a7b38f544fe9f89fc53603017d884af4788bdfeb693c3882"
+}

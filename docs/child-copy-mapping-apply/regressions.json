@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "deployed": false,
+  "sourceSHA256": {
+    "20261031204437_child_field_activity_details.sql": "ef059fb6f7a8ea2ed32945b3424071f761ee43e8b92b6d10eb28d33166563b2c",
+    "20261101041509_child_order_activity.sql": "521f9b92ece30c56f9ace24d49bbc756104cae2fe26a65dbfe0dd1d923bf827e",
+    "20261101101059_reviewed_saved_copy_reconciliation.sql": "7a25e9dcd57c46b81713521daa26443f4a766da9dae7f92a50dad8706fde1247",
+    "20261101123154_reviewed_child_history_reconciliation.sql": "ddf413624e19aab8b74634903f962f07e30e08d4803bf3ef940c68f5f01160cf",
+    "20261101124928_atomic_child_copy_mapping.sql": "cc84badc25526576ded6013b758b329010ed894312b5173df5cfd36e8f3dd430"
+  },
+  "suites": [
+    {
+      "name": "copy-choice",
+      "assertions": 133,
+      "passed": true,
+      "fixtureRemoved": true
+    },
+    {
+      "name": "legacy-repair",
+      "assertions": 332,
+      "passed": true,
+      "fixtureRemoved": true
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-bulk-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo" -resultBundlePath /tmp/taskfold-workflow-bulk-phone-rerun.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-workflow-bulk-phone-rerun.xcresult
+
+2026-10-26 21:54:16.717186+0100 TaskfoldUITests-Runner[58597:23649949] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 21:54:20.203.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 21:54:20.204.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 21:54:20.204.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' started.
+    t =     0.00s Start Test at 2026-10-26 21:54:20.207
+    t =     0.03s Set Up
+    t =     0.04s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.04s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 21:54:20.512 xcodebuild[58576:23649479] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 21:54:20.512 xcodebuild[58576:23649479] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[58597]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1022dc398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1031f8310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     2.22s         Setting up automation session
+    t =     6.70s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.78s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =     9.85s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =     9.85s         Checking existence of `"openNativeWorkflow" Button`
+    t =    11.07s Tap "openNativeWorkflow" Button
+    t =    11.07s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.07s     Find the "openNativeWorkflow" Button
+    t =    11.12s     Check for interrupting elements affecting "openNativeWorkflow" Button
+    t =    11.15s     Synthesize event
+    t =    11.49s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.81s Find the "applyWorkflowTemplate" Button
+    t =    12.93s     Find the "applyWorkflowTemplate" Button (retry 1)
+    t =    13.99s     Find the "applyWorkflowTemplate" Button (retry 2)
+    t =    14.05s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    14.05s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.05s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    14.10s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    14.15s     Synthesize event
+    t =    14.57s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.40s Find the "applyWorkflowTemplate" Button
+    t =    15.48s Waiting 8.0s for "applyWorkflowTemplate" Button to exist
+    t =    16.57s     Checking `Expect predicate `existsNoRetry == 1` for object "applyWorkflowTemplate" Button`
+    t =    16.57s         Checking existence of `"applyWorkflowTemplate" Button`
+    t =    16.63s Tap "applyWorkflowTemplate" Button
+    t =    16.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.65s     Find the "applyWorkflowTemplate" Button
+    t =    16.72s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    16.78s     Synthesize event
+    t =    17.07s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.62s Tap "addIncomingWorkflowTask" Button
+    t =    18.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.62s     Find the "addIncomingWorkflowTask" Button
+    t =    18.68s     Check for interrupting elements affecting "addIncomingWorkflowTask" Button
+    t =    18.71s     Synthesize event
+    t =    19.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.26s Tap "undoNativeWorkflow" Button
+    t =    19.26s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.26s     Find the "undoNativeWorkflow" Button
+    t =    19.29s     Check for interrupting elements affecting "undoNativeWorkflow" Button
+    t =    19.33s     Synthesize event
+    t =    19.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.00s Checking existence of `"Later incoming work" StaticText`
+    t =    21.03s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    21.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.04s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    21.06s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    21.09s     Synthesize event
+    t =    21.52s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.05s Checking existence of `"Later incoming work" StaticText`
+    t =    22.08s Find the "Later incoming work" StaticText
+    t =    22.13s Waiting 5.0s for "Later incoming work" StaticText to exist
+    t =    23.20s     Checking `Expect predicate `existsNoRetry == 1` for object "Later incoming work" StaticText`
+    t =    23.20s         Checking existence of `"Later incoming work" StaticText`
+    t =    23.30s Find the "Later incoming work" StaticText
+    t =    23.46s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    23.63s Added attachment named 'Refused workflow Undo preserves incoming work'
+    t =    23.63s Terminate com.dbakp.taskfold.workflowteststeameditbridge:58617
+    t =    24.72s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    24.73s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 21:54:44.937 xcodebuild[58576:23649479] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 21:54:44.938 xcodebuild[58576:23649479] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    24.96s         Setting up automation session
+    t =    30.86s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.73s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =    36.81s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =    36.82s         Checking existence of `"openNativeWorkflow" Button`
+    t =    39.54s Terminate com.dbakp.taskfold.workflowteststeameditbridge:58775
+    t =    40.63s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' passed (41.314 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-26 21:55:01.521.
+	 Executed 1 test, with 0 failures (0 unexpected) in 41.314 (41.317) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 21:55:01.524.
+	 Executed 1 test, with 0 failures (0 unexpected) in 41.314 (41.320) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 21:55:01.524.
+	 Executed 1 test, with 0 failures (0 unexpected) in 41.314 (41.321) seconds
+2026-10-26 21:55:01.907 xcodebuild[58576:23649479] [MT] IDETestOperationsObserverDebug: 48.242 elapsed -- Testing started completed.
+2026-10-26 21:55:01.907 xcodebuild[58576:23649479] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 21:55:01.907 xcodebuild[58576:23649479] [MT] IDETestOperationsObserverDebug: 48.242 sec, +48.242 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-workflow-bulk-phone-rerun.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

@@ -1,0 +1,27 @@
+{
+  "app": {
+    "entitlements": {
+      "com.apple.security.app-sandbox": true,
+      "com.apple.security.application-groups": [
+        "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts"
+      ],
+      "com.apple.security.files.user-selected.read-write": true,
+      "com.apple.security.get-task-allow": true,
+      "com.apple.security.network.client": true,
+      "com.apple.security.personal-information.calendars": true
+    },
+    "actualSignatureTeam": "3UZ4C73FM2",
+    "strictDeepSignatureVerified": true
+  },
+  "extension": {
+    "entitlements": {
+      "com.apple.security.app-sandbox": true,
+      "com.apple.security.application-groups": [
+        "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts"
+      ],
+      "com.apple.security.get-task-allow": true
+    },
+    "actualSignatureTeam": "3UZ4C73FM2",
+    "strictDeepSignatureVerified": true
+  }
+}

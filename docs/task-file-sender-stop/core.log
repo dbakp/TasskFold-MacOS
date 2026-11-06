@@ -1,0 +1,374 @@
+Building for debugging...
+[Using on-disk description]
+[2 / 11]
+[4 / 13] TaskfoldCore
+[6 / 15] TaskfoldCore
+[11 / 16] TaskfoldCore
+[12 / 15] TaskfoldCoreTests-product
+[14 / 17] TaskfoldCoreTests-product
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/AutomationAccessTests.swift:5:61: warning: 'AutomationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 | @testable import TaskfoldCore
+  4 |
+  5 | private final class AutomationHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                       `- warning: 'AutomationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'AutomationHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, AutomationHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/ChildTaskCompletionBatchTests.swift:13:56: warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 11 |     func remove(key: String) throws { lock.lock(); defer { lock.unlock() }; rows.removeValue(forKey: key) }
+ 12 | }
+ 13 | private final class BatchHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                  `- warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'BatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 14 |     nonisolated(unsafe) static var handler: ((URLRequest, BatchHTTP) -> Void)?
+ 15 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/CloudCalendarTests.swift:15:61: warning: 'CalendarProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 13 |     var captured:[URLRequest] {lock.lock();defer{lock.unlock()};return requests}
+ 14 | }
+ 15 | private final class CalendarProtocol:URLProtocol,@unchecked Sendable {
+    |                     |                                       `- warning: 'CalendarProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'CalendarProtocol' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 16 |     static let lock=NSLock()
+ 17 |     nonisolated(unsafe) static var scripts:[String:CalendarScript]=[:]
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/CompletionSelectionRootReadTests.swift:4:59: warning: 'RootReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  2 | @testable import TaskfoldCore
+  3 |
+  4 | private final class RootReadHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'RootReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'RootReadHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  5 |     nonisolated(unsafe) static var handler: ((URLRequest, RootReadHTTP) -> Void)?
+  6 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/EmailCaptureTests.swift:195:56: warning: 'EmailHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+193 |     }
+194 | }
+195 | private final class EmailHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                  `- warning: 'EmailHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'EmailHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+196 |     static var handler: ((URLRequest, EmailHTTP) -> Void)?
+197 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/LocationHandoffTests.swift:12:58: warning: 'HandoffHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 10 |     var calls: [URLRequest] { lock.lock(); defer { lock.unlock() }; return requests }
+ 11 | }
+ 12 | private final class HandoffHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'HandoffHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'HandoffHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 13 |     static let state = HandoffHTTPState()
+ 14 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/MixedTaskCompletionTests.swift:5:56: warning: 'MixedHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 | @testable import TaskfoldCore
+  4 |
+  5 | private final class MixedHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                  `- warning: 'MixedHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'MixedHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     nonisolated(unsafe) static var handler: ((URLRequest, MixedHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TaskFileUploadTests.swift:40:55: warning: 'FileHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 38 |     func remove(key: String) throws { try base.remove(key: key) }
+ 39 | }
+ 40 | private final class FileHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                 `- warning: 'FileHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'FileHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 41 |     static var handler: ((URLRequest, FileHTTP) -> Void)?
+ 42 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionBatchTests.swift:5:66: warning: 'CompletionBatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+   3 | @testable import TaskfoldCore
+   4 |
+   5 | private final class CompletionBatchHTTP: URLProtocol, @unchecked Sendable {
+     |                     |                                            `- warning: 'CompletionBatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+     |                     `- note: 'CompletionBatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+   6 |     static var handler: ((URLRequest, CompletionBatchHTTP) -> Void)?
+   7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionTests.swift:5:61: warning: 'CompletionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+   3 | @testable import TaskfoldCore
+   4 |
+   5 | private final class CompletionHTTP: URLProtocol, @unchecked Sendable {
+     |                     |                                       `- warning: 'CompletionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+     |                     `- note: 'CompletionHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+   6 |     static var handler: ((URLRequest,CompletionHTTP)->Void)?
+   7 |     override class func canInit(with request:URLRequest)->Bool {true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamOrganizationCommandTests.swift:30:58: warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 28 |     }
+ 29 | }
+ 30 | private final class CommandHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'CommandHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 31 |     static var handler: ((URLRequest, CommandHTTP) -> Void)?
+ 32 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamOrganizationTests.swift:8:63: warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  6 | private let orgOther = "ea300000-0000-4000-8000-000000000003"
+  7 | private let orgOrigin = "https://backend.example"
+  8 | private final class OrganizationHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                         `- warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'OrganizationHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  9 |     static var handler: ((URLRequest, OrganizationHTTP) -> Void)?
+ 10 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamProjectAccessTests.swift:7:62: warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  5 | private let tpTeam = "f07dcafe-0000-4000-8000-000000000011", tpProject = "f07dcafe-0000-4000-8000-000000000021"
+  6 | private let tpOrigin = "https://backend.example"
+  7 | private final class TeamProjectHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                        `- warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamProjectHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  8 |     static var handler: ((URLRequest, TeamProjectHTTP) -> Void)?
+  9 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamProjectAdoptionTests.swift:32:59: warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 30 |     }
+ 31 | }
+ 32 | private final class AdoptionHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'AdoptionHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 33 |     static var handler: ((URLRequest, AdoptionHTTP) -> Void)?
+ 34 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskBatchTests.swift:5:54: warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private let batchOrigin="https://backend.example"
+  5 | private final class BatchHTTP:URLProtocol,@unchecked Sendable {
+    |                     |                                `- warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'BatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler:((URLRequest,BatchHTTP)->Void)?
+  7 |     override class func canInit(with request:URLRequest)->Bool{true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskEditTests.swift:5:59: warning: 'TeamEditHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private let editOrigin = "https://backend.example"
+  5 | private final class TeamEditHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'TeamEditHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamEditHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, TeamEditHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskLifecycleTests.swift:5:59: warning: 'TeamLifeHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private let lifeOrigin = "https://backend.example"
+  5 | private final class TeamLifeHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'TeamLifeHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamLifeHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, TeamLifeHTTP) -> Void)?
+  7 |     override class func canInit(with request:URLRequest)->Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskMoveTests.swift:449:55: warning: 'MoveHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+447 |     }
+448 | }
+449 | private final class MoveHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                 `- warning: 'MoveHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'MoveHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+450 |     static var handler: ((URLRequest, MoveHTTP) -> Void)?
+451 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskRecipientTests.swift:4:60: warning: 'RecipientHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  2 | @testable import TaskfoldCore
+  3 |
+  4 | private final class RecipientHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                      `- warning: 'RecipientHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'RecipientHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  5 |     static var handler: ((URLRequest, RecipientHTTP) -> Void)?
+  6 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTemplateCommandTests.swift:35:66: warning: 'TemplateCommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 33 | }
+ 34 | private extension Int { var double: Double { Double(self) } }
+ 35 | private final class TemplateCommandHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                            `- warning: 'TemplateCommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TemplateCommandHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 36 |     static var handler: ((URLRequest, TemplateCommandHTTP) -> Void)?
+ 37 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTemplateLibraryTests.swift:6:58: warning: 'LibraryHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  4 | private let libraryAccount = "ec250000-0000-4000-8000-000000000001", libraryTeam = "ec250000-0000-4000-8000-000000000002", libraryOrigin = "https://library.example"
+  5 | private func libraryID(_ n: Int) -> String { String(format: "ec250000-0000-4000-8001-%012d", n) }
+  6 | private final class LibraryHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'LibraryHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'LibraryHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  7 |     static var handler: ((URLRequest, LibraryHTTP) -> Void)?
+  8 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamWorkflowDestinationsTests.swift:5:63: warning: 'WorkflowReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private func destinationID(_ n: Int) -> String { String(format: "ec270000-0000-4000-8000-%012d", n) }
+  5 | private final class WorkflowReadHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                         `- warning: 'WorkflowReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkflowReadHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, WorkflowReadHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamWorkflowRunCommandTests.swift:34:59: warning: 'WorkflowHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 32 |     func remove(key: String) throws { lock.lock(); let fail = failing; lock.unlock(); if fail { throw URLError(.cannotRemoveFile) }; try base.remove(key: key) }
+ 33 | }
+ 34 | private final class WorkflowHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'WorkflowHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkflowHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 35 |     static var handler: ((URLRequest, WorkflowHTTP) -> Void)?
+ 36 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamWorkspaceTests.swift:4:58: warning: 'WorkspaceHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  2 | @testable import TaskfoldCore
+  3 |
+  4 | private final class WorkspaceHTTP:URLProtocol,@unchecked Sendable {
+    |                     |                                    `- warning: 'WorkspaceHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkspaceHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  5 |     static var handler:((URLRequest,WorkspaceHTTP)->Void)?
+  6 |     override class func canInit(with request:URLRequest)->Bool {true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/WebhookAccessTests.swift:135:58: warning: 'WebhookHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+133 | }
+134 |
+135 | private final class WebhookHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'WebhookHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WebhookHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+136 |     static var handler: ((URLRequest,WebhookHTTP)->Void)?
+137 |     override class func canInit(with request:URLRequest)->Bool { true }
+
+[#UnavailableSendableConformance]: <https://docs.swift.org/compiler/documentation/diagnostics/unavailable-sendable-conformance>
+[21 / 23] TaskfoldCoreTests-product
+[23 / 23] TaskfoldCoreTests-product
+Build complete! (11,59 secs)
+Test Suite 'Selected tests' started at 2026-11-02 00:03:31.793.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-11-02 00:03:31.796.
+Test Suite 'TaskFileUploadTests' started at 2026-11-02 00:03:31.796.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testAccountSwitchWhileAwaitingReplyKeepsAttemptedOriginalWithoutLateUIReceipt]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testAccountSwitchWhileAwaitingReplyKeepsAttemptedOriginalWithoutLateUIReceipt]' passed (0.020 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testActualBackendSendsFrozenBytesAndOnlyOperationForRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testActualBackendSendsFrozenBytesAndOnlyOperationForRecovery]' passed (0.044 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testActualOwnSQLReceiptRoundTripsAndKeepsOriginalFile]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testActualOwnSQLReceiptRoundTripsAndKeepsOriginalFile]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testActualOwnSQLUnknownSenderStopClosesAndColdRestoresOriginal]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testActualOwnSQLUnknownSenderStopClosesAndColdRestoresOriginal]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testBackendDownloadVerifiesActualBytesBeforeReturningCopy]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testBackendDownloadVerifiesActualBytesBeforeReturningCopy]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testBackendRejectsWrongSessionBeforeAnyNetworkRequest]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testBackendRejectsWrongSessionBeforeAnyNetworkRequest]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testCASRefusesStaleWindowAndCannotResurrectClearedJournal]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testCASRefusesStaleWindowAndCannotResurrectClearedJournal]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testCiphertextColdReadHasNoPlaintextAndIsBoundToOrigin]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testCiphertextColdReadHasNoPlaintextAndIsBoundToOrigin]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testDescriptorBoundsAndUnsafeFileNamesReject]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testDescriptorBoundsAndUnsafeFileNamesReject]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testDisabledPublicationStillLoadsAndResolvesSavedOriginal]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testDisabledPublicationStillLoadsAndResolvesSavedOriginal]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testDurableAttemptPrecedesSendAndLostReplyRecoversSameIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testDurableAttemptPrecedesSendAndLostReplyRecoversSameIdentity]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testMalformedReceiptCannotClearOrConfirmAndTerminalCopyClearsOnlyExplicitly]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testMalformedReceiptCannotClearOrConfirmAndTerminalCopyClearsOnlyExplicitly]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testMaximumBinaryFileFitsEncryptedRecoveryAndRealHTTPEnvelope]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testMaximumBinaryFileFitsEncryptedRecoveryAndRealHTTPEnvelope]' passed (0.406 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testMinimalSenderStopRejectsForeignUnknownAndPublishingClaims]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testMinimalSenderStopRejectsForeignUnknownAndPublishingClaims]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testOnlyAuthenticatedTerminalStatesResolveAndKeepBytes]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testOnlyAuthenticatedTerminalStatesResolveAndKeepBytes]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testQueuedAndAttemptedJournalsRoundTripWithoutExposingDescriptions]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testQueuedAndAttemptedJournalsRoundTripWithoutExposingDescriptions]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testQueuedCancellationDoesNotSendAndStatusDoesNotMarkUnsentAttempted]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testQueuedCancellationDoesNotSendAndStatusDoesNotMarkUnsentAttempted]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testReceiptRequiresExactOperationAccountTargetAndFileDescriptor]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testReceiptRequiresExactOperationAccountTargetAndFileDescriptor]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testTamperedBytesOrUnknownJournalFieldsCannotRecover]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testTamperedBytesOrUnknownJournalFieldsCannotRecover]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testUnreservedAttemptCanStopAndReleaseOnlyAfterRealProof]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testUnreservedAttemptCanStopAndReleaseOnlyAfterRealProof]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testWriteFailureAndAnotherPendingFilePreventNetworkAndReplacement]' started.
+Test Case '-[TaskfoldCoreTests.TaskFileUploadTests testWriteFailureAndAnotherPendingFilePreventNetworkAndReplacement]' passed (0.004 seconds).
+Test Suite 'TaskFileUploadTests' passed at 2026-11-02 00:03:32.362.
+	 Executed 21 tests, with 0 failures (0 unexpected) in 0.564 (0.567) seconds
+Test Suite 'TeamOrganizationCommandTests' started at 2026-11-02 00:03:32.362.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testActualPostgreSQLCommandReceiptsDecodeForEveryImplementedAction]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testActualPostgreSQLCommandReceiptsDecodeForEveryImplementedAction]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testAllActionsHaveExactBodiesAndRoundTripWithoutChangingRequestIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testAllActionsHaveExactBodiesAndRoundTripWithoutChangingRequestIdentity]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testBackendIsScopedAndPreservesExactCommandBody]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testBackendIsScopedAndPreservesExactCommandBody]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testCancelledLeaseCannotPersistOrClear]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testCancelledLeaseCannotPersistOrClear]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testClosingDuringSendKeepsOriginalAccountRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testClosingDuringSendKeepsOriginalAccountRecovery]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testCorruptRecoveryIsKeptAndAccountRemovalStillErasesIt]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testCorruptRecoveryIsKeptAndAccountRemovalStillErasesIt]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testDifferentServerCleanupCannotEraseOriginalRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testDifferentServerCleanupCannotEraseOriginalRequest]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testExpiredCommandCannotBeRenewedByDecodeOrRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testExpiredCommandCannotBeRenewedByDecodeOrRetry]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testExpiryNeverGeneratesReplacementOrSendsAgain]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testExpiryNeverGeneratesReplacementOrSendsAgain]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testForeignResultAndAuthenticationFailureKeepPending]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testForeignResultAndAuthenticationFailureKeepPending]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testInvalidFieldsNamesAndRevisionsCannotBecomeCommands]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testInvalidFieldsNamesAndRevisionsCannotBecomeCommands]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testLostReplyRelaunchAndRetryUseExactlyOneServerRequestIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testLostReplyRelaunchAndRetryUseExactlyOneServerRequestIdentity]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testReceiptsRejectForeignTeamStateRevisionAndMissingFolder]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testReceiptsRejectForeignTeamStateRevisionAndMissingFolder]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testRemovalFencePreventsLateRecoveryRecreationAndReads]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testRemovalFencePreventsLateRecoveryRecreationAndReads]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testStaleRetryCannotSendAnotherWindowsReplacementRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testStaleRetryCannotSendAnotherWindowsReplacementRequest]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testStorageFailurePreventsSendAndFailedClearRetainsRetry]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testStorageFailurePreventsSendAndFailedClearRetainsRetry]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testTwoWindowsCannotReplaceEachOthersPendingCommand]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testTwoWindowsCannotReplaceEachOthersPendingCommand]' passed (0.034 seconds).
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testVaultRefusesReplacementWrongOriginAndStaleAcknowledgement]' started.
+Test Case '-[TaskfoldCoreTests.TeamOrganizationCommandTests testVaultRefusesReplacementWrongOriginAndStaleAcknowledgement]' passed (0.003 seconds).
+Test Suite 'TeamOrganizationCommandTests' passed at 2026-11-02 00:03:32.478.
+	 Executed 18 tests, with 0 failures (0 unexpected) in 0.114 (0.115) seconds
+Test Suite 'TeamTemplateCommandTests' started at 2026-11-02 00:03:32.478.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testAccessReviewCheckedBeforeAndAfterDurableSave]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testAccessReviewCheckedBeforeAndAfterDurableSave]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testActualHTTPCommandContractAndReceiptVerification]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testActualHTTPCommandContractAndReceiptVerification]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testAllActionsRoundTripAndHaveExactReceiptSemantics]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testAllActionsRoundTripAndHaveExactReceiptSemantics]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCancelledLeaseAndRemovedAccountCannotWriteOrRecreate]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCancelledLeaseAndRemovedAccountCannotWriteOrRecreate]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testChangedRequestInAnotherWindowCannotBeRetriedOrDropped]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testChangedRequestInAnotherWindowCannotBeRetriedOrDropped]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCiphertextCannotBeReadUnderAnotherAccountOriginOrKey]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCiphertextCannotBeReadUnderAnotherAccountOriginOrKey]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testClosingOrChangingAccountDuringReplyKeepsDiskButClearsPresentation]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testClosingOrChangingAccountDuringReplyKeepsDiskButClearsPresentation]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCorruptionBlocksNewAuthoringWithoutOverwritingRecovery]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testCorruptionBlocksNewAuthoringWithoutOverwritingRecovery]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testEncryptedFileRelaunchRoundTripAndPrivatePermissions]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testEncryptedFileRelaunchRoundTripAndPrivatePermissions]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testExactActionFieldsRejectExtrasAndMissingReviewedInputs]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testExactActionFieldsRejectExtrasAndMissingReviewedInputs]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testForeignReceiptAndFailedCleanupRetainExactRequest]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testForeignReceiptAndFailedCleanupRetainExactRequest]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testInvalidScopeNamesAndRevisionsCannotRecover]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testInvalidScopeNamesAndRevisionsCannotRecover]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testKeyFailurePreservesCiphertextAndCleanupDoesNotNeedTheKey]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testKeyFailurePreservesCiphertextAndCleanupDoesNotNeedTheKey]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testLargeDefinitionUsesFileBackedVaultBeyondKeychainCommandDefault]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testLargeDefinitionUsesFileBackedVaultBeyondKeychainCommandDefault]' passed (0.058 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testLostReplyRelaunchRetriesExactOriginalCommandOnce]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testLostReplyRelaunchRetriesExactOriginalCommandOnce]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testOversizedAndNonregularCiphertextAreRejectedBeforeDecryption]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testOversizedAndNonregularCiphertextAreRejectedBeforeDecryption]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testReceiptCannotConfirmAnotherOperationIdentityOrRevision]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testReceiptCannotConfirmAnotherOperationIdentityOrRevision]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testStopRetryingLeavesAlreadyAppliedServerWorkAlone]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testStopRetryingLeavesAlreadyAppliedServerWorkAlone]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testSymlinkFileAndDirectoryCannotRedirectReadsOrWrites]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testSymlinkFileAndDirectoryCannotRedirectReadsOrWrites]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testTwoVaultsPreserveTheOriginalRequestAndConditionalClear]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testTwoVaultsPreserveTheOriginalRequestAndConditionalClear]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testUnreadableRecoveryBlocksFreshRequests]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testUnreadableRecoveryBlocksFreshRequests]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testUnsupportedDefinitionCannotBePublishedOrReplaced]' started.
+Test Case '-[TaskfoldCoreTests.TeamTemplateCommandTests testUnsupportedDefinitionCannotBePublishedOrReplaced]' passed (0.027 seconds).
+Test Suite 'TeamTemplateCommandTests' passed at 2026-11-02 00:03:32.663.
+	 Executed 22 tests, with 0 failures (0 unexpected) in 0.183 (0.185) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-11-02 00:03:32.663.
+	 Executed 61 tests, with 0 failures (0 unexpected) in 0.860 (0.867) seconds
+Test Suite 'Selected tests' passed at 2026-11-02 00:03:32.663.
+	 Executed 61 tests, with 0 failures (0 unexpected) in 0.860 (0.869) seconds

@@ -1,0 +1,17 @@
+{
+  "provenance": "Transcribed observed failures; early draft logs were overwritten, not retained as raw evidence.",
+  "attempts": [
+    {
+      "failure": "42601 in fixture SET request.jwt.claims",
+      "correction": "Use a quoted JSON string as the SET value, rather than a cast expression."
+    },
+    {
+      "failure": "P0001 in collaborator fixture setup",
+      "correction": "Create a pending invitation with the signed-in synthetic owner and accept through the existing trigger; add matching synthetic profiles/emails."
+    },
+    {
+      "failure": "CLI advisor invocation exited nonzero after producing results because PostHog shutdown timed out",
+      "correction": "Use documented SUPABASE_TELEMETRY_DISABLED=1 only for test commands. Do not change global settings or count the failed command as a pass."
+    }
+  ]
+}

@@ -25,6 +25,74 @@ final class ProjectPulseWidgetTests: XCTestCase {
         let payload = WidgetProjection.payload(tasks: s.tables["tasks"] ?? [], projects: s.tables["projects"] ?? [], account: account ?? owner, now: at ?? now, calendar: calendar, focusReadable: readable, pulseActivity: s.tables[TaskActivity.table] ?? [], pulseEpoch: s.tables[TaskActivity.epochTable] ?? [])
         return try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(payload))
     }
+    func testPulseProjectionRetainsFrozenHistoryAndBoundaryCorpus() throws {
+        let account = "11111111-1111-4111-8111-111111111111", second = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb72"
+        let instants = ["2026-03-29T01:30:00Z", "2026-10-25T01:30:00Z"]
+        var digests: [String] = []
+        for zone in ["Europe/Copenhagen", "America/New_York", "Asia/Kathmandu", "Pacific/Apia"] {
+            var calendar = Calendar(identifier: .gregorian); calendar.timeZone = try XCTUnwrap(TimeZone(identifier: zone))
+            for variant in 0..<16 {
+                let now = try XCTUnwrap(TaskPlanning.instant(instants[variant % 2]))
+                let open = Record(["id": .string("root"), "title": .string("Private task"), "project_id": .string(projectID), "completed": .bool(false), "task_generation": .string("cccccccc-cccc-4ccc-8ccc-cccccccccc73")])
+                var done = open; done["completed"] = .bool(true); done["completed_at"] = .string(TaskActivity.stamp(now.addingTimeInterval(-60)))
+                var moved = done; moved["project_id"] = .string(second)
+                func event(_ number: Int, _ before: Record?, _ after: Record?, _ date: Date) -> Record {
+                    let b = before.map(TaskActivity.state) ?? [:], a = after.map(TaskActivity.state) ?? [:]
+                    return Record(["id": .string(String(format: "dddddddd-dddd-4ddd-8ddd-%012d", number)), "sequence": .number(Double(number)), "user_id": .string(account), "task_id": .string("root"), "actor_id": .null,
+                        "recorded_at": .string(TaskActivity.stamp(date)), "effective_at": .string(TaskActivity.stamp(date)), "completion_version": .number(0), "kinds": .array(TaskActivity.changes(before: b, after: a).map { .string($0.rawValue) }),
+                        "before_state": .object(b), "after_state": .object(a), "root_context": TaskRootActivityContext.document(before: before, after: after)])
+                }
+                var rows = [event(1, nil, open, now.addingTimeInterval(-8 * 86400)), event(2, open, done, now.addingTimeInterval(-60)), event(3, done, open, now), event(4, done, moved, now.addingTimeInterval(-30)), event(5, moved, done, now.addingTimeInterval(1)), event(6, done, nil, now.addingTimeInterval(-7 * 86400))]
+                switch variant % 6 {
+                case 0: rows += [rows[1], rows[3]]
+                case 1: rows[1]["root_context"] = .null
+                case 2: var context = rows[1]["root_context"].object; context["after_type"] = .string("unknown"); rows[1]["root_context"] = .object(context)
+                case 3: rows[1]["recorded_at"] = .string("invalid"); rows.append(Record(["id": .string("unsupported")]))
+                case 4: var future = rows[1]; future["recorded_at"] = .string(TaskActivity.stamp(now.addingTimeInterval(1))); rows.insert(future, at: 0)
+                default: var context = rows[1]["root_context"].object; context["version"] = .number(2); rows[1]["root_context"] = .object(context)
+                }
+                if variant % 2 == 1 { rows.reverse() }
+                var projects = [project(), project(second, name: "Second")]
+                if variant % 4 == 0 { projects.append(project(projectID.uppercased(), name: "Duplicate")) }
+                let epoch = variant % 4 == 0 ? [] : [Record(["id": .string("current"), "recorded_from": .string(variant % 4 == 1 ? "2026-01-01T00:00:00Z" : variant % 4 == 2 ? TaskActivity.stamp(now.addingTimeInterval(1)) : "invalid")])]
+                let value = WidgetProjection.pulsePayload(tasks: [open, done], projects: projects, activity: rows, epoch: epoch, account: account, readable: variant != 15, now: now, calendar: calendar)
+                let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+                digests.append(DueReminder.digest(String(decoding: try encoder.encode(value), as: UTF8.self)))
+            }
+        }
+        let digest = DueReminder.digest(digests.joined(separator: "\n"))
+        print("PULSE_HISTORY_CORPUS \(digests.count) \(digest)")
+        XCTAssertEqual(digests.count, 64)
+        XCTAssertEqual(digest, "8b8a1210f63dafb2d1a9d66b084d49068dad1fef3727b92e1daac8c07fecda12", "Frozen before sharing parsed widget history")
+    }
+
+    func testPreparedHistoryKeepsDailyReadingsAndRejectsDifferentProject() throws {
+        let state = sample(), tasks = state.tables["tasks"] ?? []
+        var rows = state.tables[TaskActivity.table] ?? []
+        var unreadable = try XCTUnwrap(rows.first)
+        unreadable["id"] = .string("eeeeeeee-eeee-4eee-8eee-eeeeeeeeee74")
+        var context = unreadable["root_context"].object; context["after_type"] = .string("unknown")
+        unreadable["root_context"] = .object(context)
+        var future = try XCTUnwrap(rows.first); future["id"] = .string("ffffffff-ffff-4fff-8fff-ffffffffff75")
+        future["recorded_at"] = .string(TaskActivity.stamp(now.addingTimeInterval(1)))
+        rows += [rows[0], unreadable, future, Record(["id": .string("malformed")])]
+        func compare(_ actual: ProjectPulseReading, _ expected: ProjectPulseReading) {
+            XCTAssertEqual([actual.total, actual.completed, actual.completions, actual.reopens, actual.additions, actual.movedIn, actual.movedOut, actual.malformed], [expected.total, expected.completed, expected.completions, expected.reopens, expected.additions, expected.movedIn, expected.movedOut, expected.malformed])
+            XCTAssertEqual(actual.events, expected.events); XCTAssertEqual(actual.timeline, expected.timeline)
+            XCTAssertEqual(actual.start, expected.start); XCTAssertEqual(actual.end, expected.end)
+            XCTAssertEqual(actual.historyIncomplete, expected.historyIncomplete); XCTAssertEqual(actual.countsIncomplete, expected.countsIncomplete)
+        }
+        for project in [projectID, projectID.uppercased(), "different"] {
+            let history = ProjectPulseReading.History(project: project, activity: rows)
+            for day in 0..<8 {
+                let date = try XCTUnwrap(calendar.date(byAdding: .day, value: day, to: now))
+                let original = ProjectPulseReading(project: project, tasks: tasks, activity: rows, now: date, calendar: calendar)
+                compare(ProjectPulseReading(project: project, tasks: tasks, activity: [], now: date, calendar: calendar, history: history), original)
+                compare(ProjectPulseReading(project: project, tasks: tasks, activity: rows, now: date, calendar: calendar, history: .init(project: "wrong project", parsed: [])), original)
+            }
+        }
+    }
+
     func testActualAppProjectionMatchesCurrentScopeAndNativeEventCounts() throws {
         let s = sample(), snapshot = try widget(s), pulse = try XCTUnwrap(snapshot.projectPulse), p = try XCTUnwrap(pulse.projects.first), day = try XCTUnwrap(p.days["2026-10-06"])
         let native = ProjectPulseReading(project: projectID, tasks: s.tables["tasks"]!, activity: s.tables[TaskActivity.table]!, now: now, calendar: calendar)

@@ -1,0 +1,98 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun BuildCache/ios-calendar-tablet/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F7AD9C8B-EF5E-44F0-82DF-6654524DA94D" -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TaskfoldUITests/testInterruptedSyncStatusWithoutPendingEdits" -resultBundlePath sync-status-ios-ui-v3.xcresult
+
+Writing result bundle at path:
+	/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/sync-status-ios-ui-v3.xcresult
+
+2026-10-12 02:33:55.665891+0200 TaskfoldUITests-Runner[42904:2447214] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-12 02:33:56.542.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-12 02:33:56.543.
+Test Suite 'TaskfoldUITests' started at 2026-10-12 02:33:56.543.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testInterruptedSyncStatusWithoutPendingEdits]' started.
+    t =     0.00s Start Test at 2026-10-12 02:33:56.544
+    t =     0.04s Set Up
+    t =     0.04s Open com.dbakp.taskfold.calendaraccessibilitytests
+    t =     0.04s     Launch com.dbakp.taskfold.calendaraccessibilitytests
+2026-10-12 02:33:56.807 xcodebuild[42889:2446976] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-12 02:33:56.807 xcodebuild[42889:2446976] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[42904]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1069ec310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1068c8398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     1.09s         Setting up automation session
+    t =     2.02s         Wait for com.dbakp.taskfold.calendaraccessibilitytests to idle
+    t =     5.66s Waiting 20.0s for "syncStatus" Any to exist
+    t =     6.70s     Checking `Expect predicate `existsNoRetry == 1` for object "syncStatus" Any`
+    t =     6.70s         Checking existence of `"syncStatus" Any`
+    t =     7.96s Checking `Expect predicate `label CONTAINS "Sync needs attention"` for object "syncStatus" Any`
+    t =     7.96s     Find the "syncStatus" Any
+    t =     8.08s Checking existence of `"0 changes waiting to sync" StaticText`
+    t =     8.13s Find the "Retry sync" Button
+    t =     8.20s Find the "Retry sync" Button
+    t =     8.25s Find the "Retry sync" Button
+    t =     8.30s Find the "Retry sync" Button
+    t =     8.35s Find the "Retry sync" Button
+    t =     8.40s Find the "Retry sync" Button
+    t =     8.45s Find the "Retry sync" Button
+    t =     8.50s Find the "Retry sync" Button
+    t =     8.56s Find the "Retry sync" Button
+    t =     8.61s Tap "Retry sync" Button
+    t =     8.61s     Wait for com.dbakp.taskfold.calendaraccessibilitytests to idle
+    t =     8.61s     Find the "Retry sync" Button
+    t =     8.65s     Check for interrupting elements affecting "Retry sync" Button
+    t =     8.71s     Synthesize event
+    t =     9.01s     Wait for com.dbakp.taskfold.calendaraccessibilitytests to idle
+    t =    10.31s Checking `Expect predicate `label CONTAINS "Sync needs attention"` for object "syncStatus" Other`
+    t =    10.31s     Find the "syncStatus" Other
+    t =    10.45s Find the Target Application 'com.dbakp.taskfold.calendaraccessibilitytests'
+    t =    10.58s Added attachment named 'Interrupted sync normal text'
+    t =    10.59s Terminate com.dbakp.taskfold.calendaraccessibilitytests:42916
+    t =    11.64s Open com.dbakp.taskfold.calendaraccessibilitytests
+    t =    11.64s     Launch com.dbakp.taskfold.calendaraccessibilitytests
+2026-10-12 02:34:08.190 xcodebuild[42889:2446976] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-12 02:34:08.190 xcodebuild[42889:2446976] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    11.86s         Setting up automation session
+    t =    12.83s         Wait for com.dbakp.taskfold.calendaraccessibilitytests to idle
+    t =    15.27s Waiting 20.0s for "syncStatus" Any to exist
+    t =    16.31s     Checking `Expect predicate `existsNoRetry == 1` for object "syncStatus" Any`
+    t =    16.32s         Checking existence of `"syncStatus" Any`
+    t =    17.59s Checking `Expect predicate `label CONTAINS "Sync needs attention"` for object "syncStatus" Any`
+    t =    17.59s     Find the "syncStatus" Any
+    t =    17.74s Checking existence of `"0 changes waiting to sync" StaticText`
+    t =    17.80s Find the "Retry sync" Button
+    t =    17.85s Find the "Retry sync" Button
+    t =    17.90s Find the "Retry sync" Button
+    t =    17.95s Find the "Retry sync" Button
+    t =    18.00s Find the "Retry sync" Button
+    t =    18.05s Find the "Retry sync" Button
+    t =    18.10s Find the "Retry sync" Button
+    t =    18.15s Find the "Retry sync" Button
+    t =    18.21s Find the "Retry sync" Button
+    t =    18.26s Tap "Retry sync" Button
+    t =    18.26s     Wait for com.dbakp.taskfold.calendaraccessibilitytests to idle
+    t =    18.26s     Find the "Retry sync" Button
+    t =    18.30s     Check for interrupting elements affecting "Retry sync" Button
+    t =    18.34s     Synthesize event
+    t =    18.64s     Wait for com.dbakp.taskfold.calendaraccessibilitytests to idle
+    t =    20.43s Checking `Expect predicate `label CONTAINS "Sync needs attention"` for object "syncStatus" Other`
+    t =    20.43s     Find the "syncStatus" Other
+    t =    20.58s Find the Target Application 'com.dbakp.taskfold.calendaraccessibilitytests'
+    t =    20.73s Added attachment named 'Interrupted sync largest text'
+    t =    20.73s Terminate com.dbakp.taskfold.calendaraccessibilitytests:42936
+    t =    21.80s Terminate com.dbakp.taskfold.calendaraccessibilitytests:0
+    t =    21.81s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testInterruptedSyncStatusWithoutPendingEdits]' passed (21.864 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-12 02:34:18.408.
+	 Executed 1 test, with 0 failures (0 unexpected) in 21.864 (21.865) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-12 02:34:18.408.
+	 Executed 1 test, with 0 failures (0 unexpected) in 21.864 (21.865) seconds
+Test Suite 'Selected tests' passed at 2026-10-12 02:34:18.408.
+	 Executed 1 test, with 0 failures (0 unexpected) in 21.864 (21.866) seconds
+2026-10-12 02:34:18.722 xcodebuild[42889:2446976] [MT] IDETestOperationsObserverDebug: 26.369 elapsed -- Testing started completed.
+2026-10-12 02:34:18.722 xcodebuild[42889:2446976] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-12 02:34:18.722 xcodebuild[42889:2446976] [MT] IDETestOperationsObserverDebug: 26.369 sec, +26.369 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/sync-status-ios-ui-v3.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

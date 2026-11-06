@@ -1,0 +1,20 @@
+{
+  "phase": "v1",
+  "keyboardSpaceSentCompletion": true,
+  "reviewRetriedOriginal": true,
+  "completionWrites": 1,
+  "completionRequests": 2,
+  "finding": "After Review closed, the warning and open inspector completion label were stale; fix required before acceptance",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "8aef66fdaad6b5327b2eba638e5daf27f655f57dca7f25ece9e4adbf2b671308",
+    "Taskfold/Core/Store.swift": "bd91c75d92409789f05d04963c9b8834e994e2cdfe2a531317bdd420d2f7ddf3",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "be502491b1019b17473a1aa74f64f34c62233f743d2450b34a206d8f75d551e3",
+    "TaskfoldUITests/AudioCommentUITests.swift": "b5b6833778c188de1d516714cd413367153f6dbb0c2a8dca5ac16b078c399359",
+    "TaskfoldTests/ChildTaskListCompletionTests.swift": "110dd3c93ec4b94e23e12d7a1519e7d3ec277ff613e5b5b511b7b403a572968b",
+    "Taskfold/Workspace.swift": "b7c2a5d6c38132a8974dca5baf1dffc9fa2e57ab9bd66d5364a1be81581b7616",
+    "Taskfold/Views/RootView.swift": "f33d482f80832475b50d9481bbf4b91a7f0f09ffea2ddf3043e197245d32b015",
+    "Taskfold/Views/TaskListView.swift": "f42f9bef2ec62aae6aa2bfd7c9994f532b98af278e6620f6cb30120a2d7bdac2",
+    "Taskfold/Views/TaskRowView.swift": "8a2e116b26c3797edae075359bad1af3a29e5e891510468b1bdf082dad314c56"
+  },
+  "appSHA256": "b3395965d1a7176e959fc1fe2d03cbee925155f34dd6b8d4e5250a2b29fcc718"
+}

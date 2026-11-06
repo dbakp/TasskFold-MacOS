@@ -1,0 +1,138 @@
+{
+  "date": "2026-10-29",
+  "coreSelectedPassed": 197,
+  "nativePhases": [
+    {
+      "result": "Passed",
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "phase": "phone-v9"
+    },
+    {
+      "result": "Passed",
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "phase": "tablet-v9"
+    },
+    {
+      "result": "Passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "phase": "phone-v10a"
+    },
+    {
+      "result": "Passed",
+      "passedTests": 4,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "phase": "phone-v10b"
+    },
+    {
+      "result": "Passed",
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "phase": "tablet-v10"
+    },
+    {
+      "result": "Passed",
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "phase": "tablet-v11a"
+    },
+    {
+      "result": "Passed",
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "phase": "tablet-v12"
+    },
+    {
+      "result": "Passed",
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "phase": "phone-v12"
+    },
+    {
+      "result": "Failed",
+      "passedTests": 0,
+      "failedTests": 4,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid view geometry: height is negative."
+        },
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid view geometry: width is negative."
+        }
+      ],
+      "phase": "mac-v12",
+      "failureScope": "Desktop runner could not reliably discover/open the fixture/editor controls; functional acceptance remains open."
+    }
+  ],
+  "scope": "Owner title changes using actual Store, encrypted files, Backend and UI with synthetic HTTP/key/accounts/refresh. Native changed notes/priority, speech, genuine Keychain, full shared/team/window/cleanup and hosted lifecycle remain open.",
+  "phaseDifferences": {
+    "v10": "Five distinct mobile journeys each; iPad default saved notice visually clipped, so layout not accepted.",
+    "v11a": "iPad normal/largest notice inside actual sheet passes; not final session-focus guard.",
+    "v12": "Final original-session focus guard plus actual Form viewport bounds; rerun Save/send/cold and largest/private-cold cases on phone/tablet. Other three journeys retain their v10 scope.",
+    "v13": "Limit Form viewport AX identifier to iOS: macOS otherwise propagates it over child control identifiers. iOS branch behavior unchanged from v12; both full test builds pass; direct Mac save/send/cold observation uses v13."
+  },
+  "ordinaryFlags": {
+    "TaskfoldChildRecordReadsEnabled": "absent",
+    "TaskfoldChildRecordWritesEnabled": "absent"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Backups.swift": "3b059c78cbb190b66da80b53b0300fbbccab97fd84f60b09ae06a67e13e79fd3",
+    "Taskfold/Core/Store.swift": "30a0e89896113163f4a9f26194ee4b8feff021807d3de50c38c699e4a3167865",
+    "Taskfold/ChildFieldNativeFixture.swift": "a145f9394fd99d1d34549ce9822e7aa929984448c7804fd06467eca81658c3b1",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "daa007789d26db677dd7608e21b30268d27ce3e1fde33f91fba0cdd2500b0e97",
+    "TaskfoldUITests/AudioCommentUITests.swift": "d594f0be674a2cedf30564117f69198384f3b360982746c05a77617edd8d48a5"
+  },
+  "builds": [
+    "build-mac-v13: TEST BUILD SUCCEEDED",
+    "build-ios-v13: TEST BUILD SUCCEEDED"
+  ],
+  "strictDeepSignatureVerification": [
+    "Mac app and runner",
+    "Simulator app and runner"
+  ],
+  "exposure": "Disabled; no hosted migration or real account/task mutation",
+  "MacRuntime": "Automated v12: 0/4 with negative width/height warnings, retained as failed. Direct computer-use v13: title edit, device Save, explicit Review/Send and cold confirmed receipt pass; exactly one write/request. Broader Mac lifecycle and clean runtime remain open.",
+  "manualMac": {
+    "tool": "cua_repl native app UI",
+    "build": "v13",
+    "title": "Review the Mac child screen",
+    "afterSave": "queued=1 attempted=0 confirmed=0 writes=0 requests=0 current=Prepare the review account=A private=0",
+    "afterSendAndColdLaunch": "queued=0 attempted=0 confirmed=1 writes=1 requests=1 current=Review the Mac child screen account=A private=0",
+    "coldReview": "Confirmed \u00b7 receipt saved; authored title retained; Remove saved receipt only",
+    "screenshots": {
+      "mac-manual-saved.png": "1f0102ad097afcf634d436884ad867874dcb4694946e2730a82e97a7aa69dce1",
+      "mac-manual-confirmed.png": "5b79374a1fa45ef4afa0f346fcedb47256907eec2127e297f7f818792318921d",
+      "mac-manual-cold.png": "79378301690ff6739a9e682c1d87190e59e25190e2690c4fc77d3e34d36492f8"
+    }
+  },
+  "cleanup": {
+    "MacTestApp": "quit after final direct check; no owned native app process remains",
+    "simulators": "both owned devices shutdown",
+    "VoiceOverRestored": {
+      "phone": true,
+      "tablet": false
+    },
+    "temporaryResults": "archived summaries/logs/screenshots; obsolete result bundles pruned, reusable hosts/build caches preserved"
+  }
+}

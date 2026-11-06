@@ -1,0 +1,52 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "modelName" : "iPad Air 13-inch (M4)",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1793186770.272,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793186657.49,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertNotEqual failed: (\"2484 bytes\") is equal to (\"2484 bytes\")",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "TaskfoldUITests/testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn",
+      "testName" : "testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}

@@ -1,0 +1,18 @@
+{
+  "acceptedInitialRun": false,
+  "firstFailure": "An immediate exists assertion for an offscreen saved-review cue in a lazy native List. The selected keeper, Undo and event counts passed before this assertion.",
+  "change": "Reveal the saved-review cue toward the top before asserting it; product code unchanged by the retake.",
+  "secondRunAccepted": false,
+  "secondFailure": "Generic scrolling geometry could not fully contain a large test-only diagnostic paragraph after the repair and cold return. The peer reported one applied write and matching current/original history hashes.",
+  "finalApproach": "Keep native choice, Undo, saved-review cue, cold preview, save and cold recovery controls as UI assertions; independently verify actual peer storage and archived history with the read-only verifier.",
+  "ipadInitialAccepted": false,
+  "ipadInitialFailure": "Selection, Undo, cold draft, save and cold confirmation passed. The last direct isEnabled query targeted an export button below the visible lazy List rows at largest text.",
+  "ipadRetake": "Reveal the export control before testing availability. App source is unchanged between the accepted phone v3 and the iPad retake.",
+  "layoutFinding": "The largest-text captures exposed overlapping SF Symbol/text in the implicit Save and Export system-image button labels. The final view uses an explicit intrinsic-width icon plus wrapping, expanding title.",
+  "finalLayoutRetake": "Both complete journeys will run against the corrected production action rows. Earlier successful phases are retained as superseded pre-layout acceptance.",
+  "acceptedFinalPhases": [
+    "phone v5",
+    "iPad v5"
+  ],
+  "earlierPhasesSuperseded": true
+}

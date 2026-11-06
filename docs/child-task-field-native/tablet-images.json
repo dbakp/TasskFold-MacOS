@@ -1,0 +1,16 @@
+[
+  {
+    "phase": "tablet-v12",
+    "test": "TaskfoldUITests/testChildFieldsNativeLargestTextPreservesUnsentTypingCold()",
+    "file": "ipad-accessibility.png",
+    "attachment": "6B89998F-B4E4-4F6B-8A26-580F0FA18162.png",
+    "sha256": "2c7d8ceb2ea2d7a62b6ae287aa26e19e9ee8ffcf6213ea029900b278f2483b62"
+  },
+  {
+    "phase": "tablet-v12",
+    "test": "TaskfoldUITests/testChildFieldsNativeSaveSendColdReceipt()",
+    "file": "ipad-default.png",
+    "attachment": "CE48CD10-D8A5-4AF8-AF83-DD6421FF3361.png",
+    "sha256": "7a97dda9c2e39465fbf7202ae2a0f72737526135e2ddeef8859ba5197338b45b"
+  }
+]

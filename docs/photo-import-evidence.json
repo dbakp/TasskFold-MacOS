@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-10",
+  "scope": "Isolated iPhone native photo selection/save/relaunch/Quick Look/return; Mac Core reader and portable restore. No production changes.",
+  "ios": {
+    "bundle": "/tmp/taskfold-photo-import-phone-v5.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": 0,
+    "checks": [
+      "Select synthetic checker through native Photos picker",
+      "Save and relaunch without reseeding",
+      "Open persisted Photo.png in Quick Look: Image canvas is 64 by 64 points; inspected pixels show all four exact checker quadrants",
+      "Close preview and return to hittable persisted attachment"
+    ]
+  },
+  "data": {
+    "taskID": "ed83d07f-cb9a-4330-b4f8-b0af135e3445",
+    "attachmentID": "95e27e40-7809-464c-90ab-7ed2c88d99ae",
+    "name": "Photo.png",
+    "type": "image/png",
+    "size": 166,
+    "imageSHA256": "a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2",
+    "snapshotSHA256": "2108676f1db122c0c0fa66f4b11f160c46327c55d4811360255f72046e00eefb",
+    "pendingCount": 0
+  },
+  "mac": {
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "checks": [
+      "Mac-owned Snapshot decoder reads final actual iOS cache",
+      "Attachment bytes exactly equal independently owned fixture",
+      "Portable cross-account restore retains complete attachment value and identity",
+      "Repeated portable restore adds no records"
+    ],
+    "report": "photo-import-reports/mac-reader.txt",
+    "nativeGUI": false
+  },
+  "fixture": {
+    "path": "TaskfoldTests/Fixtures/Taskfold-P0-attachment-checker.png",
+    "size": 166,
+    "dimensions": "64x64",
+    "synthetic": true,
+    "seed": "xcrun simctl addmedia on isolated phone only; newest Photos thumbnail"
+  },
+  "build": "iOS build-for-testing v5 and Mac swift build --build-tests v1 passed; previous app builds reused because production unchanged.",
+  "diagnostics": [
+    "v1 native thumbnail element tap failed with invalid XCTest hit point; observed thumbnail frame centre succeeds. No app defect inferred.",
+    "v2 attachment selection/persistence passed; preview capture was taken during transition and is not rendering evidence.",
+    "v3 preview pixels pass. Final v5 waits for Image canvas, verifies dimensions and closes preview; v4 build only."
+  ],
+  "limits": [
+    "Phone portrait normal/light only; tablet fixture untouched.",
+    "No live cloud image handoff, upload, external provider transfer, physical host or Mac native file-dialog acceptance.",
+    "No unfiltered audit rerun or VoiceOver/keyboard acceptance.",
+    "Mac test requires TASKFOLD_NATIVE_PHOTO_SNAPSHOT; default skip is not acceptance.",
+    "Both repositories own their own fixture and tests; no cross-repo build dependency."
+  ],
+  "cleanup": {
+    "removedTerminalSupersededBundles": [
+      {
+        "path": "/tmp/taskfold-photo-import-phone-v1.xcresult",
+        "logicalFileBytes": 18053136
+      },
+      {
+        "path": "/tmp/taskfold-photo-import-phone-v2.xcresult",
+        "logicalFileBytes": 4164209
+      },
+      {
+        "path": "/tmp/taskfold-photo-import-phone-v3.xcresult",
+        "logicalFileBytes": 3995465
+      }
+    ],
+    "retained": "Final v5 bundle, compact summaries, signing receipt, Mac report and iOS inspected captures."
+  },
+  "sources": {
+    "TaskfoldUITests/TaskfoldUITests.swift": "23dcb7ec82cc802dd4332336ba4306468ac796d53e76796ba03a6a77ebec5077",
+    "TaskfoldTests/NativePhotoAttachmentTests.swift": "a2a67102571c2a8c1d14ebf1e24dc308d4e4d7017f61cdcc8d31350bb75f47bf"
+  }
+}

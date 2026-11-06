@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-21",
+  "rank": 7,
+  "status": "strict native transport contract implemented; end-user authoring/inbox/outbox integration remains",
+  "scope": [
+    "Lossless validated authenticated comment/mention records",
+    "Versioned account-bound comment/read-state intent envelopes",
+    "Explicit-only RPC payloads with no client-supplied author identity",
+    "Task/generation/project/comment/recipient/operation/revision-bound replies",
+    "Original acknowledgements retain newer current body/deletion/read state",
+    "Stale accounts rejected before any refresh or HTTP; in-flight session incarnation changes cancel replies"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/SharedComments.swift": "b809a7ef54754997a6f605dbe278886b86fd4c571fe7c998efb556c207f2d398",
+    "TaskfoldTests/SharedCommentsTests.swift": "bf6482a1bfc37bfe723544c9c4a8a2d5e245f559482a11ec925f78d31f3e5b76",
+    "Package.swift": "37041e0f08df429a580a90ea60594d2ddccf68bb13988b53bb85e2088b9f0eee",
+    "Taskfold.xcodeproj/project.pbxproj": "282c2ebc8fb2cf3fd51599f1c80e7c0e419ce5e059b22066ff596806dde19b88"
+  },
+  "coreSuite": {
+    "reported": 871,
+    "skipped": 31,
+    "failures": 0,
+    "focusedContractCases": 15,
+    "runtime": "Host macOS SwiftPM, independently compiled from this repository",
+    "log": "mac-p1-shared-comment-full-core.log",
+    "newSourceWarnings": 0
+  },
+  "nativeBuild": {
+    "result": "succeeded",
+    "log": "mac-p1-shared-comment-model-build.log",
+    "sameModelAsOwnedSource": true,
+    "newSharedCommentSourceWarnings": 0,
+    "macStrictSignatureVerification": true,
+    "runtimeUIClaim": false
+  },
+  "cases": [
+    "Unknown server metadata retained; missing/deleted author remains unavailable",
+    "Record identities/types/date/revision/UTF-8/recipient bounds and tombstone consistency",
+    "Versioned intents round-trip; unsupported or malformed raw envelopes refused without alteration",
+    "Recipient IDs canonicalized as a set; typed @text remains literal",
+    "Comment RPC payload contains only operation/target/expected revision/body/explicit recipients/delete",
+    "Old add acknowledgement retains newer current tombstone/body",
+    "Owner moderation retains original author identity",
+    "Wrong task/generation/project/comment/author/operation or revision cannot acknowledge",
+    "Current acknowledgement must match the actual requested content/recipients/read state; newer state can supersede it",
+    "Unavailable/archive/forbidden/recipient-change statuses never apply data or acknowledge",
+    "Mention replies bind recipient/comment/mention identity and preserve newer unread state",
+    "Actual Backend URLSession uses expected RPC paths/POST/explicit payloads under an intercepted session",
+    "Wrong expired account is rejected before refresh/HTTP",
+    "Held comment response is cancelled after sign-out and return to same account",
+    "Held mention 401 cannot retry under another account"
+  ],
+  "transport": {
+    "syntheticURLProtocolOnly": true,
+    "providerNetworkAccess": false,
+    "realHTTPAPIClaim": false,
+    "realCredentials": false,
+    "realKeychainAccess": false,
+    "coreRecordDecodingIsNotNativeUIAcceptance": true
+  },
+  "serverContract": "p1-shared-comment-server-evidence.json",
+  "metadataAudit": {
+    "allThreeNewTablesHaveRLS": true,
+    "newPublicTablesAuthenticatedSelectOnly": true,
+    "noAnonymousSelectOrRPCExecute": true,
+    "noDirectClientReceiptAccess": true,
+    "bothPublicRPCsSecurityInvoker": true,
+    "privateWritersFixedEmptySearchPathAndExplicitAuth": true
+  },
+  "remaining": [
+    "Native shared-comment composer, revision/conflict review and owner moderation",
+    "Explicit teammate picker and recipient-change review",
+    "Account-owned Mentions inbox and safe current-task routes",
+    "Durable pending/retry/conflict/account-switch/relaunch integration in Store",
+    "Backup/import archive preservation without replaying authorship or mention delivery",
+    "Actual HTTP/two-client and native phone/tablet/Mac acceptance"
+  ],
+  "deferredUnchanged": [
+    "Remote reminders",
+    "Older-client rollout safeguards",
+    "Distribution verification"
+  ]
+}

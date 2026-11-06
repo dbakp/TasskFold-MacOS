@@ -1,0 +1,27 @@
+{
+  "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+  "initialState": "Shutdown",
+  "app": "com.dbakp.taskfold.workflowteststeameditbridge",
+  "normalWorkspaceSyncAccepted": false,
+  "command": [
+    "xcodebuild",
+    "-project",
+    "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",
+    "-scheme",
+    "Taskfold",
+    "-configuration",
+    "Debug",
+    "-derivedDataPath",
+    "/tmp/taskfold-prepared-undo-signed-ios-build",
+    "-destination",
+    "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "-parallel-testing-enabled",
+    "NO",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testSharedFileViewerReadOnlyAndRevokedAccess",
+    "-resultBundlePath",
+    "/tmp/taskfold-file-handoff-viewer-ipad.xcresult",
+    "test-without-building"
+  ],
+  "passed": true,
+  "ownedSimulatorRestored": true
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "C3767DB2-A023-4ECA-86D8-0FA1B778442F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Cold return keeps orphan recording private without recreating the task_0_B4AF9FEF-2E08-4686-B6EB-9C8AAFEA8B74.png",
+        "timestamp" : 1793187570.084
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "C058CB62-B9C4-432D-B319-82CB699D8B76.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Private recording remains readable after its synthetic task is removed_0_31EBD63A-A484-406F-AAEE-AE5C3CB3C47B.png",
+        "timestamp" : 1793187544.669
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "5CEB4BC2-AF56-4E22-85F8-60C0E7FC9EF3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Moved task recording stays in the account library with its original association_0_1F49C253-AA4A-49A3-A0BE-1F930EF78E59.png",
+        "timestamp" : 1793187523.744
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "7EB88F04-D7C4-425C-91BF-55693AC711D7.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Private library shows the full saved caption and playable original recording_0_E70C3394-5EFF-4B81-B353-C163C4A00DB9.png",
+        "timestamp" : 1793187506.677
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn"
+  }
+]

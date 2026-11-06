@@ -1,0 +1,52 @@
+{
+  "recordedAtUTC": "2026-10-30T01:16:32.802561+00:00",
+  "reports": {
+    "commands": {
+      "file": "commands.json",
+      "checks": 220,
+      "containerRemoved": true,
+      "noAddedAdvisorFindings": true
+    },
+    "foundation-regression": {
+      "file": "foundation-regression.json",
+      "checks": 61,
+      "containerRemoved": true,
+      "noAddedAdvisorFindings": true
+    },
+    "fields-regression": {
+      "file": "fields-regression.json",
+      "checks": 95,
+      "containerRemoved": true,
+      "noAddedAdvisorFindings": true
+    },
+    "completion-regression": {
+      "file": "completion-regression.json",
+      "checks": 98,
+      "containerRemoved": true,
+      "noAddedAdvisorFindings": true
+    },
+    "resolution-regression": {
+      "file": "resolution-regression.json",
+      "checks": 63,
+      "containerRemoved": true,
+      "noAddedAdvisorFindings": true
+    }
+  },
+  "totalChecks": 537,
+  "sourceSHA256": {
+    "supabase/migrations/20261030004452_independent_child_structure_commands.sql": "5a3d0bb095dade20a78427bb5a9615718c7acff21e6e36bd54d8878f14b35686",
+    "supabase/migrations/20261030002245_child_structure_revision_and_assignment_bridge.sql": "949dd0ea6e5d9300a55cfeb81c4b3239aef112e5e2b6cc3f5923b6381ab0e682",
+    "Scripts/Database/test-child-task-structure-commands.mjs": "ee24af1b674f3077bf9dfbba921cc90e23450e443814f7e0720ee4ffaeebcabc",
+    "Scripts/Database/test-child-task-structure-revision.mjs": "bae092e8b26d286992a610f649bca5601073ab3e29115087832983792eb55140",
+    "Scripts/Database/test-child-task-field-edits.mjs": "729eec283e412f8dd23a8336d6b85343edffaf75e0bb87353cc860966b06f40f",
+    "Scripts/Database/test-child-task-completion.mjs": "c905b23f85a3971420355aa03366b574bef790346c14b6f939e9078e97981f13",
+    "Scripts/Database/test-child-completion-resolution.mjs": "59641681db5c65d4a3b3ac76a0bac7eb76baaf09812ad3ee31d659249fbaf963",
+    "Scripts/Database/child-task-records-schema.mjs": "070a0dcb346b1a25f08767bb5c82fcb6249b5736a6912cf0ae4b14d7a9a86568"
+  },
+  "migrationGeneratedWith": "Supabase CLI 2.109.0 migration new",
+  "localFullStackMigrationHistory": "Unverified: full local stack is not running.",
+  "hostedDeployment": false,
+  "appOrCoreChangesInThisStage": false,
+  "nativeClientAcceptance": "Not inferred from server checks; structural UI/offline/proofs still require implementation.",
+  "remainingKnownAdapterGap": "Older team JSON field adapter refuses null child containers."
+}

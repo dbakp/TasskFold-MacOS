@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-13",
+  "scope": "Assess two retained native Mac QoS warnings using archived process identity, UUID-matched relocated system stack frames and the original test results. No production code change.",
+  "findings": {
+    "liveConflict": "1 reported warning, 1 archived event. AppKit Services menu data-detectors qualification invoked through accessibility menu inspection.",
+    "newOfflineTask": "1 reported warning, 1 archived event; same AppKit scanner/Services/NSMenu Accessibility stack.",
+    "olderNotes": "1 reported warning, zero matching archived events. Missing archival coverage is explicitly unresolved.",
+    "classification": "The two identified warnings are framework-mediated menu inspection diagnostics. They do not identify a Taskfold persistence/sync scheduling defect; no speculative QoS change or warning suppression is justified. Historical tests remain warning-bearing and are not relabeled clean.",
+    "remaining": "Older notes warning, NSTableView reentrancy and Settings AttributeGraph cycles remain unclassified."
+  },
+  "method": {
+    "tool": "Mac-owned Scripts/inspect_mac_runtime_warning.py; no dependency on companion repository.",
+    "verification": "Executed against two positive archives and one genuinely missing-event archive; syntax and whitespace checks pass.",
+    "symbolication": "Current system image UUID must match historical frame UUID. Add archived image offset to current mapped __TEXT base before atos. Direct old virtual-address symbolication returned incorrect/unresolved names and was discarded. Missing images remain unresolved.",
+    "boundary": "Reference process read only; pending widget host not restarted or changed. No backend/Todoist actions."
+  },
+  "voiceOver": {
+    "originalEnabled": false,
+    "enabledVerified": true,
+    "announcementAccess": "CUA com.apple.VoiceOver timeoutReached after 15 seconds. No spoken pass.",
+    "restoredEnabled": false,
+    "restorationVerified": "System Settings switch off; isolated test app quit and all 28 baseline files restored.",
+    "nextBoundary": "Actual spoken output still requires an observable announcement surface or user observation; do not repeat unchanged attempts."
+  },
+  "cleanup": {
+    "protectedFilesExact": 100,
+    "retainedWidgetFilesExact": 36,
+    "restoredMacFilesExact": 28,
+    "pendingWidgetSnapshotExact": true,
+    "remainingTaskfoldMainProcesses": 1,
+    "duplicateDiagnosticExportBytesPruned": 415877923
+  },
+  "evidence": [
+    "runtime-warning-attribution/live-conflict.json",
+    "runtime-warning-attribution/new-task.json",
+    "runtime-warning-attribution/notes.json"
+  ],
+  "limits": [
+    "No new native functional execution or broad clean-runtime claim.",
+    "Desktop expiry/system privacy, spoken accessibility, actual external provider and deferred delivery/distribution remain open."
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "simulatorReservedHostsAndRunnersUninstalled": true,
+  "ownedMacProcessesRunning": false,
+  "removedTemporaryLogicalBytes": 782687642,
+  "preserved": [
+    "source .build caches",
+    "single signed isolated Mac host/build",
+    "pinned Docker fixture image"
+  ]
+}

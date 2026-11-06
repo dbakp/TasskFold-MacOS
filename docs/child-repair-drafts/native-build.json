@@ -1,0 +1,15 @@
+{
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "14bcda49b2ff2b915bf9098674097bc68c60b37f8434bb7f59b3848dd3e34f35",
+    "Taskfold/Core/Store.swift": "e50b756fefd1ca31cd989b193346628a239fd605cbb1b167d09f4b39da4d443d",
+    "Taskfold/Views/ChildTaskRepairView.swift": "0489af3099bab0d2bc91115caaedae5124510d3f778d179f12fc3fe4967e0dec"
+  },
+  "isolatedSourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "14bcda49b2ff2b915bf9098674097bc68c60b37f8434bb7f59b3848dd3e34f35",
+    "Taskfold/Core/Store.swift": "c97f65f4162bec4fd26a0d1999ab506cb13795c03177ab9a3216944c559aa2ec",
+    "Taskfold/Views/ChildTaskRepairView.swift": "0489af3099bab0d2bc91115caaedae5124510d3f778d179f12fc3fe4967e0dec"
+  },
+  "binarySHA256": "11a339956c3a225363e6894613c4df5d62890894d6dee880d01d184a6f0422fd",
+  "strictDevelopmentSignature": true,
+  "phase": "repair-drafts-v5"
+}

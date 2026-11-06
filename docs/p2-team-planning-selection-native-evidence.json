@@ -1,0 +1,392 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "aab96e86a7038e16e1e40a35b82683ef5df91b2c",
+  "status": "Sparse optional-field planning fixed; four installed iPhone/iPad scenarios accepted; wider native/live/rank-6/Px remain open",
+  "rolloutEnabled": false,
+  "sql": {
+    "checks": {
+      "disabled rollout refuses selection": true,
+      "viewer cannot plan shared selections": true,
+      "outsider cannot plan shared selections": true,
+      "anon cannot invoke planning authority": true,
+      "service_role cannot invoke planning authority": true,
+      "replaced session cannot plan": true,
+      "separate action required for title": true,
+      "separate action required for completed": true,
+      "separate action required for assigned_to": true,
+      "separate action required for labels": true,
+      "separate action required for subtasks": true,
+      "separate action required for recurrence_pattern": true,
+      "separate action required for project_id": true,
+      "separate action required for section_id": true,
+      "empty selection refused": true,
+      "duplicate member refused": true,
+      "duplicate nonce refused": true,
+      "group nonce as member refused": true,
+      "unknown envelope refused": true,
+      "restore lineage on edit refused": true,
+      "empty changes refused": true,
+      "cross-team item refused": true,
+      "unrelated changed source stops entire selection": true,
+      "first row unchanged after source conflict": true,
+      "recreated identity rejected": true,
+      "busy row refuses whole selection without waiting": true,
+      "busy refusal keeps other task untouched": true,
+      "late second-row failure aborts transaction": true,
+      "late fault rolls back first task": true,
+      "late fault rolls back group and member receipts": true,
+      "late validation refuses whole selection": true,
+      "late validation preserves first task": true,
+      "planning applies": true,
+      "receipt confirms original intent": true,
+      "receipt contains every member": true,
+      "receipt is minimal": true,
+      "priority saved 218a5916-c536-4bd3-a33f-2b62b1bda454": true,
+      "deadline saved 218a5916-c536-4bd3-a33f-2b62b1bda454": true,
+      "estimate saved 218a5916-c536-4bd3-a33f-2b62b1bda454": true,
+      "notes retained 218a5916-c536-4bd3-a33f-2b62b1bda454": true,
+      "priority saved 261908c8-dd9b-4532-9f5e-69313d0bccac": true,
+      "deadline saved 261908c8-dd9b-4532-9f5e-69313d0bccac": true,
+      "estimate saved 261908c8-dd9b-4532-9f5e-69313d0bccac": true,
+      "notes retained 261908c8-dd9b-4532-9f5e-69313d0bccac": true,
+      "private member links recorded": true,
+      "lost reply replay confirms original batch": true,
+      "replay preserves later edit": true,
+      "same group nonce cannot change intent": true,
+      "member nonce cannot be reused in a new group": true,
+      "role loss prevents replay acknowledgement": true,
+      "archived project stops selection": true,
+      "waiting caller rechecks committed role loss": true,
+      "role overlap does not partially edit": true,
+      "one selected task uses the same reviewed command": true,
+      "single selection changes only its member": true,
+      "unselected task stays unchanged": true,
+      "date planning supports the complete selection": true,
+      "date saved on both selected tasks": true,
+      "already correct tasks remain explicit reviewed members": true,
+      "absent optional clock fields retain null semantics": true,
+      "sparse date removal clears every selected date": true,
+      "sparse date removal retains notes": true,
+      "legacy delete operation remains supported": true,
+      "anon has no private batch table access": true,
+      "authenticated has no private batch table access": true,
+      "service_role has no private batch table access": true,
+      "no new advisor findings": true
+    },
+    "deployed": false,
+    "realDataChanged": false,
+    "rolloutEnabled": false,
+    "migrationSHA256": "a5170773f5390b856bc2304f5f4e91050cec0e461ad0e23e4bb4a4d21d565f60",
+    "advisors": {
+      "ran": true,
+      "source": "supabase db advisors --type all",
+      "result": [
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "projects",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "project_collaborators",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "sections",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+        }
+      ]
+    },
+    "containerRemoved": true,
+    "checkCount": 67
+  },
+  "core": {
+    "passed": 422,
+    "failed": 0,
+    "skipped": 0,
+    "batchCases": 19,
+    "newSparseRegressionCases": 1,
+    "scope": "Team|EmailCapture|Webhook"
+  },
+  "appBuild": {
+    "platform": "macOS arm64",
+    "result": "passed",
+    "configuration": "Debug",
+    "namespace": "workflowteststeameditbridge",
+    "macAppLaunched": false
+  },
+  "native": {
+    "repository": "TaskFold-iOS",
+    "namespace": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "uniqueAcceptedCasesPerDevice": 4,
+    "runs": {
+      "phone": {
+        "result": "Failed",
+        "passedTests": 3,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "totalTestCount": 4
+      },
+      "phone-priority": {
+        "result": "Passed",
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "totalTestCount": 1
+      },
+      "ipad": {
+        "result": "Passed",
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "totalTestCount": 4
+      }
+    },
+    "phoneCaseMapping": "Changed-source refusal, local-save failure/retry and Tomorrow/Remove Date pass in the initial run. The priority case passes in the corrected rerun. The initial suite\u2019s test assertion failure is retained; it is not reported as a green run.",
+    "scope": "Installed reserved synthetic host, normal Store projection and real Simulator private cache and OS app relaunch. HTTP is intercepted; no task mutation is delivered to a hosted service and no real Auth/Keychain acceptance is claimed.",
+    "checks": [
+      "Priority review cancellation leaves the complete cache and outbox unchanged",
+      "Save queues exactly one edit group for the two selected task identities, with notes and unselected work unchanged",
+      "Undo restores every original task row and queues a fresh linked edit group; normal app relaunch preserves the exact saved cache",
+      "Tomorrow writes the expected calendar day to both selected tasks and leaves the unselected third row intact",
+      "Explicit Remove Date supports saved rows with omitted optional clock fields",
+      "Changed saved contents disable the complete review and produce no queued change",
+      "Injected local persistence failure keeps tasks/outbox unchanged; the same review retries to exactly one group"
+    ]
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/TeamTaskBatch.swift": "70934aff7632131f683e58929f67eb24950ec44c7712f19f26f97d10a1ec5a3b",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "bd1b992c9437e5a8bc94337807501525243a7791b42794da60b55ed672101885",
+    "TaskfoldTests/TeamTaskBatchTests.swift": "1e57dd84103a6d2668fc912b463223c06d32943d9a6d212712139a95d403cc33",
+    "TaskfoldTests/Fixtures/team-planning-batch-v1.json": "3a57a64148fe64b169294cb4b79a4d6e62c68517ce608d857eda11d49b43343f",
+    "Scripts/Database/test-team-planning-batches.mjs": "6ebd3ef185cd1a85351561cf36f5e9c317cd36033a6762411663295e88157cbb"
+  },
+  "logs": {
+    "core": {
+      "path": "team-planning-selection-native/core.log.gz",
+      "originalSHA256": "cf77cc8fd558a449686d40a57931e419a2346ac6b7a4768d5bd3dd063762fd08",
+      "compressedSHA256": "025ad3a144e0d3f261203a4e983d2b076b41ef2d96d66b4ec584edae5ab32b0d"
+    },
+    "sql": {
+      "path": "team-planning-selection-native/sql.log.gz",
+      "originalSHA256": "77a0b2f32fb8557cb26e0e6a0fa375d9d361c77d7d5b485975f8af8e4ddaf864",
+      "compressedSHA256": "3c99a6ba6be046004f8ac36ce97a6a9a383403988528869046ac2721e189164c"
+    },
+    "build": {
+      "path": "team-planning-selection-native/build.log.gz",
+      "originalSHA256": "1a360c1c2ae267c21aadc7d334fe32a26d68a65d18355bc068361cb924c6eeb3",
+      "compressedSHA256": "db324df90a6d070e4ef6e02ba86752323c34ffd07f3e2a041b234b27741eba9b"
+    },
+    "sparseBefore": {
+      "path": "team-planning-selection-native/sparseBefore.log.gz",
+      "originalSHA256": "30e18b8ab157c56b0f5f880f35ad66fde0bb9e0f7caa8d9cc97fb15b41ce498b",
+      "compressedSHA256": "44ab33974d7c31f7e1c3aeb6e71c04ff898bb09e87e382163d27b30debe233a9"
+    },
+    "phone": {
+      "path": "team-planning-selection-native/phone.log.gz",
+      "originalSHA256": "f9d379033301a43a4942858df34bfcfe41e69786a775902d7c1abe4046c0d37d",
+      "compressedSHA256": "243b3e6f407dcaa74a9010c793fee79a536b46bcfeb0897610e0273db7f57f66"
+    },
+    "phone-priority": {
+      "path": "team-planning-selection-native/phone-priority.log.gz",
+      "originalSHA256": "8ff0a8e9acc64a502f6e9d2b45c4ab2b89035ccebc72fcb8538eddd6e4179e2b",
+      "compressedSHA256": "c0fe8b85a545d1d145fc0c6f930dcf43eb95103b133a4106c13b1edded870996"
+    },
+    "ipad": {
+      "path": "team-planning-selection-native/ipad.log.gz",
+      "originalSHA256": "82b4b7689e23411aa337385793113fedd27df493a9b6c4975ad029f45dc6657e",
+      "compressedSHA256": "56d7d826e411176c2e02552df8dfb9604ba2db0557643477bec2dfe596c08492"
+    }
+  },
+  "screenshotsReviewed": [
+    {
+      "path": "team-planning-selection-native/iphone-priority.png",
+      "SHA256": "282d7b21bb81ecd42517673057eb10e2befb6f250b84125e2f57c6671445db40",
+      "visuallyReviewed": true,
+      "appearance": "default light"
+    },
+    {
+      "path": "team-planning-selection-native/iphone-date.png",
+      "SHA256": "7c24f1a865622fec600c934f7b7d446a496462ddf3a4f0399309b61898eaf5e6",
+      "visuallyReviewed": true,
+      "appearance": "default light"
+    },
+    {
+      "path": "team-planning-selection-native/iphone-refusal.png",
+      "SHA256": "81ea2a079253148189ee9a0346553187dcc3e0c4c86c739f26e2fd5dd72df77c",
+      "visuallyReviewed": true,
+      "appearance": "default light"
+    },
+    {
+      "path": "team-planning-selection-native/iphone-save-retry.png",
+      "SHA256": "da20bcdb87e7d9e1758722d8dae4211ca0b068d24300275754962aea1edebd8b",
+      "visuallyReviewed": true,
+      "appearance": "default light"
+    },
+    {
+      "path": "team-planning-selection-native/ipad-priority.png",
+      "SHA256": "c1960c41fc5a82718cd15c23dcebbfd552192747d4844343b6c1acd1a114f631",
+      "visuallyReviewed": true,
+      "appearance": "default light"
+    },
+    {
+      "path": "team-planning-selection-native/ipad-date.png",
+      "SHA256": "be3cc450e1a94a0107ce9e167b9cb621aea513242f806d1d850c1735a4265e2f",
+      "visuallyReviewed": true,
+      "appearance": "default light"
+    }
+  ],
+  "diagnostics": [
+    "Before the production fix, the sparse-row Core regression failed in TeamTaskEditScope.body because absent optional clock keys did not satisfy validation. Validation now normalizes a temporary copy, while the persisted/wire source record remains unchanged. Opening identity/access and whole-row checks remain intact.",
+    "The initial phone priority test incorrectly searched the entire app, including the underlying list behind the review sheet, for the unselected task. The assertion now searches the review form. Three other scenario methods were unchanged; the corrected priority scenario passes and the final iPad suite passes all four."
+  ],
+  "limits": [
+    "No installed Mac/window, keyboard/spoken, large-text/dark/contrast or hosted multi-actor acceptance claimed",
+    "Native queue/relaunch proof is separate from the real PostgreSQL contract tests and HTTP sender Core checks; no live end-to-end delivery chain is claimed",
+    "Bulk deadline/estimate entry, other shared bulk commands, connection preparation/file custody, remaining team/Watch/Wear OS/Px scope remain open",
+    "No migration, hosted configuration, real task/account/provider or normal rollout changed; all user-deferred release/provider/device dependencies remain deferred"
+  ],
+  "cleanup": {
+    "ownedTemporaryEntriesRemoved": 33,
+    "allocatedBytesRemoved": 1356554240,
+    "isolatedBundles": [
+      {
+        "simulator": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "absent": true
+      },
+      {
+        "simulator": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "absent": true
+      },
+      {
+        "simulator": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "absent": true
+      },
+      {
+        "simulator": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "absent": true
+      }
+    ],
+    "ownedFixtureContainersRemaining": 0,
+    "baselineSimulatorsPreserved": true,
+    "sourceBuildCachesPreserved": true,
+    "macAppLaunched": false
+  }
+}

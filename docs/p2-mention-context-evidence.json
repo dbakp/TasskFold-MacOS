@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-26",
+  "scope": "Optional captured context for newly queued shared mention read/unread choices, allowing explicit encrypted task-recovery drafts after cached comment/mention removal.",
+  "core": {
+    "passed": 284,
+    "failed": 0,
+    "skipped": 0,
+    "filter": "TeamCompletion|SharedComments|PinnedNotes",
+    "newCases": 9,
+    "coverage": "Recorded single/group, absent cache, exact single cancellation proof, current read-scope refusal, foreign/forged/stale/ambiguous metadata, frozen nonce, encrypted reopen and scoped export, unavailable capture fallback, unknown-column exclusion and actual intercepted mention HTTP request."
+  },
+  "native": {
+    "status": "Pending interactive macOS automation approval",
+    "acceptedCases": 0,
+    "build": "Signed isolated app and test targets pass; current source and strict signature verified.",
+    "coverage": "Matching native test added; not executed while approval is pending."
+  },
+  "contract": {
+    "field": "_conversation_outbox.mention_recovery",
+    "version": 1,
+    "binding": "Full original intent/operation, account/backend, supported comment and mention columns, task generation/project, recipient and expected revision. Optional; no capture fabricated for legacy or ambiguous input.",
+    "bounds": "64,000 bytes and exact supported metadata schema; existing outbox/archive limits apply.",
+    "authority": "No permissions or task fields captured. Current recovery read scope and typed task incarnations remain required. Historical rows exist only in a temporary analysis copy; live cache remains empty.",
+    "wire": "Original SharedMentionChange payload remains exactly _operation_id, _mention_id, _expected_revision, _read. No metadata sent to RPC.",
+    "export": "Only selected related discussion; missing-cache fallback rows carry source=captured. No unrelated context, full snapshot or permission cache exported."
+  },
+  "remaining": [
+    "Mac UI automation approval and native acceptance",
+    "Provisional connected-copy cohorts and unsupported legacy context",
+    "I/O-phase account/session UI races; broader native recurring/spoken/large-workload acceptance",
+    "Genuine hosted team acceptance before default-off rollout; user deferrals unchanged"
+  ],
+  "sourceSHA256": {
+    "Taskfold/ConversationStore.swift": "3621966287c93f6bd5f4732a471f88160ec01c02eda5efe8c49070beffc863b0",
+    "Taskfold/Core/SharedComments.swift": "09ffe656ae5e0d27606824304c4daf2ccafa81bc40e9b81587e545faf9d8250a",
+    "Taskfold/Core/Store.swift": "165fa9aa9524bd4c2c2e68754c45f6a23ed0e5ed5a92c955a029722d6aeffeb2",
+    "Taskfold/Core/TeamCompletion.swift": "feb6a5d0af4cb66f101d24e567db90d066a9cf78b676cd9683faeadd6235df4d",
+    "Taskfold/Core/TeamTaskBatch.swift": "b5aad40d3cefc37ba18110b937a75d832d75f8d8b365827937262bfea25732fe",
+    "TaskfoldTests/SharedCommentsTests.swift": "9397425937c77bd4f5b5155d71c61d73087c935769b9f3e57439af7cc51cdb2c",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "71ae2e851f40c16568f2b1b60dc01bf15f719932c306d9fdc4f3599389aef167",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "12a944b98972dc5839dcf6776484f7b0179e82b482cb4cd8db9916d98c224da4"
+  },
+  "artifactSHA256": {
+    "app-build.log": "3bf7dfd360d0a7f112778b0d4c406f28683918a52dc60ecc614d9c271ab664e0",
+    "core.log": "5aa20aa536a336d9b4ded5060d0b3ff26b3274137104558cb66b5271f869e044",
+    "signatures.json": "3e520a1e250ebddaa66399c6b6fc000921ed7cea4dc21dc0bd21992a5f969a28",
+    "cleanup.json": "4ddddc0a63d94fd460bf2f24dcc1967b668ddb156b14db3c7a4daf25c8f9a5a7",
+    "isolation-receipt.json": "964b0b7cbd435b16e1b23a607d97ceff7ba5735a32ac0f3becb06d433e8dc513",
+    "iterations.json": "32dc1b856c31a0f85aad33340bcc0efb05a01042e628ad1205b98f844226ed8e"
+  },
+  "cleanup": "mention-context/cleanup.json"
+}

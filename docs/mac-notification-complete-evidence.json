@@ -1,0 +1,113 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual terminated-process native Mac task-reminder Complete, exact saved completion, normal relaunch and native cleanup; historical isolated binary with current Complete branch.",
+  "bundle": "com.dbakp.taskfold.mac.p0focuscontrasttests",
+  "binaryScope": "Historical retained build; actual delegate and Complete branch match current source. Move to tomorrow branch differs and is not accepted.",
+  "steps": [
+    "Normal local launch retained from cold Focus test, without fixture arguments.",
+    "Native Settings Task reminders enabled; zero upcoming status.",
+    "Native Inbox capture Mac reminder Complete proof !2m; accepted independent absolute reminder, no planned date.",
+    "Native Reminders editor shows fixed instant12Oct09:44 and1upcoming reminder.",
+    "Native menu Quit; PID12570 absent at09:43:38.773563.",
+    "Actual delivery09:44:45.111 and Notification Center storage with no app process.",
+    "Actual exact-request taskfold.complete response09:48:36.444 foregroundfalse; new PID14048 without arguments saves completion. Native Completed list verifies correct task; native Quit and normal relaunchPID14180 retain it."
+  ],
+  "task": {
+    "id": "9a78c806-da65-452e-8879-824b44c36b33",
+    "project_id": null,
+    "priority": 4,
+    "reminders": [],
+    "attachments": [],
+    "reminder_specs": [
+      {
+        "channels": [
+          "local"
+        ],
+        "taskfold_default_placeholder": true,
+        "kind": "relative",
+        "id": "00000000-0000-4000-8000-000000000001",
+        "anchor": "planned",
+        "offset_minutes": 0,
+        "version": 1,
+        "enabled": true
+      },
+      {
+        "channels": [
+          "local"
+        ],
+        "kind": "absolute",
+        "id": "b72b22ee-40db-5df1-ab3c-cb7f1f740c3b",
+        "version": 1,
+        "enabled": true,
+        "time_zone": "Europe/Copenhagen",
+        "at": "2026-10-12T07:44:45Z"
+      }
+    ],
+    "created_at": "2026-10-12T07:42:45Z",
+    "comments": [],
+    "user_id": "local",
+    "task_generation": "789af644-6671-4261-a6db-d164b98d3fa1",
+    "description": "",
+    "subtasks": [],
+    "due_date": null,
+    "is_recurring": false,
+    "completed": false,
+    "title": "Mac reminder Complete proof",
+    "scheduled_at": null,
+    "completion_version": 0,
+    "labels": []
+  },
+  "quit": {
+    "normalMenuQuit": true,
+    "pid": 12570,
+    "absentAt": "2026-10-12T09:43:38.773563"
+  },
+  "deliveryRequestID": "taskfold.r2.76cba782dbcd13752a7d2a02765edb4fe70b470213e4cec3bb79bc3d52d24640",
+  "preservation": {
+    "fullScheduledSnapshotExactAfterDelivery": true,
+    "originalUiTestingCacheHashExact": true,
+    "pending": []
+  },
+  "actionAccepted": true,
+  "remaining": [
+    "Mac Snooze/Move to tomorrow/Open/account transitions and broader reminder conditions.",
+    "Current-source notification test build is prepared but unlaunched; distribution/APNs and remaining named P0 gates."
+  ],
+  "action": {
+    "identifier": "taskfold.complete",
+    "foreground": false,
+    "hostLocalTime": "2026-10-12 09:48:36.444 +0200",
+    "pid": 14048,
+    "changedTaskFields": [
+      "completed",
+      "completion_version",
+      "completed_at"
+    ],
+    "reminderSpecsExact": true,
+    "normalRelaunch": {
+      "normalRelaunchSnapshotExact": true,
+      "pid": 14180,
+      "command": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-focus-alert-products/Taskfold.app/Contents/MacOS/Taskfold",
+      "nativeUpcomingStatus": 0
+    },
+    "nativeResultScreenshotInspected": true,
+    "actualPendingDeliveredRegistryInspection": false,
+    "limits": "Native0upcoming is scheduler status, not independent UN registry inspection. This single fired reminder has no future occurrence; no future cancellation claim."
+  },
+  "cleanup": {
+    "nativeDeliveryPreferenceRestoredOff": true,
+    "nativeReversibleDeleteOnlySyntheticTask": true,
+    "finalTasks": 0,
+    "pending": 0,
+    "nonActivityTablesExact": [
+      "tasks",
+      "focus_sessions"
+    ],
+    "originalActivityRetained": true,
+    "newSyntheticCreateCompleteDeleteActivityRows": 3,
+    "originalUiTestingFileHashExact": true,
+    "protectedContainers": 6,
+    "protectedFiles": 100,
+    "protectedFileSetsAndHashesExact": true
+  }
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "platform": "mac",
+    "scenario": "recorded-cache",
+    "entireFailedWorkspaceKept": true,
+    "entireRelaunchWorkspaceExact": true,
+    "frozenNonceAndCancellationOrdering": true,
+    "noEditingGrant": true
+  },
+  {
+    "platform": "mac",
+    "scenario": "cancel-backup",
+    "entireFailedWorkspaceKept": true,
+    "entireRelaunchWorkspaceExact": true,
+    "frozenNonceAndCancellationOrdering": true,
+    "noEditingGrant": true
+  },
+  {
+    "platform": "mac",
+    "scenario": "cancel-cache",
+    "entireFailedWorkspaceKept": true,
+    "entireRelaunchWorkspaceExact": true,
+    "frozenNonceAndCancellationOrdering": true,
+    "noEditingGrant": true
+  }
+]

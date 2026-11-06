@@ -1,0 +1,52 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "deviceName" : "Taskfold assignment iPad",
+        "modelName" : "iPad Pro 11-inch (M5)",
+        "osBuildNumber" : "23F77",
+        "osVersion" : "26.5",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1791614395.467,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1791614377.661,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Failed to tap \"Add task\" Button: No matches found for Elements matching predicate '\"Add task\" IN identifiers' from input {(\n    Button, identifier: 'ToggleSideBar', label: 'Toggle sidebar',\n    Button, identifier: 'sun.max', label: 'Today',\n    Button, identifier: 'tray', label: 'Inbox',\n    Button, identifier: 'calendar.day.timeline.left', label: 'Upcoming',\n    Button, identifier: 'calendar', label: 'Calendar',\n    Button, identifier: 'square.grid.2x2', label: 'Browse', Selected,\n    Button, identifier: 'sun.max', label: 'Today',\n    Button, identifier: 'tray', label: 'Inbox',\n    Button, identifier: 'calendar.day.timeline.left', label: 'Upcoming',\n    Button, identifier: 'calendar', label: 'Calendar',\n    Button, identifier: 'square.grid.2x2', label: 'Browse', Selected,\n    Button, identifier: 'BackButton', label: 'Browse',\n    Button, label: 'Search',\n    Button, label: 'Task options',\n    Button,\n    Button, identifier: 'floatingAdd', label: 'Create task or section',\n    Button, identifier: 'sectionHeader-eeeeeeee-eeee-4eee-8eee-eeeeeeeeee01:unsectioned', label: 'Tasks, 1', value: Expanded,\n    Button, label: 'Complete Sketch widget concept'\n)}\nPossibly caused by runtime issues:\nAutomation type mismatch: computed Button from legacy attributes vs Cell from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 75;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeTraits\" = 146297323528;\n}\nAutomation type mismatch: computed Button from legacy attributes vs Cell from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 75;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeTraits\" = 146297323520;\n}\nAutomation type mismatch: computed Button from legacy attributes vs Other from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 0;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeTraits\" = 8858370048;\n}\nAutomation type mismatch: computed Button from legacy attributes vs Other from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 0;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeTraits\" = 8858370056;\n}\nAutomation type mismatch: computed Button from legacy attributes vs PopUpButton from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 14;\n    \"XC_kAXXCAttributeElementBaseType\" = UIResponder;\n    \"XC_kAXXCAttributeElementType\" = \"SwiftUI.AccessibilityNode\";\n    \"XC_kAXXCAttributeTraits\" = 1108101562369;\n}\nSee test report attachments for more detail.",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "TaskfoldUITests/testInstalledTabletMediumAndLargeMyListRoutesPersist()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testInstalledTabletMediumAndLargeMyListRoutesPersist",
+      "testName" : "testInstalledTabletMediumAndLargeMyListRoutesPersist()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}

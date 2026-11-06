@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "configuration": "Release",
+  "platform": "mac",
+  "bundle": "com.dbakp.taskfold.mac",
+  "version": "1.2.0",
+  "build": "27",
+  "app": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Release/Taskfold.app",
+  "sourceFingerprint": "a5a62062fec1633cb794143d39cb7d6cbce3f5550bac6ed3d172949e204cc7f0",
+  "sourceRevision": "15c5a421508710b9976148b661aaf9fc03340e06",
+  "simulatorOnly": false,
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "published": false,
+  "cachedProfileSigning": {
+    "mode": "existing-development-profiles-only",
+    "identitySHA1": "9421BFBE87503809AB8274B2B84048C65BE9D2FC",
+    "profiles": {
+      "com.dbakp.taskfold.mac": {
+        "uuid": "8d7498f4-1e66-4f06-a95f-a9e433e719a3",
+        "expires": "2026-11-10T18:38:42+00:00",
+        "xcodeManaged": true
+      },
+      "com.dbakp.taskfold.mac.widgets": {
+        "uuid": "9fddc085-4a2d-40cb-86ed-dff551baf84e",
+        "expires": "2026-11-10T18:32:04+00:00",
+        "xcodeManaged": true
+      },
+      "com.dbakp.taskfold.mac.share": {
+        "uuid": "25d8c570-2916-4cf4-8c05-881dcb51fbda",
+        "expires": "2026-11-10T18:32:07+00:00",
+        "xcodeManaged": true
+      }
+    },
+    "profileCreationAllowed": false,
+    "networkProvisioningAllowed": false,
+    "embeddedProfilesVerified": true
+  },
+  "buildToolsSHA256": {
+    "build_daily.py": "82c77051f4845176d305f8ef0f5df039e51ce318ff0b5947dd23c74ed6579b58",
+    "cached_development_signing.py": "319da92eff45402826db9d8a5e9c54cb64a754f3abafe67585719261bcfa54a9"
+  }
+}

@@ -219,3 +219,426 @@ final class ProfileAvatarTests: XCTestCase {
         for url in ["", "file:///private/photo", "javascript:alert(1)", "http://example.com/photo", "https:"] { XCTAssertNil(ProfileAvatar.url(url)) }
     }
 }
+
+/// Companion to the two-Simulator continuity walk. This exercises the Mac-owned
+/// transport and decoding without opening the installed Mac app or its Keychain.
+final class NativeContinuityTests: XCTestCase {
+    @MainActor func testMacTransportCannotReadRevokedSharedProject() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_REVOCATION_FIXTURE"] else { throw XCTSkip("Disposable revoked-access fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let projects = try await backend.rows("projects"), tasks = try await backend.rows("tasks")
+        XCTAssertFalse(projects.contains { $0.id == fixture["projectID"] })
+        XCTAssertFalse(tasks.contains { $0.id == fixture["taskID"] })
+    }
+    @MainActor func testMacTransportReadsPersonalTaskAfterSharedCreationRecovery() async throws {
+        let (task, _) = try await continuityTask(environment: "TASKFOLD_REVOCATION_CREATION_FIXTURE")
+        XCTAssertEqual(task.title, "Personal work survives")
+        XCTAssertTrue(task.string("project_id").isEmpty)
+    }
+    @MainActor func testMacTransportReadsPinnedNoteAndEndedFocusAfterOfflineTabletEdit() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_NOTE_FOCUS_FIXTURE"] else { throw XCTSkip("Disposable note/Focus fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let tasks = try await backend.rows("tasks"), pins = try await backend.rows("view_orders"), sessions = try await backend.rows("focus_sessions")
+        XCTAssertEqual(tasks.count, 1); XCTAssertEqual(sessions.count, 1)
+        let task = try XCTUnwrap(tasks.first), row = try XCTUnwrap(sessions.first)
+        XCTAssertEqual(task.id, fixture["taskID"]); XCTAssertEqual(task.title, "Continuity reference"); XCTAssertFalse(task.completed)
+        XCTAssertTrue(task.string("description").contains("Keep these instructions")); XCTAssertTrue(task.string("description").contains("Tablet offline addition."))
+        XCTAssertTrue(PinnedNotes.contains(task.id, pins: pins, account: owner))
+        let session = try FocusSession(document: row["state"])
+        XCTAssertEqual(session.id, fixture["sessionID"]); XCTAssertEqual(session.taskID, task.id); XCTAssertEqual(session.status, .stopped)
+        XCTAssertEqual(session.durationSeconds, 1500); XCTAssertGreaterThan(session.elapsedMilliseconds, 0)
+    }
+    @MainActor func testMacTransportReadsOrganizedWorkspaceAfterOfflineTabletEdit() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_WORKSPACE_HANDOFF_FIXTURE"] else { throw XCTSkip("Disposable workspace fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        var rows: [String: [Record]] = [:]
+        for table in ["projects", "sections", "labels", "tasks", "favorites", "view_preferences"] {
+            rows[table] = try await backend.rows(table); XCTAssertEqual(rows[table]?.count, 1, table)
+        }
+        let task = try XCTUnwrap(rows["tasks"]?.first), project = try XCTUnwrap(rows["projects"]?.first), section = try XCTUnwrap(rows["sections"]?.first), label = try XCTUnwrap(rows["labels"]?.first)
+        XCTAssertEqual(task.id, fixture["taskID"]); XCTAssertEqual(project.id, fixture["projectID"]); XCTAssertEqual(section.id, fixture["sectionID"]); XCTAssertEqual(label.id, fixture["labelID"])
+        XCTAssertEqual(project.name, "Handoff studio"); XCTAssertEqual(section.name, "Next steps"); XCTAssertEqual(label.name, "Launch notes")
+        XCTAssertEqual(task.string("project_id"), project.id); XCTAssertEqual(task.string("section_id"), section.id); XCTAssertEqual(section.string("project_id"), project.id)
+        XCTAssertTrue(task["labels"].list.contains(.string(label.id)))
+        XCTAssertEqual(task.title, "Prepare handoff"); XCTAssertFalse(task.completed); XCTAssertEqual(task.string("description"), "Tablet offline handoff notes")
+        XCTAssertEqual(task.string("due_date"), "2028-01-04"); XCTAssertTrue(task.string("due_time").hasPrefix("09:00")); XCTAssertEqual(task.string("deadline_date"), "2028-01-05"); XCTAssertEqual(task.durationMinutes, 26)
+        XCTAssertEqual(task["reminder_specs"].list.compactMap { ReminderSpec(row: $0)?.offset }.sorted(), [-30, -15, 0])
+        XCTAssertEqual(rows["favorites"]?.first?.id, "project:" + project.id)
+        XCTAssertEqual(rows["view_preferences"]?.first?.id, "project:" + project.id); XCTAssertEqual(rows["view_preferences"]?.first?.string("layout"), "board")
+    }
+    func testMacReadsNativeExportAndMatchesIOSRestoreIdentityMapping() throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_PORTABLE_WORKSPACE_FILE"], let fixturePath = ProcessInfo.processInfo.environment["TASKFOLD_WORKSPACE_HANDOFF_FIXTURE"] else { throw XCTSkip("Disposable native export and receiving-account fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: fixturePath)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backup = try WorkspaceBackup.read(Data(contentsOf: URL(fileURLWithPath: path)))
+        XCTAssertNotEqual(backup.sourceAccount, owner); XCTAssertEqual(backup.unsyncedChanges, 0)
+        let plan = try backup.plan(current: Snapshot(), account: owner)
+        XCTAssertEqual(plan.added, 6); XCTAssertEqual(plan.updated, 0)
+        var restored = Snapshot(); plan.changes.forEach { restored.apply($0) }
+        for (table, key) in [("tasks", "taskID"), ("projects", "projectID"), ("sections", "sectionID"), ("labels", "labelID")] {
+            let row = try XCTUnwrap(restored.tables[table]?.first)
+            XCTAssertEqual(row.id, fixture[key], "Mac and iOS must use the same cross-account restore mapping")
+            XCTAssertEqual(row.string("user_id"), owner)
+        }
+        let task = try XCTUnwrap(restored.tables["tasks"]?.first)
+        XCTAssertEqual(task.string("project_id"), fixture["projectID"]); XCTAssertEqual(task.string("section_id"), fixture["sectionID"])
+        XCTAssertEqual(task["labels"].list, [.string(try XCTUnwrap(fixture["labelID"]))])
+        XCTAssertEqual(task.string("description"), "Tablet offline handoff notes"); XCTAssertEqual(task.durationMinutes, 26)
+        XCTAssertEqual(task.string("due_date"), "2028-01-04"); XCTAssertEqual(task.string("deadline_date"), "2028-01-05")
+        XCTAssertEqual(task["reminder_specs"].list.compactMap { ReminderSpec(row: $0)?.offset }.sorted(), [-30, -15, 0])
+        XCTAssertEqual(try backup.plan(current: restored, account: owner).total, 0)
+    }
+    @MainActor private func continuityTask(environment: String) async throws -> (Record, String) {
+        guard let path = ProcessInfo.processInfo.environment[environment] else {
+            throw XCTSkip("Disposable iOS continuity fixture not supplied")
+        }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        XCTAssertNotNil(UUID(uuidString: owner))
+        guard fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else {
+            throw XCTSkip("Requires the disposable continuity account namespace")
+        }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let rows = try await backend.rows("tasks")
+        XCTAssertEqual(rows.count, 1, "The fixture must contain only the task created through iOS")
+        let task = try XCTUnwrap(rows.first)
+        XCTAssertEqual(task.string("user_id"), owner)
+        XCTAssertFalse(task.completed)
+        XCTAssertFalse(task.string("task_generation").isEmpty)
+        return (task, owner)
+    }
+    @MainActor func testMacTransportReadsSavedFilterEditedOnIOS() async throws { try await checkSavedFilterContinuity(deleted: false) }
+    @MainActor func testMacTransportExcludesTaskDeletedOnIOS() async throws { try await checkSavedFilterContinuity(deleted: true) }
+    @MainActor private func checkSavedFilterContinuity(deleted: Bool) async throws {
+        let environment = deleted ? "TASKFOLD_DELETE_CONTINUITY_FIXTURE" : "TASKFOLD_FILTER_CONTINUITY_FIXTURE"
+        guard let path = ProcessInfo.processInfo.environment[environment] else { throw XCTSkip("Disposable saved-filter fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let views = try await backend.rows("saved_views"), tasks = try await backend.rows("tasks")
+        XCTAssertEqual(views.count, 1); XCTAssertEqual(tasks.count, deleted ? 1 : 2)
+        let view = try XCTUnwrap(views.first); XCTAssertEqual(view.name, deleted ? "Across devices" : "All undated work"); XCTAssertEqual(view.string("user_id"), owner)
+        let rule = try FilterRule(document: view["query_ast"]); XCTAssertEqual(rule, deleted ? .predicate("search", "Continuity") : .predicate("no_date", ""))
+        let matches = tasks.filter { rule.matches($0, today: "2026-10-09", userID: owner, labels: [], timeZone: "UTC") }
+        XCTAssertEqual(Set(matches.map(\.title)), deleted ? Set<String>() : Set(["Continuity alpha", "Other item"]))
+        if deleted { XCTAssertEqual(tasks.first?.title, "Other item") }
+        XCTAssertTrue(matches.allSatisfy { !$0.completed && $0.string("user_id") == owner })
+    }
+    @MainActor func testMacTransportReadsTaskCreatedAndEditedOnIOS() async throws {
+        let (task, owner) = try await continuityTask(environment: "TASKFOLD_CONTINUITY_FIXTURE")
+        XCTAssertEqual(task.title, "Continuity " + String(owner.prefix(8)) + " revised")
+    }
+    @MainActor func testMacTransportReadsTaskRestoredOfflineOnIOS() async throws {
+        let (task, owner) = try await continuityTask(environment: "TASKFOLD_RESTORE_CONTINUITY_FIXTURE")
+        XCTAssertEqual(task.title, "Continuity " + String(owner.prefix(8)))
+    }
+    @MainActor func testMacTransportReadsWorkingWeekEditedOfflineOnIOS() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_SETTINGS_CONTINUITY_FIXTURE"] else { throw XCTSkip("Disposable planner settings fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let preferences = try await backend.rows("view_preferences")
+        let planner = try XCTUnwrap(preferences.first { $0.id == "planner" })
+        XCTAssertEqual(planner.string("user_id"), owner)
+        let hours = try WorkingHours(document: planner["working_hours"])
+        XCTAssertEqual(hours, WorkingHours(weekdays: Set(1...7)))
+    }
+    @MainActor func testMacTransportReadsSyncedChoiceAndLaterEstimate() async throws {
+        let (task, _) = try await continuityTask(environment: "TASKFOLD_USE_SYNCED_FIXTURE")
+        XCTAssertEqual(task.title, "Remote device edit")
+        XCTAssertEqual(task.string("description"), "Independent tablet notes")
+        XCTAssertEqual(task.durationMinutes, 30)
+    }
+    @MainActor func testMacTransportReadsRecurringCompletionFromIOS() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_RECURRENCE_CONTINUITY_FIXTURE"] else { throw XCTSkip("Disposable recurrence fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let tasks = try await backend.rows("tasks")
+        XCTAssertEqual(tasks.count, 2)
+        let original = try XCTUnwrap(tasks.first(where: \.completed))
+        let next = try XCTUnwrap(tasks.first(where: { !$0.completed }))
+        XCTAssertNotEqual(original.id, next.id)
+        XCTAssertEqual(original.string("due_date"), "2028-01-03"); XCTAssertEqual(next.string("due_date"), "2028-01-04")
+        for task in tasks { XCTAssertEqual(task.title, "Continuity routine"); XCTAssertEqual(task.durationMinutes, 25); XCTAssertEqual(task["is_recurring"], .bool(true)) }
+        XCTAssertEqual(original["recurrence_pattern"].object["count"], .number(3))
+        var expected = original["recurrence_pattern"].object; expected["count"] = .number(2)
+        XCTAssertEqual(next["recurrence_pattern"], .object(expected))
+    }
+    @MainActor func testMacTransportReadsConfirmedConcurrentDeletion() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_CONFIRMED_DELETE_FIXTURE"] else { throw XCTSkip("Disposable confirmed-deletion fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let tasks = try await backend.rows("tasks")
+        XCTAssertTrue(tasks.isEmpty)
+    }
+    @MainActor func testMacTransportReadsTaskKeptAfterOfflineDeletion() async throws {
+        let (task, _) = try await continuityTask(environment: "TASKFOLD_OFFLINE_DELETE_FIXTURE")
+        XCTAssertEqual(task.title, "Remote device edit")
+        XCTAssertEqual(task.string("description"), "Independent tablet notes")
+    }
+    @MainActor func testMacTransportReadsReviewedOfflineEdit() async throws {
+        let (task, _) = try await continuityTask(environment: "TASKFOLD_OFFLINE_CONTINUITY_FIXTURE")
+        XCTAssertEqual(task.title, "Offline device edit")
+        XCTAssertEqual(task.string("description"), "Independent tablet notes")
+    }
+}
+
+
+final class SyncStatusTests: XCTestCase {
+    func testUnverifiedAndInterruptedSyncNeverClaimsSuccess() {
+        for previous in [nil, Date(timeIntervalSince1970: 1_700_000_000)] {
+            let interrupted = SyncStatus.presentation(local: false, online: true, syncing: false, needsAttention: true, pending: 0, lastSync: previous)
+            XCTAssertEqual(interrupted.title, "Sync needs attention")
+            XCTAssertEqual(interrupted.symbol, "exclamationmark.icloud")
+        }
+        let initial = SyncStatus.presentation(local: false, online: true, syncing: false, needsAttention: false, pending: 0, lastSync: nil)
+        XCTAssertEqual(initial.title, "Waiting to sync")
+        XCTAssertEqual(initial.symbol, "icloud")
+    }
+    func testPendingWorkOverridesPreviousSuccessfulSync() {
+        for count in [1, 2] {
+            let status = SyncStatus.presentation(local: false, online: true, syncing: false, needsAttention: false, pending: count, lastSync: Date())
+            XCTAssertEqual(status.title, "\(count) \(count == 1 ? "change" : "changes") waiting to sync")
+            XCTAssertEqual(status.symbol, "icloud")
+        }
+    }
+    func testLocalOfflineAndInFlightStatesTakePrecedence() {
+        let date = Date()
+        XCTAssertEqual(SyncStatus.presentation(local: true, online: false, syncing: false, needsAttention: true, pending: 2, lastSync: date).title, "Saved on this device")
+        XCTAssertEqual(SyncStatus.presentation(local: false, online: false, syncing: false, needsAttention: true, pending: 2, lastSync: date).symbol, "wifi.slash")
+        XCTAssertEqual(SyncStatus.presentation(local: false, online: true, syncing: true, needsAttention: true, pending: 2, lastSync: date).title, "Syncing…")
+        XCTAssertEqual(SyncStatus.presentation(local: false, online: true, syncing: false, needsAttention: false, pending: 0, lastSync: date).symbol, "checkmark.icloud")
+    }
+
+    func testTransportInterruptionsExplainSavedWorkWithoutRawCodes() {
+        for code in [URLError.notConnectedToInternet, .networkConnectionLost, .timedOut] {
+            // URLSession can bridge its failures to NSError, without a localized description.
+            let error = NSError(domain: NSURLErrorDomain, code: code.rawValue)
+            let message = SyncStatus.failureMessage(error)
+            XCTAssertTrue(message.contains("saved"))
+            XCTAssertFalse(message.contains("NSURLErrorDomain"))
+            XCTAssertFalse(message.contains(String(code.rawValue)))
+        }
+        XCTAssertTrue(SyncStatus.failureMessage(URLError(.notConnectedToInternet)).contains("reconnect"))
+    }
+    func testConfirmedSessionRefusalOffersRecoveryWithoutSuggestingLostChanges() {
+        XCTAssertEqual(SyncStatus.failureMessage(AccountSessionAuthorizationRequired()),
+                       "Sign in again to sync. Your changes are saved on this device.")
+        // Similar words in a storage/server error must not imply an expired session.
+        XCTAssertEqual(SyncStatus.failureMessage(AppFailure(message: "session_expired")),
+                       "Sync paused: session_expired")
+    }
+    func testUnrelatedFailuresKeepTheirExplanation() {
+        XCTAssertEqual(SyncStatus.failureMessage(AppFailure(message: "Sign in to sync your tasks.")), "Sync paused: Sign in to sync your tasks.")
+        let error = NSError(domain: "Storage", code: URLError.notConnectedToInternet.rawValue, userInfo: [NSLocalizedDescriptionKey: "Could not save changes"])
+        XCTAssertEqual(SyncStatus.failureMessage(error), "Sync paused: Could not save changes")
+    }
+}
+
+extension NativeBehaviorTests {
+    @MainActor func testMacTransportSeparatesAccountsAfterNativeOfflineSwitch() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_ACCOUNT_ISOLATION_FIXTURES"] else { throw XCTSkip("Disposable account-switch fixtures not supplied") }
+        let fixtures = try JSONDecoder().decode([[String: String]].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        XCTAssertEqual(fixtures.count, 2)
+        for f in fixtures {
+            let owner = try XCTUnwrap(f["userID"])
+            guard UUID(uuidString: owner) != nil, f["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable accounts") }
+        }
+        XCTAssertNotEqual(fixtures[0]["userID"], fixtures[1]["userID"])
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixtures[0]["url"]), "Key": try XCTUnwrap(fixtures[0]["key"])], session: nil, persistSession: { _ in })
+        for index in [0, 1, 0] {
+            let f = fixtures[index], owner = try XCTUnwrap(f["userID"])
+            let signedIn = try await backend.signIn(email: try XCTUnwrap(f["email"]), password: try XCTUnwrap(f["password"]), signup: false)
+            XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+            for table in ["tasks", "projects", "saved_views", "favorites"] {
+                let rows = try await backend.rows(table)
+                XCTAssertEqual(rows.count, 1); XCTAssertTrue(rows.allSatisfy { $0.string("user_id") == owner })
+                if table == "tasks" {
+                    let task = try XCTUnwrap(rows.first)
+                    XCTAssertEqual(task.id, f["taskID"]); XCTAssertFalse(task.completed)
+                    XCTAssertEqual(task.title, index == 0 ? "Workspace A private task revised offline" : "Workspace B private task")
+                }
+                if table == "projects" { XCTAssertEqual(rows.first?.id, f["projectID"]) }
+                if table == "saved_views" { XCTAssertEqual(rows.first?.id, f["viewID"]) }
+                if table == "favorites" { XCTAssertEqual(rows.first?.id, "project:" + (try XCTUnwrap(f["projectID"]))) }
+            }
+        }
+    }
+}
+
+extension NativeBehaviorTests {
+    func testOrganizationDragPreservesMetadataAndRoundTripsQueueAndUndo() throws {
+        for table in ["projects", "sections", "saved_views", "favorites"] {
+            let original = ["a", "b", "c"].enumerated().map { index, id in
+                Record(["id": .string(id), "user_id": .string("owner"), "name": .string("Item " + id), "order_index": .number(Double(index)), "project_id": .string("project"), "future_field": .object(["keep": .bool(true)])])
+            }
+            var snapshot = Snapshot(); snapshot.tables[table] = original
+            let changes = try OrganizationOrder.changes(table: table, rows: original, ids: ["c", "a", "b"])
+            let history = EditHistory(changes: changes, snapshot: snapshot)
+            for change in changes {
+                XCTAssertEqual(change.method, "PATCH"); XCTAssertEqual(Set(change.fields.keys), ["order_index"])
+                snapshot.apply(change); snapshot.pending.append(change)
+            }
+            let restored = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+            XCTAssertEqual(OrganizationOrder.sorted(restored.tables[table] ?? []).map(\.id), ["c", "a", "b"])
+            XCTAssertEqual(restored.pending, changes)
+            for row in restored.tables[table] ?? [] {
+                let before = try XCTUnwrap(original.first { $0.id == row.id })
+                XCTAssertEqual(row.fields.filter { $0.key != "order_index" }, before.fields.filter { $0.key != "order_index" })
+            }
+            for change in history.undo { snapshot.apply(change) }
+            XCTAssertEqual(snapshot.tables[table], original)
+            for change in history.redo { snapshot.apply(change) }
+            XCTAssertEqual(OrganizationOrder.sorted(snapshot.tables[table] ?? []).map(\.id), ["c", "a", "b"])
+            XCTAssertTrue(try OrganizationOrder.changes(table: table, rows: snapshot.tables[table] ?? [], ids: ["c", "a", "b"]).isEmpty)
+        }
+    }
+    func testOrganizationRejectsStaleDuplicateAndOutOfScopeDrags() throws {
+        let rows = ["a", "b"].map { Record(["id": .string($0)]) }
+        for ids in [["a"], ["a", "a"], ["a", "missing"], ["a", "b", "other-project-section"]] {
+            XCTAssertThrowsError(try OrganizationOrder.changes(table: "sections", rows: rows, ids: ids))
+        }
+        XCTAssertThrowsError(try OrganizationOrder.changes(table: "tasks", rows: rows, ids: ["b", "a"]))
+        XCTAssertThrowsError(try OrganizationOrder.changes(table: "favorites", rows: [rows[0], rows[0]], ids: ["a", "b"]))
+    }
+    func testOrganizationTiedOrderIsIndependentOfServerRowSequence() {
+        let rows = ["c", "a", "b"].map { Record(["id": .string($0), "order_index": .number(0)]) }
+        XCTAssertEqual(OrganizationOrder.sorted(rows).map(\.id), ["a", "b", "c"])
+        XCTAssertEqual(OrganizationOrder.sorted(rows.reversed()).map(\.id), ["a", "b", "c"])
+    }
+}
+
+extension NativeBehaviorTests {
+    @MainActor func testMacReadsOrganizationOrderingAfterNativeOfflineHandoff() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_ORGANIZATION_ORDER_FIXTURE"] else { throw XCTSkip("Disposable ordering fixture not supplied") }
+        let f = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(f["userID"])
+        guard UUID(uuidString: owner) != nil, f["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(f["url"]), "Key": try XCTUnwrap(f["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(f["email"]), password: try XCTUnwrap(f["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        for (table, key) in [("projects", "Project"), ("sections", "Section"), ("saved_views", "View"), ("favorites", "Project")] {
+            let rows = OrganizationOrder.sorted(try await backend.rows(table))
+            let ids = try ["first", "second"].map { try XCTUnwrap(f[$0 + key + "ID"]) }
+            XCTAssertEqual(rows.map(\.id), table == "favorites" ? ids.map { "project:" + $0 } : ids)
+            XCTAssertEqual(rows.map { $0["order_index"].integer }, [0, 1])
+            XCTAssertTrue(rows.allSatisfy { $0.string("user_id") == owner })
+            if table == "sections" {
+                XCTAssertTrue(rows.allSatisfy { $0.string("project_id") == f["firstProjectID"] })
+                XCTAssertEqual(rows.map(\.name), ["First step", "Second step"])
+            }
+            if table == "projects" { XCTAssertEqual(rows.map { $0.string("description") }, ["Original studio description", "Original garden description"]) }
+            if table == "saved_views" {
+                XCTAssertEqual(rows.map(\.name), ["First queue", "Second queue"])
+                XCTAssertTrue(rows.allSatisfy { $0["query_ast"] == FilterRule.predicate("inbox", "").document && $0.string("layout") == "list" })
+            }
+        }
+        let tasks = try await backend.rows("tasks"); XCTAssertTrue(tasks.isEmpty)
+    }
+}
+
+extension NativeBehaviorTests {
+    func testCompleteOrderReplaysUnchangedRowAfterConcurrentRemoteMove() throws {
+        let original = ["p", "a", "b"].enumerated().map { Record(["id": .string($0.element), "order_index": .number(Double($0.offset)), "name": .string($0.element)]) }
+        let changes = try OrganizationOrder.command(table: "projects", rows: original, ids: ["p", "b", "a"])
+        XCTAssertEqual(changes.count, 1)
+        let move = try XCTUnwrap(changes.first)
+        var cached = Snapshot(tables: ["projects": original], pending: changes)
+        cached.apply(move)
+        cached = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(cached))
+        var remote = Snapshot(tables: ["projects": original])
+        for change in try OrganizationOrder.command(table: "projects", rows: original, ids: ["a", "b", "p"]) { remote.apply(change) }
+        cached.mergeRemote(remote.tables)
+        XCTAssertEqual(OrganizationOrder.sorted(cached.tables["projects"]!).map(\.id), ["p", "b", "a"])
+        XCTAssertEqual(cached.pending[0].id, move.id, "A retry must retain the same identity")
+        let history = EditHistory(changes: changes, snapshot: Snapshot(tables: ["projects": original]))
+        for back in history.undo { cached.apply(back) }
+        XCTAssertEqual(cached.tables["projects"], original)
+        XCTAssertNotEqual(history.undo[0].id, move.id)
+        for forward in history.redo { cached.apply(forward) }
+        XCTAssertEqual(OrganizationOrder.sorted(cached.tables["projects"]!).map(\.id), ["p", "b", "a"])
+        // An earlier server acknowledgement must replay the next entire queued move.
+        let next = try OrganizationOrder.command(table: "projects", rows: cached.tables["projects"]!, ids: ["a", "p", "b"])[0]
+        cached.pending.append(next)
+        cached.acknowledge(move, saved: Record(["organization_order_rows": .array(remote.tables["projects"]!.map { .object($0.fields) })]))
+        XCTAssertEqual(OrganizationOrder.sorted(cached.tables["projects"]!).map(\.id), ["a", "p", "b"])
+        XCTAssertEqual(cached.pending, [next])
+    }
+    func testCompleteSectionOrderKeepsOtherProjectsAndRemoteAdditions() throws {
+        let original = ["a", "b"].enumerated().map { Record(["id": .string($0.element), "project_id": .string("p"), "order_index": .number(Double($0.offset))]) }
+        let change = try OrganizationOrder.command(table: "sections", rows: original, ids: ["b", "a"], projectID: "p")[0]
+        let other = Record(["id": .string("other"), "project_id": .string("q"), "order_index": .number(9)])
+        let added = Record(["id": .string("new"), "project_id": .string("p"), "order_index": .number(0)])
+        var snapshot = Snapshot(tables: ["sections": original + [other, added]], pending: [change])
+        snapshot.mergeRemote(["sections": [original[1], other, added]]) // a was deleted remotely
+        XCTAssertEqual(snapshot.tables["sections"]!.first { $0.id == "other" }, other)
+        XCTAssertEqual(OrganizationOrder.sorted(snapshot.tables["sections"]!.filter { $0.string("project_id") == "p" }).map(\.id), ["b", "new"])
+        XCTAssertFalse(snapshot.tables["sections"]!.contains { $0.id == "a" })
+        XCTAssertThrowsError(try OrganizationOrder.command(table: "sections", rows: original, ids: ["b", "a"], projectID: "q"))
+    }
+}
+
+extension AuthTransportTests {
+    @MainActor func testCompleteOrderingUsesOneScopedRPCAndRetainsRetryIdentityAfterLostResponse() async throws {
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [Stub.self]
+        let session = try JSONDecoder().decode(Session.self, from: Data(#"{"access_token":"test","refresh_token":"refresh","expires_in":3600,"user":{"id":"one"}}"#.utf8))
+        let rows = ["a", "b"].enumerated().map { Record(["id": .string($0.element), "order_index": .number(Double($0.offset))]) }
+        let change = try OrganizationOrder.command(table: "projects", rows: rows, ids: ["b", "a"])[0]
+        var payloads: [[String: JSON]] = []
+        Stub.handler = { request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_order_organization")
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer test")
+            var body = request.httpBody ?? Data()
+            if let stream = request.httpBodyStream {
+                stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 1024)
+                while stream.hasBytesAvailable { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; body.append(contentsOf: bytes.prefix(count)) }
+            }
+            payloads.append(try JSONDecoder().decode([String: JSON].self, from: body))
+            if payloads.count == 1 { throw URLError(.networkConnectionLost) }
+            return (200, try JSONEncoder().encode(rows))
+        }
+        defer { Stub.handler = nil }
+        let backend = Backend(configuration: ["URL": "https://native-auth.test", "Key": "public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
+        do { _ = try await backend.send(change, expectedAccount: "one"); XCTFail("Lost response should remain queued") } catch { }
+        _ = try await backend.send(change, expectedAccount: "one")
+        XCTAssertEqual(payloads.count, 2); XCTAssertEqual(payloads[0], payloads[1])
+        XCTAssertEqual(payloads[0]["_ids"], .array([.string("b"), .string("a")]))
+        XCTAssertEqual(payloads[0]["_action"], .string(change.id.uuidString.lowercased()))
+        XCTAssertEqual(Set(payloads[0].keys), ["_table", "_ids", "_project", "_action"])
+        do { _ = try await backend.send(change, expectedAccount: "other"); XCTFail("Stale account must not send ordering") } catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(payloads.count, 2)
+    }
+}

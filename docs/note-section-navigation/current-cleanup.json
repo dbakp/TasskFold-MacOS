@@ -1,0 +1,102 @@
+{
+  "date": "2026-11-06",
+  "terminalRuns": true,
+  "retiredOutputs": {
+    "freeBeforeBytes": 58678636544,
+    "removed": [
+      {
+        "path": "/tmp/taskfold-note-navigation-large-baseline.xcresult",
+        "allocatedBytes": 23646208,
+        "reason": "Terminal native result; concise source-bound receipt and necessary screenshots retained"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-large-target.xcresult",
+        "allocatedBytes": 23552000,
+        "reason": "Terminal native result; concise source-bound receipt and necessary screenshots retained"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-large-switch.xcresult",
+        "allocatedBytes": 22847488,
+        "reason": "Terminal native result; concise source-bound receipt and necessary screenshots retained"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-large-viewport.xcresult",
+        "allocatedBytes": 3629056,
+        "reason": "Terminal native result; concise source-bound receipt and necessary screenshots retained"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-normal-current.xcresult",
+        "allocatedBytes": 3117056,
+        "reason": "Terminal native result; concise source-bound receipt and necessary screenshots retained"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-switch-screens",
+        "allocatedBytes": 21610496,
+        "reason": "Terminal duplicate attachment export; needed frames retained in owning docs"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-large-current-screens",
+        "allocatedBytes": 630784,
+        "reason": "Terminal duplicate attachment export; needed frames retained in owning docs"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-normal-current-screens",
+        "allocatedBytes": 614400,
+        "reason": "Terminal duplicate attachment export; needed frames retained in owning docs"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-frame-42.png",
+        "allocatedBytes": 524288,
+        "reason": "Duplicate extracted frame; retained one inspected frame in owning docs"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-frame-47.png",
+        "allocatedBytes": 524288,
+        "reason": "Duplicate extracted frame; retained one inspected frame in owning docs"
+      },
+      {
+        "path": "/tmp/taskfold-note-navigation-frame-55.png",
+        "allocatedBytes": 524288,
+        "reason": "Duplicate extracted frame; retained one inspected frame in owning docs"
+      }
+    ],
+    "preserved": "Owning current/baseline receipts, source/build hashes, current screenshots and hidden-control diagnosis; app/device contents, daily archives, backups and unrelated data untouched",
+    "freeAfterBytes": 58779856896
+  },
+  "compilerAndSimulatorCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 58764787712,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 680361984,
+        "projectedAllocatedBytes": 680361984
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 623489024,
+        "projectedAllocatedBytes": 623489024
+      }
+    ],
+    "freeAfterBytes": 58764607488,
+    "actualFreeChangeBytes": -180224
+  },
+  "coreCaches": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 672583680,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 616288256,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 58761580544,
+  "ordinaryAppsAndDataUnchanged": true,
+  "deviceInstallationDeferred": true
+}

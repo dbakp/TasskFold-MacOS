@@ -1,0 +1,23 @@
+{
+  "reviewed": "2026-11-05",
+  "owner": "TasskFold-MacOS",
+  "selectedTests": 30,
+  "newPreparationTests": 6,
+  "failures": 0,
+  "logSHA256": "8e55b3e326c974f1b2417f7c8b0a35ced04f24088192210a1c5f94207f6c9534",
+  "sourceSHA256": {
+    "Taskfold/Core/NoteMarkup.swift": "4f210192d89fff95b68b88ab18a704a4f5e1eb4217cfbaaa51d8dac220b22ba0",
+    "Taskfold/Views/NoteFormattingView.swift": "bd9cc4e8887347f1d9723155dfa223541ecaedc90c9c318ce12266423e563095",
+    "Taskfold/Views/PinnedNotesView.swift": "60869512de83e346e590edc24491cfaccb685963ff85742631c0fb4b574b05a7",
+    "TaskfoldTests/NoteMarkupTests.swift": "08efa7a5c6c7af4c2494d0befcf9cb5398ec10ff14338e9d1af01f9ee324467b"
+  },
+  "scope": [
+    "Existing block/inline semantics and safe links",
+    "Unicode and revised source",
+    "Original oversized/fragmented fallback stays complete",
+    "Canceled sync/async preparation cannot return partial/stale data",
+    "Existing formatting edits and pinned text intents"
+  ],
+  "unrelatedExistingTestCompileWarnings": true,
+  "physicalFPSClaim": false
+}

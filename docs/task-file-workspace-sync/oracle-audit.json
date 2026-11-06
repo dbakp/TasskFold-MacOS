@@ -1,0 +1,62 @@
+{
+  "reviewed": "2026-11-02",
+  "finding": "audioTaskRows read unrelated ui-testing.json while Store TeamEditor account writes ec240000-0000-4000-8000-000000000001.json. Actual correct cache had SQL description Local service original, correct root ID/generation, pending0. Wrong legacy cache had a511... unrelated synthetic assignment task. Normal actual SQL read succeeded twice, all 15 tables and optional feeds, no errors. Do not weaken assertion.",
+  "correction": "audioTaskRows requires an explicit identity at every caller, without a default or fallback: ui-testing for recording fixtures that startLocal(), account UUID .001 for signed-in shared-file fixtures. The independent provider driver reads that same UUID cache.",
+  "affectedScope": "Original signed-in shared-file dialog/refresh and paused provider publication/Stop task-cache comparisons used an unrelated generic cache. Original recording workflows used their correct local cache. The temporary blanket UUID correction was rejected by recording move/delete positive controls.",
+  "status": "Four full normal Store.sync publication/Stop flows pass on phone/iPad. Seven phone recording/file cases are accepted by exact source phase: five unchanged v5 methods, export v6 and import v10. The affected-five iPad regression run was interrupted after repeated 60-second system-animation waits, before any case completed; no case from that run is accepted. Signed-in iPad dialog/cache reacceptance remains open.",
+  "independentEvidenceStillValid": [
+    "Actual SQL/provider byte/publication/cleanup checks",
+    "Encrypted journal IO/CAS/cold state checks",
+    "Read-only viewer direct Store.snapshot comparisons",
+    "Original local recording task-cache comparisons; their fixtures call startLocal()"
+  ],
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "providerCacheEvidenceReplacement": "Original paused provider publication/Stop cache comparisons are superseded by the full normal Store.sync publication/Stop cases, using actual account cache and SQL attachment comparisons. Independent original provider receipt/bytes/journal proofs retain their original scope.",
+  "originalIOSHelperCommit": "155981dd0fc2c4c0cb8e04929f52bde1a233525f",
+  "observedWrongCache": {
+    "filename": "ui-testing.json",
+    "taskID": "a5110000-0000-4000-8000-000000000001",
+    "description": ""
+  },
+  "observedActiveCache": {
+    "filename": "ec240000-0000-4000-8000-000000000001.json",
+    "taskID": "ec240000-0000-4000-8000-000000000002",
+    "description": "Local service original",
+    "generation": "ec240000-0000-4000-8000-000000000071",
+    "pendingCount": 0
+  },
+  "observationScope": "Diagnostic fields inspected after first failed native run, not a retained complete-cache byte archive. Subsequent corrected native runs independently verify the active account cache against SQL.",
+  "acceptedReplacementFlows": [
+    "phone-publish",
+    "ipad-publish",
+    "phone-stop",
+    "ipad-stop"
+  ],
+  "scopeCorrection": "The original ui-testing cache helper was wrong for signed-in shared-file fixtures. Recording fixtures deliberately call startLocal and their original ui-testing cache was correct. The first blanket UUID-default fix was too broad and was caught by recording move/delete positive controls. Final helper requires an explicit cache identity at every call.",
+  "originalRecordingPreservationEvidence": "The four recording workflows originally read their real local ui-testing cache; their original task-preservation comparisons are not invalidated by the shared-file finding. They are being rechecked after restoring an explicit local identity.",
+  "originalWrongCacheCases": [
+    "testSharedFileNativeCopyCancelSaveAndColdReadback",
+    "testTaskFileNativeSelectionCancelAndPrivateCopy",
+    "testTaskFileNativeStaleRecoveryRefreshAndColdReturn",
+    "testTaskFileProviderNativeLostReplyAndColdRecovery",
+    "testTaskFileProviderNativeStopAndColdRecovery"
+  ],
+  "reacceptanceCases": [
+    "testRecordingBackupImportReviewCancelSaveAndColdReturn",
+    "testRecordingBackupCancelSaveReadbackAndColdReturn",
+    "testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn",
+    "testTaskEditorInboxAndProjectRecordingsPersistOutsideTaskData",
+    "testSharedFileNativeCopyCancelSaveAndColdReadback",
+    "testTaskFileNativeSelectionCancelAndPrivateCopy",
+    "testTaskFileNativeStaleRecoveryRefreshAndColdReturn",
+    "testTaskFileProviderNativeLostReplyAndColdRecovery",
+    "testTaskFileProviderNativeStopAndColdRecovery"
+  ],
+  "acceptedReacceptanceCasesPerDevice": {
+    "phone": 7,
+    "ipad": 0
+  },
+  "unchangedOriginalRecordingScope": "Original iPad local recording task-preservation checks used the correct ui-testing cache. They retain their earlier source scope; this does not establish current v10 tablet picker behavior.",
+  "iPadRecheck": "No more broad retries of this same runtime condition. Preserve the accepted four normal-sync mobile flows, the seven phone cases, and the explicit open iPad recheck."
+}

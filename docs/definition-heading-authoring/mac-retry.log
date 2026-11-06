@@ -1,0 +1,494 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-definition-headings-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testCloudCSVHeadingDefinitionCancelSaveAndColdReturn" "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testCloudTemplateHeadingDraftCancelSaveAndColdReturn" -resultBundlePath /tmp/taskfold-definition-headings-mac-retry.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-definition-headings-mac-retry.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 19:04:04.955690+0100 TaskfoldUITests-Runner[22166:23240986] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 19:04:05.051.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 19:04:05.051.
+Test Suite 'TeamWorkflowMacUITests' started at 2026-10-26 19:04:05.052.
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 19:04:05.052
+    t =     0.17s Set Up
+    t =     0.18s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.19s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 19:04:05.524 xcodebuild[22140:23240507] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:04:05.524 xcodebuild[22140:23240507] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.66s         Wait for accessibility to load
+    t =     1.98s         Setting up automation session
+    t =     2.03s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.04s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.04s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.04s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.05s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     3.09s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     3.09s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     3.24s Click "openSharedTemplateFixture" Button
+    t =     3.24s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.24s     Find the "openSharedTemplateFixture" Button
+    t =     3.28s     Check for interrupting elements affecting "openSharedTemplateFixture" Button
+    t =     3.30s     Synthesize event
+    t =     4.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.12s Checking existence of `"importWorkflowText" Button`
+    t =     4.26s Find the "importWorkflowText" Button
+    t =     4.34s Click "importWorkflowText" Button
+    t =     4.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.35s     Find the "importWorkflowText" Button
+    t =     4.41s     Check for interrupting elements affecting "importWorkflowText" Button
+    t =     4.43s     Synthesize event
+    t =     5.01s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.32s Waiting 8.0s for "templateImportText" TextView to exist
+    t =     6.40s     Checking `Expect predicate `existsNoRetry == 1` for object "templateImportText" TextView`
+    t =     6.40s         Checking existence of `"templateImportText" TextView`
+    t =     6.53s Click "templateImportText" TextView
+    t =     6.53s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.54s     Find the "templateImportText" TextView
+    t =     6.62s     Check for interrupting elements affecting "templateImportText" TextView
+    t =     6.64s     Synthesize event
+    t =     7.15s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.16s Type 'Name,Kind,Done
+Des...' into "templateImportText" TextView
+    t =     7.16s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.17s     Find the "templateImportText" TextView
+    t =     7.26s     Check for interrupting elements affecting "templateImportText" TextView
+    t =     7.29s     Synthesize event
+2026-10-26 19:04:12.347472+0100 TaskfoldUITests-Runner[22166:23240986] [DisplayManager] Found 1 displays containing rect (768.0, 487.5, 520.0, 220.0): [1]
+    t =     8.92s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.93s Checking existence of `"mapTemplateCSVText" Button`
+    t =     9.01s Find the "mapTemplateCSVText" Button
+    t =     9.09s Click "mapTemplateCSVText" Button
+    t =     9.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.09s     Find the "mapTemplateCSVText" Button
+    t =     9.27s     Check for interrupting elements affecting "mapTemplateCSVText" Button
+    t =     9.29s     Synthesize event
+    t =     9.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.07s Checking existence of `"mappedCSVColumn-title" PopUpButton`
+    t =    10.16s Find the "mappedCSVColumn-title" PopUpButton
+    t =    10.27s Click "mappedCSVColumn-title" PopUpButton
+    t =    10.27s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.27s     Find the "mappedCSVColumn-title" PopUpButton
+    t =    10.36s     Check for interrupting elements affecting "mappedCSVColumn-title" PopUpButton
+    t =    10.38s     Synthesize event
+    t =    10.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.89s Waiting 5.0s for "Name" MenuItem to exist
+    t =    11.92s     Checking `Expect predicate `existsNoRetry == 1` for object "Name" MenuItem`
+    t =    11.93s         Checking existence of `"Name" MenuItem`
+    t =    12.03s Click "Name" MenuItem
+    t =    12.03s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.04s     Find the "Name" MenuItem
+    t =    12.14s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    12.14s     Synthesize event
+    t =    12.15s         Checking existence of `"menuAction:" MenuItem`
+    t =    12.22s         Hover menu item 'Name'
+    t =    12.22s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.22s             Find the "menuAction:" MenuItem
+    t =    12.30s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    12.30s             Synthesize event
+    t =    12.53s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.54s         Find the "menuAction:" MenuItem
+    t =    13.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.52s Checking existence of `"mappedCSVColumn-type" PopUpButton`
+    t =    13.62s Find the "mappedCSVColumn-type" PopUpButton
+    t =    13.72s Click "mappedCSVColumn-type" PopUpButton
+    t =    13.72s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.72s     Find the "mappedCSVColumn-type" PopUpButton
+    t =    13.81s     Check for interrupting elements affecting "mappedCSVColumn-type" PopUpButton
+    t =    13.83s     Synthesize event
+    t =    14.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.33s Waiting 5.0s for "Kind" MenuItem to exist
+    t =    15.37s     Checking `Expect predicate `existsNoRetry == 1` for object "Kind" MenuItem`
+    t =    15.37s         Checking existence of `"Kind" MenuItem`
+    t =    15.48s Click "Kind" MenuItem
+    t =    15.48s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.49s     Find the "Kind" MenuItem
+    t =    15.58s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    15.58s     Synthesize event
+    t =    15.59s         Checking existence of `"menuAction:" MenuItem`
+    t =    15.67s         Hover menu item 'Kind'
+    t =    15.67s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.67s             Find the "menuAction:" MenuItem
+    t =    15.75s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    15.75s             Synthesize event
+    t =    15.97s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.98s         Find the "menuAction:" MenuItem
+    t =    16.92s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.94s Checking existence of `"reviewMappedCSV" Button`
+    t =    17.04s Find the "reviewMappedCSV" Button
+    t =    17.39s Get number of matches for: Descendants matching type Sheet
+    t =    17.45s Get number of matches for: Descendants matching type Sheet
+    t =    17.51s Scroll ScrollView (First Match) by dx: 0.00, dy: -280.00
+    t =    17.51s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.51s     Find the ScrollView (First Match)
+    t =    17.52s     Check for interrupting elements affecting ScrollView
+    t =    17.53s     Synthesize event
+    t =    17.83s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.85s Checking existence of `"reviewMappedCSV" Button`
+    t =    17.96s Find the "reviewMappedCSV" Button
+    t =    18.16s Get number of matches for: Descendants matching type Sheet
+    t =    18.23s Get number of matches for: Descendants matching type Sheet
+    t =    18.31s Scroll ScrollView (First Match) by dx: 0.00, dy: -280.00
+    t =    18.31s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.31s     Find the ScrollView (First Match)
+    t =    18.33s     Check for interrupting elements affecting ScrollView
+    t =    18.35s     Synthesize event
+    t =    18.67s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.68s Checking existence of `"reviewMappedCSV" Button`
+    t =    18.77s Find the "reviewMappedCSV" Button
+    t =    18.87s Click "reviewMappedCSV" Button
+    t =    18.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.88s     Find the "reviewMappedCSV" Button
+    t =    18.96s     Check for interrupting elements affecting "reviewMappedCSV" Button
+    t =    18.98s     Synthesize event
+    t =    19.53s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.59s Checking existence of `"confirmImportTemplate" Button`
+    t =    19.70s Find the "confirmImportTemplate" Button
+    t =    19.79s Checking existence of `"cancelImportTemplateReview" Button`
+    t =    19.86s Find the "cancelImportTemplateReview" Button
+    t =    19.95s Click "cancelImportTemplateReview" Button
+    t =    19.95s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.96s     Find the "cancelImportTemplateReview" Button
+    t =    20.03s     Check for interrupting elements affecting "cancelImportTemplateReview" Button
+    t =    20.04s     Synthesize event
+    t =    20.54s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.85s Waiting 8.0s for "importWorkflowText" Button to exist
+    t =    21.89s     Checking `Expect predicate `existsNoRetry == 1` for object "importWorkflowText" Button`
+    t =    21.89s         Checking existence of `"importWorkflowText" Button`
+    t =    21.98s Click "importWorkflowText" Button
+    t =    21.98s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.98s     Find the "importWorkflowText" Button
+    t =    22.05s     Check for interrupting elements affecting "importWorkflowText" Button
+    t =    22.07s     Synthesize event
+    t =    22.62s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.93s Waiting 8.0s for "templateImportText" TextView to exist
+    t =    23.97s     Checking `Expect predicate `existsNoRetry == 1` for object "templateImportText" TextView`
+    t =    23.97s         Checking existence of `"templateImportText" TextView`
+    t =    24.10s Click "templateImportText" TextView
+    t =    24.10s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.11s     Find the "templateImportText" TextView
+    t =    24.18s     Check for interrupting elements affecting "templateImportText" TextView
+    t =    24.20s     Synthesize event
+    t =    24.71s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.72s Type 'Name,Kind,Done
+Des...' into "templateImportText" TextView
+    t =    24.72s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.72s     Find the "templateImportText" TextView
+    t =    24.81s     Check for interrupting elements affecting "templateImportText" TextView
+    t =    24.86s     Synthesize event
+2026-10-26 19:04:29.922953+0100 TaskfoldUITests-Runner[22166:23240986] [DisplayManager] Found 1 displays containing rect (768.0, 487.5, 520.0, 220.0): [1]
+    t =    26.43s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    26.43s Checking existence of `"mapTemplateCSVText" Button`
+    t =    26.52s Find the "mapTemplateCSVText" Button
+    t =    26.61s Click "mapTemplateCSVText" Button
+    t =    26.61s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    26.61s     Find the "mapTemplateCSVText" Button
+    t =    26.68s     Check for interrupting elements affecting "mapTemplateCSVText" Button
+    t =    26.69s     Synthesize event
+    t =    27.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.43s Checking existence of `"mappedCSVColumn-title" PopUpButton`
+    t =    27.52s Find the "mappedCSVColumn-title" PopUpButton
+    t =    27.62s Click "mappedCSVColumn-title" PopUpButton
+    t =    27.62s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.62s     Find the "mappedCSVColumn-title" PopUpButton
+    t =    27.70s     Check for interrupting elements affecting "mappedCSVColumn-title" PopUpButton
+    t =    27.72s     Synthesize event
+    t =    28.21s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.22s Waiting 5.0s for "Name" MenuItem to exist
+    t =    29.25s     Checking `Expect predicate `existsNoRetry == 1` for object "Name" MenuItem`
+    t =    29.25s         Checking existence of `"Name" MenuItem`
+    t =    29.37s Click "Name" MenuItem
+    t =    29.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.38s     Find the "Name" MenuItem
+    t =    29.48s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    29.49s     Synthesize event
+    t =    29.49s         Checking existence of `"menuAction:" MenuItem`
+    t =    29.56s         Hover menu item 'Name'
+    t =    29.56s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.58s             Find the "menuAction:" MenuItem
+    t =    29.66s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    29.66s             Synthesize event
+    t =    29.89s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.90s         Find the "menuAction:" MenuItem
+    t =    30.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.89s Checking existence of `"mappedCSVColumn-type" PopUpButton`
+    t =    31.02s Find the "mappedCSVColumn-type" PopUpButton
+    t =    31.13s Click "mappedCSVColumn-type" PopUpButton
+    t =    31.13s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    31.13s     Find the "mappedCSVColumn-type" PopUpButton
+    t =    31.22s     Check for interrupting elements affecting "mappedCSVColumn-type" PopUpButton
+    t =    31.24s     Synthesize event
+    t =    31.74s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    31.75s Waiting 5.0s for "Kind" MenuItem to exist
+    t =    32.78s     Checking `Expect predicate `existsNoRetry == 1` for object "Kind" MenuItem`
+    t =    32.78s         Checking existence of `"Kind" MenuItem`
+    t =    32.89s Click "Kind" MenuItem
+    t =    32.89s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    32.90s     Find the "Kind" MenuItem
+    t =    32.99s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    33.00s     Synthesize event
+    t =    33.01s         Checking existence of `"menuAction:" MenuItem`
+    t =    33.08s         Hover menu item 'Kind'
+    t =    33.08s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    33.09s             Find the "menuAction:" MenuItem
+    t =    33.17s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    33.17s             Synthesize event
+    t =    33.40s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    33.40s         Find the "menuAction:" MenuItem
+    t =    34.35s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.36s Checking existence of `"reviewMappedCSV" Button`
+    t =    34.47s Find the "reviewMappedCSV" Button
+    t =    34.93s Get number of matches for: Descendants matching type Sheet
+    t =    34.99s Get number of matches for: Descendants matching type Sheet
+    t =    35.04s Scroll ScrollView (First Match) by dx: 0.00, dy: -280.00
+    t =    35.04s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    35.04s     Find the ScrollView (First Match)
+    t =    35.05s     Check for interrupting elements affecting ScrollView
+    t =    35.06s     Synthesize event
+    t =    35.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    35.38s Checking existence of `"reviewMappedCSV" Button`
+    t =    35.50s Find the "reviewMappedCSV" Button
+    t =    35.67s Get number of matches for: Descendants matching type Sheet
+    t =    35.74s Get number of matches for: Descendants matching type Sheet
+    t =    35.81s Scroll ScrollView (First Match) by dx: 0.00, dy: -280.00
+    t =    35.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    35.82s     Find the ScrollView (First Match)
+    t =    35.83s     Check for interrupting elements affecting ScrollView
+    t =    35.84s     Synthesize event
+    t =    36.16s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    36.17s Checking existence of `"reviewMappedCSV" Button`
+    t =    36.27s Find the "reviewMappedCSV" Button
+    t =    36.38s Click "reviewMappedCSV" Button
+    t =    36.38s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    36.38s     Find the "reviewMappedCSV" Button
+    t =    36.48s     Check for interrupting elements affecting "reviewMappedCSV" Button
+    t =    36.49s     Synthesize event
+    t =    37.05s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    37.13s Checking existence of `"confirmImportTemplate" Button`
+    t =    37.22s Find the "confirmImportTemplate" Button
+    t =    37.31s Checking existence of `Window (First Match)`
+    t =    37.31s Find the Window (First Match)
+2026-10-26 19:04:42.367553+0100 TaskfoldUITests-Runner[22166:23240986] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    37.39s Added attachment named 'cloud-heading-csv-review'
+    t =    37.39s Click "confirmImportTemplate" Button
+    t =    37.39s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    37.40s     Find the "confirmImportTemplate" Button
+    t =    37.46s     Check for interrupting elements affecting "confirmImportTemplate" Button
+    t =    37.47s     Synthesize event
+    t =    37.99s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    38.29s Waiting 10.0s for "importWorkflowText" Button to exist
+    t =    39.32s     Checking `Expect predicate `existsNoRetry == 1` for object "importWorkflowText" Button`
+    t =    39.33s         Checking existence of `"importWorkflowText" Button`
+    t =    39.42s Checking existence of `"workflowTemplate-deeb8fb5-28ec-4d64-a18e-c455fa39ce09" Button`
+    t =    39.48s Find the "workflowTemplate-deeb8fb5-28ec-4d64-a18e-c455fa39ce09" Button
+    t =    39.56s Click "workflowTemplate-deeb8fb5-28ec-4d64-a18e-c455fa39ce09" Button
+    t =    39.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    39.56s     Find the "workflowTemplate-deeb8fb5-28ec-4d64-a18e-c455fa39ce09" Button
+    t =    39.63s     Check for interrupting elements affecting "workflowTemplate-deeb8fb5-28ec-4d64-a18e-c455fa39ce09" Button
+    t =    39.64s     Synthesize event
+    t =    40.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    40.56s Checking existence of `"applyWorkflowTemplate" Button`
+<unknown>:0: warning: -[TaskfoldUITests.TeamWorkflowMacUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+    t =    40.74s Find the "applyWorkflowTemplate" Button
+    t =    40.85s Find the "applyWorkflowTemplate" Button
+    t =    40.94s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:22184
+    t =    42.03s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    42.04s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 19:04:47.103 xcodebuild[22140:23240507] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:04:47.103 xcodebuild[22140:23240507] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    42.56s         Wait for accessibility to load
+    t =    42.78s         Setting up automation session
+    t =    42.80s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    42.80s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    42.81s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    42.81s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    42.82s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    43.85s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    43.85s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    43.99s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:22355
+    t =    45.09s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn]' passed (45.587 seconds).
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testCloudTemplateHeadingDraftCancelSaveAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 19:04:50.639
+    t =     0.13s Set Up
+    t =     0.13s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.13s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 19:04:50.771 xcodebuild[22140:23240507] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:04:50.771 xcodebuild[22140:23240507] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.63s         Wait for accessibility to load
+    t =     0.84s         Setting up automation session
+    t =     0.88s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.88s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.88s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.89s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.90s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     1.92s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     1.92s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     2.04s Click "openPrivateWorkflowRunFixture" Button
+    t =     2.04s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.05s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     2.09s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     2.11s     Synthesize event
+    t =     2.76s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.77s Waiting 8.0s for "editTemplateDefinition" Button to exist
+    t =     3.77s     Checking `Expect predicate `existsNoRetry == 1` for object "editTemplateDefinition" Button`
+    t =     3.77s         Checking existence of `"editTemplateDefinition" Button`
+    t =     3.86s Click "editTemplateDefinition" Button
+    t =     3.86s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.87s     Find the "editTemplateDefinition" Button
+    t =     3.92s     Check for interrupting elements affecting "editTemplateDefinition" Button
+    t =     3.94s     Synthesize event
+    t =     4.57s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.58s Checking existence of `"editTemplateTask-0" Button`
+    t =     4.66s Find the "editTemplateTask-0" Button
+    t =     4.74s Click "editTemplateTask-0" Button
+    t =     4.74s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.75s     Find the "editTemplateTask-0" Button
+    t =     4.80s     Check for interrupting elements affecting "editTemplateTask-0" Button
+    t =     4.81s     Synthesize event
+    t =     5.40s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.76s Waiting 8.0s for "saveTemplateTask" Button to exist
+    t =     6.86s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTemplateTask" Button`
+    t =     6.86s         Checking existence of `"saveTemplateTask" Button`
+<unknown>:0: warning: -[TaskfoldUITests.TeamWorkflowMacUITests testCloudTemplateHeadingDraftCancelSaveAndColdReturn] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+    t =     7.00s Checking existence of `"templateTaskKind" PopUpButton`
+    t =     7.07s Find the "templateTaskKind" PopUpButton
+    t =     7.15s Click "templateTaskKind" PopUpButton
+    t =     7.15s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.17s     Find the "templateTaskKind" PopUpButton
+    t =     7.24s     Check for interrupting elements affecting "templateTaskKind" PopUpButton
+    t =     7.27s     Synthesize event
+    t =     7.78s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.78s Waiting 5.0s for "Heading" MenuItem to exist
+    t =     8.81s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" MenuItem`
+    t =     8.82s         Checking existence of `"Heading" MenuItem`
+    t =     8.92s Click "Heading" MenuItem
+    t =     8.93s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.93s     Find the "Heading" MenuItem
+    t =     9.02s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     9.02s     Synthesize event
+    t =     9.03s         Checking existence of `"menuAction:" MenuItem`
+    t =     9.09s         Hover menu item 'Heading'
+    t =     9.09s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.09s             Find the "menuAction:" MenuItem
+    t =     9.16s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     9.16s             Synthesize event
+    t =     9.38s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.39s         Find the "menuAction:" MenuItem
+    t =    10.41s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.43s Click "saveTemplateTask" Button
+    t =    10.43s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.44s     Find the "saveTemplateTask" Button
+    t =    10.53s     Check for interrupting elements affecting "saveTemplateTask" Button
+    t =    10.54s     Synthesize event
+    t =    11.06s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.39s Waiting 8.0s for "saveTemplateDefinition" Button to exist
+    t =    12.41s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTemplateDefinition" Button`
+    t =    12.41s         Checking existence of `"saveTemplateDefinition" Button`
+    t =    12.49s Click "cancelTemplateDefinition" Button
+    t =    12.49s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.50s     Find the "cancelTemplateDefinition" Button
+    t =    12.56s     Check for interrupting elements affecting "cancelTemplateDefinition" Button
+    t =    12.57s     Synthesize event
+    t =    13.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.39s Waiting 5.0s for "Discard changes" Button to exist
+    t =    14.42s     Checking `Expect predicate `existsNoRetry == 1` for object "Discard changes" Button`
+    t =    14.42s         Checking existence of `"Discard changes" Button`
+    t =    14.44s Click "Discard changes" Button
+    t =    14.44s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.45s     Find the "Discard changes" Button
+    t =    14.47s     Check for interrupting elements affecting "action-button-1" Button
+    t =    14.48s     Synthesize event
+    t =    15.32s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.33s Click "editTemplateDefinition" Button
+    t =    15.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.34s     Find the "editTemplateDefinition" Button
+    t =    15.44s     Check for interrupting elements affecting "editTemplateDefinition" Button
+    t =    15.45s     Synthesize event
+    t =    16.05s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.06s Checking existence of `"editTemplateTask-0" Button`
+    t =    16.13s Find the "editTemplateTask-0" Button
+    t =    16.20s Click "editTemplateTask-0" Button
+    t =    16.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.21s     Find the "editTemplateTask-0" Button
+    t =    16.26s     Check for interrupting elements affecting "editTemplateTask-0" Button
+    t =    16.28s     Synthesize event
+    t =    16.86s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.18s Checking existence of `"templateTaskKind" PopUpButton`
+    t =    17.29s Find the "templateTaskKind" PopUpButton
+    t =    17.37s Click "templateTaskKind" PopUpButton
+    t =    17.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.38s     Find the "templateTaskKind" PopUpButton
+    t =    17.45s     Check for interrupting elements affecting "templateTaskKind" PopUpButton
+    t =    17.47s     Synthesize event
+    t =    17.97s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.97s Waiting 5.0s for "Heading" MenuItem to exist
+    t =    18.99s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" MenuItem`
+    t =    18.99s         Checking existence of `"Heading" MenuItem`
+    t =    19.09s Click "Heading" MenuItem
+    t =    19.10s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.10s     Find the "Heading" MenuItem
+    t =    19.19s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    19.20s     Synthesize event
+    t =    19.21s         Checking existence of `"menuAction:" MenuItem`
+    t =    19.27s         Hover menu item 'Heading'
+    t =    19.27s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.27s             Find the "menuAction:" MenuItem
+    t =    19.34s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    19.34s             Synthesize event
+    t =    19.58s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.59s         Find the "menuAction:" MenuItem
+    t =    20.57s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.57s Click "saveTemplateTask" Button
+    t =    20.57s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.57s     Find the "saveTemplateTask" Button
+    t =    20.66s     Check for interrupting elements affecting "saveTemplateTask" Button
+    t =    20.67s     Synthesize event
+    t =    21.17s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.48s Checking existence of `Window (First Match)`
+    t =    21.50s Find the Window (First Match)
+2026-10-26 19:05:12.153097+0100 TaskfoldUITests-Runner[22166:23240986] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    21.58s Added attachment named 'cloud-template-heading-draft'
+    t =    21.58s Click "saveTemplateDefinition" Button
+    t =    21.58s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.58s     Find the "saveTemplateDefinition" Button
+    t =    21.64s     Check for interrupting elements affecting "saveTemplateDefinition" Button
+    t =    21.65s     Synthesize event
+    t =    22.19s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.20s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:22364
+    t =    23.28s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    23.29s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 19:05:13.926 xcodebuild[22140:23240507] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:05:13.926 xcodebuild[22140:23240507] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    23.81s         Wait for accessibility to load
+    t =    23.97s         Setting up automation session
+    t =    23.99s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.00s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    24.00s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    24.01s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.02s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    25.03s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    25.03s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    25.17s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:22414
+    t =    26.25s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testCloudTemplateHeadingDraftCancelSaveAndColdReturn]' passed (26.685 seconds).
+Test Suite 'TeamWorkflowMacUITests' passed at 2026-10-26 19:05:17.324.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 72.272 (72.273) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 19:05:17.325.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 72.272 (72.273) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 19:05:17.326.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 72.272 (72.275) seconds
+2026-10-26 19:05:28.295 xcodebuild[22140:23240507] [MT] IDETestOperationsObserverDebug: 84.022 elapsed -- Testing started completed.
+2026-10-26 19:05:28.295 xcodebuild[22140:23240507] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 19:05:28.295 xcodebuild[22140:23240507] [MT] IDETestOperationsObserverDebug: 84.022 sec, +84.022 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-definition-headings-mac-retry.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

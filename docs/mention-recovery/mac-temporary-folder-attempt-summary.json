@@ -1,0 +1,46 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "modelName": "MacBook Pro",
+        "osBuildNumber": "25G83",
+        "osVersion": "26.6.2",
+        "platform": "macOS"
+      },
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "passedTests": 0,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+  "expectedFailures": 0,
+  "failedTests": 1,
+  "finishTime": 1792961449.426,
+  "passedTests": 0,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1792961403.857,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "failed: caught error: \"Error Domain=NSCocoaErrorDomain Code=513 \"You don\u2019t have permission to save the file \u201ctaskfold-recorded-recovery-native-exports\u201d in the folder \u201ctmp\u201d.\" UserInfo={NSFilePath=/tmp/taskfold-recorded-recovery-native-exports, NSURL=file:///tmp/taskfold-recorded-recovery-native-exports, NSUnderlyingError=0x9aa1b5710 {Error Domain=NSPOSIXErrorDomain Code=1 \"Operation not permitted\"}}\"",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 1,
+      "testIdentifierString": "TeamCompletionRecoveryMacUITests/testRecordedMissingTaskKeepsConnectedMentionMarkerAfterRelaunch()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedMissingTaskKeepsConnectedMentionMarkerAfterRelaunch",
+      "testName": "testRecordedMissingTaskKeepsConnectedMentionMarkerAfterRelaunch()"
+    }
+  ],
+  "title": "Test - Taskfold",
+  "topInsights": [],
+  "totalTestCount": 1
+}

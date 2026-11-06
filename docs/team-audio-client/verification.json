@@ -1,0 +1,85 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "0fe8216facc9bfa7bd8651634c06ed1755383f21",
+  "checks": {
+    "core": 213,
+    "controller": 284,
+    "newCoreTests": 10,
+    "newControllerAssertions": 2
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/AudioCommentPublishing.swift": "5e49f64287069d12703142afa975a705a9bc537b9d101e9b85ef90da7168c1f9",
+    "Taskfold/Core/Store.swift": "24899c6ced98a6970978715ae8d5248e667615592f77f834eabb340a88ed6e88",
+    "Taskfold/AudioCommentCapture.swift": "319a02288cc32278e754f1c635aa2449207b52fd9bea01b4d29060662def6d96",
+    "Taskfold/AudioCommentNativeFixture.swift": "f1382acaf69e7034293f91918afc24bb6840f1cf36ac64c21483404673e57e85",
+    "Taskfold/Info.plist": "52c9b320d133bbea6a6f9def5a03c10eafefd7cdd0af2cf52662f193f51d5820",
+    "Taskfold/Views/AudioCommentDraftView.swift": "56162d9422c521f79dbd980d3617cd238b80f9d7a74d7ee31a5fc65f243c51a7",
+    "Taskfold/Views/AudioCommentConversationView.swift": "a2a17b54054569ef8fa95b837af3a950eb806d4317cda30811b737e45e272069",
+    "TaskfoldTests/AudioCommentTaskAdmissionTests.swift": "3387f133af23601a8a1d7a0156349dc29d254c748a56e2cceee35a1bf2300148",
+    "TaskfoldTests/AudioCommentPublishingTests.swift": "75840d6946b1fc9e5bf51f284f3a882f67c32d1f3bf26b8ce04f81441d38bd7d",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "30080fa0dc2b890c27d29cdf0d1ceae7259f40c062df61972fa46c86ee10142e",
+    "Scripts/test_audio_comment_capture.py": "d67dc8b1aa2be4f0805cd5de186e991ea17cadd388a28e5f35803b33c853c18a",
+    "Taskfold/Views/TaskInspector.swift": "9581147319b2150b86cee77d191e14817a93633a085ab598fc60e3b64fcdf065"
+  },
+  "compiledHostSource": {
+    "Taskfold/Core/AudioCommentPublishing.swift": {
+      "owningSourceSHA256": "5e49f64287069d12703142afa975a705a9bc537b9d101e9b85ef90da7168c1f9",
+      "compiledHostSHA256": "5e49f64287069d12703142afa975a705a9bc537b9d101e9b85ef90da7168c1f9",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "owningSourceSHA256": "24899c6ced98a6970978715ae8d5248e667615592f77f834eabb340a88ed6e88",
+      "compiledHostSHA256": "514401f0e4179c72b816a6c447bc21e648e444a8689eb197f33d459d31a7add1",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/AudioCommentCapture.swift": {
+      "owningSourceSHA256": "319a02288cc32278e754f1c635aa2449207b52fd9bea01b4d29060662def6d96",
+      "compiledHostSHA256": "319a02288cc32278e754f1c635aa2449207b52fd9bea01b4d29060662def6d96",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/AudioCommentNativeFixture.swift": {
+      "owningSourceSHA256": "f1382acaf69e7034293f91918afc24bb6840f1cf36ac64c21483404673e57e85",
+      "compiledHostSHA256": "f1382acaf69e7034293f91918afc24bb6840f1cf36ac64c21483404673e57e85",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/AudioCommentDraftView.swift": {
+      "owningSourceSHA256": "56162d9422c521f79dbd980d3617cd238b80f9d7a74d7ee31a5fc65f243c51a7",
+      "compiledHostSHA256": "56162d9422c521f79dbd980d3617cd238b80f9d7a74d7ee31a5fc65f243c51a7",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/AudioCommentConversationView.swift": {
+      "owningSourceSHA256": "a2a17b54054569ef8fa95b837af3a950eb806d4317cda30811b737e45e272069",
+      "compiledHostSHA256": "a2a17b54054569ef8fa95b837af3a950eb806d4317cda30811b737e45e272069",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/TaskInspector.swift": {
+      "owningSourceSHA256": "9581147319b2150b86cee77d191e14817a93633a085ab598fc60e3b64fcdf065",
+      "compiledHostSHA256": "9581147319b2150b86cee77d191e14817a93633a085ab598fc60e3b64fcdf065",
+      "matchesAfterIsolation": true
+    }
+  },
+  "currentProducts": {
+    "Taskfold.app": {
+      "executableSHA256": "9b968dd5a9301b89948f5783d3e77249da56ad5037626dc69c80237f3b507c2f",
+      "strictSignatureVerified": true,
+      "debugCodeSHA256": "e6da938b7f2391a7fbd09b07332fe104585437e1a6907aa64e83d9e12516325e"
+    },
+    "TaskfoldUITests-Runner.app": {
+      "executableSHA256": "6dbbff2e71106e7153b5b702c4b371f0cbfdf70b9025e8fe3a3cea08922e4e16",
+      "strictSignatureVerified": true
+    }
+  },
+  "controllerQualification": {
+    "StoreBridgeExcludedByCompileFlag": true,
+    "testedControllerPrefixSHA256": "e4e05fb3fd4ba3ccf08f451f01d18ec94c7005429f6b26f8e9eb0a979473024b",
+    "onlyExcludedStoreRefreshOrderingChangedAfterControllerRun": true,
+    "linkedCoreArchiveSHA256": "b866b4861d91bf78cc0b7704c44b7321e182f40df006f08a7972bb6ad60116c4"
+  },
+  "phoneReport": null,
+  "MacOrIPadRuntimeAccepted": false,
+  "fullNativePublishRemoveOrStoreRefreshAccepted": false,
+  "genuineProviderOrFullSchemaAccepted": false,
+  "ordinaryClientGate": false,
+  "deployed": false
+}

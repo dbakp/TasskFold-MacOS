@@ -1,0 +1,105 @@
+Window: "", App: Taskfold Team Editor Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Audio comments, Secondary Actions: Cancel
+		3 scroll area ID: audioConversationForm, Secondary Actions: Scroll Up, Scroll Down, Cancel
+			4 container
+				5 container audioConversationRow-ad311000-0000-4000-8000-000000000002
+					6 text You 1,0 sec Design review 02
+					7 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000002
+					8 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000002
+				9 container audioConversationRow-ad311000-0000-4000-8000-000000000003
+					10 text You 1,0 sec Design review 03
+					11 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000003
+					12 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000003
+				13 container audioConversationRow-ad311000-0000-4000-8000-000000000004
+					14 text You 1,0 sec Design review 04
+					15 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000004
+					16 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000004
+				17 container audioConversationRow-ad311000-0000-4000-8000-000000000005
+					18 text You 1,0 sec Design review 05
+					19 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000005
+					20 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000005
+				21 container audioConversationRow-ad311000-0000-4000-8000-000000000006
+					22 text You 1,0 sec Design review 06
+					23 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000006
+					24 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000006
+				25 container audioConversationRow-ad311000-0000-4000-8000-000000000007
+					26 text You 1,0 sec Design review 07
+					27 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000007
+					28 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000007
+				29 container audioConversationRow-ad311000-0000-4000-8000-000000000008
+					30 text You 1,0 sec Design review 08
+					31 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000008
+					32 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000008
+				33 container audioConversationRow-ad311000-0000-4000-8000-000000000009
+					34 text You 1,0 sec Design review 09
+					35 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000009
+					36 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000009
+				37 container audioConversationRow-ad311000-0000-4000-8000-000000000010
+					38 text You 1,0 sec Design review 10
+					39 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000010
+					40 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000010
+				41 container audioConversationRow-ad311000-0000-4000-8000-000000000011
+					42 text You 1,0 sec Design review 11
+					43 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000011
+					44 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000011
+				45 container audioConversationRow-ad311000-0000-4000-8000-000000000012
+					46 text You 1,0 sec Design review 12
+					47 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000012
+					48 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000012
+				49 container audioConversationRow-ad311000-0000-4000-8000-000000000013
+					50 text You 1,0 sec Design review 13
+					51 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000013
+					52 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000013
+				53 container audioConversationRow-ad311000-0000-4000-8000-000000000014
+					54 text You 1,0 sec Design review 14
+					55 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000014
+					56 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000014
+				57 container audioConversationRow-ad311000-0000-4000-8000-000000000015
+					58 text You 1,0 sec Design review 15
+					59 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000015
+					60 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000015
+				61 container audioConversationRow-ad311000-0000-4000-8000-000000000016
+					62 text You 1,0 sec Design review 16
+					63 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000016
+					64 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000016
+				65 container audioConversationRow-ad311000-0000-4000-8000-000000000017
+					66 text You 1,0 sec Design review 17
+					67 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000017
+					68 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000017
+				69 container audioConversationRow-ad311000-0000-4000-8000-000000000018
+					70 text You 1,0 sec Design review 18
+					71 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000018
+					72 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000018
+				73 container audioConversationRow-ad311000-0000-4000-8000-000000000019
+					74 text You 1,0 sec Design review 19
+					75 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000019
+					76 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000019
+				77 container audioConversationRow-ad311000-0000-4000-8000-000000000020
+					78 text You 1,0 sec Design review 20
+					79 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000020
+					80 button Description: Remove audio comment, ID: audioConversationRemove-ad311000-0000-4000-8000-000000000020
+				81 button Description: Load more recordings, ID: audioConversationMore
+				82 text Value: Audio comment removed. Private saved recordings are unchanged., ID: audioConversationNotice
+			83 text Play recordings here without adding copies to Saved recordings.
+			84 button Description: Refresh recordings, ID: audioConversationRefresh
+			85 scroll bar (settable, float) 0
+				86 value indicator (settable, float) 0
+				87 increment arrow button
+				88 decrement arrow button
+				89 increment page button
+				90 decrement page button
+		91 button Description: Close, ID: audioConversationClose
+92 menu bar
+	93 Taskfold Workflow Test
+	94 File
+	95 Edit
+	96 View
+	97 Fixture
+	98 Account
+	99 Task
+	100 Window
+	101 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

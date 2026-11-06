@@ -1,0 +1,58 @@
+{
+  "scratchAllocatedBytes": 1792114688,
+  "scratchPathsRemoved": 54,
+  "remainingVerifiedSyntheticExportsRemoved": [
+    {
+      "path": "/tmp/taskfold-output-proof-ff675ebb-d3fe-41c0-b04b-db9c559c4662.pdf",
+      "sha256": "4392564a7006fc41b7a7d611410f038a96faa1e0ea7ee5d7d3caa013b4a1be0a",
+      "bytes": 90228,
+      "validation": "PDFKit synthetic title, section 8, final instruction, two pages"
+    },
+    {
+      "path": "/tmp/taskfold-output-proof-347804af-f3e8-4f85-aa9c-37eca649ad8b.csv",
+      "sha256": "fb9963886b49953f20b1dd74832b1837312ebe66b1f404e3b1603c5371a90ffc",
+      "bytes": 1077,
+      "validation": "exact tested CSV bytes"
+    },
+    {
+      "path": "/tmp/taskfold-output-proof-864c0845-b737-4ad9-9a18-71058ce4d047.csv",
+      "sha256": "fb9963886b49953f20b1dd74832b1837312ebe66b1f404e3b1603c5371a90ffc",
+      "bytes": 1077,
+      "validation": "exact tested CSV bytes"
+    },
+    {
+      "path": "/tmp/taskfold-output-proof-84a86d37-7529-4135-a473-9432c71275c9.csv",
+      "sha256": "59f66d3b1af56ac18cd152167c1088c04076a3ae1d4647f726248c88710c6f1a",
+      "bytes": 780,
+      "validation": "exact tested CSV bytes"
+    },
+    {
+      "path": "/tmp/taskfold-output-proof-aedf3d41-f711-4ba5-bcc5-302ef0211c52.pdf",
+      "sha256": "d852a8ed0123e8599146afca158b117699b600f1893354a52577b3e78e6972d8",
+      "bytes": 90228,
+      "validation": "PDFKit synthetic title, section 8, final instruction, two pages"
+    }
+  ],
+  "cleanupNote": "Validated CSV files removed in the first cleanup phase; remaining saved PDFs validated through PDFKit before removal. Only owned temporary files and isolated installs removed.",
+  "isolatedSimulatorInstallsRemoved": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    }
+  ],
+  "taskfoldAppProcesses": "",
+  "repositoryBuildCachesPreserved": true,
+  "systemNetworkPermissionNotGranted": true
+}

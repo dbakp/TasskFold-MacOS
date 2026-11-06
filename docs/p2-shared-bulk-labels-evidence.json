@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "status": "Reviewed shared bulk labels implemented; isolated native scope accepted; rank 6 and wider Px incomplete",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamTaskBatch.swift": "5ffe2550a082b7a476dae3017af2cf2294f39dbdaa319758455152c154448c54",
+    "Taskfold/Core/TeamTaskLabels.swift": "9addbcf15fadd8922e0c88007ed9d6c71705b689ab34abf5ab2cbf93da905599",
+    "Taskfold/Core/Store.swift": "feed9032825ea8945f13d6b020512ec00d8df06784d25e70ba5d2680e6c656fc",
+    "Taskfold/Views/BulkPlanningEditor.swift": "d28c027262fa19c60625fd62ce0a813e26c29b2980a8e67c4b4c9d6288c55c5b",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "cb06de03767a2174b0fbfe5ba3559149fa80ddf60684eb0eef36470ba5e370c1",
+    "TaskfoldTests/TeamTaskBatchTests.swift": "a8f0e8d920c2968945a7196d8e32a15649250bdc803f51c4b3c4aacb5e846e3c",
+    "supabase/migrations/20261025111218_team_task_label_batches.sql": "eead42f9f94e22635269c14b9470e28d534453dd9f800a4921f9171afeb3a9a2",
+    "Scripts/Database/test-team-planning-batches.mjs": "8d2598d5961443a2299578883211dce5d599e373d96b2788dd3a1333f6004e2d",
+    "Scripts/Database/team-label-batch-checks.mjs": "403223ab8f1adb021ff5fcb3f375462792af8fc27038ccc35c673c3036ea5436",
+    "Scripts/Database/team-label-batch-schema.mjs": "45993b9fabfe6b820466f45c997198a735421c1bf8bdce590de621fb1e94ab9f",
+    "Taskfold/Workspace.swift": "56a3e6482d57580c39ade04198f38ca2994ca1d6aea137a057d7aa888b8bad9f",
+    "Taskfold/Views/RootView.swift": "031ca4d5d9343b599baa63c8db138fb429c73994bde63e0de93ff03cc093239d",
+    "Taskfold/Views/TaskListView.swift": "d905413fe3d979e7a6833306513f9d397e72d2fd3ac1eef18cb0167a559e5b35"
+  },
+  "actions": [
+    "Add a new bounded trimmed name",
+    "Remove exact readable saved name, including spaces/case and older longer values",
+    "Explicit Clear all"
+  ],
+  "invariants": [
+    "Other labels, order, duplicates and opaque values retained for unrelated changes",
+    "No personal-catalog normalization",
+    "Whole captured selection, complete before rows and access/session fences",
+    "One durable command/RPC and linked exact per-member Undo/Redo",
+    "Unknown label array shapes refuse whole action",
+    "Server rights/baseline/quota/lock/HMAC/replay/rollback rules retained"
+  ],
+  "database": {
+    "isolatedChecks": 124,
+    "advisorsChecked": true,
+    "containerRemoved": true,
+    "migrationSHA256": "eead42f9f94e22635269c14b9470e28d534453dd9f800a4921f9171afeb3a9a2"
+  },
+  "core": {
+    "filter": "Team|AccountRemovalTests",
+    "passed": 500,
+    "failed": 0,
+    "newBulkLabelCases": 6
+  },
+  "build": "Final independent arm64 Debug app BUILD SUCCEEDED; signing disabled, compile only",
+  "native": {
+    "repository": "TaskFold-iOS",
+    "phonePassed": 3,
+    "tabletPassed": 3,
+    "skipped": 0,
+    "scenarios": [
+      "Exact Remove and explicit Clear, complete source preservation, Undo each",
+      "Review/Back/Cancel no write; Save one frozen command; exact Undo; normal relaunch persistence",
+      "Invalid name disables Review; changed source pauses input without writing labels"
+    ],
+    "transport": "Store queue/cache and native controls; fixture intentionally skips cloud sync. Real migration RPC transaction/replay checks are separate isolated PostgreSQL acceptance.",
+    "finalInstalledIdentityAndBinaryHashesVerified": true,
+    "defaultLightScreenshotsInspected": [
+      "phone review/result sets and paused state",
+      "tablet review/result sets and explicit Clear"
+    ],
+    "screenshotsOwner": "TaskFold-iOS",
+    "macRuntimeAccepted": false,
+    "genuineHostedAccepted": false
+  },
+  "initialCorrection": "Native test now scrolls lazy review Save into view before asserting its presence; retained first failed attempt. Removal semantics strengthened to literal saved values; regression covers spaces and older long names.",
+  "securityReview": {
+    "noNewTablesOrGrants": true,
+    "existingLiveAuthAndRolesRetained": true,
+    "noUserMetadataAuthority": true,
+    "privateDefinerSearchPathEmpty": true,
+    "canonicalLockOrderRetained": true,
+    "sourceReferences": [
+      "https://supabase.com/docs/guides/database/functions",
+      "https://supabase.com/changelog/postgres-15-19-17-11-breaking-changes",
+      "https://supabase.com/changelog/cbc-tls-ciphers-deprecated"
+    ]
+  },
+  "remaining": [
+    "Mac runtime/spoken/account/window acceptance pending unlock",
+    "Larger text/dark/contrast and wider native fault cases",
+    "Genuine hosted acceptance and gated rollout",
+    "Remaining shared batch/history/keyboard and wider ranked Px; release/provider/device deferrals"
+  ],
+  "hostedSchemaOrConfigChanged": false,
+  "rolloutEnabled": false,
+  "realDataChanged": false,
+  "evidenceDirectory": "shared-bulk-labels"
+}

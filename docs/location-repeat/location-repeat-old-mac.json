@@ -1,0 +1,13 @@
+{
+  "revision": "aca5bb52e96639742d537b1db51207ebaf673a90",
+  "oldLocationSourceSHA256": "b80e98f9af594ada1bb065ea5d8db47c6d8b93a83058b6eb708da8ce87041d5f",
+  "fixtureSHA256": "9fee3691fc50b64197a7dfca34c274374801823210935ca34fb74b1af5d735ac",
+  "payloadSHA256": "783119d285fae466542a2222b7b6d71684c503bfcc66958525d8c4e4161871a3",
+  "actualPassed": 2,
+  "checks": [
+    "opaque version7 row preserved through edits/record round-trip/recurring successor",
+    "no substitute planned-time alerts",
+    "private journal3 repeat ticket refused without overwrite"
+  ],
+  "scope": "This selected previous prototype reader only; no general older-client rollout claim."
+}

@@ -1,0 +1,6 @@
+{
+  "prunedKnownInactiveProducts": "BuildCache/mac-widget-host-v3",
+  "logicalBytes": 353947974,
+  "stagedSourceAndReceiptsRetained": true,
+  "replacementStops": "Targeted SIGTERM; no normal Quit acceptance claimed"
+}

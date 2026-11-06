@@ -1,0 +1,15 @@
+{
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "656cea89d7d5d625c493909efce8dfc35ef0548b3633d0725add2f95aaf3ca57",
+    "Taskfold/Views/PinnedNotesView.swift": "74f94c95b5a51f42c55306569cd58451a8a45a9c5ff4171d02a62972a0f85243",
+    "Taskfold/Views/PrintReviewView.swift": "86f0037d1e7366bab6d9cbb51e049e77ad9b0748fddec811ecf874d3c001b3c0",
+    "Taskfold/Core/PrintDocument.swift": "295ce4865ec7e5e9d7c23238b5f2c3e14f3a590e3a9f6a738927984c0d3b5f11",
+    "Taskfold/Core/ReviewedTaskOutput.swift": "fa3f3b2482cc6aa8236e4662e31f6ca33cc8fb45811377ddcb15bec9ef2ad196",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "9b34395d32ca7dec180598c4b28694c9547a6bbcb504338e2f8f239aa8e6bc69"
+  },
+  "binarySHA256": "b73a3c78be4ef9a9bfd1b0bc923145194570d2d68f70ab29eb88ae6caa96f17b",
+  "limitations": [
+    "Mac CUA acceptance preceded a test-only helper rebuild; app sources were unchanged.",
+    "Source bindings for the final native mobile run; intermediate diagnostics are not accepted product behavior."
+  ]
+}

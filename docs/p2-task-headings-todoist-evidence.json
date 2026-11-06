@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-26",
+  "stage": "Reviewed Todoist heading mapping and independent service ownership",
+  "platform": "mac",
+  "fullHeadingFeatureComplete": false,
+  "normalAppAuthoringEnabled": false,
+  "serverHeadingSwitchEnabled": false,
+  "hostedDeployment": false,
+  "realTodoistRequests": false,
+  "realDataChanged": false,
+  "observedDeployedBaseline": {
+    "function": "import-todoist",
+    "version": 41,
+    "artifactSHA256": "b6705250a7ccb409b4bc680c449e3ff1b88a0f19adb708f1b91a56e3cf4f4ca2",
+    "changed": false,
+    "sqlDefinition": "headings-todoist/service-baseline.sql"
+  },
+  "core": {
+    "executed": 67,
+    "failures": 0,
+    "skips": 0,
+    "newImportCases": 6,
+    "evidence": "headings-todoist/core.log"
+  },
+  "service": {
+    "denoPassed": 14,
+    "newCases": 4,
+    "typeCheckAccepted": true,
+    "independentlyOwnedSource": true,
+    "sourceGETOnly": true,
+    "environmentSwitchDefaultOff": true,
+    "requiresClientCapabilityAndReviewedCounts": true,
+    "evidence": [
+      "headings-todoist/service.log",
+      "headings-todoist/edge-check.log"
+    ]
+  },
+  "sql": {
+    "realPostgreSQLCases": 38,
+    "actualMapperGeneratedBundle": true,
+    "invokerRLSAndAtomicityVerified": true,
+    "advisorsRan": true,
+    "inheritedFixtureNotices": 7,
+    "importSourcesNotices": 0,
+    "ownedRuntimeRemoved": true,
+    "evidence": "headings-todoist/sql.json"
+  },
+  "native": {
+    "macPassed": 1,
+    "iphonePassed": 1,
+    "ipadPassed": 1,
+    "failures": 0,
+    "skips": 0,
+    "macAutomationPermissionNowWorks": true,
+    "responseFixturesOnly": true,
+    "scenario": "Included heading count and unavailable state disable Import, supported preview enters lost-response retry, typed receipt succeeds. Phone/tablet task tables remain unchanged.",
+    "currentGuardedSource": true,
+    "visuallyInspectedImages": 6,
+    "genuineProviderHeadingAcceptance": false,
+    "spokenOrLargestTextAccepted": false,
+    "crossDeviceAccepted": false,
+    "evidence": [
+      "headings-todoist/mac-summary.json",
+      "headings-todoist/iphone-summary.json",
+      "headings-todoist/ipad-summary.json"
+    ]
+  },
+  "sourceSHA256": "headings-todoist/source-sha256.json",
+  "preparedSourceProof": "headings-todoist/source-proof.json",
+  "notes": "headings-todoist/verification-notes.txt",
+  "references": "headings-todoist/references.json",
+  "remaining": [
+    "Clipboard and CSV formats.",
+    "Explicit reviewed conversion of older imported literal-prefix copies.",
+    "Genuine provider and hosted heading import acceptance after rollout gates.",
+    "Wider native heading history/action/keyboard/spoken/cross-device acceptance.",
+    "Shared heading capability and command adapters."
+  ],
+  "userDeferredUnchanged": [
+    "Release/distribution",
+    "Remote notifications",
+    "Older-client rollout",
+    "OAuth/provider registration",
+    "Physical location delivery",
+    "Inbound email provider"
+  ],
+  "build": {
+    "macAndIOSDebugArm64Accepted": true,
+    "strictSignaturesVerified": true,
+    "evidence": [
+      "headings-todoist/mac-build-summary.json",
+      "headings-todoist/ios-build-summary.json",
+      "headings-todoist/ios-signing.json"
+    ]
+  },
+  "cleanup": "headings-todoist/cleanup.json"
+}

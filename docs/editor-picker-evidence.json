@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-10",
+  "scope": "iPhone normal/light and accessibility XXXL/dark editor Reminders and native Photos picker cancellation; draft save/relaunch preservation",
+  "change": "iOS accessibility-size Reminders navigation uses a text-only label so the full word fits. Normal sizes retain the bell. No stored fields, routing, reminder semantics or attachment handling changed.",
+  "cause": "The pre-fix largest-text capture showed the bell and label splitting Reminders into Re- and minders. Both routes functioned; this is a confirmed readability improvement, not a delivery failure.",
+  "finalResult": {
+    "bundle": "/tmp/taskfold-editor-picker-phone-v4.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": 0,
+    "modesInCase": [
+      "normal/light",
+      "accessibility XXXL/dark"
+    ],
+    "checks": [
+      "Named Reminders action, at least 44-point row, opens Reminders and returns",
+      "Photo action at least 44 points; opens actual native Photos picker",
+      "Cancel returns to same task editor; save then relaunch preserves exact title and full notes",
+      "Inspected final normal capture retains bell; largest capture has full single-word Reminders; photo action wraps fully"
+    ]
+  },
+  "baselineResult": {
+    "bundle": "/tmp/taskfold-editor-picker-phone-v3.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": 0,
+    "meaning": "Workflow passed before visual fix; retained screenshot proves readability issue despite a passing functional test."
+  },
+  "data": {
+    "taskID": "e71cdc62-498d-40d9-8d26-faf8ce23198a",
+    "title": "Accessible attachment draft",
+    "description": "Keep the complete client instructions when returning from reminders and the photo picker.",
+    "completed": false,
+    "attachments": [],
+    "pendingCount": 0,
+    "snapshotSHA256": "14bfc09eb5e1594d06711398f15825a83dc5971e565e93d0f0687301afe7f439"
+  },
+  "sources": {
+    "iosEditorSHA256": "6b62f76864d91813092cb02f78b33bb39436dfd3b0f843972d9c54206f4237f0",
+    "iosUITestsSHA256": "4dad6eb20877de379bb01d009f4fd77c295d86cd57c2bcca38940ea7cc199e36",
+    "macInspectorSHA256": "e690d7a69caf78f82b53635ffa139895457f35de28df30efd5082a2bc5515d45"
+  },
+  "build": "TEST BUILD SUCCEEDED /tmp/taskfold-editor-picker-build-v5.log",
+  "signing": "editor-picker-reports/sign-v5.json",
+  "mac": "Desktop TaskInspector source reviewed: Reminders sheet uses current draft, Attach a File invokes native importer. No iOS Dynamic Type layout change applies. Mac production unchanged and GUI not launched; previous Mac build/continuity evidence reused, native cancellation remains unverified.",
+  "diagnostics": [
+    "Initial compile referenced unsupported lastMatch; corrected before native execution.",
+    "phone-v1 selected a global Cancel index that changed during picker presentation. phone-v2 waiting for one global Cancel timed out because both presenting editor and picker expose Cancel. Neither is product acceptance.",
+    "Final test scopes Cancel to the native picker navigation bar. phone-v3 and phone-v4 both complete both modes.",
+    "Early picker captures showed Loading; final inspected largest capture shows loaded Photos/Collections and privacy notice. This does not prove selecting/importing an image."
+  ],
+  "limits": [
+    "Phone portrait only for this checkpoint; tablet installed widget fixture untouched.",
+    "No photo selection, upload, external provider transfer, Mac native or physical acceptance.",
+    "No unfiltered audit rerun/whitelist; VoiceOver and keyboard acceptance remain open.",
+    "Long notes at XXXL require scrolling; exact full editor value and persisted notes are verified, not all text fitting one screen."
+  ],
+  "bundleCleanup": "editor-picker-bundle-cleanup.json: failed original bundle paths are historical; summaries retained."
+}

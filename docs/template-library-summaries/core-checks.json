@@ -1,0 +1,13 @@
+{
+  "selectedTests": [
+    "ProjectWorkflowsTests",
+    "ProjectWorkflowIntegrationTests",
+    "TeamWorkspaceTests"
+  ],
+  "reported": 189,
+  "passed": 185,
+  "existingOptInSkips": 4,
+  "failures": 0,
+  "log": "/tmp/taskfold-library-summary-mac-core-v1.log",
+  "logSHA256": "0d1d60ec48a6929326c603b8e97931f6ac8bf2f521fed4947c228058ebb7c6b8"
+}

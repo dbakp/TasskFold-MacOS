@@ -1,0 +1,339 @@
+{
+  "checks": {
+    "legacy clients are not silently opted into pause": true,
+    "pause capability is explicit": true,
+    "project hook inventory": true,
+    "unfinished project hook inventory": true,
+    "global hook inventory": true,
+    "no-choice review still requires integration decision": true,
+    "no-choice review has no authorized effects": true,
+    "old no-consent command cannot pause connections": true,
+    "unsupported action rejected retarget": true,
+    "unsupported action rejected Pause": true,
+    "unsupported action rejected null": true,
+    "exact connection effects are reviewed": true,
+    "selected policy clears pause blocker": true,
+    "policy identity is returned": true,
+    "review itself leaves email active": true,
+    "review leaves project hook active": true,
+    "review leaves unfinished setup intact": true,
+    "policy cannot be stripped from signed review": true,
+    "effects cannot be supplied by an untrusted client": true,
+    "collaborator cannot pause the owners branch": true,
+    "rejected commands have no effects": true,
+    "file custody remains blocked": true,
+    "pause policy does not bypass file custody": true,
+    "file refusal leaves email active": true,
+    "wire busy capability is false": true,
+    "wire busy never partially pauses": true,
+    "wire refusal leaves hook active": true,
+    "binding edit and revert invalidate signed pause": true,
+    "fresh review includes later queued updates": true,
+    "late custody failure rolls back entire pause and queue retirement": true,
+    "late failure restores private rows and epochs exactly": true,
+    "late failure leaves no custody": true,
+    "late failure leaves no receipt": true,
+    "pause and adoption apply together": true,
+    "receipt preserves exact reviewed effects": true,
+    "receipt policy is explicit": true,
+    "selected email is paused 1501d610-d713-4905-9ef7-c5b98a7417ad": true,
+    "selected email is paused af9de5b8-b706-40c0-b58d-8080ec340b85": true,
+    "verified project hook is paused 2bc1034b-a199-4dcb-9832-70de2c6fce5f": true,
+    "verified project hook is paused 2ce124d8-be63-4baa-b575-4a8ef0f3d4ea": true,
+    "unfinished project setup revoked": true,
+    "unfinished credential is scrubbed": true,
+    "global connection metadata byte exact": true,
+    "unrelated address byte exact": true,
+    "selected queued payloads retired": true,
+    "unrelated queued payload kept": true,
+    "global queue budget preserves unrelated pending update": true,
+    "project queue budget clears retired work": true,
+    "task text remains intact": true,
+    "reviewed assignment clear still occurs": true,
+    "personal route cannot resume into adopted team": true,
+    "exact replay works after disabled rollout": true,
+    "replay returns historical reviewed counts": true,
+    "replay never rewinds later connection or queue changes": true,
+    "same nonce cannot change connection policy": true
+  },
+  "hostedChanges": false,
+  "realUserDataChanged": false,
+  "migration": "20261025033903_team_project_adoption_connection_policy.sql",
+  "migrationSHA256": "b6c922cab8f2c340ea02f2c40b5dc56ef85d2dee48a879a8ef6b04aab8a5bb46",
+  "advisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+      }
+    ]
+  },
+  "serverVersion": 170006,
+  "containerRemoved": true,
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "status": "reviewed atomic personal-connection pause and native consent/recovery implemented; retarget/file custody and wider Px acceptance remain open",
+  "rolloutEnabled": false,
+  "newPolicySQLChecks": 55,
+  "existingAdoptionSQLChecks": 148,
+  "existingConnectionFenceSQLChecks": 55,
+  "core": {
+    "passed": 367,
+    "failed": 0,
+    "skipped": 0,
+    "adoptionCases": 27,
+    "logSHA256": "62a6aefd3ad3a9d040436208523414abe67797ef3a5cbfe7d9635d2b7bdd632c"
+  },
+  "appBuild": {
+    "platform": "macOS arm64",
+    "configuration": "Debug",
+    "result": "passed",
+    "signing": "disabled; build only",
+    "logSHA256": "6078db218c8c1160a9b98c83b9f92ef332ef471a8bb1515e9cafeebc7eb44378"
+  },
+  "native": {
+    "repository": "TaskFold-iOS",
+    "runs": {
+      "iPhone 18 Pro": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "case": "testConnectionPauseConsentAndReviewedCounts",
+        "logSHA256": "6388bc0c859bbdaeb85d78f9169096539c474f1d460a934b5fa3fdb446c48e17",
+        "retainedLog": "project-adoption-connection-policy/phone-accessible.log.gz",
+        "compressedLogSHA256": "7cb974b87c380de57c4cc93aaaaf0494f7cb9edf2b18e834123bdd711fb20706",
+        "retainedLogRepository": "TaskFold-iOS"
+      },
+      "iPad Pro 13-inch (M5)": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "case": "testConnectionPauseConsentAndReviewedCounts",
+        "logSHA256": "86a552a5d52e69de2d12f3702957e38ec3ab157ccb5f2c44b09bcdfe870f1d28",
+        "retainedLog": "project-adoption-connection-policy/ipad-header-stop.log.gz",
+        "compressedLogSHA256": "662dda062098aa966c324e890bc583ba5a9e1984ffec7f26aa082e53f24ad309",
+        "retainedLogRepository": "TaskFold-iOS"
+      }
+    },
+    "preparedSQLPeerSHA256": "447c85e07186896e3c2bcc66dab552c030469b2147e3aa0df4ab6c0304c3138d",
+    "scope": "Installed isolated DEBUG apps use SQL-derived synthetic adoption replies and intercepted HTTP, normal Store sync and real Simulator private storage. This is not a live database/provider/hosted integration test.",
+    "compatibilityNote": "Native peer sample precedes a compatibility-only queue terminal-reason correction. Final SQL metadata is independently regenerated and parsed by the real connection-settings Core decoder; adoption body/receipt policy and counter semantics are unchanged.",
+    "checks": [
+      "Explicit consent off disables Review even with collaborator decisions selected",
+      "Tapping actual switch turns consent on and enables Review",
+      "Reviewed queue count is exposed as one labelled accessible element with value 2",
+      "Explicit pause body is persisted/sent once, confirmation succeeds and normal workspace refresh completes with empty local queue",
+      "Default light iPhone/iPad screenshots reviewed for readable action counts"
+    ],
+    "limits": [
+      "No new installed Mac, physical device, large text/dark/contrast, keyboard or spoken VoiceOver acceptance",
+      "No installed OS relaunch acceptance specific to the new count fields; exact lost-reply/relaunch codec/model behavior is covered in Core and earlier OS adoption recovery remains separate evidence"
+    ]
+  },
+  "scope": [
+    "Optional connection_policy=pause is an explicit consent field; unselected/legacy clients remain blocked for affected bindings/retained queue",
+    "Policy-aware immutable review uses a v2 HMAC proof binding the action and exact five counts, while no-policy proof and applied old receipt recovery stay compatible",
+    "Atomic commit keeps personal email and verified project hooks paused, cancels unverified project setups, retires only affected queued payloads and preserves unrelated/global settings and other queued work",
+    "File custody and live write permits still refuse the entire transfer without partial pause; late custody faults roll back all private state/epochs/queue counters",
+    "Receipts and private device-only retry journal retain policy plus bounded numeric effects, with strict decode/misroute/counter validation and no names/addresses/endpoints/credentials/task text",
+    "Native review defaults consent off, explains all effects, exposes labelled count values and includes saved-request actions on recovery",
+    "Existing resource_unavailable delivery status preserves old edge/client validators; actual SQL webhook receipt parses in connection settings"
+  ],
+  "limits": [
+    "No credential/address/endpoint retarget into a team; supported destination reauthorization remains open",
+    "Personal email/webhook settings still need team-destination filtering, disabled Resume/verification and clear explanations for adopted projects; server already rejects unsupported personal writes",
+    "A separate persistent pause/preparation flow before draining a busy wire permit is not implemented; the current atomic action refuses all changes while sends remain live",
+    "File/provider custody, native stage scroll/focus polish, remaining Mac/account/window/accessibility/load and hosted/provider acceptance remain open",
+    "No real user data, system settings, hosted schema/configuration or ordinary feature rollout changed; all user-deferred release/signing/distribution, general older-client rollout, remote reminders, OAuth/provider/domain setup and physical location work remain deferred",
+    "Adoption, rank 6 and the wider remaining Px plan are not complete"
+  ],
+  "diagnostics": [
+    "Initial SQL assertion compared the receipt against a superseded pre-file-test queue count. Fresh review correctly included later queued events; the test now binds the final 12-event review.",
+    "Native DTO pause-blocker validation was updated to account for the explicit policy while retaining strict file and count checks.",
+    "UIKit exposes a switch-sized action inside a label-sized accessibility frame; the test now taps the observed switch control and verifies value 1. The app correctly kept Review disabled when consent remained off.",
+    "Each count is now one explicitly labelled/value-bearing accessibility element; tests inspect its display frame and value rather than requiring noninteractive text to be tappable.",
+    "iPad scroll helper stops at the visible header instead of over-scrolling and dismissing the sheet. Earlier diagnostic failures are not reported as passing runs.",
+    "Cross-component review caught an unrecognized new queue status; the final implementation reuses resource_unavailable and tests the SQL-generated webhook receipt through the existing decoder."
+  ],
+  "sourceSHA256": {
+    "Scripts/Database/project-adoption-schema.mjs": "571558d1e2a07a68c218200242446a89ef2c77d164b82d4ae498b91bfb6b24a7",
+    "Scripts/Database/test-project-adoption-connection-policy.mjs": "318eda57c16333fa0659e18fc472134db8db97b276b78eef5f289e4f71046f00",
+    "Scripts/Database/export-project-adoption-contract.mjs": "6ba1633a9259d87c67835d5a4c8899ce0244a4baea24ba53372be50a72f891c3",
+    "Scripts/prepare_project_adoption_native_test.py": "c7281e77fb13467c707787d16ee065d6deadc46b310c9235d3122d751a8f1e4c",
+    "Taskfold/Core/Backend.swift": "e1ebd9f842481b6ea4510bb11d2dc7a2397caebaa427e860fe26f4ce8360d7d1",
+    "Taskfold/Core/TeamProjectAdoption.swift": "67413494721bc3f6d2a0a057808d6b5b2cfdff2900fa2adbaff7a43131799e19",
+    "Taskfold/ProjectAdoptionNativeFixture.swift": "79c8dcf01c335d57e87854591a110b4d896da9c4c9d189bbf55dcafce819220e",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "cc83893f8a7f529591a4e0ca6b5a797a83b7a55315c1c997b971ec779cfec1ee",
+    "TaskfoldTests/TeamProjectAdoptionTests.swift": "1b771743517c7c63b92828b60fa128e16dd3548a865804b4ba20b0637dd24131",
+    "TaskfoldTests/Fixtures/team-project-adoption-connections-v1.json": "70c5f9db3f1a9489eb05345949881699984c7ea589e9f3fc146906027bf1a703"
+  },
+  "cleanup": {
+    "removedTemporaryEntries": 70,
+    "allocatedBytesRemoved": 1841123328,
+    "isolatedBundles": [
+      {
+        "simulator": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "absent": true
+      },
+      {
+        "simulator": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "absent": true
+      },
+      {
+        "simulator": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "absent": true
+      },
+      {
+        "simulator": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "absent": true
+      }
+    ],
+    "ownedFixtureContainersRemaining": 0,
+    "baselineSimulatorsPreserved": true,
+    "sourceBuildCachesPreserved": true,
+    "macAppLaunched": false
+  },
+  "advisorCategories": [
+    "auth_rls_initplan"
+  ],
+  "regressionEvidence": {
+    "mac-regression": {
+      "checks": 148,
+      "containerRemoved": true,
+      "logSHA256": "8a2f7eb64e5f0db96bc316fa1298705b28ac0e80af76f5f47e8ca49413719e96"
+    },
+    "mac-fences": {
+      "checks": 55,
+      "containerRemoved": true,
+      "logSHA256": "24abb6bbb5b9d6e44535cc92eb2325729797de9bff2cfc152345d1a6050097f7"
+    }
+  }
+}

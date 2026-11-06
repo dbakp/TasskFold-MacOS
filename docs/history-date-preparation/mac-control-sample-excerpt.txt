@@ -1,0 +1,74 @@
+Diagnostic scoped sample only; not a precise CPU percentage or latency baseline.
+    +                                                                                     219 static LocalActivityCreation.record(_:snapshot:account:)  (in Taskfold.debug.dylib) + 2024  [0x107361124]  TaskActivity.swift:1286
+    +                                                                                     ! 76 static TaskActivity.recordLocal(_:before:after:snapshot:account:now:cursor:)  (in Taskfold.debug.dylib) + 3112  [0x107325ee0]  TaskActivity.swift:344
+    +                                                                                     ! : 38 TaskActivity.init(row:parseInstant:validDay:)  (in Taskfold.debug.dylib) + 2140  [0x107320910]  TaskActivity.swift:268
+    +                                                                                     ! : |   19 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 396  [0x106d38678]  Models.swift:1690
+    +                                                                                     ! : |   + 10 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 72  [0x18e8ebf6c]
+    +                                                                                     ! : |   + ! 10 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! : |   13 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 288  [0x106d3860c]  Models.swift:1689
+    +                                                                                     ! : |   +       4 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! : |   6 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 448  [0x106d386ac]  Models.swift:1691
+    +                                                                                     ! : 32 TaskActivity.init(row:parseInstant:validDay:)  (in Taskfold.debug.dylib) + 2316  [0x1073209c0]  TaskActivity.swift:268
+    +                                                                                     ! : |   11 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 288  [0x106d3860c]  Models.swift:1689
+    +                                                                                     ! : |   +       3 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! : |   11 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 396  [0x106d38678]  Models.swift:1690
+    +                                                                                     ! : |   + 4 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 72  [0x18e8ebf6c]
+    +                                                                                     ! : |   + ! 4 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! : |   + 1 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 40  [0x18e8ebf4c]
+    +                                                                                     ! : |   7 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 448  [0x106d386ac]  Models.swift:1691
+    +                                                                                     ! : |   2 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 1056  [0x106d3890c]  Models.swift:1691
+    +                                                                                     ! : |   1 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 352  [0x106d3864c]  Models.swift:1690
+    +                                                                                     ! : 2 TaskActivity.init(row:parseInstant:validDay:)  (in Taskfold.debug.dylib) + 4500  [0x107321248]  TaskActivity.swift:278
+    +                                                                                     ! : 1 TaskActivity.init(row:parseInstant:validDay:)  (in Taskfold.debug.dylib) + 2276  [0x107320998]  TaskActivity.swift:268
+    +                                                                                     ! : 1 TaskActivity.init(row:parseInstant:validDay:)  (in Taskfold.debug.dylib) + 2852  [0x107320bd8]  TaskActivity.swift:270
+    +                                                                                     ! : 1 TaskActivity.init(row:parseInstant:validDay:)  (in Taskfold.debug.dylib) + 3692  [0x107320f20]  TaskActivity.swift:274
+    +                                                                                     ! : 1 TaskActivity.init(row:parseInstant:validDay:)  (in Taskfold.debug.dylib) + 3968  [0x107321034]  TaskActivity.swift:275
+    +                                                                                     ! 73 static TaskActivity.recordLocal(_:before:after:snapshot:account:now:cursor:)  (in Taskfold.debug.dylib) + 1044  [0x1073256cc]  TaskActivity.swift:336
+    +                                                                                     ! : 73 static TaskActivity.state(_:)  (in Taskfold.debug.dylib) + 1032  [0x107324aec]  TaskActivity.swift:313
+    +                                                                                     ! :   26 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 744  [0x106d387d4]  Models.swift:1691
+    +                                                                                     ! :   |     + 9 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! :   |     + 1 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 776  [0x18d08d668]
+    +                                                                                     ! :   24 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 396  [0x106d38678]  Models.swift:1690
+    +                                                                                     ! :   | 10 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 72  [0x18e8ebf6c]
+    +                                                                                     ! :   | + 9 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! :   | + 1 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 80  [0x18d08d3b0]
+    +                                                                                     ! :   | 1 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 40  [0x18e8ebf4c]
+    +                                                                                     ! :   22 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 288  [0x106d3860c]  Models.swift:1689
+    +                                                                                     ! :   |     + 13 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! :   |     + 1 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 152  [0x18d08d3f8]
+    +                                                                                     ! :   1 static TaskPlanning.instant(_:)  (in Taskfold.debug.dylib) + 844  [0x106d38838]  Models.swift:1691
+    +                                                                                     ! 41 static TaskActivity.recordLocal(_:before:after:snapshot:account:now:cursor:)  (in Taskfold.debug.dylib) + 2216  [0x107325b60]  TaskActivity.swift:343
+    +                                                                                     ! : 24 static TaskActivity.stamp(_:)  (in Taskfold.debug.dylib) + 164  [0x10731b5e0]  TaskActivity.swift:318
+    +                                                                                     ! : | 11 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 72  [0x18e8ebf6c]
+    +                                                                                     ! : | + 11 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! : | 2 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 40  [0x18e8ebf4c]
+    +                                                                                     ! : 14 static TaskActivity.stamp(_:)  (in Taskfold.debug.dylib) + 52  [0x10731b570]  TaskActivity.swift:318
+    +                                                                                     ! : |       6 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! : 3 static TaskActivity.stamp(_:)  (in Taskfold.debug.dylib) + 188  [0x10731b5f8]  TaskActivity.swift:318
+    +                                                                                     ! 27 static TaskActivity.recordLocal(_:before:after:snapshot:account:now:cursor:)  (in Taskfold.debug.dylib) + 2284  [0x107325ba4]  TaskActivity.swift:343
+    +                                                                                     ! : 12 static TaskActivity.stamp(_:)  (in Taskfold.debug.dylib) + 164  [0x10731b5e0]  TaskActivity.swift:318
+    +                                                                                     ! : | 5 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 72  [0x18e8ebf6c]
+    +                                                                                     ! : | + 4 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! : | + 1 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 768  [0x18d08d660]
+    +                                                                                     ! : | 2 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 40  [0x18e8ebf4c]
+    +                                                                                     ! : 11 static TaskActivity.stamp(_:)  (in Taskfold.debug.dylib) + 52  [0x10731b570]  TaskActivity.swift:318
+    +                                                                                     ! : |       4 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! : 3 static TaskActivity.stamp(_:)  (in Taskfold.debug.dylib) + 188  [0x10731b5f8]  TaskActivity.swift:318
+    +                                                                                     ! : 1 static TaskActivity.stamp(_:)  (in Taskfold.debug.dylib) + 272  [0x10731b64c]  TaskActivity.swift:318
+    +                                                                                     ! 1 static TaskActivity.recordLocal(_:before:after:snapshot:account:now:cursor:)  (in Taskfold.debug.dylib) + 2676  [0x107325d2c]  TaskActivity.swift:343
+    +                                                                                     ! :   1 closure #1 in static TaskActivity.recordLocal(_:before:after:snapshot:account:now:cursor:)  (in Taskfold.debug.dylib) + 36  [0x107326854]  TaskActivity.swift:343
+    +                                                                                     ! 1 static TaskActivity.recordLocal(_:before:after:snapshot:account:now:cursor:)  (in Taskfold.debug.dylib) + 3672  [0x107326110]  TaskActivity.swift:345
+    +                                                                                     27 static LocalActivityCreation.record(_:snapshot:account:)  (in Taskfold.debug.dylib) + 2156  [0x1073611a8]  TaskActivity.swift:1288
+    +                                                                                     ! 25 static TaskAssignmentProvenance.recordLocal(_:before:after:snapshot:account:now:)  (in Taskfold.debug.dylib) + 7352  [0x107318c00]  TaskActivity.swift:180
+    +                                                                                     ! : 16 static TaskActivity.stamp(_:)  (in Taskfold.debug.dylib) + 52  [0x10731b570]  TaskActivity.swift:318
+    +                                                                                     ! : |       7 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! : 9 static TaskActivity.stamp(_:)  (in Taskfold.debug.dylib) + 164  [0x10731b5e0]  TaskActivity.swift:318
+    +                                                                                     ! :   3 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 72  [0x18e8ebf6c]
+    +                                                                                     ! :   + 3 CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+    +                                                                                     ! :   1 -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 40  [0x18e8ebf4c]
+    +                                                                                     ! 2 static TaskAssignmentProvenance.recordLocal(_:before:after:snapshot:account:now:)  (in Taskfold.debug.dylib) + 2712  [0x1073179e0]  TaskActivity.swift:166
+    +                                                                                     7 static LocalActivityCreation.record(_:snapshot:account:)  (in Taskfold.debug.dylib) + 2096  [0x10736116c]  TaskActivity.swift:1287
+    +                                                                                     1 static LocalActivityCreation.record(_:snapshot:account:)  (in Taskfold.debug.dylib) + 1872  [0x10736108c]  TaskActivity.swift:0
+        13       CFDateFormatterCreateISO8601Formatter  (in CoreFoundation) + 132  [0x18d08d3e4]
+        6       -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 72  [0x18e8ebf6c]
+        5       -[NSISO8601DateFormatter updateFormatter]  (in Foundation) + 40  [0x18e8ebf4c]

@@ -1,0 +1,35 @@
+Native Mac computer-use observations, 11 October 2026.
+Final isolated bundle: com.dbakp.taskfold.mac.p0importa11ytests.
+Response fixture only; no Todoist token, provider call or real task write.
+
+Preview AX entries:
+unknown Description: Projects, Details: 2, ID: todoistCount-projects
+unknown Description: Sections, Details: 3, ID: todoistCount-sections
+unknown Description: Labels, Details: 2, ID: todoistCount-labels
+unknown Description: Tasks, Details: 4, ID: todoistCount-tasks
+unknown Description: Subtasks, Details: 2, ID: todoistCount-subtasks
+unknown Description: Comments, Details: 3, ID: todoistCount-comments
+unknown Description: Completed history and archived projects are not imported., ID: todoistWarning-0
+unknown Description: Reminder settings and saved filters stay in Todoist., ID: todoistWarning-1
+
+After native Import:
+text Value: The connection was lost while saving. Preview and retry: source IDs prevent duplicate imports., ID: todoistImportError
+button Description: Retry import, ID: todoistImport
+
+After native Retry:
+unknown Description: Projects imported, Details: 0, ID: todoistReceipt-projectsImported
+unknown Description: Sections imported, Details: 0, ID: todoistReceipt-sectionsImported
+unknown Description: Labels imported, Details: 0, ID: todoistReceipt-labelsImported
+unknown Description: Tasks imported, Details: 0, ID: todoistReceipt-tasksImported
+unknown Description: Subtasks imported, Details: 0, ID: todoistReceipt-subtasksImported
+unknown Description: Comments imported, Details: 0, ID: todoistReceipt-commentsImported
+unknown Description: Projects already imported, Details: 2, ID: todoistReceipt-projectsSkipped
+unknown Description: Sections already imported, Details: 2, ID: todoistReceipt-sectionsSkipped
+unknown Description: Labels already imported, Details: 2, ID: todoistReceipt-labelsSkipped
+unknown Description: Tasks already imported, Details: 4, ID: todoistReceipt-tasksSkipped
+Token field is empty; Preview is disabled; Clear token and Import are absent.
+
+Three native screenshots were inspected inline: preview, visible failure/retry, full receipt.
+This is computer-use/AX evidence, not a passing XCTest or full VoiceOver journey.
+The automated Mac case failed before execution while enabling automation mode.
+An intermediate static-text-trait variant merged these rows again; the final build omits that trait.

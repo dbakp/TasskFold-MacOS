@@ -1,0 +1,12 @@
+{
+  "preparedHost": "/tmp/taskfold-background-mac-finalinput",
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "dc793fed8e0137e5d2a4ced93a249c14e6a60e5225c5a1b73854c1d312e91de4",
+    "Taskfold/Core/Store.swift": "c5d50ee0f8f85cb0d31918618c8d71e16d0cc95f4431a4a230efbeab7abec3e4",
+    "Taskfold/Core/TaskActivity.swift": "36514b51a005b25fb047a9a52f2920ad11906650df61e712135eeae2dfd92416",
+    "Taskfold/Core/WidgetActions.swift": "5a4d09a53ecb84bcc6dd0aab1b6f199bb3fbff327e3afb5980442bd02f1311d1",
+    "Taskfold/TeamTemplateNativeFixture.swift": "99cb5b3fe0910026f40fc1c49824653ae40b5380c676a16c36b0518975356387"
+  },
+  "binarySHA256": null,
+  "note": "Broad-matrix build inputs retained. Binary hashes were not captured before incremental debug-fixture correction; final targeted proof binds the current reusable binary separately."
+}

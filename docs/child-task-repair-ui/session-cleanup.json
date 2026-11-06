@@ -1,0 +1,11 @@
+{
+  "macIsolatedAppClosed": true,
+  "ownedSimulatorStates": {
+    "phone": "Shutdown",
+    "ipad": "Shutdown"
+  },
+  "newDevicesCreated": false,
+  "storageFreeBytes": 36377481216,
+  "passingResultBundlesPrunedAfterEvidenceRetention": true,
+  "passingResultBundleBytesRemoved": 14570181
+}

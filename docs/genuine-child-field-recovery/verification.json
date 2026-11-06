@@ -1,0 +1,13 @@
+{
+  "accepted": true,
+  "actualAppChecks": 14,
+  "coldAppProcesses": 4,
+  "currentOwnSourceMatchesAcceptedApp": true,
+  "strictSignaturesVerified": true,
+  "buildLogSHA256": "e3aa53eb9fe3d5c8df10b550c4f3ae996b1fb1702acb6c284ad88b033259c671",
+  "driverSHA256": "ead2c08909293b718a7bb9c40fe37417e2f61c2d16a87644fcf366923d134e1c",
+  "hostedChanges": false,
+  "normalUseGateChanges": false,
+  "genuineTLSOrKeychainAcceptance": false,
+  "nativeViewInteractionOrSpeechAcceptance": false
+}

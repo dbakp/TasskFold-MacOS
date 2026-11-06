@@ -1,0 +1,3 @@
+	 Executed 52 tests, with 0 failures (0 unexpected) in 0.797 (0.801) seconds
+	 Executed 52 tests, with 0 failures (0 unexpected) in 0.797 (0.802) seconds
+COLD_COMPACT_NOTE_DIAGNOSTIC source_bytes=708080 rounds=12 reference_ms=210.70194244384766 current_ms=5.623102188110352

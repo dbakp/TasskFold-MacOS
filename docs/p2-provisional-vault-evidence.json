@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-26",
+  "scope": "Verified encrypted provisional-occurrence draft saves and copy-request transitions; bounded filesystem reads and account-removal deletion fence in both independent apps.",
+  "core": {
+    "passed": 238,
+    "failed": 0,
+    "skipped": 0,
+    "filter": "TeamCompletion",
+    "newRealFilesystemCases": [
+      "testAccountRemovalFenceProtectsProvisionalDraftDeletionAsWellAsWrites",
+      "testProvisionalCopyCancellationReadbackFailurePreservesAuthoredWorkOnReopen",
+      "testProvisionalCopyPreparationReadbackFailureKeepsExactFrozenRequestForRetry",
+      "testProvisionalDraftSaveRequiresEncryptedReadbackAndRetriesSameArchive",
+      "testProvisionalVaultBlockedDestinationRepairKeepsAuthoredArchiveAndCopyChoices",
+      "testProvisionalVaultChecksAggregateAndCountBoundsBeforeDecrypting",
+      "testProvisionalVaultRefusesOversizeFilesBeforeReadingOrFetchingKey",
+      "testProvisionalVaultRejectsLinkedDirectoryAndLinkedFileWithoutChangingTarget"
+    ]
+  },
+  "build": {
+    "passed": true,
+    "mode": "Signed isolated Mac build-for-testing"
+  },
+  "compatibility": "Existing v1 provisional draft JSON, AAD and RPC bodies unchanged. No new server/schema/UI contract. Every mutation requires decrypted read-back equality. Same-request retries do not rewrite or replace frozen choices.",
+  "limits": "These Core tests prove storage operations and retry behavior. Native Store retirement/copy delivery, I/O-phase account/session UI races and genuine hosted delivery remain open. Existing Mac UI automation approval remains pending; no native UI pass is inferred from compilation.",
+  "remaining": [
+    "Provisional connected-edit expansion and absent conversation context",
+    "Native I/O-phase races, broader recurring/spoken/large-workload checks",
+    "Mac UI approval and genuine hosted team acceptance before default-off rollout",
+    "User release/provider/device deferrals unchanged"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/TeamCompletionDraft.swift": "b7a21a8ed3e8b64d4767fef0e7ff2455d2913db8a973018aff2f8343192b7ead",
+    "TaskfoldTests/TeamCompletionTests.swift": "22ed788b1191bd0e41bd42ffd82603b080fccccbf07252051fe6a4221afb1e0b"
+  },
+  "artifactSHA256": {
+    "app-build.log": "9aed0183ecefcf193dcd75400f3f996323d6544cf0b07bed063c5c215b3d9469",
+    "core.log": "d372998e9462bb6a02230ccb31114110aeff8a0c25577e13194f55a10146bca3",
+    "signatures.json": "bddcea65c572fdd66787ad3e33c190d9c70c7d9f518728ce8fa2f1664c1f38f7",
+    "cleanup.json": "7ec290605a49e40df91b084ded066ab64497b8f03feb15fe2e78b8b5f34c6a53",
+    "iteration-results.json": "0659592239045ecaa9c47b81458978c498fe1f2a94ab2a068d0355e367fef144",
+    "isolation-receipt.json": "084d288912a509787d8f420cf600b21bb3ca55a76d2bc0c344262c6568812ad1"
+  },
+  "cleanup": "provisional-vault/cleanup.json"
+}

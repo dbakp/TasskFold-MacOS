@@ -18,13 +18,15 @@ public struct PulseDay: Codable, Equatable, Sendable {
 public struct PulseProject: Codable, Equatable, Identifiable, Sendable {
     public var id: String, recordID: String, name: String
     public var total: Int, completed: Int
+    public var countsIncomplete: Bool?
+    public var historyPartial: Bool?
     public var days: [String: PulseDay]
-    public init(account: String, recordID: String, name: String, total: Int, completed: Int, days: [String: PulseDay]) {
-        self.id = Self.key(account: account, project: recordID); self.recordID = recordID; self.name = name; self.total = total; self.completed = completed; self.days = days
+    public init(account: String, recordID: String, name: String, total: Int, completed: Int, days: [String: PulseDay], countsIncomplete: Bool = false, historyPartial: Bool = false) {
+        self.id = Self.key(account: account, project: recordID); self.recordID = recordID; self.name = name; self.total = total; self.completed = completed; self.days = days; self.countsIncomplete = countsIncomplete ? true : nil; self.historyPartial = historyPartial ? true : nil
     }
-    public static func key(account: String, project: String) -> String { (try? JSONEncoder().encode([account, project]).base64EncodedString()) ?? "" }
+    public static func key(account: String, project: String) -> String { (try? TaskfoldJSONEncoder().encode([account, project]).base64EncodedString()) ?? "" }
     public static func link(for id: String) -> ProjectPulseLink? {
-        guard id.utf8.count <= 1024, let data = Data(base64Encoded: id), let parts = try? JSONDecoder().decode([String].self, from: data), parts.count == 2, validID(parts[0]), validID(parts[1]), key(account: parts[0], project: parts[1]) == id else { return nil }
+        guard id.utf8.count <= 1024, let data = Data(base64Encoded: id), let parts = try? TaskfoldJSONDecoder().decode([String].self, from: data), parts.count == 2, validID(parts[0]), validID(parts[1]), key(account: parts[0], project: parts[1]) == id else { return nil }
         return ProjectPulseLink(account: parts[0], project: parts[1])
     }
     static func validID(_ value: String) -> Bool { !value.isEmpty && value.utf8.count <= 256 }
@@ -98,45 +100,44 @@ public struct ProjectPulseLink: Equatable, Sendable {
 #if !TASKFOLD_WIDGET_EXTENSION
 extension WidgetProjection {
     /// Bound titles and summaries, never the full task ledger, leave the app.
-    static func pulsePayload(tasks: [Record], projects: [Record], activity: [Record], epoch: [Record], account: String, readable: Bool, now: Date, calendar input: Calendar) -> JSON {
+    static func pulsePayload(tasks: [Record], projects: [Record], activity: [Record], epoch: [Record], account: String, readable: Bool, now: Date, calendar input: Calendar, children: ChildWorkHistory? = nil) -> JSON {
         guard readable, PulseProject.validID(account) else { return .null }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        let child = children.map { ChildWorkReading($0, now: now) }
         var seen = Set<String>()
-        let uniqueTasks = tasks.filter { seen.insert($0.id.lowercased()).inserted }
-        let groups = Dictionary(grouping: uniqueTasks, by: { $0.string("project_id").lowercased() })
-        var events: [String: [Record]] = [:], malformed = false; seen = []
+        let work = ProjectWorkScope(tasks: tasks)
+        let groups = Dictionary(grouping: tasks, by: { $0.string("project_id").lowercased() })
+        var events: [String: [TaskActivity]] = [:], malformed = false; seen = []
+        let parser = TaskNodeActivity.Parser()
         for row in activity {
-            guard let event = TaskActivity(row: row) else { malformed = true; continue }
+            guard let event = parser.parent(row) else { malformed = true; continue }
             guard seen.insert(event.id).inserted, event.recordedAt <= now else { continue }
+            if let context = event.rootContext, !context.readable { malformed = true }
             let ids = Set([event.before["project_id"]?.text.lowercased() ?? "", event.after["project_id"]?.text.lowercased() ?? ""]).subtracting([""])
-            for id in ids { events[id, default: []].append(row) }
+            for id in ids { events[id, default: []].append(event) }
         }
         seen = []
         let all = projects.filter { PulseProject.validID($0.id) && seen.insert($0.id.lowercased()).inserted }.sorted { $0.id < $1.id }
-        let recorded = epoch.first { $0.id == "current" }.flatMap { TaskPlanning.instant($0.string("recorded_from")) }?.timeIntervalSince1970
+        let rootRecorded = epoch.first { $0.id == "current" }.flatMap { TaskPlanning.instant($0.string("recorded_from")) }.flatMap { $0 <= now ? $0.timeIntervalSince1970 : nil }
+        let recorded = [rootRecorded, child?.recordedFrom?.timeIntervalSince1970].compactMap { $0 }.min()
         let cards = all.prefix(2048).map { project -> PulseProject in
             let id = project.id.lowercased(), rows = groups[id] ?? []
+            let history = ProjectPulseReading.History(project: id, parsed: events[id] ?? [])
             var days: [String: PulseDay] = [:]
+            var partial = children != nil && rootRecorded == nil
             for offset in 0..<8 {
                 let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now))!
-                let key = ProjectPulseSnapshot.day(date, calendar: calendar), soon = ProjectPulseSnapshot.day(calendar.date(byAdding: .day, value: 6, to: date)!, calendar: calendar)
-                let reading = ProjectPulseReading(project: id, tasks: rows, activity: events[id] ?? [], now: offset == 0 ? now : date, calendar: calendar)
-                let attention = rows.filter {
-                    guard !$0.completed else { return false }
-                    let deadline = $0.string("deadline_date"), planned = TaskPlanner.plannedDay($0, calendar: calendar)
-                    return (!deadline.isEmpty && Dates.parse(deadline) != nil && deadline <= soon) || (!planned.isEmpty && Dates.parse(planned) != nil && planned < key)
-                }.sorted {
-                    let a = $0.string("deadline_date"), b = $1.string("deadline_date")
-                    if a != b { return (a.isEmpty ? "9999" : a) < (b.isEmpty ? "9999" : b) }
-                    return $0.priority == $1.priority ? $0.id < $1.id : $0.priority < $1.priority
-                }
-                days[key] = PulseDay(completions: reading.completions, reopens: reading.reopens, additions: reading.additions, movedIn: reading.movedIn, movedOut: reading.movedOut, attentionCount: attention.count, attention: attention.prefix(3).map { PulseAttention(id: $0.id, title: PinnedNotes.excerpt($0.title, characters: 120, bytes: 800).0) })
+                let key = ProjectPulseSnapshot.day(date, calendar: calendar)
+                let reading = ProjectPulseReading(project: id, tasks: rows, activity: [], now: offset == 0 ? now : date, calendar: calendar, work: work, childReading: child, history: history)
+                partial = partial || reading.historyIncomplete || (rootRecorded.map { Date(timeIntervalSince1970: $0) > reading.start } ?? false)
+                let attention = work.attention(project: id, now: date, calendar: calendar)
+                days[key] = PulseDay(completions: reading.completions, reopens: reading.reopens, additions: reading.additions, movedIn: reading.movedIn, movedOut: reading.movedOut, attentionCount: attention.count, attention: attention.prefix(3).map { PulseAttention(id: $0.id, title: PinnedNotes.excerpt($0.task.title, characters: 120, bytes: 800).0) })
             }
-            return PulseProject(account: account, recordID: id, name: PinnedNotes.excerpt(project.name, characters: 160, bytes: 1000).0, total: rows.count, completed: rows.filter(\.completed).count, days: days)
+            return PulseProject(account: account, recordID: id, name: PinnedNotes.excerpt(project.name, characters: 160, bytes: 1000).0, total: work.items(project: id).count, completed: work.items(project: id).filter { $0.task.completed }.count, days: days, countsIncomplete: work.incomplete(project: id), historyPartial: partial)
         }
         let snapshot = ProjectPulseSnapshot(account: account, timeZone: calendar.timeZone.identifier, history: malformed ? "incomplete" : recorded == nil ? "unavailable" : "ready", recordedFrom: recorded, projects: cards, omitted: max(0, all.count - cards.count))
         guard snapshot.valid(for: account) else { return .null }
-        return (try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(snapshot))) ?? .null
+        return (try? TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(snapshot))) ?? .null
     }
 }
 #endif

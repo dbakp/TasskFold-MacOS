@@ -1,0 +1,12 @@
+{
+  "appSHA256": "b3395965d1a7176e959fc1fe2d03cbee925155f34dd6b8d4e5250a2b29fcc718",
+  "checkboxCompletedSecondChild": true,
+  "visibleConfirmationAndUndo": true,
+  "commandZRestoredSecondChild": true,
+  "completionWrites": 2,
+  "completionRequests": 2,
+  "firstChildUnchanged": true,
+  "exactMetadataRetained": true,
+  "coldReturnOpenChild": true,
+  "finalQuitVerified": true
+}

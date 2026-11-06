@@ -1,0 +1,218 @@
+{
+  "milestone": "Native Mac place-draft sending and iOS reviewed receiving screens",
+  "date": "2026-10-22",
+  "repository": "TasskFold-MacOS",
+  "status": "Native screens/commands implemented and verified within isolated client workflow scope; genuine paired Auth/PostgREST, live Mac UI and physical region delivery remain unverified. Rank5/Px incomplete.",
+  "parentCommit": "c0b51840079d5f321fa067e307f5fce943f6820b",
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "5a7156923f95c12ed5fe7f6d8810846380319dd2ba2536e73309f1f3cf568779",
+    "Taskfold/Core/LocationPlaceStore.swift": "2ce582df1cfbb94ebba89262460ee52f567a4ef471737cb5d78c3a54a5ad3df6",
+    "Taskfold/Core/LocationReminders.swift": "7ccba26203de3e017207acedd04e4e86590d716d184de1dc8a4decd509dbf109",
+    "Taskfold/Core/Store.swift": "a87f95e1d90dbb5a1428bd2592ec79a8bf8952ad8d68cc97a6bea48907b050a5",
+    "TaskfoldTests/LocationHandoffTests.swift": "cccbc2a420d8731a596db0581553e0bc9e6b2404f49bb04dc67f58228935330f",
+    "Taskfold/TaskfoldMacApp.swift": "373bfd0376f3cda85c2feb0f57034ea906e0d13a9ecf525301e0246311420f06",
+    "Taskfold/Views/ReminderEditor.swift": "020dea4e4c7caeca39cd88bfa78aa5d3e2a4f84fb1582713ab5c08b6d48d7671",
+    "Taskfold/Views/CalendarView.swift": "e7199f978530fecf1b63dfdbf4a86a24fb12c91384c1f1c73007e53911306863",
+    "Scripts/render_location_handoff.py": "e1c3041e3408d5e8539e2aad7d423a652db4d0466252bc9f826c1d3e708580a2"
+  },
+  "core": {
+    "reported": 1303,
+    "skipped": 33,
+    "actualPassed": 1270,
+    "failures": 0,
+    "log": {
+      "file": "location-handoff-screens-core-mac.log",
+      "sha256": "3cc2a06ba13cffc471402f537fbc07e0a22824d006d74586e5ebf8edcfdcfa31"
+    },
+    "scope": "Full owned Core suite including existing protocol/recovery checks and added 25-second request-timeout assertion."
+  },
+  "build": {
+    "passed": true,
+    "log": {
+      "file": "location-handoff-screens-build-accepted-mac.log",
+      "sha256": "1226f042b4ca5eb98d33364e5e535b0d5d92697d6f633e2861ed37cdf2cb92fe"
+    },
+    "scope": "Current independently owned app/extension Debug compilation; iOS Simulator only, Mac unsigned isolated host only. Final iOS build includes additional reset/other-device explanatory copy after native flow checks."
+  },
+  "nativeReceiving": {
+    "uniqueCases": 4,
+    "acceptedExecutions": 5,
+    "acceptedRuns": [
+      {
+        "name": "location-handoff-phone",
+        "passed": 3,
+        "failed": 0,
+        "runtimeWarnings": 0,
+        "summary": {
+          "file": "location-handoff-phone-summary.json",
+          "sha256": "b756e51b6dbb515f302585f1a5ba4564ef653faedda4dd195c6218d0f2cec455"
+        },
+        "log": {
+          "file": "location-handoff-phone.log",
+          "sha256": "412e2e2dc06c3547a8b022141376e7eb96eedc2716212b475fe6ac066f7b9ae2"
+        }
+      },
+      {
+        "name": "location-handoff-phone-final",
+        "passed": 1,
+        "failed": 0,
+        "runtimeWarnings": 0,
+        "summary": {
+          "file": "location-handoff-phone-final-summary.json",
+          "sha256": "1a7e16de7998edb68902be23d180c5ab0686d621f541624b53d1fdde745f49dd"
+        },
+        "log": {
+          "file": "location-handoff-phone-final.log",
+          "sha256": "c735f832d9d11c457ba106f19d3056684d1a1da003f2181bd84dc157768ebc5f"
+        }
+      },
+      {
+        "name": "location-handoff-ipad-final",
+        "passed": 1,
+        "failed": 0,
+        "runtimeWarnings": 0,
+        "summary": {
+          "file": "location-handoff-ipad-final-summary.json",
+          "sha256": "fff77b42af0790cd3595b7be5f31db6bcacd5bd5e9d28d27068a7de398530597"
+        },
+        "log": {
+          "file": "location-handoff-ipad-final.log",
+          "sha256": "b9fa23c8380e1e7fe825202ff5eb7ea7e17a4c842ac065ac0f1e6cdd8e353ca3"
+        }
+      }
+    ],
+    "scope": [
+      "Real production inbox/review views, Store, Backend/URLSession, protected private file and atomic task/receipt cache; all Backend HTTP intercepted by an exact-host DEBUG URLProtocol with fake session. No Keychain read, real task/account or permission/region activation.",
+      "Not now keeps one durable nonce/pin/spec/arm identity across relaunch and Continue review; Save adds exactly one reminder/private pin; imported rows cannot offer another import.",
+      "Injected task-cache write failure leaves task/cache/import receipt untouched, keeps one reviewed pin/header and retry commits once.",
+      "Unacknowledged Finish retains header+receipt and task; relaunch/open inbox confirms import and clears only the matching header with no task replay.",
+      "Largest-text dark landscape iPad review scrolls to confirmed Discard and keeps task bytes unchanged; draft geometry removed.",
+      "Final happy case and iPad large-text case repeat the shortened Review title/copy. The two other recovery cases passed before that layout/copy-only patch. The final reset/other-device captions are compile-checked, not separately interacted with."
+    ],
+    "bounds": "Native fixture keeps ordinary/location delivery off; private journal remains empty. This proves receiving/save/retry, not actual native geofencing or real Auth/PostgREST. Normal signed-in setup entry wiring is inspected/compiled; direct fixture root starts on the actual inbox, so full normal navigation and spoken VoiceOver are not claimed."
+  },
+  "nativeMacCommands": {
+    "passed": true,
+    "checks": [
+      "first put commits but response is lost",
+      "retry confirms same immutable proposal",
+      "list recovers one pending proposal",
+      "retry uploads one logical draft",
+      "stale workspace refused before upload",
+      "discard removes geometry without task mutation",
+      "send retry list discard leave task cache unchanged"
+    ],
+    "proofSHA256": "ee9f6ab793ff1cb21603e3ec1fc4f4286bb4ee2385da244601e9303d43a142ba",
+    "log": {
+      "file": "location-handoff-mac-command.log",
+      "sha256": "314b26bb06109cfc8e25b07b72c4ac1d8fc54f76f0c048e3ed45e83609c68d91"
+    },
+    "scope": "Separately launched exact isolated Mac app, real Store/Backend using synthetic intercepted HTTP. First send commits with lost response; retry confirms one draft, list recovers, stale workspace refused, pending discard purges payload, snapshot unchanged. App terminates itself. No Mac UI input or live Maps search/real Auth acceptance."
+  },
+  "visualsSHA256": {
+    "docs/location-handoff/handoff-confirmation-pending.png": "8e8ac2628e1673a1fe0534479f2be71ce281b8c29d2a3f9e8bf555f1c4aca72d",
+    "docs/location-handoff/handoff-ipad-largest-dark-review.png": "4418536825d69954ae22f8117f848f4e1aa2ad7b4bed1fdf7d1bcebef650ce4b",
+    "docs/location-handoff/handoff-phone-review.png": "4c6f3da881c95c52e1e9384f6a7410dc5ae70a9621bdf4c5c27be9a70ffdfa85",
+    "docs/location-handoff/handoff-phone-saved.png": "86a6c7782ff6900604f46b00771576df97e76b25c175b5d24b4dea8e0be96e54",
+    "docs/location-handoff/handoff-save-failure.png": "f52f73163e8ab4318669c8d18bf53d85a5ce47646819502f58f2b22b9868bb4f",
+    "docs/location-handoff/mac-send-dark-bottom.png": "f725bf3fe39225676bb7b5e9fb29732ac69feca34d0fc6af91fa046982da236c",
+    "docs/location-handoff/mac-send-light-top.png": "735e1f6302c8ee7d42ca09d7ce0ac71e17d2440bb4f96272f198f9c86403fc56"
+  },
+  "visualScope": "Phone review/saved/failure/pending confirmation and largest-text dark iPad native captures inspected. Short title no longer truncates on phone. Scrolling viewports may cut content naturally. Mac production send form light/dark top/bottom rendered with actual Core models and read-only Store stand-in. Offscreen MapKit grid omits live tile/pin layer and title/toolbar; layout-only, not live map appearance. No real private content.",
+  "earlierIterations": [
+    {
+      "log": {
+        "file": "location-handoff-screens-build-mac.log",
+        "sha256": "1696c64aa187c16f9e3520e082fdaec69d6fc67be0f2f9b02f156553d10cccca"
+      },
+      "result": "failed",
+      "reason": "Existing year-calendar miniMonth cell exceeded type-checking budget. Extracted identical cell calculation/render into helper with explicit Color; final build passes."
+    },
+    {
+      "summary": {
+        "file": "location-handoff-ipad-summary.json",
+        "sha256": "4b577d57093dd352295062d739d4206dad04c79d10ab91697f6ee68d17ea596d"
+      },
+      "log": {
+        "file": "location-handoff-ipad.log",
+        "sha256": "1558e7d96af8fca3a989b4f1f57473f4dc745e051951718715c0904e9ea774fb"
+      },
+      "result": "failed",
+      "reason": "Test asserted offscreen Discard existence before scrolling the virtualized large-text review form. Product unchanged by test-helper correction."
+    },
+    {
+      "summary": {
+        "file": "location-handoff-ipad-v2-summary.json",
+        "sha256": "6159252b681291227b28bf111e8e4798b08304378cc053991d77fc788f505949"
+      },
+      "log": {
+        "file": "location-handoff-ipad-v2.log",
+        "sha256": "a96b09c39c41d6edc96b02a98c9b126b94b79686581ad00610d0028d009c2f5b"
+      },
+      "hierarchy": {
+        "file": "location-handoff-ipad-v2-hierarchy.txt",
+        "sha256": "cc57b3e42c0758953fd90ef89f49cacb2b5a9af0eba6b75ae2cc4904686f8be4"
+      },
+      "result": "failed",
+      "reason": "Correctly reached Discard confirmation; Xcode exposed duplicate wrappers with the same identifier. Test now selects the first confirmation match. Final iPad run passes."
+    },
+    {
+      "log": {
+        "file": "location-handoff-mac-layout.log",
+        "sha256": "a91ce29afd4782bb81fee1900109f4f7384377749916b754dcf43631db58370d"
+      },
+      "result": "failed",
+      "reason": "Renderer assumed SwiftPM Modules layout; current owned build uses out/Products static library. Added existing supported build-layout discovery, then rendered current source."
+    }
+  ],
+  "privacy": "No real credentials read or live backend mutations made. Both exact disposable hosts use a fake session, intercept all Backend requests, skip real task sync and use dedicated cache/private paths; Mac fixture is under /private/tmp/taskfold-handoff-native-mac. Normal bundles cannot enable it and Release excludes it. Apple map tiles may load synthetic public coordinates. Sending UI requires explicit upload confirmation and preserves immutable proposal UUID on retry.",
+  "cleanup": {
+    "verifiedExactUninstalls": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "uninstalled": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "uninstalled": true
+      }
+    ],
+    "removedUnsignedMacProduct": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-project-workflows-native-v2/Build/Products/Debug/Taskfold.app",
+    "removedSyntheticMacFixtureRoot": "/private/tmp/taskfold-handoff-native-mac",
+    "prunedSupersededArtifacts": [
+      "location-handoff-ipad.xcresult",
+      "location-handoff-ipad-v2.xcresult",
+      "location-handoff-mac-layout",
+      "location-handoff-mac-layout-final",
+      "location-handoff-mac-layout-verified"
+    ],
+    "retained": "Final accepted results/logs/summaries, failure logs/hierarchies/summaries, final captures and reusable build caches.",
+    "mainTaskfoldProcesses": [],
+    "realAppsAccountsPermissions": "Untouched"
+  },
+  "remaining": [
+    "Genuine same-account paired Auth/PostgREST/offline/concurrency behavior",
+    "Live Mac send/search/map/confirmation/keyboard and spoken VoiceOver acceptance; desktop remains locked",
+    "Actual capable-device region delivery, permission/background/locked/cold callback acceptance",
+    "Safe bounded history and terminal/absent-header maintenance; capacity currently refuses new imports rather than forgetting protection",
+    "Wider rank5 and remaining Px"
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall recovery",
+    "General older-client rollout safeguards",
+    "Release signing/distribution/install/update verification",
+    "Genuine Google/Microsoft calendar OAuth registrations/provider acceptance"
+  ]
+}

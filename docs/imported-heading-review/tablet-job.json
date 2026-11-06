@@ -1,0 +1,21 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-commit-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-heading-review-tablet-verified.xcresult",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testImportedHeadingReviewCancelApplySaveAndColdReturn",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn"
+  ],
+  "started": 1793103801.470528,
+  "returncode": 0,
+  "finished": 1793104043.702264
+}

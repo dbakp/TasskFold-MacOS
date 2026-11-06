@@ -1,0 +1,108 @@
+{
+  "date": "2026-10-10",
+  "scope": "Touch activation of saved description and estimate previews after process relaunch; full description value preserved, completion remains separate. Phone normal/light and accessibility XXXL/dark, tablet accessibility XXXL/dark.",
+  "results": [
+    {
+      "bundle": "/tmp/taskfold-preview-details-phone-v1.xcresult",
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+              "deviceName": "Taskfold assignment iPhone",
+              "modelName": "iPhone 17 Pro",
+              "osBuildNumber": "23F77",
+              "osVersion": "26.5",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1791609862.85,
+        "passedTests": 2,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1791609778.39,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      }
+    },
+    {
+      "bundle": "/tmp/taskfold-preview-details-tablet-v1.xcresult",
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+              "deviceName": "Taskfold assignment iPad",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "23F77",
+              "osVersion": "26.5",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1791609837.608,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1791609793.551,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      }
+    }
+  ],
+  "buildLog": "/tmp/taskfold-preview-details-build-v1.log",
+  "signingReceipt": "/tmp/taskfold-preview-details-sign-v1.json",
+  "testSourceSHA256": "7fb8245fe576992c68599b05464b10ae82ad01babf5c938c20d1d3a3260c8d30",
+  "productionSourceSHA256": "1250cc8af8e3f2651be33b093b7be7730d014e3ab46a837fa12d8bec98733d0b",
+  "captures": [
+    {
+      "path": "docs/usability-previews/preview-details-phone-largest.png",
+      "sha256": "e614d42cc6d511ac5703abea1f14d5855c4c6a6155c45057e7a9c6694a948cb7",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/preview-details-tablet-largest.png",
+      "sha256": "410775e3afe92d8479674907c81daa7ab0699a32707ca6a237c283b8085c94b8",
+      "inspected": true
+    }
+  ],
+  "limitations": [
+    "No VoiceOver or keyboard acceptance. Unfiltered accessibility warnings remain unresolved.",
+    "The phone editor screenshot shows a viewport of the long text; complete text is asserted from the editor value, not claimed fully visible in a single frame.",
+    "Mac source preserves the complete notes in the inspector; Mac runtime was not launched or verified.",
+    "No production changes or schema/sync changes. Uses disposable DEBUG local fixtures only."
+  ]
+}

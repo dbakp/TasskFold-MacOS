@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-30",
+  "tests": [
+    {
+      "platform": "iPhone",
+      "name": "testChildCompletionNativeStopReviewFreshReplacementAndNoOp",
+      "passed": true,
+      "seconds": 139.844
+    },
+    {
+      "platform": "iPad",
+      "name": "testChildCompletionNativeStopReviewFreshReplacementAndNoOp",
+      "passed": true,
+      "seconds": 125.457
+    }
+  ],
+  "builds": {
+    "macAppAndTestProducts": true,
+    "macStrictSignatures": true,
+    "iosAppAndTestProducts": true,
+    "iosStrictSignatures": true
+  },
+  "macRuntime": "Not executed: Mac locked, revalidated after mobile runs.",
+  "spokenAndLargestTextReview": "Not verified in this follow-up.",
+  "sourceSHA256": {
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "a35a131b3108457bd55c64eed828f0467a07d10f9ce87e98f295c6a6d584324b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "f7f0f09669e58c32392833fd53cc0a7286e858e2228e6aab9a83f9225073245b"
+  }
+}

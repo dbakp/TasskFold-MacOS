@@ -1,0 +1,18 @@
+{
+  "Taskfold/AudioCommentNativeFixture.swift": {
+    "repo": "0d7ff7c95b21dba2a902d09a79d5ccdfe7285ca1bb32f147d239f2a5ec8fd7f9",
+    "isolatedHost": "0d7ff7c95b21dba2a902d09a79d5ccdfe7285ca1bb32f147d239f2a5ec8fd7f9"
+  },
+  "Taskfold/Views/AudioPendingPublicationView.swift": {
+    "repo": "bba0149ec3d3043a636d20d58967b11c96b1251bec5af7cf2f948c373a5fa302",
+    "isolatedHost": "bba0149ec3d3043a636d20d58967b11c96b1251bec5af7cf2f948c373a5fa302"
+  },
+  "TaskfoldUITests/AudioCommentUITests.swift": {
+    "repo": "a560e5b701646a46972d28d855324e2728837ef822947062de81265980abcfb7",
+    "isolatedHost": "a560e5b701646a46972d28d855324e2728837ef822947062de81265980abcfb7"
+  },
+  "Taskfold/TaskfoldMacApp.swift": {
+    "repo": "528d70d698488394e9bb5f07de20e89ccdecd54da3c344ec1881d4bc2741a3d9",
+    "isolatedHost": "528d70d698488394e9bb5f07de20e89ccdecd54da3c344ec1881d4bc2741a3d9"
+  }
+}

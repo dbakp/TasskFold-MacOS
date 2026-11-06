@@ -1,0 +1,19 @@
+{
+  "removed": [
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/ios-cold-complete-v1",
+      "bytesRemoved": 417293120
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-cold-complete-stage-v1",
+      "bytesRemoved": 3243292
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/cold-complete-export-v1",
+      "bytesRemoved": 7832038
+    }
+  ],
+  "totalBytesRemoved": 428368450,
+  "rawXCResultLogsPrivateBaselinesAndSelectedCapturesRetained": true,
+  "liveMacBinariesRetained": true
+}

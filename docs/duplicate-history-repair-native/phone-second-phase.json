@@ -1,0 +1,25 @@
+{
+  "platform": "phone",
+  "sourceSHA256": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": "0c39af9b7676a66c1dfae959745e170e0ca8b14d8ed10c6f71cff8d75d0fc0a2",
+    "Taskfold/ChildFieldNativeFixture.swift": "5eb4daf9ea3a1e184ca9bce5364f59a43b9884f5656a569922c553a4848cd1b1",
+    "Taskfold/ChildRepairNativeFixture.swift": "435883cd99f6fbef3cae02980ed6fc9ed8feb1bdeaaf19d0e2800473124d83d5",
+    "TaskfoldUITests/AudioCommentUITests.swift": "f6b91d9b1c78cd353579cde3f7baa422bc8f472db63829648569d5692b0292f1"
+  },
+  "builtHostSHA256": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": "0c39af9b7676a66c1dfae959745e170e0ca8b14d8ed10c6f71cff8d75d0fc0a2",
+    "Taskfold/ChildFieldNativeFixture.swift": "5eb4daf9ea3a1e184ca9bce5364f59a43b9884f5656a569922c553a4848cd1b1",
+    "Taskfold/ChildRepairNativeFixture.swift": "435883cd99f6fbef3cae02980ed6fc9ed8feb1bdeaaf19d0e2800473124d83d5",
+    "TaskfoldUITests/AudioCommentUITests.swift": "f6b91d9b1c78cd353579cde3f7baa422bc8f472db63829648569d5692b0292f1"
+  },
+  "appSHA256": "16dfd4862e99a77b7ea5d1888b39a7ff11150bf37203062ee257c0bdc3952cad",
+  "debugDylibSHA256": "a5d57e3a31ed0edb0ab4c7d92b8a502fd2a86b7c77c1711653e6bf44ac1274c4",
+  "newSimulator": false,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": true,
+    "Taskfold/ChildFieldNativeFixture.swift": true,
+    "Taskfold/ChildRepairNativeFixture.swift": true,
+    "TaskfoldUITests/AudioCommentUITests.swift": true
+  }
+}

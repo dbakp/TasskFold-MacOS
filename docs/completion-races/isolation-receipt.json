@@ -1,0 +1,77 @@
+{
+  "sourceRepository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "workspace": "/private/tmp/taskfold-mac-recovery-host",
+  "bundleID": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "sandbox": true,
+  "productionURLAndFileRegistrationsRemoved": true,
+  "embeddedWidgetExtension": false,
+  "embeddedShareExtension": false,
+  "isolatedURLScheme": null,
+  "recordRouteTesting": false,
+  "isolatedAppGroup": null,
+  "signingTeam": null,
+  "namespaceOnlySourceChanges": {
+    "Taskfold/Workspace.swift": {
+      "originalSHA256": "fc871482c72bb2b1446d93d2e546073c96d9245bd0a8df9e5541437345d37269",
+      "isolatedSHA256": "8754efdfffbc39bf5f0d21f82430f5489e5ec243f9c08dbef3ca8d27bd19724c"
+    },
+    "Taskfold/AccountRemovalNativeFixture.swift": {
+      "originalSHA256": "9bf9004ba79bacd0c2370b1d6af5d99c6b05f63c8d3aeea5c7f4ffe67bee9587",
+      "isolatedSHA256": "fdcbf1de811af736e1df888a492e5c86bacb92bc175ede94956a8f81d9187446"
+    },
+    "Taskfold/Core/Backups.swift": {
+      "originalSHA256": "147c4a0c0bd29978d0a85aeea1c9d863fe6d1b85d8db36031811b245120eb86b",
+      "isolatedSHA256": "5f777122a215c02967c48fb7c4e2b9d6e1f95b4004728976e1ef7f7164faec21"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "originalSHA256": "171cf14659a412612b26e3c4a5f9cfa26a82cf7371ac0931f79f4a22ddbe3965",
+      "isolatedSHA256": "c05284c57b5d54743282b959e1966be07019a3630de5d7f297c8c653986b6997"
+    },
+    "Taskfold/Core/Store.swift": {
+      "originalSHA256": "4af360806a820b5d36154d92bcfb2425519ca4f7c711b6f97359f25885011884",
+      "isolatedSHA256": "14e1bebb932c7e853680a0bff2d5e989399f18e8115aeffd50208019dc1d15d5"
+    },
+    "Taskfold/Core/WidgetActions.swift": {
+      "originalSHA256": "9c0aa4ccbe6808e8ecb8c1cf5f5be32d65d94f0ea230f60444fbd8a16e6add8a",
+      "isolatedSHA256": "35a9ad129483bf504778b969d0ab6934c46217f23f163bcd3f5189c6caf058da"
+    },
+    "Taskfold/Core/SharedCapture.swift": {
+      "originalSHA256": "6c818d7a4aadef3997d41a36cab14e3bc6305394df838b75186c126d121e2fbf",
+      "isolatedSHA256": "fce120945b1d285af94c48c01af67b1ffd32514aa770019e6b619c364a99f832"
+    },
+    "Taskfold/Core/TeamCompletion.swift": {
+      "originalSHA256": "5f2bf81ded96efa63349d12e1bfd0f093784131702653a85073680e622b84967",
+      "isolatedSHA256": "5f2bf81ded96efa63349d12e1bfd0f093784131702653a85073680e622b84967"
+    },
+    "TaskfoldUITests/TaskfoldMacUITests.swift": {
+      "originalSHA256": "fd9f4d4ce30a7a86f0c11975efe6f1c2b81a434fcb4273f44f7562d6b4ceaef1",
+      "isolatedSHA256": "64b4ddc665e81dc3ce602ced035bb94b9f9d2353326dd679bdaa0841d8dee46f"
+    },
+    "Taskfold/Collaboration.swift": {
+      "originalSHA256": "65d2c4cd42e5767c8091b15ba1725f41a4858fae84b4a8729c11af7d5974d8aa",
+      "isolatedSHA256": "65d2c4cd42e5767c8091b15ba1725f41a4858fae84b4a8729c11af7d5974d8aa"
+    },
+    "Taskfold/Views/TaskInspector.swift": {
+      "originalSHA256": "9afc3994045e61980ae004a83de85d384e183fbd14b9da3c063bba108d52c53f",
+      "isolatedSHA256": "9afc3994045e61980ae004a83de85d384e183fbd14b9da3c063bba108d52c53f"
+    }
+  },
+  "replacements": {
+    "com.dbakp.taskfold.task": "com.dbakp.taskfold.mac.workflowteststeameditbridge.task",
+    "com.taskfold.ios.session": "com.taskfold.mac.workflowteststeameditbridge.session",
+    "com.taskfold.recovery.v1": "com.taskfold.mac.workflowteststeameditbridge.recovery.v1",
+    "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.mac.workflowteststeameditbridge"
+  },
+  "launchArguments": [
+    "--uitesting"
+  ],
+  "limitations": [
+    "Preparation only; no launch/install/runtime acceptance.",
+    "Unique keychain services; no production credential migration.",
+    "Production Push Notifications and keychain-group entitlements are absent only from the copied test app.",
+    "No signed-distribution, APNs or provider acceptance.",
+    "Cold OS launches omit --uitesting and use the isolated local workspace; fixture continuity must be verified separately."
+  ],
+  "workflowNamespace": "workflowteststeameditbridge",
+  "privateKeychainProfileRequired": false
+}

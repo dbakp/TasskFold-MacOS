@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "A1C54CA2-1518-453C-A9F8-61546E0D1603.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 5000_0_93834578-5AB2-49BB-B4BA-DA4D461712ED.json",
+        "timestamp" : 1793173783.328
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce"
+  }
+]

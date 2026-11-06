@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "B22F69D5-3142-44A7-8F48-D622D6031F20.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Mac reviewed voice tasks after explicit Add Undo Redo and cold return_0_FB59CADB-70F8-4BF8-84CD-103667CDC472.json",
+        "timestamp" : 1793120060.074
+      }
+    ],
+    "testIdentifier" : "TaskfoldMacUITests/testMacVoiceReviewCorrectionCancelApplySaveUndoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testMacVoiceReviewCorrectionCancelApplySaveUndoAndColdReturn"
+  }
+]

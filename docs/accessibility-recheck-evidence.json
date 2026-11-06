@@ -1,0 +1,139 @@
+{
+  "date": "2026-10-11",
+  "baseCommits": {
+    "TaskFold-iOS": "bd9fe23d55359861dd4f9770aa99095043bf9c9b",
+    "TasskFold-MacOS": "45fc16cf9f8068765dec2557425f113df283dc14"
+  },
+  "scope": "Native iPhone Simulator diagnostic recheck; no Mac UI, VoiceOver, physical device or full P0 acceptance inferred.",
+  "audit": {
+    "resultBundle": "accessibility-recheck-native-v1.xcresult",
+    "build": "accessibility-recheck-ios-build-v4.log",
+    "signing": "accessibility-recheck-ios-signing-v1.json",
+    "executed": 2,
+    "passed": 0,
+    "failed": 2,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "allFindingsRetained": true,
+    "normal": {
+      "count": 2,
+      "findings": [
+        "Saved list: native Search inbox field",
+        "Saved list: one-line notes preview"
+      ]
+    },
+    "darkLargest": {
+      "count": 2,
+      "findings": [
+        "Quick capture: 25 min estimate chip",
+        "Saved list: native Search inbox field"
+      ]
+    },
+    "editorOverviewAndSubtaskActions": "No findings in either configuration for the three selected audit categories. The previous photo-action finding did not recur; this is not a blanket clearance of attachments or accessibility.",
+    "categories": [
+      "sufficientElementDescription",
+      "hitRegion",
+      "textClipped"
+    ]
+  },
+  "visualReview": {
+    "images": [
+      {
+        "file": "accessibility-recheck-normal-saved-task-list.png",
+        "source": "A6C12531-9F8C-4260-81F4-6256DF931CC1.png",
+        "inspected": true
+      },
+      {
+        "file": "accessibility-recheck-normal-editor-subtask-actions.png",
+        "source": "6E58DBAC-501E-4FD2-BE58-7B55B5A61CF8.png",
+        "inspected": true
+      },
+      {
+        "file": "accessibility-recheck-normal-editor-overview.png",
+        "source": "EFACC417-A3CA-43BD-9B3D-E0A2C7E0A314.png",
+        "inspected": true
+      },
+      {
+        "file": "accessibility-recheck-normal-quick-capture.png",
+        "source": "2D2ACC32-42A8-4101-BEC8-5E22EEF53EC5.png",
+        "inspected": true
+      },
+      {
+        "file": "accessibility-recheck-largest-saved-task-list.png",
+        "source": "B2BC623C-D86C-4EC2-9960-DF0E193DE397.png",
+        "inspected": true
+      },
+      {
+        "file": "accessibility-recheck-largest-editor-subtask-actions.png",
+        "source": "01BF8C2D-8EAA-4F9B-8EFB-B1E5BEB12F12.png",
+        "inspected": true
+      },
+      {
+        "file": "accessibility-recheck-largest-editor-overview.png",
+        "source": "734D3FD7-FAD5-4A41-A228-7CDA47AD19B1.png",
+        "inspected": true
+      },
+      {
+        "file": "accessibility-recheck-largest-quick-capture.png",
+        "source": "A0AC5AAA-C022-40A3-AB56-E2709FD17A04.png",
+        "inspected": true
+      }
+    ],
+    "observations": [
+      "Normal notes deliberately end in an ellipsis; the editor shows the full text. Largest notes wrap and extend below the current viewport.",
+      "Estimate chip and Search inbox text appear complete in these captures; retained audit findings still require resolution or documented, independently justified classification.",
+      "Largest-text editor and capture require vertical scrolling. Captures alone do not prove all controls or screen-reader navigation."
+    ],
+    "imagesLocatedIn": "TaskFold-iOS/docs/usability-previews"
+  },
+  "abandonedExperiment": {
+    "change": "One-point vertical chip-label padding in both repos",
+    "iOSResult": "chip-headroom-audit-v1.xcresult",
+    "outcome": "Failed before the audit because the complete native input was absent. No clipping result was obtained.",
+    "macBuild": "chip-headroom-mac-build-v1.log",
+    "macOutcome": "Failed because the isolated signing setup required a development certificate.",
+    "shipped": false,
+    "disposition": "Padding reverted in both owned sources; no product fix claimed."
+  },
+  "cloudReturn": {
+    "case": "testAuthorizedAccessibilityAuditRestoresPrimaryCloudWorkspace",
+    "resultBundle": "accessibility-recheck-restore-v2.xcresult",
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "behavior": "Existing isolated primary cloud account Today task is visible before and after normal process relaunch. No sign-in or source data mutation.",
+    "buildScope": "Cleanup ran from the experiment product; it does not exercise or validate the reverted chip layout."
+  },
+  "preservation": {
+    "primary": {
+      "allExistingRowsExactlyPreserved": true,
+      "cachedTableCount": 15,
+      "newlyFetchedRows": {
+        "view_preferences": 1,
+        "projects": 2
+      },
+      "all14ServerTablesPreservedIgnoringOnlyIntentionalProjectOrder": true,
+      "pendingExactlyPreserved": true,
+      "pendingCount": 0,
+      "pendingMethods": []
+    },
+    "secondary": {
+      "allExistingRowsExactlyPreserved": true,
+      "cachedTableCount": 15,
+      "newlyFetchedRows": {},
+      "all14ServerTablesPreservedIgnoringOnlyIntentionalProjectOrder": true,
+      "pendingExactlyPreserved": true,
+      "pendingCount": 1,
+      "pendingMethods": [
+        "ORDER"
+      ]
+    }
+  },
+  "remaining": [
+    "Resolve/classify retained clipping findings with appropriate functional and assistive-technology evidence.",
+    "Actual VoiceOver and broader keyboard critical journeys.",
+    "All other current P0_RELEASE_STATUS gates; full objective remains incomplete."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native iPhone landscape capture controls and durable persistence, normal/light and Accessibility XXXL/dark.",
+  "productionCodeChanged": false,
+  "build": "ios-landscape-capture-build-v3.log: TEST BUILD SUCCEEDED; strict genuine app/widget/runner signing receipt retained.",
+  "nativeResult": "ios-landscape-capture-native-v2.xcresult",
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "checks": [
+    "Actual wide native window after rotation",
+    "Type unique title and dismiss keyboard through named native control",
+    "Change Today to Tomorrow and back through real menu",
+    "Select Inbox through real project menu",
+    "Save and relaunch without reseeding; saved task accessibility element exists",
+    "Original fixture task identities/titles/estimates retained; final cache contains exactly three original open tasks plus one correctly dated open capture; queue empty"
+  ],
+  "limits": [
+    "Keyboard-visible date controls remain partly clipped; hiding keyboard and scrolling makes date/project controls fully reachable. No product layout change made.",
+    "Largest-text final Today screenshot does not visibly show saved task; the native query and durable cache prove persistence only. General largest-text landscape Today list reachability/readability is not accepted.",
+    "Largest controls screenshot has draft title above scroll viewport while date/priority/project remain visible; simultaneous visibility is not claimed.",
+    "No spoken VoiceOver, other landscape periods, installed Mac widget, APNs or distribution acceptance added.",
+    "Structured runtime warning list empty; Apple framework/debugger console diagnostics remain disclosed."
+  ],
+  "intermediateFailures": [
+    "build-v1: new test used nonexistent lastMatch API; corrected before execution.",
+    "native-v1: both cases stopped at ambiguous Today selector (menu and underlying tab); scoped selector to menu collection. No product failure or native pass claimed for v1."
+  ],
+  "protectedAccounts": [
+    {
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "protectedFileCount": 26,
+      "fullFileSetAndHashesExact": true
+    },
+    {
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "protectedFileCount": 43,
+      "fullFileSetAndHashesExact": true
+    }
+  ],
+  "finalIsolatedFixture": {
+    "tasks": 4,
+    "originalTasksBusinessFieldsExact": true,
+    "newTaskTitle": "Landscape accessible capture",
+    "newTaskDueDate": "2026-10-11",
+    "newTaskProject": "Inbox",
+    "pending": 0
+  },
+  "sourceSha256": {
+    "TaskfoldUITests/TaskfoldUITests.swift": "7162be9c9c0b2cea303fdc4a1ef50cb14d6295c7dbc6cb5e3218550c77ac3bc2"
+  }
+}

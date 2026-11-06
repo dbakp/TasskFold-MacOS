@@ -1,0 +1,22 @@
+[
+  {
+    "product": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "product": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "product": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "product": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app",
+    "exit": 0,
+    "output": ""
+  }
+]

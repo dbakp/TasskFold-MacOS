@@ -1,0 +1,22 @@
+{
+  "Taskfold/Core/Store.swift": {
+    "ownSHA256": "56419532523dcd35e8ba2572cf544ada2fc0b37a3af003746075781524dd29c7",
+    "preparedSHA256": "fc386ffe4cefd3204d9dec17078fcb4856cdc665d5bb5ca904ec2a7f0328a9b8",
+    "namespaceOnlyTransformation": true
+  },
+  "Taskfold/TaskfoldMacApp.swift": {
+    "ownSHA256": "0c1b780bbf6c4a94f8d9211e74d75babc071daf82cf3daf8eb73ab362e909bbc",
+    "preparedSHA256": "0c1b780bbf6c4a94f8d9211e74d75babc071daf82cf3daf8eb73ab362e909bbc",
+    "namespaceOnlyTransformation": true
+  },
+  "Taskfold/Views/TaskInspector.swift": {
+    "ownSHA256": "8b1cc616e01d17d82bee94d26d7d48642d3aa28765c777b506eeede75ed1bcc9",
+    "preparedSHA256": "8b1cc616e01d17d82bee94d26d7d48642d3aa28765c777b506eeede75ed1bcc9",
+    "namespaceOnlyTransformation": true
+  },
+  "TaskfoldUITests/TaskfoldMacUITests.swift": {
+    "ownSHA256": "126621c7c8464ddd5659e32c0d55bea8b0a84b2e4f7353a0c1137ba7a7888e13",
+    "preparedSHA256": "126621c7c8464ddd5659e32c0d55bea8b0a84b2e4f7353a0c1137ba7a7888e13",
+    "namespaceOnlyTransformation": true
+  }
+}

@@ -26,10 +26,22 @@ private final class HTTPGate: @unchecked Sendable {
     func release(_ status: Int, _ data: Data) { lock.lock(); let request = held; held = nil; lock.unlock(); request?.finish(status, data) }
 }
 
+private final class SessionDiskFixture: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored = "original"
+    var value: String { lock.lock(); defer { lock.unlock() }; return stored }
+    func save(_ value: String) { lock.lock(); stored = value; lock.unlock() }
+}
+
 final class AccountTransportTests: XCTestCase {
     let owner = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", other = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
     func signed(_ account: String, token: String = "old") throws -> Session {
         try JSONDecoder().decode(Session.self, from: Data(("{\"access_token\":\"" + token + "\",\"refresh_token\":\"refresh\",\"expires_in\":3600,\"user\":{\"id\":\"" + account + "\"}}").utf8))
+    }
+    private func replyToPreparation(_ request: URLRequest, _ transport: ScopedHTTP) -> Bool {
+        guard request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof") == nil else { return false }
+        let body: [String: JSON] = ["prepared": .bool(true), "account": .string(owner), "proof": .string("fixture." + String(repeating: "a", count: 43))]
+        transport.finish(200, try! JSONEncoder().encode(body)); return true
     }
     @MainActor func backend(_ session: Session, save: @escaping (Session?) throws -> Void = { _ in }) -> Backend {
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ScopedHTTP.self]
@@ -162,7 +174,7 @@ extension AccountTransportTests {
         }
         defer { ScopedHTTP.handler=nil }
         let confirmed=try await api.sendReminderDevice(active); XCTAssertEqual(confirmed.state,"registered")
-        try api.clearSession()
+        try await api.clearSession()
         let cleared=try await api.sendReminderDevice(retired); XCTAssertEqual(cleared.state,"retired")
     }
     @MainActor func testDeviceBindingResponseAfterSameAccountReentryCannotBeAccepted() async throws {
@@ -302,5 +314,747 @@ extension AccountTransportTests {
             catch { XCTAssertTrue(error.localizedDescription.contains("supported delay")) }
         }
         XCTAssertEqual(calls, 3)
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testAvatarResponseAfterAccountSwitchOrReentryIsDiscarded() async throws {
+        for destination in [other, owner] {
+            let api = backend(try signed(owner)), gate = HTTPGate()
+            let started = expectation(description: "Avatar upload held")
+            let next = try JSONEncoder().encode(signed(destination, token: "new-login"))
+            ScopedHTTP.handler = { request, transport in
+                if request.url?.path == "/auth/v1/token" { transport.finish(200, next) }
+                else {
+                    XCTAssertTrue(request.url!.path.hasPrefix("/storage/v1/object/avatars/" + self.owner + "/"))
+                    XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+                    gate.hold(transport); started.fulfill()
+                }
+            }
+            defer { ScopedHTTP.handler = nil }
+            let upload = Task { @MainActor in try await api.uploadAvatar(Data([1, 2, 3]), expectedAccount: self.owner) }
+            await fulfillment(of: [started], timeout: 3)
+            _ = try await api.signIn(email: "fixture@example.invalid", password: "fixture", signup: false)
+            gate.release(200, Data())
+            do { _ = try await upload.value; XCTFail("A stale upload returned a profile URL") }
+            catch { XCTAssertTrue(error is CancellationError) }
+            XCTAssertEqual(gate.count, 1)
+            XCTAssertEqual(api.session?.user.id, destination)
+        }
+    }
+    @MainActor func testAvatarRejectsStalePickerOwnerBeforeHTTP() async throws {
+        let api = backend(try signed(other)); var calls = 0
+        ScopedHTTP.handler = { _, transport in calls += 1; transport.finish(200, Data()) }
+        defer { ScopedHTTP.handler = nil }
+        do { _ = try await api.uploadAvatar(Data([1]), expectedAccount: owner); XCTFail("Stale picker used new credentials") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(calls, 0)
+    }
+    @MainActor func testAvatarUploadReturnsOriginalOwnersURLOnSuccess() async throws {
+        let api = backend(try signed(owner)); var calls = 0
+        ScopedHTTP.handler = { request, transport in
+            calls += 1
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "image/jpeg")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+            XCTAssertTrue(request.url!.path.hasPrefix("/storage/v1/object/avatars/" + self.owner + "/"))
+            transport.finish(200, Data())
+        }
+        defer { ScopedHTTP.handler = nil }
+        let url = try await api.uploadAvatar(Data([1, 2, 3]), expectedAccount: owner)
+        XCTAssertTrue(url.hasPrefix("https://native-scope.test/storage/v1/object/public/avatars/" + owner + "/"))
+        XCTAssertTrue(url.hasSuffix(".jpg")); XCTAssertEqual(calls, 1)
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testAvatarCannotStartStorageAfterAccountChangesDuringRefresh() async throws {
+        var expired = try signed(owner); expired.expires_at = 0
+        let api = backend(expired), gate = HTTPGate()
+        let started = expectation(description: "Avatar token refresh held")
+        let next = try JSONEncoder().encode(signed(other, token: "new-login"))
+        let old = try JSONEncoder().encode(signed(owner, token: "refreshed-old"))
+        var storageCalls = 0
+        ScopedHTTP.handler = { request, transport in
+            if request.url?.query?.contains("refresh_token") == true { gate.hold(transport); started.fulfill() }
+            else if request.url?.path == "/auth/v1/token" { transport.finish(200, next) }
+            else { storageCalls += 1; transport.finish(200, Data()) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        let upload = Task { @MainActor in try await api.uploadAvatar(Data([1]), expectedAccount: self.owner) }
+        await fulfillment(of: [started], timeout: 3)
+        _ = try await api.signIn(email: "fixture@example.invalid", password: "fixture", signup: false)
+        gate.release(200, old)
+        do { _ = try await upload.value; XCTFail("Old picker crossed a refresh/account boundary") }
+        catch { /* Both cancellation forms leave the new account intact. */ }
+        XCTAssertEqual(storageCalls, 0); XCTAssertEqual(api.session?.user.id, other)
+    }
+    @MainActor func testSuspendedSessionAcceptanceCannotResurrectAfterSignOut() async throws {
+        let started = expectation(description: "Session write held")
+        var release: CheckedContinuation<Void, Never>?
+        let current = try signed(owner), next = try signed(other)
+        let api = Backend(configuration: [:], session: current, persistSession: { value in
+            if value != nil {
+                await withCheckedContinuation { release = $0; started.fulfill() }
+            }
+        })
+        let accepting = Task { try await api.accept(next) }
+        await fulfillment(of: [started], timeout: 3)
+        do { _ = try await api.request("/rest/v1/tasks"); XCTFail("A credential transition used the previous session") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        try await api.clearSession()
+        release?.resume()
+        do { try await accepting.value; XCTFail("A delayed sign-in revived the cleared session") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertNil(api.session)
+    }
+
+    @MainActor func testFailedSessionClearRetainsCurrentSession() async throws {
+        let current = try signed(owner)
+        let api = Backend(configuration: [:], session: current, persistSession: { _ in
+            throw AppFailure(message: "Test keychain unavailable")
+        })
+        do { try await api.clearSession(); XCTFail("Failed clearing must be reported") }
+        catch { XCTAssertEqual(error.localizedDescription, "Test keychain unavailable") }
+        XCTAssertEqual(api.session?.user.id, owner)
+    }
+
+    @MainActor func testSessionWritesRunOffMainAndClearFollowsHeldSave() async throws {
+        let started = expectation(description: "Save started off main")
+        let clear = expectation(description: "Clear finished off main")
+        let gate = DispatchSemaphore(value: 0)
+        let durable = SessionDiskFixture()
+        let save = Task {
+            try await SessionPersistence.perform {
+                XCTAssertFalse(Thread.isMainThread)
+                started.fulfill()
+                guard gate.wait(timeout: .now() + 5) == .success else { throw AppFailure(message: "Test gate timed out") }
+                durable.save("saved")
+            }
+        }
+        await fulfillment(of: [started], timeout: 3)
+        let remove = Task {
+            try await SessionPersistence.perform {
+                XCTAssertFalse(Thread.isMainThread)
+                durable.save("cleared")
+                clear.fulfill()
+            }
+        }
+        // This code still executes on the main actor while the credential write is held.
+        XCTAssertTrue(Thread.isMainThread)
+        gate.signal()
+        try await save.value; try await remove.value
+        await fulfillment(of: [clear], timeout: 3)
+        XCTAssertEqual(durable.value, "cleared")
+    }
+
+    @MainActor func testDelayedClearCannotEraseNewAcceptedSession() async throws {
+        let started = expectation(description: "Credential clear held")
+        var release: CheckedContinuation<Void, Never>?
+        let current = try signed(owner), next = try signed(other)
+        let api = Backend(configuration: [:], session: current, persistSession: { value in
+            if value == nil {
+                await withCheckedContinuation { release = $0; started.fulfill() }
+            }
+        })
+        let clearing = Task { try await api.clearSession() }
+        await fulfillment(of: [started], timeout: 3)
+        try await api.accept(next)
+        release?.resume()
+        do { try await clearing.value; XCTFail("An old sign-out erased a newer sign-in") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(api.session?.user.id, other)
+        XCTAssertEqual(api.session?.access_token, next.access_token)
+    }
+
+}
+
+extension AccountTransportTests {
+    @MainActor func testPasswordResponseCannotReturnAfterSignOut() async throws {
+        let gate = HTTPGate(), started = expectation(description: "Password response held")
+        var writes = 0
+        let api = backend(try signed(owner), save: { _ in writes += 1 })
+        let response = try JSONEncoder().encode(signed(other, token: "late"))
+        ScopedHTTP.handler = { _, transport in gate.hold(transport); started.fulfill() }
+        defer { ScopedHTTP.handler = nil }
+        let signingIn = Task { try await api.signIn(email: "late@example.invalid", password: "fixture", signup: false) }
+        await fulfillment(of: [started], timeout: 3)
+        try await api.clearSession()
+        gate.release(200, response)
+        do { _ = try await signingIn.value; XCTFail("An abandoned password response signed in again") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertNil(api.session)
+        XCTAssertEqual(writes, 1, "Only the explicit clear may persist")
+    }
+
+    @MainActor func testEarlierPasswordResponseCannotReplaceNewerSignIn() async throws {
+        let gate = HTTPGate(), started = expectation(description: "First password response held")
+        var saved: Session?
+        let api = backend(try signed(owner), save: { saved = $0 })
+        let old = try JSONEncoder().encode(signed(owner, token: "late-old"))
+        let next = try JSONEncoder().encode(signed(other, token: "latest"))
+        var calls = 0
+        ScopedHTTP.handler = { _, transport in
+            calls += 1
+            if calls == 1 { gate.hold(transport); started.fulfill() }
+            else { transport.finish(200, next) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        let earlier = Task { try await api.signIn(email: "earlier@example.invalid", password: "fixture", signup: false) }
+        await fulfillment(of: [started], timeout: 3)
+        let accepted = try await api.signIn(email: "latest@example.invalid", password: "fixture", signup: false)
+        XCTAssertTrue(accepted)
+        gate.release(200, old)
+        do { _ = try await earlier.value; XCTFail("Earlier authentication replaced the user's newer choice") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(api.session?.user.id, other)
+        XCTAssertEqual(saved?.access_token, "latest")
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testTemplateEditsUseGuardedRPCAndConfirmSavedFields() async throws {
+        let api=backend(try signed(owner)),id="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+        let base:[String:JSON]=["id":.string(id),"user_id":.string(owner),"name":.string("Original"),"document":.object(["version":.number(1)])]
+        var response=base;response["name"] = .string("Edited")
+        let data=try JSONEncoder().encode(Record(response)),called=expectation(description:"Guarded template edit")
+        ScopedHTTP.handler={request,transport in
+            XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_edit_template");XCTAssertEqual(request.httpMethod,"POST")
+            let body=try? JSONDecoder().decode([String:JSON].self,from:request.httpBody ?? { let stream=request.httpBodyStream!;stream.open();defer{stream.close()};var data=Data(),buffer=[UInt8](repeating:0,count:4096);while stream.hasBytesAvailable { let count=stream.read(&buffer,maxLength:buffer.count);if count<=0{break};data.append(buffer,count:count) };return data }())
+            XCTAssertEqual(body?["_base"],.object(base));XCTAssertEqual(body?["_changes"],.object(["name":.string("Edited")]));XCTAssertEqual(body?["_delete"],.bool(false))
+            transport.finish(200,data);called.fulfill()
+        }
+        defer{ScopedHTTP.handler=nil}
+        let saved=try await api.send(Mutation(table:WorkflowTemplate.table,recordID:id,method:"PATCH",fields:["name":.string("Edited")],baseline:base),expectedAccount:owner)
+        XCTAssertEqual(saved?.name,"Edited");await fulfillment(of:[called],timeout:2)
+    }
+    @MainActor func testTemplateConflictAndMissingBaselineNeverSendBlindPatch() async throws {
+        let api=backend(try signed(owner)),gate=HTTPGate(),id="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+        ScopedHTTP.handler={_,transport in gate.hold(transport);transport.finish(409,Data(#"{"message":"TASKFOLD_CONFLICT: overlapping template"}"#.utf8))}
+        defer{ScopedHTTP.handler=nil}
+        let base:[String:JSON]=["name":.string("Original"),"document":.object(["version":.number(1)])]
+        do{_ = try await api.send(Mutation(table:WorkflowTemplate.table,recordID:id,method:"PATCH",fields:["name":.string("Edited")]));XCTFail("Missing baseline sent")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))}
+        XCTAssertEqual(gate.count,0)
+        do{_ = try await api.send(Mutation(table:WorkflowTemplate.table,recordID:id,method:"PATCH",fields:["name":.string("Edited")],baseline:base));XCTFail("Overlap accepted")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))}
+        XCTAssertEqual(gate.count,1)
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testTemplateRestoreCannotUpsertOverAnotherDevicesEdit() async throws {
+        let api=backend(try signed(owner)),id="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+        let desired:[String:JSON]=["id":.string(id),"user_id":.string(owner),"name":.string("Older restored copy"),"document":.object(["version":.number(1)])]
+        var remote=desired;remote["name"] = .string("Other device edited this")
+        let data=try JSONEncoder().encode([Record(remote)]),posted=expectation(description:"Insert ignores existing identity"),fetched=expectation(description:"Existing template compared")
+        ScopedHTTP.handler={request,transport in
+            if request.httpMethod=="POST" {
+                XCTAssertTrue(request.value(forHTTPHeaderField:"Prefer")?.contains("resolution=ignore-duplicates")==true)
+                transport.finish(200,Data("[]".utf8));posted.fulfill()
+            } else { transport.finish(200,data);fetched.fulfill() }
+        }
+        defer{ScopedHTTP.handler=nil}
+        do { _ = try await api.send(Mutation(table:WorkflowTemplate.table,recordID:id,method:"POST",fields:desired));XCTFail("A stale restoration overwrote the current template") }
+        catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"),error.localizedDescription) }
+        await fulfillment(of:[posted,fetched],timeout:2)
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testProductivityGoalCreationAndEditsUseGuardedRPCWithExactBaselines() async throws {
+        let api=backend(try signed(owner)),owner=self.owner
+        var goals=try ProductivityGoals();goals.timeZone="UTC";goals.dailyTarget=5;goals.weeklyTarget=20
+        let first=try ProductivityGoalEdit.command(goals.document,previous:nil,account:owner)
+        var original=ProductivityGoalEdit.emptyRow(account:owner);original[ProductivityGoals.field]=goals.document
+        goals.dailyTarget=6;let second=try ProductivityGoalEdit.command(goals.document,previous:original,account:owner)
+        let expected=[first,second],called=expectation(description:"Guarded goal saves");called.expectedFulfillmentCount=2
+        var index=0
+        ScopedHTTP.handler={request,transport in
+            XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_set_productivity_goals");XCTAssertEqual(request.httpMethod,"POST")
+            let data=request.httpBody ?? {let stream=request.httpBodyStream!;stream.open();defer{stream.close()};var data=Data(),buffer=[UInt8](repeating:0,count:4096);while stream.hasBytesAvailable {let count=stream.read(&buffer,maxLength:buffer.count);if count<=0{break};data.append(buffer,count:count)};return data}()
+            let body=try? JSONDecoder().decode([String:JSON].self,from:data),change=expected[index];index+=1
+            XCTAssertEqual(body,["_base":change.baseline![ProductivityGoals.field]!,"_goals":change.fields[ProductivityGoals.field]!])
+            var saved=ProductivityGoalEdit.emptyRow(account:owner);saved[ProductivityGoals.field]=change.fields[ProductivityGoals.field]!;saved["sort_by"] = .string("title")
+            transport.finish(200,try! JSONEncoder().encode(saved));called.fulfill()
+        }
+        defer{ScopedHTTP.handler=nil}
+        let savedFirst=try await api.send(first,expectedAccount:owner);XCTAssertEqual(savedFirst?[ProductivityGoals.field],first.fields[ProductivityGoals.field])
+        let savedSecond=try await api.send(second,expectedAccount:owner);XCTAssertEqual(savedSecond?[ProductivityGoals.field],second.fields[ProductivityGoals.field])
+        await fulfillment(of:[called],timeout:2)
+    }
+    @MainActor func testGoalUnknownBaselineNeedsReviewAndConflictPropagatesWithoutBlindPatch() async throws {
+        let api=backend(try signed(owner)),gate=HTTPGate()
+        var goals=try ProductivityGoals();goals.timeZone="UTC";goals.dailyTarget=3
+        var change=try ProductivityGoalEdit.command(goals.document,previous:nil,account:owner)
+        change.baseline?[ProductivityGoals.field] = .object(["version":.number(2)])
+        ScopedHTTP.handler={_,transport in gate.hold(transport);transport.finish(400,Data(#"{"message":"TASKFOLD_CONFLICT: Goals changed"}"#.utf8))};defer{ScopedHTTP.handler=nil}
+        do{_ = try await api.send(change);XCTFail("Unsupported baseline sent")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))};XCTAssertEqual(gate.count,0)
+        change.baseline?[ProductivityGoals.field] = .null
+        do{_ = try await api.send(change);XCTFail("Stale save accepted")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))};XCTAssertEqual(gate.count,1)
+    }
+    @MainActor func testGoalServerAcknowledgementMustConfirmOwnerAndCompleteChoice() async throws {
+        let api=backend(try signed(owner));var goals=try ProductivityGoals();goals.timeZone="UTC";goals.dailyTarget=3
+        let change=try ProductivityGoalEdit.command(goals.document,previous:nil,account:owner)
+        var wrong=ProductivityGoalEdit.emptyRow(account:owner);wrong[ProductivityGoals.field] = .null
+        let data=try JSONEncoder().encode(wrong)
+        ScopedHTTP.handler={_,transport in transport.finish(200,data)};defer{ScopedHTTP.handler=nil}
+        do{_ = try await api.send(change);XCTFail("Unconfirmed goal choice was acknowledged")}catch{XCTAssertTrue(error.localizedDescription.contains("did not confirm"))}
+    }
+}
+
+
+extension AccountTransportTests {
+    @MainActor func testAccountRemovalRequiresExplicitBooleanConfirmation() async throws {
+        let api = backend(try signed(owner))
+        defer { ScopedHTTP.handler = nil }
+        for body in ["", "{}", "null", "[]", "{\"deleted\":false}", "{\"deleted\":\"true\"}", "not JSON", String(repeating: " ", count: 5000) + "{\"deleted\":true}"] {
+            ScopedHTTP.handler = { request, transport in
+                XCTAssertEqual(request.url?.path, "/functions/v1/delete-account")
+                XCTAssertEqual(request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal"), "2")
+                XCTAssertEqual(request.httpMethod, "POST")
+                if self.replyToPreparation(request, transport) { return }
+                transport.finish(200, Data(body.utf8))
+            }
+            do { try await api.deleteAccount(); XCTFail("Unconfirmed removal accepted: " + body) }
+            catch { XCTAssertTrue(error.localizedDescription.contains("did not confirm")) }
+            XCTAssertEqual(api.session?.user.id, owner)
+        }
+        ScopedHTTP.handler = { request, transport in
+            if request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof") == nil {
+                let body: [String: JSON] = ["prepared": .bool(true), "account": .string(self.owner), "proof": .string("fixture." + String(repeating: "a", count: 43))]
+                transport.finish(200, try! JSONEncoder().encode(body))
+            } else { transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        }
+        try await api.deleteAccount()
+        // Store owns local cleanup after confirmation; the transport never clears a session.
+        XCTAssertEqual(api.session?.user.id, owner)
+    }
+    @MainActor func testDelayedRemovalCannotConfirmForAnotherAccountOrNewSignIn() async throws {
+        for destination in [other, owner] {
+            let gate = HTTPGate(), started = expectation(description: "Deletion response held")
+            let api = backend(try signed(owner))
+            ScopedHTTP.handler = { request, transport in
+                if self.replyToPreparation(request, transport) { return }
+                gate.hold(transport); started.fulfill()
+            }
+            defer { ScopedHTTP.handler = nil }
+            let deleting = Task { @MainActor in try await api.deleteAccount() }
+            await fulfillment(of: [started], timeout: 3)
+            try await api.accept(signed(destination, token: "new"))
+            gate.release(200, Data(#"{"deleted":true}"#.utf8))
+            do { try await deleting.value; XCTFail("Old response confirmed a newer workspace") }
+            catch { XCTAssertTrue(error is CancellationError) }
+            XCTAssertEqual(api.session?.user.id, destination)
+            XCTAssertEqual(api.session?.access_token, "new")
+        }
+    }
+    @MainActor func testRemovalRefusalPreservesSessionAndDoesNotReportSuccess() async throws {
+        let api = backend(try signed(owner))
+        ScopedHTTP.handler = { _, transport in transport.finish(503, Data(#"{"error":"Retry removal"}"#.utf8)) }
+        defer { ScopedHTTP.handler = nil }
+        do { try await api.deleteAccount(); XCTFail("Refused removal reported success") }
+        catch { XCTAssertEqual(error.localizedDescription, "Retry removal") }
+        XCTAssertEqual(api.session?.user.id, owner)
+        XCTAssertEqual(api.session?.access_token, "old")
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testPersistedRemovalUsesOriginalTokenAfterExpiryAndAnotherAccountSignIn() async throws {
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand().prepared(with: "fixture." + String(repeating: "a", count: 43))
+        var next = try signed(other, token: "B-current"); next.expires_at = 0
+        try await api.accept(next)
+        var calls = 0
+        ScopedHTTP.handler = { request, transport in
+            calls += 1
+            XCTAssertEqual(request.url?.path, "/functions/v1/delete-account")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+            XCTAssertFalse(request.httpShouldHandleCookies)
+            transport.finish(200, Data(#"{"deleted":true}"#.utf8))
+        }
+        defer { ScopedHTTP.handler = nil }
+        try await api.performAccountRemoval(command)
+        XCTAssertEqual(calls, 1); XCTAssertEqual(api.session?.user.id, other); XCTAssertEqual(api.session?.access_token, "B-current")
+    }
+    @MainActor func testLostRemovalReplyRetriesExactAuthorizationWithoutRefreshingDeadSession() async throws {
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand().prepared(with: "fixture." + String(repeating: "a", count: 43))
+        var calls = 0
+        ScopedHTTP.handler = { request, transport in
+            calls += 1
+            XCTAssertEqual(request.url?.path, "/functions/v1/delete-account")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+            if calls == 1 { transport.finish(503, Data(#"{"error":"Reply lost; retry"}"#.utf8)) }
+            else { transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        do { try await api.performAccountRemoval(command); XCTFail("Lost result was accepted") } catch {}
+        api.session?.expires_at = 0
+        try await api.performAccountRemoval(command)
+        XCTAssertEqual(calls, 2); XCTAssertEqual(api.session?.access_token, "old")
+    }
+    @MainActor func testRemovalCommandCannotSendItsBearerToChangedServerAndConfirmedRecoveryNeedsNoNetwork() async throws {
+        let api = backend(try signed(owner))
+        var calls = 0
+        ScopedHTTP.handler = { _, transport in calls += 1; transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        defer { ScopedHTTP.handler = nil }
+        let foreign = try AccountRemovalCommand(account: owner, origin: "https://another.test", authorization: "private-fixture")
+        do { try await api.performAccountRemoval(foreign); XCTFail("Bearer reached another host") } catch {}
+        var confirmed = try await api.accountRemovalCommand().prepared(with: "fixture." + String(repeating: "a", count: 43)); confirmed.confirmed = true
+        try await api.performAccountRemoval(confirmed)
+        XCTAssertEqual(calls, 0)
+    }
+}
+
+
+extension AccountTransportTests {
+    @MainActor func testExplicitRemovalRefusalCanRenewOnlyCurrentAccountBeforeRetry() async throws {
+        let api = backend(try signed(owner)), original = try await api.accountRemovalCommand().prepared(with: "fixture." + String(repeating: "a", count: 43))
+        let refreshed = try JSONEncoder().encode(signed(owner, token: "renewed"))
+        var calls: [String] = []
+        ScopedHTTP.handler = { request, transport in
+            let path = request.url!.path; calls.append(path)
+            if path == "/auth/v1/token" { transport.finish(200, refreshed) }
+            else if request.value(forHTTPHeaderField: "Authorization") == "Bearer old" { transport.finish(401, Data(#"{"error":"Sign in again"}"#.utf8)) }
+            else { XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer renewed"); transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        do { try await api.performAccountRemoval(original); XCTFail("401 accepted") }
+        catch { XCTAssertTrue(error is AccountRemovalAuthorizationRequired) }
+        XCTAssertEqual(calls, ["/functions/v1/delete-account"], "No automatic refresh may discard the original receipt authorization")
+        let replacement = try await api.accountRemovalCommand(forceRefresh: true).prepared(with: "fixture." + String(repeating: "a", count: 43))
+        XCTAssertEqual(replacement.account, owner); XCTAssertEqual(replacement.authorization, "renewed")
+        try await api.performAccountRemoval(replacement)
+        XCTAssertEqual(calls, ["/functions/v1/delete-account", "/auth/v1/token", "/functions/v1/delete-account"])
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testExecutionWithoutPersistableProofNeverSendsRequest() async throws {
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand()
+        var calls = 0
+        ScopedHTTP.handler = { _, _ in calls += 1 }; defer { ScopedHTTP.handler = nil }
+        do { try await api.performAccountRemoval(command); XCTFail("Unprepared deletion sent") } catch {}
+        XCTAssertEqual(calls, 0)
+    }
+    @MainActor func testPreparationRequiresMatchingAccountAndBoundedOpaqueProof() async throws {
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand()
+        defer { ScopedHTTP.handler = nil }
+        for body in [#"{"prepared":true,"account":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","proof":"a.b"}"#,
+                     #"{"prepared":true,"account":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","proof":"a.b"}"#,
+                     #"{"prepared":"true"}"#, #"{"deleted":true}"#] {
+            ScopedHTTP.handler = { request, transport in
+                XCTAssertNil(request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof"))
+                let sentBody = request.httpBody ?? { let stream = request.httpBodyStream!; stream.open(); defer { stream.close() }; var data = Data(), buffer = [UInt8](repeating: 0, count: 64); while stream.hasBytesAvailable { let n = stream.read(&buffer, maxLength: buffer.count); if n <= 0 { break }; data.append(buffer, count: n) }; return data }()
+                XCTAssertEqual(sentBody, Data(#"{"action":"prepare"}"#.utf8))
+                transport.finish(200, Data(body.utf8))
+            }
+            do { _ = try await api.prepareAccountRemoval(command); XCTFail("Invalid preparation accepted") } catch {}
+        }
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testConnectionRefreshReplaysTheOriginalIntentOnlyOnce() async throws {
+        for path in ["/functions/v1/automation-webhooks", "/functions/v1/automation-keys"] {
+            var refreshed = 0, requests = 0, intents: [[String:JSON]] = []
+            let api = backend(try signed(owner)), next = try JSONEncoder().encode(signed(owner,token:"renewed"))
+            ScopedHTTP.handler = { request, transport in
+                if request.url?.path == "/auth/v1/token" { refreshed += 1; transport.finish(200,next); return }
+                XCTAssertEqual(request.url?.path,path)
+                requests += 1
+                var data = request.httpBody ?? Data()
+                if let stream = request.httpBodyStream {
+                    stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating:0,count:4096)
+                    while stream.hasBytesAvailable { let n = stream.read(&bytes,maxLength:bytes.count); if n <= 0 { break }; data.append(bytes,count:n) }
+                }
+                if let body = try? JSONDecoder().decode([String:JSON].self,from:data) { intents.append(body) }
+                if requests == 1 { transport.finish(401,Data(#"{"message":"Expired"}"#.utf8)) }
+                else {
+                    XCTAssertEqual(request.value(forHTTPHeaderField:"Authorization"),"Bearer renewed")
+                    transport.finish(200,try! JSONEncoder().encode(["account":JSON.string(self.owner)]))
+                }
+            }
+            defer { ScopedHTTP.handler = nil }
+            let fields:[String:JSON] = ["id":.string(UUID().uuidString.lowercased()),"name":.string("Synthetic connection")]
+            if path.hasSuffix("webhooks") { _ = try await api.webhookReceipt(action:"create",body:fields,account:owner,origin:"https://native-scope.test") }
+            else { _ = try await api.request(path,method:"POST",body:["action":.string("create"),"body":.object(fields)],extra:["X-Taskfold-Automation":"1"],expectedAccount:owner) }
+            XCTAssertEqual(refreshed,1); XCTAssertEqual(requests,2); XCTAssertEqual(intents.count,2)
+            XCTAssertTrue(intents.first == intents.last,"Automatic renewal must replay the original intent")
+            XCTAssertEqual(api.session?.user.id,owner)
+        }
+    }
+    @MainActor func testConnectionRepeated401RequiresSignInWithoutExposingServerDetails() async throws {
+        for path in ["/functions/v1/automation-webhooks", "/functions/v1/automation-keys"] {
+            var renewals = 0, requests = 0
+            let api = backend(try signed(owner)), next = try JSONEncoder().encode(signed(owner,token:"renewed"))
+            ScopedHTTP.handler = { request, transport in
+                if request.url?.path == "/auth/v1/token" { renewals += 1; transport.finish(200,next) }
+                else { requests += 1; transport.finish(401,Data(#"{"message":"PRIVATE SERVER DETAIL"}"#.utf8)) }
+            }
+            defer { ScopedHTTP.handler = nil }
+            do { _ = try await api.request(path,method:"POST",body:["action":.string("list")],expectedAccount:owner); XCTFail("Rejected session accepted") }
+            catch { XCTAssertTrue(error is AccountSessionAuthorizationRequired); XCTAssertFalse(error.localizedDescription.contains("PRIVATE")) }
+            XCTAssertEqual(renewals,1); XCTAssertEqual(requests,2)
+            XCTAssertEqual(api.session?.user.id,owner,"Authorization failure must not discard the saved account")
+        }
+    }
+    @MainActor func testRevokedRefreshCodesRequireSignInButTransientFailuresDoNot() async throws {
+        for (status,code,requiresSignIn) in [
+            (400,"refresh_token_not_found",true),(400,"refresh_token_already_used",true),
+            (400,"session_expired",true),(422,"session_not_found",true),
+            (400,"unexpected_failure",false),(429,"over_request_rate_limit",false),
+            (500,"session_expired",false)
+        ] {
+            let api = backend(try signed(owner)); var refreshes = 0, requests = 0
+            ScopedHTTP.handler = { request, transport in
+                if request.url?.path == "/auth/v1/token" {
+                    refreshes += 1
+                    transport.finish(status,try! JSONEncoder().encode(["code":code,"message":"PRIVATE AUTH DETAIL"]))
+                } else { requests += 1; transport.finish(401,Data(#"{"message":"Expired"}"#.utf8)) }
+            }
+            defer { ScopedHTTP.handler = nil }
+            do { _ = try await api.webhookReceipt(action:"list",body:[:],account:owner,origin:"https://native-scope.test"); XCTFail("Renewal failure accepted") }
+            catch { XCTAssertEqual(error is AccountSessionAuthorizationRequired,requiresSignIn); if requiresSignIn { XCTAssertFalse(error.localizedDescription.contains("PRIVATE")) } }
+            XCTAssertEqual(refreshes,1); XCTAssertEqual(requests,1)
+            XCTAssertEqual(api.session?.access_token,"old")
+        }
+    }
+    @MainActor func testLateRejectedConnectionRefreshCannotAffectAnotherAccount() async throws {
+        let gate = HTTPGate(), started = expectation(description:"Old account's refresh started")
+        let api = backend(try signed(owner)), otherSession = try JSONEncoder().encode(signed(other,token:"other"))
+        var requests = 0
+        ScopedHTTP.handler = { request, transport in
+            if request.url?.query?.contains("refresh_token") == true { gate.hold(transport); started.fulfill() }
+            else if request.url?.path == "/auth/v1/token" { transport.finish(200,otherSession) }
+            else { requests += 1; XCTAssertEqual(request.value(forHTTPHeaderField:"Authorization"),"Bearer old"); transport.finish(401,Data("{}".utf8)) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        let old = Task { @MainActor in try await api.webhookReceipt(action:"list",body:[:],account:self.owner,origin:"https://native-scope.test") }
+        await fulfillment(of:[started],timeout:3)
+        _ = try await api.signIn(email:"synthetic@example.invalid",password:"synthetic",signup:false)
+        gate.release(400,Data(#"{"code":"refresh_token_not_found"}"#.utf8))
+        do { _ = try await old.value; XCTFail("Old request must not recover under a different account") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(api.session?.user.id,other); XCTAssertEqual(requests,1)
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testReauthenticationAcceptsOnlyTheOriginalAccountAndInvalidatesOldScope() async throws {
+        var saves = 0, committing = false
+        let api = backend(try signed(owner),save:{ _ in saves += 1 })
+        let context = try api.reauthenticationContext(account:owner), next = try JSONEncoder().encode(signed(owner,token:"renewed"))
+        ScopedHTTP.handler = { _,transport in transport.finish(200,next) }; defer { ScopedHTTP.handler = nil }
+        let accepted = try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context,willCommit:{committing=true}); XCTAssertTrue(accepted)
+        XCTAssertTrue(committing); XCTAssertEqual(saves,1); XCTAssertEqual(api.session?.user.id,owner); XCTAssertEqual(api.session?.access_token,"renewed")
+        XCTAssertNotEqual(api.reminderSessionIncarnation,context.incarnation)
+        XCTAssertThrowsError(try api.requireReauthentication(context))
+    }
+    @MainActor func testReauthenticationRejectsOtherAccountBeforeCredentialWrite() async throws {
+        var saves = 0, committing = false
+        let api = backend(try signed(owner),save:{ _ in saves += 1 }), next = try JSONEncoder().encode(signed(other,token:"wrong"))
+        let context = try api.reauthenticationContext(account:owner)
+        ScopedHTTP.handler = { _,transport in transport.finish(200,next) }; defer { ScopedHTTP.handler = nil }
+        do { _ = try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context,willCommit:{committing=true}); XCTFail("Other account accepted") }
+        catch { XCTAssertTrue(error is AccountReauthenticationMismatch) }
+        XCTAssertFalse(committing); XCTAssertEqual(saves,0); XCTAssertEqual(api.session?.user.id,owner); XCTAssertEqual(api.session?.access_token,"old")
+        XCTAssertEqual(api.reminderSessionIncarnation,context.incarnation)
+    }
+    @MainActor func testStaleReauthenticationIsRefusedBeforeNetworkAndCannotCancelNewSignIn() async throws {
+        let api = backend(try signed(owner)), context = try api.reauthenticationContext(account:owner)
+        let next = try JSONEncoder().encode(signed(other,token:"other"));var requests=0
+        ScopedHTTP.handler = { _,transport in requests += 1;transport.finish(200,next) }; defer { ScopedHTTP.handler = nil }
+        _ = try await api.signIn(email:"other@example.invalid",password:"fixture",signup:false)
+        api.cancelReauthentication(context)
+        do { _ = try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context);XCTFail("Stale context sent") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(requests,1);XCTAssertEqual(api.session?.user.id,other)
+    }
+    @MainActor func testCancelledReauthenticationCannotCommitEvenIfHTTPStillReplies() async throws {
+        let gate=HTTPGate(),started=expectation(description:"Reauthentication is waiting")
+        var saves=0
+        let api=backend(try signed(owner),save:{_ in saves += 1}),context=try api.reauthenticationContext(account:owner)
+        ScopedHTTP.handler={_,transport in gate.hold(transport);started.fulfill()};defer{ScopedHTTP.handler=nil}
+        let waiting=Task { @MainActor in try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context) }
+        await fulfillment(of:[started],timeout:3)
+        api.cancelReauthentication(context)
+        gate.release(200,try JSONEncoder().encode(signed(owner,token:"late")))
+        do { _=try await waiting.value;XCTFail("Cancelled sign-in committed") } catch {XCTAssertTrue(error is CancellationError)}
+        XCTAssertEqual(saves,0);XCTAssertEqual(api.session?.access_token,"old");XCTAssertEqual(api.reminderSessionIncarnation,context.incarnation)
+    }
+    @MainActor func testOldReauthenticationCancellationDoesNotCancelNewAttempt() async throws {
+        let firstGate=HTTPGate(),secondGate=HTTPGate(),firstReady=expectation(description:"First attempt"),secondReady=expectation(description:"Second attempt")
+        var requests=0,saves=0
+        let api=backend(try signed(owner),save:{_ in saves += 1}),first=try api.reauthenticationContext(account:owner),second=try api.reauthenticationContext(account:owner)
+        ScopedHTTP.handler={_,transport in requests += 1;if requests==1 {firstGate.hold(transport);firstReady.fulfill()} else {secondGate.hold(transport);secondReady.fulfill()}};defer{ScopedHTTP.handler=nil}
+        let a=Task { @MainActor in try await api.signIn(email:"synthetic@example.invalid",password:"first",signup:false,reauthenticating:first) }
+        await fulfillment(of:[firstReady],timeout:3)
+        let b=Task { @MainActor in try await api.signIn(email:"synthetic@example.invalid",password:"second",signup:false,reauthenticating:second) }
+        await fulfillment(of:[secondReady],timeout:3)
+        api.cancelReauthentication(first)
+        firstGate.release(200,try JSONEncoder().encode(signed(owner,token:"old-attempt")))
+        do {_=try await a.value;XCTFail("Superseded sign-in accepted")} catch {XCTAssertTrue(error is CancellationError)}
+        secondGate.release(200,try JSONEncoder().encode(signed(owner,token:"new-attempt")))
+        let accepted=try await b.value;XCTAssertTrue(accepted);XCTAssertEqual(api.session?.access_token,"new-attempt");XCTAssertEqual(saves,1)
+    }
+    @MainActor func testReauthenticationCommitCallbackPrecedesHeldCredentialWrite() async throws {
+        let started=expectation(description:"Credential commit is held")
+        var committing=false,release:CheckedContinuation<Void,Never>?
+        let configuration=URLSessionConfiguration.ephemeral;configuration.protocolClasses=[ScopedHTTP.self]
+        let api=Backend(configuration:["URL":"https://native-scope.test","Key":"public"],http:URLSession(configuration:configuration),session:try signed(owner),persistSession:{_ in
+            XCTAssertTrue(committing);await withCheckedContinuation { release=$0;started.fulfill() }
+        })
+        let context=try api.reauthenticationContext(account:owner),data=try JSONEncoder().encode(signed(owner,token:"renewed"))
+        ScopedHTTP.handler={_,transport in transport.finish(200,data)};defer{ScopedHTTP.handler=nil}
+        let saving=Task { @MainActor in try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context,willCommit:{committing=true}) }
+        await fulfillment(of:[started],timeout:3)
+        api.cancelReauthentication(context) // Committing has retired only this authentication attempt.
+        XCTAssertEqual(api.session?.access_token,"old")
+        release?.resume();let accepted=try await saving.value
+        XCTAssertTrue(accepted);XCTAssertEqual(api.session?.access_token,"renewed")
+    }
+    @MainActor func testFailedReauthenticationSaveKeepsAccountAndAllowsFreshScopedRetry() async throws {
+        var fail=true
+        let api=backend(try signed(owner),save:{_ in if fail {throw AppFailure(message:"Synthetic credential write failure")}})
+        let original=try api.reauthenticationContext(account:owner),data=try JSONEncoder().encode(signed(owner,token:"renewed"))
+        ScopedHTTP.handler={_,transport in transport.finish(200,data)};defer{ScopedHTTP.handler=nil}
+        do {_=try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:original);XCTFail("Failed credential write accepted")}catch{}
+        XCTAssertEqual(api.session?.access_token,"old");XCTAssertEqual(api.session?.user.id,owner)
+        let retry=try api.reauthenticationContext(account:owner);fail=false
+        let accepted=try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:retry)
+        XCTAssertTrue(accepted);XCTAssertEqual(api.session?.access_token,"renewed")
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testReauthenticationRefusesForeignOriginAndSignupBeforeNetwork() async throws {
+        var calls = 0, saves = 0
+        let api = backend(try signed(owner),save:{_ in saves += 1})
+        let valid = try api.reauthenticationContext(account:owner)
+        let foreign = AccountReauthentication(account:owner,origin:"https://other.test",incarnation:api.reminderSessionIncarnation)
+        let existing = api.beginAuthentication()
+        ScopedHTTP.handler = {_,transport in calls += 1;transport.finish(500,Data())};defer{ScopedHTTP.handler=nil;api.endAuthentication(existing)}
+        for (scope,signup) in [(foreign,false),(valid,true)] {
+            do {_ = try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:signup,reauthenticating:scope);XCTFail("Invalid renewal scope sent")}
+            catch {XCTAssertTrue(error is CancellationError)}
+            XCTAssertNoThrow(try api.requireAuthentication(existing),"Refusal must not cancel an unrelated sign-in")
+        }
+        XCTAssertEqual(calls,0);XCTAssertEqual(saves,0);XCTAssertEqual(api.session?.access_token,"old")
+    }
+}
+
+
+extension AccountTransportTests {
+    @MainActor func testProfileRefreshKeepsConnectionScopeAndPendingSignInCurrent() async throws {
+        var saved:Session?
+        let api=backend(try signed(owner),save:{saved=$0}),context=try api.reauthenticationContext(account:owner)
+        let attempt=api.beginAuthentication()
+        ScopedHTTP.handler={request,transport in
+            XCTAssertEqual(request.url?.path,"/auth/v1/user")
+            transport.finish(200,Data(("{\"id\":\""+self.owner+"\",\"email\":\"profile@example.invalid\"}").utf8))
+        };defer{ScopedHTTP.handler=nil;api.endAuthentication(attempt)}
+        try await api.refreshUser()
+        XCTAssertEqual(api.reminderSessionIncarnation,context.incarnation)
+        XCTAssertNoThrow(try api.requireReauthentication(context))
+        XCTAssertNoThrow(try api.requireAuthentication(attempt))
+        XCTAssertEqual(api.session?.user.email,"profile@example.invalid")
+        XCTAssertEqual(saved?.user.email,"profile@example.invalid")
+        XCTAssertEqual(api.session?.access_token,"old")
+    }
+    @MainActor func testLateProfileRefreshCannotWriteAfterSameAccountReentry() async throws {
+        let gate=HTTPGate(),started=expectation(description:"Profile response held")
+        var saves=0
+        let api=backend(try signed(owner),save:{_ in saves += 1})
+        ScopedHTTP.handler={_,transport in gate.hold(transport);started.fulfill()};defer{ScopedHTTP.handler=nil}
+        let waiting=Task { @MainActor in try await api.refreshUser() }
+        await fulfillment(of:[started],timeout:3)
+        try await api.accept(signed(owner,token:"new-entry"))
+        gate.release(200,Data(("{\"id\":\""+owner+"\",\"email\":\"stale@example.invalid\"}").utf8))
+        do {try await waiting.value;XCTFail("Late profile accepted")}catch{XCTAssertTrue(error is CancellationError)}
+        XCTAssertEqual(saves,1);XCTAssertEqual(api.session?.access_token,"new-entry");XCTAssertNil(api.session?.user.email)
+    }
+}
+
+
+extension AccountTransportTests {
+    @MainActor func testProfileRefreshKeepsTokensRenewedWhileMetadataSaveWaits() async throws {
+        let started=expectation(description:"Metadata save held")
+        var release:CheckedContinuation<Void,Never>?
+        let config=URLSessionConfiguration.ephemeral;config.protocolClasses=[ScopedHTTP.self]
+        let api=Backend(configuration:["URL":"https://native-scope.test","Key":"public"],http:URLSession(configuration:config),session:try signed(owner),persistSession:{value in
+            if value?.access_token == "old" {await withCheckedContinuation {release=$0;started.fulfill()}}
+        })
+        let fresh=try JSONEncoder().encode(signed(owner,token:"fresh"))
+        ScopedHTTP.handler={request,transport in
+            if request.url?.path == "/auth/v1/user" {transport.finish(200,Data(("{\"id\":\""+self.owner+"\",\"email\":\"profile@example.invalid\"}").utf8))}
+            else {transport.finish(200,fresh)}
+        };defer{ScopedHTTP.handler=nil}
+        let generation=api.reminderSessionIncarnation
+        let profile=Task { @MainActor in try await api.refreshUser() }
+        await fulfillment(of:[started],timeout:3)
+        try await api.refreshIfNeeded(force:true)
+        XCTAssertEqual(api.session?.access_token,"fresh")
+        release?.resume();try await profile.value
+        XCTAssertEqual(api.session?.access_token,"fresh");XCTAssertEqual(api.session?.user.email,"profile@example.invalid")
+        XCTAssertEqual(api.reminderSessionIncarnation,generation)
+    }
+}
+
+
+extension AccountTransportTests {
+    @MainActor func testRawAuthWireErrorCodeRequiresReauthentication() async throws {
+        for (status,reason,legacy,required) in [
+            (400,"session_expired","400",true),(400,"session_not_found","400",true),
+            (400,"refresh_token_not_found","400",true),(422,"refresh_token_already_used","422",true),
+            (400,"unknown_reason","session_expired",false),(429,"session_expired","429",false),
+            (500,"session_expired","500",false)
+        ] {
+            let api=backend(try signed(owner))
+            ScopedHTTP.handler={request,transport in
+                if request.url?.path == "/auth/v1/token" {
+                    let code=Int(legacy).map{JSON.number(Double($0))} ?? .string(legacy)
+                    transport.finish(status,try! JSONEncoder().encode(["code":code,"error_code":.string(reason),"msg":.string("Session wording must not control classification")]))
+                } else {transport.finish(401,Data("{}".utf8))}
+            }
+            do {_=try await api.webhookReceipt(action:"list",body:[:],account:owner,origin:"https://native-scope.test");XCTFail("Expired request accepted")}
+            catch {XCTAssertEqual(error is AccountSessionAuthorizationRequired,required,"Raw Auth reason: \(reason), status \(status)")}
+            ScopedHTTP.handler=nil
+        }
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testImportedRecoveryUsesOriginalAuthorizationAndBoundAcknowledgement() async throws {
+        let original = try AccountRemovalCommand(account:owner,origin:"https://native-scope.test",authorization:"old")
+        let (request,data) = try removalRecoveryFixture(original), file = try AccountRemovalRecoveryFile(data:data,expected:request)
+        let prepared = try original.prepared(with:file.proof), api = backend(try signed(other,token:"B"))
+        var calls = 0
+        ScopedHTTP.handler = { outgoing, transport in
+            calls += 1;XCTAssertEqual(outgoing.url?.path,"/functions/v1/delete-account")
+            XCTAssertEqual(outgoing.value(forHTTPHeaderField:"Authorization"),"Bearer old")
+            XCTAssertEqual(outgoing.value(forHTTPHeaderField:"X-Taskfold-Account-Removal-Command"),original.id.uuidString.lowercased())
+            transport.finish(200,try! TaskfoldJSONEncoder().encode(JSON.object(["deleted":.bool(true),"account":.string(request.account),"command":.string(request.command.uuidString.lowercased()),"authorization_hash":.string(request.authorizationHash)])))
+        }
+        defer{ScopedHTTP.handler=nil}
+        try await api.performAccountRemoval(prepared);XCTAssertEqual(calls,1);XCTAssertEqual(api.session?.user.id,other)
+    }
+    @MainActor func testImportedRecoveryRefusesGenericOrForeignSuccessAndExplicit401() async throws {
+        let original = try AccountRemovalCommand(account:owner,origin:"https://native-scope.test",authorization:"old")
+        let (request,data) = try removalRecoveryFixture(original), file = try AccountRemovalRecoveryFile(data:data,expected:request)
+        let prepared = try original.prepared(with:file.proof), api = backend(try signed(owner))
+        for mode in ["generic","account","command","hash","refused"] {
+            var calls = 0
+            ScopedHTTP.handler = { outgoing, transport in
+                calls += 1;XCTAssertEqual(outgoing.url?.path,"/functions/v1/delete-account")
+                var body:[String:JSON]=["deleted":.bool(true),"account":.string(request.account),"command":.string(request.command.uuidString.lowercased()),"authorization_hash":.string(request.authorizationHash)]
+                if mode == "generic" {body=["deleted":.bool(true)]}
+                if mode == "account" {body["account"] = .string(self.other)}
+                if mode == "command" {body["command"] = .string(UUID().uuidString.lowercased())}
+                if mode == "hash" {body["authorization_hash"] = .string(String(repeating:"0",count:64))}
+                transport.finish(mode == "refused" ? 401 : 200,try! TaskfoldJSONEncoder().encode(JSON.object(body)))
+            }
+            do{try await api.performAccountRemoval(prepared);XCTFail("Unbound recovery was accepted: "+mode)}catch{}
+            XCTAssertEqual(calls,1);XCTAssertEqual(api.session?.user.id,owner)
+        }
+        ScopedHTTP.handler=nil
     }
 }

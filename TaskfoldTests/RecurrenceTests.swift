@@ -172,3 +172,79 @@ final class RecurrenceTests: XCTestCase {
     }
 
 }
+
+extension RecurrenceTests {
+    private func multi(_ days:[Int],interval:Int=1)->[String:JSON] { ["type":.string("monthly"),"interval":.number(Double(interval)),"daysOfMonth":.array(days.map{.number(Double($0))})] }
+    func testMultipleMonthlyDatesStayWithinActiveMonthsAndKeepInterval() throws {
+        var t=task("2026-01-01",multi([1,15,31],interval:2))
+        for expected in ["2026-01-15","2026-01-31","2026-03-01","2026-03-15","2026-03-31","2026-05-01"] {
+            let next=try XCTUnwrap(TaskCompletion.complete(t,tasks:[],at:date(t.string("due_date")),calendar:calendar()).last)
+            XCTAssertEqual(next.fields["due_date"],.string(expected));t=Record(next.fields)
+            XCTAssertEqual(t["recurrence_pattern"].object["daysOfMonth"],.array([.number(1),.number(15),.number(31)]));XCTAssertNil(t["recurrence_pattern"].object["dayOfMonth"])
+        }
+    }
+    func testMonthlyDatesClampOnceThenRecoverAllRequestedDays() throws {
+        var t=task("2027-01-31",multi([30,31]))
+        for expected in ["2027-02-28","2027-03-30","2027-03-31","2027-04-30","2027-05-30"] {
+            let next=try XCTUnwrap(TaskCompletion.complete(t,tasks:[],at:date(t.string("due_date")),calendar:calendar()).last)
+            XCTAssertEqual(next.fields["due_date"],.string(expected));t=Record(next.fields)
+        }
+        XCTAssertEqual(Dates.next(task("2028-01-31",multi([29,30,31])),calendar:calendar()).map{TaskPlanner.dayKey($0,calendar:calendar())},"2028-02-29")
+    }
+    func testLateCompletionFindsRemainingActiveMonthDateOrNextCycle() {
+        let t=task("2026-01-01",multi([1,15,31],interval:2))
+        for (at,expected) in [("2026-03-10","2026-03-15"),("2026-03-15","2026-03-31"),("2026-04-10","2026-05-01"),("2090-04-10","2090-05-01")] {
+            XCTAssertEqual(TaskCompletion.complete(t,tasks:[],at:date(at),calendar:calendar()).last?.fields["due_date"],.string(expected))
+        }
+    }
+    func testCompletionBasedMonthlySetWaitsEntireInterval() {
+        var rule=multi([1,15,31],interval:2);rule["fromCompletion"] = .bool(true)
+        let t=task("2026-01-01",rule)
+        XCTAssertEqual(TaskCompletion.complete(t,tasks:[],at:date("2026-01-16"),calendar:calendar()).last?.fields["due_date"],.string("2026-03-31"))
+        XCTAssertEqual(TaskCompletion.complete(t,tasks:[],at:date("2026-01-15"),calendar:calendar()).last?.fields["due_date"],.string("2026-03-15"))
+    }
+    func testMonthlyDateSetCountAndEndApplyToActualUniqueOccurrences() throws {
+        var rule=multi([30,31]);rule["count"] = .number(3);rule["endDate"] = .string("2027-03-30")
+        let t=task("2027-01-31",rule)
+        XCTAssertEqual(Recurrence.preview(t,completion:date("2027-01-31"),calendar:calendar()).map{TaskPlanner.dayKey($0,calendar:calendar())},["2027-02-28","2027-03-30"])
+        rule["count"] = .number(1);XCTAssertNil(Dates.next(task("2027-01-31",rule),calendar:calendar()))
+    }
+    func testMonthlySetRejectsAmbiguousInvalidAndNonMonthlyDefinitions() {
+        XCTAssertEqual(Recurrence.summary(Record(multi([31]))),"Every month · Day 31")
+        var rules:[Record]=[]
+        for bad in [JSON.array([]),.array([.number(0)]),.array([.number(32)]),.array([.number(1),.number(1)]),.array([.number(1.5)]),.array([.string("1")]),.array([.number(.infinity)]),.object([:])] {
+            var r=multi([1,15]);r["daysOfMonth"]=bad;rules.append(Record(r))
+        }
+        for key in ["dayOfMonth","weekdayOrdinal","weekday","monthOfYear","daysOfWeek"] {var r=multi([1,15]);r[key] = .number(1);rules.append(Record(r))}
+        for type in ["daily","weekly","yearly","custom"] {var r=multi([1,15]);r["type"] = .string(type);rules.append(Record(r))}
+        for rule in rules {XCTAssertFalse(Recurrence.valid(rule));XCTAssertNil(Dates.next(task("2026-01-01",rule.fields),calendar:calendar()))}
+    }
+    func testQuickMonthlyListParsesWholePhraseWithBoundsAndKeepsInvalidListsLiteral() {
+        let q=quick("Invoices every 2 months on the 1st, 15th and 31st starting 2026-02-10 until 2027-12-31 for 4 occurrences p2")
+        XCTAssertEqual(q.title,"Invoices");XCTAssertEqual(q.updates["due_date"],.string("2026-02-15"));XCTAssertEqual(q.updates["recurrence_pattern"]?.object["daysOfMonth"],.array([.number(1),.number(15),.number(31)]));XCTAssertEqual(q.updates["priority"],.number(2))
+        for phrase in ["every month on 1 and banana until 2027-12-31","every month on 1, 32 starting 2027-01-01","every month on 1 and 1","every month on 1, 15 and 0"] {
+            let q=quick("Review "+phrase);XCTAssertEqual(q.title,"Review "+phrase);XCTAssertNil(q.updates["recurrence_pattern"]);XCTAssertNil(q.updates["due_date"])
+        }
+    }
+    func testMonthlySetFixedZonePreservesClockAndIdentityAcrossDSTAndTravel() throws {
+        var t=task("2026-10-15",multi([15,31]));t["due_time"] = .string("09:00");t["time_zone"] = .string("Europe/Copenhagen")
+        let a=try XCTUnwrap(TaskCompletion.complete(t,tasks:[],at:date("2026-10-15"),calendar:calendar()).last)
+        let b=try XCTUnwrap(TaskCompletion.complete(t,tasks:[],at:date("2026-10-15"),calendar:calendar("America/New_York")).last)
+        XCTAssertEqual(a.recordID,b.recordID);XCTAssertEqual(a.fields["scheduled_at"],.string("2026-10-31T08:00:00Z"));XCTAssertEqual(a.fields["scheduled_at"],b.fields["scheduled_at"])
+    }
+    func testMonthlySetQueueAndBackupPreserveRuleAndOpaqueMetadata() throws {
+        var rule=multi([1,15,31]);rule["future_metadata"] = .object(["keep":.bool(true)])
+        let t=task("2026-01-01",rule);var snapshot=Snapshot(tables:["tasks":[t]])
+        let changes=TaskCompletion.complete(t,tasks:[t],at:date("2026-01-01"),calendar:calendar());snapshot.pending=changes;for change in changes {snapshot.apply(change)}
+        let reloaded=try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(snapshot));XCTAssertEqual(reloaded,snapshot)
+        let backup=try WorkspaceBackup.read(WorkspaceBackup.make(snapshot,account:"owner").data())
+        let next=try XCTUnwrap(backup.tables["tasks"]?.first{$0.id != t.id});XCTAssertEqual(next["recurrence_pattern"],.object(rule))
+        XCTAssertEqual(TaskCompletion.complete(t,tasks:[t,next],at:date("2026-01-01"),calendar:calendar()).count,1)
+    }
+    func testPreviewStabilizesLegacyMonthEndAndMatchesSuccessorCount() {
+        let t=task("2027-01-31",["type":.string("monthly"),"interval":.number(1)])
+        XCTAssertEqual(Recurrence.preview(t,completion:date("2027-01-31"),limit:3,calendar:calendar()).map{TaskPlanner.dayKey($0,calendar:calendar())},["2027-02-28","2027-03-31","2027-04-30"])
+        XCTAssertTrue(Recurrence.preview(t,completion:date("2027-01-31"),limit:-1,calendar:calendar()).isEmpty)
+        XCTAssertNil(Dates.next(task("9999-12-31",multi([1,31])),calendar:calendar()))
+    }
+}

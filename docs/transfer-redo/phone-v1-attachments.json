@@ -1,0 +1,71 @@
+[
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "2F8B312A-117E-4205-A9BA-47ED237DC008.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Move Undo Redo Undo preserves the branch after relaunch_0_0A13D2C9-5184-46A7-9F75-23A6EE96EBAF.png",
+        "timestamp": 1793467090.587
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "FD9DB4FF-9439-4484-A3C2-F852F07257DA.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Redo moves the same branch with a fresh request_0_24C279F2-25EC-420C-86E3-886DA16D2EA9.png",
+        "timestamp": 1793466969.491
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "A7EBDFC4-8999-4067-A50D-895E42B9F254.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Saved Undo offers readable Redo at largest text_0_DE2AD663-5E10-457A-9CBE-4833548AA92A.png",
+        "timestamp": 1793466963.999
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "D2E8B8F9-1B8C-4494-8173-B8B659D528BF.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Certified Undo restores original branch after relaunch_0_3A513BA5-B7AA-4873-B9EA-9C13BEB2A13B.png",
+        "timestamp": 1793466917.837
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "B43B3E5A-C94D-4393-90DF-E0F035D4C299.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Largest text Undo action remains readable and reachable_0_AED9DB65-7792-4C1B-A853-63DC0E845DC3.png",
+        "timestamp": 1793466858.305
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "902FD0DB-29B3-4E49-AB2B-450C999CA0D2.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Transfer confirmation remains open after source row disappears_0_D66A46C1-EC78-47D9-A5D9-26891D91CABB.png",
+        "timestamp": 1793466856.053
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "78424925-AEA9-499D-8B84-35B4A2A53C0E.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Subtask transfer review preserves nested work_0_C88CDE4F-DD13-4F83-9E21-8F4F559671BA.png",
+        "timestamp": 1793466847.45
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testChildTransferNativeMoveColdUndoAndReturn()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testChildTransferNativeMoveColdUndoAndReturn"
+  }
+]

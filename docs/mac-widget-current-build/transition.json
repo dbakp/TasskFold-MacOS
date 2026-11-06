@@ -1,0 +1,11 @@
+{
+  "oldPID": 87182,
+  "oldProcessStopped": true,
+  "stopMethod": "Targeted SIGTERM for isolated build replacement; not native Quit acceptance",
+  "allBaselineCacheJSONExactAfterStop": true,
+  "newAppPID": 92233,
+  "newExtensionPID": 92235,
+  "singleRegisteredPluginPath": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v3/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex",
+  "allBaselineCacheJSONExactAfterNewLaunch": true,
+  "nativeInspection": "CUA reports locked Mac; manual unlock pending"
+}

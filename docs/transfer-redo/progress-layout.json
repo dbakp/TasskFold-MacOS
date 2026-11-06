@@ -1,0 +1,59 @@
+{
+  "substeps": 9,
+  "barCheckpoints": 74,
+  "substepsDoNotInflateBars": true,
+  "date": "2026-10-31",
+  "viewportChecks": [
+    {
+      "width": 320,
+      "theme": "light",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 736,
+      "theme": "light",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 736,
+      "theme": "dark",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    }
+  ],
+  "inlineStateRestore": true,
+  "noSaveOnLoadOrRestore": true,
+  "consoleErrors": [],
+  "networkDependencies": false,
+  "keyboardEnterAndSpace": true,
+  "segmentWidthsMatchCheckpointCounts": true,
+  "readOnlyProgress": true,
+  "standaloneSHA256": "4a931c4baa5535e4b35000a5df440068dc33909d28bd7c13f36a2f8586f0bea6",
+  "inlineSHA256": "4f59d319cc38b828a36e5fd584c12b6deb63efaefa98eab90b3848e8e8231c65"
+}

@@ -1,0 +1,6 @@
+{
+  "accepted": false,
+  "stage": "Row selection; project picker not exercised",
+  "reason": "The test queried only the task title, although the native accessible name includes due-date and project context. It now uses the existing stable title-row identifier.",
+  "logSHA256": "52240181579cf12289fd93467bed4cc8b2f2d54668dc7472899f0834f6c9f4ee"
+}

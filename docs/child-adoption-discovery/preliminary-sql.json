@@ -1,0 +1,8 @@
+{
+  "checksBeforeFixtureError": 122,
+  "error": {
+    "message": "Unexpected non-whitespace character after JSON at position 6"
+  },
+  "containerRemoved": true,
+  "correction": "Hash scalar must be wrapped in to_jsonb for the test harness parser; candidate SQL was unchanged"
+}

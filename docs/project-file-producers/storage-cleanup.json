@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-06",
+  "freeBytes": 59370733568,
+  "serviceCleanup": {
+    "taskfold-producer-full-ios-v2": {
+      "servicesRemoved": true,
+      "reportSHA256": "854aa784d964caec853ef4bef509ec9aa4397266a7739f568134ff6e30a1c3be"
+    },
+    "taskfold-producer-full-mac-v2": {
+      "servicesRemoved": true,
+      "reportSHA256": "3b368d80708a68467292d5b9dfd48a918740d38f525c765b720ebbf67340ee0c"
+    },
+    "taskfold-producer-copy-ios": {
+      "servicesRemoved": true,
+      "reportSHA256": "f853899dbe2027931547107156b2fd58eb66504a0f70d7afe2a1f477478b4c00"
+    },
+    "taskfold-producer-copy-mac": {
+      "servicesRemoved": true,
+      "reportSHA256": "93779d1c78c5d14ce3dc9222cf4b79e147d69b6f97170fe37951ed4e151c069c"
+    },
+    "taskfold-mac-step-controls-resumed": {
+      "servicesRemoved": true,
+      "reportSHA256": "ae27f267814c8434be073fbd75558c5ead09a138c56a046eb365aa0c94d0f9d7"
+    },
+    "initial-ios-transport-fixture": {
+      "servicesRemoved": true,
+      "reason": "Maintenance correctly required HTTPS. Fixture mapping was corrected to a pinned virtual HTTPS origin; production validation was retained."
+    }
+  },
+  "remainingTaskfoldProcesses": [
+    "/Applications/Taskfold.app/Contents/MacOS/Taskfold"
+  ],
+  "nativeAppClosed": true,
+  "cacheCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 59341111296,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 624074752,
+        "projectedAllocatedBytes": 624074752
+      }
+    ],
+    "freeAfterBytes": 59341107200,
+    "actualFreeChangeBytes": -4096
+  },
+  "generalCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 59391410176,
+    "actions": [],
+    "skipped": [],
+    "freeAfterBytes": 59390914560,
+    "actualFreeChangeBytes": -495616
+  },
+  "noNewSimulatorOrAppArchive": true,
+  "preserved": "Normal app/drafts, real task/device data, Keychain, Docker volumes and current/rollback packages",
+  "retained": "Small owning result summaries, source/migration hashes, necessary failure evidence and actual Mac controller observations. No new raw native result bundles were created."
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "677564D8-3162-49F2-959A-E356373908DF.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Cold return keeps orphan recording private without recreating the task_0_F1B5FF52-E0F9-4670-B214-6763802A1D9C.png",
+        "timestamp" : 1793187622.101
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "1220764E-CE6B-4BA0-A6B0-0CD0B0BC2AD4.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Private recording remains readable after its synthetic task is removed_0_29971B08-5276-425F-B521-4EC554F00A24.png",
+        "timestamp" : 1793187589.195
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "10BBBCC6-E74A-432C-907D-C1F8217C084B.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Moved task recording stays in the account library with its original association_0_FF3A940A-D5F4-42F9-B8C2-731ECE11C4DC.png",
+        "timestamp" : 1793187557.543
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "ED88BE1D-F3A8-40F4-A4D7-0809CF4EFC71.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Private library shows the full saved caption and playable original recording_0_3D8105D3-5F2E-42C9-8608-69DAFA2F890A.png",
+        "timestamp" : 1793187536.022
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn"
+  }
+]

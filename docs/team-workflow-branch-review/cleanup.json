@@ -1,0 +1,11 @@
+{
+  "scope": "Only owned /tmp/taskfold-workflow-mac-native-*",
+  "temporaryPathsRemoved": 13,
+  "temporaryBytesRemoved": 628050682,
+  "retainedForPendingUnlock": [
+    "/tmp/taskfold-workflow-mac-native-build",
+    "/tmp/taskfold-workflow-mac-native-host"
+  ],
+  "repositoryCoreBuildCachesPreserved": true,
+  "testAppNotRunning": true
+}

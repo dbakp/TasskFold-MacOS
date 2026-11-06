@@ -1,0 +1,29 @@
+{
+  "removed": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core",
+      "allocatedBytes": 653086720,
+      "rebuiltFromCommittedSource": true,
+      "cacheTagVerified": true,
+      "noDependenciesOrCheckouts": true,
+      "noOpenHandles": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/ios-core",
+      "allocatedBytes": 686022656,
+      "rebuiltFromCommittedSource": true,
+      "cacheTagVerified": true,
+      "noDependenciesOrCheckouts": true,
+      "noOpenHandles": true
+    }
+  ],
+  "freeBefore": 23421812736,
+  "freeAfter": 24757137408,
+  "allocatedBytesRemoved": 1339109376,
+  "kept": [
+    "core-mac",
+    "core-ios",
+    "current signed Mac/iOS native builds",
+    "all app data and Simulators"
+  ]
+}

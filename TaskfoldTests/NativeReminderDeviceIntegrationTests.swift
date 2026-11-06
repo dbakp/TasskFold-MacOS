@@ -38,7 +38,7 @@ final class NativeReminderDeviceIntegrationTests: XCTestCase {
             outsider.secret=secret; outsider.binding?.enabled=false
             let rebound=try await c.sendReminderDevice(outsider); XCTAssertEqual(rebound.account,other); XCTAssertFalse(rebound.enabled)
             try await rejection(b,command,contains:"TASKFOLD_DEVICE_CONFLICT")
-            try a.clearSession()
+            try await a.clearSession()
             let retired=ReminderDeviceCommand(device:id,secret:secret,revision:4,account:nil,binding:nil)
             let ended=try await a.sendReminderDevice(retired); XCTAssertEqual(ended.state,"retired"); XCTAssertNil(ended.account)
             try await rejection(c,outsider,contains:"TASKFOLD_DEVICE_CONFLICT")

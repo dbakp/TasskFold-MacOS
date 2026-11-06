@@ -1,4 +1,7 @@
 import SwiftUI
+import CryptoKit
+import Observation
+import Security
 import Network
 import UserNotifications
 #if os(iOS)
@@ -12,13 +15,164 @@ import WidgetKit
 
 @MainActor @Observable
 final class Store {
-    /// One store per process so notification actions and App Intents share the app's data.
-    static let shared = Store()
-    var snapshot = Snapshot() {
-        didSet {
-            if taskCache.update(snapshot.tables["tasks"] ?? []) { taskRevision += 1 }
+    #if DEBUG
+    func recordTaskOutputFixtureResult(kind: String, url: URL) {
+        let args = ProcessInfo.processInfo.arguments
+        guard userID == "ui-testing", localMode, args.contains("--uitesting"), args.contains("--workflow-fixture"), url.isFileURL,
+              ["com.dbakp.taskfold.mac.workflowteststeameditbridge", "com.dbakp.taskfold.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? ""),
+              kind == "pdf" || kind == "csv" else { return }
+        let receipt = cacheURL.deletingLastPathComponent().appendingPathComponent("task-output-fixture-result.json")
+        if let data = try? JSONSerialization.data(withJSONObject: ["kind": kind, "url": url.absoluteString], options: [.sortedKeys]) {
+            try? data.write(to: receipt, options: .atomic)
         }
     }
+    /// Synthetic backchannel changes real Store state only after XCTest has
+    /// observed the native Save panel. No provider or export callback is mocked.
+    func beginTaskOutputRaceFixture() {
+        let args = ProcessInfo.processInfo.arguments
+        guard userID == "ui-testing", args.contains("--uitesting"), args.contains("--workflow-fixture"),
+              ["com.dbakp.taskfold.mac.workflowteststeameditbridge", "com.dbakp.taskfold.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? ""),
+              localMode else { return }
+        let receipt = cacheURL.deletingLastPathComponent().appendingPathComponent("task-output-fixture-result.json")
+        try? FileManager.default.removeItem(at: receipt)
+        guard args.contains("--task-output-race-source") || args.contains("--task-output-race-workspace") else { return }
+        let workspace = args.contains("--task-output-race-workspace")
+        let signal = cacheURL.deletingLastPathComponent().appendingPathComponent("task-output-race-control.txt")
+        outputRaceTask?.cancel()
+        do { try Data("waiting".utf8).write(to: signal, options: .atomic) } catch { return }
+        #if os(macOS)
+        let center = DistributedNotificationCenter.default()
+        if let previous = outputRaceObserver { center.removeObserver(previous) }
+        let name = Notification.Name("com.dbakp.taskfold.output-race." + UUID().uuidString.lowercased())
+        let observer = center.addObserver(forName: name, object: nil, queue: .main) { _ in
+            try? Data("invalidate".utf8).write(to: signal, options: .atomic)
+        }
+        outputRaceObserver = observer
+        do { try Data(name.rawValue.utf8).write(to: signal.deletingLastPathComponent().appendingPathComponent("task-output-race-notification.txt"), options: .atomic) }
+        catch { center.removeObserver(observer); return }
+        #endif
+        outputRaceTask = Task { @MainActor [weak self] in
+            #if os(macOS)
+            defer { DistributedNotificationCenter.default().removeObserver(observer) }
+            #endif
+            let deadline = Date().addingTimeInterval(90)
+            while !Task.isCancelled, Date() < deadline {
+                guard let self, self.userID == "ui-testing" else { return }
+                if let data = try? Data(contentsOf: signal), data == Data("invalidate".utf8) {
+                    if workspace { self.accountGeneration = UUID() }
+                    else if var tasks = self.snapshot.tables["tasks"], !tasks.isEmpty {
+                        var changed = false
+                        for index in tasks.indices {
+                            let original = tasks[index].string("description")
+                            let edited = original.replacingOccurrences(of: "Résumé", with: "Re\u{301}sume\u{301}")
+                            guard original == edited else { return }
+                            if !original.utf8.elementsEqual(edited.utf8) { tasks[index]["description"] = .string(edited); changed = true }
+                        }
+                        guard changed else { try? Data("fixture-missing-accented-source".utf8).write(to: signal, options: .atomic); return }
+                        self.snapshot.tables["tasks"] = tasks
+                    }
+                    try? Data((workspace ? "applied-workspace" : "applied-source").utf8).write(to: signal, options: .atomic)
+                    return
+                }
+                do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
+            }
+        }
+    }
+    #endif
+
+    /// One store per process so notification actions and App Intents share the app's data.
+    static let shared = Store()
+    #if DEBUG
+    private(set) var teamRecoveryRaceStatus = "Ready"
+    private(set) var recordedDraftAdmissionStatus = "Ready"
+    #endif
+    #if DEBUG
+    @ObservationIgnored private var outputRaceTask: Task<Void, Never>?
+    #if os(macOS)
+    @ObservationIgnored private var outputRaceObserver: NSObjectProtocol?
+    #endif
+    @ObservationIgnored private var workflowFixtureFailureConsumed = false
+    @ObservationIgnored private var sharedCaptureFixtureFailureConsumed = false
+    #endif
+    private(set) var workspaceReadRevision = UUID() { didSet { subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear() } }
+    var workspaceAccessToken: String? { (activeTeamMask ?? snapshot.teamWorkspace)?.boundary.raw["token"]?.text }
+    var nativeConversationTeamCache: TeamWorkspaceCache? { activeTeamMask ?? snapshot.teamWorkspace }
+    @ObservationIgnored private var workflowPresentationDeferred = false
+    @ObservationIgnored private(set) var snapshotRevision = UUID()
+    #if DEBUG
+    @ObservationIgnored private(set) var workflowPreparedLocalHistoryUsed = false
+    @ObservationIgnored private(set) var workflowPreparedNormalizationUsed = false
+    @ObservationIgnored private(set) var workflowNormalizationSetupUsed = false
+    @ObservationIgnored private(set) var workflowPreparedUndoUsed = false
+    @ObservationIgnored private(set) var workflowPreparedEncodingUsed = false
+    @ObservationIgnored private(set) var workflowPreparedProjectionUsed = false
+    @ObservationIgnored private(set) var workflowPreparedValidationUsed = false
+    #endif
+    var snapshot = Snapshot() {
+        didSet {
+            snapshotRevision = UUID()
+            presentationReadCache.clear()
+            assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
+            guard !workflowPresentationDeferred else { return }
+            refreshSnapshotPresentation(from: oldValue)
+        }
+    }
+    private func refreshSnapshotPresentation(from old: Snapshot) {
+        if old.teamWorkspace?.boundary != snapshot.teamWorkspace?.boundary || old.tables["projects"] != snapshot.tables["projects"] || old.tables["project_collaborators"] != snapshot.tables["project_collaborators"] { workspaceReadRevision = UUID() }
+        if taskCache.update(presentedTables["tasks"] ?? []) { taskRevision += 1 }
+    }
+    private var teamAccessMask:TeamWorkspaceCache? {
+        didSet {
+            presentationAccessEpoch = UUID()
+            subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
+            presentationReadCache.clear()
+            assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
+            if oldValue?.boundary != teamAccessMask?.boundary {workspaceReadRevision = UUID()}
+            if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}
+            publishWidgetSnapshot(scheduleCapacityRefresh:false)
+            Task {await reschedule()}
+        }
+    }
+    private var activeTeamMask:TeamWorkspaceCache? {
+        guard let teamAccessMask,teamAccessMask.boundary.account==userID,teamAccessMask.boundary.origin==(try? backend.accountRemovalOrigin) else {return nil}
+        return teamAccessMask
+    }
+    private var teamAccessFenceDisk:TeamAccessFenceDisk? {
+        guard !localMode,TeamProjectValue.id(userID),let origin=try? backend.accountRemovalOrigin else {return nil}
+        return TeamAccessFenceDisk(disk:AccountRemovalDisk(directory:cacheURL.deletingLastPathComponent(),account:userID),origin:origin)
+    }
+    @ObservationIgnored private let presentationReadCache = WorkspacePresentationReadCache()
+    @ObservationIgnored private let assigneeDisplayCache = AssigneeDisplayReadCache()
+    @ObservationIgnored private let projectCatalogReadCache = WorkspaceProjectCatalogReadCache()
+    @ObservationIgnored private let subtaskProgressReadCache = SubtaskProgressReadCache()
+    @ObservationIgnored private let taskNotePreviewReadCache = TaskNotePreviewReadCache()
+    func taskNotePreview(_ task: Record, fullText: Bool = false) -> String {
+        taskNotePreviewReadCache.read(task.string("description"), id: task.id, fullText: fullText,
+            context: .init(workspace: .init(account: userID, generation: workspaceGeneration),
+                           session: backend.reminderSessionIncarnation, access: presentationAccessEpoch))
+    }
+
+    func subtaskProgress(_ task: Record) -> (completed: Int, total: Int) {
+        subtaskProgressReadCache.read(task["subtasks"], id: task.id,
+            context: .init(workspace: .init(account: userID, generation: workspaceGeneration),
+                           session: backend.reminderSessionIncarnation, access: presentationAccessEpoch))
+    }
+
+    @ObservationIgnored private var presentationAccessEpoch = UUID()
+    private var presentedTables: [String: [Record]] {
+        guard workspaceCacheReadable else { return [:] }
+        guard let mask = activeTeamMask else {
+            presentationReadCache.clear()
+            return snapshot.tables
+        }
+        // Read even on a hit so SwiftUI keeps observing the actual snapshot.
+        let source = snapshot
+        let context = WorkspacePresentationReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
+            account: userID, origin: try? backend.accountRemovalOrigin)
+        return presentationReadCache.tables(for: context) { mask.presentation(source) }
+    }
+    var presentationSnapshot:Snapshot {var visible=snapshot;visible.tables=presentedTables;return visible}
+    @ObservationIgnored private let durableSnapshotReadCache = DurableSnapshotReadCache()
     @ObservationIgnored private let taskCache = TaskCache()
     private(set) var taskRevision = 0
     private(set) var calendarContext = TaskCalendarContext()
@@ -52,6 +206,25 @@ final class Store {
     var calendarContextFixtureEnabled: Bool {
         userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--calendar-context-testing")
     }
+    var assigneePatternFixtureEnabled: Bool {
+        userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--assignee-pattern-testing")
+    }
+    func startAssigneePatternFixture() {
+        guard assigneePatternFixtureEnabled else { return }
+        dailyBackupsEnabled = false; disableNotifications()
+        if ProcessInfo.processInfo.arguments.contains("--assignee-pattern-fixture") {
+            snapshot = Snapshot(); undoStack = []; redoStack = []
+            let project = "assignee-pattern-project"
+            snapshot.tables["projects"] = [Record(["id": .string(project), "name": .string("Studio"), "user_id": .string(userID)])]
+            snapshot.tables["project_collaborators"] = [("22222222-2222-4222-8222-222222222222", "Mary Smith"), ("33333333-3333-4333-8333-333333333333", "Marc Smith"), ("44444444-4444-4444-8444-444444444444", "Jane Smith")].map { id, name in
+                Record(["id": .string("member-" + id), "user_id": .string(id), "project_id": .string(project), "display_name": .string(name), "status": .string("accepted")])
+            }
+            snapshot.tables["tasks"] = [("Mary task", "22222222-2222-4222-8222-222222222222"), ("Marc task", "33333333-3333-4333-8333-333333333333"), ("Jane task", "44444444-4444-4444-8444-444444444444")].map { title, person in
+                var task = Record.task(user: userID, project: project); task["title"] = .string(title); task["assigned_to"] = .string(person); return task
+            }
+            do { try persist() } catch { self.error = error.localizedDescription }
+        }
+    }
     var datePhraseFixtureEnabled: Bool {
         userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--date-phrase-testing")
     }
@@ -61,7 +234,7 @@ final class Store {
         if ProcessInfo.processInfo.arguments.contains("--date-phrase-fixture") {
             snapshot = Snapshot()
             snapshot.tables["saved_views"] = [("date-pref-week", "Next week choices", "next week"), ("date-pref-weekend", "Weekend choices", "this weekend")].map { id, name, phrase in
-                Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "query_ast": FilterRule.predicate("planned_on", phrase).document, "layout": .string("list"), "sort_by": .string("title")])
+                Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "query_ast": FilterRule.predicate("planned_on", ProcessInfo.processInfo.arguments.contains("--compound-date-testing") ? "1 week after " + phrase : phrase).document, "layout": .string("list"), "sort_by": .string("title")])
             }
             do { try persist() } catch { self.error = error.localizedDescription }
         }
@@ -108,10 +281,12 @@ final class Store {
     #endif
     @ObservationIgnored private let reminderScheduler = ReminderScheduler()
     @ObservationIgnored private var reminderRevision = 0
+    @ObservationIgnored private var reminderRefreshTask: Task<Void, Never>?
+    @ObservationIgnored private var reminderRefreshRequest = 0
     private var reminderPreferenceRevision = 0
     @ObservationIgnored private var reminderDeviceLifecycle: ReminderDeviceLifecycle?
     @ObservationIgnored private lazy var reminderAppIdentity = ReminderAppIdentity.signed()
-    var remoteReminderStatus = "Remote reminders are not available yet. Reminders stay on this device."
+    var remoteReminderStatus = "Remote reminders are not available yet."
     var remoteReminderBusy = false
     private var reminderAuthority: ReminderDeliveryAuthority?
     private var reminderAuthorityRead = false
@@ -121,6 +296,8 @@ final class Store {
     var remoteReminderSelected: Bool { reminderAuthority?.account == reminderAuthorityAccount && reminderAuthority?.wantsRemote == true }
     var remoteReminderNeedsConfirmation: Bool { remoteReminderHoldingOriginals }
     private var remoteReminderHoldingOriginals: Bool { reminderAuthorityUnreadable || reminderAuthority?.account == reminderAuthorityAccount && reminderAuthority?.phase != .local }
+    private var systemTimeSensitiveAllowed = false
+    var timeSensitiveReminderStatus = "System notification settings control Time Sensitive delivery."
     var reminderStatus = "Choose whether this device delivers reminders."
     var focusAlertStatus = "Finish alerts are off on this device."
     private var focusPermissionDenied = false
@@ -128,37 +305,941 @@ final class Store {
     var requestingNotifications = false
     var signedIn = false
     var localMode = false
+    /// Read-only migration candidate. Neither a response nor this flag enables
+    /// independent edits or replaces the current saved task hierarchy.
+    private func childTaskRecordContext(_ id:String) throws -> ChildTaskRecordContext {
+        guard Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordReadsEnabled") as? Bool == true,
+              signedIn,!localMode,!signingOut,!accountRemovalBlocked,online,
+              let root=record("tasks",id:id) else {throw ChildTaskRecordFailure.unavailable}
+        return try ChildTaskRecordContext(account:userID,origin:backend.accountRemovalOrigin,workspace:workspaceGeneration,
+            session:backend.reminderSessionIncarnation,access:workspaceReadRevision,snapshot:snapshotRevision,root:root)
+    }
+    func readChildTaskRecords(_ id:String) async throws -> ChildTaskRecordRead {
+        let captured=try childTaskRecordContext(id)
+        do {
+            let value=try await backend.childTaskRecords(captured)
+            try Task.checkCancellation()
+            guard captured.matches(try childTaskRecordContext(id)) else {throw CancellationError()}
+            return value
+        } catch {
+            guard let current=try? childTaskRecordContext(id),captured.matches(current) else {throw CancellationError()}
+            throw error
+        }
+    }
+    func readChildTaskStructure(_ id:String) async throws -> ChildTaskStructureRead {
+        guard Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true else { throw ChildTaskRecordFailure.unavailable }
+        let captured=try childTaskRecordContext(id)
+        do {
+            let value=try await backend.childTaskStructure(captured)
+            try Task.checkCancellation()
+            guard captured.matches(try childTaskRecordContext(id)) else {throw CancellationError()}
+            return value
+        } catch {
+            guard let current=try? childTaskRecordContext(id),captured.matches(current) else {throw CancellationError()}
+            throw error
+        }
+    }
+    func childTaskFieldComparisonIsCurrent(_ read: ChildTaskRecordRead) -> Bool {
+        guard let current = try? childTaskRecordContext(read.context.root.id) else { return false }
+        return read.context.matches(current)
+    }
+    /// Recovery remains reachable if rollout gates are later turned off.
+    var childTaskFieldRecoveryScope: ChildTaskFieldClientScope? {
+        guard signedIn,!localMode,!signingOut,!accountRemovalBlocked,
+              let origin=try? backend.accountRemovalOrigin,TeamProjectValue.id(userID) else {return nil}
+        return .init(account:userID,origin:origin,workspace:workspaceGeneration,
+                     session:backend.reminderSessionIncarnation,access:workspaceReadRevision)
+    }
+    var childTaskFieldEditingEnabled: Bool {
+        Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordWritesEnabled") as? Bool == true &&
+        Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordReadsEnabled") as? Bool == true
+    }
+    private func childTaskActionAdmission(account: String, origin: String) -> ChildTaskActionAdmission {
+        let directory = cacheURL.deletingLastPathComponent().appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+        return .init(account: account, origin: origin, directory: directory, encryptionKey: {
+            #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+    }
+    func childTaskFieldJournal(account:String,origin:String) throws -> ChildTaskFieldJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        try TeamOrganizationValue.scope(account:account,origin:origin)
+        let root=cacheURL.deletingLastPathComponent()
+        let directory=root.appendingPathComponent("Backups",isDirectory:true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault",account),isDirectory:true)
+            .appendingPathComponent("Child field requests",isDirectory:true)
+        let io=try ChildTaskFieldJournalFileIO(directory:directory,account:account,origin:origin,
+            encryptionKey:{
+                #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
+                if ChildFieldNativeIdentity.enabled {return try ChildFieldNativeIdentity.key(account)}
+                #endif
+                return try BackupVault.deviceKey(account:account)
+            })
+        return try ChildTaskFieldJournal(account:account,origin:origin,io:io,
+            coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
+    }
+    func permitsChildTaskFieldRequest(_ command: ChildTaskFieldCommand, sending: Bool) -> Bool {
+        permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskFieldEditingEnabled, sending: sending)
+    }
+    private func permitsChildTaskRequest(account: String, origin: String, identity: [String: JSON], enabled: Bool, sending: Bool) -> Bool {
+        guard enabled,let scope=childTaskFieldRecoveryScope,
+              scope.account==account,scope.origin==origin,workspaceCacheReadable,
+              !sending || online && !syncing,
+              let root=record("tasks",id:identity["task_id"]!.text),
+              root["task_generation"]==identity["task_generation"],root["project_id"]==identity["project_id"],
+              !snapshot.pending.contains(where:{$0.table=="tasks" && $0.recordID==root.id}) else {return false}
+        let project=root.string("project_id")
+        guard project.isEmpty || record("projects",id:project)?["is_archived"].flag==false else {return false}
+        let cache=nativeConversationTeamCache
+        if cache?.knownTasks.contains(root.id)==true || cache?.knownTeams[project] != nil {
+            return (try? captureTeamTaskEditor(root)) != nil
+        }
+        return root.string("user_id")==scope.account && editorMayWrite(source:root,proposed:root)
+    }
+    func childTaskFieldRecoveryModel(didApply: @escaping (ChildTaskFieldJournalState.Entry, ChildTaskFieldClientScope) -> Void = { _, _ in }) throws -> ChildTaskFieldRecoveryModel {
+        guard let scope=childTaskFieldRecoveryScope else {throw CancellationError()}
+        return ChildTaskFieldRecoveryModel(scope:scope,journal:try childTaskFieldJournal(account:scope.account,origin:scope.origin),service:backend,
+            current:{[weak self] in self?.childTaskFieldRecoveryScope},
+            canQueue:{[weak self] in self?.permitsChildTaskFieldRequest($0,sending:false)==true},
+            canSend:{[weak self] in self?.permitsChildTaskFieldRequest($0,sending:true)==true},
+            refresh:{[weak self] in
+                guard let self,self.childTaskFieldRecoveryScope==scope else {return}
+                await self.sync()
+            }, didApply: didApply)
+    }
+    var childTaskCompletionEnabled: Bool {
+        childTaskFieldEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRecordCompletionsEnabled") as? Bool == true
+    }
+    func childTaskCompletionJournal(account: String, origin: String) throws -> ChildTaskCompletionJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child completion requests", isDirectory: true)
+        let io = try ChildTaskCompletionJournalFileIO(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
+    }
+    private let childRecoveryDiscovery = ChildTaskRecoveryDiscovery()
+    var childRecoveryPresenceScope: ChildTaskFieldClientScope? { childRecoveryDiscovery.scope }
+    func hasSavedChildRecovery(_ kind: ChildTaskRecoveryKind) -> Bool {
+        childRecoveryDiscovery.contains(kind, scope: childTaskFieldRecoveryScope)
+    }
+    var hasSavedChildFields: Bool { hasSavedChildRecovery(.fields) }
+    var hasSavedChildCompletions: Bool { hasSavedChildRecovery(.completions) }
+    var hasSavedChildGroups: Bool { hasSavedChildRecovery(.groups) }
+    func hideChildTaskRecoveryPresence() {
+        // An inactive window must not clear another mounted screen's discovery.
+        guard childTaskFieldRecoveryScope == nil else { return }
+        childRecoveryDiscovery.close()
+    }
+    func refreshChildTaskRecoveryPresence() async {
+        guard let captured = childTaskFieldRecoveryScope else { hideChildTaskRecoveryPresence(); return }
+        await childRecoveryDiscovery.refresh(scope: captured, current: { self.childTaskFieldRecoveryScope }) { kind in
+            switch kind {
+            case .fields:
+                let state = try await self.childTaskFieldJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .completions:
+                let state = try await self.childTaskCompletionJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .mixed:
+                let state = try await self.mixedTaskCompletionJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .groups:
+                let state = try await self.childTaskCompletionBatchJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .hierarchy:
+                let state = try await self.childTaskStructureJournal(account: captured.account, origin: captured.origin).load()
+                guard !Task.isCancelled, self.childTaskFieldRecoveryScope == captured else { throw CancellationError() }
+                let drafts = try await self.childTaskStructureDraftJournal(account: captured.account, origin: captured.origin).load()
+                return !state.entries.isEmpty || !state.disposals.isEmpty || !drafts.entries.isEmpty
+            case .transfers:
+                let state = try await self.childTaskTransferJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .adoptions:
+                let state = try await self.childTaskAdoptionJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .repairs:
+                let state = try await self.childTaskRepairJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty || !state.drafts.isEmpty
+            }
+        }
+    }
+    func childTaskCompletionBatchJournal(account: String, origin: String) throws -> ChildTaskCompletionBatchJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child completion groups", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ChildTaskCompletionBatchState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkBatch($0) })
+    }
+    var childTaskCompletionBatchesEnabled: Bool {
+        childTaskCompletionEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildCompletionBatchesEnabled") as? Bool == true
+    }
+    func childTaskCompletionBatchRecoveryModel() throws -> ChildTaskCompletionBatchRecoveryModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskCompletionBatchJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canQueue: { [weak self] command in
+                         guard let self, self.childTaskCompletionBatchesEnabled else { return false }
+                         return command.items.allSatisfy { self.permitsChildTaskCompletionRequest($0, sending: false) }
+                     },
+                     canSend: { [weak self] command in
+                         guard let self, self.childTaskCompletionBatchesEnabled else { return false }
+                         return command.items.allSatisfy { self.permitsChildTaskCompletionRequest($0, sending: true) }
+                     },
+                     refresh: { [weak self] in
+                         guard let self, self.childTaskFieldRecoveryScope == scope else { return }
+                         await self.sync()
+                     })
+    }
+    func permitsChildTaskCompletionBatch(_ command: ChildTaskCompletionBatchCommand, sending: Bool) -> Bool {
+        childTaskCompletionBatchesEnabled && command.items.allSatisfy { permitsChildTaskCompletionRequest($0, sending: sending) }
+    }
+    func captureChildListBatch(_ tasks: [Record], completed: Bool) throws -> ChildTaskListBatchIntent {
+        guard childTaskCompletionBatchesEnabled, online, let scope = childTaskFieldRecoveryScope else { throw ChildTaskCompletionBatchCommand.invalid }
+        return try .init(tasks: tasks, roots: activeTasks, projects: allProjects, scope: scope, completed: completed)
+    }
+    func readChildBatch(_ command: ChildTaskCompletionBatchCommand) async throws -> [String: ChildTaskRecordRead] {
+        guard let scope = childTaskFieldRecoveryScope, scope.account == command.account, scope.origin == command.origin, online else { throw CancellationError() }
+        var reads: [String: ChildTaskRecordRead] = [:]
+        for id in Set(command.items.map { $0.body["task_id"]!.text }).sorted() {
+            reads[id] = try await ChildTaskListRead.fresh(scope: scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(id) })
+        }
+        guard childTaskFieldRecoveryScope == scope, reads.values.allSatisfy(childTaskFieldComparisonIsCurrent) else { throw CancellationError() }
+        return reads
+    }
+    func completeChildBatchFromList(_ intent: ChildTaskListBatchIntent) async -> ChildTaskListBatchResult? {
+        guard !childListCompletionBusy, childTaskCompletionBatchesEnabled, online, childTaskFieldRecoveryScope == intent.scope else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            var reads: [String: ChildTaskRecordRead] = [:]
+            for member in intent.members {
+                guard member.opening.permits(account: userID, generation: workspaceGeneration, root: record("tasks", id: member.opening.rootID)) else { throw ChildTaskCompletionBatchCommand.invalid }
+                if reads[member.opening.rootID] == nil {
+                    reads[member.opening.rootID] = try await ChildTaskListRead.fresh(scope: intent.scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(member.opening.rootID) })
+                }
+            }
+            guard childTaskFieldRecoveryScope == intent.scope, reads.values.allSatisfy(childTaskFieldComparisonIsCurrent) else { throw CancellationError() }
+            let command = try intent.command(reads: reads), model = try childTaskCompletionBatchRecoveryModel(); defer { model.close() }
+            let applied = await model.perform(command)
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            if applied { return .init(message: "\(intent.completed ? "Completed" : "Reopened") \(command.items.count) \(command.items.count == 1 ? "subtask" : "subtasks")", undo: .init(scope: intent.scope, command: command)) }
+            return .init(message: model.message ?? "Review this saved selection before trying again.", undo: nil, needsReview: true)
+        } catch {
+            guard childTaskFieldRecoveryScope == intent.scope, !Task.isCancelled else { return nil }
+            return .init(message: "The selection changed or has another saved action. Review it before trying again.", undo: nil, needsReview: true)
+        }
+    }
+    func canUndoChildListBatch(_ token: ChildTaskListBatchUndo) -> Bool {
+        !childListCompletionBusy && childTaskFieldRecoveryScope == token.scope && permitsChildTaskCompletionBatch(token.command, sending: true)
+    }
+    func undoChildBatchFromList(_ token: ChildTaskListBatchUndo) async -> ChildTaskListBatchResult? {
+        guard canUndoChildListBatch(token) else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let reads = try await readChildBatch(token.command), model = try childTaskCompletionBatchRecoveryModel(); defer { model.close() }
+            await model.load()
+            guard let entry = model.entries.first(where: { $0.command == token.command && $0.phase == .confirmed }) else { throw ChildTaskCompletionBatchCommand.invalid }
+            let undo = await model.undo(entry, reads: reads)
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            if let undo, model.entries.contains(where: { $0.command == undo && $0.phase == .confirmed }) { return .init(message: "Undid selection of \(token.command.items.count) \(token.command.items.count == 1 ? "subtask" : "subtasks")", undo: nil) }
+            return .init(message: model.message ?? "Review the saved selection Undo.", undo: nil, needsReview: true)
+        } catch {
+            guard childTaskFieldRecoveryScope == token.scope, !Task.isCancelled else { return nil }
+            return .init(message: "This selection Undo needs review. Your saved work is kept.", undo: nil, needsReview: true)
+        }
+    }
+    func permitsChildTaskCompletionRequest(_ command: ChildTaskCompletionCommand, sending: Bool) -> Bool {
+        guard childTaskCompletionEnabled else { return false }
+        return permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskCompletionEnabled, sending: sending)
+    }
+    /// Shared across windows: a second list click cannot race the first local
+    /// preparation. Other processes remain protected by the command journal.
+    var childListCompletionBusy = false
+    func captureChildListCompletion(_ task: Record) throws -> ChildTaskListCompletionIntent {
+        guard childTaskCompletionEnabled, let scope = childTaskFieldRecoveryScope,
+              let rootID = SubtaskTree.referencePath(task.id)?.first, let root = record("tasks", id: rootID) else { throw ChildTaskCompletionDraft.invalid }
+        guard online else { throw AppFailure(message: "Connect to change this subtask’s completion.") }
+        return try .init(task: task, root: root, projects: allProjects, scope: scope)
+    }
+    func canUndoChildListCompletion(_ token: ChildTaskListCompletionUndo) -> Bool {
+        !childListCompletionBusy && childTaskCompletionEnabled && online && childTaskFieldRecoveryScope == token.scope && permitsChildTaskCompletionRequest(token.command, sending: true)
+    }
+    func completeChildFromList(_ intent: ChildTaskListCompletionIntent) async -> ChildTaskListCompletionResult? {
+        guard !childListCompletionBusy, childTaskCompletionEnabled, online, childTaskFieldRecoveryScope == intent.scope else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            guard intent.opening.permits(account: userID, generation: workspaceGeneration, root: record("tasks", id: intent.opening.rootID)) else { throw ChildTaskCompletionDraft.invalid }
+            let read = try await ChildTaskListRead.fresh(scope: intent.scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(intent.opening.rootID) })
+            let key = try intent.key(in: read)
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            let model = try childTaskCompletionRecoveryModel(); defer { model.close() }
+            await model.load()
+            let command = await model.perform(read: read, key: key, action: intent.completed ? .reopen : .complete)
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            if let command, model.entries.contains(where: { $0.command == command && $0.phase == .confirmed }) {
+                return .init(message: (intent.completed ? "Reopened “" : "Completed “") + intent.title + "”", undo: .init(scope: intent.scope, command: command, title: intent.title))
+            }
+            return .init(message: model.message ?? "Saved action needs review. Open Saved subtask actions.", undo: nil, needsReview: true)
+        } catch {
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            self.error = error is CancellationError ? "This subtask changed while loading. Try again." : error.localizedDescription
+            return nil
+        }
+    }
+    func undoChildFromList(_ token: ChildTaskListCompletionUndo) async -> ChildTaskListCompletionResult? {
+        guard canUndoChildListCompletion(token) else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let read = try await ChildTaskListRead.fresh(scope: token.scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(token.command.body["task_id"]!.text) })
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            let model = try childTaskCompletionRecoveryModel(); defer { model.close() }
+            await model.load()
+            guard let entry = model.entries.first(where: { $0.command == token.command && $0.phase == .confirmed }) else { throw ChildTaskCompletionDraft.invalid }
+            let previous = Set(model.entries.map { $0.command.id })
+            await model.undo(entry, read: read)
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            let confirmed = model.entries.contains { !previous.contains($0.command.id) && $0.command.body["undo_of"] == .string(token.command.id) && $0.phase == .confirmed }
+            return .init(message: confirmed ? "Undid change to “" + token.title + "”" : model.message ?? "Undo saved; review Saved subtask actions.", undo: nil, needsReview: !confirmed)
+        } catch {
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            self.error = error is CancellationError ? "This subtask changed while loading. Try again." : error.localizedDescription; return nil
+        }
+    }
+    func childTaskCompletionRecoveryModel() throws -> ChildTaskCompletionRecoveryModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskCompletionJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canQueue: { [weak self] in self?.permitsChildTaskCompletionRequest($0, sending: false) == true },
+                     canSend: { [weak self] in self?.permitsChildTaskCompletionRequest($0, sending: true) == true },
+                     refresh: { [weak self] in guard let self, self.childTaskFieldRecoveryScope == scope else { return }; await self.sync() })
+    }
+    var childTaskStructureEditingEnabled: Bool {
+        childTaskCompletionEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureWritesEnabled") as? Bool == true
+    }
+    func reviewedTaskStepsJournal(account: String, origin: String) throws -> ReviewedTaskStepsJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Reviewed task steps", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ReviewedTaskStepsState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if FullSchemaNativeFixture.enabled { return try FullSchemaNativeFixture.journalKey(account) }
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkBatch($0, includeSteps: false); try admission.checkOther($0, includeSteps: false) })
+    }
+    func reviewedTaskStepsModel(didApply: @escaping (ReviewedTaskStepsState.Entry, ChildTaskFieldClientScope) -> Void = { _, _ in }) throws -> ReviewedTaskStepsModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try reviewedTaskStepsJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canSend: { [weak self] in guard let self else { return false }; return self.permitsChildTaskRequest(account: $0.account, origin: $0.origin, identity: $0.body, enabled: self.childTaskStructureEditingEnabled, sending: true) },
+                     isCurrent: { [weak self] in self?.childTaskFieldComparisonIsCurrent($0.records) == true },
+                     refresh: { [weak self] in guard let self, self.childTaskFieldRecoveryScope == scope else { return }; await self.sync() }, didApply: didApply)
+    }
+    func reviewedTaskStepsHistoryStep(_ entry: ReviewedTaskStepsState.Entry, scope: ChildTaskFieldClientScope, name: String? = nil, report: @escaping (ChildTaskHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
+        let actionName = name ?? (entry.command.undoing ? "Remove Added Steps" : "Add Task Steps")
+        return .init(name: actionName, key: entry.command.id, retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope }, available: { [weak self] in
+            guard let self else { return false }
+            return !self.childTransferHistoryBusy && !self.childListCompletionBusy && self.permitsChildTaskRequest(account: entry.command.account, origin: entry.command.origin, identity: entry.command.body, enabled: self.childTaskStructureEditingEnabled, sending: true)
+        }, perform: { [weak self] in
+            guard let self, !self.childTransferHistoryBusy, self.childTaskFieldRecoveryScope == scope else { return nil }
+            self.childTransferHistoryBusy = true; defer { self.childTransferHistoryBusy = false }
+            do {
+                let model = try self.reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+                let read = try await self.readCurrentChildTaskStructure(entry.command.root)
+                guard self.childTaskFieldRecoveryScope == scope,
+                      let saved = await model.queueInverse(entry, read: read), await model.run(saved, operation: .apply),
+                      let next = model.entries.first(where: { $0.command == saved && $0.phase == .applied }) else { throw ReviewedTaskStepsCommand.invalid }
+                let notice = ChildTaskHistoryNotice(kind: .steps, scope: scope, commandID: saved.id, message: saved.undoing ? "Removed added steps" : "Restored added steps")
+                self.childHistoryNotice = notice; report(notice)
+                return self.reviewedTaskStepsHistoryStep(next, scope: scope, name: actionName, report: report)
+            } catch {
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(kind: .steps, scope: scope, commandID: nil, message: "These steps need review. Open Saved step additions to check the original request.")
+                self.childHistoryNotice = notice; report(notice); return nil
+            }
+        })
+    }
+    func childTaskStructureJournal(account: String, origin: String) throws -> ChildTaskStructureJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child hierarchy requests", isDirectory: true)
+        let io = try ChildTaskStructureJournalFileIO(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
+    }
+    func childTaskStructureDraftJournal(account: String, origin: String) throws -> ChildTaskStructureDraftJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child hierarchy drafts", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ChildTaskStructureDraftState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
+    }
+    func permitsChildTaskStructureRequest(_ command: ChildTaskStructureCommand, sending: Bool) -> Bool {
+        permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskStructureEditingEnabled, sending: sending)
+    }
+    func childTaskStructureSender() throws -> ChildTaskStructureSender {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskStructureJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canSend: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: true) == true })
+    }
+    /// Join an existing sync before asking for current task data. A second
+    /// caller must not mistake sync()'s busy early return for fresh cache data.
+    func synchronizeChildTaskRecordReads() async throws {
+        guard let captured = childTaskFieldRecoveryScope, online else { throw ChildTaskRecordFailure.unavailable }
+        let deadline = ContinuousClock.now.advanced(by: .seconds(25))
+        func waitForSync() async throws {
+            while syncing {
+                try Task.checkCancellation()
+                guard childTaskFieldRecoveryScope == captured else { throw CancellationError() }
+                guard ContinuousClock.now < deadline else { throw ChildTaskRecordFailure.unavailable }
+                try await Task.sleep(for: .milliseconds(50))
+            }
+        }
+        let joinedExistingSync = syncing
+        #if DEBUG
+        if joinedExistingSync,FullSchemaNativeFixture.enabled {FullSchemaNativeNetwork.recordReadJoin()}
+        #endif
+        try await waitForSync(); try Task.checkCancellation()
+        guard childTaskFieldRecoveryScope == captured else { throw CancellationError() }
+        if !joinedExistingSync { await sync() }
+        try await waitForSync(); try Task.checkCancellation()
+        guard childTaskFieldRecoveryScope == captured else { throw CancellationError() }
+    }
+    func synchronizeChildTaskStructureReads() async throws {try await synchronizeChildTaskRecordReads()}
+    func readCurrentChildTaskStructure(_ root: String) async throws -> ChildTaskStructureRead {
+        try await synchronizeChildTaskStructureReads()
+        return try await readChildTaskStructure(root)
+    }
+    var childTaskAdoptionEnabled: Bool {
+        childTaskStructureEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildAdoptionEnabled") as? Bool == true
+    }
+    /// Remote review can work without local rows. Writes must still prove that
+    /// the saved workspace was decoded, otherwise its pending edits are unknown.
+    var childTaskAdoptionWritesAvailable: Bool { childTaskAdoptionEnabled && workspaceCacheDecoded && workspaceCacheReadable }
+    func childTaskAdoptionJournal(account: String, origin: String) throws -> ChildTaskAdoptionJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child adoption requests", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ChildTaskAdoptionState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
+    }
+    func permitsChildTaskAdoption(_ command: ChildTaskAdoptionCommand, sending: Bool) -> Bool {
+        guard childTaskAdoptionWritesAvailable, let scope = childTaskFieldRecoveryScope,
+              command.account == scope.account, command.origin == scope.origin,
+              !sending || online && !syncing,
+              !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == command.rootID }) else { return false }
+        // The adoption service owns live project/workspace/permission admission.
+        // Missing or unreadable ordinary rows are never replaced with metadata.
+        return true
+    }
+    func childTaskAdoptionReviewIsCurrent(_ read: ChildTaskAdoptionReview) -> Bool {
+        childTaskAdoptionEnabled && online && childTaskFieldRecoveryScope == ChildTaskFieldClientScope(read.context)
+        && read.context.snapshot == snapshotRevision
+        && !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == read.context.root.id })
+    }
+    func childTaskAdoptionTitle(_ command: ChildTaskAdoptionCommand) -> String {
+        guard command.account == userID, command.origin == (try? backend.accountRemovalOrigin),
+              let root = record("tasks", id: command.rootID), root["task_generation"] == command.body["task_generation"], root["project_id"] == command.body["project_id"] else { return "Task unavailable" }
+        let cache = nativeConversationTeamCache, realm = cache?.knownTeams[root.string("project_id")]
+        guard cache?.knownTasks.contains(root.id) != true || realm != nil,
+              command.body["workspace_id"] == (realm.map(JSON.string) ?? .null) else { return "Task unavailable" }
+        return root.title
+    }
+    func childTaskAdoptionLiveTitle(_ command: ChildTaskAdoptionCommand) async throws -> String {
+        guard command.account == userID, command.origin == (try? backend.accountRemovalOrigin) else { throw CancellationError() }
+        let context = try await childTaskAdoptionLiveContext(command.rootID)
+        guard context.root["task_generation"] == command.body["task_generation"], context.root["project_id"] == command.body["project_id"] else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        return context.root.title
+    }
+    func childTaskAdoptionTargets(after: String? = nil) async throws -> ChildTaskAdoptionTargetPage {
+        guard childTaskAdoptionEnabled, online, let scope = childTaskFieldRecoveryScope else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        let page = try await backend.childTaskAdoptionTargets(scope: scope, after: after)
+        try Task.checkCancellation()
+        guard childTaskFieldRecoveryScope == scope, childTaskAdoptionEnabled else { throw CancellationError() }
+        return page
+    }
+    private func childTaskAdoptionLiveContext(_ id: String) async throws -> ChildTaskRecordContext {
+        guard childTaskAdoptionEnabled, online, let scope = childTaskFieldRecoveryScope else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        let revision = snapshotRevision
+        let page = try await backend.childTaskAdoptionTargets(scope: scope, limit: 1, id: id)
+        try Task.checkCancellation()
+        guard childTaskFieldRecoveryScope == scope, revision == snapshotRevision, childTaskAdoptionEnabled else { throw CancellationError() }
+        guard let target = page.targets.first else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        return try target.context(scope: scope, snapshot: revision)
+    }
+    func readChildTaskAdoption(_ id: String) async throws -> ChildTaskAdoptionReview {
+        guard !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == id }) else { throw ChildTaskAdoptionAdmission.unfinished }
+        let captured = try await childTaskAdoptionLiveContext(id)
+        let read = try await backend.childTaskAdoptionDiscoveredReview(captured)
+        try Task.checkCancellation()
+        guard childTaskAdoptionReviewIsCurrent(read) else { throw CancellationError() }
+        return read
+    }
+    private func childAdoptionOpenEditorRoots() -> Set<String> {
+        var roots = Set<String>()
+        for editor in editorSessions.values where !editor.closed && editor.account == userID {
+            if let latest = editor.latest { roots.formUnion(ChildTaskAdoptionAdmission.roots(latest)) }
+            else if let id = SubtaskTree.referencePath(editor.original.id)?.first { roots.insert(id) }
+            else if record("tasks", id: editor.original.id) != nil { roots.insert(editor.original.id) }
+            else { roots.insert("*") }
+        }
+        return roots
+    }
+    private func admitChildTaskAdoption(_ command: ChildTaskAdoptionCommand, excludingRepairID: String? = nil) async throws {
+        let captured = childTaskFieldRecoveryScope
+        guard permitsChildTaskAdoption(command, sending: false) else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        let live = try await childTaskAdoptionLiveContext(command.rootID)
+        guard live.root["task_generation"] == command.body["task_generation"], live.root["project_id"] == command.body["project_id"] else { throw ChildTaskAdoptionFailure(reason: .review) }
+        let fields = try await childTaskFieldJournal(account: command.account, origin: command.origin).load()
+        let completions = try await childTaskCompletionJournal(account: command.account, origin: command.origin).load()
+        let structures = try await childTaskStructureJournal(account: command.account, origin: command.origin).load()
+        let drafts = try await childTaskStructureDraftJournal(account: command.account, origin: command.origin).load()
+        let transfers = try await childTaskTransferJournal(account: command.account, origin: command.origin).load()
+        let repairs = try await childTaskRepairJournal(account: command.account, origin: command.origin).load()
+        var pending = Set(fields.entries.filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        pending.formUnion(completions.entries.filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        pending.formUnion(structures.entries.filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        pending.formUnion(drafts.entries.map { $0.body["task_id"]!.text })
+        for entry in transfers.entries where entry.phase == .queued || entry.phase == .attempted { pending.formUnion(entry.command.roots) }
+        pending.formUnion(repairs.entries.filter { ($0.phase == .queued || $0.phase == .attempted) && $0.command.id != excludingRepairID }.map { $0.command.rootID })
+        try ChildTaskAdoptionAdmission.requireClear(root: command.rootID, pending: pending, openEditors: childAdoptionOpenEditorRoots())
+        do { try await ChildTaskAdoptionAdmission.checkPreservedEdits(root: command.rootID, vault: backupVault, origin: command.origin) }
+        catch let failure as AppFailure { throw failure }
+        catch { throw AppFailure(message: "Saved edits couldn’t be checked. Their originals are kept; review them in Account before upgrading.") }
+        try Task.checkCancellation()
+        guard captured == childTaskFieldRecoveryScope, permitsChildTaskAdoption(command, sending: false) else { throw CancellationError() }
+        try ChildTaskAdoptionAdmission.requireClear(root: command.rootID, pending: [], openEditors: childAdoptionOpenEditorRoots())
+    }
+    func childTaskAdoptionModel() throws -> ChildTaskAdoptionModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskAdoptionJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canSend: { [weak self] in self?.permitsChildTaskAdoption($0, sending: true) == true },
+                     admit: { [weak self] command in guard let self else { throw CancellationError() }; try await self.admitChildTaskAdoption(command) },
+                     reviewCurrent: { [weak self] in self?.childTaskAdoptionReviewIsCurrent($0) == true })
+    }
+    var childTaskRepairEnabled: Bool {
+        childTaskAdoptionEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRepairEnabled") as? Bool == true
+    }
+    var childTaskRepairWritesAvailable: Bool { childTaskRepairEnabled && workspaceCacheDecoded && workspaceCacheReadable }
+    func childTaskRepairJournal(account: String, origin: String) throws -> ChildTaskRepairJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        var directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child repair requests", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        #if DEBUG
+        // Keep local SQL acceptance separate from earlier synthetic journals.
+        if ChildMappingSQLNativePeer.enabled {
+            directory = ChildFieldNativePeer.folder.appendingPathComponent("Repair journal", isDirectory: true)
+        }
+        #endif
+        let io = ReviewedTeamCommandFileIO<ChildTaskRepairState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
+    }
+    func permitsChildTaskRepair(_ command: ChildTaskRepairCommand, sending: Bool) -> Bool {
+        guard childTaskRepairWritesAvailable, let identity = try? repairAdoptionIdentity(command) else { return false }
+        return permitsChildTaskAdoption(identity, sending: sending)
+    }
+    private func repairAdoptionIdentity(_ command: ChildTaskRepairCommand) throws -> ChildTaskAdoptionCommand {
+        try .init(account: command.account, origin: command.origin, body: command.body.filter { ChildTaskAdoptionCommand.keys.contains($0.key) }, nodeCount: command.nodeCount)
+    }
+    func childTaskRepairReviewIsCurrent(_ preview: ChildTaskRepairPreview) -> Bool {
+        childTaskRepairEnabled && online && childTaskFieldRecoveryScope == ChildTaskFieldClientScope(preview.context)
+        && preview.context.snapshot == snapshotRevision
+        && !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == preview.context.root.id })
+    }
+    func childTaskCopiesAreCurrent(_ value: ChildTaskCopyReview) -> Bool {
+        childTaskRepairEnabled && online && childTaskFieldRecoveryScope == ChildTaskFieldClientScope(value.context)
+        && value.context.snapshot == snapshotRevision
+        && !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == value.context.root.id })
+    }
+    func readChildTaskCopies(_ review: ChildTaskAdoptionReview) async throws -> ChildTaskCopyReview {
+        guard childTaskRepairEnabled, online, childTaskAdoptionReviewIsCurrent(review) else { throw ChildTaskCopyReview.invalid }
+        let value = try await backend.childTaskCopyReview(review)
+        try Task.checkCancellation()
+        guard childTaskRepairEnabled, childTaskAdoptionReviewIsCurrent(review), childTaskFieldRecoveryScope == ChildTaskFieldClientScope(value.context),
+              value.context.snapshot == snapshotRevision else { throw CancellationError() }
+        return value
+    }
+    func readChildTaskRepair(_ review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange]) async throws -> ChildTaskRepairPreview {
+        guard childTaskRepairEnabled, childTaskAdoptionReviewIsCurrent(review) else { throw ChildTaskRepairFailure(reason: .unavailable) }
+        let preview = try await backend.childTaskRepairPreview(review, changes: changes)
+        try Task.checkCancellation(); guard childTaskRepairReviewIsCurrent(preview) else { throw CancellationError() }; return preview
+    }
+    private func admitChildTaskRepair(_ command: ChildTaskRepairCommand) async throws {
+        guard permitsChildTaskRepair(command, sending: false) else { throw ChildTaskRepairFailure(reason: .unavailable) }
+        let captured = childTaskFieldRecoveryScope
+        let adoptions = try await childTaskAdoptionJournal(account: command.account, origin: command.origin).load()
+        let pending = Set(adoptions.entries.filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.rootID })
+        try ChildTaskAdoptionAdmission.requireClear(root: command.rootID, pending: pending, openEditors: childAdoptionOpenEditorRoots())
+        try await admitChildTaskAdoption(repairAdoptionIdentity(command), excludingRepairID: command.id)
+        guard captured == childTaskFieldRecoveryScope, permitsChildTaskRepair(command, sending: false) else { throw CancellationError() }
+    }
+    func childTaskRepairModel() throws -> ChildTaskRepairModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskRepairJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canSend: { [weak self] in self?.permitsChildTaskRepair($0, sending: true) == true },
+                     admit: { [weak self] command in guard let self else { throw CancellationError() }; try await self.admitChildTaskRepair(command) },
+                     reviewCurrent: { [weak self] in self?.childTaskRepairReviewIsCurrent($0) == true })
+    }
+    func childTaskRepairTitle(_ command: ChildTaskRepairCommand) -> String {
+        guard let identity = try? repairAdoptionIdentity(command) else { return "Task unavailable" }; return childTaskAdoptionTitle(identity)
+    }
+    func childTaskRepairLiveTitle(_ command: ChildTaskRepairCommand) async throws -> String { try await childTaskAdoptionLiveTitle(repairAdoptionIdentity(command)) }
+    func readChildTaskRepairOriginal(_ entry: ChildTaskRepairState.Entry) async throws -> ChildTaskRepairOriginal {
+        guard let scope = childTaskFieldRecoveryScope, entry.command.account == scope.account, entry.command.origin == scope.origin, let result = entry.result, result.applied else { throw ChildTaskRepairFailure(reason: .unavailable) }
+        let revision = snapshotRevision
+        let original = try await backend.childTaskRepairOriginal(entry.command, result: result, session: scope.session)
+        try Task.checkCancellation(); guard scope == childTaskFieldRecoveryScope, revision == snapshotRevision else { throw CancellationError() }; return original
+    }
+    var childTaskTransfersEnabled: Bool {
+        childTaskStructureEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildTransfersEnabled") as? Bool == true
+    }
+    func childTaskTransferJournal(account: String, origin: String) throws -> ChildTaskTransferJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child transfer requests", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ChildTaskTransferState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
+    }
+    private func permitsChildTransferRoot(_ root: Record, sending: Bool) -> Bool {
+        permitsChildTaskRequest(account: userID, origin: (try? backend.accountRemovalOrigin) ?? "", identity: ["task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": root["project_id"]], enabled: childTaskTransfersEnabled, sending: sending)
+    }
+    func childTaskTransferTargets(source: String) -> [Record] {
+        guard childTaskTransfersEnabled, let root = record("tasks", id: source), permitsChildTransferRoot(root, sending: false) else { return [] }
+        let team = nativeConversationTeamCache?.knownTeams[root.string("project_id")]
+        return (snapshot.tables["tasks"] ?? []).filter {
+            $0.id != source && nativeConversationTeamCache?.knownTeams[$0.string("project_id")] == team && permitsChildTransferRoot($0, sending: false)
+        }.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+    func permitsChildTaskTransferRequest(_ command: ChildTaskTransferCommand, sending: Bool) -> Bool {
+        guard childTaskTransfersEnabled, command.account == userID, command.origin == (try? backend.accountRemovalOrigin),
+              let from = record("tasks", id: command.body["source"]!.object["task_id"]!.text), let to = record("tasks", id: command.body["destination"]!.object["task_id"]!.text),
+              nativeConversationTeamCache?.knownTeams[from.string("project_id")] == nativeConversationTeamCache?.knownTeams[to.string("project_id")] else { return false }
+        return ["source", "destination"].allSatisfy {
+            permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body[$0]!.object, enabled: childTaskTransfersEnabled, sending: sending)
+        }
+    }
+    func readChildTaskTransferPair(source: String, destination: String) async throws -> (ChildTaskStructureRead, ChildTaskStructureRead) {
+        guard childTaskTransfersEnabled else { throw ChildTaskTransferFailure(reason: .unavailable) }
+        try await synchronizeChildTaskStructureReads()
+        let a = try await readChildTaskStructure(source), b = try await readChildTaskStructure(destination)
+        guard childTaskFieldComparisonIsCurrent(a.records), childTaskFieldComparisonIsCurrent(b.records), a.context.snapshot == b.context.snapshot else { throw CancellationError() }
+        return (a, b)
+    }
+    private func admitChildTaskTransfer(_ command: ChildTaskTransferCommand, source: ChildTaskStructureRead, destination: ChildTaskStructureRead) async throws {
+        let scope = childTaskFieldRecoveryScope
+        guard scope == ChildTaskFieldClientScope(source.context), permitsChildTaskTransferRequest(command, sending: false), childTaskFieldComparisonIsCurrent(source.records), childTaskFieldComparisonIsCurrent(destination.records) else { throw ChildTaskTransferFailure(reason: .review) }
+        let fields = try await childTaskFieldJournal(account: command.account, origin: command.origin).load()
+        let completions = try await childTaskCompletionJournal(account: command.account, origin: command.origin).load()
+        let structures = try await childTaskStructureJournal(account: command.account, origin: command.origin).load()
+        let drafts = try await childTaskStructureDraftJournal(account: command.account, origin: command.origin).load()
+        if fields.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && command.roots.contains($0.command.body["task_id"]!.text) }) ||
+            completions.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && command.roots.contains($0.command.body["task_id"]!.text) }) ||
+            structures.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && command.roots.contains($0.command.body["task_id"]!.text) }) ||
+            drafts.entries.contains(where: { command.roots.contains($0.body["task_id"]!.text) }) {
+            throw AppFailure(message: "Finish the saved edits and hierarchy actions for these tasks before moving a subtask.")
+        }
+        guard childTaskFieldRecoveryScope == scope, childTaskFieldComparisonIsCurrent(source.records), childTaskFieldComparisonIsCurrent(destination.records) else { throw CancellationError() }
+    }
+    func childTaskTransferModel(didApply: ((ChildTaskTransferState.Entry, ChildTaskFieldClientScope) -> Void)? = nil) throws -> ChildTaskTransferModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskTransferJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canSend: { [weak self] in self?.permitsChildTaskTransferRequest($0, sending: true) == true },
+                     admit: { [weak self] command, a, b in guard let self else { throw CancellationError() }; try await self.admitChildTaskTransfer(command, source: a, destination: b) }, didApply: { entry in didApply?(entry, scope) })
+    }
+    private(set) var childTransferHistoryBusy = false
+    private(set) var childHistoryNotice: ChildTaskHistoryNotice?
+    func childTransferHistoryStep(_ entry: ChildTaskTransferState.Entry, scope: ChildTaskFieldClientScope, name: String? = nil, report: @escaping (ChildTaskHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
+        let actionName = name ?? (entry.command.undoing ? "Undo Subtask Move" : "Move Subtask")
+        return .init(name: actionName, key: entry.command.id,
+              retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope },
+              available: { [weak self] in
+                  guard let self else { return false }
+                  return !self.childTransferHistoryBusy && !self.childListCompletionBusy && self.online && self.permitsChildTaskTransferRequest(entry.command, sending: true)
+              }, perform: { [weak self] in
+            guard let self, !self.childTransferHistoryBusy, self.childTaskFieldRecoveryScope == scope else { return nil }
+            self.childTransferHistoryBusy = true; defer { self.childTransferHistoryBusy = false }
+            do {
+                let model = try self.childTaskTransferModel(); defer { model.close() }; await model.load()
+                let (a, b) = try await self.readChildTaskTransferPair(source: entry.command.body["destination"]!.object["task_id"]!.text, destination: entry.command.body["source"]!.object["task_id"]!.text)
+                guard self.childTaskFieldRecoveryScope == scope else { throw CancellationError() }
+                let command = try model.historyCommand(entry, source: a, destination: b)
+                guard let saved = await model.queueHistory(command, reversing: entry, source: a, destination: b),
+                      await model.run(saved, operation: .send),
+                      let next = model.entries.first(where: { $0.command == saved && $0.phase == .applied }) else { throw ChildTaskTransferCommand.invalid }
+                await self.sync()
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(scope: scope, commandID: saved.id, message: saved.undoing ? "Undid subtask move" : "Redid subtask move")
+                self.childHistoryNotice = notice; report(notice)
+                return self.childTransferHistoryStep(next, scope: scope, name: actionName, report: report)
+            } catch {
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(scope: scope, commandID: nil, message: "This move needs review. Open Saved subtask moves to check its original request.")
+                self.childHistoryNotice = notice; report(notice); return nil
+            }
+        })
+    }
+    func childFieldHistoryStep(_ entry: ChildTaskFieldJournalState.Entry, scope: ChildTaskFieldClientScope, name: String = "Edit Subtask", report: @escaping (ChildTaskHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
+        .init(name: name, key: entry.command.id,
+              retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope },
+              available: { [weak self] in
+                  guard let self else { return false }
+                  return !self.childTransferHistoryBusy && !self.childListCompletionBusy && self.online && self.permitsChildTaskFieldRequest(entry.command, sending: true)
+              }, perform: { [weak self] in
+            guard let self, !self.childTransferHistoryBusy, self.childTaskFieldRecoveryScope == scope else { return nil }
+            self.childTransferHistoryBusy = true; defer { self.childTransferHistoryBusy = false }
+            do {
+                let model = try self.childTaskFieldRecoveryModel(); defer { model.close() }; await model.load()
+                let read = try await self.readChildTaskRecords(entry.command.body["task_id"]!.text)
+                guard self.childTaskFieldRecoveryScope == scope else { throw CancellationError() }
+                let redo = model.isRedo(entry)
+                guard let saved = await model.queueInverse(entry, read: read), await model.send(saved),
+                      let next = model.entries.first(where: { $0.command == saved && $0.phase == .confirmed }) else { throw ChildTaskFieldCommand.invalid }
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(kind: .fields, scope: scope, commandID: saved.id, message: redo ? "Redid subtask edit" : "Undid subtask edit")
+                self.childHistoryNotice = notice; report(notice)
+                return self.childFieldHistoryStep(next, scope: scope, name: name, report: report)
+            } catch {
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(kind: .fields, scope: scope, commandID: nil, message: "This edit needs review. Open Saved subtask changes to check its original request.")
+                self.childHistoryNotice = notice; report(notice); return nil
+            }
+        })
+    }
+    func childStructureHistoryStep(_ entry: ChildTaskStructureJournalState.Entry, scope: ChildTaskFieldClientScope, name: String? = nil, report: @escaping (ChildTaskHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
+        let actionName = name ?? ChildTaskStructureReview.title(entry.command)
+        return .init(name: actionName, key: entry.command.id,
+                     retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope },
+                     available: { [weak self] in
+            guard let self else { return false }
+            return !self.childTransferHistoryBusy && !self.childListCompletionBusy && self.online && self.permitsChildTaskStructureRequest(entry.command, sending: true)
+        }, perform: { [weak self] in
+            guard let self, !self.childTransferHistoryBusy, self.childTaskFieldRecoveryScope == scope else { return nil }
+            self.childTransferHistoryBusy = true; defer { self.childTransferHistoryBusy = false }
+            do {
+                let model = try self.childTaskStructurePresentation(); defer { model.close() }; await model.load()
+                let read = try await self.readCurrentChildTaskStructure(entry.command.body["task_id"]!.text)
+                guard self.childTaskFieldRecoveryScope == scope else { throw CancellationError() }
+                guard let saved = await model.queueInverse(entry, read: read), await model.send(saved),
+                      let next = model.entries.first(where: { $0.command == saved && $0.phase == .confirmed }) else { throw ChildTaskStructureCommand.invalid }
+                await self.sync(); guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let message: String
+                if saved.action == .undo {
+                    switch saved.original?.receipt["action"] {
+                    case .string("insert"): message = "Removed added subtask"
+                    case .string("move"): message = "Restored subtask position"
+                    default: message = "Restored subtasks"
+                    }
+                } else { message = saved.action == .insert ? "Subtask added" : saved.action == .move ? "Subtask moved" : "Subtasks removed" }
+                let notice = ChildTaskHistoryNotice(kind: .hierarchy, scope: scope, commandID: saved.id, message: message)
+                self.childHistoryNotice = notice; report(notice)
+                return self.childStructureHistoryStep(next, scope: scope, name: actionName, report: report)
+            } catch {
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(kind: .hierarchy, scope: scope, commandID: nil, message: "This hierarchy change needs review. Open Saved hierarchy actions to check its original action.")
+                self.childHistoryNotice = notice; report(notice); return nil
+            }
+        })
+    }
+    func childTaskStructurePresentation(didApply: @escaping (ChildTaskStructureJournalState.Entry, ChildTaskFieldClientScope) -> Void = { _, _ in }) throws -> ChildTaskStructurePresentation {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskStructureJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canQueue: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: false) == true },
+                     canSend: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: true) == true },
+                     draftJournal: try childTaskStructureDraftJournal(account: scope.account, origin: scope.origin), didApply: didApply)
+    }
     var syncing = false
     var online = true
-    var error: String?
+    @ObservationIgnored private var teamCompletionErrorRevision = UUID()
+    @ObservationIgnored private var teamCompletionReviewFailure: TeamCompletionReviewFailure?
+    var error: String? {
+        didSet { teamCompletionErrorRevision = UUID(); teamCompletionReviewFailure = nil }
+    }
     var notice: String?
+    /// A confirmed Auth refusal is scoped to this workspace, never inferred from text.
+    private(set) var syncSignInWorkspace: WorkspaceBinding?
+    private var syncAfterSignInRequested: WorkspaceBinding?
+    var canSignInForSync: Bool {
+        syncSignInWorkspace?.matches(account:userID,generation:workspaceGeneration) == true &&
+        signedIn && !localMode && !signingOut && !accountRemovalBlocked
+    }
+    func syncSignInContext() throws -> AccountReauthentication {
+        guard canSignInForSync else { throw CancellationError() }
+        return try backend.reauthenticationContext(account:userID)
+    }
+    func resumeSyncAfterSignIn(workspace: WorkspaceBinding) async {
+        guard workspace.matches(account:userID,generation:workspaceGeneration), signedIn,
+              !localMode, !signingOut, !accountRemovalBlocked else { return }
+        syncSignInWorkspace = nil
+        if syncing { syncAfterSignInRequested = workspace; return }
+        await sync()
+    }
+    var accessRecoveryPending = false
+    private var accessRecoveryNoticeKey: String { "taskfold.accessRecoveryPending." + userID.lowercased() }
+    func acknowledgeAccessRecovery() {
+        UserDefaults.standard.removeObject(forKey: accessRecoveryNoticeKey)
+        accessRecoveryPending = false
+    }
+    private func markAccessRecovery() {
+        UserDefaults.standard.set(true, forKey: accessRecoveryNoticeKey)
+        accessRecoveryPending = true
+    }
+    var sharedCaptureDraftCount = 0
     var widgetActionStatus: String?
     var syncConflict: SyncConflict?
     var focusSyncConflict: FocusSyncConflict?
     var lastSync: Date?
     var undoStack: [EditHistory] = []
     var redoStack: [EditHistory] = []
-    let backend = Backend()
+    let backend: Backend
+    var conversationSyncID: UUID?
+    var conversationSyncGeneration: UUID?
+    var conversationError: String?
+    var conversationPageTokens: [String: UUID] = [:]
+    #if DEBUG
+    var conversationFixtureRevision = 0
+    var conversationFixtureHolding = false
+    var conversationFixtureWaiting = false
+    var conversationFixtureRelease: CheckedContinuation<Void,Never>?
+    func changeConversationAccessFixture(readable: Bool) {
+        guard ConversationFixture.enabled, ProcessInfo.processInfo.arguments.contains("--conversation-access-testing"), let origin=try? backend.accountRemovalOrigin else {return}
+        do {
+            var raw:[String:JSON] = ["workspace_boundary_protocol":.number(1),"account":.string(userID),"native_team_reads_enabled":.bool(false),"setup_paused":.bool(false),"teams":.array([]),"projects":.array([]),"token":.string(String(repeating:"b",count:64))]
+            if readable {
+                let team="f1799000-0000-4000-8000-000000000099"
+                raw["native_team_reads_enabled"] = .bool(true);raw["token"] = .string(String(repeating:"a",count:64))
+                raw["teams"] = .array([.object(["id":.string(team),"state":.string("active"),"revision":.number(1),"access_revision":.number(1)])])
+                raw["projects"] = .array([.object(["id":.string(ConversationFixture.project),"team_id":.string(team),"role":.string("viewer"),"archived":.bool(false),"can_send_tasks":.bool(false)])])
+            }
+            let boundary=try TeamWorkspaceBoundary(raw,account:userID,origin:origin)
+            let cache=try TeamWorkspaceCache(boundary:boundary,previous:snapshot.teamWorkspace,pending:snapshot.pending,tasks:snapshot.tables["tasks"] ?? [])
+            teamAccessMask=cache
+            snapshot=cache.merging(cache.filtering(snapshot.tables),into:snapshot)
+            try persist()
+            if !readable {
+                conversationFixtureHolding=false;conversationFixtureWaiting=false
+                let reply=conversationFixtureRelease;conversationFixtureRelease=nil;reply?.resume()
+            }
+        } catch {self.conversationError=error.localizedDescription;self.error=error.localizedDescription}
+    }
+
+    #endif
     private let monitor = NWPathMonitor()
-    private var accountGeneration = UUID()
+    @ObservationIgnored private let projectMemberReads = ProjectMemberReads()
+    private var accountGeneration = UUID() { didSet {
+        subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
+        projectMemberReads.cancelAll()
+        snapshotRevision = UUID()
+        widgetPublicationQueue.invalidate()
+        syncSignInWorkspace = nil; syncAfterSignInRequested = nil; conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
     @ObservationIgnored private var consumingWidgetActions = false
+    @ObservationIgnored var sharedCapturePublishedWorkspace: SharedCaptureWorkspace?
+    @ObservationIgnored var sharedCapturePublicationReady = false
     @ObservationIgnored private var widgetCalendarWindow: CalendarCapacityWindow?
     @ObservationIgnored private var widgetCalendarRevision = -1
     @ObservationIgnored private var capacityRequest: (UUID, String)?
+    @ObservationIgnored private let widgetPublicationQueue = WidgetPublicationQueue()
     private(set) var widgetPublicationRevision = 0
-    @ObservationIgnored private var workspaceCacheReadable = true
+    private var workspaceRepairFingerprint: String?
+    var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
+    private var workspaceCacheDecoded = true
+    private var workspaceCacheReadable = true {
+        didSet {subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+    }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
     var todoistImportFixture: Bool { userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--todoist-import-testing") }
     var widgetFixtureFailSave = false
     var inboxFixtureFailSave = false
     var focusFixtureFailSave = false
+    @ObservationIgnored private var savedFilterFixtureFailureConsumed = false
+    @ObservationIgnored private var savedFilterFixtureFailNextPersist = false
+    @ObservationIgnored private var noteSaveFixtureFailureConsumed = false
     var widgetFixtureReady = false
     #endif
     #if !DEBUG
     var todoistImportFixture: Bool { false }
     #endif
     var workspaceGeneration: UUID { accountGeneration }
+    var audioConversationRevision = UUID()
+    var teamOrganizationReadable: Bool { workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked }
+    var sharedCaptureAvailable: Bool { !accountRemovalBlocked && workspaceCacheReadable && (signedIn || localMode) && !signingOut && !userID.isEmpty }
     var backupWarning: String?
     @ObservationIgnored private var dailyBackupRunning = false
     var dailyBackupsEnabled: Bool {
@@ -169,18 +1250,428 @@ final class Store {
         let account = userID
         let folder = cacheURL.deletingLastPathComponent().appending(path: "Backups", directoryHint: .isDirectory)
             .appending(path: WorkspaceBackup.stableID("vault", account), directoryHint: .isDirectory)
-        return BackupVault(directory: folder, account: account, key: { try BackupVault.deviceKey(account: account) })
+        return BackupVault(directory: folder, account: account, key: {
+            #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
+            if ChildFieldNativeIdentity.enabled {return try ChildFieldNativeIdentity.key(account)}
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        }, removalGate: UUID(uuidString: account) == nil ? nil : AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: account))
+    }
+    var teamDraftVault: TeamCompletionDraftVault? {
+        guard signedIn,!localMode,!signingOut,!accountRemovalBlocked,TeamProjectValue.id(userID),let origin=try? backend.accountRemovalOrigin else {return nil}
+        let vault=backupVault
+        return TeamCompletionDraftVault(directory:vault.directory.appendingPathComponent("Team drafts",isDirectory:true).appendingPathComponent(WorkspaceBackup.stableID("origin",origin),isDirectory:true),account:userID,origin:origin,key:vault.key,removalGate:vault.removalGate)
+    }
+    var teamRecordedRecoveryVault: TeamCompletionRecoveryDraftVault? {
+        guard let base = teamDraftVault else { return nil }
+        return TeamCompletionRecoveryDraftVault(directory: base.directory.appendingPathComponent("Recorded recovery", isDirectory: true), account: base.account, origin: base.origin, key: base.key, removalGate: base.removalGate)
+    }
+    var teamCancelledRecoveryVault: TeamCompletionRecoveryDraftVault? {
+        guard let base = teamDraftVault else { return nil }
+        return TeamCompletionRecoveryDraftVault(directory: base.directory.appendingPathComponent("Cancelled recovery", isDirectory: true), account: base.account, origin: base.origin, key: base.key, removalGate: base.removalGate, cancelled: true)
+    }
+    func teamRecoveryVault(for draft: TeamCompletionRecoveryDraft) -> TeamCompletionRecoveryDraftVault? {
+        draft.isCancellationDraft ? teamCancelledRecoveryVault : teamRecordedRecoveryVault
+    }
+    var teamSelectionDraftVault: TeamCompletionBatchDraftVault? {
+        guard let base = teamDraftVault else { return nil }
+        return TeamCompletionBatchDraftVault(directory: base.directory.appendingPathComponent("Selections", isDirectory: true), account: base.account, origin: base.origin, key: base.key, removalGate: base.removalGate)
     }
     func makeRecoveryBackup(kind: String = "Manual") async throws -> RecoveryEntry {
-        guard signedIn || localMode, !userID.isEmpty else { throw BackupFailure(message: "Open a workspace before backing it up.") }
+        guard workspaceCacheDecoded, !accountRemovalBlocked, !signingOut, signedIn || localMode, !userID.isEmpty else { throw BackupFailure(message: "Open a readable workspace before backing it up.") }
         let vault = backupVault, before = snapshot, generation = accountGeneration
         let entry = try await Task.detached(priority: .utility) { try vault.save(before, kind: kind) }.value
         guard generation == accountGeneration else { throw BackupFailure(message: "The workspace changed. The backup belongs to the previous workspace.") }
         backupWarning = nil
         return entry
     }
+    func preserveUnreadableWorkspace() async throws {
+        guard workspaceNeedsRepair, !accountRemovalBlocked, !signingOut, !syncing, signedIn || localMode,
+              let fingerprint = workspaceRepairFingerprint else { throw BackupFailure(message: "The original file cannot be safely read yet. Reopen your workspace and try again.") }
+        let vault = backupVault, source = cacheURL, generation = accountGeneration
+        _ = try await Task.detached(priority: .utility) { try vault.preserveAndReopen(source, expectedDigest: fingerprint) }.value
+        guard generation == accountGeneration, !signingOut, !accountRemovalBlocked else { throw CancellationError() }
+        accountGeneration = UUID()
+        snapshot = Snapshot(); teamAccessMask = nil; undoStack = []; redoStack = []; syncConflict = nil; focusSyncConflict = nil
+        error = nil; load(); publishWidgetSnapshot(scheduleCapacityRefresh: false)
+        guard !workspaceNeedsRepair else { throw BackupFailure(message: "The original is preserved, but the workspace could not reopen. Try reopening the app.") }
+        notice = "Original file preserved. Restore a recovery copy or wait for cloud sync."
+        Task { await reschedule(); await sync() }
+    }
+    @ObservationIgnored private var editorSessions: [UUID:TaskEditorSession] = [:]
+    func editorAdmission(_ record: Record, kind: TaskEditorAdmission.Kind = .existing, workspace: WorkspaceBinding? = nil, root: Record? = nil) -> TaskEditorAdmission {
+        let capturedRoot = root ?? self.record("tasks", id: SubtaskTree.referencePath(record.id)?.first ?? record.id)
+        let team = kind == .existing && capturedRoot?.id == record.id ? capturedRoot.flatMap { try? captureTeamTaskEditor($0) } : nil
+        return TaskEditorAdmission(workspace:workspace ?? WorkspaceBinding(account:userID,generation:workspaceGeneration),record:record,root:capturedRoot,kind:kind,teamDraft:team)
+    }
+    func teamTaskCreationOpening(_ source: Record) throws -> TaskEditorOpening {
+        let draft = try captureTeamTaskCreation(source)
+        return TaskEditorOpening(task: source, admission: TaskEditorAdmission(workspace: draft.workspace, record: source, root: nil, kind: .new, teamDraft: draft))
+    }
+    func beginEditorSession(_ original: Record, exactOriginalFields: JSON? = nil) throws -> TaskEditorSession {
+        guard !accountRemovalBlocked,signedIn || localMode else {throw CancellationError()}
+        if let exactOriginalFields {
+            guard AuthoredValueComparison.exactJSON(.object(try exactOriginalFields.fieldEditingProjection()), .object(original.fields)) else { throw CancellationError() }
+        }
+        let session=TaskEditorSession(vault:backupVault,origin:localMode ? nil:try backend.accountRemovalOrigin,original:original,labels:labels,exactOriginalFields:exactOriginalFields)
+        editorSessions=editorSessions.filter{!$0.value.closed}
+        editorSessions[session.id]=session
+        return session
+    }
+    /// Team editors require their captured scope; ordinary personal writers stay closed.
+    func editorMayWrite(source: Record, proposed: Record, teamDraft: TeamTaskEditorDraft? = nil) -> Bool {
+        guard workspaceCacheReadable,!accountRemovalBlocked,!signingOut,signedIn || localMode else {return false}
+        let cache=nativeConversationTeamCache
+        if let teamDraft {
+            guard let cache, !localMode, teamDraft.source.id == source.id,
+                  ["id", "user_id", "project_id", "task_generation"].allSatisfy({ teamDraft.source[$0] == source[$0] }),
+                  teamDraft.scope.origin == (try? backend.accountRemovalOrigin) else { return false }
+            return teamDraft.permits(current: record("tasks", id: teamDraft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+        }
+        if cache?.knownTasks.contains(source.id)==true {return false}
+        for project in Set([source.string("project_id"),proposed.string("project_id")]) where !project.isEmpty {
+            guard record("projects",id:project) != nil, cache?.knownTeams[project]==nil else {return false}
+            if let permission=cache?.boundary.projects[project],!permission.canSend {return false}
+        }
+        return true
+    }
+    /// This explicit path never infers team scope for an ordinary personal save.
+    /// Organization rollout and the service's task capability both stay required.
+    private var nativeTeamEditorEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldTeamsEnabled") as? Bool == true }
+    /// Local client support is distinct from live shared-workspace admission.
+    var teamWorkflowHeadingClientEnabled: Bool { nativeTeamEditorEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true }
+    var teamWorkflowCreationAvailable: Bool { nativeTeamEditorEnabled && workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked && online && !syncing && snapshot.pending.isEmpty }
+    var teamTaskMovesAvailable: Bool { nativeTeamEditorEnabled && workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked }
+    func teamTaskMoveContextCurrent(account: String, origin: String, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        teamTaskMovesAvailable && workspace.matches(account: userID, generation: workspaceGeneration) && account == userID && origin == (try? backend.accountRemovalOrigin) && session == backend.reminderSessionIncarnation
+    }
+    func teamTaskMoveDestinations(_ admission: TeamTaskMoveAdmission) throws -> [Record] {
+        guard teamTaskMovesAvailable, online, !syncing, let cache = nativeConversationTeamCache else { throw AppFailure(message: "Wait for sync to finish before moving a shared task.") }
+        let ids = try admission.destinations(current: record("tasks", id: admission.draft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, pending: snapshot.pending, enabled: nativeTeamEditorEnabled)
+        return projects.filter { ids.contains($0.id) }
+    }
+    func teamTaskMoveScope(_ admission: TeamTaskMoveAdmission, destination: String) throws -> TeamTaskMoveScope {
+        guard try teamTaskMoveDestinations(admission).contains(where: { $0.id == destination }), let cache = nativeConversationTeamCache else { throw TeamTaskMoveCommand.invalid }
+        return try admission.scope(destination: destination, current: record("tasks", id: admission.draft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, pending: snapshot.pending, enabled: nativeTeamEditorEnabled)
+    }
+    func teamTaskMoveReviewCurrent(_ scope: TeamTaskMoveScope, token: String) -> Bool {
+        guard teamTaskMovesAvailable, online, !syncing, snapshot.pending.isEmpty, let cache = nativeConversationTeamCache,
+              cache.boundary.belongs(account: scope.account, origin: scope.origin), cache.boundary.raw["token"] == .string(token) else { return false }
+        return [scope.source, scope.destination].allSatisfy { id in
+            guard let permission = cache.boundary.projects[id] else { return false }
+            return permission.team == scope.team && permission.canSend && !permission.archived && ["manager", "editor"].contains(permission.role)
+        }
+    }
+    var teamTaskMoveService: any TeamTaskMoveService {
+        #if DEBUG
+        if TeamTaskMoveNativePeer.enabled { return TeamTaskMoveNativePeer(store: self) }
+        #endif
+        return backend
+    }
+    func refreshAfterTeamTaskMove(_ receipt: TeamTaskMoveReceipt) async -> Bool {
+        #if DEBUG
+        if TeamTaskMoveNativePeer.enabled { return applyTeamTaskMoveNativeReceipt(receipt) }
+        #endif
+        let generation = workspaceGeneration, account = userID, session = backend.reminderSessionIncarnation, started = Date()
+        await sync()
+        return generation == workspaceGeneration && account == userID && session == backend.reminderSessionIncarnation && (lastSync ?? .distantPast) >= started
+    }
+    func captureTeamTaskEditor(_ source: Record) throws -> TeamTaskEditorDraft {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache, cache.boundary.origin == (try backend.accountRemovalOrigin),
+              record("tasks", id: source.id) == source else { throw TeamTaskEditorDraft.unavailable }
+        return try TeamTaskEditorDraft(source: source, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    func captureTeamTaskCreation(_ source: Record) throws -> TeamTaskEditorDraft {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache, cache.boundary.origin == (try backend.accountRemovalOrigin),
+              record("tasks", id: source.id) == nil else { throw TeamTaskEditorDraft.unavailable }
+        return try TeamTaskEditorDraft(creating: source, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    @discardableResult
+    func saveTeamTaskEditor(_ desired: Record, draft: TeamTaskEditorDraft) -> Bool {
+        do {
+            guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+                  let cache = nativeConversationTeamCache, draft.scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditorDraft.unavailable }
+            let change = try draft.mutation(desired: desired, current: record("tasks", id: draft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+            guard let change else { return true }
+            return commit([change])
+        } catch { self.error = error.localizedDescription; return false }
+    }
+    func reviewedPersonalTaskPlanning(_ records: [Record], workspace: WorkspaceBinding, session: UUID, origin: String?) throws {
+        guard (1...TaskHierarchyIndex.maximumEdits).contains(records.count) else { throw AppFailure(message: "Select up to 1,000 tasks at a time.") }
+        guard Set(records.map(\.id)).count == records.count, workspace.matches(account: userID, generation: workspaceGeneration), session == backend.reminderSessionIncarnation, origin == (try? backend.accountRemovalOrigin), signedIn, !signingOut, !accountRemovalBlocked, workspaceCacheReadable else { throw TeamTaskBatch.conflict }
+        for source in records {
+            let root = SubtaskTree.referencePath(source.id)?.first ?? source.id
+            if let cache = nativeConversationTeamCache {
+                guard let origin, cache.boundary.belongs(account: workspace.account, origin: origin), cache.knownTeams[source.string("project_id")] == nil, !cache.knownTasks.contains(root) else { throw TeamTaskBatch.conflict }
+            }
+            guard try selectionRecord(source.id) == source else { throw TeamTaskBatch.conflict }
+        }
+    }
+    func hasSharedTaskSelection(_ ids: Set<String>) -> Bool {
+        ids.contains { id in
+            let root = SubtaskTree.referencePath(id)?.first ?? id
+            return nativeConversationTeamCache?.knownTasks.contains(root) == true || record("tasks", id: root).map { nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
+        }
+    }
+    func captureTeamTaskCompletionSelection(_ records: [Record]) throws -> TeamTaskCompletionSelection {
+        let selection = try TeamTaskCompletionSelection(drafts: records.map { try captureTeamTaskEditor($0) }, tasks: snapshot.tables["tasks"] ?? [])
+        _ = try reviewedTeamTaskCompletionSelection(selection); return selection
+    }
+    func reviewedTeamTaskCompletionSelection(_ selection: TeamTaskCompletionSelection) throws -> Mutation {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache,
+              selection.drafts.allSatisfy({ $0.scope.origin == (try? backend.accountRemovalOrigin) }) else { throw TeamTaskEditorDraft.unavailable }
+        return try selection.mutation(tasks: snapshot.tables["tasks"] ?? [], workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    @discardableResult func saveTeamTaskCompletionSelection(_ selection: TeamTaskCompletionSelection) -> Bool {
+        do { return commit([try reviewedTeamTaskCompletionSelection(selection)]) }
+        catch { self.error = error.localizedDescription; return false }
+    }
+    func captureTeamTaskPlanningAdmission(_ records: [Record]) throws -> TeamTaskPlanningAdmission {
+        guard !records.isEmpty, records.count <= 100, Set(records.map(\.id)).count == records.count else { throw TeamTaskBatch.invalid }
+        let admission = try TeamTaskPlanningAdmission(drafts: records.map { try captureTeamTaskEditor($0) })
+        try reviewedTeamTaskPlanningAdmission(admission); return admission
+    }
+    func reviewedTeamTaskPlanningAdmission(_ admission: TeamTaskPlanningAdmission) throws {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache,
+              admission.drafts.allSatisfy({ $0.scope.origin == (try? backend.accountRemovalOrigin) }) else { throw TeamTaskEditorDraft.unavailable }
+        let current = Dictionary(uniqueKeysWithValues: admission.drafts.compactMap { draft in record("tasks", id: draft.source.id).map { (draft.source.id, $0) } })
+        guard admission.permits(current: current, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled) else { throw TeamTaskBatch.conflict }
+    }
+    func captureTeamTaskPlanningSelection(_ records: [Record], changes: [String: [String: JSON]]) throws -> TeamTaskPlanningSelection {
+        guard !records.isEmpty, records.count <= 100, Set(records.map(\.id)).count == records.count else { throw TeamTaskBatch.invalid }
+        let selection = try TeamTaskPlanningSelection(drafts: records.map { try captureTeamTaskEditor($0) }, changes: changes)
+        _ = try reviewedTeamTaskPlanningSelection(selection); return selection
+    }
+    func reviewedTeamTaskPlanningSelection(_ selection: TeamTaskPlanningSelection) throws -> Mutation {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache,
+              selection.drafts.allSatisfy({ $0.scope.origin == (try? backend.accountRemovalOrigin) }) else { throw TeamTaskEditorDraft.unavailable }
+        let current = Dictionary(uniqueKeysWithValues: selection.drafts.compactMap { draft in record("tasks", id: draft.source.id).map { (draft.source.id, $0) } })
+        return try selection.mutation(current: current, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    @discardableResult func saveTeamTaskPlanningSelection(_ selection: TeamTaskPlanningSelection) -> Bool {
+        do { return commit([try reviewedTeamTaskPlanningSelection(selection)]) }
+        catch { self.error = error.localizedDescription; return false }
+    }
+    #if DEBUG
+    var teamAudioNativeSyncPhase = "Not started"
+    private func traceTeamAudioNativeSync(_ phase: String) {
+        guard AudioTeamNativeProvider.enabled else { return }
+        teamAudioNativeSyncPhase = phase
+    }
+    #endif
+    var teamAudioDeletionReviewEnabled: Bool {
+        #if DEBUG
+        if AudioTeamNativeProvider.enabled, ProcessInfo.processInfo.arguments.contains("--audio-lifecycle-review-testing") { return nativeTeamEditorEnabled }
+        #endif
+        return nativeTeamEditorEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldAudioRestorationEnabled") as? Bool == true
+    }
+    private func teamAudioDeletionMembers(_ change: Mutation) throws -> [Mutation] {
+        if let batch = change.teamTaskBatch {
+            guard batch.operation == .delete else { throw TeamTaskBatch.invalid }
+            _ = try batch.body(for: change); return batch.items
+        }
+        guard try change.teamTaskScope?.lifecycleAction(for: change) == "delete" else { throw TeamTaskEditScope.invalid }
+        return [change]
+    }
+    func teamAudioDeletionReviews(for change: Mutation) async throws -> [String: TeamAudioLifecycleReview] {
+        guard teamAudioDeletionReviewEnabled, workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked else { throw TeamAudioLifecycleReview.unavailable }
+        let workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration), session = backend.reminderSessionIncarnation
+        let members = try teamAudioDeletionMembers(change), scopes = try members.map(TeamAudioLifecycleScope.init)
+        guard scopes.allSatisfy({ $0.account == userID && $0.origin == (try? backend.accountRemovalOrigin) }) else { throw TeamAudioLifecycleReview.unavailable }
+        var result: [String: TeamAudioLifecycleReview] = [:]
+        // Four bounded read requests keep large selection reviews responsive.
+        for start in stride(from: 0, to: scopes.count, by: 4) {
+            let chunk = Array(scopes[start..<min(start + 4, scopes.count)]), client = backend
+            let values = try await withThrowingTaskGroup(of: TeamAudioLifecycleReview.self) { group in
+                for scope in chunk { group.addTask { try await client.teamAudioLifecycleReview(scope) } }
+                var values: [TeamAudioLifecycleReview] = []
+                for try await review in group { values.append(review) }
+                return values
+            }
+            try Task.checkCancellation()
+            guard workspace.matches(account: userID, generation: workspaceGeneration), session == backend.reminderSessionIncarnation,
+                  workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked else { throw CancellationError() }
+            for review in values { _ = try review.acknowledgement(); result[review.scope.task] = review }
+        }
+        return result
+    }
+    private func applyingTeamAudioDeletionReviews(_ reviews: [String: TeamAudioLifecycleReview], to change: Mutation) throws -> Mutation {
+        guard teamAudioDeletionReviewEnabled else {
+            guard reviews.isEmpty else { throw TeamAudioLifecycleReview.unavailable }; return change
+        }
+        let members = try teamAudioDeletionMembers(change)
+        guard Set(reviews.keys) == Set(members.map(\.recordID)) else { throw TeamAudioLifecycleReview.unavailable }
+        let checked = try members.map { member in try reviews[member.recordID]!.applying(to: member) }
+        if var batch = change.teamTaskBatch {
+            batch.items = checked; var result = change; result.teamTaskBatch = batch; _ = try batch.body(for: result); return result
+        }
+        return checked[0]
+    }
+    var pendingAudioRestoreSelectionRecovery: TeamAudioRestoreSelection? {
+        guard teamAudioDeletionReviewEnabled, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              workspaceCacheReadable, let head = snapshot.pending.first,
+              let selection = try? TeamAudioRestoreSelection(head), let batch = head.teamTaskBatch,
+              batch.account == userID, batch.origin == (try? backend.accountRemovalOrigin) else { return nil }
+        return selection
+    }
+    func audioRestoreSelectionRecoveryIsCurrent(_ selection: TeamAudioRestoreSelection, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        workspace.matches(account: userID, generation: workspaceGeneration) && session == backend.reminderSessionIncarnation &&
+        pendingAudioRestoreSelectionRecovery == selection && online && !syncing
+    }
+    func audioRestoreSelectionReview(_ selection: TeamAudioRestoreSelection, workspace: WorkspaceBinding, session: UUID) async throws -> TeamAudioRestoreSelectionReview {
+        guard audioRestoreSelectionRecoveryIsCurrent(selection, workspace: workspace, session: session) else { throw CancellationError() }
+        var reviews: [TeamAudioLifecycleReview] = []
+        for start in stride(from: 0, to: selection.scopes.count, by: 4) {
+            let scopes = Array(selection.scopes[start..<min(start + 4, selection.scopes.count)]), client = backend
+            let values = try await withThrowingTaskGroup(of: TeamAudioLifecycleReview.self) { group in
+                for scope in scopes { group.addTask { try await client.teamAudioLifecycleReview(scope) } }
+                var values: [TeamAudioLifecycleReview] = []
+                for try await review in group { values.append(review) }
+                return values
+            }
+            try Task.checkCancellation()
+            guard audioRestoreSelectionRecoveryIsCurrent(selection, workspace: workspace, session: session) else { throw CancellationError() }
+            reviews.append(contentsOf: values)
+        }
+        return try TeamAudioRestoreSelectionReview(selection: selection, reviews: reviews)
+    }
+    func replaceExpiredAudioRestoreSelection(_ receipt: TeamAudioRestoreSelectionReceipt, review: TeamAudioRestoreSelectionReview, workspace: WorkspaceBinding, session: UUID) throws {
+        guard audioRestoreSelectionRecoveryIsCurrent(receipt.selection, workspace: workspace, session: session) else { throw CancellationError() }
+        let previous = snapshot
+        do {
+            try snapshot.replaceExpiredAudioRestoreSelection(receipt: receipt, review: review)
+            guard let replacement = snapshot.pending.first else { throw TeamAudioLifecycleReview.unavailable }
+            let history = try TeamAudioRestoreHistoryRebinding(original: receipt.selection.original, replacement: replacement)
+            let nextUndo = try undoStack.map(history.applying), nextRedo = try redoStack.map(history.applying)
+            #if DEBUG
+            if audioSelectionFixtureFailNextSave, AudioTeamNativeProvider.enabled,
+               ProcessInfo.processInfo.arguments.contains("--audio-selection-recovery-testing") {
+                audioSelectionFixtureFailNextSave = false; savedFilterFixtureFailNextPersist = true
+            }
+            #endif
+            try persist()
+            undoStack = nextUndo; redoStack = nextRedo
+        } catch { snapshot = previous; throw error }
+        notice = "Recovery saved for \(receipt.selection.scopes.count) tasks. Checking its result…"
+        Task { await sync() }
+    }
+    func confirmRecordedAudioRestoreSelection(_ receipt: TeamAudioRestoreSelectionReceipt, workspace: WorkspaceBinding, session: UUID) async throws {
+        guard receipt.state == .recorded, audioRestoreSelectionRecoveryIsCurrent(receipt.selection, workspace: workspace, session: session) else { throw CancellationError() }
+        let saved = try await backend.send(receipt.selection.original, expectedAccount: userID)
+        guard audioRestoreSelectionRecoveryIsCurrent(receipt.selection, workspace: workspace, session: session) else { throw CancellationError() }
+        let previous = snapshot
+        do {
+            guard snapshot.acknowledge(receipt.selection.original, saved: saved) else { throw TeamAudioRestoreSelection.unavailable }
+            #if DEBUG
+            if audioSelectionFixtureFailNextSave, AudioTeamNativeProvider.enabled,
+               ProcessInfo.processInfo.arguments.contains("--audio-selection-recovery-testing") {
+                audioSelectionFixtureFailNextSave = false; savedFilterFixtureFailNextPersist = true
+            }
+            #endif
+            try persist()
+        } catch { snapshot = previous; throw error }
+        notice = "Saved selection Undo confirmed."
+        Task { await sync() }
+    }
+    #if DEBUG
+    @ObservationIgnored private var audioSelectionFixtureFailNextSave = false
+    func fixtureAudioSelectionRecoveryFailNextSave() {
+        guard AudioTeamNativeProvider.enabled, ProcessInfo.processInfo.arguments.contains("--audio-selection-recovery-testing") else { return }
+        audioSelectionFixtureFailNextSave = true
+    }
+    #endif
+    var pendingAudioRestoreRecovery: TeamAudioRestoreRecoveryCommand? {
+        guard teamAudioDeletionReviewEnabled, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              workspaceCacheReadable, let head = snapshot.pending.first,
+              let command = try? TeamAudioRestoreRecoveryCommand(head), command.scope.account == userID,
+              command.scope.origin == (try? backend.accountRemovalOrigin) else { return nil }
+        return command
+    }
+    func audioRestoreRecoveryIsCurrent(_ command: TeamAudioRestoreRecoveryCommand, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        workspace.matches(account: userID, generation: workspaceGeneration) && session == backend.reminderSessionIncarnation &&
+        pendingAudioRestoreRecovery == command && online && !syncing
+    }
+    func replaceExpiredAudioRestore(_ receipt: TeamAudioRestoreRecoveryReceipt, review: TeamAudioLifecycleReview, workspace: WorkspaceBinding, session: UUID) throws {
+        guard audioRestoreRecoveryIsCurrent(receipt.command, workspace: workspace, session: session) else { throw CancellationError() }
+        let previous = snapshot
+        do {
+            try snapshot.replaceExpiredAudioRestore(receipt: receipt, review: review)
+            guard let replacement = snapshot.pending.first else { throw TeamAudioLifecycleReview.unavailable }
+            let history = try TeamAudioRestoreHistoryRebinding(original: receipt.command.original, replacement: replacement)
+            let nextUndo = try undoStack.map(history.applying), nextRedo = try redoStack.map(history.applying)
+            try persist()
+            undoStack = nextUndo; redoStack = nextRedo
+        } catch { snapshot = previous; throw error }
+        notice = "Task-only recovery saved. Checking its result…"
+        Task { await sync() }
+    }
+    func confirmRecordedAudioRestore(_ receipt: TeamAudioRestoreRecoveryReceipt, workspace: WorkspaceBinding, session: UUID) async throws {
+        guard receipt.state == .recorded, audioRestoreRecoveryIsCurrent(receipt.command, workspace: workspace, session: session) else { throw CancellationError() }
+        // Replay the unchanged certified intent; never invent a current task row
+        // from the metadata-only recorded proof or re-upload private media.
+        let saved = try await backend.send(receipt.command.original, expectedAccount: userID)
+        guard audioRestoreRecoveryIsCurrent(receipt.command, workspace: workspace, session: session) else { throw CancellationError() }
+        let previous = snapshot
+        do {
+            guard snapshot.acknowledge(receipt.command.original, saved: saved) else { throw TeamAudioRestoreRecoveryCommand.unavailable }
+            try persist()
+        } catch { snapshot = previous; throw error }
+        notice = "Saved Undo confirmed."
+        Task { await sync() }
+    }
+    func captureTeamTaskDeletionSelection(_ records: [Record]) throws -> TeamTaskDeletionSelection {
+        guard (2...100).contains(records.count), Set(records.map(\.id)).count == records.count,
+              records.allSatisfy({ nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil }) else {
+            throw AppFailure(message: "Choose between 2 and 100 tasks from one shared team. Nothing has been removed.")
+        }
+        let selection = try TeamTaskDeletionSelection(drafts: records.map { try captureTeamTaskEditor($0) })
+        _ = try reviewedTeamTaskDeletionSelection(selection)
+        return selection
+    }
+    func reviewedTeamTaskDeletionSelection(_ selection: TeamTaskDeletionSelection) throws -> Mutation {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache,
+              selection.drafts.allSatisfy({ $0.scope.origin == (try? backend.accountRemovalOrigin) }) else { throw TeamTaskEditorDraft.unavailable }
+        let current = Dictionary(uniqueKeysWithValues: selection.drafts.compactMap { draft in record("tasks", id: draft.source.id).map { (draft.source.id, $0) } })
+        return try selection.mutation(current: current, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    @discardableResult func deleteTeamTaskSelection(_ selection: TeamTaskDeletionSelection, audioReviews: [String: TeamAudioLifecycleReview] = [:]) -> Bool {
+        do { return commit([try applyingTeamAudioDeletionReviews(audioReviews, to: reviewedTeamTaskDeletionSelection(selection))]) }
+        catch { self.error = error.localizedDescription; return false }
+    }
+    /// Both review and commit use the original admission; no fresh authority or
+    /// source baseline is acquired by a confirmation sheet.
+    func reviewedTeamTaskDeletion(_ draft: TeamTaskEditorDraft, requestID: UUID) throws -> Mutation {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache, draft.scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditorDraft.unavailable }
+        return try draft.deletion(current: record("tasks", id: draft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled, requestID: requestID)
+    }
+    @discardableResult func deleteTeamTaskEditor(_ draft: TeamTaskEditorDraft, requestID: UUID, audioReviews: [String: TeamAudioLifecycleReview] = [:]) -> Bool {
+        do { return commit([try applyingTeamAudioDeletionReviews(audioReviews, to: reviewedTeamTaskDeletion(draft, requestID: requestID))]) }
+        catch { self.error = error.localizedDescription; return false }
+    }
+    func flushEditorSessions() -> Bool {
+        var success=true
+        for session in editorSessions.values where !session.closed {if !session.flush() {success=false}}
+        return success
+    }
+    func preserveEditorEdit(_ value: TaskEditorRecovery, workspace: WorkspaceBinding) async throws {
+        guard workspace.matches(account:userID,generation:workspaceGeneration), value.account==userID,
+              !accountRemovalBlocked,!signingOut,signedIn || localMode else {throw CancellationError()}
+        let origin=localMode ? nil:try backend.accountRemovalOrigin
+        guard value.origin==origin else {throw CancellationError()}
+        let vault=backupVault
+        try await Task.detached(priority:.utility) {try vault.saveEditorDraft(value)}.value
+        guard workspace.matches(account:userID,generation:workspaceGeneration),!accountRemovalBlocked,!signingOut else {throw CancellationError()}
+    }
     private func scheduleDailyBackup() {
-        guard (signedIn || localMode), !userID.isEmpty, dailyBackupsEnabled, !dailyBackupRunning else { return }
+        guard workspaceCacheDecoded, !accountRemovalBlocked, !signingOut, (signedIn || localMode), !userID.isEmpty, dailyBackupsEnabled, !dailyBackupRunning else { return }
         let vault = backupVault, before = snapshot, generation = accountGeneration
         dailyBackupRunning = true
         Task {
@@ -195,10 +1686,13 @@ final class Store {
         }
     }
     /// The reviewed snapshot must still be current after the encrypted checkpoint is written.
-    func restore(_ backup: WorkspaceBackup, policy: RestorePolicy, reviewed: Snapshot, generation: UUID) async throws -> RestorePlan {
+    func restore(_ backup: WorkspaceBackup, policy: RestorePolicy, reviewed: Snapshot, generation: UUID, onlyNewTask: Bool = false) async throws -> RestorePlan {
+        guard activeTeamMask==nil else {throw BackupFailure(message:"Finish the project-access recovery before restoring another workspace. Your saved work is kept.")}
+        guard workspaceCacheDecoded else {throw BackupFailure(message:"This device’s saved workspace could not be read. Its original file is protected and needs repair before it can be replaced.")}
         guard generation == accountGeneration, snapshot == reviewed, signedIn || localMode else { throw BackupFailure(message: "Your workspace changed. Refresh the restore preview before continuing.") }
         guard !syncing else { throw BackupFailure(message: "Wait for sync to finish, then refresh the restore preview.") }
         let plan = try backup.plan(current: reviewed, account: userID, policy: policy)
+        if onlyNewTask {try TaskEditorRecovery.requireNewTaskPlan(plan)}
         guard plan.total > 0 else { return plan }
         _ = try await makeRecoveryBackup(kind: "Before restore")
         guard generation == accountGeneration, snapshot == reviewed, !syncing else { throw BackupFailure(message: "Your workspace changed while the recovery copy was saved. Refresh the preview before continuing.") }
@@ -207,12 +1701,14 @@ final class Store {
             error = nil
             throw BackupFailure(message: message)
         }
+        workspaceCacheDecoded=true
         undoStack = []; redoStack = []
         return plan
     }
     var userID: String {
         if localMode {
             #if DEBUG
+            if ConversationFixture.enabled { return ConversationFixture.owner }
             if ProcessInfo.processInfo.arguments.contains("--uitesting") { return "ui-testing" }
             if ProcessInfo.processInfo.arguments.contains("--preview") { return "preview" }
             #endif
@@ -222,10 +1718,30 @@ final class Store {
     }
     var email: String { backend.session?.user.email ?? "On this iPhone" }
     var tasks: [Record] { _ = taskRevision; return taskCache.tasks }
-    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { projectMembers($0.id) }, datePreferences: datePhrasePreferences) }
-    var savedViews: [Record] { rows("saved_views").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
-    var favorites: [Record] { rows("favorites").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
-    var workingHours: WorkingHours { (try? WorkingHours(document: record("view_preferences", id: "planner")?["working_hours"] ?? .null)) ?? WorkingHours() }
+    private var filterCollaborators: [Record]? { presentedTables["project_collaborators"] ?? (localMode ? [] : nil) }
+    @ObservationIgnored private var cachedAssignments: (rows:[Record]?,scope:String?,catalog:TaskAssignmentProvenance.Catalog)?
+    var assignmentCatalog: TaskAssignmentProvenance.Catalog {
+        let rows = presentedTables[TaskAssignmentProvenance.table] ?? (localMode ? [] : nil), scope = localMode ? userID : nil
+        if let cachedAssignments, cachedAssignments.rows == rows, cachedAssignments.scope == scope { return cachedAssignments.catalog }
+        let catalog = TaskAssignmentProvenance.Catalog(rows,localAccount:scope)
+        cachedAssignments = (rows,scope,catalog); return catalog
+    }
+    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { project in projectMembers(project.id).map { person in var scoped = person; scoped["project_id"] = .string(project.id); return scoped } }, datePreferences: datePhrasePreferences, collaborators: filterCollaborators, assignments: assignmentCatalog) }
+    var savedViews: [Record] { OrganizationOrder.sorted(rows("saved_views")) }
+    var favorites: [Record] { OrganizationOrder.sorted(rows("favorites")) }
+    var workingHours: WorkingHours? { workingHoursDocument == .null ? WorkingHours() : try? WorkingHours(document: workingHoursDocument) }
+    var workingHoursDocument: JSON { record("view_preferences", id: "planner")?["working_hours"] ?? .null }
+    var workingHoursEditable: Bool { workspaceCacheReadable && (signedIn || localMode) && WorkingHours.editable(workingHoursDocument) }
+    var insightsAvailable:Bool { workspaceCacheReadable && (signedIn || localMode) }
+    var productivityGoalRow:Record? { ProductivityGoals.row(snapshot,account:userID) }
+    var productivityGoalDocument:JSON { productivityGoalRow?[ProductivityGoals.field] ?? .null }
+    var productivityGoals:ProductivityGoals? { try? ProductivityGoals(document:productivityGoalDocument) }
+    @discardableResult func saveProductivityGoals(_ desired:JSON,expected:JSON,workspace:WorkspaceBinding) -> Bool {
+        guard workspace.matches(account:userID,generation:workspaceGeneration),workspaceCacheReadable,signedIn || localMode else { error="Reopen goals in your current workspace.";return false }
+        guard productivityGoalDocument==expected else { error="Goals changed while you were editing. Your draft is kept; review the latest goals before saving.";return false }
+        do { return commit([try ProductivityGoalEdit.command(desired,previous:productivityGoalRow,account:userID)],remember:false) }
+        catch { self.error=error.localizedDescription;return false }
+    }
     var datePhraseRecord: Record? { DatePhrasePreferences.row(snapshot, account: userID) }
     var datePhrasePreferences: DatePhrasePreferences? { try? DatePhrasePreferences(document: datePhraseRecord?["date_preferences"] ?? .null) }
     var datePhraseEditable: Bool { workspaceCacheReadable && (signedIn || localMode) && datePhrasePreferences != nil }
@@ -279,7 +1795,10 @@ final class Store {
         return ReminderAutomatic.applying(to: task, previous: current ?? previous, minutes: reminderAutomaticMinutes)
     }
     var focusRecord: Record? { record(FocusSessionChange.table, id: FocusSessionChange.recordID) }
-    var focusAvailable: Bool { workspaceCacheReadable && (signedIn || localMode) }
+    func allowsWidgetRecordLink(_ url: URL) -> Bool {
+        WidgetRecordLink.allows(url, account: userID, available: workspaceCacheReadable && (signedIn || localMode))
+    }
+    var focusAvailable: Bool { !accountRemovalBlocked && !signingOut && workspaceCacheReadable && (signedIn || localMode) }
     var focusSession: FocusSession? { FocusSessionChange.session(in: focusRecord, account: userID) }
     @discardableResult func changeFocus(_ session: FocusSession?, expected: Record?, workspace: WorkspaceBinding) -> Bool {
         guard workspace.matches(account: userID, generation: workspaceGeneration), workspaceCacheReadable, signedIn || localMode,
@@ -287,8 +1806,8 @@ final class Store {
             error = "This Focus session changed. Review its current state before continuing."; return false
         }
         if let session, session.status == .running || session.id != focusSession?.id {
-            guard tasks.contains(where: { $0.id.lowercased() == session.taskID && !$0.completed }) else {
-                error = "This task is no longer open in your workspace."; return false
+            guard tasks.contains(where: { $0.id.lowercased() == session.taskID && TaskKind.mayComplete($0) && !$0.completed }) else {
+                error = "Choose an open task to start or resume Focus."; return false
             }
         }
         do { return commit([try FocusSessionChange.make(session, current: focusRecord, account: userID)], remember: false) }
@@ -303,11 +1822,16 @@ final class Store {
         do { try persist() } catch { snapshot = old; self.error = error.localizedDescription; return false }
         focusSyncConflict = nil; notice = nil; publishWidgetSnapshot(scheduleCapacityRefresh: false); Task { await reschedule(); await sync() }; return true
     }
-    @discardableResult func setWorkingHours(_ hours: WorkingHours) -> Bool {
-        guard (try? WorkingHours(document: hours.document)) != nil else { error = "Choose valid working hours."; return false }
-        var row = record("view_preferences", id: "planner") ?? Record(["id": .string("planner"), "user_id": .string(userID)])
-        row["working_hours"] = hours.document
-        return save("view_preferences", row)
+    @discardableResult func setWorkingHours(_ hours: WorkingHours, workspace: WorkspaceBinding) -> Bool {
+        guard workspace.matches(account: userID, generation: workspaceGeneration), workingHoursEditable else {
+            error = "These working hours changed or are unsupported. Reopen settings before changing them."; return false
+        }
+        do {
+            let document = try hours.replacing(workingHoursDocument)
+            var row = record("view_preferences", id: "planner") ?? Record(["id": .string("planner"), "user_id": .string(userID)])
+            row["working_hours"] = document
+            return save("view_preferences", row)
+        } catch { self.error = error.localizedDescription; return false }
     }
     /// Native queries share the observed clock; selected calendar days remain explicit.
     func matching(_ query: TaskQuery) -> [Record] {
@@ -315,16 +1839,21 @@ final class Store {
         var query = calendarContext.applying(to: query)
         if case .saved(let id) = query.scope {
             guard let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [] }
-            query.filterProjects = projects.map { FilterReference(id: $0.id, name: $0.name) }; query.filterSections = rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
+            query.filterProjects = filterContext.projectReferences; query.filterSections = rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
+            query.filterPeople = filterContext.personReferences
             query.filter = rule; query.datePreferences = datePhrasePreferences; query.now = rule.usesClockWindow ? calendarContext.minute : nil; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
             query.includeCompleted = query.includeCompleted || view["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion)
         }
-        return taskCache.matching(query)
+        if query.filter?.usesAssignmentHistory == true { query.filterAssignments = assignmentCatalog }
+        let matches = taskCache.matching(query)
+        if case .project = query.scope { return matches }
+        let archived = projectCatalog.archivedIDs
+        return matches.filter { !archived.contains($0.string("project_id")) }
     }
     func filterGroups(_ scope: TaskScope, tasks: [Record], includeCompleted: Bool = false) -> [TaskGrouping.Group] {
         let view: Record? = { if case .saved(let id) = scope { return record("saved_views", id: id) }; return nil }()
         let rule = view.flatMap { try? FilterRule(document: $0["query_ast"]) }
-        return TaskGrouping.queryGroups(tasks, rule: rule, by: viewValue(scope, field: "grouping", fallback: .string("none")).text, context: filterContext, today: calendarContext.today, timeZone: calendarContext.timeZone, includeCompleted: includeCompleted || view?["include_completed"].flag == true, now: calendarContext.minute)
+        return TaskGrouping.queryGroups(tasks, rule: rule, by: viewValue(scope, field: "grouping", fallback: .string("none")).text, context: filterContext, today: calendarContext.today, timeZone: calendarContext.timeZone, includeCompleted: includeCompleted || view?["include_completed"].flag == true, now: calendarContext.minute, work: productiveReading)
     }
     func captureDefaults(_ scope: TaskScope) -> [String: JSON] {
         guard case .saved(let id) = scope, let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [:] }
@@ -333,7 +1862,11 @@ final class Store {
     func filterError(_ scope: TaskScope) -> String? {
         guard case .saved(let id) = scope else { return nil }
         guard let view = record("saved_views", id: id) else { return "This saved filter was deleted or is unavailable on this account." }
-        do { let rule = try FilterRule(document: view["query_ast"]); try rule.validate(in: filterContext); return nil }
+        do {
+            let rule = try FilterRule(document: view["query_ast"]); try rule.validate(in: filterContext)
+            if rule.usesTaskHierarchy { _ = try taskCache.hierarchyCandidates(for: rule, projects: filterContext.projectReferences, userID: userID) }
+            return nil
+        }
         catch { return error.localizedDescription }
     }
     func title(for scope: TaskScope) -> String {
@@ -364,14 +1897,65 @@ final class Store {
         if isFavorite(scope) { remove("favorites", scope.preferenceKey) }
         else { _ = save("favorites", Record(["id": .string(scope.preferenceKey), "user_id": .string(userID), "order_index": .number(Double((favorites.map { $0["order_index"].integer }.max() ?? -1) + 1))])) }
     }
-    func reorderFavorites(_ keys: [String]) {
-        let changes = keys.enumerated().compactMap { index, id -> Mutation? in
-            guard record("favorites", id: id) != nil else { return nil }
-            return Mutation(table: "favorites", recordID: id, method: "PATCH", fields: ["order_index": .number(Double(index))])
-        }
-        _ = commit(changes)
+    func reorderFavorites(_ keys: [String]) { _ = reorderOrganization("favorites", ids: keys) }
+    @discardableResult func shiftProjectOrder(_ request: ProjectOrderRequest, id: String, by distance: Int) -> Bool {
+        applyProjectOrder(request) { try $0.shifting(id, by: distance) }
     }
-    var projects: [Record] { rows("projects").sorted { $0["order_index"].integer < $1["order_index"].integer } }
+    @discardableResult func moveProjectOrder(_ request: ProjectOrderRequest, from offsets: IndexSet, to destination: Int) -> Bool {
+        applyProjectOrder(request) { try $0.moving(from: offsets, to: destination) }
+    }
+    private func applyProjectOrder(_ request: ProjectOrderRequest, plan: (ProjectOrganization.Ordering) throws -> [String]) -> Bool {
+        guard workflowPreviewReady(request.workspace), request.matches(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration),
+            session: backend.reminderSessionIncarnation, projects: allProjects) else {
+            error = "Projects changed. Reopen the list before rearranging them."; return false
+        }
+        do {
+            let ids = try plan(request.ordering)
+            if ids == request.ordering.rows.map(\.id) { return true }
+            return reorderOrganization("projects", ids: ids)
+        } catch { self.error = error.localizedDescription; return false }
+    }
+    @discardableResult
+    func reorderOrganization(_ table: String, ids: [String], projectID: String? = nil) -> Bool {
+        let current = rows(table).filter { table != "sections" || $0.string("project_id") == projectID }
+        do {
+            let changes = try OrganizationOrder.command(table: table, rows: current, ids: ids, projectID: projectID)
+            return changes.isEmpty || commit(changes)
+        } catch { self.error = error.localizedDescription; return false }
+    }
+    private var projectCatalog: ProjectOrganization.Catalog {
+        // Keep observation and current access filtering on every read, including hits.
+        let projects = presentedTables["projects"] ?? []
+        guard workspaceCacheReadable else { projectCatalogReadCache.clear(); return ProjectOrganization.Catalog([]) }
+        let context = WorkspaceProjectCatalogReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
+            workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation,
+            origin: try? backend.accountRemovalOrigin)
+        return projectCatalogReadCache.catalog(for: context) { projects }
+    }
+    var allProjects: [Record] { projectCatalog.all }
+    var projects: [Record] { projectCatalog.active }
+    var personalConnectionProjects: [Record] {
+        let cache = nativeConversationTeamCache, account = userID, origin = try? backend.accountRemovalOrigin
+        return projects.filter { PersonalConnectionDestination.resolve(project: $0.id, projects: [$0], cache: cache, account: account, origin: origin).supported }
+    }
+    func personalConnectionDestination(_ project: String?) -> PersonalConnectionDestination {
+        PersonalConnectionDestination.resolve(project: project, projects: allProjects, cache: nativeConversationTeamCache, account: userID, origin: try? backend.accountRemovalOrigin)
+    }
+    var archivedProjects: [ProjectOrganization.Item] { projectCatalog.archived }
+    var inboxProductiveReading: ProductiveTaskReading {
+        _ = taskRevision
+        return taskCache.inboxProductiveReading()
+    }
+    var navigationCounts: TaskNavigationCounts {
+        _ = taskRevision
+        return taskCache.navigationCounts(labels: rows("labels"), excluding: projectCatalog.archivedIDs)
+    }
+    var productiveReading: ProductiveTaskReading {
+        _ = taskRevision
+        return taskCache.productiveReading(excluding: projectCatalog.archivedIDs)
+    }
+    var activeTasks: [Record] { let archived = projectCatalog.archivedIDs; return tasks.filter { !archived.contains($0.string("project_id")) } }
+    var workflowTemplates: [Record] { rows(WorkflowTemplate.table).sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
     var labels: [Record] { rows("labels").sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
     func quickEntryContext(project: String = "") -> QuickEntryContext {
         QuickEntryContext(projects: projects, sections: rows("sections"), labels: labels,
@@ -382,24 +1966,73 @@ final class Store {
     private(set) var googleAvatarURL: URL?
     private var avatarMetadataLoaded = false
     var avatarURL: URL? { localMode ? nil : ProfileAvatar.resolved(uploaded: profile.string("avatar_url"), google: googleAvatarURL) }
-    var pendingCount: Int { snapshot.pending.count }
+    var childActivityHistory: ChildWorkHistory {
+        let tables = presentedTables
+        return ChildWorkHistory(rows: tables[TaskNodeActivity.table], epoch: tables[TaskNodeActivity.epochTable])
+    }
+    var pendingCount: Int { snapshot.pending.count + ConversationOutbox.rows(snapshot, account: userID).filter { $0.string("state") != "draft" }.count }
     var cacheURL: URL {
+        #if DEBUG
+        if AccountRemovalNativeFixture.enabled { return AccountRemovalNativeFixture.dataRoot.appendingPathComponent(userID + ".json") }
+        #endif
+        #if DEBUG
+        if LocationHandoffNativeFixture.enabled { return LocationHandoffNativeFixture.root.appendingPathComponent("task-cache.json") }
+        #endif
         let folder = URL.applicationSupportDirectory.appending(path: "Taskfold", directoryHint: .isDirectory)
         return folder.appending(path: "\(userID.isEmpty ? "signed-out" : userID).json")
     }
     init() {
         #if DEBUG
+        // This local-only fixture must never read another app's stored cloud credentials.
+        // Keep authenticated test variants and every normal app launch on the existing path.
+        if FullSchemaNativeFixture.enabled { backend = FullSchemaNativeFixture.backend() }
+        else if TeamEditorNativeFixture.enabled { backend = TeamEditorNativeFixture.backend() }
+        else if AccountRemovalNativeFixture.enabled { backend = AccountRemovalNativeFixture.backend() }
+        else if LocationHandoffNativeFixture.enabled { backend = LocationHandoffNativeFixture.backend() }
+        else if let bundle = Bundle.main.bundleIdentifier,
+           (bundle == "com.dbakp.taskfold.mac.p0grammaruitests" || bundle == "com.dbakp.taskfold.mac.p0widgethosts" || bundle.hasPrefix("com.dbakp.taskfold.mac.workflowtests")),
+           ProcessInfo.processInfo.arguments.contains("--uitesting"),
+           !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test"),
+           UserDefaults.standard.bool(forKey: "localMode") {
+            backend = Backend(session: nil)
+        } else { backend = Backend() }
+        #else
+        backend = Backend()
+        #endif
+        #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") {
-            try? backend.clearSession()
+            try? SecureSession.save(nil); backend.session = nil
             UserDefaults.standard.set(false, forKey: "localMode")
         }
         #endif
         localMode = UserDefaults.standard.bool(forKey: "localMode")
+        #if DEBUG
+        if TeamEditorNativeFixture.enabled { localMode = false }
+        #endif
         googleAvatarURL = backend.session?.user.googleAvatarURL
         signedIn = backend.session != nil || localMode
+        #if DEBUG
+        if TeamEditorNativeFixture.enabled { try? TeamRecoveryStorageNativeFixture.restoreIfRequested() }
+        #endif
+        #if DEBUG
+        if FullSchemaNativeFixture.enabled { dailyBackupsEnabled=false;online = !FullSchemaNativeNetwork.offline }
+        #endif
         if signedIn { load() } else { publishWidgetSnapshot() }
+        #if DEBUG
+        prepareTeamEditorNativeFixture()
+        #endif
+        #if DEBUG
+        if LocationHandoffNativeFixture.enabled {
+            if !rows("tasks").contains(where: { $0.id == LocationHandoffNativeFixture.taskID }) { snapshot.tables["tasks"] = [LocationHandoffNativeFixture.task()] }
+            dailyBackupsEnabled = false
+            try? persist()
+        }
+        #endif
         monitor.pathUpdateHandler = { [weak self] path in
             Task { @MainActor in
+                #if DEBUG
+                if FullSchemaNativeFixture.enabled,FullSchemaNativeNetwork.offline {self?.online=false;return}
+                #endif
                 self?.online = path.status == .satisfied
                 if path.status == .satisfied { await self?.refreshRemoteReminderRegistration(); await self?.sync() }
             }
@@ -407,34 +2040,51 @@ final class Store {
         monitor.start(queue: DispatchQueue(label: "taskfold.connectivity"))
         Task { await refreshRemoteReminderRegistration() }
     }
-    func rows(_ table: String) -> [Record] { snapshot.tables[table] ?? [] }
+    func rows(_ table: String) -> [Record] { presentedTables[table] ?? [] }
     func record(_ table: String, id: String) -> Record? { rows(table).first { $0.id == id } }
     func projectMembers(_ projectID: String) -> [Record] {
         guard let project = record("projects", id: projectID) else { return [] }
         let key = "project_members:" + projectID
-        let people = snapshot.tables[key] ?? rows("project_collaborators").filter { $0.string("project_id") == projectID }
+        let people = presentedTables[key] ?? rows("project_collaborators").filter { $0.string("project_id") == projectID }
         return TaskAssignment.members(project: project, collaborators: people, currentUser: userID, profile: profile)
     }
     func assigneeName(_ task: Record) -> String {
         let id = task.string("assigned_to")
         guard !id.isEmpty else { return "Unassigned" }
-        return projectMembers(task.string("project_id")).first { $0.id == id }?.string("display_name") ?? "Assigned collaborator"
+        // Keep snapshot, mask and readability dependencies active on memo hits.
+        _ = presentedTables
+        let project = task.string("project_id")
+        let context = AssigneeDisplayReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
+            account: userID, origin: try? backend.accountRemovalOrigin)
+        return assigneeDisplayCache.name(for: id, project: project, context: context) { projectMembers(project) } ?? "Assigned collaborator"
     }
     @discardableResult
     func refreshProjectMembers(_ projectID: String) async throws -> [Record] {
         guard !projectID.isEmpty, !localMode else { return projectMembers(projectID) }
-        let generation = accountGeneration
-        let data = try await backend.request("/rest/v1/rpc/taskfold_project_members", method: "POST", body: ["_project_id": .string(projectID)])
-        let people = try JSONDecoder().decode([Record].self, from: data).map { person in
-            var member = person; member["status"] = .string("accepted"); return member
+        guard record("projects", id: projectID) != nil else { throw TeamProjectAccessUnavailable() }
+        let scope = ProjectMemberReads.Scope(account: userID, generation: accountGeneration, access: workspaceReadRevision,
+            session: backend.reminderSessionIncarnation, origin: try backend.accountRemovalOrigin, project: projectID)
+        return try await projectMemberReads.load(scope) { [weak self] in
+            guard let self, self.memberReadCurrent(scope) else { throw CancellationError() }
+            let data = try await self.backend.request("/rest/v1/rpc/taskfold_project_members", method: "POST", body: ["_project_id": .string(projectID)], expectedAccount: scope.account)
+            try Task.checkCancellation()
+            let people = try TaskfoldJSONDecoder().decode([Record].self, from: data).map { person in
+                var member = person; member["status"] = .string("accepted"); return member
+            }
+            guard self.memberReadCurrent(scope) else { throw CancellationError() }
+            self.snapshot.tables["project_members:" + projectID] = people
+            try self.persist()
+            return self.projectMembers(projectID)
         }
-        guard generation == accountGeneration else { throw CancellationError() }
-        snapshot.tables["project_members:" + projectID] = people
-        try persist()
-        return projectMembers(projectID)
     }
+    private func memberReadCurrent(_ scope: ProjectMemberReads.Scope) -> Bool {
+        scope.account == userID && scope.generation == accountGeneration && scope.access == workspaceReadRevision &&
+        scope.session == backend.reminderSessionIncarnation && scope.origin == (try? backend.accountRemovalOrigin) && record("projects", id: scope.project) != nil
+    }
+
     func load() {
-        workspaceCacheReadable = false
+        accessRecoveryPending = UserDefaults.standard.bool(forKey: accessRecoveryNoticeKey)
+        workspaceCacheReadable = false;workspaceCacheDecoded=false;workspaceRepairFingerprint=nil
         defer {
             if localMode, workspaceCacheReadable { migrateOrganization() }
             if workspaceCacheReadable {
@@ -442,80 +2092,238 @@ final class Store {
                 catch { self.error = "Could not prepare widget actions: " + error.localizedDescription }
             }
         }
-        guard FileManager.default.fileExists(atPath: cacheURL.path) else { snapshot = Snapshot(); workspaceCacheReadable = true; return }
+        guard FileManager.default.fileExists(atPath: cacheURL.path) else { snapshot = Snapshot(); workspaceCacheDecoded=true;workspaceCacheReadable = true; return }
         do {
-            snapshot = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+            let loaded=try durableSnapshotReadCache.decode(Data(contentsOf:cacheURL))
+            snapshot=loaded;workspaceCacheDecoded=true
+            if let boundary=try teamAccessFenceDisk?.load() {
+                teamAccessMask=try TeamWorkspaceCache(boundary:boundary,previous:loaded.teamWorkspace,pending:loaded.pending,tasks:loaded.tables["tasks"] ?? [])
+            }
             workspaceCacheReadable = true
             if snapshot.tables[DayPlacement.table] == nil, let legacy = snapshot.tables["_local_day_order"] {
                 snapshot.tables[DayPlacement.table] = legacy.map { row in var row = row; row["user_id"] = .string(userID); return row }
             }
         }
-        catch { self.error = "Could not read saved tasks: \(error.localizedDescription)"; if let disk = try? widgetActionDisk() { try? disk.clearProjection() } }
+        catch { if !workspaceCacheDecoded { workspaceRepairFingerprint = try? backupVault.unreadableFingerprint(cacheURL) }; self.error = "Could not read saved tasks: \(error.localizedDescription)"; if let disk = try? widgetActionDisk() { try? disk.clearProjection() } }
     }
-    func persist() throws {
+    #if DEBUG
+    func failNextWorkflowNativeSave() {
+        guard WorkflowUndoNativePeer.enabled else { return }
+        savedFilterFixtureFailNextPersist = true
+    }
+    #endif
+    func persist(acceptingTimeSnooze timeSnooze: TimeSnoozeIntent? = nil, backgroundWidgets: Bool = false, preparedEncoding: PreparedSnapshotEncoding? = nil) throws {
         #if DEBUG
+        if savedFilterFixtureFailNextPersist {
+            savedFilterFixtureFailNextPersist = false
+            throw CocoaError(.fileWriteOutOfSpace)
+        }
         if inboxFixtureFailSave { throw WidgetActionFailure("Isolated Inbox review save-failure fixture") }
         if focusFixtureFailSave { throw WidgetActionFailure("Isolated Focus save-failure fixture") }
         if widgetFixtureFailSave, !snapshot.widgetCompletion.receipts.isEmpty { throw WidgetActionFailure("Isolated widget save-failure fixture") }
         #endif
-        WidgetCompletion.prepare(&snapshot)
+        if try preparedEncoding?.hasPreparedWidgetCompletion(matching: snapshot) != true {
+            WidgetCompletion.prepare(&snapshot)
+        }
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try JSONEncoder().encode(snapshot).write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
-        publishWidgetSnapshot()
+        let previous = FileManager.default.fileExists(atPath: cacheURL.path) ? try durableSnapshotReadCache.decode(Data(contentsOf: cacheURL)) : Snapshot()
+        var durable = snapshot
+        durable.locationImports = try LocationHandoffImportLedger.staging(previous: previous, proposed: durable)
+        durable.timeSnoozes = try stagedTimeSnoozes(previous: previous, proposed: durable, newIntent: timeSnooze)
+        durable = try WearableReceiptLedger.applying(previous: previous, proposed: durable)
+        let preparedData = try preparedEncoding?.matching(durable)
+        #if DEBUG
+        if preparedEncoding != nil { workflowPreparedEncodingUsed = preparedData != nil }
+        #endif
+        let data = try durableSnapshotReadCache.encode(durable, prepared: preparedEncoding)
+        if UUID(uuidString: userID) != nil {
+            try AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).writable {
+                try data.write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            }
+        } else { try data.write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
+        snapshot = durable
+        publishWidgetSnapshot(background: backgroundWidgets)
+        #if DEBUG
+        if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-diagnostics"), Bundle.main.bundleIdentifier?.contains(".workflowtests") == true {
+            let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+            if let data = try? encoder.encode(snapshot), let text = String(data: data, encoding: .utf8) { print("WORKFLOW_SNAPSHOT " + text); fflush(stdout) }
+        }
+        #endif
         scheduleDailyBackup()
     }
     func makeInboxReview(batch: InboxReviewBatch = .five, excluding: Set<String> = []) -> InboxReviewRequest? {
         guard signedIn || localMode, workspaceCacheReadable else { error = "Open a readable workspace before reviewing Inbox."; return nil }
         let order = record(DayPlacement.table, id: "scope:inbox")?["ids"].list.map(\.text) ?? []
-        return InboxReviewRequest(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), tasks: tasks, batch: batch, order: order, excluding: excluding)
+        return InboxReviewRequest(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), tasks: tasks, batch: batch, order: order, excluding: excluding, reading: inboxProductiveReading)
     }
 
     static let appGroup = "group.com.dbakp.taskfold"
     /// The private cache is saved before its actionable projection is published.
-    private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true) {
-        guard let disk = try? widgetActionDisk() else { return }
-        let account = signedIn || localMode ? userID : ""
+    private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true, background: Bool = false) {
+        if !background { widgetPublicationQueue.invalidate() }
+        publishSharedCaptureWorkspace()
+        guard let disk = try? widgetActionDisk() else { widgetPublicationQueue.invalidate(); return }
+        let account = sharedCaptureAvailable ? userID : ""
         let busy = CalendarBusyStore.shared; busy.bind(account: account)
         let current = widgetCalendarWindow.flatMap { value -> CalendarCapacityWindow? in
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
-        let fallback = busy.connected ? (busy.selected.isEmpty ? "choose" : "refresh") : "off"
-        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences)
-        do { try disk.publish(JSONEncoder().encode(payload)); widgetPublicationRevision += 1 }
-        catch { try? disk.clearProjection() } // A failed publication must not leave actionable old data.
-        #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadAllTimelines()
-        #endif
+        let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
+        var input = WidgetPublicationInput(tasks: activeTasks, projects: projects, account: account)
+        input.labels = labels; input.sections = rows("sections"); input.savedViews = savedViews
+        input.completionTokens = (activeTeamMask ?? snapshot.teamWorkspace)?.widgetTokens(presentationSnapshot) ?? WidgetCompletion.tokens(snapshot)
+        input.pendingSync = pendingCount; input.workingHours = workingHours
+        input.calendarWindow = current; input.calendarFallback = fallback
+        input.notePins = rows("view_orders"); input.focusRecord = focusRecord
+        input.focusConflict = focusSyncConflict != nil; input.focusReadable = workspaceCacheReadable
+        input.pulseActivity = rows(TaskActivity.table); input.pulseEpoch = rows(TaskActivity.epochTable)
+        input.pulseChildren = childActivityHistory; input.datePreferences = datePhrasePreferences
+        input.people = filterContext.people; input.viewPreferences = rows("view_preferences")
+        input.viewOrders = rows("view_orders"); input.collaborators = filterCollaborators; input.assignments = assignmentCatalog
+        if let feedback = snapshot.widgetCompletion.feedback, widgetFeedbackIsCurrent(feedback) { input.feedback = feedback }
+        if background, !account.isEmpty {
+            let captured = input, generation = accountGeneration, revision = workspaceReadRevision
+            let session = backend.reminderSessionIncarnation
+            #if DEBUG
+            let gate = WorkflowUndoNativePeer.enabled ? workflowWidgetGate : nil
+            #endif
+            widgetPublicationQueue.enqueue(render: {
+                #if DEBUG
+                await gate?.hold()
+                #endif
+                return try captured.encoded()
+            }) { [weak self] result in
+                guard let self, self.accountGeneration == generation, self.workspaceReadRevision == revision,
+                      self.backend.reminderSessionIncarnation == session, self.sharedCaptureAvailable,
+                      self.userID == account else { return }
+                self.finishWidgetPublication(result, disk: disk)
+            }
+        } else {
+            // Account removal, sign-out and widget receipts keep their immediate
+            // publication/acknowledgement semantics. No late worker may undo them.
+            widgetPublicationQueue.invalidate()
+            finishWidgetPublication(Result { try input.encoded() }, disk: disk)
+        }
         if scheduleCapacityRefresh, !account.isEmpty, workspaceCacheReadable, current == nil, capacityRequest?.1 != account {
             capacityRequest = (UUID(), account)
             Task { await refreshWidgetCapacity() }
         }
     }
 
+    #if DEBUG
+    @ObservationIgnored private var workflowWidgetGate: WidgetPublicationNativeGate?
+    var workflowWidgetPublicationIdle: Bool { widgetPublicationQueue.isIdle }
+    func workflowWidgetNativeProjection() throws -> [String: JSON] {
+        guard WorkflowUndoNativePeer.enabled else { throw CancellationError() }
+        return try TaskfoldJSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data ?? Data())
+    }
+    func verifyWorkflowWidgetPublication() async throws -> [String: JSON] {
+        guard WorkflowUndoNativePeer.enabled else { throw CancellationError() }
+        let original = snapshot, disk = try widgetActionDisk()
+        let oldGate = WidgetPublicationNativeGate(), accessGate = WidgetPublicationNativeGate()
+        defer {
+            Task { await oldGate.resume(); await accessGate.resume() }
+            workflowWidgetGate = nil; snapshot = original; try? persist()
+        }
+        func mark(_ phase: String) {
+            notice = "Widget check: " + phase
+        }
+        func waitForStart(_ gate: WidgetPublicationNativeGate, phase: String) async throws {
+            let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+            while !(await gate.hasStarted()) {
+                guard ContinuousClock.now < deadline else {
+                    throw AppFailure(message: phase + " did not start; queue idle: \(widgetPublicationQueue.isIdle), readable workspace: \(sharedCaptureAvailable)")
+                }
+                try await Task.sleep(for: .milliseconds(10))
+            }
+        }
+        func waitForIdle() async throws {
+            let deadline = ContinuousClock.now.advanced(by: .seconds(20))
+            while !widgetPublicationQueue.isIdle {
+                guard ContinuousClock.now < deadline else { throw AppFailure(message: "Widget renderer did not settle") }
+                try await Task.sleep(for: .milliseconds(10))
+            }
+        }
+        func require(_ valid: Bool, _ message: String) throws {
+            guard valid else { throw AppFailure(message: message) }
+        }
+        mark("first renderer"); workflowWidgetGate = oldGate
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
+        try await waitForStart(oldGate, phase: "First renderer")
+        mark("redaction")
+        // Exercise the real immediate redaction path while the old renderer is
+        // still held. Restoring access must not make its cancelled result valid.
+        signingOut = true; publishWidgetSnapshot(scheduleCapacityRefresh: false); signingOut = false
+        let redacted = try workflowWidgetNativeProjection()
+        try require(redacted["account"] == .string(""), "Sign-out did not redact widgets immediately")
+        await oldGate.resume(); try await waitForIdle()
+        try require(try workflowWidgetNativeProjection() == redacted, "Old renderer revived signed-out content")
+
+        mark("access renderer"); workflowWidgetGate = accessGate
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
+        try await waitForStart(accessGate, phase: "Access renderer")
+        mark("access fence")
+        // No queue invalidation here: independently prove the Store access fence
+        // rejects a successful current-ticket callback after its context changes.
+        workspaceReadRevision = UUID(); try disk.clearProjection()
+        await accessGate.resume(); try await waitForIdle()
+        try require(try disk.read().data == nil, "Old access context was republished")
+
+        mark("latest recovery"); workflowWidgetGate = nil
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
+        try await waitForIdle()
+        try require(try workflowWidgetNativeProjection()["account"] == .string(userID), "Latest workspace did not recover")
+        try require(snapshot == original, "Projection check modified saved work")
+        let durable = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+        try require(durable == original, "Projection check modified durable work")
+        return ["signOutRedactedImmediately": .bool(true), "staleResultRejected": .bool(true), "accessFenceRejected": .bool(true), "latestRecovered": .bool(true), "savedDataUnchanged": .bool(true)]
+    }
+    #endif
+
+    private func finishWidgetPublication(_ result: Result<Data, Error>, disk: WidgetActionDisk) {
+        do { try disk.publish(result.get()); widgetPublicationRevision += 1 }
+        catch { try? disk.clearProjection() }
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
+    }
+
     /// Calendar reads remain in the app. Publication never blocks a durable task save.
     func refreshWidgetCapacity() async {
-        let account = signedIn || localMode ? userID : ""
+        let account = sharedCaptureAvailable ? userID : ""
         guard !account.isEmpty, workspaceCacheReadable else { return }
         let request = UUID(), generation = accountGeneration
         capacityRequest = (request, account)
         let busy = CalendarBusyStore.shared; busy.bind(account: account)
         let revision = busy.revision
         widgetCalendarWindow = nil
-        publishWidgetSnapshot(scheduleCapacityRefresh: false)
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
         let window = await busy.capacityWindow()
         guard capacityRequest?.0 == request else { return }
         capacityRequest = nil
         guard generation == accountGeneration, account == userID, !Task.isCancelled, busy.revision == revision, let window else { return }
         widgetCalendarWindow = window; widgetCalendarRevision = revision
-        publishWidgetSnapshot(scheduleCapacityRefresh: false)
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
     }
 
     private func widgetActionDisk() throws -> WidgetActionDisk {
         #if DEBUG
-        if calendarContextFixtureEnabled || clockWindowFixtureEnabled || datePhraseFixtureEnabled {
+        if AccountRemovalNativeFixture.enabled { return WidgetActionDisk(directory: AccountRemovalNativeFixture.sharedRoot) }
+        #endif
+        #if DEBUG
+        if calendarContextFixtureEnabled || clockWindowFixtureEnabled || datePhraseFixtureEnabled || assigneePatternFixtureEnabled {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "CalendarContextTests", directoryHint: .isDirectory))
         }
-        if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") {
+        // These isolated native test apps have no App Group entitlement. Keep each
+        // projection in its own sandbox without requiring the widget fixture's UI overlay.
+        let isolatedNativeBundles: Set<String> = [
+            "com.dbakp.taskfold.mac.p0uitests", "com.dbakp.taskfold.mac.p0localuitests",
+            "com.dbakp.taskfold.mac.p0importa11ytests", "com.dbakp.taskfold.mac.p0focuscontrasttests",
+            "com.dbakp.taskfold.mac.p0grammaruitests", "com.dbakp.taskfold.mac.p0signeduitests",
+            "com.dbakp.taskfold.mac.p0notificationtests",
+            "com.dbakp.taskfold.mac.workflowteststeameditbridge"
+        ]
+        if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") || isolatedNativeBundles.contains(Bundle.main.bundleIdentifier ?? "") {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "WidgetActionTests", directoryHint: .isDirectory))
         }
         #endif
@@ -540,7 +2348,8 @@ final class Store {
         case .saved: return true
         case .stale: return false
         case .complete(let changes):
-            guard commit(changes, widgetReceipt: request) else {
+            let feedback = WidgetCompletionFeedback.capture(request, projection: try? widgetActionDisk().read().data)
+            guard commit(changes, widgetReceipt: request, widgetFeedback: feedback) else {
                 throw WidgetActionFailure(error ?? "Your widget completion could not be saved. Open Taskfold to retry.")
             }
             return true
@@ -548,9 +2357,13 @@ final class Store {
     }
     /// Startup, foreground refresh and connectivity retry the same credential-free handoff.
     func consumeWidgetCompletions() {
+        refreshSharedCaptureDraftCount()
         guard !consumingWidgetActions, workspaceCacheReadable, signedIn || localMode,
               let disk = try? widgetActionDisk() else { return }
         consumingWidgetActions = true; defer { consumingWidgetActions = false }
+        // A successful local retry returns before cloud sync can clear the banner.
+        // Clear only the notice owned by this widget attempt, preserving other warnings.
+        if let previous = widgetActionStatus, notice == previous { notice = nil }
         widgetActionStatus = nil
         do {
             for request in try disk.pending(account: userID) {
@@ -558,9 +2371,13 @@ final class Store {
                 if !applied { widgetActionStatus = "A widget completion became out of date. Refresh the widget before trying again."; notice = widgetActionStatus }
                 try disk.acknowledge(request)
             }
-        } catch { widgetActionStatus = "A widget completion is waiting: " + error.localizedDescription; notice = widgetActionStatus }
+        } catch { widgetActionStatus = "Widget actions need attention: " + error.localizedDescription; notice = widgetActionStatus }
     }
     func startLocal() {
+        guard !signingOut else { return }
+        // Re-entering the current workspace is not an account switch. Preserve its
+        // session-bound routes and already scheduled one-shot snoozes.
+        guard !localMode || !signedIn || !workspaceCacheReadable else { return }
         let firstRun = !FileManager.default.fileExists(atPath: URL.applicationSupportDirectory.appending(path: "Taskfold/local.json").path)
         if !remoteReminderTestWorkspace {
             do { try prepareReminderDeviceRetirement() } catch { remoteReminderStatus = "Device unlinking could not be saved securely. Retry remote setup." }
@@ -596,92 +2413,574 @@ final class Store {
         commit(changes, remember: false)
     }
     func authenticated() async {
+        // A newer authenticated session supersedes an in-flight sign-out.
         guard backend.session != nil else { return }
+        if let account = backend.session?.user.id, UUID(uuidString: account) != nil, AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: account).removed {
+            do { try await backend.clearSession() } catch { return }
+            resetRemovedWorkspaceIfSignedOut(); return
+        }
         googleAvatarURL = backend.session?.user.googleAvatarURL; avatarMetadataLoaded = false
         accountGeneration = UUID(); localMode = false; signedIn = true; syncConflict = nil; focusSyncConflict = nil
         CalendarBusyStore.shared.bind(account: userID)
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await refreshRemoteReminderRegistration(); await sync() }
     }
-    func signOut() {
+    func permitsTeamTemplateTransfer(_ review: TeamTemplateTransferReview) -> Bool {
+        teamOrganizationReadable && review.workspace.matches(account: userID, generation: workspaceGeneration)
+            && review.session == backend.reminderSessionIncarnation && review.detail.scope.origin == (try? backend.accountRemovalOrigin)
+    }
+    func revalidateTeamTemplateTransfer(_ review: TeamTemplateTransferReview) async throws {
+        guard permitsTeamTemplateTransfer(review) else { throw TeamTemplateLibraryValue.invalid }
+        let latest = try await backend.teamTemplateDetail(team: review.detail.scope.team, template: review.detail.metadata.id, account: review.detail.scope.account, origin: review.detail.scope.origin)
+        guard permitsTeamTemplateTransfer(review) else { throw TeamTemplateLibraryValue.invalid }
+        try review.verify(latest: latest, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation)
+    }
+    var teamTemplateRecoveryAvailable: Bool { signedIn && !localMode && !signingOut && !accountRemovalBlocked }
+    /// Uses the confirmed account for cleanup, never whichever account is now active.
+    func teamTemplateCommandVault(account: String, origin: String) throws -> TeamTemplateCommandVault {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Team template requests", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("origin", origin), isDirectory: true)
+        let io = TeamTemplateCommandFileIO(directory: directory, account: account, origin: origin, encryptionKey: { try BackupVault.deviceKey(account: account) })
+        return TeamTemplateCommandVault(io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: root)
+    }
+    func teamWorkflowRunVault(account: String, origin: String) throws -> TeamWorkflowRunVault {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Shared workflow requests", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("origin", origin), isDirectory: true)
+        let io = TeamWorkflowRunFileIO(directory: directory, account: account, origin: origin, encryptionKey: { try BackupVault.deviceKey(account: account) })
+        return TeamWorkflowRunVault(io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: root)
+    }
+    @ObservationIgnored lazy var teamProjectCommandVault = TeamProjectCommandVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-project-commands"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
+    @ObservationIgnored lazy var teamTaskMoveVault = TeamTaskMoveVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-task-moves"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
+    @ObservationIgnored lazy var projectAdoptionVault = TeamProjectAdoptionVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-project-adoption"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
+    @ObservationIgnored lazy var projectFilePreparationVault = ProjectFilePreparationVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".project-file-preparation"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
+    @ObservationIgnored lazy var teamOrganizationCommandVault = TeamOrganizationCommandVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-commands"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
+    @ObservationIgnored lazy var emailAddressVault = EmailAddressVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".email-addresses"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("EmailAddressLocks", isDirectory: true))
+    @ObservationIgnored lazy var webhookEnrollmentVault = WebhookEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".webhook-enrollment"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("WebhookEnrollmentLocks", isDirectory: true))
+    @ObservationIgnored lazy var automationEnrollmentVault = AutomationEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".automation-enrollment"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("AutomationEnrollmentLocks", isDirectory: true))
+    private var accountRemovalService: String {
+        #if DEBUG
+        if AccountRemovalNativeFixture.enabled { return AccountRemovalNativeFixture.vaultService }
+        #endif
+        return (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".account-removal"
+    }
+    private func accountRemovalCoordinationDirectory() -> URL {
+        AccountRemovalVault.coordinationDirectory(service: accountRemovalService)
+    }
+    @ObservationIgnored private lazy var accountRemovalVault = AccountRemovalVault(io: CalendarKeychainIO(service: accountRemovalService), coordinationDirectory: accountRemovalCoordinationDirectory())
+    private(set) var accountRemovalStatus: String?
+    private var removalPendingAccounts = Set<String>()
+    private var removalRecoveryRunning = false
+    var accountRemovalBusy: Bool { signingOut || removalRecoveryRunning }
+    var accountRemovalBlocked: Bool {
+        !localMode && (removalPendingAccounts.contains(userID) || UserDefaults.standard.bool(forKey: "accountRemoval.pending." + userID) ||
+            UUID(uuidString: userID) != nil && AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).removed)
+    }
+    /// The only new-account entry point is an explicit destructive confirmation.
+    func deleteAccount(expected: WorkspaceBinding) async throws {
+        guard expected.matches(account: userID, generation: workspaceGeneration), !localMode, !signingOut, !removalRecoveryRunning,
+              let account = backend.session?.user.id, account == expected.account, UUID(uuidString: account) != nil else { throw AppFailure(message: "Sign in and finish the current account action first.") }
+        signingOut = true; defer { signingOut = false; publishWidgetSnapshot(); Task { await reschedule() } }
+        try persist()
+        let incarnation = backend.reminderSessionIncarnation
+        let origin = try backend.accountRemovalOrigin
+        var command = try await accountRemovalVault.command(account: account, origin: origin)
+        if command == nil {
+            let fresh = try await backend.accountRemovalCommand()
+            guard backend.reminderSessionIncarnation == incarnation, backend.session?.user.id == account else { throw CancellationError() }
+            command = try await accountRemovalVault.begin(fresh)
+        }
+        guard let command else { throw CancellationError() }
+        markRemovalPending(command.account)
+        do { try await finishAccountRemoval(command) }
+        catch { accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."; throw error }
+    }
+    /// Runs on launch and by explicit Retry, including after ordinary sign-out.
+    /// Only commands that already reached this app's private vault may resume.
+    func resumeAccountRemovals() async {
+        guard !removalRecoveryRunning, !signingOut else { return }
+        removalRecoveryRunning = true; defer { removalRecoveryRunning = false; Task { await reschedule() } }
+        do {
+            let commands = try await accountRemovalVault.pending()
+            var needsAttention = false
+            for command in commands {
+                markRemovalPending(command.account)
+                do { try await finishAccountRemoval(command) }
+                catch {
+                    if let latest = try? await accountRemovalVault.pending(),
+                       await acknowledgeRemovalFinishedElsewhere(account: command.account, origin: command.origin, pending: latest) {
+                        continue
+                    }
+                    needsAttention = true
+                }
+            }
+            // A may have finished elsewhere while B still has a pending command.
+            // Reconcile remembered accounts after every pass, not only an empty
+            // initial journal, and never infer completion from absence alone.
+            let latest = try await accountRemovalVault.pending()
+            if let origin = try? backend.accountRemovalOrigin {
+                for account in removalPendingAccounts.union([userID]) {
+                    _ = await acknowledgeRemovalFinishedElsewhere(account: account, origin: origin, pending: latest)
+                }
+            }
+            if needsAttention || !removalPendingAccounts.isEmpty {
+                accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
+            } else { accountRemovalStatus = nil }
+        } catch { accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish." }
+    }
+    /// A successful, locked vault read plus the server-confirmed disk fence
+    /// can acknowledge another process's completed cleanup. A missing receipt
+    /// alone never permits erasure or a claim that server removal succeeded.
+    private func acknowledgeRemovalFinishedElsewhere(account: String, origin: String, pending: [AccountRemovalCommand]) async -> Bool {
+        guard let id = UUID(uuidString: account), id.uuidString.lowercased() == account,
+              origin == (try? backend.accountRemovalOrigin), !pending.contains(where: { $0.account == account }),
+              AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: account).removed else { return false }
+        if backend.session?.user.id == account {
+            do { try await backend.clearSession() }
+            catch { guard backend.session?.user.id != account else { return false } }
+            guard backend.session?.user.id != account else { return false }
+        }
+        // Preserve a newer cloud account or the user's local workspace.
+        if backend.session == nil, !localMode { resetRemovedWorkspaceIfSignedOut() }
+        removalPendingAccounts.remove(account)
+        UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)
+        if removalPendingAccounts.isEmpty { accountRemovalStatus = nil }
+        return true
+    }
+    private func markRemovalPending(_ account: String) {
+        removalPendingAccounts.insert(account)
+        UserDefaults.standard.set(true, forKey: "accountRemoval.pending." + account)
+        accountRemovalStatus = "Finishing account removal…"
+        if userID == account {
+            accountGeneration = UUID(); undoStack = []; redoStack = []
+            CalendarBusyStore.shared.bind(account: "")
+            publishWidgetSnapshot()
+        }
+    }
+    private func finishAccountRemoval(_ original: AccountRemovalCommand) async throws {
+        guard original.valid, original.origin == (try backend.accountRemovalOrigin) else { throw AppFailure(message: "Return to this account's original server to finish removal.") }
+        var command = original
+        if !command.confirmed {
+            do {
+                if command.statusProof == nil {
+                    let proof = try await backend.prepareAccountRemoval(command)
+                    command = try await accountRemovalVault.prepare(command, proof: proof)
+                }
+                try await backend.performAccountRemoval(command)
+            }
+            catch is AccountRemovalAuthorizationRequired {
+                // Imported recovery is absence-only. Never turn a refused file
+                // into a fresh destructive authorization using a current login.
+                guard !command.hasRecoveryCertificate else { throw AppFailure(message: "This recovery file could not be verified. Ask your administrator for an updated file. Your remaining device copies have been kept.") }
+                guard backend.session?.user.id == command.account else { throw AccountRemovalAuthorizationRequired() }
+                let session = backend.reminderSessionIncarnation
+                let fresh = try await backend.accountRemovalCommand(forceRefresh: backend.session?.access_token == command.authorization)
+                guard fresh.account == command.account, backend.reminderSessionIncarnation == session else { throw CancellationError() }
+                command = try await accountRemovalVault.renew(command, with: fresh)
+                let proof = try await backend.prepareAccountRemoval(command)
+                command = try await accountRemovalVault.prepare(command, proof: proof)
+                try await backend.performAccountRemoval(command)
+            }
+            command = try await accountRemovalVault.confirm(command)
+        }
+        // All paths and keys below derive from the confirmed command, never from
+        // whichever account may have become active while network/Keychain awaited.
+        let account = command.account
+        let root = cacheURL.deletingLastPathComponent()
+        let gate = AccountRemovalDisk(directory: root, account: account)
+        let vault = BackupVault(directory: root.appendingPathComponent("Backups").appendingPathComponent(WorkspaceBackup.stableID("vault", account)), account: account,
+            key: { try BackupVault.deviceKey(account: account) }, removalGate: gate)
+        try gate.removeCache()
+        let privateRoot = LocationPrivateStore.applicationSupport
+        if privateRoot != root { try AccountRemovalDisk(directory: privateRoot, account: account).removeCache() }
+        try await LocationPrivateStore(applicationSupport: privateRoot).removeAccountData(account)
+        #if os(iOS)
+        // Reject a hydration that read the old archive before this cleanup.
+        // The next serialized reschedule installs the current workspace's engine.
+        locationRefreshID = UUID(); locationArchive = nil; locationEngine = nil
+        #endif
+        try widgetActionDisk().removeAccount(account)
+        try sharedCaptureDisk().removeAccount(account)
+        try await CalendarBusyStore.shared.eraseAccount(account)
+        try await Task.detached(priority: .utility) { try vault.removeAll(); try BackupVault.removeDeviceKey(account: account) }.value
+        for key in ["dailyBackups." + account, ReminderPreferences.timeSensitiveKey(account), FocusFinish.preferenceKey(account)] { UserDefaults.standard.removeObject(forKey: key) }
+        if backend.session?.user.id == account {
+            // Confirmed Auth removal covers every incarnation of this account.
+            // Backend's conditional clear still protects a concurrent B sign-in.
+            do { try await backend.clearSession() } catch is CancellationError {
+                guard backend.session?.user.id != account else { throw CancellationError() }
+            }
+            guard backend.session?.user.id != account else { throw CancellationError() }
+            resetRemovedWorkspaceIfSignedOut()
+        }
+        try await automationEnrollmentVault.removeAccount(account, origin: command.origin)
+        try await webhookEnrollmentVault.removeAccount(account, origin: command.origin)
+        try await emailAddressVault.removeAccount(account, origin: command.origin)
+        try await teamOrganizationCommandVault.removeAccount(account, origin: command.origin)
+        try await teamProjectCommandVault.removeAccount(account, origin: command.origin)
+        try await teamTemplateCommandVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
+        try await teamWorkflowRunVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
+        try await childTaskFieldJournal(account:account,origin:command.origin).removeAccount()
+        try await childTaskCompletionJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskCompletionBatchJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskStructureJournal(account: account, origin: command.origin).removeAccount()
+        try await reviewedTaskStepsJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskStructureDraftJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskTransferJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskAdoptionJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskRepairJournal(account: account, origin: command.origin).removeAccount()
+        try await teamTaskMoveVault.removeAccount(account, origin: command.origin)
+        try await projectAdoptionVault.removeAccount(account, origin: command.origin)
+        try await projectFilePreparationVault.removeAccount(account, origin: command.origin)
+        try await accountRemovalVault.finish(command)
+        removalPendingAccounts.remove(account)
+        UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)
+        accountRemovalStatus = nil
+    }
+    private func resetRemovedWorkspaceIfSignedOut() {
+        guard backend.session == nil else { return }
+        googleAvatarURL = nil; avatarMetadataLoaded = false
+        accountGeneration = UUID(); signedIn = false; localMode = false
+        UserDefaults.standard.set(false, forKey: "localMode")
+        snapshot = Snapshot(); error = nil; undoStack = []; redoStack = []; lastSync = nil; syncConflict = nil; focusSyncConflict = nil; accessRecoveryPending = false
+        CalendarBusyStore.shared.bind(account: ""); publishWidgetSnapshot(); clearScheduledReminders()
+    }
+    private(set) var signingOut = false
+    func signOut() async {
+        guard !signingOut else { return }
+        signingOut = true; defer { signingOut = false; publishWidgetSnapshot(); Task { await reschedule() } }
+
+        let leavingSnoozeEpochKey = timeSnoozeEpochKey
         // The account-specific cache and unsent queue stay on disk for the next sign-in.
-        do { try persist(); try prepareReminderDeviceRetirement(); try backend.clearSession() } catch { self.error = error.localizedDescription; return }
+        do {
+            try persist(); try prepareReminderDeviceRetirement(); accountGeneration = UUID()
+            try await backend.clearSession()
+        } catch is CancellationError {
+            // A newer sign-in owns the session; do not clear its workspace or show an old error.
+            return
+        } catch { self.error = error.localizedDescription; return }
+        UserDefaults.standard.set(UUID().uuidString.lowercased(), forKey: leavingSnoozeEpochKey)
         googleAvatarURL = nil; avatarMetadataLoaded = false
         accountGeneration = UUID(); backend.session = nil; signedIn = false; localMode = false
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; lastSync = nil; syncConflict = nil; focusSyncConflict = nil
+        accessRecoveryPending = false
         CalendarBusyStore.shared.bind(account: "")
         publishWidgetSnapshot()
         clearScheduledReminders()
     }
     @discardableResult
-    func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil) -> Bool {
-        guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable }) else { error = "Activity history is read-only."; return false }
-        guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
+    func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil, localHistory: LocalActivityCreation.Preparation? = nil) -> Bool {
+        let historySourceRevision = snapshotRevision
+        let admittedHistory = localMode ? localHistory?.admit(changes, source: historySourceRevision, account: userID, cache: nativeConversationTeamCache) : nil
+        #if DEBUG
+        workflowPreparedLocalHistoryUsed = false
+        workflowPreparedNormalizationUsed = false
+        workflowNormalizationSetupUsed = false
+        workflowPreparedUndoUsed = false
+        workflowPreparedEncodingUsed = false
+        workflowPreparedProjectionUsed = false
+        workflowPreparedValidationUsed = false
+        #endif
+        guard !signingOut, !accountRemovalBlocked else { error = "Finish account removal before changing this workspace."; return false }
+        guard workspaceCacheDecoded else {error="Your saved workspace needs recovery before more changes can be saved. Its original file is kept.";return false}
+        if let access=activeTeamMask ?? snapshot.teamWorkspace,
+           changes.contains(where:{!access.canSend($0,in:snapshot)}) {
+            error="Team editing is not available for this change. Your existing work is kept.";return false
+        }
+        let prepared:[Mutation]
+        do {
+            prepared=try TeamTaskBatch.preparing(changes,snapshot:snapshot)
+            for change in prepared {
+                if WorkflowUndo.matches(change) {
+                    guard localMode || (WorkflowUndo.available(boundary: nativeConversationTeamCache?.boundary, account: userID, origin: try? backend.accountRemovalOrigin, service: snapshot.workflowUndoService) && WorkflowUndo.canSend(change, boundary: nativeConversationTeamCache?.boundary, service: snapshot.workflowUndoService, origin: try? backend.accountRemovalOrigin)) else { throw AppFailure(message: WorkflowUndo.unavailable) }
+                    try WorkflowUndo.validate(change, snapshot: snapshot, account: userID)
+                }
+                if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
+                    guard let command=change.teamCompletion else { throw TeamCompletion.invalid }
+                    guard !localMode,command.scope.account == userID,command.scope.origin == (try backend.accountRemovalOrigin) else { throw TeamCompletion.invalid }
+                    var preview=snapshot
+                    guard command.apply(to:&preview,header:change) else { throw TeamCompletion.conflict }
+                }
+                if let batch=change.teamTaskBatch {
+                    guard !localMode,batch.account == userID,batch.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskBatch.invalid }
+                    var preview=snapshot
+                    guard batch.apply(to:&preview,header:change) else { throw TeamTaskBatch.invalid }
+                }
+            }
+        } catch { self.error=error.localizedDescription;return false }
+        let preparedChanges=prepared
+        guard !preparedChanges.contains(where: { $0.table == "tasks" && $0.recordID.hasPrefix("subtask:") }) else {
+            error = "Open this subtask's details to make this change."; return false
+        }
+        if let draft = sharedCaptureReceipt {
+            guard draft.workspace.account == userID, preparedChanges.count == 1,
+                  preparedChanges[0].table == "tasks", preparedChanges[0].method == "POST",
+                  preparedChanges[0].recordID == draft.taskID, preparedChanges[0].insertOnly == true else { return false }
+        }
+        #if DEBUG
+        if noteConcurrentFixtureScope, ProcessInfo.processInfo.arguments.contains("--note-save-failure-once"),
+           !noteSaveFixtureFailureConsumed,
+           preparedChanges.contains(where: { $0.table == "tasks" && $0.method == "PATCH" && $0.fields["description"] != nil }) {
+            noteSaveFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
+        }
+        if userID == "ui-testing", sharedCaptureReceipt != nil,
+           ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--shared-capture-save-failure-once"),
+           !sharedCaptureFixtureFailureConsumed {
+            sharedCaptureFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
+        }
+        if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-save-failure-once"), !workflowFixtureFailureConsumed,
+           preparedChanges.filter({ $0.table == "tasks" && $0.method == "POST" }).count > 1 {
+            workflowFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
+        }
+        #endif
+        guard preparedChanges.filter(ProductivityGoalEdit.matches).allSatisfy({ProductivityGoalEdit.valid($0,account:userID)}) else { error="These goals need a supported choice and current workspace.";return false }
+        guard preparedChanges.allSatisfy({ $0.table != TaskNodeActivity.table && $0.table != TaskNodeActivity.epochTable && $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable && $0.table != TaskAssignmentProvenance.table && $0.table != SharedComment.table && $0.table != SharedMention.table && !$0.table.hasPrefix("_conversation_") }) else { error = "Activity history is read-only."; return false }
+        guard preparedChanges.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false
         }
-        let old = snapshot
-        let changes = changes.flatMap { TaskAssignment.mutations($0, existing: record($0.table, id: $0.recordID)) }.map { change in
-            var change = change
-            if change.table == "tasks", change.method != "DELETE" {
-                change.fields = TaskPlanning.fields(change.fields, existing: record("tasks", id: change.recordID))
-                if change.method == "PATCH", change.fields["reminder_specs"] == nil,
-                   !Set(change.fields.keys).isDisjoint(with: ["due_date", "due_time", "scheduled_at", "time_zone"]),
-                   let existing = record("tasks", id: change.recordID) {
-                    let proposed = Record(existing.fields.merging(change.fields) { _, new in new })
-                    let resolved = applyingReminderDefault(proposed, previous: existing)
-                    if resolved["reminder_specs"] != proposed["reminder_specs"] {
-                        change.fields["reminder_specs"] = resolved["reminder_specs"]
-                        if change.baseline != nil { change.baseline?["reminder_specs"] = existing["reminder_specs"] }
-                    }
-                }
-                if case .array(let values)? = change.fields["labels"] { change.fields["labels"] = .array(TaskLabels.normalized(values, labels: labels)) }
-            }
-            if change.table == DayPlacement.table, change.method != "DELETE" {
-                change.method = "POST" // Stable composite upsert also handles pre-sync legacy rows.
-                change.fields["id"] = .string(change.recordID); change.fields["user_id"] = .string(userID)
-            }
-            return change
+        guard preparedChanges.filter({ $0.organizationOrder != nil || $0.method == "ORDER" }).allSatisfy(OrganizationOrder.valid) else {
+            error = "This ordering command is invalid."; return false
         }
-        var committedChanges: [Mutation] = []
-        for var change in changes {
-            if change.table == "tasks", change.method == "PATCH", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
-                change.baseline = Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, existing[$0]) })
+        let old = snapshot
+        let changes: [Mutation]
+        if let admittedHistory {
+            // Exact worker admission already supplies these normalized commands.
+            // Do not build command copies/catalog lookups that this path discards.
+            changes = admittedHistory.changes
+        } else {
+            #if DEBUG
+            workflowNormalizationSetupUsed = true
+            #endif
+            // Undo and redo are new commands; a persisted retry keeps its existing identity.
+            let orderingCommands = preparedChanges.map { change in
+                var change = change
+                if change.organizationOrder != nil { change.id = UUID() }
+                return change
             }
-            if change.table == "tasks", change.method == "DELETE", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
+            // Normalization precedes all mutation; reuse its immutable lookup/catalog.
+            let normalizationTables = Set(orderingCommands.map(\.table))
+            let normalizationRows = presentedTables.filter { normalizationTables.contains($0.key) }.mapValues { rows in
+                Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            }
+            func normalizationRecord(_ table: String, id: String) -> Record? { normalizationRows[table]?[id] }
+            let normalizationLabels = orderingCommands.contains { $0.table == "tasks" && $0.method != "DELETE" } ? labels : []
+            let normalizationCache = nativeConversationTeamCache
+            do {
+            changes = try TaskAssignment.normalizedChanges(orderingCommands, existing: { normalizationRecord("tasks", id: $0) }, markMove: markPersonalTaskMove).map { change in
+                var change = change
+                if change.table == "tasks", change.method != "DELETE" {
+                    change.fields = TaskPlanning.fields(change.fields, existing: normalizationRecord("tasks", id: change.recordID))
+                    if change.method == "PATCH", change.fields["reminder_specs"] == nil,
+                       !Set(change.fields.keys).isDisjoint(with: ["due_date", "due_time", "scheduled_at", "time_zone"]),
+                       let existing = normalizationRecord("tasks", id: change.recordID) {
+                        let proposed = Record(existing.fields.merging(change.fields) { _, new in new })
+                        let resolved = applyingReminderDefault(proposed, previous: existing)
+                        if resolved["reminder_specs"] != proposed["reminder_specs"] {
+                            change.fields["reminder_specs"] = resolved["reminder_specs"]
+                            if change.baseline != nil { change.baseline?["reminder_specs"] = existing["reminder_specs"] }
+                        }
+                    }
+                    change = TeamTaskLabelsDraft.normalizing(change, existing: normalizationRecord("tasks", id: change.recordID), catalog: normalizationLabels, cache: normalizationCache)
+                }
+                change = DayPlacement.preparing(change, account: userID)
+                return change
+            }
+            } catch { self.error = error.localizedDescription; return false }
+        }
+        #if DEBUG
+        workflowPreparedNormalizationUsed = admittedHistory != nil
+        #endif
+        // This synchronous creation path reads rows directly, not cached task
+        // queries. Publish once after validation/history admission, before disk
+        // save and widget publication; every early return restores the old view.
+        let widgetAccessBefore = workspaceReadRevision
+        var workflowSaveSucceeded = false
+        var deferringPresentation = WorkflowUndo.creationRun(changes) != nil && !workflowPresentationDeferred
+        if deferringPresentation { workflowPresentationDeferred = true }
+        defer {
+            if deferringPresentation {
+                workflowPresentationDeferred = false
+                refreshSnapshotPresentation(from: old)
+            }
+        }
+        defer {
+            if !workflowSaveSucceeded, workspaceReadRevision != widgetAccessBefore {
+                publishWidgetSnapshot(background: true)
+            }
+        }
+        let validatedCreation = admittedHistory?.validatedCreation(matching: changes, source: historySourceRevision, account: userID)
+        var freshCreation = validatedCreation?.creation ?? FreshWorkflowCreation(changes, snapshot: old, account: userID)
+        let projectsFreshCreation = freshCreation != nil
+        var working = old
+        var localCreations: [LocalActivityCreation.Entry] = []
+        let retainCapturedChanges = projectsFreshCreation && admittedHistory?.canRetainCapturedChanges == true
+        let canAdoptProjection = retainCapturedChanges && admittedHistory?.canAdoptProjectedCreation == true
+
+        let reuseValidation = canAdoptProjection && validatedCreation != nil
+        if reuseValidation, validatedCreation?.permitsAuthoring(enabled: taskHeadingsAuthoringEnabled) != true {
+            snapshot = old; error = "Heading creation is not available in this workspace yet. Your source and saved draft are unchanged."; return false
+        }
+        #if DEBUG
+        workflowPreparedValidationUsed = reuseValidation
+        #endif
+        var committedChanges: [Mutation] = retainCapturedChanges ? changes : []
+        // Only an unchanged, wholly-fresh local projection can reuse its worker
+        // checks. All other edits retain the complete sequential validation path.
+        for var change in reuseValidation ? [] : changes {
+            let current = projectsFreshCreation ? nil : record(change.table, id: change.recordID)
+            if change.table == "tasks", change.method == "PATCH", change.baseline == nil, let existing = current {
+                change.baseline = TaskCompletionRevision.editBaseline(for: change.fields, from: existing)
+            }
+            if change.table == "tasks", change.method == "DELETE", change.baseline == nil, let existing = current {
                 change.baseline = existing.fields
             }
-            change = TaskCompletionRevision.capturing(change, existing: record(change.table, id: change.recordID))
-            guard TaskGeneration.permitsLocalAction(change, existing: record(change.table, id: change.recordID)) else {
+            if change.table == WorkflowTemplate.table, ["PATCH","DELETE"].contains(change.method), let existing=current {
+                change.baseline = existing.fields.merging(change.baseline ?? [:]) { _, original in original }
+            }
+            // Admitted fresh local commands were already captured in the worker.
+            // Without admitted worker validation, all checks below still run.
+            if !retainCapturedChanges { change = TaskCompletionRevision.capturing(change, existing: current) }
+            guard TaskGeneration.permitsLocalAction(change, existing: current) else {
                 snapshot = old
                 error = "This task was deleted and restored while you were editing. Reopen its current copy before applying this change."
                 return false
             }
-            committedChanges.append(change)
-            let before = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
+            guard (change.teamTaskScope == nil && taskHeadingsAuthoringEnabled) || teamHeadingAuthoringAvailable(change.teamTaskScope) || !TaskKind.requiresAuthoring(change, existing: current) else {
+                snapshot = old; error = "Heading creation is not available in this workspace yet. Your source and saved draft are unchanged."; return false
+            }
+            guard TaskKind.permits(change, existing: current) else {
+                snapshot = old
+                error = "This task type or checklist needs review before completion. Your work is unchanged."
+                return false
+            }
+            do { try TaskKind.validateCapturedTypeEdit(change, existing: current) }
+            catch { snapshot = old; self.error = error.localizedDescription; return false }
+            if let scope = change.teamTaskScope {
+                do {
+                    guard !localMode, scope.account == userID, scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditScope.invalid }
+                    change = try scope.capturing(change, existing: current)
+                } catch { snapshot = old; self.error = error.localizedDescription; return false }
+            }
+            if !retainCapturedChanges {
+                if change.table == "view_orders" { change = capturingTaskOrderRecovery(change) }
+                committedChanges.append(change)
+            }
+            if projectsFreshCreation {
+                // The Store gates above still run. The initial wholly-fresh plan
+                // and immutable command admission also cover append's identity
+                // checks; adopt its already-built rows after the final scope fence.
+                if canAdoptProjection { continue }
+                guard let after = freshCreation?.append(change, to: &working) else {
+                    snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
+                }
+                if localMode {
+                    if change.table == "tasks" { localCreations.append(.init(change: change, after: after)) }
+                } else { working.pending.append(change) }
+                continue
+            }
+            let before = change.table == "tasks" ? current : nil
             snapshot.apply(change)
-            if localMode { TaskActivity.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID) }
+            if localMode {
+                let after = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
+                TaskActivity.recordLocal(change, before: before, after: after, snapshot: &snapshot, account: userID)
+                TaskNodeActivity.recordLocal(change, before: before, after: after, snapshot: &snapshot, account: userID)
+                TaskAssignmentProvenance.recordLocal(change, before: before, after: after, snapshot: &snapshot, account: userID)
+            }
             if !localMode { snapshot.pending.append(change) }
         }
-        if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt) }
-        do { try persist() } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
-        let historyChanges = committedChanges.filter { $0.table != FocusSessionChange.table }
-        if remember, !historyChanges.isEmpty { undoStack.append(EditHistory(changes: historyChanges, snapshot: old)); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
+        if projectsFreshCreation {
+            var projectionSource = snapshotRevision
+            #if DEBUG
+            if canAdoptProjection, WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-reject-prepared-projection") { projectionSource = UUID() }
+            #endif
+            let preparedHistory = localMode && (admittedHistory?.apply(to: &working, source: projectionSource, account: userID, retainingValidatedCommands: retainCapturedChanges) ?? localHistory?.apply(localCreations, to: &working, source: snapshotRevision, account: userID) ?? false)
+            if canAdoptProjection && !preparedHistory {
+                // A late scope/calendar rejection leaves working untouched. Replay
+                // the complete ordinary append path, including project-only runs;
+                // an empty history list must never stand in for uncreated rows.
+                for change in changes {
+                    guard let after = freshCreation?.append(change, to: &working) else {
+                        snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
+                    }
+                    if change.table == "tasks" { localCreations.append(.init(change: change, after: after)) }
+                }
+            }
+            #if DEBUG
+            workflowPreparedLocalHistoryUsed = preparedHistory
+            workflowPreparedProjectionUsed = canAdoptProjection && preparedHistory
+            #endif
+            guard !localMode || preparedHistory || LocalActivityCreation.record(localCreations, snapshot: &working, account: userID) else {
+                snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
+            }
+            snapshot = working
+        }
+        if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt); snapshot.widgetCompletion.feedback = widgetFeedback }
+        if let draft = sharedCaptureReceipt {
+            if snapshot.sharedCaptureReceipts == nil { snapshot.sharedCaptureReceipts = [:] }
+            snapshot.sharedCaptureReceipts?[draft.taskID] = draft.taskID
+        }
+        // Fresh workflow capture excludes Focus commands by construction. Keep
+        // its original immutable array so prepared Undo can prove exact identity.
+        let historyChanges = retainCapturedChanges ? changes : committedChanges.filter { $0.table != FocusSessionChange.table }
+        // Retained commands are the unchanged fresh-creation buffer admitted above.
+        // Its prepared Undo already proved this shape; ordinary edits still scan.
+        let workflowCreation = retainCapturedChanges || WorkflowUndo.requiresCreationHistory(historyChanges)
+        let preparedUndo = admittedHistory?.editHistory(matching: historyChanges, source: historySourceRevision, account: userID)
+        let history = (remember || workflowCreation) && !historyChanges.isEmpty ? (preparedUndo ?? EditHistory(changes: historyChanges, snapshot: old)) : nil
+        #if DEBUG
+        workflowPreparedUndoUsed = preparedUndo != nil
+        #endif
+        if WorkflowUndo.missingCreationHistory(historyChanges, snapshot: old, undo: history?.undo) {
+            snapshot = old; error = WorkflowUndo.tooLarge; return false
+        }
+        if deferringPresentation {
+            workflowPresentationDeferred = false; deferringPresentation = false
+            refreshSnapshotPresentation(from: old)
+        }
+        let groupedHistoryChanged = localMode && changes.first.map {
+            ActivityOperation.attachLocal(id: $0.id, account: userID, after: ActivityOperation.counts(old), to: &snapshot)
+        } == true
+        do { try persist(backgroundWidgets: widgetReceipt == nil && sharedCaptureReceipt == nil, preparedEncoding: retainCapturedChanges && !groupedHistoryChanged ? admittedHistory?.encodedCache : nil) } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
+        workflowSaveSucceeded = true
+        if remember, let history { undoStack.append(history); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         Task { await reschedule(); await sync() }
         return true
     }
     @discardableResult
     func save(_ table: String, _ record: Record, baseline: Record? = nil, applyReminderDefaults: Bool = true) -> Bool {
         let existing = self.record(table, id: record.id)
+        if table == "tasks", let existing, let baseline {
+            do { try TaskKind.validateTypeEdit(original: baseline, edited: record, current: existing) }
+            catch { self.error = error.localizedDescription; return false }
+        }
+        if table == "projects" {
+            let intended = baseline.map { old in record.fields.filter { old.fields[$0.key] != $0.value } } ?? record.fields
+            let proposed = Record((existing?.fields ?? [:]).merging(intended) { _, new in new })
+            do { try ProjectOrganization.validate(proposed, previous: existing, account: userID, projects: allProjects) }
+            catch { self.error = error.localizedDescription; return false }
+        }
+        if table == WorkflowTemplate.table {
+            do { _ = try WorkflowTemplate(document: record["document"]) }
+            catch { self.error = error.localizedDescription; return false }
+        }
         let record = table == "tasks" && applyReminderDefaults ? applyingReminderDefault(record, previous: baseline ?? existing) : record
-        let editable = record.fields.filter { table != "tasks" || $0.key != "completion_version" && (existing == nil || $0.key != "task_generation") }
-        let changed = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
+        let editable = record.fields.filter { !(table == "projects" && $0.key == "ancestor_archived") && (table != "tasks" || $0.key != "completion_version" && (existing == nil || $0.key != "task_generation")) }
+        let difference = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
+        let changed = table == "tasks" ? TaskAssignment.preservingAssignmentIntent(difference, authored: editable) : difference
         guard !changed.isEmpty else { return true }
         var changes = [Mutation(table: table, recordID: record.id, method: existing == nil ? "POST" : "PATCH", fields: changed, baseline: baseline.map { old in
-            table == "tasks" ? TaskCompletionRevision.editBaseline(for: changed, from: old) : Dictionary(uniqueKeysWithValues: changed.keys.map { ($0, old[$0]) })
+            table == WorkflowTemplate.table ? old.fields : table == "tasks" ? TaskCompletionRevision.editBaseline(for: changed, from: old) : Dictionary(uniqueKeysWithValues: changed.keys.map { ($0, old[$0]) })
         })]
         if table == "labels", let existing, existing.name != record.name {
-            for task in tasks {
+            for task in tasks where TeamTaskLabelsDraft.usesPersonalCatalog(task, cache: nativeConversationTeamCache) {
                 let values = TaskLabels.normalized(task["labels"].list, labels: labels)
                 // Bind legacy names before the rename; IDs belonging to another label survive.
                 if values != task["labels"].list && values.contains(.string(existing.id)) {
@@ -689,10 +2988,45 @@ final class Store {
                 }
             }
         }
+        #if DEBUG
+        if table == "saved_views", assigneePatternFixtureEnabled,
+           ProcessInfo.processInfo.arguments.contains("--filter-save-failure-once"), !savedFilterFixtureFailureConsumed {
+            savedFilterFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
+        }
+        #endif
         return commit(changes)
     }
     func isPinnedNote(_ taskID: String) -> Bool { PinnedNotes.contains(taskID, pins: rows("view_orders"), account: userID) }
+    /// Pinned-note text uses the same task admission, conflict, queue and Undo
+    /// writers as task details. It never changes the pin or reminder defaults.
+    @discardableResult func savePinnedNoteText(_ text: String, admission: TaskEditorAdmission, session: UUID) -> Bool {
+        do {
+            let source = admission.source.record, current = record("tasks", id: admission.rootID)
+            guard session == backend.reminderSessionIncarnation, admission.kind == .existing,
+                  admission.rootID == source.id,
+                  admission.matches(account: userID, generation: workspaceGeneration, currentRoot: current) else {
+                throw AppFailure(message: "This task or workspace changed. Your note text is still here.")
+            }
+            let desired = try PinnedNoteTextEdit(source: source).applying(text, current: current, pinned: isPinnedNote(source.id))
+            guard editorMayWrite(source: source, proposed: desired, teamDraft: admission.teamDraft) else {
+                throw AppFailure(message: "This note’s editing access changed. Your text is still here.")
+            }
+            if current?["description"] == desired["description"] { return true }
+            if let team = admission.teamDraft { return saveTeamTaskEditor(desired, draft: team) }
+            return save("tasks", desired, baseline: source, applyReminderDefaults: false)
+        } catch { self.error = error.localizedDescription; return false }
+    }
+
     /// Task edits and selection reach disk together before any sync begins.
+    /// Capture optional recovery evidence without changing the user's row write.
+    /// Older/unsupported choices keep their original queue and remain protected.
+    func capturingTaskOrderRecovery(_ change: Mutation) -> Mutation {
+        var result = change; result.orderRecovery = nil
+        guard result.table == "view_orders", result.insertOnly != true, !localMode,
+              let origin = try? backend.accountRemovalOrigin,
+              let captured = try? TaskOrderRecovery.capturing(result, snapshot: snapshot, account: userID, origin: origin) else { return result }
+        return captured
+    }
     @discardableResult
     func saveTaskWithNotePin(_ task: Record, pin: Bool?, baseline: Record? = nil) -> Bool {
         guard let pin else { return save("tasks", task, baseline: baseline) }
@@ -713,7 +3047,7 @@ final class Store {
         var changes: [Mutation] = []
         if table == "saved_views", record("favorites", id: "view:" + id) != nil { changes.append(Mutation(table: "favorites", recordID: "view:" + id, method: "DELETE", fields: [:])) }
         if table == "labels", let label = record("labels", id: id) {
-            for task in tasks {
+            for task in tasks where TeamTaskLabelsDraft.usesPersonalCatalog(task, cache: nativeConversationTeamCache) {
                 let values = TaskLabels.normalized(task["labels"].list, labels: labels)
                 if values.contains(.string(label.id)) {
                     changes.append(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["labels": .array(values.filter { $0 != .string(id) })]))
@@ -721,6 +3055,9 @@ final class Store {
             }
         }
         if table == "projects" {
+            for child in allProjects where child.string("parent_id") == id {
+                changes.append(Mutation(table: "projects", recordID: child.id, method: "PATCH", fields: ["parent_id": .null, "ancestor_archived": .bool(false)]))
+            }
             for task in tasks where task.string("project_id") == id {
                 changes.append(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["project_id": .null, "section_id": .null]))
             }
@@ -736,14 +3073,55 @@ final class Store {
         changes.append(Mutation(table: table, recordID: id, method: "DELETE", fields: [:]))
         commit(changes)
     }
-    func toggle(_ task: Record) { commit(toggleChanges(task)) }
+    /// Source-only local acceptance switch. Normal app configuration omits it;
+    /// shared authoring additionally requires negotiated capabilities and live team admission.
+    /// Authoring a portable definition does not create live tasks or grant shared access.
+    var workflowTemplateHeadingsEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true }
+    var taskHeadingsAuthoringEnabled: Bool {
+        let enabled = Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true
+        if localMode { return enabled }
+        guard workspaceCacheReadable, signedIn, !signingOut, !accountRemovalBlocked else { return false }
+        return PersonalTaskTypes.authoringAvailable(boundary: nativeConversationTeamCache?.boundary, account: userID,
+            origin: try? backend.accountRemovalOrigin, enabled: enabled)
+    }
+    private func teamHeadingAuthoringAvailable(_ scope: TeamTaskEditScope?) -> Bool {
+        guard let scope, workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              scope.account == userID, scope.origin == (try? backend.accountRemovalOrigin), let cache = nativeConversationTeamCache else { return false }
+        return TeamTaskTypes.authoringAvailable(scope: scope, cache: cache, enabled: nativeTeamEditorEnabled && (Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true))
+    }
+    func canAuthorTaskHeadings(teamDraft: TeamTaskEditorDraft?) -> Bool {
+        guard let teamDraft else { return taskHeadingsAuthoringEnabled }
+        guard teamHeadingAuthoringAvailable(teamDraft.scope), let cache = nativeConversationTeamCache else { return false }
+        return teamDraft.permits(current: record("tasks", id: teamDraft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    func toggle(_ task: Record) { toggleNativeTask(task) }
+    /// Explicit native gesture admission. Shared rows never fall back to the
+    /// personal writer if their captured access, source or workspace is unavailable.
+    @discardableResult func toggleNativeTask(_ task: Record) -> Bool {
+        guard TaskKind.mayComplete(task) else { error = "Headings stay open. Open the heading to edit its details."; return false }
+        do {
+            if hasSharedTaskSelection([task.id]) {
+                let draft = try captureTeamTaskEditor(task)
+                guard let cache = nativeConversationTeamCache else { throw TeamTaskEditorDraft.unavailable }
+                let change = try draft.completionMutation(current: record("tasks", id: task.id), tasks: tasks,
+                    workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration),
+                    session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+                return commit([change])
+            }
+            return commit(toggleChanges(task))
+        } catch { self.error = error.localizedDescription; return false }
+    }
+
     /// Completes or reopens several tasks as one undoable change.
-    func toggleAll(_ tasks: [Record]) { let changes = tasks.flatMap(toggleChanges); if !changes.isEmpty { commit(changes) } }
+    func toggleAll(_ tasks: [Record]) {
+        guard tasks.allSatisfy(TaskKind.mayComplete) else { error = "Headings stay open. Select tasks to complete."; return }
+        let changes = tasks.flatMap(toggleChanges); if !changes.isEmpty { commit(changes) }
+    }
     /// Patches the same fields on several tasks as one undoable change.
     func update(_ ids: [String], fields: [String: JSON]) {
         let changes = ids.compactMap { id -> Mutation? in
             guard let task = record("tasks", id: id) else { return nil }
-            let changed = fields.filter { task.fields[$0.key] != $0.value }
+            let changed = TaskAssignment.preservingAssignmentIntent(fields.filter { task.fields[$0.key] != $0.value }, authored: fields)
             return changed.isEmpty ? nil : Mutation(table: "tasks", recordID: id, method: "PATCH", fields: changed)
         }
         if !changes.isEmpty { commit(changes) }
@@ -753,65 +3131,253 @@ final class Store {
         let changes = ids.filter { record("tasks", id: $0) != nil }.map { Mutation(table: "tasks", recordID: $0, method: "DELETE", fields: [:]) }
         if !changes.isEmpty { commit(changes) }
     }
-    func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks) }
-    private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
-        changes.map { change in
+    func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks, account: userID) }
+    private func markPersonalTaskMove(_ input: Mutation, existing: Record?) -> Mutation {
+        var change = input
+        if TaskAssignment.scopedProject(change) != nil { return change }
+        if change.table == "tasks", change.method == "PATCH", !localMode, childTaskFieldEditingEnabled,
+           let destination = change.fields["project_id"], let existing,
+           destination != existing["project_id"], change.teamTaskScope == nil,
+           change.teamCompletion == nil, change.teamTaskBatch == nil,
+           nativeConversationTeamCache?.knownTasks.contains(change.recordID) != true { change.personalTaskMove = true }
+        return change
+    }
+    private func historyChanges(_ changes: [Mutation]) throws -> [Mutation] {
+        let actions = changes.map { original in
+            var change = PersonalTaskMove.historyAction(TeamCompletion.historyAction(original,snapshot:snapshot))
+            if change.table == "view_orders" { change.id = UUID(); change.orderRecovery = nil }
             if change.table == "tasks", change.method == "POST" {
                 return TaskGeneration.restoring(change, existing: record("tasks", id: change.recordID))
             }
-            guard change.table == "tasks", change.method == "PATCH", let base = change.baseline,
-                  let current = record("tasks", id: change.recordID) else { return change }
-            var next = change
-            next.fields = Dictionary(uniqueKeysWithValues: change.fields.map { key, value in
-                (key, TaskEdit.keepingLocal(base: base[key] ?? .null, desired: value, remote: current[key]))
-            })
-            next.baseline = nil // commit captures the actual state before applying the rebased inverse.
-            return next
+            return change
         }
+        return try TaskAssignment.replayingHistory(actions, existing: { record($0, id: $1) }, markMove: markPersonalTaskMove)
     }
-    func undo() {
-        guard let entry = undoStack.popLast() else { return }
-        let changes = historyChanges(entry.undo), applied = EditHistory(changes: changes, snapshot: snapshot)
-        if commit(changes, remember: false) { redoStack.append(applied.reversed) } else { undoStack.append(entry) }
+    func captureHistoryRequest(_ direction: EditHistoryRequest.Direction = .undo) -> EditHistoryRequest? {
+        guard (signedIn || localMode), !signingOut, !accountRemovalBlocked else { return nil }
+        return EditHistoryRequest(direction: direction, history: direction == .undo ? undoStack.last : redoStack.last,
+            workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation)
     }
-    func redo() {
-        guard let entry = redoStack.popLast() else { return }
-        let changes = historyChanges(entry.redo), applied = EditHistory(changes: changes, snapshot: snapshot)
-        if commit(changes, remember: false) { undoStack.append(applied) } else { redoStack.append(entry) }
+    func canApplyHistory(_ request: EditHistoryRequest) -> Bool {
+        (signedIn || localMode) && !signingOut && !accountRemovalBlocked && request.matches(direction: request.direction,
+            history: request.direction == .undo ? undoStack.last : redoStack.last,
+            workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation)
+    }
+    @discardableResult func undo(_ request: EditHistoryRequest? = nil) -> Bool {
+        if let request, request.direction != .undo || !canApplyHistory(request) {
+            error = "This Undo belongs to an earlier change or workspace. Use the current Undo controls."; return false
+        }
+        guard let entry = undoStack.popLast() else { return false }
+        do {
+            let changes = try historyChanges(entry.undo), applied = EditHistory(changes: changes, snapshot: snapshot, id: entry.id)
+            if commit(changes, remember: false) { redoStack.append(applied.reversed); return true }
+        } catch { self.error = error.localizedDescription }
+        undoStack.append(entry); return false
+    }
+    @discardableResult func redo(_ request: EditHistoryRequest? = nil) -> Bool {
+        if let request, request.direction != .redo || !canApplyHistory(request) {
+            error = "This Redo belongs to an earlier change or workspace. Use the current Redo controls."; return false
+        }
+        guard let entry = redoStack.popLast() else { return false }
+        do {
+            let changes = try historyChanges(entry.redo), applied = EditHistory(changes: changes, snapshot: snapshot, id: entry.id)
+            if commit(changes, remember: false) { undoStack.append(applied); return true }
+        } catch { self.error = error.localizedDescription }
+        redoStack.append(entry); return false
+    }
+    /// A denied queued change must not block the refresh that removes revoked shared work.
+    /// Keep its complete local snapshot in the encrypted vault before changing the live cache.
+    private func recoverUnavailableProject(_ mutation: Mutation, generation: UUID, account: String) async -> Bool {
+        guard mutation.personalTaskMove != true, mutation.teamTaskScope == nil, mutation.teamCompletion == nil, mutation.teamTaskBatch == nil, generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
+        let reviewed = snapshot
+        let projectIDs = reviewed.recoveryProjectIDs(for: mutation)
+        guard !projectIDs.isEmpty else { return false }
+        do {
+            var remote: [String: [Record]] = [:]
+            for table in ["projects", "tasks", "sections", "labels", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {
+                remote[table] = try await backend.rows(table)
+                guard generation == accountGeneration, snapshot == reviewed else { return false }
+                if table == "projects", projectIDs.allSatisfy({ id in remote[table]!.contains { $0.id.lowercased() == id } }) { return false }
+                if table == mutation.table, remote[table]!.contains(where: { $0.id.lowercased() == mutation.recordID.lowercased() }) { return false }
+            }
+            remote[TaskAssignmentProvenance.table] = await backend.assignmentProvenanceRows()
+            if let history = await backend.nodeActivityHistory(expectedAccount: account) { remote.merge(history.tables) { _, new in new } }
+            guard generation == accountGeneration, snapshot == reviewed else { return false }
+            guard let recovered = reviewed.recoveringUnavailableProject(for: mutation, remote: remote), recovered.pending.count < reviewed.pending.count else { return false }
+            _ = try await makeRecoveryBackup(kind: "Access removed")
+            guard generation == accountGeneration, account == userID, snapshot == reviewed else { return false }
+            markAccessRecovery()
+            snapshot = recovered
+            do { try persist() } catch { snapshot = reviewed; throw error }
+            undoStack = []; redoStack = []; syncConflict = nil; lastSync = Date()
+            notice = "A shared project is no longer available. Your unsynced changes were saved in Backups & restore."
+            await reschedule()
+            if !snapshot.pending.isEmpty { Task { await self.sync() } }
+            return true
+        } catch { return false }
     }
     func sync() async {
+        #if DEBUG
+        if ChildFieldNativeIdentity.enabled { try? childFieldNativeRefresh(); return }
+        if PersonalHeadingNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") { return }
+        if (TeamEditorNativeFixture.enabled && !FullSchemaNativeFixture.enabled && !TaskFileNativeProviderFixture.workspaceTesting && !AudioTeamNativeProvider.enabled && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
+        #endif
+        guard workspaceCacheDecoded else {notice="Your saved workspace needs recovery before sync can continue. Its original file is kept.";return}
         consumeWidgetCompletions()
-        guard signedIn, !localMode, online, !syncing, syncConflict == nil, focusSyncConflict == nil else { return }
+        guard !signingOut, !accountRemovalBlocked, signedIn, !localMode, online, !syncing else { return }
+        let hadConflict=syncConflict != nil || focusSyncConflict != nil
         syncing = true; let generation = accountGeneration, account = userID
         var sending: Mutation?
-        defer { syncing = false }
+        defer {
+            syncing = false
+            #if DEBUG
+            if TeamBatchRecoveryNativePeer.blockedSync {
+                let proof: [String: JSON] = ["completionReview": .bool(syncConflict?.completionReview != nil), "batchReview": .bool(syncConflict?.completionBatchReview != nil), "notice": notice.map(JSON.string) ?? .null, "error": error.map(JSON.string) ?? .null,
+                    "windowCount": .number(Double(NSApp.windows.count)), "visibleWindows": .number(Double(NSApp.windows.filter(\.isVisible).count))]
+                try? TaskfoldJSONEncoder().encode(proof).write(to: TeamBatchRecoveryNativePeer.traceFile.deletingLastPathComponent().appendingPathComponent("taskfold-cold-discovery-diagnostic.json"), options: .atomic)
+            }
+            #endif
+            if let retry = syncAfterSignInRequested {
+                syncAfterSignInRequested = nil
+                Task { await self.resumeSyncAfterSignIn(workspace: retry) }
+            }
+        }
+        var workflowUndoRefused = false
         do {
-            while let mutation = snapshot.pending.first {
+            #if DEBUG
+            traceTeamAudioNativeSync("Boundary")
+            #endif
+            let workflowService: WorkflowUndoService?
+            do { workflowService = try await backend.workflowUndoService(account: account) }
+            catch is AccountSessionAuthorizationRequired { throw AccountSessionAuthorizationRequired() }
+            catch is CancellationError { throw CancellationError() }
+            catch { workflowService = nil } // Optional discovery must not hold unrelated ordinary sync.
+            guard generation == accountGeneration else { return }
+            if snapshot.workflowUndoService != workflowService { snapshot.workflowUndoService = workflowService }
+            let boundary:TeamWorkspaceBoundary?
+            let allowLegacy=snapshot.teamWorkspace==nil && !snapshot.pending.contains{$0.teamTaskScope != nil || $0.teamCompletion != nil || $0.teamTaskBatch != nil || PersonalTaskTypes.requiresService($0)}
+            do {boundary=try await backend.workspaceBoundary(account:account)}
+            catch is TeamWorkspaceUnavailable {guard allowLegacy else {throw TeamWorkspaceUnavailable()};boundary=nil}
+            guard generation==accountGeneration else {return}
+            if boundary==nil && hadConflict {await syncConversations();return}
+            let access=try boundary.map{try TeamWorkspaceCache(boundary:$0,previous:snapshot.teamWorkspace,pending:snapshot.pending,tasks:snapshot.tables["tasks"] ?? [])}
+            if let access,access.requiresRecovery(snapshot) {
+                teamAccessMask=access
+                if let fence=teamAccessFenceDisk,let boundary {
+                    try await Task.detached(priority:.utility){try fence.save(boundary)}.value
+                    guard generation==accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+                }
+            }
+            let initialRequests=Set(snapshot.pending.map(\.id)),blockedRequests=access?.blocked(snapshot) ?? []
+            while !hadConflict,let mutation = snapshot.pending.first {
+                if blockedRequests.contains(mutation.id) || (!initialRequests.contains(mutation.id) && access?.canSend(mutation,in:snapshot)==false) {
+                    if mutation.personalTaskMove == true {
+                        let confirmed = try await backend.confirmPersonalTaskMove(mutation, expectedAccount: account)
+                        guard generation == accountGeneration, snapshot.pending.first == mutation else { return }
+                        if confirmed {
+                            guard snapshot.acknowledge(mutation, saved: nil) else { throw PersonalTaskMove.invalid }
+                            try persist(backgroundWidgets: true); continue
+                        }
+                        notice = "Your original project move is saved. Its result is not confirmed; review access before trying it again."
+                    }
+                    if let access, try await discoverBlockedTeamCompletion(access: access) { return }
+                    break
+                }
+                // Compatibility pauses delivery, not access or the optimistic draft.
+                // Continue the read so restored support can resume this exact intention.
+                if !PersonalTaskTypes.canSend(mutation, boundary: boundary) || !WorkflowUndo.canSend(mutation, boundary: boundary, service: workflowService, origin: try? backend.accountRemovalOrigin) { break }
                 sending = mutation
                 let saved = try await backend.send(mutation, expectedAccount: account)
                 guard generation == accountGeneration else { return }
-                snapshot.acknowledge(mutation, saved: saved); try persist()
+                guard snapshot.acknowledge(mutation, saved: saved) else { throw TeamCompletion.conflict }
+                if WorkflowUndo.matches(mutation), WorkflowUndo.reply(saved, change: mutation)?.applied == false {
+                    undoStack = []; redoStack = []; notice = WorkflowUndo.message; workflowUndoRefused = true
+                }
+                try persist(backgroundWidgets: true)
+                if let command=mutation.teamCompletion,command.operation == .undo,let saved,
+                   case .object(let raw)=saved["team_completion_reply"],let receipt=try? command.receipt(raw,for:mutation),
+                   !receipt.removed,receipt.successor != nil,
+                   !snapshot.pending.contains(where:{$0.teamCompletion?.source.id == command.source.id}),
+                   record("tasks",id:command.source.id)?["task_generation"] == command.source["task_generation"],
+                   record("tasks",id:command.source.id)?.completed == false {
+                    notice = "Task reopened. The next occurrence was kept."
+                }
             }
-            var remote: [String: [Record]] = [:]
-            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {
-                remote[table] = try await backend.rows(table)
-                guard generation == accountGeneration else { return }
-            }
-            snapshot.mergeRemote(remote); try persist(); lastSync = Date(); migrateOrganization()
+            #if DEBUG
+            traceTeamAudioNativeSync("Workspace read")
+            #endif
+            let read=try await backend.workspaceRead(account:account,initial:boundary,allowLegacy:allowLegacy)
+            guard generation==accountGeneration else {return}
+            if let boundary=read.boundary {
+                let cache=try TeamWorkspaceCache(boundary:boundary,previous:snapshot.teamWorkspace,pending:snapshot.pending,tasks:(snapshot.tables["tasks"] ?? [])+(read.tables["tasks"] ?? []))
+                let before=snapshot,protect=cache.requiresRecovery(before)
+                if protect {
+                    teamAccessMask=cache
+                    if let fence=teamAccessFenceDisk {
+                        try await Task.detached(priority:.utility){try fence.save(boundary)}.value
+                        guard generation==accountGeneration,!signingOut,!accountRemovalBlocked,snapshot==before else {throw TeamWorkspaceChanged()}
+                    }
+                    _=try await makeRecoveryBackup(kind:"Before team access refresh")
+                    guard generation==accountGeneration,!signingOut,!accountRemovalBlocked,snapshot==before else {throw TeamWorkspaceChanged()}
+                }
+                if hadConflict && !protect {
+                    // Keep a current review's optimistic drafts untouched until
+                    // its explicit resolution; only cull inaccessible content.
+                    snapshot.tables=cache.filtering(snapshot.tables);snapshot.teamWorkspace=cache
+                } else {snapshot=cache.merging(read.tables,into:snapshot)}
+                do {try persist(backgroundWidgets: true)} catch {snapshot=before;throw error}
+                if let fence=teamAccessFenceDisk {try fence.clear(after:boundary)}
+                let wasUnreadable = !workspaceCacheReadable
+                workspaceCacheReadable=true
+                if teamAccessMask != nil {teamAccessMask=nil}
+                else if wasUnreadable {publishWidgetSnapshot(scheduleCapacityRefresh:false)}
+                if protect {
+                    undoStack=[];redoStack=[];syncConflict=nil;markAccessRecovery()
+                    notice="Project access changed. Your queued work is kept, and a Recovery copy is saved."
+                }
+            } else {snapshot.mergeRemote(read.tables);try persist(backgroundWidgets: true)}
+            lastSync=Date();migrateOrganization()
+            #if DEBUG
+            traceTeamAudioNativeSync("Conversation read")
+            #endif
+            await syncConversations()
+            #if DEBUG
+            traceTeamAudioNativeSync("Profile read")
+            #endif
             if !avatarMetadataLoaded {
                 do { try await backend.refreshUser(); if generation == accountGeneration { avatarMetadataLoaded = true } }
                 catch { /* Optional avatar refresh must not interrupt task synchronization. */ }
             }
             guard generation == accountGeneration else { return }
             googleAvatarURL = backend.session?.user.googleAvatarURL
+            #if DEBUG
+            traceTeamAudioNativeSync("Reminder scheduling")
+            #endif
             await reschedule()
         } catch {
+            if !(error is TeamTaskReviewRequired), let mutation = sending, await recoverUnavailableProject(mutation, generation: generation, account: account) { return }
             if generation == accountGeneration {
-                notice = "Sync paused: \(error.localizedDescription)"
+                syncSignInWorkspace = error is AccountSessionAuthorizationRequired ? WorkspaceBinding(account:account,generation:generation) : nil
+                notice = SyncStatus.failureMessage(error)
+                if let mutation = sending, mutation.teamTaskBatch?.isCompletion == true,
+                   !(error is CancellationError), !(error is AccountSessionAuthorizationRequired),
+                   let review = try? await backend.reviewTeamCompletionBatch(mutation, expectedAccount: account),
+                   generation == accountGeneration, snapshot.pending.first == mutation {
+                    installTeamCompletionBatchReview(review)
+                    notice = "Your task selection is saved. Review its sync status to continue."; return
+                }
+                if let mutation=sending,mutation.teamCompletion != nil,
+                   !(error is CancellationError),!(error is AccountSessionAuthorizationRequired),
+                   let review=try? await backend.reviewTeamCompletion(mutation,expectedAccount:account),
+                   generation == accountGeneration,snapshot.pending.first == mutation {
+                    syncConflict=SyncConflict(mutation:mutation,remote:review.task ?? mutation.teamCompletion!.source,completionReview:review)
+                    notice="Your completion is saved. Review its sync status to continue."
+                    return
+                }
                 if error.localizedDescription.contains("TASKFOLD_FOCUS_CONFLICT:"), let mutation = sending,
                    mutation.table == FocusSessionChange.table,
                    let data = try? await backend.request("/rest/v1/focus_sessions?id=eq.current&select=*"),
-                   let remoteRows = try? JSONDecoder().decode([Record].self, from: data),
+                   let remoteRows = try? TaskfoldJSONDecoder().decode([Record].self, from: data),
                    generation == accountGeneration, snapshot.pending.contains(mutation) {
                     let remote = remoteRows.first ?? FocusSessionChange.emptyRow(account: userID)
                     guard FocusSessionChange.validRow(remote, account: userID) else { return }
@@ -820,11 +3386,26 @@ final class Store {
                     publishWidgetSnapshot(scheduleCapacityRefresh: false)
                     notice = "Focus changed on another device. Open Focus session to review it and resume sync."
                 }
+                if error.localizedDescription.contains("TASKFOLD_CONFLICT:"),let mutation=sending,ProductivityGoalEdit.matches(mutation),
+                   let data=try? await backend.request("/rest/v1/view_preferences?id=eq.insights&select=*",expectedAccount:account),
+                   let rows=try? TaskfoldJSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
+                    let remote=rows.first ?? ProductivityGoalEdit.emptyRow(account:account)
+                    if remote.id==ProductivityGoals.recordID,remote.string("user_id")==account {
+                        syncConflict=SyncConflict(mutation:mutation,remote:remote);notice="Goals changed on another device. Review both choices to resume sync."
+                    }
+                }
+                if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation=sending,mutation.table==WorkflowTemplate.table,
+                   let escaped=mutation.recordID.addingPercentEncoding(withAllowedCharacters:.alphanumerics),
+                   let data=try? await backend.request("/rest/v1/project_templates?id=eq.\(escaped)&select=*"),
+                   let rows=try? TaskfoldJSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
+                    syncConflict=SyncConflict(mutation:mutation,remote:rows.first ?? Record(["id":.string(mutation.recordID),"name":.string("Deleted template")]))
+                    notice="This template changed on another device. Review it to resume sync."
+                }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation = sending,
                    mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
                    let escaped = mutation.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
                    let data = try? await backend.request("/rest/v1/tasks?id=eq.\(escaped)&select=*"),
-                   let remote = try? JSONDecoder().decode([Record].self, from: data).first,
+                   let remote = try? TaskfoldJSONDecoder().decode([Record].self, from: data).first,
                    generation == accountGeneration, snapshot.pending.contains(mutation),
                    remote.id.lowercased() == mutation.recordID.lowercased() {
                     syncConflict = SyncConflict(mutation: mutation, remote: remote)
@@ -833,9 +3414,16 @@ final class Store {
             }
             return
         }
-        notice = widgetActionStatus
-        // Edits made while fetching are still queued; flush after this sync releases its lock.
-        if !snapshot.pending.isEmpty { Task { await self.sync() } }
+        guard generation == accountGeneration else { return }
+        syncSignInWorkspace = nil
+        let accessBlocked=snapshot.pending.first.map{snapshot.teamWorkspace?.blocked(snapshot).contains($0.id)==true} ?? false
+        let headingBlocked = snapshot.pending.first.map { !PersonalTaskTypes.canSend($0, boundary: snapshot.teamWorkspace?.boundary) } ?? false
+        let workflowUndoBlocked = snapshot.pending.first.map { !WorkflowUndo.canSend($0, boundary: snapshot.teamWorkspace?.boundary, service: snapshot.workflowUndoService, origin: try? backend.accountRemovalOrigin) } ?? false
+        if workflowUndoBlocked { notice = "Your workflow Undo is saved on this device. Its service needs an update before it can sync." }
+        if headingBlocked, syncSignInWorkspace == nil { notice = "Your heading changes are saved on this device. This service needs heading support before they can sync." }
+        if !accessBlocked && !headingBlocked && !workflowUndoBlocked && !workflowUndoRefused && !hadConflict {notice = widgetActionStatus}
+        // A blocked head needs review, not an immediate busy retry loop.
+        if !snapshot.pending.isEmpty && !accessBlocked && !headingBlocked && !workflowUndoBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.sync()}}
     }
     /// Only fill missing remote rows after a successful fetch. Existing synchronized choices win.
     private func migrateOrganization() {
@@ -870,6 +3458,491 @@ final class Store {
         }
         #endif
     }
+    func reviewSavedTeamDraft(_ draft:TeamCompletionDraft,command:TeamCompletionDraft.CopyCommand) async throws -> TeamCompletionDraft.CopyReview {
+        let generation=accountGeneration,account=userID
+        guard let vault=teamDraftVault,draft.scope.account == account,draft.scope.origin == vault.origin,
+              snapshot.tables["projects"]?.contains(where:{$0.id == draft.scope.project}) == true else {
+            throw AppFailure(message:"Reopen the original project to review a task copy. Your draft is kept.")
+        }
+        let saved=try await Task.detached(priority:.utility){try vault.load(draft.id)}.value
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,saved.sameWork(as:draft),
+              saved.copyAttempt == nil || saved.copyAttempt == command else {throw TeamCompletionDraft.invalid}
+        let review=try await backend.copyTeamDraft(saved,command:command,commit:false,expectedAccount:account)
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        if review.cancelled,saved.copyAttempt == command {
+            try await Task.detached(priority:.utility){try vault.clearCopyAttempt(saved,proof:review)}.value
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        }
+        return review
+    }
+    func createSavedTeamDraftCopy(_ draft:TeamCompletionDraft,review:TeamCompletionDraft.CopyReview) async throws -> TeamCompletionDraft.CopyReview {
+        let generation=accountGeneration,account=userID
+        guard let vault=teamDraftVault,draft.scope.account == account,draft.scope.origin == vault.origin,review.matches(draft),
+              snapshot.tables["projects"]?.contains(where:{$0.id == draft.scope.project}) == true else {throw TeamCompletionDraft.invalid}
+        _=try await makeRecoveryBackup(kind:"Before copying team draft")
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        let saved=try await Task.detached(priority:.utility){try vault.prepareCopy(draft,command:review.command)}.value
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        let result=try await backend.copyTeamDraft(saved,command:review.command,commit:true,expectedAccount:account)
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        if result.cancelled {
+            try await Task.detached(priority:.utility){try vault.clearCopyAttempt(saved,proof:result)}.value
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+            return result
+        }
+        // An in-flight workspace read may predate this server write. Let its
+        // authorized refresh finish rather than inserting a row it could then
+        // erase. The same copy remains recoverable through the saved request.
+        if !syncing,let next=result.installing(in:snapshot) {
+            let before=snapshot;snapshot=next
+            do {try persist()} catch {snapshot=before;throw error}
+        }
+        // The draft and frozen request remain encrypted even after success.
+        // A retry reads the same copy; it never rewinds local edits or recreates
+        // a deleted/replaced task. Ordinary sync can refresh other shared work.
+        notice=result.task == nil ? "This task copy is no longer available. Your saved draft is kept." : "Task copy saved. Your original draft is kept."
+        return result
+    }
+
+    func cancelSavedTeamDraftCopy(_ draft:TeamCompletionDraft,command:TeamCompletionDraft.CopyCommand) async throws -> TeamCompletionDraft.CopyReview {
+        let generation=accountGeneration,account=userID
+        guard let vault=teamDraftVault,draft.scope.account == account,draft.scope.origin == vault.origin else {throw CancellationError()}
+        let saved=try await Task.detached(priority:.utility){try vault.load(draft.id)}.value
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,saved.sameWork(as:draft),saved.copyAttempt == command else {throw TeamCompletionDraft.invalid}
+        let result=try await backend.copyTeamDraft(saved,command:command,commit:false,cancel:true,expectedAccount:account)
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        if result.cancelled {
+            try await Task.detached(priority:.utility){try vault.clearCopyAttempt(saved,proof:result)}.value
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        }
+        return result
+    }
+
+    @discardableResult func parkTeamCompletionDraft(_ expected:TeamCompletion.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
+        let generation=accountGeneration,account=userID,before=snapshot,access=nativeConversationTeamCache,revision=workspaceReadRevision
+        guard currentTeamCompletionReview(expected),let access,let candidate=TeamCompletionDraft.Candidate(review:expected,snapshot:before),let vault=teamDraftVault,
+              candidate.draft.scope.account == account,candidate.draft.scope.origin == vault.origin else {return false}
+        do {
+            _=try await makeRecoveryBackup(kind:"Before saving team draft")
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            _=try await Task.detached(priority:.utility){try vault.save(candidate.draft)}.value
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            let proof=try await backend.retireTeamProvisional(expected.mutation,expectedAccount:account)
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            guard let projected=candidate.parking(snapshot,proof:proof), let next=access.retainingRecoveryAccess(in:projected,from:before) else {
+                syncConflict=SyncConflict(mutation:expected.mutation,remote:proof.review.task ?? expected.mutation.teamCompletion!.source,completionReview:proof.review)
+                recordTeamCompletionReviewFailure("Your draft is saved. The shared task changed; check the current review before continuing.", origin: presentation);return false
+            }
+            snapshot=next
+            do {try persist()} catch {snapshot=before;recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation);return false}
+            undoStack=[];redoStack=[];syncConflict=nil;notice="Edits kept in Saved team drafts. Sync can continue."
+            Task {await sync()};return true
+        } catch {
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionReview(expected) else {return false}
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation);return false
+        }
+    }
+
+    @discardableResult func parkConnectedTeamCompletionDraft(_ expected: TeamCompletionReviewPresentation) async -> Bool {
+        guard expected == teamCompletionReviewPresentation, let initial = syncConflict?.completionReview,
+              currentTeamCompletionReview(initial), initial.isRecorded,
+              let access = nativeConversationTeamCache, let copyVault = teamDraftVault,
+              let archiveVault = teamRecordedRecoveryVault else { return false }
+        let generation = accountGeneration, session = backend.reminderSessionIncarnation, account = userID
+        let before = snapshot, revision = workspaceReadRevision
+        var observed = initial
+        func unchanged() -> Bool {
+            generation == accountGeneration && session == backend.reminderSessionIncarnation && before == snapshot &&
+            revision == workspaceReadRevision && nativeConversationTeamCache == access && currentTeamCompletionReview(observed) &&
+            syncConflict?.completionBatchReview == expected.group && teamCompletionReviewMayFinish(expected)
+        }
+        do {
+            let candidate = try await Task.detached(priority: .userInitiated) {
+                guard let value = TeamConnectedProvisionalDraft(review: initial, snapshot: before),
+                      value.recovery.preserving(readable: access) != nil else { throw TeamCompletionDraft.invalid }
+                return value
+            }.value
+            guard unchanged() else { return false }
+            _ = try await makeRecoveryBackup(kind: "Before saving connected recurring draft")
+            guard unchanged() else { return false }
+            let saved = try await Task.detached(priority: .utility) { () -> (TeamCompletionRecoveryDraft, TeamCompletionDraft) in
+                let archive = try archiveVault.save(candidate.recovery)
+                let copy = try copyVault.saveConnected(candidate.copy, recovery: archive)
+                guard archive.sameWork(as: candidate.recovery), copy.original == candidate.copy.original,
+                      copy.record == candidate.copy.record, copy.connectedRecoveryIDs?.contains(archive.id) == true else { throw TeamCompletionDraft.invalid }
+                return (archive, copy)
+            }.value
+            guard unchanged() else { return false }
+            // Existing actor-bound retirement only; this never creates a task copy.
+            let proof = try await backend.retireTeamProvisional(initial.mutation, expectedAccount: account)
+            guard unchanged() else { return false }
+            syncConflict = SyncConflict(mutation: proof.review.mutation, remote: proof.review.task ?? initial.mutation.teamCompletion!.source, completionReview: proof.review)
+            observed = proof.review
+            let next = try await Task.detached(priority: .utility) { () -> Snapshot in
+                let archive = try archiveVault.recordProvisionalRetirement(saved.0, proof: proof)
+                let copy = try copyVault.load(saved.1.id)
+                guard archive.provisionalRetirements?.last == proof.response,
+                      copy.original == candidate.copy.original, copy.record == candidate.copy.record,
+                      copy.connectedRecoveryIDs?.contains(archive.id) == true,
+                      let projection = candidate.parking(proof: proof, readable: access) else { throw TeamCompletionDraft.invalid }
+                return projection
+            }.value
+            guard unchanged() else { return false }
+            snapshot = next
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: expected); return false }
+            undoStack = []; redoStack = []; syncConflict = nil
+            notice = "Recurring draft kept. Review its task copy and connected saved edits in Saved team drafts."
+            Task { await sync() }; return true
+        } catch {
+            guard unchanged() else { return false }
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: expected); return false
+        }
+    }
+
+    @discardableResult func cancelTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
+        await resolveTeamCompletionReview(expected,rebase:false)
+    }
+    @discardableResult func rebaseTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
+        await resolveTeamCompletionReview(expected,rebase:true)
+    }
+    private func resolveTeamCompletionReview(_ expected:TeamCompletion.Review,rebase:Bool) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
+        let generation=accountGeneration,account=userID,before=snapshot,access=nativeConversationTeamCache,revision=workspaceReadRevision
+        guard currentTeamCompletionReview(expected), let access,
+              (rebase ? expected.canRequestRebase(before):expected.canRequestCancellation(before)),
+              let command=expected.mutation.teamCompletion,command.scope.account == account,
+              command.scope.origin == (try? backend.accountRemovalOrigin),!signingOut, !rebase || access.canSend(expected.mutation, in: before) else {return false}
+        var observedReview = expected
+        do {
+            _=try await makeRecoveryBackup(kind:"Before sync review")
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            let review: TeamCompletion.Review
+            if expected.isCancelled { review = expected }
+            else { review = try await backend.cancelTeamCompletion(expected.mutation,expectedAccount:account) }
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            syncConflict=SyncConflict(mutation:expected.mutation,remote:review.task ?? command.source,completionReview:review)
+            observedReview = review
+            guard review.isCancelled else {
+                notice="This action had already synced. Review its result to continue.";return false
+            }
+            let next:Snapshot
+            let history:EditHistory?
+            if rebase {
+                guard review.matchesRebaseObservation(expected),let plan=review.rebasing(snapshot, readable: access) else {
+                    notice="Task access or content changed. Review the current task before applying your action.";return false
+                }
+                next=plan.snapshot;history=EditHistory(changes:[plan.action],snapshot:plan.base)
+            } else {
+                guard let cancelled=review.cancelling(snapshot, readable: access) else {
+                    notice="Your action was cancelled. Additional changes remain saved for review.";return false
+                }
+                next=cancelled;history=nil
+            }
+            let old=snapshot;snapshot=next
+            do {try persist()} catch {snapshot=old;recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation);return false}
+            undoStack=history.map{[$0]} ?? [];redoStack=[];syncConflict=nil
+            notice=rebase ? "Your reviewed action is saved and ready to sync." : "Synced task kept. A recovery copy is saved."
+            Task {await sync()};return true
+        } catch {
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionReview(observedReview) else {return false}
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation);return false
+        }
+    }
+
+    /// Inspect a blocked immutable completion before a workspace merge can replace
+    /// its optimistic projection. This never calls a completion writer.
+    private func discoverBlockedTeamCompletion(access: TeamWorkspaceCache) async throws -> Bool {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              syncConflict == nil, focusSyncConflict == nil, access.boundary.account == userID,
+              access.boundary.origin == (try? backend.accountRemovalOrigin) else { return false }
+        let generation = accountGeneration, before = snapshot, initialAccess = nativeConversationTeamCache, initialRevision = workspaceReadRevision, account = userID
+        let requests = await Task.detached(priority: .userInitiated) { (TeamCompletionBatchDiscovery(snapshot: before, access: access), TeamCompletionDiscovery(snapshot: before, access: access)) }.value
+        guard generation == accountGeneration, snapshot == before, initialRevision == workspaceReadRevision,
+              nativeConversationTeamCache == initialAccess, !signingOut, !accountRemovalBlocked,
+              syncConflict == nil, focusSyncConflict == nil else { throw CancellationError() }
+        guard requests.0 != nil || requests.1 != nil else { return false }
+        if teamAccessMask != access { teamAccessMask = access }
+        let revision = workspaceReadRevision
+        let groupReview: TeamTaskBatch.Review?
+        let singleReview: TeamCompletion.Review?
+        if let request = requests.0 {
+            groupReview = try await backend.reviewTeamCompletionBatch(request.mutation, expectedAccount: account); singleReview = nil
+        } else if let request = requests.1 {
+            singleReview = try await backend.reviewTeamCompletion(request.mutation, expectedAccount: account); groupReview = nil
+        } else { return false }
+        guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision,
+              nativeConversationTeamCache == access, !signingOut, !accountRemovalBlocked,
+              syncConflict == nil, focusSyncConflict == nil else { throw CancellationError() }
+        if let request = requests.0, let review = groupReview, let terminal = request.terminal(review, current: snapshot, readable: access) {
+            installTeamCompletionBatchReview(terminal)
+            notice = terminal.isCancelled ? "This saved task selection was cancelled. Review your work to continue." : "This task selection already synced. Review its result to continue."
+        } else if let request = requests.1, let review = singleReview, let terminal = request.terminal(review, current: snapshot, readable: access) {
+            syncConflict = SyncConflict(mutation: terminal.mutation, remote: terminal.task ?? terminal.mutation.teamCompletion!.source, completionReview: terminal)
+            notice = terminal.isCancelled ? "This saved task action was cancelled. Review your work to continue." : "This task action already synced. Review its result to continue."
+        } else { return false }
+        return true
+    }
+
+    var teamCompletionReviewPresentation: TeamCompletionReviewPresentation {
+        TeamCompletionReviewPresentation(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, snapshot: snapshot, access: nativeConversationTeamCache, revision: workspaceReadRevision, errorRevision: teamCompletionErrorRevision, single: syncConflict?.completionReview, group: syncConflict?.completionBatchReview)
+    }
+    func teamCompletionReviewMayFinish(_ context: TeamCompletionReviewPresentation) -> Bool {
+        context.matchesWorkspace(WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation) && signedIn && !localMode && !signingOut && !accountRemovalBlocked && (syncConflict == nil || syncConflict?.id == context.request)
+    }
+    private func recordTeamCompletionReviewFailure(_ message: String, origin: TeamCompletionReviewPresentation) {
+        guard teamCompletionReviewMayFinish(origin), teamCompletionErrorRevision == origin.errorRevision else { return }
+        error = message
+        teamCompletionReviewFailure = TeamCompletionReviewFailure(origin: origin, current: teamCompletionReviewPresentation, message: message)
+    }
+    func takeTeamCompletionReviewFailure(_ context: TeamCompletionReviewPresentation, fallback: String) -> String? {
+        guard teamCompletionReviewMayFinish(context) else { return nil }
+        if let failure = teamCompletionReviewFailure, failure.mayConsume(origin: context, current: teamCompletionReviewPresentation, error: error) {
+            let message = failure.message; error = nil; return message
+        }
+        guard context.ownsFailure(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, snapshot: snapshot, access: nativeConversationTeamCache, revision: workspaceReadRevision, single: syncConflict?.completionReview, group: syncConflict?.completionBatchReview) else {
+            return "The review changed while it was being checked. Check the current result before continuing."
+        }
+        return fallback
+    }
+
+    /// Local acceptance only: the recorded receipt is already authoritative.
+    /// Durable safety copies and current read access precede retiring any intent.
+    @discardableResult func preserveRecordedCompletionDraft(_ expected: TeamCompletionReviewPresentation) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        guard expected == presentation else { return false }
+        let generation = accountGeneration, session = backend.reminderSessionIncarnation
+        let before = snapshot, access = nativeConversationTeamCache, revision = workspaceReadRevision
+        let single = syncConflict?.completionReview, group = syncConflict?.completionBatchReview
+        guard let access, let vault = teamRecordedRecoveryVault,
+              single.map({ currentTeamCompletionReview($0) && $0.isRecorded }) ?? group.map({ currentTeamCompletionBatchReview($0) && $0.isRecorded }) ?? false else { return false }
+        func unchanged() -> Bool {
+            generation == accountGeneration && session == backend.reminderSessionIncarnation && before == snapshot &&
+            revision == workspaceReadRevision && nativeConversationTeamCache == access &&
+            syncConflict?.completionReview == single && syncConflict?.completionBatchReview == group &&
+            teamCompletionReviewMayFinish(presentation)
+        }
+        do {
+            let prepared = try await Task.detached(priority: .userInitiated) { () -> (TeamCompletionRecoveryDraft, Snapshot) in
+                let draft: TeamCompletionRecoveryDraft
+                if let single { draft = try TeamCompletionRecoveryDraft(single: single, snapshot: before) }
+                else if let group { draft = try TeamCompletionRecoveryDraft(group: group, snapshot: before) }
+                else { throw TeamCompletionRecoveryDraft.invalid }
+                guard let next = draft.preserving(readable: access) else { throw TeamCompletionRecoveryDraft.invalid }
+                return (draft, next)
+            }.value
+            guard unchanged() else { return false }
+            _ = try await makeRecoveryBackup(kind: "Before keeping recorded edits")
+            guard unchanged() else { return false }
+            let saved = try await Task.detached(priority: .utility) { try vault.save(prepared.0) }.value
+            guard unchanged(), saved.sameWork(as: prepared.0) else { return false }
+            snapshot = prepared.1
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
+            undoStack = []; redoStack = []; syncConflict = nil
+            notice = "Edits kept in Saved team drafts. Sync can continue."
+            Task { await sync() }; return true
+        } catch {
+            guard unchanged() else { return false }
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false
+        }
+    }
+
+    /// A saved preflight is not a cancellation certificate. Retain the actual
+    /// terminal reply in the encrypted archive and verify it before local retirement.
+    @discardableResult func preserveCancelledCompletionDraft(_ expected: TeamCompletionReviewPresentation) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        guard expected == presentation, let initial = syncConflict?.completionReview,
+              currentTeamCompletionReview(initial), !initial.isRecorded,
+              let access = nativeConversationTeamCache, let vault = teamCancelledRecoveryVault else { return false }
+        let generation = accountGeneration, session = backend.reminderSessionIncarnation, account = userID
+        let before = snapshot, revision = workspaceReadRevision
+        var observed = initial
+        func unchanged() -> Bool {
+            generation == accountGeneration && session == backend.reminderSessionIncarnation && before == snapshot &&
+            revision == workspaceReadRevision && nativeConversationTeamCache == access && currentTeamCompletionReview(observed) &&
+            syncConflict?.completionBatchReview == presentation.group && teamCompletionReviewMayFinish(presentation)
+        }
+        do {
+            let draft = try await Task.detached(priority: .userInitiated) {
+                let draft = try TeamCompletionRecoveryDraft(single: initial, snapshot: before)
+                guard draft.previewCancellation(readable: access) != nil else { throw TeamCompletionRecoveryDraft.invalid }
+                return draft
+            }.value
+            guard unchanged() else { return false }
+            _ = try await makeRecoveryBackup(kind: "Before cancelling saved action")
+            guard unchanged() else { return false }
+            let saved = try await Task.detached(priority: .utility) { try vault.save(draft) }.value
+            guard unchanged(), saved.sameWork(as: draft) else { return false }
+            let proof: TeamCompletion.Review
+            if initial.isCancelled { proof = initial }
+            else { proof = try await backend.cancelTeamCompletion(initial.mutation, expectedAccount: account) }
+            guard unchanged() else { return false }
+            syncConflict = SyncConflict(mutation: proof.mutation, remote: proof.task ?? proof.mutation.teamCompletion!.source, completionReview: proof)
+            observed = proof
+            guard proof.isCancelled else {
+                let message = "This action already synced. Your draft is kept; review the recorded result to continue."
+                notice = message; recordTeamCompletionReviewFailure(message, origin: presentation); return false
+            }
+            let prepared = try await Task.detached(priority: .utility) { () -> (TeamCompletionRecoveryDraft, Snapshot) in
+                let verified = try vault.recordCancellation(saved, proof: proof)
+                guard verified.cancellations?.last == proof.response, let next = verified.preserving(readable: access) else { throw TeamCompletionRecoveryDraft.invalid }
+                return (verified, next)
+            }.value
+            guard unchanged(), prepared.0.sameWork(as: draft) else { return false }
+            snapshot = prepared.1
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
+            undoStack = []; redoStack = []; syncConflict = nil
+            notice = "Saved action cancelled. Your edits are kept in Saved team drafts."
+            Task { await sync() }; return true
+        } catch {
+            guard unchanged() else { return false }
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false
+        }
+    }
+
+    func currentTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) -> Bool {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              syncConflict?.completionBatchReview == review, snapshot.pending.first == review.mutation,
+              let batch = review.mutation.teamTaskBatch, batch.account == userID,
+              batch.origin == (try? backend.accountRemovalOrigin), let cache = nativeConversationTeamCache,
+              cache.boundary.belongs(account: batch.account, origin: batch.origin),
+              cache.boundary.raw["native_team_reads_enabled"] == .bool(true),
+              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(batch.team) && $0.object["state"] == .string("active") }) == true else { return false }
+        return batch.items.allSatisfy { item in
+            guard let command = item.teamCompletion else { return false }
+            return [command.scope.project, command.seriesProject].allSatisfy { cache.boundary.projects[$0]?.team == batch.team }
+        }
+    }
+    private func installTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) {
+        syncConflict = SyncConflict(mutation: review.mutation, remote: review.members.first?.task ?? review.mutation.teamTaskBatch!.items[0].teamCompletion!.source, completionBatchReview: review)
+    }
+    @discardableResult func refreshTeamCompletionBatchReview(_ expected: TeamTaskBatch.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
+        let generation = accountGeneration, account = userID, before = snapshot, access = nativeConversationTeamCache, revision = workspaceReadRevision
+        guard currentTeamCompletionBatchReview(expected) else { return false }
+        do {
+            let review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: account)
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            installTeamCompletionBatchReview(review); return true
+        } catch {
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            recordTeamCompletionReviewFailure(SyncStatus.failureMessage(error), origin: presentation); return false
+        }
+    }
+    @discardableResult func continueTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
+        let generation = accountGeneration, before = snapshot
+        guard currentTeamCompletionBatchReview(review), !review.isCancelled else { return false }
+        if review.isRecorded {
+            guard let access = nativeConversationTeamCache else { return false }
+            let readRevision = workspaceReadRevision
+            let next = await Task.detached(priority: .userInitiated) { review.acknowledging(before, readable: access) }.value
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, readRevision == workspaceReadRevision,
+                  nativeConversationTeamCache == access, currentTeamCompletionBatchReview(review) else { return false }
+            guard let next else { recordTeamCompletionReviewFailure("Later task changes still need review. The entire saved selection and its drafts are kept.", origin: presentation); return false }
+            snapshot = next
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
+            undoStack = []; redoStack = []
+        }
+        syncConflict = nil; notice = nil; Task { await sync() }; return true
+    }
+    @discardableResult func cancelTeamCompletionBatchReview(_ expected: TeamTaskBatch.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
+        let generation = accountGeneration, before = snapshot, account = userID
+        guard currentTeamCompletionBatchReview(expected), !expected.isRecorded, let access = nativeConversationTeamCache else { return false }
+        let revision = workspaceReadRevision
+        var observedReview = expected
+        do {
+            var savedDraft: TeamCompletionBatchDraft?
+            let independent = await Task.detached(priority: .userInitiated) { expected.canRequestCancellation(before) }.value
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            if !independent {
+                guard let vault = teamSelectionDraftVault else { throw TeamCompletionBatchDraft.invalid }
+                savedDraft = try await Task.detached(priority: .userInitiated) {
+                    let draft = try TeamCompletionBatchDraft(review: expected, snapshot: before)
+                    return try vault.save(draft)
+                }.value
+                guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+                guard savedDraft?.snapshot == before else { throw TeamCompletionBatchDraft.invalid }
+            }
+            _ = try await makeRecoveryBackup(kind: "Before selection sync review")
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            let review: TeamTaskBatch.Review
+            if expected.isCancelled { review = expected }
+            else { review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: account, cancel: true) }
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            installTeamCompletionBatchReview(review)
+            observedReview = review
+            guard review.isCancelled else { notice = "This selection had already synced. Review its result to continue. Any saved draft is kept."; return false }
+            let archived = savedDraft != nil
+            let next = await Task.detached(priority: .userInitiated) {
+                archived ? review.parkingCancellation(before, readable: access) : review.cancelling(before, readable: access)
+            }.value
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(review) else { return false }
+            guard let next else { notice = "The selection was cancelled. Your additional changes remain saved for review."; return false }
+            snapshot = next
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
+            undoStack = []; redoStack = []; syncConflict = nil
+            notice = archived ? "Synced tasks kept. Your later edits are in Saved team drafts." : "Synced tasks kept. A recovery copy is saved."
+            Task { await sync() }; return true
+        } catch {
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(observedReview) else { return false }
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false
+        }
+    }
+
+    func currentTeamCompletionReview(_ review: TeamCompletion.Review) -> Bool {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              syncConflict?.completionReview == review, snapshot.pending.first == review.mutation,
+              let command = review.mutation.teamCompletion, command.scope.account == userID,
+              command.scope.origin == (try? backend.accountRemovalOrigin), let cache = nativeConversationTeamCache else { return false }
+        return command.canReview(review.mutation, readable: cache)
+    }
+    func canContinueTeamCompletionReview(_ review: TeamCompletion.Review) -> Bool {
+        guard currentTeamCompletionReview(review), !review.isCancelled, let cache = nativeConversationTeamCache else { return false }
+        return !review.isRecorded || review.acknowledging(snapshot, readable: cache) != nil
+    }
+    @discardableResult func refreshTeamCompletionReview(_ expected: TeamCompletion.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
+        let generation = accountGeneration, account = userID, before = snapshot, access = nativeConversationTeamCache, revision = workspaceReadRevision
+        guard currentTeamCompletionReview(expected) else { return false }
+        do {
+            let review = try await backend.reviewTeamCompletion(expected.mutation, expectedAccount: account)
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision,
+                  nativeConversationTeamCache == access, currentTeamCompletionReview(expected) else { return false }
+            syncConflict = SyncConflict(mutation: expected.mutation, remote: review.task ?? expected.mutation.teamCompletion!.source, completionReview: review)
+            return true
+        } catch {
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionReview(expected) else { return false }
+            recordTeamCompletionReviewFailure(SyncStatus.failureMessage(error), origin: presentation); return false
+        }
+    }
+    @discardableResult func continueTeamCompletionReview(_ review: TeamCompletion.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
+        let generation = accountGeneration, before = snapshot
+        guard currentTeamCompletionReview(review), !review.isCancelled else { return false }
+        if review.isRecorded {
+            guard let access = nativeConversationTeamCache else { return false }
+            let revision = workspaceReadRevision
+            let next = await Task.detached(priority: .userInitiated) { review.acknowledging(before, readable: access) }.value
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision,
+                  nativeConversationTeamCache == access, currentTeamCompletionReview(review) else { return false }
+            guard let next else { recordTeamCompletionReviewFailure("Your additional task changes are still saved. Keep this review for now.", origin: presentation); return false }
+            snapshot = next
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
+            undoStack = []; redoStack = []
+        }
+        // Unrecorded reads retain the original nonce and immutable command.
+        syncConflict = nil; notice = nil; Task { await sync() }; return true
+    }
+
     /// Resolution is persisted before resuming. A second simultaneous edit can still conflict safely.
     @discardableResult func resolveConflict(id: UUID, keepLocal: Bool) -> Bool {
         guard let conflict = syncConflict, conflict.id == id,
@@ -917,16 +3990,16 @@ final class Store {
                 for key in ["installation", "authority", "lostAck", "serverRevision", "serverExpiry"] { defaults.removeObject(forKey: prefix + key) }
             }
             if let data = defaults.data(forKey: prefix + "authority") {
-                let value = try JSONDecoder().decode(ReminderDeliveryAuthority.self, from: data)
+                let value = try TaskfoldJSONDecoder().decode(ReminderDeliveryAuthority.self, from: data)
                 guard value.valid else { throw AppFailure(message: "Invalid isolated authority fixture.") }
                 reminderAuthority = value
             }
         }
-        var installation = defaults.data(forKey: prefix + "installation").flatMap { try? JSONDecoder().decode(ReminderDeviceInstallation.self, from: $0) }
+        var installation = defaults.data(forKey: prefix + "installation").flatMap { try? TaskfoldJSONDecoder().decode(ReminderDeviceInstallation.self, from: $0) }
         if installation == nil, create { installation = ReminderDeviceInstallation(id: "f0729000-0000-4000-8000-000000000101", secret: String(repeating: "a", count: 64)) }
         guard let installation else { return nil }
         let engine = try ReminderDeviceLifecycle(installation: installation,
-            save: { defaults.set(try JSONEncoder().encode($0), forKey: prefix + "installation") },
+            save: { defaults.set(try TaskfoldJSONEncoder().encode($0), forKey: prefix + "installation") },
             send: { command, _ in
                 // Synthetic receipts only. This path never calls Backend or APNs registration.
                 let serverRevision = Int64(defaults.double(forKey: prefix + "serverRevision"))
@@ -948,7 +4021,7 @@ final class Store {
             },
             changed: { [weak self] status, busy in self?.remoteReminderStatus = status; self?.remoteReminderBusy = busy },
             authority: reminderAuthority,
-            saveAuthority: { defaults.set(try JSONEncoder().encode($0), forKey: prefix + "authority") },
+            saveAuthority: { defaults.set(try TaskfoldJSONEncoder().encode($0), forKey: prefix + "authority") },
             authorityChanged: { [weak self] next in
                 guard let self else { return }; self.reminderAuthority = next
                 Task { await self.reschedule() }
@@ -1047,7 +4120,7 @@ final class Store {
         if remoteReminderTestWorkspace { await refreshReminderAuthorityFixture(force: force); return }
         #endif
         guard !isolatedReminderDeviceFixture else {
-            remoteReminderStatus = "Remote reminders are not available in this workspace. Reminders stay on this device."; return
+            remoteReminderStatus = "Remote reminders are not available in this workspace."; return
         }
         let generation = accountGeneration, incarnation = backend.reminderSessionIncarnation, account = userID
         remoteReminderAvailable = false
@@ -1085,19 +4158,19 @@ final class Store {
                 NSApplication.shared.registerForRemoteNotifications()
                 #endif
             } else if lifecycle == nil || context == nil && lifecycle?.busy != true && lifecycle?.retirementPending != true {
-                remoteReminderStatus = localMode || !signedIn ? "Sign in to prepare remote reminders. Current reminders stay on this device." :
-                    eligible && reminderAppIdentity == nil ? "Remote setup is unavailable in this build. Reminders continue on this device." :
-                    "Remote reminders are not available yet. Reminders stay on this device."
+                remoteReminderStatus = localMode || !signedIn ? "Sign in to prepare remote reminders." :
+                    eligible && reminderAppIdentity == nil ? "Remote setup is unavailable in this build." :
+                    "Remote reminders are not available yet."
             }
         } catch {
-            remoteReminderStatus = remoteReminderHoldingOriginals ? "Task reminders are waiting for confirmed delivery. Check remote setup to retry." : "Device registration could not be saved securely. Reminders continue on this device."; remoteReminderBusy = false
+            remoteReminderStatus = remoteReminderHoldingOriginals ? "Task reminders are waiting for confirmed delivery. Check remote setup to retry." : "Device registration could not be saved securely. Check remote setup to retry."; remoteReminderBusy = false
         }
     }
     func receivedRemoteReminderToken(_ token: Data) async {
         guard !isolatedReminderDeviceFixture else { return }
         await refreshRemoteReminderRegistration()
         do { try reminderDeviceLifecycle?.receivedToken(token) }
-        catch { remoteReminderStatus = remoteReminderHoldingOriginals ? "Task reminders are waiting for confirmed delivery. Check remote setup to retry." : "Device registration could not be saved securely. Reminders continue on this device."; remoteReminderBusy = false }
+        catch { remoteReminderStatus = remoteReminderHoldingOriginals ? "Task reminders are waiting for confirmed delivery. Check remote setup to retry." : "Device registration could not be saved securely. Check remote setup to retry."; remoteReminderBusy = false }
     }
     func failedRemoteReminderToken() {
         guard !isolatedReminderDeviceFixture else { return }
@@ -1107,8 +4180,18 @@ final class Store {
     private var reminderPreferenceKey: String { ReminderPreferences.key(userID) }
     var remindersEnabled: Bool {
         _ = reminderPreferenceRevision
-        guard signedIn || localMode, !userID.isEmpty else { return false }
+        guard !signingOut, !accountRemovalBlocked, signedIn || localMode, !userID.isEmpty else { return false }
         return ReminderPreferences.enabled(account: userID, fixture: userID == "ui-testing" || userID == "preview")
+    }
+    var timeSensitiveRemindersEnabled: Bool {
+        _ = reminderPreferenceRevision
+        return (signedIn || localMode) && ReminderPreferences.timeSensitiveEnabled(account: userID)
+    }
+    func setTimeSensitiveReminders(_ enabled: Bool) {
+        guard signedIn || localMode, !userID.isEmpty else { return }
+        UserDefaults.standard.set(enabled, forKey: ReminderPreferences.timeSensitiveKey(userID))
+        reminderPreferenceRevision += 1
+        Task { await reschedule() }
     }
     func enableNotifications() async {
         guard !requestingNotifications, !requestingFocusAlerts, signedIn || localMode else { return }
@@ -1151,20 +4234,53 @@ final class Store {
         Task { await reschedule() }
     }
     private func reminderState() -> ReminderState {
+        let generation = accountGeneration
         reminderRevision += 1
-        var events = remindersEnabled ? DueReminder.events(tasks: tasks) : []
+        var events = remindersEnabled ? DueReminder.events(tasks: activeTasks) : []
         if focusAlertsEnabled, let event = focusFinishEvent { events.append(event) }
-        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? tasks : [], deliveryAuthority: reminderAuthority, deliveryAuthorityUnreadable: reminderAuthorityUnreadable, deliveryAuthorityAccount: remoteReminderTestWorkspace ? reminderAuthorityAccount : nil)
+        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? activeTasks : [], deliveryAuthority: reminderAuthority, deliveryAuthorityUnreadable: reminderAuthorityUnreadable, deliveryAuthorityAccount: remoteReminderTestWorkspace ? reminderAuthorityAccount : nil, timeSensitiveAllowed: timeSensitiveRemindersEnabled && systemTimeSensitiveAllowed, queuedTimeSnoozes: queuedTimeSnoozes, timeSnoozeTransition: { [weak self] request, transition in await self?.transitionTimeSnooze(request, transition: transition, generation: generation) ?? .obsolete })
     }
     func reschedule() async {
+        reminderRefreshRequest &+= 1
+        if let current = reminderRefreshTask { await current.value; return }
+        let work = Task { [weak self] in
+            guard let self else { return }
+            while true {
+                let request = self.reminderRefreshRequest
+                await self.refreshScheduledReminders()
+                if request == self.reminderRefreshRequest { self.reminderRefreshTask = nil; return }
+            }
+        }
+        reminderRefreshTask = work
+        await work.value
+    }
+    private func refreshScheduledReminders() async {
         ReminderCategory.register(minutes: reminderSnoozeMinutes)
         refreshCalendarContext()
+        #if DEBUG
+        traceTeamAudioNativeSync("Reminder registration")
+        #endif
         await refreshRemoteReminderRegistration()
-        let state = reminderState(), generation = accountGeneration
+        let generation = accountGeneration
+        #if DEBUG
+        traceTeamAudioNativeSync("Notification settings")
+        #endif
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard generation == accountGeneration else { return }
+        systemTimeSensitiveAllowed = settings.timeSensitiveSetting == .enabled
+        #if DEBUG
+        traceTeamAudioNativeSync("Time reminder reconciliation")
+        #endif
+        await reconcileTimeSnoozes(generation: generation)
+        guard generation == accountGeneration else { return }
+        let state = reminderState()
         let report = await reminderScheduler.update(state)
         guard generation == accountGeneration, state.revision == reminderRevision, report.revision == state.revision else { return }
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        guard generation == accountGeneration, state.revision == reminderRevision else { return }
+        switch settings.timeSensitiveSetting {
+        case .enabled: timeSensitiveReminderStatus = "System Time Sensitive delivery is allowed. Focus settings still apply."
+        case .disabled: timeSensitiveReminderStatus = "Time Sensitive delivery is off in system settings. Marked reminders follow normal delivery settings."
+        default: timeSensitiveReminderStatus = "Time Sensitive delivery is unavailable in this build or on this device. Marked reminders follow normal delivery settings."
+        }
         var allowed = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
         #if os(iOS)
         allowed = allowed || settings.authorizationStatus == .ephemeral
@@ -1177,6 +4293,7 @@ final class Store {
         if !focusAlertsEnabled { focusAlertStatus = "Finish alerts are off on this device." }
         else if report.focusFailure { focusAlertStatus = "The finish alert could not be scheduled. Open Focus to retry." }
         else if report.focusScheduled { focusAlertStatus = "A finish alert is scheduled on this device." }
+        else if report.focusDeferred { focusAlertStatus = "There’s no room for the finish alert yet. Taskfold will retry while this session is running." }
         else if focusSyncConflict != nil { focusAlertStatus = "Review the session changes before a finish alert can be scheduled." }
         else if focusSession?.finished(at: Date()) == true { focusAlertStatus = "Start another session to receive its finish alert." }
         else { focusAlertStatus = "Start or resume a session to schedule its finish alert." }
@@ -1187,6 +4304,7 @@ final class Store {
         else { reminderStatus = "\(report.scheduled) upcoming \(report.scheduled == 1 ? "reminder" : "reminders") scheduled on this device." }
     }
     func disableNotifications() {
+        UserDefaults.standard.set(UUID().uuidString.lowercased(), forKey: timeSnoozeEpochKey)
         do { try prepareReminderDeviceRetirement() } catch { remoteReminderStatus = "Device unlinking could not be saved securely. Retry remote setup." }
         UserDefaults.standard.set(false, forKey: reminderPreferenceKey); reminderPreferenceRevision += 1
         if focusAlertsEnabled { Task { await reschedule() } } else { clearScheduledReminders() }
@@ -1202,12 +4320,12 @@ final class Store {
         guard remindersEnabled, let account = info["accountID"] as? String, account == userID,
               let task = info["taskID"] as? String, let spec = info["specID"] as? String,
               let signature = info["signature"] as? String else { return nil }
-        return DueReminder.validated(tasks: tasks, taskID: task, specID: spec, signature: signature, originalAt: (info["originalAt"] as? Double).map { Date(timeIntervalSince1970: $0) })
+        return DueReminder.validated(tasks: activeTasks, taskID: task, specID: spec, signature: signature, originalAt: (info["originalAt"] as? Double).map { Date(timeIntervalSince1970: $0) })
     }
     func reminderTask(for route: ReminderTaskRoute) -> Record? {
         let valid = workspaceCacheReadable && (signedIn || localMode) && remindersEnabled &&
             route.workspace.matches(account: userID, generation: workspaceGeneration) &&
-            DueReminder.validated(tasks: tasks, taskID: route.taskID, specID: route.specID, signature: route.signature, originalAt: route.originalAt) != nil
+            DueReminder.validated(tasks: activeTasks, taskID: route.taskID, specID: route.specID, signature: route.signature, originalAt: route.originalAt) != nil
         #if DEBUG
         if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") {
             reminderRouteFixtureOutcome = valid ? "Opened" : "Ignored"
@@ -1221,18 +4339,16 @@ final class Store {
         switch action {
         case ReminderCategory.complete: toggle(task)
         case ReminderCategory.tomorrow:
-            if let due = TaskPlanner.dayDate(task), let next = Calendar.current.date(byAdding: .day, value: 1, to: max(due, Calendar.current.startOfDay(for: Date()))) {
-                _ = commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: TaskPlanner.dayFields(task: task, day: TaskPlanner.dayKey(next)))])
+            let fields = TaskPlanner.tomorrowFields(task: task)
+            if !fields.isEmpty {
+                _ = commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields)])
             }
         case let action where ReminderSnooze.minutes(action: action) != nil:
             guard let minutes = ReminderSnooze.minutes(action: action) else { return nil }
-            let generation = accountGeneration, account = userID
+            let generation = accountGeneration
             await reschedule()
             guard generation == accountGeneration, validReminder(info) != nil else { return nil }
-            if let report = await reminderScheduler.snooze(account: account, taskID: event.taskID, specID: event.specID, signature: event.signature, minutes: minutes, originalAt: event.date), generation == accountGeneration {
-                if report.failures > 0 { reminderStatus = "The snooze could not be scheduled. Open the task to try again." }
-                else if report.deferred > 0 { reminderStatus = "The nearest 60 reminders are scheduled. This snooze may be deferred until Taskfold refreshes." }
-            }
+            await saveTimeSnooze(event: event, minutes: minutes, generation: generation)
         case let action where action.hasPrefix("taskfold.snooze."): return nil
         default: return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: task.id, specID: event.specID, signature: event.signature, originalAt: event.date)
         }
@@ -1285,8 +4401,12 @@ extension Store {
         return await handleReminder(["accountID":userID,"taskID":event.taskID,"specID":event.specID,"signature":old],action:UNNotificationDefaultActionIdentifier)
     }
     func reminderRouteFixtureRequest() -> ReminderTaskRoute? {
-        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing"), let event = DueReminder.events(tasks: tasks).first else { return nil }
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing"), let event = DueReminder.events(tasks: activeTasks).first else { return nil }
         return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: event.taskID, specID: event.specID, signature: event.signature)
+    }
+    func seedInsightsFixture() {
+        guard userID=="ui-testing",ProcessInfo.processInfo.arguments.contains("--uitesting"),ProcessInfo.processInfo.arguments.contains("--insights-fixture") else { return }
+        dailyBackupsEnabled=false;disableNotifications();snapshot=Snapshot.insightsFixture(account:userID);undoStack=[];redoStack=[];try? persist()
     }
     func seedWidgetActionFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--widget-action-testing") else { return }
@@ -1316,16 +4436,16 @@ extension Store {
     }
     func focusWidgetFixtureProjection() -> String {
         _ = widgetPublicationRevision
-        guard let data = try? widgetActionDisk().read().data, let payload = try? JSONDecoder().decode([String: JSON].self, from: data),
-              let encoded = try? JSONEncoder().encode(payload["focusSession"] ?? .null),
-              let focus = try? JSONDecoder().decode(FocusWidgetSnapshot.self, from: encoded), focus.valid(for: userID) else { return "Focus: refresh" }
+        guard let data = try? widgetActionDisk().read().data, let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data),
+              let encoded = try? TaskfoldJSONEncoder().encode(payload["focusSession"] ?? .null),
+              let focus = try? TaskfoldJSONDecoder().decode(FocusWidgetSnapshot.self, from: encoded), focus.valid(for: userID) else { return "Focus: refresh" }
         return "Focus: " + (focus.conflict ? "review" : focus.clock?.status ?? "idle")
     }
     func pulseWidgetFixtureProjection() -> String {
         _ = widgetPublicationRevision
-        guard let data = try? widgetActionDisk().read().data, let payload = try? JSONDecoder().decode([String: JSON].self, from: data),
-              let encoded = try? JSONEncoder().encode(payload["projectPulse"] ?? .null),
-              let pulse = try? JSONDecoder().decode(ProjectPulseSnapshot.self, from: encoded), pulse.valid(for: userID),
+        guard let data = try? widgetActionDisk().read().data, let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data),
+              let encoded = try? TaskfoldJSONEncoder().encode(payload["projectPulse"] ?? .null),
+              let pulse = try? TaskfoldJSONDecoder().decode(ProjectPulseSnapshot.self, from: encoded), pulse.valid(for: userID),
               let project = pulse.projects.first, let day = project.days[ProjectPulseSnapshot.day(Date())] else { return "Pulse: refresh" }
         return "Pulse: \(project.completed)/\(project.total) · \(day.completions) completion events · \(day.reopens) reopen events"
     }
@@ -1342,9 +4462,49 @@ extension Store {
         }
         for interval in [-3600.0, -1800.0, -900.0] {
             guard let task = snapshot.tables["tasks"]?.first else { continue }
-            for change in TaskCompletion.toggle(task, tasks: tasks, at: now.addingTimeInterval(interval)) {
+            for change in TaskCompletion.toggle(task, tasks: tasks, at: now.addingTimeInterval(interval), account: userID) {
                 snapshot.apply(change); TaskActivity.recordLocal(change, before: task, after: record("tasks", id: task.id), snapshot: &snapshot, account: userID, now: now.addingTimeInterval(interval))
             }
+        }
+        if ProcessInfo.processInfo.arguments.contains("--project-pulse-field-details") || ProcessInfo.processInfo.arguments.contains("--project-pulse-order-details") {
+            var parent = Record.task(user: userID, project: project)
+            parent["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa75")
+            parent["task_generation"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa90")
+            parent["title"] = .string("Workshop"); parent["is_heading"] = .bool(true)
+            parent["subtasks"] = .array([.object(["id": .string("concept"), "title": .string("Prepare the concept"), "description": .string("Keep these original instructions private"), "priority": .number(4), "completed": .bool(false)])])
+            if ProcessInfo.processInfo.arguments.contains("--project-pulse-order-details") {
+                parent["subtasks"] = .array(parent["subtasks"].list + [.object(["id": .string("companion"), "title": .string("Review the companion sketch"), "completed": .bool(false)])])
+            }
+            let creation = Mutation(table: "tasks", recordID: parent.id, method: "POST", fields: parent.fields)
+            snapshot.apply(creation)
+            TaskActivity.recordLocal(creation, before: nil, after: parent, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-86400))
+            TaskNodeActivity.recordLocal(creation, before: nil, after: parent, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-86400))
+            var edited = parent
+            edited["subtasks"] = SubtaskTree.changing(parent["subtasks"], id: "concept", fields: ["description": .string("Keep these revised instructions private"), "priority": .number(1)])
+            let change = Mutation(id: UUID(uuidString: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa91")!, table: "tasks", recordID: parent.id, method: "PATCH", fields: edited.fields)
+            snapshot.apply(change)
+            TaskNodeActivity.recordLocal(change, before: parent, after: edited, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-60))
+            if ProcessInfo.processInfo.arguments.contains("--project-pulse-order-details") {
+                var reordered = edited
+                reordered["subtasks"] = .array(Array(edited["subtasks"].list.reversed()))
+                let reorder = Mutation(id: UUID(uuidString: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa92")!, table: "tasks", recordID: parent.id, method: "PATCH", fields: reordered.fields)
+                snapshot.apply(reorder)
+                TaskNodeActivity.recordLocal(reorder, before: edited, after: reordered, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-30))
+            }
+
+        }
+        if ProcessInfo.processInfo.arguments.contains("--project-pulse-group-details") {
+            var selected: [Record] = []
+            for (id, title) in [("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa93", "Prepare the study"), ("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa94", "Send the summary")] {
+                var task = Record.task(user: userID, project: project)
+                task["id"] = .string(id); task["title"] = .string(title)
+                let creation = Mutation(table: "tasks", recordID: id, method: "POST", fields: task.fields)
+                snapshot.apply(creation)
+                TaskActivity.recordLocal(creation, before: nil, after: task, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-86400))
+                selected.append(task)
+            }
+            let changes = selected.flatMap { TaskCompletion.toggle($0, tasks: tasks, at: now.addingTimeInterval(-30), account: userID) }
+            _ = commit(changes)
         }
         if ProcessInfo.processInfo.arguments.contains("--project-pulse-no-history") {
             snapshot.tables[TaskActivity.table] = []; snapshot.tables[TaskActivity.epochTable] = []
@@ -1400,7 +4560,7 @@ extension Store {
     }
     func pinnedNotesFixtureProjection() -> String {
         _ = widgetPublicationRevision
-        guard let data = try? widgetActionDisk().read().data, let payload = try? JSONDecoder().decode([String: JSON].self, from: data) else { return "Notes: unavailable" }
+        guard let data = try? widgetActionDisk().read().data, let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { return "Notes: unavailable" }
         let notes = payload["notes"]?.list ?? []
         return "Notes: \(notes.count) · Private: \(notes.contains { $0.object["taskID"] == .string("note-private") } ? "visible" : "hidden")"
     }
@@ -1430,7 +4590,7 @@ extension Store {
     func inboxWidgetFixtureCount() -> String {
         _ = widgetPublicationRevision
         guard let read = try? widgetActionDisk().read(), let data = read.data,
-              let payload = try? JSONDecoder().decode([String: JSON].self, from: data) else { return "Inbox unavailable" }
+              let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { return "Inbox unavailable" }
         let count = payload["tasks"]?.list.filter { $0.object["projectID"]?.text == "" }.count ?? 0
         return "Inbox: \(count)"
     }
@@ -1453,7 +4613,7 @@ extension Store {
     func capacityWidgetFixtureDay() -> String {
         _ = widgetPublicationRevision
         guard let read = try? widgetActionDisk().read(), let data = read.data,
-              let payload = try? JSONDecoder().decode([String: JSON].self, from: data) else { return "Capacity unavailable" }
+              let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { return "Capacity unavailable" }
         let day = payload["capacity"]?.object["days"]?.object[TaskPlanner.dayKey(Date())]?.object ?? [:]
         let state = payload["capacity"]?.object["calendarState"]?.text ?? "missing"
         return "Work \(day["working"]?.integer ?? -1) · Tasks \(day["estimated"]?.integer ?? -1) · Unknown \(day["unknown"]?.integer ?? -1) · Calendar \(state)"
@@ -1463,7 +4623,7 @@ extension Store {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--completion-cycle-fixture") else { return }
         seedWidgetActionFixture()
         guard let root = tasks.first else { return }
-        let changes = TaskCompletion.complete(root, tasks: tasks)
+        let changes = TaskCompletion.complete(root, tasks: tasks, account: userID)
         for change in changes { snapshot.apply(change); snapshot.pending.append(change) }
         if ProcessInfo.processInfo.arguments.contains("--edited-occurrence-fixture"), let creation = changes.last, creation.method == "POST" {
             let edit = Mutation(table: "tasks", recordID: creation.recordID, method: "PATCH", fields: ["title": .string("Saved occurrence draft")], baseline: ["title": creation.fields["title"] ?? .null])
@@ -1478,5 +4638,2959 @@ extension Store {
         _ = try widgetActionDisk().enqueue(request)
     }
     func widgetActionFixturePending() -> Int { ((try? widgetActionDisk().pending(account: userID)) ?? []).count }
+}
+#endif
+
+extension Store {
+    var locationHandoffAvailable: Bool { signedIn && !localMode && workspaceCacheReadable }
+    func locationHandoffs(workspace: WorkspaceBinding) async throws -> [LocationHandoffRecord] {
+        guard locationHandoffAvailable, workflowReady(workspace) else { throw LocationStorageFailure.changed }
+        return try await LocationHandoffAPI(backend: backend).perform(.list(device: nil), account: workspace.account,
+            isCurrent: { self.locationHandoffAvailable && self.workflowReady(workspace) }).records
+    }
+    /// Explicit confirmation uploads only this reviewed proposal, never the placebook.
+    func sendLocationHandoff(_ proposal: LocationHandoffProposal, workspace: WorkspaceBinding) async throws -> LocationHandoffRecord {
+        guard locationHandoffAvailable, workflowReady(workspace), let task = record("tasks", id: proposal.taskID),
+              proposal.matches(task: task, account: workspace.account) else { throw LocationStorageFailure.changed }
+        let response = try await LocationHandoffAPI(backend: backend).perform(.put(proposal), account: workspace.account,
+            isCurrent: { self.locationHandoffAvailable && self.workflowReady(workspace) })
+        guard let result = response.records.first else { throw LocationStorageFailure.changed }
+        return result
+    }
+    func discardLocationHandoff(_ row: LocationHandoffRecord, workspace: WorkspaceBinding) async throws {
+        guard locationHandoffAvailable, workflowReady(workspace), row.account == workspace.account, row.state == .pending else { throw LocationStorageFailure.changed }
+        _ = try await LocationHandoffAPI(backend: backend).perform(.discard(id: row.id), account: workspace.account,
+            isCurrent: { self.locationHandoffAvailable && self.workflowReady(workspace) })
+    }
+    func captureWorkflowTemplate(kind: WorkflowTemplate.Kind, sourceID: String, binding: WorkspaceBinding?) throws -> WorkflowTemplateCapture {
+        guard workflowReady(binding), let binding else { throw WorkflowTemplateCapture.changed }
+        return try WorkflowTemplateCapture(kind: kind, sourceID: sourceID, snapshot: presentationSnapshot, workspace: binding, session: backend.reminderSessionIncarnation, origin: try? backend.accountRemovalOrigin, teamCache: nativeConversationTeamCache)
+    }
+    func reviewWorkflowTemplateCapture(_ capture: WorkflowTemplateCapture) throws {
+        guard workspaceCacheReadable, signedIn || localMode, !signingOut, !accountRemovalBlocked else { throw WorkflowTemplateCapture.changed }
+        try capture.reviewed(snapshot: presentationSnapshot, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, origin: try? backend.accountRemovalOrigin, teamCache: nativeConversationTeamCache)
+    }
+    /// Read-only presentation admission; never sets an error while SwiftUI renders.
+    func workflowPreviewReady(_ binding: WorkspaceBinding?) -> Bool {
+        binding?.matches(account: userID, generation: workspaceGeneration) == true && workspaceCacheReadable &&
+        (signedIn || localMode) && !signingOut && !accountRemovalBlocked
+    }
+    func workflowReady(_ binding: WorkspaceBinding?) -> Bool {
+        guard binding?.matches(account: userID, generation: workspaceGeneration) == true, workspaceCacheReadable, signedIn || localMode else {
+            error = "Your workspace changed. Reopen this tool before saving."; return false
+        }
+        return true
+    }
+    @discardableResult func archiveProject(_ project: Record, archived: Bool) -> Bool {
+        guard var current = record("projects", id: project.id), current.string("user_id") == userID else { error = "Only the project owner can archive or restore it."; return false }
+        current["is_archived"] = .bool(archived)
+        return save("projects", current)
+    }
+    func workflowDestinationsAvailable(_ lines: [MultiLineCapture.Line]) -> Bool {
+        let active = Set(projects.map(\.id)), sections = rows("sections")
+        return lines.allSatisfy { line in
+            let task = line.task, project = task.string("project_id"), section = task.string("section_id")
+            return (project.isEmpty || active.contains(project)) && (section.isEmpty || sections.contains { $0.id == section && $0.string("project_id") == project })
+        }
+    }
+    func workflowChanges(_ lines: [MultiLineCapture.Line]) throws -> [Mutation] {
+        guard !lines.isEmpty else { throw AppFailure(message: "Choose at least one task.") }
+        guard workflowDestinationsAvailable(lines) else { throw AppFailure(message: "A project or section changed. Review the original text again before saving.") }
+        var changes: [Mutation] = [], knownLabels = labels
+        for line in lines {
+            var task = line.task
+            guard task.string("user_id") == userID, !task.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  task.string("project_id").isEmpty || projects.contains(where: { $0.id == task.string("project_id") }) else { throw AppFailure(message: "Every task needs a title and an available active project.") }
+            var values: [JSON] = []
+            for value in task["labels"].list {
+                if let label = knownLabels.first(where: { $0.id == value.text || $0.name.lowercased() == value.text.lowercased() }) { values.append(.string(label.id)) }
+                else {
+                    let label = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(userID), "name": value, "color": .string("#8b5cf6")])
+                    knownLabels.append(label); values.append(.string(label.id)); changes.append(Mutation(table: "labels", recordID: label.id, method: "POST", fields: label.fields))
+                }
+            }
+            task["labels"] = .array(values)
+            changes.append(Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields))
+        }
+        let groups = Dictionary(grouping: changes.filter { $0.table == "tasks" }) { change in
+            let row = Record(change.fields)
+            return row.string("project_id").isEmpty ? "scope:inbox" : "group:" + row.string("project_id") + ":" + (row.string("section_id").isEmpty ? "none" : row.string("section_id"))
+        }
+        for key in groups.keys.sorted() {
+            let existing = record("view_orders", id: key)
+            let ids = (existing?["ids"].list ?? []) + groups[key]!.map { .string($0.recordID) }
+            changes.append(Mutation(table: "view_orders", recordID: key, method: existing == nil ? "POST" : "PATCH", fields: ["id": .string(key), "user_id": .string(userID), "ids": .array(ids)]))
+        }
+        let run = UUID()
+        return changes.map { original in
+            var change = original; change.workflowRun = run
+            if change.method == "POST" { change.insertOnly = true }
+            return change
+        }
+    }
+}
+
+
+#if DEBUG
+extension Store {
+    var noteConcurrentFixtureScope: Bool {
+        localMode && userID == "ui-testing" &&
+        Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowteststeameditbridge" &&
+        ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--workflow-fixture")
+    }
+    var noteConcurrentFixtureEnabled: Bool { noteConcurrentFixtureScope && ProcessInfo.processInfo.arguments.contains("--note-format-concurrent-edit") }
+    @discardableResult func simulateConcurrentNoteEditForTesting(taskID: String, original: String) -> Bool {
+        guard noteConcurrentFixtureEnabled, var current = record("tasks", id: taskID), current.title == "Prepare workflow brief",
+              current.string("user_id") == "ui-testing", current.string("description") == original else { return false }
+        let baseline = current
+        current["description"] = .string("Updated elsewhere while formatting.")
+        return save("tasks", current, baseline: baseline)
+    }
+    func seedWorkflowFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-fixture") else { return }
+        dailyBackupsEnabled = false; disableNotifications(); undoStack = []; redoStack = []
+        let parent = "f0742000-1111-4111-8111-000000000001", child = "f0742000-1111-4111-8111-000000000002"
+        let projects = [(parent, "Launch lab", ""), (child, "Design studio", parent)].map { id, name, parent in
+            Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "color": .string("#8b5cf6"), "parent_id": parent.isEmpty ? .null : .string(parent), "is_archived": .bool(false), "order_index": .number(parent.isEmpty ? 0 : 1)])
+        }
+        var task = Record.task(user: userID, project: child, date: Date()); task["title"] = .string("Prepare workflow brief"); task["description"] = .string("Keep the original notes.")
+        if ProcessInfo.processInfo.arguments.contains("--task-heading-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true {
+            task["id"] = .string("f1810000-0000-4000-8000-000000000001")
+            if ProcessInfo.processInfo.arguments.contains("--heading-conversion-fixture") {
+                let suffix = ProcessInfo.processInfo.arguments.contains("--heading-conversion-long-title") ? String(repeating: " Keep the revised workshop instructions, original references and every follow-up step together.", count: 4) : ""
+                let imported = "* Plan tomorrow #work p1" + suffix
+                task["title"] = .string(ProcessInfo.processInfo.arguments.contains("--heading-conversion-edited-title") ? "* My revised plan tomorrow #work p1" + suffix : imported)
+                task["source_metadata"] = .object(["provider": .string("todoist"), "account": .string("synthetic-account"), "original": .object(["id": .string("synthetic-task"), "content": .string(imported)])])
+                task["opaque_future"] = .object(["keep": .array([.string("é"), .string("e\u{301}"), .number(7)])])
+            }
+        }
+        if ProcessInfo.processInfo.arguments.contains("--print-output-fixture") {
+            task["description"] = .string((1...8).map { index in
+                "## Design section \(index)\nRésumé, København, 東京, العربية, 🙂. Review **contrast** and _spacing_, then read the [guide](https://example.com/guide).\n- Keep every instruction\n- Check the complete exported document\n```text\nLiteral **code** \(index)\n```"
+            }.joined(separator: "\n\n") + "\nFINAL-NATIVE-PRINT-INSTRUCTION")
+        }
+        if ProcessInfo.processInfo.arguments.contains("--subtask-organizer-fixture") {
+            func child(_ suffix: String, _ title: String, _ children: [JSON] = []) -> JSON {
+                .object(["id": .string("f1710000-0000-4000-8000-" + suffix), "title": .string(title), "completed": .bool(false),
+                         "description": .string("Keep these checklist notes."), "due_date": .string("2027-01-04"), "subtasks": .array(children)])
+            }
+            task["subtasks"] = .array([child("000000000001", "Planning", [child("000000000002", "Research", [child("000000000004", "Collect references")])]), child("000000000003", "Review")])
+        }
+        snapshot = Snapshot(tables: ["projects": projects, "tasks": [task]])
+        if ProcessInfo.processInfo.arguments.contains("--pinned-output-fixture"),
+           ["com.dbakp.taskfold.mac.workflowteststeameditbridge", "com.dbakp.taskfold.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") {
+            snapshot.tables["view_orders"] = [Record(["id": .string(PinnedNotes.key(task.id)), "user_id": .string(userID), "ids": .array([.string(task.id)])])]
+        }
+        if ProcessInfo.processInfo.arguments.contains("--sharing-filter-fixture"), Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowtestsnotes1" {
+            task["title"] = .string("Review shared layout")
+            var personal = Record.task(user: userID, project: parent, date: Date()); personal["title"] = .string("Prepare private draft")
+            var inbox = Record.task(user: userID, date: Date()); inbox["title"] = .string("Capture personal idea")
+            snapshot.tables["tasks"] = [task, personal, inbox]
+            snapshot.tables["project_collaborators"] = [
+                Record(["id": .string("f3910000-0000-4000-8000-000000000001"), "project_id": .string(child), "user_id": .string("f3910000-0000-4000-8000-000000000002"), "status": .string("accepted"), "role": .string("collaborator")]),
+                Record(["id": .string("f3910000-0000-4000-8000-000000000003"), "project_id": .string(parent), "status": .string("pending"), "invited_email": .string("sharing-fixture@example.invalid"), "role": .string("collaborator")])]
+        }
+        if ProcessInfo.processInfo.arguments.contains("--assignment-history-fixture"), Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowtestsnotes1" {
+            let member = "f4920000-0000-4000-8000-000000000001"
+            func assigned(_ title: String, _ recipient: String) -> Record {
+                var result = Record.task(user:userID,project:child,date:Date()); result["title"] = .string(title)
+                result["task_generation"] = .string(UUID().uuidString.lowercased()); result["assigned_to"] = recipient.isEmpty ? .null : .string(recipient)
+                return result
+            }
+            let mine = assigned("Plan the calm handoff",userID), legacy = assigned("Review earlier assignment",userID)
+            let other = assigned("Follow the team handoff",member), unassigned = assigned("Capture the next idea","")
+            snapshot.tables["tasks"] = [mine,legacy,other,unassigned]
+            TaskAssignmentProvenance.recordLocal(Mutation(table:"tasks",recordID:mine.id,method:"POST",fields:mine.fields),before:nil,after:mine,snapshot:&snapshot,account:userID)
+            snapshot.tables[TaskAssignmentProvenance.table,default:[]].append(Record(["id":.string(UUID().uuidString.lowercased()),"task_id":.string(other.id),"task_generation":other["task_generation"],"node_key":.string(""),"node_path":.array([]),"assignee_id":.string(member),"actor_id":.string(member),"event_id":.string(UUID().uuidString.lowercased()),"assigned_at":.string(TaskActivity.stamp(Date())),"origin":.string("recorded"),"active":.bool(true)]))
+        }
+        if ProcessInfo.processInfo.arguments.contains("--heading-portability-template-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true {
+            do {
+                guard let current = record("tasks", id: "f1810000-0000-4000-8000-000000000001") else { throw AppFailure(message: "The heading fixture is unavailable.") }
+                var heading = try TaskKind.setting(current, heading: true)
+                heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f1710000-0000-4000-8000-000000000002", fields: ["is_heading": .bool(true)])
+                snapshot.tables["tasks"] = [heading]
+                let definition = try WorkflowTemplate.capture(kind: .task, id: heading.id, snapshot: snapshot)
+                let file = try WorkflowTemplateFile(name: "Reference workflow", document: definition.document)
+                let decoded = try WorkflowTemplateFile(data: file.encoded())
+                snapshot.tables[WorkflowTemplate.table] = [Record(["id": .string("f2810000-0000-4000-8000-000000000003"), "user_id": .string(userID), "name": .string(decoded.name), "document": decoded.template.document])]
+            } catch { self.error = error.localizedDescription }
+        }
+        if ProcessInfo.processInfo.arguments.contains("--heading-progress-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true {
+            func item(_ suffix: String, _ title: String, heading: Bool = false, done: Bool = false, children: [JSON] = []) -> JSON {
+                .object(["id": .string("f5810000-0000-4000-8000-" + suffix), "title": .string(title), "description": .string("Keep the work’s own notes."), "is_heading": .bool(heading), "completed": .bool(done), "subtasks": .array(children)])
+            }
+            var heading = try! TaskKind.setting(task, heading: true)
+            heading["project_id"] = .string(parent); heading["title"] = .string("Launch context")
+            heading["due_date"] = .string(Dates.day(Date()))
+            var attention = item("000000000001", "Draft the launch note", children: [item("000000000005", "Checklist detail")]).object
+            attention["deadline_date"] = .string("2026-01-01")
+            heading["subtasks"] = .array([.object(attention), item("000000000002", "Choose the palette", done: true), item("000000000003", "Second phase", heading: true, children: [item("000000000004", "Check the layout")])])
+            snapshot.tables["tasks"] = [heading]
+        }
+        if ProcessInfo.processInfo.arguments.contains("--heading-planner-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true,
+           var heading = record("tasks", id: "f1810000-0000-4000-8000-000000000001"), TaskKind(heading) == .heading {
+            let today = Dates.day(Date())
+            heading["duration_minutes"] = .number(999)
+            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000001", fields: ["due_date": .string(today), "duration_minutes": .number(45)])
+            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000004", fields: ["due_date": .string(today), "due_time": .string("09:00"), "duration_minutes": .number(30)])
+            snapshot.tables["tasks"] = [heading]
+        }
+        if ProcessInfo.processInfo.arguments.contains("--heading-inbox-work-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true,
+           var heading = record("tasks", id: "f1810000-0000-4000-8000-000000000001"), TaskKind(heading) == .heading {
+            heading["project_id"] = .null; heading["section_id"] = .null
+            snapshot.tables["tasks"] = [heading]
+        }
+        if ProcessInfo.processInfo.arguments.contains("--heading-list-work-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true,
+           var heading = record("tasks", id: "f1810000-0000-4000-8000-000000000001"), TaskKind(heading) == .heading {
+            let label = "f6820000-0000-4000-8000-000000000001", view = "f6820000-0000-4000-8000-000000000002"
+            heading["priority"] = .number(3)
+            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000001", fields: ["priority": .number(1), "labels": .array([.string(label)])])
+            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000004", fields: ["priority": .number(2)])
+            snapshot.tables["tasks"] = [heading]
+            snapshot.tables["labels"] = [Record(["id": .string(label), "user_id": .string(userID), "name": .string("Design work"), "color": .string("#7c5cbf")])]
+            snapshot.tables["saved_views"] = [Record(["id": .string(view), "user_id": .string(userID), "name": .string("Priority work"), "query_ast": FilterRule.predicate("priority", "1").document, "sort_by": .string("priority"), "grouping": .string("none")])]
+        }
+        do { try persist(); seedSharedCaptureFixture() } catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+
+extension Store {
+    /// Resolve the displayed incarnation before an action; selection captures its
+    /// workspace and raw source so later Save cannot retarget another child.
+    func hierarchySelection(for displayed: Record) throws -> TaskHierarchyIndex.Selection {
+        guard let path = SubtaskTree.referencePath(displayed.id), let root = activeTasks.first(where: { $0.id == path[0] }) else {
+            throw SubtaskTree.Failure(message: "This subtask is no longer accessible. Reopen its parent task.")
+        }
+        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+        guard let selection = index.selection(displayed.id), selection.item.record == displayed else {
+            throw SubtaskTree.Failure(message: "This subtask changed. Reopen its current details before editing it.")
+        }
+        return selection
+    }
+    @discardableResult
+    func commitHierarchy(_ edits: [TaskHierarchyIndex.Edit]) throws -> Bool {
+        let changes = try TaskHierarchyIndex.changes(edits, accessibleRoots: activeTasks, projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+        guard !changes.isEmpty else { return true }
+        guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The subtask could not be saved. Your draft is still open.") }
+        return true
+    }
+}
+
+
+extension Store {
+    @discardableResult
+    func commitSelection(_ tasks: [Record], action: (Record) -> TaskSelectionPlan.Action) throws -> Bool {
+        let workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration)
+        let requests = tasks.map { TaskSelectionPlan.Request(task: $0, action: action($0), workspace: workspace) }
+        let changes = try TaskSelectionPlan.changes(requests, accessibleRoots: activeTasks, projects: projects, workspace: workspace)
+        guard !changes.isEmpty else { return true }
+        guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The selection could not be saved. Try again.") }
+        return true
+    }
+    func selectionRecord(_ id: String) throws -> Record {
+        guard let path = SubtaskTree.referencePath(id) else {
+            guard let task = activeTasks.first(where: { $0.id == id }) else { throw SubtaskTree.Failure(message: "This task is no longer accessible.") }
+            return task
+        }
+        guard let root = activeTasks.first(where: { $0.id == path[0] }) else { throw SubtaskTree.Failure(message: "This subtask is no longer accessible.") }
+        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+        guard let task = index.item(id)?.record else { throw SubtaskTree.Failure(message: "This subtask moved. Select its current row again.") }
+        return task
+    }
+}
+
+
+extension Store {
+    func hierarchyFilterError(_ rule: FilterRule) -> String? {
+        guard rule.usesTaskHierarchy else { return nil }
+        do { _ = try taskCache.hierarchyCandidates(for: rule, projects: filterContext.projectReferences, userID: userID); return nil }
+        catch { return error.localizedDescription }
+    }
+}
+
+
+extension Store {
+    @discardableResult
+    func duplicateSelection(_ tasks: [Record]) throws -> Bool {
+        let changes = try TaskSelectionPlan.duplicateChanges(tasks, accessibleRoots: activeTasks, projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+        guard !changes.isEmpty else { return true }
+        guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The copies could not be saved. Try again.") }
+        return true
+    }
+}
+
+
+extension Store {
+    func previewFilterCount(_ rule: FilterRule, includeCompleted: Bool) -> Int {
+        previewFilterMatches(rule, includeCompleted: includeCompleted).count
+    }
+    /// Use the same access-filtered query for the count and read-only sample.
+    func previewFilterMatches(_ rule: FilterRule, includeCompleted: Bool) -> [Record] {
+        matching(TaskQuery(scope: .all, includeCompleted: includeCompleted || (!rule.hasQuerySections && rule.includesCompletion), filter: rule, now: calendarContext.minute, datePreferences: datePhrasePreferences, filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: filterContext.projectReferences, filterSections: rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: filterContext.personReferences, userID: userID))
+    }
+}
+
+
+extension Store {
+    /// The URL boundary checks account/readability before resolving a nested path.
+    func widgetLinkedTask(_ url: URL) throws -> Record {
+        guard allowsWidgetRecordLink(url), url.scheme == "taskfold", url.host == "task", focusAvailable else { throw WidgetActionFailure("This task widget is unavailable in your current workspace.") }
+        return try WidgetRecordLink.task(url, roots: activeTasks, projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+    }
+    private func widgetFeedbackIsCurrent(_ feedback: WidgetCompletionFeedback) -> Bool {
+        guard let task = try? selectionRecord(feedback.taskID), task.completed else { return false }
+        guard SubtaskTree.referencePath(feedback.taskID) != nil else { return true }
+        guard let selection = try? hierarchySelection(for: task) else { return false }
+        return WidgetCompletion.routeContext(selection.item) == feedback.routeContext
+    }
+}
+
+extension Store {
+    private var timeSnoozeEpochKey: String { "taskfold.timeSnoozeEpoch." + userID }
+    private var timeSnoozeEpoch: String { UserDefaults.standard.string(forKey: timeSnoozeEpochKey) ?? "" }
+    private var queuedTimeSnoozes: [ReminderRequest] {
+        guard sharedCaptureAvailable, remindersEnabled else { return [] }
+        let entries = (snapshot.timeSnoozes ?? [:]).values.filter { $0.phase == .queued }
+        guard !entries.isEmpty else { return [] }
+        let tasks = activeTasks, epoch = timeSnoozeEpoch, now = Date()
+        return entries.compactMap { $0.request(account: userID, epoch: epoch, tasks: tasks, now: now) }
+    }
+    private func reconcileTimeSnoozes(generation: UUID) async {
+        guard sharedCaptureAvailable, let original = snapshot.timeSnoozes, !original.isEmpty else { return }
+        let pending = await UNUserNotificationCenter.current().pendingNotificationRequests().compactMap(SystemReminderCenter.decode)
+        guard generation == accountGeneration, snapshot.timeSnoozes == original else { return }
+        let next = TimeSnoozeOutbox.reconciling(original, account: userID, epoch: timeSnoozeEpoch, tasks: activeTasks,
+            enabled: remindersEnabled, pending: pending)
+        guard next != original else { return }
+        snapshot.timeSnoozes = next
+        do { try persist() } catch { snapshot.timeSnoozes = original; reminderStatus = "Snooze recovery could not be saved. It will retry when Taskfold opens." }
+    }
+    private func transitionTimeSnooze(_ request: ReminderRequest, transition: LocationSnoozeTransition, generation: UUID) async -> LocationSnoozeAcknowledgement {
+        guard generation == accountGeneration, sharedCaptureAvailable, remindersEnabled else { return .obsolete }
+        let tasks = activeTasks, epoch = timeSnoozeEpoch, now = Date()
+        guard let entry = snapshot.timeSnoozes?.values.first(where: { entry in
+            entry.phase != .closed && entry.request(account: userID, epoch: epoch, tasks: tasks, now: now)?.matchesSnooze(request) == true
+        }) else { return .obsolete }
+        let phase: TimeSnoozeIntent.Phase
+        switch transition {
+        case .reserve: guard entry.phase == .queued else { return .obsolete }; phase = .reserved
+        case .installed: guard entry.phase == .reserved else { return .obsolete }; phase = .installed
+        case .notSubmitted: guard entry.phase == .reserved else { return .obsolete }; phase = .queued
+        case .failed: phase = .closed
+        }
+        snapshot.timeSnoozes?[entry.id] = entry.changing(to: phase)
+        do { try persist(); return .saved }
+        catch { snapshot.timeSnoozes?[entry.id] = entry; return .retry }
+    }
+    /// Save the explicit fire instant before admission. Native submission cannot
+    /// begin until its reservation also reaches the durable cache.
+    private func saveTimeSnooze(event: DueReminder, minutes: Int, generation: UUID) async {
+        guard generation == accountGeneration, sharedCaptureAvailable, remindersEnabled, ReminderSnooze.validMinutes(minutes) else { return }
+        if timeSnoozeEpoch.isEmpty { UserDefaults.standard.set(UUID().uuidString.lowercased(), forKey: timeSnoozeEpochKey) }
+        let request = ReminderRequest.make(account: userID, event: event,
+            fireAt: Date(timeIntervalSince1970: ceil(Date().timeIntervalSince1970 + Double(minutes * 60))), snoozed: true)
+        guard let intent = TimeSnoozeIntent(request: request, epoch: timeSnoozeEpoch) else { return }
+        let old = snapshot
+        let tasks = activeTasks, epoch = timeSnoozeEpoch, now = Date()
+        // Another explicit snooze replaces this reminder's earlier waiting intent.
+        for entry in (snapshot.timeSnoozes ?? [:]).values where entry.phase != .closed &&
+            entry.request(account: userID, epoch: epoch, tasks: tasks, now: now)?.identifier == request.identifier {
+            snapshot.timeSnoozes?[entry.id] = entry.changing(to: .closed)
+        }
+        if snapshot.timeSnoozes == nil { snapshot.timeSnoozes = [:] }
+        snapshot.timeSnoozes?[intent.id] = intent
+        do { try persist(acceptingTimeSnooze: intent) }
+        catch { snapshot = old; reminderStatus = "The snooze could not be saved. Open the task to try again."; return }
+        await reschedule()
+        guard generation == accountGeneration, let saved = snapshot.timeSnoozes?[intent.id] else { return }
+        switch saved.phase {
+        case .installed: reminderStatus = "Snoozed for \(ReminderSnooze.label(minutes)) on this device."
+        case .queued: reminderStatus = "Snooze saved for \(request.fireAt.formatted(date: .abbreviated, time: .shortened)). Waiting for notification space; Taskfold will retry when opened."
+        case .reserved: reminderStatus = "Confirming your saved snooze. Taskfold will check it when opened."
+        case .closed: reminderStatus = "This snooze could not be scheduled. Open the task to review its reminder."
+        }
+    }
+}
+
+
+extension Store {
+    private func stagedTimeSnoozes(previous: Snapshot, proposed: Snapshot, newIntent: TimeSnoozeIntent?) throws -> [String: TimeSnoozeIntent]? {
+        if let newIntent { guard newIntent.account == userID, newIntent.epoch == timeSnoozeEpoch else { throw AppFailure(message: "Your workspace changed before the snooze was saved.") } }
+        var next = try TimeSnoozeOutbox.staging(previous: previous.timeSnoozes ?? [:], proposed: proposed.timeSnoozes ?? [:], newIntent: newIntent)
+        guard !next.isEmpty else { return nil }
+        let tasks = activeTasks, epoch = timeSnoozeEpoch, now = Date()
+        for entry in next.values where entry.phase != .closed && (!remindersEnabled || entry.request(account: userID, epoch: epoch, tasks: tasks, now: now) == nil) {
+            next[entry.id] = entry.changing(to: .closed)
+        }
+        return next.isEmpty ? nil : next
+    }
+}
+
+#if DEBUG
+extension Store {
+    /// Command acceptance through the real Store/Backend, separate from UI input.
+    func runLocationHandoffSenderProof() async {
+        guard LocationHandoffNativeFixture.enabled else { return }
+        var checks: [String] = []
+        do {
+            func require(_ value: Bool, _ label: String) throws { guard value else { throw AppFailure(message: label) }; checks.append(label) }
+            let workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration), before = snapshot
+            let task = LocationHandoffNativeFixture.task()
+            let place = LocationPrivatePlace.make(account: userID, name: "Sample design studio", latitude: 55.676098, longitude: 12.568337, radius: 250)!
+            let proposal = LocationHandoffProposal.make(account: userID, task: task, place: place, transition: .leave, repeats: true, id: LocationHandoffNativeFixture.draftID)!
+            do { _ = try await sendLocationHandoff(proposal, workspace: workspace); throw AppFailure(message: "Lost-response fixture did not interrupt") }
+            catch { try require(error.localizedDescription.contains("interrupted"), "first put commits but response is lost") }
+            let sent = try await sendLocationHandoff(proposal, workspace: workspace)
+            try require(sent.id == proposal.id && sent.state == .pending, "retry confirms same immutable proposal")
+            let rows = try await locationHandoffs(workspace: workspace)
+            try require(rows.count == 1 && rows[0].proposal == proposal, "list recovers one pending proposal")
+            let counter = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(contentsOf: LocationHandoffNativeFixture.root.appendingPathComponent("server.json"))).object
+            try require(counter["putCalls"] == .number(2) && counter["records"]!.object.count == 1, "retry uploads one logical draft")
+            let stale = WorkspaceBinding(account: userID, generation: UUID())
+            do { _ = try await sendLocationHandoff(proposal, workspace: stale); throw AppFailure(message: "Stale workspace accepted") }
+            catch { try require(error is LocationStorageFailure, "stale workspace refused before upload"); self.error = nil }
+            try await discardLocationHandoff(sent, workspace: workspace)
+            let terminal = try await locationHandoffs(workspace: workspace)
+            try require(terminal.count == 1 && terminal[0].state == .discarded && terminal[0].proposal == nil, "discard removes geometry without task mutation")
+            try require(snapshot == before, "send retry list discard leave task cache unchanged")
+            let report: [String:JSON] = ["passed":.bool(true),"checks":.array(checks.map(JSON.string))]
+            try TaskfoldJSONEncoder().encode(report).write(to: LocationHandoffNativeFixture.root.appendingPathComponent("sender-proof.json"), options: .atomic)
+        } catch {
+            let report: [String:JSON] = ["passed":.bool(false),"checks":.array(checks.map(JSON.string)),"error":.string(error.localizedDescription)]
+            try? TaskfoldJSONEncoder().encode(report).write(to: LocationHandoffNativeFixture.root.appendingPathComponent("sender-proof.json"), options: .atomic)
+        }
+    }
+}
+#endif
+
+
+struct AccountRemovalRecoveryBanner: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var textSize
+    @State private var recovering = false
+    var body: some View {
+        if let status = store.accountRemovalStatus {
+            let layout = textSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+                : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+            layout {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label(store.accountRemovalBusy ? "Finishing account removal…" : "Account removal paused", systemImage: "person.crop.circle.badge.exclamationmark")
+                        .font(.callout.weight(.semibold))
+                    if !store.accountRemovalBusy {
+                        Text("Remaining device copies stay saved.").font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(status)
+                .accessibilityIdentifier("accountRemovalStatus")
+                if store.accountRemovalRecoveryEnabled {
+                    Button("Recovery options…") { recovering = true }.frame(minWidth:44,minHeight:44).disabled(store.accountRemovalBusy).accessibilityIdentifier("accountRemovalRecoveryOptions")
+                }
+                Button("Retry") { Task { await store.resumeAccountRemovals() } }
+                    .frame(minWidth: 44, minHeight: 44)
+                    .disabled(store.accountRemovalBusy)
+                    .accessibilityIdentifier("retryAccountRemoval")
+            }.padding().background(.regularMaterial)
+                .sheet(isPresented: $recovering) { AccountRemovalRecoveryOptionsView() }
+        }
+    }
+}
+
+#if DEBUG
+extension Store {
+    func runAccountRemovalNativeProof() async {
+        guard AccountRemovalNativeFixture.enabled else { return }
+        var checks: [String: Bool] = [:]
+        func require(_ key: String, _ value: Bool) throws {
+            checks[key] = value
+            if !value { throw AppFailure(message: "Native removal proof failed: " + key) }
+        }
+        do {
+            let account = AccountRemovalNativeFixture.owner, outside = AccountRemovalNativeFixture.other
+            let io = CalendarKeychainIO(service: accountRemovalService)
+            let old = try await accountRemovalVault.pending()
+            try require("reservedRecoveryOnly", old.allSatisfy { $0.account == account || $0.account == outside })
+            try io.remove(key: "unfinished-removals-v1")
+            try await backend.accept(AccountRemovalNativeFixture.session(account))
+            try require("privateSessionPersisted", try AccountRemovalNativeFixture.persistedSession()?.user.id == account)
+            var a = Record.task(user: account); a["title"] = .string("Synthetic owner work")
+            snapshot = Snapshot(tables: ["tasks": [a]])
+            localMode = false; signedIn = true; workspaceCacheReadable = true
+            removalPendingAccounts = []; accountRemovalStatus = nil
+            try persist()
+            let aCache = cacheURL, before = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+            var b = Record.task(user: outside); b["title"] = .string("Keep outsider work")
+            var bSnapshot = Snapshot(tables: ["tasks": [b]])
+            bSnapshot.pending = [Mutation(table: "tasks", recordID: b.id, method: "POST", fields: b.fields)]
+            let bCache = aCache.deletingLastPathComponent().appendingPathComponent(outside + ".json")
+            try TaskfoldJSONEncoder().encode(bSnapshot).write(to: bCache, options: .atomic)
+            var bBytes = try Data(contentsOf: bCache)
+            let ownedVault = backupVault.directory
+            let outsiderVault = ownedVault.deletingLastPathComponent().appendingPathComponent(WorkspaceBackup.stableID("vault", outside))
+            let ownBackup = backupVault
+            let ownEntry = try ownBackup.save(snapshot, kind: "Synthetic")
+            let outsideBackup = BackupVault(directory: outsiderVault, account: outside, key: { try BackupVault.deviceKey(account: outside) })
+            let outsideEntry = try outsideBackup.save(bSnapshot, kind: "Synthetic")
+            let outsideCiphertext = try Data(contentsOf: outsideBackup.file(outsideEntry))
+            try require("encryptedRecoveryRoundtrip", try ownBackup.load(ownEntry).snapshot == snapshot && outsideBackup.load(outsideEntry).snapshot == bSnapshot)
+            try require("backupKeysExistBeforeRemoval", AccountRemovalNativeFixture.backupKeyStatus(account) == errSecSuccess && AccountRemovalNativeFixture.backupKeyStatus(outside) == errSecSuccess)
+            let places = LocationPrivateStore(applicationSupport: LocationPrivateStore.applicationSupport)
+            let pinA = LocationPrivatePlace.make(account: account, name: "Synthetic A", latitude: 55, longitude: 12, radius: 200)!
+            let pinB = LocationPrivatePlace.make(account: outside, name: "Keep B", latitude: 56, longitude: 13, radius: 250)!
+            _ = try await places.save(pinA); _ = try await places.save(pinB)
+            let shares = try sharedCaptureDisk()
+            let aWorkspace = SharedCaptureWorkspace(account: account, generation: workspaceGeneration, label: "Synthetic A")
+            try shares.publish(aWorkspace); try shares.save(SharedCaptureDraft(workspace: aWorkspace, content: .init(title: "Synthetic A draft")))
+            for invalid in [WorkspaceBinding(account: outside, generation: workspaceGeneration), WorkspaceBinding(account: account, generation: UUID())] {
+                do { try await deleteAccount(expected: invalid); throw AppFailure(message: "Stale confirmation was accepted") }
+                catch { try require("staleConfirmationRefused", AccountRemovalProofHTTP.count == 0 && !accountRemovalBlocked) }
+            }
+            if AccountRemovalNativeFixture.switching {
+                let deleting = Task { try await self.deleteAccount(expected: WorkspaceBinding(account: account, generation: workspaceGeneration)) }
+                for _ in 0..<300 {
+                    if AccountRemovalProofHTTP.count > 0 { break }
+                    try await Task.sleep(for: .milliseconds(10))
+                }
+                try require("heldOriginalRequest", AccountRemovalProofHTTP.count == 1)
+                try await backend.accept(AccountRemovalNativeFixture.session(outside))
+                await authenticated()
+                bBytes = try Data(contentsOf: bCache)
+                let active = snapshot
+                let context = SharedCaptureWorkspace(account: outside, generation: workspaceGeneration, label: backend.session?.user.email ?? "Taskfold workspace")
+                try shares.publish(context); let draft = try SharedCaptureDraft(workspace: context, content: .init(title: "Keep B draft")); try shares.save(draft)
+                AccountRemovalProofHTTP.release(); try await deleting.value
+                try require("otherSessionKept", backend.session?.user.id == outside && signedIn && userID == outside)
+                try require("otherMemoryKept", snapshot == active)
+                let activeWidget = try TaskfoldJSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data!)
+                try require("otherWidgetKept", activeWidget["account"] == .string(outside) && activeWidget["tasks"]?.list.contains(where: { $0.object["title"] == .string("Keep outsider work") }) == true)
+                try require("otherShareKept", try shares.workspace() == context && shares.drafts(account: outside) == [draft])
+            } else if AccountRemovalNativeFixture.expiring {
+                try await deleteAccount(expected: WorkspaceBinding(account: account, generation: workspaceGeneration))
+                try require("expiredAuthorizationRenewed", AccountRemovalProofHTTP.count == 2 && AccountRemovalProofHTTP.refreshCount == 1)
+                try require("confirmedRemovalSignsOut", backend.session == nil && !signedIn)
+            } else {
+                do { try await deleteAccount(expected: WorkspaceBinding(account: account, generation: workspaceGeneration)); throw AppFailure(message: "Synthetic failure was accepted") }
+                catch { try require("interruptedResultRefused", AccountRemovalProofHTTP.count == 1) }
+                let diagnosticEncoder = TaskfoldJSONEncoder(); diagnosticEncoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+                try diagnosticEncoder.encode(before).write(to: AccountRemovalNativeFixture.root.appendingPathComponent("before-cache.json"))
+                let afterFailure = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: aCache))
+                try diagnosticEncoder.encode(afterFailure).write(to: AccountRemovalNativeFixture.root.appendingPathComponent("after-cache.json"))
+                try require("failedRequestKeepsCache", afterFailure == before)
+                try require("failedRequestKeepsSession", backend.session?.user.id == account && signedIn)
+                let pausedWidget = try TaskfoldJSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data!)
+                try require("pendingWidgetPrivate", pausedWidget["account"] == .string("") && pausedWidget["tasks"]?.list.isEmpty == true)
+                let restarted = AccountRemovalVault(io: io, coordinationDirectory: accountRemovalCoordinationDirectory()), pending = try await restarted.pending()
+                try require("originalAuthorizationDurable", pending.count == 1 && pending.first?.authorization == "synthetic-A" && pending.first?.confirmed == false)
+                try require("pendingWorkspaceQuiescent", accountRemovalBlocked && !commit([Mutation(table: "tasks", recordID: a.id, method: "PATCH", fields: ["title": .string("Must not save")])]))
+                await resumeAccountRemovals()
+                try require("sameAuthorizationRetried", AccountRemovalProofHTTP.count == 2)
+                try require("confirmedRemovalSignsOut", backend.session == nil && !signedIn)
+            }
+            try require("ownerCacheRemoved", !FileManager.default.fileExists(atPath: aCache.path))
+            try require("outsiderCacheExact", try Data(contentsOf: bCache) == bBytes)
+            try require("ownedRecoveryRemoved", !FileManager.default.fileExists(atPath: ownedVault.path))
+            try require("outsiderRecoveryExact", try Data(contentsOf: outsideBackup.file(outsideEntry)) == outsideCiphertext && outsideBackup.load(outsideEntry).snapshot == bSnapshot)
+            try require("ownedBackupKeyRemoved", AccountRemovalNativeFixture.backupKeyStatus(account) == errSecItemNotFound)
+            try require("outsiderBackupKeyKept", AccountRemovalNativeFixture.backupKeyStatus(outside) == errSecSuccess)
+            let archive = try await places.snapshot()
+            try require("privatePlacesScoped", archive?.places(for: account).isEmpty == true && archive?.places(for: outside) == [pinB])
+            let remaining = try await accountRemovalVault.pending()
+            try require("recoveryCommandFinished", remaining.isEmpty && accountRemovalStatus == nil)
+            try require("staleCacheWriteRefused", AccountRemovalDisk(directory: aCache.deletingLastPathComponent(), account: account).removed)
+            if !AccountRemovalNativeFixture.switching {
+                try await backend.accept(AccountRemovalNativeFixture.session(account))
+                await authenticated()
+                try require("lateRemovedAccountCannotReopen", backend.session == nil && !signedIn)
+            }
+            if AccountRemovalNativeFixture.coordination {
+                let origin = try backend.accountRemovalOrigin
+                // This Store still remembers A; a different vault instance has
+                // already acknowledged the exact server-confirmed cleanup.
+                try await backend.accept(AccountRemovalNativeFixture.session(account))
+                snapshot = before; signedIn = true; localMode = false
+                markRemovalPending(account)
+                await resumeAccountRemovals()
+                try require("finishedElsewhereClearsMatchingSession", backend.session == nil && !signedIn && snapshot == Snapshot() && accountRemovalStatus == nil)
+                try require("finishedElsewhereClearsPrivateSession", try AccountRemovalNativeFixture.persistedSession() == nil)
+                try require("finishedElsewhereDoesNotRepeatServerCall", AccountRemovalProofHTTP.count == 2)
+
+                let pendingB = try AccountRemovalCommand(account: outside, origin: origin, authorization: "synthetic-B")
+                _ = try await accountRemovalVault.begin(pendingB)
+                try await backend.accept(AccountRemovalNativeFixture.session(account))
+                snapshot = before; signedIn = true; localMode = false
+                markRemovalPending(account)
+                await resumeAccountRemovals()
+                let remainingB = try await accountRemovalVault.pending()
+                try require("finishedElsewhereWhileAnotherRemovalRemains", backend.session == nil && !signedIn && snapshot == Snapshot() && !removalPendingAccounts.contains(account) && removalPendingAccounts.contains(outside) && remainingB == [pendingB] && accountRemovalStatus != nil)
+                try require("otherPendingRemovalKeepsItsFiles", try Data(contentsOf: bCache) == bBytes && Data(contentsOf: outsideBackup.file(outsideEntry)) == outsideCiphertext)
+                // Only this reserved fixture's exact synthetic B command is
+                // discarded after the preservation assertion, never in app code.
+                try io.remove(key: "unfinished-removals-v1")
+                removalPendingAccounts.remove(outside)
+                UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + outside)
+                accountRemovalStatus = nil
+
+                try await backend.accept(AccountRemovalNativeFixture.session(outside))
+                await authenticated()
+                let active = snapshot
+                markRemovalPending(account)
+                await resumeAccountRemovals()
+                try require("finishedElsewherePreservesNewAccount", backend.session?.user.id == outside && signedIn && snapshot == active && accountRemovalStatus == nil)
+                try require("finishedElsewherePreservesNewPrivateSession", try AccountRemovalNativeFixture.persistedSession()?.user.id == outside)
+
+                try await backend.clearSession()
+                localMode = true; signedIn = true
+                var local = Record.task(user: userID); local["title"] = .string("Keep local workspace")
+                snapshot = Snapshot(tables: ["tasks": [local]])
+                let localSnapshot = snapshot
+                markRemovalPending(account)
+                await resumeAccountRemovals()
+                try require("finishedElsewherePreservesLocalWorkspace", localMode && signedIn && snapshot == localSnapshot && accountRemovalStatus == nil)
+
+                markRemovalPending(outside)
+                await resumeAccountRemovals()
+                try require("missingReceiptAloneDoesNotAcknowledge", removalPendingAccounts.contains(outside) && accountRemovalStatus != nil && snapshot == localSnapshot && FileManager.default.fileExists(atPath: bCache.path))
+                removalPendingAccounts.remove(outside)
+                UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + outside)
+                accountRemovalStatus = nil
+                localMode = false; signedIn = false; snapshot = Snapshot()
+                UserDefaults.standard.set(false, forKey: "localMode")
+            }
+            // Explicitly remove only the synthetic outsider's test key/session
+            // after preservation is proved; do not leave credentials behind.
+            try BackupVault.removeDeviceKey(account: outside)
+            if backend.session?.user.id == outside { try await backend.clearSession() }
+            let result: [String: Any] = ["status": "passed", "scenario": AccountRemovalNativeFixture.switching ? "late-account-switch" : AccountRemovalNativeFixture.expiring ? "expired-authorization" : "failed-reply-retry", "checks": checks, "scope": "Real native Store and file/Keychain cleanup with synthetic accounts and simulated endpoint replies. Fixture-owned sharing directory; not live Auth/Storage or normal App Group acceptance."]
+            try JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]).write(to: AccountRemovalNativeFixture.result, options: .atomic)
+        } catch {
+            let result: [String: Any] = ["status": "failed", "checks": checks, "error": error.localizedDescription]
+            try? FileManager.default.createDirectory(at: AccountRemovalNativeFixture.root, withIntermediateDirectories: true)
+            try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]).write(to: AccountRemovalNativeFixture.result, options: .atomic)
+        }
+    }
+}
+#endif
+
+#if DEBUG
+/// Reserved isolated bundle only. Only the synthetic recipient lookup is answered;
+/// this exercises native Store persistence, not a hosted service acceptance.
+@MainActor enum TeamEditorNativeFixture {
+    static var enabled: Bool {
+        ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--team-editor-testing")
+    }
+    static var historyRequest: EditHistoryRequest?
+    static let account = "ec240000-0000-4000-8000-000000000001"
+    static let taskID = "ec240000-0000-4000-8000-000000000002"
+    static let childID = "ec240000-0000-4000-8000-000000000005"
+    static let siblingID = "ec240000-0000-4000-8000-000000000006"
+    static let recipientID = "ec240000-0000-4000-8000-000000000007"
+    static func removeRecipient() { UserDefaults.standard.set(true, forKey: "teamEditorRecipientUnavailable") }
+    static func recipientData() -> Data {
+        var people: [[String: Any]] = [["user_id": account, "role": "editor", "display_name": NSNull()]]
+        if !UserDefaults.standard.bool(forKey: "teamEditorRecipientUnavailable") {
+            people.append(["user_id": recipientID, "role": "editor", "display_name": "Riley Chen"])
+        }
+        return try! JSONSerialization.data(withJSONObject: ["recipient_protocol": 1, "account": account, "team_id": teamID, "project_id": projectID, "access_token": String(repeating: "a", count: 64), "recipients": people])
+    }
+    static let projectID = "ec240000-0000-4000-8000-000000000003"
+    static let teamID = "ec240000-0000-4000-8000-000000000004"
+    static let personalPlanningProject = "ec240000-0000-4000-8000-000000000041"
+    static func backend() -> Backend {
+        let account = ChildFieldNativeIdentity.enabled ? ChildFieldNativeIdentity.account : Self.account
+        if ProjectAdoptionNativeFixture.enabled { return ProjectAdoptionNativeFixture.backend() }
+        if TeamTemplateNativeFixture.enabled { return TeamTemplateNativeFixture.backend() }
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = AudioTeamNativeProvider.enabled ? [AudioTeamNativeProtocol.self] : TaskFileNativeProviderFixture.enabled ? [TaskFileNativeProviderProtocol.self, TeamEditorNoNetwork.self] : [TeamEditorNoNetwork.self]
+        let token = (try? AudioTeamNativeProvider.configuration().token) ?? (try? TaskFileNativeProviderFixture.configuration().token) ?? "synthetic-auth"
+        let data = try! JSONSerialization.data(withJSONObject: ["access_token": token, "refresh_token": "synthetic-refresh", "expires_in": 3600, "user": ["id": account]])
+        let session = try! Foundation.JSONDecoder().decode(Session.self, from: data)
+        return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
+    }
+    static func boundary(viewer: Bool = false) throws -> TeamWorkspaceBoundary {
+        if PersonalHeadingNativePeer.enabled { return try PersonalHeadingNativePeer.boundary() }
+        var rows: [JSON] = [.object(["id": .string(projectID), "team_id": .string(teamID), "role": .string(viewer ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool(!viewer)])]
+        if ProcessInfo.processInfo.arguments.contains("--team-move-testing") {
+            rows.append(.object(["id": .string(TeamTaskMoveNativePeer.destination), "team_id": .string(teamID), "role": .string(viewer ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool(!viewer)]))
+            rows.append(.object(["id": .string(TeamTaskMoveNativePeer.viewerProject), "team_id": .string(teamID), "role": .string("viewer"), "archived": .bool(false), "can_send_tasks": .bool(false)]))
+        }
+        if ProcessInfo.processInfo.arguments.contains("--team-planning-personal-testing") {
+            rows.append(.object(["id": .string(personalPlanningProject), "team_id": .null, "role": .string("owner"), "archived": .bool(false), "can_send_tasks": .bool(true)]))
+            rows.sort { $0.object["id"]!.text < $1.object["id"]!.text }
+        }
+        return try TeamWorkspaceBoundary([
+            "workspace_boundary_protocol": .number(1), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false),
+            "task_types_protocol": .number(ProcessInfo.processInfo.arguments.contains("--team-heading-testing") && !viewer && !ProcessInfo.processInfo.arguments.contains("--team-heading-capability-off") && !UserDefaults.standard.bool(forKey: "teamHeadingCapabilityPaused") ? 1 : 0),
+            "task_type_lifecycle_protocol": .number(ProcessInfo.processInfo.arguments.contains("--team-heading-testing") ? 1 : 0),
+            "account": .string(account), "token": .string(String(repeating: viewer ? "b" : (ProcessInfo.processInfo.arguments.contains("--team-heading-testing") && UserDefaults.standard.bool(forKey: "teamHeadingCapabilityPaused") ? "c" : "a"), count: 64)),
+            "teams": .array([.object(["id": .string(teamID), "state": .string("active"), "revision": .number(1), "access_revision": .number(viewer ? 2 : 1)])]),
+            "projects": .array(rows)
+        ], account: account, origin: "https://synthetic.example")
+    }
+}
+private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        let request = self.request
+        Task { @MainActor in
+            if TaskFileViewerFixture.enabled, request.url?.absoluteString == "https://synthetic.example/functions/v1/task-files?action=download", request.httpMethod == "POST" {
+                client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "text/plain"])!, cacheStoragePolicy: .notAllowed)
+                client?.urlProtocol(self, didLoad: Data("hello".utf8)); client?.urlProtocolDidFinishLoading(self); return
+            }
+            if ChildFieldNativeIdentity.enabled {
+                do {
+                    let (data, lose) = try await ChildFieldNativePeer.response(request)
+                    if lose { client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost)); return }
+                    let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+                    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed); client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
+                } catch let error as ChildFieldNativeRefusal {
+                    let response = HTTPURLResponse(url: request.url!, statusCode: 409, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+                    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+                    client?.urlProtocol(self, didLoad: try! TaskfoldJSONEncoder().encode(["code": error.code])); client?.urlProtocolDidFinishLoading(self)
+                } catch { client?.urlProtocol(self, didFailWithError: error) }
+                return
+            }
+            if PersonalHeadingNativePeer.enabled {
+                do {
+                    let (data, lose) = try PersonalHeadingNativePeer.response(request)
+                    if lose { client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost)); return }
+                    let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+                    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed); client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
+                } catch { client?.urlProtocol(self, didFailWithError: error) }
+                return
+            }
+            TeamRecoveryRaceNativeFixture.observe(request)
+            if let data = TeamBatchRecoveryNativePeer.response(request), let url = request.url {
+                let delivered: Data
+                do { delivered = try await TeamRecoveryRaceNativeFixture.deliver(data, request: request) }
+                catch { client?.urlProtocol(self, didFailWithError: error); return }
+
+                client?.urlProtocol(self, didReceive: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
+                client?.urlProtocol(self, didLoad: delivered); client?.urlProtocolDidFinishLoading(self); return
+            }
+            guard TeamEditorNativeFixture.enabled,
+                  request.url?.absoluteString == "https://synthetic.example/rest/v1/rpc/taskfold_team_task_recipients",
+                  request.httpMethod == "POST" else {
+                client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet)); return
+            }
+            var body = request.httpBody
+            if body == nil, let stream = request.httpBodyStream {
+                stream.open(); defer { stream.close() }
+                var data = Data(); var bytes = [UInt8](repeating: 0, count: 1024)
+                while stream.hasBytesAvailable && data.count < 65536 {
+                    let count = stream.read(&bytes, maxLength: bytes.count)
+                    if count <= 0 { break }; data.append(contentsOf: bytes.prefix(count))
+                }
+                body = data
+            }
+            guard let body, let params = try? JSONSerialization.jsonObject(with: body) as? [String: String],
+                  params == ["_team_id": TeamEditorNativeFixture.teamID, "_project_id": TeamEditorNativeFixture.projectID] else {
+                client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse)); return
+            }
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: TeamEditorNativeFixture.recipientData())
+            client?.urlProtocolDidFinishLoading(self)
+        }
+    }
+    override func stopLoading() {}
+}
+extension Store {
+    private func prepareTeamEditorNativeFixture() {
+        if FullSchemaNativeFixture.enabled || ChildFieldNativeIdentity.enabled { return }
+        guard TeamEditorNativeFixture.enabled else { return }
+        if ProjectAdoptionNativeFixture.enabled { prepareProjectAdoptionNativeFixture(); return }
+        dailyBackupsEnabled = false
+        if ProcessInfo.processInfo.arguments.contains("--team-editor-reset") {
+            UserDefaults.standard.removeObject(forKey: "teamHeadingCapabilityPaused")
+            teamAccessMask = nil
+            try? FileManager.default.removeItem(at: AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).teamAccessFence)
+        }
+        if TeamBatchRecoveryNativePeer.blockedSync { try? FileManager.default.removeItem(at: TeamBatchRecoveryNativePeer.traceFile) }
+        if TeamBatchRecoveryNativePeer.recurring, ProcessInfo.processInfo.arguments.contains("--team-editor-reset") { try? FileManager.default.removeItem(at: TeamBatchRecoveryNativePeer.recurringProof) }
+        let reset = ProcessInfo.processInfo.arguments.contains("--team-editor-reset")
+        let preserveMissing = ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing")
+        guard reset || (!preserveMissing && record("tasks", id: TeamEditorNativeFixture.taskID) == nil) else { return }
+        UserDefaults.standard.removeObject(forKey: "teamEditorRecipientUnavailable")
+        do {
+            var row = Record.task(user: "ec240000-0000-4000-8000-000000000099", project: TeamEditorNativeFixture.projectID)
+            row["id"] = .string(TeamEditorNativeFixture.taskID); row["title"] = .string("Team editor proof"); row["description"] = .string("Original team notes")
+            row["opaque_future"] = .object(["preserved": .bool(true)])
+            row["subtasks"] = .array([
+                .object(["id": .string(TeamEditorNativeFixture.childID), "title": .string("Review the layout"), "description": .string("Original child notes"), "completed": .bool(false), "priority": .number(4), "subtasks": .array([]), "opaque_child": .bool(true)]),
+                .object(["id": .string(TeamEditorNativeFixture.siblingID), "title": .string("Keep the workshop notes"), "description": .string("Unchanged sibling notes"), "completed": .bool(false), "subtasks": .array([])])
+            ])
+            let project = Record(["id": .string(TeamEditorNativeFixture.projectID), "user_id": row["user_id"], "name": .string("Design workshop")])
+            var tasks = [row], projects = [project], labels: [Record] = []
+            if ProcessInfo.processInfo.arguments.contains("--team-label-testing") {
+                row["labels"] = .array([.string("Design"), .string("ec240000-0000-4000-8000-000000000009")])
+                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["labels": .array([.string("Child design")])])
+                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.siblingID, fields: ["labels": .array([.string("Review")])])
+                labels = [Record(["id": .string("ec240000-0000-4000-8000-000000000008"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Design")]),
+                          Record(["id": .string("ec240000-0000-4000-8000-000000000010"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Personal only")])]
+                let privateProject = Record(["id": .string("ec240000-0000-4000-8000-000000000012"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private test project")])
+                var privateTask = Record.task(user: TeamEditorNativeFixture.account, project: privateProject.id)
+                privateTask["title"] = .string("Private test work"); privateTask["labels"] = .array([.string("Private project label")])
+                tasks = [row, privateTask]; projects.append(privateProject)
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-reminder-testing") {
+                var local = ReminderSpec.relative(-5, id: "ec240000-0000-4000-8000-000000000021").raw
+                local["future_row"] = .object(["keep": .bool(true)])
+                var other = ReminderSpec.relative(-45, id: "ec240000-0000-4000-8000-000000000024").raw; other["channels"] = .array([.string("email")])
+                row["reminder_specs"] = .array([.object(local),
+                    .object(["id": .string("ec240000-0000-4000-8000-000000000022"), "version": .number(99), "kind": .string("future"), "hidden": .string("Hidden future instructions")]),
+                    .object(["id": .string("ec240000-0000-4000-8000-000000000023"), "version": .number(77), "kind": .string("location"), "place_label": .string("Private studio"), "latitude_e6": .number(1), "longitude_e6": .number(2)]), .object(other)])
+                row["reminders"] = .array([.string("legacy-time-cue")]); row["due_date"] = .string(Dates.day(Date().addingTimeInterval(86400))); row["due_time"] = .string("09:00"); row["time_zone"] = .string("UTC")
+                let privateProject = Record(["id": .string("ec240000-0000-4000-8000-000000000026"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private reminder project")])
+                var privateTask = Record.task(user: TeamEditorNativeFixture.account, project: privateProject.id)
+                privateTask["id"] = .string("ec240000-0000-4000-8000-000000000025"); privateTask["title"] = .string("Personal reminder proof")
+                privateTask["reminder_specs"] = .array([.object(ReminderSpec.relative(-15, id: "ec240000-0000-4000-8000-000000000027").raw)])
+                tasks = [row, privateTask]; projects.append(privateProject)
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-repeat-testing") {
+                row["due_date"] = .string("2026-10-25"); row["due_time"] = .string("09:00"); row["time_zone"] = .string("Europe/Copenhagen")
+                row["is_recurring"] = .bool(false); row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
+                row["recurrence_end_date"] = .string("2027-10-25")
+                if ProcessInfo.processInfo.arguments.contains("--team-repeat-future") { row["recurrence_pattern"] = .object(["type": .string("hourly"), "future": .bool(true)]) }
+            }
+            if TeamBatchRecoveryNativePeer.recurring {
+                row["is_recurring"] = .bool(true); row["due_date"] = .string("2026-10-25"); row["due_time"] = .string("09:00"); row["time_zone"] = .string("Europe/Copenhagen")
+                row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
+                row["recurrence_end_date"] = .string("2027-10-25")
+                var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: "Europe/Copenhagen")!
+                row["scheduled_at"] = .string(ISO8601DateFormatter().string(from: calendar.date(from: DateComponents(year: 2026, month: 10, day: 25, hour: 9))!))
+                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["completed": .bool(true)])
+            }
+            if TaskFileViewerFixture.enabled {
+                row["task_generation"] = .string(TaskFileViewerFixture.generation)
+                row["attachments"] = .array([.object(TaskFileViewerFixture.attachment.fields)])
+            }
+            tasks[0] = row
+            if ProcessInfo.processInfo.arguments.contains("--team-batch-testing") {
+                var next = Record.task(user: row.string("user_id"), project: TeamEditorNativeFixture.projectID)
+                next["id"] = .string("ec240000-0000-4000-8000-000000000031")
+                next["title"] = .string("Next workshop review"); next["description"] = .string("Keep the selected occurrence notes")
+                next["recurrence_parent_id"] = row["id"]
+                var later = Record.task(user: row.string("user_id"), project: TeamEditorNativeFixture.projectID)
+                later["id"] = .string("ec240000-0000-4000-8000-000000000032")
+                later["title"] = .string("Later workshop review"); later["description"] = .string("Keep this unselected occurrence")
+                later["recurrence_parent_id"] = row["id"]
+                tasks += [next, later]
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-planning-input-testing") {
+                for index in tasks.indices {
+                    let offset = min(index, 2)
+                    tasks[index]["deadline_date"] = .string("2026-11-\(10 + offset)")
+                    tasks[index]["duration_minutes"] = .number(Double([25, 45, 60][offset]))
+                    tasks[index]["due_date"] = .string(String(format: "2026-11-%02d", 5 + offset))
+                    tasks[index]["due_time"] = .string("09:30"); tasks[index]["time_zone"] = .string("UTC")
+                    tasks[index]["scheduled_at"] = .string(String(format: "2026-11-%02dT09:30:00.000Z", 5 + offset))
+                }
+                if ProcessInfo.processInfo.arguments.contains("--team-label-batch-testing") {
+                    let labels: [[JSON]] = [[.string("Design"), .string("ec240000-0000-4000-8000-000000000009")], [.string("design"), .string("Keep")], [.string("Unselected")]]
+                    for index in tasks.indices { tasks[index]["labels"] = .array(labels[min(index, 2)]) }
+                }
+                if ProcessInfo.processInfo.arguments.contains("--team-planning-personal-testing") {
+                    projects.append(Record(["id": .string(TeamEditorNativeFixture.personalPlanningProject), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Personal planning studio")]))
+                    for index in 0..<3 {
+                        var task = Record.task(user: TeamEditorNativeFixture.account, project: TeamEditorNativeFixture.personalPlanningProject)
+                        task["id"] = .string("ec240000-0000-4000-8000-00000000005\(index + 1)")
+                        task["title"] = .string("Personal planning \(index + 1)"); task["description"] = .string("Keep personal notes \(index + 1)")
+                        task["duration_minutes"] = .number(Double([25, 45, 60][index])); task["deadline_date"] = .string("2026-11-12")
+                        tasks.append(task)
+                    }
+                }
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-template-testing") {
+                tasks[0]["labels"] = .array([.string("Launch shared")])
+                tasks[0]["subtasks"] = SubtaskTree.changing(tasks[0]["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["labels": .array([.string("Outline shared")])])
+                labels = [Record(["id": .string("Launch shared"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private catalog name"), "color": .string("#112233")])]
+            }
+            if PersonalHeadingNativePeer.enabled {
+                row["user_id"] = .string(TeamEditorNativeFixture.account); row["project_id"] = .null
+                row["title"] = .string("Personal heading proof"); row["is_heading"] = .null
+                row["task_generation"] = .string(UUID().uuidString.lowercased()); row["completion_version"] = .number(0)
+                tasks = [row]; projects = []; labels = []
+                try PersonalHeadingNativePeer.reset(row)
+            }
+            if AudioTeamNativeProvider.enabled { row["task_generation"] = .string(AudioTeamNativeProvider.generation); tasks = [row] }
+            snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
+            if WorkflowUndoNativePeer.enabled { snapshot.tables[WorkflowTemplate.table] = [WorkflowUndoNativePeer.template] }
+            if TeamTaskMoveNativePeer.enabled {
+                row["section_id"] = .null
+                row["assigned_to"] = .string(TeamEditorNativeFixture.recipientID)
+                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["assigned_to": .string(TeamEditorNativeFixture.recipientID)])
+                tasks = [row]
+                projects += [Record(["id": .string(TeamTaskMoveNativePeer.destination), "user_id": row["user_id"], "name": .string("Launch studio")]), Record(["id": .string(TeamTaskMoveNativePeer.viewerProject), "user_id": row["user_id"], "name": .string("Read-only studio")])]
+                try TeamTaskMoveNativePeer.write(TeamTaskMoveNativePeer.State(tasks: tasks))
+                UserDefaults.standard.removeObject(forKey: "teamMoveLoseReply")
+                snapshot.tables["tasks"] = tasks; snapshot.tables["projects"] = projects
+            }
+            if TeamTemplateNativeFixture.enabled {
+                try TeamTemplateNativeFixture.reset()
+                snapshot.tables[WorkflowTemplate.table] = [TeamTemplateNativeFixture.personal]
+                let workflows = backupVault.directory.appendingPathComponent("Shared workflow requests", isDirectory: true)
+                if FileManager.default.fileExists(atPath: workflows.path) { try FileManager.default.removeItem(at: workflows) }
+                let requests = backupVault.directory.appendingPathComponent("Team template requests", isDirectory: true)
+                if FileManager.default.fileExists(atPath: requests.path) { try FileManager.default.removeItem(at: requests) }
+            }
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(viewer: TaskFileViewerFixture.enabled && !TaskFileViewerFixture.selectionTesting), previous: nil, pending: [], tasks: tasks)
+            try persist()
+            try seedTeamCompletionRecoveryFixture()
+        } catch { self.error = error.localizedDescription }
+    }
+    func changeTeamLabelCatalogFixture() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-label-testing"),
+              let original = record("labels", id: "ec240000-0000-4000-8000-000000000008") else { return }
+        var renamed = original; renamed["name"] = .string("Private design")
+        guard save("labels", renamed), save("labels", original) else { return }
+        remove("labels", original.id)
+    }
+    func changeTeamEditorFixtureSibling() {
+        guard TeamEditorNativeFixture.enabled,
+              let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == TeamEditorNativeFixture.taskID }) else { return }
+        snapshot.tables["tasks"]![index]["subtasks"] = SubtaskTree.changing(snapshot.tables["tasks"]![index]["subtasks"], id: TeamEditorNativeFixture.siblingID, fields: ["title": .string("Sibling updated elsewhere")])
+        do { try persist() } catch { self.error = error.localizedDescription }
+    }
+    func changeTeamDeletionFixtureSource() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-delete-testing"),
+              let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == TeamEditorNativeFixture.taskID }) else { return }
+        snapshot.tables["tasks"]![index]["description"] = .string("A newer saved design decision")
+        try? persist()
+    }
+    func failTeamCreationFixtureSave() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-create-testing") else { return }
+        savedFilterFixtureFailNextPersist = true
+    }
+    func failTeamDeletionFixtureSave() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-delete-testing") else { return }
+        savedFilterFixtureFailNextPersist = true
+    }
+    func pauseTeamHeadingCapabilityFixture() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-heading-testing") else { return }
+        UserDefaults.standard.set(true, forKey: "teamHeadingCapabilityPaused")
+        do {
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: snapshot.teamWorkspace, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+            try persist()
+        } catch { self.error = error.localizedDescription }
+    }
+    func revokeTeamEditorNativeFixture() {
+        guard TeamEditorNativeFixture.enabled else { return }
+        do {
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(viewer: true), previous: snapshot.teamWorkspace, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+            try persist()
+        } catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+#if DEBUG
+/// File-backed synthetic peer in the reserved native host. It never sends HTTP
+/// or touches a real account. Actual PostgreSQL contracts have separate tests.
+@MainActor final class TeamTaskMoveNativePeer: TeamTaskMoveService {
+    static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--team-move-testing") }
+    static let destination = "ec240000-0000-4000-8000-000000000040"
+    static let viewerProject = "ec240000-0000-4000-8000-000000000041"
+    static let foreignProject = "ec240000-0000-4000-8000-000000000042"
+    static var journalPrepared = false
+    struct State: Codable { var tasks: [Record]; var before: [String: Record] = [:]; var commands: [String: TeamTaskMoveCommand] = [:]; var replies: [String: [String: JSON]] = [:] }
+    private weak var store: Store?
+    init(store: Store) { self.store = store }
+    static var file: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldTeamMoveNative/server.json") }
+    static func write(_ state: State) throws {
+        guard enabled else { throw CancellationError() }
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try TaskfoldJSONEncoder().encode(state).write(to: file, options: .atomic)
+    }
+    static func read() throws -> State { guard enabled else { throw CancellationError() }; return try TaskfoldJSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func proof(_ scope: TeamTaskMoveScope, _ task: Record, _ expires: String) throws -> String {
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
+        return CalendarOAuthConfiguration.digest(String(decoding: try encoder.encode(["scope": JSON.object(scope.body), "task": .object(task.fields), "expires": .string(expires)]), as: UTF8.self))
+    }
+    private func task(_ scope: TeamTaskMoveScope, state: State) throws -> Record {
+        guard Self.enabled, let store, scope.account == TeamEditorNativeFixture.account, scope.origin == "https://synthetic.example", scope.team == TeamEditorNativeFixture.teamID,
+              let token = store.nativeConversationTeamCache?.boundary.raw["token"]?.text, store.teamTaskMoveReviewCurrent(scope, token: token),
+              let task = state.tasks.first(where: { $0.id == scope.task }), task.string("project_id") == scope.source, task.string("task_generation") == scope.generation else { throw TeamTaskMoveCommand.invalid }
+        if let related = scope.undoes {
+            guard let command = state.commands[related], command.scope.source == scope.destination, command.scope.destination == scope.source,
+                  state.replies[related]?["task"] == .object(task.fields) else { throw TeamTaskMoveCommand.invalid }
+        }
+        return task
+    }
+    func teamTaskMoveReview(_ scope: TeamTaskMoveScope) async throws -> TeamTaskMoveReview {
+        let state = try Self.read(), row = try task(scope, state: state)
+        let date = ISO8601DateFormatter().string(from: Date().addingTimeInterval(1800))
+        let original = scope.undoes.flatMap { state.before[$0] }
+        let currentCount = (row.string("assigned_to").isEmpty ? 0 : 1) + (try TeamChecklist.indexed(row["subtasks"])).values.filter { !($0["assigned_to"]?.text ?? "").isEmpty }.count
+        let restoredCount = try original.map { value in (value.string("assigned_to").isEmpty ? 0 : 1) + (try TeamChecklist.indexed(value["subtasks"])).values.filter { !($0["assigned_to"]?.text ?? "").isEmpty }.count } ?? 0
+        var raw = scope.body; raw.removeValue(forKey: "undoes")
+        raw.merge(["move_review_protocol": .number(1), "account": .string(scope.account), "related_request": scope.undoes.map(JSON.string) ?? .null,
+                   "review_token": .string(try Self.proof(scope, row, date)), "expires_at": .string(date), "task": .object(row.fields),
+                   "source_name": .string(store?.record("projects", id: scope.source)?.name ?? "Shared project"), "destination_name": .string(store?.record("projects", id: scope.destination)?.name ?? "Shared project"), "destination_visibility": .string("team"),
+                   "cleared_assignments": .number(scope.undoes == nil ? Double(currentCount) : 0), "restored_assignments": .number(Double(restoredCount)), "discussion_count": .number(1)]) { _, new in new }
+        return try TeamTaskMoveReview(raw, scope: scope)
+    }
+    func teamTaskMove(_ command: TeamTaskMoveCommand) async throws -> TeamTaskMoveReceipt {
+        guard Self.enabled else { throw CancellationError() }
+        var state = try Self.read()
+        if let saved = state.commands[command.id] {
+            guard saved == command else { throw TeamTaskMoveCommand.invalid }
+            var raw = state.replies[command.id]!; raw["replayed"] = .bool(true)
+            raw["task"] = state.tasks.first(where: { $0.id == command.scope.task && $0.string("project_id") == command.scope.destination && $0.string("task_generation") == command.scope.generation }).map { .object($0.fields) } ?? .null
+            return try command.confirmed(raw)
+        }
+        let before = try task(command.scope, state: state), expiry = try TeamOrganizationValue.date(command.body["expires_at"])
+        guard expiry > Date(), command.body["review_token"] == .string(try Self.proof(command.scope, before, command.body["expires_at"]!.text)) else { throw TeamTaskMoveCommand.invalid }
+        var after = before; after["project_id"] = .string(command.scope.destination)
+        if let related = command.scope.undoes, let original = state.before[related] {
+            for key in ["section_id", "assigned_to", "subtasks"] { after[key] = original[key] }
+        } else {
+            let children = try PersonalTaskMove.clearAssignments(after["subtasks"])
+            after["assigned_to"] = .null; after["section_id"] = .null; after["subtasks"] = children
+        }
+        var raw = command.scope.body; raw.removeValue(forKey: "undoes")
+        raw.merge(["protocol": .number(1), "account": .string(command.account), "request_id": .string(command.id), "operation": .string(command.operation), "related_request": command.scope.undoes.map(JSON.string) ?? .null, "replayed": .bool(false), "task": .object(after.fields)]) { _, new in new }
+        state.tasks[state.tasks.firstIndex(where: { $0.id == before.id })!] = after
+        state.before[command.id] = before; state.commands[command.id] = command; state.replies[command.id] = raw; try Self.write(state)
+        if UserDefaults.standard.bool(forKey: "teamMoveLoseReply") { UserDefaults.standard.removeObject(forKey: "teamMoveLoseReply"); throw URLError(.networkConnectionLost) }
+        return try command.confirmed(raw)
+    }
+}
+extension Store {
+    func prepareTeamTaskMoveNativeJournal() async {
+        guard TeamTaskMoveNativePeer.enabled, !TeamTaskMoveNativePeer.journalPrepared else { return }
+        TeamTaskMoveNativePeer.journalPrepared = true
+        if ProcessInfo.processInfo.arguments.contains("--team-editor-reset") {
+            do { try await teamTaskMoveVault.removeAccount(TeamEditorNativeFixture.account, origin: "https://synthetic.example") } catch { self.error = error.localizedDescription }
+        }
+    }
+    func applyTeamTaskMoveNativeReceipt(_ receipt: TeamTaskMoveReceipt) -> Bool {
+        guard TeamTaskMoveNativePeer.enabled, receipt.command.account == userID, receipt.command.scope.task == TeamEditorNativeFixture.taskID,
+              snapshot.pending.isEmpty, let state = try? TeamTaskMoveNativePeer.read() else { return false }
+        let old = snapshot
+        snapshot.tables["tasks"] = state.tasks
+        do { try persist(); return true } catch { snapshot = old; self.error = error.localizedDescription; return false }
+    }
+    func changeTeamTaskMoveNativeSource() {
+        guard TeamTaskMoveNativePeer.enabled, var state = try? TeamTaskMoveNativePeer.read(), let index = state.tasks.firstIndex(where: { $0.id == TeamEditorNativeFixture.taskID }) else { return }
+        state.tasks[index]["description"] = .string("A newer shared note")
+        do { try TeamTaskMoveNativePeer.write(state); snapshot.tables["tasks"] = state.tasks; try persist() } catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+extension Store {
+    var projectTransferRecoveryAvailable: Bool { signedIn && !localMode && !signingOut && !accountRemovalBlocked }
+    var projectTransferAuthoringAvailable: Bool { projectTransferRecoveryAvailable && nativeTeamEditorEnabled && workspaceCacheReadable }
+    /// Recovery stays available independently of fresh transfer authoring gates.
+    func projectTransferModel() throws -> TeamProjectAdoptionModel {
+        guard projectTransferRecoveryAvailable else { throw TeamProjectAdoptionValue.invalid }
+        let account = userID, origin = try backend.accountRemovalOrigin
+        let workspace = WorkspaceBinding(account: account, generation: workspaceGeneration), session = backend.reminderSessionIncarnation
+        return TeamProjectAdoptionModel(account: account, origin: origin, vault: projectAdoptionVault, service: backend, current: { [weak self] in
+            self?.projectTransferContext(account: account, origin: origin, workspace: workspace, session: session) == true
+        })
+    }
+    func projectTransferContext(account: String, origin: String, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        projectTransferRecoveryAvailable && account == userID && origin == (try? backend.accountRemovalOrigin) && workspace.matches(account: userID, generation: workspaceGeneration) && session == backend.reminderSessionIncarnation
+    }
+    var personalTransferProjects: [Record] {
+        guard projectTransferAuthoringAvailable, let boundary = nativeConversationTeamCache?.boundary else { return [] }
+        return allProjects.filter { $0.string("user_id") == userID && boundary.projects[$0.id]?.team == nil && boundary.projects[$0.id]?.role == "owner" }.sorted { $0.string("name").localizedStandardCompare($1.string("name")) == .orderedAscending }
+    }
+    /// A new transfer requires synced work and closed affected task editors.
+    /// Retries remain available independently, including after destination access loss.
+    func projectTransferAuthorStamp(_ scope: TeamProjectAdoptionScope, projects ids: [String]) -> String? {
+        guard projectTransferAuthoringAvailable, online, !syncing, snapshot.pending.isEmpty, syncConflict == nil, focusSyncConflict == nil,
+              scope.account == userID, scope.origin == (try? backend.accountRemovalOrigin), let cache = nativeConversationTeamCache,
+              cache.boundary.belongs(account: scope.account, origin: scope.origin), Set(scope.roots).isSubset(of: Set(ids)),
+              ids.allSatisfy({ id in record("projects", id: id)?.string("user_id") == userID && cache.knownTeams[id] == nil && cache.boundary.projects[id]?.role == "owner" && cache.boundary.projects[id]?.team == nil }) else { return nil }
+        for editor in editorSessions.values where !editor.closed && editor.account == userID {
+            let root = SubtaskTree.referencePath(editor.original.id)?.first ?? editor.original.id
+            let project = record("tasks", id: root)?.string("project_id") ?? editor.original.string("project_id")
+            if ids.contains(project) { return nil }
+        }
+        return "\(workspaceReadRevision)|\(taskRevision)|\(cache.boundary.raw["token"]?.text ?? "")"
+    }
+    /// Receipts certify custody only. Ordinary boundary refresh handles drafts,
+    /// recovery copies and visibility; no old response is projected into tasks.
+    func refreshAfterProjectTransfer(_ receipt: TeamProjectAdoptionReceipt) async -> Bool {
+        let c = receipt.command, workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration), session = backend.reminderSessionIncarnation
+        guard projectTransferContext(account: c.account, origin: c.origin, workspace: workspace, session: session), !syncing, online else { return false }
+        let started = Date(); await sync()
+        guard projectTransferContext(account: c.account, origin: c.origin, workspace: workspace, session: session), !syncing,
+              (lastSync ?? .distantPast) >= started, let cache = nativeConversationTeamCache, cache.boundary.belongs(account: c.account, origin: c.origin) else { return false }
+        // A refresh that preserved conflicting work is still useful, but it is
+        // not a claim that every selected project has reloaded successfully.
+        guard syncConflict == nil, focusSyncConflict == nil, snapshot.pending.isEmpty else { return false }
+        return c.projects.allSatisfy { cache.boundary.projects[$0] == nil || cache.boundary.projects[$0]?.team == c.scope.team }
+    }
+}
+
+#if DEBUG
+extension Store {
+    private func prepareProjectAdoptionNativeFixture() {
+        dailyBackupsEnabled = false
+        do {
+            let resetting = ProcessInfo.processInfo.arguments.contains("--team-editor-reset")
+            if resetting || !FileManager.default.fileExists(atPath: ProjectAdoptionNativeFixture.stateURL.path) { try ProjectAdoptionNativeFixture.reset() }
+            if !resetting, snapshot.tables["projects"]?.contains(where: { $0.id == ProjectAdoptionNativeFixture.root }) == true { return }
+            let state = try ProjectAdoptionNativeFixture.read(), rows = ProjectAdoptionNativeFixture.rows(state)
+            let boundary = try TeamWorkspaceBoundary(ProjectAdoptionNativeFixture.boundary(state),account:ProjectAdoptionNativeFixture.account,origin:ProjectAdoptionNativeFixture.origin)
+            snapshot = Snapshot(tables: rows); snapshot.teamWorkspace = try TeamWorkspaceCache(boundary:boundary,previous:nil,pending:[],tasks:rows["tasks"] ?? [])
+            try persist()
+        } catch { self.error = "Synthetic project-transfer workspace could not be prepared." }
+    }
+    func changeProjectAdoptionFixtureSource() {
+        guard ProjectAdoptionNativeFixture.enabled,var rows=snapshot.tables["tasks"],!rows.isEmpty else{return}
+        rows[0]["description"] = .string("Changed after review");snapshot.tables["tasks"]=rows;try? persist()
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    private var historyBindingFixtureEnabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--history-binding-testing") }
+    func seedHistoryBindingFixture() {
+        guard historyBindingFixtureEnabled else { return }
+        do {
+            undoStack = []; redoStack = []; TeamEditorNativeFixture.historyRequest = nil
+            for index in 1...30 {
+                let id = "ec240000-0000-4000-8000-000000000032"
+                guard var row = record("tasks", id: id) else { throw TeamTaskBatch.invalid }
+                let draft = try captureTeamTaskEditor(row)
+                row["title"] = .string("History checkpoint \(index)")
+                guard saveTeamTaskEditor(row, draft: draft) else { throw TeamTaskBatch.invalid }
+            }
+        } catch { self.error = error.localizedDescription }
+    }
+    func advanceHistoryBindingFixture() {
+        guard historyBindingFixtureEnabled, let old = TeamEditorNativeFixture.historyRequest else { return }
+        do {
+            let oldDepth = undoStack.count, oldEntry = undoStack.last?.id
+            guard var row = record("tasks", id: "ec240000-0000-4000-8000-000000000031") else { throw TeamTaskBatch.invalid }
+            let draft = try captureTeamTaskEditor(row); row["description"] = .string("Newer history binding proof")
+            guard saveTeamTaskEditor(row, draft: draft) else { throw TeamTaskBatch.invalid }
+            let before = snapshot, beforeUndo = undoStack.map(\.id), beforeRedo = redoStack.map(\.id)
+            let rejected = !undo(old)
+            let unchanged = snapshot.tables == before.tables && snapshot.pending == before.pending && undoStack.map(\.id) == beforeUndo && redoStack.map(\.id) == beforeRedo
+            let report: [String: JSON] = ["sameDepth": .bool(oldDepth == undoStack.count), "depth": .number(Double(undoStack.count)), "newEntry": .bool(oldEntry != undoStack.last?.id), "rejected": .bool(rejected), "snapshotAndStacksUnchanged": .bool(unchanged)]
+            try TaskfoldJSONEncoder().encode(report).write(to: cacheURL.deletingLastPathComponent().appendingPathComponent("history-binding-proof.json"), options: .atomic)
+            self.error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+#if DEBUG
+/// A local, ordinary-root protocol peer only for the reserved acceptance host.
+/// SQL behavior is verified separately; no request can reach a real service.
+@MainActor private enum TeamBatchRecoveryNativePeer {
+    static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-testing") }
+    static var readOnlyMode: String? { ["viewer", "archived", "paused"].first { ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-" + $0) } }
+    private static var singleReviewCount = 0
+    static var blockedSync: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync") }
+    static var traceFile: URL { FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("taskfold-cold-discovery-trace.json") }
+    static func trace(_ request: URLRequest) {
+        guard blockedSync else { return }
+        var entries = (try? TaskfoldJSONDecoder().decode([[String: String]].self, from: Data(contentsOf: traceFile))) ?? []
+        entries.append(["method": request.httpMethod ?? "", "path": request.url?.path ?? ""])
+        try? FileManager.default.createDirectory(at: traceFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? TaskfoldJSONEncoder().encode(Array(entries.suffix(128))).write(to: traceFile, options: .atomic)
+    }
+    static func readBoundary() throws -> TeamWorkspaceBoundary {
+        guard enabled else { throw CancellationError() }
+        let mode = readOnlyMode ?? "viewer"
+        var raw = try TeamEditorNativeFixture.boundary(viewer: mode == "viewer").raw
+        raw["setup_paused"] = .bool(mode == "paused"); raw["token"] = .string(String(repeating: "e", count: 64))
+        raw["projects"] = .array(raw["projects"]!.list.map { value in var project = value.object; project["can_send_tasks"] = .bool(false); project["archived"] = .bool(mode == "archived"); return .object(project) })
+        return try TeamWorkspaceBoundary(raw, account: TeamEditorNativeFixture.account, origin: "https://synthetic.example")
+    }
+
+    static var recurring: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recurring") }
+    static var recurringProof: URL { traceFile.deletingLastPathComponent().appendingPathComponent("taskfold-recurring-review-proof.json") }
+    static func rememberRecurring(_ header: Mutation) throws {
+        guard recurring else { return }
+        let body: [String: JSON]
+        if let group = header.teamTaskBatch { body = try group.body(for: header) }
+        else if let command = header.teamCompletion { body = try command.body(for: header) }
+        else { throw TeamCompletion.invalid }
+        let value: [String: JSON] = ["_action": .string("complete"), "_body": .object(body)]
+        if FileManager.default.fileExists(atPath: recurringProof.path) {
+            guard try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recurringProof)) == value else { throw TeamCompletion.invalid }
+        } else { try TaskfoldJSONEncoder().encode(value).write(to: recurringProof, options: .atomic) }
+    }
+    /// A sealed first-completion observation, not an emulation of later writes.
+    /// The domain forecast is already checked against independent SQL fixtures.
+    static func recurringCommand(_ body: [String: JSON], operation: TeamCompletion.Operation) throws -> Mutation {
+        let source = Record(body["record"]?.object ?? [:])
+        guard let id = UUID(uuidString: body["request_id"]?.text ?? ""),
+              let clock = TaskPlanning.instant(body["completed_at"]?.text ?? ""),
+              source.string("project_id") == TeamEditorNativeFixture.projectID,
+              body["series_id"] == .string(source.id) else { throw TeamCompletion.invalid }
+        let scope = TeamTaskEditScope(account: TeamEditorNativeFixture.account, origin: "https://synthetic.example", team: TeamEditorNativeFixture.teamID, project: source.string("project_id"))
+        let related = body[operation == .undo ? "undoes" : "redo_of"].flatMap { UUID(uuidString: $0.text) }
+        guard operation != .undo || related != nil else { throw TeamCompletion.invalid }
+        let forecast = try TeamCompletion.complete(source, tasks: [source], scope: scope, at: clock, zone: body["input_zone"]?.text ?? "", id: operation == .undo ? related! : id)
+        var proposed = forecast.teamCompletion!.proposed
+        proposed?["task_generation"] = body["next_generation"]!
+        let command = TeamCompletion(scope: scope, operation: operation, source: source, completedAt: body["completed_at"]!.text, inputZone: body["input_zone"]!.text, seriesID: source.id,
+                                     seriesGeneration: body["series_generation"]?.text ?? "", seriesProject: body["series_project_id"]?.text ?? "", nextGeneration: body["next_generation"]?.text ?? "", proposed: proposed, related: related)
+        let header = TeamCompletion.header(command, id: id)
+        guard try command.body(for: header) == body else { throw TeamCompletion.invalid }
+        return header
+    }
+    static func recurringResponse(_ params: [String: JSON], single: Bool) throws -> Data {
+        guard recurring, let operation = TeamCompletion.Operation(rawValue: params["_action"]?.text ?? ""),
+              let body = params["_body"]?.object else { throw TeamCompletion.invalid }
+        let proof = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recurringProof))
+        let original = proof["_body"]!.object
+        let originalItems = original["items"]?.list ?? [.object(original)], items = single ? [.object(body)] : body["items"]?.list ?? []
+        guard !items.isEmpty else { throw TeamCompletion.invalid }
+        let sealed = proof == params, cancelled = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-cancelled")
+        let recorded = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recorded") && !cancelled
+        let state = sealed ? (cancelled ? "cancelled" : recorded ? "recorded" : "unrecorded") : "unrecorded"
+        var current: [String: (Record, Record?)] = [:]
+        for item in originalItems {
+            let header = try recurringCommand(item.object, operation: .complete), command = header.teamCompletion!
+            let task = recorded ? TaskCompletionRevision.applying(["completed": .bool(true), "completed_at": .string(command.completedAt)], to: command.source) : command.source
+            guard current.index(forKey: task.id) == nil else { throw TeamCompletion.invalid }
+            current[task.id] = (task, recorded ? command.proposed : nil)
+        }
+        var views: [JSON] = []
+        let identityKeys = ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"]
+        for item in items {
+            let b = item.object
+            let header = try recurringCommand(b, operation: operation)
+            let command = header.teamCompletion!
+            guard let (task, originalNext) = current[command.source.id] else { throw TeamCompletion.invalid }
+            var next: Record? = originalNext?.id == command.proposed?.id ? originalNext : nil
+            if ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), var replacement = next {
+                replacement["task_generation"] = .string(WorkspaceBackup.stableID("native-connected-replacement", replacement.id))
+                replacement["title"] = .string("Existing shared occurrence")
+                next = replacement
+            }
+            let nextValue: JSON = next.map { JSON.object($0.fields) } ?? .null
+            let related: JSON = command.related.map { JSON.string($0.uuidString.lowercased()) } ?? .null
+            var identity: [String: JSON] = [:]
+            for key in identityKeys { identity[key] = b[key]! }
+            var receipt = identity
+            receipt["protocol"] = .number(1); receipt["account"] = .string(TeamEditorNativeFixture.account)
+            receipt["operation"] = .string(operation.rawValue); receipt["related_request"] = related; receipt["replayed"] = .bool(true)
+            receipt["source_revision"] = task["completion_version"]; receipt["created_successor"] = .bool(next != nil && (!ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing") || next?["task_generation"] == command.proposed?["task_generation"])); receipt["removed_successor"] = .bool(false)
+            receipt["successor_id"] = next.map { JSON.string($0.id) } ?? .null
+            receipt["successor_generation"] = next?["task_generation"] ?? .null
+            receipt["task"] = .object(task.fields); receipt["successor"] = nextValue
+            var view = identity
+            view["review_protocol"] = .number(1); view["account"] = .string(TeamEditorNativeFixture.account); view["operation"] = .string(operation.rawValue)
+            view["state"] = .string(state); view["project_role"] = .string(readOnlyMode == "viewer" ? "viewer" : "editor")
+            view["task"] = .object(task.fields); view["series"] = .object(task.fields); view["successor"] = nextValue
+            view["receipt"] = state == "recorded" ? .object(receipt) : .null
+            view["can_edit_current"] = .bool(readOnlyMode == nil); view["can_edit_series"] = .bool(readOnlyMode == nil)
+            views.append(.object(view))
+        }
+        if single { return try TaskfoldJSONEncoder().encode(views[0]) }
+        let receipt: JSON = state == "recorded" ? .object(["batch_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string(operation.rawValue), "related_request": body["related_request"] ?? .null, "items": .array(views.map { $0.object["receipt"]! }), "replayed": .bool(true)]) : .null
+        return try TaskfoldJSONEncoder().encode(["group_review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string(operation.rawValue), "related_request": body["related_request"] ?? .null, "state": .string(state), "items": .array(views), "receipt": receipt])
+    }
+    static func response(_ request: URLRequest) -> Data? {
+        guard enabled, request.url?.host == "synthetic.example" else { return nil }
+        trace(request)
+        if blockedSync, request.httpMethod == "POST", request.url?.path == "/rest/v1/rpc/taskfold_workspace_boundary" { return try? TaskfoldJSONEncoder().encode(readBoundary().raw) }
+        guard request.httpMethod == "POST",
+              ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional"].contains(request.url?.path ?? "") else { return nil }
+        var data = request.httpBody
+        if data == nil, let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var value = Data(), bytes = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable && value.count < 2_000_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; value.append(contentsOf: bytes.prefix(count)) }; data = value
+        }
+        guard let data, let params = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { return nil }
+        if recurring, request.url?.path == "/rest/v1/rpc/taskfold_retire_team_provisional" {
+            guard ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), Set(params.keys) == ["_body"], let body = params["_body"]?.object,
+                  let data = try? recurringResponse(["_action": .string("complete"), "_body": .object(body)], single: true),
+                  let read = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data), read["state"] == .string("recorded") else { return nil }
+            let response: [String: JSON] = ["draft_retirement_protocol": .number(1), "generation_unavailable": .bool(true), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "project_id": body["project_id"]!, "request_id": body["request_id"]!, "task_id": body["planned_next_id"]!, "task_generation": body["next_generation"]!, "review": .object(read), "current_proposed": read["successor"] ?? .null]
+            let file = recurringProof.deletingLastPathComponent().appendingPathComponent("taskfold-connected-provisional-rpc-proof.json")
+            var calls = (try? TaskfoldJSONDecoder().decode([JSON].self, from: Data(contentsOf: file))) ?? []
+            calls.append(.object(["path": .string(request.url!.path), "body": .object(params), "response": .object(response)]))
+            try? TaskfoldJSONEncoder().encode(Array(calls.suffix(16))).write(to: file, options: .atomic)
+            return try? TaskfoldJSONEncoder().encode(response)
+        }
+        if recurring { return try? recurringResponse(params, single: ["/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion"].contains(request.url?.path ?? "")) }
+        guard params["_action"] == .string("complete"),
+              let body = params["_body"]?.object, body["team_id"] == .string(TeamEditorNativeFixture.teamID),
+              let nonce = body["request_id"]?.text, TeamProjectValue.id(nonce) else { return nil }
+        let single = ["/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion"].contains(request.url?.path ?? "")
+        let items = single ? [JSON.object(body)] : body["items"]?.list ?? []
+        guard (1...100).contains(items.count) else { return nil }
+        let file = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("taskfold-group-review-peer.json")
+        var retired = (try? TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file))) ?? [:]
+        if let old = retired[nonce], old != .object(body) { return nil }
+        let alreadyCancelled = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-cancelled")
+        let support = file.deletingLastPathComponent(), recordedFile = support.appendingPathComponent("taskfold-single-cancel-recorded-peer.json")
+        var recordedActions = (try? TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recordedFile))) ?? [:]
+        if let old = recordedActions[nonce], old != .object(body) { return nil }
+        let raceRecorded = ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-recorded-race") && request.url!.path.contains("cancel_")
+        let recorded = (ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recorded") && !alreadyCancelled) || recordedActions[nonce] != nil || raceRecorded
+        if raceRecorded {
+            recordedActions[nonce] = .object(body); try? TaskfoldJSONEncoder().encode(recordedActions).write(to: recordedFile, options: .atomic)
+        }
+        if ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-testing"), request.url!.path.contains("cancel_") {
+            let trace = support.appendingPathComponent("taskfold-single-cancel-attempts.json")
+            var attempts = (try? TaskfoldJSONDecoder().decode([JSON].self, from: Data(contentsOf: trace))) ?? []
+            attempts.append(.object(["path": .string(request.url!.path), "request_id": .string(nonce), "body": .object(body)]))
+            try? TaskfoldJSONEncoder().encode(Array(attempts.suffix(128))).write(to: trace, options: .atomic)
+        }
+        if request.url!.path.contains("cancel_"), !recorded {
+            retired[nonce] = .object(body)
+            do { try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true); try TaskfoldJSONEncoder().encode(retired).write(to: file, options: .atomic) } catch { return nil }
+        }
+        let state = alreadyCancelled ? "cancelled" : recorded ? "recorded" : retired[nonce] != nil ? "cancelled" : "unrecorded"
+        var views: [JSON] = [], receipts: [JSON] = []
+        for item in items {
+            let b = item.object; var task = Record(b["record"]?.object ?? [:])
+            guard task.string("project_id") == TeamEditorNativeFixture.projectID, task["is_recurring"] != .bool(true), b["planned_next_id"] == .null,
+                  b["series_id"] == .string(task.id), task["completed"] == .bool(false) else { return nil }
+            if recorded { task = TaskCompletionRevision.applying(["completed": .bool(true), "completed_at": b["completed_at"]!], to: task) }
+            var receipt: [String: JSON] = Dictionary(uniqueKeysWithValues: ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"].map { ($0, b[$0]!) })
+            receipt.merge(["protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "replayed": .bool(true), "operation": .string("complete"), "related_request": .null,
+                "source_revision": task["completion_version"], "created_successor": .bool(false), "removed_successor": .bool(false), "successor_id": .null, "successor_generation": .null, "task": .object(task.fields), "successor": .null]) { _, new in new }
+            var view: [String: JSON] = Dictionary(uniqueKeysWithValues: ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"].map { ($0, b[$0]!) })
+            view.merge(["review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "operation": .string("complete"), "state": .string(state), "project_role": .string(readOnlyMode == "viewer" ? "viewer" : "editor"),
+                "task": .object(task.fields), "series": .object(task.fields), "successor": .null, "receipt": recorded ? .object(receipt) : .null, "can_edit_current": .bool(readOnlyMode == nil), "can_edit_series": .bool(readOnlyMode == nil)]) { _, new in new }
+            if recorded, ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing"), task.id == TeamEditorNativeFixture.taskID {
+                receipt["task"] = .null; view["task"] = .null; view["series"] = .null; view["receipt"] = .object(receipt)
+            }
+            views.append(.object(view)); receipts.append(.object(receipt))
+        }
+        if single {
+            if ProcessInfo.processInfo.arguments.contains("--team-single-recovery-refresh") {
+                singleReviewCount += 1
+                var view = views[0].object, receipt = view["receipt"]!.object, task = view["task"]!.object
+                task["description"] = .string(singleReviewCount > 1 ? "Updated synced instructions" : "Initial synced instructions")
+                view["task"] = .object(task); view["series"] = .object(task); receipt["task"] = .object(task); view["receipt"] = .object(receipt)
+                return try? TaskfoldJSONEncoder().encode(view)
+            }
+            return try? TaskfoldJSONEncoder().encode(views[0])
+        }
+        let receipt: JSON = recorded ? .object(["batch_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string("complete"), "related_request": .null, "items": .array(receipts), "replayed": .bool(true)]) : .null
+        return try? TaskfoldJSONEncoder().encode(["group_review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string("complete"), "related_request": .null, "state": .string(state), "items": .array(views), "receipt": receipt])
+    }
+}
+extension Store {
+    func prepareTeamBatchRecoveryFixture() async {
+        guard TeamBatchRecoveryNativePeer.enabled, var header = snapshot.pending.first, header.teamTaskBatch?.isCompletion == true || header.teamCompletion != nil else { return }
+        do {
+            if ProcessInfo.processInfo.arguments.contains("--team-single-recovery-testing"), let batch = header.teamTaskBatch, let first = batch.items.first {
+                for other in batch.items.dropFirst() {
+                    if let source = other.teamCompletion?.source, let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == source.id }) { snapshot.tables["tasks"]![index] = source }
+                }
+                header = first; snapshot.pending[0] = first; undoStack = []; redoStack = []; try persist()
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), TeamBatchRecoveryNativePeer.recurring,
+               ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-dependent"), snapshot.pending.count == 1,
+               let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first,
+               let command = item.teamCompletion, let proposed = command.proposed,
+               let row = snapshot.tables["tasks"]?.first(where: { $0.id == proposed.id && $0["task_generation"] == proposed["task_generation"] }) {
+                let fields: [String: JSON] = ["title": .string("Connected recurring draft"), "description": .string("Keep the connected recurring instructions")]
+                let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
+                snapshot.apply(edit); snapshot.pending.append(edit); try persist()
+            }
+            if TeamBatchRecoveryNativePeer.recurring, ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-dependent"), snapshot.pending.count == 3 {
+                let last = snapshot.pending.last!
+                guard let item = last.teamCompletion != nil ? last : last.teamTaskBatch?.items.first,
+                      let command = item.teamCompletion, let proposed = command.proposed,
+                      let row = snapshot.tables["tasks"]?.first(where: { $0.id == proposed.id && $0["task_generation"] == proposed["task_generation"] }) else { throw TeamCompletion.invalid }
+                let fields: [String: JSON] = ["title": .string("Later recurring occurrence proof"), "description": .string("Keep these later recurring instructions")]
+                let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
+                snapshot.apply(edit); snapshot.pending.append(edit); try persist()
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-dependent"), snapshot.pending.count == 1,
+               let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first, let command = item.teamCompletion,
+               let row = snapshot.tables["tasks"]?.first(where: { $0.id == item.recordID }) {
+                let fields: [String: JSON] = ["title": .string("Later selection draft proof"), "description": .string("Keep these later workshop instructions")]
+                let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
+                snapshot.apply(edit); snapshot.pending.append(edit); try persist()
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), let previous = snapshot.teamWorkspace {
+                snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: previous.boundary, previous: previous, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-recorded-mention-testing"),
+               (snapshot.tables[ConversationOutbox.table] ?? []).isEmpty,
+               let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first,
+               let task = snapshot.tables["tasks"]?.first(where: { $0.id == ((ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing") ? item.teamCompletion?.proposed?.id : nil) ?? item.recordID) }) {
+                let stamp = "2026-10-25T12:00:00Z", commentID = "ec240000-0000-4000-8000-000000000091", mentionID = "ec240000-0000-4000-8000-000000000092"
+                let comment = Record(["id": .string(commentID), "task_id": .string(task.id), "task_generation": task["task_generation"], "project_id": task["project_id"], "author_id": .string(userID), "body": .string("Native connected mention recovery proof"), "mention_ids": .array([.string(userID)]), "revision": .number(2), "created_at": .string(stamp), "updated_at": .string(stamp), "deleted_at": .null])
+                let marker = Record(["id": .string(mentionID), "comment_id": .string(commentID), "recipient_id": .string(userID), "revision": .number(3), "created_at": .string(stamp), "read_at": .null])
+                guard let mention = SharedMention(marker) else { throw TeamCompletion.invalid }
+                snapshot.tables[SharedComment.table] = [comment]; snapshot.tables[SharedMention.table] = [marker]
+                let captured = ProcessInfo.processInfo.arguments.contains("--team-captured-mention-testing")
+                try ConversationOutbox.enqueue(SharedMentionChange(mention: mention, account: userID, read: true).record, into: &snapshot, origin: captured ? (try? backend.accountRemovalOrigin) : nil)
+                if captured {
+                    guard snapshot.tables[ConversationOutbox.table]?.first?.fields[MentionRecoveryContext.field] != nil else { throw TeamCompletion.invalid }
+                    snapshot.tables[SharedComment.table] = []; snapshot.tables[SharedMention.table] = []
+                }
+                try persist()
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-recorded-order-testing"),
+               !snapshot.pending.contains(where: { $0.table == "view_orders" }),
+               let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first,
+               let task = snapshot.tables["tasks"]?.first(where: { $0.id == ((ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing") ? item.teamCompletion?.proposed?.id : nil) ?? item.recordID) }),
+               let other = snapshot.tables["tasks"]?.first(where: { $0.id != task.id }) {
+                let stale = "ec240000-0000-4000-8000-000000000099"
+                let order = Record(["id": .string("scope:today"), "user_id": .string(userID), "ids": .array([.string(other.id), .string(stale), .string(task.id)]), "updated_at": .string("2026-10-25T12:00:00Z")])
+                let independent = Record(["id": .string("scope:inbox"), "user_id": .string(userID), "ids": .array([.string(other.id)])])
+                snapshot.tables["view_orders"] = [order, independent]
+                func applyChoice(_ raw: Mutation) throws -> Mutation {
+                    let captured = capturingTaskOrderRecovery(raw)
+                    guard captured.orderRecovery != nil else { throw TaskOrderRecovery.invalid }
+                    snapshot.apply(captured); snapshot.pending.append(captured); return captured
+                }
+                _ = try applyChoice(Mutation(table: "view_orders", recordID: order.id, method: "POST", fields: ["id": order["id"], "user_id": .string(userID), "ids": .array([.string(task.id), .string(other.id), .string(stale)])]))
+                let beforePin = snapshot
+                guard let choice = PinnedNotes.change(taskID: task.id, enabled: true, pins: snapshot.tables["view_orders"] ?? [], account: userID) else { throw TaskOrderRecovery.invalid }
+                let pin = try applyChoice(choice)
+                let inverse = EditHistory(changes: [pin], snapshot: beforePin).undo
+                for change in try historyChanges(inverse) { _ = try applyChoice(change) }
+                for change in try historyChanges([pin]) { _ = try applyChoice(change) }
+                try persist()
+            }
+            if let mode = TeamBatchRecoveryNativePeer.readOnlyMode {
+                var raw = try TeamEditorNativeFixture.boundary(viewer: mode == "viewer").raw
+                raw["setup_paused"] = .bool(mode == "paused"); raw["token"] = .string(String(repeating: "e", count: 64))
+                raw["projects"] = .array(raw["projects"]!.list.map { value in var project = value.object; project["can_send_tasks"] = .bool(false); project["archived"] = .bool(mode == "archived"); return .object(project) })
+                let boundary = try TeamWorkspaceBoundary(raw, account: userID, origin: backend.accountRemovalOrigin)
+                // Model a newer access mask while disk still has the old writer
+                // boundary. Successful acknowledgement must persist this mask.
+                teamAccessMask = try TeamWorkspaceCache(boundary: boundary, previous: snapshot.teamWorkspace, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+                if mode == "archived" { for i in snapshot.tables["projects"]!.indices { snapshot.tables["projects"]![i]["is_archived"] = .bool(true) } }
+                try persist()
+            }
+            try TeamBatchRecoveryNativePeer.rememberRecurring(header)
+            if header.teamCompletion != nil {
+                let review = try await backend.reviewTeamCompletion(header, expectedAccount: userID)
+                syncConflict = SyncConflict(mutation: header, remote: review.task ?? header.teamCompletion!.source, completionReview: review)
+            } else { installTeamCompletionBatchReview(try await backend.reviewTeamCompletionBatch(header, expectedAccount: userID)) }
+        }
+        catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    /// Seed only reserved Mac acceptance storage. Review, sync and persistence
+    /// below still use their real Store implementations.
+    private func seedTeamCompletionRecoveryFixture() throws {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-testing"), snapshot.pending.isEmpty else { return }
+        let tasks = snapshot.tables["tasks"] ?? []
+        let scope = TeamTaskEditScope(account: userID, origin: try backend.accountRemovalOrigin, team: TeamEditorNativeFixture.teamID, project: TeamEditorNativeFixture.projectID)
+        let chosen = tasks.filter { $0.id == TeamEditorNativeFixture.taskID || $0.id == "ec240000-0000-4000-8000-000000000031" }
+        guard chosen.count == 2 else { throw TeamTaskBatch.invalid }
+        let actions = try chosen.map { try TeamCompletion.complete($0, tasks: tasks, scope: scope, at: Date(timeIntervalSince1970: 1792944000), zone: "Europe/Copenhagen") }
+        let header: Mutation
+        if ProcessInfo.processInfo.arguments.contains("--team-single-recovery-testing") { header = actions[0] }
+        else { header = TeamTaskBatch.header(TeamTaskBatch(account: userID, origin: scope.origin, team: scope.team, operation: .complete, restores: nil, items: actions)) }
+        var next = snapshot; next.apply(header); next.pending = [header]
+        next.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: snapshot.teamWorkspace, pending: next.pending, tasks: next.tables["tasks"] ?? [])
+        snapshot = next; try persist()
+    }
+}
+#endif
+
+
+#if DEBUG
+/// Real filesystem barriers inside the reserved app's own sandbox. No fault is
+/// synthesized in the production writer, backup or encrypted-draft code.
+@MainActor enum TeamRecoveryStorageNativeFixture {
+    static var fault: String? {
+        guard TeamEditorNativeFixture.enabled else { return nil }
+        return ["cache", "draft", "backup", "connected-copy"].first { ProcessInfo.processInfo.arguments.contains("--team-recovery-storage=" + $0) }
+    }
+    private static var support: URL { URL.applicationSupportDirectory }
+    private static var cache: URL { support.appendingPathComponent("Taskfold/" + TeamEditorNativeFixture.account + ".json") }
+    private static var vault: URL { cache.deletingLastPathComponent().appendingPathComponent("Backups/d2be2d54-84e6-8f3d-8850-546d0835535a") }
+    private static var prior: URL { vault.appendingPathExtension("storage-proof-prior") }
+    private static var held: URL { cache.appendingPathExtension("storage-proof-held") }
+    private static var journal: URL { support.appendingPathComponent("taskfold-storage-proof-journal.json") }
+    private static func target(_ fault: String) -> URL {
+        if fault == "cache" { return cache }
+        if fault == "backup" { return vault.appendingPathComponent("index.json") }
+        if fault == "connected-copy" { return vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee.taskfolddraft") }
+        let name = ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-testing") ? "Cancelled recovery" : ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing") ? "Recorded recovery" : "Selections"
+        return vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/" + name)
+    }
+    static func block() throws {
+        guard let fault else { throw TeamCompletion.invalid }
+        let fm = FileManager.default
+        guard !fm.fileExists(atPath: journal.path), !fm.fileExists(atPath: prior.path), !fm.fileExists(atPath: held.path) else { throw TeamCompletion.invalid }
+        let hadVault = fm.fileExists(atPath: vault.path)
+        try TaskfoldJSONEncoder().encode(["fault": JSON.string(fault), "hadVault": .bool(hadVault)]).write(to: journal, options: .atomic)
+        if hadVault { try fm.moveItem(at: vault, to: prior) }
+        let destination = target(fault)
+        try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if fault == "cache" {
+            try fm.moveItem(at: cache, to: held)
+            try fm.createDirectory(at: destination, withIntermediateDirectories: false)
+        } else if fault == "backup" { try fm.createDirectory(at: destination, withIntermediateDirectories: false) }
+        else { try Data("Reserved native storage barrier".utf8).write(to: destination) }
+    }
+    static func repair() throws {
+        guard let fault else { throw TeamCompletion.invalid }
+        let fm = FileManager.default
+        try fm.removeItem(at: target(fault))
+        if fault == "cache" { try fm.moveItem(at: held, to: cache) }
+    }
+    static func restoreIfRequested() throws {
+        guard TeamEditorNativeFixture.enabled,
+              ProcessInfo.processInfo.arguments.contains("--team-editor-reset") || ProcessInfo.processInfo.arguments.contains("--team-recovery-storage-cleanup") else { return }
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: journal.path) else { return }
+        let proof = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: journal))
+        guard ["cache", "draft", "backup", "connected-copy"].contains(proof["fault"]?.text ?? ""), let hadVault = proof["hadVault"]?.flag else { throw TeamCompletion.invalid }
+        if fm.fileExists(atPath: held.path) {
+            if fm.fileExists(atPath: cache.path) { try fm.removeItem(at: cache) }
+            try fm.moveItem(at: held, to: cache)
+        }
+        if fm.fileExists(atPath: prior.path) {
+            if fm.fileExists(atPath: vault.path) { try fm.removeItem(at: vault) }
+            try fm.moveItem(at: prior, to: vault)
+        } else if !hadVault, fm.fileExists(atPath: vault.path) { try fm.removeItem(at: vault) }
+        try fm.removeItem(at: journal)
+    }
+}
+#endif
+
+
+#if DEBUG
+/// Hold a validated local peer reply so a real Store transaction can be
+/// interleaved with a new session, current read boundary or authored edit.
+@MainActor enum TeamRecoveryRaceNativeFixture {
+    static var mode: String? {
+        guard TeamEditorNativeFixture.enabled else { return nil }
+        return ["refresh-access", "refresh-access-error", "single-refresh-access-error", "cancel-account", "single-cancel-account", "refresh-account-return", "refresh-edit", "refresh-edit-error", "single-refresh-edit-error", "refresh-current", "refresh-current-error", "refresh-session", "cancel-access-error", "single-cancel-edit-error"].first { ProcessInfo.processInfo.arguments.contains("--team-recovery-race=" + $0) }
+    }
+    static var expected: Mutation?
+    static var held = false
+    static var validated = false
+    static var path = ""
+    static var attemptedPaths: [String] = []
+    private static var armed = false
+    private static var resume: CheckedContinuation<Void, Never>?
+    static func arm(_ header: Mutation) { expected = header; held = false; validated = false; path = ""; attemptedPaths = []; armed = true }
+    static func release() { armed = false; let pending = resume; resume = nil; pending?.resume() }
+    static func observe(_ request: URLRequest) { if armed, mode != nil { attemptedPaths.append(request.url?.path ?? "") } }
+
+    static func deliver(_ data: Data, request: URLRequest) async throws -> Data {
+        guard armed, let mode, let expected,
+              request.url?.path.contains(mode.contains("cancel") ? "cancel_team_completion" : "review_team_completion") == true else { return data }
+        armed = false
+        var raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        if !mode.contains("cancel") {
+            func changed(_ member: [String: JSON]) -> [String: JSON] {
+                var view = member, task = view["task"]!.object
+                task["description"] = .string("Delayed response instructions")
+                view["task"] = .object(task); view["series"] = .object(task)
+                if case .object(var receipt) = view["receipt"] { receipt["task"] = .object(task); view["receipt"] = .object(receipt) }
+                return view
+            }
+            if expected.teamCompletion != nil { raw = changed(raw) }
+            else {
+                raw["items"] = .array(raw["items"]!.list.map { .object(changed($0.object)) })
+                if case .object(var receipt) = raw["receipt"] { receipt["items"] = .array(raw["items"]!.list.map { $0.object["receipt"]! }); raw["receipt"] = .object(receipt) }
+            }
+        }
+        // Prove that rejecting the reply is a context decision, not malformed test data.
+        if expected.teamCompletion != nil { _ = try TeamCompletion.Review(raw, for: expected) }
+        else { _ = try TeamTaskBatch.Review(raw, for: expected) }
+        validated = true; path = request.url!.path; held = true
+        await withCheckedContinuation { resume = $0 }
+        if mode.hasSuffix("error") { throw URLError(.timedOut) }
+        return try TaskfoldJSONEncoder().encode(raw)
+    }
+    static func session(_ account: String) throws -> Session {
+        try Foundation.JSONDecoder().decode(Session.self, from: Data(("{\"access_token\":\"synthetic-race-access\",\"refresh_token\":\"synthetic-race-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"" + account + "\"}}").utf8))
+    }
+}
+
+extension Store {
+    func runTeamRecoveryRaceFixture() async {
+        guard let mode = TeamRecoveryRaceNativeFixture.mode, userID == TeamEditorNativeFixture.account,
+              let conflict = syncConflict else { teamRecoveryRaceStatus = "Failed: original review unavailable"; return }
+        teamRecoveryRaceStatus = "Running"
+        let original = snapshot, originalGeneration = accountGeneration, originalAccess = nativeConversationTeamCache
+        error = nil
+        let presentation = teamCompletionReviewPresentation, originalSession = backend.reminderSessionIncarnation
+        let owner = userID, outsider = "ec240000-0000-4000-8000-000000000098"
+        let ownerFile = cacheURL, outsiderFile = cacheURL.deletingLastPathComponent().appendingPathComponent(outsider + ".json")
+        let priorOutsider = try? Data(contentsOf: outsiderFile)
+        var touchedOutsider = false
+        var action: Task<Bool, Never>?
+        var checks: [String: JSON] = [:], proof: [String: JSON] = [:]
+        func require(_ name: String, _ condition: Bool) throws {
+            checks[name] = .bool(condition)
+            if !condition { throw AppFailure(message: "Race check failed: " + name) }
+        }
+        func encoded(_ value: Snapshot) throws -> JSON { try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(value)) }
+        do {
+            proof["before"] = try encoded(original)
+            if mode.contains("account") { try require("priorOtherWorkspaceReadable", !FileManager.default.fileExists(atPath: outsiderFile.path) || priorOutsider != nil) }
+            TeamRecoveryRaceNativeFixture.arm(conflict.mutation)
+            action = Task {
+                if mode.contains("cancel") {
+                    if let review = conflict.completionReview { return await self.cancelTeamCompletionReview(review) }
+                    if let review = conflict.completionBatchReview { return await self.cancelTeamCompletionBatchReview(review) }
+                } else {
+                    if let review = conflict.completionReview { return await self.refreshTeamCompletionReview(review) }
+                    if let review = conflict.completionBatchReview { return await self.refreshTeamCompletionBatchReview(review) }
+                }
+                return false
+            }
+            for _ in 0..<1000 { if TeamRecoveryRaceNativeFixture.held { break }; try await Task.sleep(for: .milliseconds(10)) }
+            try require("actualReplyHeld", TeamRecoveryRaceNativeFixture.held && TeamRecoveryRaceNativeFixture.validated)
+            if mode.contains("account") {
+                var outside = Snapshot(); var task = Record.task(user: outsider)
+                task["id"] = .string("ec240000-0000-4000-8000-000000000097"); task["title"] = .string("Other workspace untouched proof")
+                outside.tables["tasks"] = [task]
+                try TaskfoldJSONEncoder().encode(outside).write(to: outsiderFile, options: .atomic); touchedOutsider = true
+                try await backend.accept(TeamRecoveryRaceNativeFixture.session(outsider)); await authenticated()
+                if mode == "refresh-account-return" { try await backend.accept(TeamRecoveryRaceNativeFixture.session(owner)); await authenticated() }
+                try require("realWorkspaceGenerationChanged", accountGeneration != originalGeneration)
+            } else if mode.contains("access") {
+                var raw = try TeamEditorNativeFixture.boundary(viewer: true).raw
+                raw["token"] = .string(String(repeating: "f", count: 64))
+                teamAccessMask = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: owner, origin: backend.accountRemovalOrigin), previous: snapshot.teamWorkspace, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+                try require("coarseGuardsStillMatch", accountGeneration == originalGeneration && snapshot == original && (conflict.completionReview.map { currentTeamCompletionReview($0) } ?? conflict.completionBatchReview.map { currentTeamCompletionBatchReview($0) } ?? false))
+                try require("freshReadAccessChanged", nativeConversationTeamCache != originalAccess)
+            } else if mode == "refresh-session" {
+                try await backend.accept(TeamRecoveryRaceNativeFixture.session(owner))
+                try require("sameWorkspaceNewSession", accountGeneration == originalGeneration && snapshot == original && backend.reminderSessionIncarnation != originalSession)
+            } else if !mode.hasPrefix("refresh-current") {
+                let item = conflict.mutation.teamCompletion != nil ? conflict.mutation : conflict.mutation.teamTaskBatch!.items[0]
+                let command = item.teamCompletion!
+                let row = snapshot.tables["tasks"]!.first { $0.id == item.recordID }!
+                let fields: [String: JSON] = ["description": .string("New authored work while reviewing")]
+                let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
+                snapshot.apply(edit); snapshot.pending.append(edit); try persist()
+            }
+            let interleaved = snapshot, currentAccess = nativeConversationTeamCache, currentRevision = workspaceReadRevision
+            let changedBytes = try Data(contentsOf: cacheURL)
+            if !mode.hasPrefix("refresh-current") { error = "Current workspace message" }
+            proof["interleaved"] = try encoded(interleaved)
+            TeamRecoveryRaceNativeFixture.release()
+            let accepted = await action!.value
+            try require(mode == "refresh-current" ? "currentResultAccepted" : "staleResultRefused", accepted == (mode == "refresh-current"))
+            if mode == "refresh-current" { try require("currentInstructionsVisible", syncConflict?.completionBatchReview?.members.first?.task?.string("description") == "Delayed response instructions") }
+            try require("currentSnapshotExact", snapshot == interleaved)
+            try require("currentReadAccessExact", nativeConversationTeamCache == currentAccess && workspaceReadRevision == currentRevision)
+            if mode == "refresh-current-error" {
+                let message = takeTeamCompletionReviewFailure(presentation, fallback: "Missing current error")
+                try require("currentFailurePresented", message == SyncStatus.failureMessage(URLError(.timedOut)) && error == nil)
+                let earlier = teamCompletionReviewPresentation
+                recordTeamCompletionReviewFailure("Earlier owned failure", origin: earlier)
+                error = "Current workspace message"
+                recordTeamCompletionReviewFailure("Late obsolete failure", origin: earlier)
+                _ = takeTeamCompletionReviewFailure(earlier, fallback: "Old screen fallback")
+                try require("newMessageCannotBePublishedOverOrConsumed", error == "Current workspace message")
+                error = nil
+            } else if mode != "refresh-current" {
+                _ = takeTeamCompletionReviewFailure(presentation, fallback: "Stale screen callback")
+                try require("stalePresentationKeptCurrentMessage", error == "Current workspace message")
+            } else { try require("currentMessageKept", error == nil) }
+            try require("currentWorkspaceFileExact", try Data(contentsOf: cacheURL) == changedBytes)
+            proof["after"] = try encoded(snapshot)
+            if mode.contains("account") {
+                try require("originalQueueFileKept", try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: ownerFile)).pending == original.pending)
+                try await backend.accept(TeamRecoveryRaceNativeFixture.session(owner)); await authenticated()
+                try require("originalQueueReloads", snapshot == original)
+                if mode == "cancel-account", let vault = teamSelectionDraftVault {
+                    let entries = try await Task.detached(priority: .utility) { try vault.entries() }.value
+                    try require("originalEncryptedDraftKept", entries.contains { $0.snapshot == original && $0.scope.account == owner })
+                }
+            }
+            proof["restored"] = try encoded(snapshot)
+            proof["status"] = .string("passed"); teamRecoveryRaceStatus = "Passed " + mode
+        } catch {
+            TeamRecoveryRaceNativeFixture.release()
+            if let action { _ = await action.value }
+            proof["status"] = .string("failed"); proof["failure"] = .string(error.localizedDescription); teamRecoveryRaceStatus = "Failed " + mode
+            if userID != owner { try? await backend.accept(TeamRecoveryRaceNativeFixture.session(owner)); await authenticated() }
+        }
+        if touchedOutsider {
+            do { if let priorOutsider { try priorOutsider.write(to: outsiderFile, options: .atomic) } else { try FileManager.default.removeItem(at: outsiderFile) } }
+            catch { proof["status"] = .string("failed"); teamRecoveryRaceStatus = "Failed outsider cleanup" }
+        }
+        proof["mode"] = .string(mode); proof["checks"] = .object(checks); proof["heldPath"] = .string(TeamRecoveryRaceNativeFixture.path)
+        proof["attemptedPaths"] = .array(TeamRecoveryRaceNativeFixture.attemptedPaths.map(JSON.string))
+        if let error = self.error { proof["actionMessage"] = .string(error) }
+
+        do { try TaskfoldJSONEncoder().encode(proof).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-completion-race-proof.json"), options: .atomic) }
+        catch { teamRecoveryRaceStatus = "Failed proof persistence" }
+        self.error = nil
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    /// Exercise the real entry point with an obsolete presentation while the
+    /// same account, task and review remain current. No queue or file may change.
+    func checkRecordedDraftAdmissionFixture() async {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing"), userID == TeamEditorNativeFixture.account else { return }
+        let context = teamCompletionReviewPresentation, before = snapshot, oldError = error
+        let file = cacheURL, bytes = try? Data(contentsOf: file)
+        error = "Current workspace message"
+        let accepted: Bool
+        if ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-testing") { accepted = await preserveCancelledCompletionDraft(context) }
+        else { accepted = await preserveRecordedCompletionDraft(context) }
+        let protected = !accepted && before == snapshot && bytes != nil && (try? Data(contentsOf: file)) == bytes && error == "Current workspace message"
+        if error == "Current workspace message" { error = oldError }
+        recordedDraftAdmissionStatus = protected ? "Saved draft context protected" : "Saved draft context failed"
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func childFieldNativeStart() async throws {
+        guard ChildFieldNativeIdentity.enabled,userID==ChildFieldNativeIdentity.account else {throw CancellationError()}
+        dailyBackupsEnabled=false; disableNotifications()
+        if ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") {
+            guard !ChildMappingSQLNativePeer.enabled else { throw CancellationError() }
+            try ChildFieldNativePeer.save(ChildFieldNativePeer.initial())
+            try await childTaskFieldJournal(account:ChildFieldNativeIdentity.account,origin:ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskCompletionBatchJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await mixedTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskStructureDraftJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskAdoptionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskRepairJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            for entry in try backupVault.editorEntries() {
+                if let draft=try? backupVault.editorDraft(entry.id,origin:ChildFieldNativeIdentity.origin),(draft.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) || ChildAdoptionNativePeer.enabled && ChildTaskAdoptionAdmission.roots(draft).contains(ChildFieldNativeIdentity.rootID)) {try backupVault.closeEditorDraft(entry.id)}
+            }
+        }
+        try ChildAdoptionNativePeer.prepareExport(reset: ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset"))
+        accountGeneration=UUID();signedIn=true;localMode=false;workspaceCacheDecoded=true;workspaceCacheReadable=true;teamAccessMask=nil
+        snapshot=Snapshot();undoStack=[];redoStack=[];try childFieldNativeRefresh()
+    }
+    func childFieldNativeRefresh() throws {
+        guard ChildFieldNativeIdentity.enabled,signedIn,!localMode,!signingOut,!accountRemovalBlocked,online else {return}
+        if ChildAdoptionNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--child-adoption-empty-cache") || ProcessInfo.processInfo.arguments.contains("--child-adoption-unreadable-cache") {
+            snapshot.tables["tasks"] = []
+            workspaceCacheDecoded = !ProcessInfo.processInfo.arguments.contains("--child-adoption-unreadable-cache")
+            workspaceCacheReadable = workspaceCacheDecoded
+        } else if ChildTransferNativePeer.enabled, userID == ChildFieldNativeIdentity.account {
+            var peer = try ChildFieldNativePeer.state(); let destination = ChildTransferNativePeer.destination(&peer); try ChildFieldNativePeer.save(peer)
+            snapshot.tables["tasks"] = [Record(peer["root"]!.object), destination]
+        } else {
+        snapshot.tables["tasks"] = userID==ChildFieldNativeIdentity.account ? [try ChildFieldNativePeer.root] : []
+        }
+        try persist()
+    }
+    func childFieldNativeSwitchAccount() async throws {
+        guard ChildFieldNativeIdentity.enabled,userID==ChildFieldNativeIdentity.account else {throw CancellationError()}
+        let session=try Foundation.JSONDecoder().decode(Session.self,from:Data("{\"access_token\":\"synthetic-b\",\"refresh_token\":\"synthetic-b\",\"expires_in\":3600,\"user\":{\"id\":\"\(ChildFieldNativeIdentity.other)\"}}".utf8))
+        try await backend.accept(session);accountGeneration=UUID();teamAccessMask=nil;snapshot=Snapshot();undoStack=[];redoStack=[]
+    }
+}
+#endif
+
+extension Store {
+    var mixedTaskCompletionEnabled: Bool { childTaskCompletionBatchesEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldMixedCompletionEnabled") as? Bool == true }
+    func mixedTaskCompletionJournal(account: String, origin: String) throws -> MixedTaskCompletionJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true).appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Task selection requests", isDirectory: true).appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<MixedTaskCompletionState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkForMixed($0) })
+    }
+    func permitsMixedTaskCompletion(_ command: MixedTaskCompletionCommand, sending: Bool) -> Bool {
+        guard mixedTaskCompletionEnabled else { return false }
+        let source = command.original?.body ?? command.body
+        let guards = source["roots"]!.list.map { value -> [String: JSON] in
+            var identity = value.object["baseline"]!.object; identity["task_id"] = value.object["task_id"]; return identity
+        } + source["children"]!.list.map(\.object)
+        return guards.allSatisfy { permitsChildTaskRequest(account: command.account, origin: command.origin, identity: $0, enabled: mixedTaskCompletionEnabled, sending: sending) }
+    }
+    func mixedTaskCompletionRecoveryModel() throws -> MixedTaskCompletionRecoveryModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try mixedTaskCompletionJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canQueue: { [weak self] in self?.permitsMixedTaskCompletion($0, sending: false) == true },
+                     canSend: { [weak self] in self?.permitsMixedTaskCompletion($0, sending: true) == true },
+                     refresh: { [weak self] in guard let self, self.childTaskFieldRecoveryScope == scope else { return }; await self.sync() })
+    }
+    func captureMixedListCompletion(_ tasks: [Record], completed: Bool) throws -> TaskListCompletionSelectionIntent {
+        guard mixedTaskCompletionEnabled, online, let scope = childTaskFieldRecoveryScope else { throw MixedTaskCompletionCommand.invalid }
+        return try .init(tasks: tasks, roots: activeTasks, projects: allProjects, scope: scope, completed: completed)
+    }
+    func completeMixedFromList(_ intent: TaskListCompletionSelectionIntent) async -> MixedTaskListResult? {
+        guard !childListCompletionBusy, mixedTaskCompletionEnabled, online, childTaskFieldRecoveryScope == intent.scope else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let openingSnapshot = snapshotRevision
+            let parentIDs = intent.members.compactMap { member -> String? in if case .root(let root) = member { return root.source.id }; return nil }
+            let parents = try await backend.completionSelectionRoots(parentIDs, scope: intent.scope)
+            var reads: [String: ChildTaskRecordRead] = [:]
+            for child in intent.childMembers where reads[child.opening.rootID] == nil {
+                let opening = try childTaskRecordContext(child.opening.rootID)
+                let root = parents.roots.first { $0.task.id == child.opening.rootID }?.task ?? opening.root
+                let current = try ChildTaskRecordContext(account: opening.account, origin: opening.origin, workspace: opening.workspace, session: opening.session, access: opening.access, snapshot: opening.snapshot, root: root)
+                let read = try await backend.childTaskRecords(current)
+                guard opening.matches(try childTaskRecordContext(child.opening.rootID)) else { throw CancellationError() }
+                reads[child.opening.rootID] = read
+            }
+            guard let current = childTaskFieldRecoveryScope, current == intent.scope, snapshotRevision == openingSnapshot else { throw CancellationError() }
+            let prepared = try parents.prepare(intent, projects: allProjects, childReads: reads, current: current)
+            let command = try MixedTaskCompletionCommand(prepared: prepared, roots: parents)
+            let model = try mixedTaskCompletionRecoveryModel(); defer { model.close() }
+            let applied = await model.perform(command)
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            return .init(message: applied ? "\(intent.completed ? "Completed" : "Reopened") \(command.items.count) selected tasks" : model.message ?? "Review this saved selection before trying again.", undo: applied ? .init(scope: intent.scope, command: command) : nil, needsReview: !applied)
+        } catch {
+            guard !Task.isCancelled, childTaskFieldRecoveryScope == intent.scope else { return nil }
+            return .init(message: "These tasks changed. Review the current selection and try again.", undo: nil, needsReview: false)
+        }
+    }
+    func readMixedChildren(_ command: MixedTaskCompletionCommand) async throws -> [String: ChildTaskRecordRead] {
+        guard let scope = childTaskFieldRecoveryScope, scope.account == command.account, scope.origin == command.origin, online else { throw CancellationError() }
+        var reads: [String: ChildTaskRecordRead] = [:]
+        for id in Set((command.original?.body ?? command.body)["children"]!.list.map { $0.object["task_id"]!.text }).sorted() {
+            reads[id] = try await ChildTaskListRead.fresh(scope: scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(id) })
+        }
+        guard childTaskFieldRecoveryScope == scope, reads.values.allSatisfy(childTaskFieldComparisonIsCurrent) else { throw CancellationError() }; return reads
+    }
+    func mixedHistoryStep(_ token: MixedTaskListUndo, report: @escaping (MixedTaskListResult) -> Void) -> ConfirmedHistoryBridge.Step {
+        let original = token.command.original?.body ?? token.command.body
+        return .init(name: original["action"] == .string("complete") ? "Complete Selected Tasks" : "Reopen Selected Tasks", key: token.command.id, retained: { [weak self] in
+            self?.childTaskFieldRecoveryScope == token.scope
+        }, available: { [weak self] in self?.canUndoMixedFromList(token) == true }, perform: { [weak self] in
+            guard let self else { return nil }
+            let result = token.command.isUndo ? await self.redoMixedFromList(token) : await self.undoMixedFromList(token)
+            guard let result, self.childTaskFieldRecoveryScope == token.scope else { return nil }
+            report(result)
+            guard let next = result.undo ?? result.redo else { return nil }
+            return self.mixedHistoryStep(next, report: report)
+        })
+    }
+    func redoMixedFromList(_ token: MixedTaskListUndo) async -> MixedTaskListResult? {
+        guard token.command.isUndo, canUndoMixedFromList(token), let source = token.command.original else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let openingSnapshot = snapshotRevision
+            let parentIDs = source.body["roots"]!.list.map { $0.object["task_id"]!.text }
+            let parents = try await backend.completionSelectionRoots(parentIDs, scope: token.scope)
+            let reads = try await readMixedChildren(token.command)
+            let model = try mixedTaskCompletionRecoveryModel(); defer { model.close() }; await model.load()
+            guard childTaskFieldRecoveryScope == token.scope, snapshotRevision == openingSnapshot,
+                  let entry = model.entries.first(where: { $0.command == token.command && $0.phase == .confirmed }), let proof = entry.proof else { throw MixedTaskCompletionCommand.invalid }
+            let command = try token.command.redo(roots: parents, reads: reads, decision: proof)
+            let confirmed = await model.perform(command)
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            return .init(message: confirmed ? "Redid selected tasks" : model.message ?? "Review this saved selection Redo.", undo: confirmed ? .init(scope: token.scope, command: command) : nil, needsReview: !confirmed)
+        } catch {
+            guard !Task.isCancelled, childTaskFieldRecoveryScope == token.scope else { return nil }
+            return .init(message: "These tasks changed since Undo. Review their current state before completing them again.", undo: nil, needsReview: false)
+        }
+    }
+    func canUndoMixedFromList(_ token: MixedTaskListUndo) -> Bool { !childListCompletionBusy && childTaskFieldRecoveryScope == token.scope && permitsMixedTaskCompletion(token.command, sending: true) }
+    func undoMixedFromList(_ token: MixedTaskListUndo) async -> MixedTaskListResult? {
+        guard canUndoMixedFromList(token) else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let reads = try await readMixedChildren(token.command), model = try mixedTaskCompletionRecoveryModel(); defer { model.close() }; await model.load()
+            guard let entry = model.entries.first(where: { $0.command == token.command && $0.phase == .confirmed }) else { throw MixedTaskCompletionCommand.invalid }
+            let command = await model.undo(entry, reads: reads)
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            let confirmed = command.map { undo in model.entries.contains { $0.command == undo && $0.phase == .confirmed } } == true
+            return .init(message: confirmed ? "Undid selected tasks" : model.message ?? "Review this saved selection Undo.", undo: nil, needsReview: !confirmed, redo: confirmed ? command.map { .init(scope: token.scope, command: $0) } : nil)
+        } catch {
+            guard !Task.isCancelled, childTaskFieldRecoveryScope == token.scope else { return nil }
+            return .init(message: "This selection Undo needs review. Your saved work is kept.", undo: nil, needsReview: true)
+        }
+    }
+}
+
+#if DEBUG
+extension Store {
+    func prepareWorkspaceReadFixture() throws {
+        guard WorkspaceReadNativeFixture.enabled else { throw CancellationError() }
+        if WorkspaceReadNativeFixture.templateLibrary { try prepareTemplateLibraryReadFixture(); return }
+        if WorkspaceReadNativeFixture.projectCatalog { try prepareProjectCatalogFixture(); return }
+        dailyBackupsEnabled = false
+        var tasks: [Record] = []
+        for index in 0..<240 {
+            var task = Record.task(user: TeamEditorNativeFixture.account, project: TeamEditorNativeFixture.projectID)
+            task["id"] = .string(String(format: "ec250000-0000-4000-8000-%012d", index + 1))
+            task["title"] = .string(String(format: "Workshop task %03d", index + 1))
+            task["assigned_to"] = .string(TeamEditorNativeFixture.recipientID)
+            task["description"] = .string("Review the design notes and prepare the next iteration.")
+            task["subtasks"] = .array((0..<3).map { child in .object([
+                "id": .string(UUID().uuidString.lowercased()), "title": .string("Design step \(child + 1)"),
+                "completed": .bool(false), "subtasks": .array([])
+            ]) })
+            if WorkspaceReadNativeFixture.largeCatalog {
+                task["task_generation"] = .string(String(format: "ec250002-0000-4000-8000-%012d", index + 1))
+                task["created_at"] = .string("2026-11-03T08:00:00.000Z")
+                task["subtasks"] = .array((0..<3).map { child in .object([
+                    "id": .string(String(format: "ec250003-0000-4000-8000-%012d", index * 3 + child + 1)),
+                    "title": .string("Design step \(child + 1)"), "completed": .bool(false), "subtasks": .array([])
+                ]) })
+            }
+            tasks.append(task)
+        }
+        let project = Record(["id": .string(TeamEditorNativeFixture.projectID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Read performance workshop")])
+        let person = Record(["id": .string(UUID().uuidString.lowercased()), "project_id": .string(project.id), "user_id": .string(TeamEditorNativeFixture.recipientID), "display_name": .string("Riley Chen"), "status": .string("accepted")])
+        var people = [person]
+        if WorkspaceReadNativeFixture.largeCatalog {
+            people = (0..<400).map { index in
+                let id = String(format: "ec250001-0000-4000-8000-%012d", index + 1)
+                return Record(["id": .string(id), "project_id": .string(project.id),
+                    "user_id": .string(index == 0 ? TeamEditorNativeFixture.recipientID : id),
+                    "display_name": .string(index == 0 ? "Riley Chen" : String(format: "Workshop person %03d", index + 1)), "status": .string("accepted")])
+            }
+        }
+        let boundary = try TeamEditorNativeFixture.boundary()
+        let mask = try TeamWorkspaceCache(boundary: boundary, previous: nil, pending: [], tasks: tasks)
+        snapshot = Snapshot(tables: ["tasks": tasks, "projects": [project], "project_collaborators": people])
+        snapshot.teamWorkspace = mask
+        teamAccessMask = mask
+        workspaceCacheReadable = true
+        try persist()
+    }
+    func measureWorkspaceReadFixture() throws {
+        guard WorkspaceReadNativeFixture.enabled else { throw CancellationError() }
+        let source = snapshot
+        let tasks = rows("tasks")
+        guard tasks.count == 240 else { throw AppFailure(message: "Synthetic workspace is incomplete") }
+        var measurements: [Double] = []
+        var matches = 0
+        var firstNameReadMilliseconds: Double = 0
+        if WorkspaceReadNativeFixture.largeCatalog {
+            let start = Date.timeIntervalSinceReferenceDate
+            guard assigneeName(tasks[0]) == "Riley Chen" else { throw AppFailure(message: "Missing initial assignee") }
+            firstNameReadMilliseconds = (Date.timeIntervalSinceReferenceDate - start) * 1000
+        }
+        for _ in 0..<3 {
+            let start = Date.timeIntervalSinceReferenceDate
+            for task in tasks.prefix(100) {
+                if record("tasks", id: task.id) == task,
+                   record("projects", id: task.string("project_id"))?.name == "Read performance workshop",
+                   assigneeName(task) == "Riley Chen" { matches += 1 }
+            }
+            measurements.append((Date.timeIntervalSinceReferenceDate - start) * 1000)
+        }
+        guard snapshot == source, matches == 300 else { throw AppFailure(message: "Read fixture changed its source") }
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
+        let tablesHash = CalendarOAuthConfiguration.digest(String(decoding: try encoder.encode(source.tables), as: UTF8.self))
+        let invalidations = try verifyWorkspaceReadInvalidationFixture()
+        let report: [String: JSON] = ["catalog": .bool(WorkspaceReadNativeFixture.largeCatalog),
+            "collaborators": .number(WorkspaceReadNativeFixture.largeCatalog ? 400 : 1),
+            "tableSHA256": .string(tablesHash), "firstNameReadMilliseconds": .number(firstNameReadMilliseconds),
+            "invalidationChecks": .number(Double(invalidations)), "protocol": .number(1), "roots": .number(240), "children": .number(720),
+            "iterations": .number(100), "matchedReads": .number(Double(matches)),
+            "readMilliseconds": .array(measurements.map(JSON.number)), "snapshotUnchanged": .bool(true)]
+        let folder = URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try TaskfoldJSONEncoder().encode(report).write(to: folder.appendingPathComponent("report.json"), options: .atomic)
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func verifyWorkspaceReadInvalidationFixture() throws -> Int {
+        guard WorkspaceReadNativeFixture.enabled, let originalMask = teamAccessMask else { throw CancellationError() }
+        let original = snapshot, readable = workspaceCacheReadable
+        defer { snapshot = original; teamAccessMask = originalMask; workspaceCacheReadable = readable }
+        guard rows("tasks").count == 240 else { throw AppFailure(message: "Expected readable fixture") }
+        _ = rows("projects") // Warm the cache before registering a fresh observer.
+        let observed = WorkspaceReadObservationProbe()
+        withObservationTracking { _ = rows("projects") } onChange: { observed.markChanged() }
+        snapshot.tables["projects"]![0]["name"] = .string("Updated project name")
+        guard observed.changed, rows("projects").first?.name == "Updated project name" else { throw AppFailure(message: "Cached presentation lost observation") }
+        snapshot.tables["tasks"]![0]["title"] = .string("Updated workshop title")
+        guard rows("tasks").first?.title == "Updated workshop title" else { throw AppFailure(message: "Stale source presentation") }
+        let task = snapshot.tables["tasks"]![0]
+        var nameChecks = 0
+        if WorkspaceReadNativeFixture.largeCatalog {
+            _ = assigneeName(task)
+            let nameObserved = WorkspaceReadObservationProbe()
+            withObservationTracking { _ = assigneeName(task) } onChange: { nameObserved.markChanged() }
+            snapshot.tables["project_collaborators"]![0]["display_name"] = .string("Updated Riley")
+            guard nameObserved.changed, assigneeName(task) == "Updated Riley" else { throw AppFailure(message: "Assignee name lost observation or source update") }
+            nameChecks += 1
+            var scoped = snapshot.tables["project_collaborators"]![0]; scoped["display_name"] = .string("Scoped Riley")
+            snapshot.tables["project_members:" + TeamEditorNativeFixture.projectID] = [scoped]
+            guard assigneeName(task) == "Scoped Riley" else { throw AppFailure(message: "Scoped member catalog ignored") }; nameChecks += 1
+            snapshot.tables.removeValue(forKey: "project_members:" + TeamEditorNativeFixture.projectID)
+            guard assigneeName(task) == "Updated Riley" else { throw AppFailure(message: "Removed member catalog retained") }; nameChecks += 1
+        }
+        var raw = originalMask.boundary.raw
+        raw["projects"] = .array([])
+        let lostBoundary = try TeamWorkspaceBoundary(raw, account: userID, origin: backend.accountRemovalOrigin)
+        teamAccessMask = try TeamWorkspaceCache(boundary: lostBoundary, previous: originalMask, pending: snapshot.pending, tasks: snapshot.tables["tasks"]!)
+        guard rows("tasks").isEmpty, rows("projects").isEmpty, snapshot.tables["tasks"]?.count == 240 else { throw AppFailure(message: "Stale access presentation") }
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Assigned collaborator" else { throw AppFailure(message: "Revoked assignee name exposed") }; nameChecks += 1 }
+        teamAccessMask = originalMask
+        guard rows("tasks").count == 240, rows("tasks").first?.title == "Updated workshop title" else { throw AppFailure(message: "Restored access presentation missing") }
+        workspaceCacheReadable = false
+        guard rows("tasks").isEmpty, rows("projects").isEmpty else { throw AppFailure(message: "Unreadable cache exposed rows") }
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Assigned collaborator" else { throw AppFailure(message: "Unreadable assignee name exposed") }; nameChecks += 1 }
+        workspaceCacheReadable = true
+        guard rows("tasks").count == 240 else { throw AppFailure(message: "Readable cache did not recover") }
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Updated Riley" else { throw AppFailure(message: "Readable assignee name missing") }; nameChecks += 1 }
+        teamAccessMask = nil
+        guard rows("tasks") == snapshot.tables["tasks"] else { throw AppFailure(message: "Unmasked presentation differs") }
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Updated Riley" else { throw AppFailure(message: "Unmasked assignee name missing") }; nameChecks += 1 }
+        snapshot = original; teamAccessMask = originalMask
+        guard rows("tasks").first?.title == "Workshop task 001", snapshot == original else { throw AppFailure(message: "Original source did not return") }
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Riley Chen" else { throw AppFailure(message: "Restored original assignee name missing") }; nameChecks += 1 }
+        return 8 + nameChecks
+    }
+}
+#endif
+
+#if DEBUG
+private final class WorkspaceReadObservationProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+    func markChanged() { lock.lock(); defer { lock.unlock() }; value = true }
+    var changed: Bool { lock.lock(); defer { lock.unlock() }; return value }
+}
+#endif
+
+extension Store {
+    var accountRemovalRecoveryEnabled: Bool {
+        #if DEBUG
+        if ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? ""), ProcessInfo.processInfo.arguments.contains("--account-removal-recovery-testing") { return true }
+        #endif
+        return Bundle.main.object(forInfoDictionaryKey: "TaskfoldAccountRemovalRecoveryEnabled") as? Bool ?? false
+    }
+    var accountRemovalRecoveryScope: AccountRemovalRecoveryScope {
+        .init(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation)
+    }
+    func accountRemovalRecoveryRequests(scope: AccountRemovalRecoveryScope) async throws -> [AccountRemovalRecoveryRequest] {
+        guard accountRemovalRecoveryEnabled, !accountRemovalBusy, scope == accountRemovalRecoveryScope else { throw CancellationError() }
+        let pending = try await accountRemovalVault.pending()
+        guard scope == accountRemovalRecoveryScope, !accountRemovalBusy else { throw CancellationError() }
+        return try pending.filter { !$0.confirmed }.map { try AccountRemovalRecoveryRequest(command: $0) }.sorted { $0.account < $1.account }
+    }
+    func applyAccountRemovalRecovery(_ file: AccountRemovalRecoveryFile, scope: AccountRemovalRecoveryScope) async throws {
+        try Task.checkCancellation()
+        guard accountRemovalRecoveryEnabled, !accountRemovalBusy, scope == accountRemovalRecoveryScope,
+              file.request.origin == (try backend.accountRemovalOrigin) else { throw CancellationError() }
+        removalRecoveryRunning = true
+        defer { removalRecoveryRunning = false; publishWidgetSnapshot(); Task { await reschedule() } }
+        do {
+            guard let original = try await accountRemovalVault.command(account: file.request.account, origin: file.request.origin), file.request.matches(original) else { throw AccountRemovalRecoveryRequest.invalid }
+            try Task.checkCancellation()
+            guard scope == accountRemovalRecoveryScope else { throw CancellationError() }
+            // A failed secure write cannot lead to a server request or local erase.
+            let prepared = try await accountRemovalVault.prepare(original, proof: file.proof)
+            try Task.checkCancellation()
+            guard scope == accountRemovalRecoveryScope else { throw CancellationError() }
+            if removalPendingAccounts.contains(prepared.account) { accountRemovalStatus = "Finishing account removal…" }
+            else { markRemovalPending(prepared.account) }
+            try await finishAccountRemoval(prepared)
+            if !(try await accountRemovalVault.pending()).isEmpty {
+                accountRemovalStatus = "Another account removal still needs attention. Its remaining device copies have been kept."
+            }
+        } catch {
+            accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
+            throw error
+        }
+    }
+}
+
+#if DEBUG
+extension Store {
+    func seedAccountRecoveryUIFixture() async throws -> String {
+        guard AccountRemovalNativeFixture.recoveryTesting else { throw CancellationError() }
+        let root = AccountRemovalNativeFixture.root, marker = root.appendingPathComponent("recovery-baseline.json")
+        if FileManager.default.fileExists(atPath: marker.path), !ProcessInfo.processInfo.arguments.contains("--account-removal-proof-reset") {
+            let baseline = try TaskfoldJSONDecoder().decode([String:JSON].self,from:Data(contentsOf:marker))
+            accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
+            return baseline["file"]!.text
+        }
+        let a = AccountRemovalNativeFixture.owner, b = AccountRemovalNativeFixture.other
+        let old = try await accountRemovalVault.pending()
+        guard old.allSatisfy({$0.account == a || $0.account == b}) else { throw CancellationError() }
+        try CalendarKeychainIO(service:accountRemovalService).remove(key:"unfinished-removals-v1")
+        try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true)
+        try await backend.accept(AccountRemovalNativeFixture.session(a));localMode=false;signedIn=true;workspaceCacheReadable=true;accountGeneration=UUID()
+        dailyBackupsEnabled=false;disableNotifications();disableFocusAlerts()
+        var taskA=Record.task(user:a);taskA["title"] = .string("Keep older account work until verified")
+        snapshot=Snapshot(tables:["tasks":[taskA]]);try persist()
+        let aCache=cacheURL, aVault=backupVault;_ = try aVault.save(snapshot,kind:"Synthetic recovery proof")
+        var taskB=Record.task(user:b);taskB["title"] = .string("Keep current account work")
+        var bSnapshot=Snapshot(tables:["tasks":[taskB]]);bSnapshot.pending=[Mutation(table:"tasks",recordID:taskB.id,method:"POST",fields:taskB.fields)]
+        let bCache=aCache.deletingLastPathComponent().appendingPathComponent(b+".json")
+        try TaskfoldJSONEncoder().encode(bSnapshot).write(to:bCache,options:.atomic)
+        let bVault=BackupVault(directory:aVault.directory.deletingLastPathComponent().appendingPathComponent(WorkspaceBackup.stableID("vault",b)),account:b,key:{try BackupVault.deviceKey(account:b)})
+        let bEntry=try bVault.save(bSnapshot,kind:"Synthetic current account proof"), bBackup=bVault.file(bEntry)
+        var first=try AccountRemovalCommand(account:a,origin:backend.accountRemovalOrigin,authorization:"synthetic-A");first.version=1
+        var second=try AccountRemovalCommand(account:b,origin:backend.accountRemovalOrigin,authorization:"synthetic-B");second.version=1
+        _ = try await accountRemovalVault.begin(first);_ = try await accountRemovalVault.begin(second)
+        markRemovalPending(a);markRemovalPending(b)
+        if !ProcessInfo.processInfo.arguments.contains("--account-recovery-current-owner") {
+            try await backend.accept(AccountRemovalNativeFixture.session(b));accountGeneration=UUID();snapshot=bSnapshot
+        }
+        try persist()
+        accountRemovalStatus="Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
+        let request=try AccountRemovalRecoveryRequest(command:first)
+        let payload:JSON = .object(["v":.number(1),"scope":.string("account-removal-recovery"),"origin":.string(request.origin),"account":.string(a),"command":.string(first.id.uuidString.lowercased()),"authorization_hash":.string(request.authorizationHash),"kid":.string("f086cafe-0000-4000-8000-000000000001"),"issued":.number(floor(Date().timeIntervalSince1970))])
+        let encoded=try TaskfoldJSONEncoder().encode(payload).base64EncodedString().replacingOccurrences(of:"+",with:"-").replacingOccurrences(of:"/",with:"_").replacingOccurrences(of:"=",with:"")
+        var requestDocument=request.document
+        if ProcessInfo.processInfo.arguments.contains("--account-recovery-invalid-file") { var invalid=requestDocument.object;invalid["command"] = .string(UUID().uuidString.lowercased());requestDocument = .object(invalid) }
+        let packet:JSON = .object(["format":.string("taskfold-account-removal-recovery"),"version":.number(1),"request":requestDocument,"proof":.string(encoded+"."+String(repeating:"a",count:43))])
+        let fileName="Taskfold-recovery-"+first.id.uuidString.lowercased()+".json"
+        let documents=URL.documentsDirectory;try FileManager.default.createDirectory(at:documents,withIntermediateDirectories:true)
+        try TaskfoldJSONEncoder().encode(packet).write(to:documents.appendingPathComponent(fileName),options:.atomic)
+        try request.encoded().write(to:root.appendingPathComponent("recovery-request.json"),options:.atomic)
+        func digest(_ url:URL)throws->String {SHA256.hash(data:try Data(contentsOf:url)).map{String(format:"%02x",$0)}.joined()}
+        func jsonDigest(_ url:URL)throws->String {
+            let object=try JSONSerialization.jsonObject(with:Data(contentsOf:url))
+            let canonical=try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])
+            return SHA256.hash(data:canonical).map{String(format:"%02x",$0)}.joined()
+        }
+        let baseline:[String:JSON] = ["file":.string(fileName),"aCacheSHA":.string(try digest(aCache)),"bCacheSHA":.string(try digest(bCache)),"aCacheJSONSHA":.string(try jsonDigest(aCache)),"bCacheJSONSHA":.string(try jsonDigest(bCache)),"bBackup":.string(bBackup.path),"bBackupSHA":.string(try digest(bBackup)),"bCommand":.string(second.id.uuidString.lowercased()),"active":.string(userID)]
+        try TaskfoldJSONEncoder().encode(baseline).write(to:marker,options:.atomic)
+        return fileName
+    }
+    func inspectAccountRecoveryUIFixture(completed:Bool) async throws {
+        guard AccountRemovalNativeFixture.recoveryTesting else {throw CancellationError()}
+        let root=AccountRemovalNativeFixture.root, baseline=try TaskfoldJSONDecoder().decode([String:JSON].self,from:Data(contentsOf:root.appendingPathComponent("recovery-baseline.json")))
+        let a=AccountRemovalNativeFixture.owner,b=AccountRemovalNativeFixture.other, pending=try await accountRemovalVault.pending()
+        let aCache=AccountRemovalNativeFixture.dataRoot.appendingPathComponent(a+".json"),bCache=AccountRemovalNativeFixture.dataRoot.appendingPathComponent(b+".json")
+        func digest(_ url:URL)throws->String {SHA256.hash(data:try Data(contentsOf:url)).map{String(format:"%02x",$0)}.joined()}
+        func jsonDigest(_ url:URL)throws->String {
+            let object=try JSONSerialization.jsonObject(with:Data(contentsOf:url))
+            let canonical=try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])
+            return SHA256.hash(data:canonical).map{String(format:"%02x",$0)}.joined()
+        }
+        var checks:[String:Bool]=[:]
+        let current=baseline["active"]!.text
+        checks["currentSessionPreserved"]=backend.session?.user.id==current && signedIn
+        checks["privateSessionPreserved"]=(try AccountRemovalNativeFixture.persistedSession())?.user.id==current
+        let cold = !ProcessInfo.processInfo.arguments.contains("--account-removal-proof-reset")
+        let currentBytesUnchanged = try digest(current == a ? aCache : bCache)==baseline[current == a ? "aCacheSHA":"bCacheSHA"]?.text
+        let otherBytesUnchanged = try digest(bCache)==baseline["bCacheSHA"]?.text
+        checks["currentCacheFullJSONPreserved"] = try jsonDigest(current == a ? aCache : bCache)==baseline[current == a ? "aCacheJSONSHA":"bCacheJSONSHA"]?.text
+        checks["otherCacheFullJSONPreserved"] = try jsonDigest(bCache)==baseline["bCacheJSONSHA"]?.text
+        if !cold { checks["sameProcessCacheBytesPreserved"] = currentBytesUnchanged && otherBytesUnchanged }
+        let backup=URL(fileURLWithPath:baseline["bBackup"]!.text)
+        guard backup.path.hasPrefix(AccountRemovalNativeFixture.dataRoot.path+"/") else {throw CancellationError()}
+        checks["otherEncryptedBackupExact"]=try digest(backup)==baseline["bBackupSHA"]?.text
+        checks["otherBackupKeyPresent"]=AccountRemovalNativeFixture.backupKeyStatus(b)==errSecSuccess
+        let other=pending.first{$0.account==b}
+        checks["otherCommandExact"]=other?.id.uuidString.lowercased()==baseline["bCommand"]?.text && other?.authorization=="synthetic-B" && other?.statusProof==nil && other?.version==1 && other?.confirmed==false
+        checks["pendingWarningVisible"]=accountRemovalStatus != nil
+        if completed {
+            checks["legacyCommandFinished"] = !pending.contains{$0.account==a}
+            checks["targetCacheRemoved"] = !FileManager.default.fileExists(atPath:aCache.path)
+            checks["targetRemovalFenceSaved"] = AccountRemovalDisk(directory:aCache.deletingLastPathComponent(),account:a).removed
+            checks["targetBackupKeyRemoved"] = AccountRemovalNativeFixture.backupKeyStatus(a)==errSecItemNotFound
+        } else {
+            checks["targetCacheExact"] = try digest(aCache)==baseline["aCacheSHA"]?.text
+            checks["targetCommandKept"] = pending.contains{$0.account==a && !$0.confirmed}
+            checks["targetNotFenced"] = !AccountRemovalDisk(directory:aCache.deletingLastPathComponent(),account:a).removed
+            checks["targetBackupKeyKept"] = AccountRemovalNativeFixture.backupKeyStatus(a)==errSecSuccess
+        }
+        checks["noRefreshOrNewDeletionAuthorization"]=AccountRemovalProofHTTP.refreshCount==0
+        let accepted=checks.values.allSatisfy({$0})
+        let report:JSON = .object(["accepted":.bool(accepted),"completed":.bool(completed),"checks":.object(checks.mapValues(JSON.bool)),"serverCalls":.number(Double(AccountRemovalProofHTTP.count)),"coldReload":.bool(cold),"currentCacheBytesUnchanged":.bool(currentBytesUnchanged),"otherCacheBytesUnchanged":.bool(otherBytesUnchanged)])
+        try TaskfoldJSONEncoder().encode(report).write(to:root.appendingPathComponent(completed ? "recovery-completed.json":"recovery-preserved.json"),options:.atomic)
+        guard accepted else {throw AppFailure(message:"Recovery fixture failed: "+checks.filter{!$0.value}.keys.sorted().joined(separator:", "))}
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func prepareProjectCatalogFixture() throws {
+        guard WorkspaceReadNativeFixture.projectCatalog else {throw CancellationError()}
+        localMode=true;signedIn=false;teamAccessMask=nil;workspaceCacheReadable=true;dailyBackupsEnabled=false
+        if WorkspaceReadNativeFixture.projectParents,ProcessInfo.processInfo.arguments.contains("--workspace-project-parent-reload") {
+            let saved=try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
+            guard saved.tables["projects"]?.count==4000,saved.tables["tasks"]?.count==240,
+                  saved.tables["projects"]?.allSatisfy({$0.string("user_id")==userID})==true,
+                  saved.tables["tasks"]?.allSatisfy({$0.string("user_id")==userID && $0.string("project_id")==TeamEditorNativeFixture.projectID})==true else {throw AppFailure(message:"Missing saved parent-choice fixture")}
+            snapshot=saved;publishWidgetSnapshot();return
+        }
+        var projects:[Record]=[]
+        for index in 0..<1000 {
+            let root=index==0 ? TeamEditorNativeFixture.projectID:String(format:"ec260000-0000-4000-8000-%012d",index)
+            projects.append(Record(["id":.string(root),"user_id":.string(userID),"name":.string(String(format:"Catalog project %04d",index)),"order_index":.number(Double(index*4)),"is_archived":.bool(index%10==9)]))
+            for child in 1...3 {
+                projects.append(Record(["id":.string(String(format:"ec260001-0000-4000-8000-%012d",index*3+child)),"user_id":.string(userID),"name":.string("Design phase \(child)"),"parent_id":.string(root),"order_index":.number(Double(index*4+child))]))
+            }
+        }
+        let tasks=(0..<240).map {index->Record in
+            var task=Record.task(user:userID,project:TeamEditorNativeFixture.projectID)
+            task["id"] = .string(String(format:"ec250000-0000-4000-8000-%012d",index+1))
+            task["title"] = .string(String(format:"Workshop task %03d",index+1));return task
+        }
+        snapshot=Snapshot(tables:["projects":projects,"tasks":tasks]);try persist()
+    }
+    func measureProjectCatalogFixture() throws {
+        guard WorkspaceReadNativeFixture.projectCatalog else {throw CancellationError()}
+        let source=snapshot,readable=workspaceCacheReadable
+        defer {snapshot=source;workspaceCacheReadable=readable}
+        guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240 else {throw AppFailure(message:"Incomplete project catalog fixture")}
+        projectCatalogReadCache.clear()
+        let start=ProcessInfo.processInfo.systemUptime
+        var total=0
+        for _ in 0..<20 {total += allProjects.count+projects.count+archivedProjects.count+projectCatalog.archivedIDs.count}
+        let elapsed=ProcessInfo.processInfo.systemUptime-start
+        guard total==168000,snapshot==source else {throw AppFailure(message:"Project reads changed saved work")}
+        let probe=WorkspaceReadObservationProbe()
+        withObservationTracking {_ = projects.first?.name} onChange: {probe.markChanged()}
+        snapshot.tables["projects"]![0]["name"] = .string("Renamed catalog project")
+        guard probe.changed,projects.first?.name=="Renamed catalog project" else {throw AppFailure(message:"Project observation did not refresh")}
+        snapshot.tables["projects"]![1]["parent_id"] = .string(source.tables["projects"]![36].id)
+        guard projects.count==3599,archivedProjects.count==401 else {throw AppFailure(message:"Reparented archive inheritance stayed stale")}
+        snapshot=source
+        snapshot.tables["projects"]![0]["is_archived"] = .bool(true)
+        guard projects.count==3596,archivedProjects.count==404,activeTasks.isEmpty else {throw AppFailure(message:"Archived work stayed visible")}
+        snapshot=source
+        workspaceCacheReadable=false
+        guard allProjects.isEmpty,projects.isEmpty,archivedProjects.isEmpty else {throw AppFailure(message:"Unreadable project catalog exposed cached content")}
+        workspaceCacheReadable=true
+        guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240,snapshot==source else {throw AppFailure(message:"Project catalog failed to return")}
+        let report:[String:JSON] = ["accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
+        let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
+        try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+        try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-catalog.json"),options:.atomic)
+    }
+}
+#endif
+
+
+#if DEBUG
+extension Store {
+    func measureProjectParentFixture() throws {
+        guard WorkspaceReadNativeFixture.projectParents,let root=record("projects",id:TeamEditorNativeFixture.projectID) else {throw CancellationError()}
+        let source=snapshot,projects=allProjects,start=ProcessInfo.processInfo.systemUptime
+        let choices=ProjectOrganization.parentChoices(for:root,account:userID,projects:projects)
+        let elapsed=ProcessInfo.processInfo.systemUptime-start
+        guard choices.count==3596,snapshot==source,!choices.contains(where:{$0.id==root.id}) else {throw AppFailure(message:"Parent choices changed their source or eligibility")}
+        let report:[String:JSON] = ["accepted":.bool(true),"projects":.number(4000),"choices":.number(3596),"seconds":.number(elapsed),"snapshotUnchanged":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
+        let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
+        try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+        try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-parents.json"),options:.atomic)
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func prepareTemplateLibraryReadFixture() throws {
+        guard WorkspaceReadNativeFixture.templateLibrary else{throw CancellationError()}
+        localMode=true;signedIn=false;teamAccessMask=nil;workspaceCacheReadable=true;dailyBackupsEnabled=false
+        if ProcessInfo.processInfo.arguments.contains("--workspace-template-library-reload") {
+            let saved=try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
+            guard saved.tables[WorkflowTemplate.table]?.count==17,saved.tables["tasks"]?.count==3,
+                  saved.tables[WorkflowTemplate.table]?.allSatisfy({$0.string("user_id")==userID})==true else{throw AppFailure(message:"Missing saved template-library fixture")}
+            snapshot=saved;return
+        }
+        let project=Record(["id":.string(TeamEditorNativeFixture.projectID),"user_id":.string(userID),"name":.string("Library workshop")])
+        var templates=(0..<16).map {i in Record(["id":.string(WorkspaceReadNativeFixture.libraryID(i)),"user_id":.string(userID),"name":.string(String(format:"Workflow %02d",i)),"document":WorkspaceReadNativeFixture.libraryDocument()])}
+        templates.append(Record(["id":.string(WorkspaceReadNativeFixture.libraryID(16)),"user_id":.string(userID),"name":.string("Workflow 16 — future format"),"document":.object(["version":.number(999)])]))
+        let tasks=(0..<3).map {i->Record in var row=Record.task(user:userID,project:project.id);row["id"] = .string(String(format:"ec270001-0000-4000-8000-%012d",i));row["title"] = .string("Preserve task \(i)");return row}
+        snapshot=Snapshot(tables:["projects":[project],"tasks":tasks,WorkflowTemplate.table:templates]);try persist()
+    }
+    func changeWorkflowSourceReadFixture(removing: Bool = false) throws {
+        guard WorkspaceReadNativeFixture.templateLibrary, localMode,
+              let project = snapshot.tables["projects"]?.firstIndex(where: { $0.id == TeamEditorNativeFixture.projectID }) else { throw CancellationError() }
+        let task = "ec270001-0000-4000-8000-000000000002"
+        if removing { snapshot.tables["tasks"]?.removeAll { $0.id == task } }
+        else {
+            snapshot.tables["projects"]![project]["name"] = .string("Updated library workshop")
+            guard let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == task }) else { throw CancellationError() }
+            snapshot.tables["tasks"]![index]["title"] = .string("Updated source task")
+        }
+        try persist()
+    }
+    func changeTemplateLibraryReadFixture() throws {
+        guard WorkspaceReadNativeFixture.templateLibrary,let index=snapshot.tables[WorkflowTemplate.table]?.firstIndex(where:{$0.id==WorkspaceReadNativeFixture.libraryID(0)}) else{throw CancellationError()}
+        snapshot.tables[WorkflowTemplate.table]![index]["document"] = WorkspaceReadNativeFixture.libraryDocument(changed:true);try persist()
+    }
+    func templateLibraryReadFixtureVisibility(_ readable:Bool) {
+        guard WorkspaceReadNativeFixture.templateLibrary else{return};workspaceCacheReadable=readable
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    private func fullSchemaPendingFingerprint()throws->String {
+        let json=try JSONSerialization.jsonObject(with:TaskfoldJSONEncoder().encode(snapshot.pending))
+        return SHA256.hash(data:try JSONSerialization.data(withJSONObject:json,options:[.sortedKeys])).map{String(format:"%02x",$0)}.joined()
+    }
+    private func fullSchemaSyncSettled() async throws {
+        let deadline=ContinuousClock.now.advanced(by:.seconds(45))
+        while syncing {guard ContinuousClock.now<deadline else{throw AppFailure(message:"Existing Store sync did not settle")};try await Task.sleep(for:.milliseconds(100))}
+        await sync()
+        while syncing {guard ContinuousClock.now<deadline else{throw AppFailure(message:"Store sync did not settle")};try await Task.sleep(for:.milliseconds(100))}
+    }
+    func writeFullSchemaNativeFailure(_ error:Error)throws {
+        let c=try FullSchemaNativeFixture.configuration()
+        let report:[String:JSON]=["accepted":.bool(false),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(FullSchemaNativeFixture.phase),"message":.string(error.localizedDescription),"notice":.string(notice ?? ""),"pending":.number(Double(snapshot.pending.count))]
+        try FullSchemaNativeFixture.writeReport(report, phase: FullSchemaNativeFixture.phase)
+    }
+
+    private func runFullSchemaChildFieldPhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        guard let child=c.child else {throw AppFailure(message:"Missing isolated child identity")}
+        dailyBackupsEnabled=false
+        if phase=="child-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Genuine child sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskRecords(c.task)
+            let command=try ChildTaskFieldCommand(read:read,key:child,changes:["description":.string("Child edit saved offline")])
+            let before=try ChildTaskFieldBaseline(read:read,command:command)
+            FullSchemaNativeNetwork.offline=true;online=false
+            let model=try childTaskFieldRecoveryModel();defer{model.close()}
+            guard await model.save(command,before:before) != nil else {throw AppFailure(message:model.message ?? "Child request was not saved offline")}
+        }else {
+            guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Genuine child session was not reopened")}
+            online=false
+        }
+        let journal=try childTaskFieldJournal(account:c.account,origin:backend.accountRemovalOrigin)
+        let original=try await journal.load()
+        guard original.entries.count==1,let first=original.entries.first,first.before != nil else {throw AppFailure(message:"Expected one durable child request with its original baseline")}
+        func fingerprint(_ entry:ChildTaskFieldJournalState.Entry)throws->String {
+            let value=try TaskfoldJSONDecoder().decode(JSON.self,from:TaskfoldJSONEncoder().encode(entry))
+            let stable:[String:JSON] = ["command":value.object["command"] ?? .null,"before":value.object["before"] ?? .null]
+            let object=try JSONSerialization.jsonObject(with:TaskfoldJSONEncoder().encode(stable))
+            return SHA256.hash(data:try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])).map{String(format:"%02x",$0)}.joined()
+        }
+        if phase != "child-queue" {guard try fingerprint(first)==c.queuedFingerprint else {throw AppFailure(message:"The cold child request or original baseline changed")}}
+        var message="Saved offline"
+        if phase=="child-loss" || phase=="child-replay" {
+            guard first.phase == (phase=="child-loss" ? .queued:.attempted) else {throw AppFailure(message:"Unexpected durable child phase before sending")}
+            if phase=="child-loss" {FullSchemaNativeNetwork.armDrop()}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskFieldRecoveryModel();defer{model.close()};await model.load()
+            let sent=await model.send(first.command);message=model.message ?? ""
+            if phase=="child-loss" {
+                FullSchemaNativeNetwork.offline=true;online=false
+                guard !sent,FullSchemaNativeNetwork.dropped==1,model.entries.first?.phase == .attempted else {throw AppFailure(message:"Child lost reply did not preserve attempted recovery. "+message)}
+            }else {guard sent,model.entries.first?.phase == .confirmed else {throw AppFailure(message:"Child exact retry was not confirmed. "+message)}}
+        }
+        let disk=try await childTaskFieldJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard disk.entries.count==1,let saved=disk.entries.first,try fingerprint(saved)==fingerprint(first),snapshot.pending.isEmpty else {throw AppFailure(message:"Durable child request changed or entered the root queue")}
+        if phase=="child-queue" {guard saved.phase == .queued else {throw AppFailure(message:"Offline child request was not queued")}}
+        if phase=="child-replay" || phase=="child-verify" {
+            guard saved.phase == .confirmed,saved.receipt?.raw["replayed"] == .bool(true),
+                  let task=record("tasks",id:c.task),task.title=="Changed remotely while closed",
+                  task["subtasks"].list.contains(where:{$0.object["id"]?.text==child && $0.object["description"]?.text=="Child edit saved offline"}),
+                  task["subtasks"].list.contains(where:{$0.object["id"]?.text==c.sibling && $0.object["title"]?.text=="Remote sibling edit"}) else {throw AppFailure(message:"Confirmed child recovery lost a local or remote edit")}
+        }
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Child recovery Store and disk differ")}
+        let report:[String:JSON] = ["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"account":.string(userID),"task":.string(c.task),"pending":.number(Double(snapshot.pending.count)),"commandFingerprint":.string(try fingerprint(saved)),"journalPhase":.string(saved.phase.rawValue),"journalCommand":.object(saved.command.body),"receipt":saved.receipt.map{.object($0.raw)} ?? .null,"diskMatchesStore":.bool(true),"droppedReplies":.number(Double(FullSchemaNativeNetwork.dropped)),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+
+
+    private func runFullSchemaStructurePhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        guard let child=c.child else {throw AppFailure(message:"Missing isolated branch identity")}
+        dailyBackupsEnabled=false
+        if phase=="structure-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Genuine hierarchy sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskStructure(c.task)
+            let command=try ChildTaskStructureCommand(move:child,parent:c.sibling,index:0,read:read)
+            FullSchemaNativeNetwork.offline=true;online=false
+            let model=try childTaskStructurePresentation();defer{model.close()}
+            guard await model.queue(command,read:read) else {throw AppFailure(message:model.message ?? "Hierarchy action was not saved offline")}
+        }else {
+            guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Genuine hierarchy session was not reopened")}
+            online=false
+        }
+        let journal=try childTaskStructureJournal(account:c.account,origin:backend.accountRemovalOrigin)
+        let original=try await journal.load()
+        guard let first=original.entries.first else {throw AppFailure(message:"Missing durable hierarchy action")}
+        func fingerprint(_ command:ChildTaskStructureCommand)throws->String {
+            let object=try JSONSerialization.jsonObject(with:TaskfoldJSONEncoder().encode(command))
+            return SHA256.hash(data:try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])).map{String(format:"%02x",$0)}.joined()
+        }
+        if phase != "structure-queue" {guard try fingerprint(first.command)==c.queuedFingerprint else {throw AppFailure(message:"The cold hierarchy action differs from its original")}}
+        var message=first.phase == .confirmed ? "Confirmed action reopened offline":"Saved offline"
+        if phase=="structure-loss" || phase=="structure-replay" {
+            guard original.entries.count==1,first.phase == (phase=="structure-loss" ? .queued:.attempted) else {throw AppFailure(message:"Unexpected hierarchy state before sending")}
+            if phase=="structure-loss" {FullSchemaNativeNetwork.armDrop()}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskStructurePresentation();defer{model.close()};await model.load()
+            let sent=await model.send(first.command);message=model.message ?? ""
+            if phase=="structure-loss" {
+                FullSchemaNativeNetwork.offline=true;online=false
+                guard !sent,FullSchemaNativeNetwork.dropped==1,model.entries.first?.phase == .attempted else {throw AppFailure(message:"Hierarchy lost reply did not preserve attempted recovery. "+message)}
+            }else {
+                guard sent,model.entries.first?.phase == .confirmed else {throw AppFailure(message:"Exact hierarchy retry was not confirmed. "+message)}
+                try await fullSchemaSyncSettled()
+            }
+        }
+        if phase=="structure-undo" || phase=="structure-redo" {
+            guard original.entries.allSatisfy({$0.phase == .confirmed}),original.entries.count == (phase=="structure-undo" ? 1:2),let previous=original.entries.last else {throw AppFailure(message:"Unexpected hierarchy history before reversal")}
+            FullSchemaNativeNetwork.offline=false;online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskStructure(c.task),model=try childTaskStructurePresentation();defer{model.close()};await model.load()
+            guard let inverse=await model.queueInverse(previous,read:read),await model.send(inverse) else {throw AppFailure(message:model.message ?? "Hierarchy reversal was not confirmed")}
+            message=model.message ?? "";try await fullSchemaSyncSettled()
+        }
+        let disk=try await childTaskStructureJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard let saved=disk.entries.first,try fingerprint(saved.command)==fingerprint(first.command),snapshot.pending.isEmpty else {throw AppFailure(message:"Original hierarchy action changed or entered the root queue")}
+        if phase=="structure-queue" {guard disk.entries.count==1,saved.phase == .queued else {throw AppFailure(message:"Hierarchy action was not queued")}}
+        if ["structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify"].contains(phase) {
+            let count=phase.contains("redo") ? 3:phase.contains("undo") ? 2:1
+            guard disk.entries.count==count,disk.entries.allSatisfy({$0.phase == .confirmed}),saved.receipt?.raw["replayed"] == .bool(true),
+                  let task=record("tasks",id:c.task),task.title=="Changed remotely while closed" else {throw AppFailure(message:"Confirmed hierarchy history or remote title was not preserved")}
+            let roots=task["subtasks"].list
+            if count==2 {guard roots.count==2,roots[0].object["id"]?.text==child,roots[1].object["id"]?.text==c.sibling else {throw AppFailure(message:"Undo did not restore the original branch order")}}
+            else {guard roots.count==1,roots[0].object["id"]?.text==c.sibling,roots[0].object["subtasks"]?.list.first?.object["id"]?.text==child else {throw AppFailure(message:"Hierarchy move was duplicated or lost")}}
+        }
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Hierarchy Store and disk differ")}
+        let reports=disk.entries.map{entry in JSON.object(["command":.object(entry.command.body),"phase":.string(entry.phase.rawValue),"receipt":entry.receipt.map{.object($0.raw)} ?? .null,"redoOf":entry.redoOf.map(JSON.string) ?? .null])}
+        let report:[String:JSON] = ["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"account":.string(userID),"task":.string(c.task),"pending":.number(Double(snapshot.pending.count)),"commandFingerprint":.string(try fingerprint(saved.command)),"journalPhase":.string(saved.phase.rawValue),"history":.array(reports),"diskMatchesStore":.bool(true),"droppedReplies":.number(Double(FullSchemaNativeNetwork.dropped)),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+
+
+    private func fullSchemaReviewFingerprint<T:Encodable>(_ value:T)throws->String {
+        var object=try JSONSerialization.jsonObject(with:TaskfoldJSONEncoder().encode(value))
+        // Baseline field names are a Set. Canonicalize only that metadata;
+        // authored request arrays and baseline values retain their exact order.
+        if var entry=object as? [String:Any],var before=entry["before"] as? [String:Any],let fields=before["fields"] as? [String] {
+            before["fields"]=fields.sorted();entry["before"]=before;object=entry
+        }
+        return SHA256.hash(data:try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])).map{String(format:"%02x",$0)}.joined()
+    }
+    private func runFullSchemaFieldReviewPhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        guard let child=c.child else {throw AppFailure(message:"Missing isolated field identity")}
+        dailyBackupsEnabled=false
+        if phase=="field-review-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Review sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskRecords(c.task)
+            let command=try ChildTaskFieldCommand(read:read,key:child,changes:["description":.string("Reviewed local description"),"priority":.number(2)])
+            let before=try ChildTaskFieldBaseline(read:read,command:command)
+            FullSchemaNativeNetwork.offline=true;online=false
+            let model=try childTaskFieldRecoveryModel();defer{model.close()}
+            guard await model.save(command,before:before) != nil else {throw AppFailure(message:model.message ?? "Review draft was not saved")}
+        }else {guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Review session was not reopened")};online=false}
+        let journal=try childTaskFieldJournal(account:c.account,origin:backend.accountRemovalOrigin),original=try await journal.load()
+        guard let first=original.entries.first,first.before != nil else {throw AppFailure(message:"Missing original field review request")}
+        func fingerprint(_ e:ChildTaskFieldJournalState.Entry)throws->String {try fullSchemaReviewFingerprint(ChildTaskFieldJournalState.Entry(command:e.command,phase:.queued,receipt:nil,before:e.before))}
+        if phase != "field-review-queue" {guard try fingerprint(first)==c.queuedFingerprint else {throw AppFailure(message:"Original field request or baseline changed")}}
+        var message="Saved field review reopened offline"
+        if phase=="field-review-refuse" {
+            guard original.entries.count==1,first.phase == .queued else {throw AppFailure(message:"Expected queued stale field request")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskFieldRecoveryModel();defer{model.close()};await model.load()
+            guard !(await model.send(first.command)),model.entries.first?.phase == .attempted,model.message==ChildTaskFieldWriteFailure(reason:.review).localizedDescription else {throw AppFailure(message:model.message ?? "Stale field request was not refused for review")}
+            message=model.message ?? ""
+        }
+        if phase=="field-review-save" {
+            guard original.entries.count==1,first.phase == .attempted else {throw AppFailure(message:"Expected original attempted field request")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskFieldRecoveryModel();defer{model.close()};await model.load();await model.closeOriginal(first.command)
+            guard model.entries.first?.phase == .closed else {throw AppFailure(message:model.message ?? "Original field request was not closed")}
+            FullSchemaNativeNetwork.armWorkspaceRead();defer{FullSchemaNativeNetwork.releaseWorkspaceRead()}
+            let existing=Task {await self.sync()}
+            let deadline=ContinuousClock.now.advanced(by:.seconds(10))
+            while !FullSchemaNativeNetwork.workspaceReadIsHeld {guard ContinuousClock.now<deadline else {throw AppFailure(message:"Actual background workspace read was not held")};try await Task.sleep(for:.milliseconds(10))}
+            guard syncing else {throw AppFailure(message:"Expected an actual ongoing workspace sync")}
+            var readFinished=false
+            let waiter=Task {try await self.synchronizeChildTaskRecordReads();readFinished=true}
+            while FullSchemaNativeNetwork.joinedReads==0 {guard ContinuousClock.now<deadline else {throw AppFailure(message:"Review did not join the existing sync")};try await Task.sleep(for:.milliseconds(10))}
+            guard !readFinished,syncing,FullSchemaNativeNetwork.workspaceReadIsHeld else {throw AppFailure(message:"Review returned before the held workspace read finished")}
+            FullSchemaNativeNetwork.releaseWorkspaceRead();try await waiter.value;await existing.value
+            guard readFinished else {throw AppFailure(message:"Review did not finish after the workspace read")}
+            let read=try await readChildTaskRecords(c.task),comparison=try ChildTaskFieldComparison(original:first.command,read:read)
+            guard comparison.current.string("description")=="Remote description",comparison.current["priority"] == .number(1),comparison.groups.filter({$0.differs && $0.warning==nil}).count==2 else {throw AppFailure(message:"Review did not expose both current remote values")}
+            FullSchemaNativeNetwork.offline=true;online=false
+            guard let replacement=await model.saveReplacement(comparison,choosing:["description"]),replacement.id != first.command.id,Set(replacement.body["changes"]!.object.keys)==["description"] else {throw AppFailure(message:model.message ?? "Selected field review was not saved")}
+            message=model.message ?? ""
+        }
+        if phase=="field-review-send" {
+            guard original.entries.count==2,first.phase == .closed,let next=original.entries.last,next.phase == .queued else {throw AppFailure(message:"Expected closed field original and queued replacement")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskFieldRecoveryModel();defer{model.close()};await model.load()
+            guard await model.send(next.command),model.entries.last?.phase == .confirmed else {throw AppFailure(message:model.message ?? "Reviewed field replacement was not confirmed")}
+            message=model.message ?? ""
+        }
+        let disk=try await childTaskFieldJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard let retained=disk.entries.first,try fingerprint(retained)==fingerprint(first),snapshot.pending.isEmpty else {throw AppFailure(message:"Field review changed original work or entered the root queue")}
+        if ["field-review-save","field-review-send","field-review-verify"].contains(phase) {guard disk.entries.count==2,retained.phase == .closed,retained.resolution?.closed==true else {throw AppFailure(message:"Field closure proof was not retained")}}
+        if phase=="field-review-send" || phase=="field-review-verify" {
+            guard disk.entries.last?.phase == .confirmed,let task=record("tasks",id:c.task),let node=task["subtasks"].list.first(where:{$0.object["id"]?.text==child}),node.object["description"]?.text=="Reviewed local description",node.object["priority"] == .number(1) else {throw AppFailure(message:"Reviewed description overwrote an unselected remote field")}
+        }
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Field review Store and disk differ")}
+        let history=try disk.entries.map{try TaskfoldJSONDecoder().decode(JSON.self,from:TaskfoldJSONEncoder().encode($0))}
+        let report:[String:JSON]=["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"originalFingerprint":.string(try fingerprint(retained)),"joinedExistingRead":.bool(FullSchemaNativeNetwork.joinedReads>0),"history":.array(history),"pending":.number(Double(snapshot.pending.count)),"diskMatchesStore":.bool(true),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+    private func runFullSchemaStructureReviewPhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        guard let child=c.child else {throw AppFailure(message:"Missing isolated hierarchy identity")}
+        dailyBackupsEnabled=false
+        if phase=="structure-review-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Hierarchy review sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskStructure(c.task),command=try ChildTaskStructureCommand(move:child,parent:c.sibling,index:0,read:read)
+            FullSchemaNativeNetwork.offline=true;online=false
+            let model=try childTaskStructurePresentation();defer{model.close()}
+            guard await model.queue(command,read:read) else {throw AppFailure(message:model.message ?? "Hierarchy review was not saved")}
+        }else {guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Hierarchy review session was not reopened")};online=false}
+        let journal=try childTaskStructureJournal(account:c.account,origin:backend.accountRemovalOrigin),original=try await journal.load()
+        guard let first=original.entries.first else {throw AppFailure(message:"Missing original hierarchy review action")}
+        if phase != "structure-review-queue" {guard try fullSchemaReviewFingerprint(first.command)==c.queuedFingerprint else {throw AppFailure(message:"Original hierarchy review action changed")}}
+        var message="Saved hierarchy review reopened offline"
+        if phase=="structure-review-refuse" {
+            guard original.entries.count==1,first.phase == .queued else {throw AppFailure(message:"Expected queued stale hierarchy action")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskStructurePresentation();defer{model.close()};await model.load()
+            guard !(await model.send(first.command)),model.entries.first?.phase == .attempted,model.message==ChildTaskStructureFailure(reason:.review).localizedDescription else {throw AppFailure(message:model.message ?? "Stale hierarchy action was not refused for review")}
+            message=model.message ?? ""
+        }
+        if phase=="structure-review-save" {
+            guard original.entries.count==1,first.phase == .attempted else {throw AppFailure(message:"Expected original attempted hierarchy action")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskStructurePresentation();defer{model.close()};await model.load();await model.stop(first.command)
+            guard let closed=model.entries.first,closed.phase == .closed else {throw AppFailure(message:model.message ?? "Original hierarchy action was not closed")}
+            try await synchronizeChildTaskStructureReads()
+            let read=try await readChildTaskStructure(c.task),replacement=try ChildTaskStructureReview.fresh(first.command,read:read,parent:c.sibling,index:0)
+            FullSchemaNativeNetwork.offline=true;online=false
+            guard await model.replace(closed,with:replacement,read:read) else {throw AppFailure(message:model.message ?? "Fresh hierarchy review was not saved")}
+            message=model.message ?? ""
+        }
+        if phase=="structure-review-send" {
+            guard original.entries.count==2,first.phase == .closed,let next=original.entries.last,next.phase == .queued else {throw AppFailure(message:"Expected closed hierarchy original and queued replacement")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskStructurePresentation();defer{model.close()};await model.load()
+            guard await model.send(next.command),model.entries.last?.phase == .confirmed else {throw AppFailure(message:model.message ?? "Reviewed hierarchy action was not confirmed")}
+            message=model.message ?? "";try await fullSchemaSyncSettled()
+        }
+        let disk=try await childTaskStructureJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard let retained=disk.entries.first,retained.command==first.command,snapshot.pending.isEmpty else {throw AppFailure(message:"Hierarchy review changed original action or entered the root queue")}
+        if ["structure-review-save","structure-review-send","structure-review-verify"].contains(phase) {guard disk.entries.count==2,retained.phase == .closed,retained.resolution?.closed==true else {throw AppFailure(message:"Hierarchy closure proof was not retained")}}
+        if phase=="structure-review-send" || phase=="structure-review-verify" {
+            guard disk.entries.last?.phase == .confirmed,let task=record("tasks",id:c.task),task["subtasks"].list.count==1,task["subtasks"].list.first?.object["id"]?.text==c.sibling,task["subtasks"].list.first?.object["subtasks"]?.list.first?.object["id"]?.text==child else {throw AppFailure(message:"Reviewed branch hierarchy was lost")}
+        }
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Hierarchy review Store and disk differ")}
+        let history=try disk.entries.map{try TaskfoldJSONDecoder().decode(JSON.self,from:TaskfoldJSONEncoder().encode($0))}
+        let report:[String:JSON]=["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"originalFingerprint":.string(try fullSchemaReviewFingerprint(retained.command)),"history":.array(history),"pending":.number(Double(snapshot.pending.count)),"diskMatchesStore":.bool(true),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+
+
+    private func runFullSchemaAdoptionPhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        dailyBackupsEnabled=false;var preservedGuard=false
+        if phase=="adoption-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Migration sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskAdoption(c.task)
+            guard read.eligible,read.metadata["state"] == .string("ready"),read.preview.count==3 else {throw AppFailure(message:"Genuine legacy hierarchy is not ready for review")}
+            let command=try ChildTaskAdoptionCommand(review:read),model=try childTaskAdoptionModel();defer{model.close()}
+            guard let root=record("tasks",id:c.task) else {throw AppFailure(message:"Missing actual legacy task cache")}
+            var draft=root;draft["description"] = .string("Synthetic preserved unsent edit")
+            let edit=try TaskEditorRecovery(account:c.account,origin:backend.accountRemovalOrigin,original:root,draft:draft),vault=backupVault
+            try vault.saveEditorDraft(edit);let bytes=try Data(contentsOf:vault.editorFile(edit.id))
+            guard !(await model.queue(command,review:read)),model.entries.isEmpty,try vault.editorDraft(edit.id,origin:backend.accountRemovalOrigin)==edit,try Data(contentsOf:vault.editorFile(edit.id))==bytes else {throw AppFailure(message:"Migration did not preserve and refuse an unsent editor draft")}
+            preservedGuard=true;try vault.closeEditorDraft(edit.id)
+            guard await model.queue(command,review:read),model.entries.first?.phase == .queued else {throw AppFailure(message:model.message ?? "Reviewed migration was not durably queued")}
+            FullSchemaNativeNetwork.offline=true;online=false
+        }else {guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Migration session was not reopened")};online=false}
+        let journal=try childTaskAdoptionJournal(account:c.account,origin:backend.accountRemovalOrigin),original=try await journal.load()
+        guard original.entries.count==1,let first=original.entries.first else {throw AppFailure(message:"Expected one original migration request")}
+        if phase != "adoption-queue" {guard try fullSchemaReviewFingerprint(first.command)==c.queuedFingerprint else {throw AppFailure(message:"Cold migration request differs from its original review")}}
+        var message="Reviewed migration reopened offline"
+        if phase=="adoption-loss" || phase=="adoption-replay" {
+            guard first.phase == (phase=="adoption-loss" ? .queued:.attempted) else {throw AppFailure(message:"Unexpected migration phase before retry")}
+            if phase=="adoption-loss" {FullSchemaNativeNetwork.armDrop()}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskAdoptionModel();defer{model.close()};await model.load()
+            let sent=await model.run(first.command,operation:.send);message=model.message ?? ""
+            if phase=="adoption-loss" {
+                FullSchemaNativeNetwork.offline=true;online=false
+                guard !sent,FullSchemaNativeNetwork.dropped==1,model.entries.first?.phase == .attempted,model.entries.first?.result==nil else {throw AppFailure(message:"Lost migration reply did not retain the original attempted request. "+message)}
+            }else {
+                guard sent,model.entries.first?.result?.applied==true,model.entries.first?.result?.raw["replayed"] == .bool(true) else {throw AppFailure(message:"Original migration retry did not recover its real confirmation. "+message)}
+                try await fullSchemaSyncSettled()
+                let current=try await readChildTaskRecords(c.task)
+                guard current.nodes.count==3 else {throw AppFailure(message:"Migrated hierarchy is not readable through the actual record client")}
+            }
+        }
+        let disk=try await childTaskAdoptionJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard disk.entries.count==1,let saved=disk.entries.first,saved.command==first.command,snapshot.pending.isEmpty else {throw AppFailure(message:"Migration changed the original request or entered the root queue")}
+        if phase=="adoption-replay" || phase=="adoption-verify" {guard saved.result?.applied==true,saved.result?.raw["replayed"] == .bool(true),record("tasks",id:c.task)?.title=="Changed remotely while closed" else {throw AppFailure(message:"Migration confirmation or remote title did not survive cold recovery")}}
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Migration Store and disk differ")}
+        let history=try TaskfoldJSONDecoder().decode(JSON.self,from:TaskfoldJSONEncoder().encode(saved))
+        let report:[String:JSON]=["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"originalFingerprint":.string(try fullSchemaReviewFingerprint(saved.command)),"history":history,"preservedEditRefusedAndKept":.bool(preservedGuard),"pending":.number(Double(snapshot.pending.count)),"droppedReplies":.number(Double(FullSchemaNativeNetwork.dropped)),"diskMatchesStore":.bool(true),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+
+    private func runFullSchemaCapturePhase() async throws {
+        let c = try FullSchemaNativeFixture.configuration()
+        guard FullSchemaNativeFixture.enabled, FullSchemaNativeFixture.phase == "capture" else { throw CancellationError() }
+        dailyBackupsEnabled = false
+        guard try await backend.signIn(email: c.email, password: c.password, signup: false) else { throw AppFailure(message: "Capture fixture sign-in failed") }
+        await authenticated(); online = true; try await fullSchemaSyncSettled()
+        guard let original = record("tasks", id: c.task), snapshot.workflowUndoService?.capture == true else { throw AppFailure(message: "Capture fixture is missing its original work or service") }
+        let project = original.string("project_id"), key = project.isEmpty ? "scope:inbox" : "group:" + project + ":none"
+        guard record("view_orders", id: key) == nil else { throw AppFailure(message: "Capture fixture order must be fresh") }
+        let before: [JSON] = [.string(original.id)]
+        guard commit([Mutation(table: "view_orders", recordID: key, method: "POST", fields: ["id": .string(key), "user_id": .string(userID), "ids": .array(before)])]) else { throw AppFailure(message: error ?? "Capture fixture order failed") }
+        try await fullSchemaSyncSettled()
+        let lines = try MultiLineCapture.preview("Prepare the design review\nPublish the workshop notes", account: userID, project: project, recognize: false)
+        let changes = try workflowChanges(lines), ids = lines.map { $0.task.id }
+        guard commit(changes) else { throw AppFailure(message: "Capture creation: " + (error ?? "Failed")) }
+        try await fullSchemaSyncSettled()
+        let after = before + ids.map(JSON.string)
+        guard record("view_orders", id: key)?["ids"] == .array(after), ids.allSatisfy({ record("tasks", id: $0) != nil }) else { throw AppFailure(message: "Capture did not preserve its reviewed order") }
+        guard undo() else { throw AppFailure(message: error ?? "Capture Undo failed") }
+        try await fullSchemaSyncSettled()
+        guard ids.allSatisfy({ record("tasks", id: $0) == nil }), record("view_orders", id: key)?["ids"] == .array(before) else { throw AppFailure(message: "Capture Undo did not restore existing work") }
+        guard redo() else { throw AppFailure(message: "Capture Redo: " + (error ?? "Failed")) }
+        try await fullSchemaSyncSettled()
+        guard ids.allSatisfy({ record("tasks", id: $0) != nil }), record("view_orders", id: key)?["ids"] == .array(after) else { throw AppFailure(message: "Capture Redo did not restore its tasks and order") }
+        guard undo() else { throw AppFailure(message: error ?? "Second capture Undo failed") }
+        try await fullSchemaSyncSettled()
+        let template = try WorkflowTemplate.capture(kind: .project, id: project, snapshot: snapshot)
+        let templateChanges = try template.instantiate(account: userID, name: "Reusable workshop")
+        guard commit(templateChanges) else { throw AppFailure(message: "Template creation: " + (error ?? "Failed")) }
+        try await fullSchemaSyncSettled()
+        guard templateChanges.allSatisfy({ record($0.table, id: $0.recordID) != nil }) else { throw AppFailure(message: "Native template run did not persist") }
+        guard undo() else { throw AppFailure(message: error ?? "Native template Undo failed") }
+        try await fullSchemaSyncSettled()
+        guard templateChanges.allSatisfy({ record($0.table, id: $0.recordID) == nil }) else { throw AppFailure(message: "Native template Undo did not remove its fresh run") }
+        guard ids.allSatisfy({ record("tasks", id: $0) == nil }), record("tasks", id: original.id)?.title == original.title,
+              record("view_orders", id: key)?["ids"] == .array(before), snapshot.pending.isEmpty,
+              try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) == snapshot else { throw AppFailure(message: "Capture's saved result differs from its original work") }
+        let report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string("capture"),
+            "actualStoreSync": .bool(true), "createdTaskIDs": .array(ids.map(JSON.string)), "orderKey": .string(key),
+            "createdAndUndoneTwice": .bool(true), "redoPreserved": .bool(true), "personalTemplateUndo": .bool(true), "existingWorkPreserved": .bool(true), "diskMatchesStore": .bool(true), "pending": .number(0)]
+        try TaskfoldJSONEncoder().encode(report).write(to: FullSchemaNativeFixture.root.appendingPathComponent("capture.json"), options: .atomic)
+    }
+
+    /// Uses the same Store factory, durable vault and Backend as the transfer sheet.
+    /// Only the reserved synthetic host can invoke these cold process phases.
+    private func runFullSchemaProjectRecordingPhase() async throws {
+        guard FullSchemaNativeFixture.enabled else { throw CancellationError() }
+        let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
+        dailyBackupsEnabled = false
+        guard backend.session?.user.id == c.account, signedIn, !localMode else { throw AppFailure(message: "Project transfer session was not reopened") }
+        let model = try projectTransferModel(); defer { model.close() }
+        await model.load()
+        var refreshed = false, downloaded = false
+        if phase == "audio-project-queue" {
+            FullSchemaNativeNetwork.offline = false; online = true; try await fullSchemaSyncSettled()
+            guard let task = record("tasks", id: c.task), let project = UUID(uuidString: task.string("project_id")) else { throw AppFailure(message: "Original recording project is missing") }
+            let scope = try TeamProjectAdoptionScope(account: c.account, origin: backend.accountRemovalOrigin, team: c.sibling, roots: [project.uuidString.lowercased()], visibility: .team, folder: nil, parent: nil)
+            guard let stamp = projectTransferAuthorStamp(scope, projects: scope.roots) else { throw AppFailure(message: "Current Store does not admit project transfer authoring") }
+            let inspection = try await backend.inspectProjectAdoption(scope)
+            guard inspection.recordingInventory?.published == 1, inspection.supportedRecordingPolicy == .published else { throw AppFailure(message: "Actual recording inventory is not ready") }
+            let decisions = try inspection.people.map { person -> TeamProjectAdoptionDecision in
+                guard let user = person.user else { throw TeamProjectAdoptionValue.invalid }
+                return try TeamProjectAdoptionDecision(project: person.project, user: user, choice: .retire)
+            }
+            let review = try await backend.reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil, recordingPolicy: .published)
+            guard review.canCommit, review.recordingCount == 1 else { throw AppFailure(message: "Current recording review is not committable") }
+            let command = try TeamProjectAdoptionCommand(review: review)
+            // Reachability can change between authoring and transport. Preserve the
+            // actual queued request instead of pretending that a send succeeded.
+            FullSchemaNativeNetwork.offline = true
+            await model.send(command, canAuthor: { self.projectTransferAuthorStamp(scope, projects: inspection.projects.map(\.id)) == stamp })
+            guard model.pending == command, model.receipt == nil else { throw AppFailure(message: model.message ?? "Offline transfer was not preserved") }
+        } else if phase == "audio-project-loss" || phase == "audio-project-replay" {
+            guard let command = model.pending, try fullSchemaReviewFingerprint(command) == c.queuedFingerprint else { throw AppFailure(message: "The original recording transfer changed across launch") }
+            FullSchemaNativeNetwork.offline = false; online = true
+            if phase == "audio-project-loss" { FullSchemaNativeNetwork.armDrop() }
+            await model.retry()
+            if phase == "audio-project-loss" {
+                guard model.pending == command, model.receipt == nil, FullSchemaNativeNetwork.dropped == 1 else { throw AppFailure(message: model.message ?? "Lost transfer confirmation was not preserved (pending: \(model.pending != nil), dropped: \(FullSchemaNativeNetwork.dropped))") }
+            } else {
+                guard let receipt = model.receipt, receipt.command == command, model.pending == nil else { throw AppFailure(message: model.message ?? "Original transfer confirmation was not recovered") }
+                refreshed = await refreshAfterProjectTransfer(receipt)
+                guard refreshed, let task = record("tasks", id: c.task), nativeConversationTeamCache?.knownTeams[task.string("project_id")] == c.sibling else { throw AppFailure(message: "Confirmed transfer did not refresh the current team workspace") }
+                let target = try AudioCommentTarget(task: UUID(uuidString: c.task)!, generation: UUID(uuidString: task.string("task_generation"))!, project: UUID(uuidString: task.string("project_id")))
+                let comments = try await backend.listAudio(account: UUID(uuidString: c.account)!, target: target, origin: backend.accountRemovalOrigin, incarnation: backend.reminderSessionIncarnation)
+                guard comments.count == 1, let comment = comments.first else { throw AppFailure(message: "Transferred recording is not visible to the current audience") }
+                let clip = try await backend.downloadAudio(comment, origin: backend.accountRemovalOrigin, incarnation: backend.reminderSessionIncarnation)
+                let folder = FullSchemaNativeFixture.root.appendingPathComponent("audio-" + c.nonce.uuidString.lowercased(), isDirectory: true)
+                let source = try AudioCommentVault(applicationSupport: folder, owner: .init(c.account)).drafts()
+                guard source.count == 1, clip.data == source[0].clip.data else { throw AppFailure(message: "Transferred recording bytes changed") }
+                downloaded = true
+            }
+        } else {
+            guard phase == "audio-project-verify", FullSchemaNativeNetwork.offline, model.pending == nil,
+                  let task = record("tasks", id: c.task), nativeConversationTeamCache?.knownTeams[task.string("project_id")] == c.sibling else { throw AppFailure(message: "Transferred workspace did not survive offline reopening") }
+        }
+        let pending = try await projectAdoptionVault.pending(account: c.account, origin: backend.accountRemovalOrigin)
+        guard pending == model.pending, snapshot.pending.isEmpty,
+              try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) == snapshot else { throw AppFailure(message: "Transfer journal or saved workspace differs from the current Store") }
+        let folder = FullSchemaNativeFixture.root.appendingPathComponent("audio-" + c.nonce.uuidString.lowercased(), isDirectory: true)
+        let source = try AudioCommentVault(applicationSupport: folder, owner: .init(c.account)).drafts()
+        guard source.count == 1 else { throw AppFailure(message: "Private source recording was lost during transfer") }
+        let raw = AudioCommentVault(applicationSupport: folder, owner: try .init(c.account)).directory.appendingPathComponent("draft-" + source[0].id.uuidString.lowercased() + ".bin")
+        let fingerprint = try pending.map(fullSchemaReviewFingerprint) ?? c.queuedFingerprint ?? ""
+        let report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase),
+            "pending": .bool(pending != nil), "commandFingerprint": .string(fingerprint), "command": pending.map { .object($0.body) } ?? .null,
+            "receipt": model.receipt.map { .object(["request_id": .string($0.command.id), "replayed": .bool($0.replayed), "command": .object($0.command.body)]) } ?? .null, "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)),
+            "workspaceRefreshed": .bool(refreshed), "downloadedExactBytes": .bool(downloaded), "offline": .bool(FullSchemaNativeNetwork.offline),
+            "rawDraftSHA256": .string(SHA256.hash(data: try Data(contentsOf: raw)).map { String(format: "%02x", $0) }.joined()), "diskMatchesStore": .bool(true)]
+        try FullSchemaNativeFixture.writeReport(report, phase: phase)
+    }
+
+    func runFullSchemaAudioPhase() async throws {
+        guard FullSchemaNativeFixture.enabled else { throw CancellationError() }
+        let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
+        dailyBackupsEnabled = false
+        if phase == "audio-cleanup" {
+            guard FullSchemaNativeFixture.protectedStorageRequested else { throw CancellationError() }
+            let folder = FullSchemaNativeFixture.root.appendingPathComponent("audio-" + c.nonce.uuidString.lowercased(), isDirectory: true)
+            if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
+            if FileManager.default.fileExists(atPath: cacheURL.path), userID == c.account { try FileManager.default.removeItem(at: cacheURL) }
+            try FullSchemaNativeFixture.writeReport(["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase), "syntheticFilesRemoved": .bool(!FileManager.default.fileExists(atPath: folder.path)), "testKeychainRetained": .bool(true)], phase: phase)
+            return
+        }
+        if phase == "audio-create" {
+            FullSchemaNativeNetwork.offline = false
+            guard try await backend.signIn(email: c.email, password: c.password, signup: false) else { throw AppFailure(message: "Genuine audio sign-in failed") }
+            await authenticated(); online = true; try await fullSchemaSyncSettled()
+        } else { guard backend.session?.user.id == c.account, signedIn, !localMode else { throw AppFailure(message: "Audio session was not reopened") } }
+        guard let task = record("tasks", id: c.task) else { throw AppFailure(message: "Genuine task cache is missing") }
+        let folder = FullSchemaNativeFixture.root.appendingPathComponent("audio-" + c.nonce.uuidString.lowercased(), isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        let owner = try AudioCommentOwner(c.account), vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+        let target = try AudioCommentTaskAdmission.target(account: c.account, task: task, projects: projects)
+        if phase == "audio-create" {
+            guard try vault.drafts().isEmpty else { throw AppFailure(message: "Expected a fresh private recording folder") }
+            let bytes = try Data(contentsOf: FullSchemaNativeFixture.mediaURL(c.nonce))
+            let clip = try await AudioCommentDecoding.validate(bytes)
+            try vault.save(AudioCommentSavedDraft(owner: owner, target: target, caption: "Native genuine recording proof", clip: clip))
+        }
+        let drafts = try vault.drafts(); guard drafts.count == 1, let source = drafts.first, source.target == target else { throw AppFailure(message: "Private recording was not preserved") }
+        let disk = try AudioCommentPublicationDisk(root: folder, account: UUID(uuidString: c.account)!, origin: backend.accountRemovalOrigin)
+        let storage = AudioCommentPublicationStorage(disk: disk), session = backend.reminderSessionIncarnation
+        let flow = AudioCommentPublicationFlow(storage: storage, transport: backend, incarnation: session, target: target, isCurrent: { [weak self] in
+            guard let self else { return false }; return self.userID == c.account && self.backend.reminderSessionIncarnation == session && self.signedIn && !self.localMode
+        })
+        try await flow.restore(source)
+        var rejectedUntrusted = false, downloaded = false
+        if phase == "audio-deny" {
+            FullSchemaNativeNetwork.offline = false
+            do { try await flow.reviewAudience(source) } catch { rejectedUntrusted = true }
+            guard rejectedUntrusted, flow.reviewedApproval == nil, flow.journal?.isPending == true else { throw AppFailure(message: "Untrusted audio TLS did not preserve the unsent recording") }
+        } else if phase == "audio-loss" {
+            FullSchemaNativeNetwork.offline = false
+            try await flow.reviewAudience(source)
+            guard flow.reviewedApproval != nil else { throw AppFailure(message: "Genuine audience review is missing") }
+            FullSchemaNativeNetwork.armDrop()
+            do { try await flow.publish(source) } catch { }
+            guard FullSchemaNativeNetwork.dropped == 1, flow.state == .unconfirmed, flow.journal?.isPending == true, flow.journal?.approval != nil else { throw AppFailure(message: "Lost publication reply did not preserve the original approved intent") }
+        } else if phase == "audio-check" {
+            guard let original = flow.journal, original.isPending, original.approval != nil else { throw AppFailure(message: "The original approved recording was not reopened") }
+            FullSchemaNativeNetwork.offline = false
+            try await flow.checkPublication(original)
+            guard flow.state == .published, let receipt = flow.journal?.receipt else { throw AppFailure(message: "Genuine publication was not confirmed") }
+            let comments = try await backend.listAudio(account: UUID(uuidString: c.account)!, target: target, origin: backend.accountRemovalOrigin, incarnation: session)
+            guard comments.count == 1, let comment = comments.first, comment.id == receipt.publication.comment else { throw AppFailure(message: "Published conversation does not match the original recording") }
+            let fetched = try await backend.downloadAudio(comment, origin: backend.accountRemovalOrigin, incarnation: session)
+            guard fetched.data == source.clip.data else { throw AppFailure(message: "Real Storage returned different recording bytes") }; downloaded = true
+        } else if phase == "audio-verify" {
+            guard FullSchemaNativeNetwork.offline, flow.state == .published, flow.journal?.receipt != nil else { throw AppFailure(message: "Confirmed recording did not survive offline cold reopening") }
+        } else { guard phase == "audio-create", flow.state == .ready else { throw AppFailure(message: "Unexpected audio phase") } }
+        guard try vault.drafts() == [source] else { throw AppFailure(message: "Recording source changed during publication/recovery") }
+        func hash(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let journal = flow.journal
+        var report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase),
+            "account": .string(userID), "sourceFingerprint": .string(hash(try source.encoded())), "clipSHA256": .string(source.clip.descriptor.sha256),
+            "intentFingerprint": .string(try journal.map { hash(try encoder.encode($0.publication.record)) } ?? ""),
+            "operation": .string(journal?.publication.operation.uuidString.lowercased() ?? ""), "comment": .string(journal?.publication.comment.uuidString.lowercased() ?? ""),
+            "approvalSaved": .bool(journal?.approval != nil), "pending": .bool(journal?.isPending ?? false),
+            "receipt": journal?.receipt.map { .object($0.record.fields) } ?? .null, "rejectedUntrustedTLS": .bool(rejectedUntrusted), "downloadedExactBytes": .bool(downloaded),
+            "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)), "offline": .bool(FullSchemaNativeNetwork.offline)]
+        if FullSchemaNativeFixture.protectedStorageRequested {
+            guard let stored = SecureSession.read(), let current = backend.session, try encoder.encode(stored) == encoder.encode(current), stored.user.id == c.account,
+                  !FileManager.default.fileExists(atPath: FullSchemaNativeFixture.root.appendingPathComponent("session.json").path) else { throw AppFailure(message: "Protected session was not retained exclusively in the scoped Keychain") }
+            let key = try BackupVault.deviceKey(account: c.account)
+            let backups = BackupVault(directory: folder.appendingPathComponent("encrypted-recovery", isDirectory: true), account: c.account, key: { try BackupVault.deviceKey(account: c.account) })
+            let expected = Snapshot(tables: ["tasks": [task]])
+            if phase == "audio-create" { guard try backups.entries().isEmpty else { throw CancellationError() }; _ = try backups.save(expected, kind: "native-protected-proof") }
+            let entries = try backups.entries()
+            guard entries.count == 1, let entry = entries.first, try backups.load(entry).snapshot == expected else { throw AppFailure(message: "Encrypted recovery changed across cold reopening") }
+            let ciphertext = try Data(contentsOf: backups.file(entry))
+            let raw = vault.directory.appendingPathComponent("draft-" + source.id.uuidString.lowercased() + ".bin")
+            let attributes = try FileManager.default.attributesOfItem(atPath: raw.path)
+            guard (attributes[.posixPermissions] as? NSNumber)?.intValue == 0o600 else { throw AppFailure(message: "Private recording permissions changed") }
+            #if os(iOS)
+            let protection = (attributes[.protectionKey] as? FileProtectionType)?.rawValue ?? attributes[.protectionKey] as? String
+            let firstUnlock = protection == FileProtectionType.completeUntilFirstUserAuthentication.rawValue
+            #if targetEnvironment(simulator)
+            // Simulator attributes do not prove hardware protected-data enforcement.
+            report["simulatorFileProtectionAttribute"] = .string(protection ?? "unavailable")
+            report["hardwareFileProtectionAccepted"] = .bool(false)
+            #else
+            guard firstUnlock else { throw AppFailure(message: "Private recording file protection changed") }
+            #endif
+            report["firstUnlockFileProtection"] = .bool(firstUnlock)
+            #endif
+            report["protectedSessionReadback"] = .bool(true)
+            report["encryptedRecoveryReadback"] = .bool(true)
+            report["backupKeyFingerprint"] = .string(key.withUnsafeBytes { hash(Data($0)) })
+            report["backupCiphertextSHA256"] = .string(hash(ciphertext))
+            report["rawDraftSHA256"] = .string(hash(try Data(contentsOf: raw)))
+            report["privateDraftMode"] = .number(384)
+        }
+        try FullSchemaNativeFixture.writeReport(report, phase: phase)
+    }
+
+    private func runFullSchemaStepPhase() async throws {
+        let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
+        dailyBackupsEnabled = false
+        if phase == "step-queue" || phase == "step-ui" {
+            guard try await backend.signIn(email: c.email, password: c.password, signup: false) else { throw AppFailure(message: "Genuine step sign-in failed") }
+            await authenticated(); online = true; try await fullSchemaSyncSettled()
+            if phase == "step-ui" {
+                try FullSchemaNativeFixture.writeReport(["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase), "reviewScreenPrepared": .bool(true)], phase: phase)
+                return
+            }
+            let read = try await readChildTaskStructure(c.task), model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            guard let saved = await model.queue(try .init(titles: ["Tomorrow #work @Pat", "Review workshop layout"], parent: nil, read: read), read: read), !saved.undoing else { throw AppFailure(message: model.message ?? "Step review was not saved") }
+        } else {
+            guard backend.session?.user.id == c.account, signedIn, !localMode else { throw AppFailure(message: "Genuine step session was not reopened") }
+            online = false
+        }
+        let journal = try reviewedTaskStepsJournal(account: c.account, origin: backend.accountRemovalOrigin), original = try await journal.load()
+        guard let first = original.entries.first else { throw AppFailure(message: "Missing original step addition") }
+        let fingerprint = try fullSchemaReviewFingerprint(first.command)
+        if phase != "step-queue" { guard fingerprint == c.queuedFingerprint else { throw AppFailure(message: "Original step request changed across launch") } }
+        var undoObserved = false, redoObserved = false, historyActionName = ""
+        if phase == "step-loss" || phase == "step-replay" {
+            if phase == "step-loss" { FullSchemaNativeNetwork.armDrop() }
+            FullSchemaNativeNetwork.offline = false; online = true
+            let model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            let sent = await model.run(first.command, operation: .apply)
+            if phase == "step-loss" {
+                FullSchemaNativeNetwork.offline = true; online = false
+                guard !sent, FullSchemaNativeNetwork.dropped == 1, model.entries.first?.phase == .attempted else { throw AppFailure(message: model.message ?? "Lost step response did not retain its request") }
+            } else { guard sent, model.entries.first?.phase == .applied else { throw AppFailure(message: model.message ?? "Step retry was not confirmed") }; try await fullSchemaSyncSettled() }
+        }
+        if phase == "step-history" {
+            FullSchemaNativeNetwork.offline = false; online = true; try await fullSchemaSyncSettled()
+            guard original.entries.count == 1, first.phase == .applied else { throw AppFailure(message: "Unexpected step history before Undo") }
+            let model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            let read = try await readCurrentChildTaskStructure(c.task)
+            guard let second = await model.queue(try .init(titles: ["Second reviewed addition"], parent: nil, read: read), read: read), await model.run(second, operation: .apply),
+                  let secondEntry = model.entries.first(where: { $0.command == second && $0.phase == .applied }), let scope = childTaskFieldRecoveryScope else { throw AppFailure(message: model.message ?? "Second step addition failed") }
+            #if os(macOS)
+            let manager = UndoManager(); manager.groupsByEvent = false
+            let history = ConfirmedHistoryBridge(manager: manager)
+            #else
+            let history = viewHistory
+            #endif
+            history.record(reviewedTaskStepsHistoryStep(first, scope: scope)); history.record(reviewedTaskStepsHistoryStep(secondEntry, scope: scope))
+            for _ in 0..<2 {
+                guard history.canUndo else { throw AppFailure(message: "Native stacked Undo was unavailable") }; history.undo()
+                let deadline = ContinuousClock.now.advanced(by: .seconds(40))
+                while history.busy { guard ContinuousClock.now < deadline else { throw AppFailure(message: "Step Undo did not finish") }; try await Task.sleep(for: .milliseconds(20)) }
+            }
+            let undone = try await journal.load()
+            guard history.canRedo, !history.canUndo, undone.entries.count == 4, undone.entries.suffix(2).allSatisfy({ $0.command.undoing && $0.phase == .applied }), record("tasks", id: c.task)?["subtasks"].list.count == 2 else { throw AppFailure(message: childHistoryNotice?.message ?? "Stacked native Undo did not confirm") }
+            undoObserved = true
+            for _ in 0..<2 {
+                guard history.canRedo else { throw AppFailure(message: "Native stacked Redo was unavailable") }; history.redo()
+                let deadline = ContinuousClock.now.advanced(by: .seconds(40))
+                while history.busy { guard ContinuousClock.now < deadline else { throw AppFailure(message: "Step Redo did not finish") }; try await Task.sleep(for: .milliseconds(20)) }
+            }
+            let redone = try await journal.load()
+            guard history.canUndo, !history.canRedo, redone.entries.count == 6, redone.entries.suffix(2).allSatisfy({ $0.redoOf != nil && $0.phase == .applied }), record("tasks", id: c.task)?["subtasks"].list.count == 5 else { throw AppFailure(message: childHistoryNotice?.message ?? "Stacked native Redo did not confirm") }
+            redoObserved = true; historyActionName = history.manager.undoActionName
+            guard historyActionName == "Add Task Steps" else { throw AppFailure(message: "Native history changed the original action label") }
+        }
+        if phase == "step-close-queue" {
+            FullSchemaNativeNetwork.offline = false; online = true; try await fullSchemaSyncSettled()
+            let read = try await readChildTaskStructure(c.task), model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            guard let child = c.child, await model.queue(try .init(titles: ["Cancelled nested step"], parent: child, read: read), read: read) != nil else { throw AppFailure(message: model.message ?? "Nested test addition was not saved") }
+        }
+        if phase == "step-close" {
+            FullSchemaNativeNetwork.offline = false; online = true
+            let model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            guard let last = model.entries.last, last.phase == .queued, await model.run(last.command, operation: .close), model.entries.last?.phase == .closed else { throw AppFailure(message: model.message ?? "Nested step request was not closed") }
+        }
+        let disk = try await journal.load()
+        guard try fullSchemaReviewFingerprint(disk.entries.first!.command) == fingerprint, snapshot.pending.isEmpty,
+              try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) == snapshot else { throw AppFailure(message: "Step recovery changed its original request or ordinary task queue") }
+        let history = disk.entries.map { JSON.object(["command": .object($0.command.body), "phase": .string($0.phase.rawValue), "result": $0.result.map { .object($0.raw) } ?? .null, "redoOf": $0.redoOf.map(JSON.string) ?? .null]) }
+        let report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase), "account": .string(userID), "task": .string(c.task), "pending": .number(Double(snapshot.pending.count)), "commandFingerprint": .string(fingerprint), "history": .array(history), "diskMatchesStore": .bool(true), "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)), "nativeUndoObserved": .bool(undoObserved), "nativeRedoObserved": .bool(redoObserved), "historyActionName": .string(historyActionName)]
+        try FullSchemaNativeFixture.writeReport(report, phase: phase)
+    }
+
+    func runFullSchemaNativePhase() async throws {
+        if FullSchemaNativeFixture.phase.hasPrefix("step-") { try await runFullSchemaStepPhase(); return }
+        if FullSchemaNativeFixture.phase.hasPrefix("audio-project-") { try await runFullSchemaProjectRecordingPhase(); return }
+        if FullSchemaNativeFixture.phase.hasPrefix("audio-") { try await runFullSchemaAudioPhase(); return }
+        if FullSchemaNativeFixture.phase == "capture" { try await runFullSchemaCapturePhase(); return }
+        if FullSchemaNativeFixture.phase.hasPrefix("adoption-") {try await runFullSchemaAdoptionPhase();return}
+        if FullSchemaNativeFixture.phase.hasPrefix("field-review-") {try await runFullSchemaFieldReviewPhase();return}
+        if FullSchemaNativeFixture.phase.hasPrefix("structure-review-") {try await runFullSchemaStructureReviewPhase();return}
+        if FullSchemaNativeFixture.phase.hasPrefix("structure-") {try await runFullSchemaStructurePhase();return}
+        guard FullSchemaNativeFixture.enabled else{throw CancellationError()}
+        if FullSchemaNativeFixture.phase.hasPrefix("child-") {try await runFullSchemaChildFieldPhase();return}
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        dailyBackupsEnabled=false
+        if phase=="initial" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else{throw AppFailure(message:"Genuine sign-in did not return a session")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+        }else {
+            guard backend.session?.user.id==c.account,signedIn,!localMode else{throw AppFailure(message:"Genuine saved session was not reopened")}
+            online=false
+        }
+        guard userID==c.account,let task=record("tasks",id:c.task) else{throw AppFailure(message:"Store did not read the genuine account task. "+(notice ?? ""))}
+        if phase=="queue" {
+            var edited=task;edited["description"] = .string("Saved offline by the actual Store")
+            guard save("tasks",edited,baseline:task,applyReminderDefaults:false) else{throw AppFailure(message:error ?? "Offline save failed")}
+        }
+        if phase=="loss" || phase=="replay" {
+            guard snapshot.pending.count==1,try fullSchemaPendingFingerprint()==c.queuedFingerprint else{throw AppFailure(message:"The cold queue differs from the original saved request")}
+            if phase=="loss" {FullSchemaNativeNetwork.armDrop()}
+            FullSchemaNativeNetwork.offline=false;online=true;try await fullSchemaSyncSettled()
+            if phase=="loss" {FullSchemaNativeNetwork.offline=true;online=false;guard FullSchemaNativeNetwork.dropped==1,snapshot.pending.count==1,try fullSchemaPendingFingerprint()==c.queuedFingerprint else{throw AppFailure(message:"The lost response did not preserve the exact original queue")}}
+        }
+        let disk=try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
+        guard disk==snapshot else{throw AppFailure(message:"Store memory and its actual account cache differ")}
+        if phase=="initial" {guard snapshot.pending.isEmpty,profile.string("user_id")==c.account else{throw AppFailure(message:"Initial Store migration/sync did not finish. "+(notice ?? ""))}}
+        if phase=="queue" {guard snapshot.pending.count==1,record("tasks",id:c.task)?.string("description")=="Saved offline by the actual Store" else{throw AppFailure(message:"Offline edit was not durably queued")}}
+        if phase=="replay" || phase=="verify" {
+            guard snapshot.pending.isEmpty,let saved=record("tasks",id:c.task),saved.title=="Changed remotely while closed",saved.string("description")=="Saved offline by the actual Store",saved["subtasks"].list.contains(where:{$0.object["id"]?.text==c.sibling && $0.object["title"]?.text=="Remote sibling edit"}) else{throw AppFailure(message:"Synced data lost a local or remote edit. "+(notice ?? ""))}
+        }
+        let report:[String:JSON]=["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"account":.string(userID),"task":.string(c.task),"pending":.number(Double(snapshot.pending.count)),"pendingFingerprint":.string(try fullSchemaPendingFingerprint()),"diskMatchesStore":.bool(true),"actualStoreSync":.bool(phase=="initial" || phase=="loss" || phase=="replay"),"droppedReplies":.number(Double(FullSchemaNativeNetwork.dropped)),"notice":.string(notice ?? "")]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
 }
 #endif

@@ -1,0 +1,24 @@
+Test Suite 'Selected tests' started at 2026-10-27 06:00:31.432.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 06:00:31.432.
+Test Suite 'WidgetListTests' started at 2026-10-27 06:00:31.433.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testFullStructuredWorkflowPublishesAllWidgetListsGroupsAndMembership]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testFullStructuredWorkflowPublishesAllWidgetListsGroupsAndMembership]' passed (4.333 seconds).
+Test Suite 'WidgetListTests' passed at 2026-10-27 06:00:35.766.
+	 Executed 1 test, with 0 failures (0 unexpected) in 4.333 (4.333) seconds
+Test Suite 'WidgetPublicationTests' started at 2026-10-27 06:00:35.766.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testCapturedInputPreservesProjectionAndFeedback]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testCapturedInputPreservesProjectionAndFeedback]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testInvalidatedSuccessCannotResurrectProjectionAfterSignOut]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testInvalidatedSuccessCannotResurrectProjectionAfterSignOut]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testLatestFailureIsDeliveredAndNextRequestCanRecover]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testLatestFailureIsDeliveredAndNextRequestCanRecover]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testNewestPendingReplacesIntermediateWithoutConcurrentRendering]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testNewestPendingReplacesIntermediateWithoutConcurrentRendering]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testStaleFailureCannotClearNewerPublication]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testStaleFailureCannotClearNewerPublication]' passed (0.000 seconds).
+Test Suite 'WidgetPublicationTests' passed at 2026-10-27 06:00:35.785.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.018 (0.019) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-27 06:00:35.785.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 4.351 (4.353) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 06:00:35.785.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 4.351 (4.353) seconds

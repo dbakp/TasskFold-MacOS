@@ -16,37 +16,117 @@ struct TaskfoldMacApp: App {
         // Fixture launches are force-quit by the test runner, which leaves window-restoration state that can
         // restore "no windows" on the next launch. Ignore it for fixtures so every test starts with a window.
         let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("--uitesting") || arguments.contains("--preview") || ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
+        if arguments.contains("--uitesting") || arguments.contains("--preview") || TeamEditorNativeFixture.enabled || ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
             UserDefaults.standard.register(defaults: ["ApplePersistenceIgnoreState": true])
         }
         #endif
         // One store per process: App Intents and notification actions act on the same data the window shows.
         let store = Store.shared
+        NativeCalendarAuthorization.install()
         _store = State(initialValue: store)
         _workspace = State(initialValue: Workspace(store: store))
     }
 
+    @ViewBuilder private var mainContent: some View {
+        #if DEBUG
+        if AccountRemovalNativeFixture.recoveryTesting { AccountRemovalRecoveryFixtureView() }
+        else if ChildFieldNativeIdentity.enabled {
+            if ChildFieldNativeIdentity.mainListTesting { ChildFieldMainListNativeFixtureView() }
+            else { ChildFieldNativeFixtureView() }
+        }
+        else if AudioCommentNativeFixture.ownerReviewTesting { AudioOwnerReviewNativeFixtureView() }
+        else if AudioCommentNativeFixture.conversationTesting { AudioConversationNativeFixtureView() }
+        else if AudioCommentNativeFixture.enabled { AudioCommentNativeFixtureView() }
+        else if ProjectAdoptionNativeFixture.enabled { ProjectAdoptionNativeFixtureView() }
+        else if WorkflowUndoNativePeer.enabled { WorkflowUndoNativeFixtureView() }
+        else if TeamEditorNativeFixture.enabled { TeamEditorNativeFixtureView() }
+        else if TeamOrganizationFixture.enabled { NavigationStack { TeamOrganizationView() } }
+        else if WebhookManagementFixture.enabled { NavigationStack { WebhookAccessView(fixture: true) } }
+        else if AutomationManagementFixture.enabled { NavigationStack { AutomationAccessView(fixture: true) } }
+        else if AccountRemovalNativeFixture.enabled { AccountRemovalProofView() }
+        else if LocationHandoffNativeFixture.enabled {
+            LocationHandoffSendView(request: .init(taskID: LocationHandoffNativeFixture.taskID, workspace: .init(account: store.userID, generation: store.workspaceGeneration)))
+                .task {
+                    if ProcessInfo.processInfo.arguments.contains("--handoff-autonomous-proof") {
+                        await store.runLocationHandoffSenderProof()
+                        NSApplication.shared.terminate(nil)
+                    }
+                }
+        } else { RootView() }
+        #else
+        RootView()
+        #endif
+    }
     var body: some Scene {
         WindowGroup("Taskfold") {
-            RootView()
+            mainContent
+                .safeAreaInset(edge: .top, spacing: 0) { AccountRemovalRecoveryBanner().environment(store) }
+                .task {
+                    #if DEBUG
+                    if TeamEditorNativeFixture.enabled || TeamOrganizationFixture.enabled || AutomationManagementFixture.enabled || AccountRemovalNativeFixture.enabled { return }
+                    #endif
+                    await store.resumeAccountRemovals()
+                }
                 .environment(store)
                 .environment(workspace)
                 .tint(tint)
                 .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
                 .frame(minWidth: 820, minHeight: 520)
+                // Widget and notification URLs should reuse an open workspace window.
+                .handlesExternalEvents(preferring: ["*"], allowing: ["*"])
         }
+        .handlesExternalEvents(matching: ["*"])
         .defaultSize(width: 1380, height: 840)
         .windowToolbarStyle(.unified)
         .commands { TaskfoldCommands(workspace: workspace, store: store) }
 
         Settings {
+            #if DEBUG
+            if WorkflowUndoNativePeer.enabled {
+                Text("Account settings are outside this isolated workflow test.")
+            } else {
+                SettingsView().environment(store).environment(workspace).tint(tint)
+                    .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
+            }
+            #else
             SettingsView().environment(store).environment(workspace).tint(tint)
                 .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
+            #endif
         }
     }
 }
 
+/// Shared synchronously with every open inspector before macOS may terminate.
+@MainActor final class TerminationSaveRequest {
+    static let notification = Notification.Name("Taskfold.savePendingInspectorEdits")
+    var hasUnsavedEdits = false
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    private var preservingAudioBeforeQuit = false
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let request = TerminationSaveRequest()
+        NotificationCenter.default.post(name: TerminationSaveRequest.notification, object: request)
+        if !Store.shared.flushEditorSessions() { request.hasUnsavedEdits = true }
+        guard !request.hasUnsavedEdits else { return .terminateCancel }
+        guard AudioCommentCapture.hasUnpreservedWork else { return .terminateNow }
+        guard !preservingAudioBeforeQuit else { return .terminateLater }
+        preservingAudioBeforeQuit = true
+        Task { @MainActor in
+            let kept = await AudioCommentCapture.preserveForDeparture()
+            preservingAudioBeforeQuit = false
+            sender.reply(toApplicationShouldTerminate: kept)
+            if !kept {
+                let alert = NSAlert()
+                alert.messageText = "Audio recovery needs attention"
+                alert.informativeText = "Taskfold could not confirm every recording’s recovery copy. Keep the app open and retry recovery or Finish saving before quitting."
+                alert.addButton(withTitle: "Keep Taskfold open")
+                alert.runModal()
+            }
+        }
+        return .terminateLater
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
         ReminderCategory.register(minutes: Store.shared.reminderSnoozeMinutes)
@@ -87,9 +167,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             await MainActor.run { NotificationRoute.shared.focusReceipt = receipt }
             return
         }
+        #if DEBUG
+        await MacNotificationResponseHoldFixture.shared.hold(account: response.notification.request.content.userInfo["accountID"] as? String ?? "", action: response.actionIdentifier)
+        #endif
         if let route = await Store.shared.handleReminder(response.notification.request.content.userInfo, action: response.actionIdentifier) {
             await MainActor.run { NotificationRoute.shared.taskRequest = route }
         }
+        #if DEBUG
+        await MainActor.run { MacNotificationResponseHoldFixture.shared.finished(account: Store.shared.userID) }
+        #endif
     }
 }
 
@@ -101,11 +187,45 @@ final class NotificationRoute {
 }
 
 /// Menu bar commands mirror every keyboard shortcut in the window so they are discoverable and scriptable.
+/// Native field editors own their text history. Refresh command validation when
+/// that responder's history changes, even when no workspace model changed.
+@MainActor @Observable private final class NativeHistoryCommandUpdates {
+    var revision = 0
+    @ObservationIgnored private var observers: [NSObjectProtocol] = []
+    init() {
+        let names: [Notification.Name] = [NSControl.textDidBeginEditingNotification, NSControl.textDidChangeNotification,
+            NSControl.textDidEndEditingNotification, NSText.didChangeNotification, .NSUndoManagerDidCloseUndoGroup, .NSUndoManagerDidUndoChange,
+            .NSUndoManagerDidRedoChange, NSWindow.didBecomeKeyNotification]
+        for name in names {
+            observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor [weak self] in self?.revision &+= 1 }
+            })
+        }
+    }
+    deinit { for observer in observers { NotificationCenter.default.removeObserver(observer) } }
+}
+
 struct TaskfoldCommands: Commands {
+    @State private var historyUpdates = NativeHistoryCommandUpdates()
+    @FocusedValue(\.taskfoldPrint) private var printAction
     @Environment(\.openSettings) private var openSettings
     let workspace: Workspace
     let store: Store
     var body: some Commands {
+        let _ = historyUpdates.revision
+        CommandGroup(replacing: .undoRedo) {
+            Button(NSApp.keyWindow?.firstResponder?.undoManager?.undoMenuItemTitle ?? "Undo") {
+                NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
+            }.keyboardShortcut("z", modifiers: .command)
+                .disabled(workspace.completionHistory?.busy == true || store.childListCompletionBusy || NSApp.keyWindow?.firstResponder?.undoManager?.canUndo != true)
+            Button(NSApp.keyWindow?.firstResponder?.undoManager?.redoMenuItemTitle ?? "Redo") {
+                NSApp.sendAction(Selector(("redo:")), to: nil, from: nil)
+            }.keyboardShortcut("z", modifiers: [.command, .shift])
+                .disabled(workspace.completionHistory?.busy == true || store.childListCompletionBusy || NSApp.keyWindow?.firstResponder?.undoManager?.canRedo != true)
+        }
+        CommandGroup(replacing: .printItem) {
+            Button("Print or Export…") { printAction?.perform() }.keyboardShortcut("p", modifiers: .command).disabled(printAction?.isEnabled != true)
+        }
         CommandGroup(replacing: .newItem) {
             Button("New Task") { workspace.quickAddFocusRequest += 1 }.keyboardShortcut("n", modifiers: .command)
             Button("New Project…") { workspace.newProjectRequest += 1 }.keyboardShortcut("n", modifiers: [.command, .shift])
@@ -147,6 +267,9 @@ struct TaskfoldCommands: Commands {
                 Button("Remove Date") { workspace.reschedule(workspace.actionSelection, to: nil, label: "") }
             }.disabled(workspace.actionSelection.isEmpty)
             Button("Edit Deadlines…") { workspace.editDeadlines(workspace.actionSelection) }.keyboardShortcut("d", modifiers: [.command, .option, .shift]).disabled(workspace.actionSelection.isEmpty)
+            Button("Assign Shared Tasks…") { workspace.assignSharedSelection(workspace.actionSelection) }.disabled(!store.hasSharedTaskSelection(workspace.actionSelection))
+            Button("Edit Shared Labels…") { workspace.editSharedLabels(workspace.actionSelection) }.disabled(!store.hasSharedTaskSelection(workspace.actionSelection))
+            Button("Edit Estimates…") { workspace.editEstimates(workspace.actionSelection) }.disabled(workspace.actionSelection.isEmpty)
             Menu("Move to Project") {
                 Button("Inbox") { workspace.move(workspace.actionSelection, toProject: "") }
                 ForEach(store.projects) { project in Button(project.name) { workspace.move(workspace.actionSelection, toProject: project.id) } }
@@ -186,3 +309,42 @@ struct TaskfoldCommands: Commands {
         return tasks.first?.completed == true ? "Reopen Task" : "Complete Task"
     }
 }
+
+#if DEBUG
+/// Holds one real OS callback only in an explicitly opted-in isolated Mac test app.
+@MainActor @Observable final class MacNotificationResponseHoldFixture {
+    static let shared = MacNotificationResponseHoldFixture()
+    static var enabled: Bool {
+        Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.p0notificationtests" &&
+            ProcessInfo.processInfo.arguments.contains("--notification-callback-hold-testing")
+    }
+    private(set) var phase = "Idle"
+    private(set) var account = ""
+    private(set) var action = ""
+    private(set) var receiver = ""
+    private var armed = false
+    @ObservationIgnored private var continuation: CheckedContinuation<Void, Never>?
+    var status: String { [phase, account, action, receiver].joined(separator: "|") }
+    func arm() {
+        guard Self.enabled, continuation == nil else { return }
+        account = ""; action = ""; receiver = ""; armed = true; phase = "Armed"
+    }
+    func hold(account: String, action: String) async {
+        guard Self.enabled, armed else { return }
+        armed = false; self.account = account; self.action = action
+        await withCheckedContinuation { continuation in
+            self.continuation = continuation; phase = "Held"
+        }
+        phase = "Resumed"
+    }
+    func release() {
+        guard Self.enabled, let continuation else { return }
+        self.continuation = nil; phase = "Released"; continuation.resume()
+    }
+    func finished(account: String) {
+        guard Self.enabled, phase == "Resumed" else { return }
+        receiver = account; phase = "Handled"
+    }
+}
+
+#endif

@@ -1,0 +1,56 @@
+{
+  "syntheticOnly": true,
+  "containerRemoved": true,
+  "migrationSHA256": "98da78036c4f9f2a08cf8c61e6bfbbfbedc38a92deebdb7a9fdb559eb74c989a",
+  "command": {
+    "protocol": 1,
+    "account": "97c75e0a-2b23-43c8-bec0-c88cb0638329",
+    "request_id": "d2db1c02-ff76-4170-a9b0-cb0bbe7a4cba",
+    "task_id": "64a9d5f4-52be-4327-9194-e1e655c293ea",
+    "baseline": {
+      "task_generation": "3c6bcb2a-23c3-4de5-a161-3a1db22dfad4",
+      "project_id": "18d76736-832b-4cc8-ad0c-3cd70b5e7d0a",
+      "description": "Root notes"
+    },
+    "changes": {
+      "project_id": "db8d7cba-2121-40ec-ae30-df7f9132313a",
+      "description": "Edited root note with move"
+    }
+  },
+  "receipt": {
+    "task": null,
+    "account": "97c75e0a-2b23-43c8-bec0-c88cb0638329",
+    "applied": true,
+    "task_id": "64a9d5f4-52be-4327-9194-e1e655c293ea",
+    "protocol": 1,
+    "replayed": false,
+    "request_id": "d2db1c02-ff76-4170-a9b0-cb0bbe7a4cba",
+    "task_generation": "3c6bcb2a-23c3-4de5-a161-3a1db22dfad4",
+    "source_project_id": "18d76736-832b-4cc8-ad0c-3cd70b5e7d0a",
+    "destination_project_id": "db8d7cba-2121-40ec-ae30-df7f9132313a"
+  },
+  "replay": {
+    "task": null,
+    "account": "97c75e0a-2b23-43c8-bec0-c88cb0638329",
+    "applied": true,
+    "task_id": "64a9d5f4-52be-4327-9194-e1e655c293ea",
+    "protocol": 1,
+    "replayed": true,
+    "request_id": "d2db1c02-ff76-4170-a9b0-cb0bbe7a4cba",
+    "task_generation": "3c6bcb2a-23c3-4de5-a161-3a1db22dfad4",
+    "source_project_id": "18d76736-832b-4cc8-ad0c-3cd70b5e7d0a",
+    "destination_project_id": "db8d7cba-2121-40ec-ae30-df7f9132313a"
+  },
+  "confirmation": {
+    "task": null,
+    "account": "97c75e0a-2b23-43c8-bec0-c88cb0638329",
+    "applied": true,
+    "task_id": "64a9d5f4-52be-4327-9194-e1e655c293ea",
+    "protocol": 1,
+    "replayed": true,
+    "request_id": "d2db1c02-ff76-4170-a9b0-cb0bbe7a4cba",
+    "task_generation": "3c6bcb2a-23c3-4de5-a161-3a1db22dfad4",
+    "source_project_id": "18d76736-832b-4cc8-ad0c-3cd70b5e7d0a",
+    "destination_project_id": "db8d7cba-2121-40ec-ae30-df7f9132313a"
+  }
+}

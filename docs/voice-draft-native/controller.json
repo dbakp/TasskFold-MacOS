@@ -1,0 +1,31 @@
+{
+  "checks": {
+    "accountChangeClosesAndReleasesRecorder": true,
+    "closeReleasesContextClosureAndController": true,
+    "finalCorrectionAcceptedBeforeReview": true,
+    "finalizationTimeoutKeepsPartial": true,
+    "finalResultStopsInputAndAllowsReview": true,
+    "latePermissionGrantCannotStartCancelledDraft": true,
+    "lateResultCannotOverwriteManualCorrection": true,
+    "oneMinuteLimitStopsInputAndKeepsDraft": true,
+    "oversizeEventStopsWithoutLosingEarlierText": true,
+    "permissionFailurePreservesEditableText": true,
+    "permissionPendingCannotApplyOrOverwrite": true,
+    "providerContextGuardChangesImmediately": true,
+    "realDriverRejectsStaleContextBeforePermissions": true,
+    "stopEndsAudioBeforeFinalization": true,
+    "supersededCallbackCannotRetargetNewRecording": true,
+    "typingRemainsAvailableAfterFailure": true,
+    "unboundPresentationCannotStart": true
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/VoiceDraft.swift": "ad70d4b2593da6734f0bc6cee6634bdcf94a67cc32fae24ce6a962e943895f18",
+    "Taskfold/VoiceCapture.swift": "cd67f14486a6f18d13ad720d99e2f5b21bccb8e452c784a2f4e8bf1eb3a8f172",
+    "Scripts/fixtures/VoiceCaptureControllerProof.swift": "3ee60681890a2f7b0e7955faf84acdf74b694037526598829ba49bfc5d1e005f"
+  },
+  "limits": [
+    "Mac-native controller with a synthetic recorder; no microphone or permission prompt was opened.",
+    "The real recorder is invoked only with a false context gate to verify rejection before permission access.",
+    "No genuine speech-recognition accuracy, audio interruption or TCC recovery acceptance."
+  ]
+}

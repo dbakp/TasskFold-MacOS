@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native installed Mac medium Today Capture → stable Inbox sheet → save → native Quit/relaunch",
+  "ownedSourceRepository": "TasskFold-MacOS",
+  "cause": [
+    "WindowGroup did not prefer an existing scene for external URLs; actual window identifier advanced to AppWindow-3 while process stayed the same",
+    "Fixture preparation was per RootView; each new fixture window called startLocal, renewed workspaceGeneration and reset shared navigation to Today, dismissing capture"
+  ],
+  "changes": [
+    "Root content prefers/allows external events; main scene matches them, reusing an open workspace window",
+    "DEBUG fixture preparation guard belongs to shared Workspace, preventing repeated setup across windows"
+  ],
+  "nativeAccepted": [
+    "Manual installed desktop Today + opens Inbox New Task in development-signed v5",
+    "Sheet remains open through text entry and real Add Task; one undated open Inbox task saved",
+    "Window menu lists only one Inbox window after capture; no new extra window",
+    "Native menu Quit leaves no v5 app process; relaunch with same isolated arguments/no seed retains all nine task records and native Inbox row",
+    "Native reversible deletion removes only synthetic task; all eight originals and all non-activity tables exact; pending edits zero",
+    "All 100 protected files exact after Mac walk"
+  ],
+  "builds": {
+    "isolatedDebug": "mac-widget-host-build-v5.log: BUILD SUCCEEDED",
+    "productionUnsignedRelease": "mac-widget-window-release-v1.log: BUILD SUCCEEDED",
+    "strictAppExtensionDeepSignatures": true,
+    "catalogueTeamVerification": true
+  },
+  "officialReference": [
+    "https://developer.apple.com/documentation/swiftui/view/handlesexternalevents(preferring:allowing:)",
+    "https://developer.apple.com/documentation/swiftui/scene/handlesexternalevents(matching:)"
+  ],
+  "evidenceDirectory": "mac-widget-capture-native",
+  "limitations": [
+    "One medium Today capture workflow in isolated local fixture, not all widget families/actions/privacy/account transitions",
+    "Native manual/computer-use acceptance, not a Mac XCTest runner pass",
+    "No production signing/APNs/distribution acceptance"
+  ],
+  "cleanup": "Old v3/v4 registrations and inactive products removed; replacement used targeted SIGTERM, distinct from later verified native Quit. Stages/logs retained. Current v5 remains available. Empty local workspace created by older cold launch has no rows; original fixture records preserved.",
+  "logsSHA256": {
+    "mac-widget-host-build-v5.log": "9d9ae53cf60218d22806901f261ac357e601c983a2566b75049a824dd632e8ec",
+    "mac-widget-window-release-v1.log": "486fd9e67467fbe1e87d52cfb30c37da92451e33ebce936ec6e5a52ab2042403"
+  }
+}

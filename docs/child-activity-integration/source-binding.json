@@ -1,0 +1,42 @@
+{
+  "namespaceReplacements": {
+    "com.dbakp.taskfold.task": "com.dbakp.taskfold.mac.workflowteststeameditbridge.task",
+    "com.taskfold.ios.session": "com.taskfold.mac.workflowteststeameditbridge.session",
+    "com.taskfold.recovery.v1": "com.taskfold.mac.workflowteststeameditbridge.recovery.v1",
+    "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.mac.workflowteststeameditbridge"
+  },
+  "files": {
+    "Taskfold/Core/Store.swift": {
+      "source": "31feee6d7b9227afd7f8a750ac985455475c10b796ee45d2371b4fe16e2701fd",
+      "prepared": "7ba9551b0867e79f0dba839700d8d2e08e897f18020eab814cca263175da0a43"
+    },
+    "Taskfold/Core/TaskActivity.swift": {
+      "source": "14bb7dd4d0a54afc9e7359b57a106cda74c797f8c80b88ee2c4be70aa9b3bb01",
+      "prepared": "14bb7dd4d0a54afc9e7359b57a106cda74c797f8c80b88ee2c4be70aa9b3bb01"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "source": "78515f0a0dae2e1816e7bdec84838c1433dda068d8a55e27bfff761538158939",
+      "prepared": "6f7960d0d356b0a8218730970e23b3939f1c326df70f094981a62c527f564dc9"
+    },
+    "Taskfold/Core/Backups.swift": {
+      "source": "f1d2927bce75bc6d1490c715dd5122154c139432cd9ccbb49ddafb62d42104cd",
+      "prepared": "ab0ee60717c5fdace8ce142d1551555ac4cbacb191f2278ce1e0119f2327909a"
+    },
+    "Taskfold/Core/Models.swift": {
+      "source": "fc758e5f32178535e88e20876843c6b6a451b8fdd982125c247e91d78a1623de",
+      "prepared": "fc758e5f32178535e88e20876843c6b6a451b8fdd982125c247e91d78a1623de"
+    },
+    "Taskfold/Core/TeamWorkspace.swift": {
+      "source": "22dbc1ee0e9f91ab1b3d780d782b65a50af41fc2438dfe2020a77f3571986c5d",
+      "prepared": "22dbc1ee0e9f91ab1b3d780d782b65a50af41fc2438dfe2020a77f3571986c5d"
+    },
+    "Taskfold/Core/TeamProjectAccess.swift": {
+      "source": "3a92db38c9fbe9f590c55dc8f3bd30157269e9283c613bccf94c18abdb3e9aac",
+      "prepared": "3a92db38c9fbe9f590c55dc8f3bd30157269e9283c613bccf94c18abdb3e9aac"
+    },
+    "TaskfoldUITests/TaskfoldMacUITests.swift": {
+      "source": "2462c9e2e10a871c304463fda3d41a036b315742e9a7b9b8c2f10598fa0304d0",
+      "prepared": "2462c9e2e10a871c304463fda3d41a036b315742e9a7b9b8c2f10598fa0304d0"
+    }
+  }
+}

@@ -1,0 +1,1510 @@
+{
+  "frames": [
+    {
+      "index": 0,
+      "function": "AG::Graph::print_cycle(AG::data::ptr<AG::Node>) const",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 1,
+      "function": "AG::Graph::UpdateStack::push_slow(AG::data::ptr<AG::Node>, AG::Node&, bool, bool)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 2,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 3,
+      "function": "AG::Graph::value_ref(AG::AttributeID, unsigned int, AGSwiftMetadata const*, unsigned char&)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 4,
+      "function": "AGGraphGetWeakValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 5,
+      "function": "SwiftUI.ViewGraph.accessibilityNodes.getter : Swift.Array<SwiftUI.AccessibilityNode>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 6,
+      "function": "closure #1 (SwiftUI.ViewGraph) -> Swift.Array<SwiftUI.AccessibilityNode> in SwiftUI.ViewRendererHost.accessibilityNodes.getter : Swift.Array<SwiftUI.AccessibilityNode>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 7,
+      "function": "closure #1 () -> \u03c4_1_0 in SwiftUI.ViewRendererHost.updateViewGraph<\u03c4_0_0>(body: (SwiftUI.ViewGraph) -> \u03c4_1_0) -> \u03c4_1_0",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 8,
+      "function": "SwiftUI.ViewRendererHost.updateViewGraph<\u03c4_0_0>(body: (SwiftUI.ViewGraph) -> \u03c4_1_0) -> \u03c4_1_0",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 9,
+      "function": "SwiftUI.ViewRendererHost.accessibilityNodes.getter : Swift.Array<SwiftUI.AccessibilityNode>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 10,
+      "function": "SwiftUI.NSHostingView.accessibilityNodes(options: SwiftUI.AccessibilityCore.TraversalOptions) -> Swift.Array<SwiftUI.AccessibilityNode>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 11,
+      "function": "SwiftUI.NSHostingView.appKitAccessibilityChildren(options: SwiftUI.AccessibilityCore.TraversalOptions) -> Swift.Array<__C.NSObject & SwiftUI.PlatformAccessibilityElementProtocol>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 12,
+      "function": "SwiftUI.NSHostingView.accessibilityChildren() -> Swift.Optional<Swift.Array<Any>>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 13,
+      "function": "@objc SwiftUI.NSHostingView.accessibilityChildren() -> Swift.Optional<Swift.Array<Any>>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 14,
+      "function": "-[NSAccessibilityAttributeAccessorInfo getAttributeValue:forObject:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 15,
+      "function": "___NSAccessibilityEntryPointValueForAttribute_block_invoke.773",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 16,
+      "function": "NSAccessibilityPerformEntryPointObject",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 17,
+      "function": "_NSAccessibilityEntryPointValueForAttribute",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 18,
+      "function": "NSAccessibilityChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 19,
+      "function": "NSAccessibilityUnignoredChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 20,
+      "function": "NSAccessibilityGetObjectForAttributeUsingLegacyAPI",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 21,
+      "function": "NSAccessibilityGetObjectValueForAttribute",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 22,
+      "function": "-[NSAccessibilityAttributeAccessorInfo getAttributeValue:forObject:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 23,
+      "function": "___NSAccessibilityEntryPointValueForAttribute_block_invoke.773",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 24,
+      "function": "NSAccessibilityPerformEntryPointObject",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 25,
+      "function": "_NSAccessibilityEntryPointValueForAttribute",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 26,
+      "function": "NSAccessibilityChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 27,
+      "function": "NSAccessibilityUnignoredChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 28,
+      "function": "-[NSTableViewCellMockElement accessibilityChildrenAttribute]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 29,
+      "function": "NSAccessibilityGetObjectForAttributeUsingLegacyAPI",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 30,
+      "function": "___NSAccessibilityEntryPointValueForAttribute_block_invoke.773",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 31,
+      "function": "NSAccessibilityPerformEntryPointObject",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 32,
+      "function": "_NSAccessibilityEntryPointValueForAttribute",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 33,
+      "function": "NSAccessibilityChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 34,
+      "function": "-[NSObject(NSObjectAccessibilityAttributeAccessAdditions) accessibilityIndexOfChild:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 35,
+      "function": "-[NSObject(NSAccessibilityUIElementSpecifier) _accessibilityUIElementSpecifierForChild:registerIfNeeded:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 36,
+      "function": "-[NSObject(NSAccessibilityUIElementSpecifier) _accessibilityUIElementSpecifierRegisterIfNeeded:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 37,
+      "function": "NSAccessibilityPostNotificationForObservedElementWithUserInfo",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 38,
+      "function": "-[NSTextView(NSSharing) setSelectedRanges:affinity:stillSelecting:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 39,
+      "function": "-[NSLayoutManager textStorage:edited:range:changeInLength:invalidatedRange:]",
+      "module": "UIFoundation",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 40,
+      "function": "-[NSTextStorage _notifyEdited:range:changeInLength:invalidatedRange:]",
+      "module": "UIFoundation",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 41,
+      "function": "-[NSTextStorage endEditing]",
+      "module": "UIFoundation",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 42,
+      "function": "__NSConcreteTextStorageLockedForwarding",
+      "module": "UIFoundation",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 43,
+      "function": "-[NSConcreteTextStorage replaceCharactersInRange:withAttributedString:]",
+      "module": "UIFoundation",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 44,
+      "function": "Taskfold.LinkText.updateNSView(_: Taskfold.LinkAwareTextView, context: SwiftUI.NSViewRepresentableContext<Taskfold.LinkText>) -> ()",
+      "module": "Taskfold.debug.dylib",
+      "source": "Links.swift",
+      "line": 127
+    },
+    {
+      "index": 45,
+      "function": "protocol witness for SwiftUI.NSViewRepresentable.updateNSView(_: \u03c4_0_0.NSViewType, context: SwiftUI.NSViewRepresentableContext<\u03c4_0_0>) -> () in conformance Taskfold.LinkText : SwiftUI.NSViewRepresentable in Taskfold",
+      "module": "Taskfold.debug.dylib",
+      "source": "<compiler-generated>",
+      "line": 0
+    },
+    {
+      "index": 46,
+      "function": "SwiftUI.PlatformViewRepresentableAdaptor.updateViewProvider(_: \u03c4_0_0.NSViewType, context: SwiftUI.PlatformViewRepresentableContext<SwiftUI.PlatformViewRepresentableAdaptor<\u03c4_0_0>>) -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 47,
+      "function": "closure #1 () -> () in closure #1 () -> () in closure #7 () -> () in closure #1 () -> () in SwiftUI.PlatformViewChild.updateValue() -> ()",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 48,
+      "function": "SwiftUI.ViewRendererHost.performExternalUpdate(() -> ()) -> ()",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 49,
+      "function": "closure #1 () -> () in closure #7 () -> () in closure #1 () -> () in SwiftUI.PlatformViewChild.updateValue() -> ()",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 50,
+      "function": "closure #1 () -> () in SwiftUI.PlatformViewChild.updateValue() -> ()",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 51,
+      "function": "partial apply forwarder for implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.StatefulRule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 52,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 53,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 54,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 55,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 56,
+      "function": "SwiftUI.AccessibilityBridgedPlatformView.updateValue() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 57,
+      "function": "partial apply forwarder for implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.StatefulRule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 58,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 59,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 60,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 61,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 62,
+      "function": "static SwiftUI.AccessibilityViewModifierAccessor.willCreateNode(modifier: __C.AGAttribute, for: Swift.Array<SwiftUI.AccessibilityNode>) -> Swift.Bool",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 63,
+      "function": "SwiftUI.PropertiesTransform.updateValue() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 64,
+      "function": "generic specialization <SwiftUI.AccessibilityNodeList, SwiftUI.PropertiesTransform> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.StatefulRule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 65,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 66,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 67,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 68,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 69,
+      "function": "SwiftUI.AccessibilityHostedViewBridgeTransform.updateValue() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 70,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 71,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 72,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 73,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 74,
+      "function": "merged closure #1 () -> \u03c4_0_0.Value in SwiftUI.LazyPreference.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 75,
+      "function": "protocol witness for static SwiftUI.PreferenceKey.reduce(value: inout \u03c4_0_0.Value, nextValue: () -> \u03c4_0_0.Value) -> () in conformance SwiftUI.AccessibilityNodesKey : SwiftUI.PreferenceKey in SwiftUI",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 76,
+      "function": "SwiftUI.DynamicPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 77,
+      "function": "implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.Rule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 78,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 79,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 80,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 81,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 82,
+      "function": "closure #1 () -> \u03c4_0_0.Value in SwiftUI.PairPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 83,
+      "function": "protocol witness for static SwiftUI.PreferenceKey.reduce(value: inout \u03c4_0_0.Value, nextValue: () -> \u03c4_0_0.Value) -> () in conformance SwiftUI.AccessibilityNodesKey : SwiftUI.PreferenceKey in SwiftUI",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 84,
+      "function": "SwiftUI.PairPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 85,
+      "function": "implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.Rule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 86,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 87,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 88,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 89,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 90,
+      "function": "SwiftUI.DynamicPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 91,
+      "function": "implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.Rule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 92,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 93,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 94,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 95,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 96,
+      "function": "SwiftUI.GeometryTransform.updateValue() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 97,
+      "function": "generic specialization <SwiftUI.AccessibilityNodeList, SwiftUI.GeometryTransform> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.StatefulRule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 98,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 99,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 100,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 101,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 102,
+      "function": "SwiftUI.PropertiesTransform.updateValue() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 103,
+      "function": "generic specialization <SwiftUI.AccessibilityNodeList, SwiftUI.PropertiesTransform> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.StatefulRule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 104,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 105,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 106,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 107,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 108,
+      "function": "SwiftUI.PropertiesTransform.updateValue() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 109,
+      "function": "generic specialization <SwiftUI.AccessibilityNodeList, SwiftUI.PropertiesTransform> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.StatefulRule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 110,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 111,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 112,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 113,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 114,
+      "function": "closure #1 () -> \u03c4_0_0.Value in SwiftUI.PairPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 115,
+      "function": "protocol witness for static SwiftUI.PreferenceKey.reduce(value: inout \u03c4_0_0.Value, nextValue: () -> \u03c4_0_0.Value) -> () in conformance SwiftUI.AccessibilityNodesKey : SwiftUI.PreferenceKey in SwiftUI",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 116,
+      "function": "SwiftUI.PairPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 117,
+      "function": "implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.Rule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 118,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 119,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 120,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 121,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 122,
+      "function": "SwiftUI.PairPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 123,
+      "function": "implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.Rule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 124,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 125,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 126,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 127,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 128,
+      "function": "SwiftUI.DynamicPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 129,
+      "function": "implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.Rule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 130,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 131,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 132,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 133,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 134,
+      "function": "closure #1 () -> \u03c4_0_0.Value in SwiftUI.PairPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 135,
+      "function": "protocol witness for static SwiftUI.PreferenceKey.reduce(value: inout \u03c4_0_0.Value, nextValue: () -> \u03c4_0_0.Value) -> () in conformance SwiftUI.AccessibilityNodesKey : SwiftUI.PreferenceKey in SwiftUI",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 136,
+      "function": "SwiftUI.PairPreferenceCombiner.value.getter : \u03c4_0_0.Value",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 137,
+      "function": "implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.Rule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 138,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 139,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 140,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 141,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 142,
+      "function": "SwiftUI.PropertiesTransform.updateValue() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 143,
+      "function": "generic specialization <SwiftUI.AccessibilityNodeList, SwiftUI.PropertiesTransform> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.StatefulRule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 144,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 145,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 146,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 147,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 148,
+      "function": "SwiftUI.PropertiesTransform.updateValue() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 149,
+      "function": "generic specialization <SwiftUI.AccessibilityNodeList, SwiftUI.PropertiesTransform> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.StatefulRule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 150,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 151,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 152,
+      "function": "AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 153,
+      "function": "AGGraphGetValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 154,
+      "function": "SwiftUI.PropertiesTransform.updateValue() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 155,
+      "function": "generic specialization <SwiftUI.AccessibilityNodeList, SwiftUI.PropertiesTransform> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<\u03c4_1_0>) -> AttributeGraph.Attribute<\u03c4_0_0> in AttributeGraph.Attribute.init<\u03c4_0_0 where \u03c4_0_0 == \u03c4_1_0.Value, \u03c4_1_0: AttributeGraph.StatefulRule>(\u03c4_1_0) -> AttributeGraph.Attribute<\u03c4_0_0>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 156,
+      "function": "AG::Graph::UpdateStack::update()",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 157,
+      "function": "AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 158,
+      "function": "AG::Graph::value_ref(AG::AttributeID, unsigned int, AGSwiftMetadata const*, unsigned char&)",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 159,
+      "function": "AGGraphGetWeakValue",
+      "module": "AttributeGraph",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 160,
+      "function": "SwiftUI.ViewGraph.accessibilityNodes.getter : Swift.Array<SwiftUI.AccessibilityNode>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 161,
+      "function": "closure #1 (SwiftUI.ViewGraph) -> Swift.Array<SwiftUI.AccessibilityNode> in SwiftUI.ViewRendererHost.accessibilityNodes.getter : Swift.Array<SwiftUI.AccessibilityNode>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 162,
+      "function": "closure #1 () -> \u03c4_1_0 in SwiftUI.ViewRendererHost.updateViewGraph<\u03c4_0_0>(body: (SwiftUI.ViewGraph) -> \u03c4_1_0) -> \u03c4_1_0",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 163,
+      "function": "SwiftUI.ViewRendererHost.updateViewGraph<\u03c4_0_0>(body: (SwiftUI.ViewGraph) -> \u03c4_1_0) -> \u03c4_1_0",
+      "module": "SwiftUICore",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 164,
+      "function": "SwiftUI.ViewRendererHost.accessibilityNodes.getter : Swift.Array<SwiftUI.AccessibilityNode>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 165,
+      "function": "SwiftUI.NSHostingView.accessibilityNodes(options: SwiftUI.AccessibilityCore.TraversalOptions) -> Swift.Array<SwiftUI.AccessibilityNode>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 166,
+      "function": "SwiftUI.NSHostingView.appKitAccessibilityChildren(options: SwiftUI.AccessibilityCore.TraversalOptions) -> Swift.Array<__C.NSObject & SwiftUI.PlatformAccessibilityElementProtocol>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 167,
+      "function": "SwiftUI.NSHostingView.accessibilityChildren() -> Swift.Optional<Swift.Array<Any>>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 168,
+      "function": "@objc SwiftUI.NSHostingView.accessibilityChildren() -> Swift.Optional<Swift.Array<Any>>",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 169,
+      "function": "-[NSAccessibilityAttributeAccessorInfo getAttributeValue:forObject:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 170,
+      "function": "___NSAccessibilityEntryPointValueForAttribute_block_invoke.773",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 171,
+      "function": "NSAccessibilityPerformEntryPointObject",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 172,
+      "function": "_NSAccessibilityEntryPointValueForAttribute",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 173,
+      "function": "NSAccessibilityChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 174,
+      "function": "NSAccessibilityUnignoredChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 175,
+      "function": "NSAccessibilityGetObjectForAttributeUsingLegacyAPI",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 176,
+      "function": "NSAccessibilityGetObjectValueForAttribute",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 177,
+      "function": "-[NSAccessibilityAttributeAccessorInfo getAttributeValue:forObject:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 178,
+      "function": "___NSAccessibilityEntryPointValueForAttribute_block_invoke.773",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 179,
+      "function": "NSAccessibilityPerformEntryPointObject",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 180,
+      "function": "_NSAccessibilityEntryPointValueForAttribute",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 181,
+      "function": "NSAccessibilityChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 182,
+      "function": "NSAccessibilityUnignoredChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 183,
+      "function": "-[NSTableViewCellMockElement accessibilityChildrenAttribute]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 184,
+      "function": "NSAccessibilityGetObjectForAttributeUsingLegacyAPI",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 185,
+      "function": "___NSAccessibilityEntryPointValueForAttribute_block_invoke.773",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 186,
+      "function": "NSAccessibilityPerformEntryPointObject",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 187,
+      "function": "_NSAccessibilityEntryPointValueForAttribute",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 188,
+      "function": "NSAccessibilityChildren",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 189,
+      "function": "-[NSObject(NSObjectAccessibilityAttributeAccessAdditions) accessibilityArrayAttributeCount:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 190,
+      "function": "-[NSObject(NSAccessibilityInternal) _accessibilityArrayAttributeCount:clientError:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 191,
+      "function": "GetAttributeValueCount",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 192,
+      "function": "__AXCopyAttributeValueForHierarchy",
+      "module": "HIServices",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 193,
+      "function": "_AXXMIGCopyHierarchy",
+      "module": "HIServices",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 194,
+      "function": "_XCopyHierarchy",
+      "module": "HIServices",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 195,
+      "function": "mshMIGPerform",
+      "module": "HIServices",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 196,
+      "function": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__",
+      "module": "CoreFoundation",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 197,
+      "function": "__CFRunLoopDoSource1",
+      "module": "CoreFoundation",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 198,
+      "function": "__CFRunLoopRun",
+      "module": "CoreFoundation",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 199,
+      "function": "_CFRunLoopRunSpecificWithOptions",
+      "module": "CoreFoundation",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 200,
+      "function": "RunCurrentEventLoopInMode",
+      "module": "HIToolbox",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 201,
+      "function": "ReceiveNextEventCommon",
+      "module": "HIToolbox",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 202,
+      "function": "_BlockUntilNextEventMatchingListInMode",
+      "module": "HIToolbox",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 203,
+      "function": "_DPSBlockUntilNextEventMatchingListInMode",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 204,
+      "function": "_DPSNextEvent",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 205,
+      "function": "-[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 206,
+      "function": "-[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 207,
+      "function": "-[NSApplication run]",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 208,
+      "function": "NSApplicationMain",
+      "module": "AppKit",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 209,
+      "function": "merged generic specialization <SwiftUI.TestingAppDelegate> of function signature specialization <Arg[0] = Existential To Protocol Constrained Generic> of SwiftUI.runApp(__C.NSResponder & __C.NSApplicationDelegate) -> Swift.Never",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 210,
+      "function": "SwiftUI.runApp<\u03c4_0_0 where \u03c4_0_0: SwiftUI.App>(\u03c4_0_0) -> Swift.Never",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 211,
+      "function": "static SwiftUI.App.main() -> ()",
+      "module": "SwiftUI",
+      "source": null,
+      "line": null
+    },
+    {
+      "index": 212,
+      "function": "static Taskfold.TaskfoldMacApp.$main() -> ()",
+      "module": "Taskfold.debug.dylib",
+      "source": "<compiler-generated>",
+      "line": 0
+    },
+    {
+      "index": 213,
+      "function": "main",
+      "module": "Taskfold.debug.dylib",
+      "source": "TaskfoldMacApp.swift",
+      "line": 0
+    },
+    {
+      "index": 214,
+      "function": "start",
+      "module": "dyld",
+      "source": null,
+      "line": null
+    }
+  ],
+  "capture": "Symbol-only LLDB breakpoint at AG::Graph::print_cycle; first main-window CUA accessibility traversal; local diagnostic copy of imported workspace; no task values or debugger expressions."
+}

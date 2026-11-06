@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-21",
+  "scope": "Rank 7 conversation cancellation and queued-action clarity",
+  "changes": [
+    "Untouched existing comments/drafts dismiss without creating or replacing a draft",
+    "Body or recipient edits still require an explicit keep/discard/save decision",
+    "Blank or oversized text cannot use Save draft in the confirmation",
+    "Queued read/unread and removal operations state their intended action"
+  ],
+  "native": {
+    "phone": {
+      "passed": 2,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "result": "ios-p1-conversation-polish-phone-v2.xcresult"
+    },
+    "tablet": {
+      "passed": 2,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "result": "ios-p1-conversation-polish-tablet.xcresult"
+    },
+    "checks": [
+      "Cancel untouched saved draft directly",
+      "Change text and dismiss the native confirmation outside its popover without losing edits",
+      "Explicitly discard only the new edits and reopen the exact original saved draft",
+      "Queue a read-state change offline and retain its action description across termination/relaunch",
+      "Queue owner removal of the synthetic collaborator comment with a clear pending description",
+      "Resume both operations and remove their saved entries only after acknowledgement"
+    ],
+    "savedStatePerDevice": {
+      "tasks": 1,
+      "taskTitleUnchanged": true,
+      "commentsIncludingTombstone": 1,
+      "removedCommentRevision": 2,
+      "removedTextAndRecipientsEmpty": true,
+      "originalAuthorRetained": true,
+      "mentions": 0,
+      "pendingCoreMutations": 0,
+      "conversationOutbox": 0
+    },
+    "screenshots": "Reviewed phone/tablet pending-removal descriptions; all data synthetic and local. This is not additional genuine HTTP or spoken VoiceOver acceptance."
+  },
+  "build": {
+    "ios": "App/widget and UI test bundle build succeeds",
+    "macOS": "Independent app/widget build and strict codesign verification pass",
+    "logs": [
+      "ios-p1-conversation-polish-build.log",
+      "mac-p1-conversation-polish-build.log"
+    ],
+    "nativeMacInteraction": false
+  },
+  "regressionBoundary": "Core, transport and schema are unchanged. Their prior full-suite and genuine HTTP results remain in p1-native-conversations-evidence.json; they were not rerun or relabelled as new evidence.",
+  "remainingAcceptance": {
+    "nativeMac": "Current computer-use inventory reports locked; walkthroughs remain unverified",
+    "calendarProviders": "Both built apps contain blank Google and Microsoft Calendar client IDs; genuine consent/refresh/recovery remains unverified",
+    "mobilePolicy": "Use isolated Simulators as requested. Physical-device distribution/reinstall checks remain deferred."
+  },
+  "deferredUnchanged": [
+    "Remote reminders",
+    "Older-client rollout safeguards",
+    "Distribution verification"
+  ]
+}

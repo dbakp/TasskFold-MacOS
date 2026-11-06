@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-11",
+  "scope": "Installed large Pinned note on isolated iPhone 17 Pro / iOS 26.5 Simulator using existing synthetic cloud A note; exact current committed widget source",
+  "applicationCodeChanged": false,
+  "testChanges": [
+    "Generalize medium-note workflow with large family selection and aspect-ratio assertions",
+    "Install large notes on a separate Home page; return to that page after native configuration dismissal and each app route",
+    "Retain a scoped cleanup workflow for the initial temporary large instance"
+  ],
+  "runs": [
+    {
+      "resultBundle": "large-note-phone-v1.xcresult",
+      "durationSeconds": 99.104,
+      "summary": {
+        "result": "Failed",
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "animationIdleDiagnostics": 0,
+      "remoteAXDiagnosticsPresent": true
+    },
+    {
+      "resultBundle": "large-note-cleanup-v1.xcresult",
+      "durationSeconds": 143.181,
+      "summary": {
+        "result": "Passed",
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "animationIdleDiagnostics": 2,
+      "remoteAXDiagnosticsPresent": true
+    },
+    {
+      "resultBundle": "large-note-phone-v2.xcresult",
+      "durationSeconds": 683.497,
+      "summary": {
+        "result": "Passed",
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "animationIdleDiagnostics": 8,
+      "remoteAXDiagnosticsPresent": true
+    }
+  ],
+  "initialFailure": "After installing the large note on the first page, the old helper expected three visible widgets but saw two. The original medium Focus flowed to the next page. Failure occurred before note selection or privacy changes; it is a test-layout failure, not evidence of an application defect.",
+  "cleanup": "One native passing case removes only the temporary unconfigured large widget. The original small note and medium Focus return automatically to the first page and both exact original routes pass; fallback drag branch was not executed.",
+  "correctedAcceptance": [
+    "Actual large gallery installation on separate Home page and original cloud note selection",
+    "Inspected public title, full short note body and Read full note footer fit",
+    "Native Hide title and text on/off; inspected private rendering",
+    "Terminated-app exact original full-text route both public and private",
+    "Normal app relaunch restores public rendering; second terminated-app exact full-text route",
+    "Only temporary large widget removed; original first-page note and Focus remain selected and both routes pass"
+  ],
+  "sourceProvenance": {
+    "widgetSHA256": "9fffcc9f761c16c8180e7d60874c60aa6271e3b54a6407db063af96af4114588",
+    "testSHA256": "a64c6d5c98cbd41be14130d6edb130b7485f299bb1f84fa0815ff4bbbaeb777e",
+    "ownedTestMatchesStage": true,
+    "testBuild": "large-note-ios-build-v3.log",
+    "strictSigning": "large-note-ios-signing-v3.json"
+  },
+  "builds": [
+    "large-note-ios-build-v1.log",
+    "large-note-ios-build-v2.log",
+    "large-note-ios-build-v3.log"
+  ],
+  "strictSigningReceipts": [
+    "large-note-ios-signing-v1.json",
+    "large-note-ios-signing-v2.json",
+    "large-note-ios-signing-v3.json"
+  ],
+  "strictPassingResultVerifier": [
+    "large-note-cleanup-v1.xcresult",
+    "large-note-phone-v2.xcresult"
+  ],
+  "preservation": {
+    "sharedTableCount": 14,
+    "devices": {
+      "primary": {
+        "changedSharedTables": [],
+        "pendingCount": 0
+      },
+      "secondary": {
+        "changedSharedTables": [],
+        "pendingCount": 0
+      },
+      "mac": {
+        "changedSharedTables": [],
+        "pendingCount": 0
+      }
+    }
+  },
+  "inspectedPreviews": [
+    "docs/large-note-previews/public.png",
+    "docs/large-note-previews/private.png",
+    "docs/large-note-previews/restored-after-relaunch.png",
+    "docs/large-note-previews/private-full-reader.png",
+    "docs/large-note-previews/original-pair-restored.png",
+    "docs/large-note-previews/recovered-first-attempt.png",
+    "docs/large-note-previews/initial-layout-displacement.png"
+  ],
+  "diagnostics": "Summaries report zero runtime warnings, but logs retain SpringBoard animation-idle waits and remote AX failures from Simulator DragUI druid PID 35486. Functional pass does not mean clean logs.",
+  "mac": "No new Mac code/build/native acceptance in this checkpoint. Both repos already own the identical widget change; Mac typecheck and missing-development-profile limitation remain recorded in medium-note-host-evidence.json.",
+  "stillOpen": [
+    "Large filled/overflowing note content, other state variants and appearance/accessibility configurations",
+    "iPad medium/large note and Mac Desktop hosts",
+    "System privacy redaction and actual VoiceOver",
+    "Remaining P0 rows and external gates"
+  ],
+  "fullP0Accepted": false,
+  "cleanupStorage": {
+    "removedMiB": 248.0,
+    "manifest": "large-note-pruned-manifest.json",
+    "retained": "Three full xcresult bundles, logs, signing/source/data receipts, selected inspected previews and current built products"
+  }
+}

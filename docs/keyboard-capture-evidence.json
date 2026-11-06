@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-12",
+  "scope": "iPhone compact landscape capture with keyboard visible at normal/light and accessibility XXXL/dark: native Save and More, exact title/25-minute estimate and process relaunch.",
+  "sourceBase": {
+    "iOS": "6b07eac",
+    "macOS": "5ccb342"
+  },
+  "productionChange": "Focused compact-height capture uses one native scrolling editing line; unfocused and regular-height capture keep the existing maximum of four lines. No parser, persistence, Mac composer or shared build dependency change.",
+  "confirmedVisualProblem": "The largest landscape multi-line draft was cut through its next line above the action bar. Full-screen before/after captures establish the correction and visible end caret.",
+  "native": {
+    "resultBundle": "keyboard-capture-phone-v4.xcresult",
+    "tests": [
+      "testLandscapeKeyboardVisibleCaptureActions",
+      "testLandscapeKeyboardVisibleCaptureActionsLargest"
+    ],
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "durationsSeconds": [
+      64.104,
+      62.617
+    ],
+    "strictVerifierPassed": true,
+    "checks": [
+      "Exact native draft including ~25m.",
+      "Entire editing field fits the visible capture scroll viewport.",
+      "Save, More and Hide Keyboard are hittable, at least 44\u00d744, inside the window and above the keyboard.",
+      "Save closes capture while the keyboard is visible.",
+      "More opens the exact cleaned title and retains the accessible estimate value 25.",
+      "Normal process relaunch retains exact saved title and estimate 25."
+    ],
+    "fullScreenCapturesUsed": true,
+    "signingReceipt": "keyboard-capture/signing-v4.json"
+  },
+  "initialAttempts": [
+    {
+      "bundle": "keyboard-capture-phone-v1.xcresult",
+      "passed": 0,
+      "failed": 2,
+      "cause": "Test queried a static estimate label instead of its accessible value/control."
+    },
+    {
+      "bundle": "keyboard-capture-phone-v2.xcresult",
+      "passed": 1,
+      "failed": 1,
+      "cause": "Normal full swipe crossed the short planning section; largest passed. Full-screen capture also revealed the independent draft-line clipping issue."
+    },
+    {
+      "bundle": "keyboard-capture-phone-v3.xcresult",
+      "passed": 1,
+      "failed": 1,
+      "cause": "Normal slow drag started in the landscape form margin, outside its inset cells. Retained hierarchy shows the form remained at the top. Final drag starts within the form content."
+    }
+  ],
+  "preservation": {
+    "all15ServerTablesEqualPreLocalTestBaseline": true,
+    "authenticatedDedicatedPhoneCacheHashUnchanged": true,
+    "protectedPrimaryPhoneFilesExact": 43,
+    "protectedPrimaryTabletFilesExact": 26,
+    "localTestQueue": 0,
+    "disposableLocalWorkspace": "Capacity seed plus one saved large capture retained as a test artifact; cloud workspace untouched."
+  },
+  "limits": [
+    "This closes the named compact landscape keyboard-visible Save/More and editing-line journey, not every keyboard or long-row layout.",
+    "The four retained clipping audit reports and earlier project-menu background publishing warning remain unresolved; a clean different journey does not clear them.",
+    "Spoken VoiceOver, Mac notification Open/actions, installed Mac widgets, APNs, external provider transfer, remaining concurrency variants and distribution gates remain open."
+  ],
+  "sourceSha256": {
+    "Taskfold/Views/QuickAdd.swift": "aeaade2e360cc521726070f051319a38b2d4acfde4ef405a4945f15e46325cc0",
+    "Taskfold/Views/TaskEditor.swift": "af8253f869c100a262dbb44a150a2901bb1ed278e1af99510d79f8eee354325e",
+    "Taskfold/TaskfoldApp.swift": "2cf292913a66ea63166965369de91c034b9c2f63b2bbca8dc79e0c5d9b71d8ee",
+    "TaskfoldUITests/TaskfoldUITests.swift": "06749feebf80b9c4e97d1c9c4cb82e7b1b58601db45ac86ad57b3874ac306add"
+  },
+  "retainedFilesSha256": {
+    "signing-v4.json": "9a074250161c139b9bb78f981e3106d455663abf1db8ef2b9637ba8ae9953565",
+    "before-largest-clipped-draft.png": "cca545c38c76901fbc58f4e69f5ae0a0f54f83793c032afdaa78e3a8074578c6",
+    "normal-save.png": "ec3b6d136c6d98b3a81c776162702e46e196064400c16d3999f3f20c84af3047",
+    "largest-save.png": "1dbbf23a6ab79a408f535fe235f7587183c384482ad7b12de0953fbfd27082e7",
+    "normal-more.png": "209716a60e6db99591b7781bf7e0db7cdb05b09cc72405b81aa31b23e5d1bb65",
+    "largest-more.png": "54b57446723c111fabb8a3f74a12ccaf2dc2f79edce6a7458ed4d5feefb20503",
+    "initial-missing-estimate-hierarchy.txt": "9589f78ebdd3d3a5445d6c36f26b5f92b92fe1ffb9d213bbe549cb37ef58417a"
+  }
+}

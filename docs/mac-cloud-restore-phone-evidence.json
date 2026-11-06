@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-11",
+  "scope": "Read-only native iPhone receipt of the synthetic workspace restored through native Mac cloud restore",
+  "result": {
+    "bundle": "restored-phone-v2.xcresult",
+    "test": "TaskfoldUITests/testAuthorizedMacCloudRestoreReceiptAndOriginalAccountReturn",
+    "passed": 1,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0,
+    "durationSeconds": 126.572
+  },
+  "nativeChecks": {
+    "destinationAuthentication": true,
+    "restoredProjectAndSection": true,
+    "restoredLabelMembership": true,
+    "restoredSavedFilterMembership": true,
+    "copiedTaskStableID": "326f50db-5d19-8c85-8be2-c548947f9ff1",
+    "fullNotesExact": true,
+    "estimateMinutes": 25,
+    "pinnedNoteFullText": true,
+    "focusStatus": "Session ended",
+    "focusClockMeaning": "Time spent",
+    "focusClock": "00:03",
+    "focusTaskTitlePreserved": true,
+    "focusRetainedAfterNormalRelaunch": true,
+    "originalAccountNativeAuthenticationAndRelaunch": true,
+    "originalTaskStableIDPresentAndCopiedTaskAbsent": true
+  },
+  "dataReceipt": {
+    "a": {
+      "sharedTablesEqualBaselineOnBothDevices": {
+        "focus_sessions": true,
+        "saved_views": true,
+        "tasks": true,
+        "labels": true,
+        "projects": true,
+        "favorites": true,
+        "task_activity_epoch": true,
+        "view_orders": true,
+        "sections": true,
+        "project_collaborators": true,
+        "reminder_preferences": true,
+        "profiles": true,
+        "task_activity": true,
+        "view_preferences": true
+      },
+      "phonePending": 0,
+      "macPending": 0,
+      "tasks": 3
+    },
+    "b": {
+      "sharedTablesEqualBaselineOnBothDevices": {
+        "sections": true,
+        "view_preferences": true,
+        "task_activity": true,
+        "project_collaborators": true,
+        "tasks": true,
+        "profiles": true,
+        "labels": true,
+        "favorites": true,
+        "view_orders": true,
+        "focus_sessions": true,
+        "reminder_preferences": true,
+        "saved_views": true,
+        "projects": true,
+        "task_activity_epoch": true
+      },
+      "phonePending": 0,
+      "macPending": 0,
+      "tasks": 256
+    }
+  },
+  "visualChecks": {
+    "capturesInspected": 4,
+    "taskDetailsAndFullNoteReadable": true,
+    "focusStateTitleContextAndElapsedVisible": true,
+    "followup": "Next-session task-picker context inherits a pale accent color in light appearance; improve its contrast while retaining the soft accent surface."
+  },
+  "testHarnessFix": {
+    "firstResult": "restored-phone-v1.xcresult",
+    "firstFailure": "After returning from a project, the helper searched down for Labels, which was above the saved Browse scroll position.",
+    "change": "Optional towardTop direction when an offscreen Browse target is not yet in the accessibility tree; use it for Labels and Pinned notes in this receipt."
+  },
+  "preservation": {
+    "bothAccountsAll14SharedTablesEqualBaselineOnMacAndPhone": true,
+    "allFourQueuesEmpty": true,
+    "todoistRequests": 0,
+    "todoistMutations": 0,
+    "primaryAppsReplaced": false,
+    "rawPrivateDataCommitted": false
+  },
+  "limits": [
+    "No new installed-widget, physical-device, VoiceOver or Mac XCTest claim",
+    "Full P0 acceptance remains open"
+  ]
+}

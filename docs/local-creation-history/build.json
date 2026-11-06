@@ -1,0 +1,7 @@
+{
+  "buildForTesting": "Passed",
+  "signedDebugHost": true,
+  "preparation": "--headings only in reserved disposable copy",
+  "warningsPresent": true,
+  "note": "Build/deprecation and existing URLProtocol Sendable diagnostics are distinct from the zero runtime warnings in the accepted result summaries."
+}

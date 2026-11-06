@@ -1,0 +1,231 @@
+{
+  "date": "2026-10-11",
+  "scope": "iPhone Simulator Year calendar at normal/light and accessibility XXXL/dark; no iPad or spoken VoiceOver acceptance",
+  "change": "Accessibility text sizes use vertically scrollable full-width month rows with wrapping names, task counts and decorative heatmaps. Vertical month scrolling no longer collapses Year view. Selected month has an outline, selected trait, stable identifier and Open month action.",
+  "build": "Final build-for-testing v7 succeeded; genuine Apple Development signing receipt ios-year-route-signing-v4.json; no signing bypass.",
+  "runs": [
+    {
+      "resultBundle": "ios-year-route-native-v1.xcresult",
+      "passedTests": 0,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "ios-year-route-native-v2.xcresult",
+      "passedTests": 1,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "ios-year-route-native-v3.xcresult",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "ios-year-route-native-v4.xcresult",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    }
+  ],
+  "preservation": {
+    "allRawTablesExactlyEqual": true,
+    "sharedTableCount": 14,
+    "allSharedTablesExactlyEqual": true,
+    "pendingBefore": 0,
+    "pendingAfter": 0,
+    "pendingExactlyEqual": true,
+    "localMode": false
+  },
+  "localFixture": {
+    "taskCount": 3,
+    "allOriginalIDsTitlesEstimatesAndOpenStatesPreserved": true,
+    "pending": 0
+  },
+  "limits": [
+    "Normal/light acceptance comes from v2; production CalendarView is unchanged between that build and final v7 (later changes strengthen tests).",
+    "All twelve largest-text target month rows were visually inspected and asserted entirely inside the scroll viewport in v4. Neighboring partially visible rows are expected scroll boundaries.",
+    "Task route and cancel/relaunch pass; full Month-grid largest-text rendering and broader task-list layout are not accepted by this test.",
+    "Prior unfiltered accessibility audit remains failing with two normal and two largest-text clipping findings.",
+    "VoiceOver spoken navigation, iPad Year layout and full P0 release acceptance remain open.",
+    "Console contains Apple duplicate WebKit/WebCore class and debugger version warnings; structured runtimeWarnings are recorded below."
+  ],
+  "intermediateFailures": [
+    "v1: both cases fail because cached neighboring Month pages expose duplicate today identifiers; the largest screenshot also reveals real four-column month clipping.",
+    "v2: normal passes; largest fails on month reveal after an overshooting swipe.",
+    "Build v3: test compile error from querying allElementsBoundByIndex on an element; corrected in subsequent successful builds.",
+    "v3: largest route passes, but its weak scrolling assertion does not establish all target rows fully visible. v4 strengthens bidirectional reveal and post-loop viewport containment."
+  ],
+  "storage": {
+    "duplicateAttachmentExportBytesPruned": 53292858,
+    "retained": "Original xcresults, logs, summaries, signing receipts, exported manifests and selected repo captures"
+  },
+  "captures": [
+    {
+      "run": 1,
+      "configuration": "normal",
+      "caption": "Year calendar normal text before month activation",
+      "file": "ios-year-route/v1-normal-year-calendar-normal-text-before-month-activation.png",
+      "sha256": "188256989a3cfa6b957353e808712648bcf0da279384b4dfabceb27264046663"
+    },
+    {
+      "run": 1,
+      "configuration": "largest",
+      "caption": "Year calendar largest text before month activation",
+      "file": "ios-year-route/v1-largest-year-calendar-largest-text-before-month-activation.png",
+      "sha256": "9b97b694c1ac930aad8020ea129feb51fdd2db9086d0c3e86c26c2b18122fac1"
+    },
+    {
+      "run": 2,
+      "configuration": "normal",
+      "caption": "Year route leaves original tasks open after relaunch",
+      "file": "ios-year-route/v2-normal-year-route-leaves-original-tasks-open-after-relaunch.png",
+      "sha256": "547e80502a398dedb190e5635d5d554e94aec52c60b91a7ab6babae814c8e378"
+    },
+    {
+      "run": 2,
+      "configuration": "normal",
+      "caption": "Year route opens the exact existing task",
+      "file": "ios-year-route/v2-normal-year-route-opens-the-exact-existing-task.png",
+      "sha256": "245314d420d122624137d10b6e1cf4fcfa1724ccb628b90a76f7cd82749932bd"
+    },
+    {
+      "run": 2,
+      "configuration": "normal",
+      "caption": "Year calendar current month fully reachable",
+      "file": "ios-year-route/v2-normal-year-calendar-current-month-fully-reachable.png",
+      "sha256": "b24cf6a23e36484b9e832232d09af61c0eb69bae7464fecb133b725e0dcaff4e"
+    },
+    {
+      "run": 2,
+      "configuration": "normal",
+      "caption": "Year calendar normal text before month activation",
+      "file": "ios-year-route/v2-normal-year-calendar-normal-text-before-month-activation.png",
+      "sha256": "b24cf6a23e36484b9e832232d09af61c0eb69bae7464fecb133b725e0dcaff4e"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year route leaves original tasks open after relaunch",
+      "file": "ios-year-route/v4-largest-year-route-leaves-original-tasks-open-after-relaunch.png",
+      "sha256": "43e98bca5e5682621c3b15d6029f9e07eb60f368530069d744c2c8f972147717"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year route opens the exact existing task",
+      "file": "ios-year-route/v4-largest-year-route-opens-the-exact-existing-task.png",
+      "sha256": "a8c9335b40add579479b9f5e0e86ac943a6443cb4a7c21f1c6fc9ea1b234e1e2"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year calendar current month fully reachable",
+      "file": "ios-year-route/v4-largest-year-calendar-current-month-fully-reachable.png",
+      "sha256": "0c88d7e95a77d761a0e692ed00de886b3444762d698fed83f6e451162db4ab3a"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 December",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-december.png",
+      "sha256": "a80aac63513cd67151485e134262b01b3ac73c83d08d3a497c588d1a3720660c"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 November",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-november.png",
+      "sha256": "c76dac99aba3462e7b9412ffc5e3f049979b82a7191a18a010e18383e099e511"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 October",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-october.png",
+      "sha256": "0c88d7e95a77d761a0e692ed00de886b3444762d698fed83f6e451162db4ab3a"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 September",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-september.png",
+      "sha256": "2c09f344bd29f6d4d58461120599fa8670eb6a7720f2a150966b12f5ae65c567"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 August",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-august.png",
+      "sha256": "c7e289c3d29c5dedf7a3e60a68f4a42a2978f08f3ad3b19748304c9fa71ea705"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 July",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-july.png",
+      "sha256": "5ff5bb3555443dca0b482baa7a2eb18422d51511fc44669616ba3e377db0fe97"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 June",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-june.png",
+      "sha256": "19a706603d5f0a1e244b968ea61c342dcc339f906419e2d4bce523324f7c7776"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 May",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-may.png",
+      "sha256": "8b45d99cc1c9b31fe58cea9eac0ba500b31af69a5fe5dc687bb21bf1f321a46d"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 April",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-april.png",
+      "sha256": "5e3eaf8167bb7451137e4b8b246fff42b885f1bb35bdaac32e25663630b759a4"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 March",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-march.png",
+      "sha256": "aba5862e854a492f13d9697d19ba5c7bdcd595d8c1dc600ae059af5a9e3d21e9"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 February",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-february.png",
+      "sha256": "2e65ebd3b4c1e0d5f8bd3be877b7ff97b5aa27fdc1753f7b05945efba80ddc7d"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year month fully visible at largest text \u2014 January",
+      "file": "ios-year-route/v4-largest-year-month-fully-visible-at-largest-text-january.png",
+      "sha256": "2e65ebd3b4c1e0d5f8bd3be877b7ff97b5aa27fdc1753f7b05945efba80ddc7d"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Year calendar largest text before month activation",
+      "file": "ios-year-route/v4-largest-year-calendar-largest-text-before-month-activation.png",
+      "sha256": "2e65ebd3b4c1e0d5f8bd3be877b7ff97b5aa27fdc1753f7b05945efba80ddc7d"
+    }
+  ],
+  "cloudReturn": {
+    "resultBundle": "ios-year-route-restore-v2.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "freeBeforeBytes": 63353675776,
+  "actions": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Release/Taskfold.app",
+      "allocatedBytes": 77602816,
+      "reason": "Unaccepted changed cached product after interrupted Mac23; frozen Mac22 archive preserved"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-ios-native-v1.xcresult",
+      "allocatedBytes": 38465536,
+      "reason": "Own completed result bundle; concise actual outcome preserved"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-ios-native-v2.xcresult",
+      "allocatedBytes": 42258432,
+      "reason": "Own completed result bundle; concise actual outcome preserved"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-ios-native-v3.xcresult",
+      "allocatedBytes": 18157568,
+      "reason": "Own completed result bundle; concise actual outcome preserved"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-ios-native-v4.xcresult",
+      "allocatedBytes": 1646592,
+      "reason": "Own completed result bundle; concise actual outcome preserved"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-ios-largest-v1.xcresult",
+      "allocatedBytes": 11456512,
+      "reason": "Own completed result bundle; concise actual outcome preserved"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-ios-largest-v2.xcresult",
+      "allocatedBytes": 23830528,
+      "reason": "Own completed result bundle; concise actual outcome preserved"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-native-v1-all",
+      "allocatedBytes": 37728256,
+      "reason": "Own duplicate media export; concise proof and selected frames retained"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-native-v2-all",
+      "allocatedBytes": 41312256,
+      "reason": "Own duplicate media export; concise proof and selected frames retained"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-native-v2-attachments",
+      "allocatedBytes": 4096,
+      "reason": "Own duplicate media export; concise proof and selected frames retained"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-native-v3-attachments",
+      "allocatedBytes": 17580032,
+      "reason": "Own duplicate media export; concise proof and selected frames retained"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-largest-v1-attachments",
+      "allocatedBytes": 11005952,
+      "reason": "Own duplicate media export; concise proof and selected frames retained"
+    },
+    {
+      "path": "/tmp/taskfold-note-contents-largest-v2-attachments",
+      "allocatedBytes": 23040000,
+      "reason": "Own duplicate media export; concise proof and selected frames retained"
+    }
+  ],
+  "freeAfterBytes": 63696027648,
+  "realDataTouched": false,
+  "frozenMac22ArchiveVerified": true,
+  "cachedMac22PayloadStillMatchesArchive": false,
+  "newPackagesAccepted": false
+}

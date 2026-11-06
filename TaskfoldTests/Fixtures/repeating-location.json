@@ -1,0 +1,81 @@
+{
+  "task": {
+    "id": "96000000-0000-4000-8000-000000000002",
+    "user_id": "repeat-local",
+    "task_generation": "96000000-0000-4000-8000-000000000003",
+    "completion_version": 0,
+    "title": "Repeat compatibility sample",
+    "due_date": "2027-01-16",
+    "due_time": "09:00",
+    "is_recurring": true,
+    "recurrence_pattern": {
+      "type": "daily",
+      "count": 3
+    },
+    "reminder_specs": [
+      {
+        "version": 7,
+        "id": "96000000-0000-4000-8000-000000000004",
+        "kind": "location",
+        "channels": [
+          "local"
+        ],
+        "enabled": true,
+        "location_reference": {
+          "version": 2,
+          "device": "96000000-0000-4000-8000-000000000001",
+          "task_id": "96000000-0000-4000-8000-000000000002",
+          "task_generation": "96000000-0000-4000-8000-000000000003",
+          "place_id": "96000000-0000-4000-8000-000000000005",
+          "place_revision": "96000000-0000-4000-8000-000000000006",
+          "arm": "96000000-0000-4000-8000-000000000007",
+          "transition": "arrive",
+          "repeats": true
+        }
+      }
+    ]
+  },
+  "archive": {
+    "version": 2,
+    "device": "96000000-0000-4000-8000-000000000001",
+    "places": [
+      {
+        "version": 1,
+        "id": "96000000-0000-4000-8000-000000000005",
+        "revision": "96000000-0000-4000-8000-000000000006",
+        "account": "repeat-local",
+        "name": "Private repeat pin",
+        "latitude_e6": 55676098,
+        "longitude_e6": 12568337,
+        "radius_m": 250
+      }
+    ],
+    "allowedAccounts": [
+      "repeat-local"
+    ],
+    "journal": {
+      "version": 3,
+      "device": "96000000-0000-4000-8000-000000000001",
+      "entries": {
+        "taskfold.location.v2.8e2111f86932288e5279951bd305bbd67a407186762db81b0bcc9e56d5383879": {
+          "ticket": {
+            "account": "repeat-local",
+            "device": "96000000-0000-4000-8000-000000000001",
+            "taskID": "96000000-0000-4000-8000-000000000002",
+            "generation": "96000000-0000-4000-8000-000000000003",
+            "completionVersion": 0,
+            "specID": "96000000-0000-4000-8000-000000000004",
+            "placeID": "96000000-0000-4000-8000-000000000005",
+            "placeRevision": "96000000-0000-4000-8000-000000000006",
+            "arm": "96000000-0000-4000-8000-000000000007",
+            "transition": "arrive",
+            "repeats": true
+          },
+          "phase": "prepared",
+          "epoch": 0
+        }
+      },
+      "revoked": []
+    }
+  }
+}

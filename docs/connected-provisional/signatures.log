@@ -1,0 +1,10 @@
+--prepared:/private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/__preview.dylib
+--validated:/private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/__preview.dylib
+--prepared:/private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib
+--validated:/private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib
+/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app: valid on disk
+/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app: satisfies its Designated Requirement
+--prepared:/private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest
+--validated:/private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest
+/tmp/taskfold-mac-recovery-build/Build/Products/Debug/TaskfoldUITests-Runner.app: valid on disk
+/tmp/taskfold-mac-recovery-build/Build/Products/Debug/TaskfoldUITests-Runner.app: satisfies its Designated Requirement

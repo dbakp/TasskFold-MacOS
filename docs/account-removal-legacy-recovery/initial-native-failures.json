@@ -1,0 +1,54 @@
+[
+  {
+    "run": 1,
+    "passed": 0,
+    "failed": 2,
+    "ownedSimulatorRestored": true,
+    "accepted": false,
+    "reason": "Duplicate fixture banner and hidden file label selector"
+  },
+  {
+    "run": 2,
+    "passed": 0,
+    "failed": 2,
+    "ownedSimulatorRestored": true,
+    "accepted": false,
+    "reason": "Multiple retained Files collection views; select a visible file collection explicitly"
+  },
+  {
+    "run": 3,
+    "accepted": false,
+    "passed": 0,
+    "failed": 2,
+    "ownedSimulatorRestored": true,
+    "reason": "Completion observer action did not deliver a saved result; at largest text the selected file remained in the picker. Wait for true modal dismissal, target the fully visible file icon and keep the request across picker coverage."
+  },
+  {
+    "run": 4,
+    "accepted": false,
+    "passed": 0,
+    "failed": 2,
+    "ownedSimulatorRestored": true,
+    "sameProcessChecksPassed": 13,
+    "sameProcessServerCalls": 1,
+    "reason": "Actual immediate cleanup/preservation passed. Cold check rejected raw cache byte differences; next run compares every JSON field as well as requiring byte preservation within the same process. Largest-text picker dismissal remained unverified."
+  },
+  {
+    "run": 5,
+    "wholeRunAccepted": false,
+    "passed": 1,
+    "failed": 1,
+    "ownedSimulatorRestored": true,
+    "completionAndColdCaseAccepted": true,
+    "reason": "Completion and cold return pass. Every saved JSON field matches despite changed byte encoding. The largest-text Files tile/dismissal interaction remains unaccepted; next run uses visible List rows."
+  },
+  {
+    "run": 6,
+    "wholeRunAccepted": false,
+    "case": "refusals only",
+    "passed": 0,
+    "failed": 1,
+    "ownedSimulatorRestored": true,
+    "reason": "Changed approach to Files List view, but its More/List control was unavailable through XCTest. Removed that unsupported selector; largest-text refusal acceptance remains open. No further picker retry in this batch."
+  }
+]

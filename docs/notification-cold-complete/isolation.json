@@ -1,0 +1,23 @@
+{
+  "onlyStagedChanges": {
+    "Taskfold/Taskfold.entitlements": {
+      "sourceSHA256": "a3c2928715507ca76dfa667f87c73fd1e14dfa7072265395ffe4f8b973cefa6d",
+      "stagedSHA256": "de4e2ec78cf899a593da51f9dbb557f05ee0a4fac006bc8dd6c741804fa527e8"
+    },
+    "Taskfold/Core/WidgetActions.swift": {
+      "sourceSHA256": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2",
+      "stagedSHA256": "7287acfcc6cf4a09cb2d1ac1f5e3f3e3875964a7755cb71d4194ae0045a95078"
+    },
+    "TaskfoldWidgets/TaskfoldWidgets.entitlements": {
+      "sourceSHA256": "4c80ed07b668d7ebaff08e7790ca4f959d00fef3b58c66def29f40964e2e08a4",
+      "stagedSHA256": "c15bbb579fc83b06e250616e27effcb54e757fedddf30822bd9066e607690a10"
+    },
+    "Taskfold.xcodeproj/project.pbxproj": {
+      "sourceSHA256": "2480843f89a9971201f3830ae3b0c39668212f90abdc5c9dc125545276a783aa",
+      "stagedSHA256": "202244bdfbe0eb95d9de31ad92a769b67536ba50559d6ed58ec0b747f5307c4d"
+    }
+  },
+  "independentAppGroupVerified": true,
+  "allOtherOwnedNativeInputsExact": true,
+  "uiTestSHA256": "3fba8da11946cf47277870fa921f683717bf441d8276253ba68a517829e65eda"
+}

@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-03",
+  "milestone": "Persistent repair review controls and keyboard shortcuts",
+  "sourceSHA256": "7ad15a1e13f2229b2c680c816956ea94fc9de185c68ca2d90cd7101424f05dcb",
+  "mac": {
+    "build": "passed",
+    "strictSignature": "passed",
+    "binarySHA256": "28cbccc50dd32f7822d55957cbaa1d27e627e228e06ec9c26283c5478ad8a86e",
+    "acceptedBuild": "repair-keyboard-v4",
+    "uiChecks": [
+      "Undo last choice is an actual visible control outside the scrolling List",
+      "Command-Z removed only the latest choice, leaving the prior choice saved",
+      "Command-Return while incomplete did not open confirmation; toolbar Save disabled",
+      "Escape closed partial review; reopening retained prior choice",
+      "Restoring second choice produced two tasks ready",
+      "Command-Return opened existing confirmation while list Save was off-screen",
+      "Escape canceled confirmation and retained both choices",
+      "Escape closed review; Command-Q from main screen quit app"
+    ],
+    "peerUnchanged": true,
+    "serverWrites": 0,
+    "newDevice": false
+  },
+  "ios": {
+    "build": "passed",
+    "strictSignature": "passed",
+    "regression": {
+      "test": "TaskfoldUITests.testChildRepairNativeReviewSaveAndColdConfirmation",
+      "result": "passed",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0,
+      "scope": "Actual iPhone synthetic repair review/save/cold-confirmation; not external keyboard or spoken acceptance",
+      "deviceRestoredTo": "Shutdown"
+    }
+  },
+  "diagnostics": [
+    "Initial shortcut on lazy List Save did not register while off-screen; moved to toolbar",
+    "Mac sheet omitted secondary toolbar Undo; final Undo moved out of the List into a persistent safe-area control",
+    "One old process survived Command-Q from a sheet; closed sheet first, then quit and verified single current process before final acceptance"
+  ],
+  "scope": "Mac computer-use acceptance against reserved synthetic HTTP peer. No VoiceOver listening, external iPad keyboard, hosted or genuine shared-account claim. Normal feature gates unchanged.",
+  "ownBuild": {
+    "platform": "mac",
+    "phase": "repair-keyboard-v4",
+    "appAndRunnerStrictSignatures": "passed",
+    "sourceMatchesBuiltHost": true
+  },
+  "freeBytesAfterCleanup": 22755680256
+}

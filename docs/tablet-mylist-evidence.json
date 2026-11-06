@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-10",
+  "scope": "Installed iPad portrait medium and large My list: five project tasks, header routes, relaunch and terminated-app exact task routes",
+  "change": "Both independently owned widget implementations now give ready medium/large list headers explicit destination Links, with a full header content shape. Small-widget task routing and stored contracts are unchanged.",
+  "device": {
+    "id": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "model": "iPad Pro 11-inch (M5)",
+    "runtime": "iOS Simulator 26.5",
+    "bundle": "com.dbakp.taskfold.assigneepatterntests"
+  },
+  "installation": {
+    "resultBundle": "/tmp/taskfold-tablet-mylist-host-v3.xcresult",
+    "wholeTestPassed": false,
+    "observed": "Actual gallery installation and native List configuration completed for both sizes. Retained Home Screen inspected: medium displays two complete wrapping titles, large all five titles and planned date; total five and footers visible. The original icon-relative header assertion failed; not counted as passing acceptance."
+  },
+  "results": [
+    {
+      "resultBundle": "/tmp/taskfold-tablet-mylist-route-v3.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "checks": [
+        "Each header opens Widget Studio after resetting app to Inbox",
+        "All five project task rows present; unrelated Inbox row absent",
+        "Both header routes repeat after app relaunch"
+      ]
+    },
+    {
+      "resultBundle": "/tmp/taskfold-tablet-mylist-cold-v3.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "checks": [
+        "Terminate app before each medium/large first-row tap",
+        "Exact full task title appears in editor",
+        "Cancel leaves records unchanged",
+        "Post-assertion screenshots inspected for both sizes"
+      ]
+    }
+  ],
+  "data": {
+    "unchangedTables": true,
+    "baselineTablesSHA256": "919a1459150347e214ecbfff8d891718b83bb4634e83e9488a8d817b48f68c60",
+    "finalSnapshotSHA256": "aeaf79bb53b344924349db81bd587dc826224cd1ddbc99f138cfd27218556e16",
+    "taskCount": 6,
+    "projectTaskCount": 5,
+    "pendingCount": 0,
+    "projectID": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee01"
+  },
+  "builds": {
+    "ios": "TEST BUILD SUCCEEDED /tmp/taskfold-tablet-mylist-build-v12.log",
+    "mac": "BUILD SUCCEEDED /tmp/taskfold-tablet-mylist-mac-build-v1.log",
+    "simulatorSigning": "tablet-mylist-reports/sign-v12.json",
+    "macAppLaunched": false
+  },
+  "sources": {
+    "widgetSHA256": "5163caec9dadeabc091fcecdee95c6145b29b068b1361328d757f8fc45448529",
+    "macWidgetSHA256": "5163caec9dadeabc091fcecdee95c6145b29b068b1361328d757f8fc45448529",
+    "iosUITestsSHA256": "4c828e82a8c400ac88a0fe5a39b29210928168a4cfce31623ee7a64d4aa5401a"
+  },
+  "diagnostics": [
+    "host-v1 used wrong project Add label; host-v2 targeted offscreen iPad gallery ScrollView; corrected test setup.",
+    "Icon-relative route-v1 opened first task; route-v2 did not launch. Absolute screen title taps pass. No A/B baseline established, so original background-URL behavior is not assigned a confirmed root cause.",
+    "route-v4 and cold-v1 omitted the existing DEBUG Simulator cold-workspace flag; system launch selected empty local workspace. Corrected test flag, no Store change.",
+    "final-v1 header case passed; cold case opened exact first task then failed transient SpringBoard index lookup. Cold test now retains the initial two positions; cold-v2 and cold-v3 pass.",
+    "cold-v2 captures preceded editor presentation; cold-v3 moves screenshots after exact-title assertions.",
+    "Terminal superseded/failing bundles pruned after retaining their summaries and final inspected captures; original bundle paths in these reports are historical. Final passing route-v3 and cold-v3 bundles retained."
+  ],
+  "retainedReports": "tablet-mylist-reports/",
+  "storageCleanup": "tablet-retired-app-cleanup.json: 14 retired isolated app/runner bundles, 507452242 logical file bytes; current fixture and empty queues retained.",
+  "limits": [
+    "Only the named project, sizes, portrait layout and isolated iPad Simulator are accepted.",
+    "No VoiceOver, full keyboard, physical, Desktop/Lock Screen or Mac runtime acceptance.",
+    "Existing cloud account lifecycle and continuity evidence is reused; no synchronization or serialization changes.",
+    "Full P0 release gates remain open in P0_RELEASE_STATUS.md."
+  ],
+  "bundleCleanup": "tablet-mylist-bundle-cleanup.json"
+}

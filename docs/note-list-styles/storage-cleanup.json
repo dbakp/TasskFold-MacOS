@@ -1,0 +1,55 @@
+{
+  "initialFreeBytes": 58092134400,
+  "completedDailyCaches": {
+    "apply": true,
+    "freeBeforeBytes": 57991585792,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 577150976,
+        "projectedAllocatedBytes": 577150976
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 543629312,
+        "projectedAllocatedBytes": 543629312
+      }
+    ],
+    "freeAfterBytes": 57991577600,
+    "actualFreeChangeBytes": -8192
+  },
+  "packageRetirement": {
+    "date": "2026-11-06",
+    "beforeFreeBytes": 57991397376,
+    "removed": [
+      {
+        "archive": "Taskfold-1.4.0-35-iphone-development.zip",
+        "bytes": 24095420,
+        "sha256": "8efccfa9d51e3ee0fc3e33dc46d190aa7035b70840d6f1b0c75ac01e6a9585d7"
+      }
+    ],
+    "reason": "Uninstalled phone35 superseded by signed and readback-verified phone36; installed phone34 and its rollback archive retained. Installed Mac23, prepared24 and verified Mac14 rollback retained.",
+    "afterFreeBytes": 57991380992
+  },
+  "coreCaches": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 674910208,
+      "within768MiB": true,
+      "removed": false
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 619274240,
+      "within768MiB": true,
+      "removed": false
+    }
+  ],
+  "initialCleanupRefusal": "finish_test_run refused unmarked SwiftPM Core cache before deleting anything. Core caches measured separately below; no marker was fabricated.",
+  "simulatorsBooted": [],
+  "dockerStarted": false,
+  "normalAppsReplaced": false
+}

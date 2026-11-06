@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-31",
+  "milestone": "Redo for cross-task subtask moves",
+  "core": {
+    "tests": 44,
+    "failures": 0,
+    "newRedoCases": 5,
+    "historyBridgeCases": 6,
+    "encryptedColdLostReplyHTTP": true
+  },
+  "native": [
+    {
+      "phase": "phone-v1",
+      "uiTests": 1,
+      "failures": 0,
+      "operationSequence": [
+        "move",
+        "undo",
+        "redo",
+        "undo"
+      ],
+      "exactWrites": 4,
+      "exactRequests": 4,
+      "preservation": "Exact source/nested fields; empty destination; untouched sibling version 1",
+      "scope": "Synthetic native HTTP peer; not hosted SQL or real shared-account acceptance"
+    },
+    {
+      "phase": "phone-v2-main",
+      "uiTests": 1,
+      "failures": 0,
+      "operationSequence": [
+        "move",
+        "undo",
+        "redo",
+        "undo"
+      ],
+      "exactWrites": 4,
+      "exactRequests": 4,
+      "preservation": "Exact source/nested fields; empty destination; untouched sibling version 1",
+      "scope": "Synthetic native HTTP peer; not hosted SQL or real shared-account acceptance"
+    },
+    {
+      "phase": "ipad-v1",
+      "uiTests": 1,
+      "failures": 0,
+      "operationSequence": [
+        "move",
+        "undo",
+        "redo",
+        "undo"
+      ],
+      "exactWrites": 4,
+      "exactRequests": 4,
+      "preservation": "Exact source/nested fields; empty destination; untouched sibling version 1",
+      "scope": "Synthetic native HTTP peer; not hosted SQL or real shared-account acceptance"
+    }
+  ],
+  "mac": {
+    "fullBuild": "passed",
+    "strictSignature": "passed",
+    "keyboardWalkthrough": "not verified; Mac locked",
+    "runtimeClaim": false
+  },
+  "diagnostics": [
+    "Mobile SwiftUI composition split into a static content property after a compiler type-check timeout; layout preserved.",
+    "The first normal-menu journey was intentionally canceled because its test helper tried to scroll a fixed toolbar button. The corrected journey passes.",
+    "After the first saved-move journey passed, the observer initially used simctl on the automatically shut-down Simulator. Reading the exact container metadata recovered the already completed proof without rerunning the UI."
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskTransfers.swift": "ef7cb50aaf4eff063de8380e53284d67b7eeb7a30363eb1f74df5f7748bf4402",
+    "Taskfold/Core/Store.swift": "7f2bbc0e5e4167b49a8dcab3ae15348d0da9efb7805ad871b186b5a4a937f0f5",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "eb1635e822c0afeb2f8b1b3c91698c4c2bb8d2796f3872ab4f21073e804b7033",
+    "Taskfold/Workspace.swift": "9c28dbd6d82871c490678fce0e99e65d0a52f19631c4c02d2e8e3f6944185534",
+    "TaskfoldTests/ChildTaskTransferTests.swift": "950dd03ebebb122d4e4948ac2e234fe006b6eaa67eb8e50e705a4d3edc71c72a",
+    "TaskfoldUITests/AudioCommentUITests.swift": "34d1422978fb6a997b9ec00be7b96310b79d436c7b242f8b5c970d1f567a1499"
+  },
+  "hostAppSourceFidelity": {
+    "Taskfold/Core/ChildTaskTransfers.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Views/ChildTaskTransferViews.swift": true,
+    "Taskfold/Workspace.swift": true
+  },
+  "finalBinarySHA256": {
+    "Contents/MacOS/Taskfold.debug.dylib": "1c4a21cba5ff082c5454e96bfc9ee3b87ac5df314a8453dde3c640fabc50742a",
+    "Contents/MacOS/Taskfold": "87c1f46829256eaafa4c8e04a07faf3ace94f31be35ea215edfaeb3acaa4c2d7"
+  },
+  "productionTransferGate": false,
+  "onlyCopiedTestHostTransferGate": true,
+  "serverSchemaProtocolAndDeploymentChanged": false,
+  "remaining": [
+    "Field-edit and other hierarchy Redo",
+    "Consistent shared activity/history",
+    "Older-data/history mapping",
+    "Shared file/discussion custody",
+    "Genuine Mac/cloud/account/window/speech/larger-workflow acceptance"
+  ],
+  "userDeferralsUnchanged": true
+}

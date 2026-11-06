@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-24",
+  "platform": "macOS",
+  "scope": "Immutable opening-time editor admission and original-account capture handoff",
+  "rank": 6,
+  "rankComplete": false,
+  "fullGoalComplete": false,
+  "sourceSHA256": {
+    "Taskfold/Core/Backups.swift": "3110e44219b6205c613b451a6269c1d12b48ee250bda4e1d3e53fe8ddf240447",
+    "Taskfold/Core/Store.swift": "6f5fa4138d278f67203ab5f6c7b1525766436d901fdcc8f201ea32ff9b3baa7c",
+    "Taskfold/Views/SubtaskOrganizer.swift": "164210e11bd48ddb2bdb9259a2df5983065ea08ca083cbf72a3e404ab32bceb5",
+    "Taskfold/Views/NoteFormattingView.swift": "16c444cad6c41836f500a05b550eb0cf36ea3e3f0fbe612a74a06dfccbefa7ab",
+    "Taskfold/Views/InboxReviewView.swift": "ce2e8d24ed5c7cc5b6c189692891805fbe21d618e9f27fd2a1335b39ddf293c6",
+    "Taskfold/Views/PinnedNotesView.swift": "350080dd481f7339c098c59bbfbabca3d258b5b76159a0d485da756cffb23447",
+    "TaskfoldTests/BackupTests.swift": "eebac14e7ee678acf6f1a600312aa686040ffdecb65b3ce583e5c8ed113c711a",
+    "Taskfold/Views/TaskInspector.swift": "a3bf6b29eb05de992bf1da075f735f46c4cf973121ee45b9b00c7df3a827832c"
+  },
+  "coreTests": {
+    "passed": 124,
+    "failed": 0,
+    "logSHA256": "38d85c2d07c303dc169c77f5de198229a4ea67cf5c073c9911b3021e5c727f11",
+    "newCases": [
+      "Account and epoch captured before presentation",
+      "Missing/replaced existing sources cannot become new tasks",
+      "New drafts require authored account and unused identity",
+      "Nested sheets keep original root/workspace",
+      "Queued new draft remains in original vault and rejects other vault"
+    ]
+  },
+  "build": {
+    "passed": true,
+    "configuration": "Debug unsigned generic macOS",
+    "logSHA256": "93b7b210f8bf1d1648369829935616fc778c599a4fad8ebc5d776ab7e4175737"
+  },
+  "nativeAcceptance": {
+    "macRuntime": false,
+    "spokenVoiceOver": false,
+    "realCloudAuthTransitions": false,
+    "serviceRoleChanges": false,
+    "syntheticLocalAccountsOnly": true
+  },
+  "realDataChanged": false,
+  "hostedChanges": false,
+  "releaseConfigurationChanged": false,
+  "remaining": [
+    "Broader live role/account and draft-cohort acceptance",
+    "Native Mac and spoken acceptance",
+    "Scoped team adapters and premium organization UI",
+    "Paired offline Watch completion and documented remaining ranks"
+  ],
+  "cleanup": {
+    "removedOwnedBuildBytes": 1875386309,
+    "removedPaths": [
+      "/tmp/taskfold-editor-admission-ios-host",
+      "/tmp/taskfold-editor-admission-ios-build",
+      "/tmp/taskfold-editor-admission-mac-build",
+      "/tmp/taskfold-editor-admission-ipad.xcresult",
+      "/tmp/taskfold-editor-admission-iphone.xcresult",
+      "/tmp/taskfold-editor-admission-iphone-accepted.xcresult",
+      "/tmp/taskfold-editor-admission-ipad-accepted.xcresult",
+      "/tmp/taskfold-editor-admission-ipad-final.xcresult",
+      "/tmp/taskfold-editor-admission-iphone-final.xcresult",
+      "/tmp/taskfold-editor-admission-iphone-final-attachments",
+      "/tmp/taskfold-editor-admission-ipad-accepted-attachments",
+      "/tmp/taskfold-editor-admission-iphone-accepted-attachments",
+      "/tmp/taskfold-editor-admission-ipad-initial-attachments"
+    ],
+    "temporaryApps": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestseditoradmission",
+        "uninstalled": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestseditoradmission.uitests.xctrunner",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestseditoradmission",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestseditoradmission.uitests.xctrunner",
+        "uninstalled": true
+      }
+    ],
+    "macRegistrationRemoved": true,
+    "noMacAppLaunched": true
+  }
+}

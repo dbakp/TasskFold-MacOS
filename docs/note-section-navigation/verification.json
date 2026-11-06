@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-06",
+  "platform": "mac",
+  "implementationBuilt": true,
+  "coreAccepted": true,
+  "selectedCorePasses": 47,
+  "currentSignedBuildAccepted": true,
+  "currentNativeNavigationAccepted": false,
+  "iPhoneNormalReaderAndEditorPreviewAccepted": true,
+  "iPhoneLargestTextReaderAccepted": true,
+  "normalAppsReplaced": false,
+  "ordinaryFeatureGatesChanged": false,
+  "sourceSHA256": {
+    "Taskfold/Core/NoteMarkup.swift": "823b1cc50930f9235727c9b2dce86fa2c4e9dac33334064193eb4a24faeb1ee3",
+    "Taskfold/Views/NoteFormattingView.swift": "27ab262eeb2019d7fd8ebf55dbec55687d55d0eb80b64f94497213ff67b37c78",
+    "Taskfold/Views/PinnedNotesView.swift": "2a199d2f747c7e507cf6565092d6cb23e769f8a674f284587b0845f2cbca1927",
+    "TaskfoldTests/NoteSourceBindingTests.swift": "e06fc579bdbbae3e5603001686e34047cc67dd032f74d3a2022c64d7675de7db"
+  },
+  "remaining": [
+    "Mac/iPad interactive navigation and broader source/account transitions",
+    "VoiceOver heading speech and physical scrolling/FPS",
+    "Largest-text editor-preview heading navigation"
+  ],
+  "dailyPackages": "Frozen Mac22/phone34 archives preserved; normal Mac14/phone34 unchanged; further physical phone installation deferred",
+  "previousSourceReference": "pre-fix-verification.json"
+}

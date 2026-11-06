@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native iOS Today accessory circular, rectangular and inline views under explicit SwiftUI privacy, then return to normal",
+  "status": "Native owned iOS view acceptance; actual installed system-selected privacy remains open",
+  "productCodeChanged": false,
+  "implementation": "iOS-owned generator creates a separate in-memory SwiftUI app from current owned widget source and three owned widget core files. App source phase contains only generated host; no extension embedding/dependency, URL handlers, workspace store or auth flow. No build dependency on Mac repo. Mac receives evidence only because accessory families are iOS-specific.",
+  "native": {
+    "bundle": "ios-accessory-privacy-native-v2.xcresult",
+    "result": "Passed",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": [],
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+      "deviceName": "Taskfold phone calendar rotation disposable",
+      "modelName": "iPhone 17 Pro",
+      "osBuildNumber": "23F77",
+      "osVersion": "26.5",
+      "platform": "iOS Simulator"
+    },
+    "durationSeconds": 23.928,
+    "steps": [
+      "Native segmented control chooses circular, rectangular and inline in turn",
+      "Verify expected normal count/task title in actual accessibility subtree",
+      "Native test-host button enables explicit .privacy; wait for visible mode change",
+      "Private subtree contains readable generic message, no synthetic task title, project, time, count or task ID and zero task buttons",
+      "Capture each private view and subtree",
+      "Return to normal and verify each layout restores its expected content"
+    ],
+    "visual": "All three screenshots individually inspected: circular lock, rectangular and inline lock plus Tasks are private; no sensitive data visible",
+    "initialFailure": "ios-accessory-privacy-native-v1.xcresult failed before private checks: host switch tap left Normal content. Test-only host uses explicit button and visible-state waits in accepted v2. Failed bundle retained."
+  },
+  "builds": {
+    "initial": "Isolated iOS Simulator Debug build-for-testing passes (arm64 and x86_64)",
+    "accepted": "Isolated iOS Simulator Debug arm64 build-for-testing passes",
+    "release": "No production source change; no new Release or distribution claim",
+    "macOS": "No new Mac app build/native pass claimed; prior separately owned Mac privacy evidence remains scoped"
+  },
+  "references": [
+    "https://developer.apple.com/documentation/widgetkit/creating-a-widget-extension",
+    "https://developer.apple.com/documentation/swiftui/view/privacysensitive(_:)"
+  ],
+  "limitations": [
+    "Explicit privacy environment does not prove operating-system redaction selection on a locked device",
+    "This is a native app host of accessory views, not an installed Lock Screen widget",
+    "No spoken VoiceOver acceptance",
+    "Other widget families, Mac hosts, account boundaries and broad P0 remain separately tracked"
+  ],
+  "cleanup": {
+    "protectedFilesUnchanged": 100,
+    "mainAppsAndRunnersOpen": 0,
+    "disposableAppAndRunnerUninstalled": true,
+    "disposableSimulatorShutdown": true,
+    "prunedBytes": 311881986,
+    "freeGiB": 97.2,
+    "preserved": "Original native result bundles, current production test products and installed system widget hosts",
+    "cleanupNote": "Xcode shut the device down after tests; booted only to uninstall and shut down again"
+  },
+  "sourceSafety": "Synthetic in-memory data only; no Todoist or backend requests, no real tasks changed, no installed widgets or privacy settings changed",
+  "sourceHashes": {
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "c34bad2c1237b0835715ece2f1f4c68216d0cbd2b73fcba19686192a9931964e",
+    "Scripts/prepare_ios_widget_privacy_host.py": "58cad5e79fe2af4cbaa370167a7d6dd971584943c130a35ceac46fc685e42803",
+    "Scripts/fixtures/AccessoryPrivacyHost.swift": "7809956abc341146cfec5b44ebedba63bbd9bacb8ce11645c8dd0e9ea48ca9d6",
+    "Scripts/fixtures/AccessoryPrivacyUITests.swift": "8c509177a71a228b7016fbc933d27326426e0a50e9fe1dec69494f6aa7e1187d"
+  },
+  "captures": {
+    "captures/accessory-privacy/circular-private-accessibility.txt": "0637b13643d68321e94f7f532aedab2ac7df53eaba7c8ec17c212b22477784e2",
+    "captures/accessory-privacy/circular-private-accessory.png": "38e7d219afafde1a6b6a86f4b3c5116fc6b70ea25c8968a126e4b7bad27be834",
+    "captures/accessory-privacy/inline-private-accessibility.txt": "ee26d5e4560d19ebd19f77ea16dd3a3ab87290f364f15e4a719c6642b160a070",
+    "captures/accessory-privacy/inline-private-accessory.png": "0e427c0e6cb89b183deebcbee6a6d78a845dadb63a7ba905332bed1a980b5716",
+    "captures/accessory-privacy/rectangular-private-accessibility.txt": "abdd3698b3def7f2e1b63c8713bd2fea3364c4fcb16a9a301952657b3dd9f593",
+    "captures/accessory-privacy/rectangular-private-accessory.png": "a8bd21e0812841f0a66e30bca6c3ae49ceae0151d9fd4e9e49372f3ab2471ac9"
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "date": "2026-10-10",
+  "scope": "Native Mac \u2192 iPhone Simulator \u2192 Mac task, pin and Focus handoff; Mac and phone relaunch persistence",
+  "macBaseCommit": "10467e815ebc2f306b07009b261658ff13e150e1",
+  "iosBaseCommit": "f59662bd2259acfc83ff978de9e4e011e1ebb5f3",
+  "macBundleID": "com.dbakp.taskfold.mac.p0uitests",
+  "phoneBundleID": "com.dbakp.taskfold.assigneepatterntests",
+  "phoneDevice": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+  "serverBefore": {
+    "task": {
+      "id": "101fbaab-af99-480c-97a6-4876bc3e7389",
+      "title": "Continuity 9a8bfc3d revised",
+      "due_date": "2026-10-10",
+      "due_time": null,
+      "priority": 1,
+      "description": "Created in the native Mac app for device-switch verification.",
+      "deadline_date": null,
+      "duration_minutes": 25
+    },
+    "focus": [
+      {
+        "id": "current",
+        "state": {
+          "status": "paused",
+          "task_id": "101fbaab-af99-480c-97a6-4876bc3e7389",
+          "elapsed_ms": 1165,
+          "session_id": "87aa5a91-718e-46ec-9010-b76f5f09eda9",
+          "changed_at_ms": 1791659265347,
+          "started_at_ms": 1791659264182,
+          "duration_seconds": 1500,
+          "running_since_ms": null
+        },
+        "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "revision": 2,
+        "action_id": "e086b216-f834-4c09-991e-12c6ed79e8ec",
+        "updated_at": "2026-10-10T19:07:46.389213+00:00"
+      }
+    ],
+    "viewOrders": [
+      {
+        "id": "widget-note:101fbaab-af99-480c-97a6-4876bc3e7389",
+        "ids": [
+          "101fbaab-af99-480c-97a6-4876bc3e7389"
+        ],
+        "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "updated_at": "2026-10-10T19:07:36.362872+00:00"
+      }
+    ]
+  },
+  "serverAfter": {
+    "task": {
+      "id": "101fbaab-af99-480c-97a6-4876bc3e7389",
+      "title": "Continuity 9a8bfc3d revised",
+      "due_date": "2026-10-10",
+      "due_time": null,
+      "priority": 1,
+      "description": "\nPhone added a durable handoff note.Created in the native Mac app for device-switch verification.",
+      "deadline_date": null,
+      "duration_minutes": 25
+    },
+    "focus": [
+      {
+        "id": "current",
+        "state": {
+          "status": "stopped",
+          "task_id": "101fbaab-af99-480c-97a6-4876bc3e7389",
+          "elapsed_ms": 3848,
+          "session_id": "87aa5a91-718e-46ec-9010-b76f5f09eda9",
+          "changed_at_ms": 1791659349051,
+          "started_at_ms": 1791659264182,
+          "duration_seconds": 1500,
+          "running_since_ms": null
+        },
+        "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "revision": 4,
+        "action_id": "912b7e58-3c24-4d7e-8dcf-76cba043d990",
+        "updated_at": "2026-10-10T19:09:09.20547+00:00"
+      }
+    ],
+    "viewOrders": [
+      {
+        "id": "widget-note:101fbaab-af99-480c-97a6-4876bc3e7389",
+        "ids": [
+          "101fbaab-af99-480c-97a6-4876bc3e7389"
+        ],
+        "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "updated_at": "2026-10-10T19:07:36.362872+00:00"
+      }
+    ]
+  },
+  "nativePhases": [
+    {
+      "test": "testLiveLocalToCloudProfileAndPhoneEditReceive()",
+      "resultBundle": "mac-live-handoff-v4.xcresult",
+      "checks": [
+        "Local Account pane \u2192 native email sign-in \u2192 untouched profile draft follows cloud account",
+        "Phone-revised title and original Mac notes in native inspector",
+        "Pin task and start/pause Focus"
+      ],
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0
+    },
+    {
+      "test": "testLiveMacPinnedTaskAndFocusReceiveEditAndEndOnPhone()",
+      "resultBundle": "phone-mac-rich-handoff-v1.xcresult",
+      "checks": [
+        "Receive Mac pin and original notes",
+        "Edit notes while retaining original content",
+        "Receive paused Focus, resume/end same session, relaunch retains end and notes"
+      ],
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0
+    },
+    {
+      "test": "testLivePhoneNoteAndEndedFocusReturnToMac()",
+      "resultBundle": "mac-rich-handoff-return-v1.xcresult",
+      "checks": [
+        "Receive phone note edit and retained pin",
+        "Receive phone-ended Focus",
+        "Quit/relaunch Mac and verify both again"
+      ],
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0
+    }
+  ],
+  "fixtureState": "Existing disposable account retained privately for remaining native organization/planning checks. No credentials committed; no production task data used.",
+  "open": [
+    "Native Mac project/section/label/filter ordering and offline handoff",
+    "Broader planning/recurrence/account-switch and profile photo acceptance",
+    "Installed Desktop widget hosts, VoiceOver, provider/APNs/distribution gates"
+  ],
+  "limitations": [
+    "This proves the named task/pin/Focus workflow, not every feature or device/surface.",
+    "Phone edit inserts at its native caret position; full text is preserved, including the resulting leading newline."
+  ],
+  "artifactRoot": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance",
+  "cacheVerification": {
+    "taskCount": 1,
+    "macPending": 0,
+    "phonePending": 0,
+    "exactEqualTables": [
+      "tasks",
+      "view_orders",
+      "focus_sessions"
+    ],
+    "canonicalEqualTablesSHA256": "a0a6d4bff7cc2ae1b6482705897591d2fe2db259d112077300ae16ed880e78a3",
+    "allTaskFieldsExceptDescriptionUnchanged": true,
+    "focusOriginalSessionID": "87aa5a91-718e-46ec-9010-b76f5f09eda9",
+    "focusRevisionBefore": 2,
+    "focusRevisionAfter": 4
+  },
+  "screenshots": {
+    "handoff-mac-cloud-profile.png": {
+      "sha256": "a3da3c59548f5bcbe3bd457b89be1111040ff58d56facdf0d5ee3d042bbb8e2b",
+      "inspected": true
+    },
+    "handoff-mac-phone-title-received.png": {
+      "sha256": "b32e4df0b52064c1b4ace51bb1e0e2027b3c190ebd9d180ae0c2e42b5961dfd8",
+      "inspected": true
+    },
+    "handoff-mac-pinned-paused.png": {
+      "sha256": "c05253fcef78252b588f031aa0bcd1d56f742bcaa34a6bcbea43590304ee0f8e",
+      "inspected": true
+    },
+    "handoff-phone-note-edited.png": {
+      "sha256": "4b20d7818bb44177547606ca7e420a3027d11d6ebdaae0edcdeb0eaf31e1b059",
+      "inspected": true
+    },
+    "handoff-phone-focus-ended.png": {
+      "sha256": "92a76b1b65f34a8391c1076d5074d6e8ba1ad7991588c6d8e15467e653a54021",
+      "inspected": true
+    },
+    "handoff-mac-note-return-relaunch.png": {
+      "sha256": "39b7b4fd134344d84572777d908f2c0b524b36537b7b5bc363e0d8a180295e37",
+      "inspected": true
+    },
+    "handoff-mac-focus-return-relaunch.png": {
+      "sha256": "8896e8775120a76860cfcac1e9a30c0b185157f88ef825b89af5440e73d9fbd5",
+      "inspected": true
+    }
+  },
+  "visualReview": "Cloud account name replaces Local Workspace in Mac settings. Original phone-revised title/notes/P1/25-minute plan remain readable on Mac. Phone reader retains both original and inserted note text; phone and relaunched Mac show Session ended for the original task. Mac pin remains on. The test insertion is at the native caret and leaves a leading newline; no full-note reformatting occurred."
+}

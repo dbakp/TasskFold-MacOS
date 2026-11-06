@@ -1,0 +1,10 @@
+{
+  "host": "/tmp/taskfold-mac-recovery-host",
+  "derivedData": "/tmp/taskfold-mac-recovery-build",
+  "scheme": "Taskfold",
+  "configuration": "Debug",
+  "destination": "platform=macOS",
+  "test": "TaskfoldUITests/TaskfoldMacUITests/testHeadingPlannerChildScheduleUndoCompleteAndColdReturn",
+  "status": "Ready for test-without-building after manual unlock; use a fresh result path",
+  "note": "The workflow fixture starts in Inbox, so the corrected case explicitly selects Calendar. No user data or release settings are involved."
+}

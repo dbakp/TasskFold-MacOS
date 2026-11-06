@@ -1,0 +1,14 @@
+{
+  "repository": "TasskFold-MacOS",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "7fe4e17b96721ebd3efd4fcdfa2d67aa6fa2cd810b65901400e8653e42baceba",
+    "Taskfold/Core/TaskActivity.swift": "4110439b64aa5483cf0998e2b9366575608f094437e260ca5569a99df9a7f764",
+    "Taskfold/Views/ProjectPulseView.swift": "ddba9326e2a64bd1ca3cbeef4428cc1d78818ebebbce14d45a78814a43da89b9",
+    "TaskfoldTests/TaskNodeActivityTests.swift": "6290a3c6fd83b227c84454b36147d46cf9d9939a0cea48e324908fe3d04a11e8",
+    "Scripts/Database/test-child-field-activity.mjs": "e8f4e3448302b382119ed9e644f593f8e7fe6ac20b024d83adcda8457bba15c8",
+    "Scripts/verify_child_field_activity_snapshot.py": "42a7971c5202fb02569f2e8ceb957074b38765589f406ebc9df1ec15a0d80e91",
+    "supabase/migrations/20261031204437_child_field_activity_details.sql": "ef059fb6f7a8ea2ed32945b3424071f761ee43e8b92b6d10eb28d33166563b2c",
+    "TaskfoldTests/Fixtures/child-field-activity-v2.json": "34cf2ced557af29648fa5cbade20d7f54ffc17c71d6137ae5986752b7754ac56"
+  },
+  "productionGatesChanged": false
+}

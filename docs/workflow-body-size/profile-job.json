@@ -1,0 +1,24 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+    "-destination",
+    "platform=macOS,arch=arm64",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-save-profile.xcresult",
+    "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce"
+  ],
+  "returncode": 0,
+  "sampling": {
+    "pid": "60074",
+    "returncode": 0,
+    "stderr": "Sampling process 60074 for 4 seconds with 1 millisecond of run time between samples\nSampling completed, processing symbols...\nSample analysis of process 60074 written to file /tmp/taskfold-save-profile.sample.txt\n"
+  },
+  "elapsed": 22.642531871795654
+}

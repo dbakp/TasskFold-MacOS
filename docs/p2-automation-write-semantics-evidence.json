@@ -1,0 +1,124 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "milestone": "Shared recurrence creator fix and full write-semantics parity; gateway in progress",
+  "baseCommit": "390806910cde7fca5b8372322ec3d7fa1a81c279",
+  "featureEnabled": false,
+  "migrationApplied": false,
+  "edgeFunctionDeployed": false,
+  "productionMutationRPCImplemented": false,
+  "fullPxComplete": false,
+  "nativeRuntimeChanged": true,
+  "candidateMigration": "20261022222726_automation_task_writes.sql",
+  "implemented": [
+    "Direct/widget/bulk recurring successors use acting account; original creator/project preserved",
+    "Native INSERT predicate faithfully represented and tested under authenticated role",
+    "Full successor stable occurrence/child IDs, rules, dates, resets, reminders, metadata and unknown-field preservation",
+    "Timed-default behavior including placeholders/manual/opaque/disabled/local-semantic duplicate choices",
+    "First-fold/first-valid-minute wall clock and valid explicit-instant preservation; candidate normalizer replacement",
+    "Only input-time helpers get narrow native DML-role grants; data/successor/default helpers remain private"
+  ],
+  "verification": {
+    "selectedCore": {
+      "tests": 150,
+      "failures": 0,
+      "skips": 0,
+      "includes": [
+        "316 previous date goldens",
+        "49 new write-semantics goldens",
+        "Direct/widget/bulk shared ownership",
+        "Hierarchy/generation/completion/project regressions"
+      ],
+      "command": "swift test --filter 'TaskCompletionTests|AutomationWriteSemanticsTests|AutomationRecurrenceParityTests|WidgetActionTests|TaskGenerationTests|ProjectWorkflowsTests|CompletionRevisionTests|SubtaskTreeTests|TaskHierarchyIndexTests|MixedSelectionTests|QuickPlanningCompletionTests'"
+    },
+    "localWriteSemantics": {
+      "passed": true,
+      "assertions": 84,
+      "goldens": {
+        "wallTimes": 11,
+        "automaticReminders": 26,
+        "fullSuccessors": 12
+      },
+      "runtime": "Pinned PGlite 0.5.11 with pgcrypto",
+      "command": "npm run --prefix Scripts/Database test:automation-write-semantics",
+      "fixtureAuthAccountsRemaining": 0,
+      "includes": [
+        "Old-creator INSERT rejected, acting-account INSERT accepted under native role",
+        "Invoker-trigger grants/normalization through native INSERT/UPDATE",
+        "Unrelated edits keep gap normalization stable; date edit rebuilds old instant",
+        "Explicit-zone repeat independent of connection display zone"
+      ]
+    },
+    "previousReadJournalRegression": {
+      "passed": true,
+      "assertions": 89,
+      "command": "npm run --prefix Scripts/Database test:automation-tasks"
+    },
+    "appBuild": {
+      "passed": true,
+      "platform": "macOS",
+      "mode": "Mac Debug CODE_SIGNING_ALLOWED=NO",
+      "note": "Existing isolated workflowtestsp1 stage/cache; current runtime sources and isolated App Group. No app launch/new GUI acceptance."
+    }
+  },
+  "goldenProvenance": {
+    "wallTimeExpectations": "Independently specified instants",
+    "otherExpectedOutputs": "Actual native algorithms through explicit maintainer-only synthetic export",
+    "normalized": [
+      "Fresh generation/action IDs",
+      "Equivalent timestamp spellings"
+    ],
+    "ordinaryTestsRewriteFixtures": false
+  },
+  "readOnlyLiveFindings": [
+    "Native INSERT requires user_id == auth.uid even for accepted project collaborators",
+    "guard_task refuses changing an existing creator; new source leaves parent creator unchanged",
+    "Hosted normalizer uses PostgreSQL default wall-time resolution",
+    "Existing authenticated and anonymous private-schema USAGE inspected; no USAGE grant added",
+    "Recurrence-parent self-FK is ON DELETE CASCADE; no FK change made"
+  ],
+  "scopeLimits": [
+    "No hosted DDL/function/config/deployment/real task changes",
+    "Local dependency fixture does not load every hosted assignment/activity/reminder/Auth trigger",
+    "No installed shared-cloud/native network completion, new GUI/VoiceOver or real HTTP acceptance",
+    "Helpers are not a production mutation RPC, preference read, duplicate insert/replay or reviewed cascade proof",
+    "Historical/future timezone and rule equivalence is not exhaustively proven",
+    "Mac release/signing/runtime, legacy rollout enforcement, OAuth, remote reminder and physical-location deferrals remain"
+  ],
+  "remaining": [
+    "Guarded create/update/complete/reopen/delete wrappers with actor/destination/assignment checks and immutable journal",
+    "Atomic preference read: distinguish no record from unsupported documents",
+    "Safe successor suppression/insert under native generation/advisory locks",
+    "Review/lock all cascade descendant baselines/access/generations; retain native/backup links",
+    "Real HTTP/request/lock budgets, Auth/scopes/quota/revocation/concurrency acceptance",
+    "Premium native management/recovery/revoke and signed-in Simulator flows before coherent apply/deploy",
+    "Wider automation/email/webhook/teams/wearable Px work remains active"
+  ],
+  "iterations": [
+    "Removed unnecessary Swift try marker before final ordinary runs",
+    "Qualified PL/pgSQL duplicate-check alias to avoid row-variable ambiguity",
+    "Corrected fixture INSERT-policy fidelity and proved rejected/accepted native-role controls",
+    "Aligned empty/removed-clock, disabled and local multi-channel reminder semantics"
+  ],
+  "sources": {
+    "Taskfold/Core/Models.swift": "587f4bf158b42ec296b82d51dfeadced720288ed62fc2a1b6b2f8f30edec62cb",
+    "Taskfold/Core/Store.swift": "a0fa2842bc18933b15c85e7890c05709ba8f426eff2e1f97fc72028ab9909649",
+    "Taskfold/Core/SubtaskTree.swift": "0081747bb2915dca139e31a8c14c7a956e85bd1cd3ba930a984eb5e4633136c9",
+    "Taskfold/Core/WidgetCompletion.swift": "f19b48fce8685163ceffce52bb2df2078c3ef488ae3b833571397aab70a8aa8a",
+    "TaskfoldTests/TaskCompletionTests.swift": "6b24647b0a2939ca9946be99a3d857badd2332ae813fc19e6c07c37aeddaa6ea",
+    "TaskfoldTests/WidgetActionTests.swift": "e77a5cfd6bd5b79376e6d86bb2db51c3cff71d8590e3ae1681b42f14a086827c",
+    "TaskfoldTests/SubtaskTreeTests.swift": "a5c2953b579e7c66b0fd3bb170c290b522d5f33ab804b8c71c663b7be2d2c83d",
+    "TaskfoldTests/AutomationWriteSemanticsTests.swift": "fff47e96ec14977f33d471c4d0b56d86c8e4a718995732d79ac314840c92c777",
+    "TaskfoldTests/Fixtures/automation-write-semantics.json": "7026487ad7ef942aeada3b9878ae68e95a47e16c166cdcd5df388b504a662740",
+    "Scripts/Database/automation-task-bootstrap.sql": "43ef03fb36c6782d9f89359528f1c4d62ecfb769cf145797991aa0c73b426f4a",
+    "Scripts/Database/test-automation-write-semantics.mjs": "a67e61e5830dd2b27fd67fca3788457a13a7e37b488eb532605d6a3cddf9fcfd",
+    "supabase/migrations/20261022222726_automation_task_writes.sql": "b121e8aa1a4525fdbfaa7f7903abbc44a2f7cc6d5a593f7f185d71424af9dd59"
+  },
+  "readOnlyLiveVerification": {
+    "successorHelper": null,
+    "candidateMigrationPresent": false,
+    "hostedNormalizerUsesCandidateHelper": false,
+    "recurrenceForeignKey": "FOREIGN KEY (recurrence_parent_id) REFERENCES tasks(id) ON DELETE CASCADE",
+    "note": "Metadata SELECT only. No schema/function/task changes on the hosted project."
+  }
+}

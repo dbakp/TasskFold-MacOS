@@ -1,0 +1,466 @@
+{
+  "date": "2026-11-04",
+  "project": "zqxflydiyfjeedqvyova",
+  "sourceMigration": "supabase/migrations/20261104190311_taskfold_capture_workflow_undo.sql",
+  "sourceSHA256": "edf4a9e90c8158b1aade72234e6b11324a1306efb1728c32c9b415795427d8bc",
+  "expectedFunctionBodies": {
+    "taskfold_private.undo_private_workflow": "8c8567e3862184c91df75242adfcc028",
+    "public.taskfold_undo_private_workflow": "b107d79d598a4bbc0baaa9f8d0489dcd",
+    "public.taskfold_undo_capture_workflow": "f5f4a15e5c99fdb3fdbfc85ae0e519fe",
+    "public.taskfold_workflow_undo_capabilities": "7b23c847a10868f5840d502739afcfb0"
+  },
+  "before": {
+    "baseline": {
+      "undo": true,
+      "actor": true,
+      "teams": false,
+      "boundary": false,
+      "patchMD5": "7ee251352383bd82460a1a231d938f73",
+      "policies": "f47d73f4af02a1d7a6f4af0fb2cd75c4",
+      "receipts": true,
+      "privateUndo": true,
+      "capabilities": true,
+      "publicTables": "41a583b2b31941afd8ab1adb17ce23ed",
+      "taskTriggers": "201b08161aa0754a82e7e93dd228df6a",
+      "projectAccessMD5": "4546075427ba75e7e02df4db3838c6d6"
+    },
+    "functions": [
+      {
+        "name": "taskfold_undo_private_workflow",
+        "bodyMD5": "e5a12b7d563585344c89a1eeb5a59617",
+        "definer": false,
+        "anonymous": false,
+        "authenticated": true
+      },
+      {
+        "name": "taskfold_workflow_undo_capabilities",
+        "bodyMD5": "b0cd499d5e2e06d955c7b2a77e7ce0f8",
+        "definer": false,
+        "anonymous": false,
+        "authenticated": true
+      },
+      {
+        "name": "undo_private_workflow",
+        "bodyMD5": "e10df976dd4c01fddcaaf225f9f26898",
+        "definer": true,
+        "anonymous": false,
+        "authenticated": true
+      }
+    ],
+    "captureRoute": false
+  },
+  "deployed": true,
+  "rollbackPreservesReceipts": true,
+  "testedMigration": "supabase/migrations/20261103213718_capture_workflow_undo.sql",
+  "after": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "table": "labels"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "table": "labels"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "table": "labels"
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "table": "labels"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "table": "labels"
+      },
+      {
+        "name": "id",
+        "type": "uuid",
+        "table": "project_collaborators"
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "table": "project_collaborators"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "table": "project_collaborators"
+      },
+      {
+        "name": "invited_email",
+        "type": "text",
+        "table": "project_collaborators"
+      },
+      {
+        "name": "role",
+        "type": "collaborator_role",
+        "table": "project_collaborators"
+      },
+      {
+        "name": "status",
+        "type": "invitation_status",
+        "table": "project_collaborators"
+      },
+      {
+        "name": "invited_by",
+        "type": "uuid",
+        "table": "project_collaborators"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "table": "project_collaborators"
+      },
+      {
+        "name": "accepted_at",
+        "type": "timestamp with time zone",
+        "table": "project_collaborators"
+      },
+      {
+        "name": "id",
+        "type": "uuid",
+        "table": "projects"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "table": "projects"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "table": "projects"
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "table": "projects"
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "table": "projects"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "table": "projects"
+      },
+      {
+        "name": "order_index",
+        "type": "integer",
+        "table": "projects"
+      },
+      {
+        "name": "source_metadata",
+        "type": "jsonb",
+        "table": "projects"
+      },
+      {
+        "name": "parent_id",
+        "type": "uuid",
+        "table": "projects"
+      },
+      {
+        "name": "is_archived",
+        "type": "boolean",
+        "table": "projects"
+      },
+      {
+        "name": "ancestor_archived",
+        "type": "boolean",
+        "table": "projects"
+      },
+      {
+        "name": "id",
+        "type": "uuid",
+        "table": "sections"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "table": "sections"
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "table": "sections"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "table": "sections"
+      },
+      {
+        "name": "order_index",
+        "type": "integer",
+        "table": "sections"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "table": "sections"
+      },
+      {
+        "name": "id",
+        "type": "uuid",
+        "table": "tasks"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "table": "tasks"
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "table": "tasks"
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "table": "tasks"
+      },
+      {
+        "name": "completed",
+        "type": "boolean",
+        "table": "tasks"
+      },
+      {
+        "name": "priority",
+        "type": "integer",
+        "table": "tasks"
+      },
+      {
+        "name": "due_date",
+        "type": "date",
+        "table": "tasks"
+      },
+      {
+        "name": "due_time",
+        "type": "time without time zone",
+        "table": "tasks"
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "table": "tasks"
+      },
+      {
+        "name": "section_id",
+        "type": "uuid",
+        "table": "tasks"
+      },
+      {
+        "name": "labels",
+        "type": "text[]",
+        "table": "tasks"
+      },
+      {
+        "name": "subtasks",
+        "type": "jsonb",
+        "table": "tasks"
+      },
+      {
+        "name": "reminders",
+        "type": "text[]",
+        "table": "tasks"
+      },
+      {
+        "name": "attachments",
+        "type": "jsonb",
+        "table": "tasks"
+      },
+      {
+        "name": "comments",
+        "type": "jsonb",
+        "table": "tasks"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "table": "tasks"
+      },
+      {
+        "name": "completed_at",
+        "type": "timestamp with time zone",
+        "table": "tasks"
+      },
+      {
+        "name": "recurrence_pattern",
+        "type": "jsonb",
+        "table": "tasks"
+      },
+      {
+        "name": "is_recurring",
+        "type": "boolean",
+        "table": "tasks"
+      },
+      {
+        "name": "recurrence_parent_id",
+        "type": "uuid",
+        "table": "tasks"
+      },
+      {
+        "name": "recurrence_end_date",
+        "type": "date",
+        "table": "tasks"
+      },
+      {
+        "name": "notification_sent_at",
+        "type": "timestamp with time zone",
+        "table": "tasks"
+      },
+      {
+        "name": "assigned_to",
+        "type": "uuid",
+        "table": "tasks"
+      },
+      {
+        "name": "deadline_date",
+        "type": "date",
+        "table": "tasks"
+      },
+      {
+        "name": "duration_minutes",
+        "type": "integer",
+        "table": "tasks"
+      },
+      {
+        "name": "time_zone",
+        "type": "text",
+        "table": "tasks"
+      },
+      {
+        "name": "reminder_specs",
+        "type": "jsonb",
+        "table": "tasks"
+      },
+      {
+        "name": "source_metadata",
+        "type": "jsonb",
+        "table": "tasks"
+      },
+      {
+        "name": "scheduled_at",
+        "type": "timestamp with time zone",
+        "table": "tasks"
+      },
+      {
+        "name": "completion_version",
+        "type": "bigint",
+        "table": "tasks"
+      },
+      {
+        "name": "task_generation",
+        "type": "uuid",
+        "table": "tasks"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "table": "view_orders"
+      },
+      {
+        "name": "id",
+        "type": "text",
+        "table": "view_orders"
+      },
+      {
+        "name": "ids",
+        "type": "jsonb",
+        "table": "view_orders"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "table": "view_orders"
+      }
+    ],
+    "baseline": {
+      "undo": true,
+      "actor": true,
+      "teams": false,
+      "boundary": false,
+      "patchMD5": "7ee251352383bd82460a1a231d938f73",
+      "policies": "f47d73f4af02a1d7a6f4af0fb2cd75c4",
+      "receipts": true,
+      "privateUndo": true,
+      "capabilities": true,
+      "publicTables": "41a583b2b31941afd8ab1adb17ce23ed",
+      "taskTriggers": "201b08161aa0754a82e7e93dd228df6a",
+      "projectAccessMD5": "4546075427ba75e7e02df4db3838c6d6"
+    },
+    "functions": [
+      {
+        "name": "public.taskfold_undo_capture_workflow",
+        "bodyMD5": "f5f4a15e5c99fdb3fdbfc85ae0e519fe",
+        "definer": false,
+        "settings": [
+          "search_path=\"\""
+        ],
+        "anonymous": false,
+        "authenticated": true
+      },
+      {
+        "name": "public.taskfold_undo_private_workflow",
+        "bodyMD5": "b107d79d598a4bbc0baaa9f8d0489dcd",
+        "definer": false,
+        "settings": [
+          "search_path=\"\""
+        ],
+        "anonymous": false,
+        "authenticated": true
+      },
+      {
+        "name": "public.taskfold_workflow_undo_capabilities",
+        "bodyMD5": "7b23c847a10868f5840d502739afcfb0",
+        "definer": false,
+        "settings": [
+          "search_path=\"\""
+        ],
+        "anonymous": false,
+        "authenticated": true
+      },
+      {
+        "name": "taskfold_private.require_workflow_actor",
+        "bodyMD5": "70273382ab65699fe18e566d5cdc98d1",
+        "definer": true,
+        "settings": [
+          "search_path=\"\"",
+          "lock_timeout=3s"
+        ],
+        "anonymous": false,
+        "authenticated": true
+      },
+      {
+        "name": "taskfold_private.undo_private_workflow",
+        "bodyMD5": "8c8567e3862184c91df75242adfcc028",
+        "definer": true,
+        "settings": [
+          "search_path=\"\"",
+          "lock_timeout=3s"
+        ],
+        "anonymous": false,
+        "authenticated": true
+      }
+    ],
+    "migration": {
+      "name": "taskfold_capture_workflow_undo",
+      "version": "20261104190311"
+    },
+    "captureRoute": true
+  },
+  "publicPermissionsAndPoliciesUnchanged": true,
+  "liveColumnsMatchCapturedContract": true,
+  "noRealTaskRowsReadOrWritten": true,
+  "securityWarningsUnchanged": true
+}

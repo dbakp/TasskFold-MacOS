@@ -1,0 +1,128 @@
+{
+  "date": "2026-10-21",
+  "status": "Native conversation and Mentions implementation accepted on phone/tablet; Mac interaction pending unlock",
+  "core": {
+    "ios": {
+      "reported": 859,
+      "skipped": 12,
+      "failures": 0,
+      "log": "ios-p1-conversation-full-core.log"
+    },
+    "macOS": {
+      "reported": 883,
+      "skipped": 32,
+      "failures": 0,
+      "log": "mac-p1-conversation-full-core.log"
+    },
+    "focusedConversationCasesPerRepo": 26,
+    "skips": "Existing opt-in environment cases, including the new disposable HTTP fixture; genuine HTTP was run separately with that fixture."
+  },
+  "liveHTTP": {
+    "ios": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 7.366,
+      "log": "ios-p1-conversation-live.log"
+    },
+    "macOS": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 6.777,
+      "log": "mac-p1-conversation-live.log"
+    },
+    "accounts": 2,
+    "sessionsPerRun": 3,
+    "checks": [
+      "Authenticated authorship and explicit recipient delivery",
+      "Original operation retry does not duplicate comment",
+      "Recipient read/retry and exact counts",
+      "Late creation acknowledgement returns newer comment body",
+      "Stale authored change retains text across queue encoding and requires reviewed revision",
+      "Body edits preserve recipient read state",
+      "All 51 comments arrive across two bounded cursor pages without duplicates",
+      "Removal clears text and recipients",
+      "Legacy task comment JSON remains identical"
+    ],
+    "cleanup": "Both disposable accounts, sessions, refresh tokens, projects, tasks, collaborator links, comments, mentions and operation receipts removed; private fixture file deleted."
+  },
+  "native": {
+    "phone": {
+      "result": "ios-p1-conversation-phone-accepted.xcresult",
+      "passed": 4,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "device": "iPhone 18 Pro / iOS 27"
+    },
+    "tablet": {
+      "result": "ios-p1-conversation-tablet-accepted.xcresult",
+      "passed": 4,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0,
+      "device": "iPad Pro 13-inch M5 / iOS 27"
+    },
+    "checks": [
+      "Mention opens exact current task editor",
+      "Explicit teammate toggle and multiline comment capture",
+      "Offline Send survives app termination and normal relaunch with exact text",
+      "Resume delivery removes the saved operation and shows canonical comment",
+      "Read/unread round trip",
+      "Explicit edited draft survives normal relaunch",
+      "Normal/light and largest-accessibility-text/dark presentation",
+      "Retained conflict displays authored draft beside latest shared version and sends reviewed revision",
+      "Confirmed removal preserves unrelated comment"
+    ],
+    "fixtureBoundary": "Native screen tests use a bundle-guarded local service fixture. Genuine server HTTP tests are separate and do not claim an end-to-end real-account native UI test. No real user tasks, Keychain credentials or provider accounts are used by these screen cases.",
+    "savedSnapshotPerDevice": {
+      "tasks": 1,
+      "projects": 1,
+      "commentsIncludingTombstone": 2,
+      "mentions": 1,
+      "pendingCoreMutations": 0,
+      "conversationOutbox": 0,
+      "removedCommentRevision": 4,
+      "removedCommentBodyEmpty": true,
+      "removedCommentRecipientsEmpty": true,
+      "unrelatedCommentPreserved": true
+    },
+    "visualReview": "Reviewed native phone normal conversation, conflict form and largest-text draft; tablet normal and largest-text conversations. Static draft text was visibly readable despite XCTest isHittable being false; its assertion now checks presence. Actual largest-text action-word hyphenation was fixed with fitting horizontal/vertical layouts and individual 44-point action areas."
+  },
+  "build": {
+    "ios": "App/widget and UI test bundle succeed for arm64 Simulator",
+    "macOS": "Independent app/widget development build succeeds; codesign --verify --deep --strict passes",
+    "logs": [
+      "ios-p1-conversation-native-build.log",
+      "mac-p1-conversation-native-build.log"
+    ],
+    "distributionClaim": false
+  },
+  "databaseEvidence": "p1-conversation-summary-server-evidence.json",
+  "durability": [
+    "Send persists the original account-bound operation before HTTP",
+    "Unavailable/archive/recipient/revision statuses retain authored text",
+    "Pending attempts cannot be replaced before an acknowledgement",
+    "New operations saved during a drain are not left behind by its in-flight summary",
+    "Workspace generation and per-scope tokens discard late callbacks",
+    "Older cache revisions cannot overwrite newer replies",
+    "Moved/recreated/inaccessible tasks and deleted comments hide cached mentions",
+    "Opaque unsupported cache records remain retained and unrendered"
+  ],
+  "backup": [
+    "Portable restore converts scoped shared text and drafts to historical task comments",
+    "No authenticated author rows, recipient delivery, read state or sending queues are replayed",
+    "Opaque source records and colliding legacy IDs are preserved",
+    "Legacy absent/null comment collections stay unchanged when nothing is archived",
+    "Encrypted account-bound recovery retains the queue"
+  ],
+  "remaining": [
+    "Interactive Mac walkthrough; CUA confirms desktop still locked",
+    "Genuine calendar provider registration/consent/reconnect acceptance from rank 6",
+    "No new VoiceOver spoken-output, release distribution or remote-notification acceptance claimed"
+  ],
+  "deferredUnchanged": [
+    "Remote reminders",
+    "Older-client rollout safeguards",
+    "Distribution verification"
+  ]
+}

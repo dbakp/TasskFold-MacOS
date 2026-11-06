@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-09",
+  "outage": "Debug Simulator URLProtocol fails Backend HTTP with notConnectedToInternet; OS network monitoring and physical connectivity are not simulated",
+  "preFeedbackPolishRoundTrip": [
+    {
+      "phase": "phone-create",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "a31a9c3c-14a4-4aa2-bf41-a3fb0ddbc2a7",
+      "serverTitle": "Continuity 42b503df"
+    },
+    {
+      "phase": "tablet-edit",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "a31a9c3c-14a4-4aa2-bf41-a3fb0ddbc2a7",
+      "serverTitle": "Continuity 42b503df revised"
+    },
+    {
+      "phase": "phone-observe",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "a31a9c3c-14a4-4aa2-bf41-a3fb0ddbc2a7",
+      "serverTitle": "Continuity 42b503df revised"
+    },
+    {
+      "phase": "phone-offline",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "a31a9c3c-14a4-4aa2-bf41-a3fb0ddbc2a7",
+      "serverTitle": "Continuity 42b503df revised",
+      "durablePendingEditVerified": true
+    },
+    {
+      "phase": "tablet-concurrent",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "a31a9c3c-14a4-4aa2-bf41-a3fb0ddbc2a7",
+      "serverTitle": "Remote device edit",
+      "independentNotesPreserved": true
+    },
+    {
+      "phase": "phone-review",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "a31a9c3c-14a4-4aa2-bf41-a3fb0ddbc2a7",
+      "serverTitle": "Offline device edit",
+      "independentNotesPreserved": true
+    },
+    {
+      "phase": "tablet-reviewed",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "a31a9c3c-14a4-4aa2-bf41-a3fb0ddbc2a7",
+      "serverTitle": "Offline device edit",
+      "independentNotesPreserved": true
+    }
+  ],
+  "finalFeedbackCheck": [
+    {
+      "phase": "phone-feedback",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "a31a9c3c-14a4-4aa2-bf41-a3fb0ddbc2a7",
+      "serverTitle": "Offline device edit",
+      "durablePendingEditVerified": true
+    }
+  ],
+  "loginCasesPassed": 2,
+  "roundTripUICasesPassed": 7,
+  "finalFeedbackUICasesPassed": 1,
+  "uiFailures": 0,
+  "uiSkips": 0,
+  "reportedUIRuntimeWarnings": 0,
+  "iOSFocusedCore": {
+    "passed": 2,
+    "skipped": 0
+  },
+  "macFocusedCore": {
+    "passed": 3,
+    "skipped": 0,
+    "includesLiveReadOfReviewedTask": true
+  },
+  "logs": {
+    "/tmp/taskfold-offline-ui-build-v1.log": "13d7fcd3b6601a2ba3898253fc34ce2aa672a191a729f4847432b740a6173070",
+    "/tmp/taskfold-offline-ui-build-v2.log": "2c45095b9c4408e72f34bdd27269cbafebf41777511eb98c4cc7bf37365cd9d8",
+    "/tmp/taskfold-offline-mac-build-v2.log": "cea98277d0d21bfc638c2d5ffe767d53c4083337df6353654c4ee8772a8a574f",
+    "/tmp/taskfold-offline-ios-core-v2.log": "e742dafb715d9f6aebdf2c08117d8b7c43dd733360832cd4d9a0f4f2aba0f531",
+    "/tmp/taskfold-offline-mac-core-v2.log": "3df9c7e52268b76626004e20308957b5f6f3a2ed9f2db7845114caa85f898df5"
+  },
+  "screenshots": {
+    "offline-before": {
+      "sha256": "9e400b47da6fa29cb1fdd64fea93fb8b42685db48ba18767dc7aea078da8520e",
+      "visuallyInspected": true
+    },
+    "conflict-review": {
+      "sha256": "1d428461acfdff4e1cb1c81c343548df9321b1c0a7d71b61d9db2a66f5dcf3b6",
+      "visuallyInspected": true
+    },
+    "tablet-reviewed": {
+      "sha256": "657872c7a1da8b07020b812964afaead59a985cafdd2b13932331deb3c436d95",
+      "visuallyInspected": true
+    },
+    "offline-after": {
+      "sha256": "0fa101af6ca35e6630074b390812f8f664a190e9f3d574067fb13ed85598ac9f",
+      "visuallyInspected": true
+    }
+  },
+  "cleanup": {
+    "usersRemaining": 0,
+    "sessionsRemaining": 0,
+    "profilesRemaining": 0,
+    "tasksRemaining": 0,
+    "credentialsRemoved": true
+  },
+  "remaining": [
+    "Use synced resolution in paired native flow",
+    "multiple queued edits and rich task fields",
+    "physical reconnection",
+    "Mac UI",
+    "full P0 acceptance"
+  ],
+  "ownedFinalInputs": {
+    "Taskfold/Core/Backend.swift": "d879c72fc47bf2b407568b82d44a21dd445a9ec339903015a8d6c30bd9ebc2d5",
+    "Taskfold/Core/Store.swift": "af628c88a06873dc5dab65fd646cb7eed761b626c8b3d9513f8fef7e5e71ddf4",
+    "TaskfoldTests/NativeBehaviorTests.swift": "20bc4518f8bcdb3dc6ea90931d145f6c6fee328575e452cd7c77b7a74343217b",
+    "Taskfold/Views/SidebarView.swift": "04dd6e0249be64b52dde193873e890f0b36e1dd057432988b9f08eeca3bb4347"
+  }
+}

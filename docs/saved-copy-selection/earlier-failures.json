@@ -1,0 +1,7 @@
+{
+  "originalArchiveReader": {
+    "observed": "The actual SQL copy-choice archive was rejected because the existing original reader allowed only null/empty indexed storage and no copy_choice/root_history fields.",
+    "fixed": "The typed reader accepts the exact copy-choice archive shape, binds it to the saved command, verifies full size/hash and preserves the strict existing format-repair archive shape.",
+    "verified": "The actual SQL original now decodes; wrong source and incomplete archives with recalculated matching hashes are rejected."
+  }
+}

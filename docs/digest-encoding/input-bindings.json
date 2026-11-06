@@ -1,0 +1,40 @@
+{
+  "repository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "validation": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/digest-encoding/validation.json",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "26639f0185de341a9e83179f62a6c60434f88264cebe4b760a81a8734013681a",
+    "Taskfold/Core/Models.swift": "dc793fed8e0137e5d2a4ced93a249c14e6a60e5225c5a1b73854c1d312e91de4",
+    "Taskfold/Core/Store.swift": "2e3c17facadcb4d0437e85d2e029afc489b16e58e35de90c3d8c82c7a3808f2c",
+    "Taskfold/Core/TaskActivity.swift": "16d4df0c81e9576d2f6e208ad0f9d40aeb51cb2e91d238d6b278fccbd582630f",
+    "Taskfold/TeamTemplateNativeFixture.swift": "09d0c14cafed31f1a0da882fd20e504209f98f3e73645ef307de4a8514d7ba14",
+    "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "a9a820a6d026baf547944a57152900532ba18f3c35c18f0e3cb63a12e726d4cc",
+    "TaskfoldTests/WorkflowBodySizeTests.swift": "8fe550db4dfa073cc6f9adbfda89f94743a093cde2227b4a51de7c1c3b3e026d",
+    "TaskfoldTests/FreshLocalActivityTests.swift": "c54046b22b9f5c088924eb674987f3b56d75e70934884d4fe548dbfbac27d2e8",
+    "Taskfold/Core/SubtaskTree.swift": "fd0e9e91052c5ae9034d0a7bf925bdc8dbe7d88e796dda6779cafae39889c094",
+    "Taskfold/Core/PinnedNotes.swift": "42ed1c4de538ebd5598551cd060e2c47636cc95818163300f5f2dee009d2af1f",
+    "TaskfoldTests/PinnedNotesTests.swift": "60fa12601fbab0a43eb4806b971fd383f8505bbb8662be0cda5c472f4cf6564a",
+    "Taskfold/Core/ProjectPulseWidget.swift": "13b8ac7687b37aac0f4c92d5893f598b659dec79725cf4c8794e130ccac874d4",
+    "TaskfoldTests/ProjectPulseWidgetTests.swift": "d874c804babdc39727d88fa9631403d1697d7759dd8abb55290c7f547dab36df",
+    "Taskfold/Core/Reminders.swift": "74c00f7b370143dc21036111565f2d26d8001b5c572f475d802d6929c8c9b9f0",
+    "TaskfoldTests/ReminderTests.swift": "1852253586a7a435bc0daec45c7f7da60ac269afd8ffc2bf6581f28e7ba0a860"
+  },
+  "preparedSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "26639f0185de341a9e83179f62a6c60434f88264cebe4b760a81a8734013681a",
+    "Taskfold/Core/Models.swift": "dc793fed8e0137e5d2a4ced93a249c14e6a60e5225c5a1b73854c1d312e91de4",
+    "Taskfold/Core/Store.swift": "6bf369c818a9a80f1a7fcfc1b87b5ca951c299619efa0a6e7223cac9b0899416",
+    "Taskfold/Core/TaskActivity.swift": "16d4df0c81e9576d2f6e208ad0f9d40aeb51cb2e91d238d6b278fccbd582630f",
+    "Taskfold/TeamTemplateNativeFixture.swift": "09d0c14cafed31f1a0da882fd20e504209f98f3e73645ef307de4a8514d7ba14",
+    "Taskfold/Info.plist": "266e1dec43d400a089a76ec68c4a8b7b0adf6104890f71f0b428cb38530523a5",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "a9a820a6d026baf547944a57152900532ba18f3c35c18f0e3cb63a12e726d4cc",
+    "Taskfold/Core/PinnedNotes.swift": "42ed1c4de538ebd5598551cd060e2c47636cc95818163300f5f2dee009d2af1f",
+    "Taskfold/Core/ProjectPulseWidget.swift": "13b8ac7687b37aac0f4c92d5893f598b659dec79725cf4c8794e130ccac874d4",
+    "Taskfold/Core/Reminders.swift": "74c00f7b370143dc21036111565f2d26d8001b5c572f475d802d6929c8c9b9f0"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "87590e62c8137b57e9d89a9231bde50dbd56f18604c9e47239940790707b4ef9",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "407a249c1a8b93ea8ffe08481d6d0d59961e71d370295f577d8d0f54956e9490",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "f4925195ccaf4ecd5e722c4e8d74951c4165912d99801833dfd2a1572227a584"
+  },
+  "scope": "Each repo owns source and isolated host. Core tests run in actual repository, not host test cache. Store/Info keep the existing isolation transforms."
+}

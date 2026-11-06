@@ -1,0 +1,15 @@
+{
+  "attempt": "v1",
+  "accepted": false,
+  "scope": "Range/scope passed; gesture-ended chart selection did not remain visible. Added explicit persistent tap selection and accepted v2.",
+  "failures": [
+    {
+      "failureText": "XCTAssertTrue failed",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 1,
+      "testIdentifierString": "WorkflowSourceSelectionUITests/testPreparedInsightsScopeRangeRefreshAndColdReturn()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/WorkflowSourceSelectionUITests/testPreparedInsightsScopeRangeRefreshAndColdReturn",
+      "testName": "testPreparedInsightsScopeRangeRefreshAndColdReturn()"
+    }
+  ]
+}

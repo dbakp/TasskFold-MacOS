@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-11",
+  "platform": "macOS native isolated local fixture",
+  "method": "CUA native pointer/keyboard, AX, inline screenshot inspection and persisted cache comparison",
+  "bundle": "com.dbakp.taskfold.mac.p0grammaruitests",
+  "scope": "Mac-owned sources; iOS receives status/evidence only, no AppKit code or cross-repository dependency",
+  "sourceSHA256": {
+    "Taskfold/Views/TaskInspector.swift": "20c774bd8bed8d7c1a0a0ca158d0349cbeb3f208ca3de50478c99fb8aa8f7816",
+    "Taskfold/Views/KeyRouter.swift": "a4c98f5b23b2392b38f876ff818c25ac1a2e7b28ea03376b3db543b43b1bae35",
+    "Taskfold/Views/ReminderEditor.swift": "71c868d3beda9655189823af8b69f705141f58a76e314b0e03f26e6ca128cbba",
+    "Taskfold/Views/TaskListView.swift": "7c0db2f2e297d03de5b3f9139ba6d32f52b99ab3e2d4c870216fb49ec0d19465",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "da9f1c7e8a0ab151a2d657167253e0e2dc1c78e3006f9751a30b41a573689673"
+  },
+  "defect": {
+    "before": "Repeat disclosure required chevron targeting, inherited the same accessibility ID onto child controls, and the window-wide Space handler could complete the selected task while Repeat owned focus.",
+    "intermediateAttempts": "Full-row Button alone and explicit focus alone still allowed unintended completion. Both affected only the disposable local task and were undone natively.",
+    "after": "Full-width focused Repeat button exposes expanded/collapsed summary; keyboard router handles Space/Return/Escape only for focused taskList NSTableView."
+  },
+  "nativeChecks": [
+    "Repeat full-header AX click expands; summary and individual recurrence-control identifiers are distinct.",
+    "Focused Repeat Space collapses then expands without completing/removing the selected task.",
+    "Focused task-list Space completes original and creates exactly one next-day successor with count 2; native Command-Z restores original Jan 3 plan, Jan 6 deadline, count 3 and estimate 25.",
+    "Focused task-list Return opens exact task editor; Escape clears task selection and inspector.",
+    "Command-N bounded capture preview visually wraps; saved Jan 3 2028 plan, Jan 5 recurrence end, 3 occurrences, Jan 6 independent deadline and 25-minute estimate persist across normal relaunch.",
+    "Quick reminder capture saves -30-minute relative reminder, +2-hour fixed instant, tomorrow 09:00 fixed instant, plus workspace default at planned time.",
+    "Independent reminder every! day rejects Save; every 2 weeks on Monday and Friday for 5 occurrences accepts Save.",
+    "Repeating reminder survives Cancel editing, clearing task plan and full process relaunch; fixed reminders persist and relative reminders explicitly await a planned date.",
+    "Deleting only the independent repeating reminder persists through second normal relaunch; all four other reminder specs are unchanged."
+  ],
+  "boundedTask": {
+    "id": "a92d3878-df10-45da-a207-3578822b45e1",
+    "due_date": "2028-01-03",
+    "deadline_date": "2028-01-06",
+    "duration_minutes": 25,
+    "recurrence_pattern": {
+      "interval": 1,
+      "count": 3,
+      "endDate": "2028-01-05",
+      "type": "daily"
+    },
+    "completed": false
+  },
+  "reminderTask": {
+    "id": "5594fc06-c002-4b65-ab87-d9d4346ef34d",
+    "plannedDateCleared": true,
+    "retainedSpecCount": 4,
+    "otherSpecsUnchangedAfterRepeatRemoval": true
+  },
+  "persistence": {
+    "firstRelaunchAllTablesEqual": true,
+    "secondRelaunchOnlyIntendedReminderRemoved": true,
+    "pending": 0,
+    "taskCount": 2
+  },
+  "visualCaveat": "Native time-picker AX reported 16.56 while the UTC-environment picker visibly displayed 15.56. Inline screenshot, saved schedule time and next-occurrence summary all agree on 15:56; this is not recorded as a time-setting defect. No screenshot file was retained.",
+  "testStatus": {
+    "buildForTesting": "TEST BUILD SUCCEEDED in mac-repeat-header-build-v3.log; application and updated XCTest sources compile",
+    "XCTestExecution": "No new XCTest pass claimed. Earlier grammar XCTest runner timed out enabling automation before any app cases executed. Acceptance above is native CUA execution.",
+    "signing": "Ad-hoc app-only diagnostic variant; no widget extension or distribution acceptance"
+  },
+  "logs": {
+    "mac-repeat-header-build-v3.log": {
+      "sha256": "104cee56cbe2bb4de18cb14cd8c382b5e278e2466cb50f9517db6203cc04a5b2",
+      "attributeGraphCycleCount": 0
+    },
+    "mac-repeat-header-native-v3.log": {
+      "sha256": "9d17ca65f1bf54b0ea215f5fc9d0b740d7fdc062557da0872d23561859587190",
+      "attributeGraphCycleCount": 0
+    },
+    "mac-grammar-final-relaunch-v1.log": {
+      "sha256": "332b5cf250b7ffe38072e61b669820d1833c45ab5d48fbec5cb45b499305038b",
+      "attributeGraphCycleCount": 0
+    },
+    "mac-grammar-final-relaunch-v2.log": {
+      "sha256": "9e14e9873cc78a9dad91bb5e3bf25e892e5ddbffc2a9442b8b8931d04881c737",
+      "attributeGraphCycleCount": 0
+    }
+  },
+  "open": [
+    "Actual Focus notification Open/action receipt; app still Inbox after latest unlock, existing fixture not restarted.",
+    "Mac grammar variants beyond the listed native cases, external URL delivery, mixed-version preservation, broader keyboard/VoiceOver acceptance and board/calendar focus shortcuts.",
+    "Earlier cloud Settings AttributeGraph warnings remain unexplained; warm diagnostic did not reproduce them.",
+    "Remaining P0 widget hosts, external provider/device acceptance and distribution gates."
+  ]
+}

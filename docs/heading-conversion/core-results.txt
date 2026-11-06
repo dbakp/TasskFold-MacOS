@@ -1,0 +1,119 @@
+Test Suite 'Selected tests' started at 2026-10-26 16:49:26.300.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-26 16:49:26.302.
+Test Suite 'HeadingPortabilityTests' started at 2026-10-26 16:49:26.302.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testAuthoringGateAllowsExistingMetadataButRejectsIntroducedOrConvertedTypes]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testAuthoringGateAllowsExistingMetadataButRejectsIntroducedOrConvertedTypes]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testCaptureRejectsUnsupportedKindsRatherThanDroppingTheirType]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testCaptureRejectsUnsupportedKindsRatherThanDroppingTheirType]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testChecklistProgressExcludesHeadingsAndUnknownKindsButKeepsTheirDescendants]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testChecklistProgressExcludesHeadingsAndUnknownKindsButKeepsTheirDescendants]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testDuplicationKeepsTypesButUsesFreshRootAndChildIdentities]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testDuplicationKeepsTypesButUsesFreshRootAndChildIdentities]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testHeadingTemplateUsesExplicitCapabilityWhileOrdinaryFilesStayVersionOne]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testHeadingTemplateUsesExplicitCapabilityWhileOrdinaryFilesStayVersionOne]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testInvalidRootOrNestedHeadingCannotBeRestored]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testInvalidRootOrNestedHeadingCannotBeRestored]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testNestedOnlyTypeAndExplicitOrdinaryTypeRequireWorkspaceCapabilityToo]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testNestedOnlyTypeAndExplicitOrdinaryTypeRequireWorkspaceCapabilityToo]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testOldOrMismatchedTemplateEnvelopesCannotSmuggleHeadingSemantics]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testOldOrMismatchedTemplateEnvelopesCannotSmuggleHeadingSemantics]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testRealCoordinatedTemplateAndBackupFilesRoundTripTypedContent]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testRealCoordinatedTemplateAndBackupFilesRoundTripTypedContent]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testSavedEditorCopyKeepsHeadingTypeInsteadOfBecomingCompletable]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testSavedEditorCopyKeepsHeadingTypeInsteadOfBecomingCompletable]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testSharedTemplatePublicationDoesNotSendUnsupportedVersionTwoToOldService]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testSharedTemplatePublicationDoesNotSendUnsupportedVersionTwoToOldService]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testTemplateMetadataEditsKeepHeadingCapabilityAndFlags]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testTemplateMetadataEditsKeepHeadingCapabilityAndFlags]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testTemplateRunPreservesEveryHeadingWithFreshIdentitiesAndRelativeDates]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testTemplateRunPreservesEveryHeadingWithFreshIdentitiesAndRelativeDates]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testUnsupportedDuplicateRefusesWholeSelection]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testUnsupportedDuplicateRefusesWholeSelection]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testUnversionedTypedTablesCannotBypassTheBackupCapabilityHeader]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testUnversionedTypedTablesCannotBypassTheBackupCapabilityHeader]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testWorkspaceRoundTripPreservesRootAndNestedTypesAndRejectsDowngrade]' started.
+Test Case '-[TaskfoldCoreTests.HeadingPortabilityTests testWorkspaceRoundTripPreservesRootAndNestedTypesAndRejectsDowngrade]' passed (0.006 seconds).
+Test Suite 'HeadingPortabilityTests' passed at 2026-10-26 16:49:26.354.
+	 Executed 16 tests, with 0 failures (0 unexpected) in 0.050 (0.051) seconds
+Test Suite 'TaskKindTests' started at 2026-10-26 16:49:26.354.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testCompoundPinnedHeadingEditKeepsItsCapturedCompletionFence]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testCompoundPinnedHeadingEditKeepsItsCapturedCompletionFence]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testCreationRejectsCompletedHeadingButPreservesAnOrdinaryLegacyContainer]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testCreationRejectsCompletedHeadingButPreservesAnOrdinaryLegacyContainer]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testDraftChoicePreservesAllDetailsAndWorksForEmbeddedChildren]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testDraftChoicePreservesAllDetailsAndWorksForEmbeddedChildren]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testDraftChoiceRejectsCompletedAndUnsupportedKindsWithoutChangingSource]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testDraftChoiceRejectsCompletedAndUnsupportedKindsWithoutChangingSource]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testEmbeddedTypeEditMergesCurrentNotesAndKeepsOrdinaryDescendants]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testEmbeddedTypeEditMergesCurrentNotesAndKeepsOrdinaryDescendants]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testExplicitConversionKeepsEveryOtherFieldAndCapturesCompletionAuthority]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testExplicitConversionKeepsEveryOtherFieldAndCapturesCompletionAuthority]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testHeadingCannotCompleteReopenOrGenerateARecurringSuccessor]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testHeadingCannotCompleteReopenOrGenerateARecurringSuccessor]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testHeadingMetadataChangesRemainAvailableAndOpaqueContainersSurvive]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testHeadingMetadataChangesRemainAvailableAndOpaqueContainersSurvive]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testHierarchyDetailChoiceWritesOnlyTheExistingRootAndKeepsTheChildIdentity]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testHierarchyDetailChoiceWritesOnlyTheExistingRootAndKeepsTheChildIdentity]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testKindHistoryAdvancesCompletionRevisionButOrdinaryNilToFalseDoesNot]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testKindHistoryAdvancesCompletionRevisionButOrdinaryNilToFalseDoesNot]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testLegacyNilNullAndFalseRemainOrdinaryAndAsteriskIsLiteral]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testLegacyNilNullAndFalseRemainOrdinaryAndAsteriskIsLiteral]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testLocalSnapshotRefusesOldCompletionWithoutTouchingHeading]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testLocalSnapshotRefusesOldCompletionWithoutTouchingHeading]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMalformedCompletionTimestampsCannotCompareAsTwoMissingDates]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMalformedCompletionTimestampsCannotCompareAsTwoMissingDates]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMalformedNestedHeadingAndUnknownFlagAreRefusedWithoutPartialTreeChanges]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMalformedNestedHeadingAndUnknownFlagAreRefusedWithoutPartialTreeChanges]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMalformedTypeOrMissingIncarnationCannotGainAnAction]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMalformedTypeOrMissingIncarnationCannotGainAnAction]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMixedChildCompletionRefusesHeadingButItsOrdinaryChildRemainsActionable]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMixedChildCompletionRefusesHeadingButItsOrdinaryChildRemainsActionable]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMixedRootCompletionRefusesWholeSelectionBeforeReturningAnyChanges]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testMixedRootCompletionRefusesWholeSelectionBeforeReturningAnyChanges]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testNestedHeadingCannotCompleteAndAnOlderWriterCannotEraseItsType]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testNestedHeadingCannotCompleteAndAnOlderWriterCannotEraseItsType]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testNestedPreservationInspectsContainmentOnlyAndAllowsExplicitRemoval]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testNestedPreservationInspectsContainmentOnlyAndAllowsExplicitRemoval]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testOldWholeRowWriterCannotDropTheHeadingFlagOrOverwriteAnUnknownType]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testOldWholeRowWriterCannotDropTheHeadingFlagOrOverwriteAnUnknownType]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testProductiveProjectionExcludesHeadingsWhileAppQueriesRetainDatedContext]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testProductiveProjectionExcludesHeadingsWhileAppQueriesRetainDatedContext]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testProjectCurrentProgressDoesNotTreatHeadingsAsUnfinishedWork]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testProjectCurrentProgressDoesNotTreatHeadingsAsUnfinishedWork]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testRepeatedTypeChoiceIsNoOpAndCompletedTaskNeedsReopening]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testRepeatedTypeChoiceIsNoOpAndCompletedTaskNeedsReopening]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testStaleCompletedTimestampIsExplicitlyClearedDuringConversion]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testStaleCompletedTimestampIsExplicitlyClearedDuringConversion]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testTypeEditAdmitsUnrelatedConcurrentDetailsButFencesCompletionCyclesAndReplacement]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testTypeEditAdmitsUnrelatedConcurrentDetailsButFencesCompletionCyclesAndReplacement]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testUnavailableCompletionNeverPromotesDeletionToFullSwipe]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testUnavailableCompletionNeverPromotesDeletionToFullSwipe]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testUndoUsesExplicitTaskTypeAndRedoKeepsHeadingWithoutLosingDetails]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testUndoUsesExplicitTaskTypeAndRedoKeepsHeadingWithoutLosingDetails]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testUnknownAndNonFiniteRevisionCannotAuthorizeTypeEditing]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testUnknownAndNonFiniteRevisionCannotAuthorizeTypeEditing]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TaskKindTests testWidgetRefusesHeadingAndInvalidatesExistingActionAfterTypeChange]' started.
+Test Case '-[TaskfoldCoreTests.TaskKindTests testWidgetRefusesHeadingAndInvalidatesExistingActionAfterTypeChange]' passed (0.002 seconds).
+Test Suite 'TaskKindTests' passed at 2026-10-26 16:49:26.375.
+	 Executed 29 tests, with 0 failures (0 unexpected) in 0.020 (0.022) seconds
+Test Suite 'TodoistHeadingConversionTests' started at 2026-10-26 16:49:26.375.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testCompletedUnsupportedAndInvalidStateNeedExplicitRecoveryFirst]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testCompletedUnsupportedAndInvalidStateNeedExplicitRecoveryFirst]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testEditedTitleIsNeverReplacedBySourceTitle]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testEditedTitleIsNeverReplacedBySourceTitle]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testLiteralMarkerCanBeKeptAndOnlyOneMarkerIsRemoved]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testLiteralMarkerCanBeKeptAndOnlyOneMarkerIsRemoved]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testOnlyKnownImportEvidenceOffersReview]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testOnlyKnownImportEvidenceOffersReview]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testReviewDoesNotMutateAndApplyChangesOnlyTypeAndReviewedTitle]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testReviewDoesNotMutateAndApplyChangesOnlyTypeAndReviewedTitle]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testReviewedLiteralTitleDoesNotCreateQuickEntryEdits]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testReviewedLiteralTitleDoesNotCreateQuickEntryEdits]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testWholeDraftAndCapabilityAreRechecked]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testWholeDraftAndCapabilityAreRechecked]' passed (0.000 seconds).
+Test Suite 'TodoistHeadingConversionTests' passed at 2026-10-26 16:49:26.388.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.012 (0.012) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-26 16:49:26.388.
+	 Executed 52 tests, with 0 failures (0 unexpected) in 0.081 (0.085) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 16:49:26.388.
+	 Executed 52 tests, with 0 failures (0 unexpected) in 0.081 (0.088) seconds

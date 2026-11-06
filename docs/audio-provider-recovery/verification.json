@@ -1,0 +1,29 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "e13c9c3251b3dc24e7c044d64157a05564a431e6",
+  "checks": 42,
+  "actualLocalStorage": true,
+  "genuineAuth": false,
+  "fullSchemaParity": false,
+  "nativeRuntimeThisMilestone": false,
+  "productionChangesThisMilestone": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "sourceSHA256": {
+    "Scripts/Database/test-audio-provider-recovery.mjs": "945bf6af1f32f2e7f9d2e7e35668a88a20de96cc7c4a34724c967b5820db2e6c",
+    "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "188f494393d8a8e488116d49ba78cd29d4e79a6ea85d6d5c5363f6554cfd071d",
+    "Scripts/Database/task-file-provider-schema.mjs": "fd833ccc010e72d054a7c385b70ac07a25019e9e987e6fb77cce52a76ee2e2d5",
+    "Scripts/Database/audio-project-custody-schema.mjs": "47237d46b444c5dadbc6d6e915fcdcafa4a6d4ea6d9f391134ad161ea62a9ca0",
+    "Scripts/Database/storage-provider-fixture.mjs": "fc13de3a9941ad6e1da80987020d922dc7179e8119c9b368d49c530cf5dbc1a9",
+    "supabase/functions/audio-comments/handler.ts": "d1edddd03b36ce34f884ab26eeff847587636a3ec903adaa69d910671713006a",
+    "supabase/functions/audio-comment-maintenance/handler.ts": "e8a02a14521bdd2a4fb598eae0c084392ea2799fb4e3b134f9f579f800383d5c"
+  },
+  "reportSHA256": "08e309d6bdd262865aba8344ecdc20964e53f0ac17ceb9b680f427ae09ff93b4",
+  "cleanup": "Both owned services finished cleanup without errors; no app or Simulator was launched.",
+  "qualification": "Upload/DELETE/finalize/confirm replies are replaced by synthetic HTTP503 only after actual Storage/SQL success. The immediate post-upload GET is deliberately refused once. This verifies these specific ambiguous service-hop failures, not arbitrary network failures or real sign-in.",
+  "initialAttempt": "The first test stopped at assertion 2 because the new oracle tried to JSON-decode an unquoted SQL text value. The scalar query now uses to_jsonb(state/token); no production behavior changed. Owned resources cleaned up.",
+  "unchangedDefaultAdapterRegressionChecks": 93,
+  "regressionSHA256": "9a9ee5bef506ab09b99d7228730693fce8f9b94622fca4ac331fa1cba968a9f5",
+  "dashboardQA": "28 scoped substeps; 74 curated checkpoints unchanged; all light/dark widths and state restoration pass."
+}

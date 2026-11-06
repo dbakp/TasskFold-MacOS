@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "nodeEvents": 4,
+  "orderingEntries": 1,
+  "editEntries": 1,
+  "oneEntryForList": true,
+  "currentOrderPreserved": true,
+  "noCompletionCreditInvented": true,
+  "privateContentAbsent": true,
+  "noPendingNetworkMutations": true,
+  "snapshotSHA256": "e7536b3e6ff81769e29747ed8303989673562799779e0fde1102cbfdf125695d"
+}

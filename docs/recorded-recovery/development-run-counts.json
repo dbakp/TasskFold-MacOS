@@ -1,0 +1,126 @@
+[
+  {
+    "run": "mac",
+    "totalTestCount": 5,
+    "passedTests": 1,
+    "failedTests": 4,
+    "skippedTests": 0,
+    "runtimeWarnings": [],
+    "result": "Failed",
+    "cases": [
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry",
+        "passed"
+      ],
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedDraftCacheFailurePreservesQueueAndReusesArchiveOnRetry",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedDraftVaultFailurePreservesQueueBeforeRetry",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch",
+        "failed"
+      ]
+    ]
+  },
+  {
+    "run": "phone",
+    "totalTestCount": 5,
+    "passedTests": 1,
+    "failedTests": 4,
+    "skippedTests": 0,
+    "runtimeWarnings": [],
+    "result": "Failed",
+    "cases": [
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry",
+        "passed"
+      ],
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testRecordedDraftCacheFailurePreservesQueueAndReusesArchiveOnRetry",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testRecordedDraftVaultFailurePreservesQueueBeforeRetry",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch",
+        "failed"
+      ]
+    ]
+  },
+  {
+    "run": "ipad",
+    "totalTestCount": 5,
+    "passedTests": 1,
+    "failedTests": 4,
+    "skippedTests": 0,
+    "runtimeWarnings": [],
+    "result": "Failed",
+    "cases": [
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry",
+        "passed"
+      ],
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testRecordedDraftCacheFailurePreservesQueueAndReusesArchiveOnRetry",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testRecordedDraftVaultFailurePreservesQueueBeforeRetry",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamTaskBatchDeletionUITests testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch",
+        "failed"
+      ]
+    ]
+  },
+  {
+    "run": "mac-accepted",
+    "totalTestCount": 5,
+    "passedTests": 4,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "runtimeWarnings": [],
+    "result": "Failed",
+    "cases": [
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry",
+        "passed"
+      ],
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedDraftCacheFailurePreservesQueueAndReusesArchiveOnRetry",
+        "passed"
+      ],
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedDraftVaultFailurePreservesQueueBeforeRetry",
+        "passed"
+      ],
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch",
+        "failed"
+      ],
+      [
+        "TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch",
+        "passed"
+      ]
+    ]
+  }
+]

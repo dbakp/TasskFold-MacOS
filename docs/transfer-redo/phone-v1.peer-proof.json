@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "requests": 4,
+  "writes": 4,
+  "freshIdentities": 4,
+  "sequence": [
+    "move",
+    "undo",
+    "redo",
+    "undo"
+  ],
+  "finalSourceAndNestedFieldsExact": true,
+  "destinationEmptyAgain": true,
+  "untouchedSiblingVersion": 1,
+  "branchVersions": 5,
+  "bothStructureRevisions": 5,
+  "wireProtocolUnchanged": true,
+  "scope": "Synthetic native HTTP peer; not hosted SQL or real shared-account acceptance",
+  "peerSHA256": "f9acac07d89883c4f79aa428e6b09bd0cd22bab568ca711b7038ff0f62c2fb92"
+}

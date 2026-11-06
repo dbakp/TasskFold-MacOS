@@ -1,0 +1,237 @@
+import XCTest
+import CryptoKit
+@testable import TaskfoldCore
+
+private final class RemovalMemoryIO: CalendarSecureItemIO, @unchecked Sendable {
+    private let lock = NSLock()
+    private var data: Data?
+    private var fail = false
+    func setFailure(_ value: Bool) { lock.lock(); fail = value; lock.unlock() }
+    func seed(_ value: Data) { lock.lock(); data = value; lock.unlock() }
+    func read(key: String) throws -> Data? { lock.lock(); defer { lock.unlock() }; return data }
+    func write(_ value: Data, key: String) throws {
+        lock.lock(); defer { lock.unlock() }
+        if fail { throw CocoaError(.fileWriteOutOfSpace) }; data = value
+    }
+    func remove(key: String) throws {
+        lock.lock(); defer { lock.unlock() }
+        if fail { throw CocoaError(.fileWriteOutOfSpace) }; data = nil
+    }
+}
+final class AccountRemovalTests: XCTestCase {
+    let owner = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", other = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+    func command(_ account: String? = nil, token: String = "original-token") throws -> AccountRemovalCommand {
+        try .init(account: account ?? owner, origin: "https://removal.test", authorization: token)
+    }
+    let proof = "fixture." + String(repeating: "a", count: 43)
+    func root() throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-removal-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: url) }; return url
+    }
+    func testDurableOriginalAuthorizationSurvivesNewVaultAndRefusesUnconfirmedFinish() async throws {
+        let io = RemovalMemoryIO(), vault = AccountRemovalVault(io: io), first = try command()
+        let saved = try await vault.begin(first); XCTAssertEqual(saved, first)
+        let restarted = AccountRemovalVault(io: io)
+        let pending = try await restarted.pending(); XCTAssertEqual(pending, [first])
+        let duplicate = try await restarted.begin(command(token: "refreshed-token")); XCTAssertEqual(duplicate.authorization, "original-token")
+        do { try await restarted.finish(first); XCTFail("Unconfirmed cleanup discarded its retry capability") } catch {}
+        let prepared = try await restarted.prepare(first, proof: proof)
+        let confirmed = try await restarted.confirm(prepared)
+        XCTAssertTrue(confirmed.confirmed)
+        let afterRestart = try await AccountRemovalVault(io: io).pending(); XCTAssertEqual(afterRestart, [confirmed])
+        try await restarted.finish(confirmed)
+        let empty = try await restarted.pending(); XCTAssertTrue(empty.isEmpty)
+    }
+    func testFailedSecureConfirmationAndFinishRemainRecoverableAndNeverTouchAnotherAccount() async throws {
+        let io = RemovalMemoryIO(), vault = AccountRemovalVault(io: io)
+        let initial = try await vault.begin(command())
+        let a = try await vault.prepare(initial, proof: proof), b = try await vault.begin(command(other))
+        io.setFailure(true)
+        do { _ = try await vault.confirm(a); XCTFail("Failed secure write pretended durability") } catch {}
+        let unchanged = try await vault.pending(); XCTAssertEqual(unchanged, [a,b])
+        io.setFailure(false); let confirmed = try await vault.confirm(a)
+        io.setFailure(true)
+        do { try await vault.finish(confirmed); XCTFail("Failed cleanup acknowledgement pretended durability") } catch {}
+        let retained = try await vault.pending(); XCTAssertEqual(retained, [confirmed,b])
+        io.setFailure(false); try await vault.finish(confirmed)
+        let remaining = try await vault.pending(); XCTAssertEqual(remaining, [b])
+    }
+    func testMalformedRecoveryAndOriginChangesPreserveStoredData() async throws {
+        let io = RemovalMemoryIO(), vault = AccountRemovalVault(io: io), bad = Data("unsupported protected state".utf8)
+        io.seed(bad)
+        do { _ = try await vault.begin(command()); XCTFail("Corrupt recovery overwritten") } catch {}
+        XCTAssertEqual(try io.read(key: "unused"), bad)
+        io.seed(try JSONEncoder().encode([command()]))
+        do { _ = try await vault.command(account: owner, origin: "https://elsewhere.test"); XCTFail("Original bearer could be sent to another server") } catch {}
+        XCTAssertThrowsError(try AccountRemovalCommand(account: "../outside", origin: "https://removal.test", authorization: "token"))
+        XCTAssertThrowsError(try AccountRemovalCommand(account: owner, origin: "https://removal.test?redirect=elsewhere", authorization: "token"))
+    }
+    func testCacheRemovalIsIdempotentAndStopsDelayedWritersWithoutErasingOtherWorkspace() throws {
+        let directory = try root(), a = AccountRemovalDisk(directory: directory, account: owner), b = AccountRemovalDisk(directory: directory, account: other)
+        let old = Data("A private cache".utf8), outside = Data("B private queue".utf8)
+        try a.writable { try old.write(to: a.cache) }; try b.writable { try outside.write(to: b.cache) }
+        try a.removeCache(); try a.removeCache()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: a.cache.path)); XCTAssertEqual(try Data(contentsOf: b.cache), outside)
+        XCTAssertThrowsError(try AccountRemovalDisk(directory: directory, account: owner).writable { try old.write(to: a.cache) })
+        try b.writable { try outside.write(to: b.cache) }
+        XCTAssertThrowsError(try AccountRemovalDisk(directory: directory, account: "../outside").removeCache())
+    }
+    func testBackupWipeCannotBeRecreatedByDelayedSaveAndKeepsOtherVault() throws {
+        let directory = try root(), aGate = AccountRemovalDisk(directory: directory, account: owner)
+        let key = SymmetricKey(size: .bits256)
+        let a = BackupVault(directory: directory.appendingPathComponent("a-vault"), account: owner, key: { key }, removalGate: aGate)
+        let b = BackupVault(directory: directory.appendingPathComponent("b-vault"), account: other, key: { key })
+        _ = try a.save(Snapshot(), kind: "Synthetic"); let outside = try b.save(Snapshot(), kind: "Synthetic")
+        try aGate.removeCache(); try a.removeAll(); try a.removeAll()
+        XCTAssertTrue(try a.entries().isEmpty); XCTAssertEqual(try b.entries().map(\.id), [outside.id]); XCTAssertEqual(try b.load(outside).workspace.sourceAccount, other)
+        XCTAssertThrowsError(try a.save(Snapshot(), kind: "Delayed old backup"))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: a.directory.path))
+    }
+    func testPrivatePlacesConsentAndReceiptsPurgeOnlyDeletedAccountAndRejectStaleJournal() async throws {
+        let directory = try root(), store = LocationPrivateStore(applicationSupport: directory)
+        let a = try XCTUnwrap(LocationPrivatePlace.make(account: owner, name: "A private place", latitude: 55, longitude: 12, radius: 200))
+        let b = try XCTUnwrap(LocationPrivatePlace.make(account: other, name: "B private place", latitude: 56, longitude: 13, radius: 250))
+        let first = try await store.save(a); _ = try await store.save(b)
+        _ = try await store.setAllowance(account: owner, enabled: true, expectedDevice: first.device)
+        _ = try await store.setAllowance(account: other, enabled: true, expectedDevice: first.device)
+        let ticket = LocationReminderTicket(account: owner, device: first.device, taskID: UUID().uuidString.lowercased(), generation: UUID().uuidString.lowercased(), completionVersion: 0, specID: UUID().uuidString.lowercased(), placeID: a.id, placeRevision: a.revision, arm: UUID().uuidString.lowercased(), transition: "arrive")
+        var stale = first.journal; XCTAssertTrue(stale.prepare(ticket)); try await store.saveJournal(stale)
+        try AccountRemovalDisk(directory: directory, account: owner).removeCache()
+        try await store.removeAccountData(owner); try await store.removeAccountData(owner)
+        let state = try await store.snapshot()
+        XCTAssertEqual(state?.places(for: other), [b]); XCTAssertEqual(state?.places(for: owner), [])
+        XCTAssertEqual(state?.allowedAccounts, [other]); XCTAssertEqual(state?.device, first.device); XCTAssertTrue(state?.journal.entries.isEmpty == true)
+        do { _ = try await store.save(a); XCTFail("Deleted place recreated") } catch {}
+        do { try await store.saveJournal(stale); XCTFail("Deleted receipt recreated") } catch {}
+        do { _ = try await store.setAllowance(account: owner, enabled: true, expectedDevice: first.device); XCTFail("Deleted consent restored") } catch {}
+    }
+    func testShareAndWidgetPurgeKeepCurrentOtherAccountPublicationAndDrafts() throws {
+        let directory = try root(), share = SharedCaptureDisk(directory: directory)
+        let a = SharedCaptureWorkspace(account: owner, generation: UUID(), label: "A"), b = SharedCaptureWorkspace(account: other, generation: UUID(), label: "B")
+        try share.publish(a); try share.save(SharedCaptureDraft(workspace: a, content: .init(title: "A draft")))
+        try share.publish(b); let bDraft = try SharedCaptureDraft(workspace: b, content: .init(title: "B draft")); try share.save(bDraft)
+        try share.removeAccount(owner)
+        XCTAssertEqual(try share.workspace(), b); XCTAssertEqual(try share.drafts(account: other), [bDraft])
+        let widgets = WidgetActionDisk(directory: directory)
+        var task = Record.task(user: other); task["title"] = .string("B task")
+        let payload = try JSONEncoder().encode(WidgetProjection.payload(tasks: [task], projects: [], account: other))
+        try widgets.publish(payload); try widgets.removeAccount(owner)
+        XCTAssertEqual(try widgets.read().data, payload)
+        try widgets.removeAccount(other); XCTAssertNil(try widgets.read().data)
+        try share.removeAccount(other); XCTAssertNil(try share.workspace())
+    }
+}
+
+
+extension AccountRemovalTests {
+    func testRenewalIsDurableAndConditionalOnExactUnconfirmedOwnerAndServer() async throws {
+        let io = RemovalMemoryIO(), vault = AccountRemovalVault(io: io)
+        let original = try await vault.begin(command())
+        do { _ = try await vault.renew(original, with: command(other, token: "new")); XCTFail("Other account replaced authorization") } catch {}
+        io.setFailure(true)
+        do { _ = try await vault.renew(original, with: command(token: "new")); XCTFail("Renewal pretended durability") } catch {}
+        let preserved = try await vault.pending(); XCTAssertEqual(preserved, [original])
+        io.setFailure(false)
+        let renewed = try await vault.renew(original, with: command(token: "new"))
+        let restarted = try await AccountRemovalVault(io: io).pending(); XCTAssertEqual(restarted, [renewed])
+        do { _ = try await vault.renew(original, with: command(token: "late")); XCTFail("Stale renewal overwrote current command") } catch {}
+        let prepared = try await vault.prepare(renewed, proof: proof)
+        let confirmed = try await vault.confirm(prepared)
+        do { _ = try await vault.renew(confirmed, with: command(token: "newer")); XCTFail("Confirmed local cleanup was reauthorized") } catch {}
+    }
+}
+
+extension AccountRemovalTests {
+    func testProofMustPersistBeforeConfirmationAndFailedWriteKeepsOriginal() async throws {
+        let io = RemovalMemoryIO(), vault = AccountRemovalVault(io: io), original = try await vault.begin(command())
+        do { _ = try await vault.confirm(original); XCTFail("Unprepared execution confirmed") } catch {}
+        io.setFailure(true)
+        do { _ = try await vault.prepare(original, proof: proof); XCTFail("Unsaved proof accepted") } catch {}
+        let unchanged = try await vault.pending(); XCTAssertEqual(unchanged, [original])
+        io.setFailure(false)
+        let prepared = try await vault.prepare(original, proof: proof)
+        let restarted = try await AccountRemovalVault(io: io).pending(); XCTAssertEqual(restarted, [prepared])
+        do { _ = try await vault.prepare(original, proof: "other." + String(repeating: "b", count: 43)); XCTFail("Stale preparation replaced proof") } catch {}
+        do { _ = try await vault.confirm(original); XCTFail("Stale confirmation accepted") } catch {}
+    }
+    func testLegacyCommandsDecodeAndConfirmedCleanupDoesNotNeedNewProof() async throws {
+        let io = RemovalMemoryIO(), vault = AccountRemovalVault(io: io)
+        var legacy = try command(); legacy.version = 1; legacy.confirmed = true
+        var encoded = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(legacy)) as? [String: Any])
+        encoded.removeValue(forKey: "statusProof")
+        io.seed(try JSONSerialization.data(withJSONObject: [encoded]))
+        let pending = try await vault.pending(); XCTAssertEqual(pending, [legacy])
+        try await vault.finish(legacy)
+        legacy.confirmed = false; _ = try await vault.begin(legacy)
+        let prepared = try await vault.prepare(legacy, proof: proof)
+        XCTAssertEqual(prepared.version, 2); XCTAssertEqual(prepared.statusProof, proof)
+    }
+    func testInvalidProofsCannotEnterRecoveryVault() async throws {
+        let io = RemovalMemoryIO(), vault = AccountRemovalVault(io: io), original = try await vault.begin(command())
+        for bad in ["", "a.b", proof + "\n", proof + "=", "a b." + String(repeating: "a", count: 43), String(repeating: "a", count: 2050) + "." + String(repeating: "a", count: 43)] {
+            do { _ = try await vault.prepare(original, proof: bad); XCTFail("Malformed proof saved") } catch {}
+        }
+        let pending = try await vault.pending(); XCTAssertEqual(pending, [original])
+    }
+}
+
+func removalRecoveryFixture(_ command: AccountRemovalCommand) throws -> (AccountRemovalRecoveryRequest, Data) {
+    let request = try AccountRemovalRecoveryRequest(command: command)
+    let payload: JSON = .object(["v":.number(1),"scope":.string("account-removal-recovery"),"origin":.string(request.origin),"account":.string(request.account),"command":.string(request.command.uuidString.lowercased()),"authorization_hash":.string(request.authorizationHash),"kid":.string("f086cafe-0000-4000-8000-000000000001"),"issued":.number(1_790_000_000)])
+    let encoded = try TaskfoldJSONEncoder().encode(payload).base64EncodedString().replacingOccurrences(of:"+",with:"-").replacingOccurrences(of:"/",with:"_").replacingOccurrences(of:"=",with:"")
+    let data = try TaskfoldJSONEncoder().encode(JSON.object(["format":.string("taskfold-account-removal-recovery"),"version":.number(1),"request":request.document,"proof":.string(encoded+"."+String(repeating:"a",count:43))]))
+    return (request, data)
+}
+
+extension AccountRemovalTests {
+    func testRecoveryRequestContainsOnlyBoundNonCredentialMetadata() throws {
+        var old = try command(token:"original-private-password-like-token"); old.version = 1
+        old.statusProof = proof
+        let request = try AccountRemovalRecoveryRequest(command: old), data = try request.encoded()
+        let object = try TaskfoldJSONDecoder().decode(JSON.self,from:data).object
+        XCTAssertEqual(Set(object.keys),["format","version","origin","account","command","authorization_hash"])
+        XCTAssertFalse(String(decoding:data,as:UTF8.self).contains(old.authorization))
+        XCTAssertFalse(String(decoding:data,as:UTF8.self).contains(proof))
+        XCTAssertEqual(request.authorizationHash,SHA256.hash(data:Data(old.authorization.utf8)).map{String(format:"%02x",$0)}.joined())
+        XCTAssertEqual(try AccountRemovalRecoveryRequest(document:.object(object)),request)
+        XCTAssertTrue(request.matches(old)); XCTAssertFalse(request.matches(try command(token:"renewed")))
+        old.confirmed = true; XCTAssertThrowsError(try AccountRemovalRecoveryRequest(command:old))
+    }
+    func testRecoveryFileIsBoundToExactPendingCommandAndPurpose() throws {
+        let original = try command(), (request,data) = try removalRecoveryFixture(original)
+        let file = try AccountRemovalRecoveryFile(data:data,expected:request)
+        XCTAssertTrue(try original.prepared(with:file.proof).hasRecoveryCertificate)
+        XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:data,expected:AccountRemovalRecoveryRequest(command:command(other))))
+        XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:data,expected:AccountRemovalRecoveryRequest(command:command(token:"new"))))
+        var outer = try TaskfoldJSONDecoder().decode(JSON.self,from:data).object
+        for (key,value) in [("version",JSON.number(2)),("proof",JSON.string(proof)),("extra",JSON.string("unknown"))] {
+            var changed = outer;changed[key]=value
+            XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:TaskfoldJSONEncoder().encode(JSON.object(changed)),expected:request))
+        }
+        outer["request"] = .object([:]); XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:TaskfoldJSONEncoder().encode(JSON.object(outer)),expected:request))
+    }
+    func testRecoveryFileBoundsAndCancelKeepExistingFilesUntouched() throws {
+        let directory = try root(), url = directory.appendingPathComponent("recovery.json")
+        let data = Data(repeating:65,count:AccountRemovalRecoveryFile.maximumBytes+1);try data.write(to:url)
+        XCTAssertThrowsError(try AccountRemovalRecoveryReadOperation().read(url));XCTAssertEqual(try Data(contentsOf:url),data)
+        let cancelled = AccountRemovalRecoveryReadOperation();cancelled.cancel()
+        XCTAssertThrowsError(try cancelled.read(url)){XCTAssertEqual(($0 as NSError).code,CocoaError.userCancelled.rawValue)}
+        let (request,valid) = try removalRecoveryFixture(command());try valid.write(to:url)
+        XCTAssertEqual(try AccountRemovalRecoveryReadOperation().read(url),valid)
+        XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:data,expected:request))
+    }
+    func testRecoveryCertificatePreparationIsDurableAndStaleSafe() async throws {
+        let io = RemovalMemoryIO(), vault = AccountRemovalVault(io:io)
+        let a = try await vault.begin(command()), b = try await vault.begin(command(other))
+        let (request,data) = try removalRecoveryFixture(a), file = try AccountRemovalRecoveryFile(data:data,expected:request)
+        io.setFailure(true)
+        do{_ = try await vault.prepare(a,proof:file.proof);XCTFail("Failed certificate write accepted")}catch{}
+        let unchanged = try await vault.pending();XCTAssertEqual(unchanged,[a,b])
+        io.setFailure(false)
+        let updated = try await vault.prepare(a,proof:file.proof)
+        let retained = try await AccountRemovalVault(io:io).pending();XCTAssertEqual(retained,[updated,b]);XCTAssertTrue(updated.hasRecoveryCertificate)
+        do{_ = try await vault.prepare(a,proof:file.proof);XCTFail("Stale import replaced a changed journal entry")}catch{}
+        XCTAssertFalse(updated.confirmed)
+    }
+}

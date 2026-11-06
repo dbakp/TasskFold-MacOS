@@ -1,0 +1,11 @@
+{
+  "reservedNamespace": "workflowteststeameditbridge",
+  "localHeadingAuthoringInCopyOnly": true,
+  "cloudHeadingAuthoring": false,
+  "sourceStoreSHA256": "b853a35af383c4183c6aaece501aa8e91684ca68b79e72b2da13a909c502242f",
+  "preparedInfoSHA256": "55c1550013547bcd4e7c805fa4819b369036f8461ddbeeee34ba99979f44e4fe",
+  "limitations": [
+    "Preparation is not runtime acceptance",
+    "No hosted schema, rollout or production setting changed"
+  ]
+}

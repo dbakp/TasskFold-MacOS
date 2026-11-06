@@ -1,0 +1,25 @@
+Test Suite 'Selected tests' started at 2026-10-27 10:53:00.525.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 10:53:00.526.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-27 10:53:00.526.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' passed (8.113 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (8.819 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' passed (10.801 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' passed (12.627 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' passed (8.846 seconds).
+Test Suite 'SharedHeadingNativeTests' passed at 2026-10-27 10:53:49.737.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 49.206 (49.211) seconds
+Test Suite 'TaskfoldMacUITests' started at 2026-10-27 10:53:49.739.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' started.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' passed (11.697 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-10-27 10:54:01.437.
+	 Executed 1 test, with 0 failures (0 unexpected) in 11.697 (11.699) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 10:54:01.439.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 60.902 (60.913) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 10:54:01.439.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 60.902 (60.914) seconds
+** TEST EXECUTE SUCCEEDED **

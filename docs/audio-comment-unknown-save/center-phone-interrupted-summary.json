@@ -1,0 +1,60 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "modelName" : "iPhone 18 Pro",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 1,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1793145191.603,
+  "passedTests" : 1,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793144940.264,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertTrue failed - Complete audio control must fit above native and fixture overlays: Attributes: Application, 0x107c00500, pid: 8005, label: 'Taskfold Team Editor Test'\nElement subtree:\n →Application, 0x107c00500, pid: 8005, label: 'Taskfold Team Editor Test'\n    Window (Main), 0x107c02bc0, {{0.0, 0.0}, {402.0, 874.0}}\n      Other, 0x107c01680, {{0.0, 0.0}, {402.0, 874.0}}\n        Other, 0x107c03c00, {{0.0, 0.0}, {402.0, 874.0}}\n          Other, 0x107c003c0, {{-402.0, -874.0}, {1206.0, 2622.0}}\n          Other, 0x107c03980, {{0.0, 0.0}, {402.0, 874.0}}\n            Other, 0x107c02800, {{0.0, 0.0}, {402.0, 874.0}}\n              StaticText, 0x107c03200, {{59.8, 102.3}, {282.3, 137.3}}, label: 'Audio draft workshop'\n              StaticText, 0x107c03480, {{24.0, 259.7}, {354.0, 249.3}}, label: 'Synthetic recording and silent playback; no microphone access.'\n              Button, 0x113751180, {{65.3, 529.0}, {271.3, 125.3}}, identifier: 'audioFixtureOpen', label: 'Open audio draft'\n              Button, 0x1137503c0, {{79.0, 674.3}, {244.0, 125.3}}, identifier: 'audioFixtureSwitch', label: 'Change workspace'\n      Other, 0x113751900, {{0.0, 0.0}, {402.0, 874.0}}\n        Other, 0x1137521c0, {{-402.0, -874.0}, {1206.0, 2622.0}}\n        Other, 0x113753ac0, {{0.0, 62.0}, {402.0, 812.0}}\n          Other, 0x113750280, {{0.0, 62.0}, {402.0, 812.0}}\n            Other, 0x1137512c0, {{0.0, 62.0}, {402.0, 812.0}}\n              Other, 0x113752a80, {{0.0, 62.0}, {402.0, 812.0}}\n                Other, 0x113752d00, {{0.0, 62.0}, {402.0, 812.0}}\n                  NavigationBar, 0x113753d40, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Audio draft'\n                    Other, 0x113751040, {{20.0, 82.0}, {76.0, 36.0}}\n                      Other, 0x113752440, {{20.0, 82.0}, {76.0, 36.0}}\n                        Button, 0x113750c80, {{20.0, 82.0}, {76.0, 36.0}}, identifier: 'audioClose', label: 'Close'\n                    StaticText, 0x113750b40, {{147.7, 87.3}, {106.7, 25.3}}, label: 'Audio draft'\n                    Other, 0x113753980, {{307.3, 82.0}, {74.7, 36.0}}\n                      Other, 0x104ea3340, {{307.3, 82.0}, {74.7, 36.0}}\n                        Button, 0x104ea3480, {{307.3, 82.0}, {74.7, 36.0}}, identifier: 'audioSaveClose', label: 'Done'\n                  Other, 0x104ea3840, {{0.0, 62.0}, {402.0, 812.0}}\n                    Other, 0x104ea3200, {{0.0, 62.0}, {402.0, 812.0}}\n                      Other, 0x104ea35c0, {{0.0, 62.0}, {402.0, 812.0}}\n                        Other, 0x104ea3700, {{0.0, 62.0}, {402.0, 812.0}}\n                          CollectionView, 0x104ea0f00, {{0.0, 62.0}, {402.0, 812.0}}, identifier: 'audioDraftForm'\n                            Other, 0x113f88000, {{-16.0, -875.7}, {434.0, 1023.7}}\n                            Cell, 0x113f88140, {{16.0, 49.0}, {370.0, 81.3}}\n                              Other, 0x113f88280, {{16.0, 49.0}, {370.0, 81.3}}\n                                Other, 0x113f883c0, {{16.0, 49.0}, {370.0, 81.3}}\n                              Other, 0x113f88500, {{16.0, 49.0}, {370.0, 81.3}}\n                                Other, 0x113f88640, {{16.0, 49.0}, {370.0, 81.3}}\n                                  Other, 0x113f88780, {{16.0, 49.0}, {370.0, 81.3}}\n                                    StaticText, 0x113f888c0, {{16.0, 49.0}, {370.0, 81.3}}, label: '0:01 · AAC audio'\n                            Other, 0x113f88a00, {{0.0, 62.0}, {402.0, 812.0}}\n                              Other, 0x113f88b40, {{0.0, 62.0}, {402.0, 110.0}}\n                            Other, 0x113f88c80, {{0.0, 62.0}, {402.0, 812.0}}\n                              Other, 0x113f88dc0, {{0.0, 62.0}, {402.0, 110.0}}\n                            Other, 0x113f88f00, {{-16.0, 148.0}, {434.0, 2316.0}}\n                            Cell, 0x113f89040, {{16.0, 148.0}, {370.0, 145.3}}\n                              Other, 0x113f89180, {{16.0, 148.0}, {370.0, 145.3}}\n                              Other, 0x113f892c0, {{16.0, 148.0}, {370.0, 145.3}}\n                                Other, 0x113f89400, {{16.0, 148.0}, {370.0, 145.3}}\n                                  Other, 0x113f89540, {{16.0, 148.0}, {370.0, 145.3}}\n                                    StaticText, 0x113f89680, {{16.0, 148.0}, {370.0, 145.3}}, label: 'Caption (optional)'\n                            Cell, 0x113f897c0, {{16.0, 293.3}, {370.0, 250.0}}\n                              Other, 0x113f89900, {{16.0, 293.3}, {370.0, 250.0}}\n                                Other, 0x113f89a40, {{16.0, 293.3}, {370.0, 250.0}}\n                              Other, 0x113f89b80, {{16.0, 293.3}, {370.0, 250.0}}\n                                Other, 0x113f89cc0, {{16.0, 293.3}, {370.0, 250.0}}\n                                  Other, 0x113f89e00, {{16.0, 293.3}, {370.0, 250.0}}\n                                    TextView, 0x113f89f40, {{32.0, 308.3}, {338.0, 220.0}}, identifier: 'audioCaption', label: 'Recording caption', value: Keep this exact re...\n                                      Other, 0x113f8a080, {{32.0, 308.3}, {0.0, 0.0}}, identifier: '_UITextSelectionRangeAdjustmentContainerView'\n                                        Other, 0x113f8a1c0, {{32.0, 308.3}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'\n                                          Other, 0x113f8a300, {{24.8, 294.8}, {16.5, 16.5}}\n                                          Other, 0x113f8a440, {{32.0, 308.3}, {2.0, 0.0}}\n                                        Other, 0x113f8a580, {{32.0, 308.3}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'\n                                          Other, 0x113f8a6c0, {{24.8, 294.8}, {16.5, 16.5}}\n                                          Other, 0x113f8a800, {{32.0, 308.3}, {2.0, 0.0}}\n                                      Other, 0x113f8a940, {{337.0, 318.3}, {30.0, 210.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %\n                                        Other, 0x113f8aa80, {{364.0, 337.3}, {3.0, 188.0}}\n                            Cell, 0x113f8abc0, {{16.0, 543.3}, {370.0, 93.3}}\n                              Other, 0x113f8ad00, {{16.0, 543.3}, {370.0, 93.3}}\n                                Other, 0x113f8ae40, {{16.0, 543.3}, {370.0, 93.3}}\n                              Other, 0x113f8af80, {{16.0, 543.3}, {370.0, 93.3}}\n                                Other, 0x113f8b0c0, {{16.0, 543.3}, {370.0, 93.3}}\n                                  Other, 0x113f8b200, {{16.0, 543.3}, {370.0, 93.3}}\n                                    Button, 0x113f8b340, {{16.0, 543.3}, {370.0, 93.3}}, identifier: 'audioSave', label: 'Save draft'\n                                      StaticText, 0x113f8b480, {{47.3, 558.3}, {296.0, 63.3}}, label: 'Save draft'\n                                      Image, 0x113f8b5c0, {{47.3, 562.7}, {36.7, 48.3}}, identifier: 'square.and.arrow.down', label: 'Download'\n                            Other, 0x113f8b700, {{32.0, 542.3}, {338.0, 1.0}}\n                            Cell, 0x113f8b840, {{16.0, 636.7}, {370.0, 183.3}}\n                              Other, 0x113f8b980, {{16.0, 636.7}, {370.0, 183.3}}\n                                Other, 0x113f8bac0, {{16.0, 636.7}, {370.0, 183.3}}\n                              Other, 0x113f8bc00, {{16.0, 636.7}, {370.0, 183.3}}\n                                Other, 0x113f8bd40, {{16.0, 636.7}, {370.0, 183.3}}\n                                  Other, 0x113f8be80, {{16.0, 636.7}, {370.0, 183.3}}\n                                    StaticText, 0x10929c000, {{16.0, 636.7}, {370.0, 183.3}}, identifier: 'audioRecoveryStatus', label: 'Recovery copy kept privately on this device.'\n                            Other, 0x10929c140, {{32.0, 635.7}, {338.0, 1.0}}\n                            Other, 0x10929c280, {{369.0, 132.0}, {30.0, 680.0}}, label: 'Vertical scroll bar, 4 pages', value: 100 %\n                              Other, 0x10929c3c0, {{396.0, 579.0}, {3.0, 230.0}}\n                            Other, 0x10929c500, {{369.0, 132.0}, {30.0, 680.0}}, label: 'Vertical scroll bar, 4 pages', value: 100 %\n                              Other, 0x10929c640, {{396.0, 579.0}, {3.0, 230.0}}\n                  Toolbar, 0x10929c780, {{0.0, 62.0}, {402.0, 812.0}}, identifier: 'Toolbar', label: 'Toolbar'\n                    Other, 0x10929c8c0, {{0.0, 62.0}, {402.0, 812.0}}\n                StaticText, 0x10929ca00, {{46.8, 574.3}, {308.3, 102.3}}, identifier: 'audioFixtureLookupProbe', label: 'Storage reads: 0 · ready'\n                Button, 0x10929cb40, {{82.0, 684.7}, {238.3, 139.3}}, identifier: 'audioFixtureResumeStorage', label: 'Resume storage'\n    Window, 0x10929cc80, {{0.0, 0.0}, {402.0, 874.0}}\n      Other, 0x10929cdc0, {{0.0, 0.0}, {402.0, 874.0}}\n        Other, 0x10929cf00, {{0.0, 0.0}, {402.0, 874.0}}\nPath to element:\n →Application, 0x107c00500, pid: 8005, label: 'Taskfold Team Editor Test'\nQuery chain:\n →Find: Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'\n  Output: {\n    Application, 0x10929d040, pid: 8005, label: 'Taskfold Team Editor Test'\n  }\n",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 2,
+      "testIdentifierString" : "TaskfoldUITests/testAudioUnknownPreparedSaveRetryKeepsOriginalIDsAfterLockRelease()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAudioUnknownPreparedSaveRetryKeepsOriginalIDsAfterLockRelease",
+      "testName" : "testAudioUnknownPreparedSaveRetryKeepsOriginalIDsAfterLockRelease()"
+    },
+    {
+      "failureText" : "Testing was canceled",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 3,
+      "testIdentifierString" : "TaskfoldUITests/testAudioUnknownSaveColdLaunchRecoversTheOriginalAuthorization()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAudioUnknownSaveColdLaunchRecoversTheOriginalAuthorization",
+      "testName" : "testAudioUnknownSaveColdLaunchRecoversTheOriginalAuthorization()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 3
+}

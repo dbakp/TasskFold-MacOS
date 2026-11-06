@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-09",
+  "scope": "Unreadable working hours no longer create default capacity in either native planner or widget projection. Task estimates and task widgets remain available.",
+  "core": {
+    "ios": {
+      "passed": 21,
+      "failures": 0,
+      "log": "/tmp/taskfold-capacity-version-ios-core-v1.log"
+    },
+    "mac": {
+      "passed": 21,
+      "failures": 0,
+      "log": "/tmp/taskfold-capacity-version-mac-core-v1.log"
+    },
+    "suites": [
+      "PlannerTests",
+      "CapacityWidgetTests"
+    ],
+    "coverage": "Nil working hours retain workload estimates, emit empty capacity days/hours with explicit settings state, decode without room calculations for today/tomorrow, and retain task data."
+  },
+  "native": {
+    "result": "/tmp/taskfold-capacity-version-ui-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0,
+    "scope": "Isolated iPhone Simulator: capacity-unavailable message and 115 minutes of estimates, persisted across relaunch with settings still read-only.",
+    "actualAppGroup": {
+      "account": "ui-testing",
+      "capacity": {
+        "version": 1,
+        "timeZone": "Europe/Copenhagen",
+        "calendarState": "settings",
+        "calendarUpdated": null,
+        "hours": "",
+        "days": {}
+      },
+      "retainedTasks": 4
+    },
+    "captureInIOSRepository": "docs/native-continuity-previews/capacity-unsupported.png",
+    "captureSHA256": "b78e68fa6dd8750b2be210770fa3235cce9a7242767e4cd67f0f9212183a9630",
+    "visuallyInspected": true
+  },
+  "builds": {
+    "ios": "/tmp/taskfold-capacity-version-ios-build-v1.log",
+    "mac": "/tmp/taskfold-capacity-version-mac-build-v1.log",
+    "configuration": "Debug arm64 app/widgets, iOS test products",
+    "signatures": "/tmp/taskfold-capacity-version-signatures-v1.json"
+  },
+  "limitations": [
+    "No installed capacity-widget host screenshot in this checkpoint",
+    "No Mac GUI or physical device execution",
+    "No live mixed-version pair or account-switch acceptance"
+  ],
+  "sourceHashes": {
+    "Taskfold/Core/Models.swift": "d37378b958eefd9eda283508bdd1b6284329c8db61c3cbd9b707a3af26c57902",
+    "Taskfold/Core/Planner.swift": "4aa5c2c5008379d89a92f7d48dec21949d36225ad7552e3413a112ed0df943ae",
+    "Taskfold/Core/Store.swift": "a821e682ef89dd52b83d192cf1c63a0518abd85d10707ea5eb28c469606d588f",
+    "Taskfold/Views/HourlyPlanner.swift": "d9e91291f806c78d4bc6e44b732e88ba0e0b7b943bc81d647416422ff31d57c7",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "73e4c3b0a9ecf6163a7d3eabbac3a87b1acb4a3f3bac4f8491683c3378599396"
+  }
+}

@@ -1,0 +1,3 @@
+Initial native attempt: iPad passed the complete recording-backup Cancel/Save/local-readback/cold-return journey. Phone reached the file picker but the test could not find a Cancel button. Inspection of its archived accessibility snapshot shows a compact OverflowBarButtonItem (More) at the Cancel control frame; the driver now opens that observed menu when Cancel is not a direct button. Production code is unchanged for this driver correction. Final acceptance is recorded separately.
+
+The More-menu hypothesis was subsequently disproved by its view-options contents; see ../compact-picker/README.md. Final phone cancellation uses standard sheet dismissal, verified through the actual cancellation callback.

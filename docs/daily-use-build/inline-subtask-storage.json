@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-05",
+  "firstNativeCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 70519808000,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 419041280
+      }
+    ],
+    "freeAfterBytes": 70518456320,
+    "actualFreeChangeBytes": -1351680
+  },
+  "retirement": {
+    "freeBeforeBytes": 70518431744,
+    "retired": [
+      {
+        "path": "/tmp/taskfold-inline-subtasks-ios-native-v3.xcresult",
+        "allocatedBytes": 17473536,
+        "reason": "Superseded test-selector failure; concise report and complete failure log preserved privately"
+      },
+      {
+        "path": "/tmp/taskfold-inline-subtasks-ios-native-v4.xcresult",
+        "allocatedBytes": 13611008,
+        "reason": "Superseded test-selector failure; concise report and complete failure log preserved privately"
+      },
+      {
+        "path": "/tmp/taskfold-inline-subtasks-v5-attachments",
+        "allocatedBytes": 495616,
+        "reason": "Reviewed screenshot retained privately and in final result; duplicate export removed"
+      },
+      {
+        "path": "/tmp/taskfold-inline-subtasks-large-v5-attachments",
+        "allocatedBytes": 413696,
+        "reason": "Reviewed screenshot retained privately and in final result; duplicate export removed"
+      }
+    ],
+    "preserved": "Normal/largest-text final raw results, concise failure reports/logs, reviewed screenshots, pending Mac14/phone30 and Mac10/phone26 rollback archives and private privacy-test backup.",
+    "freeAfterBytes": 70550347776
+  },
+  "finalCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 70528860160,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 419041280
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 402079744
+      }
+    ],
+    "freeAfterBytes": 70528831488,
+    "actualFreeChangeBytes": -28672
+  },
+  "coreCacheTotals": {
+    "ios": {
+      "allocatedBytes": 577982464,
+      "within768MiB": true
+    },
+    "mac": {
+      "allocatedBytes": 530812928,
+      "within768MiB": true
+    }
+  },
+  "finalFreeBytes": 70588616704,
+  "preservedPackagesSHA256": {
+    "mac14": "92a74a61ae2c04d12cfaf13edd2cc2b127e0eed8026b015ebd5e9c948aff5651",
+    "phone30": "64ac268cb80a7473dc10b2ac953cac0167f7b37fd2cbb6b35572e89f26c6816c"
+  },
+  "limits": "System-wide free-space changes include concurrent system writes; the retired allocated-byte sum measures only the selected Taskfold outputs. No real task/app/device data, Keychain, Docker, shared support files or unrelated devices/jobs removed."
+}

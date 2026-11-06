@@ -6,7 +6,7 @@ A preview belongs to the exact entered token and originating workspace. Token ed
 
 The UI accepts a preview only when `preview:true`, a nonempty bounded source account, all six nonnegative integral count fields, and a string warnings array are present. It accepts an import receipt only when `success:true`, the same approved source account, all ten expected nonnegative integral import/skip counts, and warnings are present. Invalid/missing fields never become an apparently successful zero-count import. Unknown fields remain preserved in the decoded record. Validation bounds numeric counts before conversion to native integers.
 
-Preview counts appear in a fixed order. Unsupported-data warnings precede the import action in the native form, with wrapping text. Confirmed receipts use readable labels such as “Tasks already imported” instead of raw response keys. The primary token field precedes the explanatory footer. iOS provides a reachable keyboard Done action and an explicit token-clear control. Clear and Preview are disabled while busy; the status distinguishes preparation from import.
+Preview counts appear in a fixed order. Each count and receipt row exposes its own explicit accessible label/value, and warnings remain independently accessible. Unsupported-data warnings precede the import action in the native form, with wrapping text. Confirmed receipts use readable labels such as “Tasks already imported” instead of raw response keys. The primary token field precedes the explanatory footer. iOS provides a reachable keyboard Done action and an explicit token-clear control. Clear and Preview are disabled while busy; the status distinguishes preparation from import.
 
 A lost save response can follow a committed transaction. The client keeps the exact approved preview/token and displays the returned error, allowing a source-bound retry; source-ID replay protection remains the server's responsibility. A newly requested preview discards previous approval until a new valid response arrives. Leaving during a preview discards its eventual response. Leaving during an import allows the request to finish and refresh the originating workspace after a valid receipt; a workspace change prevents that refresh. Success clears the token and previous approval. Reopening this screen starts empty.
 
@@ -15,3 +15,54 @@ The existing deployed `import-todoist` function was read on 7 October 2026: acti
 Verification is recorded in `todoist-import-review-evidence.json` with owned input hashes. Native response-state fixtures exercise short/rejected tokens, malformed preview, warnings, lost-response retry and confirmed skipped-count receipts. These are client UI/error-handling evidence. They do not prove provider pagination, real source-ID replay, imported task persistence, live token authorization, paired native synchronization or physical/provisioned/Mac runtime acceptance. The existing server fixture evidence remains separate. Real isolated Todoist-account preview/import/retry, current deployed end-to-end persistence, Mac user walks and full P0 acceptance remain open.
 
 The final four iOS Simulator response-fixture walks pass with 16 inspected captures in `todoist-import/final/`. Own Core suites pass 524 tests (four optional skips); own unsigned Debug/Release builds and current rolled-back receipt SQL pass. Mac UI tests compile only. Largest phone text requires scrolling and the initial large title truncates. Each device records two source-unlocated frame-dimension warnings at import navigation, retained for diagnosis. This is scoped client verification, not full P0 or real provider acceptance.
+
+### 11 October — real Todoist provider import and replay
+
+With explicit user authorization, the existing Todoist account was used as a read-only source. Its existing API token was copied directly through native controls into the isolated Mac app; no token regeneration or Todoist task/project mutation was performed. The deployed importer remains version 41 and uses only GET requests to Todoist. A fresh authenticated Taskfold destination was verified empty before import.
+
+The native preview and first confirmed receipt contain 23 projects, 88 sections, 5 labels, 252 root tasks, 24 subtasks and 94 comments. The 276 active source tasks exceed the 200-item page limit, exercising real pagination. A second native preview/import creates zero records and skips all previously imported projects/sections/labels/root tasks. Complete ordered database fingerprints for all four destination entity tables and 368 source mappings are identical before and after replay. Normal app quit/relaunch retains the authenticated destination and all six counts, with no pending sync changes. Success clears the transient token; the temporary clipboard was replaced. See `todoist-live-provider-evidence.json`.
+
+The original Mac account's seven task/organization/filter/pin/Focus tables equal the established canonical phone baseline and its queue is empty. Its whole cache file differs from the older Mac hash after the running app caught up; byte-for-byte equality is not claimed. No private task content, source identity, credential or raw cache is committed.
+
+This accepts real provider authorization, multi-page snapshot, native Mac import, unchanged duplicate-safe replay and normal-launch persistence. The repeated real import followed a confirmed success; actual lost-response recovery was not injected. iOS real-provider native interaction and paired imported-account sync remain unverified. The Mac accessibility tree combines count/receipt values under their first label even though all visual labels are present; actual VoiceOver acceptance remains open. Broader native Mac, accessibility, provider/delivery, widget host and distribution gates still apply; full P0 acceptance is not claimed.
+
+### 11 October — independent importer accessibility rows
+
+Both independently owned importer views now expose an explicit label/value for each of the six preview counts and ten receipt rows, plus separate warning elements. This fixes the live Mac observation where a grouped form merged all values under its first label. The final isolated Mac native computer-use walk verifies those elements, failed-save explanation, visible Retry and successful token clearing; three screenshots were inspected inline. Its automated XCTest attempt failed before executing the case because macOS timed out enabling automation mode. An intermediate static-text-trait variant reintroduced merging and was removed; no passing automated Mac result is claimed.
+
+Normal/light and largest/dark phone walks pass all count/receipt labels and values, token validation, warnings, failed-save retry, clearing and empty reopening. The first largest run failed only because equal visual edges differed by floating-point rounding; the retained failure reports 700.3333333333334 versus 700.333333333333. A 0.001-point measurement tolerance fixes that test assertion, and the largest rerun passes. Eight captures are inspected and retained. At largest text, labels wrap and the long form requires substantial scrolling; the final receipt capture shows its last rows, not all ten simultaneously. See `import-count-accessibility-evidence.json`.
+
+The original cloud note and ended Focus cold routes pass separately. The entire phone cloud cache and widget account/note/Focus/pending fields equal their baselines; both queues are empty, local/cold-fixture preferences are false and seven Mac shared tables equal the canonical account. Both final app/test builds pass. Temporary Mac build products and duplicate exports were pruned while every native result bundle remains retained. This is scoped native/AX acceptance; full VoiceOver, keyboard, real lost-response recovery, iOS real-provider/paired imported-account flows and broader P0 gates remain open.
+
+### 11 October — native imported-workspace round trip
+
+The user unlocked the Mac and approved its isolated app's Keychain prompt. Native Mac → phone → Mac notes handoff now passes in the real imported destination: full original notes and 25-minute estimate, Mac note edit/relaunch, exact phone receipt and return note save/relaunch, then native Mac full inspector receipt and final quit/relaunch. The phone case passes with zero failures/skips/reported runtime warnings and restores the original account through native authentication. All 14 imported cache tables match across apps; every imported/non-synthetic row remains unchanged, only the synthetic task description changes, and all four checked account/device queues are empty. Original-account cached tables are unchanged on both devices. No Todoist request occurs in this phase. See `imported-workspace-native-handoff-evidence.json`.
+
+Computer use returned stale filtered-row accessibility IDs/content and one invalid element ID; visual task identity and exact inspector values were verified before accepting the return. Controls are explicitly rebound after process relaunch. This observation does not establish a VoiceOver pass or a product data-filtering defect. The earlier Keychain blocker and native imported-account return gap are resolved for this binary/workflow; real lost-save-response recovery and the other current P0 requirements remain open.
+
+
+### 11 October — genuine replay response deliberately lost
+
+The native iPhone importer now passes recovery after a real successful provider replay response is deliberately dropped at the HTTP boundary. It shows the interrupted-save explanation and Retry without false success, retries the same approved source, receives all expected zero-created/skipped counts, clears its transient token, reopens empty after relaunch and returns to the original account through native authentication. All 15 destination tables and four checked source tables are identical before/after; existing Mac edits remain in the exact imported phone cache. Both own importer suites pass eight cases; see `import-lost-response-evidence.json`. The isolated DEBUG boundary requires an exact bundle/account, explicit flag and UUID marker, loses only the first actual successful save response, and is absent from Release output. This proves accepted-response replay recovery; first-import commit/response-loss and native Mac discard/retry remain unverified. Earlier response-state fixtures remain distinct.
+
+
+### 26 October — owned heading mapping, gated source only
+
+Each native repo now owns its own import-todoist service source/tests and typed
+import migration. The starting point is deployed version 41, read without
+modification. Todoist's documented leading asterisk/space becomes an explicit
+root/nested heading, keeping original content in source metadata. Notes, dates,
+comments, HTTPS links and descendants are retained. Typed bundle/receipt and
+client/server availability checks prevent flattening a heading into completable
+work. Preview counts and availability are explicit; a changed heading count
+requires a new preview. Replay preserves existing Taskfold types/edits and cannot
+resurrect deleted destinations. Older imported literal-prefix copies are not
+automatically converted.
+
+No code or migration was deployed. Normal heading creation/import and the server
+switch remain off. Native fixture responses do not contact Todoist or save tasks;
+the separate real local database harness consumes the actual mapper's output.
+See TASK_HEADINGS.md and p2-task-headings-todoist-evidence.json for exact scope,
+source hashes, rejected harness attempts and remaining provider/native gates.
+The earlier genuine provider evidence above remains historical, not evidence
+that the new heading path has been run against a real account.

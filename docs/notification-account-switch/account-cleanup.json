@@ -1,0 +1,28 @@
+{
+  "disposableAccountID": "32f97209-441c-480c-9213-79574fb2aa78",
+  "globalLogoutHTTP": 204,
+  "deleteAccountHTTP": 404,
+  "credentialsPrinted": false,
+  "scopedSQLFallback": "Exact disposable UUID/email; requires zero sessions, tasks and owned objects before auth.users deletion",
+  "verifiedRemainingCounts": {
+    "projects": 0,
+    "sections": 0,
+    "labels": 0,
+    "tasks": 0,
+    "profiles": 0,
+    "project_collaborators": 0,
+    "saved_views": 0,
+    "favorites": 0,
+    "view_preferences": 0,
+    "view_orders": 0,
+    "reminder_preferences": 0,
+    "focus_sessions": 0,
+    "task_activity_epoch": 0,
+    "task_activity": 0,
+    "auth.users": 0,
+    "auth.sessions": 0,
+    "storage.objects": 0
+  },
+  "disposableCredentialsRemoved": true,
+  "disposableCacheRemoved": true
+}

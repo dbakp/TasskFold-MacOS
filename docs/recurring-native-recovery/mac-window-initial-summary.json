@@ -1,0 +1,46 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "modelName": "MacBook Pro",
+        "osBuildNumber": "25G83",
+        "osVersion": "26.6.2",
+        "platform": "macOS"
+      },
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "passedTests": 0,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+  "expectedFailures": 0,
+  "failedTests": 1,
+  "finishTime": 1792949685.465,
+  "passedTests": 0,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1792949648.343,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "XCTAssertTrue failed - Attributes: Application, 0xc28dd6080, pid: 53787, title: 'Taskfold Workflow Test', Disabled\n[Unrelated system menu hierarchy omitted]\n",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 1,
+      "testIdentifierString": "TeamCompletionRecoveryMacUITests/testRecordedSingleViewerColdRecovery()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedSingleViewerColdRecovery",
+      "testName": "testRecordedSingleViewerColdRecovery()"
+    }
+  ],
+  "title": "Test - Taskfold",
+  "topInsights": [],
+  "totalTestCount": 1
+}

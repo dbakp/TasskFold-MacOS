@@ -1,0 +1,18 @@
+{
+  "completeOwnMigrationReplay": true,
+  "migrationCount": 202,
+  "genuineLocalAuthAndRESTChecks": 72,
+  "recordingRegressionChecks": 65,
+  "fullSchemaAdvisorWarnings": 15,
+  "nativeStoreVerified": false,
+  "hostedChanges": false,
+  "normalAppGateChanges": false,
+  "ownedResourcesRemoved": true,
+  "sourceSHA256": {
+    "Scripts/Database/full-schema-runtime.mjs": "fec6b262196c234775e0f236e5ff8a87b4496427fd54479d7215878ce28ca4da",
+    "Scripts/Database/full-schema-gateway.mjs": "6588135c15783e925e91ad8661ad34fc995d2dcacbdfc97fcba547a61351ba68",
+    "Scripts/Database/test-full-schema-sync.mjs": "60851ca1c1c4ed0279378326e1cee1c795f17663a1723d59a0edadadaf9d02d4",
+    "supabase/migrations/20260911123547_collaboration_foundation.sql": "3f37737fd34de859cb6f7f54f08aac9b6900dd3ed49ac010ca83c12f29b6af23",
+    "supabase/migrations/20261102175200_reviewed_audio_generation_restore.sql": "a4cde59f4f9f477227b2ef5ae343191a1932a6a55dbc4719df770fea08553fa8"
+  }
+}

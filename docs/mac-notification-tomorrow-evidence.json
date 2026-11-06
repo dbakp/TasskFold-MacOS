@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual native macOS terminated-process Move to tomorrow for an undated local task, normal relaunch and scoped cleanup.",
+  "bundle": "com.dbakp.taskfold.mac.p0notificationtests",
+  "actionBuild": "v2; reminder action handler matches current source",
+  "taskID": "aff8e49e-92d4-48eb-a7f0-75ffc88e027c",
+  "action": {
+    "id": "taskfold.tomorrow",
+    "hostTime": "2026-10-12 10:18:23.945 +0200",
+    "foreground": false,
+    "requestID": "taskfold.r2.ee200343161f7518f8c0962d1c71de937810c999d09f4286d6ff33fea0222299",
+    "osStartedPID": 18813,
+    "noLaunchArguments": true,
+    "onlyChangedTaskFields": [
+      "due_date"
+    ],
+    "plannedDate": "2026-10-13",
+    "reminderSpecsExact": true
+  },
+  "nativeEditor": {
+    "plannedDateOn": true,
+    "date": "13/10/2026",
+    "timeOff": true,
+    "screenshotInspected": true
+  },
+  "normalRelaunch": {
+    "normalRelaunchSnapshotExact": true,
+    "pid": 19444,
+    "command": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-notification-v2/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+  },
+  "cleanup": {
+    "nativeDeliveryOff": true,
+    "nativeReversibleDeleteOnlySyntheticTask": true,
+    "originalFourStarterTasksAndProjectExact": true,
+    "priorActivityRetained": true,
+    "expectedNewActivityRows": 3,
+    "pendingEdits": 0,
+    "protectedFilesExact": 100
+  },
+  "debugInspector": {
+    "source": "Mac-owned SettingsView.swift, DEBUG only and exact p0notificationtests bundle guard",
+    "readOnly": true,
+    "workspaceChangeInvalidatesReport": true,
+    "signedDebugBuildAndStrictDeepSignaturePass": true,
+    "nativeNormalLaunch": true,
+    "actualMacOSRegistryAfterCleanup": {
+      "accountID": "local",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791793421.4326658,
+      "pending": [],
+      "processID": 19589
+    },
+    "nativeRuntimeAccepted": true,
+    "buildLogSHA256": "eb54b8608b1b402ba6f26b4e56a1137cee85c1c2e604877e4f9104a9802de33f",
+    "sourceSHA256": "88deee6494ce2c5359342fbc358163dc6c016e58a541bdfb8e7abc3f985ecc4d",
+    "stageSourceExact": true,
+    "existingBuildWarningLines": 8
+  },
+  "prunedLogicalBytes": 217843318,
+  "limits": [
+    "Registry inspected after delivery was disabled and synthetic task deleted, in normally launched v4; this does not prove pre-disable cancellation timing.",
+    "Move action is accepted for the named undated local task only; Mac Snooze/Open/account transitions and other P0 release gates remain open.",
+    "Settings permission pending indicator pixels remain unaccepted."
+  ]
+}

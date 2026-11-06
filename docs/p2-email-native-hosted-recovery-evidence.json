@@ -1,0 +1,559 @@
+{
+  "date": "2026-10-23",
+  "scope": "Native hosted email recovery; ongoing Px work, not provider delivery or release acceptance",
+  "repositoryPlatform": "mac",
+  "productionFix": "Preserve accepted session incarnation across sign-in sheet completion; resume workspace-bound sync",
+  "nativeRuntimeRepository": "TaskFold-iOS",
+  "nativeCases": {
+    "phone": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792788983.749,
+      "passedTests": 1,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792788745.534,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "tablet": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+            "deviceName": "iPad Pro 13-inch (M5)",
+            "modelName": "iPad Pro 13-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792789388.366,
+      "passedTests": 1,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792789041.962,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    }
+  },
+  "nativeController": {
+    "checks": {
+      "native-phone-actual-task-and-private-route-baseline": true,
+      "native-phone-actual-sessions-expired": true,
+      "native-phone-renewed-session-and-original-row": true,
+      "native-phone-saved-pause-retry-confirmed": true,
+      "native-phone-resume-confirmed": true,
+      "native-phone-other-account-has-no-route": true,
+      "native-phone-revoke-confirmed": true,
+      "native-phone-ui-relaunch-isolation-cleanup-completed": true,
+      "native-tablet-actual-task-and-private-route-baseline": true,
+      "native-tablet-actual-sessions-expired": true,
+      "native-tablet-renewed-session-and-original-row": true,
+      "native-tablet-saved-pause-retry-confirmed": true,
+      "native-tablet-resume-confirmed": true,
+      "native-tablet-other-account-has-no-route": true,
+      "native-tablet-revoke-confirmed": true,
+      "native-tablet-ui-relaunch-isolation-cleanup-completed": true
+    },
+    "nativeFingerprints": {
+      "phone": {
+        "route": "14f083e9d332848b26c80b95ba4d77c902c33a55fb3b016bed9701f499b59f0d",
+        "task": "cf894e6c94faabf61dc12c2f0f82fe57962cce1692c55c9874d1a9bc97a4be9e"
+      },
+      "tablet": {
+        "route": "2ece04b3414e5cc28a681006b81ddfa13c67f5755de775a2b8c1a96ee99e29d3",
+        "task": "86bb60b2d01c4f2cecad00fc04239c142d96f168617c32faf4d8c03c74d45d8b"
+      }
+    },
+    "cleanup": {
+      "users": true,
+      "function": true,
+      "environment": true,
+      "files": true,
+      "configuration": true
+    },
+    "mainChanged": false,
+    "realTasksChanged": 0,
+    "providerDeliveryClaimed": false,
+    "nativeUIClaimed": true,
+    "passed": true
+  },
+  "hostedRegression": {
+    "ios": {
+      "passed": true,
+      "checks": {
+        "nonempty saved task snapshot recorded": true,
+        "actual Auth and hosted list succeed": true,
+        "successful metadata is not cached": true,
+        "old native protocol refused": true,
+        "unknown management field refused": true,
+        "unreviewed domain refused": true,
+        "hosted setup creates owner bound route": true,
+        "response projects no private alias hash": true,
+        "exact setup retry keeps route identity": true,
+        "exact retry leaves complete row unchanged": true,
+        "changed setup conflicts": true,
+        "other real account sees no owner routes": true,
+        "other real account cannot pause route": true,
+        "other real account cannot replay owner setup": true,
+        "actual expired server session refuses mutation": true,
+        "expired session leaves full route row unchanged": true,
+        "wrong password refuses renewal": true,
+        "same account gets new actual session": true,
+        "renewed account retries original setup": true,
+        "renewal retry preserves full route fingerprint": true,
+        "pause after renewal persists": true,
+        "uncertain pause retry is idempotent": true,
+        "stale resume revision refused": true,
+        "reviewed resume persists": true,
+        "rotation revokes original and returns replacement": true,
+        "rotation retry keeps one replacement": true,
+        "two retained route identities after rotation": true,
+        "terminal revocation persists": true,
+        "revoked route cannot resume": true,
+        "cancel before create persists": true,
+        "discarded setup cannot be created": true,
+        "old session bearer remains refused": true,
+        "all hosted management preserves task snapshot": true,
+        "native cannot bypass gateway with direct RPC": true,
+        "native cannot attest provider delivery": true,
+        "no native delivery task created": true
+      },
+      "cleanup": {
+        "users": true,
+        "function": true,
+        "environment": true,
+        "files": true,
+        "configuration": true
+      },
+      "existingPreviewAdvisorFindings": 24,
+      "emailObjectAdvisorFindings": 0
+    },
+    "mac": {
+      "passed": true,
+      "checks": {
+        "nonempty saved task snapshot recorded": true,
+        "actual Auth and hosted list succeed": true,
+        "successful metadata is not cached": true,
+        "old native protocol refused": true,
+        "unknown management field refused": true,
+        "unreviewed domain refused": true,
+        "hosted setup creates owner bound route": true,
+        "response projects no private alias hash": true,
+        "exact setup retry keeps route identity": true,
+        "exact retry leaves complete row unchanged": true,
+        "changed setup conflicts": true,
+        "other real account sees no owner routes": true,
+        "other real account cannot pause route": true,
+        "other real account cannot replay owner setup": true,
+        "actual expired server session refuses mutation": true,
+        "expired session leaves full route row unchanged": true,
+        "wrong password refuses renewal": true,
+        "same account gets new actual session": true,
+        "renewed account retries original setup": true,
+        "renewal retry preserves full route fingerprint": true,
+        "pause after renewal persists": true,
+        "uncertain pause retry is idempotent": true,
+        "stale resume revision refused": true,
+        "reviewed resume persists": true,
+        "rotation revokes original and returns replacement": true,
+        "rotation retry keeps one replacement": true,
+        "two retained route identities after rotation": true,
+        "terminal revocation persists": true,
+        "revoked route cannot resume": true,
+        "cancel before create persists": true,
+        "discarded setup cannot be created": true,
+        "old session bearer remains refused": true,
+        "all hosted management preserves task snapshot": true,
+        "native cannot bypass gateway with direct RPC": true,
+        "native cannot attest provider delivery": true,
+        "no native delivery task created": true
+      },
+      "cleanup": {
+        "users": true,
+        "function": true,
+        "environment": true,
+        "files": true,
+        "configuration": true
+      },
+      "existingPreviewAdvisorFindings": 24,
+      "emailObjectAdvisorFindings": 0
+    }
+  },
+  "diagnostics": {
+    "first_ipad_failure": {
+      "assertion": "retryEmailSetup absent after successful same-account renewal",
+      "observed_accessibility_labels": [
+        "Sign in to capture email",
+        "Email addresses belong to your synced account."
+      ],
+      "cause": "Late observer cleared restored model",
+      "product_fix": "Remember restored incarnation before sheet reset, and resume workspace-bound sync"
+    },
+    "later_test_failure": {
+      "assertion": "settings-Account absent",
+      "observed": "Save Password alert consumed original Settings tap; computed hit point -1,-1",
+      "harness_fix": "Recheck destination and retry after prompt dismissal"
+    },
+    "orphan_cleanup": {
+      "phone": "orphan=cleared accounts=4 policy=absent",
+      "tablet": "orphan=cleared accounts=3 policy=absent"
+    }
+  },
+  "orphanCleanup": {
+    "cases": {
+      "phone": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792788548.569,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792788523.674,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "tablet": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792788444.093,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792788421.929,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      }
+    },
+    "functionalAcceptance": false,
+    "earlierSkippedCleanupNotAccepted": true
+  },
+  "builds": {
+    "iosTestBuild": true,
+    "macOwnProjectBuild": true,
+    "macRuntimeClaimed": false,
+    "signing": {
+      "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      },
+      "TaskfoldUITests-Runner.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      }
+    }
+  },
+  "sourceHashes": {
+    "Taskfold/Views/EmailCaptureView.swift": "4c446979c7b4a890611c67a1162d754c7d3456eb2d145b47de76dceef4039d55",
+    "Taskfold/Views/EmailCaptureKeychainFixture.swift": "10244766ee5e161173427d3dbd3673cf9c2f1f37e457262eab7a16bd046d8c38",
+    "Scripts/prepare_webhook_native_host.py": "f4eef09a4184c6f6b76c5529f1ab9e07ec5ef88312acd7b5431a4f9c546d30a2",
+    "Scripts/Diagnostics/test-email-routes-hosted.mjs": "8d8f954809c35f79a8c15493ddaeaacd217405db45eec2ec00c6f60b0a4fa3f4",
+    "Scripts/Diagnostics/email-native-hosted.mjs": "9bb107a0748a2f717ada725db6234de43ac81f847fe01ba682f15fb7be614cc4"
+  },
+  "iosTestSourceHashes": {
+    "TaskfoldUITests/AutomationManagementUITests.swift": "96ae02b491b6d47daf59a4dc51a0e2c0d93cdb60f82a7753bc07b4a44a6a8cf9",
+    "TaskfoldUITests/EmailCaptureUITests.swift": "59b2fd35cbcb76fcd69c05caa5b7802a5ff827cf997120d5c7657425496ea268"
+  },
+  "stagedAppAndUITestSourcesMatched": true,
+  "coreBackendStoreSQLChanged": false,
+  "shippingEmailFlagEnabled": false,
+  "isolatedStagedEmailFlagEnabled": true,
+  "screenshots": {
+    "phone-hosted-email-recovered.png": {
+      "sha256": "8fd0afc964c2d9faf4e84050a835dde245475c026fb1f9ec910897b792772d5e",
+      "visuallyReviewed": true
+    },
+    "tablet-hosted-email-recovered.png": {
+      "sha256": "b3f5d31287c9ef61d411219e57d03b65aa6d3d81086379c99552fcb2ed373927",
+      "visuallyReviewed": true
+    }
+  },
+  "presentation": "Normal light iPhone; largest accessibility text dark iPad with scrollable controls",
+  "cleanup": {
+    "branch_id": "bf66bb85-c403-4225-ba7e-2ba62393b1d6",
+    "project": "dtyrglsqiarnvjuaarhs",
+    "final_server_state": {
+      "cancellations": 0,
+      "enabled": false,
+      "routes": 0,
+      "tasks": 0,
+      "users": 0
+    },
+    "branch_absent": true,
+    "private_connection_directory_removed": true,
+    "native_password_handoff_removed": true,
+    "isolated_apps_and_runners_absent_on_both_devices": true,
+    "app_bundle_privileged_key_scan": "No exact service-role credential bytes in owned app bundle; not a whole-device scan"
+  },
+  "pruning": {
+    "removedBytes": 902822847,
+    "ownedArtifactsRemoved": [
+      {
+        "name": "EmailNativeHostedPhone41fa5900Attachments",
+        "bytes": 399641
+      },
+      {
+        "name": "EmailNativeOrphanTablet41fa5900Attachments",
+        "bytes": 764
+      },
+      {
+        "name": "EmailNativeHostedPhone41fa5900.xcresult",
+        "bytes": 2204590
+      },
+      {
+        "name": "EmailNativeHostedPhoneV241fa5900Attachments",
+        "bytes": 386097
+      },
+      {
+        "name": "EmailNativeHostedTabletV241fa5900Attachments",
+        "bytes": 439010
+      },
+      {
+        "name": "EmailNativeHostedPhoneFixed41fa5900.xcresult",
+        "bytes": 2196967
+      },
+      {
+        "name": "EmailNativeOrphanTablet41fa5900.xcresult",
+        "bytes": 296217
+      },
+      {
+        "name": "EmailNativeOrphanPhone41fa5900.xcresult",
+        "bytes": 293897
+      },
+      {
+        "name": "EmailNativeHostedPhoneV241fa5900.xcresult",
+        "bytes": 2300744
+      },
+      {
+        "name": "EmailNativeHostedRoundTripCleanup41fa5900.xcresult",
+        "bytes": 21243
+      },
+      {
+        "name": "EmailNativeOrphanPhone41fa5900Attachments",
+        "bytes": 756
+      },
+      {
+        "name": "EmailNativeHostedTabletCleanup41fa5900.xcresult",
+        "bytes": 187132412
+      },
+      {
+        "name": "EmailNativeHostedPhoneFixed41fa5900Attachments",
+        "bytes": 383766
+      },
+      {
+        "name": "EmailNativeHostedTabletV241fa5900.xcresult",
+        "bytes": 3731289
+      },
+      {
+        "name": "EmailNativeHostedTablet41fa5900.xcresult",
+        "bytes": 120926164
+      },
+      {
+        "name": "EmailNativeHostedTabletFixed41fa5900.xcresult",
+        "bytes": 202242932
+      },
+      {
+        "name": "EmailNativeHostedTabletCleanupFixed41fa5900.xcresult",
+        "bytes": 1708023
+      },
+      {
+        "name": "EmailNativeHostedTablet41fa5900FailureAttachments",
+        "bytes": 67533305
+      },
+      {
+        "name": "EmailHostedNativeHost",
+        "bytes": 7352791
+      },
+      {
+        "name": "email-native-tablet-retry-missing.png",
+        "bytes": 6321488
+      },
+      {
+        "name": "taskfold-email-native-changelog.md",
+        "bytes": 102641
+      },
+      {
+        "name": "taskfold-email-native-sessions.md",
+        "bytes": 12142
+      },
+      {
+        "name": "Debug-iphoneos",
+        "bytes": 141642985
+      },
+      {
+        "name": "Debug-iphoneos",
+        "bytes": 1212781
+      },
+      {
+        "name": "Debug-iphoneos",
+        "bytes": 153358076
+      },
+      {
+        "name": "email-hosted-native-41fa5900-tablet-cleanup-fixed.log",
+        "bytes": 68835
+      },
+      {
+        "name": "email-hosted-native-41fa5900-phone-fixed.log",
+        "bytes": 61349
+      },
+      {
+        "name": "email-hosted-native-41fa5900-tablet-v2.log",
+        "bytes": 119231
+      },
+      {
+        "name": "email-hosted-native-41fa5900-tablet-fixed.log",
+        "bytes": 102657
+      },
+      {
+        "name": "email-hosted-native-41fa5900-tablet-ui.log",
+        "bytes": 59091
+      },
+      {
+        "name": "email-hosted-native-41fa5900-orphan-tablet.log",
+        "bytes": 4965
+      },
+      {
+        "name": "email-hosted-native-41fa5900-roundtrip-cleanup.log",
+        "bytes": 2948
+      },
+      {
+        "name": "email-hosted-native-41fa5900-tablet-cleanup.log",
+        "bytes": 74785
+      },
+      {
+        "name": "email-hosted-native-41fa5900-orphan-phone.log",
+        "bytes": 4746
+      },
+      {
+        "name": "email-hosted-native-41fa5900-phone-v2.log",
+        "bytes": 62595
+      },
+      {
+        "name": "email-hosted-native-41fa5900-phone-ui.log",
+        "bytes": 60924
+      }
+    ],
+    "reusableBuildCachesRetained": true
+  },
+  "privacyLimits": "Private temporary passwords removed; raw UI archives/input logs pruned. Exact service-role bytes absent in owned app bundle; not a whole-device audit. No real task data changed.",
+  "harness": "Bounded 90-minute run; owner-private handoff and safe account-ID-only cleanup manifest",
+  "remaining": [
+    "Provider configuration deferred by user; shipping delivery disabled",
+    "Verified provider/MIME/sender/original-envelope/receipt integration",
+    "Source links and additional verified senders",
+    "Mac runtime, physical locked/denied storage, human VoiceOver and wider fault/concurrency acceptance",
+    "Advanced team roles, durable ownership, folders/admin and wearable clients",
+    "User deferrals: remote notifications/reinstall, general older-client safeguards, distribution/signing, calendar OAuth registration, physical location delivery"
+  ]
+}

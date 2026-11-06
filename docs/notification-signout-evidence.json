@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native iPhone Simulator local workspace exit after actual local reminder delivery; normal signed-out relaunch and isolated workspace reopening",
+  "productionChange": {
+    "platform": "iOS",
+    "file": "Taskfold/Views/BrowseView.swift",
+    "behavior": "Dismiss the presented Settings navigation stack when sign-in becomes false. A failed sign-out that retains sign-in does not dismiss it."
+  },
+  "macProductionCodeChanged": false,
+  "before": {
+    "result": "signout-action-ios-v1.xcresult",
+    "failedTests": 1,
+    "passedTests": 0,
+    "classification": "Actual delivery and native workspace exit reached. Account settings remained presented over AuthView; the read-only inspector existed behind the sheet but its button was not hittable. Registry retirement was not established in this failed run.",
+    "retainedAccessibilityExcerpt": "notification-signout/before-account-sheet.txt"
+  },
+  "after": {
+    "result": "signout-action-ios-after-v1.xcresult",
+    "tests": 1,
+    "passed": 1,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0,
+    "seconds": 252.848,
+    "case": "testLeavingWorkspaceRetiresDeliveredAndPendingSystemReminders"
+  },
+  "accepted": [
+    "Real native undated task capture with two absolute independent reminder occurrences",
+    "Actual background local notification reaches SpringBoard",
+    "Actual Account > Leave local workspace > Continue",
+    "Settings sheet dismisses and read-only inspector becomes hittable",
+    "Actual UNUserNotificationCenter pending and delivered registries are empty after exit",
+    "Normal process relaunch without uitesting/localMode arguments remains signed out with both registries empty",
+    "Explicit isolated workspace reopening preserves the entire parsed disk snapshot exactly",
+    "End fixture retires re-enabled pending occurrences; no queued edits"
+  ],
+  "fixture": {
+    "device": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+    "bundle": "com.dbakp.taskfold.calendaraccessibilitytests",
+    "registryInspector": "Read-only UNUserNotificationCenter queries. Visible only on signed-out dedicated Simulator Debug bundle with explicit --notification-signout-testing; no synthetic callback or handler invocation."
+  },
+  "builds": {
+    "debugTestBuild": "signout-action-build-after-v1.log",
+    "releaseAppBuild": "signout-action-ios-release-v1.log",
+    "bothPassed": true,
+    "macBuildRerun": false,
+    "signing": "notification-signout/signing.json",
+    "widgetCatalogVerified": true
+  },
+  "preservation": "notification-signout/preservation.json",
+  "testedSourceSHA256": {
+    "Taskfold/Views/BrowseView.swift": "0fdc949e07b8f02afe4533d2d69c96d82700a34962dc40c045d83224eb5e8a74",
+    "Taskfold/TaskfoldApp.swift": "d05725381e4a5ff7b42abbf2a44118afb7cde2e27cfb50632b350a51e02d4d9f",
+    "Taskfold/Core/WidgetActionTestPanel.swift": "2e80e8c389eae28590eba06dbc3e2294e1e1ce5c7dff9f4ab0e19e021c876d08",
+    "TaskfoldUITests/TaskfoldUITests.swift": "6494e9c91925ae737d04e0f587cbdfed9c11026582fb4c3c7c86a4b036829751"
+  },
+  "captures": {
+    "workspace-exit.png": "Inspected sign-in screen without stale Account sheet; inspector action usable. Debug inspector button caption ellipsizes; no product layout claim for it.",
+    "signed-out-relaunch.png": "Inspected signed-out relaunch without stale sheet.",
+    "delivered-alert-animation.png": "Delivery capture caught banner animation and is blurred. Real title existence is established by native SpringBoard assertion; this image is not visual alert-layout acceptance."
+  },
+  "limitations": [
+    "Local workspace exit is not authenticated account A > B or cross-account callback replay",
+    "No stale notification action was tapped after exit; both registries were already retired",
+    "No cold-process Complete, Mac notification action, APNs or physical device acceptance",
+    "Mac app is now accessible after manual unlock, but gallery access still needs the desktop Edit Widgets action; no installed-host pass"
+  ],
+  "earlierBuildAttempt": "signout-action-build-v1.log failed from a test helper parameter inserted at the wrong matching launch line; corrected before native runs; not a product defect"
+}

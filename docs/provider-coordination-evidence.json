@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-12",
+  "scope": "Provider-coordinated backup reads in independently owned Mac and iOS implementations.",
+  "defect": "Restore read external picker URLs directly, so pending file-presenter saves were not coordinated.",
+  "fix": "WorkspaceBackup.readFile holds security scope, coordinates the read, uses the coordinator-provided URL, validates file size and propagates coordination/read/parse errors. Both native backup forms call it on their existing detached worker; generation checks and deferred busy cleanup remain.",
+  "reference": "https://developer.apple.com/documentation/UIKit/UIDocumentPickerViewController",
+  "tests": {
+    "perRepository": 43,
+    "failures": 0,
+    "newCases": [
+      "Direct read sees stale file; coordinated read triggers a real NSFilePresenter save and parses latest backup",
+      "Presenter save failure throws instead of silently reading stale backup",
+      "Missing file throws, then a later valid read succeeds",
+      "Oversized sparse file rejects before JSON decoding"
+    ],
+    "macLog": "/private/tmp/taskfold-provider-read-mac-tests-v2.log",
+    "iosLog": "/private/tmp/taskfold-provider-read-ios-tests-v1.log"
+  },
+  "builds": {
+    "mac": "signed Debug passed; deep strict signature verified",
+    "ios": "arm64 Simulator Debug passed, not installed",
+    "macLog": "/private/tmp/taskfold-provider-read-mac-build-v1.log",
+    "iosLog": "/private/tmp/taskfold-provider-read-ios-build-v1.log",
+    "warnings": "Existing Swift actor-isolation and unused-result warnings remain; not a warning-free build claim."
+  },
+  "limitations": [
+    "Tests exercise actual Foundation coordination locally; no claim of iOS external-provider or offline native acceptance.",
+    "Earlier Mac iCloud native upload/download/restore receipt predates this change and is not counted as a runtime pass of this build."
+  ],
+  "dataScope": "Synthetic temporary files only. No app was replaced or installed and no account data were edited.",
+  "cleanup": {
+    "inactiveBuildProductBytesPruned": 276393082,
+    "runningTestAppsReplaced": false
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Backups.swift": "ef24af07b6a90d2f740b1241556943b4d512381c29bc90462fc0e63688791eb9",
+    "Taskfold/Views/BackupTools.swift": "27bed3e6096bf5e9490585983bfb19c107b37ae843057b927967be058828ad23",
+    "TaskfoldTests/BackupFileReadTests.swift": "cc7807215052404f0a58acf8a717b4e82681f9e320154cde85574d49f0960c65"
+  }
+}

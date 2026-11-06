@@ -1,0 +1,14 @@
+{
+  "normalLaunchArguments": true,
+  "noProductionRegistrations": true,
+  "independentBundleAndKeychain": true,
+  "noEmbeddedWidget": true,
+  "fiveBehaviorSourcesNamespaceOnly": true,
+  "appEntitlements": {
+    "com.apple.security.app-sandbox": true,
+    "com.apple.security.files.user-selected.read-write": true,
+    "com.apple.security.network.client": true,
+    "com.apple.security.personal-information.calendars": true
+  },
+  "preparationOnly": true
+}

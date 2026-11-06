@@ -1,0 +1,105 @@
+{
+  "phases": [
+    {
+      "device": "phone",
+      "phase": "Before keyboard-dismissal follow-up",
+      "tests": [
+        {
+          "name": "testChildCompletionNativeLostReplyColdRetryOnce",
+          "seconds": 68.684,
+          "passed": true
+        },
+        {
+          "name": "testChildCompletionNativeUndoPreservesUnsentFields",
+          "seconds": 89.216,
+          "passed": true
+        }
+      ],
+      "assertions": [
+        "Complete then Undo preserves the unsent title draft and original server notes",
+        "Confirmed two-action state survives a cold launch",
+        "Lost reply remains attempted; retry after cold launch confirms one write across two requests"
+      ],
+      "limitations": "The title keyboard covered feedback in this first phase. A later final-source follow-up proves dismissal and draft preservation."
+    },
+    {
+      "device": "tablet",
+      "phase": "Before keyboard-dismissal follow-up",
+      "tests": [
+        {
+          "name": "testChildCompletionNativeLostReplyColdRetryOnce",
+          "seconds": 68.557,
+          "passed": true
+        },
+        {
+          "name": "testChildCompletionNativeUndoPreservesUnsentFields",
+          "seconds": 85.376,
+          "passed": true
+        }
+      ],
+      "assertions": [
+        "Complete then Undo preserves the unsent title draft and original server notes",
+        "Confirmed two-action state survives a cold launch",
+        "Lost reply remains attempted; retry after cold launch confirms one write across two requests"
+      ],
+      "limitations": "The title keyboard covered feedback in this first phase. A later final-source follow-up proves dismissal and draft preservation."
+    },
+    {
+      "device": "phone",
+      "phase": "Final keyboard-dismissal follow-up",
+      "tests": [
+        {
+          "name": "testChildCompletionNativeUndoPreservesUnsentFields",
+          "seconds": 85.972,
+          "passed": true
+        }
+      ],
+      "assertions": [
+        "Completion dismisses keyboard within 8 seconds",
+        "Complete then Undo retains the unsent title and original saved notes",
+        "Confirmed two-action state survives a cold launch"
+      ],
+      "windowScreenshotInspected": true
+    },
+    {
+      "device": "tablet",
+      "phase": "Final keyboard-dismissal follow-up",
+      "tests": [
+        {
+          "name": "testChildCompletionNativeUndoPreservesUnsentFields",
+          "seconds": 88.625,
+          "passed": true
+        }
+      ],
+      "assertions": [
+        "Completion dismisses keyboard within 8 seconds",
+        "Complete then Undo retains the unsent title and original saved notes",
+        "Confirmed two-action state survives a cold launch"
+      ],
+      "windowScreenshotInspected": true
+    }
+  ],
+  "macRuntime": "Blocked before app launch: Mac locked; Xcode UI runner reports system authentication already running. Manual unlock requested once.",
+  "currentBuildAndKeyboardFollowUp": "Final app/test products build independently on Mac and iOS. Mac app/runner strict signatures pass. iOS strict Apple Development Simulator team/namespace signatures pass. Both final keyboard follow-ups pass. Mac runtime remains blocked before app launch.",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "2dc529ba2917ba8c4be5020de10826374ea48f17db7fa09b042cca87f7e5686a",
+    "Taskfold/Core/Store.swift": "21135834dde5075f3854128ff63f47c474b26f7eea5136ed71408894f41d519f",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "eae88197ddcb65d30fd06fd0e54ffa40afc378ae88e90a4ff91339a50c21c808",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "eeea3a2e5224719be8d8d013f1b9e71390c26ec04560136596b8a534274955c2",
+    "Taskfold/ChildFieldNativeFixture.swift": "f7a99fa4a584590d76841d6d3b88ca49b922325d12732703a1fc77bb831c27c1",
+    "TaskfoldUITests/AudioCommentUITests.swift": "37c74f4783a39108f4960f6c21766c37d2e67c470db3d93ccf8beb601dee21be"
+  },
+  "builds": {
+    "mac": {
+      "finalTestBuildSucceeded": true,
+      "appAndRunnerStrictSignaturesVerified": true,
+      "runtimeExecuted": false
+    },
+    "ios": {
+      "finalTestBuildSucceeded": true,
+      "appAndRunnerStrictTeamAndNamespaceSignaturesVerified": true,
+      "finalPhoneKeyboardFollowUpPassed": true,
+      "finalTabletKeyboardFollowUpPassed": true
+    }
+  }
+}

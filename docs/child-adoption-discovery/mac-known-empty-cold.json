@@ -1,0 +1,4 @@
+{
+  "processAbsentBeforeColdLaunch": true,
+  "resetOnRelaunch": false
+}

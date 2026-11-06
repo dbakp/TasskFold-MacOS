@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-12",
+  "scope": "Installed Mac medium Today local-workspace exit, retained fixture return, repeat exit and normal signed-out relaunch",
+  "ownedSourceRepository": "TasskFold-MacOS",
+  "sourceCommit": "e471dfc",
+  "sourceChangesRequired": false,
+  "runtime": "Existing development-signed v5 app and registered extension; no rebuild or registration change during repeat workflow",
+  "accepted": [
+    "Native Leave Local Workspace reaches auth screen; projection is exactly version 2, updated 0, empty account/tasks",
+    "Normal native Quit and no-argument relaunch retain auth screen and installed unavailable Today state",
+    "Same retained fixture returns without a seed flag; original Inbox six open rows retained, eight total tasks exact; widget returns to 0 scheduled / All clear",
+    "Repeat native workspace exit changes installed widget to Task count unavailable / Open Taskfold / Refresh your tasks without rebuild or re-registration",
+    "Final native Quit exits fixture PID 10174; normal no-argument process 10361 retains auth screen and unavailable installed widget"
+  ],
+  "initialFailure": "First exit publishes the correct empty projection but host retains All clear. Actual chronod log records extension-process creation / Unknown extension process failures. Following normal relaunch, native host becomes unavailable; repeat entry/exit then passes. Initial immediate refresh is not accepted.",
+  "preservation": "Full saved fixture snapshot exact; eight tasks exact, six-file isolated set exact, other five byte hashes exact and only ui-testing.json encoding changes. Six protected containers/all 100 files exact.",
+  "visualScope": "Final app sign-in capture inspected; Taskfold-only desktop AX confirms installed widget copy. No desktop pixel rendering, all sizes, system privacy or distribution acceptance claimed.",
+  "stateLeft": "Normal isolated signed-out app and temporary Today widget retained; saved fixture tasks unchanged",
+  "evidenceDirectory": "mac-widget-signout",
+  "hostLogSHA256": "b50ddf2a692d69265fa5226fdc62df4fed2b0ee8eca18a313ef6187de041e48e",
+  "notAccepted": [
+    "Authenticated Mac A → B transitions",
+    "Other widget families and system privacy",
+    "Immediate host refresh during the initial extension launch failure",
+    "Production APNs/distribution"
+  ]
+}

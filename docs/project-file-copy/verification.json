@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-05",
+  "platform": "mac",
+  "handlerTests": {
+    "passed": 22,
+    "failed": 0
+  },
+  "fullSchemaChecks": 69,
+  "completeOwnMigrationsReplayed": 208,
+  "normalUseEnabled": false,
+  "hostedDeployment": false,
+  "nativeAcceptance": false,
+  "fullProjectFileTransferComplete": false,
+  "installedAppsUnchanged": true,
+  "assistantDirection": "On-device only; no cloud fallback",
+  "furtherIPhoneInstallation": "Deferred by user",
+  "sources": {
+    "supabase/functions/project-files/handler.ts": "b8c398c4b7d60c17adab79013efaa4fd5ddac7268ed1a754e1201f73abceddb6",
+    "supabase/functions/project-files/index.ts": "4a6cd99e4ede84f54fa6cfc1020bc64d801bad14ce27fd551420e9c84615ed87",
+    "supabase/functions/project-files/handler_test.ts": "cdcb7e89ad4ab76009bb71cede0171f4c3d40618222f47748510f49eae427104",
+    "Scripts/Database/test-full-schema-project-file-copy.ts": "fd6392bbd812f42a7b3858ae17de4fa72dad85ba73604374d6d73247b36c845f",
+    "supabase/migrations/20261105203116_project_file_copy_preparation.sql": "bb21031aca263ee3bfd6fb81213f22d7b8b75f0b71dc87f739efdaed4c38aba0"
+  },
+  "knownRemaining": [
+    "Explicit owner/audience consent and signed file policy",
+    "Atomic project/custody commit, exact receipts and native pending recovery",
+    "Legacy and other realms plus lifecycle/account-removal acceptance",
+    "Producer-terminal recovery for unresolved writes",
+    "Hosted provider and native acceptance"
+  ]
+}

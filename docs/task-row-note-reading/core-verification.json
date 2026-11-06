@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-06",
+  "owner": "mac",
+  "testCommand": "bash Scripts/test_core.sh --filter 'TaskNotePreviewReadTests|NoteMarkupTests|NoteFormattingTests|PinnedNotesTests|SubtaskProgressReadTests'",
+  "passed": 55,
+  "failed": 0,
+  "skipped": 0,
+  "newNotePreviewTests": 9,
+  "logSHA256": "cb81375278da5b5e08f1f11ccf88559822f01f8babf0569ae7b28b8c68a10cc8",
+  "sourceSHA256": {
+    "Taskfold/Core/NoteMarkup.swift": "7a9205d810932097fb6a1d4e51a65b970dba89a0e5b301ac4c0d9c3298c0bf3f",
+    "Taskfold/Core/Store.swift": "258725e65c64fa5a2ab42dd0f9cf9d69f937f8d1936168c0812c45d0851cd641",
+    "Taskfold/Views/Links.swift": "706d748616a3be0fb2b4de763484d0d1fe6541e2c849a24f24bfd340279ed28a",
+    "TaskfoldTests/TaskNotePreviewReadTests.swift": "7850921b3c106f432c7a5e82aa6bac66a1788c89b520ab3a35b64be19830d4b6",
+    "TaskfoldTests/SubtaskProgressReadTests.swift": "e529b9bbb0238304478c0a30464c5390b56cdbfebf1a946d8c642145d014bc5d",
+    "Taskfold/Views/TaskRowView.swift": "e09dda90b0195aa7554388a2726736ac2497b7622d286b4826e553bf069ed6d9"
+  },
+  "diagnostic": {
+    "configuration": "Debug on this Mac; not rendering/FPS",
+    "compact": {
+      "previousMilliseconds": 100.74305534362793,
+      "retainedMillisecondsIncludingFirstRead": 1.0809898376464844,
+      "reads": 100
+    },
+    "fullAccessibility": {
+      "previousMilliseconds": 384.8639726638794,
+      "retainedMillisecondsIncludingFirstRead": 3.9120912551879883,
+      "reads": 100
+    },
+    "formattingComputations": 2
+  },
+  "limits": {
+    "entries": 128,
+    "sourceAndResultUTF8Bytes": 8388608,
+    "diskPersistence": false
+  },
+  "nativeLinkTapSpeechAndRenderingAccepted": false,
+  "coldFormattingMovedOffInterfaceThread": false,
+  "normalAppsOrGatesChanged": false,
+  "noteWriteFormatChanged": false
+}

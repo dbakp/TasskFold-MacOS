@@ -1,0 +1,37 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "08c97e77fea84c47e512bf63252914897196b9be",
+  "checks": {
+    "authority": 66,
+    "personalRecoveryRegression": 51,
+    "addedAdvisorFindings": 0
+  },
+  "sourceSHA256": {
+    "supabase/migrations/20261102143104_team_audio_write_authority.sql": "4286eb0e84b25a52fed63403a0c977bdb54c66aa539d126c42847c8cfe3cfeea",
+    "Scripts/Database/test-team-audio-authority.mjs": "b0477303a476d1687fb4f736f9df519294b418b553001a5febd431affccb379c",
+    "Scripts/Database/test-audio-owner-status.mjs": "47a3815238f5d6844ce09aaa9dc4365a2d8002120fbc5b54d14d02d82573d08e",
+    "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "fdb62dbedf081247685354cafaa27c44b09db8315af4d0c04aac77e788901e2b",
+    "Scripts/Database/audio-comments-http-fixture.ts": "55ccbacb1d48cde374ed4b57da6843d13bb8e69b2c702cb55f45d1647f964386",
+    "Scripts/Database/postgres-fixture.mjs": "34b670d084b200848fa7f72fbd191424eb30c1ba64989bcbfc639bac2127568d",
+    "Scripts/Database/team-project-schema.mjs": "c338738c01855a14b85663064c6e25ed1b0205feeb51e16794b58d2e4bf565b9",
+    "supabase/functions/audio-comments/handler.ts": "38f731c8335a4255e18dc9dc3d721a1ce13dfa66067ecbbad4097383933a5556",
+    "supabase/functions/audio-comments/wire.ts": "3f03fc0183263c9a57ae5a5b19081c2d4e45e24352a911425615e36b8c13e09c"
+  },
+  "personalRegressionSQL": {
+    "parts": [
+      "20261024040403_team_task_edits.sql",
+      "20261028212632_audio_owner_publication_status.sql",
+      "20261102143104_team_audio_write_authority.sql"
+    ],
+    "sha256": "9ee3dc66cd0888e8560e220553cf8211ef45904f63bca444b77db8a03e1e7855"
+  },
+  "authorityReportSHA256": "59995fe9c487913df13290a5dda389a6c8be318ed4a338bfd79167974077b61a",
+  "personalRegressionReportSHA256": "967cd823517654984a520601929a76f4e2d3b636e8a0380ed3a0616f51ae5d8e",
+  "allOwnedFixturesRemoved": true,
+  "appSourceChanged": false,
+  "nativeOrRealProviderAcceptance": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "reviewedTaskMediaTransfersImplemented": false
+}

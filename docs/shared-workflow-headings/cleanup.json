@@ -1,0 +1,37 @@
+{
+  "ownedSimulatorAppsRemoved": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4|com.dbakp.taskfold.workflowteststeameditbridge": true,
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4|com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": true,
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378|com.dbakp.taskfold.workflowteststeameditbridge": true,
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378|com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": true
+  },
+  "remainingTaskfoldProcesses": [],
+  "removedTemporaryBytes": 3310808199,
+  "removedTemporaryPaths": [
+    "/tmp/taskfold-native-types-mac-host",
+    "/tmp/taskfold-native-types-mac-native-build",
+    "/tmp/taskfold-native-types-mac-unlocked-20261026.xcresult",
+    "/tmp/taskfold-native-types-mac-authorized-20261026.xcresult",
+    "/tmp/taskfold-native-types-mac-authorized-attachments",
+    "/tmp/taskfold-workflow-types-ios-host",
+    "/tmp/taskfold-workflow-types-ios-build",
+    "/tmp/taskfold-workflow-types-mac-host",
+    "/tmp/taskfold-workflow-types-mac-build",
+    "/tmp/taskfold-workflow-types-mac-native-build",
+    "/tmp/taskfold-workflow-types-phone.xcresult",
+    "/tmp/taskfold-workflow-types-tablet.xcresult",
+    "/tmp/taskfold-workflow-types-mac.xcresult",
+    "/tmp/taskfold-workflow-types-phone-retry.xcresult",
+    "/tmp/taskfold-workflow-types-tablet-retry.xcresult",
+    "/tmp/taskfold-workflow-types-mac-retry.xcresult",
+    "/tmp/taskfold-workflow-types-phone-final.xcresult",
+    "/tmp/taskfold-workflow-types-tablet-final.xcresult",
+    "/tmp/taskfold-workflow-types-mac-final.xcresult",
+    "/tmp/taskfold-workflow-types-mac-accepted.xcresult",
+    "/tmp/taskfold-workflow-types-phone-attachments",
+    "/tmp/taskfold-workflow-types-tablet-attachments",
+    "/tmp/taskfold-workflow-types-phone-final-attachments",
+    "/tmp/taskfold-workflow-types-tablet-final-attachments",
+    "/tmp/taskfold-workflow-types-mac-accepted-attachments"
+  ]
+}

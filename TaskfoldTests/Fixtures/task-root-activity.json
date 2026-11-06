@@ -1,0 +1,403 @@
+[
+  {
+    "id": "633223f6-856c-42db-b577-9d9ccb855262",
+    "kinds": [
+      "created"
+    ],
+    "task_id": "2f1404bc-e0a6-413e-9898-ddfe87f05cf9",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "sequence": 1,
+    "after_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "recorded_at": "2026-10-26T10:52:31.437908+00:00",
+    "before_state": {},
+    "effective_at": "2026-10-26T10:52:31.437908+00:00",
+    "root_context": null,
+    "completion_version": 0
+  },
+  {
+    "id": "c4aa0cd6-f740-4bbc-ad34-947a2bebd2ea",
+    "kinds": [
+      "completed"
+    ],
+    "task_id": "2f1404bc-e0a6-413e-9898-ddfe87f05cf9",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "sequence": 2,
+    "after_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": true,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": "2026-10-26T09:00:00+00:00",
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "recorded_at": "2026-10-26T10:52:31.749085+00:00",
+    "before_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "effective_at": "2026-10-26T09:00:00+00:00",
+    "root_context": {
+      "version": 1,
+      "after_type": "task",
+      "before_type": "task",
+      "after_generation": "164915e0-c65e-4833-894c-7f4deb142eec",
+      "before_generation": "164915e0-c65e-4833-894c-7f4deb142eec"
+    },
+    "completion_version": 1
+  },
+  {
+    "id": "9b7014ea-0b31-4c52-b4c0-c175b75db40d",
+    "kinds": [
+      "created"
+    ],
+    "task_id": "ede99e61-0ac0-468c-816e-7aadb6c64e9a",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "sequence": 3,
+    "after_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "recorded_at": "2026-10-26T10:52:32.081763+00:00",
+    "before_state": {},
+    "effective_at": "2026-10-26T10:52:32.081763+00:00",
+    "root_context": {
+      "version": 1,
+      "after_type": "heading",
+      "before_type": null,
+      "after_generation": "def32af2-1d52-448f-800d-e496f9e072d6",
+      "before_generation": null
+    },
+    "completion_version": 0
+  },
+  {
+    "id": "c5d01cb5-5e8a-45b4-8f65-27d5a8cbdb7e",
+    "kinds": [
+      "completed"
+    ],
+    "task_id": "ede99e61-0ac0-468c-816e-7aadb6c64e9a",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "sequence": 4,
+    "after_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": true,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": "2026-10-26T09:01:00+00:00",
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "recorded_at": "2026-10-26T10:52:32.419506+00:00",
+    "before_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "effective_at": "2026-10-26T09:01:00+00:00",
+    "root_context": {
+      "version": 1,
+      "after_type": "heading",
+      "before_type": "heading",
+      "after_generation": "def32af2-1d52-448f-800d-e496f9e072d6",
+      "before_generation": "def32af2-1d52-448f-800d-e496f9e072d6"
+    },
+    "completion_version": 0
+  },
+  {
+    "id": "7da96404-6055-4080-8272-dad62900c00c",
+    "kinds": [
+      "reopened"
+    ],
+    "task_id": "ede99e61-0ac0-468c-816e-7aadb6c64e9a",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "sequence": 5,
+    "after_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "recorded_at": "2026-10-26T10:52:32.556934+00:00",
+    "before_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": true,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": "2026-10-26T09:01:00+00:00",
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "effective_at": "2026-10-26T10:52:32.556934+00:00",
+    "root_context": {
+      "version": 1,
+      "after_type": "heading",
+      "before_type": "heading",
+      "after_generation": "def32af2-1d52-448f-800d-e496f9e072d6",
+      "before_generation": "def32af2-1d52-448f-800d-e496f9e072d6"
+    },
+    "completion_version": 0
+  },
+  {
+    "id": "7f45b7e8-875e-4982-a28a-9d03c052b311",
+    "kinds": [
+      "moved"
+    ],
+    "task_id": "2f1404bc-e0a6-413e-9898-ddfe87f05cf9",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "sequence": 6,
+    "after_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": true,
+      "time_zone": null,
+      "project_id": "a6aed460-01bf-44ca-b2b2-eb1cd668665c",
+      "section_id": null,
+      "completed_at": "2026-10-26T09:00:00+00:00",
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "recorded_at": "2026-10-26T10:52:32.875361+00:00",
+    "before_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": true,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": "2026-10-26T09:00:00+00:00",
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "effective_at": "2026-10-26T10:52:32.875361+00:00",
+    "root_context": {
+      "version": 1,
+      "after_type": "task",
+      "before_type": "task",
+      "after_generation": "164915e0-c65e-4833-894c-7f4deb142eec",
+      "before_generation": "164915e0-c65e-4833-894c-7f4deb142eec"
+    },
+    "completion_version": 1
+  },
+  {
+    "id": "0045ac99-fcc4-4e5b-9496-66a5e91ae0b3",
+    "kinds": [
+      "reopened"
+    ],
+    "task_id": "2f1404bc-e0a6-413e-9898-ddfe87f05cf9",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111112",
+    "sequence": 7,
+    "after_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": "a6aed460-01bf-44ca-b2b2-eb1cd668665c",
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "recorded_at": "2026-10-26T10:52:33.118727+00:00",
+    "before_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": true,
+      "time_zone": null,
+      "project_id": "a6aed460-01bf-44ca-b2b2-eb1cd668665c",
+      "section_id": null,
+      "completed_at": "2026-10-26T09:00:00+00:00",
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "effective_at": "2026-10-26T10:52:33.118727+00:00",
+    "root_context": {
+      "version": 1,
+      "after_type": "task",
+      "before_type": "task",
+      "after_generation": "164915e0-c65e-4833-894c-7f4deb142eec",
+      "before_generation": "164915e0-c65e-4833-894c-7f4deb142eec"
+    },
+    "completion_version": 2
+  },
+  {
+    "id": "a94157bb-915b-40fb-9123-64942ca694e0",
+    "kinds": [
+      "rescheduled"
+    ],
+    "task_id": "2f1404bc-e0a6-413e-9898-ddfe87f05cf9",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "sequence": 8,
+    "after_state": {
+      "due_date": "2026-10-27",
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": "a6aed460-01bf-44ca-b2b2-eb1cd668665c",
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "recorded_at": "2026-10-26T10:52:33.476505+00:00",
+    "before_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": "a6aed460-01bf-44ca-b2b2-eb1cd668665c",
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "effective_at": "2026-10-26T10:52:33.476505+00:00",
+    "root_context": {
+      "version": 1,
+      "after_type": "task",
+      "before_type": "task",
+      "after_generation": "9939bd19-31a9-4b36-b26d-8be86898774f",
+      "before_generation": "164915e0-c65e-4833-894c-7f4deb142eec"
+    },
+    "completion_version": 2
+  },
+  {
+    "id": "03864edb-d191-42c7-8d95-891a204fff9e",
+    "kinds": [
+      "deleted"
+    ],
+    "task_id": "ede99e61-0ac0-468c-816e-7aadb6c64e9a",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "sequence": 9,
+    "after_state": {},
+    "recorded_at": "2026-10-26T10:52:33.645273+00:00",
+    "before_state": {
+      "due_date": null,
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "effective_at": "2026-10-26T10:52:33.645273+00:00",
+    "root_context": {
+      "version": 1,
+      "after_type": null,
+      "before_type": "task",
+      "after_generation": null,
+      "before_generation": "def32af2-1d52-448f-800d-e496f9e072d6"
+    },
+    "completion_version": 0
+  },
+  {
+    "id": "371f14db-32d7-4e2f-a39a-a0c7c95d733c",
+    "kinds": [
+      "moved"
+    ],
+    "task_id": "2f1404bc-e0a6-413e-9898-ddfe87f05cf9",
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "sequence": 10,
+    "after_state": {
+      "due_date": "2026-10-27",
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": null,
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "recorded_at": "2026-10-26T10:52:33.924849+00:00",
+    "before_state": {
+      "due_date": "2026-10-27",
+      "due_time": null,
+      "completed": false,
+      "time_zone": null,
+      "project_id": "a6aed460-01bf-44ca-b2b2-eb1cd668665c",
+      "section_id": null,
+      "completed_at": null,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "recurrence_parent_id": null
+    },
+    "effective_at": "2026-10-26T10:52:33.924849+00:00",
+    "root_context": {
+      "version": 1,
+      "after_type": "task",
+      "before_type": "task",
+      "after_generation": "9939bd19-31a9-4b36-b26d-8be86898774f",
+      "before_generation": "9939bd19-31a9-4b36-b26d-8be86898774f"
+    },
+    "completion_version": 2
+  }
+]

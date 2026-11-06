@@ -1,0 +1,21 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 62244052992,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 658534400,
+      "projectedAllocatedBytes": 658534400
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 519643136,
+      "projectedAllocatedBytes": 519643136
+    }
+  ],
+  "freeAfterBytes": 62227378176,
+  "actualFreeChangeBytes": -16674816
+}

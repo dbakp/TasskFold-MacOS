@@ -1,0 +1,167 @@
+{
+  "requests": 0,
+  "structureArchives": {},
+  "structureIncarnations": {
+    "1196c648-a05d-4362-a54c-88b01b49bf68": "556e3d00-cc2f-41be-9bc4-84aa7e02ae03",
+    "concept": "ec990000-0000-4000-8000-000000000005",
+    "review": "ec990000-0000-4000-8000-000000000006"
+  },
+  "structureRequests": 3,
+  "root": {
+    "id": "ec990000-0000-4000-8000-000000000002",
+    "task_generation": "ec990000-0000-4000-8000-000000000003",
+    "project_id": null,
+    "subtasks": [
+      {
+        "completed": false,
+        "id": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "title": "Hierarchy keyboard proof",
+        "completed_at": null,
+        "taskfold_completion_v1": {
+          "epoch": "65cd4977-a0c1-40d2-8acf-989d7b00ec36",
+          "version": 0
+        }
+      },
+      {
+        "completed": false,
+        "priority": 4,
+        "future": {
+          "keep": true
+        },
+        "id": "concept",
+        "description": "Original saved notes",
+        "title": "Prepare the review"
+      },
+      {
+        "completed": false,
+        "future": {
+          "keep": true
+        },
+        "priority": 4,
+        "id": "review",
+        "description": "Original saved notes",
+        "title": "Publish the summary"
+      }
+    ],
+    "title": "Native child workspace",
+    "user_id": "ec990000-0000-4000-8000-000000000001"
+  },
+  "versions": {
+    "1196c648-a05d-4362-a54c-88b01b49bf68": 1,
+    "concept": 1,
+    "review": 1
+  },
+  "receipts": {},
+  "structureReceipts": {
+    "241aac86-7ef7-472f-9aea-4db268bc0821": {
+      "body": {
+        "request_id": "241aac86-7ef7-472f-9aea-4db268bc0821",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "node": {
+          "id": "1196c648-a05d-4362-a54c-88b01b49bf68",
+          "title": "Hierarchy keyboard proof"
+        },
+        "project_id": null,
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "structure_revision": 3,
+        "parent_key": null,
+        "index": 0,
+        "action": "insert",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "protocol": 1
+      },
+      "inverse": {
+        "destination_parent": null,
+        "digest": "187fd875573d4d0184a40168f3acad936aeea06b7a4c588c035f47659dee3b66",
+        "destination_kind": "array"
+      },
+      "receipt": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "undo_of": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "after_revision": 4,
+        "replayed": false,
+        "incarnation": "556e3d00-cc2f-41be-9bc4-84aa7e02ae03",
+        "action": "insert",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "project_id": null,
+        "before_revision": 3,
+        "node_key": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "request_id": "241aac86-7ef7-472f-9aea-4db268bc0821",
+        "protocol": 1
+      }
+    },
+    "228dc9ea-6afb-446e-b55f-369a0f2fef98": {
+      "body": {
+        "request_id": "228dc9ea-6afb-446e-b55f-369a0f2fef98",
+        "project_id": null,
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "structure_revision": 2,
+        "action": "undo",
+        "undo_of": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "protocol": 1
+      },
+      "inverse": {},
+      "receipt": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "undo_of": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "after_revision": 3,
+        "replayed": false,
+        "incarnation": null,
+        "action": "undo",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "project_id": null,
+        "before_revision": 2,
+        "node_key": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "request_id": "228dc9ea-6afb-446e-b55f-369a0f2fef98",
+        "protocol": 1
+      }
+    },
+    "1196c648-a05d-4362-a54c-88b01b49bf68": {
+      "reversed": true,
+      "body": {
+        "request_id": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "node": {
+          "id": "1196c648-a05d-4362-a54c-88b01b49bf68",
+          "title": "Hierarchy keyboard proof"
+        },
+        "project_id": null,
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "structure_revision": 1,
+        "parent_key": null,
+        "index": 0,
+        "action": "insert",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "protocol": 1
+      },
+      "inverse": {
+        "destination_parent": null,
+        "digest": "304eb7e58031f59e7e2eaa59aa50fd47ed4a350fd3baeda4ceed468cb4d498d1",
+        "destination_kind": "array"
+      },
+      "receipt": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "undo_of": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "after_revision": 2,
+        "replayed": false,
+        "incarnation": "26ebc1e2-1a4f-481c-a300-c739458bc9fe",
+        "action": "insert",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "project_id": null,
+        "before_revision": 1,
+        "node_key": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "request_id": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "protocol": 1
+      }
+    }
+  },
+  "structureWrites": 3,
+  "structureRevision": 4,
+  "writes": 0,
+  "lost": false
+}

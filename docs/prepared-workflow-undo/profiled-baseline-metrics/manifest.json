@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "5BE7F911-B688-417B-B8F0-9EE50621A9FA.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 5000_0_726D528F-04E9-4894-890C-BBAB8DCF853D.json",
+        "timestamp" : 1793107699.886
+      }
+    ],
+    "testIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce"
+  }
+]

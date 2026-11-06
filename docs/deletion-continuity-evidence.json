@@ -1,0 +1,138 @@
+{
+  "date": "2026-10-09",
+  "scope": "Online deletion through actual iPad UI, received and persisted on iPhone, read-only Mac transport; disposable signed-in clients",
+  "phases": [
+    {
+      "phase": "phone-login",
+      "passed": true
+    },
+    {
+      "phase": "tablet-login",
+      "passed": true
+    },
+    {
+      "phase": "phone-create",
+      "passed": true,
+      "serverView": {
+        "id": "0fab9c88-cf84-4b46-bdee-90c8c7763731",
+        "name": "Across devices",
+        "query_ast": {
+          "root": {
+            "op": "predicate",
+            "field": "search",
+            "value": "Continuity"
+          },
+          "version": 1
+        }
+      },
+      "serverTaskIDs": [
+        "95ef12c4-cfdf-460f-b60d-fc890987f003",
+        "d57fa305-fa65-4935-835b-6e03ace41199"
+      ],
+      "durableQueueEmpty": true,
+      "taskDeleted": false
+    },
+    {
+      "phase": "tablet-delete",
+      "passed": true,
+      "serverView": {
+        "id": "0fab9c88-cf84-4b46-bdee-90c8c7763731",
+        "name": "Across devices",
+        "query_ast": {
+          "root": {
+            "op": "predicate",
+            "field": "search",
+            "value": "Continuity"
+          },
+          "version": 1
+        }
+      },
+      "serverTaskIDs": [
+        "95ef12c4-cfdf-460f-b60d-fc890987f003"
+      ],
+      "durableQueueEmpty": true,
+      "taskDeleted": true
+    },
+    {
+      "phase": "phone-deletion",
+      "passed": true,
+      "serverView": {
+        "id": "0fab9c88-cf84-4b46-bdee-90c8c7763731",
+        "name": "Across devices",
+        "query_ast": {
+          "root": {
+            "op": "predicate",
+            "field": "search",
+            "value": "Continuity"
+          },
+          "version": 1
+        }
+      },
+      "serverTaskIDs": [
+        "95ef12c4-cfdf-460f-b60d-fc890987f003"
+      ],
+      "durableQueueEmpty": true,
+      "taskDeleted": true
+    }
+  ],
+  "initialUIResults": {
+    "passes": 5,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0
+  },
+  "finalEmptyStateResults": [
+    "/tmp/taskfold-delete-empty-phone-v2.xcresult",
+    "/tmp/taskfold-delete-empty-tablet-v2.xcresult"
+  ],
+  "finalUIResults": {
+    "passes": 2,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0
+  },
+  "macTransport": {
+    "test": "NativeContinuityTests/testMacTransportExcludesTaskDeletedOnIOS",
+    "passes": 1,
+    "failures": 0,
+    "skips": 0
+  },
+  "builds": {
+    "ios": "/tmp/taskfold-delete-continuity-build-v2.log",
+    "mac": "/tmp/taskfold-delete-empty-mac-build-v2.log",
+    "scope": "Debug arm64 app/widget, iOS test products; Mac compile only"
+  },
+  "cleanup": {
+    "users": 0,
+    "sessions": 0,
+    "profiles": 0,
+    "tasks": 0,
+    "saved_views": 0,
+    "deviceSessionsReset": true,
+    "scopedCachesRemoved": true,
+    "privateCredentialsRemoved": true
+  },
+  "capturesInIOSRepository": {
+    "docs/native-continuity-previews/delete-filter-before.png": {
+      "sha256": "0ec8b7b09ebfe8e002ce639cd6ea148a71c05ec0003c13cbc2091661150aa8a3",
+      "visuallyInspected": true
+    },
+    "docs/native-continuity-previews/delete-filter-phone.png": {
+      "sha256": "367f93dff43800f7bc302ea0ff54f98c7c157a8966657985a3a1d7b2b8a14cfa",
+      "visuallyInspected": true
+    },
+    "docs/native-continuity-previews/delete-filter-tablet.png": {
+      "sha256": "7f3907a856560140113ba7211312be4d78cdb93d7a6334276fc5923ee4df716f",
+      "visuallyInspected": true
+    }
+  },
+  "remaining": [
+    "Offline/concurrent deletion and restoration",
+    "Mac GUI and physical-device acceptance",
+    "Full P0"
+  ],
+  "ownInputHashes": {
+    "Taskfold/Views/TaskListView.swift": "d13ccc21eee444721253870d9b6d76eb855322e33918da51aae95822310e6a1d",
+    "TaskfoldTests/NativeBehaviorTests.swift": "63c554c7f63dd0df956ab8802b9c3e693492ff78e57c4aebc0f8aa56e5dd807c"
+  }
+}

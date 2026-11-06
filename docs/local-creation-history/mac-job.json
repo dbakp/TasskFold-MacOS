@@ -1,0 +1,31 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+    "-destination",
+    "platform=macOS,arch=arm64",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-local-history-mac.xcresult",
+    "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale1000PublishesOnce",
+    "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory1000PublishesOnce",
+    "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce",
+    "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ],
+  "returncode": 0,
+  "started": 1793083855.302,
+  "finished": 1793083927.262,
+  "observedPassingCases": [
+    "SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale1000PublishesOnce",
+    "SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory1000PublishesOnce",
+    "SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce",
+    "SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory",
+    "TaskfoldMacUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ]
+}

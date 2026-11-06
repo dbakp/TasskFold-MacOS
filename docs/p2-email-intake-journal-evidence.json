@@ -1,0 +1,504 @@
+{
+  "date": "2026-10-23",
+  "scope": "Disabled email-intake database candidate; independently owned source",
+  "deployed": false,
+  "liveEmailSent": false,
+  "realDataChanged": false,
+  "fullEmailIntakeComplete": false,
+  "sourceSha256": {
+    "Scripts/Database/package.json": "c5d6fd8de95c54d3485bfdbcd689782418c0e54e45925135ee9bad80e5d491a0",
+    "Scripts/Database/postgres-fixture.mjs": "aaf6a596489b4d2d4ff9165fe468b773f6abf963b074c2efa647018e27046ede",
+    "Scripts/Database/email-intake-schema.mjs": "2ec5b98454682b70b4bcbaa1b52af7eb2ee53909b85a85206dee140840c97105",
+    "Scripts/Database/postgres-advisors.mjs": "0250eb9a8646305edfa77e072a4108b01b1a501b94cf3e391b18baadf0f7f0c0",
+    "Scripts/Database/test-email-intake.mjs": "23b17a7c7e919e8e1dab89879acf63b2a84f86843f91fee0d75483d5c1e1c448",
+    "Scripts/Database/test-email-intake-concurrency.mjs": "4505e26e24cb6aad45126010d7eff2c85b257cee6abe4c227b03aa2d019e9fa5",
+    "supabase/migrations/20261023150729_email_intake_journal.sql": "5cb06c4aed1708168d03a5339fdd07c1feb068c8b3974f3a1393c8cfe3ef27c3"
+  },
+  "functional": {
+    "date": "2026-10-23T15:30:38.831Z",
+    "checks": {
+      "default delivery gate closed": true,
+      "disabled create refused": true,
+      "disabled create stores no route": true,
+      "unknown session refused": true,
+      "unverified sender cannot set up capture": true,
+      "unknown field refused": true,
+      "invalid identity refused": true,
+      "invalid name refused": true,
+      "invalid project refused": true,
+      "bad timestamp refused": true,
+      "old setup refused": true,
+      "verified sender fixed by Auth": true,
+      "route receipt omits alias hash": true,
+      "same setup retry keeps complete receipt": true,
+      "changed setup conflicts": true,
+      "foreign route identity refused": true,
+      "foreign route edits refused": true,
+      "foreign catalog empty": true,
+      "untrusted sender refused": true,
+      "plus alias not guessed to be same sender": true,
+      "wrong configured provider refused": true,
+      "unknown route refused": true,
+      "extra destination refused": true,
+      "extra sender claim refused": true,
+      "header newline refused": true,
+      "binary content refused": true,
+      "not normalized CR refused": true,
+      "large UTF8 title refused": true,
+      "invalid count refused": true,
+      "rejected input creates no tasks": true,
+      "rejected input creates no journal": true,
+      "first delivery committed": true,
+      "actor claim restored": true,
+      "owner comes from route": true,
+      "Inbox remains Inbox": true,
+      "title preserved": true,
+      "full note preserved": true,
+      "no instruction-derived planning": true,
+      "generation identity recorded": true,
+      "no private metadata leaks to task": true,
+      "content fingerprint matches JS contract": true,
+      "delivery key matches JS contract": true,
+      "exact retry acknowledged": true,
+      "exact retry cannot duplicate task": true,
+      "changed content cannot overwrite task": true,
+      "changed original timestamp conflicts": true,
+      "retry preserves user edit": true,
+      "retry preserves user task move": true,
+      "retry never recreates deleted task": true,
+      "retry preserves restored incarnation": true,
+      "email receipt retains original generation": true,
+      "pause replay does not increment revision": true,
+      "paused delivery refused even for replay": true,
+      "resume cannot import mail from paused interval": true,
+      "already committed retry still acknowledged after resume": true,
+      "stale pause cannot undo resume": true,
+      "accepted shared destination used": true,
+      "lost membership refuses new mail": true,
+      "lost membership refuses old receipt access": true,
+      "lost membership cannot fall back to Inbox": true,
+      "archived project refuses delivery": true,
+      "archived ancestor refuses delivery": true,
+      "deleted route destination is retained": true,
+      "deleted project refuses delivery": true,
+      "rotation revokes old address": true,
+      "replacement active": true,
+      "rotation retry retains replacement": true,
+      "old address rejected after rotation": true,
+      "old setup replay cannot revive address": true,
+      "revoked route cannot resume": true,
+      "cancel before create fences late enrollment": true,
+      "failed rotation rolls back old revocation": true,
+      "old route survives failed rotation": true,
+      "changed Auth email invalidates old sender approval": true,
+      "removed verification refuses old routes": true,
+      "expired native session refuses management": true,
+      "pending account removal blocks delivery": true,
+      "pending account removal blocks management": true,
+      "banned account cannot receive": true,
+      "stale original delivery refused": true,
+      "future original delivery refused": true,
+      "expired delivery tombstones pruned": true,
+      "pruned receipt cannot replay old message": true,
+      "five live routes available": true,
+      "sixth live route refused": true,
+      "rotation works at live route capacity": true,
+      "rotation retains live route limit": true,
+      "rolling route birth limit enforced": true,
+      "fiftieth route-hour final slot enforced": true,
+      "exact receipt retry works at quota": true,
+      "account daily quota spans routes": true,
+      "rolling quota permits a later day": true,
+      "256-byte receipt identity supported": true,
+      "257-byte receipt identity refused": true,
+      "non-ASCII receipt identity refused": true,
+      "Unicode content contract remains compatible": true,
+      "hard receipt storage bound enforced": true,
+      "account deletion clears routes": true,
+      "account deletion clears receipts": true,
+      "account deletion clears cancellations": true,
+      "other account tasks retained": true,
+      "removed account cannot receive late mail": true,
+      "anon has no direct email_routes access": true,
+      "anon has no direct email_route_cancellations access": true,
+      "anon has no direct email_deliveries access": true,
+      "anon has no direct email_intake_config access": true,
+      "authenticated has no direct email_routes access": true,
+      "authenticated has no direct email_route_cancellations access": true,
+      "authenticated has no direct email_deliveries access": true,
+      "authenticated has no direct email_intake_config access": true,
+      "service_role has no direct email_routes access": true,
+      "service_role has no direct email_route_cancellations access": true,
+      "service_role has no direct email_deliveries access": true,
+      "service_role has no direct email_intake_config access": true,
+      "all intake tables use RLS": true,
+      "public wrappers are invokers": true,
+      "anon cannot execute intake RPC": true,
+      "authenticated cannot execute intake RPC": true,
+      "actual native SQL execution refused": true
+    },
+    "deployed": false,
+    "realDataChanged": false,
+    "passed": true
+  },
+  "postgresConcurrency": {
+    "date": "2026-10-23T15:32:45.298Z",
+    "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+    "checks": {
+      "all exact concurrent retries accepted": true,
+      "exactly one worker creates": true,
+      "eleven workers acknowledge original": true,
+      "concurrent retry task count": true,
+      "concurrent retry journal count": true,
+      "conflicting concurrent replay has one winner": true,
+      "conflicting concurrent replay refuses loser": true,
+      "conflict cannot duplicate task": true,
+      "actual PostgreSQL key matches JS contract": true,
+      "actual PostgreSQL Unicode fingerprint matches JS contract": true,
+      "journal failure refuses whole transaction": true,
+      "task generation and receipt all rolled back": true,
+      "same request can retry after rollback": true,
+      "cancel-before-create result": true,
+      "cancelled race creates no route": true,
+      "pause-before-delivery result": true,
+      "delivery-before-pause result": true,
+      "committed delivery precedes later pause": true,
+      "later replay sees paused state": true,
+      "membership-removal-before-delivery result": true,
+      "membership race creates no Inbox fallback": true,
+      "archive-before-delivery result": true,
+      "project-delete-before-delivery result": true,
+      "Auth-email-change-before-delivery result": true,
+      "verification-removal-before-delivery result": true,
+      "session-expiry-before-management result": true,
+      "provider capture independent of native sign-in expiry": true,
+      "account-removal-before-delivery result": true,
+      "quota race has one accepted final slot": true,
+      "quota race refuses other final slot": true,
+      "quota race exact receipt bound": true,
+      "official advisors no new email warnings or errors": true
+    },
+    "barriers": [
+      {
+        "label": "cancel-before-create",
+        "pid": 442,
+        "event": "advisory",
+        "blockers": [
+          429
+        ]
+      },
+      {
+        "label": "pause-before-delivery",
+        "pid": 477,
+        "event": "advisory",
+        "blockers": [
+          464
+        ]
+      },
+      {
+        "label": "delivery-before-pause",
+        "pid": 510,
+        "event": "advisory",
+        "blockers": [
+          498
+        ]
+      },
+      {
+        "label": "membership-removal-before-delivery",
+        "pid": 573,
+        "event": "transactionid",
+        "blockers": [
+          560
+        ]
+      },
+      {
+        "label": "archive-before-delivery",
+        "pid": 615,
+        "event": "transactionid",
+        "blockers": [
+          601
+        ]
+      },
+      {
+        "label": "project-delete-before-delivery",
+        "pid": 649,
+        "event": "transactionid",
+        "blockers": [
+          636
+        ]
+      },
+      {
+        "label": "Auth-email-change-before-delivery",
+        "pid": 679,
+        "event": "transactionid",
+        "blockers": [
+          664
+        ]
+      },
+      {
+        "label": "verification-removal-before-delivery",
+        "pid": 713,
+        "event": "transactionid",
+        "blockers": [
+          700
+        ]
+      },
+      {
+        "label": "session-expiry-before-management",
+        "pid": 748,
+        "event": "transactionid",
+        "blockers": [
+          735
+        ]
+      },
+      {
+        "label": "account-removal-before-delivery",
+        "pid": 790,
+        "event": "transactionid",
+        "blockers": [
+          777
+        ]
+      }
+    ],
+    "hostedAcceptance": false,
+    "containerRemoved": true,
+    "postgresVersion": 170006,
+    "advisors": {
+      "ran": true,
+      "source": "supabase db advisors --type all",
+      "result": [
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+        },
+        {
+          "name": "function_search_path_mutable",
+          "title": "Function Search Path Mutable",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "SECURITY"
+          ],
+          "description": "Detects functions where the search_path parameter is not set.",
+          "detail": "Function `public.is_project_owner` has a role mutable search_path",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+          "metadata": {
+            "name": "is_project_owner",
+            "type": "function",
+            "schema": "public"
+          },
+          "cache_key": "function_search_path_mutable_public_is_project_owner_8f50cf28f66c9989c028839a0b8123dc"
+        }
+      ],
+      "emailFindings": []
+    },
+    "passed": true
+  },
+  "fixtureCompatibility": {
+    "date": "2026-10-23T15:28:10.007Z",
+    "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+    "checks": {
+      "eight-exact-enrollments-have-one-receipt": true,
+      "all-exact-enrollments-succeed": true,
+      "enrollments-use-independent-backends": true,
+      "one-row-after-concurrent-retries": true,
+      "different-intents-with-one-id-have-one-conflict": true,
+      "five-final-slots-are-atomic": true,
+      "other-seven-enrollments-refused": true,
+      "no-quota-overrun-in-table": true,
+      "create-f09fcafe-0000-4000-8000-000000000103": true,
+      "begin-f09fcafe-0000-4000-8000-000000000303": true,
+      "late-proof-does-not-reactivate-revoked-endpoint": true,
+      "late-proof-is-cancelled": true,
+      "revoked-secret-remains-erased": true,
+      "create-f09fcafe-0000-4000-8000-000000000104": true,
+      "begin-f09fcafe-0000-4000-8000-000000000304": true,
+      "proof-first-then-revoke-is-still-terminal": true,
+      "successful-verification-does-not-protect-secret-from-revoke": true,
+      "create-f09fcafe-0000-4000-8000-000000000105": true,
+      "begin-f09fcafe-0000-4000-8000-000000000305": true,
+      "committed-signout-blocks-late-proof": true,
+      "signout-left-no-activation": true,
+      "create-f09fcafe-0000-4000-8000-000000000106": true,
+      "begin-f09fcafe-0000-4000-8000-000000000306": true,
+      "expiry-is-rechecked-after-the-lock-wait": true,
+      "create-f09fcafe-0000-4000-8000-000000000107": true,
+      "begin-f09fcafe-0000-4000-8000-000000000307": true,
+      "membership-removal-wins-before-proof-commit": true,
+      "membership-removal-left-no-activation": true,
+      "create-f09fcafe-0000-4000-8000-000000000109": true,
+      "begin-f09fcafe-0000-4000-8000-000000000309": true,
+      "guarded-pause-succeeds": true,
+      "newer-resume-succeeds": true,
+      "late-old-pause-retry-does-not-reapply": true,
+      "new-stale-pause-needs-current-review": true,
+      "same-control-id-cannot-change-action": true,
+      "exact-control-retry-does-not-add-a-receipt": true,
+      "create-f09fcafe-0000-4000-8000-000000000108": true,
+      "begin-f09fcafe-0000-4000-8000-000000000308": true,
+      "removal-receipt-blocks-late-proof": true,
+      "removal-permanently-revokes-and-erases-secret": true,
+      "receipt-pruning-cannot-restore-account-access": true,
+      "receipt-pruning-cannot-enroll-a-new-webhook": true,
+      "permanent-removal-marker-cannot-be-pruned": true
+    },
+    "barriers": [
+      {
+        "app": "taskfold-webhook-retry-0",
+        "pid": 297,
+        "event": "advisory",
+        "blockers": [
+          242,
+          298
+        ]
+      },
+      {
+        "app": "taskfold-webhook-slot-0",
+        "pid": 431,
+        "event": "advisory",
+        "blockers": [
+          353
+        ]
+      },
+      {
+        "app": "taskfold-webhook-revoke-first",
+        "pid": 483,
+        "event": "advisory",
+        "blockers": [
+          469
+        ]
+      },
+      {
+        "app": "taskfold-webhook-proof-first",
+        "pid": 531,
+        "event": "advisory",
+        "blockers": [
+          518
+        ]
+      },
+      {
+        "app": "taskfold-webhook-session",
+        "pid": 581,
+        "event": "transactionid",
+        "blockers": [
+          567
+        ]
+      },
+      {
+        "app": "taskfold-webhook-expiry",
+        "pid": 651,
+        "event": "advisory",
+        "blockers": [
+          638
+        ]
+      },
+      {
+        "app": "taskfold-webhook-member",
+        "pid": 706,
+        "event": "transactionid",
+        "blockers": [
+          693
+        ]
+      },
+      {
+        "app": "taskfold-webhook-removal",
+        "pid": 839,
+        "event": "transactionid",
+        "blockers": [
+          826
+        ]
+      }
+    ],
+    "realTasksChanged": 0,
+    "hostedAcceptance": false,
+    "containerRemoved": true,
+    "postgresVersion": 170006,
+    "passed": true
+  },
+  "correctionsBeforeDeployment": [
+    "Replaced PostgreSQL regex repetition bound over 255 with explicit byte bounds.",
+    "Aligned ASCII control handling with the Unicode content contract.",
+    "Changed email-management session lock from KEY SHARE to SHARE after actual PostgreSQL race exposed the weaker lock.",
+    "Corrected test worker labels and replaced abandoned advisor proxy with opt-in loopback-only fixture port."
+  ],
+  "advisorLimits": "Zero email-object findings; five prerequisite minimal-fixture findings retained in raw receipt. Not a production audit.",
+  "cleanup": "All owned ephemeral fixture containers removed; no cloud or native app changes.",
+  "remaining": [
+    "Trusted management/admission gateway",
+    "Verified provider signature/MIME/sender/original-receipt adapter",
+    "Native alias generation, vault, recovery and setup UI",
+    "Additional verified sender enrollment",
+    "Source links",
+    "Scheduled inactive-account maintenance",
+    "Hosted/native/provider acceptance",
+    "Provider/domain configuration deferred by user"
+  ]
+}

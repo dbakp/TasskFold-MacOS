@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-06",
+  "functionalJourneyPassed": true,
+  "cleanRuntimeAccepted": false,
+  "strictWrapperAccepted": false,
+  "runtimeWarnings": [
+    {
+      "issueType": "Runtime Warning",
+      "message": "Invalid frame dimension (negative or non-finite)."
+    }
+  ],
+  "proof": {
+    "accepted": true,
+    "archivedTasksExcluded": true,
+    "boundedSampleAndExactCount": true,
+    "cancelAndColdPreserveAllTables": true,
+    "editingInvalidatesPreview": true,
+    "emptyAndCompletedQueries": true,
+    "keyboardDone": true,
+    "productionAssistance": true,
+    "useIsDraftOnly": true
+  },
+  "proofSHA256": "076e7ac64081e55d72546e84ced018d296f5da7641d1901342100bca136b3e93",
+  "nativeReportSHA256": "fa29686866bd200cb591ff8a92ad197098e7955b029c3a6b3292989455aefb13",
+  "allCurrentOwningSourceHashesMatch": true,
+  "normalInstalledAppsUnchanged": true,
+  "limits": [
+    "Actual generation not invoked; manual expression review only",
+    "Live task/access/date invalidation not exercised natively",
+    "Mac/iPad controls, largest text, speech and broader account cases remain open",
+    "Keyboard focus warning has no proven originating frame and remains unresolved"
+  ]
+}

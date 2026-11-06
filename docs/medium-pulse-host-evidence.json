@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-11",
+  "scope": "Installed medium Project pulse on isolated iPhone Simulator. Native configuration, terminated-app routes, privacy, completion/relaunch refresh and original cloud-widget cleanup. No new native Mac or large-widget acceptance.",
+  "baseCommits": {
+    "TaskFold-iOS": "fe7abdf",
+    "TasskFold-MacOS": "b685854"
+  },
+  "productChanges": false,
+  "build": "medium-pulse-build-v1.log",
+  "signing": "medium-pulse-signing-v1.json",
+  "sourceHashes": {
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "0b23d237ba80f2fb0b6a3edf742c66f4563a8a2668de45dea65beb5d0eb8bd4c",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "0b23d237ba80f2fb0b6a3edf742c66f4563a8a2668de45dea65beb5d0eb8bd4c",
+    "TaskFold-iOS/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+    "TasskFold-MacOS/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+    "ios-live-stage/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632"
+  },
+  "nativeRun": {
+    "resultBundle": "medium-pulse-phone-v1.xcresult",
+    "testCase": "testInstalledMediumPulsePrivacyCompletionAndColdRoute",
+    "summary": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    }
+  },
+  "accepted": [
+    "Actual medium widget gallery installation beside retained original selected note and medium Focus instances. Native project picker selects Studio.",
+    "Terminated-app header opens Studio Project pulse: 1 of 3 current tasks completed, 2 completion events and 1 reopen event. Native history coverage explicitly says earlier work has no recorded timeline.",
+    "Inspected medium host distinguishes current completion from recorded last-seven-day events, shows date window/recorded-from date and the full chosen attention title Review the launch checklist.",
+    "Native privacy switch state changes to 1 then back to 0. Inspected private state uses Your chosen project / Task names hidden, retains counts and a lock icon, and preserves the selected Studio cold route.",
+    "Native completion of Review the launch checklist updates the row; process relaunch and terminated-app widget route show 2 of 3 current tasks completed, 3 completion events, 1 reopen and no attention task. Inspected refreshed medium host matches those values.",
+    "Only temporary pulse widget removed. Original cloud Today task, complete selected note and ended Focus cold routes pass; inspected Home shows original two widget selections."
+  ],
+  "dataPreservation": {
+    "fullOriginalCloudCacheParsedEqual": true,
+    "originalWidgetFieldsEqual": {
+      "account": true,
+      "focusSession": true,
+      "notes": true,
+      "pendingSync": true
+    },
+    "pendingSync": 0,
+    "localMode": false,
+    "widgetColdLaunchFixture": false,
+    "originalMacCloudCacheUnchanged": true,
+    "localTasks": 3,
+    "completedLocalTasks": [
+      "Finish a useful draft",
+      "Review the launch checklist"
+    ],
+    "localPending": 0
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-medium-pulse-cleanup-host.png",
+      "sha256": "6775c72ff913551a12e45d7e7514f5b7546a47e21a0d360931a33e5175b7c41c",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-pulse-config.png",
+      "sha256": "e6b3fbd0cd210996e9f23b6889e90d76a4a94794c750dcce692b96c504874b06",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-pulse-initial.png",
+      "sha256": "97c520531e2e5386708a7ffcd3a81d3ceca63d8c7fd3abfb61077cbafae73a57",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-pulse-private.png",
+      "sha256": "17b11867b928244aa860618351f38937b4a8be77b4ba74dfbe4bad77bff67ca6",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-pulse-refreshed.png",
+      "sha256": "b5dd8e89d4a851b20116f8914b5880221f511be08f4a09d6995f3869c097492f",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-pulse-updated-route.png",
+      "sha256": "e667c9e7f48a5ca16deed410dc4c87117465d68fe8d033e286279454bb85c885",
+      "inspected": true
+    }
+  ],
+  "diagnostics": {
+    "springBoardAnimationNotificationWaits": 8,
+    "remoteHierarchyDiagnosticsRetained": true,
+    "configurationCapture": "Studio is selected; bottom of the system Project picker remains visible during dismissal in the configuration capture. Subsequent cold route verifies selection."
+  },
+  "remaining": [
+    "Large Project pulse, Desktop and other named widget host/privacy conditions.",
+    "Native Mac interaction remains unavailable: latest getApp explicitly reports locked desktop.",
+    "Existing unfiltered accessibility findings, VoiceOver/keyboard, native Mac ordering/account/restore, actual Todoist provider, external calendar/file and notification/distribution gates."
+  ]
+}

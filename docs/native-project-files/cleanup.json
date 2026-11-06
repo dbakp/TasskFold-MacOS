@@ -1,0 +1,62 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 61007859712,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 669503488,
+      "projectedAllocatedBytes": 669503488
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 529801216,
+      "projectedAllocatedBytes": 529801216
+    }
+  ],
+  "freeAfterBytes": 61006798848,
+  "actualFreeChangeBytes": -1060864,
+  "runPreflightFreeBytes": 61451915264,
+  "ownedFixtureContainersRemoved": true,
+  "simulatorsBooted": 0,
+  "installedAppsUnchanged": true,
+  "retiredGeneratedOutputs": [
+    {
+      "path": "/tmp/taskfold-file-client-ios-core-final.log",
+      "bytes": 45552
+    },
+    {
+      "path": "/tmp/taskfold-file-client-mac-core-final.log",
+      "bytes": 45098
+    },
+    {
+      "path": "/tmp/taskfold-file-client-ios-full-final.json",
+      "bytes": 42162
+    },
+    {
+      "path": "/tmp/taskfold-file-client-ios-full-final.log",
+      "bytes": 16356
+    },
+    {
+      "path": "/tmp/taskfold-file-client-mac-full-final.json",
+      "bytes": 42006
+    },
+    {
+      "path": "/tmp/taskfold-file-client-mac-full-final.log",
+      "bytes": 16304
+    }
+  ],
+  "retiredBytes": 207478,
+  "coreCaches": {
+    "ios": {
+      "allocatedBytes": 667357184,
+      "within768MiB": true
+    },
+    "mac": {
+      "allocatedBytes": 611577856,
+      "within768MiB": true
+    }
+  }
+}

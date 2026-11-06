@@ -1,0 +1,181 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-native-output-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378" -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TaskfoldUITests/testTaskCSVNativeSaveReadbackAndColdReturn" -resultBundlePath /tmp/taskfold-native-output-tablet.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-native-output-tablet.xcresult
+
+2026-10-26 19:36:18.986833+0100 TaskfoldUITests-Runner[27802:23307100] [Default] Running tests...
+2026-10-26 19:36:19.395444+0100 TaskfoldUITests-Runner[27802:23307100] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 19:36:24.461.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 19:36:24.463.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 19:36:24.463.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testTaskCSVNativeSaveReadbackAndColdReturn]' started.
+    t =     0.02s Start Test at 2026-10-26 19:36:24.488
+    t =     0.06s Set Up
+    t =     0.07s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.07s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:36:24.619 xcodebuild[27796:23306693] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:36:24.619 xcodebuild[27796:23306693] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.61s         Setting up automation session
+objc[27802]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x102ecc398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x105fb0310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     7.54s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.14s Checking existence of `"Today" Button`
+    t =    11.85s Checking existence of `Button (First Match)`
+    t =    11.94s Checking existence of `"sun.max" Cell`
+    t =    12.05s Waiting 2.0s for "Today" Button to exist
+    t =    13.10s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    13.10s         Checking existence of `"Today" Button`
+    t =    13.12s Find the "Today" Button
+    t =    13.17s Tap "sun.max" Button
+    t =    13.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.17s     Find the "sun.max" Button
+    t =    13.19s     Check for interrupting elements affecting "sun.max" Button
+    t =    13.25s         Wait for com.apple.springboard to idle
+    t =    13.35s     Synthesize event
+    t =    13.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.35s Tap Any (First Match)
+    t =    15.35s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.35s     Find the Any (First Match)
+    t =    15.42s     Check for interrupting elements affecting "Task options" Button
+    t =    15.55s         Wait for com.apple.springboard to idle
+    t =    15.61s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    15.61s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    15.66s     Synthesize event
+    t =    15.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.92s Tap "Print or export" Button
+    t =    16.92s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.93s     Find the "Print or export" Button
+    t =    17.03s     Check for interrupting elements affecting "Print or export" Button
+    t =    17.10s         Wait for com.apple.springboard to idle
+    t =    17.12s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    17.13s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    17.13s     Synthesize event
+    t =    17.43s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.90s Waiting 10.0s for "openTaskCSV" Button to exist
+    t =    19.94s     Checking `Expect predicate `existsNoRetry == 1` for object "openTaskCSV" Button`
+    t =    19.94s         Checking existence of `"openTaskCSV" Button`
+    t =    20.63s Tap "openTaskCSV" Button
+    t =    20.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.63s     Find the "openTaskCSV" Button
+    t =    21.22s     Check for interrupting elements affecting "openTaskCSV" Button
+    t =    21.30s         Wait for com.apple.springboard to idle
+    t =    21.32s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    21.32s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    21.33s     Synthesize event
+    t =    21.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.71s Waiting 10.0s for "csvRowCount" StaticText to exist
+    t =    22.79s     Checking `Expect predicate `existsNoRetry == 1` for object "csvRowCount" StaticText`
+    t =    22.79s         Checking existence of `"csvRowCount" StaticText`
+    t =    23.48s Find the "csvRowCount" StaticText
+    t =    24.15s Tap "saveTaskCSV" Button
+    t =    24.15s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.16s     Find the "saveTaskCSV" Button
+    t =    24.84s     Check for interrupting elements affecting "saveTaskCSV" Button
+    t =    24.93s         Wait for com.apple.springboard to idle
+    t =    24.95s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    24.96s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    24.96s     Synthesize event
+    t =    25.25s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.50s Waiting 12.0s for "DOCPicker.actionButton" Button to exist
+    t =    26.54s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    26.54s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    27.20s         Capturing element debug description
+    t =    27.50s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    27.51s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    28.23s         Capturing element debug description
+    t =    28.53s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    28.53s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    29.23s         Capturing element debug description
+    t =    29.54s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    29.54s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    30.43s         Capturing element debug description
+    t =    30.53s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    30.53s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    31.73s         Capturing element debug description
+    t =    32.55s     Checking `Expect predicate `existsNoRetry == 1` for object "DOCPicker.actionButton" Button`
+    t =    32.56s         Checking existence of `"DOCPicker.actionButton" Button`
+    t =    33.56s Find the "DOCPicker.actionButton" Button
+    t =    34.31s Tap "DOCPicker.actionButton" Button
+    t =    34.31s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.31s     Find the "DOCPicker.actionButton" Button
+    t =    35.37s     Check for interrupting elements affecting "DOCPicker.actionButton" Button
+    t =    35.54s         Wait for com.apple.springboard to idle
+    t =    35.57s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    35.58s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    35.58s     Synthesize event
+    t =    35.90s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.91s Waiting 15.0s for "csvExportStatus" StaticText to exist
+    t =    36.94s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    36.94s         Checking existence of `"csvExportStatus" StaticText`
+    t =    37.75s Ignoring failure to get hierarchy for remote element in process 27931 (Error getting main window kAXErrorInvalidUIElement)
+    t =    37.76s Ignoring failure to get hierarchy for remote element in process 27931 (Error getting main window kAXErrorInvalidUIElement)
+    t =    37.76s Ignoring failure to get hierarchy for remote element in process 27931 (Error getting main window kAXErrorInvalidUIElement)
+    t =    37.76s         Capturing element debug description
+    t =    37.96s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    37.96s         Checking existence of `"csvExportStatus" StaticText`
+    t =    38.63s         Capturing element debug description
+    t =    38.94s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    38.94s         Checking existence of `"csvExportStatus" StaticText`
+    t =    39.74s         Capturing element debug description
+    t =    39.94s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    39.94s         Checking existence of `"csvExportStatus" StaticText`
+    t =    40.81s         Capturing element debug description
+    t =    40.91s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    40.91s         Checking existence of `"csvExportStatus" StaticText`
+    t =    41.60s         Capturing element debug description
+    t =    41.91s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    41.91s         Checking existence of `"csvExportStatus" StaticText`
+    t =    42.67s         Capturing element debug description
+    t =    42.98s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    42.98s         Checking existence of `"csvExportStatus" StaticText`
+    t =    43.67s         Capturing element debug description
+    t =    43.98s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    43.98s         Checking existence of `"csvExportStatus" StaticText`
+    t =    44.66s         Capturing element debug description
+    t =    44.97s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    44.97s         Checking existence of `"csvExportStatus" StaticText`
+    t =    45.73s         Capturing element debug description
+    t =    45.93s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    45.93s         Checking existence of `"csvExportStatus" StaticText`
+    t =    46.48s         Capturing element debug description
+    t =    47.00s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    47.00s         Checking existence of `"csvExportStatus" StaticText`
+    t =    47.62s         Capturing element debug description
+    t =    47.92s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    47.92s         Checking existence of `"csvExportStatus" StaticText`
+    t =    48.46s         Capturing element debug description
+    t =    48.98s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    48.98s         Checking existence of `"csvExportStatus" StaticText`
+    t =    49.83s         Capturing element debug description
+    t =    49.93s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    49.93s         Checking existence of `"csvExportStatus" StaticText`
+    t =    50.62s         Capturing element debug description
+    t =    50.91s     Checking `Expect predicate `existsNoRetry == 1` for object "csvExportStatus" StaticText`
+    t =    50.91s         Checking existence of `"csvExportStatus" StaticText`
+    t =    51.22s         Capturing element debug description
+    t =    51.22s     Checking existence of `"csvExportStatus" StaticText`
+    t =    52.12s Collecting debug information to assist test failure triage
+    t =    52.12s     Requesting snapshot of accessibility hierarchy for app with pid 27842
+/tmp/taskfold-native-output-ios-host/TaskfoldUITests/TaskfoldUITests.swift:15809: error: -[TaskfoldUITests.TaskfoldUITests testTaskCSVNativeSaveReadbackAndColdReturn] : XCTAssertTrue failed
+    t =    53.19s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testTaskCSVNativeSaveReadbackAndColdReturn]' failed (53.512 seconds).
+Test Suite 'TaskfoldUITests' failed at 2026-10-26 19:37:18.000.
+	 Executed 1 test, with 1 failure (0 unexpected) in 53.512 (53.536) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 19:37:18.007.
+	 Executed 1 test, with 1 failure (0 unexpected) in 53.512 (53.544) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 19:37:18.007.
+	 Executed 1 test, with 1 failure (0 unexpected) in 53.512 (53.547) seconds
+2026-10-26 19:37:18.393 xcodebuild[27796:23306693] [MT] IDETestOperationsObserverDebug: 64.127 elapsed -- Testing started completed.
+2026-10-26 19:37:18.393 xcodebuild[27796:23306693] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 19:37:18.393 xcodebuild[27796:23306693] [MT] IDETestOperationsObserverDebug: 64.127 sec, +64.127 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-native-output-tablet.xcresult
+
+Failing tests:
+	TaskfoldUITests.testTaskCSVNativeSaveReadbackAndColdReturn()
+
+** TEST EXECUTE FAILED **
+
+Testing started

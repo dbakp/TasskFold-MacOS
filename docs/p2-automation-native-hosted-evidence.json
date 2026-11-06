@@ -1,0 +1,180 @@
+{
+  "date": "2026-10-23",
+  "milestone": "Normal signed-in iPhone and iPad hosted automation management",
+  "productionBehaviorChanged": false,
+  "mainMigrationsApplied": false,
+  "mainEndpointsEnabled": false,
+  "normalNativeEntryEnabled": false,
+  "realTasksChanged": 0,
+  "fullPxComplete": false,
+  "sourceCommits": {
+    "iOS": "75b7492dce90f551a090685ff7974b43de7da1ff",
+    "macOS": "aa51e587ca9f0a612ec2d7775a4ad1d8f618e886"
+  },
+  "native": {
+    "phone": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792727895.797,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792727686.273,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    },
+    "tablet": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "D5805439-113D-4777-9D02-D35C5F812F61",
+            "deviceName": "Taskfold Automation Native QA",
+            "modelName": "iPad Pro 13-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792730141.993,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792729845.18,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    },
+    "testFile": "TaskfoldUITests/AutomationManagementUITests.swift",
+    "phoneHarnessSha256": "6f956a98569bec004fe0e63dc36a6b1c8bcab0bd7992fdb0ada29f99da4ce77d",
+    "finalTabletHarnessSha256": "cc5f7440bbea769b72919a495cce2b194753580c5efacfaa4f2d967a48e01ac9",
+    "harnessDifference": "Tablet-only system Save Password dismissal, compact-sheet scrolling and consumed navigation tap retries were refined after the phone run. Production app sources did not change.",
+    "transport": "Real disposable Auth accounts, canonical Edge Functions and PostgREST; ordinary Store, Backend and Simulator Keychain. No URLProtocol fixture or local-mode replacement.",
+    "gate": "Exact workflowtestsp1 debug host only; automation-management-testing opens the otherwise disabled native entry. live-auth-ui-test resets Auth only on initial launch; subsequent cold launches use ordinary persisted Auth.",
+    "scenarios": [
+      "Create and copy a masked key through the real view; ordinary relaunch recovers its same pending setup and signed-in session; acknowledge, revoke and relaunch without recovery; view revoked history.",
+      "Account A pending setup remains invisible to B; return to A resumes that intent; acknowledge and revoke. Both accounts sign out."
+    ],
+    "secretHandling": "UI tests assert Copied without reading the key/pasteboard; kept screenshots precede secret reveal. Credentials stayed in private non-Git files.",
+    "iterations": [
+      "Early runs failed on an offscreen Create control and pending-row accessibility lookup.",
+      "The existing iPad Simulator failed to launch Taskfold and Apple Settings. Its data was preserved; final acceptance used a new owned disposable iPad.",
+      "Tablet Save Password interruption consumed navigation taps and compact sheets needed their own scroll container. These were harness fixes, not product code fixes.",
+      "An earlier successful tablet account-switch run had one fully revoked key. The helper checkpointed that revoked baseline before the final two-case run; the final verifier still requires exactly two NEW A keys and zero B keys."
+    ]
+  },
+  "serverReadback": {
+    "checks": {
+      "verify-session-phone-A": true,
+      "verified-keys-phone-A": true,
+      "verify-session-phone-B": true,
+      "verified-keys-phone-B": true,
+      "verify-session-tablet-A": true,
+      "verified-keys-tablet-A": true,
+      "verify-session-tablet-B": true,
+      "verified-keys-tablet-B": true
+    },
+    "passed": true,
+    "counts": [
+      {
+        "fixture": "phone A",
+        "keys": 2,
+        "revoked": 2
+      },
+      {
+        "fixture": "phone B",
+        "keys": 0,
+        "revoked": 0
+      },
+      {
+        "fixture": "tablet A",
+        "keys": 3,
+        "revoked": 3,
+        "previousCompletedRunBaseline": 1
+      },
+      {
+        "fixture": "tablet B",
+        "keys": 0,
+        "revoked": 0
+      }
+    ],
+    "duplicateNewIntents": 0
+  },
+  "cleanup": {
+    "fixtureCleanupPassed": true,
+    "privateNativeFixtureRemoved": true,
+    "remainingUsers": 0,
+    "remainingTasks": 0,
+    "remainingProfiles": 0,
+    "remainingKeys": 0,
+    "remainingJournals": 0,
+    "remainingDeadlineControls": 0,
+    "canonicalTestEndpointsRemoved": true,
+    "acceptanceBranchDeleted": true,
+    "branchId": "faa2f628-7c48-4db5-b57a-218672229442",
+    "branchProject": "janyfroruofnmpxvhwfn",
+    "branchAbsenceConfirmed": true,
+    "privateConnectionExportRemoved": true,
+    "devices": {
+      "freshSimulatorDeleted": true,
+      "originalTabletBooted": true,
+      "originalDeviceDataErased": false,
+      "isolatedAppsUninstalled": true,
+      "stagePublicBackendRestored": true
+    }
+  },
+  "mainReadback": {
+    "postgres": "17.6",
+    "automationMigrations": 0,
+    "automationKeyTablePresent": false,
+    "automationEndpointsPresent": false
+  },
+  "limits": [
+    "Mac private-Keychain/runtime remains deferred with signing; these iOS tests do not prove Mac runtime.",
+    "Simulator Keychain acceptance is not physical-device secure hardware or distribution acceptance.",
+    "Uninstall is not forensic Keychain erasure. Old interrupted-cohort accounts are deleted; no global Keychain reset was used.",
+    "API/client entry remains off on main pending coherent enablement. Email intake, webhooks, advanced teams and wearables remain unfinished."
+  ],
+  "platformSource": "macOS"
+}

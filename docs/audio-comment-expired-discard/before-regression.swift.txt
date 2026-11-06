@@ -1,0 +1,22 @@
+        let discardFolder = root.appendingPathComponent("expired-review-discard",isDirectory:true)
+        try FileManager.default.createDirectory(at:discardFolder,withIntermediateDirectories:false)
+        let discardVault = AudioCommentVault(applicationSupport:discardFolder,owner:owner)
+        let discardFault = AudioProofOneShotFault(point:.afterSaveJournal)
+        let discardStore = AudioCommentDraftStorage(vault:.init(applicationSupport:discardFolder,owner:owner,fault:{ try discardFault.check($0) }))
+        let abandoned = make(AudioProofRecorder(data),discardStore)
+        abandoned.start(); _ = await wait { abandoned.session.phase == .recording }; abandoned.stop(); _ = await wait { abandoned.session.phase == .review }
+        abandoned.editCaption("Discard only this cafe\u{301} review"); _ = await abandoned.preserveReview(); _ = await abandoned.save()
+        guard let abandonedIntent = try await discardStore.saves().first else { throw AudioCommentStorageFailure.unreadable }
+        try discardVault.discardSave(abandonedIntent); _ = await abandoned.save()
+        var unrelated: [AudioCommentSavedDraft] = []
+        for index in 0..<AudioCommentVault.maximumEntries {
+            let next = try AudioCommentSavedDraft(owner:owner,target:request.scope.target,caption:"Unrelated saved recording \(index)",clip:abandonedIntent.next.clip)
+            try discardVault.save(next); unrelated.append(next)
+        }
+        let didDiscard = await abandoned.discardReviewAndClose()
+        let remaining = try discardVault.drafts(), remainingJournals = try discardVault.saves()
+        checks["removedSaveReviewCanBeDiscardedDirectlyAtEntryQuota"] = didDiscard && remainingJournals.isEmpty
+        checks["explicitExpiredDiscardClosesAndReleasesRetainedAuthorization"] = abandoned.session.phase == .closed && abandoned.session.clip == nil && !AudioCommentCapture.hasUnpreservedWork
+        checks["expiredDiscardPreservesEveryUnrelatedRecordingAtQuota"] = remaining.count == unrelated.count && remaining.allSatisfy(unrelated.contains)
+        abandoned.recovery.finishSave(); abandoned.close()
+

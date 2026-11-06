@@ -1,0 +1,22 @@
+{
+  "version": "1.4.0",
+  "build": "34",
+  "fromBuild": "31",
+  "archiveSHA256": "b01bc8c67cbbf82ee14bb8e0542801250cc66d6156807bcabb13e79f3de227e7",
+  "installed": true,
+  "installedAt": "2026-11-05T18:45:43+01:00",
+  "verifiedAt": "2026-11-05T18:55:01+01:00",
+  "launchVerifiedRunning": true,
+  "dataChecks": [
+    {
+      "priorTasks": 205,
+      "afterTasks": 205,
+      "allPriorIDsRetained": true,
+      "titlesNotesAttachmentsAndChildrenPreserved": true
+    }
+  ],
+  "containsAssistantChanges": false,
+  "privatePreUpdateBackupRetained": true,
+  "temporaryExtractionAndVerificationCopiesRemoved": true,
+  "scope": "In-place verified frozen optimized Release update. App process launch and critical task-field comparison accepted; physical visual rendering/FPS and all later source changes remain separate."
+}

@@ -1,0 +1,63 @@
+{
+  "verifiedUTC": "2026-10-24T07:11:01.568630+00:00",
+  "platform": "mac",
+  "hostedDeployment": false,
+  "realDataChanged": false,
+  "nativeTeamUIEnabled": false,
+  "nativeRuntimeAcceptanceClaimed": false,
+  "distributionAcceptanceClaimed": false,
+  "databaseChecks": 583,
+  "databaseReports": {
+    "p2-team-completion-evidence.json": {
+      "sha256": "7cce3bf4d401132078fc94e9093e96c9d0dc5bd7d8de421a23e8e43e4fcfbead",
+      "checks": 131
+    },
+    "p2-team-completion-edit-regression.json": {
+      "sha256": "a79ad0341da2faf74772c26b93218e716eb6feea5510c19618f00003bbc30f0b",
+      "checks": 221
+    },
+    "p2-team-completion-batch-regression.json": {
+      "sha256": "66f4bcefed24c8750fc0b38462d8b9432048c4ce8c4e5ce8ab248b6f7b46d5f0",
+      "checks": 72
+    },
+    "p2-team-completion-lifecycle-regression.json": {
+      "sha256": "b97d0d53cac431c6dee91be4be33af231c3623fd78885319be7ed4aa84c2afbe",
+      "checks": 89
+    },
+    "p2-team-completion-conversation-regression.json": {
+      "sha256": "619b7f3981d5a7836bfb6f9706f999e368bb9b9363d8169a73125f884b8ae379",
+      "checks": 70
+    }
+  },
+  "selectedSwiftTests": 262,
+  "swiftFailures": 0,
+  "swiftSkipped": 0,
+  "swiftLogSHA256": "abf08041e7e40bd00a33964f6a018f5bfb771f8c0be0927bcf9f74501e644ea3",
+  "unsignedDebugAppAndExtensionsBuild": true,
+  "appBuildLogSHA256": "ff14f4b706576953adfce3fdfe8d85d9eb2671fb844be664dddbffa7597a7c08",
+  "sources": {
+    "Package.swift": "8690c8d1ae21ff9e424b71aa3c8e0f48394cc2658164bd0818d83b462b5c072d",
+    "Taskfold.xcodeproj/project.pbxproj": "618957f7a8f2a4e161b45cba10f4961ca1ebd0d15bd6041a95f7a46a411a2dae",
+    "Taskfold/Core/TeamCompletion.swift": "96c74cdd56cd7b98380d7ec5a3bc1078981d24c6ed7e39a76b3e685ed8860192",
+    "Taskfold/Core/TeamChecklist.swift": "0aea065eab465b918d1f30b22173025ad73e4c82717cd84bd9b25e2cce7e5303",
+    "Taskfold/Core/TeamProjectAccess.swift": "b98d6a77451830006aa43d01f9a7161691a4a30d759da4305b560105efa7b822",
+    "Taskfold/Core/Models.swift": "cab69bbf99a9b28dac124e77795a86df2d74caaec9b0a4b3ed3537e28b1a41fd",
+    "Taskfold/Core/Backend.swift": "6a70d2c0f2c6a659f502fbd1d4ce7beb9c427311da30642d04f79fca8c2bbe46",
+    "Taskfold/Core/Store.swift": "147d2d8adadd93c301288aff7fbde50c19b77543ea189d7d2f66a8bdeaa92047",
+    "TaskfoldTests/TeamCompletionTests.swift": "150de3cd4ec5b04e94a721377b07f76102d0527696a042783e0d918f1a12ce5c",
+    "TaskfoldTests/Fixtures/team-completion-v1.json": "cfb3dad7d6da45ded08a859e8153fb25915c253018802b3676dfdd665c9ce5e2",
+    "Scripts/Database/team-completion-schema.mjs": "8920c08ff540aeed9c90a010efa5035885a9c83aa637e63c6e38c17a30731bd9",
+    "Scripts/Database/test-team-completion.mjs": "52307aaba7efaa1613da59c144da92172fed2a4ee273c768974a7445c0aedfb4",
+    "Scripts/Database/test-team-task-edits.mjs": "ccc8a9ed228e8370273c656b04a4aa00cd673d92b95b4447442aa648694e2d37",
+    "Scripts/Database/test-team-task-batches.mjs": "60d4893b641042af39fd381319249c014622181404ba7e79d3377179002ee501",
+    "Scripts/Database/test-team-task-lifecycle.mjs": "5cf2cc318cdf02bbd7d4783f05c09d51da629c942d311aaf2fa1c59a886f79a3",
+    "Scripts/Database/test-team-conversation-recovery.mjs": "08a4cb25d0d3514eab4a67211d3a6c862d718cbba73d970a55fc248f08ed35d8",
+    "supabase/migrations/20261024063514_team_recurring_completion.sql": "e7584b94e6e0638b9bafdb7a118f86d452225291b12b04342e7dc1a9361c6ed5"
+  },
+  "cleanup": {
+    "temporaryAppLaunched": false,
+    "temporaryBuildRemoved": true,
+    "temporaryMacRegistrationUnregistered": true,
+    "removedBuildBytes": 1133208868
+  }
+}

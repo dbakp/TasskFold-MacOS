@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-10",
+  "scope": "Two terminal failed editor-picker harness bundles. Retained summaries in both repos; passing baseline v3/final v4 bundles and inspected captures retained.",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-editor-picker-phone-v1.xcresult",
+      "logicalFileBytes": 23932978,
+      "retainedSummary": "editor-picker-reports/phone-v1.json"
+    },
+    {
+      "path": "/tmp/taskfold-editor-picker-phone-v2.xcresult",
+      "logicalFileBytes": 24136915,
+      "retainedSummary": "editor-picker-reports/phone-v2.json"
+    }
+  ],
+  "totalLogicalFileBytes": 48069893
+}

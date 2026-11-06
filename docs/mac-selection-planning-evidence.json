@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-10",
+  "method": "Native Codex CUA; no XCTest cases executed",
+  "defect": "Selecting a row could highlight it while the inspector remained closed or showed No Task Selected.",
+  "fix": "Evaluate inspectorVisible during WorkspaceView.body so selection invalidates presentation; avoid relying only on Binding.get observation.",
+  "diagnosticRemoved": true,
+  "stagedSourcesMatchRepositoryExceptRecordedNamespaces": true,
+  "nativeChecks": [
+    "Direct row selection opens populated inspector in Today and Inbox",
+    "Space completes selection; Command-Z restores task after native state settles",
+    "Reselecting restored task opens populated inspector",
+    "Inspector toolbar hides/restores correct task",
+    "Rescheduling plan to 11 October 09:00 preserves 10 October deadline",
+    "Two custom reminders show 08:50 and 09:10, with planned-time default also enabled",
+    "Quit/relaunch retains plan, deadline, priority, estimate, notes and reminders, reinspected in native editor"
+  ],
+  "taskID": "a8cebf4a-753c-42b8-b083-8f666a24ec0c",
+  "persistedTask": {
+    "title": "Mac acceptance review",
+    "description": "Saved from the isolated native Mac acceptance walk.",
+    "priority": 1,
+    "duration_minutes": 25,
+    "due_date": "2026-10-11",
+    "due_time": "09:00",
+    "deadline_date": "2026-10-10",
+    "completed": false,
+    "reminder_specs": [
+      {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "offset_minutes": 0,
+        "anchor": "planned",
+        "channels": [
+          "local"
+        ],
+        "kind": "relative",
+        "enabled": true,
+        "version": 1
+      },
+      {
+        "id": "47bee7f0-ac5f-4b91-8701-0cc4aff78ab7",
+        "offset_minutes": -10,
+        "anchor": "planned",
+        "channels": [
+          "local"
+        ],
+        "kind": "relative",
+        "enabled": true,
+        "version": 1
+      },
+      {
+        "id": "31a6001c-0532-410a-821e-4cc53824e9b6",
+        "offset_minutes": 10,
+        "anchor": "planned",
+        "channels": [
+          "local"
+        ],
+        "kind": "relative",
+        "enabled": true,
+        "version": 1
+      }
+    ]
+  },
+  "pendingMutations": 0,
+  "build": "/tmp/taskfold-mac-selection-fix-build.log: TEST BUILD SUCCEEDED",
+  "existingRegression": "TaskfoldMacUITests.testKeyboardCompletionAndUndo compiled; XCTest automation initialization remains unavailable",
+  "limitations": [
+    "One local workflow, not full Mac P0 acceptance",
+    "No native cloud handoff, Desktop widget, distribution or remote-delivery claim"
+  ]
+}

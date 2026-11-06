@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-26",
+  "stage": "historical parent type/generation and custody preservation",
+  "previousGoalTurn": "progress: app integration, verification and pushed independent commits",
+  "core": {
+    "passed": 239,
+    "failed": 0,
+    "newCases": 13
+  },
+  "postgresUpgradeChecks": 36,
+  "custodyChecksWithNewWriter": 94,
+  "hostedChanged": false,
+  "normalAuthoringEnabled": false,
+  "mixedChildTimelineIntegrated": false,
+  "newNativeRuntimeAcceptance": false,
+  "remainingChildCustody": "Auth FK/writer and role/cleanup alignment required before child-ledger team rollout",
+  "sources": {
+    "Taskfold/Core/TaskActivity.swift": "76c4942874889b445235ca20b60dbc5d6aad85d6a4f9015a8b8925552e340ae8",
+    "Taskfold/Core/ProjectPulseWidget.swift": "277e402cc11d86dc7f12233ee7800043bb71c4960137a96636c113217d31b965",
+    "TaskfoldTests/TaskRootActivityContextTests.swift": "e1348b9835790f7d4e04c81eeb9520b88ec495eb25056480be1f3c47f865a81e",
+    "TaskfoldTests/Fixtures/task-root-activity.json": "1ca00908b77df7a9dc00ea78478eae33b0c5f7e71da2d6fc57773c03cc0bd495",
+    "Scripts/Database/test-task-root-activity.mjs": "0118e5f727f9afd5ff60399f90c4416e4f58ca8ba964aa7b94ac2666965577ce",
+    "Scripts/Database/test-team-content-custody.mjs": "233aec3cf76cf8c468c4703e0d60705a1366e5d741f09b28968e25862782cd51",
+    "supabase/migrations/20261026104450_task_activity_root_context.sql": "9ed35d72212eff58ebe25cd9ec2da9ddf909bcc70dcf8f34bf1924a2ebb78831"
+  },
+  "logNormalization": "Trailing whitespace and blank lines removed; diagnostic and result text retained."
+}

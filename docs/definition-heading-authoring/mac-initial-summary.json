@@ -1,0 +1,67 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "modelName" : "MacBook Pro",
+        "osBuildNumber" : "25G83",
+        "osVersion" : "26.6.2",
+        "platform" : "macOS"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 1,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1793037691.441,
+  "passedTests" : 1,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    }
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793037630.446,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Failed to click \"openSharedTemplateFixture\" Button: No matches found for Elements matching predicate '\"openSharedTemplateFixture\" IN identifiers' from input {(\n    Button, identifier: '_XCUI:CloseWindow',\n    Button, identifier: '_XCUI:FullScreenWindow',\n    Button, identifier: '_XCUI:MinimizeWindow',\n    Button, identifier: 'openTeamTemplateLibraryFixture', label: 'Open team template library',\n    Button, identifier: 'openPrivateWorkflowRunFixture', label: 'Open private workflow run',\n    Button, identifier: 'openWorkflowRecoveryFixture', label: 'Open workflow recovery',\n    Button, identifier: 'openSavedTeamTemplateFixture', label: 'Open saved template request'\n)}",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "TeamWorkflowMacUITests/testCloudCSVHeadingDefinitionCancelSaveAndColdReturn()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamWorkflowMacUITests/testCloudCSVHeadingDefinitionCancelSaveAndColdReturn",
+      "testName" : "testCloudCSVHeadingDefinitionCancelSaveAndColdReturn()"
+    },
+    {
+      "failureText" : "-[XCUIElementMacOSEventTarget clickWithError:]_block_invoke cannot be called with Touch Bar elements, not valid for \"Discard changes\" Button.",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 2,
+      "testIdentifierString" : "TeamWorkflowMacUITests/testCloudTemplateHeadingDraftCancelSaveAndColdReturn()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamWorkflowMacUITests/testCloudTemplateHeadingDraftCancelSaveAndColdReturn",
+      "testName" : "testCloudTemplateHeadingDraftCancelSaveAndColdReturn()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 3
+}

@@ -1,0 +1,65 @@
+{
+  "accepted": true,
+  "case": "testReviewedRecoveryCompletesLegacyCommandPreservesOtherAccountAndColdState",
+  "caseResult": "Passed",
+  "wholeOriginalRunAccepted": false,
+  "otherCaseFailed": true,
+  "initial": {
+    "coldReload": false,
+    "accepted": true,
+    "currentCacheBytesUnchanged": true,
+    "otherCacheBytesUnchanged": true,
+    "completed": true,
+    "checks": {
+      "targetCacheRemoved": true,
+      "legacyCommandFinished": true,
+      "targetRemovalFenceSaved": true,
+      "privateSessionPreserved": true,
+      "sameProcessCacheBytesPreserved": true,
+      "noRefreshOrNewDeletionAuthorization": true,
+      "currentCacheFullJSONPreserved": true,
+      "otherCommandExact": true,
+      "otherEncryptedBackupExact": true,
+      "targetBackupKeyRemoved": true,
+      "pendingWarningVisible": true,
+      "currentSessionPreserved": true,
+      "otherCacheFullJSONPreserved": true,
+      "otherBackupKeyPresent": true
+    },
+    "serverCalls": 1
+  },
+  "cold": {
+    "serverCalls": 0,
+    "accepted": true,
+    "coldReload": true,
+    "currentCacheBytesUnchanged": false,
+    "otherCacheBytesUnchanged": false,
+    "completed": true,
+    "checks": {
+      "pendingWarningVisible": true,
+      "targetRemovalFenceSaved": true,
+      "targetCacheRemoved": true,
+      "otherCacheFullJSONPreserved": true,
+      "privateSessionPreserved": true,
+      "otherCommandExact": true,
+      "noRefreshOrNewDeletionAuthorization": true,
+      "otherEncryptedBackupExact": true,
+      "targetBackupKeyRemoved": true,
+      "currentCacheFullJSONPreserved": true,
+      "currentSessionPreserved": true,
+      "otherBackupKeyPresent": true,
+      "legacyCommandFinished": true
+    }
+  },
+  "independentEncodingObserver": {
+    "capturedBefore": true,
+    "completed": true,
+    "rawBytesChanged": true,
+    "fullJSONEqual": true,
+    "changedPaths": []
+  },
+  "genuineServerHMACClaim": false,
+  "syntheticEndpoint": true,
+  "nativePlatform": "iPhone Simulator",
+  "macRuntimeClaim": false
+}

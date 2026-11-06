@@ -1,0 +1,215 @@
+{
+  "date": "2026-10-21",
+  "status": "implemented; iPhone/iPad functional and final render acceptance passed; Mac walkthrough pending unlock",
+  "independent_ownership": true,
+  "contract": {
+    "monthly_dates": "daysOfMonth: unique integer array, 1...31, monthly only; mutually exclusive with single-day, ordinal and other calendar selectors.",
+    "planned_rhythm": "Visit remaining selected dates in the current active month, then advance the chosen month interval; late completion skips missed dates while retaining active-month alignment.",
+    "from_completion": "Wait the full month interval from completion, then find the first selected calendar date on or after that boundary.",
+    "short_months": "Clamp requested dates independently to month end and emit once per actual day, preserving original requested dates for later months.",
+    "limits": "Remaining occurrence count includes the current task; inclusive end date. Checklist items retain the existing parent occurrence behavior.",
+    "preview": "Up to five next dates; first assumes completion today, subsequent ones assume completion on the displayed day; source Gregorian zone; no mutation.",
+    "quick_capture": "Whole comma/and lists with existing start/end/count clauses. Invalid or duplicate lists remain literal.",
+    "preservation": "Opaque rule metadata, saved date set, source clock/zone, stable successor identity, queues and supported backups preserved."
+  },
+  "core": {
+    "ios": {
+      "reported": 782,
+      "skipped": 11,
+      "failures": 0,
+      "log": "ios-p1-multidate-core-delivery.log"
+    },
+    "macOS": {
+      "reported": 806,
+      "skipped": 31,
+      "failures": 0,
+      "log": "mac-p1-multidate-core-delivery.log"
+    },
+    "focused_recurrence": 29,
+    "focused_reminders": 55,
+    "new_cases": [
+      "Same-month dates and multi-month intervals",
+      "Short-month collisions and later recovery",
+      "Leap year",
+      "Late catch-up",
+      "Completion-based full interval",
+      "Count/end bounds and actual unique dates",
+      "Invalid arrays and ambiguous selectors",
+      "Quick capture whole-list parsing and literal refusal",
+      "Fixed-zone DST/travel and stable successor ID",
+      "Queue and backup preservation with opaque metadata",
+      "Preview legacy month-end stabilization",
+      "Independent reminder dates/counts and expression round-trip",
+      "Calendar rule replacement removes old selectors",
+      "Canonical client/server reminder signature"
+    ]
+  },
+  "live": {
+    "case": "ProjectWorkflowIntegrationTests.testTwoClientMonthlyDatesPersistCompleteAndReopen",
+    "ios": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 5.774,
+      "log": "ios-p1-multidate-live-fixed.log"
+    },
+    "macOS": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 3.096,
+      "log": "mac-p1-multidate-live.log"
+    },
+    "checks": [
+      "Two independently authenticated sessions",
+      "Saved rule and opaque metadata preserved",
+      "Queue encoding retains the rule",
+      "Completion creates one correctly dated/clocked successor and decrements count",
+      "Both clients see the same task identities and count",
+      "Reopen preserves the existing successor without creating a duplicate"
+    ],
+    "cleanup": "Disposable tasks removed by test; refresh tokens and sessions revoked before deleting the synthetic account; server counts for account/tasks/activity/sessions/tokens verified zero; private credential fixture removed.",
+    "limit": "These live runs predate the added rejection of ambiguous mixed weekly/monthly selectors. That invalid-input guard is covered by the final full core suites."
+  },
+  "database": {
+    "migration": "20261020231600_monthly_date_sets.sql",
+    "deployed": true,
+    "project": "zqxflydiyfjeedqvyova",
+    "fixtures": [
+      "supabase/tests/monthly_date_sets.sql",
+      "supabase/tests/calendar_reminder_jobs.sql",
+      "supabase/tests/calendar_reminder_bounds.sql"
+    ],
+    "fixtures_passed": true,
+    "rollback_only": true,
+    "security": "New helper is private, security-invoker, empty search_path and service-role only. Existing invoker functions and grants retained. No user/work data updated.",
+    "advisors": {
+      "before_rules": 6,
+      "after_rules": 6,
+      "before_findings": 42,
+      "after_findings": 42,
+      "new_findings": []
+    },
+    "remote_delivery": "Existing cron/dispatch activation check remains false; no activation performed."
+  },
+  "native": {
+    "ios_build": "ios-p1-multidate-build-delivery.log",
+    "macOS_build": "mac-p1-multidate-build-delivery.log",
+    "macOS": "Builds/signs independently. CUA recheck reports Mac locked; no interactive or VoiceOver acceptance claim.",
+    "iPhone": {
+      "passed": 2,
+      "failures": 0,
+      "runtime_warnings": 0,
+      "seconds": 204.756,
+      "result": "ios-p1-multidate-phone-final.xcresult",
+      "checks": [
+        "Quick-capture date set",
+        "Single-date/multiple-date native mode transitions",
+        "Draft Cancel preserves original rule",
+        "Save and relaunch retain selected dates and count",
+        "Upcoming dates match monthly rhythm",
+        "Completion decrements remaining count and creates successor",
+        "Task Undo removes successor and restores original occurrence",
+        "Normal/largest text with accessible selected states"
+      ],
+      "saved_cache_sha256": "b2f809f3e2e664086a6e46ae77267bb7db5f1f8c54b3dafce661e4dec371d5d5",
+      "saved_test_tasks": 1,
+      "saved_day": "2027-01-01",
+      "saved_rule": {
+        "count": 5,
+        "daysOfMonth": [
+          1,
+          15,
+          31
+        ],
+        "interval": 1,
+        "type": "monthly"
+      },
+      "pending": 0,
+      "limit": "Predates the final purely visual date-cell refinement; final render checks are recorded separately."
+    },
+    "iPad": {
+      "passed": 2,
+      "failures": 0,
+      "runtime_warnings": 0,
+      "seconds": 216.108,
+      "result": "ios-p1-multidate-tablet-final.xcresult",
+      "checks": [
+        "Quick-capture date set",
+        "Single-date/multiple-date native mode transitions",
+        "Draft Cancel preserves original rule",
+        "Save and relaunch retain selected dates and count",
+        "Upcoming dates match monthly rhythm",
+        "Completion decrements remaining count and creates successor",
+        "Task Undo removes successor and restores original occurrence",
+        "Normal/largest text with accessible selected states"
+      ],
+      "saved_cache_sha256": "132b2ceac2b9f05a6a63238f68328dd757c611fdcb9dcdcfd919e1634d17fe59",
+      "saved_test_tasks": 1,
+      "saved_day": "2027-01-01",
+      "saved_rule": {
+        "count": 5,
+        "daysOfMonth": [
+          1,
+          15,
+          31
+        ],
+        "interval": 1,
+        "type": "monthly"
+      },
+      "pending": 0,
+      "limit": "Predates the final purely visual date-cell refinement; final render checks are recorded separately."
+    },
+    "resolved_issues": [
+      "A container identifier inherited by preview rows prevented distinct row identification; individual preview rows now retain their identifiers.",
+      "Date cells use adaptive widths and single-line numbers with 44-point minimum targets.",
+      "A custom button style preserves selected-date contrast when the last remaining date cannot be removed.",
+      "Focused final render checks require the full date cell in view, at normal and largest text sizes."
+    ],
+    "iPhone_final_render": {
+      "passed": 1,
+      "failures": 0,
+      "runtime_warnings": 0,
+      "seconds": 100.037,
+      "result": "ios-p1-multidate-phone-delivery.xcresult",
+      "modes": [
+        "Normal text/light",
+        "Largest accessibility text/dark"
+      ],
+      "checks": [
+        "All date numbers stay on one line",
+        "Date targets meet 44 points",
+        "Full selected date cell is in view",
+        "Only remaining selected date cannot be removed",
+        "Selected-date ink and background retain contrast"
+      ],
+      "screenshots_reviewed": true
+    },
+    "iPad_final_render": {
+      "passed": 1,
+      "failures": 0,
+      "runtime_warnings": 0,
+      "seconds": 94.003,
+      "result": "ios-p1-multidate-tablet-visible.xcresult",
+      "modes": [
+        "Normal text/light",
+        "Largest accessibility text/dark"
+      ],
+      "checks": [
+        "All date numbers stay on one line",
+        "Date targets meet 44 points",
+        "Full selected date cell is in view",
+        "Only remaining selected date cannot be removed",
+        "Selected-date ink and background retain contrast"
+      ],
+      "screenshots_reviewed": true
+    },
+    "ios_test_build": "ios-p1-multidate-build-sheet-scroll.log",
+    "iPad_capture_note": "Accessibility geometry did not describe normal-size sheet clipping. The final fixture uses a drag inside the actual sheet and visual review confirms the entire selected date is visible. Earlier green bundles with a clipped capture are superseded."
+  },
+  "limits": [
+    "No sub-day or holiday-calendar repeat policy added.",
+    "Short-month behavior follows the existing clamp policy; there is no new skip-date setting.",
+    "Older clients can misinterpret new date-set rules; the explicitly deferred older-client rollout gate remains open.",
+    "Remote reminder delivery and distribution verification remain deferred."
+  ],
+  "cleanup": "Superseded failed/visual test bundles pruned; four obsolete prior iOS test-build caches removed. Isolated phone/tablet apps and runners uninstalled and both Simulators shut down. One current signed Mac bundle retained without launch."
+}

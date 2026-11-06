@@ -1,0 +1,17 @@
+{
+  "application": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+  "bundleIdentifier": "com.dbakp.taskfold.mac",
+  "signing": "disabled",
+  "launched": false,
+  "audioFlagsPresent": {},
+  "binaries": {
+    "Taskfold": {
+      "sha256": "7a2231c6327b65d5e81467bf1f793379f6c5b4a6c161b5fc8fdc1167deab7f2f",
+      "architectures": "arm64"
+    },
+    "Taskfold.debug.dylib": {
+      "sha256": "8b44364f1e6140896de5a7b9bfca6ed5e49c2799d096cf27a8152c0a931d1fdf",
+      "architectures": "arm64"
+    }
+  }
+}

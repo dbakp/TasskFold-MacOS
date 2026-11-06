@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-13",
+  "scope": "Mac runtime follow-up; no product behavior change or iOS native acceptance claimed",
+  "coldCloudSettings": {
+    "test": "testLiveMacColdCloudSettingsReadOnlyAndRelaunch",
+    "result": "mac-cold-cloud-settings-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "strictVerifier": "passed",
+    "journey": [
+      "Fresh owner sign-in and full sync",
+      "All Tasks and task inspector",
+      "General, Appearance, Account",
+      "Native restore picker Cancel",
+      "Close Settings, normal Quit, ordinary relaunch",
+      "Repeat Settings and picker Cancel"
+    ],
+    "preservation": "All 14 synchronized cache tables exact across the journey; all 14 owner-readable server tables exact after both cases",
+    "limits": [
+      "3 tasks, 3 projects, 1 section, 1 label; not the original 256-task import",
+      "ApplePersistenceIgnoreState YES; Settings closed before Quit, so restored-open-Settings not exercised",
+      "No avatar upload/removal or dirty profile save",
+      "No causal fix established for historical NSTableView reentrancy or AttributeGraph cycles"
+    ]
+  },
+  "notes": {
+    "test": "testPinnedNoteReadEditUnpinUndoAndRelaunch",
+    "result": "mac-notes-runtime-recheck-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 1,
+    "strictVerifier": "rejected due to retained warning",
+    "reportedEvents": 1,
+    "archivedEvents": 1,
+    "symbolicatedFrames": 40,
+    "totalFrames": 59,
+    "attribution": "UUID-matched system frames show AppKit Services/Data Detectors menu scanning during NSMenu accessibility inspection",
+    "report": "runtime-warning-attribution/notes-current.json",
+    "limits": [
+      "Older result still has no archived event; current same-case/message reproduction supplies a new captured event",
+      "Does not explain every historical runtime finding; no speculative app scheduling fix or warning suppression"
+    ]
+  },
+  "voiceOver": {
+    "accepted": false,
+    "observations": [
+      "Caption panel was already enabled; app screenshot did not expose spoken text",
+      "Two copy-last-spoken-phrase probes, including welcome-dialog-disabled attempt, yielded no identifiable announcement",
+      "Unsaved local capture draft cleared; no task saved",
+      "Verified VoiceOver off, welcome dialog on and caption panel on afterward"
+    ],
+    "next": "Human listening availability requested; no response yet",
+    "limits": [
+      "No spoken acceptance or cause of automation limitation established",
+      "Clipboard restoration not verified; clipboard content was not disclosed"
+    ]
+  },
+  "preservation": {
+    "primaryFilesExact": 100,
+    "restoredMacFilesExact": 28,
+    "retainedIOSFilesExact": 36,
+    "pendingWidgetFingerprintExact": true,
+    "serverRows": {
+      "tasks": 3,
+      "projects": 3,
+      "sections": 1,
+      "labels": 1,
+      "profiles": 1,
+      "project_collaborators": 0,
+      "saved_views": 3,
+      "favorites": 2,
+      "view_preferences": 5,
+      "view_orders": 1,
+      "reminder_preferences": 0,
+      "focus_sessions": 1,
+      "task_activity_epoch": 1,
+      "task_activity": 44
+    },
+    "onlyRemainingTaskfoldMainProcess": "Pending installed-widget host; left untouched"
+  },
+  "captures": [
+    {
+      "path": "/private/tmp/taskfold-cold-cloud-settings-captures-v1/13827BDC-7C53-49D4-80E9-EBD7742C508B.png",
+      "sha256": "441ab57ab2c396e2694f02191ad0a507161fd91988ada6994a879ed82720e910",
+      "visuallyInspected": true
+    },
+    {
+      "path": "/private/tmp/taskfold-notes-runtime-captures-v1/81822199-C5D2-4589-9BE4-072BF4701B0F.png",
+      "sha256": "edc7fae41879f89576bd0b85904e89999c786f19c9e5524e3b96b8fe4c5e02ab",
+      "visuallyInspected": true
+    },
+    {
+      "path": "/private/tmp/taskfold-notes-runtime-captures-v1/CCA3F62F-DD73-4A95-879C-E8D08F725607.png",
+      "sha256": "edc7fae41879f89576bd0b85904e89999c786f19c9e5524e3b96b8fe4c5e02ab",
+      "visuallyInspected": true
+    }
+  ]
+}

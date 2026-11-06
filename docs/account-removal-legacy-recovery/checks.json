@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-03",
+  "platform": "mac",
+  "core": {
+    "passed": 78,
+    "failed": 0,
+    "logSHA256": "1ced1e2672914e1bd063b22fb345f7fc5634e7ee8401e9c83fface6564d9c3df"
+  },
+  "deno": {
+    "passed": 40,
+    "failed": 0,
+    "logSHA256": "762e0eaa5c818e1cfe625dc77e935e8d087933f4c22073740eb5eadf2870dbd1"
+  },
+  "provider": {
+    "passed": 57,
+    "realStorageBytes": true,
+    "hosted": false,
+    "authAdminHTTP": false,
+    "removed": true
+  }
+}

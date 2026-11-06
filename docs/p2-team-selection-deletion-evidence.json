@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-25",
+  "status": "Reviewed atomic selection deletion implemented; team rollout off; wider native/live acceptance remains open",
+  "repositoryOwner": "TasskFold-MacOS",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamTaskBatch.swift": "a9aed12d8ecc41f419614310388992fc97aacb594e30273201b0b64cab6213cc",
+    "Taskfold/Core/Store.swift": "584fb2b88562134b931592f5f19a304090152007474f77a7b3bad471c5d94e59",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "c8840c8e4b0843f35c38362e6b94dced5c4543698567e5914844f67f00250136",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "ee324a92f9a50f72e55563cf908918fe879d2975a82bc1fbbfb5cc82b0e60e01",
+    "Scripts/Database/test-team-task-batches.mjs": "dd5058257666e4215450cd1160d08f887a449d1d491e16a45c794c31c5e68c48",
+    "Taskfold/Workspace.swift": "77292ae9036e5b13632ecddbaf5def2b4452e66be83edb6980521cc0b8a5cb0e"
+  },
+  "preparedHostSHA256": {
+    "Taskfold/Core/TeamTaskBatch.swift": "a9aed12d8ecc41f419614310388992fc97aacb594e30273201b0b64cab6213cc",
+    "Taskfold/Core/Store.swift": "764dfab2eb5d812c731264524dcc921c211e62e681c3e62a1de8ef5f83373956",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "c8840c8e4b0843f35c38362e6b94dced5c4543698567e5914844f67f00250136",
+    "Scripts/Database/test-team-task-batches.mjs": "60d4893b641042af39fd381319249c014622181404ba7e79d3377179002ee501",
+    "Taskfold/Workspace.swift": "dbbd43cf8e2f28ee24e1857fb999fc0193484170bd863df53f04779a25ae09b1"
+  },
+  "scope": [
+    "Review every selected root and project; freeze all rows and command/member nonces",
+    "2\u2013100 distinct tasks in one team; projects and retained creators may differ",
+    "Never serialize editor authority, infer personal scope, expand selection, rebase, truncate or chunk",
+    "Refuse any changed/missing/recreated member, mixed/nested selection, selected cycle, oversized payload or changed authority",
+    "Missing previously known shared IDs cannot reach personal recursive deletion paths",
+    "Atomic Store save/queue, existing batch RPC and receipt-scoped Undo/Redo; single task review remains separate",
+    "Failed save preserves all tasks and review; review consumes transient error for retry"
+  ],
+  "core": {
+    "focusedTeamCases": 319,
+    "newSelectionCases": 10,
+    "failures": 0,
+    "skips": 0,
+    "fullNonTeamSuitesRepeated": false,
+    "testLogSHA256": "3db6eb6e06be6f05d6419ee3efa35413d012e2bc309a5df9409356202d360226"
+  },
+  "service": {
+    "report": "docs/p2-team-selection-deletion-service-evidence.json",
+    "checks": 72,
+    "currentWorkspaceSchema": true,
+    "ownedContainersRemoved": true,
+    "hostedAcceptanceClaimed": false
+  },
+  "build": {
+    "DebugArm64": true,
+    "MacRuntimeClaimed": false,
+    "MacTestHelperOmitsWidgets": true
+  },
+  "native": {
+    "devices": [
+      "iPhone 18 Pro, iOS 27.0 Simulator",
+      "iPad Pro 13-inch (M5), iOS 27.0 Simulator"
+    ],
+    "casesPerDevice": 6,
+    "failures": 0,
+    "skips": 0,
+    "flows": [
+      "Actual list selection: linked delete, unselected preservation, Undo, fresh generations, one atomic queue group and relaunch",
+      "Cancel preserves actual cache exactly",
+      "Changed member pauses whole review and hides selected contents",
+      "Role loss pauses whole review without deletion",
+      "Failed group Store save leaves cache exact; retry commits one group",
+      "Existing single-task failed save/retry regression"
+    ],
+    "evidenceOwner": "TaskFold-iOS/docs/evidence/team-selection-deletion",
+    "screenshotsVisuallyReviewed": 8,
+    "productionFlagEnabled": false,
+    "fixtureIdentity": "workflowteststeameditbridge",
+    "evidenceCommit": "14c042712fe54b9a50f5b1ea3311b2ff3a355ee4",
+    "referenceIsDocumentationOnly": true
+  },
+  "compatibility": {
+    "newStoredOrWireFields": false,
+    "newMigration": false,
+    "hostedChanges": false,
+    "shippingTeamFlagEnabled": false,
+    "crossRepositoryBuildDependency": false,
+    "realUserDataChanged": false
+  },
+  "diagnosticRuns": {
+    "unit": "Random project IDs must be sorted in the strict boundary fixture; corrected test data only",
+    "native": "System Menu strips control IDs; query its real Select tasks label instead",
+    "initialRegressionFilter": "Initial diagnostic filter misspelled the single-task test; final summary proves that exact named regression ran",
+    "failedCollectors": "All diagnostic cases were terminal; process samples confirmed collectSimulatorDiagnostics before owned drivers were terminated. No live scenario was restarted. Final six-test runs complete normally."
+  },
+  "remaining": [
+    "Mac runtime/keyboard, VoiceOver, wider native selection/account/large-text/fault/concurrency and hosted acceptance",
+    "Shared task moves/adoption/templates/conversations/files and independent child records; rest of ranked Px",
+    "Watch/Wear OS and all previously recorded gates; user release/provider/remote reminder deferrals unchanged"
+  ],
+  "cleanup": {
+    "isolatedAppsAndRunnersUninstalledAndAbsenceVerified": true,
+    "noTaskfoldProcessesRemain": true,
+    "ownedTemporaryRootsRemoved": 42,
+    "allocatedBytesRemoved": 1672863744,
+    "removedNames": [
+      "taskfold-selection-service-ios.log",
+      "taskfold-selection-teams-mac-final.log",
+      "taskfold-selection-ios-build",
+      "taskfold-selection-mac-host",
+      "taskfold-selection-tablet-attachments",
+      "taskfold-selection-phone-final.xcresult",
+      "taskfold-selection-ios-build.log",
+      "taskfold-selection-phone.xcresult",
+      "taskfold-selection-ios-host",
+      "taskfold-selection-tablet-final.xcresult",
+      "taskfold-selection-phone-driver.sample",
+      "taskfold-selection-phone-attachments.log",
+      "taskfold-selection-tablet-driver.sample",
+      "taskfold-selection-phone-summary.json",
+      "taskfold-selection-tablet.xcresult",
+      "taskfold-selection-mac-final-build.log",
+      "taskfold-selection-tablet.log",
+      "taskfold-selection-focused-mac.log",
+      "taskfold-selection-mac-build",
+      "taskfold-selection-ios-preparation.log",
+      "taskfold-selection-tablet-final.log",
+      "taskfold-selection-teams-mac.log",
+      "taskfold-selection-phone.log",
+      "taskfold-selection-teams-ios-final.log",
+      "taskfold-selection-native.py",
+      "taskfold-selection-evidence.py",
+      "taskfold-selection-focused-ios.log",
+      "taskfold-selection-tablet-attachments.log",
+      "taskfold-selection-teams-ios.log",
+      "taskfold-selection-mac-build.log",
+      "taskfold-selection-tablet-summary.json",
+      "taskfold-selection-service-ios.json",
+      "taskfold-selection-mac-preparation.log",
+      "taskfold-selection-service-mac.log",
+      "taskfold-selection-core-ios.log",
+      "taskfold-selection-tests.py",
+      "taskfold-selection-plan.swift",
+      "taskfold-selection-service-mac.json",
+      "taskfold-selection-edit.py",
+      "taskfold-selection-phone-final.log",
+      "taskfold-selection-ios-final-build.log",
+      "taskfold-selection-phone-attachments"
+    ],
+    "baselineSimulatorStatesAndCoreCachesPreserved": true,
+    "unrelatedFilesTouched": false
+  }
+}

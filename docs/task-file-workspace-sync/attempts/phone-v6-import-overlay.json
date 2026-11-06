@@ -1,0 +1,9 @@
+{
+  "reviewed": "2026-11-02",
+  "sourcePhase": "workspace-sync-v6",
+  "export": "Passed: native Files Cancel/Save, exact destination bytes, original/task preservation, cold return",
+  "import": "Failed: actual filename found and reported hittable, but text frame y64.7..241.7 had center153.2 underneath Files navigation/search overlay ending182. Tap did not dismiss picker or reach review. No import accepted.",
+  "correction": "V7 import only aligns full filename below navigation/search and above bottom tab bar, retains actual picker close/review and exact byte/cache assertions.",
+  "wholeRunAccepted": false,
+  "failureHierarchySHA256": "3362c0b1b36f2d5ea0c2dfcc3f547cf36fc1d96aab0edd7db6a8f6dc2471ff4e"
+}

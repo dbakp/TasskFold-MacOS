@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-26",
+  "source": {
+    "Taskfold/Core/Planner.swift": "f4ef28f4c34c0ede5c3e802a33ab5a0e9ad474469a244d5bf0fc61f3fbe2b777",
+    "Taskfold/Views/CalendarView.swift": "dcfea644402af61a77c816c0ca64c3f0931d63f744013f7bb6cc94d8b85d6655",
+    "TaskfoldTests/PlannerTests.swift": "db304d2fc36f1da0dfb7240eedf5e790851bf12bab9b82bae79099b2729193a0"
+  },
+  "normalHeadingAuthoringChanged": false,
+  "hostedChanges": false
+}

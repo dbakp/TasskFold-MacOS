@@ -1,0 +1,11 @@
+{
+  "accepted": true,
+  "checks": 59,
+  "migrationsReplayed": 203,
+  "genuineLocalAuthREST": true,
+  "nativeUIOrStoreAcceptance": false,
+  "appSourcesChanged": false,
+  "hostedChanges": false,
+  "normalUseGatesChanged": false,
+  "driverSHA256": "12729ef16bbafb34d46f7b2ec2760fb6724239609d52307f8bd0dcc4253ce796"
+}

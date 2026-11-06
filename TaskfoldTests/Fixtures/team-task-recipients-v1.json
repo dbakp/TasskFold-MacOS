@@ -1,0 +1,30 @@
+{
+  "account": "81d7769e-1f58-4d0f-aecb-9d5354dd80d1",
+  "team": "c215997f-4795-48bb-939a-56b1ecb67390",
+  "project": "8f284c07-ac7a-408b-ba04-3c391b83c118",
+  "origin": "https://backend.example",
+  "reply": {
+    "account": "81d7769e-1f58-4d0f-aecb-9d5354dd80d1",
+    "team_id": "c215997f-4795-48bb-939a-56b1ecb67390",
+    "project_id": "8f284c07-ac7a-408b-ba04-3c391b83c118",
+    "recipients": [
+      {
+        "role": "editor",
+        "user_id": "81d7769e-1f58-4d0f-aecb-9d5354dd80d1",
+        "display_name": null
+      },
+      {
+        "role": "editor",
+        "user_id": "b425c71a-92cf-4f22-bddb-3bf4200aa8bc",
+        "display_name": "Élodie"
+      },
+      {
+        "role": "manager",
+        "user_id": "eb152953-acdd-4204-ab96-a5e0d1c5ece9",
+        "display_name": "owner"
+      }
+    ],
+    "access_token": "8e44c634056da44e5164725f92149de889dc0e4e72ff7366e90cad629db6e088",
+    "recipient_protocol": 1
+  }
+}

@@ -1,0 +1,10 @@
+create role anon;create role authenticated;create role service_role;create schema auth;create schema taskfold_private;
+create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb);
+create function auth.uid() returns uuid language sql stable set search_path='' as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+create table public.projects(id uuid primary key,user_id uuid references auth.users(id) on delete cascade,name text);
+create table public.project_collaborators(id uuid primary key,project_id uuid references public.projects(id) on delete cascade,user_id uuid references auth.users(id) on delete cascade,status text);
+create function public.has_project_access(u uuid,p uuid) returns boolean language sql stable security definer set search_path='' as $$select exists(select 1 from public.projects where id=p and user_id=u) or exists(select 1 from public.project_collaborators where project_id=p and user_id=u and status='accepted')$$;
+create table public.tasks(id uuid primary key,user_id uuid references auth.users(id) on delete cascade,title text,description text,project_id uuid references public.projects(id) on delete set null,section_id uuid,completed boolean default false,completed_at timestamptz,due_date date,due_time time,scheduled_at timestamptz,time_zone text,deadline_date date,recurrence_parent_id uuid,completion_version bigint default 0,task_generation uuid default gen_random_uuid(),is_heading boolean,subtasks jsonb default '[]');
+alter table public.tasks enable row level security;
+create policy fixture_task_access on public.tasks to authenticated using((project_id is null and user_id=auth.uid()) or public.has_project_access(auth.uid(),project_id)) with check((project_id is null and user_id=auth.uid()) or public.has_project_access(auth.uid(),project_id));
+grant usage on schema public,auth to authenticated;grant select,insert,update,delete on public.tasks,public.projects,public.project_collaborators to authenticated;

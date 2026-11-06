@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-21",
+  "status": "Rank 5 elapsed-reminder scheduling foundation; no user-facing interval reminder yet",
+  "implemented": [
+    "Fixed-instant anchor canonicalized to milliseconds; elapsed intervals from 5 minutes to 7 days",
+    "Total count including anchor, inclusive end, earlier limit wins",
+    "Missed slots consumed without catch-up; arithmetic seek and maximum 60 projections",
+    "Exact original-slot membership and canonical semantic identity independent of display time zone"
+  ],
+  "cases": [
+    "exclusive current-time boundary",
+    "missed count slots and ended single occurrence",
+    "inclusive end and combined count/end",
+    "bounded and nonpositive projection requests",
+    "invalid interval/count/end rejection without clamping",
+    "non-finite and extreme Date inputs",
+    "years 1/9999 boundaries and no overflow",
+    "Copenhagen spring gap/autumn fold with equal elapsed spacing",
+    "Los Angeles/Tokyo travel presentation leaves instants and identity stable",
+    "millisecond canonical identity and submillisecond boundary",
+    "arithmetic seeking against independent enumerated reference",
+    "receipt exact slot and current count/end membership",
+    "future millisecond at upper date boundary"
+  ],
+  "verification": {
+    "ios": {
+      "coreReported": 1021,
+      "coreSkipped": 13,
+      "coreFailures": 0,
+      "newScheduleCases": 13,
+      "coreArtifact": "ios-interval-schedule-full-core.log",
+      "coreSHA256": "07c55aef467da3b565ac81468dcc546e79e542d4faf70780cf18b00d8ec09bd4",
+      "buildArtifact": "ios-interval-schedule-build.log",
+      "buildSucceeded": true,
+      "strictDeepDebugSignature": true,
+      "currentAppSourceMatchesBuiltIsolatedStage": true
+    },
+    "mac": {
+      "coreReported": 1053,
+      "coreSkipped": 33,
+      "coreFailures": 0,
+      "newScheduleCases": 13,
+      "coreArtifact": "mac-interval-schedule-full-core.log",
+      "coreSHA256": "2dcf5e65acefa75fee1bc9331d709613cb14d47c19c2d98467b3775623304da0",
+      "buildArtifact": "mac-interval-schedule-build.log",
+      "buildSucceeded": true,
+      "strictDeepDebugSignature": true,
+      "currentAppSourceMatchesBuiltIsolatedStage": true
+    }
+  },
+  "sourceSHA256": {
+    "TaskFold-iOS": {
+      "Taskfold/Core/ReminderIntervalSchedule.swift": "2299b66ee5c752089b2394e3cc6d6e0322fff2fcafc4123afb39f7ab9e86468d",
+      "TaskfoldTests/ReminderIntervalScheduleTests.swift": "d5a2c6f205c22c977e0af64600b228fea6a11ea5b0392bfc816068ede72a05bf"
+    },
+    "TasskFold-MacOS": {
+      "Taskfold/Core/ReminderIntervalSchedule.swift": "2299b66ee5c752089b2394e3cc6d6e0322fff2fcafc4123afb39f7ab9e86468d",
+      "TaskfoldTests/ReminderIntervalScheduleTests.swift": "d5a2c6f205c22c977e0af64600b228fea6a11ea5b0392bfc816068ede72a05bf"
+    }
+  },
+  "notYetImplemented": [
+    "Versioned saved interval spec/import/export/old-reader behavior",
+    "Native editor with next-five preview and Save/Cancel/Undo",
+    "DueReminder projection, notification signatures, response/snooze integration",
+    "Genuine native audio-independent notification delivery and accessibility acceptance"
+  ],
+  "limits": [
+    "Core foundation and build verification only; no UI or delivery acceptance claim",
+    "No persistent interval envelope is created; existing reminders unchanged",
+    "No task/cache/account/notification permission/widget data changed",
+    "Mac remains locked; no repeated manual request",
+    "No release/provider/push/older-client deferral reopened"
+  ]
+}

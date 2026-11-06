@@ -1,0 +1,96 @@
+{
+  "date": "2026-11-01",
+  "cutoff": "2026-10-20T00:00:00Z",
+  "removedBundles": 482,
+  "bytesRemoved": 17485174105,
+  "summarySHA256": "125f09bfba5da2d8404829a44719a47393e67200747d56bfab48f818cfb05d2e",
+  "summaryFile": "older-result-summaries.jsonl",
+  "skipped": [
+    {
+      "name": "mac-backup-switch-native-v1.xcresult",
+      "reason": "Path changed or not an owned result directory"
+    },
+    {
+      "name": "mac-local-bulk-deadline-v1.xcresult",
+      "reason": "Path changed or not an owned result directory"
+    },
+    {
+      "name": "ios-new-task-revocation-cleanup-v1.xcresult",
+      "reason": "Summary unavailable; retained"
+    },
+    {
+      "name": "copy-fixes-mac-v1.xcresult",
+      "reason": "Summary unavailable; retained"
+    },
+    {
+      "name": "ios-fileprovider-legacy-ui-v3.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-legacy-ui-v4.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v9.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v10.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v6.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v8.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v5.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v7.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v4.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v3.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-legacy-ui-v1.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-legacy-ui-v2.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-native-picker-v1.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-new-task-revocation-receipt-v4.xcresult",
+      "reason": "Summary unavailable; retained"
+    },
+    {
+      "name": "mac-new-task-revocation-create-v1.xcresult",
+      "reason": "Summary unavailable; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v1.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    },
+    {
+      "name": "ios-fileprovider-probe-ui-v2.xcresult",
+      "reason": "Ownership or completion not confirmed; retained"
+    }
+  ],
+  "scope": "Only finished Taskfold result bundles under the owned acceptance directory, with unchanged inventory timestamps and verified Taskfold summaries. Source code, curated repository evidence, simulator/app data and Docker containers were not removed.",
+  "evidenceLimit": "Retained summary counts describe historical runs; they do not replace current native or visual acceptance. Raw logs and raw screenshots inside these obsolete bundles were pruned."
+}

@@ -1,0 +1,124 @@
+{
+  "date": "2026-10-21",
+  "status": "Saved hierarchy grammar, candidate pipeline and mixed-selection actions implemented; full hierarchy feature and rank 3 remain unfinished",
+  "implementation": [
+    "root, subtask, parent strict valueless predicates and native builder choices",
+    "Root-only legacy filters unchanged; comma-separated queries retain independent candidate scopes",
+    "Own node fields with inherited project/section containment and ancestor context",
+    "One cached bounded hierarchy projection; explicit unsupported-tree errors, no identity creation during reads",
+    "Root-only proof avoids child indexing for main-task-only expressions, including older ID-less checklists",
+    "Mixed edits coalesce into real root patches with branch-delete collapse, stale-generation/workspace/access guards and existing durable Undo",
+    "Branch duplication refreshes node identities/completion; selected ancestor dominates child copies",
+    "Root recurrence preserves actual completion mutation UUID and successor behavior",
+    "Child-needed widget filters explicitly unavailable; root-only filters use existing widget membership",
+    "Child project moves unavailable; no new reparent/drag contract"
+  ],
+  "verification": {
+    "owned_full_core": {
+      "executed": 978,
+      "skipped": 32,
+      "failures": 0,
+      "log": "mac-p2-hierarchy-full.log"
+    },
+    "new_focused_cases": {
+      "executed": 13,
+      "failures": 0,
+      "log": "mac-p2-hierarchy-focused-v3.log"
+    },
+    "isolated_mac_build": "mac-p2-real-hierarchy-build.log: BUILD SUCCEEDED; no Mac native interaction acceptance claimed",
+    "isolated_signature_verification": "Both app products pass codesign --verify --deep --strict",
+    "native_test": "testRealSavedSubtaskFilterCompletionUndoAndRelaunch",
+    "native_method": "Public saved filter created through actual editor; no --hierarchy-editor-fixture override",
+    "native_checks": [
+      "four children displayed, root excluded",
+      "full ancestor path in accessible row",
+      "exact leaf opens Subtask details; Cancel returns",
+      "completion removes only leaf, parent remains open",
+      "Undo restores leaf",
+      "normal relaunch without fixture reseeding retains saved filter and restored task",
+      "phone/tablet normal-light captures inspected for readable layout"
+    ],
+    "staging_input_manifest": "p2-real-hierarchy-staging-inputs.json",
+    "phone": {
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0,
+      "result": "ios-p2-real-hierarchy-phone.xcresult",
+      "persistence": {
+        "sha256": "8a88ddbfbb62a8e73f1ebb130cfe9c46b333f5e6e5932e6e09cb4e7a19ae1d03",
+        "persisted_root_tasks": 1,
+        "persisted_nested_tasks": 4,
+        "root_completed": false,
+        "nested_completed": 0,
+        "saved_filter": {
+          "root": {
+            "value": "",
+            "field": "subtask",
+            "op": "predicate"
+          },
+          "version": 1
+        },
+        "pending": 0
+      },
+      "captures": "tmp/real-hierarchy-phone/"
+    },
+    "tablet": {
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0,
+      "result": "ios-p2-real-hierarchy-tablet.xcresult",
+      "persistence": {
+        "sha256": "c5c5f6eff8518392c8e8e7ba6ac890a0588a65f7e9b13aebd70fd8c17d2634d6",
+        "persisted_root_tasks": 1,
+        "persisted_nested_tasks": 4,
+        "root_completed": false,
+        "nested_completed": 0,
+        "saved_filter": {
+          "version": 1,
+          "root": {
+            "field": "subtask",
+            "value": "",
+            "op": "predicate"
+          }
+        },
+        "pending": 0
+      },
+      "captures": "tmp/real-hierarchy-tablet/"
+    }
+  },
+  "remaining_gates": [
+    "child-needed widget publication, route and completion support",
+    "dependent output ancestor context",
+    "native Mac flat-result/mixed-action acceptance",
+    "native bulk/mixed-action, broader layout, malformed-checklist recovery and accessibility acceptance",
+    "live concurrent-workspace/account/access acceptance",
+    "remaining rank-3 collaboration predicates/view controls/headings and backlog ranks 4\u20137"
+  ],
+  "deferred_by_user": [
+    "server reminders",
+    "older-client rollout enforcement",
+    "distribution signing/install/update acceptance",
+    "genuine Google/Microsoft registrations/provider acceptance"
+  ],
+  "cleanup": {
+    "main_test_apps": "No Taskfold main app processes remain after test teardown",
+    "disk_free_gib": 50,
+    "retained": "Accepted native results, PNGs, compact evidence and warm caches; no new disposable app installations"
+  },
+  "source_sha256": {
+    "Taskfold/Collaboration.swift": "cb4fc38b97fa398a6a91bd6062dd4927afe2278c00d24df7c1b79ef426230cf3",
+    "Taskfold/Core/Filters.swift": "1d169b47a9a7110cd230a5fa420b4ed81ac984c94730235d111a9a8dfd9d8765",
+    "Taskfold/Core/Models.swift": "5507f5d941a5fc66c52111aa6f1db80d0abc760ae4276b283be7b2e4aaab3f97",
+    "Taskfold/Core/Planner.swift": "673a70f9ae667e6f45cccc4a2bb8e3b4e924476a32d3aabce47872e2c2cfcab3",
+    "Taskfold/Core/Store.swift": "e6ebcd3b4a378256318d73de734174a9b4bb543a21bff8c0effa7ffeaf79622f",
+    "Taskfold/Core/SubtaskTree.swift": "1cfeef3c6fdb0fa0cb2bcd2b7b912c93ca43ca593e89a939b101631e07e8223e",
+    "Taskfold/Views/RootView.swift": "7da708b8af928597021420243604a86bcb4eb6de5c988d1ee3d1ad286b7d0777",
+    "Taskfold/Views/SavedViews.swift": "28c2c790ef2745d76649d553065f428b9d05f60e1e4049aacd10d25e7448ab27",
+    "Taskfold/Views/TaskInspector.swift": "9e638893d18b9775000b45daa8c5b3c7f1d191cbe5412e4456a04c7a977e3a91",
+    "Taskfold/Views/TaskListView.swift": "973755928f85d64ed9ccb884b1b29336c0f28e731d87261c8c4382fc15e61489",
+    "Taskfold/Views/TaskRowView.swift": "8541094054797f997a3583425dfaab160789bb5148f9505a482142fc01cfcd4a",
+    "Taskfold/Workspace.swift": "470318e4ba1fde9e12191e62d5a6a799cd5d53dcdac17189fb08f4b1b614d75b",
+    "TaskfoldTests/FilterTests.swift": "1b846a1de75f6c8442d1a93513364e03fcf9e028b23f9dc9f7a95bd98fe8e469",
+    "TaskfoldTests/SubtaskTreeTests.swift": "5cf4e52b18d35a433411e8f22a1ad4355f4171acf154572cbd91e8857a415b4d"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "modelName": "iPhone 18 Pro",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "passedTests": 5,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+  "expectedFailures": 0,
+  "failedTests": 1,
+  "finishTime": 1793110070.401,
+  "passedTests": 5,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1793109765.07,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 2,
+      "testIdentifierString": "TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn",
+      "testName": "testPrivateWorkflowNativeCreateUndoRedoAndColdReturn()"
+    }
+  ],
+  "title": "Test - Taskfold",
+  "topInsights": [],
+  "totalTestCount": 6
+}

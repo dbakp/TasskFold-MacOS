@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "scope": "Observed local synthetic native project picker, save/autosave, refusal and cold return; no cloud delivery or spoken-output claim",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "deviceName": "iPad Pro 13-inch (M5)",
+    "modelName": "iPad Pro 13-inch (M5)",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "summarySHA256": "ce6842d9c52a22463220533eb2f7a83479478834cf8262f5a1a1fa7bddb099cd",
+  "manifestSHA256": "e1a9dad57efa9a096503e0835d4d88024315f0b13c6b66fa3445c5aea271ed6a",
+  "fullRootMoveHasOnlyExpectedChanges": true,
+  "exactUnicodeKeysAndLargeIntegerPreserved": true,
+  "fullSnapshotColdReturnPreserved": true,
+  "refusalSourceBytesUntouched": true,
+  "refusalFullSnapshotColdReturnPreserved": true,
+  "attachments": [
+    {
+      "name": "Original project change source_0_D924279C-01AB-4ECE-93A0-4468235A436F.json",
+      "sha256": "18635d5c6f09f6c2ff0a5c5d46c3448cfe2c2b3418f4f948f78aefc88f138247",
+      "bytes": 1273
+    },
+    {
+      "name": "Actual saved project change cache_0_132C0E3D-77F3-4F39-B787-FEA306309F85.json",
+      "sha256": "c3cd3f24e9016abc704e2514c04f4f4b31adaa19c312501d378ca8e519219c69",
+      "bytes": 3664
+    },
+    {
+      "name": "Actual saved project change cache_0_2B52440C-A900-4C07-A1DA-EC0A8378DE9C.json",
+      "sha256": "4baab9fd41585b38f491e46fee51c64074bccaf3304469058a3519e2fd0e49f2",
+      "bytes": 3664
+    },
+    {
+      "name": "Unsupported project change source_0_FD8B1AED-AA3E-437C-A2AF-1384209DDC11.json",
+      "sha256": "af85dd61b496ecd6a5d1ff5cf307b9a0cbc6a26d497e4db00b5cb3c38da20165",
+      "bytes": 1030
+    },
+    {
+      "name": "Unsupported source after refusal_0_95B9C9A9-A48F-4F52-8F8D-380FD47EEE46.json",
+      "sha256": "af85dd61b496ecd6a5d1ff5cf307b9a0cbc6a26d497e4db00b5cb3c38da20165",
+      "bytes": 1030
+    },
+    {
+      "name": "Unsupported source after cold return_0_3E52B4AE-6BAB-45D8-8B22-F7778566E86C.json",
+      "sha256": "7561fa93bf3e3660fac57318cde41a590b900b322be90b939a863bef98c84040",
+      "bytes": 1030
+    }
+  ]
+}

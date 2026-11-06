@@ -1,0 +1,84 @@
+{
+  "date": "2026-11-01",
+  "repository": "mac",
+  "sourceSHA256": {
+    "Taskfold/Views/ChildTaskRepairView.swift": "4fba6ff8b9de03af8867a546c35df6e5f426996429c347067493ca227e559450",
+    "Taskfold/ChildFieldNativeFixture.swift": "fdc89c52682e69fa86d0399703fb02d2000e8e9ee27180cb6e0d282e779a3b69",
+    "Taskfold/Core/Store.swift": "160264180b8241a9b4dffb7a102728211e1b9ceb4c189f0dfddfcaa5e8493482",
+    "TaskfoldUITests/AudioCommentUITests.swift": "b503c0fcb7391f485ad1dac0fb2fdafdf55f07cb2cdbae6a4f2b9ac46adbe37d",
+    "Scripts/Database/child-mapping-native-channel.mjs": "e590c60113be5479969dbe09e6ca0b41d684ea61c33325c241e396a53d6dd09b",
+    "Scripts/Database/run-child-mapping-native.mjs": "8f6d5c4193f93aa72c11b59ab2cdfdd3e666e26dc31d85f132ce75f9d8562c13",
+    "Scripts/Database/test-child-mapping-native-channel.mjs": "0b9c315dbafae016704a440681d0d55896512403b0c55672813825f47c5165a4",
+    "Scripts/verify_child_mapping_native.mjs": "1d220c6cb03c41ef986546957c30dbb727e8c09876575e81664a0c11f4ee526d"
+  },
+  "build": {
+    "phase": "mapping-native-final-ui",
+    "appAndRunnerSignaturesVerified": true,
+    "sourceProof": {
+      "Taskfold/Views/ChildTaskRepairView.swift": {
+        "sourceSHA256": "4fba6ff8b9de03af8867a546c35df6e5f426996429c347067493ca227e559450",
+        "hostSHA256": "4fba6ff8b9de03af8867a546c35df6e5f426996429c347067493ca227e559450",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/ChildFieldNativeFixture.swift": {
+        "sourceSHA256": "fdc89c52682e69fa86d0399703fb02d2000e8e9ee27180cb6e0d282e779a3b69",
+        "hostSHA256": "fdc89c52682e69fa86d0399703fb02d2000e8e9ee27180cb6e0d282e779a3b69",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/Store.swift": {
+        "sourceSHA256": "160264180b8241a9b4dffb7a102728211e1b9ceb4c189f0dfddfcaa5e8493482",
+        "hostSHA256": "6c197229481afccdd971db0861080ddb073ae2dfc75bc6372718111a933fec78",
+        "matchesDocumentedIsolation": true
+      },
+      "TaskfoldUITests/AudioCommentUITests.swift": {
+        "sourceSHA256": "b503c0fcb7391f485ad1dac0fb2fdafdf55f07cb2cdbae6a4f2b9ac46adbe37d",
+        "hostSHA256": "b503c0fcb7391f485ad1dac0fb2fdafdf55f07cb2cdbae6a4f2b9ac46adbe37d",
+        "matchesDocumentedIsolation": true
+      }
+    },
+    "appBinariesSHA256": {
+      "Contents/MacOS/Taskfold": "a9921f7138d241346e3bf76086709a68f765b81e8a186fe9823fbcc33acc8bd2",
+      "Contents/MacOS/Taskfold.debug.dylib": "0a8ebde6718e6e7a3098d230ac941ff132da6b822e38fc8a1c9b94e3d031a68b"
+    }
+  },
+  "phoneRuntime": {
+    "sourceRepository": "TaskFold-iOS",
+    "selector": "testChildMappingSQLNativeSearchColdReviewSaveAndOriginal",
+    "phase": "phone-v9",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "deviceName": "iPhone 18 Pro",
+      "modelName": "iPhone 18 Pro",
+      "osBuildNumber": "24A434",
+      "osVersion": "27.0",
+      "platform": "iOS Simulator"
+    },
+    "archiveSHA256": "ff4f78fab2512b466b959d7cb94d6ec31be1e5e9a736d3caf4cbc2d26423b8e9",
+    "archiveBytes": 9809,
+    "fixtureRemoved": true
+  },
+  "macNativeRuntimeAccepted": false,
+  "ipadNativeRuntimeAccepted": false,
+  "hostedChanges": false,
+  "normalUseEnabled": false,
+  "remaining": "Mac/iPad, new/retired identities, changed lifecycles, account/access/privacy, keyboard/VoiceOver/largest text/large library and other Files destinations. Broader storage/custody work stays open.",
+  "channelUnitTests": 5,
+  "sqlChannelChecks": [
+    "live native target discovery uses actual SQL",
+    "real scoped comparison through file channel",
+    "real mapped preview",
+    "lost reply occurs after actual committed save",
+    "status recovery and exact request replay with write gates closed",
+    "committed root published before response becomes visible",
+    "original canonical bytes survive channel unchanged",
+    "foreign scope and arbitrary SQL routes fail closed",
+    "stale channel nonce rejected",
+    "one receipt after replay and refused requests",
+    "one neutral reconciliation event from real transaction"
+  ],
+  "sqlFixtureRemoved": true
+}

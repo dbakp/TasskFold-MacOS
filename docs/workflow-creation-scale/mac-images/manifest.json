@@ -1,0 +1,17 @@
+[
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "exportedFileName": "9034C529-7237-422F-BDC6-34734EAC51A4.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Cancellable workflow preparation_0_6D3CBF8B-AE0D-431D-9495-AF6E9DF96626.png",
+        "timestamp": 1793053146.123
+      }
+    ],
+    "testIdentifier": "SharedHeadingNativeTests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry"
+  }
+]

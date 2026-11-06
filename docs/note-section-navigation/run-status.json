@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-06",
+  "currentIPhoneNormalNavigationAccepted": true,
+  "currentIPhoneLargestReaderAccepted": true,
+  "currentOwnPlatformRuntimeAccepted": false,
+  "owningBuildAndSignatureAccepted": true,
+  "normalAppsReplaced": false,
+  "phoneInstallationDeferred": true,
+  "currentCleanup": "current-cleanup.json",
+  "noKeychainOrUserDataCleanup": true
+}

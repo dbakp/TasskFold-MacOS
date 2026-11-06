@@ -1,0 +1,599 @@
+{
+  "capturedOn": "2026-11-03",
+  "scope": "Live catalog-only column and access-policy definitions; no task records. Synthetic fixture supplies Auth and representative dependencies.",
+  "tables": [
+    {
+      "table_name": "labels",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": "gen_random_uuid()"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "color",
+          "type": "text",
+          "not_null": true,
+          "default_expression": "'#3b82f6'::text"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true,
+          "default_expression": "now()"
+        }
+      ]
+    },
+    {
+      "table_name": "project_collaborators",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": "gen_random_uuid()"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "invited_email",
+          "type": "text",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "role",
+          "type": "collaborator_role",
+          "not_null": true,
+          "default_expression": "'collaborator'::collaborator_role"
+        },
+        {
+          "name": "status",
+          "type": "invitation_status",
+          "not_null": true,
+          "default_expression": "'pending'::invitation_status"
+        },
+        {
+          "name": "invited_by",
+          "type": "uuid",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true,
+          "default_expression": "now()"
+        },
+        {
+          "name": "accepted_at",
+          "type": "timestamp with time zone",
+          "not_null": false,
+          "default_expression": null
+        }
+      ]
+    },
+    {
+      "table_name": "projects",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": "gen_random_uuid()"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": "auth.uid()"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "color",
+          "type": "text",
+          "not_null": true,
+          "default_expression": "'#3b82f6'::text"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true,
+          "default_expression": "now()"
+        },
+        {
+          "name": "order_index",
+          "type": "integer",
+          "not_null": true,
+          "default_expression": "0"
+        },
+        {
+          "name": "source_metadata",
+          "type": "jsonb",
+          "not_null": true,
+          "default_expression": "'{}'::jsonb"
+        },
+        {
+          "name": "parent_id",
+          "type": "uuid",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "is_archived",
+          "type": "boolean",
+          "not_null": true,
+          "default_expression": "false"
+        },
+        {
+          "name": "ancestor_archived",
+          "type": "boolean",
+          "not_null": true,
+          "default_expression": "false"
+        }
+      ]
+    },
+    {
+      "table_name": "sections",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": "gen_random_uuid()"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "order_index",
+          "type": "integer",
+          "not_null": true,
+          "default_expression": "0"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true,
+          "default_expression": "now()"
+        }
+      ]
+    },
+    {
+      "table_name": "tasks",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": "gen_random_uuid()"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "completed",
+          "type": "boolean",
+          "not_null": true,
+          "default_expression": "false"
+        },
+        {
+          "name": "priority",
+          "type": "integer",
+          "not_null": true,
+          "default_expression": "4"
+        },
+        {
+          "name": "due_date",
+          "type": "date",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "due_time",
+          "type": "time without time zone",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "section_id",
+          "type": "uuid",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "labels",
+          "type": "text[]",
+          "not_null": false,
+          "default_expression": "'{}'::text[]"
+        },
+        {
+          "name": "subtasks",
+          "type": "jsonb",
+          "not_null": false,
+          "default_expression": "'[]'::jsonb"
+        },
+        {
+          "name": "reminders",
+          "type": "text[]",
+          "not_null": false,
+          "default_expression": "'{}'::text[]"
+        },
+        {
+          "name": "attachments",
+          "type": "jsonb",
+          "not_null": false,
+          "default_expression": "'[]'::jsonb"
+        },
+        {
+          "name": "comments",
+          "type": "jsonb",
+          "not_null": false,
+          "default_expression": "'[]'::jsonb"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "not_null": true,
+          "default_expression": "now()"
+        },
+        {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "recurrence_pattern",
+          "type": "jsonb",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "is_recurring",
+          "type": "boolean",
+          "not_null": true,
+          "default_expression": "false"
+        },
+        {
+          "name": "recurrence_parent_id",
+          "type": "uuid",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "recurrence_end_date",
+          "type": "date",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "notification_sent_at",
+          "type": "timestamp with time zone",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "assigned_to",
+          "type": "uuid",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "deadline_date",
+          "type": "date",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "duration_minutes",
+          "type": "integer",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "time_zone",
+          "type": "text",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "reminder_specs",
+          "type": "jsonb",
+          "not_null": true,
+          "default_expression": "'[]'::jsonb"
+        },
+        {
+          "name": "source_metadata",
+          "type": "jsonb",
+          "not_null": true,
+          "default_expression": "'{}'::jsonb"
+        },
+        {
+          "name": "scheduled_at",
+          "type": "timestamp with time zone",
+          "not_null": false,
+          "default_expression": null
+        },
+        {
+          "name": "completion_version",
+          "type": "bigint",
+          "not_null": true,
+          "default_expression": "0"
+        },
+        {
+          "name": "task_generation",
+          "type": "uuid",
+          "not_null": false,
+          "default_expression": null
+        }
+      ]
+    },
+    {
+      "table_name": "view_orders",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "not_null": true,
+          "default_expression": "auth.uid()"
+        },
+        {
+          "name": "id",
+          "type": "text",
+          "not_null": true,
+          "default_expression": null
+        },
+        {
+          "name": "ids",
+          "type": "jsonb",
+          "not_null": true,
+          "default_expression": "'[]'::jsonb"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "not_null": true,
+          "default_expression": "now()"
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "labels",
+      "policyname": "Users can create their own labels",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "labels",
+      "policyname": "Users can delete their own labels",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "labels",
+      "policyname": "Users can update their own labels",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "labels",
+      "policyname": "Users can view their own labels",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "projects",
+      "policyname": "projects_delete_owner",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "projects",
+      "policyname": "projects_insert_owner",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "projects",
+      "policyname": "projects_select_access",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((user_id = ( SELECT auth.uid() AS uid)) OR has_project_access(( SELECT auth.uid() AS uid), id))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "projects",
+      "policyname": "projects_update_access",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "has_project_access(( SELECT auth.uid() AS uid), id)",
+      "with_check": "has_project_access(( SELECT auth.uid() AS uid), id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sections",
+      "policyname": "Users can create sections in accessible projects",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((auth.uid() = user_id) AND has_project_access(auth.uid(), project_id))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sections",
+      "policyname": "Users can delete accessible sections",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "has_project_access(( SELECT auth.uid() AS uid), project_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sections",
+      "policyname": "Users can update accessible sections",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "has_project_access(( SELECT auth.uid() AS uid), project_id)",
+      "with_check": "has_project_access(( SELECT auth.uid() AS uid), project_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sections",
+      "policyname": "Users can view accessible sections",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "has_project_access(( SELECT auth.uid() AS uid), project_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tasks",
+      "policyname": "Users can create accessible tasks",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((auth.uid() = user_id) AND ((project_id IS NULL) OR has_project_access(auth.uid(), project_id)))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tasks",
+      "policyname": "Users can delete accessible tasks",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(((project_id IS NULL) AND (user_id = ( SELECT auth.uid() AS uid))) OR has_project_access(( SELECT auth.uid() AS uid), project_id))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tasks",
+      "policyname": "Users can update accessible tasks",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "(((project_id IS NULL) AND (user_id = ( SELECT auth.uid() AS uid))) OR has_project_access(( SELECT auth.uid() AS uid), project_id))",
+      "with_check": "(((project_id IS NULL) AND (user_id = ( SELECT auth.uid() AS uid))) OR has_project_access(( SELECT auth.uid() AS uid), project_id))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tasks",
+      "policyname": "Users can view accessible tasks",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(((project_id IS NULL) AND (user_id = ( SELECT auth.uid() AS uid))) OR has_project_access(( SELECT auth.uid() AS uid), project_id))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "view_orders",
+      "policyname": "account_owner",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "with_check": "(user_id = ( SELECT auth.uid() AS uid))"
+    }
+  ],
+  "projectAccess": "CREATE OR REPLACE FUNCTION public.has_project_access(_user_id uuid, _project_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  SELECT EXISTS (\n    SELECT 1 FROM public.projects WHERE id = _project_id AND user_id = _user_id\n    UNION\n    SELECT 1 FROM public.project_collaborators \n    WHERE project_id = _project_id AND user_id = _user_id AND status = 'accepted'\n  )\n$function$\n",
+  "enumTypes": {
+    "collaborator_role": [
+      "owner",
+      "collaborator"
+    ],
+    "invitation_status": [
+      "pending",
+      "accepted",
+      "declined"
+    ]
+  }
+}

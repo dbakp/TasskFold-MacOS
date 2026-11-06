@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "date": "2026-11-01",
+  "method": "Direct native computer use with actual controls; not XCTest",
+  "sourceHead": "6d6ad40fcdb2ab8047f727f8444aca8fdf7549f2",
+  "sourceSHA256": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": "6a43dbb03c5b027a83d402eabe042994db42e180b9f1e4a59770511cc6fd64a9",
+    "Taskfold/ChildFieldNativeFixture.swift": "d7000a01d6c9041c8b22e876818b571f2b5a2465a19bac16c0a99bfc7b57e228",
+    "Taskfold/ChildRepairNativeFixture.swift": "a16461663f66e31b4ffd98730150adc6588f1145fd2ea711e21301f69cbfd91b",
+    "Taskfold/Core/ChildTaskRepair.swift": "c0e65dcf37247cec7e49aae90f37ba87c797177cbb07840088b14984f0e9599d",
+    "Taskfold/Views/ChildTaskRepairView.swift": "f5ddf3996537e8648c4176ec318ccf8a9f5c4944d3d39b2b8393721ca3b5f09b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "188c2ccca3942642327725c29efaa21d6148546352017f526b6295c3efb5ca0e"
+  },
+  "appSHA256": "cf338dfdfed8847bdab4c05f8a883fa16dc6a5f6af36fc57b1a3257c719da2fd",
+  "debugDylibSHA256": "fa456b0e3edaf96804812dab0877a93cd8554e16399ce901e93d19d223ba3019",
+  "sameProductThroughout": true,
+  "scope": "Personal same-Inbox synthetic saved-copy workflow at normal Mac text size",
+  "checks": {
+    "compareThreeCopies": true,
+    "storedInstructionsVisible": true,
+    "chooseStoredCopy": true,
+    "undoChoice": true,
+    "reselect": true,
+    "fullProcessQuitBeforeColdDraft": true,
+    "coldDraftRestoresChoiceAndPreview": true,
+    "explicitSaveConfirmation": true,
+    "oneWriteWithCompleteOriginals": true,
+    "coldSavedConfirmation": true,
+    "actualNativeOriginalExport": true,
+    "exactExportedArchiveBytes": true
+  },
+  "limits": [
+    "Synthetic file-backed HTTP peer, not hosted or genuine-account acceptance",
+    "Other Mac hierarchy/keyboard/inspector/move workflows, full largest-text recovery and speech remain open"
+  ],
+  "observationInterruption": {
+    "observed": "Post-quit computer-use observation was followed by an isolated process without fixture arguments; its sample showed the ordinary app shell.",
+    "resolution": "Closed only that owned no-argument process, relaunched the unchanged product with verified fixture arguments and no reset, then verified cold confirmation/export.",
+    "appHangEstablished": false
+  },
+  "finishedWithOwnedAppFullyQuit": true
+}

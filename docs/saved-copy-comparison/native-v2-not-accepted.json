@@ -1,0 +1,10 @@
+{
+  "accepted": false,
+  "cause": "Comparison and snapshot notes opened; Stored subtask instructions could not be reached. Captures exposed a truncated heading and oversized shared list row. Periodic snapshot refresh could also discard the comparison. Fixed row structure/wrapping and fresh-authorized refresh with retained expansion; native acceptance remains separate.",
+  "summary": {
+    "totalTestCount": 1,
+    "passedTests": 0,
+    "failedTests": 1,
+    "skippedTests": 0
+  }
+}

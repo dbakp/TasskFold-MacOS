@@ -1,0 +1,610 @@
+{
+  "date": "2026-10-23",
+  "repository": "TasskFold-MacOS",
+  "scope": "Genuine hosted email management and server-session renewal; no native UI/provider acceptance",
+  "hosted": {
+    "date": "2026-10-23T18:46:30.163Z",
+    "project": "jbtrwmkvppnfzkdriayc",
+    "branchId": "64e0677d-c502-4021-8a20-81a2974cfc50",
+    "checks": {
+      "nonempty saved task snapshot recorded": true,
+      "actual Auth and hosted list succeed": true,
+      "successful metadata is not cached": true,
+      "old native protocol refused": true,
+      "unknown management field refused": true,
+      "unreviewed domain refused": true,
+      "hosted setup creates owner bound route": true,
+      "response projects no private alias hash": true,
+      "exact setup retry keeps route identity": true,
+      "exact retry leaves complete row unchanged": true,
+      "changed setup conflicts": true,
+      "other real account sees no owner routes": true,
+      "other real account cannot pause route": true,
+      "other real account cannot replay owner setup": true,
+      "actual expired server session refuses mutation": true,
+      "expired session leaves full route row unchanged": true,
+      "wrong password refuses renewal": true,
+      "same account gets new actual session": true,
+      "renewed account retries original setup": true,
+      "renewal retry preserves full route fingerprint": true,
+      "pause after renewal persists": true,
+      "uncertain pause retry is idempotent": true,
+      "stale resume revision refused": true,
+      "reviewed resume persists": true,
+      "rotation revokes original and returns replacement": true,
+      "rotation retry keeps one replacement": true,
+      "two retained route identities after rotation": true,
+      "terminal revocation persists": true,
+      "revoked route cannot resume": true,
+      "cancel before create persists": true,
+      "discarded setup cannot be created": true,
+      "old session bearer remains refused": true,
+      "all hosted management preserves task snapshot": true,
+      "native cannot bypass gateway with direct RPC": true,
+      "native cannot attest provider delivery": true,
+      "no native delivery task created": true
+    },
+    "sourceHashes": {
+      "supabase/functions/email-routes/handler.ts": "dd8cf34e3c33eb6d997f03d446a9795e8e90af69932526d2b8d69d5147a8e98c",
+      "supabase/functions/email-routes/handler_test.ts": "6b6b62f39c762c5a6ad144bd6eef0b7b2a233f592b728e4930daa536276954ce",
+      "supabase/functions/email-routes/index.ts": "ebecf8e7bbd5ffd7320cde6dc4b76e16abf1aa26630553afd2fe82076fbb3b77",
+      "supabase/functions/_shared/automation-admission.ts": "8d8eeb3965ed33c20892b42772a3e103c8a40464c7769c9be68eadaaad735865",
+      "supabase/functions/_shared/automation-admission_test.ts": "1478d6f54d659b909f25e5c12d77b73aa8f0f920f13f4747b376586d79c789e6",
+      "supabase/functions/_shared/email-alias.ts": "91a8a40a5cb15d03eb990d31dc7f05b6d5f2f5785831b86c20961a75de691008",
+      "supabase/functions/_shared/email-alias_test.ts": "dcb6fccdadc7ce0dc86a38af779996a97cbda5c9e0053a7c580c2c500de1e8fc",
+      "supabase/functions/_shared/email-content.ts": "00fa101257242e674bc797f7078d923eb30e64c7995ef41133821337078c2107",
+      "supabase/functions/_shared/email-content_test.ts": "a15e6c231faa1315dd4bd411435a0e63384597f9962d14daf998e86efe82eabe",
+      "supabase/migrations/20261023150729_email_intake_journal.sql": "5cb06c4aed1708168d03a5339fdd07c1feb068c8b3974f3a1393c8cfe3ef27c3",
+      "supabase/migrations/20261023162006_email_domain_binding.sql": "b2413f116b40243323f4873c8fd6e72a17271f9332b2d748ad12c17e7d0535f0",
+      "supabase/migrations/20261023182542_email_inactive_maintenance.sql": "340281d7368f06efc207e2c7cee484c3c380381bd12970473bd298e17182d354",
+      "Scripts/Diagnostics/test-email-routes-hosted.mjs": "8bc28af074fc5e08ac9cb693bb03173ccd8d7537461efad8f8fb3c63df78b224"
+    },
+    "mainChanged": false,
+    "realTasksChanged": 0,
+    "providerDeliveryClaimed": false,
+    "nativeUIClaimed": false,
+    "cleanup": {
+      "users": true,
+      "function": true,
+      "environment": true,
+      "files": true,
+      "configuration": true
+    },
+    "phase": "complete",
+    "advisors": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.profiles` has a row level security policy `Users can view their own profile` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "profiles",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_profiles_Users can view their own profile"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.profiles` has a row level security policy `Users can insert their own profile` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "profiles",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_profiles_Users can insert their own profile"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.labels` has a row level security policy `Users can update their own labels` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "labels",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_labels_Users can update their own labels"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.profiles` has a row level security policy `Users can update their own profile` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "profiles",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_profiles_Users can update their own profile"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.profiles` has a row level security policy `Users can delete their own profile` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "profiles",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_profiles_Users can delete their own profile"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.labels` has a row level security policy `Users can view their own labels` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "labels",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_labels_Users can view their own labels"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.labels` has a row level security policy `Users can create their own labels` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "labels",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_labels_Users can create their own labels"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.labels` has a row level security policy `Users can delete their own labels` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "labels",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_labels_Users can delete their own labels"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `Users can view accessible sections` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_Users can view accessible sections"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `Users can create sections in accessible projects` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_Users can create sections in accessible projects"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `Users can update accessible sections` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_Users can update accessible sections"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `Users can delete accessible sections` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_Users can delete accessible sections"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `Users can view accessible tasks` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_Users can view accessible tasks"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `Users can create accessible tasks` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_Users can create accessible tasks"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `Users can update accessible tasks` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_Users can update accessible tasks"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `Users can delete accessible tasks` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_Users can delete accessible tasks"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `Owners can invite` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_Owners can invite"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `Manage collaborations` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_Manage collaborations"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `Remove collaborations` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_Remove collaborations"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `View collaborations` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_View collaborations"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `projects_select_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_projects_select_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `projects_update_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_projects_update_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `projects_delete_owner` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_projects_delete_owner"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `projects_insert_owner` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_projects_insert_owner"
+      }
+    ],
+    "passed": true
+  },
+  "cleanup": {
+    "branch_id": "64e0677d-c502-4021-8a20-81a2974cfc50",
+    "project": "jbtrwmkvppnfzkdriayc",
+    "final_metadata": {
+      "cancellations": 0,
+      "enabled": false,
+      "routes": 0,
+      "tasks": 0,
+      "users": 0
+    },
+    "branch_absent": true,
+    "private_connection_directory_removed": true,
+    "main_still_present": true
+  },
+  "prepared_schema": {
+    "date": "2026-10-23T18:40:05.677Z",
+    "project": "jbtrwmkvppnfzkdriayc",
+    "branchId": "64e0677d-c502-4021-8a20-81a2974cfc50",
+    "migrationHashes": {
+      "20261006022339_guard_task_deletion.sql": "82aff473d87e164b95940c4a10cd09c1442114ef51dbcd210d3a71406a423738",
+      "20261006031648_completion_revision.sql": "87de44e29abe0ea5a6a8502f2a96ced7f4ce4ef3636530b92678bf502b0f6c8e",
+      "20261006073641_durable_focus_session.sql": "c0ff0c6df769b7eeac5a2c753a0f1f14cec52396793a650ce64871f4922ab338",
+      "20261006075121_focus_session_resume_access.sql": "655f26e54aefce2b56e11ed73ddaae9f57460425c12244e6e4e60050f69d68a0",
+      "20261006100647_task_activity_history.sql": "556ca29bfd1d3d4bb8049143926c99d45c0ff771a7ae98fe6854a24096354f17",
+      "20261006100920_task_activity_cascade_authorization.sql": "7e9befea4143b57d56f75e2c77219e7ce3dd75be835fc10064a5537b3e06aa50",
+      "20261006112647_reminder_device_bindings.sql": "2b4e8120b09d7468a984a66f058ef42540212f48811d26ec7bf7ffba674728c4",
+      "20261006112835_reminder_device_direct_access_policy.sql": "5f80eae25c65d387d6df75620087a72431ac4cefa7b95abb7d423fb085dc049d",
+      "20261006120049_remote_reminder_jobs.sql": "e48b79ff0208f92832e1a1663bf9a1b343cffe76b6f5299b93eb4df784222d9b",
+      "20261006120520_reminder_queue_session_privacy.sql": "dc0bb2ff0313750a62eee41fbcf10fb6a860cc85ce339386d54cdfbb0d95e8d5",
+      "20261006124947_task_generations_and_reminder_eligibility.sql": "60a04a2abeeca6b0feb05f8446b63a39cf98d8567e66b78429bcecceb9849748",
+      "20261006134519_reminder_provider_retry_delay.sql": "b7cf993edfb455b72ef414c1c05e1a71e197f2381eb84d2eb953e256da143bdb",
+      "20261006134836_reminder_provider_payload_bounds.sql": "ae9fd33031362988858d8835bff7c871eff80aa5eeb558761ee222edd0453e60",
+      "20261006143713_reminder_worker_cursor.sql": "a8c9490ad27f5a2bba2008fc26c1a988c43b1fdd9e058690e0d503654680c26a",
+      "20261006143800_reminder_sweep_direct_access_policy.sql": "8d05d57bacf60a7b73f5828202c2d6240ba6add6124f7ac9e6f2966d638cee80",
+      "20261006225340_calendar_reminder_occurrences.sql": "a508e2a21e0f13f4c7d357d08e70337159ced77dc5b05b06f138185a71264a05",
+      "20261006225450_calendar_reminder_projection_aliases.sql": "c600434f840494e489f54e482946d5969861095eae7fd840541ef51c1798bc38",
+      "20261006225915_calendar_reminder_projection_performance.sql": "2b15efbb4c0aa8a8eb9753cdda1acfbb7d2add00d29625d8ff042c31c51dad40",
+      "20261006230025_calendar_reminder_history_counts.sql": "410f00fd9514f14e159ed022f0c95c46710efb30462b416b9268a9ff891111ed",
+      "20261006230525_calendar_reminder_validation_budget.sql": "f09343aafd82417b58ed675aa41fcace3ba2ac4a0ad281853abbaebf468a7423",
+      "20261006233453_calendar_reminder_null_bounds.sql": "ef36ed948345a727b70273432389160164f4ff4c04bc641a33d59a27f22c5b48",
+      "20261007055145_reminder_calendar_cohort_budget.sql": "d612b6426ee386c67e177a40fa2eb6032eb32bf13832bcde121070918e0b2b23",
+      "20261007065249_reminder_snooze_preferences.sql": "687ae845f6be8c50abda466d17ce94f318b6b6944a315ba31fdf099a116f1a20",
+      "20261007101832_automatic_reminder_preferences.sql": "f68c469120e046dae8778f04306e7440085adfa939196ca09b013c9ea04a3f0c",
+      "20261007130553_reminder_delivery_authority.sql": "36f5bc4468c3fa096c54c15c02de51c0dd10d67b9593777c236fac34490024d6",
+      "20261007131151_private_reminder_availability.sql": "1226eacce5029edcacb69b51c6538b2d4f6c61afd5ad6329a91c8589402f3e6b",
+      "20261008053217_date_phrase_preferences.sql": "dd6deb3d08789c2b725af4bd90f808deb6466b9240306c192a08fd3e2ceb7042",
+      "20261011100214_atomic_organization_order.sql": "9d403db51e8980ffadcc63e59a1ac415d5ff736ab3eec1f4962eba04727f98e0",
+      "20261020174132_project_workflow_foundation.sql": "4a5318d040a080d0fe7860b46c13f5a757180bc2411cc5dbcd115f898dbb3588",
+      "20261020194217_subtask_structure_review.sql": "97ec0cebfa7acf8d2cd6e2d05910efbded309fd11924f699833bf05c39cddafb",
+      "20261020204903_template_edit_review.sql": "833b8e1cecc4e1e568ae34612bd31bd951fba7c33d3978cdef48ded43b28bf2c",
+      "20261020205307_template_review_error_response.sql": "289c4e2a11e626bad7c0907d2ed9ecd030e160af3116bba8d3c53d2f7881a4b9",
+      "20261020221933_productivity_goals_review.sql": "3a4d01d71e002caf7dd4e1f4853cbddb1d7777b87eea2b6597f61d5e37d154d1",
+      "20261020231600_monthly_date_sets.sql": "989202c78e552c741ccfeef48ea8c8742690fb925093854489bc599dd8d5ea69",
+      "20261021020423_shared_comments_and_mentions.sql": "fbd1adba72223942f938f83d2b2281e3774c1494c2d934184124aacf38110f5d",
+      "20261021023452_conversation_inbox_summary.sql": "9a01936889feee4c7006d14d38f6a0a3f9c94e0e8f1c3c8b4c830da7e79ad8b7",
+      "20261021122959_assignment_provenance.sql": "aa456e8a973ce03c04c48ddbaa76fe8ac09b1878d23a672b03912d5e33ed3c1f",
+      "20261022145128_private_location_handoffs.sql": "a987e8a30d0c8c647fcde039141bb0983ed3e6a72d6ac1c6f52298c3c3803e07",
+      "20261022193804_account_removal_service.sql": "93dd54c808919926a6546ba59d696086234b91b80cc728136e8fcd4d6fc5474c",
+      "20261022203333_account_removal_status_proofs.sql": "e96fa9f54e7ab8969a8e5c77b82dcad49791a1fd8ec99b875a4476c468113a39",
+      "20261022212224_automation_access.sql": "fa99b465eb59908864591ba05613d4b660cd0302df1a60565a400ea880b50f23",
+      "20261022215836_automation_recurrence_plan.sql": "519093c056e7267cfb3d33dce69fd3b4e6dc969b4783b7dc6dd19ef324bd45bb",
+      "20261022220821_automation_task_access.sql": "876db26d2fa60d6b8b651879fab7d72faedcfb66d7ff272e1e9cfb177122d602",
+      "20261022222726_automation_task_writes.sql": "b121e8aa1a4525fdbfaa7f7903abbc44a2f7cc6d5a593f7f185d71424af9dd59",
+      "20261022225439_automation_task_mutations.sql": "639d3d16283892c205f4cb3af8e2ed53db2847d0ffdab986675e9e2e6a54227e",
+      "20261023002825_automation_enrollment_cancellation.sql": "4ee55a85d54a627900239e5e1a6a656cc75633da84dce9b754682482124b7cf1",
+      "20261023010559_automation_destinations.sql": "141aa63e4e0cb593cbf56c96c6975f7eb4a53cbcc38d2f3449e7c2c73888ec7b",
+      "20261023011251_automation_portable_reminders.sql": "648e2e32944d91bbea245e86ae0bddcf9f7646dec3181a20a542a0fbcad46ce6",
+      "20261023012417_automation_ingress_limits.sql": "d13ec1c00c09d509c9a23283480c6cf0a88dc67a3cba5e0321fed11396f22469",
+      "20261023031416_automation_management_deadlines.sql": "9810ed952870ede4bcc33b613e29263c3f8f921b085ca18b162f1cecf9bb4178",
+      "20261023050732_webhook_subscriptions.sql": "7e0011738fbcaa92fbb5e21473a1c96bde92450f300af81c1a5c60f7c1f4a3d1",
+      "20261023054251_webhook_outbox.sql": "252fac8c4b53b13491c7097cdcc4064c7af0fffd0e57081376b70cb01251264c",
+      "20261023074744_webhook_scheduler.sql": "3c6fb5c9adbe1795a4fcf7e11e3257d097ac6c7f4e3cd8c3d2648164af962bb3",
+      "20261023150729_email_intake_journal.sql": "5cb06c4aed1708168d03a5339fdd07c1feb068c8b3974f3a1393c8cfe3ef27c3",
+      "20261023162006_email_domain_binding.sql": "b2413f116b40243323f4873c8fd6e72a17271f9332b2d748ad12c17e7d0535f0",
+      "20261023182542_email_inactive_maintenance.sql": "340281d7368f06efc207e2c7cee484c3c380381bd12970473bd298e17182d354"
+    },
+    "installed": {
+      "native_worker_denied": true,
+      "no_reminder_credentials": true,
+      "outbox_installed": true,
+      "receiver_installed": true,
+      "reminder_worker_disabled": true
+    },
+    "realTasksChanged": 0,
+    "mainChanged": false
+  },
+  "schema_note": "Common email migrations independently match each repository. No-data preview uses the existing native acceptance base bridge; not a hosted production rollout/migration test.",
+  "advisor_review": {
+    "email_findings": 0,
+    "other_preview_findings": 24
+  },
+  "release_behavior_changed": false,
+  "limits": [
+    "Password Auth renewal after controlled auth.sessions.not_after expiry, not natural wall-clock JWT expiry",
+    "Host management HTTP/SQL only; no native sheets/process relaunch/real vault or Mac runtime in this milestone",
+    "Raw alias capability never sent to gateway; no real provider configured or inbound email endpoint deployed",
+    "Provider signatures/MIME/sender/envelope-recipient and stable receipt/time attestation remain",
+    "Source links, additional verified senders and hosted retention configuration remain",
+    "All user release deferrals and the full advanced-team/wearable Px scope remain active"
+  ]
+}

@@ -1,0 +1,20 @@
+# Shared-file refresh handoff
+
+Reviewed 2 November 2026. Two production fixes, independently owned by each app:
+
+- Share, Check status and Stop now use the same publication-confirmed handoff. The file model invokes it only after validating and durably storing a published receipt. Stop can discover an already committed publication. The Store rechecks the original account/workspace/session request before using its existing sync pipeline. Local journal refresh stays local; cancelled, malformed, stale-scope and failed-journal-write replies cannot trigger the handoff. No attachment is fabricated from the receipt.
+- Shared files has an explicit Refresh shared files control, including read-only views. It uses existing workspace synchronization and is disabled during sync, upload activity or download.
+- A queued legacy attachment edit previously replaced the whole displayed list on a workspace read, hiding newly remote-published files. Snapshot read projection now applies the captured attachment delta beside remote additions, as it already did for subtasks. It does not rewrite the queued mutation or its baseline, change admission/delivery checks or grant attachment-write permission.
+
+The regression first failed with only the local attachment visible. With the fix, the remote publication remains visible, the intended local removal/addition and unsent title are preserved, the original request stays unchanged and the snapshot round-trips through cold decoding. Each repo passes 179 focused Core tests, including three new cases covering callback durability and retained private recovery for all three actions, stopped/invalid/stale/write-failed rejection and the queued-attachment display merge. Actual offline Store-refresh failure acceptance remains open.
+
+Actual ordinary workspace sync after publication is still unaccepted: the isolated native provider fixture intentionally pauses broad sync. Prior real local provider/native publication evidence remains valid for its recorded source and scope; current native rechecks are recorded separately. This batch does not claim genuine hosted Auth/S3, actual account or multiple-window transitions, Mac runtime, speech/largest-text or full migration acceptance. No schema/service deployment, scheduler or normal-use feature gate change. All user deferrals remain unchanged. Curated checkpoint/substep counts are unchanged.
+
+The current signed phone build passes the real local provider publication/lost-reply/Check status/cold/explicit-clear recheck (one native case plus twelve independent driver assertions). The original bytes and single server attachment agree, maintenance preserves the publication, and the driver removes all owned resources and disposable configuration and restores the phone Simulator. This does not establish ordinary workspace sync.
+
+The current iPad read-only viewer/cold/verified-download/access-withdrawal/Close case also passes without queued task changes. Its retained screenshot shows the explicit Refresh shared files control, readable notice and file row in the existing sheet styling. This establishes the observed layout and existing read-only journey, not the refresh action’s full workspace transport.
+
+
+### 2 November 2026 · Account-cache oracle correction
+
+An audit found that the iOS `audioTaskRows` helper compared an unrelated generic `ui-testing.json` fixture cache while the active TeamEditor account uses its UUID cache filename. Earlier assertions made through that helper do not establish active-task preservation. Independent UI, exact-byte and encrypted-vault proofs keep their original scope. The helper now selects the explicit account cache without fallback; corrected phone/iPad reacceptance is tracked in [the current audit](../task-file-workspace-sync/oracle-audit.json).

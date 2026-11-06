@@ -11,6 +11,23 @@ final class QuickPlanningCompletionTests: XCTestCase {
         let chosen = try XCTUnwrap(result.choosing(option, in: text))
         return QuickEntry(chosen.text, now: now, calendar: calendar, task: task)
     }
+    func testPlanningSuggestionUsesResolvedDirectoryContext() throws {
+        let project = Record(["id": .string("work"), "name": .string("Client Work")])
+        let section = Record(["id": .string("ready"), "name": .string("Ready"), "project_id": .string("work")])
+        let context = QuickEntryContext(projects: [project], sections: [section])
+        let input = #"Review #"Client Work" /"Ready" tomorrow at 09:00 !30mb"#
+        let menu = QuickEntryCompletion(input, now: now, calendar: calendar, context: context)
+        let option = try XCTUnwrap(menu.options.first { $0.reference == "!30mb" })
+        XCTAssertEqual(option.detail, "!30mb")
+        let chosen = try XCTUnwrap(menu.choosing(option, in: input))
+        let parsed = QuickEntry(chosen.text, now: now, calendar: calendar, context: context)
+        XCTAssertEqual(parsed.updates["section_id"], .string("ready"))
+        XCTAssertFalse(parsed.warnings.contains { $0.contains("Choose a section") })
+
+        let unresolved = QuickEntryCompletion(#"Review #"Client Work" /"Unknown" tomorrow at 09:00 !30mb"#, now: now, calendar: calendar, context: context)
+        XCTAssertTrue(try XCTUnwrap(unresolved.options.first { $0.reference == "!30mb" }).detail.contains("Choose a section"))
+    }
+
     func testDatePreviewsMatchSavedCalendarDates() throws {
         let result = try choose("Call tom", phrase: "tomorrow")
         XCTAssertEqual(result.title, "Call"); XCTAssertEqual(result.updates["due_date"], .string("2026-10-07"))
@@ -138,5 +155,23 @@ final class QuickPlanningCompletionTests: XCTestCase {
         let planning = QuickEntryCompletion("Call tom", now: now, calendar: calendar, context: c)
         XCTAssertEqual(planning.options.first?.group, "due_date")
         XCTAssertEqual(planning.options.first?.reference, "tomorrow")
+    }
+}
+
+extension QuickPlanningCompletionTests {
+    func testCompoundPlanningChoicePreviewsTheWholePhraseAndRetainsLaterText() throws {
+        let input = "☎️ Review 1 week after next we p2"
+        let caret = (input as NSString).range(of: "next we").location + "next we".utf16.count
+        let result = menu(input, caret: caret)
+        let option = try XCTUnwrap(result.options.first { $0.reference == "1 week after next week" })
+        let chosen = try XCTUnwrap(result.choosing(option, in: input))
+        XCTAssertEqual(chosen.text, "☎️ Review 1 week after next week p2")
+        let parsed = QuickEntry(chosen.text, now: now, calendar: calendar)
+        XCTAssertEqual(parsed.title, "☎️ Review"); XCTAssertEqual(parsed.updates["due_date"], .string("2026-10-19")); XCTAssertEqual(parsed.updates["priority"], .number(2))
+        XCTAssertEqual(result.literalGroups, ["due_date"])
+        for text in ["Review 3651 days after next we", "Review 522 weeks after next we", "Review \\1 week after next we", "Review \"1 week after next we"] { XCTAssertTrue(menu(text).options.isEmpty, text) }
+        let missing = QuickPlanningCompletion("Review 1 week after next we", now: now, calendar: calendar, context: QuickEntryContext(datePreferences: nil))
+        XCTAssertFalse(missing.options.contains { QuickNaturalDateText.usesDatePreferences($0.reference) })
+        XCTAssertTrue(missing.options.contains { $0.reference == "1 week after next wednesday" }, "Independent weekday anchors remain usable without date preferences")
     }
 }

@@ -1,0 +1,26 @@
+Window: "Export", App: Taskfold Team Editor Test.
+0 sheet Description: export, ID: save-panel, Secondary Actions: Raise
+	1 split group
+		2 text Value: Where:, ID: whereLabel
+		3 pop up button Where:, Value: tmp, ID: where popup
+		4 disclosure triangle Description: show more options, Value: 0
+		5 text Value: Export As:, ID: nameFieldLabel
+		6 text field (settable) Value: Taskfold-original-2026-11-01.json, ID: saveAsNameTextField
+		7 button Cancel, ID: CancelButton
+		8 button Export, ID: OKButton
+9 menu bar
+	10 Taskfold Workflow Test
+	11 File
+	12 Edit
+	13 View
+	14 Fixture
+	15 Account
+	16 Task
+	17 Window
+	18 Help
+
+Selected text: ```
+Taskfold-original-2026-11-01
+```
+
+Note: Pay special attention to the content selected by the user. If the user asks a question or refers to the content they are looking at on-screen, they might be referring to the selected content (but they might be referring to something else that's visible, too).

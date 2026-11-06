@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-29",
+  "coreSelectedPassed": 200,
+  "coreSuites": [
+    "ChildTaskFieldCommandTests:36",
+    "ChildTaskRecordReadTests:21",
+    "SubtaskTreeTests:19",
+    "AccountTransportTests:55",
+    "BackupTests:69"
+  ],
+  "beforeFix": {
+    "discard": {
+      "tests": 2,
+      "failedAssertions": 2
+    },
+    "networkMessage": {
+      "tests": 1,
+      "failedAssertions": 1
+    }
+  },
+  "nativePhases": [
+    {
+      "phase": "phone",
+      "result": "Passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "phase": "phone-final",
+      "result": "Passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "runtimeWarnings": []
+    }
+  ],
+  "phaseDifferences": {
+    "phone": "Uncertain discard Cancel/confirm and cold state; before network message normalization. UI/removal code is final.",
+    "phone-final": "Final source original retry after lost reply and cold return. One write, two requests.",
+    "Mac": "Direct cua_repl: initial flat picker order, uncertain alert readable, Cancel kept original, explicit removal leaves one synthetic server write. After normalization: final plain-language message and Retry confirms one write/two requests. No simultaneous-window or account-switch alert acceptance."
+  },
+  "MacScreenshotsSHA256": {
+    "mac-alert.png": "5123180cf20f2ff1732df0f0f2524bfd5b39eb103299ec49aa507a6e5ca485d4",
+    "mac-removed.png": "108078032511e2d83049d34f517774eabc070c5c37cc34a3d6f12a974742f608",
+    "mac-unconfirmed-final.png": "6eaf99826da99bcfe6ef9c5f07d0e35fb7128d438bad3603298f7cfc29e15613",
+    "mac-retry-final.png": "5c1390f91d3358f80aff336d04c2c24f6880619e015411f41e544c7fd063d643"
+  },
+  "builds": {
+    "Mac": "TEST BUILD SUCCEEDED",
+    "Simulator": "TEST BUILD SUCCEEDED"
+  },
+  "strictDeepSignatures": [
+    "Mac app/runner",
+    "Simulator app/runner"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "89c5034febf1cceaab1e003d180dcd2de35ff5030ef0c09bc7911c95e1c3136e",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "0b981b2607418975832ff41075f515ba851453d1ab0b8890a24e04b7078d64dd",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "ccead695772067bf78b54037bf067684728b9a0c8b41ae3e75afba00a59da5f2",
+    "TaskfoldTests/ChildTaskFieldCommandTests.swift": "a7b74b14cf9944e925eb37940b5a3eadf49bd24dbd55fe394b58017dbd3620c8",
+    "TaskfoldTests/ChildTaskRecordReadTests.swift": "b96d766354e234b0b66bf5e5a1425dc34376048092c6838f42b6ecb260185816"
+  },
+  "ordinaryFlags": {
+    "TaskfoldChildRecordReadsEnabled": "absent",
+    "TaskfoldChildRecordWritesEnabled": "absent"
+  },
+  "scope": "Synthetic owner HTTP/key/accounts only; no hosted changes or genuine Keychain acceptance. Shuffled nested picker order is proved by decoder traversal and source binding, not a native nested menu walkthrough.",
+  "cleanup": {
+    "testApps": "closed",
+    "simulators": "both shutdown",
+    "VoiceOverRestored": {
+      "phone": 1,
+      "tablet": 0
+    },
+    "temporaryResults": "pruned after summaries/logs/screenshots archived; reusable hosts/caches retained"
+  }
+}

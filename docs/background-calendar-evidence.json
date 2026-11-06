@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-12",
+  "scope": "Main-queue delivery of system calendar/time notifications before SwiftUI onReceive, independently owned by both apps.",
+  "cause": {
+    "historicalResult": "ios-saved-capture-access-v1.xcresult",
+    "timestamp": "2026-10-12 00:00:00.077303+0200",
+    "thread": 2192190,
+    "stack": "background-calendar/historical-midnight-stack.txt",
+    "finding": "CoreFoundation __postAndResetMidnight \u2192 Notification.Subscription \u2192 SwiftUI ActionDispatcherSubscriber on a worker queue; project-menu timing was coincidental. Two leaf worker frames remain unresolved."
+  },
+  "fix": {
+    "iosSubscriptions": 10,
+    "macSubscriptions": 9,
+    "scheduler": "DispatchQueue.main",
+    "synchronousMacTerminationSaveProtocol": "Unchanged"
+  },
+  "before": {
+    "resultBundle": "background-calendar-ios-before-v1.xcresult",
+    "passed": 1,
+    "runtimeWarnings": 1,
+    "strictVerifierAccepted": false,
+    "note": "New fixture posts real Foundation day/zone notifications from an asserted non-main global queue. Functional assertions passed but runtime gate correctly rejected warning."
+  },
+  "after": {
+    "resultBundle": "background-calendar-ios-after-v1.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "strictVerifierAccepted": true,
+    "cases": [
+      "testBackgroundCalendarNotificationsRefreshOpenSavedList",
+      "testLandscapeCaptureControlsAndPersistenceDarkLargest"
+    ],
+    "mac": "Native saved-list walk: initial Copenhagen March 28 (1), background March 29 (4), background Honolulu March 28 (2), exact titles/context; Workspace unchanged; normal quit; no publishing-warning log records."
+  },
+  "builds": {
+    "iosDebug": "TEST BUILD SUCCEEDED",
+    "iosRelease": "BUILD SUCCEEDED",
+    "macDebug": "BUILD SUCCEEDED",
+    "macRelease": "BUILD SUCCEEDED",
+    "boundary": "Isolated stages; changed production/fixture sources match owned files. No distribution or installed Mac widget-host acceptance.",
+    "changedSourcesExactInStage": true,
+    "backgroundFixtureAbsentFromReleaseObjects": true
+  },
+  "preservation": {
+    "macCloudAccounts": {
+      "9a8bfc3d-42ec-4c89-8f1d-c830b2215152": true,
+      "316d6706-449c-4ab8-8480-db12e7d92642": true
+    },
+    "protectedDevices": {
+      "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705": {
+        "files": 43,
+        "exact": true
+      },
+      "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969": {
+        "files": 26,
+        "exact": true
+      }
+    },
+    "dedicatedPhoneCloudAccountSemanticExact": true
+  },
+  "limits": [
+    "Fixture clock changes only disposable ui-testing workspace evaluation; no system date/timezone change.",
+    "No real calendar-provider permission/delivery or EventKit-host acceptance inferred.",
+    "Retained clipping, spoken VoiceOver, NSTableView/AttributeGraph, notification-action, installed widget and distribution gates remain open.",
+    "Original warning remains in historical result; this follow-up resolves its identified delivery cause."
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/WidgetActionTestPanel.swift": "d10c2ab3b023511e292f560c5a2afdb59d81f7f63f378059ed541118e325a5de",
+    "Taskfold/Views/HourlyPlanner.swift": "75485372d6804a6dbe53cf47955a065c108522ba52eb347da82df97b12dce1ea",
+    "Taskfold/Views/RootView.swift": "2e946fbb27960f43e208f2d7db57604d8d0691c657caaad770eb057464715e0e"
+  },
+  "references": [
+    "https://developer.apple.com/documentation/combine/publisher/receive(on:options:)"
+  ]
+}

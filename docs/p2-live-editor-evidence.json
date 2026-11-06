@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-24",
+  "platform": "macOS",
+  "stage": "Live editor session capture and retained handoff",
+  "rank": 6,
+  "rankComplete": false,
+  "fullGoalComplete": false,
+  "sourceSHA256": {
+    "Taskfold/Core/Backups.swift": "8271668d2f72a8510c9ca48e56db9efbe05fb1808e289b88d48ba1f527eed69d",
+    "Taskfold/Core/Store.swift": "330cd2e6f4e1115f037bbf8ca0916888478da335a5ae2c842afa888f7b6ab5ea",
+    "Taskfold/Views/NoteFormattingView.swift": "699e3d89fb6d3630befaeb072fdc030948afa32b7666b790a25dbd2665ba9dd0",
+    "Taskfold/Views/SubtaskOrganizer.swift": "efbd36108de9f8019019a0af3f7a3bda87d10b5605b96bf443edea0cd10dcae0",
+    "TaskfoldTests/BackupTests.swift": "abbd07f87fc213d3107868353dc4e550ef5cf14ca6be77dee0035f8f046876df",
+    "Taskfold/Views/TaskInspector.swift": "4cab5cb15942b030cf0f99e712b06831b66c0a54177908ecc0327aa018b1f647",
+    "Taskfold/TaskfoldMacApp.swift": "1f5264f3985630917627946967de8fab75ea5bbf82c850498db6eabf9ee7e276"
+  },
+  "coreTests": {
+    "passed": 115,
+    "failed": 0,
+    "logSHA256": "b0c2f6d298ce5acb8c6f20eafc4f2224a3d67d5c3617fa3f742e46f9d5e4183e",
+    "cases": [
+      "Rapid edits retain latest revision and synchronous flush verifies disk",
+      "Closed session fences queued writer recreation",
+      "Key failure retains full draft and refuses unsafe quit flush",
+      "Account removal blocks key/file recreation and retires retained session"
+    ]
+  },
+  "build": {
+    "passed": true,
+    "configuration": "Debug generic macOS unsigned",
+    "logSHA256": "6d1efaadeb124320622e2fa216e4d339f87b8e1001512a61c93eda52707aa583"
+  },
+  "nativeAcceptance": {
+    "iOSSourceRemoval": "not Mac runtime proof",
+    "macOSRuntime": false,
+    "voiceOver": false,
+    "realServiceRoleTransition": false,
+    "accountTransitionMatrix": false,
+    "nestedEditorMatrix": false
+  },
+  "writes": {
+    "realTasksChanged": false,
+    "hostedChanges": false,
+    "serviceConfigurationChanged": false,
+    "releaseConfigurationChanged": false
+  },
+  "remaining": [
+    "Full native role/account/child-editor matrix",
+    "Mac native runtime and quit verification",
+    "Spoken accessibility acceptance",
+    "Remaining adapters and premium organization UI"
+  ],
+  "testCorrections": [
+    "First native input appended at beginning of text; explicit Select All replacement and value assertion now required",
+    "Keyboard is explicitly dismissed before initial Save on iPad"
+  ],
+  "cleanup": {
+    "removedOwnedBuildBytes": 1873828650,
+    "removedPaths": [
+      "/tmp/taskfold-live-editor-ios-host",
+      "/tmp/taskfold-live-editor-ios-build",
+      "/tmp/taskfold-live-editor-mac-build",
+      "/tmp/taskfold-live-editor-iphone.xcresult",
+      "/tmp/taskfold-live-editor-ipad.xcresult",
+      "/tmp/taskfold-live-editor-iphone-accepted.xcresult",
+      "/tmp/taskfold-live-editor-ipad-accepted.xcresult",
+      "/tmp/taskfold-live-editor-ipad-failure-attachments",
+      "/tmp/taskfold-live-editor-iphone-accepted-attachments",
+      "/tmp/taskfold-live-editor-ipad-accepted-attachments"
+    ],
+    "temporaryApps": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsliveeditor",
+        "uninstalled": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsliveeditor.uitests.xctrunner",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsliveeditor",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsliveeditor.uitests.xctrunner",
+        "uninstalled": true
+      }
+    ],
+    "macRegistrationRemoved": true,
+    "noMacAppLaunched": true
+  }
+}

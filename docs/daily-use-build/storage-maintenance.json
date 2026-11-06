@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-04",
+  "freeBeforeBytes": 22872276992,
+  "realAppDataDeleted": false,
+  "devicesErased": false,
+  "unrelatedJobsStopped": false,
+  "freeAfterBytes": 63748063232,
+  "actualFreeIncreaseBytes": 40875786240,
+  "reportedRetiredBytes": 40825315328,
+  "wallpaperScratchDirectoriesRetired": 227,
+  "supersededDeviceSupportVersionsRetired": [
+    "iPhone17,1 26.6.1 (23G83)",
+    "iPhone17,1 27.0 (24A437)",
+    "iPhone12,3 27.0 (24A5390f)"
+  ],
+  "currentDeviceSupportPreserved": true,
+  "simulatorAppDataPreserved": true,
+  "cleanupSafetyTestsPerRepo": 7,
+  "policy": {
+    "hardPreflightFloorGiB": 20,
+    "pruneCompilerScratchBelowFreeGiB": 30,
+    "retainedCompilerCacheBudgetMiB": 768,
+    "everyRunCleanupRequired": true,
+    "dailyBuildCleanupAutomatic": true,
+    "wallpaperCleanupOnlyExplicitShutdownDevices": true
+  },
+  "historicalAttribution": "No baseline inventory exists for the reported 90 GiB state. Device-support caches predate this work; simulator test use accumulated wallpaper snapshots. Measured volume free-space change is authoritative; directory estimates can share APFS blocks.",
+  "endRunFreeBytes": 74841092096,
+  "endRunSelectedCompilerCacheBytes": 756338688,
+  "unrelatedCompilersDoNotPreventOwnedCleanup": true,
+  "systemFreeSpaceCanChangeIndependently": true
+}

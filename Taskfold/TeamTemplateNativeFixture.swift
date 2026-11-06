@@ -1,0 +1,824 @@
+#if DEBUG
+import Foundation
+import CryptoKit
+import Security
+
+/// Exact disposable namespace and explicit flag only. No request leaves this
+/// local URLProtocol peer; it is native client acceptance, not service acceptance.
+@MainActor enum TeamTemplateNativeFixture {
+    static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--team-library-testing") }
+    static let definitionID = "ec240000-0000-4000-8000-000000000061"
+    static let futureID = "ec240000-0000-4000-8000-000000000062"
+    static let personalID = "ec240000-0000-4000-8000-000000000063"
+    static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldTeamLibraryNativeFixture-workflowteststeameditbridge", isDirectory: true) }
+    static var file: URL { root.appendingPathComponent("state.json") }
+    struct State: Codable {
+        var items: [[String: JSON]] = []
+        var receipts: [String: [String: JSON]] = [:]
+        var requests: [String: [String: JSON]] = [:]
+        var revision = 1
+        var getReads = 0
+        var unavailable = false
+        var loseNext = false
+        var workflowReceipts: [String: [String: JSON]] = [:]
+        var workflowRequests: [String: [String: JSON]] = [:]
+        var workflowOrders: [String: [String]] = [:]
+        var workflowCalls = 0
+        var loseNextWorkflow = false
+    }
+    static func document(title: String = "Review the launch") -> JSON {
+        var document: JSON = .object(["version": .number(1), "kind": .string("task"), "projects": .array([]), "sections": .array([]), "tasks": .array([.object(["id": .string("review"), "title": .string(title), "description": .string("Compare the full layout, confirm readable labels, and record the release decision."), "priority": .number(2), "duration_minutes": .number(25), "planned_offset": .number(1), "labels": .array([.object(["name": .string("Design"), "color": .string("#7455b3")])]), "subtasks": .array([])])])])
+        if ProcessInfo.processInfo.arguments.contains("--workflow-heading-testing") {
+            var root = document.object; root["version"] = .number(2); root["capabilities"] = .array([.string("task_headings")])
+            var task = root["tasks"]!.list[0].object; task["is_heading"] = .bool(true)
+            task["subtasks"] = .array([.object(["id": .string("phase"), "title": .string("Research phase"), "is_heading": .bool(true), "labels": .array([]), "subtasks": .array([.object(["id": .string("work"), "title": .string("Approve the design"), "labels": .array([]), "subtasks": .array([])])])])])
+            root["tasks"] = .array([.object(task)]); document = .object(root)
+        }
+        return document
+    }
+    static var personal: Record { Record(["id": .string(personalID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Release routine"), "document": document(title: "Check release notes")]) }
+    static func item(_ id: String, name: String, document: JSON) -> [String: JSON] {
+        ["id": .string(id), "name": .string(name), "document": document, "revision": .number(1), "created_at": .string("2026-10-25T10:00:00Z"), "updated_at": .string("2026-10-25T10:00:00Z")]
+    }
+    static func save(_ state: State) throws { guard enabled else { throw CancellationError() }; try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true); try TaskfoldJSONEncoder().encode(state).write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
+    static func load() throws -> State { guard enabled else { throw CancellationError() }; return try TaskfoldJSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func reset() throws {
+        var initial = State(items: [item(definitionID, name: "Design review kit", document: document()), item(futureID, name: "Future workflow", document: .object(["version": .number(2), "future": .string("Preserve these instructions")]))], loseNext: ProcessInfo.processInfo.arguments.contains("--team-library-lose-reply"))
+        initial.loseNextWorkflow = ProcessInfo.processInfo.arguments.contains("--workflow-run-lose-reply")
+        try save(initial)
+    }
+    static func backend() -> Backend {
+        let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [TeamTemplateNativeHTTP.self]
+        let session = try! Foundation.JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(TeamEditorNativeFixture.account)\"}}".utf8))
+        return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
+    }
+    static func read(_ request: URLRequest) throws -> JSON {
+        guard enabled, request.httpMethod == "GET", request.url?.scheme == "https", request.url?.host == "synthetic.example" else { throw URLError(.notConnectedToInternet) }
+        let state = try load(); guard !state.unavailable else { throw URLError(.userAuthenticationRequired) }
+        let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)!.queryItems ?? []
+        let values = Dictionary(uniqueKeysWithValues: query.map { ($0.name, $0.value ?? "") })
+        guard values["user_id"] == "eq." + TeamEditorNativeFixture.account else { throw URLError(.badServerResponse) }
+        if request.url?.path == "/rest/v1/project_templates" {
+            guard values["id"] == "eq." + personalID else { return .array([]) }; return .array([.object(personal.fields)])
+        }
+        if request.url?.path == "/rest/v1/view_orders" {
+            let filter = values["id"] ?? ""
+            return .array(state.workflowOrders.keys.sorted().filter { filter.contains("\"" + $0 + "\"") }.map { .object(["id": .string($0), "user_id": .string(TeamEditorNativeFixture.account), "ids": .array(state.workflowOrders[$0]!.map(JSON.string))]) })
+        }
+        throw URLError(.notConnectedToInternet)
+    }
+    static func handle(_ request: URLRequest, data: Data) throws -> (raw: [String: JSON], status: Int, lose: Bool) {
+        guard enabled, request.url?.scheme == "https", request.url?.host == "synthetic.example", request.httpMethod == "POST" else { throw URLError(.notConnectedToInternet) }
+        let path = request.url!.path, params = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        var state = try load()
+        if path == "/rest/v1/rpc/taskfold_workspace_boundary" { return (try TeamEditorNativeFixture.boundary(viewer: state.unavailable).raw, 200, false) }
+        if path == "/rest/v1/rpc/taskfold_teams", ["list", "invitations"].contains(params["_action"]?.text ?? "") {
+            guard !state.unavailable else { return (["code": .string("PT404")], 403, false) }
+            if params["_action"] == .string("invitations") { return (["enabled": .bool(true), "invitations": .array([])], 200, false) }
+            return (["enabled": .bool(true), "teams": .array([.object(["id": .string(TeamEditorNativeFixture.teamID), "name": .string("Widget Studio"), "role": .string("owner"), "state": .string("active"), "revision": .number(1)])])], 200, false)
+        }
+        guard params["_body"]?.object["team_id"] == .string(TeamEditorNativeFixture.teamID) else { throw URLError(.badServerResponse) }
+        if state.unavailable { return (["code": .string("PT404"), "message": .string("Synthetic access withdrawn")], 403, false) }
+        if path == "/rest/v1/rpc/taskfold_teams", params["_action"] == .string("get") {
+            return (["id": .string(TeamEditorNativeFixture.teamID), "name": .string("Widget Studio"), "role": .string("owner"), "state": .string("active"), "revision": .number(1), "folders": .array([]), "members": .array([.object(["user_id": .string(TeamEditorNativeFixture.account), "role": .string("owner")])]), "invitations": .array([])], 200, false)
+        }
+        if path == "/rest/v1/rpc/taskfold_team_projects" {
+            var project: [String: JSON] = ["id": .string(TeamEditorNativeFixture.projectID), "name": .string("Design board"), "team_id": .string(TeamEditorNativeFixture.teamID), "revision": .number(1), "role": .string("editor"), "visibility": .string("team"), "folder_id": .null, "can_edit_tasks": .bool(false), "can_manage_access": .bool(false), "project_state_protocol": .number(1), "is_archived": .bool(false), "ancestor_archived": .bool(false), "project_hierarchy_protocol": .number(1), "parent_id": .null, "parent_unavailable": .bool(false)]
+            let context: [String: JSON] = ["protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": .string(TeamEditorNativeFixture.teamID), "team_revision": .number(1), "team_state": .string("active"), "setup_paused": .bool(false)]
+            if params["_action"] == .string("get") { project.merge(context) { _, new in new }; return (project, 200, false) }
+            var result = context; result["task_writes_enabled"] = .bool(false); result["projects"] = .array([.object(project)]); result["next_cursor"] = .null; return (result, 200, false)
+        }
+        if path == "/rest/v1/rpc/taskfold_team_workflow_run" {
+            let body = params["_body"]!.object
+            let command = try TeamWorkflowRunCommand(account: TeamEditorNativeFixture.account, origin: "https://synthetic.example", body: body)
+            state.workflowCalls += 1; try save(state)
+            if var receipt = state.workflowReceipts[command.id] {
+                guard state.workflowRequests[command.id] == params else { return (["code": .string("PT409")], 409, false) }
+                receipt["replayed"] = .bool(true); try save(state); return (receipt, 200, false)
+            }
+            let source = body["source"]!.object
+            if source["kind"] == .string("shared") {
+                guard let item = state.items.first(where: { $0["id"] == source["id"] }), item["document"] == source["document"], item["revision"] == source["revision"] else { return (["code": .string("PT409")], 409, false) }
+            } else { guard source["document"] == personal["document"] else { return (["code": .string("PT409")], 409, false) } }
+            for value in body["orders"]!.list {
+                let row = value.object, key = "group:" + row["project_id"]!.text + ":" + (row["section_id"] == .null ? "none" : row["section_id"]!.text)
+                guard row["base_ids"] == .array((state.workflowOrders[key] ?? []).map(JSON.string)) else { return (["code": .string("PT409")], 409, false) }
+                state.workflowOrders[key] = (state.workflowOrders[key] ?? []) + row["task_ids"]!.list.map(\.text)
+            }
+            var raw: [String: JSON] = ["run_protocol": .number(1), "account": .string(command.account), "team_id": .string(command.team), "request_id": .string(command.id), "projects": .array(body["projects"]!.list.map { $0.object["id"]! }), "sections": .array(body["sections"]!.list.map { $0.object["id"]! }), "tasks": .array(body["tasks"]!.list.map { .object(["id": $0.object["id"]!, "generation": $0.object["task_generation"]!, "project_id": $0.object["project_id"]!]) }), "replayed": .bool(false)]
+            if body["workflow_types_protocol"] != nil { raw["workflow_types_protocol"] = .number(1) }
+            state.workflowRequests[command.id] = params; state.workflowReceipts[command.id] = raw
+            let lose = state.loseNextWorkflow; state.loseNextWorkflow = false; try save(state); return (raw, 200, lose)
+        }
+        guard path == "/rest/v1/rpc/taskfold_team_templates", let operation = params["_operation"]?.text else { throw URLError(.notConnectedToInternet) }
+        let body = params["_body"]!.object
+        var raw: [String: JSON] = ["library_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": .string(TeamEditorNativeFixture.teamID), "team_state": .string("active"), "role": .string("owner"), "can_manage": .bool(true)]
+        switch operation {
+        case "list":
+            raw["library_revision"] = .number(Double(state.revision)); raw["items"] = .array(state.items.sorted { $0["id"]!.text < $1["id"]!.text }.map { var item = $0; item.removeValue(forKey: "document"); return .object(item) }); raw["next_cursor"] = .null
+        case "get":
+            guard let item = state.items.first(where: { $0["id"] == body["template_id"] }) else { return (["code": .string("PT404")], 404, false) }
+            raw["item"] = .object(item); state.getReads += 1; try save(state)
+        case "publish", "replace", "delete":
+            let action = TeamTemplateCommand.Action(rawValue: operation)!
+            let command = try TeamTemplateCommand(account: TeamEditorNativeFixture.account, origin: "https://synthetic.example", action: action, body: body)
+            if var receipt = state.receipts[command.id] {
+                guard state.requests[command.id] == params else { return (["code": .string("PT409")], 409, false) }
+                receipt["replayed"] = .bool(true); return (receipt, 200, false)
+            }
+            let index = state.items.firstIndex { $0["id"] == body["template_id"] }
+            let revision: Double
+            if action == .publish { guard index == nil else { return (["code": .string("PT409")], 409, false) }; revision = 1 }
+            else { guard let index, state.items[index]["revision"] == body["revision"] else { return (["code": .string("PT409")], 409, false) }; revision = try TeamTemplateLibraryValue.revision(body["revision"]) + (action == .replace ? 1 : 0) }
+            if action == .delete { state.items.remove(at: index!) }
+            else { var item = self.item(command.template, name: body["name"]!.text, document: body["document"]!); item["revision"] = .number(revision); if let index { state.items[index] = item } else { state.items.append(item) } }
+            raw = ["library_protocol": .number(1), "account": .string(command.account), "team_id": .string(command.team), "request_id": .string(command.id), "template_id": .string(command.template), "operation": .string(operation), "revision": .number(revision), "deleted": .bool(action == .delete), "replayed": .bool(false)]
+            if body["workflow_types_protocol"] != nil { raw["workflow_types_protocol"] = .number(1) }
+            state.receipts[command.id] = raw; state.requests[command.id] = params; state.revision += 1
+            let lose = state.loseNext; state.loseNext = false; try save(state); return (raw, 200, lose)
+        default: throw URLError(.notConnectedToInternet)
+        }
+        return (raw, 200, false)
+    }
+}
+private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        let request = self.request
+        Task { @MainActor in
+            do {
+                if request.httpMethod == "GET" {
+                    let value = try TeamTemplateNativeFixture.read(request)
+                    client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
+                    client?.urlProtocol(self, didLoad: try TaskfoldJSONEncoder().encode(value)); client?.urlProtocolDidFinishLoading(self); return
+                }
+                var data = request.httpBody ?? Data()
+                if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable, data.count <= 4_300_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; data.append(contentsOf: bytes.prefix(count)) } }
+                guard data.count <= 4_300_000 else { throw URLError(.dataLengthExceedsMaximum) }
+                let reply = try TeamTemplateNativeFixture.handle(request, data: data)
+                guard !reply.lose else { throw URLError(.networkConnectionLost) }
+                client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: reply.status, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
+                client?.urlProtocol(self, didLoad: try TaskfoldJSONEncoder().encode(reply.raw)); client?.urlProtocolDidFinishLoading(self)
+            } catch { client?.urlProtocol(self, didFailWithError: error) }
+        }
+    }
+    override func stopLoading() {}
+}
+#endif
+#if DEBUG
+@MainActor extension Store {
+    func changeTeamTemplatePrivateSourceFixture() {
+        guard TeamTemplateNativeFixture.enabled, var row = record(WorkflowTemplate.table, id: TeamTemplateNativeFixture.personalID) else { return }
+        row["document"] = TeamTemplateNativeFixture.document(title: "Changed private release notes")
+        _ = save(WorkflowTemplate.table, row)
+    }
+    func changeTeamTemplateSharedSourceFixture() {
+        guard TeamTemplateNativeFixture.enabled else { return }
+        do {
+            var state = try TeamTemplateNativeFixture.load()
+            guard let i = state.items.firstIndex(where: { $0["id"] == .string(TeamTemplateNativeFixture.definitionID) }) else { return }
+            state.items[i]["document"] = TeamTemplateNativeFixture.document(title: "Changed shared review")
+            state.items[i]["revision"] = .number(try TeamTemplateLibraryValue.revision(state.items[i]["revision"]) + 1)
+            state.revision += 1; try TeamTemplateNativeFixture.save(state)
+        } catch { self.error = error.localizedDescription }
+    }
+    func withdrawTeamTemplateAccessFixture() {
+        guard TeamTemplateNativeFixture.enabled else { return }
+        do { var state = try TeamTemplateNativeFixture.load(); state.unavailable = true; try TeamTemplateNativeFixture.save(state); revokeTeamEditorNativeFixture() }
+        catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+#if DEBUG
+/// Reserved-host personal transport peer. Real SQL contract acceptance is separate.
+@MainActor enum PersonalHeadingNativePeer {
+    static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--personal-heading-testing") }
+    static var file: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldPersonalHeadingNativeFixture-workflowteststeameditbridge.json") }
+    struct State: Codable {
+        var row: Record
+        var support = 1
+        var attempts: [[String: JSON]] = []
+        var transitions = 0
+        var loseNext = false
+    }
+    static func read() throws -> State { try TaskfoldJSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func write(_ value: State) throws { try TaskfoldJSONEncoder().encode(value).write(to: file, options: .atomic) }
+    static func reset(_ row: Record) throws {
+        var state = State(row: row)
+        if ProcessInfo.processInfo.arguments.contains("--personal-heading-capability-off") { state.support = 0 }
+        state.loseNext = ProcessInfo.processInfo.arguments.contains("--personal-heading-lose-reply")
+        try write(state)
+        if WorkflowUndoNativePeer.enabled { try WorkflowUndoNativePeer.reset(row) }
+    }
+    static func boundary() throws -> TeamWorkspaceBoundary {
+        if WorkflowUndoNativePeer.enabled { return try WorkflowUndoNativePeer.boundary() }
+        let support = (try? read().support) ?? 1
+        return try TeamWorkspaceBoundary(["workspace_boundary_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account),
+            "native_team_reads_enabled": .bool(false), "setup_paused": .bool(true), "task_types_protocol": .number(0), "task_type_lifecycle_protocol": .number(0),
+            "personal_task_types_protocol": .number(Double(support)), "projects": .array([]), "teams": .array([]), "token": .string(String(repeating: support == 1 ? "a" : "b", count: 64))],
+            account: TeamEditorNativeFixture.account, origin: "https://synthetic.example")
+    }
+    static func body(_ request: URLRequest) throws -> [String: JSON] {
+        var data = request.httpBody
+        if data == nil, let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096), result = Data()
+            while stream.hasBytesAvailable && result.count < 2_100_000 {
+                let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; result.append(contentsOf: bytes.prefix(count))
+            }; data = result
+        }
+        return try TaskfoldJSONDecoder().decode([String: JSON].self, from: data ?? Data("{}".utf8))
+    }
+    static func response(_ request: URLRequest) throws -> (Data, Bool) {
+        guard enabled, request.url?.host == "synthetic.example", request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-auth" else { throw URLError(.userAuthenticationRequired) }
+        if let response = try WorkflowUndoNativePeer.response(request) { return response }
+        let path = request.url!.path
+        let value: JSON
+        if path == "/rest/v1/rpc/taskfold_workspace_boundary" { value = .object(try boundary().raw) }
+        else if path == "/auth/v1/user" { value = .object(["id": .string(TeamEditorNativeFixture.account), "email": .string("personal-heading@example.invalid")]) }
+        else if path == "/rest/v1/rpc/taskfold_patch_task" {
+            let request = try body(request); var state = try read()
+            state.attempts.append(request)
+            let fields = request["_changes"]!.object, base = request["_base"]!.object
+            let change = Mutation(table: "tasks", recordID: state.row.id, method: "PATCH", fields: fields, baseline: base)
+            guard (!PersonalTaskTypes.requiresService(change) || state.support == 1), request["_id"] == state.row["id"], base["task_generation"] == state.row["task_generation"] else { try write(state); throw URLError(.badServerResponse) }
+            let replay = fields.allSatisfy { state.row[$0.key] == $0.value }
+            if !replay {
+                guard !TaskCompletionRevision.touches(fields) || base["completion_version"] == state.row["completion_version"] else { try write(state); throw URLError(.badServerResponse) }
+                let before = TaskKind(state.row)
+                for (key, value) in fields { state.row[key] = value }
+                guard TaskKind(state.row) != .heading || !state.row.completed else { throw URLError(.badServerResponse) }
+                if before != TaskKind(state.row) { state.row["completion_version"] = .number(Double(state.row["completion_version"].integer + 1)); state.transitions += 1 }
+            }
+            let lose = state.loseNext; state.loseNext = false
+            if lose { state.support = 0 }
+            try write(state)
+            return (try TaskfoldJSONEncoder().encode(state.row), lose)
+        }
+        else if path == "/rest/v1/tasks" { value = .array([.object(try read().row.fields)]) }
+        else { value = .array([]) }
+        return (try TaskfoldJSONEncoder().encode(value), false)
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func setPersonalHeadingSupportFixture(_ support: Int) {
+        guard PersonalHeadingNativePeer.enabled, [0, 1].contains(support) else { return }
+        do { var state = try PersonalHeadingNativePeer.read(); state.support = support; try PersonalHeadingNativePeer.write(state) }
+        catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+#if DEBUG
+import SwiftUI
+import CryptoKit
+
+/// Installed client acceptance only. Exact reserved host/explicit flags are
+/// required; the enclosing URLProtocol never connects to a real service.
+@MainActor enum WorkflowUndoNativePeer {
+    static var enabled: Bool { PersonalHeadingNativePeer.enabled && ProcessInfo.processInfo.arguments.contains("--personal-workflow-undo-testing") }
+    static var file: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldWorkflowUndoNativeFixture-workflowteststeameditbridge.json") }
+    static let templateID = "ec240000-0000-4000-8000-000000000081"
+    static let incomingID = "ec240000-0000-4000-8000-000000000082"
+    struct State: Codable {
+        var rows: [String: [Record]]
+        var support = 1
+        var attempts: [[String: JSON]] = []
+        var receipts: [String: Record] = [:]
+        var transitions = 0
+        var loseUndo = false
+    }
+    static var template: Record {
+        if ProcessInfo.processInfo.arguments.contains("--workflow-rich-template-ui") {
+            return Record(["id": .string(templateID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Rich workflow proof"), "document": WorkflowRichNativeDocument.make(count: 1000)])
+        }
+        let document: JSON = .object(["version": .number(2), "capabilities": .array([.string("task_headings")]), "kind": .string("project"),
+            "projects": .array([.object(["id": .string("root"), "name": .string("Native workflow proof"), "parent_id": .null]), .object(["id": .string("child"), "name": .string("Delivery"), "parent_id": .string("root")])]),
+            "sections": .array([.object(["id": .string("section"), "name": .string("Design"), "project_id": .string("root"), "order_index": .number(0)])]),
+            "tasks": .array([
+                .object(["id": .string("heading"), "is_heading": .bool(true), "title": .string("Design instructions"), "description": .string("Keep the layout readable.\nCheck contrast and spacing."), "priority": .number(4), "project_id": .string("root"), "section_id": .string("section"), "labels": .array([.object(["name": .string("Studio"), "color": .string("#7455b3")])]), "subtasks": .array([.object(["id": .string("work"), "title": .string("Approve the layout"), "priority": .number(2), "labels": .array([]), "subtasks": .array([])])])]),
+                .object(["id": .string("delivery"), "title": .string("Publish the design"), "priority": .number(3), "project_id": .string("child"), "labels": .array([]), "subtasks": .array([])])])])
+        return Record(["id": .string(templateID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Native workflow proof"), "document": document])
+    }
+    static func read() throws -> State { try TaskfoldJSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func write(_ state: State) throws { try TaskfoldJSONEncoder().encode(state).write(to: file, options: .atomic) }
+    static func reset(_ original: Record) throws {
+        var state = State(rows: ["tasks": [original], WorkflowTemplate.table: [template]])
+        state.loseUndo = ProcessInfo.processInfo.arguments.contains("--workflow-undo-lose-reply")
+        try write(state)
+    }
+    static func boundary() throws -> TeamWorkspaceBoundary {
+        let state = try read()
+        let projects = (state.rows["projects"] ?? []).sorted { $0.id < $1.id }.map { row in JSON.object(["id": .string(row.id), "team_id": .null, "role": .string("owner"), "archived": .bool(false), "can_send_tasks": .bool(true)]) }
+        var raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "native_team_reads_enabled": .bool(false), "setup_paused": .bool(true), "task_types_protocol": .number(0), "task_type_lifecycle_protocol": .number(0), "personal_task_types_protocol": .number(1), "personal_workflow_undo_protocol": .number(Double(state.support)), "projects": .array(projects), "teams": .array([])]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        raw["token"] = .string(SHA256.hash(data: try encoder.encode(JSON.object(raw))).map { String(format: "%02x", $0) }.joined())
+        return try TeamWorkspaceBoundary(raw, account: TeamEditorNativeFixture.account, origin: "https://synthetic.example")
+    }
+    static func response(_ request: URLRequest) throws -> (Data, Bool)? {
+        guard enabled else { return nil }
+        let path = request.url!.path
+        if path == "/rest/v1/rpc/taskfold_undo_private_workflow" {
+            let body = try PersonalHeadingNativePeer.body(request); var state = try read()
+            guard state.support == 1, let id = body["_request"]?.text, let nonce = UUID(uuidString: id) else { throw URLError(.badServerResponse) }
+            state.attempts.append(body)
+            if let receipt = state.receipts[id] { try write(state); return (try TaskfoldJSONEncoder().encode(receipt), false) }
+            // The peer models outcome/transport. Actual SQL semantics are tested
+            // against PostgreSQL independently, not inferred from this helper.
+            let run = UUID(), fields = body["_body"]!.object
+            let command = Mutation(id: nonce, table: WorkflowUndo.table, recordID: run.uuidString.lowercased(), method: "WORKFLOW_UNDO", fields: fields, workflowRun: run)
+            let items = try require(WorkflowUndo.items(command)); var snapshot = Snapshot(tables: state.rows)
+            let applied: Bool
+            do { try WorkflowUndo.validate(command, snapshot: snapshot, account: TeamEditorNativeFixture.account); applied = true }
+            catch { applied = false }
+            var current: [JSON] = []
+            if applied {
+                WorkflowUndo.apply(command, snapshot: &snapshot); state.rows = snapshot.tables; state.transitions += 1
+            } else {
+                for item in items { if let row = state.rows[item.table]?.first(where: { $0.id == item.recordID }) { current.append(.object(["table": .string(item.table), "row": .object(row.fields)])) } }
+            }
+            let reply = Record(["id": .string(id), "applied": .bool(applied), "rows": .array(current)])
+            state.receipts[id] = reply
+            let lose = state.loseUndo; state.loseUndo = false; if lose { state.support = 0 }
+            try write(state); return (try TaskfoldJSONEncoder().encode(reply), lose)
+        }
+        guard path.hasPrefix("/rest/v1/") else { return nil }
+        let table = String(path.dropFirst("/rest/v1/".count))
+        guard ["projects", "sections", "labels", "tasks", "view_orders", WorkflowTemplate.table].contains(table) else { return nil }
+        var state = try read(), rows = state.rows[table] ?? []
+        if request.httpMethod == "POST" {
+            let fields = try PersonalHeadingNativePeer.body(request), id = fields["id"]?.text ?? ""
+            guard !id.isEmpty, fields["user_id"]?.text == TeamEditorNativeFixture.account else { throw URLError(.badServerResponse) }
+            if let index = rows.firstIndex(where: { $0.id == id }) {
+                if request.value(forHTTPHeaderField: "Prefer")?.contains("resolution=ignore-duplicates") == true { return (Data("[]".utf8), false) }
+                rows[index] = Record(fields)
+            } else { rows.append(Record(fields)) }
+            state.rows[table] = rows; try write(state)
+            return (try TaskfoldJSONEncoder().encode(rows.filter { $0.id == id }), false)
+        }
+        guard request.httpMethod == "GET" else { throw URLError(.unsupportedURL) }
+        for query in URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems ?? [] {
+            if query.name == "id", let value = query.value, value.hasPrefix("eq.") { rows = rows.filter { $0.id == String(value.dropFirst(3)) } }
+            if query.name == "user_id", let value = query.value, value.hasPrefix("eq.") { rows = rows.filter { $0.string("user_id") == String(value.dropFirst(3)) } }
+        }
+        return (try TaskfoldJSONEncoder().encode(rows), false)
+    }
+    static func require<T>(_ value: T?) throws -> T { guard let value else { throw URLError(.badServerResponse) }; return value }
+}
+
+@MainActor struct WorkflowUndoNativeFixtureView: View {
+    @Environment(Store.self) private var store
+    @State private var scaleOriginal: Snapshot?
+    @State private var runSource: Record?
+    var body: some View {
+        NavigationStack {
+            Form {
+                Text("Private workflow acceptance").font(.title2)
+                Text(store.taskHeadingsAuthoringEnabled ? "Heading authoring ready" : "Heading authoring unavailable").accessibilityIdentifier("nativeHeadingAuthoringState")
+                if ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") {
+                    Button("Measure workflow commit") { Task { await measureCommit() } }.accessibilityIdentifier("measureWorkflowCommit")
+                    Button("Check background widgets") {
+                        Task {
+                            do {
+                                guard let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
+                                      let proof = UUID(uuidString: String(argument.dropFirst("--workflow-commit-proof=".count))) else { return }
+                                let directory = TeamTemplateNativeFixture.root.appendingPathComponent("WidgetPublicationChecks/\(proof.uuidString.lowercased())", isDirectory: true)
+                                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                                let result = try await store.verifyWorkflowWidgetPublication()
+                                try TaskfoldJSONEncoder().encode(result).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                            } catch {
+                                store.error = error.localizedDescription
+                                if let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
+                                   let proof = UUID(uuidString: String(argument.dropFirst("--workflow-commit-proof=".count))) {
+                                    let failure: [String: JSON] = ["error": .string(error.localizedDescription), "phase": .string(store.notice ?? "none")]
+                                    let directory = TeamTemplateNativeFixture.root.appendingPathComponent("WidgetPublicationChecks/\(proof.uuidString.lowercased())", isDirectory: true)
+                                    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                                    try? TaskfoldJSONEncoder().encode(failure).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                                }
+                            }
+                        }
+                    }.accessibilityIdentifier("checkBackgroundWidgets")
+                    Button("Restore scale fixture", action: restoreScale).disabled(scaleOriginal == nil).accessibilityIdentifier("restoreScaleFixture")
+                    if ProcessInfo.processInfo.arguments.contains("--workflow-rich-children") {
+                        Button("Open saved local workflow") { store.startLocal() }.accessibilityIdentifier("openSavedRichWorkflow")
+                    }
+                }
+                if ProcessInfo.processInfo.arguments.contains("--workflow-local-preparation-testing") {
+                    Button("Prepare local workflow") {
+                        store.startLocal(); scaleOriginal = store.snapshot
+                        var template = WorkflowUndoNativePeer.template; template["user_id"] = .string(store.userID)
+                        store.snapshot = Snapshot(tables: [WorkflowTemplate.table: [template]])
+                        do { try store.persist() } catch { store.error = error.localizedDescription }
+                    }.accessibilityIdentifier("prepareLocalWorkflow")
+                    Text(store.localMode && store.record(WorkflowTemplate.table, id: WorkflowUndoNativePeer.templateID) != nil ? "Local workflow ready" : "Preparing local workflow").accessibilityIdentifier("localWorkflowFixtureState")
+                    Text(store.workflowPreparedLocalHistoryUsed && store.workflowPreparedNormalizationUsed ? "Prepared history used" : "Ordinary history used").accessibilityIdentifier("preparedHistoryState")
+                    Button("Restore local fixture", action: restoreScale).accessibilityIdentifier("restoreLocalWorkflowFixture")
+                }
+                Button("Use native workflow") {
+                    runSource = store.record(WorkflowTemplate.table, id: WorkflowUndoNativePeer.templateID) ?? WorkflowUndoNativePeer.template
+                    if ProcessInfo.processInfo.arguments.contains("--workflow-definition-source-change") {
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(2))
+                            guard WorkflowUndoNativePeer.enabled, var row = store.record(WorkflowTemplate.table, id: WorkflowUndoNativePeer.templateID) else { return }
+                            row["name"] = .string("Updated source")
+                            store.snapshot.tables[WorkflowTemplate.table] = [row]
+                            try? store.persist()
+                        }
+                    }
+                }.accessibilityIdentifier("openNativeWorkflow")
+                Button("Attempt oversized workflow") {
+                    var row = Record.task(user: store.userID); row["title"] = .string("Oversized workflow proof")
+                    row["description"] = .string(String(repeating: "x", count: WorkflowUndo.maximumBytes))
+                    _ = store.commit([Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields, insertOnly: true, workflowRun: UUID())])
+                }.accessibilityIdentifier("oversizedNativeWorkflow")
+                Button("Fail next workflow save") { store.failNextWorkflowNativeSave() }.accessibilityIdentifier("failNativeWorkflowSave")
+                Button("Undo workflow") { store.undo() }.disabled(store.undoStack.isEmpty).accessibilityIdentifier("undoNativeWorkflow")
+                Button("Redo workflow") { store.redo() }.disabled(store.redoStack.isEmpty).accessibilityIdentifier("redoNativeWorkflow")
+                Button("Add incoming task remotely") { update { state in
+                    guard let project = state.rows["projects"]?.first else { return }
+                    var row = Record.task(user: TeamEditorNativeFixture.account, project: project.id); row["id"] = .string(WorkflowUndoNativePeer.incomingID); row["title"] = .string("Later incoming work")
+                    state.rows["tasks", default: []].append(row)
+                } }.accessibilityIdentifier("addIncomingWorkflowTask")
+                Button("Pause workflow support") { support(0) }.accessibilityIdentifier("pauseNativeWorkflowSupport")
+                Button("Restore workflow support") { support(1) }.accessibilityIdentifier("restoreNativeWorkflowSupport")
+                Text(store.error ?? store.notice ?? "Ready").accessibilityIdentifier("nativeWorkflowStatus")
+                Text("Queued edits: \(store.snapshot.pending.count)").accessibilityIdentifier("nativeWorkflowPending")
+                ForEach(store.projects) { project in Text(project.name) }
+                if ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") {
+                    Text("Saved tasks: \(store.tasks.count)").accessibilityIdentifier("nativeWorkflowSavedTaskCount")
+                } else { ForEach(store.tasks) { task in Text(task.title) } }
+            }.navigationTitle("Workflow test")
+        }.sheet(item: $runSource) { source in TemplateRunView(template: source) }
+            .alert("Workflow needs attention", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
+                Button("OK") { store.error = nil }
+            } message: { Text(store.error ?? "") }
+    }
+    private func restoreScale() {
+        guard WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") || ProcessInfo.processInfo.arguments.contains("--workflow-local-preparation-testing"), let scaleOriginal else { return }
+        store.snapshot = scaleOriginal
+        do { try store.persist(); self.scaleOriginal = nil; store.error = nil }
+        catch { store.error = error.localizedDescription }
+    }
+    private func measureCommit() async {
+        guard WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale"),
+              let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-count=") }),
+              let count = Int(argument.split(separator: "=").last ?? ""), [0, 1000, 5000].contains(count),
+              let proofArgument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
+              let proof = UUID(uuidString: String(proofArgument.dropFirst("--workflow-commit-proof=".count))) else { return }
+        do {
+            let localHistory = ProcessInfo.processInfo.arguments.contains("--workflow-local-history-scale")
+            let rich = ProcessInfo.processInfo.arguments.contains("--workflow-rich-children")
+            guard !rich || (localHistory && count == 1000) else { return }
+            if localHistory {
+                store.startLocal()
+                scaleOriginal = store.snapshot
+                var seed = Snapshot()
+                let time = Date(timeIntervalSince1970: 1793095200)
+                for index in 0..<100 {
+                    var root = Record.task(user: store.userID)
+                    root["title"] = .string("Prior local history \(index)")
+                    root["subtasks"] = .array((0..<2).map { .object(["id": .string(UUID().uuidString.lowercased()), "title": .string("Prior step \($0)"), "completed": .bool(false)]) })
+                    let change = Mutation(table: "tasks", recordID: root.id, method: "POST", fields: root.fields)
+                    TaskActivity.recordLocal(change, before: nil, after: root, snapshot: &seed, account: store.userID, now: time.addingTimeInterval(Double(index)))
+                    seed.tables[TaskNodeActivity.table, default: []] += TaskNodeActivity.localRows(change, before: nil, after: root, account: store.userID, recordedAt: time.addingTimeInterval(Double(index)), afterSequence: Int64(index * 2))
+                }
+                seed.tables[TaskNodeActivity.epochTable] = [Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(time))])]
+                var root = Record.task(user: store.userID); root["title"] = .string("Existing local task")
+                seed.tables["tasks"] = [root]
+                store.snapshot = seed
+                try store.persist()
+            }
+            let historyBefore = store.snapshot.tables[TaskActivity.table] ?? []
+            let nodeHistoryBefore = store.snapshot.tables[TaskNodeActivity.table] ?? []
+            let document: JSON
+            if rich { document = WorkflowRichNativeDocument.make(count: count) }
+            else {
+                document = .object(["version": .number(1), "kind": .string("project"),
+                "projects": .array([.object(["id": .string("root"), "name": .string("Scale workflow")])]),
+                "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
+                "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array([])]) })])
+            }
+            let instantiateClock = ContinuousClock(), instantiateStarted = instantiateClock.now
+            let changes: [Mutation]
+            if rich {
+                let account = store.userID
+                changes = try await Task.detached(priority: .userInitiated) {
+                    try WorkflowTemplate(document: document).instantiate(account: account, name: "Scale workflow", start: Date(timeIntervalSince1970: 1793095200))
+                }.value
+            } else { changes = try WorkflowTemplate(document: document).instantiate(account: store.userID, name: "Scale workflow") }
+            let instantiateElapsed = instantiateStarted.duration(to: instantiateClock.now)
+            if !localHistory { scaleOriginal = store.snapshot }
+            let clock = ContinuousClock(), started = clock.now
+            var prepared: LocalActivityCreation.Preparation?, mainActorPulses = 0
+            if localHistory {
+                let snapshot = store.snapshot, source = store.snapshotRevision, account = store.userID, labels = store.labels, cache = store.nativeConversationTeamCache
+                let heartbeat = Task { @MainActor in
+                    while !Task.isCancelled { mainActorPulses += 1; try? await Task.sleep(for: .milliseconds(1)) }
+                }
+                defer { heartbeat.cancel() }
+                prepared = try await Task.detached(priority: .userInitiated) {
+                    try LocalActivityCreation.Preparation(changes: changes, snapshot: snapshot, source: source, account: account, labels: labels, cache: cache, groupedHistory: true)
+                }.value
+            }
+            let preparationElapsed = started.duration(to: clock.now)
+            let changeSource = localHistory && ProcessInfo.processInfo.arguments.contains("--workflow-history-change-source")
+            if changeSource { store.snapshot.tables["tasks"]?[0]["title"] = .string("Edited while history prepared") }
+            let revision = store.taskRevision, commitStarted = clock.now
+            if localHistory && ProcessInfo.processInfo.arguments.contains("--workflow-local-history-fail-save") { store.failNextWorkflowNativeSave() }
+            let saved = store.commit(changes, localHistory: prepared), commitElapsed = commitStarted.duration(to: clock.now), elapsed = started.duration(to: clock.now)
+            var data: JSON = .object(["proof": .string(proof.uuidString.lowercased()), "count": .number(Double(count)), "commands": .number(Double(changes.count)), "saved": .bool(saved),
+                "richChildren": .bool(rich), "childCount": .number(rich ? Double(count * 6) : 0),
+                "instantiationSeconds": .number(Double(instantiateElapsed.components.seconds) + Double(instantiateElapsed.components.attoseconds) / 1e18),
+                "seconds": .number(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18),
+                "synchronousCommitSeconds": .number(Double(commitElapsed.components.seconds) + Double(commitElapsed.components.attoseconds) / 1e18),
+                "historyPreparationSeconds": .number(Double(preparationElapsed.components.seconds) + Double(preparationElapsed.components.attoseconds) / 1e18),
+                "mainActorPreparationPulses": .number(Double(mainActorPulses)),
+                "preparedLocalHistoryUsed": .bool(store.workflowPreparedLocalHistoryUsed),
+                "preparedNormalizationUsed": .bool(store.workflowPreparedNormalizationUsed),
+                "normalizationSetupUsed": .bool(store.workflowNormalizationSetupUsed),
+                "preparedUndoUsed": .bool(store.workflowPreparedUndoUsed),
+                "preparedEncodingUsed": .bool(store.workflowPreparedEncodingUsed),
+                "preparedProjectionUsed": .bool(store.workflowPreparedProjectionUsed),
+                "preparedValidationUsed": .bool(store.workflowPreparedValidationUsed),
+                "sourceEditPreserved": .bool(!changeSource || store.snapshot.tables["tasks"]?.first?.title == "Edited while history prepared"),
+                "taskRevisionDelta": .number(Double(store.taskRevision - revision)),
+                "tasks": .number(Double(store.tasks.count)), "pending": .number(Double(store.snapshot.pending.count)),
+                "undoCommands": .number(Double(store.undoStack.last?.undo.count ?? 0)), "error": store.error.map(JSON.string) ?? .null,
+                "localHistory": .bool(localHistory),
+                "rootHistoryCount": .number(Double(store.snapshot.tables[TaskActivity.table]?.count ?? 0)),
+                "nodeHistoryCount": .number(Double(store.snapshot.tables[TaskNodeActivity.table]?.count ?? 0)),
+                "priorRootHistoryPreserved": .bool(Array((store.snapshot.tables[TaskActivity.table] ?? []).prefix(historyBefore.count)) == historyBefore),
+                "priorNodeHistoryPreserved": .bool(Array((store.snapshot.tables[TaskNodeActivity.table] ?? []).prefix(nodeHistoryBefore.count)) == nodeHistoryBefore)])
+            try FileManager.default.createDirectory(at: TeamTemplateNativeFixture.root, withIntermediateDirectories: true)
+            Task {
+                let deadline = clock.now.advanced(by: .seconds(60))
+                while !store.workflowWidgetPublicationIdle, clock.now < deadline { try? await Task.sleep(for: .milliseconds(10)) }
+                do {
+                    let projection = try store.workflowWidgetNativeProjection()
+                    if case .object(var fields) = data {
+                        let total = started.duration(to: clock.now)
+                        fields["widgetReadySeconds"] = .number(Double(total.components.seconds) + Double(total.components.attoseconds) / 1e18)
+                        fields["widgetIdle"] = .bool(store.workflowWidgetPublicationIdle)
+                        fields["widgetLists"] = .number(Double(projection["lists"]?.list.count ?? 0))
+                        fields["widgetAccount"] = projection["account"] ?? .null
+                        data = .object(fields)
+                    }
+                    try TaskfoldJSONEncoder().encode(data).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
+                } catch {
+                    // Publish a terminal diagnostic instead of making the native
+                    // runner wait three minutes when test widget storage is absent.
+                    if case .object(var fields) = data {
+                        fields["widgetError"] = .string(error.localizedDescription)
+                        try? TaskfoldJSONEncoder().encode(JSON.object(fields)).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
+                    }
+                    store.error = error.localizedDescription
+                }
+            }
+        } catch { store.error = error.localizedDescription }
+    }
+    private func update(_ edit: (inout WorkflowUndoNativePeer.State) -> Void) {
+        do { var state = try WorkflowUndoNativePeer.read(); edit(&state); try WorkflowUndoNativePeer.write(state) } catch { store.error = error.localizedDescription }
+    }
+    private func support(_ value: Int) { update { $0.support = value }; Task { await store.sync() } }
+}
+#endif
+
+#if DEBUG
+@MainActor enum WorkspaceReadNativeFixture {
+    static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-performance") }
+    static var largeCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-catalog") }
+    static var projectCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-project-catalog") }
+    static var projectParents: Bool { projectCatalog && ProcessInfo.processInfo.arguments.contains("--workspace-project-parents") }
+    static var templateLibrary: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-template-library") }
+    static func libraryID(_ index:Int)->String {String(format:"ec270000-0000-4000-8000-%012d",index)}
+    static func libraryDocument(changed:Bool=false)->JSON {
+        let source=WorkflowRichNativeDocument.make(count:changed ? 1:40)
+        guard changed else{return source}
+        var document=source.object;document["version"] = .number(2);document["capabilities"] = .array([.string("task_headings")])
+        var tasks=document["tasks"]!.list;var first=tasks[0].object;first["is_heading"] = .bool(true);tasks[0] = .object(first);document["tasks"] = .array(tasks)
+        return .object(document)
+    }
+}
+@MainActor struct WorkspaceReadNativeFixtureView: View {
+    @Environment(Store.self) private var store
+    @State private var status = "Preparing"
+    @State private var projectEditor: Record?
+    @State private var libraryPresented=false
+    var body: some View {
+        NavigationStack {
+            Form {
+                Text(status).accessibilityIdentifier("workspaceReadStatus")
+                Button("Measure row reads") {
+                    do { if WorkspaceReadNativeFixture.projectParents { try store.measureProjectParentFixture() } else if WorkspaceReadNativeFixture.projectCatalog { try store.measureProjectCatalogFixture() } else { try store.measureWorkspaceReadFixture() }; status = "Reads verified" }
+                    catch { status = error.localizedDescription }
+                }.accessibilityIdentifier("measureWorkspaceReads").disabled(status == "Preparing")
+                if WorkspaceReadNativeFixture.templateLibrary {
+                    Button("Open template library") {libraryPresented=true}.accessibilityIdentifier("openProductionTemplateLibrary")
+                }
+                if WorkspaceReadNativeFixture.projectParents {
+                    Button("Edit project hierarchy") {projectEditor=store.record("projects",id:TeamEditorNativeFixture.projectID)}.accessibilityIdentifier("openProjectParentEditor").disabled(status=="Preparing")
+                }
+                #if os(iOS)
+                NavigationLink("Open production list") { TaskScreen(scope: .project(TeamEditorNativeFixture.projectID)) }
+                    .accessibilityIdentifier("openProductionReadList")
+                #endif
+            }.navigationTitle("Workspace reads")
+        }.sheet(item:$projectEditor) {NamedEditor(table:"projects",record:$0)}.sheet(isPresented:$libraryPresented) {TemplateLibraryView()}.task {
+            do { try store.prepareWorkspaceReadFixture(); status = "Ready" }
+            catch { status = error.localizedDescription }
+        }
+    }
+}
+#endif
+
+#if DEBUG
+private enum WorkflowRichNativeDocument {
+    static func make(count: Int) -> JSON {
+            func children(_ root: Int) -> [JSON] {
+                return (0..<3).map { child in .object([
+                    "id": .string("child-\(root)-\(child)"), "title": .string("Design step \(child + 1)"),
+                    "description": .string("Review the next iteration and keep these instructions."),
+                    "priority": .number(2), "duration_minutes": .number(15), "planned_offset": .number(2), "deadline_offset": .number(4),
+                    "project_id": .string("root"), "section_id": .string("s\(root)"),
+                    "labels": .array([.object(["name": .string("Label \(root)")])]),
+                    "subtasks": .array([.object(["id": .string("leaf-\(root)-\(child)"), "title": .string("Approve the details"),
+                        "description": .string("Keep the nested checklist intact."), "priority": .number(3), "duration_minutes": .number(5),
+                        "project_id": .string("root"), "section_id": .string("s\(root)"), "labels": .array([]), "subtasks": .array([])])])
+                ]) }
+            }
+            return .object(["version": .number(1), "kind": .string("project"),
+                "projects": .array([.object(["id": .string("root"), "name": .string("Scale workflow")])]),
+                "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
+                "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array(children($0))]) })])
+    }
+}
+#endif
+
+#if DEBUG
+/// Programmatic Store acceptance only in the reserved disposable app namespace.
+/// The transport routes real responses; it never supplies Auth or table fixtures.
+enum FullSchemaNativeFixture {
+    static var enabled: Bool {
+        ["com.dbakp.taskfold.workflowteststeameditbridge","com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && ProcessInfo.processInfo.arguments.contains("--full-schema-native-testing")
+    }
+    static var root: URL {URL.applicationSupportDirectory.appendingPathComponent("TaskfoldFullSchemaNative-workflowteststeameditbridge",isDirectory:true)}
+    static var protectedStorageRequested: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--full-schema-keychain-testing") }
+    static func keychainService(_ kind: String) -> String {
+        // Even unreadable/invalid test configuration must never fall back to a normal item.
+        let nonce = (try? configuration())?.nonce.uuidString.lowercased() ?? "unconfigured"
+        return "com.taskfold.full-schema." + kind + "." + nonce
+    }
+    static var externalConfiguration: URL? {
+        guard enabled, Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowteststeameditbridge", protectedStorageRequested,
+              let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--full-schema-config=") }) else { return nil }
+        let url = URL(fileURLWithPath: String(argument.dropFirst("--full-schema-config=".count)))
+        let folder = url.deletingLastPathComponent(), prefix = "taskfold-native-audio-control-"
+        guard url.lastPathComponent == "config.json", folder.deletingLastPathComponent().path == "/private/tmp",
+              folder.lastPathComponent.hasPrefix(prefix), UUID(uuidString: String(folder.lastPathComponent.dropFirst(prefix.count))) != nil else { return nil }
+        return url
+    }
+    static func mediaURL(_ nonce: UUID) -> URL {
+        (externalConfiguration?.deletingLastPathComponent() ?? root).appendingPathComponent("audio-media-" + nonce.uuidString.lowercased() + ".m4a")
+    }
+    static func writeReport(_ report: [String: JSON], phase: String) throws {
+        let bytes = try TaskfoldJSONEncoder().encode(report)
+        if externalConfiguration != nil {
+            try FileHandle.standardOutput.write(contentsOf: Data(("TASKFOLD_NATIVE_REPORT " + bytes.base64EncodedString() + "\n").utf8))
+        } else { try bytes.write(to: root.appendingPathComponent(phase + ".json"), options: .atomic) }
+    }
+    static var phase: String {ProcessInfo.processInfo.arguments.first(where:{$0.hasPrefix("--full-schema-phase=")}).map{String($0.dropFirst("--full-schema-phase=".count))} ?? "invalid"}
+    struct Configuration: Codable,Sendable {let version:Int;let nonce:UUID;let account:String;let task:String;let sibling:String;let origin:String;let key:String;let email:String;let password:String;let queuedFingerprint:String?;let child:String?;let audioOrigin:String?;let audioCA:String?;let protectedStorage:Bool?}
+    struct SavedSession:Codable {let nonce:UUID;let session:Session}
+    static func configuration() throws -> Configuration {
+        guard enabled else{throw CancellationError()}
+        if ProcessInfo.processInfo.arguments.contains(where: { $0.hasPrefix("--full-schema-config=") }), externalConfiguration == nil { throw CancellationError() }
+        let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:externalConfiguration ?? root.appendingPathComponent("config.json")))
+        guard c.version==1,UUID(uuidString:c.account) != nil,UUID(uuidString:c.task) != nil,UUID(uuidString:c.sibling) != nil,c.email.hasSuffix("@example.invalid"),
+              let u=URLComponents(string:c.origin),u.scheme=="http",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.query==nil,u.fragment==nil,u.path.isEmpty,
+              ["audio-project-queue","audio-project-loss","audio-project-replay","audio-project-verify","step-ui","step-queue","step-loss","step-replay","step-verify","step-history","step-history-verify","step-close-queue","step-close","step-close-verify","audio-cleanup","audio-create","audio-deny","audio-loss","audio-check","audio-verify","capture","initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
+              (!phase.hasPrefix("child-") && !phase.hasPrefix("structure-") && !phase.hasPrefix("field-review-")) || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
+        if protectedStorageRequested {
+            guard c.protectedStorage == true, c.email == "native-audio-" + c.nonce.uuidString.lowercased() + "@example.invalid" else { throw AppFailure(message: "Invalid protected test scope") }
+            if let externalConfiguration {
+                guard externalConfiguration.deletingLastPathComponent().lastPathComponent == "taskfold-native-audio-control-" + c.nonce.uuidString.lowercased() else { throw CancellationError() }
+            }
+        }
+        if phase.hasPrefix("audio-") {
+            guard let origin=c.audioOrigin,let u=URLComponents(string:origin),u.scheme=="https",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.path.isEmpty,u.query==nil,u.fragment==nil,
+                  let ca=c.audioCA,ca.utf8.count<32000,Data(base64Encoded:ca) != nil else {throw AppFailure(message:"Invalid isolated audio TLS configuration")}
+        }
+        return c
+    }
+    static func journalKey(_ account:String)throws->SymmetricKey {
+        let c=try configuration();guard c.account==account else {throw CancellationError()}
+        if protectedStorageRequested { return try BackupVault.deviceKey(account: account) }
+        // Disposable fixture-only key for the older file-session fixture.
+        return SymmetricKey(data:SHA256.hash(data:Data((c.nonce.uuidString+account).utf8)))
+    }
+    @MainActor static func backend()->Backend {
+        FullSchemaNativeNetwork.offline = !["step-ui","step-queue","capture","initial","child-queue","structure-queue","field-review-queue","structure-review-queue","adoption-queue"].contains(phase)
+        let c=try? configuration()
+        let saved=protectedStorageRequested ? nil : (try? Data(contentsOf:root.appendingPathComponent("session.json"))).flatMap{try? TaskfoldJSONDecoder().decode(SavedSession.self,from:$0)}
+        let session=protectedStorageRequested ? SecureSession.read() : (saved?.nonce==c?.nonce && saved?.session.user.id==c?.account ? saved?.session:nil)
+        let http=URLSessionConfiguration.ephemeral;http.protocolClasses=[FullSchemaNativeProtocol.self]
+        return Backend(configuration:["URL":"https://taskfold-full-schema.invalid","Key":c?.key ?? "unconfigured"],http:URLSession(configuration:http),session:session,persistSession:{session in
+            let c=try configuration(),url=root.appendingPathComponent("session.json")
+            if protectedStorageRequested {
+                guard session == nil || session?.user.id == c.account else { throw CancellationError() }
+                try await SecureSession.saveAsync(session); return
+            }
+            if let session {
+                guard session.user.id==c.account else{throw CancellationError()}
+                try TaskfoldJSONEncoder().encode(SavedSession(nonce:c.nonce,session:session)).write(to:url,options:.atomic)
+                try FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:url.path)
+            }else if FileManager.default.fileExists(atPath:url.path){try FileManager.default.removeItem(at:url)}
+        })
+    }
+}
+enum FullSchemaNativeNetwork {
+    private static let lock=NSLock()
+    private static var disconnected=true,drop=false,drops=0
+    static var offline:Bool {get{lock.withLock{disconnected}}set{lock.withLock{disconnected=newValue}}}
+
+    private static var holdRead=false,heldRead=false,readJoins=0
+    static func armWorkspaceRead(){lock.withLock{holdRead=true;heldRead=false;readJoins=0}}
+    static func releaseWorkspaceRead(){lock.withLock{holdRead=false}}
+    static var workspaceReadIsHeld:Bool {lock.withLock{heldRead}}
+    static var joinedReads:Int {lock.withLock{readJoins}}
+    static func recordReadJoin(){lock.withLock{readJoins+=1}}
+    static func waitForWorkspaceRead(_ request:URLRequest) async throws {
+        guard request.httpMethod=="GET",request.url?.path=="/rest/v1/tasks" else{return}
+        let shouldHold=lock.withLock{guard holdRead else{return false};heldRead=true;return true}
+        guard shouldHold else{return};defer{lock.withLock{heldRead=false}}
+        while lock.withLock({holdRead}) {try Task.checkCancellation();try await Task.sleep(for:.milliseconds(10))}
+    }
+
+    static func armDrop(){lock.withLock{drop=true;drops=0}}
+    static var dropped:Int {lock.withLock{drops}}
+    static func consumeDrop(_ request:URLRequest,_ response:HTTPURLResponse, payload: Data? = nil)->Bool {
+        let projectTransfer = FullSchemaNativeFixture.phase.hasPrefix("audio-project-")
+        if projectTransfer { guard let payload, let body = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: payload), body["request_id"].flatMap({ UUID(uuidString: $0.text) }) != nil, case .bool? = body["replayed"] else { return false } }
+        let expected=projectTransfer ? "/rest/v1/rpc/taskfold_team_project_adoption":FullSchemaNativeFixture.phase.hasPrefix("step-") ? "/rest/v1/rpc/taskfold_child_steps":FullSchemaNativeFixture.phase.hasPrefix("audio-") ? "/functions/v1/audio-comments":FullSchemaNativeFixture.phase.hasPrefix("adoption-") ? "/rest/v1/rpc/taskfold_adopt_child_records":FullSchemaNativeFixture.phase.hasPrefix("structure-") ? "/rest/v1/rpc/taskfold_edit_child_structure":FullSchemaNativeFixture.phase.hasPrefix("child-") ? "/rest/v1/rpc/taskfold_edit_child_task":"/rest/v1/rpc/taskfold_patch_task"
+        guard request.url?.path==expected,(!FullSchemaNativeFixture.phase.hasPrefix("audio-") || projectTransfer || URLComponents(url:request.url!,resolvingAgainstBaseURL:false)?.queryItems?.first(where:{$0.name=="action"})?.value=="publish"),request.httpMethod=="POST",(200..<300).contains(response.statusCode) else{return false}
+        return lock.withLock{guard drop else{return false};drop=false;drops+=1;disconnected=true;return true}
+    }
+}
+private final class FullSchemaNativeNoRedirect:NSObject,URLSessionTaskDelegate,@unchecked Sendable {
+    func urlSession(_ session:URLSession,didReceive challenge:URLAuthenticationChallenge,completionHandler:@escaping(URLSession.AuthChallengeDisposition,URLCredential?)->Void) {
+        guard challenge.protectionSpace.authenticationMethod==NSURLAuthenticationMethodServerTrust else {completionHandler(.performDefaultHandling,nil);return}
+        do {
+            let c=try FullSchemaNativeFixture.configuration()
+            guard let origin=c.audioOrigin,let u=URLComponents(string:origin),u.host==challenge.protectionSpace.host,u.port==challenge.protectionSpace.port,
+                  let encoded=c.audioCA,let data=Data(base64Encoded:encoded),let certificate=SecCertificateCreateWithData(nil,data as CFData),let trust=challenge.protectionSpace.serverTrust,
+                  SecTrustSetPolicies(trust,SecPolicyCreateSSL(true,"127.0.0.1" as CFString))==errSecSuccess,
+                  SecTrustSetAnchorCertificates(trust,[certificate] as CFArray)==errSecSuccess,SecTrustSetAnchorCertificatesOnly(trust,true)==errSecSuccess,
+                  SecTrustEvaluateWithError(trust,nil) else {completionHandler(.cancelAuthenticationChallenge,nil);return}
+            completionHandler(.useCredential,URLCredential(trust:trust))
+        } catch {completionHandler(.cancelAuthenticationChallenge,nil)}
+    }
+
+    func urlSession(_ session:URLSession,task:URLSessionTask,willPerformHTTPRedirection response:HTTPURLResponse,newRequest request:URLRequest,completionHandler:@escaping(URLRequest?)->Void){completionHandler(nil)}
+}
+private final class FullSchemaNativeProtocol:URLProtocol,@unchecked Sendable {
+    private var worker:Task<Void,Never>?
+    private static let forwarding:URLSession={let c=URLSessionConfiguration.ephemeral;c.protocolClasses=[];return URLSession(configuration:c,delegate:FullSchemaNativeNoRedirect(),delegateQueue:nil)}()
+    override class func canInit(with request:URLRequest)->Bool {request.url?.scheme=="https" && request.url?.host=="taskfold-full-schema.invalid"}
+    override class func canonicalRequest(for request:URLRequest)->URLRequest{request}
+    override func startLoading(){
+        guard !FullSchemaNativeNetwork.offline else{client?.urlProtocol(self,didFailWithError:URLError(.notConnectedToInternet));return}
+        worker=Task {
+            do {
+                let c=try FullSchemaNativeFixture.configuration()
+                guard let original=request.url,var target=URLComponents(string:original.path=="/functions/v1/audio-comments" ? (c.audioOrigin ?? c.origin):c.origin),let path=URLComponents(url:original,resolvingAgainstBaseURL:false) else{throw URLError(.badURL)}
+                target.percentEncodedPath=path.percentEncodedPath;target.percentEncodedQuery=path.percentEncodedQuery
+                var forwarded=request;forwarded.url=try target.url.unwrapFullSchema();forwarded.setValue(nil,forHTTPHeaderField:"Host")
+                let (data,response)=try await Self.forwarding.data(for:forwarded)
+                guard !Task.isCancelled,let http=response as? HTTPURLResponse else{throw CancellationError()}
+                try await FullSchemaNativeNetwork.waitForWorkspaceRead(request)
+                if FullSchemaNativeNetwork.consumeDrop(request,http,payload:data){client?.urlProtocol(self,didFailWithError:URLError(.networkConnectionLost));return}
+                let deliveredResponse=HTTPURLResponse(url:original,statusCode:http.statusCode,httpVersion:"HTTP/1.1",headerFields:http.allHeaderFields.reduce(into:[String:String]()){if let key=$1.key as? String{$0[key]=String(describing:$1.value)}})!
+                client?.urlProtocol(self,didReceive:deliveredResponse,cacheStoragePolicy:.notAllowed);client?.urlProtocol(self,didLoad:data);client?.urlProtocolDidFinishLoading(self)
+            }catch{client?.urlProtocol(self,didFailWithError:error)}
+        }
+    }
+    override func stopLoading(){worker?.cancel()}
+}
+private extension Optional where Wrapped==URL {func unwrapFullSchema()throws->URL{guard let self else{throw URLError(.badURL)};return self}}
+@MainActor struct FullSchemaNativeView:View {
+    @Environment(Store.self) private var store
+    @State private var status="Starting genuine Store check"
+    @State private var stepReview: ReviewedTaskStepsOpening?
+    var body:some View {
+        VStack(alignment:.leading,spacing:12){Text("Offline recovery").font(.title2);Text(status).accessibilityIdentifier("fullSchemaNativeStatus");if let c=try? FullSchemaNativeFixture.configuration(),let task=store.record("tasks",id:c.task){Text(task.title).font(.headline);Text(task.string("description"))}}.padding().task {
+            guard status=="Starting genuine Store check" else{return}
+            do{try await store.runFullSchemaNativePhase();status="Verified "+FullSchemaNativeFixture.phase; if FullSchemaNativeFixture.phase == "step-ui" { stepReview = .init(root: try FullSchemaNativeFixture.configuration().task) }}
+            catch{status=error.localizedDescription;try? store.writeFullSchemaNativeFailure(error)}
+        }
+        .sheet(item: $stepReview) { ReviewedTaskStepsView(opening: $0) }
+    }
+}
+#endif

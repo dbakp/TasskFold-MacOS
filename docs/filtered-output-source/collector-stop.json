@@ -1,0 +1,8 @@
+{
+  "action": "SIGINT only to ancillary Simulator diagnostic collector after all selected tests ended",
+  "pid": 22752,
+  "parent": 21290,
+  "args": "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl diagnose -l -b --timeout=600 --log-option=--last --log-option=8m --output=/tmp/taskfold-print-source-phone.xcresult/Staging/1_Test/Diagnostics/simctl_diagnostics --no-archive --udid=F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "testExecutionAlreadyTerminal": true,
+  "testFailurePreserved": true
+}

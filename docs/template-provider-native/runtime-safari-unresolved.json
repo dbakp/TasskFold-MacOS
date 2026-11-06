@@ -1,0 +1,387 @@
+{
+  "resultBundle": "taskfold-template-provider-mac-v1.xcresult",
+  "referencePID": 95077,
+  "method": "UUID-matched current image base plus archived image offset; atos reads the live process only. Missing images remain unresolved.",
+  "reportedQoSWarningCount": 1,
+  "archivedQoSEventCount": 1,
+  "archiveCoversReportedWarnings": true,
+  "events": [
+    {
+      "timestamp": "2026-10-27 14:16:47.575145+0100",
+      "process": "Taskfold",
+      "processUUID": "023DF4D9-E8FF-30EC-AED4-040001E836F6",
+      "sender": "/usr/lib/libRPAC.dylib",
+      "metadata": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition waitUntilDate:]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "frames": [
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 575796,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 580976,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 26876,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 111792,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 70496,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 31688,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 574396,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 572388,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 566932,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "91DACE39-FA28-3191-818D-1FCC6A0E615A",
+          "offset": 231868,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2645740,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 15719716,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3481576,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3476820,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3476252,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 14453548,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2721816,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2721560,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2632252,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10842584,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10845728,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 1656032,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846616,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846712,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846380,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10827376,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10825960,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10827244,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9994340,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9996524,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9996040,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 8229368,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 8243660,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 169180,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 162200,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 136676,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 35420,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 68784,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 69232,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 67500,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 183452,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 514816,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 514624,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 511620,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 1372772,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 775520,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 788668,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 2400588,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 7230416,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 233604,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 12380524,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 12379768,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 180540,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 18352,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 1096440,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 5007576,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 7939960,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "9150EC73-73AB-35E3-9125-D859E0988841",
+          "offset": 16824432,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "9150EC73-73AB-35E3-9125-D859E0988841",
+          "offset": 16913232,
+          "image": null,
+          "relocatedAddress": null
+        }
+      ],
+      "dataDetectorsServicesMenuInspectionObserved": false
+    }
+  ],
+  "limits": [
+    "Historical runtime warnings remain recorded; no clean-runtime pass is inferred.",
+    "Zero matching archived events does not mean zero reported warnings. Missing archival coverage remains unclassified.",
+    "A known system stack is evidence of the observed trigger, not proof that every hang has this cause.",
+    "No app launch, input, network request or persistent data mutation occurs."
+  ]
+}

@@ -1,0 +1,675 @@
+import SwiftUI
+
+struct TeamTaskDeletionRequest: Identifiable {
+    let id: UUID
+    let drafts: [TeamTaskEditorDraft]
+    let selection: TeamTaskDeletionSelection?
+    let current: () -> Bool
+    let perform: (UUID, [String: TeamAudioLifecycleReview]) -> Bool
+    let completed: () -> Void
+    var draft: TeamTaskEditorDraft { drafts[0] }
+    init(draft: TeamTaskEditorDraft, current: @escaping () -> Bool, perform: @escaping (UUID, [String: TeamAudioLifecycleReview]) -> Bool, completed: @escaping () -> Void) {
+        id = UUID(); drafts = [draft]; selection = nil
+        self.current = current; self.perform = perform; self.completed = completed
+    }
+    init(selection: TeamTaskDeletionSelection, current: @escaping () -> Bool, perform: @escaping ([String: TeamAudioLifecycleReview]) -> Bool, completed: @escaping () -> Void) {
+        id = selection.requestID; drafts = selection.drafts; self.selection = selection
+        self.current = current; self.perform = { _, reviews in perform(reviews) }; self.completed = completed
+    }
+}
+
+struct TeamTaskDeletionReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: TeamTaskDeletionRequest
+    @State private var message: String?
+    @State private var finished = false
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var audioReviews: [String: TeamAudioLifecycleReview] = [:]
+    @State private var audioConsent = false
+    @State private var audioLoading = false
+    @State private var audioError: String?
+    @State private var audioRefresh = UUID()
+    @State private var audioLifecycle: String?
+    private var lifecycle: String { "\(store.userID)|\(store.workspaceGeneration)|\(store.backend.reminderSessionIncarnation)|\((try? store.backend.accountRemovalOrigin) ?? "")|\(scenePhase)" }
+    private var audioCount: Int { audioReviews.values.reduce(0) { $0 + $1.count } }
+    private var audioReady: Bool {
+        !store.teamAudioDeletionReviewEnabled || scenePhase == .active && audioLifecycle == lifecycle &&
+        !audioLoading && audioError == nil && Set(audioReviews.keys) == Set(request.drafts.map(\.source.id)) &&
+        audioReviews.values.allSatisfy { (try? $0.acknowledgement()) != nil || $0.enabled && $0.count == 0 && $0.expiresAt > Date() } &&
+        (audioCount == 0 || audioConsent)
+    }
+    @MainActor private func loadAudioReview() async {
+        audioReviews = [:]; audioConsent = false; audioError = nil; audioLifecycle = nil; audioLoading = false
+        guard store.teamAudioDeletionReviewEnabled, scenePhase == .active, !finished, refusal == nil else { return }
+        let opened = lifecycle, attempt = audioRefresh; audioLoading = true
+        defer { if !Task.isCancelled, lifecycle == opened, audioRefresh == attempt { audioLoading = false } }
+        do {
+            let change: Mutation
+            if let selection = request.selection { change = try store.reviewedTeamTaskDeletionSelection(selection) }
+            else { change = try store.reviewedTeamTaskDeletion(request.draft, requestID: request.id) }
+            let values = try await store.teamAudioDeletionReviews(for: change)
+            try Task.checkCancellation()
+            guard lifecycle == opened, audioRefresh == attempt, refusal == nil else { return }
+            audioReviews = values; audioLifecycle = opened; audioLoading = false
+            if let expiry = values.values.map(\.expiresAt).min() {
+                try await Task.sleep(for: .seconds(max(0, expiry.timeIntervalSinceNow)))
+                guard lifecycle == opened, audioRefresh == attempt, !finished else { return }
+                audioReviews = [:]; audioConsent = false; audioError = "This recording review expired. Refresh before deleting."
+            }
+        } catch is CancellationError { }
+        catch { if !Task.isCancelled, lifecycle == opened, audioRefresh == attempt { audioError = error.localizedDescription } }
+    }
+    private var refusal: String? {
+        guard !finished, request.current() else { return "This review is no longer current. Close it and review the tasks again before deleting." }
+        do {
+            if let selection = request.selection { _ = try store.reviewedTeamTaskDeletionSelection(selection) }
+            else { _ = try store.reviewedTeamTaskDeletion(request.draft, requestID: request.id) }
+            return nil
+        }
+        catch { return error.localizedDescription }
+    }
+    var body: some View {
+        let blocked = refusal
+        NavigationStack {
+            Form {
+                if blocked == nil {
+                Section {
+                    if request.selection != nil {
+                        Text("\(request.drafts.count) shared tasks").font(.title2.weight(.semibold))
+                        Text("Delete only the tasks listed below, for everyone in their projects. Their notes, checklists, attachments and conversations stay available for Undo on this device. Unselected repeat occurrences stay in place and are detached when their parent is deleted.").foregroundStyle(.secondary)
+                    } else {
+                    Text(request.draft.source.title).font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true)
+                    LabeledContent("Project", value: store.record("projects", id: request.draft.scope.project)?.name ?? "Shared project")
+                    Text("This removes the task for everyone in this project, including its saved notes, checklist and attachments. Other tasks in the repeat series stay in place.").foregroundStyle(.secondary)
+                    }
+                }
+                if request.selection != nil {
+                    Section("Selected tasks") {
+                        ForEach(request.drafts, id: \.source.id) { draft in
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(draft.source.title).fixedSize(horizontal: false, vertical: true)
+                                Text(store.record("projects", id: draft.scope.project)?.name ?? "Shared project").font(.caption).foregroundStyle(.secondary)
+                            }.accessibilityElement(children: .combine)
+                        }
+                    }.accessibilityIdentifier("teamDeletionSelection")
+                }
+                Section {
+                    Label("Undo stays available on this device", systemImage: "arrow.uturn.backward")
+                    Text("The shared conversation is preserved for Undo. Restoring requires current project access.").font(.footnote).foregroundStyle(.secondary)
+                }
+                }
+                if store.teamAudioDeletionReviewEnabled, blocked == nil {
+                    Section("Recording recovery") {
+                        if audioLoading { ProgressView("Checking recordings…").accessibilityIdentifier("teamDeletionAudioLoading") }
+                        else if let audioError {
+                            Text(audioError).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("teamDeletionAudioError")
+                            Button("Refresh recording review") { audioRefresh = UUID() }.buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("refreshTeamDeletionAudio")
+                        } else if audioReviews.count == request.drafts.count {
+                            Label(audioCount == 0 ? "No shared recordings" : audioCount == 1 ? "1 recording kept for Undo" : "\(audioCount) recordings kept for Undo", systemImage: "waveform")
+                            if audioCount > 0 {
+                                Text("Recordings become hidden from the project. You can restore them with Undo for 30 days, with current project access. After that, they are removed from cloud storage.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                Toggle("I understand the 30-day recording recovery period", isOn: $audioConsent).accessibilityIdentifier("teamDeletionAudioConsent")
+                            }
+                        }
+                    }
+                }
+                if let blocked { Section { Label("Deletion paused", systemImage: "lock.shield"); Text(blocked).foregroundStyle(.secondary) }.accessibilityIdentifier("teamDeletionPaused") }
+                if let message { Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("teamDeletionError") } }
+                Section {
+                    Button(role: .destructive) {
+                        guard !finished, refusal == nil, audioReady else { return }
+                        if request.perform(request.id, audioReviews) {
+                            finished = true; request.completed(); dismiss()
+                        } else {
+                            message = store.error ?? "The tasks could not be deleted. Their saved contents are unchanged; try again."
+                            store.error = nil
+                        }
+                    } label: {
+                        Label(request.selection == nil ? "Delete task for everyone" : "Delete \(request.drafts.count) tasks for everyone", systemImage: "trash").foregroundStyle(blocked == nil && audioReady ? Color.red : Color.secondary)
+                    }.disabled(blocked != nil || !audioReady).accessibilityIdentifier("confirmTeamTaskDeletion")
+                }
+                #if DEBUG
+                if TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-delete-testing") {
+                    Section {
+                        Button("Change test role to viewer") { store.revokeTeamEditorNativeFixture() }.accessibilityIdentifier("revokeTeamDeletionFixture")
+                        Button("Change saved test task") { store.changeTeamDeletionFixtureSource() }.accessibilityIdentifier("changeTeamDeletionFixture")
+                        Button("Fail the next test save") { store.failTeamDeletionFixtureSave() }.accessibilityIdentifier("failTeamDeletionFixture")
+                    }
+                }
+                #endif
+            }.formStyle(.grouped).accessibilityIdentifier("teamDeletionForm")
+            .navigationTitle(request.selection == nil ? "Delete shared task?" : "Delete shared tasks?")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelTeamTaskDeletion") } }
+        }
+        .task(id: "\(lifecycle)|\(audioRefresh)") { await loadAudioReview() }
+        .privacySensitive()
+        #if os(macOS)
+        .frame(minWidth: 460, idealWidth: 520, minHeight: 430, idealHeight: 580)
+        #endif
+    }
+}
+
+
+struct TeamTaskPlanningRequest: Identifiable {
+    let selection: TeamTaskPlanningSelection
+    let title: String
+    let perform: () -> Bool
+    let completed: () -> Void
+    var back: (() -> Void)? = nil
+    var assignmentName: String? = nil
+    var id: UUID { selection.requestID }
+}
+
+struct TeamTaskPlanningReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: TeamTaskPlanningRequest
+    @State private var message: String?
+    @State private var finished = false
+    private var changesLabels: Bool { request.selection.changes.values.contains { $0["labels"] != nil } }
+    private var changesAssignment: Bool { request.selection.changes.values.contains { $0["assigned_to"] != nil } }
+    private var refusal: String? {
+        guard !finished else { return "This selection has already been saved." }
+        do { _ = try store.reviewedTeamTaskPlanningSelection(request.selection); return nil }
+        catch { return error.localizedDescription }
+    }
+    var body: some View {
+        let blocked = refusal
+        NavigationStack {
+            Form {
+                Section {
+                    Label(request.title, systemImage: changesLabels ? "tag" : changesAssignment ? "person.crop.circle.badge.checkmark" : "calendar.badge.checkmark").font(.title2.weight(.semibold))
+                    Text("Review \(request.selection.drafts.count) shared \(request.selection.drafts.count == 1 ? "task" : "tasks"). This change affects everyone with access. The complete selection saves together; a changed or unavailable task pauses the whole action.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if blocked == nil {
+                    Section("Selected tasks and changes") {
+                        ForEach(request.selection.drafts, id: \.source.id) { draft in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(draft.source.title).font(.headline).fixedSize(horizontal: false, vertical: true)
+                                Text(store.record("projects", id: draft.scope.project)?.name ?? "Shared project").font(.caption).foregroundStyle(.secondary)
+                                ForEach(displayKeys(request.selection.changes[draft.source.id] ?? [:]), id: \.self) { key in
+                                    if key == "labels" {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Labels after change").font(.caption).foregroundStyle(.secondary)
+                                            let labels = request.selection.changes[draft.source.id]![key]!.list
+                                            if labels.isEmpty { Text("No labels") }
+                                            ForEach(Array(labels.enumerated()), id: \.offset) { _, value in
+                                                Label(TeamTaskLabelsDraft.displayName(value.text) ?? "Unrecognized saved label", systemImage: "tag").fixedSize(horizontal: false, vertical: true)
+                                            }
+                                        }.font(.callout)
+                                    } else { LabeledContent(fieldTitle(key), value: valueTitle(request.selection.changes[draft.source.id]![key]!, key: key)).font(.callout) }
+                                }
+                            }.padding(.vertical, 5).accessibilityElement(children: .combine)
+                        }
+                    }.accessibilityIdentifier("teamPlanningSelection")
+                    Section {
+                        Label("Undo stays available on this device", systemImage: "arrow.uturn.backward")
+                        Text(changesAssignment ? "Undo requires current access and the same saved task contents. Notes, conversations, repeat rules and other planning details are kept." : "Undo requires current access and the same saved task contents. Notes, conversations, assignments and repeat rules are kept.").font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                if let blocked { Section { Label("Planning paused", systemImage: "lock.shield"); Text(blocked).foregroundStyle(.secondary) }.accessibilityIdentifier("teamPlanningPaused") }
+                if let message { Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("teamPlanningError") } }
+                Section {
+                    Button("Save changes together") {
+                        guard !finished, refusal == nil else { return }
+                        if request.perform() { finished = true; request.completed(); dismiss() }
+                        else { message = store.error ?? "The selection could not be saved. Your tasks are unchanged; try again."; store.error = nil }
+                    }.disabled(blocked != nil || finished).accessibilityIdentifier("confirmTeamPlanning")
+                }
+                #if DEBUG
+                if TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-planning-testing") {
+                    Section("Isolated test controls") {
+                        Button("Change saved test task") { store.changeTeamDeletionFixtureSource() }.accessibilityIdentifier("changeTeamPlanningFixture")
+                        Button("Fail next test save") { store.failTeamDeletionFixtureSave() }.accessibilityIdentifier("failTeamPlanningFixture")
+                    }
+                }
+                #endif
+            }.formStyle(.grouped).accessibilityIdentifier("teamPlanningForm")
+            .navigationTitle("Review changes")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+             .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelTeamPlanning") }
+                if let back = request.back { ToolbarItem(placement: .primaryAction) { Button("Edit choice") { back() }.accessibilityIdentifier("editTeamPlanningChoice") } }
+            }
+            #if os(macOS)
+            .frame(minWidth: 500, idealWidth: 580, minHeight: 440)
+            #endif
+        }.privacySensitive()
+    }
+    private func fieldTitle(_ key: String) -> String {
+        switch key { case "priority": "Priority"; case "due_date": "Date"; case "due_time": "Time"; case "time_zone": "Time zone"; case "scheduled_at": "Date and time"; case "deadline_date": "Deadline"; case "duration_minutes": "Estimate"; case "assigned_to": "Assign to"; default: "Planning" }
+    }
+    private func displayKeys(_ fields: [String: JSON]) -> [String] {
+        ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels"].filter { key in
+            guard fields[key] != nil else { return false }
+            if key == "scheduled_at", fields["due_date"] != nil || fields["due_time"] != nil { return false }
+            if fields["due_date"] == .null, ["due_time", "time_zone"].contains(key), fields[key] == .null { return false }
+            return true
+        }
+    }
+    private func valueTitle(_ value: JSON, key: String) -> String {
+        switch value {
+        case .null: return key == "assigned_to" ? "Unassigned" : "None"
+        case .string(let text):
+            if key == "assigned_to" { return request.assignmentName ?? "Team member" }
+            if ["due_date", "deadline_date"].contains(key), let date = Dates.parse(text) { return date.formatted(date: .abbreviated, time: .omitted) }
+            if key == "scheduled_at", let date = ISO8601DateFormatter().date(from: text) { return date.formatted(date: .abbreviated, time: .shortened) }
+            return text
+        case .number(let number):
+            if key == "priority", number == 4 { return "None" }
+            return number.formatted(.number) + (key == "duration_minutes" ? " min" : "")
+        default: return "Review required"
+        }
+    }
+}
+
+
+struct TeamTaskPlanningSheet: ViewModifier {
+    @Binding var request: TeamTaskPlanningRequest?
+    @Binding var input: BulkTaskPlanningRequest?
+    @Binding var assignment: BulkTaskAssignmentRequest?
+    @Binding var labels: BulkTaskLabelsRequest?
+    @Binding var completion: TeamTaskCompletionRequest?
+    init(request: Binding<TeamTaskPlanningRequest?>, input: Binding<BulkTaskPlanningRequest?> = .constant(nil), assignment: Binding<BulkTaskAssignmentRequest?> = .constant(nil), labels: Binding<BulkTaskLabelsRequest?> = .constant(nil), completion: Binding<TeamTaskCompletionRequest?> = .constant(nil)) { _completion = completion; _request = request; _input = input; _assignment = assignment; _labels = labels }
+    func body(content: Content) -> some View {
+        content.sheet(item: $completion) { TeamTaskCompletionReview(request: $0) }.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }.sheet(item: $input) { BulkTaskPlanningEditor(request: $0) }.sheet(item: $assignment) { BulkTaskAssignmentEditor(request: $0) }.sheet(item: $labels) { BulkTaskLabelsEditor(request: $0) }
+    }
+}
+
+struct TeamTaskCompletionRequest: Identifiable {
+    let selection: TeamTaskCompletionSelection
+    let perform: () -> Bool
+    let completed: () -> Void
+    var id: UUID { selection.requestID }
+}
+
+struct TeamTaskCompletionReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: TeamTaskCompletionRequest
+    @State private var message: String?
+    @State private var finished = false
+    private var refusal: String? {
+        guard !finished else { return "This selection has already been saved." }
+        do { _ = try store.reviewedTeamTaskCompletionSelection(request.selection); return nil }
+        catch { return error.localizedDescription }
+    }
+    var body: some View {
+        let blocked = refusal
+        NavigationStack {
+            Form {
+                Section {
+                    Label("Complete together", systemImage: "checkmark.circle").font(.title2.weight(.semibold))
+                    Text("Review the shared tasks below. The entire selection saves together for everyone with access. Undo stays available on this device.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if blocked == nil {
+                    Section("Selected tasks") {
+                        ForEach(request.selection.drafts, id: \.source.id) { draft in
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(draft.source.title).font(.headline)
+                                Text(draft.source.completed ? "Already completed · unchanged" : "Will complete").font(.caption).foregroundStyle(.secondary)
+                                Text(store.record("projects", id: draft.scope.project)?.name ?? "Shared project").font(.caption).foregroundStyle(.secondary)
+                            }.fixedSize(horizontal: false, vertical: true).accessibilityElement(children: .combine)
+                        }
+                    }
+                    if !request.selection.successors.isEmpty {
+                        Section("Next repeat occurrences") {
+                            Text("The next occurrence is kept if it already exists. Other occurrences stay in place.").font(.footnote).foregroundStyle(.secondary)
+                            ForEach(Array(request.selection.successors.enumerated()), id: \.offset) { _, task in
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(task.title)
+                                    Text(task.string("due_date")).font(.caption).foregroundStyle(.secondary)
+                                }.accessibilityElement(children: .combine)
+                            }
+                        }
+                    }
+                }
+                if let blocked { Section { Label("Completion paused", systemImage: "lock.shield"); Text(blocked).foregroundStyle(.secondary) }.accessibilityIdentifier("teamCompletionPaused") }
+                if let message { Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("teamCompletionError") } }
+                Section {
+                    Button {
+                        guard !finished, refusal == nil else { return }
+                        if request.perform() { finished = true; request.completed(); dismiss() }
+                        else { message = store.error ?? "The selection could not be saved. Try again."; store.error = nil }
+                    } label: { Label("Complete \(request.selection.completingCount) \(request.selection.completingCount == 1 ? "task" : "tasks")", systemImage: "checkmark.circle.fill") }
+                    .disabled(blocked != nil).accessibilityIdentifier("confirmTeamTaskCompletion")
+                }
+            }.formStyle(.grouped).accessibilityIdentifier("teamCompletionForm")
+            .navigationTitle("Complete shared tasks?")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelTeamTaskCompletion") } }
+        }
+        #if os(macOS)
+        .frame(minWidth: 460, idealWidth: 520, minHeight: 430, idealHeight: 580)
+        #endif
+    }
+}
+
+/// Available from sync attention and Backups & restore. Opening never changes
+/// the queued intent; an explicit task-only choice requires a terminal closure.
+private enum TeamAudioRestoreRecoveryPresentation: Equatable {
+    case task(TeamAudioRestoreRecoveryCommand)
+    case selection(TeamAudioRestoreSelection)
+}
+struct TeamAudioRestoreRecoveryButton: View {
+    @Environment(Store.self) private var store
+    @State private var request: TeamAudioRestoreRecoveryPresentation?
+    private var pending: TeamAudioRestoreRecoveryPresentation? {
+        if let selection = store.pendingAudioRestoreSelectionRecovery { return .selection(selection) }
+        if let command = store.pendingAudioRestoreRecovery { return .task(command) }
+        return nil
+    }
+    var body: some View {
+        Group {
+            if pending != nil || request != nil {
+                Button("Review recording Undo", systemImage: "arrow.uturn.backward.circle") { request = pending }
+                    .disabled(pending == nil).accessibilityIdentifier("reviewAudioRestoreRecovery")
+            }
+        }
+        .sheet(isPresented: Binding(get: { request != nil }, set: { if !$0 { request = nil } })) {
+            if let captured = request {
+                let close = { if request == captured { request = nil } }
+                switch captured {
+                case .task(let command): TeamAudioRestoreRecoveryView(command: command, close: close)
+                case .selection(let selection): TeamAudioRestoreSelectionRecoveryView(selection: selection, close: close)
+                }
+            }
+        }
+    }
+}
+
+struct TeamAudioRestoreRecoveryView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    let command: TeamAudioRestoreRecoveryCommand
+    let close: () -> Void
+    @State private var receipt: TeamAudioRestoreRecoveryReceipt?
+    @State private var review: TeamAudioLifecycleReview?
+    @State private var opening: WorkspaceBinding?
+    @State private var session: UUID?
+    @State private var loaded: String?
+    @State private var reload = UUID()
+    @State private var consent = false
+    @State private var busy = false
+    @State private var submitting = false
+    @State private var message: String?
+    private var lifecycle: String { "\(store.userID)|\(store.workspaceGeneration)|\(store.backend.reminderSessionIncarnation)|\((try? store.backend.accountRemovalOrigin) ?? "")|\(phase)|\(store.online)|\(store.syncing)|\(store.snapshot.pending.first?.id.uuidString ?? "")" }
+    private var current: Bool {
+        guard let opening, let session else { return false }
+        return phase == .active && loaded == lifecycle && store.audioRestoreRecoveryIsCurrent(command, workspace: opening, session: session)
+    }
+    private var canRestoreTaskOnly: Bool {
+        current && !busy && consent && review?.policy == .omitExpired && (try? review?.acknowledgement()) != nil
+    }
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Label("Your saved task is kept", systemImage: "doc.text").font(.headline)
+                    if phase == .active, store.pendingAudioRestoreRecovery == command {
+                        Text(command.original.fields["title"]?.text ?? "Shared task").fixedSize(horizontal: false, vertical: true)
+                    }
+                    Text("Check the original Undo before choosing how to recover. No recording is uploaded again.").foregroundStyle(.secondary)
+                }
+                if busy { Section { ProgressView("Checking saved recovery…") }.accessibilityIdentifier("audioRestoreRecoveryLoading") }
+                if let receipt, current {
+                    if receipt.state == .recorded {
+                        Section {
+                            Label("Undo already applied", systemImage: "checkmark.icloud")
+                            Text("The service has the original Undo. Confirm it to refresh this device without creating another restoration.").foregroundStyle(.secondary)
+                            Button("Confirm saved Undo") { Task { await confirmRecorded(receipt) } }.disabled(busy).buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("confirmRecordedAudioRestore")
+                        }
+                    } else if let review {
+                        Section("Recording recovery") {
+                            if review.policy == .omitExpired {
+                                Label("\(review.count) \(review.count == 1 ? "recording has" : "recordings have") expired", systemImage: "waveform")
+                                if review.cleanupPending {
+                                    Text("Cloud cleanup is still being confirmed. Keep the original request and check again before recovering without these recordings.").foregroundStyle(.secondary)
+                                } else {
+                                    Text("The recordings can no longer be recovered. The task can be restored without them; its saved title, notes and checklist are kept. This choice does not recreate the audio.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                    Toggle("Restore the task without \(review.count) expired \(review.count == 1 ? "recording" : "recordings")", isOn: $consent).disabled(busy).accessibilityIdentifier("audioRestoreOmissionConsent")
+                                    Button("Restore task without recordings") { Task { await restoreTaskOnly() } }
+                                        .disabled(!canRestoreTaskOnly).buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("confirmTaskOnlyAudioRestore")
+                                }
+                            } else {
+                                Label("Original recording recovery is available", systemImage: "waveform")
+                                Text("Retry the original saved Undo to recover its recordings. Its saved identity and policy stay unchanged.").foregroundStyle(.secondary)
+                                Button("Retry original Undo") { guard current, !busy else { return }; Task { await store.sync() }; finishPresentation() }
+                                    .disabled(busy || receipt.state == .closed).buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("retryOriginalAudioRestore")
+                            }
+                        }
+                    }
+                }
+                if let message { Section { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioRestoreRecoveryMessage") } }
+                if !busy {
+                    Section { Button("Check recovery again") { reload = UUID() }.buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("refreshAudioRestoreRecovery") }
+                }
+            }.formStyle(.grouped).privacySensitive().accessibilityIdentifier("audioRestoreRecoveryForm").navigationTitle("Recording Undo")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Later") { finishPresentation() }.disabled(submitting).accessibilityIdentifier("cancelAudioRestoreRecovery") } }
+        }
+        .interactiveDismissDisabled(submitting)
+        .task(id: "\(lifecycle)|\(reload)") { await load() }
+        #if os(macOS)
+        .frame(minWidth: 460, idealWidth: 520, minHeight: 430, idealHeight: 580)
+        #endif
+    }
+    @MainActor private func finishPresentation() { submitting = false; close() }
+    @MainActor private func load() async {
+        receipt = nil; review = nil; consent = false; loaded = nil; message = nil; busy = false
+        let expected = lifecycle, attempt = reload
+        guard phase == .active else { return }
+        let workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), session = store.backend.reminderSessionIncarnation
+        guard store.pendingAudioRestoreRecovery == command else { message = "This recovery is no longer current. Close it and review the saved task again."; return }
+        guard store.online, !store.syncing else { message = store.online ? "Finishing the current sync. Recovery will refresh when it stops." : "Connect to check this saved recovery."; return }
+        guard store.audioRestoreRecoveryIsCurrent(command, workspace: workspace, session: session) else { busy = false; message = "This recovery is no longer current. Close it and review the saved task again."; return }
+        busy = true
+        defer { if !Task.isCancelled, lifecycle == expected, reload == attempt { busy = false } }
+        do {
+            let outcome = try await store.backend.teamAudioRestoreRecovery(command, action: .inspect)
+            try Task.checkCancellation()
+            guard expected == lifecycle, attempt == reload, store.audioRestoreRecoveryIsCurrent(command, workspace: workspace, session: session) else { return }
+            let metadata = outcome.state == .recorded ? nil : try await store.backend.teamAudioLifecycleReview(command.scope)
+            try Task.checkCancellation()
+            guard expected == lifecycle, attempt == reload, store.audioRestoreRecoveryIsCurrent(command, workspace: workspace, session: session) else { return }
+            receipt = outcome; review = metadata; opening = workspace; self.session = session; loaded = expected; busy = false
+            if let metadata {
+                let expiry = metadata.policy == .retain ? min(metadata.expiresAt, metadata.retainUntil ?? metadata.expiresAt) : metadata.expiresAt
+                try await Task.sleep(for: .seconds(max(0, expiry.timeIntervalSinceNow)))
+                guard expected == lifecycle, attempt == reload else { return }
+                review = nil; consent = false; loaded = nil; message = "This recording review expired. Check recovery again before continuing."
+            }
+        } catch is CancellationError { }
+        catch { guard expected == lifecycle, attempt == reload else { return }; message = error.localizedDescription }
+    }
+    @MainActor private func confirmRecorded(_ receipt: TeamAudioRestoreRecoveryReceipt) async {
+        guard current, !busy, let opening, let session else { return }
+        let expected = lifecycle; busy = true; submitting = true
+        defer { submitting = false; if expected == lifecycle { busy = false } }
+        do {
+            try await store.confirmRecordedAudioRestore(receipt, workspace: opening, session: session)
+            // A successful acknowledgement removes the queue head and changes
+            // lifecycle. Keep the workspace/session fence while closing its review.
+            guard phase == .active, opening.matches(account: store.userID, generation: store.workspaceGeneration),
+                  session == store.backend.reminderSessionIncarnation, command.scope.origin == (try? store.backend.accountRemovalOrigin) else { return }
+            finishPresentation()
+        }
+        catch { guard expected == lifecycle else { return }; message = error.localizedDescription }
+    }
+    @MainActor private func restoreTaskOnly() async {
+        guard canRestoreTaskOnly, let review, let opening, let session else { return }
+        let expected = lifecycle; busy = true; submitting = true
+        defer { submitting = false; if expected == lifecycle { busy = false } }
+        do {
+            let closed = try await store.backend.teamAudioRestoreRecovery(command, action: .close)
+            guard expected == lifecycle, phase == .active, store.audioRestoreRecoveryIsCurrent(command, workspace: opening, session: session) else { throw CancellationError() }
+            if closed.state == .recorded {
+                receipt = closed; self.review = nil; consent = false
+                message = "The original Undo finished while you were reviewing. Confirm its saved result instead."; return
+            }
+            try store.replaceExpiredAudioRestore(closed, review: review, workspace: opening, session: session)
+            finishPresentation()
+        } catch is CancellationError { }
+        catch { guard expected == lifecycle else { return }; message = error.localizedDescription; consent = false }
+    }
+}
+
+struct TeamAudioRestoreSelectionRecoveryView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    let selection: TeamAudioRestoreSelection
+    let close: () -> Void
+    @State private var receipt: TeamAudioRestoreSelectionReceipt?
+    @State private var review: TeamAudioRestoreSelectionReview?
+    @State private var opening: WorkspaceBinding?
+    @State private var session: UUID?
+    @State private var loaded: String?
+    @State private var reload = UUID()
+    @State private var visibility = UUID()
+    @State private var consent = false
+    @State private var busy = false
+    @State private var submitting = false
+    @State private var message: String?
+    private var lifecycle: String { "\(store.userID)|\(store.workspaceGeneration)|\(store.backend.reminderSessionIncarnation)|\((try? store.backend.accountRemovalOrigin) ?? "")|\(phase)|\(store.online)|\(store.syncing)|\(store.snapshot.pending.first?.id.uuidString ?? "")" }
+    private var current: Bool {
+        guard let opening, let session else { return false }
+        return phase == .active && loaded == lifecycle && store.audioRestoreSelectionRecoveryIsCurrent(selection, workspace: opening, session: session)
+    }
+    private var canRecover: Bool {
+        guard current, !busy, !submitting, consent, let review,
+              let fresh = try? TeamAudioRestoreSelectionReview(selection: selection, reviews: review.members) else { return false }
+        return fresh.requiresOmissionConsent && !fresh.waitingForCleanup
+    }
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Label("Your \(selection.scopes.count) saved tasks are kept", systemImage: "doc.on.doc").font(.headline)
+                    Text("Review the whole selection together. Available recordings stay with their tasks; no audio is uploaded again.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if phase == .active, store.pendingAudioRestoreSelectionRecovery == selection {
+                    Section("Selected tasks") {
+                        ForEach(selection.original.teamTaskBatch!.items, id: \.recordID) { item in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(item.fields["title"]?.text ?? "Shared task").fixedSize(horizontal: false, vertical: true)
+                                if let member = review?.members.first(where: { $0.scope.task == item.recordID }), current {
+                                    Text(member.count == 0 ? "No recordings" : "\(member.count) \(member.count == 1 ? "recording" : "recordings") \(member.policy == .omitExpired ? "expired" : "available")")
+                                        .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                        }
+                    }.accessibilityIdentifier("audioSelectionRecoveryMembers")
+                }
+                if busy || submitting { Section { ProgressView("Checking saved selection…") }.accessibilityIdentifier("audioSelectionRecoveryLoading") }
+                if let receipt, current {
+                    if receipt.state == .recorded {
+                        Section {
+                            Label("Undo already applied", systemImage: "checkmark.icloud")
+                            Text("Confirm the saved result for the whole selection. No task will be restored twice.").foregroundStyle(.secondary)
+                            Button("Confirm saved Undo") { Task { await confirmRecorded(receipt) } }
+                                .disabled(busy || submitting).buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("confirmRecordedAudioSelectionRestore")
+                        }
+                    } else if let review {
+                        Section("Recording recovery") {
+                            if review.requiresOmissionConsent {
+                                Label("\(review.omittedRecordingCount) expired \(review.omittedRecordingCount == 1 ? "recording" : "recordings")", systemImage: "waveform")
+                                if review.waitingForCleanup {
+                                    Text("Cloud cleanup is still being confirmed. Your whole selection stays saved; check again before recovering without the expired audio.").foregroundStyle(.secondary)
+                                } else {
+                                    Text("All \(selection.scopes.count) tasks will return with their saved notes and checklists. \(review.recordingCount - review.omittedRecordingCount) available \(review.recordingCount - review.omittedRecordingCount == 1 ? "recording" : "recordings") will be kept. Expired audio cannot be recovered.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                    Toggle("Restore all tasks without \(review.omittedRecordingCount) expired \(review.omittedRecordingCount == 1 ? "recording" : "recordings")", isOn: $consent)
+                                        .disabled(busy || submitting).accessibilityIdentifier("audioSelectionOmissionConsent")
+                                    Button("Restore selected tasks") { Task { await recoverSelection() } }
+                                        .disabled(!canRecover).buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("confirmAudioSelectionRestore")
+                                }
+                            } else {
+                                Label("Original recording recovery is available", systemImage: "waveform")
+                                Text("Retry the original saved Undo for the whole selection.").foregroundStyle(.secondary)
+                                Button("Retry original Undo") { guard current, !busy, !submitting else { return }; Task { await store.sync() }; finishPresentation() }
+                                    .disabled(busy || submitting || receipt.state == .closed).buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("retryOriginalAudioSelectionRestore")
+                            }
+                        }
+                    }
+                }
+                if let message { Section { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioSelectionRecoveryMessage") } }
+                if !busy { Section { Button("Check recovery again") { reload = UUID() }.disabled(submitting).buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("refreshAudioSelectionRecovery") } }
+            }.formStyle(.grouped).privacySensitive().accessibilityIdentifier("audioSelectionRecoveryForm").navigationTitle("Recover selected tasks")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Later") { finishPresentation() }.disabled(submitting).accessibilityIdentifier("cancelAudioSelectionRecovery") } }
+        }
+        .interactiveDismissDisabled(submitting)
+        .onChange(of: phase) { _, _ in visibility = UUID(); consent = false }
+        .onDisappear { visibility = UUID(); consent = false }
+        .task(id: "\(lifecycle)|\(reload)") { await load() }
+        #if os(macOS)
+        .frame(minWidth: 460, idealWidth: 540, minHeight: 470, idealHeight: 650)
+        #endif
+    }
+    @MainActor private func finishPresentation() { submitting = false; close() }
+    @MainActor private func load() async {
+        receipt = nil; review = nil; consent = false; loaded = nil; message = nil; busy = false
+        let expected = lifecycle, attempt = reload
+        guard phase == .active else { return }
+        let workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), session = store.backend.reminderSessionIncarnation
+        guard store.pendingAudioRestoreSelectionRecovery == selection else { message = "This selection is no longer current. Close it and review your saved work again."; return }
+        guard store.online, !store.syncing else { message = store.online ? "Finishing the current sync. Recovery will refresh when it stops." : "Connect to check this saved selection."; return }
+        guard store.audioRestoreSelectionRecoveryIsCurrent(selection, workspace: workspace, session: session) else { return }
+        busy = true
+        defer { if !Task.isCancelled, expected == lifecycle, attempt == reload { busy = false } }
+        do {
+            let outcome = try await store.backend.teamAudioRestoreSelectionRecovery(selection, action: .inspect)
+            try Task.checkCancellation()
+            guard expected == lifecycle, attempt == reload, store.audioRestoreSelectionRecoveryIsCurrent(selection, workspace: workspace, session: session) else { return }
+            let metadata = outcome.state == .recorded ? nil : try await store.audioRestoreSelectionReview(selection, workspace: workspace, session: session)
+            try Task.checkCancellation()
+            guard expected == lifecycle, attempt == reload, store.audioRestoreSelectionRecoveryIsCurrent(selection, workspace: workspace, session: session) else { return }
+            receipt = outcome; review = metadata; opening = workspace; self.session = session; loaded = expected; busy = false
+            if let metadata {
+                try await Task.sleep(for: .seconds(max(0, metadata.validUntil.timeIntervalSinceNow)))
+                guard expected == lifecycle, attempt == reload else { return }
+                consent = false; review = nil; loaded = nil; message = "This recording review expired. Check recovery again before continuing."
+            }
+        } catch is CancellationError { }
+        catch { guard expected == lifecycle, attempt == reload else { return }; message = error.localizedDescription }
+    }
+    @MainActor private func confirmRecorded(_ receipt: TeamAudioRestoreSelectionReceipt) async {
+        guard current, !busy, !submitting, let opening, let session else { return }
+        let expected = lifecycle, visible = visibility; busy = true; submitting = true
+        defer { submitting = false; if expected == lifecycle, visible == visibility { busy = false } }
+        do {
+            try await store.confirmRecordedAudioRestoreSelection(receipt, workspace: opening, session: session)
+            guard visible == visibility, phase == .active, opening.matches(account: store.userID, generation: store.workspaceGeneration),
+                  session == store.backend.reminderSessionIncarnation, selection.original.teamTaskBatch?.origin == (try? store.backend.accountRemovalOrigin) else { return }
+            finishPresentation()
+        } catch { guard expected == lifecycle, visible == visibility else { return }; message = "The confirmation could not be saved. Your selection is kept. " + error.localizedDescription }
+    }
+    @MainActor private func recoverSelection() async {
+        guard canRecover, let review, let opening, let session else { return }
+        let expected = lifecycle, visible = visibility; busy = true; submitting = true
+        defer { submitting = false; if expected == lifecycle, visible == visibility { busy = false } }
+        do {
+            let closed = try await store.backend.teamAudioRestoreSelectionRecovery(selection, action: .close)
+            guard visible == visibility, expected == lifecycle, phase == .active, store.audioRestoreSelectionRecoveryIsCurrent(selection, workspace: opening, session: session) else { throw CancellationError() }
+            if closed.state == .recorded {
+                receipt = closed; self.review = nil; consent = false
+                message = "The original Undo finished while you were reviewing. Confirm its saved result instead."; return
+            }
+            receipt = closed
+            try store.replaceExpiredAudioRestoreSelection(closed, review: review, workspace: opening, session: session)
+            finishPresentation()
+        } catch is CancellationError { }
+        catch { guard expected == lifecycle, visible == visibility else { return }; consent = false; message = "The recovery could not be saved. Your selection is kept. " + error.localizedDescription }
+    }
+}

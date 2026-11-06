@@ -1,0 +1,172 @@
+{
+  "platform": "ios-audience-pending",
+  "checks": {
+    "compiled owning source matches Taskfold/AudioCommentNativeFixture.swift": true,
+    "compiled owning source matches Taskfold/AudioCommentCapture.swift": true,
+    "compiled owning source matches Taskfold/Core/Store.swift": true,
+    "compiled owning source matches Taskfold/Core/Models.swift": true,
+    "compiled owning source matches Taskfold/TaskfoldApp.swift": true,
+    "compiled owning source matches Taskfold/Views/BackupTools.swift": true,
+    "compiled owning source matches Taskfold/Views/BrowseView.swift": true,
+    "compiled owning source matches Taskfold/Core/TeamProjectAccess.swift": true,
+    "compiled owning source matches Taskfold/Core/TeamTaskBatch.swift": true,
+    "compiled owning source matches Taskfold/Core/Backend.swift": true,
+    "compiled owning source matches Taskfold/Views/TeamTaskDeletionReview.swift": true,
+    "compiled owning source matches Taskfold/Core/AudioCommentPublishing.swift": true,
+    "compiled owning source matches Taskfold/Views/TaskEditor.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentConversationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentPublicationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioPendingPublicationView.swift": true,
+    "compiled owning source matches Taskfold/Views/AudioCommentDraftView.swift": true,
+    "compiled owning source matches TaskfoldUITests/AudioCommentUITests.swift": true,
+    "exact isolated app identifier": true
+  },
+  "genuineAuth": false,
+  "actualLocalStorage": true,
+  "fullSchemaParity": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "sourceSHA256": {
+    "Taskfold/AudioCommentNativeFixture.swift": "dc73d032e3b176cd530385c50ba14703d164179a94b85a4a1ab6ee99589a4644",
+    "Taskfold/AudioCommentCapture.swift": "5a90bab1d673e667b98b0b5dadcea459361e1ef8918a05b097a65bad82f6d2d4",
+    "Taskfold/Core/Store.swift": "7a5aeeb58f42efdb8392f112503fb422aa299e444b49cedb9b7df8c9aa6936b9",
+    "Taskfold/Core/Models.swift": "8860cb104036b8095e41ee0b739ec4e4233a911a286d344176688e76ab164985",
+    "Taskfold/TaskfoldApp.swift": "807220d457725ee58b50d6800ff4e5f141e7e2bfe97a1e02a77f77f4598da6e3",
+    "Taskfold/Views/BackupTools.swift": "3d0f6adee157186757d69d3da23b3d32bebe9a5a4f64f7b70df33e470872b9e9",
+    "Taskfold/Views/BrowseView.swift": "874fa45858bd22c838c7363f291a36b0e57d0a3b60dac1cc9f6e6c1b967d38ae",
+    "Taskfold/Core/TeamProjectAccess.swift": "4a64f09f3743d1da20494ec0e8a6421981be08eef5d3bb99c22a33d2ff49262e",
+    "Taskfold/Core/TeamTaskBatch.swift": "52f28a92644e36d207d5585128036b332476cba7610ae4b1c1fcc0d2a220f3d6",
+    "Taskfold/Core/Backend.swift": "566b6b14b63fcf6420031c8dc264407c3fb70e78595fdaa4b713884075f047d7",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "9589a78034abd4ef8f668d47f307fba2a16bdbd8f0528f5f0e2f75a45a8991a7",
+    "Taskfold/Core/AudioCommentPublishing.swift": "a53e6e108668847b1050ad9fd5c4cad7fa140e09839ebea547e42b64e0acd99d",
+    "Taskfold/Views/TaskEditor.swift": "ae18b5a76ee7acef8f612125c917e478f263f0f5b7d64be1c0a571ef2322971c",
+    "Taskfold/Views/AudioCommentConversationView.swift": "2a8a67f23af154f2b3ca7ecce5cbc240521e98577e550c960b386ebad734c125",
+    "Taskfold/Views/AudioCommentPublicationView.swift": "c04fadb478fc07a2a37e17622582d31103585fc3fd780bddcfd2ac8d8eafd307",
+    "Taskfold/Views/AudioPendingPublicationView.swift": "4891b07f73a4a44503a841ef968351683354e845ca4e0a02b329f0910abd74e7",
+    "Taskfold/Views/AudioCommentDraftView.swift": "ccf09a888363122207d9545cefa7eefa65fba7389c20c760eaec3c2c9fbe0879",
+    "TaskfoldUITests/AudioCommentUITests.swift": "1c3a38084ebf421f3c4d7a1e500c1ca1fdf5a458c738a3d80decbddb36793d6b"
+  },
+  "xcodeExitCode": 65,
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "passedTests": 0,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold · Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 1,
+    "finishTime": 1793679459.63,
+    "passedTests": 0,
+    "result": "Failed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793679318.031,
+    "statistics": [],
+    "testFailures": [
+      {
+        "failureText": "Failed to tap \"audioPendingConfirm\" Button: Find single matching element. Multiple matching elements found for <XCUIElementQuery: 0x109ecfb60>.\nSparse tree of matches:\n→Application, pid: 73334, label: 'Taskfold Team Editor Test'\n  ↳Window (Main)\n    ↳Other\n      ↳Alert, label: 'Resume the original send?'\n        ↳Other\n          ↳Other\n            ↳Other\n              ↳ScrollView\n                ↳Other\n                  ↳Other\n                    ↳Button, identifier: 'audioPendingConfirm', label: 'Resume original send'\n                      ↳Button, identifier: 'audioPendingConfirm', label: 'Resume original send'\nPossibly caused by runtime issues:\nAutomation type mismatch: computed Alert from legacy attributes vs Sheet from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 3;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIAlertControllerPhoneTVMacView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIAlertControllerPhoneTVMacView\";\n    \"XC_kAXXCAttributeTraits\" = 72057602627862528;\n}\nSee test report attachments for more detail.",
+        "targetName": "TaskfoldUITests",
+        "testIdentifier": 1,
+        "testIdentifierString": "TaskfoldUITests/testTeamRecordingNativePendingAudienceResume()",
+        "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testTeamRecordingNativePendingAudienceResume",
+        "testName": "testTeamRecordingNativePendingAudienceResume()"
+      }
+    ],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "error": {
+    "message": "one native case accepted without skip\n+ actual - expected\n\n  [\n+   65,\n+   0,\n+   1,\n-   0,\n-   1,\n-   0,\n    0\n  ]",
+    "code": "ERR_ASSERTION"
+  },
+  "gatewayRequests": [
+    {
+      "action": "review",
+      "bodySHA256": "716e2ba9d6417a0236c8cf67a8b3ed78be4414d36bfc109cd1c0bbddb660f834",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 462
+    },
+    {
+      "action": "review",
+      "bodySHA256": "925ddf81a9ed00b4877437541dca372ca762778af59c7ec8e0983366e026b33b",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 462
+    },
+    {
+      "action": "publish",
+      "bodySHA256": "a751b3df3da11e1055c784e78d46566427d50f9779c90079c7ce799f2af8f4bc",
+      "responseStatus": 200,
+      "deliveredStatus": 503,
+      "responseBytes": 851
+    }
+  ],
+  "workspace": {
+    "boundary": 4,
+    "auth": 2,
+    "tables": {
+      "projects": 2,
+      "sections": 2,
+      "labels": 2,
+      "tasks": 2,
+      "profiles": 2,
+      "project_collaborators": 2,
+      "saved_views": 2,
+      "favorites": 2,
+      "view_preferences": 2,
+      "view_orders": 2,
+      "project_templates": 2,
+      "reminder_preferences": 2,
+      "focus_sessions": 2,
+      "task_activity_epoch": 2,
+      "task_activity": 2,
+      "task_assignment_provenance": 2,
+      "task_node_activity_epoch": 4,
+      "task_node_activity": 2
+    },
+    "rejected": 0,
+    "errors": []
+  },
+  "provider": [
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "gatewayErrors": [],
+  "checkCount": 19,
+  "configRemoved": true,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "ownedSimulatorRestored": true,
+  "cleanupErrors": []
+}

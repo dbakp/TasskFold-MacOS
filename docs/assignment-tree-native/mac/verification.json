@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "scope": "Observed local synthetic native project picker, save/autosave, refusal and cold return; no cloud delivery or spoken-output claim",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "00006000-000C59161EC3801E",
+    "deviceName": "My Mac",
+    "modelName": "MacBook Pro",
+    "osBuildNumber": "25G83",
+    "osVersion": "26.6.2",
+    "platform": "macOS"
+  },
+  "summarySHA256": "d334b1f51ef0d162eaabfc690a6ef29d824d8a75beeeff7262788817c860023f",
+  "manifestSHA256": "e1d00f9eac310ea083eeafc07126bdc1d0f7de1839a4697adc0c6b957d736bb4",
+  "fullRootMoveHasOnlyExpectedChanges": true,
+  "exactUnicodeKeysAndLargeIntegerPreserved": true,
+  "fullSnapshotColdReturnPreserved": true,
+  "refusalSourceBytesUntouched": true,
+  "refusalFullSnapshotColdReturnPreserved": true,
+  "attachments": [
+    {
+      "name": "Original project change source_0_B324B00B-75C1-4806-8D2B-3A737220B9DA.json",
+      "sha256": "bdcc679e8c447414ca6c55d77eef71435dadf15bbc47b3fd0b77adf1c40d5b7d",
+      "bytes": 1273
+    },
+    {
+      "name": "Actual saved project change cache_0_848A24B6-2A04-4074-9B7C-1E85E53BF000.json",
+      "sha256": "bffeb7e47cd6af303d0e2359a8a7f2bc79bccf8866225e87fe045322f1eb5fcf",
+      "bytes": 3664
+    },
+    {
+      "name": "Actual saved project change cache_0_1B4DC7B5-6568-4F21-B06B-86422CD9AC1F.json",
+      "sha256": "829a97220b2b24c4e979edfe96848af0df6cddce3ca7d8b2d142b8244b6b4c67",
+      "bytes": 3664
+    },
+    {
+      "name": "Unsupported project change source_0_D7223893-4014-4327-86AE-948A09F63CF2.json",
+      "sha256": "5f70b1759c61a7372adb9287cc60717b78ad0605c78c0a01e5bd9e23b31935e5",
+      "bytes": 1030
+    },
+    {
+      "name": "Unsupported source after refusal_0_6651441D-B6BB-4AF0-83E1-8E7120BD529D.json",
+      "sha256": "5f70b1759c61a7372adb9287cc60717b78ad0605c78c0a01e5bd9e23b31935e5",
+      "bytes": 1030
+    },
+    {
+      "name": "Unsupported source after cold return_0_BD8EDBF0-13B4-44A0-B46A-1049F384209F.json",
+      "sha256": "2e4867161e92e56a5f0e1ca5df37d2655ef69cca46a2c613581367651017c5c4",
+      "bytes": 1030
+    }
+  ]
+}

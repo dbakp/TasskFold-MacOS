@@ -1,0 +1,161 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "status": "initial installed iPhone/iPad adoption acceptance and recovery-entry fix; broader adoption and Px scope remain open",
+  "hostedChanges": false,
+  "rolloutEnabled": false,
+  "realUserDataChanged": false,
+  "core": {
+    "passed": 361,
+    "failed": 0,
+    "skipped": 0,
+    "logSHA256": "2f17fce89cb1e21e2afdc43e902a8c8c9f6d2f87e227a5776eafeddcad45b903"
+  },
+  "appBuild": {
+    "platform": "macOS arm64",
+    "configuration": "Debug",
+    "result": "passed",
+    "signing": "disabled; build only, no Mac app launched",
+    "logSHA256": "8612575d041718fe2e89a9a57a4d7f370224bcf735463af5af2c47d4f3aa0d8c"
+  },
+  "nativeUITests": {
+    "repository": "TaskFold-iOS",
+    "scope": "Reserved DEBUG app; independently SQL-exported synthetic contract, fully intercepted ephemeral HTTP peer, normal Store sync and real Simulator Keychain. This is not live hosted/Postgres/Auth/provider acceptance.",
+    "devices": {
+      "iPhone 18 Pro": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "iPad Pro 13-inch (M5)": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378"
+    },
+    "acceptedDistinctCasesPerDevice": 5,
+    "runs": {
+      "phone-suite": {
+        "cases": [
+          {
+            "name": "testAppliedReplyLossRelaunchAndExactRetry",
+            "result": "failed"
+          },
+          {
+            "name": "testArchivedBranchReviewCommitAndNormalRefresh",
+            "result": "passed"
+          },
+          {
+            "name": "testCancelDoesNotChangeCustodyOrQueue",
+            "result": "passed"
+          },
+          {
+            "name": "testChangedLocalSourceInvalidatesReviewBeforeSending",
+            "result": "passed"
+          }
+        ],
+        "logSHA256": "6d63c1c1ec9264616963c06a94784c42af677b1af355808a214f4a5504aa4512",
+        "retainedLog": "project-adoption-installed/phone-suite.log.gz",
+        "retainedLogRepository": "TaskFold-iOS",
+        "compressedLogSHA256": "1cd7a786bf8d792e5712f98d451ac6e6d2067aa82981b3e884f100645423b610"
+      },
+      "phone-recovery": {
+        "cases": [
+          {
+            "name": "testAppliedReplyLossRelaunchAndExactRetry",
+            "result": "passed"
+          },
+          {
+            "name": "testExpiredAppliedRequestRecoversAfterDestinationAccessLoss",
+            "result": "passed"
+          }
+        ],
+        "logSHA256": "a020bf93032fcdf20de4178c1bb4e8d6f81b4f92c2bb8ed8e220a2f181de4f3c",
+        "retainedLog": "project-adoption-installed/phone-recovery.log.gz",
+        "retainedLogRepository": "TaskFold-iOS",
+        "compressedLogSHA256": "f40d507e19ecad8a2772bd0bdb3663a220972f17c45ced470c0bae96856e15f9"
+      },
+      "ipad-suite": {
+        "cases": [
+          {
+            "name": "testAppliedReplyLossRelaunchAndExactRetry",
+            "result": "passed"
+          },
+          {
+            "name": "testArchivedBranchReviewCommitAndNormalRefresh",
+            "result": "passed"
+          },
+          {
+            "name": "testCancelDoesNotChangeCustodyOrQueue",
+            "result": "passed"
+          },
+          {
+            "name": "testChangedLocalSourceInvalidatesReviewBeforeSending",
+            "result": "failed"
+          },
+          {
+            "name": "testExpiredAppliedRequestRecoversAfterDestinationAccessLoss",
+            "result": "passed"
+          }
+        ],
+        "logSHA256": "29533618e5713fb7510b2c06e7f0d3b5ef2c61e3e99cfb0d5f311ea279afd3ed",
+        "retainedLog": "project-adoption-installed/ipad-suite.log.gz",
+        "retainedLogRepository": "TaskFold-iOS",
+        "compressedLogSHA256": "055b76bacf04ebd9534c7e647975402397cc39b02a658f1c1034317034af3b1c"
+      },
+      "ipad-navigation-recheck": {
+        "cases": [
+          {
+            "name": "testChangedLocalSourceInvalidatesReviewBeforeSending",
+            "result": "passed"
+          }
+        ],
+        "logSHA256": "a1d440e1bff2487b578f1d307160e5e38bcce0311cb72bb71c1dc71abe337ea1",
+        "retainedLog": "project-adoption-installed/ipad-navigation-recheck.log.gz",
+        "retainedLogRepository": "TaskFold-iOS",
+        "compressedLogSHA256": "b8d3b33924067d7b7545f3b1842def588a6ce4abf5602aa3b3ed70cdc5bbef59"
+      }
+    },
+    "resultBundleLimitation": "The first iPad run completed all case reports but stalled during result collection. Its owned xcodebuild was stopped after the test app had quit; the complete text log is retained. The corrected final stale-review run sealed successfully. Earlier failures are preserved and are not reported as green suites.",
+    "checks": [
+      "Archived owned branch and explicitly archived descendant, completed task and ordinary destination member",
+      "Explicit keep/retire decisions, effective admin access and custody review",
+      "Successful transfer preserves task note/completion, clears an ineligible assignment and refreshes through normal sync with empty queue",
+      "Cancel changes neither custody nor cache/queue",
+      "Local source change invalidates review before any adoption command is sent",
+      "Lost applied confirmation, quit/relaunch, Close/reopen, same UUID/body retry, one applied transfer",
+      "Actual review expiry plus simulated destination-access loss still replays the identical request; normal refresh removes inaccessible tasks/projects"
+    ]
+  },
+  "productFix": "A stable Account Project transfers row allows private recovery loading after launch; the label becomes Saved project transfer when needed, including without ordinary team navigation.",
+  "diagnostics": [
+    "Unsigned Simulator Keychain access failed; only the later Xcode local-signing run is treated as OS Keychain evidence. Manual invented-entitlement launch was rejected and its helper was removed.",
+    "The simulated peer initially returned activity in snapshot order; it now honors the requested sequence order and pagination. The app correctly rejected the bad response.",
+    "Installed relaunch caught a real empty-Group task-loading issue in the recovery entry; fixed independently in both apps.",
+    "iPad harness corrections account for bottom control bounds and lazy-list headings after stage changes. The final stale-review case passes without changing product assertions."
+  ],
+  "limits": [
+    "No installed Mac flow or Mac Keychain acceptance in this batch; Mac owns its independent source and passing build/Core checks.",
+    "No native multi-window/account switching, corrupt OS journal or 1000-decision OS Keychain capacity acceptance yet.",
+    "Only default-size/light layout samples; no new large-text, dark/contrast, keyboard or VoiceOver acceptance.",
+    "File-custody and personal email/webhook pause/retarget adapters remain unfinished; affected transfers stay blocked.",
+    "No genuine hosted/provider rollout; normal switches remain disabled. All user-deferred release/signing/distribution, broad older-client rollout, remote delivery, OAuth/provider configuration and physical location dependencies remain deferred.",
+    "Rank 6 and the wider remaining Px plan are not complete."
+  ],
+  "sourceSHA256": {
+    "Taskfold/ProjectAdoptionNativeFixture.swift": "dc1fa55a022891e327b42eea3282f214bea396cda6a5bcb42665f83995226fb6",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "56f8bd59a7946c797903f6b03bee47e5de635c364f9ae162fbf2797bef5c1f71",
+    "Taskfold/Core/Store.swift": "f200e9a3dd6e9e739ff575344695e88707f97ceef2642e52cce8d16ce9021bbe",
+    "Scripts/prepare_project_adoption_native_test.py": "b97d380e69751780e6437c90b7fd74abe3c7597586624c9d92f94bdd66fc8592",
+    "Scripts/Database/export-project-adoption-contract.mjs": "df2cf6bf292cf7336cf0255521e558a26701ab345d64eeb361d5cbc768f81ce4",
+    "TaskfoldTests/Fixtures/team-project-adoption-v1.json": "c185ca2a20febed544b023f65b60d7570a2850084981e68ca6f1a2ea9d6b9650"
+  },
+  "cleanup": {
+    "ownedTemporaryRootsRemoved": 53,
+    "ownedEntriesRemoved": 29395,
+    "allocatedBytesAccounted": 2601893888,
+    "allocatedBytesMeaning": "inode block accounting, not a guaranteed APFS free-space delta",
+    "ownedTemporaryRootsRemaining": 0,
+    "ownedDatabaseContainersRemaining": 0,
+    "isolatedHostAndRunnerUninstalledFromBothSimulators": true,
+    "baselineSimulatorStatesPreserved": {
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": "Booted",
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": "Booted"
+    },
+    "bothCoreBuildCachesPreserved": true,
+    "MacTestAppLaunched": false,
+    "freeBytesAfter": 25234333696
+  }
+}

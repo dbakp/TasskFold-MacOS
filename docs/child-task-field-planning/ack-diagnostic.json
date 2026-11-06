@@ -1,0 +1,347 @@
+[
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "read-start"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "select"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "select"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "edit"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+      "editing" : true,
+      "hasSession" : true,
+      "key" : true,
+      "saved" : true,
+      "scope" : true,
+      "unchanged" : true
+    },
+    "messageKeyMatches" : false,
+    "recovery" : false,
+    "stage" : "ack"
+  },
+  {
+    "active" : true,
+    "appeared" : true,
+    "details" : {
+
+    },
+    "messageKeyMatches" : true,
+    "recovery" : false,
+    "stage" : "message-set"
+  }
+]

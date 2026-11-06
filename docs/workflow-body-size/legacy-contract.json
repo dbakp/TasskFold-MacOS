@@ -1,0 +1,15 @@
+{
+  "corpusCases": 1377,
+  "frozenSHA256": "61adeb48f306dd1a3e94f15647507e6227a67af0e1221eb2d262de442bd3acf6",
+  "legacyCode": {
+    "TasskFold-MacOS": {
+      "originalFileSHA256": "019059469d6f4bf724db1b8234a51b40d07b5c17e951d75f3f6129db10deaa30",
+      "unchangedFallbackBodySHA256": "70b746942e11e5ab8f0d87463ed047fe46f73c13faf816808233ca3791e160ea"
+    },
+    "TaskFold-iOS": {
+      "originalFileSHA256": "d6b419d71e48161445f93f099ae3ff38d9defc782b94afa25303baa9e7baa96d",
+      "unchangedFallbackBodySHA256": "70b746942e11e5ab8f0d87463ed047fe46f73c13faf816808233ca3791e160ea"
+    }
+  },
+  "capture": "Original implementation captured first, then both original repo implementations passed the hard-coded digest before the production edit. The capture-only first run is not claimed as frozen-assertion verification."
+}

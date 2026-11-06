@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-25",
+  "status": "Shared workflow run Core foundation implemented; no shared save or native runtime acceptance yet",
+  "platform": "mac",
+  "tests": {
+    "TeamWorkflowRunTests": 10,
+    "ProjectWorkflowsTests": 47,
+    "TeamTemplateLibraryTests": 31,
+    "TeamChecklistTests": 14,
+    "total": 102,
+    "failed": 0
+  },
+  "initialFailure": "New order fixture selected the first captured task, which belonged to another group; corrected fixture explicitly selects Design review. Earlier failure log retained.",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "56d470fa49f38b1bea445c317bd3d4ba50ebf2be039dfaa3aa4f5ecc36fabf6d",
+    "TaskfoldTests/TeamWorkflowRunTests.swift": "0dc38fc720ab94afa3cbfd39e4178bb1aa519e98ea9f03cc107913c738c3925a"
+  },
+  "limits": [
+    "Core package compile/tests only in this stage",
+    "Atomic service and durable reviewed command not yet implemented",
+    "Native destination/content review and runtime verification pending",
+    "No hosted/rollout changes; full Px goal open"
+  ],
+  "reports": "team-workflow-run-plan"
+}

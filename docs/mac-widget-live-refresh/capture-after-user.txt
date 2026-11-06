@@ -1,0 +1,21 @@
+Window: "", App: Taskfold Widget Host Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text New Task
+		3 button Description: Close task entry, Help: Close (Esc), ID: xmark
+		4 text Today
+		5 text field (settable) Placeholder: Add a task for today — try “Call Sam at 4pm p1 #calls”, ID: quickAdd
+		6 text Try “Call Sam tomorrow at 4pm !30mb p1”
+		7 button (disabled) Add Task
+8 menu bar
+	9 Taskfold
+	10 File
+	11 Edit
+	12 View
+	13 Fixture
+	14 Account
+	15 Task
+	16 Window
+	17 Help
+
+The focused UI element is 5 text field (settable) Placeholder: Add a task for today — try “Call Sam at 4pm p1 #calls”, ID: quickAdd

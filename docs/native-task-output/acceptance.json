@@ -1,0 +1,45 @@
+{
+  "sourceSHA256": {
+    "Taskfold/Views/PrintReviewView.swift": "55449cc64d2874ca24c550c48d03cb27b44336811c7a3c181b45dc1ed8d3a5ee",
+    "Taskfold/Views/TaskListView.swift": "1db1f885a4af751d087b06a91ec0db3db10741e1f438d4f6e6c7cc291772fdac",
+    "Taskfold/TaskfoldMacApp.swift": "8bee108c6f381c35911d883fdf68bef796dd72a5626be0b7bcecfe5c9ddb77b9",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "c95d2255a590fc3a6793ab66efb147d96adc568fa4841b2937684095497a2682"
+  },
+  "preparedSHA256": {
+    "Taskfold/Views/PrintReviewView.swift": "55449cc64d2874ca24c550c48d03cb27b44336811c7a3c181b45dc1ed8d3a5ee",
+    "Taskfold/Views/TaskListView.swift": "1db1f885a4af751d087b06a91ec0db3db10741e1f438d4f6e6c7cc291772fdac",
+    "Taskfold/TaskfoldMacApp.swift": "8bee108c6f381c35911d883fdf68bef796dd72a5626be0b7bcecfe5c9ddb77b9",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "c95d2255a590fc3a6793ab66efb147d96adc568fa4841b2937684095497a2682"
+  },
+  "infoSHA256": "55c1550013547bcd4e7c805fa4819b369036f8461ddbeeee34ba99979f44e4fe",
+  "nativeAccepted": {
+    "mac": {
+      "run": "mac-panel-summary.json",
+      "passed": 2
+    },
+    "iPhoneSimulator": {
+      "run": "phone-summary.json",
+      "passed": 1
+    },
+    "iPadSimulator": {
+      "run": "tablet-scroll-summary.json",
+      "passed": 1
+    }
+  },
+  "realDataChanged": false,
+  "hostedChanges": false,
+  "normalRolloutChanged": false,
+  "systemPermissionGrantedByAutomation": false,
+  "keyboardAttemptsInterrupted": true,
+  "completedPrinterJob": false,
+  "finalPDFPagesPixelIdenticalToInspectedPages": true,
+  "macNativeReviewScreenshotsOccludedBySystemPrompt": true,
+  "outputSHA256": {
+    "mac.pdf": "d852a8ed0123e8599146afca158b117699b600f1893354a52577b3e78e6972d8",
+    "mac.csv": "fb9963886b49953f20b1dd74832b1837312ebe66b1f404e3b1603c5371a90ffc",
+    "mac-exclusions.csv": "59f66d3b1af56ac18cd152167c1088c04076a3ae1d4647f726248c88710c6f1a",
+    "phone.csv": "fb9963886b49953f20b1dd74832b1837312ebe66b1f404e3b1603c5371a90ffc",
+    "tablet.csv": "fb9963886b49953f20b1dd74832b1837312ebe66b1f404e3b1603c5371a90ffc"
+  },
+  "testSourceChronology": "Phone acceptance predates the test-only iPad status-scrolling helper; app source is unchanged. Final iPad and Mac acceptance use the retained prepared test hashes."
+}

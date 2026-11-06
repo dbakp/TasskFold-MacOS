@@ -1,0 +1,5 @@
+{
+  "normalQuit": true,
+  "processAbsentBeforeRelaunch": true,
+  "resetOnRelaunch": false
+}

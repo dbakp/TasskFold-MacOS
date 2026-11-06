@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-26",
+  "stage": "Heading reminder eligibility and displayed counts",
+  "platform": "macos",
+  "fullHeadingFeatureComplete": false,
+  "normalAppAuthoringEnabled": false,
+  "hostedDeployment": false,
+  "realDataChanged": false,
+  "core": {
+    "scopedCases": 209,
+    "recoveryCases": 21,
+    "overlap": 3,
+    "distinctPassed": 227,
+    "failures": 0,
+    "skips": 0,
+    "newCases": 9,
+    "wholeSuiteAccepted": false,
+    "evidence": [
+      "headings-actions/core.log",
+      "headings-actions/recovery-core.log"
+    ]
+  },
+  "native": {
+    "iphonePassed": 1,
+    "ipadPassed": 1,
+    "failures": 0,
+    "skips": 0,
+    "signedIsolatedSimulator": true,
+    "syntheticOnly": true,
+    "scenario": "Typed library summary, review/Cancel/Create, cold return, heading group badge, reminders paused cue and unchanged saved task after editor Cancel.",
+    "visuallyInspectedImages": 6,
+    "macRuntimeAccepted": false,
+    "spokenAccepted": false,
+    "physicalDeliveryAccepted": false,
+    "evidence": [
+      "headings-actions/iphone-summary.json",
+      "headings-actions/ipad-summary.json"
+    ]
+  },
+  "sourceProof": "headings-actions/source-proof.json",
+  "sourceSHA256": "headings-actions/source-sha256.json",
+  "verificationNotes": "headings-actions/verification-notes.txt",
+  "remaining": [
+    "Broader productive totals/descendant policy and history semantics.",
+    "Todoist, CSV and clipboard mapping.",
+    "Shared heading adapters and capability negotiation.",
+    "Largest-text, spoken, Mac runtime, cross-device and physical heading-delivery acceptance."
+  ],
+  "deferredByUserUnchanged": [
+    "Release/distribution",
+    "Remote reminder delivery",
+    "Older-client rollout protection",
+    "OAuth/provider registration",
+    "Physical location delivery",
+    "Inbound email provider"
+  ],
+  "build": {
+    "iosAndMacDebugArm64Accepted": true,
+    "strictSignaturesVerified": true,
+    "evidence": [
+      "headings-actions/ios-build-summary.json",
+      "headings-actions/macos-build-summary.json",
+      "headings-actions/ios-signing.json"
+    ]
+  },
+  "cleanup": "headings-actions/cleanup.json"
+}

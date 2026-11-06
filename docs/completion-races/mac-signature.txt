@@ -1,0 +1,11 @@
+Executable=/private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold
+Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge
+Format=app bundle with Mach-O thin (arm64)
+CodeDirectory v=20500 size=478 flags=0x10000(runtime) hashes=3+7 location=embedded
+Signature size=4801
+Signed Time=25 Oct 2026 at 19.56.43
+Info.plist entries=35
+TeamIdentifier=3UZ4C73FM2
+Runtime Version=27.0.0
+Sealed Resources version=2 rules=13 files=14
+Internal requirements count=1 size=224

@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {randomUUID,createHash} from 'node:crypto';
+import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
+import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
+const migrations=["20261030093035_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104147_personal_child_record_task_moves.sql", "20261030114138_cross_root_child_task_transfers.sql", "20261030134132_reviewed_child_record_adoption.sql", "20261030170753_child_adoption_metadata_discovery.sql", "20261030183133_child_task_repair_previews.sql", "20261030184402_child_task_repair_commits.sql", "20261030192638_child_repair_original_history_access.sql"];
+const output=new URL('../../TaskfoldTests/Fixtures/',import.meta.url);
+const hashes={};let pg;const report={deployed:false};
+try{
+ pg=await createPostgresFixture({advisors:true});await loadChildAuthorityDependencies(pg);
+ for(const name of [childAuthorityMigration,...migrations])await pg.raw(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
+ const account=randomUUID(),session=randomUUID(),id=randomUUID();
+ await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(account)},'repair-client@example.invalid',now());insert into auth.sessions(id,user_id) values(${lit(session)},${lit(account)});insert into public.profiles(user_id) values(${lit(account)});update taskfold_private.child_task_record_config set reads_enabled=true,edits_enabled=true,completions_enabled=true,structure_reads_enabled=true,structure_edits_enabled=true,adoption_enabled=true,repair_reviews_enabled=true,repair_writes_enabled=true;insert into public.tasks(id,user_id,title,description,subtasks) values(${lit(id)},${lit(account)},'Exact repair original',repeat('A',20000),'[{"id":9,"title":"Keep exact content","future":{"é":1,"é":2,"large":1e1000,"integer":9007199254740993},"completed":true}]')`);
+ const generation=await pg.scalar(`select to_jsonb(task_generation) from public.tasks where id=${lit(id)}`);
+ const identity=`set local request.jwt.claim.sub=${lit(account)};set local request.jwt.claims=${lit(JSON.stringify({sub:account,session_id:session}))};set local role authenticated;`;
+ const raw=async expr=>pg.raw(`begin;${identity}select (${expr})::text;commit;`);
+ const save=async(name,value)=>{const data=value+'\n';await writeFile(new URL('child-repair-'+name+'-v1.json',output),data);hashes[name]=createHash('sha256').update(data).digest('hex');};
+ const reviewRaw=await raw(`public.taskfold_review_child_adoption(${lit(id)},${lit(generation)})`);await save('review',reviewRaw);const review=JSON.parse(reviewRaw);
+ const changes=[{kind:'assign_reference',path:[0],reference:'repaired-reference'}];
+ const previewBody=Object.fromEntries(['protocol','account','task_id','task_generation','project_id','workspace_id','review_digest'].map(k=>[k,review[k]]));previewBody.changes=changes;
+ const previewRaw=await raw(`public.taskfold_preview_child_repair(${lit(JSON.stringify(previewBody))}::jsonb)`);await save('preview',previewRaw);const view=JSON.parse(previewRaw);assert.equal(view.mutation_available,true);
+ const command={...previewBody,request_id:randomUUID(),repair_digest:view.repair_digest};
+ const rpc=(op,b)=>raw(`public.taskfold_repair_children(${lit(op)},${lit(JSON.stringify(b))}::jsonb)`);
+ const receiptRaw=await rpc('send',command);await save('receipt',receiptRaw);const receipt=JSON.parse(receiptRaw);assert.equal(receipt.state,'applied');
+ const closedCommand={...command,request_id:randomUUID()},closedRaw=await rpc('close',closedCommand);await save('closed',closedRaw);assert.equal(JSON.parse(closedRaw).state,'closed');
+ const unknownCommand={...command,request_id:randomUUID()},unknownRaw=await rpc('check',unknownCommand);await save('unknown',unknownRaw);assert.equal(JSON.parse(unknownRaw).state,'unknown');
+ const originalRaw=await rpc('original',command);await save('original',originalRaw);assert.equal((originalRaw.match(/9007199254740993/g)||[]).length,1);assert.equal((previewRaw.match(/9007199254740993/g)||[]).length,2);
+ const manifest={protocol:1,account,root:{id,task_generation:generation,project_id:null,title:'Exact repair original'},command,closedCommand,unknownCommand,nodeCount:1,hashes};
+ await writeFile(new URL('child-repair-contract-v1.json',output),JSON.stringify(manifest,null,2)+'\n');
+ report.passed=true;report.hashes=hashes;report.nativeFixtureSource=migrations.at(-1);
+}catch(error){report.failure={code:error.code,message:error.message};process.exitCode=1;}finally{if(pg)report.fixtureRemoved=await pg.close();await writeFile(process.env.TASKFOLD_REPAIR_CAPTURE_REPORT??'/tmp/taskfold-repair-client-fixture-capture.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));}

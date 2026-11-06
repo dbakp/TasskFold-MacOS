@@ -1,0 +1,20 @@
+{
+  "beforeFreeBytes": 22388207616,
+  "removed": [
+    {
+      "cache": "Library/Caches/TaskfoldBuild/core-ios/out/v5",
+      "allocatedBytes": 64552960,
+      "verifiedIndexStore": true
+    },
+    {
+      "cache": "Library/Caches/TaskfoldBuild/core-mac/out/v5",
+      "allocatedBytes": 71147520,
+      "verifiedIndexStore": true
+    }
+  ],
+  "compiledProductsAndIntermediatesPreserved": true,
+  "realAppAndDataPreserved": true,
+  "futureCLIIndexingDisabled": true,
+  "afterFreeBytes": 22523736064,
+  "actualFreeBytesIncrease": 135528448
+}

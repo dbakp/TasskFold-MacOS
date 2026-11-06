@@ -1,0 +1,14 @@
+{
+  "Taskfold/Core/AudioCommentPublishing.swift": "bf66b76b2615577a85949838bc0e2a2b73ca982412b127345f183aa1d45b9e3f",
+  "Taskfold/Core/Backend.swift": "c3c4cef719f5ac761fab234af932bfa93b75a7daf48adaf02d286d3aa3342ca8",
+  "Taskfold/AudioCommentCapture.swift": "2c68636f1cffca279a5ca652b584ec5ecde4e0cdd6a9d21f3b2cc8d48e0d2a8a",
+  "Taskfold/Views/AudioCommentPublicationView.swift": "a29c619741f0e4e910100b8ea37bccaecf3bf4e7af2f442c42fe14ea43f690e8",
+  "Taskfold/Views/AudioPendingPublicationView.swift": "458dedb2b15658ffca358391003e84f097e3c261cc67d1a85d0591509355c521",
+  "TaskfoldTests/AudioCommentPublishingTests.swift": "2e12951802d8eeee8c2c88c7f248d761825eac63bd146b4e186c0a6f1651e3a1",
+  "Scripts/fixtures/AudioCommentCaptureProof.swift": "850d08348eb02150f2d59b2401189c1c2a5e536aebf468580a92e6adce0ccd01",
+  "Scripts/fixtures/AudioCommentNativePublicationProof.swift": "d995b7d5df38ab29b6270cb7ea389d337df8e830817fd414bf4733bc272c38d7",
+  "Scripts/Database/test-audio-terminal-publication.mjs": "5e93181775f5c2674e08de024762ad3c27636a6d8ff138b8a1abe6151c6dc569",
+  "Scripts/Database/test-audio-native-publication.mjs": "52d8296ece11a38f9c3f18a3e221e65b8785af1dede166e4aadf864c0976d937",
+  "supabase/functions/audio-comments/handler.ts": "c2bb1c093d2fe9025dbf115ca3ee6b181bef70a86d1f7937551242786e2e3f26",
+  "supabase/functions/audio-comments/handler_test.ts": "8bf65ff53b98de8558c6af9ef52d5bf6c772ece06df05b39c9207a8d5b0ba4e9"
+}

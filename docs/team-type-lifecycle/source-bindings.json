@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-26",
+  "sources": {
+    "Taskfold/Core/TeamProjectAccess.swift": "6a6649eec50e29bf768f3a45ee8f02d2b9c7684e63fc751b180d01d380e18337",
+    "Taskfold/Core/TeamTaskBatch.swift": "60d9895161211324faacdb69ddcc410c7d5d3ad28b2b37c9586069c2b0becbea",
+    "Taskfold/Core/TeamWorkspace.swift": "59361c9b70198ee18f69331a1e3077bd8dd0c2f2be4a3712e38cfe64ebbb7bad",
+    "TaskfoldTests/TeamTaskLifecycleTests.swift": "06d53c9aa6e75eacb0c0dc25221fbae1c9e6e8f29fe7e66d087b38b713b0e341",
+    "TaskfoldTests/Fixtures/team-type-lifecycle-v1.json": "6c7c59dc299064533f8b2f546e392347012c78dfb0cc78d0d426b4276c5838e0",
+    "Scripts/Database/test-team-type-lifecycle.mjs": "5facf93b95e8dc6bc61b0da88858b672fa47f6870914fac87a2eeed093ace33e",
+    "supabase/migrations/20261026161001_team_task_heading_lifecycle.sql": "e7a5a8c4e4174bc08a324d2fa1c8caaa2f6893df78719960e195c75851a38829"
+  },
+  "hostedChanges": false,
+  "nativeAuthoringChanged": false
+}

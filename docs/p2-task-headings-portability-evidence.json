@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-26",
+  "stage": "Heading portability and checklist progress",
+  "platform": "macos",
+  "fullHeadingFeatureComplete": false,
+  "normalAppAuthoringEnabled": false,
+  "hostedDeployment": false,
+  "realDataChanged": false,
+  "core": {
+    "filter": "HeadingPortability|TaskKind|Subtask|Workflow|Template|Backup|TaskEditorRecovery",
+    "executed": 318,
+    "passed": 313,
+    "optionalCloudFixtureSkips": 5,
+    "failures": 0,
+    "newPortabilityCases": 16,
+    "evidence": "headings-portability/core.log",
+    "wholeSuiteAccepted": false,
+    "wholeSuiteLimit": "Unfiltered runs interrupted after no further visible progress around location-private tests; retained as unresolved broad verification, not a pass."
+  },
+  "localFiles": {
+    "actualCoordinatedTemporaryFileReads": true,
+    "templateRoundTrip": true,
+    "workspaceBackupRoundTrip": true,
+    "providerPickerOrICloudAcceptance": false
+  },
+  "build": {
+    "currentIOSAndMacArm64Debug": true,
+    "strictSignatureVerified": true,
+    "evidence": [
+      "headings-portability/ios-build-summary.json",
+      "headings-portability/macos-build-summary.json",
+      "headings-portability/ios-signing.json"
+    ],
+    "macRuntimeAccepted": false
+  },
+  "iosInstalledAcceptance": {
+    "scope": "Signed isolated iPhone and iPad Simulator, synthetic local fixtures only; companion evidence for Mac repo",
+    "cases": [
+      "Decoded version-2 template review, Cancel unchanged, explicit Inbox destination, Create with retained root/nested heading flags and notes, cold return with unchanged source.",
+      "Nested heading Save/Cancel, ordinary descendants retained, cold-return checklist progress excludes heading (0/3)."
+    ],
+    "ipadPassed": 2,
+    "failures": 0,
+    "skips": 0,
+    "evidence": [
+      "headings-portability/ipad-summary.json",
+      "headings-portability/ipad-native.log",
+      "headings-portability/iphone-summary.json",
+      "headings-portability/iphone-native.log"
+    ],
+    "iphonePassed": 2,
+    "visuallyInspectedImages": 6
+  },
+  "sourceProof": "headings-portability/source-proof.json",
+  "sourceSHA256": "headings-portability/source-sha256.json",
+  "verificationNotes": "headings-portability/verification-notes.txt",
+  "remaining": [
+    "Broader task/list/project counts, action/history consistency and descendant policy.",
+    "Todoist, CSV and clipboard heading mapping.",
+    "Shared heading command/capability support and cross-device acceptance.",
+    "Largest-text, spoken and Mac runtime heading acceptance.",
+    "Whole-suite location-private stalled-run investigation before claiming broad suite acceptance."
+  ],
+  "deferredByUserUnchanged": [
+    "Release/distribution/signing",
+    "Remote delivery reminders",
+    "Older-client rollout protection",
+    "OAuth/provider registration",
+    "Physical location delivery",
+    "Inbound email provider"
+  ]
+}

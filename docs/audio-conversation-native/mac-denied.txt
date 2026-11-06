@@ -1,0 +1,21 @@
+Window: "", App: Taskfold Team Editor Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Audio comments, Secondary Actions: Cancel
+		3 scroll area ID: audioConversationForm, Secondary Actions: Cancel
+			4 text Value: This conversation is no longer available. Refresh access before reopening it., ID: audioConversationNotice
+			5 text Play recordings here without adding copies to Saved recordings.
+			6 button Description: Refresh recordings, ID: audioConversationRefresh
+		7 button Description: Close, ID: audioConversationClose
+8 menu bar
+	9 Taskfold Workflow Test
+	10 File
+	11 Edit
+	12 View
+	13 Fixture
+	14 Account
+	15 Task
+	16 Window
+	17 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

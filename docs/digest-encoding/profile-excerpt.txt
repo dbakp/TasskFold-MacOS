@@ -1,0 +1,30 @@
+    +               ! : | +                                                           ! 162 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 26248  [0x108f9dbe4]  Store.swift:1642
+    +               ! : | +                                                           ! : 162 Store.persist(acceptingTimeSnooze:backgroundWidgets:)  (in Taskfold.debug.dylib) + 2380  [0x108f01b0c]  Store.swift:955
+    +               ! : | +                                                           ! :   134 static WidgetCompletion.prepare(_:)  (in Taskfold.debug.dylib) + 2476  [0x10960ddfc]  WidgetCompletion.swift:31
+    +               ! : | +                                                           ! :   | 134 Optional.map<A, B>(_:)  (in Taskfold.debug.dylib) + 232  [0x10865d5a8]  /<compiler-generated>:0
+    +               ! : | +                                                           ! :   |   134 ???  (in Taskfold.debug.dylib)  load address 0x108648000 + 0xfc7728  [0x10960f728]
+    +               ! : | +                                                           ! :   |     129 ???  (in Taskfold.debug.dylib)  load address 0x108648000 + 0x2547f0  [0x10889c7f0]
+    +               ! : | +                                                           ! :   |     + 110 Sequence.map<A, B>(_:)  (in Taskfold.debug.dylib) + 2216  [0x108654a80]  /<compiler-generated>:0
+    +               ! : | +                                                           ! :   |     + ! 95 ???  (in Taskfold.debug.dylib)  load address 0x108648000 + 0xc1a0  [0x1086541a0]
+    +               ! : | +                                                           ! :   |     + ! : 89 String.init(format:_:)  (in Foundation) + 68  [0x18f1c6cac]
+    +               ! : | +                                                           ! :   |     + ! : | 76 specialized withVaList<A>(_:_:)  (in Foundation) + 448  [0x18f1d0000]
+    +               ! : | +                                                           ! :   |     + ! : | + 63 closure #1 in String.init(format:locale:arguments:)  (in Foundation) + 1604  [0x18f1c739c]
+    +               ! : | +                                                           ! :   |     + ! : | + ! 60 +[NSString _stringWithValidatedFormat:validFormatSpecifiers:locale:arguments:error:]  (in Foundation) + 72  [0x18f323238]
+    +               ! : | +                                                           ! :   |     + ! : | + ! : 60 -[NSPlaceholderString initWithValidatedFormat:validFormatSpecifiers:locale:arguments:error:]  (in Foundation) + 104  [0x18f324b20]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   50 _CFStringCreateStringWithValidatedFormatAuxWithDesc  (in CoreFoundation) + 160  [0x18d10235c]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | 17 __CFStringAppendFormatCore  (in CoreFoundation) + 720  [0x18cfc97f0]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + 7 __CFStringValidateFormat  (in CoreFoundation) + 484  [0x18d104188]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! 3 __CFStringFindFormatSpecifiersInString  (in CoreFoundation) + 1688  [0x18d103e78]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! : 3 __CFStringCreateImmutableFunnel3  (in CoreFoundation) + 288,2696,...  [0x18cfa16d4,0x18cfa203c,...]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! 3 __CFStringFindFormatSpecifiersInString  (in CoreFoundation) + 1588,308  [0x18d103e14,0x18d103914]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! 1 __CFStringFindFormatSpecifiersInString  (in CoreFoundation) + 1652  [0x18d103e54]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + !   1 DYLD-STUB$$strlen  (in CoreFoundation) + 8  [0x18d19c6cc]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + 5 __CFStringValidateFormat  (in CoreFoundation) + 520  [0x18d1041ac]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! 4 __CFStringFindFormatSpecifiersInString  (in CoreFoundation) + 1292  [0x18d103cec]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! : 2 _CFExecutableLinkedOnOrAfter  (in CoreFoundation) + 24  [0x18cfa146c]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! : | 1 DYLD-STUB$$dyld_get_active_platform  (in CoreFoundation) + 8  [0x18d19b51c]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! : | 1 dyld4::APIs::dyld_get_active_platform()  (in dyld) + 12  [0x18cb7c7b0]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! : 2 _CFExecutableLinkedOnOrAfter  (in CoreFoundation) + 56  [0x18cfa148c]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! :   1 DYLD-STUB$$dyld_program_sdk_at_least  (in CoreFoundation) + 8  [0x18d19b55c]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! :   1 dyld4::APIs::dyld_program_sdk_at_least(dyld_build_version_t)  (in dyld) + 72  [0x18cb7cdc0]
+    +               ! : | +                                                           ! :   |     + ! : | + ! :   | + ! :     1 mach_o::Platform::Platform(unsigned int)  (in dyld) + 36  [0x18cc07390]

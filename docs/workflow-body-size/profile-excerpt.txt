@@ -1,0 +1,132 @@
+Analysis of sampling Taskfold (pid 60074) every 1 millisecond
+Process:         Taskfold [60074]
+Path:            /private/tmp/*/Taskfold.app/Contents/MacOS/Taskfold
+Load Address:    0x102100000
+Identifier:      com.dbakp.taskfold.mac.workflowteststeameditbridge
+Version:         1.2.0 (3)
+Code Type:       ARM64
+Platform:        macOS
+Parent Process:  launchd [1]
+Target Type:     live task
+
+Date/Time:       2026-10-27 09:54:27.341 +0100
+Launch Time:     2026-10-27 09:54:23.001 +0100
+OS Version:      macOS 26.6.2 (25G83)
+Report Version:  7
+Analysis Tool:   /usr/bin/sample
+
+Physical footprint:         239.4M
+Physical footprint (peak):  274.9M
+Idle exit:                  untracked
+----
+
+    +               !     :                                                           1342 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 11428  [0x108d28afc]  TeamTemplateNativeFixture.swift:473
+    +               !     :                                                           | 384 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 24384  [0x10862f2c0]  Store.swift:1631
+    +               !     :                                                           | + 384 EditHistory.init(changes:snapshot:id:)  (in Taskfold.debug.dylib) + 2328  [0x108307e58]  Models.swift:1187
+    +               !     :                                                           | +   300 static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 4012  [0x10843fd14]  ProjectWorkflows.swift:1311
+    +               !     :                                                           | +   ! 300 static WorkflowUndo.fitsBody(_:)  (in Taskfold.debug.dylib) + 44  [0x10843ec70]  ProjectWorkflows.swift:1301
+    +               !     :                                                           | +   !   181 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 492  [0x10843d310]  ProjectWorkflows.swift:1270
+    +               !     :                                                           | +   !   33 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 828,856,...  [0x10843d460,0x10843d47c,...]  ProjectWorkflows.swift:0
+    +               !     :                                                           | +   !   28 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 1008  [0x10843d514]  ProjectWorkflows.swift:1274
+    +               !     :                                                           | +   !   13 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 960  [0x10843d4e4]  ProjectWorkflows.swift:1273
+    +               !     :                                                           | +   !   9 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 952,956,...  [0x10843d4dc,0x10843d4e0,...]  ProjectWorkflows.swift:1273
+    +               !     :                                                           | +   !   7 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 5756,5808,...  [0x10843e7a0,0x10843e7d4,...]  ProjectWorkflows.swift:1297
+    +               !     :                                                           | +   !   6 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 1224  [0x10843d5ec]  ProjectWorkflows.swift:1278
+    +               !     :                                                           | +   !   3 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 1484  [0x10843d6f0]  ProjectWorkflows.swift:1280
+    +               !     :                                                           | +   !   2 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 1068  [0x10843d550]  ProjectWorkflows.swift:1275
+    +               !     :                                                           | +   !   1 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 1392  [0x10843d694]  ProjectWorkflows.swift:1279
+    +               !     :                                                           | +   !   1 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 1780  [0x10843d818]  ProjectWorkflows.swift:1281
+    +               !     :                                                           | +   !   1 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 2156  [0x10843d990]  ProjectWorkflows.swift:1283
+    +               !     :                                                           | +   !   1 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 2304  [0x10843da24]  ProjectWorkflows.swift:1283
+    +               !     :                                                           | +   !   1 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 2380  [0x10843da70]  ProjectWorkflows.swift:1283
+    +               !     :                                                           | +   !   1 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 2644  [0x10843db78]  ProjectWorkflows.swift:1283
+    +               !     :                                                           | +   !   1 static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib) + 3140  [0x10843dd68]  ProjectWorkflows.swift:1285
+    +               !     :                                                           | +   34 static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 3708  [0x10843fbe4]  ProjectWorkflows.swift:1311
+    +               !     :                                                           | +   19 static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 3168  [0x10843f9c8]  ProjectWorkflows.swift:1310
+    +               !     :                                                           | +   ! : 6 closure #4 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 432  [0x1084412f8]  ProjectWorkflows.swift:1310
+    +               !     :                                                           | +   ! : 1 closure #4 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 404  [0x1084412dc]  ProjectWorkflows.swift:1310
+    +               !     :                                                           | +   ! : 1 closure #4 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 424  [0x1084412f0]  ProjectWorkflows.swift:1310
+    +               !     :                                                           | +   15 static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 1452  [0x10843f314]  ProjectWorkflows.swift:1304
+    +               !     :                                                           | +   ! : 9 partial apply for closure #1 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 24  [0x10844a630]  /<compiler-generated>:0
+    +               !     :                                                           | +   ! :   2 closure #1 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 3760  [0x108440e1c]  ProjectWorkflows.swift:1304
+    +               !     :                                                           | +   ! :   1 closure #1 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 108  [0x10843ffd8]  <stdin>:0
+    +               !     :                                                           | +   ! :   1 closure #1 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 448  [0x10844012c]  <stdin>:0
+    +               !     :                                                           | +   ! :   1 closure #1 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 1848  [0x1084406a4]  ProjectWorkflows.swift:1304
+    +               !     :                                                           | +   ! :   1 closure #1 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 1908  [0x1084406e0]  ProjectWorkflows.swift:1304
+    +               !     :                                                           | +   ! :   1 closure #1 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 2172  [0x1084407e8]  ProjectWorkflows.swift:1304
+    +               !     :                                                           | +   ! :   1 closure #1 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 3668  [0x108440dc0]  ProjectWorkflows.swift:1304
+    +               !     :                                                           | +   ! :   1 closure #1 in static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 3716  [0x108440df0]  ProjectWorkflows.swift:1304
+    +               !     :                                                           | +   10 static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 2552  [0x10843f760]  ProjectWorkflows.swift:1307
+    +               !     :                                                           | +   3 static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 3956  [0x10843fcdc]  ProjectWorkflows.swift:1311
+    +               !     :                                                           | +   3 static WorkflowUndo.deleting(_:snapshot:)  (in Taskfold.debug.dylib) + 4188  [0x10843fdc4]  ProjectWorkflows.swift:1311
+    +               !     :                                                           | 336 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 22388  [0x10862eaf4]  Store.swift:1619
+    +               !     :                                                           | 109 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19568  [0x10862dff0]  Store.swift:1600
+    +               !     :                                                           | 88 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 14480  [0x10862cc10]  Store.swift:1519
+    +               !     :                                                           | + !   : 1 normalizationRecord #1 (_:id:) in Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 280  [0x108686a24]  Store.swift:1516
+    +               !     :                                                           | 52 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 18228  [0x10862dab4]  Store.swift:1581
+    +               !     :                                                           | 50 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 15288  [0x10862cf38]  Store.swift:1559
+    +               !     :                                                           | 47 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 26248  [0x10862fa08]  Store.swift:1642
+    +               !     :                                                           | 44 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 18504  [0x10862dbc8]  Store.swift:1584
+    +               !     :                                                           | 38 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 4824  [0x10862a658]  Store.swift:1452
+    +               !     :                                                           | 21 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 14592  [0x10862cc80]  Store.swift:1546
+    +               !     :                                                           | 20 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 14296  [0x10862cb58]  Store.swift:1519
+    +               !     :                                                           | + !     1 normalizationRecord #1 (_:id:) in Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 168  [0x1086869b4]  Store.swift:1516
+    +               !     :                                                           | 16 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 24048  [0x10862f170]  Store.swift:1630
+    +               !     :                                                           | 11 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 13460  [0x10862c814]  Store.swift:1505
+    +               !     :                                                           | 10 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 12988  [0x10862c63c]  Store.swift:1497
+    +               !     :                                                           | 10 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 23772  [0x10862f05c]  Store.swift:1629
+    +               !     :                                                           | 9 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 17788  [0x10862d8fc]  Store.swift:1575
+    +               !     :                                                           | 8 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 8924  [0x10862b65c]  Store.swift:1472
+    +               !     :                                                           | 8 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 12820  [0x10862c594]  Store.swift:1496
+    +               !     :                                                           | 8 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 13284  [0x10862c764]  Store.swift:1501
+    +               !     :                                                           | 7 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 13088  [0x10862c6a0]  Store.swift:1498
+    +               !     :                                                           | 7 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 13596  [0x10862c89c]  Store.swift:1512
+    +               !     :                                                           | 6 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 5004  [0x10862a70c]  Store.swift:0
+    +               !     :                                                           | 6 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 15552  [0x10862d040]  Store.swift:0
+    +               !     :                                                           | 6 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 25452  [0x10862f6ec]  Store.swift:1640
+    +               !     :                                                           | 4 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 14100  [0x10862ca94]  Store.swift:1517
+    +               !     :                                                           | 3 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 14556  [0x10862cc5c]  Store.swift:1519
+    +               !     :                                                           | 3 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 17800  [0x10862d908]  Store.swift:1575
+    +               !     :                                                           | 2 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 6812  [0x10862ae1c]  Store.swift:1458
+    +               !     :                                                           | 2 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 13736  [0x10862c928]  Store.swift:1512
+    +               !     :                                                           | 2 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 17844,17956  [0x10862d934,0x10862d9a4]  Store.swift:1581
+    +               !     :                                                           | 2 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 18540  [0x10862dbec]  Store.swift:1589
+    +               !     :                                                           | 2 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19448  [0x10862df78]  Store.swift:1598
+    +               !     :                                                           | 2 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19556  [0x10862dfe4]  Store.swift:1600
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19584  [0x10862e000]  Store.swift:0
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19812  [0x10862e0e4]  Store.swift:0
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 5076  [0x10862a754]  Store.swift:1453
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 5096  [0x10862a768]  Store.swift:1454
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 6880  [0x10862ae60]  Store.swift:1458
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 7076  [0x10862af24]  Store.swift:1458
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 7124  [0x10862af54]  Store.swift:1458
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 8808  [0x10862b5e8]  Store.swift:1469
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 15596  [0x10862d06c]  Store.swift:1564
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 17816  [0x10862d918]  Store.swift:1576
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 17916  [0x10862d97c]  Store.swift:1581
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 18552  [0x10862dbf8]  Store.swift:1589
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 18588  [0x10862dc1c]  Store.swift:1590
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 18612  [0x10862dc34]  Store.swift:1591
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19384  [0x10862df38]  Store.swift:1597
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19416  [0x10862df58]  Store.swift:1597
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19468  [0x10862df8c]  Store.swift:1598
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19872  [0x10862e120]  Store.swift:1604
+    +               !     :                                                           | 1 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:)  (in Taskfold.debug.dylib) + 19944  [0x10862e168]  Store.swift:1606
+    +               !     :                                                           496 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 10392  [0x108d286f0]  TeamTemplateNativeFixture.swift:469
+    +               !     :                                                           90 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 10020  [0x108d2857c]  TeamTemplateNativeFixture.swift:469
+    +               !     :                                                           60 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 4720  [0x108d270c8]  TeamTemplateNativeFixture.swift:445
+    +               !     :                                                           39 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 6560  [0x108d277f8]  TeamTemplateNativeFixture.swift:455
+    +               !     :                                                           31 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 7984  [0x108d27d88]  TeamTemplateNativeFixture.swift:461
+    +               !     :                                                           21 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 6296  [0x108d276f0]  TeamTemplateNativeFixture.swift:454
+    +               !     :                                                           6 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 5316  [0x108d2731c]  TeamTemplateNativeFixture.swift:450
+    +               !     :                                                           6 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 9872  [0x108d284e8]  TeamTemplateNativeFixture.swift:468
+    +               !     :                                                           |   4 closure #5 in WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 1520  [0x108d30954]  TeamTemplateNativeFixture.swift:468
+    +               !     :                                                           |   1 closure #5 in WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 84  [0x108d303b8]  TeamTemplateNativeFixture.swift:468
+    +               !     :                                                           |   1 closure #5 in WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 1036  [0x108d30770]  TeamTemplateNativeFixture.swift:468
+    +               !     :                                                           3 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 5232  [0x108d272c8]  TeamTemplateNativeFixture.swift:450
+    +               !     :                                                           3 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 9620  [0x108d283ec]  TeamTemplateNativeFixture.swift:467
+    +               !     :                                                           | + 2 closure #4 in WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 828  [0x108d3033c]  TeamTemplateNativeFixture.swift:467
+    +               !     :                                                           1 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 6224  [0x108d276a8]  TeamTemplateNativeFixture.swift:454
+    +               !     :                                                           1 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 6444  [0x108d27784]  TeamTemplateNativeFixture.swift:455
+    +               !     :                                                           1 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 7140  [0x108d27a3c]  TeamTemplateNativeFixture.swift:457
+        static WorkflowUndo.bodyBytes(_:)  (in Taskfold.debug.dylib)        63

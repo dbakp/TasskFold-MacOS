@@ -1,0 +1,104 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 72255926272,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 391589888
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 401719296
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 369950720
+    }
+  ],
+  "freeAfterBytes": 72298344448,
+  "actualFreeChangeBytes": 42418176,
+  "retiredOutputs": {
+    "freeBeforeBytes": 72193441792,
+    "retired": [
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-13-mac-development.zip",
+        "allocatedBytes": 32792576,
+        "retained": "Receipt retained; new full payload and working rollback verified"
+      },
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-29-iphone-development.zip",
+        "allocatedBytes": 34455552,
+        "retained": "Receipt retained; new full payload and working rollback verified"
+      },
+      {
+        "path": "/tmp/taskfold-filter-target-ios-native-v1.xcresult",
+        "allocatedBytes": 28819456,
+        "retained": "Readable outcome/tests, proof, relevant failure hierarchy and final reviewed screenshots"
+      },
+      {
+        "path": "/tmp/taskfold-filter-target-ios-native-v2.xcresult",
+        "allocatedBytes": 2895872,
+        "retained": "Readable outcome/tests, proof, relevant failure hierarchy and final reviewed screenshots"
+      },
+      {
+        "path": "/tmp/taskfold-filter-target-large-ios-native-v2.xcresult",
+        "allocatedBytes": 10485760,
+        "retained": "Readable outcome/tests, proof, relevant failure hierarchy and final reviewed screenshots"
+      },
+      {
+        "path": "/tmp/taskfold-filter-target-large-ios-native-v3.xcresult",
+        "allocatedBytes": 14692352,
+        "retained": "Readable outcome/tests, proof, relevant failure hierarchy and final reviewed screenshots"
+      },
+      {
+        "path": "/tmp/taskfold-filter-target-native-v1-attachments",
+        "allocatedBytes": 26689536,
+        "retained": "Readable outcome/tests, proof, relevant failure hierarchy and final reviewed screenshots"
+      },
+      {
+        "path": "/tmp/taskfold-filter-target-large-v2-attachments",
+        "allocatedBytes": 9633792,
+        "retained": "Readable outcome/tests, proof, relevant failure hierarchy and final reviewed screenshots"
+      },
+      {
+        "path": "/tmp/taskfold-filter-target-large-v3-attachments",
+        "allocatedBytes": 13815808,
+        "retained": "Readable outcome/tests, proof, relevant failure hierarchy and final reviewed screenshots"
+      },
+      {
+        "path": "/tmp/taskfold-filter-final-attachments-0",
+        "allocatedBytes": 229376,
+        "retained": "Readable outcome/tests, proof, relevant failure hierarchy and final reviewed screenshots"
+      },
+      {
+        "path": "/tmp/taskfold-filter-final-attachments-1",
+        "allocatedBytes": 876544,
+        "retained": "Readable outcome/tests, proof, relevant failure hierarchy and final reviewed screenshots"
+      }
+    ],
+    "freeAfterBytes": 72257302528,
+    "retainedCurrentResults": [
+      "taskfold-filter-target-ios-native-v4.xcresult",
+      "taskfold-filter-target-large-ios-native-v4.xcresult"
+    ]
+  },
+  "coreCaches": [
+    {
+      "platform": "ios",
+      "allocatedBytes": 576983040,
+      "retained": "Reusable owning Core products below the 768 MiB cap"
+    },
+    {
+      "platform": "mac",
+      "allocatedBytes": 530128896,
+      "retained": "Reusable owning Core products below the 768 MiB cap"
+    }
+  ],
+  "finalFreeBytes": 72297267200,
+  "finalFreeGiB": 67.3,
+  "userDataPreserved": true
+}

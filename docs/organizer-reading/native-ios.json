@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-06",
+  "accepted": true,
+  "syntheticOnly": true,
+  "ordinaryGatesChanged": false,
+  "genuineAuthOrProvider": false,
+  "hardwareOrLargeLibraryRenderingAccepted": false,
+  "xcodeExitCode": 0,
+  "organizerReadingJourney": {
+    "accepted": true,
+    "boundaryAndIndent": true,
+    "cancelPreservesTables": true,
+    "coldSavedState": true,
+    "currentTitleAfterMove": true,
+    "explicitParentSave": true,
+    "opaqueFieldsAndGrandchildPreserved": true,
+    "ordinaryOrganizer": true
+  },
+  "ownedSimulatorRestored": true,
+  "simulatorInitialState": "Shutdown",
+  "tests": {
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  },
+  "allAppAndUITestSwiftManifestSHA256": "ad91e9d66e2af10f467e4a7989ae373ff0d8d3d226a26c1eafa02a1079416dbc",
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "92efb6ff63f23a788fc121fcc6bf154f815f477f4422892055d54e294c7cbc67",
+    "Taskfold/Views/SubtaskOrganizer.swift": "81df3d983296289f19f60e87b6647946375a15eb0e1893e04850d398edaac468",
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "1e4779ba5b015ce4bc04b333ab3932a1d9af945ce31a657b15cba177d68bc73e"
+  },
+  "runnerSHA256": "365a79e80fcd5890e229ce8ab992e4b80ca91b7e1b3b11bfa164713a87440192",
+  "knownFixtureColdInitialization": "Only absent default today/upcoming view preferences may initialize; saved task/activity data are compared exactly.",
+  "testHarnessCorrections": [
+    "First attempt reached required legacy-ID recovery review before editable rows; test now explicitly reviews synthetic recovery.",
+    "Second attempt passed edit/cancel/save and exact saved tasks, then failed on known first-cold default view preferences. Final test permits exactly those two default rows and compares every other table."
+  ],
+  "productSHA256": {
+    "Taskfold": "8591a61f3a3c95e55349eb4eb9ef69253cc198af132250982376c545a004974f",
+    "Taskfold.debug.dylib": "85e5c9bed253e8ee4407334d46831c54601617a86f01325f757bf1d8d78d3926"
+  }
+}

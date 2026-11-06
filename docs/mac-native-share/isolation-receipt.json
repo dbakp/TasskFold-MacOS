@@ -1,0 +1,60 @@
+{
+  "sourceRepository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "workspace": "/private/tmp/taskfold-mac-share-host",
+  "bundleID": "com.dbakp.taskfold.mac.workflowtestsmacshare",
+  "sandbox": true,
+  "productionURLAndFileRegistrationsRemoved": true,
+  "embeddedWidgetExtension": false,
+  "embeddedShareExtension": true,
+  "isolatedURLScheme": null,
+  "recordRouteTesting": false,
+  "isolatedAppGroup": "3UZ4C73FM2.com.dbakp.taskfold.mac.workflowtestsmacshare",
+  "signingTeam": "3UZ4C73FM2",
+  "namespaceOnlySourceChanges": {
+    "Taskfold/Workspace.swift": {
+      "originalSHA256": "479542b0c3e91799cc568a5717649d4640da62c76a8a207a1e24c3f444e63f34",
+      "isolatedSHA256": "3eeef95ec8075c7ec34599f84627dfad53a14909ce4784825caa908b324c22e0"
+    },
+    "Taskfold/AccountRemovalNativeFixture.swift": {
+      "originalSHA256": "9bf9004ba79bacd0c2370b1d6af5d99c6b05f63c8d3aeea5c7f4ffe67bee9587",
+      "isolatedSHA256": "9cb2164882d6d469f4194d4915c587cf1d866847bf74799f62295883d0486724"
+    },
+    "Taskfold/Core/Backups.swift": {
+      "originalSHA256": "f1d2927bce75bc6d1490c715dd5122154c139432cd9ccbb49ddafb62d42104cd",
+      "isolatedSHA256": "b586cb4c6c3d6e39b9296a47cec1541b334e31019c12707c756987f352dd13c3"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "originalSHA256": "804b799a1117cde91ec8e4a50e063d85154430d78df3b6cc8119710e6579ad0d",
+      "isolatedSHA256": "79bd4347340e13d4cd7c832997f04591a1de2c156ea3faf823b13e0d0ac3c24e"
+    },
+    "Taskfold/Core/Store.swift": {
+      "originalSHA256": "6c5a729260201184ff1c55cf235f9924b859c9f54ed53c62b45355d6461738c9",
+      "isolatedSHA256": "432e4504b8b560e99c7d6b1dad0027d06bb8d546492914797fd4f954d55c5d3f"
+    },
+    "Taskfold/Core/WidgetActions.swift": {
+      "originalSHA256": "0aa626784a49f197b7c1c11969b7194cbdded7cff116455c338a4487cd30373c",
+      "isolatedSHA256": "8c76595836466821042f664fd3e1aaa57e9cf23cfb25a4400ae0ce618b724540"
+    },
+    "Taskfold/Core/SharedCapture.swift": {
+      "originalSHA256": "6c818d7a4aadef3997d41a36cab14e3bc6305394df838b75186c126d121e2fbf",
+      "isolatedSHA256": "0ec14b67c1d348757361b76de178de9037bbc6a3f3e570460129d25d856b40aa"
+    }
+  },
+  "replacements": {
+    "com.dbakp.taskfold.task": "com.dbakp.taskfold.mac.workflowtestsmacshare.task",
+    "com.taskfold.ios.session": "com.taskfold.mac.workflowtestsmacshare.session",
+    "com.taskfold.recovery.v1": "com.taskfold.mac.workflowtestsmacshare.recovery.v1",
+    "group.com.dbakp.taskfold": "3UZ4C73FM2.com.dbakp.taskfold.mac.workflowtestsmacshare"
+  },
+  "launchArguments": [],
+  "limitations": [
+    "Preparation only; no launch/install/runtime acceptance.",
+    "Unique keychain services; no production credential migration.",
+    "Production Push Notifications and keychain-group entitlements are absent only from the copied test app.",
+    "No signed-distribution, APNs or provider acceptance.",
+    "Cold OS launches omit --uitesting and use the isolated local workspace; fixture continuity must be verified separately."
+  ],
+  "nativeShareNamespace": "workflowtestsmacshare",
+  "backend": "Synthetic reserved origin; no real credentials",
+  "copyOnlyDisplayName": "Taskfold Share Test"
+}

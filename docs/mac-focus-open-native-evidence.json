@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual warm-process Mac Focus notification Open, native finished-session result and unchanged tasks. Historical isolated binary; no cold-process action or current-source rebuild pass.",
+  "bundle": "com.dbakp.taskfold.mac.p0focuscontrasttests",
+  "process": 47062,
+  "binaryScope": "Retained historical isolated Focus binary, not a fresh current-source build.",
+  "nativeSteps": [
+    "Opened existing finished Focus session.",
+    "Finish soon fixture created one real one-minute session started 45 seconds earlier; no OS clock change.",
+    "Observed scheduled status and actual pending Focus alert count 1.",
+    "Closed Focus panel; Today remained visible. Selected already-running signed-out widget test app before delivery.",
+    "Notification Center observation timed out; native inventory recovered, then a second focused lookup timed out. No app restarted.",
+    "User clicked newest alert; actual same-request foreground response at 09:31:55.393, same PID 47062. Without restart or manual Focus activation, sheet opened with Time well spent, original task and 00:00; native pending count zero."
+  ],
+  "delivery": {
+    "hostLocalTime": "2026-10-12 09:29:24.116 +0200",
+    "requestID": "taskfold.f1.ef7da082f8442d6abf6ea53fdc4bebbcd85ef29deb331486808c5d6e2ea8e193",
+    "notificationCenterStored": true,
+    "systemLogReportsBannerAndSound": true,
+    "dndSuppression": "none; resolutionReason disabled",
+    "pixelsInspected": false,
+    "openAccepted": true,
+    "responseHostLocalTime": "2026-10-12 09:31:55.393 +0200",
+    "appResultPixelsInspected": true
+  },
+  "preservation": {
+    "tasksExact": true,
+    "onlyChangedSnapshotTable": "focus_sessions",
+    "pendingEmpty": true,
+    "widgetCompletionExact": true,
+    "fileHashEquality": {
+      "ui-testing.json": false,
+      "local.json": true,
+      "WidgetActionTests/widget.json": false,
+      "WidgetActionTests/widget-actions.lock": true,
+      "Backups/37ab6eac-1cbe-895f-b5f4-59ec47fe6a30/index.json": true,
+      "Backups/37ab6eac-1cbe-895f-b5f4-59ec47fe6a30/9f8c3f34-1728-4443-b445-1af5040efa60.taskfoldbackup": true
+    },
+    "scope": "Snapshot and widget publication change for new Focus session; four other files exact. No restoration performed."
+  },
+  "remaining": [
+    "Cold-process Focus notification Open without fixture launch overrides.",
+    "Mac task-reminder delivery/actions/account transitions and remaining named P0 gates."
+  ],
+  "logSHA256": "4fafa0393d0fc641db33ffaeddb616db3cd24bd302b21c44268d74b386168551",
+  "result": {
+    "nativePendingFocusAlerts": 0,
+    "session": [
+      {
+        "state": {
+          "task_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "started_at_ms": 1791790103525,
+          "status": "running",
+          "session_id": "a515cc86-91bb-47eb-a71e-b05c48097a0f",
+          "elapsed_ms": 0,
+          "changed_at_ms": 1791790103525,
+          "running_since_ms": 1791790103525,
+          "duration_seconds": 60
+        },
+        "revision": 6,
+        "user_id": "ui-testing",
+        "action_id": "16ed3261-8c9e-482f-829f-735463ea3f45",
+        "id": "current"
+      }
+    ],
+    "taskTableExact": true,
+    "normalAppProcessUnchanged": true,
+    "responseLogSHA256": "c72a6e2f0cf238f5362447d1add292c698c02afe81b7422a058b9d40ec6c8ded"
+  }
+}

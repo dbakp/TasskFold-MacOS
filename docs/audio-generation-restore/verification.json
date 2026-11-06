@@ -1,0 +1,49 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "f2f4b5b0ec8e56c91858cba494cbcb09096a3eb4",
+  "providerChecks": 65,
+  "serviceTests": 56,
+  "newServiceTests": 4,
+  "sourceSHA256": {
+    "supabase/migrations/20261102175200_reviewed_audio_generation_restore.sql": "2f2254c2f8bc498c668120797c141a18dcb513b61f46a66f10a1bc59a5427474",
+    "supabase/functions/audio-comments/wire.ts": "593c2e54dd71816b8edffcc5e86405f3d53236b27a41a3c959c27db0db354979",
+    "supabase/functions/audio-comments/handler.ts": "c2e61a6ae12160c1aa013441017b5e670d8dcbd593d20198a92036f9f0d35e2e",
+    "supabase/functions/audio-comments/handler_test.ts": "040c06e15806f1332fb41620c80039989c27bb03057dbee0799d4ca2c188e870",
+    "Scripts/Database/test-audio-generation-restore.mjs": "2e3d31c59177d3981a7138911efb9077a06e5edcc0f6882e7a59895810e6e600",
+    "Scripts/Database/test-audio-project-custody.mjs": "7e65ea58d23187c310cf56ab8ac7d4daec315aad964fb3be4d3d0ef6d8fc0ac2",
+    "Scripts/Database/audio-project-custody-schema.mjs": "47237d46b444c5dadbc6d6e915fcdcafa4a6d4ea6d9f391134ad161ea62a9ca0",
+    "Scripts/Database/task-file-provider-schema.mjs": "fd833ccc010e72d054a7c385b70ac07a25019e9e987e6fb77cce52a76ee2e2d5",
+    "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "188f494393d8a8e488116d49ba78cd29d4e79a6ea85d6d5c5363f6554cfd071d",
+    "Scripts/Database/storage-provider-fixture.mjs": "fc13de3a9941ad6e1da80987020d922dc7179e8119c9b368d49c530cf5dbc1a9"
+  },
+  "reportSHA256": "55558a01a67e8d4c8aff61de6f0cdea1496c3c67ddabacf81271cba9640afb27",
+  "actualLocalStorage": true,
+  "genuineAuth": false,
+  "fullSchemaParity": false,
+  "nativeRuntimeAccepted": false,
+  "nativeRetentionReviewImplemented": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "migrationCreatedWithCLI": "supabase migration new reviewed_audio_generation_restore",
+  "clientGate": false,
+  "newServiceGateDefault": false,
+  "buildQualification": "No Swift, app resource or native API field changed. Existing builds were not repeated; the gateway removes the internal storage generation from public receipts. Actual native Delete/Undo review and lifecycle acceptance remain to implement.",
+  "attemptQualifications": {
+    "v1": "New negative oracle expected the audio guard, but the existing native guard refused first with PT503. The assertion now identifies that earlier guard; it is not evidence of a valid-session direct SQL attempt.",
+    "v2": "New oracle could not JSON-decode an empty SELECT result after root deletion. It now explicitly returns SQL JSON null.",
+    "v3": "SQL JSON subtraction needed parentheses around the nested publication value. Fixed in the migration; no metadata restoration check was weakened.",
+    "v4": "The changed-object oracle reset version but real Storage had also changed updated_at. It correctly refused a later restore. The mutation now runs in a rollback-only transaction, preserving the exact original provider row for later cases.",
+    "v5": "60-check narrower flow passed. Final v6 adds explicit task-only recovery after expired-media cleanup and passes65.",
+    "unit-v1": "The new access-loss oracle expected403; the existing privacy-preserving unavailable response is404. Corrected to the established contract; final56pass."
+  },
+  "sameGenerationMoveRegressionChecks": 63,
+  "moveRegressionSHA256": "2d3a71c244caf3df1cceb855a6aeb0c889633e814399fe6ebb9091c9b1251346",
+  "regressionQualification": "The existing63 move/Undo/legacy/old-hash checks run with both custody and generation candidates applied. Restoration gate remains at its new false default for this backward-compatibility suite. Actual65-case restoration flow explicitly enables it only in the disposable database.",
+  "dashboardQA": {
+    "substeps": 30,
+    "curatedCheckpoints": 74,
+    "barTotalsUnchanged": true,
+    "allViewportThemeAndStateChecksPassed": true
+  }
+}

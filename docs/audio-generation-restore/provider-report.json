@@ -1,0 +1,129 @@
+{
+  "checks": {
+    "restoration defaults disabled": true,
+    "real provider publication succeeds": true,
+    "old client must review recording retention": true,
+    "wrong recording count cannot delete": true,
+    "busy recording prevents deletion": true,
+    "existing native guard blocks uncertified deletion": true,
+    "certified deletion removes only root": true,
+    "deleted recording is retired": true,
+    "deleted metadata cleared from public receipt ledger": true,
+    "private deletion inventory retains exact caption": true,
+    "retention and cleanup share exact deadline": true,
+    "deleted generation cannot read recording": true,
+    "retained recording not claimed for early cleanup": true,
+    "retained bytes still consume quota": true,
+    "delete acknowledgement replay preserves one inventory": true,
+    "restore needs matching explicit review": true,
+    "changed stored object refuses restoration": true,
+    "failed restore leaves old custody exact": true,
+    "revoked editor cannot restore recordings": true,
+    "late failure rolls back complete restoration": true,
+    "late failure leaves root absent": true,
+    "late failure retains retired ledger": true,
+    "late failure retains old binding": true,
+    "late failure leaves no private scope": true,
+    "restoration preserves exact task content": true,
+    "restored task gets new generation": true,
+    "recording audience follows certified generation": true,
+    "restored recording metadata exact": true,
+    "immutable original recording identity and path preserved": true,
+    "no media reupload on restore": true,
+    "successful restoration consumes private caption inventory": true,
+    "restored list succeeds": true,
+    "live recipient receives new generation": true,
+    "internal Storage generation never reaches public receipt": true,
+    "new generation downloads original object": true,
+    "restored downloaded bytes exact": true,
+    "old generation cannot list restored audio": true,
+    "sender status retains original frozen target": true,
+    "restore reply replay leaves exact new binding": true,
+    "restore retires all private scopes": true,
+    "second deletion Undo renews audience again": true,
+    "multiple generations retain single original object": true,
+    "current author removes restored recording": true,
+    "removal after restore retires ledger": true,
+    "existing fenced worker purges restored original": true,
+    "cleanup releases quota after explicit removal": true,
+    "new publication on renewed generation succeeds": true,
+    "expired recovery period refuses restoration": true,
+    "expired omission needs confirmed cleanup": true,
+    "expired recording cleanup uses existing fenced worker": true,
+    "expired private caption inventory is pruned": true,
+    "pruned expired capsule cannot silently restore without audio": true,
+    "expired cleanup releases remaining quota": true,
+    "all real uploads remain separate immutable identities": true,
+    "audio_task_deletions private to anon": true,
+    "audio_task_deletions private to authenticated": true,
+    "audio_task_deletions private to service_role": true,
+    "audio_task_restore_scope private to anon": true,
+    "audio_task_restore_scope private to authenticated": true,
+    "audio_task_restore_scope private to service_role": true,
+    "explicit expired-media choice recovers task": true,
+    "recovered task never resurrects expired recordings": true,
+    "explicit omission consumes only expired recovery inventory": true,
+    "expired omission uploads no replacement bytes": true,
+    "no added advisor findings": true
+  },
+  "maintenance": [],
+  "actualLocalStorage": true,
+  "genuineAuth": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "checkCount": 65,
+  "cleanupErrors": [],
+  "provider": [
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    }
+  ],
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true
+}

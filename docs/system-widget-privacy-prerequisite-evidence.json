@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-13",
+  "scope": "Read-only actual Settings observation on the retained disposable iPhone 17 Pro Simulator, iOS 26.5 (23F77). Environment diagnostic only; no Taskfold system-selected privacy acceptance.",
+  "finding": "The root Passcode row navigates to a visually blank system page. The final capture and accessibility observation show only the Settings back button, no static content or switches after a bounded content wait.",
+  "searchCorrection": "The initial search reports No Results for Passcode, but the actual root row exists. Settings logs CSSearchQueryErrorDomain -2000; a failed search index must not be used to conclude the setting is absent.",
+  "localAuthenticationCaution": "Public canEvaluatePolicy(.deviceOwnerAuthentication) returns true here. That does not establish actual passcode privacy control availability or widget host redaction.",
+  "nativeObservation": {
+    "authenticationErrorCode": 0,
+    "authenticationErrorDomain": "",
+    "canEvaluateDeviceOwnerAuthentication": true,
+    "diagnosticOnly": true,
+    "passcodePageButtonLabels": [
+      "Settings"
+    ],
+    "passcodePageHasStaticText": false,
+    "passcodePageLabels": [],
+    "passcodePageSwitches": [],
+    "rootButtonLabels": [
+      "Apple Account, Sign in to access your iCloud data, the App Store, Apple services and more.",
+      "Ready for Apple Intelligence",
+      "General",
+      "Accessibility",
+      "Action Button",
+      "Apple Intelligence & Siri",
+      "Camera",
+      "Home Screen & App Library",
+      "Search",
+      "StandBy",
+      "Screen Time",
+      "Dictate"
+    ],
+    "settingsChanged": false,
+    "systemVersion": "26.5",
+    "widgetPrivacyAccepted": false
+  },
+  "results": {
+    "initialSearch": "ios-system-privacy-prerequisite-v1.xcresult: 1 passing diagnostic, zero skips/failures/structured runtime warnings; inconclusive search.",
+    "initialDirectPage": "ios-system-privacy-prerequisite-v2.xcresult: 1 failed diagnostic. Driver incorrectly required a Passcode navigation title; actual route has an anonymous navigation bar and Settings back button. Full failure retained.",
+    "finalDirectPage": "ios-system-privacy-prerequisite-v3.xcresult: 1 passing read-only diagnostic, zero skips/failures/structured runtime warnings. The successful diagnostic records an unavailable prerequisite, not successful widget privacy.",
+    "builds": "All three isolated native test builds succeed, using existing development signing. No production app code changed.",
+    "method": "testInspectSimulatorSystemWidgetPrivacyPrerequisites",
+    "testSourceSHA256": "fe6f831409e37e80e4a133123cc277af4574385324d0f62b3569b9e6f7066552"
+  },
+  "nextAction": "Keep actual host-selected privacy/redacted routing open. Resume this path when a supported test environment exposes genuine Lock Screen privacy controls and a verifiable locked/unlocked transition. Do not repeat the same Simulator search or substitute explicit SwiftUI redaction for system selection. Ordinary app acceptance continues in Simulator as requested.",
+  "limits": [
+    "Observed runtime/device only; no universal claim about all Simulators or physical devices.",
+    "No passcode entry/change, biometric enrollment, privacy toggle, Apple Account sign-in, network/provider change or user task mutation.",
+    "No new Mac widget, installed iPhone widget, spoken accessibility or release-signing acceptance. Existing explicit-redaction and installed-route evidence remain separately scoped."
+  ],
+  "references": [
+    "https://developer.apple.com/documentation/widgetkit/creating-a-widget-extension",
+    "https://developer.apple.com/documentation/widgetkit/developing-a-widgetkit-strategy"
+  ],
+  "cleanup": {
+    "protectedFilesExact": 100,
+    "macBaselineFilesExact": 28,
+    "retainedIOSFilesExact": 36,
+    "pendingDesktopWidgetExact": true,
+    "testAppAndSettingsClosed": true,
+    "isolatedAppAndRunnerUninstalled": true,
+    "disposableSimulatorShutdown": true,
+    "pendingWidgetHostUntouched": 79318
+  },
+  "capture": "usability-previews/system-widget-privacy/simulator-passcode-page.png",
+  "captureSHA256": "a8b6e3c95d8cd5d86452ad36710c065c18dfb852fc459b7f6139f089936ea886"
+}

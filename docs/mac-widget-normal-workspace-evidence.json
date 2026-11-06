@@ -1,0 +1,379 @@
+{
+  "date": "2026-10-13",
+  "status": "NAMED_WIDGET_WORKFLOWS_AND_LOCAL_LEAVE_RETURN_ACCEPTED",
+  "scope": "Current-source installed Mac widget continuation in a normal local workspace; named My list and medium Pinned note workflows accepted.",
+  "sourceHeads": {
+    "TasskFold-MacOS": "38893b20bfae7ce3db56d9155238e1de8bafcc29",
+    "TaskFold-iOS": "0e9f3166cf6e929e21a122cb713600b7baad4820"
+  },
+  "build": {
+    "log": "taskfold-mac-widget-native-build-v10.log",
+    "sha256": "609c3ec78aee232382b51e79f80e8b563bbb3a5380c8b0d22325f81ef81abc61",
+    "result": "BUILD SUCCEEDED",
+    "configuration": "Debug arm64 macOS app and embedded widget extension",
+    "productionSigningChanged": false
+  },
+  "signatures": {
+    "Taskfold.app": {
+      "strictSignature": true,
+      "team": "3UZ4C73FM2",
+      "group": [
+        "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts"
+      ]
+    },
+    "TaskfoldWidgets.appex": {
+      "strictSignature": true,
+      "team": "3UZ4C73FM2",
+      "group": [
+        "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts"
+      ]
+    }
+  },
+  "registration": {
+    "singleCurrentPluginPath": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex",
+    "oldRegisteredPathsRemoved": true,
+    "oldExtensionStoppedForReplacement": true
+  },
+  "sourceAudit": {
+    "appAndWidgetSwiftFilesNamespaceOnly": 63,
+    "projectionAccount": "local",
+    "openTaskIDs": [
+      "060a3b4d-be6e-4c9a-a143-864b2b14f53e",
+      "c779b991-bb9e-4fde-bba6-045e07889264"
+    ],
+    "pinnedNoteTaskIDs": [
+      "c779b991-bb9e-4fde-bba6-045e07889264"
+    ],
+    "newAppMainProcessStarted": false
+  },
+  "nativeDataPreparation": {
+    "app": "Prior retained isolated host, normal launch without --uitesting or seed arguments; quit normally before replacement.",
+    "project": "Desktop widget workshop",
+    "tasks": [
+      {
+        "id": "c779b991-bb9e-4fde-bba6-045e07889264",
+        "title": "Prepare the design review",
+        "projectID": "afb3f2b9-427e-405c-9399-52322487805f",
+        "dueDate": "2026-10-14",
+        "estimateMinutes": 25,
+        "completed": false
+      },
+      {
+        "id": "060a3b4d-be6e-4c9a-a143-864b2b14f53e",
+        "title": "Keep the workshop notes",
+        "projectID": null,
+        "dueDate": null,
+        "estimateMinutes": null,
+        "completed": false
+      }
+    ],
+    "notes": "Review the desktop widget layout.\nCapture three decisions.\nList the next steps.",
+    "pinnedNotes": 1,
+    "pendingMutations": 0
+  },
+  "blockedObservation": {
+    "reason": "CUA reports Mac locked; current build UI launch/inspection did not start a main app process.",
+    "manualUnlockRequested": true,
+    "currentMainAppSessions": 0,
+    "currentBuildWillRemainIntact": true,
+    "resolved": true,
+    "resolution": "User confirmed manual unlock; current normal launch and installed My list route inspected."
+  },
+  "preservation": {
+    "previousHumanCompletedFixtureByteExact": true,
+    "localSyntheticSnapshotExactAfterRegistration": true,
+    "protectedPrimaryFilesExact": 100
+  },
+  "cleanup": {
+    "inactiveOldBuildBytesPruned": 372752384,
+    "currentBuildAndOriginalEvidenceRetained": true
+  },
+  "next": "Authenticated cycle completed; normal local workspace restored and main app closed. Direct desktop text confirms full note body and original configured content. See mac-widget-cloud-workspace-evidence.json for scope and remaining classes.",
+  "limits": [
+    "Accepts named installed My list, Pinned note and paused Focus cold routes plus subsequent native Focus controls; no new privacy or cloud-account claim.",
+    "Focus desktop ended preview confirmed; actual ended cold-launch state inspected with full workspace equality. Click attribution is inferred, not explicit. Desktop family/layout not independently inspected. Installed Project pulse remains pending.",
+    "Release signing remains user-deferred.",
+    "Project pulse cold route and forward completion refresh accepted; reverse installed refresh also confirmed. Unusable screenshot excludes new visual-layout acceptance.",
+    "Four named installed kinds clear/recover on leaving/reopening normal local workspace; this does not prove cloud-account-to-account switching or system-selected privacy.",
+    "Current note host logs identify systemLarge. Earlier medium setup wording is a request, not independent family/layout proof; no medium-layout acceptance inferred. Clarified widget text was the empty-selection message, with no note content. Precise Note unavailable wording was not observed."
+  ],
+  "currentNativeAcceptance": {
+    "normalProcess": "20026 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+    "noLaunchArguments": true,
+    "localSnapshotExact": true,
+    "previousHumanCompletedFixtureExact": true,
+    "nativeObserved": {
+      "inboxTask": "Keep the workshop notes",
+      "project": "Desktop widget workshop",
+      "task": "Prepare the design review",
+      "date": "2026-10-14",
+      "estimateMinutes": 25,
+      "pinEnabled": true,
+      "fullThreeLineNotes": true
+    },
+    "leftBeforeQuit": "Inbox, 1 task, inspector closed",
+    "normalQuitConfirmed": true,
+    "mainProcessesAfterQuit": 0,
+    "installedMyListColdTaskRoute": {
+      "humanConfiguredAndClickedTaskTitle": true,
+      "observedBeforeCUAAppBinding": true,
+      "mainProcess": "20280 Tue Oct 13 23:03:21 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+      "noLaunchArguments": true,
+      "projectSelected": "Desktop widget workshop",
+      "taskInspectorTitle": "Prepare the design review",
+      "taskID": "c779b991-bb9e-4fde-bba6-045e07889264",
+      "notesExact": true,
+      "pinEnabled": true,
+      "plannedDate": "2026-10-14",
+      "estimateMinutes": 25,
+      "fullSavedWorkspaceExact": true,
+      "unrelatedInboxTaskRetained": true,
+      "familyNotNewlyInspected": true
+    },
+    "installedMediumPinnedNote": {
+      "humanAddedConfiguredAndClickedMediumPinnedNote": true,
+      "processObservedBeforeCUAAppBinding": 21495,
+      "noLaunchArgumentsVerifiedAfterBinding": true,
+      "normalProcess": "21495 Tue Oct 13 23:13:12 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+      "exactOriginalThreeLinesObserved": true,
+      "nativeReaderScreenshotInspected": true,
+      "editDetailsOpenedCorrectTask": true,
+      "dateEstimatePinUnchanged": true,
+      "editedFirstLineOnly": true,
+      "fullSnapshotOnlyTargetDescriptionChanged": true,
+      "publishedPinnedNoteTextExact": true,
+      "nativeReaderUpdatedAfterDone": true,
+      "transientAXErrorAfterSheetTransition": "One AXError.failure; same binding refresh exposed correct task details. No app replacement/restart.",
+      "installedRefreshAndColdReopen": {
+        "humanObservedUpdatedPreviewAndClicked": true,
+        "observedBeforeCUAAppBinding": true,
+        "process": "21966 Tue Oct 13 23:17:56 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+        "noLaunchArguments": true,
+        "fullEditedThreeLinesObserved": true,
+        "fullEditedWorkspaceExact": true,
+        "buildNotReplacedOrReseeded": true
+      }
+    },
+    "focusPreparation": {
+      "durationSeconds": 1500,
+      "elapsedMilliseconds": 3373,
+      "status": "paused",
+      "taskID": "c779b991-bb9e-4fde-bba6-045e07889264",
+      "onlyFocusSessionsChanged": true,
+      "finishAlertsOff": true,
+      "normalQuitConfirmed": true,
+      "installedAcceptance": false,
+      "publishedProjectionMatchesDurableSession": true
+    },
+    "installedFocusColdRoute": {
+      "processObservedBeforeCUABinding": {
+        "processesBeforeCUABinding": [
+          "24758 Tue Oct 13 23:38:02 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+        ]
+      },
+      "nativeOpenedCorrectSession": true,
+      "task": "Prepare the design review",
+      "project": "Desktop widget workshop",
+      "pausedRemaining": "24:57",
+      "fullPausedWorkspaceExactOnColdOpen": true,
+      "nativePanelScreenshotInspected": true,
+      "resumePauseEndWorked": true,
+      "endedSpent": "00:06",
+      "endedState": {
+        "elapsed_ms": 6400,
+        "task_id": "c779b991-bb9e-4fde-bba6-045e07889264",
+        "duration_seconds": 1500,
+        "changed_at_ms": 1791927517520,
+        "status": "stopped",
+        "running_since_ms": null,
+        "session_id": "3454a750-9b22-4aad-8e91-7a45f3ff858c",
+        "started_at_ms": 1791926965702
+      },
+      "onlyFocusSessionsChanged": true,
+      "taskProjectNotesAndUnrelatedInboxExact": true,
+      "publishedEndedClockMatches": true,
+      "finishAlertsOff": true,
+      "widgetMediumRequested": true,
+      "actualDesktopFamilyNotIndependentlyInspected": true,
+      "unchangedBuildNoSeedArguments": true,
+      "normalQuitConfirmed": true
+    },
+    "focusEndedFollowup": {
+      "humanConfirmedEndedPreview": true,
+      "humanConfirmedClick": false,
+      "mainProcessesBeforeCUABinding": [
+        "25661 Tue Oct 13 23:45:51 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+      ],
+      "nativeEndedSessionObserved": true,
+      "task": "Prepare the design review",
+      "project": "Desktop widget workshop",
+      "timeSpent": "00:06",
+      "wholeEndedWorkspaceExact": true,
+      "normalQuitConfirmed": true,
+      "triggerAttribution": "Consistent with requested widget click: new no-argument process already running and Focus sheet open before CUA binding. User explicitly confirmed preview only; click not independently observed.",
+      "projectPulsePreparation": {
+        "nativeProjectChosen": "Desktop widget workshop",
+        "completed": 0,
+        "total": 1,
+        "open": 1,
+        "overdueOrNearDeadline": false,
+        "completionEvents": 0,
+        "reopenEvents": 0,
+        "addedEvents": 1,
+        "wholeWorkspaceUnchanged": true,
+        "installedAcceptance": false
+      }
+    },
+    "installedProjectPulse": {
+      "humanConfiguredAndClicked": true,
+      "mediumRequested": true,
+      "actualDesktopFamilyNotIndependentlyInspected": true,
+      "mainProcessObservedBeforeCUABinding": "26288 Tue Oct 13 23:48:29 2026 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+      "noLaunchArguments": true,
+      "project": "Desktop widget workshop",
+      "initialNativeCompleted": 0,
+      "total": 1,
+      "initialWholeWorkspaceExact": true,
+      "humanObservedCompletedWidget100Percent": true,
+      "nativeCompletedTotalsAgree": true,
+      "publishedCompletedTotalsAgree": true,
+      "nativeUndoRestoredOpenTask": true,
+      "nativeAndPublishedRestoredCompleted": 0,
+      "historyAfterUndo": {
+        "completions": 1,
+        "reopens": 1,
+        "additions": 1
+      },
+      "onlyExpectedTaskCompletionFieldsAndActivityChanged": true,
+      "restoredTaskOnlyCompletionVersionDiffersFromBefore": 2,
+      "unrelatedWorkExact": true,
+      "nativeQuitConfirmed": true,
+      "installedReverseRefreshPending": false,
+      "screenshotLimitation": "CUA screenshot was white/unusable; accessibility tree exposed complete expected overview. No visual layout acceptance inferred.",
+      "humanConfirmedInstalledReverseRefresh": true,
+      "fullPostUndoWorkspaceStillExact": true
+    },
+    "signedOutPreparation": {
+      "nativeLeaveLocalWorkspaceConfirmed": true,
+      "nativeNoWorkspaceAndSignInObserved": true,
+      "fullPostUndoLocalCacheExact": true,
+      "publishedEmptyAccountAndTasks": true,
+      "publishedNoFixtureContent": true,
+      "mainAppNormallyQuit": true,
+      "installedObservationAccepted": false
+    },
+    "installedLocalLeaveReturn": {
+      "humanConfirmedFourWidgetsClearedContent": true,
+      "humanExplicitlyConfirmedClick": true,
+      "mainProcessesBeforeCUABinding": [
+        "27993 Tue Oct 13 23:55:50 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+      ],
+      "nativeColdLaunchSignInOnly": true,
+      "noFixtureContentExposedInNativeSignedOutScreen": true,
+      "reopenedViaNativeUseLocally": true,
+      "fullPostUndoWorkspaceExactAfterReturn": true,
+      "nativeTaskProjectEditedNotesDateEstimateRetained": true,
+      "publishedTaskNoteEndedFocusPulseRestored": true,
+      "humanConfirmedFourInstalledWidgetsRestored": true,
+      "normalQuitConfirmed": true,
+      "protectedPrimaryFilesExact": 100,
+      "earlierHumanCompletedFixtureByteExact": true,
+      "scope": "Normal local workspace leave and return in installed My list/Pinned note/Focus session/Project pulse. Does not prove cloud-account-to-account switching or system-selected privacy."
+    },
+    "unavailableNotePreparation": {
+      "date": "2026-10-14",
+      "normalLocalWorkspace": true,
+      "nativeUnpinThroughReader": true,
+      "nativeEmptyPinnedNotesObserved": true,
+      "onlyPinSelectionViewOrdersChanged": true,
+      "allTaskRecordsExact": true,
+      "pendingAndCompletionFeedbackExact": true,
+      "publishedPinnedNotesEmpty": true,
+      "normalQuitConfirmed": true,
+      "installedObservationPending": true,
+      "verificationCorrection": "Initial diagnostic incorrectly expected a task pinned_note field; actual pin contract is view_orders. Corrected source-based comparison proves only view_orders changed; no product failure inferred."
+    },
+    "unavailableNoteInvestigation": {
+      "date": "2026-10-14",
+      "normalLocalWorkspace": true,
+      "nativeUnpinThroughReader": true,
+      "nativeEmptyPinnedNotesObserved": true,
+      "onlyPinSelectionViewOrdersChanged": true,
+      "allTaskRecordsExact": true,
+      "pendingAndCompletionFeedbackExact": true,
+      "publishedPinnedNotesEmpty": true,
+      "normalQuitConfirmed": true,
+      "installedObservationPending": true,
+      "verificationCorrection": "Initial diagnostic incorrectly expected a task pinned_note field; actual pin contract is view_orders. Corrected source-based comparison proves only view_orders changed; no product failure inferred.",
+      "humanObservedStaleInstructionsAfterUnpin": true,
+      "humanClicked": true,
+      "mainBeforeCUABinding": [
+        "31652 Wed Oct 14 00:09:49 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+      ],
+      "nativeColdClickOpenedSafeEmptyPinnedNotes": true,
+      "wholeUnpinnedWorkspaceExactAfterClick": true,
+      "publishedNotesStillEmpty": true,
+      "normalQuitAfterInspection": true,
+      "hostDiagnostic": {
+        "privateLog": "taskfold-note-unavailable-host-v10.log",
+        "sha256": "d0c2f34c161a26928e44de6c89fc8e314b175c42ea9c672c10e55170b0aabd4d",
+        "successfulNoteTimelineReloads": 13,
+        "latestSuccess": "2026-10-14 00:09:54.885 Df chronod[705:61d026] [com.apple.chrono:timeline.store] [com.dbakp.taskfold.mac.p0widgethosts::com.dbakp.taskfold.mac.p0widgethosts.widgets:TaskfoldPinnedNote:systemLarge:-3406671470781599966:344.00/344.00/27.88:(null)~(null)] on local reload: succeeded with 9 entries",
+        "matchingLoggedErrors": 0,
+        "observedCurrentFamily": "systemLarge"
+      },
+      "initialEntityResolutionHypothesisUnproven": true,
+      "productCodeChanged": false,
+      "humanExactVisibleTextPending": true,
+      "installedUnavailableVisualAcceptance": false
+    },
+    "unavailableNoteResolution": {
+      "date": "2026-10-14",
+      "normalLocalWorkspace": true,
+      "nativeUnpinThroughReader": true,
+      "nativeEmptyPinnedNotesObserved": true,
+      "onlyPinSelectionViewOrdersChanged": true,
+      "allTaskRecordsExact": true,
+      "pendingAndCompletionFeedbackExact": true,
+      "publishedPinnedNotesEmpty": true,
+      "normalQuitConfirmed": true,
+      "installedObservationPending": true,
+      "verificationCorrection": "Initial diagnostic incorrectly expected a task pinned_note field; actual pin contract is view_orders. Corrected source-based comparison proves only view_orders changed; no product failure inferred.",
+      "humanObservedStaleInstructionsAfterUnpin": true,
+      "humanClicked": true,
+      "mainBeforeCUABinding": [
+        "31652 Wed Oct 14 00:09:49 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+      ],
+      "nativeColdClickOpenedSafeEmptyPinnedNotes": true,
+      "wholeUnpinnedWorkspaceExactAfterClick": true,
+      "publishedNotesStillEmpty": true,
+      "normalQuitAfterInspection": true,
+      "hostDiagnostic": {
+        "privateLog": "taskfold-note-unavailable-host-v10.log",
+        "sha256": "d0c2f34c161a26928e44de6c89fc8e314b175c42ea9c672c10e55170b0aabd4d",
+        "successfulNoteTimelineReloads": 13,
+        "latestSuccess": "2026-10-14 00:09:54.885 Df chronod[705:61d026] [com.apple.chrono:timeline.store] [com.dbakp.taskfold.mac.p0widgethosts::com.dbakp.taskfold.mac.p0widgethosts.widgets:TaskfoldPinnedNote:systemLarge:-3406671470781599966:344.00/344.00/27.88:(null)~(null)] on local reload: succeeded with 9 entries",
+        "matchingLoggedErrors": 0,
+        "observedCurrentFamily": "systemLarge"
+      },
+      "initialEntityResolutionHypothesisUnproven": true,
+      "productCodeChanged": false,
+      "humanExactVisibleTextPending": false,
+      "installedUnavailableVisualAcceptance": false,
+      "humanExactText": "Keep a thought close - no note",
+      "oldNoteTextNotVisibleConfirmed": true,
+      "staleContentDefectEstablished": false,
+      "safeEmptySelectionVisualAccepted": true,
+      "preciseNoteUnavailableWordingObserved": false,
+      "nativeRepinnedSameTask": true,
+      "wholePostUndoWorkspaceRestoredExactly": true,
+      "publishedExactEditedNoteRestored": true,
+      "mainAppClosedAfterRestore": true,
+      "installedRepinPreviewObservationPending": false,
+      "humanObservedRepinnedTitle": "Prepare the design review",
+      "humanNewlyConfirmedRepinnedBody": false,
+      "repinSelectionRecoveryAccepted": true
+    },
+    "directDesktopReturnedBodyObserved20261014": true
+  }
+}

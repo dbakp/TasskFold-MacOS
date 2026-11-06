@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native iPhone compact landscape title/three-paragraph note insertion, complete active input line, keyboard-visible Save, exact normal process relaunch; normal/light and accessibility XXXL/dark.",
+  "sourceBase": {
+    "iOS": "6913079",
+    "macOS": "cd666dd"
+  },
+  "productionChange": "iOS TaskEditor keeps one focused compact editing line with reduced row insets, uses a 48-point labelled compact keyboard-dismiss button, and scrolls the focused row into the available viewport after focus/keyboard layout changes. Portrait/unfocused multiline content remains available. No persistence or Mac production changes.",
+  "native": {
+    "bundle": "landscape-editor-ios-v12.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "strictVerifierPassed": true,
+    "screenshotsInspected": true,
+    "checks": [
+      "Native typing inserts the entire string while preserving the preexisting text.",
+      "Both active inputs have nonempty hittable frames wholly above the dismiss bar and below the actual toolbar controls.",
+      "Dismiss button is at least 44 points high and above the onscreen keyboard.",
+      "Save is enabled and hittable with the keyboard visible.",
+      "Normal relaunch reopens the same task with exact edited title and multiline notes."
+    ],
+    "fixturePlanningFieldsRetained": {
+      "priority": 1,
+      "duration_minutes": 45,
+      "due_time": "10:30",
+      "due_date": "2026-10-13",
+      "deadline_date": "2026-10-15"
+    },
+    "pendingFixtureWrites": 0
+  },
+  "builds": {
+    "debugTestCompilation": "landscape-editor-ios-build-v14.log: TEST BUILD SUCCEEDED",
+    "release": "landscape-editor-ios-release-v2.log: BUILD SUCCEEDED"
+  },
+  "initialAttempts": [
+    "v1 exposed a 20-point keyboard-dismiss target.",
+    "v2 functional largest pass was visually rejected because the notes/caret were obscured.",
+    "v6 two green cases were rejected: CGRect.contains accepted an empty accessibility frame; final assertions require nonempty and hittable fields.",
+    "v3-v5/v7-v10 included text-menu driver failures and a too-strict navigation-bar padding bound.",
+    "v11 native Command-A did not select the title, prefixing the insertion. Selection/replacement is not accepted. Final tests exercise native insertion without requiring Select All."
+  ],
+  "preservation": {
+    "authenticatedCacheSemanticEquality": true,
+    "protectedDevices": {
+      "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705": {
+        "exactHashSetMatch": true,
+        "fileCount": 43
+      },
+      "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969": {
+        "exactHashSetMatch": true,
+        "fileCount": 26
+      }
+    }
+  },
+  "limits": [
+    "This closes the named compact keyboard editing visibility/Save/relaunch journey, not text-selection gestures or every editor/layout combination.",
+    "Spoken VoiceOver, installed Mac widgets/privacy redaction, notification actions/APNs, external provider transfer, selected concurrency/failure variants and production distribution remain open.",
+    "Mac production code is unchanged because the compact onscreen-keyboard layout is iOS-specific. Independent repository ownership remains intact."
+  ],
+  "storage": "244.2 MiB duplicate exports pruned; original xcresult bundles and selected public fixture captures retained.",
+  "sourceSha256": {
+    "Taskfold/Views/TaskEditor.swift": "45838b6134e6ae625102cdc59d763c2defc1154af1c6b912f01316c6235cf5a1",
+    "TaskfoldUITests/TaskfoldUITests.swift": "e161c12db9865764f05639aa7f2154a5acfacf0c6a9fd62b41fe267c4dc91f06"
+  },
+  "retainedFilesSha256": {
+    "before-largest-notes-clipped.png": "cccab64749c20548889be637efa6fbc73771748763cccc84d5d397eb10befc04",
+    "build-receipts.txt": "6f6dcf3fabbe0686fdd61b11f5daae1073a78d67de13ec88fb476cf882561c71",
+    "largest-hierarchy.txt": "2be4b17d98472cb8ba87de81879c2dfafd34502cf16096d2ff7b7261d5edaf8e",
+    "largest-notes.png": "fa87955dd89393beb191ad68ac9d2968dad7e0a0638c069df6421b65351b7c85",
+    "largest-relaunch.png": "7fbd2f52ae15f832991ec63e8d403f5b51c651481d0800958c0600592523da36",
+    "largest-title.png": "a67983220042987ffd5bb5abbfc84d11d219337d8924d9a2a2da02abaa7fb7cd",
+    "normal-hierarchy.txt": "6248d75f1c8eb79064cd85d807388c91e85ef64c8fae3d33219b632b4251563f",
+    "normal-notes.png": "f06805d41cb9b67b46738263b195899104b569a994af6fa81456270a50eab866",
+    "normal-relaunch.png": "f7c9016035b02209819e7cd03140d800ebbe619ffaac0a2a254fcd28e03a8de2",
+    "normal-title.png": "1545e51e3546d7f4a816d6aae6736803fc60385e1bb380a670e0b496f1c3602b",
+    "preservation.json": "f0a6f2e1bd6111902c271e35914b1b1ad7bc5045691fd2e1cbd8c389bb75277f",
+    "rejected-empty-field-hierarchy.txt": "91edc8e8b0f0dc0e1eeb71ee7567df817d9e9c2cb6014788edd440446361e6b8",
+    "rejected-empty-field-pass.png": "3ac6d59fccf90160124e7cbfbd44c975da9c7b5cf60c9976a2e5c298ec3a4a14",
+    "signing.json": "9a074250161c139b9bb78f981e3106d455663abf1db8ef2b9637ba8ae9953565"
+  }
+}

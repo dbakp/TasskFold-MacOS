@@ -1,0 +1,13 @@
+{
+  "phase": "v3",
+  "appSHA256": "e396e7e09e533e97ab6e9bf34b9da8e272929e4d373cdcaaa82567204e1ff063",
+  "firstChildCheckboxCompleteAndCommandZUndo": true,
+  "secondChildEarlierCompletionPreserved": true,
+  "inspectorRemainedAccurate": true,
+  "completionWrites": 3,
+  "completionRequests": 4,
+  "exactMetadataRetainedBothChildren": true,
+  "quitVerified": true,
+  "coldReturnFirstOpenSecondCompleted": true,
+  "finalQuitVerified": true
+}

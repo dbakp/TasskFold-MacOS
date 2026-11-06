@@ -1,0 +1,96 @@
+import assert from 'node:assert/strict';
+import {randomUUID,createHash} from 'node:crypto';
+import {readFile,writeFile} from 'node:fs/promises';
+import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
+import {loadProjectAdoptionSchema,projectAdoptionConnectionsMigration} from './project-adoption-schema.mjs';
+const report={checks:{},hostedChanges:false,realUserDataChanged:false,adaptersComplete:false};
+const check=(name,value,expected=true)=>{assert.deepEqual(value,expected,name);report.checks[name]=true};
+const json=x=>lit(JSON.stringify(x))+'::jsonb';let pg,step='load';
+const [owner,other,former]=Array.from({length:3},()=>randomUUID()),team=randomUUID(),session=randomUUID(),root=randomUUID(),unrelated=randomUUID(),task=randomUUID();
+try {
+ pg=await createPostgresFixture({advisors:true});await loadProjectAdoptionSchema(pg.raw);
+ report.migration=projectAdoptionConnectionsMigration;report.migrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+projectAdoptionConnectionsMigration,import.meta.url))).digest('hex');
+ const identity=`set local request.jwt.claim.sub=${lit(owner)};set local request.jwt.claims=${lit(JSON.stringify({sub:owner,session_id:session}))};`;
+ for(const account of [owner,other,former])await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(account)},${lit(account+'@example.invalid')},now());insert into public.profiles(user_id) values(${lit(account)});`);
+ await pg.raw(`insert into auth.sessions(id,user_id) values(${lit(session)},${lit(owner)});insert into taskfold_private.teams(id,owner_id,name) values(${lit(team)},${lit(owner)},'Connection workshop');insert into taskfold_private.team_members(team_id,user_id,role) values(${lit(team)},${lit(owner)},'admin');update taskfold_private.team_config set enabled=true;update taskfold_private.team_project_config set native_reads_enabled=true,native_task_edits_enabled=true,native_project_adoption_enabled=true;insert into public.projects(id,user_id,name) values(${lit(root)},${lit(owner)},'Transfer workshop'),(${lit(unrelated)},${lit(other)},'Unrelated work');insert into public.tasks(id,user_id,project_id,title,description) values(${lit(task)},${lit(owner)},${lit(root)},'Connection proof','Never disclose this note');`);
+ const base={team_id:team,roots:[root],visibility:'private',folder_id:null,parent_id:null};
+ const call=(op,b)=>pg.scalar(`begin;${identity}set local role authenticated;select public.taskfold_team_project_adoption(${lit(op)},${json(b)});commit;`);
+ const inspect=()=>call('inspect',base);
+ const review=async()=>{const i=await inspect();return call('review',{...base,inspection_token:i.inspection_token,decisions:[]})};
+ const command=r=>({...base,inspection_token:r.inspection_token,decisions:[],review_token:r.review_token,expires_at:r.expires_at,request_id:randomUUID()});
+ const expect=async(name,fn,code)=>{let error;try{await fn()}catch(e){error=e}check(name,error?.code,code)};
+ const route=(id,account=owner,project=root)=>`insert into taskfold_private.email_routes(id,user_id,name,alias_hash,alias_domain,project_id,sender_email,requested_at) values(${lit(id)},${lit(account)},'Synthetic route',${lit(createHash('sha256').update(id).digest('hex'))},'capture.example.invalid',${lit(project)},'synthetic@example.invalid',now());`;
+ const hook=(id,account=owner,scope='all',project=null)=>`insert into taskfold_private.webhook_subscriptions(id,user_id,name,endpoint,scope,project_id,events,ttl_days,secret_hash,secret_envelope,state,expires_at,verified_at) values(${lit(id)},${lit(account)},'Synthetic hook','https://receiver.example.invalid/events',${lit(scope)},${project?lit(project):'null'},array['task.updated'],30,repeat('b',64),'{}','active',now()+interval '1 day',now());`;
+ step='privileges and stable review';
+ const plain=await inspect();check('normal transfer still available',plain.commit_supported);check('empty queue count is explicit',plain.contents.queued_webhook_events,0);check('no sending permit',plain.contents.inflight_webhook_events,0);
+ check('permit table RLS',await pg.scalar("select to_jsonb(relrowsecurity) from pg_class where oid='taskfold_private.webhook_write_permits'::regclass"));
+ for(const role of ['anon','authenticated','service_role']){
+  check(role+' cannot inspect private sending permits',await pg.scalar(`select to_jsonb(has_table_privilege(${lit(role)},'taskfold_private.webhook_write_permits','select'))`),false);
+  check(role+' cannot take connection authority',await pg.scalar(`select to_jsonb(has_function_privilege(${lit(role)},'taskfold_private.try_project_adoption_connection_accounts(uuid[],uuid[])','execute'))`),false);
+ }
+ await expect('infinite wire permits are rejected',()=>pg.raw(`insert into taskfold_private.webhook_write_permits(event_id,lease_id,task_id,safe_until) values(gen_random_uuid(),gen_random_uuid(),${lit(task)},'infinity')`),'23514');
+ await pg.raw(`insert into taskfold_private.webhook_write_permits(event_id,lease_id,task_id,safe_until) select gen_random_uuid(),gen_random_uuid(),${lit(task)},clock_timestamp()-interval '1 second' from generate_series(1,258)`);
+ let pruneHold=await pg.hold('select 1 from taskfold_private.webhook_write_permits order by event_id limit 1 for update');
+ check('permit cleanup is bounded and skips locked history',await pg.scalar('select to_jsonb(taskfold_private.prune_webhook_write_permits())'),256);
+ check('second cleanup does not wait for another pruner',await pg.scalar('select to_jsonb(taskfold_private.prune_webhook_write_permits())'),1);
+ await pruneHold.release('rollback');check('released expired permit is pruned',await pg.scalar('select to_jsonb(taskfold_private.prune_webhook_write_permits())'),1);
+ step='account and project fences';
+ let held=await pg.hold(`select taskfold_private.automation_account_lock(${lit(owner)})`);
+ await expect('busy personal service does not deadlock transfer',inspect,'PT409');await held.release('rollback');
+ held=await pg.hold(`${identity}select public.taskfold_team_project_adoption('inspect',${json(base)})`);
+ await expect('review freezes direct email enrollment',()=>pg.raw(route(randomUUID())),'PT409');
+ await expect('review freezes direct global hook enrollment',()=>pg.raw(hook(randomUUID())),'PT409');
+ await expect('unseen connection owner cannot insert past project fence',()=>pg.raw(route(randomUUID(),former)),'PT409');
+ await pg.raw(route(randomUUID(),other,unrelated));check('unrelated owner connection still enrolls',await pg.scalar(`select to_jsonb(count(*)) from taskfold_private.email_routes where project_id=${lit(unrelated)}`),1);
+ await pg.raw(`update public.projects set name='Unrelated work still saves' where id=${lit(unrelated)}`);check('unrelated project edit still saves',await pg.scalar(`select to_jsonb(name) from public.projects where id=${lit(unrelated)}`),'Unrelated work still saves');await held.release('rollback');
+ step='binding epochs and participant cohort';
+ const email=randomUUID();await pg.raw(route(email,former));
+ check('former connection owner joins closed Auth cohort',await pg.scalar(`select to_jsonb(${lit(former)}::uuid=any(taskfold_private.project_adoption_people(array[${lit(root)}::uuid],${lit(team)})))`));
+ held=await pg.hold(`select taskfold_private.automation_account_lock(${lit(former)})`);await expect('former owner service is fenced too',inspect,'PT409');await held.release('rollback');
+ const before=await inspect();await pg.raw(`update taskfold_private.email_routes set name='Temporary' where id=${lit(email)};update taskfold_private.email_routes set name='Synthetic route' where id=${lit(email)}`);
+ await expect('email edit and exact revert cannot reuse review',()=>call('review',{...base,inspection_token:before.inspection_token,decisions:[]}),'PT409');
+ const oldEmail=await pg.scalar(`select to_jsonb(r) from taskfold_private.email_routes r where id=${lit(email)}`),beforeReuse=await inspect();await pg.raw(`delete from taskfold_private.email_routes where id=${lit(email)};insert into taskfold_private.email_routes select * from jsonb_populate_record(null::taskfold_private.email_routes,${json(oldEmail)})`);
+ await expect('byte-identical email delete and recreate cannot reuse review',()=>call('review',{...base,inspection_token:beforeReuse.inspection_token,decisions:[]}),'PT409');
+ await expect('snapshot-isolated connection writes are rejected',()=>pg.raw(`begin isolation level repeatable read;update taskfold_private.email_routes set name='Old snapshot' where id=${lit(email)};commit;`),'25000');
+ await pg.raw(`update taskfold_private.email_routes set state='revoked',revision=revision+1 where id=${lit(email)}`);
+ const subscription=randomUUID();await pg.raw(hook(subscription));
+ const oldHook=await pg.scalar(`select to_jsonb(h) from taskfold_private.webhook_subscriptions h where id=${lit(subscription)}`),beforeHook=await inspect();
+ await pg.raw(`update taskfold_private.webhook_subscriptions set state='paused',revision=gen_random_uuid() where id=${lit(subscription)};update taskfold_private.webhook_subscriptions set state='active',revision=${lit(oldHook.revision)} where id=${lit(subscription)}`);
+ await expect('global hook state and UUID revert cannot reuse review',()=>call('review',{...base,inspection_token:beforeHook.inspection_token,decisions:[]}),'PT409');
+ step='queued updates and actual prewrite authorization';
+ await pg.raw(`update public.tasks set description='Never disclose this note after edit' where id=${lit(task)}`);
+ const queued=await inspect();check('affected queue is reviewed',queued.contents.queued_webhook_events,1);
+ for(const forbidden of ['Never disclose','receiver.example','secret_envelope',oldHook.secret_hash])check('public inspection excludes '+forbidden,JSON.stringify(queued).includes(forbidden),false);
+ held=await pg.hold(`select 1 from taskfold_private.webhook_budgets where subscription_id=${lit(subscription)} for update`);
+ await expect('dispatcher budget contention is a reviewed conflict',inspect,'PT409');await held.release('rollback');
+ held=await pg.hold(`select 1 from taskfold_private.webhook_outbox where subscription_id=${lit(subscription)} for update`);
+ await expect('queue acknowledgement contention is a reviewed conflict',inspect,'PT409');await held.release('rollback');
+ const claim=await pg.scalar('select taskfold_private.webhook_claim()');check('actual dispatcher claims an affected update',typeof claim.event_id,'string');
+ const prepare=flag=>pg.scalar(`select taskfold_private.webhook_prepare(${lit(claim.event_id)},${lit(claim.lease_id)},${flag})`);
+ check('packet preparation works',(await prepare(false)).ready);check('packet preparation alone grants no sending permit',await pg.scalar('select to_jsonb(count(*)) from taskfold_private.webhook_write_permits'),0);
+ held=await pg.hold(`${identity}select public.taskfold_team_project_adoption('inspect',${json(base)})`);
+ const future=pg.scalar(`set application_name='taskfold-adoption-prewrite';select taskfold_private.webhook_prepare(${lit(claim.event_id)},${lit(claim.lease_id)},true)`).then(value=>({value}),error=>({error}));
+ await pg.waitForLock('taskfold-adoption-prewrite',held.pid);check('prewrite waits behind closed review account fence',true);await held.release('rollback');const permission=await future;assert.ifError(permission.error);check('actual prewrite authorization succeeds',permission.value.ready);
+ const permitted=await inspect();check('review sees authorized wire packet',permitted.contents.inflight_webhook_events,1);check('active wire packet disables commit',permitted.commit_supported,false);
+ const until=await pg.scalar(`select to_jsonb(safe_until) from taskfold_private.webhook_write_permits where event_id=${lit(claim.event_id)}`);check('same lease authorization is idempotent',(await prepare(true)).ready);check('same lease does not extend permit',await pg.scalar(`select to_jsonb(safe_until) from taskfold_private.webhook_write_permits where event_id=${lit(claim.event_id)}`),until);
+ await pg.raw(`update taskfold_private.webhook_subscriptions set state='revoked',revision=gen_random_uuid(),secret_envelope=null,revoked_at=now() where id=${lit(subscription)};select taskfold_private.webhook_sweep();`);
+ check('revocation scrubs queued payload',await pg.scalar(`select to_jsonb(payload is null) from taskfold_private.webhook_outbox where id=${lit(claim.event_id)}`));
+ const revoked=await review();check('revoked connection does not erase on-wire permit',revoked.contents.inflight_webhook_events,1);check('revoked connection no longer counts as a binding',revoked.contents.webhooks,0);
+ await expect('cannot cut over during a revoked packet still on wire',()=>call('adopt',command(revoked)),'PT409');
+ check('blocked commit leaves personal custody',await pg.scalar(`select to_jsonb(count(*)) from taskfold_private.team_content_projects where project_id=${lit(root)}`),0);
+ await pg.raw(`update taskfold_private.webhook_outbox set finished_at=clock_timestamp()-interval '8 days' where id=${lit(claim.event_id)};select taskfold_private.webhook_sweep();`);check('queue pruning cannot erase wire permit',(await inspect()).contents.inflight_webhook_events,1);
+ // Time progression is simulated in synthetic retention/permit rows only. No
+ // network or system clock is changed, and no packet is actually transmitted.
+ await pg.raw("update taskfold_private.webhook_write_permits set safe_until=clock_timestamp()-interval '1 second'");
+ const drained=await review();check('expired wire permit permits fresh review',drained.contents.inflight_webhook_events,0);check('expired permits are pruned',await pg.scalar('select to_jsonb(count(*)) from taskfold_private.webhook_write_permits'),0);
+ const saved=command(drained),receipt=await call('adopt',saved);check('adoption works after drain',receipt.applied);
+ await expect('personal email cannot resume into team custody',()=>pg.raw(`update taskfold_private.email_routes set state='active',revision=revision+1 where id=${lit(email)}`),'PT409');
+ await expect('fresh personal project webhook cannot target team custody',()=>pg.raw(hook(randomUUID(),owner,'project',root)),'PT409');
+ const separateTask=randomUUID();await pg.raw(`insert into public.tasks(id,user_id,project_id,title) values(${lit(separateTask)},${lit(other)},${lit(unrelated)},'Separate task')`);check('separate personal task remains writable',await pg.scalar(`select to_jsonb(count(*)) from public.tasks where id=${lit(separateTask)}`),1);
+ // A recovered receipt is confirmation, not a new cutover; later permits may
+ // never prevent replay of the exact already-applied command.
+ await pg.raw(`insert into taskfold_private.webhook_write_permits(event_id,lease_id,project_id,task_id,safe_until) values(${lit(randomUUID())},${lit(randomUUID())},${lit(root)},${lit(task)},clock_timestamp()+interval '60 seconds')`);
+ check('exact receipt replay bypasses later wire gate',(await call('adopt',saved)).replayed);
+ step='advisors';report.advisors=await pg.advisors();report.serverVersion=pg.serverVersion;report.containerRemoved=await pg.close();
+ if(process.argv[2])await writeFile(process.argv[2],JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({checks:Object.keys(report.checks).length,containerRemoved:report.containerRemoved}));
+} catch(error){report.failedStep=step;report.error=String(error);report.code=error.code;report.containerRemoved=pg?await pg.close():true;if(process.argv[2])await writeFile(process.argv[2],JSON.stringify(report,null,2)+'\n');console.error(JSON.stringify(report,null,2));process.exitCode=1}

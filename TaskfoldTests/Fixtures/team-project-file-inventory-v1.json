@@ -1,0 +1,219 @@
+{
+  "scope": {
+    "account": "599af5ad-d389-4775-be5a-4e1caad0fbdf",
+    "origin": "https://synthetic.example",
+    "team_id": "e6c4c528-08db-43bf-90bd-b10fcc98e8a5",
+    "roots": [
+      "a7a4c493-800b-49b5-85a9-cbbeff82da98"
+    ],
+    "visibility": "private",
+    "folder_id": null,
+    "parent_id": null
+  },
+  "inspection": {
+    "roots": [
+      "a7a4c493-800b-49b5-85a9-cbbeff82da98"
+    ],
+    "account": "599af5ad-d389-4775-be5a-4e1caad0fbdf",
+    "team_id": "e6c4c528-08db-43bf-90bd-b10fcc98e8a5",
+    "contents": {
+      "counts": {
+        "tasks": 2,
+        "projects": 2,
+        "sections": 0,
+        "task_activity": 2,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 0,
+        "project_collaborators": 0,
+        "task_assignment_provenance": 2
+      },
+      "webhooks": 0,
+      "attachments": 7,
+      "email_routes": 0,
+      "file_custody": {
+        "legacy": 1,
+        "stored": 3,
+        "protocol": 1,
+        "unavailable": 1
+      },
+      "inline_files": 1,
+      "content_bytes": 7919,
+      "external_files": 1,
+      "provider_files": 5,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "recording_custody": {
+        "pending": 0,
+        "protocol": 1,
+        "retained": 0,
+        "published": 0,
+        "unavailable": 0
+      },
+      "recording_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1,
+      "recording_unfinished_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "recording_private_history_transfer": {
+        "protocol": 1,
+        "supported": false
+      }
+    },
+    "projects": [
+      {
+        "id": "a7a4c493-800b-49b5-85a9-cbbeff82da98",
+        "name": "Private file review",
+        "depth": 1,
+        "root_id": "a7a4c493-800b-49b5-85a9-cbbeff82da98",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      },
+      {
+        "id": "5b13dccf-0f8c-4880-8737-a63e3d13a54a",
+        "name": "Private file review",
+        "depth": 2,
+        "root_id": "a7a4c493-800b-49b5-85a9-cbbeff82da98",
+        "parent_id": "a7a4c493-800b-49b5-85a9-cbbeff82da98",
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "File review workshop",
+    "visibility": "private",
+    "collaborators": [],
+    "automatic_undo": false,
+    "commit_supported": false,
+    "inspection_token": "539e5829460bf6392ce2fd90abaa4d305dfec0dba695dd8c619f562e1fe7c14e",
+    "sends_invitations": false,
+    "team_member_count": 1,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "connection_pause_supported": false,
+    "child_record_custody_protocol": 1
+  },
+  "review": {
+    "roots": [
+      "a7a4c493-800b-49b5-85a9-cbbeff82da98"
+    ],
+    "account": "599af5ad-d389-4775-be5a-4e1caad0fbdf",
+    "team_id": "e6c4c528-08db-43bf-90bd-b10fcc98e8a5",
+    "contents": {
+      "counts": {
+        "tasks": 2,
+        "projects": 2,
+        "sections": 0,
+        "task_activity": 2,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 0,
+        "project_collaborators": 0,
+        "task_assignment_provenance": 2
+      },
+      "webhooks": 0,
+      "attachments": 7,
+      "email_routes": 0,
+      "file_custody": {
+        "legacy": 1,
+        "stored": 3,
+        "protocol": 1,
+        "unavailable": 1
+      },
+      "inline_files": 1,
+      "content_bytes": 7919,
+      "external_files": 1,
+      "provider_files": 5,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "recording_custody": {
+        "pending": 0,
+        "protocol": 1,
+        "retained": 0,
+        "published": 0,
+        "unavailable": 0
+      },
+      "recording_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1,
+      "recording_unfinished_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "recording_private_history_transfer": {
+        "protocol": 1,
+        "supported": false
+      }
+    },
+    "projects": [
+      {
+        "id": "a7a4c493-800b-49b5-85a9-cbbeff82da98",
+        "name": "Private file review",
+        "depth": 1,
+        "root_id": "a7a4c493-800b-49b5-85a9-cbbeff82da98",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      },
+      {
+        "id": "5b13dccf-0f8c-4880-8737-a63e3d13a54a",
+        "name": "Private file review",
+        "depth": 2,
+        "root_id": "a7a4c493-800b-49b5-85a9-cbbeff82da98",
+        "parent_id": "a7a4c493-800b-49b5-85a9-cbbeff82da98",
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "decisions": [],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "File review workshop",
+    "expires_at": "2026-11-05T20:05:08.199636Z",
+    "visibility": "private",
+    "review_token": "4d18de90ff15a5f7b9e97f6928e50dc33914cfc78ab4fdc3a100b5048d3136ee",
+    "collaborators": [],
+    "automatic_undo": false,
+    "commit_supported": false,
+    "inspection_token": "539e5829460bf6392ce2fd90abaa4d305dfec0dba695dd8c619f562e1fe7c14e",
+    "connection_policy": null,
+    "sends_invitations": false,
+    "team_member_count": 1,
+    "connection_effects": null,
+    "invitations_closed": 0,
+    "assignments_cleared": 0,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "requires_provider_custody": true,
+    "connection_pause_supported": false,
+    "requires_integration_pause": false,
+    "child_record_custody_protocol": 1
+  },
+  "syntheticOnly": true
+}

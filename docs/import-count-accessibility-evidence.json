@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-11",
+  "scope": "Independently labeled native import preview, warnings and receipt in both apps",
+  "ownedInputsSHA256": {
+    "TaskFold-iOS": {
+      "Taskfold/Views/CollaborationViews.swift": "0a8a4f528a23975845dc324fd63f4b06a95e42e9890460ea7a34e909affbab50",
+      "TaskfoldUITests/TaskfoldUITests.swift": "f293b2fb57c328fbacd44055d8666100da364133c5dc6399f0dd2a8bf643166e"
+    },
+    "TasskFold-MacOS": {
+      "Taskfold/Views/Editors.swift": "245b57063eb4b94855615fa02db8fb1d236729779b8b6e34d5eec22857bfd49c",
+      "TaskfoldUITests/TaskfoldMacUITests.swift": "efc0f17a86f417f3c02a2acbd3340c8a1025ea4daee470eacee22647f894b135"
+    }
+  },
+  "normalPhoneUITestInputSHA256": "c3b33445d1326ee0bb31735541c35611104f4cccdfd94af809d2e662a617cbac",
+  "mac": {
+    "method": "Native computer use plus AX assertions and three inline screenshot inspections",
+    "bundle": "com.dbakp.taskfold.mac.p0importa11ytests",
+    "responseFixtureOnly": true,
+    "previewCountElements": 6,
+    "warningElements": 2,
+    "receiptElements": 10,
+    "failedSaveThenRetryPassed": true,
+    "successClearsToken": true,
+    "observations": "accessibility-audit-reports/mac-import-counts-native.txt",
+    "binarySHA256": "a8faabf6908f4fe7f09ab8c106e0844da72437a5e03d7f35b9ad0bb10a8dd739",
+    "xctestBundle": "mac-import-a11y-v1.xcresult",
+    "xctestResult": "Failed before executing the case: timed out enabling automation mode",
+    "intermediateFailure": "Adding static-text traits merged informational rows again. The final build uses independent accessibility elements without that trait."
+  },
+  "phone": {
+    "normal": {
+      "bundle": "import-a11y-phone-v1.xcresult",
+      "case": "testTodoistImportPreviewValidationAndRetry()",
+      "result": "Passed"
+    },
+    "largest": {
+      "bundle": "import-a11y-phone-v2.xcresult",
+      "case": "testTodoistImportDarkLargestPreviewValidationAndRetry()",
+      "result": "Passed",
+      "runtimeWarnings": []
+    },
+    "retainedFailure": {
+      "bundle": "import-a11y-phone-v1.xcresult",
+      "case": "testTodoistImportDarkLargestPreviewValidationAndRetry()",
+      "reason": "AX edge values 700.3333333333334 versus 700.333333333333 triggered the strict geometry assertion; only that assertion failed.",
+      "fix": "A 0.001-point tolerance handles floating-point measurement rounding; no product layout relaxation."
+    },
+    "assertions": "Every preview and receipt label/value, independently accessible warnings, rejected/malformed tokens, reachable retry/explanation, token clearing and empty reopening",
+    "productViewInputUnchangedBetweenNormalAndLargestRuns": true,
+    "captures": "usability-previews/phone-import-accessibility-{normal,largest}-{input,warnings,retry,receipt}.png",
+    "inspectedCaptures": 8,
+    "visualScope": "Normal receipt shows all ten rows; largest text requires substantial scrolling and its final capture shows the last receipt rows."
+  },
+  "cleanup": {
+    "bundle": "import-a11y-cloud-reset-v1.xcresult",
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "dataProof": {
+      "originalPhoneCacheEntirelyEqual": true,
+      "phonePendingChanges": 0,
+      "widgetFieldsEqual": {
+        "account": true,
+        "focusSession": true,
+        "notes": true,
+        "pendingSync": true
+      },
+      "localMode": false,
+      "coldFixture": false,
+      "macSevenTablesEqualCanonicalBaseline": {
+        "tasks": true,
+        "projects": true,
+        "sections": true,
+        "labels": true,
+        "saved_views": true,
+        "view_orders": true,
+        "focus_sessions": true
+      },
+      "macPendingChanges": 0
+    }
+  },
+  "prunedAllocatedBytes": 337539072,
+  "allNativeResultBundlesRetained": true,
+  "limitations": [
+    "Mac automated XCTest remains unaccepted; direct native computer-use checks are separate evidence.",
+    "Full VoiceOver navigation and hardware-keyboard journeys remain open.",
+    "This response-fixture UI verification does not repeat or extend the earlier real provider import evidence.",
+    "Other current P0 release requirements remain open."
+  ]
+}

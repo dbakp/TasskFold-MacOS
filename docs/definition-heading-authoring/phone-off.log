@@ -1,0 +1,372 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-definition-headings-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testCSVHeadingClientGateStillAllowsOrdinaryMapping" "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testClientOffTemplateEditsKeepExistingHeadingType" -resultBundlePath /tmp/taskfold-definition-headings-phone-off.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-definition-headings-phone-off.xcresult
+
+2026-10-26 19:17:41.211234+0100 TaskfoldUITests-Runner[24017:23267656] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 19:17:44.690.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 19:17:44.691.
+Test Suite 'TeamTemplateLibraryUITests' started at 2026-10-26 19:17:44.691.
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testClientOffTemplateEditsKeepExistingHeadingType]' started.
+    t =     0.00s Start Test at 2026-10-26 19:17:44.695
+    t =     0.03s Set Up
+    t =     0.06s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.06s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:17:44.833 xcodebuild[24009:23267441] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:17:44.835 xcodebuild[24009:23267441] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.18s         Setting up automation session
+objc[24017]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x107558398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10a828310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     6.34s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.40s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     9.47s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     9.47s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     9.62s Tap "openPrivateWorkflowRunFixture" Button
+    t =     9.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.62s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     9.66s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     9.69s     Synthesize event
+    t =    10.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.18s Waiting 8.0s for "editTemplateDefinition" Button to exist
+    t =    11.26s     Checking `Expect predicate `existsNoRetry == 1` for object "editTemplateDefinition" Button`
+    t =    11.26s         Checking existence of `"editTemplateDefinition" Button`
+    t =    11.38s Tap "editTemplateDefinition" Button
+    t =    11.38s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.39s     Find the "editTemplateDefinition" Button
+    t =    11.43s     Check for interrupting elements affecting "editTemplateDefinition" Button
+    t =    11.48s     Synthesize event
+    t =    11.78s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.78s Checking existence of `"editTemplateTask-0" Button`
+    t =    11.84s Find the "editTemplateTask-0" Button
+    t =    11.90s Tap "editTemplateTask-0" Button
+    t =    11.90s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.90s     Find the "editTemplateTask-0" Button
+    t =    11.95s     Check for interrupting elements affecting "editTemplateTask-0" Button
+    t =    11.99s     Synthesize event
+    t =    12.29s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.38s Waiting 8.0s for "saveTemplateTask" Button to exist
+    t =    13.46s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTemplateTask" Button`
+    t =    13.46s         Checking existence of `"saveTemplateTask" Button`
+    t =    13.58s Checking existence of `"templateTaskKind" Button`
+    t =    13.67s Find the "templateTaskKind" Button
+    t =    13.76s Tap "templateTaskTitle" TextField
+    t =    13.76s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.77s     Find the "templateTaskTitle" TextField
+    t =    13.84s     Check for interrupting elements affecting "templateTaskTitle" TextField
+    t =    13.93s     Synthesize event
+    t =    14.22s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.74s Type ' revised' into "templateTaskTitle" TextField
+    t =    14.74s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.75s     Find the "templateTaskTitle" TextField
+    t =    14.86s     Check for interrupting elements affecting "templateTaskTitle" TextField
+    t =    14.94s     Synthesize event
+    t =    15.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.28s Tap "saveTemplateTask" Button
+    t =    15.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.29s     Find the "saveTemplateTask" Button
+    t =    15.40s     Check for interrupting elements affecting "saveTemplateTask" Button
+    t =    15.48s     Synthesize event
+    t =    15.79s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.22s Tap "saveTemplateDefinition" Button
+    t =    16.22s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.22s     Find the "saveTemplateDefinition" Button
+    t =    16.28s     Check for interrupting elements affecting "saveTemplateDefinition" Button
+    t =    16.32s     Synthesize event
+    t =    16.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.03s Terminate com.dbakp.taskfold.workflowteststeameditbridge:24038
+    t =    18.05s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    18.05s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:18:02.745 xcodebuild[24009:23267441] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:18:02.745 xcodebuild[24009:23267441] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    18.27s         Setting up automation session
+    t =    22.34s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.12s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    25.19s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    25.19s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    25.31s Terminate com.dbakp.taskfold.workflowteststeameditbridge:24080
+    t =    26.41s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testClientOffTemplateEditsKeepExistingHeadingType]' passed (26.454 seconds).
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testCSVHeadingClientGateStillAllowsOrdinaryMapping]' started.
+    t =     0.00s Start Test at 2026-10-26 19:18:11.148
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:18:11.171 xcodebuild[24009:23267441] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:18:11.171 xcodebuild[24009:23267441] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     3.96s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     5.90s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     6.98s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     6.98s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     7.08s Tap "openSharedTemplateFixture" Button
+    t =     7.08s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.08s     Find the "openSharedTemplateFixture" Button
+    t =     7.11s     Check for interrupting elements affecting "openSharedTemplateFixture" Button
+    t =     7.14s     Synthesize event
+    t =     7.48s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.67s Checking existence of `"importWorkflowText" Button`
+    t =     7.77s Find the "importWorkflowText" Button
+    t =     7.85s Tap "importWorkflowText" Button
+    t =     7.85s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.14s     Find the "importWorkflowText" Button
+    t =     8.20s     Check for interrupting elements affecting "importWorkflowText" Button
+    t =     8.25s     Synthesize event
+    t =     8.55s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.59s Waiting 8.0s for "templateImportText" TextView to exist
+    t =     9.67s     Checking `Expect predicate `existsNoRetry == 1` for object "templateImportText" TextView`
+    t =     9.67s         Checking existence of `"templateImportText" TextView`
+    t =     9.75s Tap "templateImportText" TextView
+    t =     9.75s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.76s     Find the "templateImportText" TextView
+    t =     9.82s     Check for interrupting elements affecting "templateImportText" TextView
+    t =     9.88s     Synthesize event
+    t =    10.18s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.44s Type 'Name,Kind,Done
+Des...' into "templateImportText" TextView
+    t =    10.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.44s     Find the "templateImportText" TextView
+    t =    10.56s     Check for interrupting elements affecting "templateImportText" TextView
+    t =    10.64s     Synthesize event
+    t =    12.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.03s Checking existence of `"mapTemplateCSVText" Button`
+    t =    12.11s Find the "mapTemplateCSVText" Button
+    t =    12.19s Tap "mapTemplateCSVText" Button
+    t =    12.19s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.19s     Find the "mapTemplateCSVText" Button
+    t =    12.27s     Check for interrupting elements affecting "mapTemplateCSVText" Button
+    t =    12.34s     Synthesize event
+    t =    12.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.82s Waiting 5.0s for "mappedCSVColumn-title" Button to exist
+    t =    13.85s     Checking `Expect predicate `existsNoRetry == 1` for object "mappedCSVColumn-title" Button`
+    t =    13.86s         Checking existence of `"mappedCSVColumn-title" Button`
+    t =    13.95s Waiting 8.0s for "mappedCSVColumn-title" Button to exist
+    t =    15.03s     Checking `Expect predicate `existsNoRetry == 1` for object "mappedCSVColumn-title" Button`
+    t =    15.03s         Checking existence of `"mappedCSVColumn-title" Button`
+    t =    15.11s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    15.18s Find the "mappedCSVColumn-title" Button
+    t =    15.26s Tap "mappedCSVColumn-title" Button
+    t =    15.26s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.27s     Find the "mappedCSVColumn-title" Button
+    t =    15.34s     Check for interrupting elements affecting "mappedCSVColumn-title" Button
+    t =    15.42s     Synthesize event
+    t =    15.72s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.90s Waiting 5.0s for "Name" Button to exist
+    t =    17.93s     Checking `Expect predicate `existsNoRetry == 1` for object "Name" Button`
+    t =    17.93s         Checking existence of `"Name" Button`
+    t =    18.00s Tap "Name" Button
+    t =    18.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.00s     Find the "Name" Button
+    t =    18.04s     Check for interrupting elements affecting "Name" Button
+    t =    18.10s     Synthesize event
+    t =    18.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.85s Checking existence of `"mappedCSVColumn-type" Button`
+    t =    19.94s Find the "mappedCSVColumn-type" Button
+    t =    20.02s Tap "mappedCSVColumn-type" Button
+    t =    20.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.02s     Find the "mappedCSVColumn-type" Button
+    t =    20.09s     Check for interrupting elements affecting "mappedCSVColumn-type" Button
+    t =    20.16s     Synthesize event
+    t =    20.45s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.59s Waiting 5.0s for "Kind" Button to exist
+    t =    22.65s     Checking `Expect predicate `existsNoRetry == 1` for object "Kind" Button`
+    t =    22.65s         Checking existence of `"Kind" Button`
+    t =    22.71s Tap "Kind" Button
+    t =    22.71s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.72s     Find the "Kind" Button
+    t =    22.76s     Check for interrupting elements affecting "Kind" Button
+    t =    22.83s     Synthesize event
+    t =    23.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.59s Checking existence of `"reviewMappedCSV" Button`
+    t =    24.68s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    24.73s Find the NavigationBar (Element at index 1)
+    t =    24.81s Press "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    24.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.81s     Find the "Map CSV columns" NavigationBar
+    t =    24.87s     Check for interrupting elements affecting "Map CSV columns" NavigationBar
+    t =    24.93s     Synthesize event
+    t =    24.94s         Find the "Map CSV columns" NavigationBar
+    t =    25.00s         Find the "Map CSV columns" NavigationBar
+    t =    25.07s         Find the "Map CSV columns" NavigationBar
+    t =    25.14s         Find the "Map CSV columns" NavigationBar
+    t =    25.20s         Find the "Map CSV columns" NavigationBar
+    t =    25.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.04s Checking existence of `"reviewMappedCSV" Button`
+    t =    26.13s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    26.20s Find the NavigationBar (Element at index 1)
+    t =    26.28s Press "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    26.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.28s     Find the "Map CSV columns" NavigationBar
+    t =    26.36s     Check for interrupting elements affecting "Map CSV columns" NavigationBar
+    t =    26.43s     Synthesize event
+    t =    26.43s         Find the "Map CSV columns" NavigationBar
+    t =    26.49s         Find the "Map CSV columns" NavigationBar
+    t =    26.57s         Find the "Map CSV columns" NavigationBar
+    t =    26.65s         Find the "Map CSV columns" NavigationBar
+    t =    26.72s         Find the "Map CSV columns" NavigationBar
+    t =    27.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.51s Checking existence of `"reviewMappedCSV" Button`
+    t =    27.59s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    27.65s Find the NavigationBar (Element at index 1)
+    t =    27.73s Press "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    27.73s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.74s     Find the "Map CSV columns" NavigationBar
+    t =    27.81s     Check for interrupting elements affecting "Map CSV columns" NavigationBar
+    t =    27.88s     Synthesize event
+    t =    27.88s         Find the "Map CSV columns" NavigationBar
+    t =    27.96s         Find the "Map CSV columns" NavigationBar
+    t =    28.03s         Find the "Map CSV columns" NavigationBar
+    t =    28.10s         Find the "Map CSV columns" NavigationBar
+    t =    28.18s         Find the "Map CSV columns" NavigationBar
+    t =    28.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.98s Checking existence of `"reviewMappedCSV" Button`
+    t =    29.07s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    29.14s Find the NavigationBar (Element at index 1)
+    t =    29.22s Press "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    29.22s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.22s     Find the "Map CSV columns" NavigationBar
+    t =    29.29s     Check for interrupting elements affecting "Map CSV columns" NavigationBar
+    t =    29.37s     Synthesize event
+    t =    29.37s         Find the "Map CSV columns" NavigationBar
+    t =    29.44s         Find the "Map CSV columns" NavigationBar
+    t =    29.51s         Find the "Map CSV columns" NavigationBar
+    t =    29.58s         Find the "Map CSV columns" NavigationBar
+    t =    29.65s         Find the "Map CSV columns" NavigationBar
+    t =    30.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.44s Checking existence of `"reviewMappedCSV" Button`
+    t =    30.51s Find the "reviewMappedCSV" Button
+    t =    30.59s Tap "reviewMappedCSV" Button
+    t =    30.60s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.60s     Find the "reviewMappedCSV" Button
+    t =    30.67s     Check for interrupting elements affecting "reviewMappedCSV" Button
+    t =    30.74s     Synthesize event
+    t =    31.04s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.29s Checking existence of `"mappedCSVError" StaticText`
+    t =    31.38s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    31.44s Find the NavigationBar (Element at index 1)
+    t =    31.52s Press "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    31.52s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.52s     Find the "Map CSV columns" NavigationBar
+    t =    31.58s     Check for interrupting elements affecting "Map CSV columns" NavigationBar
+    t =    31.65s     Synthesize event
+    t =    31.65s         Find the "Map CSV columns" NavigationBar
+    t =    31.72s         Find the "Map CSV columns" NavigationBar
+    t =    31.79s         Find the "Map CSV columns" NavigationBar
+    t =    31.85s         Find the "Map CSV columns" NavigationBar
+    t =    31.93s         Find the "Map CSV columns" NavigationBar
+    t =    32.72s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    32.72s Checking existence of `"mappedCSVError" StaticText`
+    t =    32.80s Find the "mappedCSVError" StaticText
+    t =    32.88s Find the "mappedCSVError" StaticText
+    t =    32.97s Checking existence of `"mappedCSVColumn-type" Button`
+    t =    33.04s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    33.10s Find the NavigationBar (Element at index 1)
+    t =    33.17s Press "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 40.0) for 0.1 seconds, then drag to "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 250.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    33.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    33.18s     Find the "Map CSV columns" NavigationBar
+    t =    33.24s     Check for interrupting elements affecting "Map CSV columns" NavigationBar
+    t =    33.31s     Synthesize event
+    t =    33.32s         Find the "Map CSV columns" NavigationBar
+    t =    33.39s         Find the "Map CSV columns" NavigationBar
+    t =    33.46s         Find the "Map CSV columns" NavigationBar
+    t =    33.53s         Find the "Map CSV columns" NavigationBar
+    t =    33.59s         Find the "Map CSV columns" NavigationBar
+    t =    34.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.39s Checking existence of `"mappedCSVColumn-type" Button`
+    t =    34.48s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    34.54s Find the NavigationBar (Element at index 1)
+    t =    34.61s Press "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 40.0) for 0.1 seconds, then drag to "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 250.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    34.61s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.62s     Find the "Map CSV columns" NavigationBar
+    t =    34.68s     Check for interrupting elements affecting "Map CSV columns" NavigationBar
+    t =    34.76s     Synthesize event
+    t =    34.76s         Find the "Map CSV columns" NavigationBar
+    t =    34.83s         Find the "Map CSV columns" NavigationBar
+    t =    34.90s         Find the "Map CSV columns" NavigationBar
+    t =    34.96s         Find the "Map CSV columns" NavigationBar
+    t =    35.03s         Find the "Map CSV columns" NavigationBar
+    t =    35.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.82s Checking existence of `"mappedCSVColumn-type" Button`
+    t =    35.90s Find the "mappedCSVColumn-type" Button
+    t =    36.03s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    36.09s Find the NavigationBar (Element at index 1)
+    t =    36.17s Press "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 40.0) for 0.1 seconds, then drag to "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 250.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    36.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.17s     Find the "Map CSV columns" NavigationBar
+    t =    36.24s     Check for interrupting elements affecting "Map CSV columns" NavigationBar
+    t =    36.31s     Synthesize event
+    t =    36.31s         Find the "Map CSV columns" NavigationBar
+    t =    36.39s         Find the "Map CSV columns" NavigationBar
+    t =    36.47s         Find the "Map CSV columns" NavigationBar
+    t =    36.54s         Find the "Map CSV columns" NavigationBar
+    t =    36.60s         Find the "Map CSV columns" NavigationBar
+    t =    37.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.41s Checking existence of `"mappedCSVColumn-type" Button`
+    t =    37.49s Find the "mappedCSVColumn-type" Button
+    t =    37.59s Tap "mappedCSVColumn-type" Button
+    t =    37.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.59s     Find the "mappedCSVColumn-type" Button
+    t =    37.68s     Check for interrupting elements affecting "mappedCSVColumn-type" Button
+    t =    37.75s     Synthesize event
+    t =    38.05s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.19s Waiting 5.0s for "Not copied" Button to exist
+    t =    40.24s     Checking `Expect predicate `existsNoRetry == 1` for object "Not copied" Button`
+    t =    40.25s         Checking existence of `"Not copied" Button`
+    t =    40.29s Tap "Not copied" Button
+    t =    40.29s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    40.30s     Find the "Not copied" Button
+    t =    40.33s     Check for interrupting elements affecting "Not copied" Button
+    t =    40.41s     Synthesize event
+    t =    40.70s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.14s Checking existence of `"reviewMappedCSV" Button`
+    t =    42.24s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    42.30s Find the NavigationBar (Element at index 1)
+    t =    42.39s Press "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Map CSV columns" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    42.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.39s     Find the "Map CSV columns" NavigationBar
+    t =    42.47s     Check for interrupting elements affecting "Map CSV columns" NavigationBar
+    t =    42.54s     Synthesize event
+    t =    42.54s         Find the "Map CSV columns" NavigationBar
+    t =    42.61s         Find the "Map CSV columns" NavigationBar
+    t =    42.68s         Find the "Map CSV columns" NavigationBar
+    t =    42.75s         Find the "Map CSV columns" NavigationBar
+    t =    42.82s         Find the "Map CSV columns" NavigationBar
+    t =    43.61s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.61s Checking existence of `"reviewMappedCSV" Button`
+    t =    43.69s Find the "reviewMappedCSV" Button
+    t =    43.79s Tap "reviewMappedCSV" Button
+    t =    43.79s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.79s     Find the "reviewMappedCSV" Button
+    t =    43.87s     Check for interrupting elements affecting "reviewMappedCSV" Button
+    t =    43.94s     Synthesize event
+    t =    44.23s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    44.23s Checking existence of `"confirmImportTemplate" Button`
+    t =    44.30s Find the "confirmImportTemplate" Button
+    t =    44.37s Find the "confirmImportTemplate" Button
+    t =    44.43s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    44.58s Added attachment named 'client-off-ordinary-csv-review'
+    t =    44.58s Tap "cancelImportTemplateReview" Button
+    t =    44.58s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    44.58s     Find the "cancelImportTemplateReview" Button
+    t =    44.65s     Check for interrupting elements affecting "cancelImportTemplateReview" Button
+    t =    44.71s     Synthesize event
+    t =    45.01s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.41s Terminate com.dbakp.taskfold.workflowteststeameditbridge:24098
+    t =    46.48s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testCSVHeadingClientGateStillAllowsOrdinaryMapping]' passed (46.604 seconds).
+Test Suite 'TeamTemplateLibraryUITests' passed at 2026-10-26 19:18:57.752.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 73.057 (73.062) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 19:18:57.753.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 73.057 (73.063) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 19:18:57.754.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 73.057 (73.064) seconds
+2026-10-26 19:18:58.079 xcodebuild[24009:23267441] [MT] IDETestOperationsObserverDebug: 79.013 elapsed -- Testing started completed.
+2026-10-26 19:18:58.079 xcodebuild[24009:23267441] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 19:18:58.079 xcodebuild[24009:23267441] [MT] IDETestOperationsObserverDebug: 79.013 sec, +79.013 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-definition-headings-phone-off.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

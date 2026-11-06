@@ -1,0 +1,97 @@
+{
+  "obsoleteOwnedResults": [
+    {
+      "path": "/tmp/taskfold-completion-ui-mac-acceptance.xcresult",
+      "logicalBytes": 141474516,
+      "result": "Failed",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    },
+    {
+      "path": "/tmp/taskfold-child-resolution-mac-v10.xcresult",
+      "logicalBytes": 1598890,
+      "result": "Passed",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    },
+    {
+      "path": "/tmp/taskfold-child-resolution-mac-v5.xcresult",
+      "logicalBytes": 26709642,
+      "result": "Failed",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    },
+    {
+      "path": "/tmp/taskfold-child-resolution-phone-v1.xcresult",
+      "logicalBytes": 9527113,
+      "result": "Passed",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    },
+    {
+      "path": "/tmp/taskfold-child-resolution-mac-v9.xcresult",
+      "logicalBytes": 4858714,
+      "result": "Passed",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    },
+    {
+      "path": "/tmp/taskfold-child-resolution-mac-v3.xcresult",
+      "logicalBytes": 14313414,
+      "result": "Failed",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    },
+    {
+      "path": "/tmp/taskfold-child-resolution-ipad-v1.xcresult",
+      "logicalBytes": 14480360,
+      "result": "Passed",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    },
+    {
+      "path": "/tmp/taskfold-child-resolution-phone-v4.xcresult",
+      "logicalBytes": 4246996,
+      "result": "Passed",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    },
+    {
+      "path": "/tmp/taskfold-child-resolution-phone-v3.xcresult",
+      "logicalBytes": 30216372,
+      "result": "Failed",
+      "passed": 1,
+      "failed": 1,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    },
+    {
+      "path": "/tmp/taskfold-child-resolution-phone-v2.xcresult",
+      "logicalBytes": 12184277,
+      "result": "Failed",
+      "passed": 2,
+      "failed": 2,
+      "skipped": 0,
+      "note": "Old Taskfold run, completed more than an hour before this milestone. No failure text or private UI data is retained here."
+    }
+  ],
+  "logicalBytesRemoved": 259610294,
+  "currentHostsProductsAndDevicesRetained": true,
+  "unrelatedProjectsUntouched": true
+}

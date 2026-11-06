@@ -1,6 +1,8 @@
 import Foundation
 import CryptoKit
 import Security
+import Darwin
+import Observation
 
 struct BackupFailure: LocalizedError, Equatable {
     var message: String
@@ -12,6 +14,7 @@ struct BackupFailure: LocalizedError, Equatable {
 struct WorkspaceBackup: Codable, Sendable {
     var format = "com.taskfold.workspace"
     var version = 1
+    var capabilities: [String]? = nil
     var id: String
     var createdAt: String
     var sourceAccount: String
@@ -19,39 +22,48 @@ struct WorkspaceBackup: Codable, Sendable {
     var unsyncedChanges: Int
     var legacy = false
     static let maximumBytes = 256 * 1024 * 1024
-    static let workTables = ["projects", "labels", "sections", "tasks", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions", ReminderSnooze.table]
+    static let workTables = ["projects", "labels", "sections", "tasks", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions", ReminderSnooze.table, WorkflowTemplate.table]
     static func make(_ snapshot: Snapshot, account: String, now: Date = Date()) -> Self {
         var tables = snapshot.tables
+        // A portable file cannot certify server-recorded actors in another workspace.
+        tables.removeValue(forKey: TaskAssignmentProvenance.table)
         tables[FocusSessionChange.table] = tables[FocusSessionChange.table]?.map { row in
             var row = row
             if let session = FocusSessionChange.session(in: row, account: account), let checkpoint = try? session.checkpoint(at: now) { row["state"] = checkpoint.document }
             return row
         }
-        return Self(id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
-                    tables: tables, unsyncedChanges: snapshot.pending.count)
+        let headings = TaskKind.containsTypeMetadata(tables["tasks"] ?? [])
+        return Self(version: headings ? 2 : 1, capabilities: headings ? ["task_headings"] : nil, id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
+                    tables: tables, unsyncedChanges: snapshot.pending.count + ConversationOutbox.rows(snapshot, account: account).count)
     }
     func data() throws -> Data {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(self)
         guard data.count <= Self.maximumBytes else { throw BackupFailure(message: "This backup exceeds the 256 MB file limit.") }
         return data
     }
+    /// Coordinate external documents so their provider can materialize or finish saving them.
+    /// Call off the main actor: providers may need time to download the selected file.
+    static func readFile(_ url: URL) throws -> Self {
+        try BackupFileReadOperation().read(url)
+    }
+
     static func read(_ data: Data) throws -> Self {
         guard data.count <= maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
         do {
-            let root = try JSONDecoder().decode(JSON.self, from: data)
+            let root = try TaskfoldJSONDecoder().decode(JSON.self, from: data)
             guard case .object(let object) = root else { throw BackupFailure(message: "A Taskfold backup must be a JSON object.") }
             var backup: Self
             if object["format"] != nil || object["version"] != nil {
-                guard object["format"] == .string("com.taskfold.workspace"), object["version"] == .number(1) else {
+                guard object["format"] == .string("com.taskfold.workspace"), [JSON.number(1), .number(2)].contains(object["version"] ?? .null) else {
                     throw BackupFailure(message: "This backup format or version is unsupported. Update Taskfold before restoring it.")
                 }
-                backup = try JSONDecoder().decode(Self.self, from: data)
+                backup = try TaskfoldJSONDecoder().decode(Self.self, from: data)
                 guard UUID(uuidString: backup.id) != nil, TaskPlanning.instant(backup.createdAt) != nil,
                       backup.sourceAccount.count <= 200, backup.unsyncedChanges >= 0 else { throw BackupFailure(message: "The backup header is invalid.") }
             } else {
                 // Original native exports were the table dictionary. Never interpret a cache/session as one.
-                let tables = try JSONDecoder().decode([String: [Record]].self, from: data)
+                let tables = try TaskfoldJSONDecoder().decode([String: [Record]].self, from: data)
                 guard !Set(tables.keys).isDisjoint(with: Set(workTables)) else { throw BackupFailure(message: "This file contains no Taskfold workspace tables.") }
                 backup = Self(id: stableID("legacy-file", String(SHA256.hash(data: data).description)), createdAt: Dates.timestamp(), sourceAccount: "", tables: tables, unsyncedChanges: 0, legacy: true)
             }
@@ -67,30 +79,47 @@ struct WorkspaceBackup: Codable, Sendable {
         return UUID(uuid: (bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5],bytes[6],bytes[7],bytes[8],bytes[9],bytes[10],bytes[11],bytes[12],bytes[13],bytes[14],bytes[15])).uuidString.lowercased()
     }
     private static let columns: [String: Set<String>] = [
-        "projects": ["id","user_id","name","description","color","created_at","order_index","source_metadata"],
+        "projects": ["id","user_id","name","description","color","created_at","order_index","source_metadata","parent_id","is_archived","ancestor_archived"],
         "labels": ["id","user_id","name","color","created_at"],
+        WorkflowTemplate.table: ["id","user_id","name","document","created_at","updated_at"],
         "sections": ["id","user_id","project_id","name","created_at","order_index"],
-        "tasks": ["id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
+        "tasks": ["is_heading","id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
         "saved_views": ["id","user_id","name","query_ast","layout","grouping","sort_by","include_completed","order_index","created_at","updated_at"],
         "favorites": ["id","user_id","order_index","created_at"],
-        "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours","date_preferences"],
+        "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours","date_preferences",ProductivityGoals.field],
         "view_orders": ["id","user_id","ids","updated_at"],
         "focus_sessions": ["id","user_id","revision","action_id","state","updated_at"],
         ReminderSnooze.table: ["id","user_id","settings","updated_at"]
     ]
     func validate() throws {
+        guard version == 1 && capabilities == nil || version == 2 && capabilities == ["task_headings"],
+              !TaskKind.containsTypeMetadata(tables["tasks"] ?? []) || version == 2 else {
+            throw BackupFailure(message: "This backup requires the supported task-heading format. Its contents are unchanged.")
+        }
         guard tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw BackupFailure(message: "This backup exceeds the 50,000-record limit.") }
         for (table, rows) in tables {
-            let activity = table == TaskActivity.table || table == TaskActivity.epochTable
-            let metadata = activity || table == "profiles" || table == "project_collaborators" || table.hasPrefix("project_members:") || table == "_local_day_order"
+            let activity = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable].contains(table)
+            let conversation = [SharedComment.table, SharedMention.table, ConversationOutbox.table, ConversationOutbox.viewsTable].contains(table)
+            let metadata = conversation || activity || table == "profiles" || table == "project_collaborators" || table.hasPrefix("project_members:") || table == "_local_day_order"
             guard Self.workTables.contains(table) || metadata else { throw BackupFailure(message: "This backup includes the unsupported table “\(table)”. Update Taskfold before restoring it.") }
-            var ids = Set<String>()
+            var ids = Set<String>(); var nodeSequences = Set<Int64>()
             for row in rows {
                 try Self.checkJSON(.object(row.fields), depth: 0)
+                if conversation {
+                    guard ids.insert(row.id).inserted else { throw BackupFailure(message: "The conversation archive has a duplicate identity.") }
+                    if table == SharedComment.table, SharedComment(row) == nil { throw BackupFailure(message: "A shared comment archive needs a supported format.") }
+                    if table == SharedMention.table, SharedMention(row) == nil { throw BackupFailure(message: "A mention archive needs a supported format.") }
+                    if table == ConversationOutbox.table, !ConversationOutbox.valid(row) { throw BackupFailure(message: "A saved comment draft needs a newer app or repair before transfer.") }
+                    continue
+                }
                 if activity {
                     guard ids.insert(UUID(uuidString: row.id)?.uuidString.lowercased() ?? row.id).inserted else { throw BackupFailure(message: "The activity archive contains a duplicate ID.") }
                     if table == TaskActivity.table {
                         guard TaskActivity(row: row) != nil else { throw BackupFailure(message: "The activity archive contains an invalid event.") }
+                    } else if table == TaskNodeActivity.table {
+                        guard let event = TaskNodeActivity(row: row), nodeSequences.insert(event.sequence).inserted else { throw BackupFailure(message: "The child activity archive contains an invalid or duplicate event.") }
+                    } else if table == TaskNodeActivity.epochTable {
+                        guard TaskNodeActivity.validEpoch(rows) else { throw BackupFailure(message: "The child activity recording start is invalid.") }
                     } else {
                         guard rows.count == 1, row.id == "current", Set(row.fields.keys) == ["id", "recorded_from"], TaskPlanning.instant(row.string("recorded_from")) != nil else { throw BackupFailure(message: "The activity recording start is invalid.") }
                     }
@@ -99,14 +128,17 @@ struct WorkspaceBackup: Codable, Sendable {
                 if metadata && table != "_local_day_order" { continue }
                 guard !row.id.isEmpty, row.id.unicodeScalars.count <= 300, ids.insert(UUID(uuidString: row.id)?.uuidString.lowercased() ?? row.id).inserted else { throw BackupFailure(message: "The \(table) table has a missing, duplicate or invalid ID.") }
                 guard let allowed = Self.columns[table == "_local_day_order" ? "view_orders" : table], Set(row.fields.keys).isSubset(of: allowed) else { throw BackupFailure(message: "The \(table) table includes newer or unsupported fields. Update Taskfold before restoring it.") }
-                for key in ["id","user_id","name","title","description","color","project_id","section_id","assigned_to","recurrence_parent_id","time_zone","due_date","due_time","deadline_date","recurrence_end_date","scheduled_at"] {
+                for key in ["id","user_id","name","title","description","color","project_id","parent_id","section_id","assigned_to","recurrence_parent_id","time_zone","due_date","due_time","deadline_date","recurrence_end_date","scheduled_at"] {
                     if let value = row.fields[key], value != .null, case .string = value {} else if let value = row.fields[key], value != .null { throw BackupFailure(message: "\(table).\(key) must be text.") }
+                }
+                if table == "tasks", !TaskKind.permits(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields), existing: nil) {
+                    throw BackupFailure(message: "A heading or checklist task type is invalid. The saved file is unchanged.")
                 }
                 if let generation = row.fields["task_generation"], generation != .null {
                     guard case .string(let value) = generation, UUID(uuidString: value) != nil,
                           value.lowercased() != "00000000-0000-0000-0000-000000000000" else { throw BackupFailure(message: "A task has an invalid generation ID.") }
                 }
-                for key in ["completed","is_recurring","include_completed","overdue_collapsed"] {
+                for key in ["is_heading","completed","is_recurring","include_completed","overdue_collapsed","is_archived","ancestor_archived"] {
                     if let value = row.fields[key], value != .null, case .bool = value {} else if row.fields[key] != nil && row.fields[key] != .null { throw BackupFailure(message: "\(table).\(key) must be a boolean.") }
                 }
                 for (key, low, high) in [("priority",1,4),("priority_filter",0,4),("duration_minutes",1,10080),("order_index",0,2147483647),("completion_version",0,9007199254740991)] {
@@ -130,6 +162,13 @@ struct WorkspaceBackup: Codable, Sendable {
                 for key in ["subtasks","comments","attachments","reminder_specs"] where row.fields[key] != nil && row[key] != .null {
                     guard case .array(let values) = row[key], values.count <= (key == "reminder_specs" ? 20 : 10000), values.allSatisfy({ if case .object = $0 { return true }; return false }) else { throw BackupFailure(message: "\(table).\(key) must be an array of objects.") }
                 }
+                if table == WorkflowTemplate.table {
+                    guard case .object(let document) = row["document"], case .number(let version) = document["version"], version >= 1, version.rounded() == version,
+                          !row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, row.name.count <= 160,
+                          (try TaskfoldJSONEncoder().encode(row["document"])).count <= 2_000_000 else { throw BackupFailure(message: "A template document is invalid.") }
+                    // Preserve newer definitions losslessly; applying one still requires a supported reader.
+                    if version == 1 || version == 2 && document["capabilities"] == .array([.string("task_headings")]) { _ = try WorkflowTemplate(document: row["document"]) }
+                }
                 for key in ["source_metadata","recurrence_pattern"] where row.fields[key] != nil && row[key] != .null {
                     guard case .object = row[key] else { throw BackupFailure(message: "\(table).\(key) must be an object.") }
                 }
@@ -149,6 +188,11 @@ struct WorkspaceBackup: Codable, Sendable {
                     throw BackupFailure(message: "The backup includes invalid reminder preferences.")
                 }
                 if table == "saved_views" { _ = try FilterRule(document: row["query_ast"]) }
+                if row[ProductivityGoals.field] != .null {
+                    guard table=="view_preferences",row.id==ProductivityGoals.recordID else { throw BackupFailure(message:"The goal settings have an invalid record scope.") }
+                    guard case .object(let document)=row[ProductivityGoals.field],case .number(let version)=document["version"],version>=1,version.rounded(.down)==version,(try TaskfoldJSONEncoder().encode(row[ProductivityGoals.field])).count<=4096 else { throw BackupFailure(message:"The saved goals have an invalid definition.") }
+                    if version==1 { _ = try ProductivityGoals(document:row[ProductivityGoals.field]) }
+                }
                 if row["date_preferences"] != .null { _ = try DatePhrasePreferences(document: row["date_preferences"]) }
                 if row["working_hours"] != .null { _ = try WorkingHours(document: row["working_hours"]) }
                 if table == FocusSessionChange.table, !FocusSessionChange.validRow(row, account: row.string("user_id")) {
@@ -163,6 +207,9 @@ struct WorkspaceBackup: Codable, Sendable {
     private static func checkJSON(_ value: JSON, depth: Int) throws {
         guard depth <= 32 else { throw BackupFailure(message: "A backup value is nested too deeply.") }
         switch value {
+        case .preserved(let value):
+            do { _ = try value.validate(maximumDepth: 32-depth, maximumArray: 10000, maximumObject: 1000) }
+            catch { throw BackupFailure(message: "A preserved backup value exceeds its supported size or depth.") }
         case .number(let n): guard n.isFinite && abs(n) <= 9_000_000_000_000_000 else { throw BackupFailure(message: "A backup number is out of range.") }
         case .array(let values): guard values.count <= 10000 else { throw BackupFailure(message: "A backup collection is too large.") }; for v in values { try checkJSON(v, depth: depth + 1) }
         case .object(let values): guard values.count <= 1000 else { throw BackupFailure(message: "A backup object is too large.") }; for v in values.values { try checkJSON(v, depth: depth + 1) }
@@ -199,7 +246,7 @@ extension WorkspaceBackup {
             "view_orders": ["ids": .array([])]
         ]
         let currentRows = current.tables.mapValues { Dictionary($0.map { (canonical($0.id), $0) }, uniquingKeysWith: { first, _ in first }) }
-        for table in Self.workTables.prefix(5) {
+        for table in Array(Self.workTables.prefix(5)) + [WorkflowTemplate.table] {
             for row in tables[table] ?? [] {
                 let existing = currentRows[table]?[canonical(row.id)]
                 let own = canonical(row.string("user_id")) == canonical(account) && (canonical(sourceAccount) == canonical(account) || legacy)
@@ -245,7 +292,7 @@ extension WorkspaceBackup {
             guard updated.unicodeScalars.count <= 300 else { throw BackupFailure(message: "A restored view key is too long.") }
             return updated
         }
-        var clearedAssignments = 0, missingFilterTargets = 0
+        var clearedAssignments = 0, missingFilterTargets = 0, promotedSharedProjects = 0
         func person(_ value: JSON, project: String) -> JSON {
             guard !value.text.isEmpty else { return .null }
             if canonical(value.text) == canonical(sourceAccount) || canonical(value.text) == canonical(account) { return .string(account) }
@@ -285,11 +332,12 @@ extension WorkspaceBackup {
         }
         func orderedRows(_ table: String) throws -> [Record] {
             let rows = tables[table] ?? []
-            guard table == "tasks" else { return rows }
+            guard table == "tasks" || table == "projects" else { return rows }
+            let parentField = table == "projects" ? "parent_id" : "recurrence_parent_id"
             let byID = Dictionary(uniqueKeysWithValues: rows.map { (canonical($0.id), $0) })
             var remaining: [String: Int] = [:], children: [String: [String]] = [:]
             for row in rows {
-                let parent = canonical(row.string("recurrence_parent_id"))
+                let parent = canonical(row.string(parentField))
                 remaining[canonical(row.id)] = byID[parent] == nil ? 0 : 1
                 if byID[parent] != nil { children[parent, default: []].append(canonical(row.id)) }
             }
@@ -298,11 +346,26 @@ extension WorkspaceBackup {
                 let row = queue[cursor]; cursor += 1
                 for child in children[canonical(row.id)] ?? [] { remaining[child] = 0; queue.append(byID[child]!) }
             }
-            guard queue.count == rows.count else { throw BackupFailure(message: "Recurring task relationships contain a cycle.") }
+            guard queue.count == rows.count else { throw BackupFailure(message: "Project or recurring task relationships contain a cycle.") }
             return queue
         }
         for table in Self.workTables {
             for original in try orderedRows(table) {
+                if table=="view_preferences",original.id==ProductivityGoals.recordID,original.fields[ProductivityGoals.field] != nil {
+                    let existing=currentRows[table]?[ProductivityGoals.recordID]
+                    if let existing,existing.string("user_id") != account { throw BackupFailure(message:"A restore target belongs to another account.") }
+                    if existing != nil,policy == .keepCurrent { result.kept+=1;continue }
+                    var changed=false
+                    if existing==nil || existing?[ProductivityGoals.field] != original[ProductivityGoals.field] {
+                        result.changes.append(try ProductivityGoalEdit.command(original[ProductivityGoals.field],previous:existing,account:account));changed=true
+                    }
+                    let other=original.fields.filter{!["id","user_id","updated_at",ProductivityGoals.field].contains($0.key) && existing?[$0.key] != $0.value}
+                    if !other.isEmpty {
+                        result.changes.append(Mutation(table:table,recordID:ProductivityGoals.recordID,method:"PATCH",fields:other,baseline:Dictionary(uniqueKeysWithValues:other.keys.map{($0,existing?[$0] ?? .null)})));changed=true
+                    }
+                    if changed { if existing==nil {result.added+=1}else{result.updated+=1};result.counts[table,default:0]+=1 } else {result.kept+=1}
+                    continue
+                }
                 if table == FocusSessionChange.table {
                     let existing = currentRows[table]?[FocusSessionChange.recordID]
                     if existing != nil && policy == .keepCurrent { result.kept += 1; continue }
@@ -332,10 +395,24 @@ extension WorkspaceBackup {
                 if let id = result.mappedIDs[table]?[original.id] { row["id"] = .string(id) }
                 else { row["id"] = .string(try scope(original.id)) }
                 if ["favorites", "view_preferences"].contains(table), row.id.unicodeScalars.count > 200 { throw BackupFailure(message: "A restored view key exceeds 200 characters.") }
+                if table == "projects" {
+                    if !original.string("parent_id").isEmpty {
+                        if let parent = try? mapped("projects", original.string("parent_id"), required: true) { row["parent_id"] = .string(parent) }
+                        else if !sourceAccount.isEmpty, !original.string("user_id").isEmpty, canonical(original.string("user_id")) != canonical(sourceAccount) {
+                            // A shared child may legitimately reference an ancestor the exporter cannot read.
+                            // Copy it as an independent owned root, retaining the effective archive state.
+                            row["parent_id"] = .null; row["is_archived"] = .bool(original["is_archived"].flag || original["ancestor_archived"].flag)
+                            promotedSharedProjects += 1
+                        } else { throw BackupFailure(message: "A projects reference is missing from this backup and workspace.") }
+                    }
+                    row.fields.removeValue(forKey: "ancestor_archived")
+                }
                 if ["projects","labels"].contains(table), row.string("color").isEmpty { row["color"] = .string("#e31e4b") }
                 if ["sections","tasks"].contains(table) && !original.string("project_id").isEmpty { row["project_id"] = .string(try mapped("projects", original.string("project_id"), required: true)) }
                 if table == "sections", row.string("project_id").isEmpty { throw BackupFailure(message: "A section has no project.") }
                 if table == "tasks" {
+                    let archivedComments = ConversationArchive.comments(task: original, tables: tables)
+                    if archivedComments != original["comments"].list { row["comments"] = .array(archivedComments) }
                     row["completion_version"] = .number(0)
                     if !original.string("section_id").isEmpty {
                         let section = try mapped("sections", original.string("section_id"), required: true)
@@ -378,7 +455,7 @@ extension WorkspaceBackup {
                             values.contains { value in let child = Record(value.object); return !child.string("assigned_to").isEmpty || hasAssignment(child["subtasks"].list) }
                         }
                         if hasAssignment(row["subtasks"].list) { assignments["subtasks"] = row["subtasks"] }
-                        if !assignments.isEmpty { result.changes.append(Mutation(table: table, recordID: row.id, method: "PATCH", fields: assignments, baseline: Dictionary(uniqueKeysWithValues: assignments.keys.map { ($0, $0 == "assigned_to" ? JSON.null : TaskAssignment.clearChildren(row["subtasks"])) }))) }
+                        if !assignments.isEmpty { result.changes.append(Mutation(table: table, recordID: row.id, method: "PATCH", fields: assignments, baseline: Dictionary(uniqueKeysWithValues: try assignments.keys.map { ($0, $0 == "assigned_to" ? JSON.null : try TaskAssignment.clearChildren(row["subtasks"])) }))) }
                     }
                     result.updated += 1
                 } else {
@@ -388,11 +465,23 @@ extension WorkspaceBackup {
                 result.counts[table, default: 0] += 1
             }
         }
+        var organizationPreview = current
+        for change in result.changes { organizationPreview.apply(change) }
+        let restoredProjects = organizationPreview.tables["projects"] ?? []
+        for change in result.changes where change.table == "projects" {
+            if let row = restoredProjects.first(where: { $0.id == change.recordID }) {
+                try ProjectOrganization.validate(row, previous: nil, account: account, projects: restoredProjects)
+            }
+        }
         if legacy { result.warnings.append("This is an older unversioned export. Its records and references were validated before preview.") }
         if unsyncedChanges > 0 { result.warnings.append("The backup includes \(unsyncedChanges) changes that had not synced. Their visible work is included; the old network queue is not replayed.") }
+        if promotedSharedProjects > 0 { result.warnings.append("\(promotedSharedProjects) shared subprojects have an unavailable parent. Their copies become top-level projects and retain their archived state.") }
         if clearedAssignments > 0 { result.warnings.append("\(clearedAssignments) assignments will be cleared because those people are not current members of the restored projects.") }
         if missingFilterTargets > 0 { result.warnings.append("Some saved filter targets are unavailable. Those filters will request repair rather than match unrelated work.") }
-        if tables[TaskActivity.table]?.isEmpty == false { result.warnings.append("Recorded activity is retained in this file as an archive. It is not replayed as new history; restored task copies start their own activity.") }
+        if tables[SharedComment.table]?.isEmpty == false || tables[ConversationOutbox.table]?.isEmpty == false {
+            result.warnings.append("Shared conversations and unsent comment text are restored as historical task comments. Authorship is not reverified, and mentions, read state and the sending queue are never replayed.")
+        }
+        if tables[TaskActivity.table]?.isEmpty == false || tables[TaskNodeActivity.table]?.isEmpty == false { result.warnings.append("Recorded activity is retained in this file as an archive. It is not replayed as new history; restored task copies start their own activity.") }
         if tables.keys.contains(where: { $0 == "project_collaborators" || $0.hasPrefix("project_members:") }) { result.warnings.append("Collaborators and invitations are not recreated. Restored project copies belong to you.") }
         result.warnings.append("Existing work outside this backup is kept. Sign-in, profile identity and device calendar permissions are not changed.")
         return result
@@ -413,17 +502,22 @@ struct BackupVault: Sendable {
     var account: String
     var key: @Sendable () throws -> SymmetricKey
     var retention = 20
+    var removalGate: AccountRemovalDisk? = nil
     private static let lock = NSRecursiveLock()
     func entries() throws -> [RecoveryEntry] {
         Self.lock.lock(); defer { Self.lock.unlock() }
         let url = directory.appendingPathComponent("index.json")
         if !FileManager.default.fileExists(atPath: url.path) { return [] }
-        return try JSONDecoder().decode([RecoveryEntry].self, from: Data(contentsOf: url)).sorted { $0.createdAt > $1.createdAt }
+        return try TaskfoldJSONDecoder().decode([RecoveryEntry].self, from: Data(contentsOf: url)).sorted { $0.createdAt > $1.createdAt }
     }
     func save(_ snapshot: Snapshot, kind: String, now: Date = Date()) throws -> RecoveryEntry {
+        if let gate = removalGate {
+            var unguarded = self; unguarded.removalGate = nil
+            return try gate.writable { try unguarded.save(snapshot, kind: kind, now: now) }
+        }
         Self.lock.lock(); defer { Self.lock.unlock() }
         let backup = WorkspaceBackup.make(snapshot, account: account, now: now)
-        let plaintext = try JSONEncoder().encode(RecoveryPayload(workspace: backup, snapshot: snapshot))
+        let plaintext = try TaskfoldJSONEncoder().encode(RecoveryPayload(workspace: backup, snapshot: snapshot))
         guard plaintext.count <= WorkspaceBackup.maximumBytes else { throw BackupFailure(message: "This recovery backup exceeds the 256 MB limit.") }
         let sealed = try AES.GCM.seal(plaintext, using: key())
         guard let data = sealed.combined else { throw BackupFailure(message: "Could not encrypt the recovery backup.") }
@@ -432,7 +526,7 @@ struct BackupVault: Sendable {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try data.write(to: file(entry), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         let kept = Array(list.prefix(max(1, retention)))
-        do { try JSONEncoder().encode(kept).write(to: directory.appendingPathComponent("index.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
+        do { try TaskfoldJSONEncoder().encode(kept).write(to: directory.appendingPathComponent("index.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
         catch { try? FileManager.default.removeItem(at: file(entry)); throw error }
         for old in list.dropFirst(kept.count) { try? FileManager.default.removeItem(at: file(old)) }
         return entry
@@ -443,15 +537,35 @@ struct BackupVault: Sendable {
         guard data.count <= WorkspaceBackup.maximumBytes + 1024 else { throw BackupFailure(message: "The recovery file is too large.") }
         do {
             let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key())
-            let payload = try JSONDecoder().decode(RecoveryPayload.self, from: plain)
+            let payload = try TaskfoldJSONDecoder().decode(RecoveryPayload.self, from: plain)
             guard payload.workspace.sourceAccount == account else { throw BackupFailure(message: "This recovery file belongs to another workspace.") }
             try payload.workspace.validate(); return payload
         } catch let error as BackupFailure { throw error }
         catch { throw BackupFailure(message: "This recovery backup is damaged or its device key is unavailable.") }
     }
     func file(_ entry: RecoveryEntry) -> URL { directory.appendingPathComponent(entry.id.uuidString.lowercased() + ".taskfoldbackup") }
+    /// Called after the deletion tombstone; delayed saves cannot recreate this vault.
+    func removeAll() throws {
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
+    }
+    private static func deviceKeyQuery(account: String) -> [String: Any] {
+        var service = "com.taskfold.recovery.v1"
+        #if DEBUG && !SWIFT_PACKAGE
+        if FullSchemaNativeFixture.protectedStorageRequested {
+            service = FullSchemaNativeFixture.keychainService("backup")
+        }
+        #endif
+        return [kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service, kSecAttrAccount as String: account]
+    }
+    static func removeDeviceKey(account: String) throws {
+        let query = deviceKeyQuery(account: account)
+        let status = SecItemDelete(query as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw BackupFailure(message: "The account was removed, but its device backup key still needs cleanup. Unlock this device and retry removal.") }
+    }
     static func deviceKey(account: String) throws -> SymmetricKey {
-        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.taskfold.recovery.v1", kSecAttrAccount as String: account]
+        let query = deviceKeyQuery(account: account)
         var read = query; read[kSecReturnData as String] = true
         var result: CFTypeRef?
         let status = SecItemCopyMatching(read as CFDictionary, &result)
@@ -463,4 +577,611 @@ struct BackupVault: Sendable {
         if saved == errSecDuplicateItem { return try deviceKey(account: account) }
         guard saved == errSecSuccess else { throw BackupFailure(message: "Could not securely save the backup key.") }; return key
     }
+}
+
+/// One external read. Cancellation can interrupt provider coordination; if reading
+/// has already started, its eventual result is discarded before reaching the UI.
+final class BackupFileReadOperation: @unchecked Sendable {
+    private static var unavailableFile: BackupFailure {
+        BackupFailure(message: "The backup could not be opened. Make sure the file is downloaded and available, then choose it again. Your current work is unchanged.")
+    }
+    private let coordinator = NSFileCoordinator()
+    private let lock = NSLock()
+    private var cancelled = false
+
+    func cancel() {
+        lock.lock(); cancelled = true; lock.unlock()
+        coordinator.cancel()
+    }
+
+    private func checkCancellation() throws {
+        lock.lock(); let stopped = cancelled; lock.unlock()
+        if stopped { throw CocoaError(.userCancelled) }
+    }
+
+    func read(_ url: URL) throws -> WorkspaceBackup {
+        try checkCancellation()
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        #if DEBUG
+        let heldPresenter = BackupReadTestPresenter.installIfRequested(url)
+        defer { heldPresenter?.stop() }
+        #endif
+        var coordinationError: NSError?
+        var result: Result<WorkspaceBackup, Error>?
+        coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
+            result = Result {
+                try self.checkCancellation()
+                let bytes: Data
+                do {
+                    let size = try readableURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+                    guard size <= WorkspaceBackup.maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
+                    bytes = try Data(contentsOf: readableURL)
+                } catch let failure as BackupFailure {
+                    throw failure
+                } catch {
+                    // Coordination may succeed before the provider supplies readable bytes.
+                    throw Self.unavailableFile
+                }
+                return try WorkspaceBackup.read(bytes)
+            }
+        }
+        try checkCancellation()
+        if let coordinationError {
+            if coordinationError.domain == NSCocoaErrorDomain && coordinationError.code == NSUserCancelledError {
+                throw coordinationError
+            }
+            throw Self.unavailableFile
+        }
+        guard let result else { throw BackupFailure(message: "The backup could not be opened. Choose the file again.") }
+        return try result.get()
+    }
+}
+
+#if DEBUG
+/// Deterministic native test only: hold or fail the first coordinated provider read.
+/// Production identifiers and ordinary debug launches never install this presenter.
+private final class BackupReadTestPresenter: NSObject, NSFilePresenter {
+    private static let gate = NSLock()
+    private static var used = false
+    static func installIfRequested(_ url: URL) -> BackupReadTestPresenter? {
+        guard ["com.dbakp.taskfold.backupcanceltests", "com.dbakp.taskfold.mac.backupcanceltests"].contains(Bundle.main.bundleIdentifier ?? ""),
+              (ProcessInfo.processInfo.arguments.contains("--backup-provider-wait-testing") ||
+               ProcessInfo.processInfo.arguments.contains("--backup-provider-failure-testing")) else { return nil }
+        gate.lock(); defer { gate.unlock() }
+        guard !used else { return nil }
+        used = true
+        let presenter = BackupReadTestPresenter(url: url)
+        NSFileCoordinator.addFilePresenter(presenter)
+        return presenter
+    }
+    let presentedItemURL: URL?
+    let presentedItemOperationQueue = OperationQueue()
+    private let lock = NSLock()
+    private var completions: [(Error?) -> Void] = []
+    private var stopped = false
+    init(url: URL) {
+        presentedItemURL = url
+        presentedItemOperationQueue.maxConcurrentOperationCount = 1
+    }
+    func savePresentedItemChanges(completionHandler: @escaping (Error?) -> Void) {
+        if ProcessInfo.processInfo.arguments.contains("--backup-provider-failure-testing") {
+            completionHandler(URLError(.notConnectedToInternet))
+            return
+        }
+        lock.lock()
+        let finish = stopped
+        if !finish { completions.append(completionHandler) }
+        lock.unlock()
+        if finish { completionHandler(nil) }
+    }
+    func stop() {
+        lock.lock(); stopped = true
+        let callbacks = completions; completions = []
+        lock.unlock()
+        callbacks.forEach { $0(nil) }
+        NSFileCoordinator.removeFilePresenter(self)
+    }
+}
+#endif
+
+/// Bind document-picker events to the request and workspace that opened it.
+/// Providers may select after dismissal, or call back after a newer picker opens.
+struct BackupPickerSession {
+    struct Request: Identifiable, Equatable {
+        let id = UUID()
+        let workspace: UUID
+    }
+    struct Selection {
+        let url: URL
+        let workspace: UUID
+    }
+    private(set) var request: Request?
+    private var selected: URL?
+    private var closed = false
+    private var delivered = false
+
+    mutating func begin(workspace: UUID) -> Request {
+        let next = Request(workspace: workspace)
+        request = next; selected = nil; closed = false; delivered = false
+        return next
+    }
+    func accepts(_ candidate: Request, workspace: UUID) -> Bool {
+        request == candidate && candidate.workspace == workspace && !delivered
+    }
+    mutating func select(_ url: URL, for candidate: Request, workspace: UUID) -> Selection? {
+        guard accepts(candidate, workspace: workspace), selected == nil else { return nil }
+        selected = url
+        return takeSelection()
+    }
+    mutating func close(_ candidate: Request, workspace: UUID) -> Selection? {
+        guard accepts(candidate, workspace: workspace) else { return nil }
+        closed = true
+        return takeSelection()
+    }
+    mutating func cancel(_ candidate: Request) {
+        guard request == candidate else { return }
+        request = nil; selected = nil; closed = false; delivered = false
+    }
+    private mutating func takeSelection() -> Selection? {
+        guard closed, let selected, let request, !delivered else { return nil }
+        delivered = true
+        return Selection(url: selected, workspace: request.workspace)
+    }
+}
+
+
+struct PreservedWorkspaceFile: Identifiable, Sendable {
+    let id: UUID
+    let createdAt: Date
+}
+private struct PreservedWorkspacePayload: Codable {
+    let version: Int
+    let account: String
+    let digest: String
+    let original: Data
+}
+
+extension BackupVault {
+    private var preservedDirectory: URL { directory.appendingPathComponent("Preserved workspaces", isDirectory: true) }
+    func preservedFile(_ id: UUID) -> URL { preservedDirectory.appendingPathComponent(id.uuidString.lowercased() + ".taskfoldraw") }
+    private static func digest(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
+    private static func boundedFile(_ file: URL, limit: Int) throws -> Data {
+        let fd = Darwin.open(file.path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
+        guard fd >= 0 else { throw BackupFailure(message: "This file cannot be safely opened. The original is unchanged.") }
+        let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true); defer { try? handle.close() }
+        var info = stat()
+        guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_size >= 0, info.st_size <= limit else {
+            throw BackupFailure(message: "This file cannot be safely preserved. The original is unchanged.")
+        }
+        var data = Data()
+        while data.count <= limit {
+            let chunk = try handle.read(upToCount: min(1_048_576, limit + 1 - data.count)) ?? Data()
+            if chunk.isEmpty { break }
+            data.append(chunk)
+        }
+        guard data.count <= limit, data.count == info.st_size else { throw BackupFailure(message: "This file changed or exceeds the recovery limit. The original is unchanged.") }
+        return data
+    }
+    /// A review fingerprint also prevents replacing a file changed by a later writer.
+    func unreadableFingerprint(_ source: URL) throws -> String {
+        let data = try Self.boundedFile(source, limit: WorkspaceBackup.maximumBytes)
+        guard (try? TaskfoldJSONDecoder().decode(Snapshot.self, from: data)) == nil else {
+            throw BackupFailure(message: "The saved workspace is readable now. Reopen it before making changes.")
+        }
+        return Self.digest(data)
+    }
+    func preservedFiles() throws -> [PreservedWorkspaceFile] {
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        guard FileManager.default.fileExists(atPath: preservedDirectory.path) else { return [] }
+        let files = try FileManager.default.contentsOfDirectory(at: preservedDirectory, includingPropertiesForKeys: [.creationDateKey])
+        guard files.count <= 2000 else { throw BackupFailure(message: "There are too many preserved files to list. Your files are kept.") }
+        return try files.compactMap { file in
+            guard file.pathExtension == "taskfoldraw", let id = UUID(uuidString: file.deletingPathExtension().lastPathComponent) else { return nil }
+            return PreservedWorkspaceFile(id: id, createdAt: try file.resourceValues(forKeys: [.creationDateKey]).creationDate ?? .distantPast)
+        }.sorted { $0.createdAt > $1.createdAt }
+    }
+    func preservedBytes(_ id: UUID) throws -> Data {
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        let data = try Self.boundedFile(preservedFile(id), limit: WorkspaceBackup.maximumBytes * 2)
+        let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key())
+        let payload = try TaskfoldJSONDecoder().decode(PreservedWorkspacePayload.self, from: plain)
+        guard payload.version == 1, payload.account == account, payload.original.count <= WorkspaceBackup.maximumBytes,
+              payload.digest == Self.digest(payload.original) else { throw BackupFailure(message: "This preserved file does not belong to this workspace or is damaged.") }
+        return payload.original
+    }
+    /// Explicit repair only: verify an encrypted byte-for-byte copy before replacing
+    /// the unreadable cache. Separate retention means daily copies cannot evict it.
+    func preserveAndReopen(_ source: URL, expectedDigest: String) throws -> PreservedWorkspaceFile {
+        guard source.lastPathComponent == account + ".json" else { throw CancellationError() }
+        // Ask Keychain before taking the account-removal lock.
+        let secret = try key()
+        if let gate = removalGate {
+            guard gate.account == account, source.standardizedFileURL == gate.cache.standardizedFileURL else { throw CancellationError() }
+            var unguarded = self; unguarded.removalGate = nil; unguarded.key = { secret }
+            return try gate.writable { try unguarded.preserveAndReopen(source, expectedDigest: expectedDigest) }
+        }
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        guard try unreadableFingerprint(source) == expectedDigest else { throw BackupFailure(message: "The saved file changed. Reopen recovery and review it again. The original is unchanged.") }
+        let original = try Self.boundedFile(source, limit: WorkspaceBackup.maximumBytes)
+        guard Self.digest(original) == expectedDigest else { throw CancellationError() }
+        let payload = PreservedWorkspacePayload(version: 1, account: account, digest: expectedDigest, original: original)
+        let sealed = try AES.GCM.seal(TaskfoldJSONEncoder().encode(payload), using: secret)
+        guard let bytes = sealed.combined else { throw BackupFailure(message: "The original file could not be encrypted. It is unchanged.") }
+        let entry = PreservedWorkspaceFile(id: UUID(), createdAt: Date())
+        try FileManager.default.createDirectory(at: preservedDirectory, withIntermediateDirectories: true)
+        try bytes.write(to: preservedFile(entry.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        var verifier = self; verifier.key = { secret }
+        guard try verifier.preservedBytes(entry.id) == original,
+              try Self.boundedFile(source, limit: WorkspaceBackup.maximumBytes) == original else { throw BackupFailure(message: "The original changed during recovery. Both files are kept; reopen recovery to try again.") }
+        // No cloud mutations or queue replay are inferred from malformed bytes.
+        try TaskfoldJSONEncoder().encode(Snapshot()).write(to: source, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        return entry
+    }
+}
+
+/// A device-private editor checkpoint, never an instruction to modify its source.
+struct TaskEditorRecovery: Codable, Equatable, Sendable {
+    let version: Int
+    let id: UUID
+    let revision: UInt64
+    let account: String
+    let origin: String?
+    let createdAt: Date
+    let original: Record
+    let draft: Record
+    let extras: [String: JSON]
+    let labels: [Record]
+    init(id: UUID = UUID(), revision: UInt64 = 1, account: String, origin: String?, original: Record, draft: Record, extras: [String: JSON] = [:], labels: [Record] = [], now: Date = Date()) throws {
+        self.version=1;self.id=id;self.revision=revision;self.account=account;self.origin=origin;self.original=original;self.draft=draft;self.extras=extras;self.labels=labels;createdAt=now
+        try validate()
+    }
+    func validate() throws {
+        guard version==1, revision>0, revision<=9_007_199_254_740_991, !account.isEmpty, account.count<=200, !draft.id.isEmpty, original.id==draft.id, createdAt.timeIntervalSince1970.isFinite else {throw BackupFailure(message:"This saved edit needs a supported Taskfold version. Its original is kept.")}
+        if let source = extras["original_child_fields"] {
+            guard let projection = try? source.fieldEditingProjection(),
+                  AuthoredValueComparison.exactJSON(.object(projection), .object(original.fields)) else {
+                throw BackupFailure(message: "This saved edit does not match its original task fields. Its original is kept.")
+            }
+        }
+        if let origin {
+            guard let url=URLComponents(string:origin),url.scheme=="https",url.host?.isEmpty==false,url.user==nil,url.password==nil,url.path.isEmpty,url.query==nil,url.fragment==nil else {throw BackupFailure(message:"This saved edit has an invalid workspace address.")}
+        }
+    }
+    static func requireNewTaskPlan(_ plan: RestorePlan) throws {
+        guard plan.added==1,plan.updated==0,plan.kept==0,plan.changes.count==1,
+              let change=plan.changes.first,change.table=="tasks",change.method=="POST",change.insertOnly==true,
+              change.fields["project_id"] == nil || change.fields["project_id"] == .null,
+              change.fields["assigned_to"] == nil || change.fields["assigned_to"] == .null else {
+            throw BackupFailure(message:"This recovery must create one new Inbox task. Existing tasks will not be replaced. Your original edit is kept.")
+        }
+    }
+    var copyID: String {WorkspaceBackup.stableID("editor-recovery-copy",id.uuidString.lowercased())}
+    static let copyNotice="Recover as a separate Inbox task. The shared original is never changed. Assignments, reminders, shared history, pins, project links and unsupported fields are not replayed; the full original edit remains encrypted on this device. Remote attachments may still require their original access."
+    /// Review creates one independent task with stable identities; existing rows
+    /// are never updated, even if a recovery identifier unexpectedly collides.
+    func copyBackup(current: Snapshot) throws -> WorkspaceBackup {
+        try validate()
+        guard ![original.id.lowercased(),draft.id.lowercased()].contains(copyID), !(current.tables["tasks"] ?? []).contains(where:{$0.id.lowercased()==copyID}) else {throw BackupFailure(message:"A task with this recovery identity is already present. It has not been changed; your saved edit is kept.")}
+        let fields: Set<String>=["is_heading","title","description","completed","priority","due_date","due_time","time_zone","deadline_date","duration_minutes","attachments","labels","subtasks"]
+        let off=JSON.array([.object(ReminderSpec.relative(0,id:ReminderSpec.plannedID,enabled:false).raw)])
+        var count=0
+        func clean(_ source: Record, path: String, depth: Int) throws -> Record {
+            count+=1
+            guard depth<=SubtaskTree.maximumDepth,count<=10000 else {throw BackupFailure(message:"This saved edit is too large for an Inbox copy in this version. The full original is kept for export.")}
+            guard TaskKind(source) != .unsupported else { throw BackupFailure(message: "This saved task type needs a supported editor. The full original is kept for export.") }
+            var row=Record(source.fields.filter{fields.contains($0.key)})
+            row["id"] = .string(depth==0 ? copyID:WorkspaceBackup.stableID(id.uuidString.lowercased(),"child:"+path))
+            row["assigned_to"] = .null;row["reminders"] = .array([]);row["reminder_specs"] = off
+            row["labels"] = .array(source["labels"].list.compactMap { value in
+                let name=labels.first{$0.id==value.text || $0.name==value.text}?.name ?? (UUID(uuidString:value.text)==nil ? value.text:"")
+                return name.isEmpty ? nil:.string(name)
+            })
+            row["subtasks"] = .array(try source["subtasks"].list.enumerated().map { index,value in
+                let child:Record
+                switch value {
+                case .string(let title):child=Record(["title":.string(title),"completed":.bool(false)])
+                case .object(let fields):child=Record(fields)
+                default:throw BackupFailure(message:"A checklist item cannot be copied in this version. The original edit is kept for export.")
+                }
+                guard case .string = child["title"] else {throw BackupFailure(message:"A checklist item needs repair before it can be copied. The original edit is kept.")}
+                return .object(try clean(child,path:path+"/"+String(index),depth:depth+1).fields)
+            })
+            return row
+        }
+        var task=Record.task(user:account)
+        for (key,value) in try clean(draft,path:"",depth:0).fields {task[key]=value}
+        task["title"] = .string(draft.title.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty ? "Recovered task edit":draft.title)
+        task["project_id"] = .null;task["section_id"] = .null;task["completed"] = .bool(false);task["completed_at"] = .null
+        task["created_at"] = .string(ISO8601DateFormatter().string(from:createdAt))
+        task["task_generation"] = .string(WorkspaceBackup.stableID("editor-recovery-generation",id.uuidString.lowercased()))
+        task["source_metadata"] = .object(["editor_recovery_v1":.string(id.uuidString.lowercased())])
+        // Preserve authored recurrence, but never its old server bookkeeping.
+        for key in ["is_recurring","recurrence_pattern","recurrence_end_date"] where draft.fields[key] != nil {task[key]=draft[key]}
+        let backup=WorkspaceBackup.make(Snapshot(tables:["tasks":[task]]),account:account,now:createdAt)
+        try backup.validate()
+        return backup
+    }
+}
+
+extension BackupVault {
+    private static var closedEditorSessions = Set<String>()
+    private func editorClosureKey(_ id: UUID) -> String {directory.standardizedFileURL.path+"/"+account+"/"+id.uuidString}
+    func closeEditorDraft(_ id: UUID) throws {
+        if let gate=removalGate {
+            var unguarded=self;unguarded.removalGate=nil
+            // Removal already deletes this vault and blocks every late writer.
+            if gate.removed {return}
+            return try gate.writable {try unguarded.closeEditorDraft(id)}
+        }
+        Self.lock.lock();defer {Self.lock.unlock()}
+        Self.closedEditorSessions.insert(editorClosureKey(id))
+        let file=editorFile(id)
+        if FileManager.default.fileExists(atPath:file.path) {try FileManager.default.removeItem(at:file)}
+    }
+    private var editorDirectory: URL {directory.appendingPathComponent("Unsent task edits",isDirectory:true)}
+    func editorFile(_ id: UUID) -> URL {editorDirectory.appendingPathComponent(id.uuidString.lowercased()+".taskfoldedit")}
+    func editorEntries() throws -> [PreservedWorkspaceFile] {
+        Self.lock.lock();defer {Self.lock.unlock()}
+        guard FileManager.default.fileExists(atPath:editorDirectory.path) else {return []}
+        let files=try FileManager.default.contentsOfDirectory(at:editorDirectory,includingPropertiesForKeys:[.contentModificationDateKey])
+        guard files.filter({$0.pathExtension=="taskfoldedit"}).count<=2000 else {throw BackupFailure(message:"There are too many saved edits to list. All originals are kept.")}
+        return try files.compactMap {file in
+            guard file.pathExtension=="taskfoldedit",let id=UUID(uuidString:file.deletingPathExtension().lastPathComponent) else {return nil}
+            return PreservedWorkspaceFile(id:id,createdAt:try file.resourceValues(forKeys:[.contentModificationDateKey]).contentModificationDate ?? .distantPast)
+        }.sorted{$0.createdAt>$1.createdAt}
+    }
+    func editorDraft(_ id: UUID, origin: String?) throws -> TaskEditorRecovery {
+        if let gate=removalGate {
+            guard gate.account==account else {throw CancellationError()}
+            var unguarded=self;unguarded.removalGate=nil
+            return try gate.writable {try unguarded.editorDraft(id,origin:origin)}
+        }
+        Self.lock.lock();defer {Self.lock.unlock()}
+        do {
+            let ciphertext=try Self.boundedFile(editorFile(id),limit:WorkspaceBackup.maximumBytes+1024)
+            let data=try AES.GCM.open(AES.GCM.SealedBox(combined:ciphertext),using:key())
+            let value=try TaskfoldJSONDecoder().decode(TaskEditorRecovery.self,from:data)
+            try value.validate()
+            guard value.id==id,value.account==account,value.origin==origin else {throw BackupFailure(message:"This edit belongs to another workspace. Its original is kept.")}
+            return value
+        } catch let error as BackupFailure {throw error}
+        catch {throw BackupFailure(message:"This saved edit is damaged or its device key is unavailable. Its original file is kept.")}
+    }
+    func saveEditorDraft(_ value: TaskEditorRecovery) throws {
+        try value.validate()
+        guard value.account==account else {throw BackupFailure(message:"This edit belongs to another account.")}
+        if let gate=removalGate {
+            guard gate.account==account else {throw CancellationError()}
+            var unguarded=self;unguarded.removalGate=nil
+            return try gate.writable {try unguarded.saveEditorDraft(value)}
+        }
+        Self.lock.lock();defer {Self.lock.unlock()}
+        guard !Self.closedEditorSessions.contains(editorClosureKey(value.id)) else {return}
+        let secret=try key()
+        var verifier=self;verifier.key={secret}
+        if FileManager.default.fileExists(atPath:editorFile(value.id).path) {
+            let saved=try verifier.editorDraft(value.id,origin:value.origin)
+            guard saved.original.id==value.original.id, saved.original["task_generation"]==value.original["task_generation"], saved.original["project_id"]==value.original["project_id"], saved.extras["source_identity"]==value.extras["source_identity"] else {throw BackupFailure(message:"This saved edit belongs to a different task version. Its original is kept.")}
+            guard saved.revision<=value.revision else {return} // A delayed older save cannot replace newer work.
+            if saved.revision==value.revision {
+                guard saved==value else {throw BackupFailure(message:"Two versions of this edit need review. The saved original is unchanged.")}
+                return
+            }
+        }
+        let plaintext=try TaskfoldJSONEncoder().encode(value)
+        guard plaintext.count<=WorkspaceBackup.maximumBytes else {throw BackupFailure(message:"This edit exceeds the 256 MB recovery limit. Keep this window open.")}
+        guard let ciphertext=try AES.GCM.seal(plaintext,using:secret).combined else {throw BackupFailure(message:"This edit could not be encrypted. Keep this window open.")}
+        try FileManager.default.createDirectory(at:editorDirectory,withIntermediateDirectories:true)
+        let staging=editorDirectory.appendingPathComponent("staging-"+UUID().uuidString.lowercased()+".taskfoldstage")
+        defer {try? FileManager.default.removeItem(at:staging)}
+        try ciphertext.write(to:staging,options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
+        let persisted=try Self.boundedFile(staging,limit:WorkspaceBackup.maximumBytes+1024)
+        let verified=try TaskfoldJSONDecoder().decode(TaskEditorRecovery.self,from:AES.GCM.open(AES.GCM.SealedBox(combined:persisted),using:secret))
+        guard verified==value else {throw BackupFailure(message:"The saved edit could not be verified. Keep this window open.")}
+        guard Darwin.rename(staging.path,editorFile(value.id).path)==0 else {throw BackupFailure(message:"The verified edit could not replace its previous version. Keep this window open and retry.")}
+    }
+}
+
+
+/// The Store retains these sessions after their views disappear. Background
+/// checkpoints may finish out of order; vault revisions and closure fences make
+/// that safe. Quit can synchronously verify any still-unwritten checkpoint.
+@MainActor @Observable final class TaskEditorSession {
+    let id = UUID()
+    let vault: BackupVault
+    let account: String
+    let origin: String?
+    let original: Record
+    let labels: [Record]
+    private let exactOriginalFields: JSON?
+    private(set) var latest: TaskEditorRecovery?
+    private(set) var savedRevision: UInt64 = 0
+    private(set) var failure: String?
+    private(set) var closed = false
+    private var writing = false
+    private var captureFailed = false
+    private var revision: UInt64 = 0
+    private let createdAt = Date()
+    init(vault: BackupVault, origin: String?, original: Record, labels: [Record], exactOriginalFields: JSON? = nil) {
+        self.vault=vault;account=vault.account;self.origin=origin;self.original=original;self.labels=labels;self.exactOriginalFields=exactOriginalFields
+    }
+    var preserved: Bool {!captureFailed && latest != nil && savedRevision == latest?.revision}
+    func capture(_ draft: Record, extras: [String:JSON]) {
+        guard !closed else {return}
+        var extras = extras
+        // Bind the full original to this session, including across refreshed reads.
+        if let exactOriginalFields { extras["original_child_fields"] = exactOriginalFields }
+        // Semantic equality is only a fast negative check: Swift Strings compare
+        // canonically equivalent Unicode as equal. A different authored spelling
+        // must still advance the revision and fence an earlier async checkpoint.
+        if let latest, latest.draft == draft, latest.extras == extras,
+           AuthoredValueComparison.exactJSON(.object(latest.draft.fields), .object(draft.fields)),
+           AuthoredValueComparison.exactJSON(.object(latest.extras), .object(extras)) {return}
+        revision += 1
+        do {
+            let value=try TaskEditorRecovery(id:id,revision:revision,account:account,origin:origin,original:original,draft:draft,extras:extras,labels:labels,now:createdAt)
+            latest=value;failure=nil;captureFailed=false
+            guard !writing else {return}
+            writing=true
+            Task {
+                defer {writing=false}
+                while !closed,let value=latest,value.revision>savedRevision {
+                    let vault=self.vault
+                    do {
+                        try await Task.detached(priority:.utility) {try vault.saveEditorDraft(value)}.value
+                        guard !closed else {return}
+                        savedRevision=max(savedRevision,value.revision)
+                        if latest?.revision==value.revision {failure=nil}
+                    } catch {
+                        guard !closed else {return}
+                        if latest?.revision==value.revision {failure="Your edit could not be preserved. Keep this window open and retry.";return}
+                    }
+                }
+            }
+        } catch {captureFailed=true;failure=error.localizedDescription}
+    }
+    @discardableResult func flush() -> Bool {
+        if closed {return true}
+        if vault.removalGate?.removed==true {_=finish();return true}
+        guard !captureFailed else {return false}
+        guard let latest else {return true}
+        do {try vault.saveEditorDraft(latest);savedRevision=latest.revision;failure=nil;return true}
+        catch {failure="Your edit could not be preserved. Keep this window open and retry.";return false}
+    }
+    /// An asynchronous save may only retire the exact draft revision it captured.
+    @discardableResult func finish(ifRevision revision: UInt64?) -> Bool {
+        guard !closed else {return true}
+        guard latest?.revision == revision else {return false}
+        return finish()
+    }
+    @discardableResult func finish() -> Bool {
+        guard !closed else {return true}
+        do {try vault.closeEditorDraft(id);closed=true;latest=nil;failure=nil;return true}
+        catch {failure="The saved draft still needs cleanup. Its original is kept.";return false}
+    }
+}
+
+/// Access follows the persisted root, while recovery keeps only the entity the
+/// user was editing. A captured child path never retargets a moved sibling.
+struct TaskEditorSourceContext: Equatable, Sendable {
+    let record: Record
+    let root: Record?
+    private let path: [String]?
+    private let invalid: Bool
+    init(record: Record, root: Record?) {
+        self.record=record;self.root=root
+        guard let root else {path=nil;invalid=false;return}
+        if record.id==root.id {path=[];invalid=false;return}
+        if let reference=SubtaskTree.referencePath(record.id) {
+            path=Array(reference.dropFirst())
+            invalid=reference.first != root.id || Self.node(root,path:path!)==nil
+        } else {
+            let paths=Self.paths(root,id:record.id)
+            path=paths.count==1 ? paths[0]:nil
+            invalid=paths.count>1
+        }
+    }
+    var persistedSelection: Bool {root != nil && !invalid && path != nil}
+    var identity: JSON {.object(["root":.string(root?.id ?? record.id),"root_generation":root?["task_generation"] ?? record["task_generation"],"project":root?["project_id"] ?? record["project_id"],"path":path.map{.array($0.map(JSON.string))} ?? .null])}
+    func matches(_ current: Record?) -> Bool {
+        guard !invalid else {return false}
+        guard let root else {return true} // A new local draft has no persisted root.
+        guard let current,current.id==root.id,current["task_generation"]==root["task_generation"],current["project_id"]==root["project_id"],current["user_id"]==root["user_id"] else {return false}
+        guard let path else {return Self.paths(current,id:record.id).isEmpty}
+        if path.isEmpty {return true}
+        guard let before=Self.node(root,path:path),let live=Self.node(current,path:path) else {return false}
+        // UUIDs alone cannot authorize a replacement with a new incarnation.
+        for key in ["created_at","task_generation"] where before[key] != .null {if live[key] != before[key] {return false}}
+        return true
+    }
+    static func projection(_ root: Record, reference: String) -> Record? {
+        if reference==root.id {return root}
+        let path: [String]
+        if let reference=SubtaskTree.referencePath(reference) {
+            guard reference.first==root.id else {return nil};path=Array(reference.dropFirst())
+        } else {
+            let paths=paths(root,id:reference);guard paths.count==1 else {return nil};path=paths[0]
+        }
+        guard var child=node(root,path:path) else {return nil}
+        child["id"] = .string(reference)
+        for key in ["project_id","section_id","user_id","task_generation"] {child[key]=root[key]}
+        return child
+    }
+    private static func node(_ root: Record,path:[String]) -> Record? {
+        guard path.count<=SubtaskTree.readableDepth else {return nil}
+        var current=root
+        for key in path {
+            let matches=current["subtasks"].list.enumerated().filter{SubtaskTree.childKey($0.element,index:$0.offset)==key}
+            guard matches.count==1,case .object(let fields)=matches[0].element else {return nil}
+            current=Record(fields)
+        }
+        return current
+    }
+    private static func paths(_ root:Record,id:String) -> [[String]] {
+        var found:[[String]]=[],visited=0
+        func visit(_ record:Record,_ path:[String]) {
+            guard path.count<SubtaskTree.readableDepth,found.count<2,visited<100000 else {return}
+            for (index,value) in record["subtasks"].list.enumerated() {
+                visited+=1;guard case .object(let fields)=value else {continue}
+                let child=Record(fields),next=path+[SubtaskTree.childKey(value,index:index)]
+                if child.id==id {found.append(next)}
+                visit(child,next)
+            }
+        }
+        visit(root,[])
+        // Oversized trees refuse admission rather than treating an unvisited
+        // persisted node as a new draft.
+        if visited>=100000 {return [[],[]]}
+        return found
+    }
+}
+
+/// Captured at the opening action, before SwiftUI can defer presentation.
+/// This value is a client preflight; current Store/service permissions still apply.
+struct TaskEditorAdmission: Equatable, Sendable {
+    enum Kind: Equatable, Sendable { case existing, new, nested }
+    let workspace: WorkspaceBinding
+    let source: TaskEditorSourceContext
+    let kind: Kind
+    let teamDraft: TeamTaskEditorDraft?
+    private let validAtOpening: Bool
+    init(workspace: WorkspaceBinding, record: Record, root: Record?, kind: Kind, teamDraft: TeamTaskEditorDraft? = nil) {
+        self.workspace=workspace;self.kind=kind;self.teamDraft=teamDraft;let context=TaskEditorSourceContext(record:record,root:root);source=context
+        let sourceValid: Bool
+        switch kind {
+        case .existing:
+            sourceValid=root.map { root in
+                context.persistedSelection && record["task_generation"]==root["task_generation"] && record["project_id"]==root["project_id"] && record["user_id"]==root["user_id"]
+            } ?? false
+        case .new: sourceValid=root==nil && record.string("user_id")==workspace.account && !record.id.isEmpty
+        case .nested: sourceValid=root != nil || record.string("user_id").isEmpty || record.string("user_id")==workspace.account
+        }
+        // Secondary sheets inherit the opening authority; they cannot attach
+        // another task's or workspace's captured team context.
+        let teamValid = teamDraft.map { draft in
+            guard draft.workspace == workspace else { return false }
+            if draft.kind == .creation {
+                return kind != .existing && root == nil && ["id", "user_id", "project_id", "task_generation"].allSatisfy { record[$0] == draft.source[$0] }
+            }
+            return kind != .new && root.map { row in
+                ["id", "user_id", "project_id", "task_generation"].allSatisfy { row[$0] == draft.source[$0] }
+            } == true
+        } ?? true
+        validAtOpening = sourceValid && teamValid
+    }
+    var rootID: String {source.root?.id ?? source.record.id}
+    func matches(account:String,generation:UUID,currentRoot:Record?) -> Bool {
+        guard validAtOpening,workspace.matches(account:account,generation:generation) else {return false}
+        if source.root==nil {return kind != .existing && currentRoot==nil}
+        return source.matches(currentRoot)
+    }
+}
+
+
+/// One sheet item carries the record and its captured admission atomically.
+struct TaskEditorOpening: Identifiable, Equatable, Sendable {
+    let task: Record
+    let admission: TaskEditorAdmission
+    var id: String {task.id}
 }

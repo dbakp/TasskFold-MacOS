@@ -1,0 +1,13 @@
+{
+  "reviewed": "2026-11-05",
+  "owner": "TasskFold-MacOS",
+  "iphoneChecks": 17,
+  "iphoneNativeAccepted": true,
+  "macBuildAccepted": true,
+  "macRuntimeAccepted": false,
+  "ordinaryGatesChanged": false,
+  "hostedChanges": false,
+  "cleanupTestsPerRepository": 8,
+  "cacheBudgetMiB": 768,
+  "installedAppsReplaced": false
+}

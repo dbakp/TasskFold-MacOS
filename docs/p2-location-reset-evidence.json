@@ -1,0 +1,387 @@
+{
+  "milestone": "Recoverable whole-installation private location reset",
+  "date": "2026-10-22",
+  "repository": "TasskFold-MacOS",
+  "status": "Implemented experimental reset/capacity recovery; location and Px acceptance incomplete",
+  "parentCommit": "e4d07a82420da9e1da8889c277be931c8d269964",
+  "sourceSHA256": {
+    "Scripts/fixtures/OldLocationResetReaderTests.swift": "38a508447517aef50dbd207038eaf06deadf1aed901375f75155e6fa61af9602",
+    "Scripts/test_location_reset_old_reader.py": "594319471c47cd369bd0f92d60bda40b68467050dbbff59aef899c04da7187af",
+    "Taskfold/Core/LocationPlaceStore.swift": "18bacf02610bdee4de03e2d6e3eb2a5e6aa31b6feed5cebfd08dbebd867b9f59",
+    "Taskfold/Core/LocationReminders.swift": "7a287bca058a60e04bee14e9c02e01f417f03d9ac7fd02b05d821410363ef6c8",
+    "TaskfoldTests/Fixtures/reset-location.json": "6aee4b9101df5da2da6bd1042a9856708329609abcb37e6b8551d97b7bf127bb",
+    "TaskfoldTests/LocationPlaceStoreTests.swift": "a477b0faae45bbb412b8142dd19be0961944655fc630bcaa5eac06646cfaaed8",
+    "TaskfoldTests/LocationResetRecoveryTests.swift": "df9a65678828376da11aa543d421a340a78a4ab99b838f6a3523afa6be021dd0"
+  },
+  "contracts": {
+    "private": "Archive3 supersedesEarlierInstallations:true only from explicit reset; fresh device identity, places/journal/consent empty. Legacy1/2 preserved; consent updates do not downgrade reset receipt.",
+    "cache": "No snapshot/task/notification format change. Reset receipt lets this account discard other-installation action records while current-identity/other-account records stay. Only the active workspace cache is opened.",
+    "ordering": "Private reset commits first. Current identity and private-directory synchronization verified under writer lock held through atomic cache replacement. Failed cache save leaves receipt for normal hydration/relaunch retry.",
+    "behavior": "Confirmed all-account private setup reset; user task references retained for review; owned location/snooze requests removed, ordinary time/Focus namespaces retained. Old callbacks cannot act under fresh identity. No permissions granted or task command created."
+  },
+  "core": {
+    "reported": 1243,
+    "skipped": 33,
+    "actualPassed": 1210,
+    "failures": 0,
+    "newResetCases": 11,
+    "log": {
+      "file": "location-reset-verified-full-mac.log",
+      "sha256": "f9a51756f71f3bd6f538e4b675e94c6aea55435a9df75ce5247433f8e919c7a8"
+    },
+    "scope": "Durable reset/consent off, golden new-producer-valid archive, legacy/missing/malformed/future refusal, mixed account/device records, stale proof, real private writer-lock race, cache-write refusal/relaunch, both sides of monotonic merge/restore, mutating-response/wrong-account refusal, full2048 action ledger and consent preservation"
+  },
+  "combinedActualCorePassed": 2408,
+  "previousReaders": [
+    {
+      "revision": "6bfb628ef89fc3c837b9d7049eeda1b0469f425c",
+      "oldPrivateSourceSHA256": "fa8e0a914369b8818d74bfa285320e90e152dcc42771778eea02d23f1602dcfc",
+      "payloadSHA256": "6aee4b9101df5da2da6bd1042a9856708329609abcb37e6b8551d97b7bf127bb",
+      "fixtureSHA256": "38a508447517aef50dbd207038eaf06deadf1aed901375f75155e6fa61af9602",
+      "actualPassed": 1,
+      "checks": [
+        "New explicit reset archive refused",
+        "Ordinary consent edit refused without overwriting bytes"
+      ],
+      "scope": "This selected previous committed prototype only; general older-client rollout remains deferred."
+    },
+    {
+      "revision": "e4d07a82420da9e1da8889c277be931c8d269964",
+      "oldPrivateSourceSHA256": "fa8e0a914369b8818d74bfa285320e90e152dcc42771778eea02d23f1602dcfc",
+      "payloadSHA256": "6aee4b9101df5da2da6bd1042a9856708329609abcb37e6b8551d97b7bf127bb",
+      "fixtureSHA256": "38a508447517aef50dbd207038eaf06deadf1aed901375f75155e6fa61af9602",
+      "actualPassed": 1,
+      "checks": [
+        "New explicit reset archive refused",
+        "Ordinary consent edit refused without overwriting bytes"
+      ],
+      "scope": "This selected previous committed prototype only; general older-client rollout remains deferred."
+    }
+  ],
+  "additionalPreviousReaderTests": 2,
+  "nativeIOS": {
+    "repository": "TaskFold-iOS",
+    "bundle": "com.dbakp.taskfold.workflowtestsp1",
+    "results": [
+      {
+        "device": "phone",
+        "bundle": "location-reset-phone-final.xcresult",
+        "actualPassed": 1,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "location-reset-phone-final-summary.json",
+          "sha256": "9a135e261bf4b8fb7dc852e2c456dc9cfe1cdec07278b08c520a4016e0f7f56b"
+        },
+        "log": {
+          "file": "location-reset-phone-final.log",
+          "sha256": "640cbafaac166aea68aa46e8cf072f2ac4b8b622cdae5e1042a7a8057e5563de"
+        },
+        "proofs": [
+          {
+            "label": "Relaunched private reset and stale callback proof_0_F6143F91-F23B-4BD6-AC24-73A485476E38.json",
+            "report": {
+              "checks": {
+                "recoverySavedDurably": true,
+                "taskReferencePreserved": true,
+                "allConsentOff": true,
+                "resetStateExplainsReview": true,
+                "privateJournalCapacityRecovered": true,
+                "oldNativeOpenDenied": true,
+                "oldNativeActionCannotMutate": true,
+                "resetAuthorityStaysPrivate": true,
+                "oldActionHistoryRecoveredOnRelaunch": true,
+                "unrelatedTimeRequestPreserved": true,
+                "oldLocationAndSnoozeRequestsRemoved": true,
+                "allAccountsPlacesRemoved": true,
+                "freshDurableResetAuthority": true
+              },
+              "scope": "Synthetic private reset and task-cache failure/relaunch; actual native time request preservation and snooze removal; controlled old callback inputs, no geofence delivery proof"
+            }
+          },
+          {
+            "label": "Synthetic location responses and real native time snooze proof_0_5CF54E8E-BEAB-475E-A8F4-B733CE01D1D8.json",
+            "report": {
+              "fireAt": 1792673373,
+              "checks": {
+                "tomorrowSaved": true,
+                "completionReplayAfterUndoIgnored": true,
+                "undoRestoredTask": true,
+                "openExactTask": true,
+                "snoozedResponseCreatesNewIntent": true,
+                "bothNativeCategoriesRegistered": true,
+                "realTimeTrigger": true,
+                "snoozedOpenExactTask": true,
+                "routeRevalidated": true,
+                "unknownActionIgnored": true,
+                "oldSnoozeConsumed": true,
+                "completionReceiptSaved": true,
+                "snoozeStateExplainsCurrentAlert": true,
+                "completeSaved": true,
+                "snoozeInstalled": true,
+                "undoRetainsSpentReceipt": true,
+                "differentActionReplayIgnored": true,
+                "laterVisitCanActIndependently": true,
+                "privateActionsRequireAuthentication": true,
+                "snoozeReplayKeepsFireTime": true,
+                "notificationPermission": true,
+                "laterVisitReplayIsRejected": true,
+                "copiedPayloadRejected": true
+              },
+              "source": "la1:3c24a6bd2e897d49010164af074068594e8a3242a3dd88e6acceb6be95a28776",
+              "identifier": "taskfold.ls1.c7abb99bf210269f3cde056f603902adb221596dc96e6858517801227b13d511.snooze",
+              "scope": "Controlled boundary response/delivered-at inputs; actual native one-shot time requests; no region delivery proof",
+              "mode": "every-visit"
+            }
+          }
+        ]
+      },
+      {
+        "device": "ipad",
+        "bundle": "location-reset-ipad-final-v3.xcresult",
+        "actualPassed": 1,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "location-reset-ipad-final-v3-summary.json",
+          "sha256": "826a6ea79bdc052edc7fbb0cf4e5ce22d9cc8aca0dfee1e933cf145688f3698c"
+        },
+        "log": {
+          "file": "location-reset-ipad-final-v3.log",
+          "sha256": "c4790792d3d93ca750f7dbbede3d2c0b0233f4fae01ce699f8a49046490398f1"
+        },
+        "proofs": [
+          {
+            "label": "Relaunched private reset and stale callback proof_0_5B8218A5-8450-4B16-A0F5-905B5E4663D3.json",
+            "report": {
+              "scope": "Synthetic private reset and task-cache failure/relaunch; actual native time request preservation and snooze removal; controlled old callback inputs, no geofence delivery proof",
+              "checks": {
+                "oldLocationAndSnoozeRequestsRemoved": true,
+                "privateJournalCapacityRecovered": true,
+                "allConsentOff": true,
+                "oldNativeOpenDenied": true,
+                "allAccountsPlacesRemoved": true,
+                "resetAuthorityStaysPrivate": true,
+                "oldNativeActionCannotMutate": true,
+                "oldActionHistoryRecoveredOnRelaunch": true,
+                "freshDurableResetAuthority": true,
+                "resetStateExplainsReview": true,
+                "taskReferencePreserved": true,
+                "recoverySavedDurably": true,
+                "unrelatedTimeRequestPreserved": true
+              }
+            }
+          },
+          {
+            "label": "Synthetic location responses and real native time snooze proof_0_279EE19A-5DE5-4C8F-9D2C-62B4491D3E59.json",
+            "report": {
+              "checks": {
+                "tomorrowSaved": true,
+                "privateActionsRequireAuthentication": true,
+                "realTimeTrigger": true,
+                "laterVisitReplayIsRejected": true,
+                "notificationPermission": true,
+                "snoozeReplayKeepsFireTime": true,
+                "snoozedOpenExactTask": true,
+                "differentActionReplayIgnored": true,
+                "copiedPayloadRejected": true,
+                "snoozeInstalled": true,
+                "snoozeStateExplainsCurrentAlert": true,
+                "completeSaved": true,
+                "laterVisitCanActIndependently": true,
+                "completionReplayAfterUndoIgnored": true,
+                "undoRestoredTask": true,
+                "bothNativeCategoriesRegistered": true,
+                "completionReceiptSaved": true,
+                "undoRetainsSpentReceipt": true,
+                "openExactTask": true,
+                "oldSnoozeConsumed": true,
+                "routeRevalidated": true,
+                "unknownActionIgnored": true,
+                "snoozedResponseCreatesNewIntent": true
+              },
+              "source": "la1:44c4386ee7512600e381697e1c639ad5369fd0a5bd9e20d06ba09ff19ac24d50",
+              "fireAt": 1792673793,
+              "identifier": "taskfold.ls1.3768659c8ed7f868b18c055f520bde2d62cb4b73755bcd1e8fcadf401081ca33.snooze",
+              "scope": "Controlled boundary response/delivered-at inputs; actual native one-shot time requests; no region delivery proof",
+              "mode": "every-visit"
+            }
+          }
+        ]
+      }
+    ],
+    "scope": "One actual native UI case per device: initial23 controlled action checks with genuine OS time snoozes, visible reset Cancel/confirmation, injected cache refusal after private reset, held cleanup, normal relaunch and13 reset/recovery checks. Task tables unchanged, two private test accounts cleared, old native snooze requests removed and unrelated time request preserved. Old Open/Complete callbacks are controlled inputs; no geofence delivery or hardware power-loss claim."
+  },
+  "nativeTestSourceNote": "Final iPad test adds form-bound scrolling and waits for the saved setup report. After reset acceptance, the final build adds pin invalidation/refresh on picker dismissal; the separate phone regression exercises Save/Cancel/relaunch on that build. Dedicated reset-from-open-draft UI acceptance remains open.",
+  "pickerRegression": {
+    "actualPassed": 1,
+    "runtimeWarnings": [],
+    "summary": {
+      "file": "location-reset-picker-regression-summary.json",
+      "sha256": "9a9ea34127186c8bd0d897c344b6725b2eabd2f04fb0d7a4dabc82e397732cca"
+    },
+    "log": {
+      "file": "location-reset-picker-regression.log",
+      "sha256": "2f4a5121fa2134bd668d5809bc3f184bdf790a90702e49ecebe44e301af8e783"
+    },
+    "scope": "Final-build repeat picker Save/Cancel/relaunch and retirement Undo/Redo, after adding selected-pin refresh on dismissal. No geofence registration."
+  },
+  "finalBuild": {
+    "result": "TEST BUILD SUCCEEDED",
+    "log": {
+      "file": "location-reset-final-build.log",
+      "sha256": "f65e56b88dbf84c12168c0050589cc57816ad6c580127042b7228a5235a072b0"
+    }
+  },
+  "nativeMac": "No Mac UI/service change. Full independent Core compile/tests verify owned models/private storage. iOS captures copied as iOS evidence only.",
+  "artifacts": [
+    {
+      "file": "docs/location-reset/phone-0.json",
+      "sha256": "d7ea721ccbe8bad1f9328f677908ea279e4a048070f26b7a359f3e81d43d3d1d",
+      "label": "Relaunched private reset and stale callback proof_0_F6143F91-F23B-4BD6-AC24-73A485476E38.json"
+    },
+    {
+      "file": "docs/location-reset/phone-1.json",
+      "sha256": "92de41aedc5540fe295750ffcd95ca6770daf6c3c7caa6e94228975b2d10c614",
+      "label": "Private reset committed before held cache cleanup_0_CFA714D1-F835-4C7D-80EC-CAC9766A7A5C.json"
+    },
+    {
+      "file": "docs/location-reset/phone-2.png",
+      "sha256": "d0879b3cf4619bd9ffa6ac8e0570b2f5163b0343713d7f24ed81d91bee3b19b2",
+      "label": "Private location reset confirmation_0_8E5E8BE4-B4AA-4DD8-AD6F-9658EC2941C9.png"
+    },
+    {
+      "file": "docs/location-reset/phone-3.json",
+      "sha256": "c95ffb05950ea625850bf507b251d90ee792389338f4b05c2fa776b149b0ac6f",
+      "label": "Synthetic location responses and real native time snooze proof_0_5CF54E8E-BEAB-475E-A8F4-B733CE01D1D8.json"
+    },
+    {
+      "file": "docs/location-reset/ipad-0.json",
+      "sha256": "8510adc7969b72b36390805acc71b4f137af1cc6b9ab0539c3378b2d23034f53",
+      "label": "Relaunched private reset and stale callback proof_0_5B8218A5-8450-4B16-A0F5-905B5E4663D3.json"
+    },
+    {
+      "file": "docs/location-reset/ipad-1.json",
+      "sha256": "17c1bac8f1eab2f95b1007d80366fa8e877795447655f065ae761b3897ae1234",
+      "label": "Private reset committed before held cache cleanup_0_E0BEA68D-9D80-4D68-8BB0-E7584DC0B1EE.json"
+    },
+    {
+      "file": "docs/location-reset/ipad-2.png",
+      "sha256": "f9207192d7e5eed4ce3b9c30d31c321b1b9005a4bdf7d753549ad8bfaf0bd0cd",
+      "label": "Private location reset confirmation_0_B1E17CE6-6A91-4F29-B7C8-7B3FA71E8FAC.png"
+    },
+    {
+      "file": "docs/location-reset/ipad-3.json",
+      "sha256": "c9e55c44abe269f43d6a0cdc8154d86c6e24e484c31e41589949706ec568cb41",
+      "label": "Synthetic location responses and real native time snooze proof_0_279EE19A-5DE5-4C8F-9D2C-62B4491D3E59.json"
+    },
+    {
+      "file": "docs/location-reset/phone-picker-0.json",
+      "sha256": "2724db20679def8925d64eade9ac4298f9e81f73531e3f600565adc326e8ad0d",
+      "label": "Closed private intent survives Undo and Redo_0_7B928BB5-178C-440A-8FC0-78ED5FD095A3.json"
+    },
+    {
+      "file": "docs/location-reset/phone-picker-1.json",
+      "sha256": "b102a4fa9b96e994d127cb007830a9c1009ceb0e3464ff8e09dc89c358a3ec94",
+      "label": "Repeated region request codec without native registration_0_F57A151D-91DA-4427-A77A-483964454A5A.json"
+    },
+    {
+      "file": "docs/location-reset/phone-picker-2.png",
+      "sha256": "87c10af4ad18a0268f70b280c5d50351f2b373b571d0ed27f349de1ce6fd6aaa",
+      "label": "Location permission and draft-save explanation_0_48C96895-6CF3-4C24-9E72-FFD006922ABF.png"
+    },
+    {
+      "file": "docs/location-reset/phone-picker-3.png",
+      "sha256": "a4bda0e22ebf9cb7f31cfb654ac297f5b3e01e3c2ea9267da866e3e2e20116d2",
+      "label": "Reviewed departure draft before task Save_0_8858A20A-1976-49C6-8DA5-14BABC856085.png"
+    },
+    {
+      "file": "docs/location-reset/location-reset-old-ios.json",
+      "sha256": "ef76de16b6ca4379e70284c4de598075a1a229898f84f94654a7750962548232"
+    },
+    {
+      "file": "docs/location-reset/location-reset-old-mac.json",
+      "sha256": "8d265df001100980728198cb977246d0d72f3f44b98dd280cb4cdcfe61ef137f"
+    }
+  ],
+  "earlierAttempts": [
+    {
+      "summary": {
+        "file": "location-reset-phone-failed-summary.json",
+        "sha256": "441420eb2fbe2a012900c6617d545114cc6089ed039bcbdaf51039f457d6e051"
+      },
+      "log": {
+        "file": "location-reset-phone.log",
+        "sha256": "9c69b9d9b3094df3acc54ed749054e03f18b59e2356c4b5e83fa7f886c998a33"
+      },
+      "reason": "Fresh install had no Simulator data-container metadata before first launch; test helper now primes only the exact isolated app, then removes only its named ui-testing.json fixture before the real run."
+    },
+    {
+      "summary": {
+        "file": "location-reset-phone-v2-summary.json",
+        "sha256": "e90dc210923400a9bd9ccb1b7522f475d5ec14a0bbd0652bf81dce6f6ae6b1a7"
+      },
+      "log": {
+        "file": "location-reset-phone-v2.log",
+        "sha256": "347688954f764a2a1e2d29130d7f0e8841269400311ff1a63afa2f056af9e9c5"
+      },
+      "reason": "Passed functional flow; final run also verifies the private-directory synchronization required before cache cleanup."
+    }
+  ],
+  "ipadEarlierAttempt": {
+    "summary": {
+      "file": "location-reset-ipad-failed-summary.json",
+      "sha256": "86ab0ab5f6fbac0f671d84eefdda2e9f1f75d908aacb62f9a5494f6ee00a5909"
+    },
+    "log": {
+      "file": "location-reset-ipad-final.log",
+      "sha256": "9f79357ae2e5433b15c3ade71d7ccdce01f7ee2ac0e41776a1c3cd477c6d7a7d"
+    },
+    "reason": "Test searched downward for a fixture button already above the viewport. Final test positions from observed form/navigation bounds before tapping; app behavior unchanged."
+  },
+  "ipadStatusAttempt": {
+    "summary": {
+      "file": "location-reset-ipad-status-failed-summary.json",
+      "sha256": "a68faf586db83fe77e93abbe4433cb9767fef6ebc7bd4c145b76212636d1a200"
+    },
+    "log": {
+      "file": "location-reset-ipad-final-v2.log",
+      "sha256": "d2d107533ad4998687c95c70f44ec850374f27da097be5fdede448c4e61d8f3e"
+    },
+    "reason": "Transient initial debug-status wait timed out; final setup waits for and validates its durable23-check report. Visible reset confirmation and real relaunch assertions remain."
+  },
+  "remaining": [
+    "Public location setup/authoring remains gated; dedicated reset-from-open-draft UI acceptance remains open",
+    "Genuine geofence and OS-origin notification callbacks; physical protected-data, background/locked/cold and hardware power-loss acceptance",
+    "Native account-switch acceptance of the new reset bridge; only current-workspace cache touched, other caches recover when opened",
+    "Private desktop-to-phone authoring and broader accessibility/native Mac acceptance",
+    "Direct iPad Search tap while typing remains unresolved; keyboard Search retained",
+    "Other P2_PLAN.md requirements remain open"
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution/signing/install/update acceptance",
+    "Genuine Google/Microsoft OAuth registration/provider acceptance"
+  ],
+  "cleanup": {
+    "simulators": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "removedDisposableBundles": [
+          "com.dbakp.taskfold.workflowtestsp1",
+          "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner"
+        ]
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "removedDisposableBundles": [
+          "com.dbakp.taskfold.workflowtestsp1",
+          "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner"
+        ]
+      }
+    ],
+    "mainTaskfoldProcessesRemaining": 0,
+    "reusableBuildCachesAndFinalProductsRetained": true,
+    "realAppsAccountsAndPhysicalDevicesUntouched": true,
+    "scope": "Removed only exact isolated Simulator hosts/runners and their synthetic private/cache data and pending alerts. Previous-reader temporary builds automatically removed. Superseded result bundles pruned after preserving summaries/logs; final accepted evidence retained."
+  }
+}

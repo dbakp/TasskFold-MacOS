@@ -1,0 +1,64 @@
+{
+  "mac-app-build": {
+    "sourceLog": "/tmp/taskfold-heading-review-current-mac-build.log",
+    "sha256": "8e2d4fa140135543a36e5c3df4838a7923663db42d9083254d95b544ec061b11",
+    "testBuildSucceeded": true,
+    "warningLines": [
+      "/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:3757:13: warning: initialization of immutable value 'vault' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]",
+      "     |             `- warning: initialization of immutable value 'vault' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]",
+      "/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4049:52: warning: will never be executed",
+      "     |                                 |                  `- warning: will never be executed",
+      "2026-10-27 12:49:34.345 appintentsmetadataprocessor[88789:25152273] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+    ]
+  },
+  "mac-runner-build": {
+    "sourceLog": "/tmp/taskfold-heading-review-final-mac-build.log",
+    "sha256": "699458ce5c900f1c7ab873f9ea987b5a79a8e8410d5f8ac03c7e4cd03f4f12a4",
+    "testBuildSucceeded": true,
+    "warningLines": [
+      "/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:3757:13: warning: initialization of immutable value 'vault' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]",
+      "     |             `- warning: initialization of immutable value 'vault' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]",
+      "/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4049:52: warning: will never be executed",
+      "     |                                 |                  `- warning: will never be executed",
+      "2026-10-27 12:52:59.215 appintentsmetadataprocessor[89356:25159747] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+    ]
+  },
+  "ios-app-build": {
+    "sourceLog": "/tmp/taskfold-heading-review-current-ios-build.log",
+    "sha256": "3b8c77f9bf44111d9fdc318ca6e88b9af7da69345a39aaefbebcf322b6ff456c",
+    "testBuildSucceeded": true,
+    "warningLines": [
+      "/tmp/taskfold-workflow-commit-ios-host/Taskfold/Views/TaskEditor.swift:7:38: warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]",
+      "     |                                      |- warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]",
+      "/tmp/taskfold-workflow-commit-ios-host/Taskfold/Views/TaskEditor.swift:7:38: warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]",
+      "     |                                      |- warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]",
+      "/tmp/taskfold-workflow-commit-ios-host/TaskfoldUITests/TaskfoldUITests.swift:8180:99: warning: 'changed' mutated after capture by sendable closure",
+      "      |                                                                                                   `- warning: 'changed' mutated after capture by sendable closure",
+      "2026-10-27 12:50:26.049 appintentsmetadataprocessor[88869:25153394] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+    ]
+  },
+  "ios-title-build": {
+    "sourceLog": "/tmp/taskfold-heading-review-title-ios-build.log",
+    "sha256": "a0d2ba523ba1a1ac6a234c3981a11a9884b17b10b7632d895c782ef36ebcee6f",
+    "testBuildSucceeded": true,
+    "warningLines": [
+      "/tmp/taskfold-workflow-commit-ios-host/Taskfold/Views/TaskEditor.swift:7:38: warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]",
+      "     |                                      |- warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]",
+      "/tmp/taskfold-workflow-commit-ios-host/Taskfold/Views/TaskEditor.swift:7:38: warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]",
+      "     |                                      |- warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]",
+      "/tmp/taskfold-workflow-commit-ios-host/TaskfoldUITests/TaskfoldUITests.swift:8180:99: warning: 'changed' mutated after capture by sendable closure",
+      "      |                                                                                                   `- warning: 'changed' mutated after capture by sendable closure",
+      "2026-10-27 13:07:50.580 appintentsmetadataprocessor[91330:25190395] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+    ]
+  },
+  "ios-runner-build": {
+    "sourceLog": "/tmp/taskfold-heading-review-ipad-driver-build.log",
+    "sha256": "171dd0d71b0e564aedd94ba1b50fdc33d0804ab6059f0dac15b1e955b082a1c9",
+    "testBuildSucceeded": true,
+    "warningLines": [
+      "/tmp/taskfold-workflow-commit-ios-host/TaskfoldUITests/TaskfoldUITests.swift:8180:99: warning: 'changed' mutated after capture by sendable closure",
+      "      |                                                                                                   `- warning: 'changed' mutated after capture by sendable closure",
+      "2026-10-27 13:22:21.539 appintentsmetadataprocessor[92972:25213639] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+    ]
+  }
+}

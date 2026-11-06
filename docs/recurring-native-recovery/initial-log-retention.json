@@ -1,0 +1,19 @@
+{
+  "originalSHA256": {
+    "mac-probe-initial.log": "2bbced5ef0464dcaac289f28268c4a24e8e58428d20d1897e6391fd41912ec27",
+    "mac-final-initial.log": "e9b59192755280f3d2de77792539d17545cbb477017a40a3b0adf423e26f6661",
+    "mac-probe-initial-summary.json": "a198d5680f4f7b1201842d5fa3c86023700029109669df85d3ef07ff128d181f",
+    "mac-final-initial-summary.json": "746d2252027b03847616391632a548adaae4ed7cd0be342643601dfbb4e0c37c",
+    "mac-presented-initial.log": "9e7642d5ed5ab1648901e0c6c198a94867d1573875c8b272fecfc98c7f778897",
+    "mac-presented-initial-summary.json": "0fb6835b9e7f92f343897be712feb5b14e977bb13d45323b88ee136e8bb81b7f",
+    "mac-window-initial.log": "52be08ebfb9040da1fb30ff8f45a72fbcb856e1863015f289a5f2c1153979c42",
+    "mac-window-initial-summary.json": "ce0f1a7e74c2b3a774939cef3b4615edfe5ae5b60e3a2840af2525ef8424989d",
+    "mac-diagnostic-initial.log": "3ba9e5be632bedb8e1c81778ccdc1da10dde4b3de342437794ececb805fea634",
+    "mac-diagnostic-initial-summary.json": "bfae81c8f362a936dd0c426fbf230f2ac6c68818bdb202639a6f151c91b36101",
+    "mac-scene-initial.log": "0a4c2c2df16119b70c75e117120a5d5a6dcfd1a848d19cd34453d67915604617",
+    "mac-scene-initial-summary.json": "693af7a07a3ffba085d81e943f1f79d349fbba2f01abce3df9fc51b154178e96",
+    "mac-open-initial.log": "80a3b3c499941bffad63f79e0df5fdee1f20b5889ac953c8ad3a9fc9d19b8d52",
+    "mac-open-initial-summary.json": "f0ea8d908f949b6e6be75616fa82fdaa789f0e10c7179a7d3a863da99fa035b0"
+  },
+  "redaction": "Unrelated Apple menu Recent Items/debug hierarchy removed; failure identity and test outcomes retained."
+}

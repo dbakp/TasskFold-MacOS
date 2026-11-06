@@ -1,0 +1,43 @@
+{
+  "selectedTests": 106,
+  "passed": 106,
+  "skipped": 0,
+  "failures": 0,
+  "explicitModelProbeRequested": false,
+  "priorModelProbe": {
+    "observedOn": "2026-11-06",
+    "unavailableReason": "Turn on Apple Intelligence in system settings to suggest steps on this device.",
+    "actualGenerationAccepted": false,
+    "repeatedThisRound": false
+  },
+  "genuineOwningWireFixtures": true,
+  "genuineSwiftBackendHTTPAccepted": true,
+  "actualNativeUndoManagerBridge": true,
+  "nativeReviewScreenAccepted": false,
+  "nativeKeyboardMenuAccepted": false,
+  "globalUndoRedoIntegrated": true,
+  "journalReadsVersions": [
+    1,
+    2
+  ],
+  "journalWritesVersion2OnlyForRedoLineage": true,
+  "sourceSHA256": {
+    "Taskfold/Core/ReviewedTaskSteps.swift": "3044c5e16e3a8f7c8788fa19be6a140d9414c15068e1f84aa39c3dbc6585138f",
+    "Taskfold/Core/Store.swift": "b27b4c501122e7302829fefb6dd659800962e0bcb4368bda0d5ee6699dd32118",
+    "Taskfold/Core/ChildTaskTransfers.swift": "7e60a0d7a45b1cff30cda3496b2ed149bee05f43b9dd830771e0dd0f1152c5e6",
+    "Taskfold/TeamTemplateNativeFixture.swift": "adad8619fae98750734210bab89ee33155f7d265aaddf4ac7ccab2b3d154f6fd",
+    "Taskfold/Views/ReviewedTaskStepsView.swift": "9acd40b20288fb7a3b37e83a9a36123ff119978d3e4e1569230592b96731b866",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "e485b2853fab4f073bb8963b3c986361eab181e062c255f25b21ffb07e435e5d",
+    "TaskfoldTests/ReviewedTaskStepsTests.swift": "98c9b14faa49fd3a6f7c62c31cbb5c7d8048ef3b15daf4c85557f637d9d8957f",
+    "Scripts/Database/test-native-reviewed-steps.mjs": "0c076df6f6e9e1f440d1ffd3139377030bdba63ce9cb9998c360cca1128fa3c3",
+    "Scripts/prepare_project_adoption_native_test.py": "16304c9f85c83dcaf8ed7e868c48f59a7c60de8db693934b18196ddbdaf1f778",
+    "supabase/migrations/20261106014046_reviewed_step_history_reversal.sql": "0f4339ad549a16995fedb8226c226d82ab4fd344d5cd49de0cb6a616ec1841d8",
+    "Taskfold/Workspace.swift": "e2c5927970ec53ad6436289affca9a47dbc96a6caa6a77bd9fd568a7c728caff"
+  },
+  "wireFixtureBasis": {
+    "commit": "1f810f416e8cf9a5cb4c3cb453fd9c239cfa0579",
+    "path": "TaskfoldTests/Fixtures/reviewed-task-steps-proofs.json",
+    "sha256": "693d9d9a2ffca90d6069bc0c7795e19ce68ac99aad331b568eee4eb6af17bdc2",
+    "wireProtocolUnchanged": true
+  }
+}

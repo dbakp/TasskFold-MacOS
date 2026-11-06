@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "checks": [
+    "extra exported byte refused; stale success invalidated",
+    "modified encrypted journal refused",
+    "foreign saved root refused"
+  ],
+  "scope": "Independent saved-data verifier only; copied actual synthetic iPhone evidence, no source dataset changes"
+}

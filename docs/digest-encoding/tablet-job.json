@@ -1,0 +1,25 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-commit-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-digest-tablet-final.xcresult",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCommitScale1000PublishesOnce",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistory1000PublishesOnce",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery"
+  ],
+  "started": 1793096363.7342432,
+  "returncode": 0,
+  "finished": 1793096476.627133
+}

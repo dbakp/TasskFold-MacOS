@@ -1,0 +1,1787 @@
+{
+  "after": {
+    "pending": [],
+    "tables": {
+      "labels": [],
+      "projects": [
+        {
+          "id": "ec240000-0000-4000-8000-000000000003",
+          "name": "Design workshop",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        }
+      ],
+      "tasks": [
+        {
+          "attachments": [],
+          "comments": [],
+          "completed": true,
+          "completed_at": "2026-10-25T16:00:00Z",
+          "completion_version": 1,
+          "created_at": "2026-10-25T20:35:10Z",
+          "description": "Keep the selected occurrence notes",
+          "due_date": null,
+          "id": "ec240000-0000-4000-8000-000000000031",
+          "is_recurring": false,
+          "labels": [],
+          "priority": 4,
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+          "reminders": [],
+          "subtasks": [],
+          "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+          "title": "Next workshop review",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        },
+        {
+          "attachments": [],
+          "comments": [],
+          "completed": false,
+          "completion_version": 0,
+          "created_at": "2026-10-25T20:35:10Z",
+          "description": "Keep this unselected occurrence",
+          "due_date": null,
+          "id": "ec240000-0000-4000-8000-000000000032",
+          "is_recurring": false,
+          "labels": [],
+          "priority": 4,
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+          "reminders": [],
+          "subtasks": [],
+          "task_generation": "aee6527f-7bac-48db-b71f-af6046736d88",
+          "title": "Later workshop review",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        }
+      ]
+    },
+    "teamWorkspace": {
+      "boundary": {
+        "origin": "https://synthetic.example",
+        "raw": {
+          "account": "ec240000-0000-4000-8000-000000000001",
+          "native_team_reads_enabled": true,
+          "projects": [
+            {
+              "archived": false,
+              "can_send_tasks": false,
+              "id": "ec240000-0000-4000-8000-000000000003",
+              "role": "viewer",
+              "team_id": "ec240000-0000-4000-8000-000000000004"
+            }
+          ],
+          "setup_paused": false,
+          "teams": [
+            {
+              "access_revision": 2,
+              "id": "ec240000-0000-4000-8000-000000000004",
+              "revision": 1,
+              "state": "active"
+            }
+          ],
+          "token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "workspace_boundary_protocol": 1
+        }
+      },
+      "knownTasks": [
+        "ec240000-0000-4000-8000-000000000002",
+        "ec240000-0000-4000-8000-000000000031",
+        "ec240000-0000-4000-8000-000000000032"
+      ],
+      "knownTeams": {
+        "ec240000-0000-4000-8000-000000000003": "ec240000-0000-4000-8000-000000000004"
+      },
+      "quarantined": []
+    },
+    "widgetCompletion": {
+      "receiptOrder": [],
+      "receipts": {},
+      "states": {
+        "ec240000-0000-4000-8000-000000000031": {
+          "signature": "c75257b314c1393faa7445277c965d358393564e09f2f35f944ab5a7ae3b6260",
+          "token": "b239a422-784b-45bc-9de4-277a063a5a0b"
+        },
+        "ec240000-0000-4000-8000-000000000032": {
+          "signature": "3791e7dee87803984ec11e47f5003c295608eefa97d98af2ab3d05469e7ceaf8",
+          "token": "38becc0f-d10e-41a1-b942-2c7607af8043"
+        }
+      }
+    }
+  },
+  "before": {
+    "pending": [
+      {
+        "fields": {},
+        "id": "B8905FAE-B7DD-4BAD-85E8-EEAB425CC130",
+        "method": "TEAM_BATCH",
+        "recordID": "b8905fae-b7dd-4bad-85e8-eeab425cc130",
+        "table": "tasks",
+        "teamTaskBatch": {
+          "account": "ec240000-0000-4000-8000-000000000001",
+          "items": [
+            {
+              "baseline": {
+                "attachments": [],
+                "comments": [],
+                "completed": false,
+                "completion_version": 0,
+                "created_at": "2026-10-25T20:35:10Z",
+                "description": "Original team notes",
+                "due_date": null,
+                "id": "ec240000-0000-4000-8000-000000000002",
+                "is_recurring": false,
+                "labels": [],
+                "opaque_future": {
+                  "preserved": true
+                },
+                "priority": 4,
+                "project_id": "ec240000-0000-4000-8000-000000000003",
+                "reminders": [],
+                "subtasks": [
+                  {
+                    "completed": false,
+                    "description": "Original child notes",
+                    "id": "ec240000-0000-4000-8000-000000000005",
+                    "opaque_child": true,
+                    "priority": 4,
+                    "subtasks": [],
+                    "title": "Review the layout"
+                  },
+                  {
+                    "completed": false,
+                    "description": "Unchanged sibling notes",
+                    "id": "ec240000-0000-4000-8000-000000000006",
+                    "subtasks": [],
+                    "title": "Keep the workshop notes"
+                  }
+                ],
+                "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                "title": "Team editor proof",
+                "user_id": "ec240000-0000-4000-8000-000000000099"
+              },
+              "fields": {},
+              "id": "6874E65C-59AE-41E0-B97A-BF4B53CE63BA",
+              "method": "TEAM_COMPLETE",
+              "recordID": "ec240000-0000-4000-8000-000000000002",
+              "table": "tasks",
+              "teamCompletion": {
+                "completedAt": "2026-10-25T16:00:00Z",
+                "inputZone": "Europe/Copenhagen",
+                "nextGeneration": "a43b43c6-e25d-4f5d-a5f7-7de19a764a1a",
+                "operation": "complete",
+                "scope": {
+                  "account": "ec240000-0000-4000-8000-000000000001",
+                  "origin": "https://synthetic.example",
+                  "project": "ec240000-0000-4000-8000-000000000003",
+                  "team": "ec240000-0000-4000-8000-000000000004"
+                },
+                "seriesGeneration": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                "seriesID": "ec240000-0000-4000-8000-000000000002",
+                "seriesProject": "ec240000-0000-4000-8000-000000000003",
+                "source": {
+                  "attachments": [],
+                  "comments": [],
+                  "completed": false,
+                  "completion_version": 0,
+                  "created_at": "2026-10-25T20:35:10Z",
+                  "description": "Original team notes",
+                  "due_date": null,
+                  "id": "ec240000-0000-4000-8000-000000000002",
+                  "is_recurring": false,
+                  "labels": [],
+                  "opaque_future": {
+                    "preserved": true
+                  },
+                  "priority": 4,
+                  "project_id": "ec240000-0000-4000-8000-000000000003",
+                  "reminders": [],
+                  "subtasks": [
+                    {
+                      "completed": false,
+                      "description": "Original child notes",
+                      "id": "ec240000-0000-4000-8000-000000000005",
+                      "opaque_child": true,
+                      "priority": 4,
+                      "subtasks": [],
+                      "title": "Review the layout"
+                    },
+                    {
+                      "completed": false,
+                      "description": "Unchanged sibling notes",
+                      "id": "ec240000-0000-4000-8000-000000000006",
+                      "subtasks": [],
+                      "title": "Keep the workshop notes"
+                    }
+                  ],
+                  "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                  "title": "Team editor proof",
+                  "user_id": "ec240000-0000-4000-8000-000000000099"
+                }
+              }
+            },
+            {
+              "baseline": {
+                "attachments": [],
+                "comments": [],
+                "completed": false,
+                "completion_version": 0,
+                "created_at": "2026-10-25T20:35:10Z",
+                "description": "Keep the selected occurrence notes",
+                "due_date": null,
+                "id": "ec240000-0000-4000-8000-000000000031",
+                "is_recurring": false,
+                "labels": [],
+                "priority": 4,
+                "project_id": "ec240000-0000-4000-8000-000000000003",
+                "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+                "reminders": [],
+                "subtasks": [],
+                "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                "title": "Next workshop review",
+                "user_id": "ec240000-0000-4000-8000-000000000099"
+              },
+              "fields": {},
+              "id": "BD4BEA9F-6502-43E1-94CF-C20E59C516CB",
+              "method": "TEAM_COMPLETE",
+              "recordID": "ec240000-0000-4000-8000-000000000031",
+              "table": "tasks",
+              "teamCompletion": {
+                "completedAt": "2026-10-25T16:00:00Z",
+                "inputZone": "Europe/Copenhagen",
+                "nextGeneration": "81eb5197-4269-4677-9147-4a76b32c4d4c",
+                "operation": "complete",
+                "scope": {
+                  "account": "ec240000-0000-4000-8000-000000000001",
+                  "origin": "https://synthetic.example",
+                  "project": "ec240000-0000-4000-8000-000000000003",
+                  "team": "ec240000-0000-4000-8000-000000000004"
+                },
+                "seriesGeneration": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                "seriesID": "ec240000-0000-4000-8000-000000000031",
+                "seriesProject": "ec240000-0000-4000-8000-000000000003",
+                "source": {
+                  "attachments": [],
+                  "comments": [],
+                  "completed": false,
+                  "completion_version": 0,
+                  "created_at": "2026-10-25T20:35:10Z",
+                  "description": "Keep the selected occurrence notes",
+                  "due_date": null,
+                  "id": "ec240000-0000-4000-8000-000000000031",
+                  "is_recurring": false,
+                  "labels": [],
+                  "priority": 4,
+                  "project_id": "ec240000-0000-4000-8000-000000000003",
+                  "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+                  "reminders": [],
+                  "subtasks": [],
+                  "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                  "title": "Next workshop review",
+                  "user_id": "ec240000-0000-4000-8000-000000000099"
+                }
+              }
+            }
+          ],
+          "operation": "complete",
+          "origin": "https://synthetic.example",
+          "team": "ec240000-0000-4000-8000-000000000004"
+        }
+      },
+      {
+        "baseline": {
+          "description": "Original team notes",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+          "title": "Team editor proof"
+        },
+        "fields": {
+          "description": "Keep these later workshop instructions",
+          "title": "Later selection draft proof"
+        },
+        "id": "2D419EEF-3230-430E-A8FA-EF5C5D774871",
+        "method": "PATCH",
+        "recordID": "ec240000-0000-4000-8000-000000000002",
+        "table": "tasks",
+        "teamTaskScope": {
+          "account": "ec240000-0000-4000-8000-000000000001",
+          "origin": "https://synthetic.example",
+          "project": "ec240000-0000-4000-8000-000000000003",
+          "team": "ec240000-0000-4000-8000-000000000004"
+        }
+      }
+    ],
+    "tables": {
+      "labels": [],
+      "projects": [
+        {
+          "id": "ec240000-0000-4000-8000-000000000003",
+          "name": "Design workshop",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        }
+      ],
+      "tasks": [
+        {
+          "attachments": [],
+          "comments": [],
+          "completed": true,
+          "completed_at": "2026-10-25T16:00:00Z",
+          "completion_version": 1,
+          "created_at": "2026-10-25T20:35:10Z",
+          "description": "Keep these later workshop instructions",
+          "due_date": null,
+          "id": "ec240000-0000-4000-8000-000000000002",
+          "is_recurring": false,
+          "labels": [],
+          "opaque_future": {
+            "preserved": true
+          },
+          "priority": 4,
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "reminders": [],
+          "subtasks": [
+            {
+              "completed": false,
+              "description": "Original child notes",
+              "id": "ec240000-0000-4000-8000-000000000005",
+              "opaque_child": true,
+              "priority": 4,
+              "subtasks": [],
+              "title": "Review the layout"
+            },
+            {
+              "completed": false,
+              "description": "Unchanged sibling notes",
+              "id": "ec240000-0000-4000-8000-000000000006",
+              "subtasks": [],
+              "title": "Keep the workshop notes"
+            }
+          ],
+          "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+          "title": "Later selection draft proof",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        },
+        {
+          "attachments": [],
+          "comments": [],
+          "completed": true,
+          "completed_at": "2026-10-25T16:00:00Z",
+          "completion_version": 1,
+          "created_at": "2026-10-25T20:35:10Z",
+          "description": "Keep the selected occurrence notes",
+          "due_date": null,
+          "id": "ec240000-0000-4000-8000-000000000031",
+          "is_recurring": false,
+          "labels": [],
+          "priority": 4,
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+          "reminders": [],
+          "subtasks": [],
+          "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+          "title": "Next workshop review",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        },
+        {
+          "attachments": [],
+          "comments": [],
+          "completed": false,
+          "completion_version": 0,
+          "created_at": "2026-10-25T20:35:10Z",
+          "description": "Keep this unselected occurrence",
+          "due_date": null,
+          "id": "ec240000-0000-4000-8000-000000000032",
+          "is_recurring": false,
+          "labels": [],
+          "priority": 4,
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+          "reminders": [],
+          "subtasks": [],
+          "task_generation": "aee6527f-7bac-48db-b71f-af6046736d88",
+          "title": "Later workshop review",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        }
+      ]
+    },
+    "teamWorkspace": {
+      "boundary": {
+        "origin": "https://synthetic.example",
+        "raw": {
+          "account": "ec240000-0000-4000-8000-000000000001",
+          "native_team_reads_enabled": true,
+          "projects": [
+            {
+              "archived": false,
+              "can_send_tasks": true,
+              "id": "ec240000-0000-4000-8000-000000000003",
+              "role": "editor",
+              "team_id": "ec240000-0000-4000-8000-000000000004"
+            }
+          ],
+          "setup_paused": false,
+          "teams": [
+            {
+              "access_revision": 1,
+              "id": "ec240000-0000-4000-8000-000000000004",
+              "revision": 1,
+              "state": "active"
+            }
+          ],
+          "token": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "workspace_boundary_protocol": 1
+        }
+      },
+      "knownTasks": [
+        "ec240000-0000-4000-8000-000000000002",
+        "ec240000-0000-4000-8000-000000000031",
+        "ec240000-0000-4000-8000-000000000032"
+      ],
+      "knownTeams": {
+        "ec240000-0000-4000-8000-000000000003": "ec240000-0000-4000-8000-000000000004"
+      },
+      "quarantined": []
+    },
+    "widgetCompletion": {
+      "receiptOrder": [],
+      "receipts": {},
+      "states": {
+        "ec240000-0000-4000-8000-000000000002": {
+          "signature": "ee02197f8aecfae721032bd4bc6cf6e318033c5ef41bf252423f942c070386ff",
+          "token": "a76e85d1-66b7-4bb2-a141-3215399c76e7"
+        },
+        "ec240000-0000-4000-8000-000000000031": {
+          "signature": "c75257b314c1393faa7445277c965d358393564e09f2f35f944ab5a7ae3b6260",
+          "token": "b239a422-784b-45bc-9de4-277a063a5a0b"
+        },
+        "ec240000-0000-4000-8000-000000000032": {
+          "signature": "3791e7dee87803984ec11e47f5003c295608eefa97d98af2ab3d05469e7ceaf8",
+          "token": "38becc0f-d10e-41a1-b942-2c7607af8043"
+        }
+      }
+    }
+  },
+  "draft": {
+    "createdAt": 814653323.749373,
+    "id": "1BCC1149-7BF8-4E49-B771-51DAD238B5A3",
+    "original": {
+      "fields": {},
+      "id": "B8905FAE-B7DD-4BAD-85E8-EEAB425CC130",
+      "method": "TEAM_BATCH",
+      "recordID": "b8905fae-b7dd-4bad-85e8-eeab425cc130",
+      "table": "tasks",
+      "teamTaskBatch": {
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "items": [
+          {
+            "baseline": {
+              "attachments": [],
+              "comments": [],
+              "completed": false,
+              "completion_version": 0,
+              "created_at": "2026-10-25T20:35:10Z",
+              "description": "Original team notes",
+              "due_date": null,
+              "id": "ec240000-0000-4000-8000-000000000002",
+              "is_recurring": false,
+              "labels": [],
+              "opaque_future": {
+                "preserved": true
+              },
+              "priority": 4,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "reminders": [],
+              "subtasks": [
+                {
+                  "completed": false,
+                  "description": "Original child notes",
+                  "id": "ec240000-0000-4000-8000-000000000005",
+                  "opaque_child": true,
+                  "priority": 4,
+                  "subtasks": [],
+                  "title": "Review the layout"
+                },
+                {
+                  "completed": false,
+                  "description": "Unchanged sibling notes",
+                  "id": "ec240000-0000-4000-8000-000000000006",
+                  "subtasks": [],
+                  "title": "Keep the workshop notes"
+                }
+              ],
+              "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+              "title": "Team editor proof",
+              "user_id": "ec240000-0000-4000-8000-000000000099"
+            },
+            "fields": {},
+            "id": "6874E65C-59AE-41E0-B97A-BF4B53CE63BA",
+            "method": "TEAM_COMPLETE",
+            "recordID": "ec240000-0000-4000-8000-000000000002",
+            "table": "tasks",
+            "teamCompletion": {
+              "completedAt": "2026-10-25T16:00:00Z",
+              "inputZone": "Europe/Copenhagen",
+              "nextGeneration": "a43b43c6-e25d-4f5d-a5f7-7de19a764a1a",
+              "operation": "complete",
+              "scope": {
+                "account": "ec240000-0000-4000-8000-000000000001",
+                "origin": "https://synthetic.example",
+                "project": "ec240000-0000-4000-8000-000000000003",
+                "team": "ec240000-0000-4000-8000-000000000004"
+              },
+              "seriesGeneration": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+              "seriesID": "ec240000-0000-4000-8000-000000000002",
+              "seriesProject": "ec240000-0000-4000-8000-000000000003",
+              "source": {
+                "attachments": [],
+                "comments": [],
+                "completed": false,
+                "completion_version": 0,
+                "created_at": "2026-10-25T20:35:10Z",
+                "description": "Original team notes",
+                "due_date": null,
+                "id": "ec240000-0000-4000-8000-000000000002",
+                "is_recurring": false,
+                "labels": [],
+                "opaque_future": {
+                  "preserved": true
+                },
+                "priority": 4,
+                "project_id": "ec240000-0000-4000-8000-000000000003",
+                "reminders": [],
+                "subtasks": [
+                  {
+                    "completed": false,
+                    "description": "Original child notes",
+                    "id": "ec240000-0000-4000-8000-000000000005",
+                    "opaque_child": true,
+                    "priority": 4,
+                    "subtasks": [],
+                    "title": "Review the layout"
+                  },
+                  {
+                    "completed": false,
+                    "description": "Unchanged sibling notes",
+                    "id": "ec240000-0000-4000-8000-000000000006",
+                    "subtasks": [],
+                    "title": "Keep the workshop notes"
+                  }
+                ],
+                "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                "title": "Team editor proof",
+                "user_id": "ec240000-0000-4000-8000-000000000099"
+              }
+            }
+          },
+          {
+            "baseline": {
+              "attachments": [],
+              "comments": [],
+              "completed": false,
+              "completion_version": 0,
+              "created_at": "2026-10-25T20:35:10Z",
+              "description": "Keep the selected occurrence notes",
+              "due_date": null,
+              "id": "ec240000-0000-4000-8000-000000000031",
+              "is_recurring": false,
+              "labels": [],
+              "priority": 4,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+              "reminders": [],
+              "subtasks": [],
+              "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+              "title": "Next workshop review",
+              "user_id": "ec240000-0000-4000-8000-000000000099"
+            },
+            "fields": {},
+            "id": "BD4BEA9F-6502-43E1-94CF-C20E59C516CB",
+            "method": "TEAM_COMPLETE",
+            "recordID": "ec240000-0000-4000-8000-000000000031",
+            "table": "tasks",
+            "teamCompletion": {
+              "completedAt": "2026-10-25T16:00:00Z",
+              "inputZone": "Europe/Copenhagen",
+              "nextGeneration": "81eb5197-4269-4677-9147-4a76b32c4d4c",
+              "operation": "complete",
+              "scope": {
+                "account": "ec240000-0000-4000-8000-000000000001",
+                "origin": "https://synthetic.example",
+                "project": "ec240000-0000-4000-8000-000000000003",
+                "team": "ec240000-0000-4000-8000-000000000004"
+              },
+              "seriesGeneration": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+              "seriesID": "ec240000-0000-4000-8000-000000000031",
+              "seriesProject": "ec240000-0000-4000-8000-000000000003",
+              "source": {
+                "attachments": [],
+                "comments": [],
+                "completed": false,
+                "completion_version": 0,
+                "created_at": "2026-10-25T20:35:10Z",
+                "description": "Keep the selected occurrence notes",
+                "due_date": null,
+                "id": "ec240000-0000-4000-8000-000000000031",
+                "is_recurring": false,
+                "labels": [],
+                "priority": 4,
+                "project_id": "ec240000-0000-4000-8000-000000000003",
+                "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+                "reminders": [],
+                "subtasks": [],
+                "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                "title": "Next workshop review",
+                "user_id": "ec240000-0000-4000-8000-000000000099"
+              }
+            }
+          }
+        ],
+        "operation": "complete",
+        "origin": "https://synthetic.example",
+        "team": "ec240000-0000-4000-8000-000000000004"
+      }
+    },
+    "review": {
+      "account": "ec240000-0000-4000-8000-000000000001",
+      "group_review_protocol": 1,
+      "items": [
+        {
+          "account": "ec240000-0000-4000-8000-000000000001",
+          "can_edit_current": false,
+          "can_edit_series": false,
+          "operation": "complete",
+          "planned_next_id": null,
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "project_role": "viewer",
+          "receipt": {
+            "account": "ec240000-0000-4000-8000-000000000001",
+            "created_successor": false,
+            "operation": "complete",
+            "planned_next_id": null,
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "protocol": 1,
+            "related_request": null,
+            "removed_successor": false,
+            "replayed": true,
+            "request_id": "6874e65c-59ae-41e0-b97a-bf4b53ce63ba",
+            "series_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+            "series_id": "ec240000-0000-4000-8000-000000000002",
+            "series_project_id": "ec240000-0000-4000-8000-000000000003",
+            "source_revision": 1,
+            "successor": null,
+            "successor_generation": null,
+            "successor_id": null,
+            "task": null,
+            "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+            "task_id": "ec240000-0000-4000-8000-000000000002",
+            "team_id": "ec240000-0000-4000-8000-000000000004"
+          },
+          "request_id": "6874e65c-59ae-41e0-b97a-bf4b53ce63ba",
+          "review_protocol": 1,
+          "series": null,
+          "series_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+          "series_id": "ec240000-0000-4000-8000-000000000002",
+          "series_project_id": "ec240000-0000-4000-8000-000000000003",
+          "state": "recorded",
+          "successor": null,
+          "task": null,
+          "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+          "task_id": "ec240000-0000-4000-8000-000000000002",
+          "team_id": "ec240000-0000-4000-8000-000000000004"
+        },
+        {
+          "account": "ec240000-0000-4000-8000-000000000001",
+          "can_edit_current": false,
+          "can_edit_series": false,
+          "operation": "complete",
+          "planned_next_id": null,
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "project_role": "viewer",
+          "receipt": {
+            "account": "ec240000-0000-4000-8000-000000000001",
+            "created_successor": false,
+            "operation": "complete",
+            "planned_next_id": null,
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "protocol": 1,
+            "related_request": null,
+            "removed_successor": false,
+            "replayed": true,
+            "request_id": "bd4bea9f-6502-43e1-94cf-c20e59c516cb",
+            "series_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+            "series_id": "ec240000-0000-4000-8000-000000000031",
+            "series_project_id": "ec240000-0000-4000-8000-000000000003",
+            "source_revision": 1,
+            "successor": null,
+            "successor_generation": null,
+            "successor_id": null,
+            "task": {
+              "attachments": [],
+              "comments": [],
+              "completed": true,
+              "completed_at": "2026-10-25T16:00:00Z",
+              "completion_version": 1,
+              "created_at": "2026-10-25T20:35:10Z",
+              "description": "Keep the selected occurrence notes",
+              "due_date": null,
+              "id": "ec240000-0000-4000-8000-000000000031",
+              "is_recurring": false,
+              "labels": [],
+              "priority": 4,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+              "reminders": [],
+              "subtasks": [],
+              "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+              "title": "Next workshop review",
+              "user_id": "ec240000-0000-4000-8000-000000000099"
+            },
+            "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+            "task_id": "ec240000-0000-4000-8000-000000000031",
+            "team_id": "ec240000-0000-4000-8000-000000000004"
+          },
+          "request_id": "bd4bea9f-6502-43e1-94cf-c20e59c516cb",
+          "review_protocol": 1,
+          "series": {
+            "attachments": [],
+            "comments": [],
+            "completed": true,
+            "completed_at": "2026-10-25T16:00:00Z",
+            "completion_version": 1,
+            "created_at": "2026-10-25T20:35:10Z",
+            "description": "Keep the selected occurrence notes",
+            "due_date": null,
+            "id": "ec240000-0000-4000-8000-000000000031",
+            "is_recurring": false,
+            "labels": [],
+            "priority": 4,
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+            "reminders": [],
+            "subtasks": [],
+            "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+            "title": "Next workshop review",
+            "user_id": "ec240000-0000-4000-8000-000000000099"
+          },
+          "series_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+          "series_id": "ec240000-0000-4000-8000-000000000031",
+          "series_project_id": "ec240000-0000-4000-8000-000000000003",
+          "state": "recorded",
+          "successor": null,
+          "task": {
+            "attachments": [],
+            "comments": [],
+            "completed": true,
+            "completed_at": "2026-10-25T16:00:00Z",
+            "completion_version": 1,
+            "created_at": "2026-10-25T20:35:10Z",
+            "description": "Keep the selected occurrence notes",
+            "due_date": null,
+            "id": "ec240000-0000-4000-8000-000000000031",
+            "is_recurring": false,
+            "labels": [],
+            "priority": 4,
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+            "reminders": [],
+            "subtasks": [],
+            "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+            "title": "Next workshop review",
+            "user_id": "ec240000-0000-4000-8000-000000000099"
+          },
+          "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+          "task_id": "ec240000-0000-4000-8000-000000000031",
+          "team_id": "ec240000-0000-4000-8000-000000000004"
+        }
+      ],
+      "operation": "complete",
+      "receipt": {
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "batch_protocol": 1,
+        "items": [
+          {
+            "account": "ec240000-0000-4000-8000-000000000001",
+            "created_successor": false,
+            "operation": "complete",
+            "planned_next_id": null,
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "protocol": 1,
+            "related_request": null,
+            "removed_successor": false,
+            "replayed": true,
+            "request_id": "6874e65c-59ae-41e0-b97a-bf4b53ce63ba",
+            "series_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+            "series_id": "ec240000-0000-4000-8000-000000000002",
+            "series_project_id": "ec240000-0000-4000-8000-000000000003",
+            "source_revision": 1,
+            "successor": null,
+            "successor_generation": null,
+            "successor_id": null,
+            "task": null,
+            "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+            "task_id": "ec240000-0000-4000-8000-000000000002",
+            "team_id": "ec240000-0000-4000-8000-000000000004"
+          },
+          {
+            "account": "ec240000-0000-4000-8000-000000000001",
+            "created_successor": false,
+            "operation": "complete",
+            "planned_next_id": null,
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "protocol": 1,
+            "related_request": null,
+            "removed_successor": false,
+            "replayed": true,
+            "request_id": "bd4bea9f-6502-43e1-94cf-c20e59c516cb",
+            "series_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+            "series_id": "ec240000-0000-4000-8000-000000000031",
+            "series_project_id": "ec240000-0000-4000-8000-000000000003",
+            "source_revision": 1,
+            "successor": null,
+            "successor_generation": null,
+            "successor_id": null,
+            "task": {
+              "attachments": [],
+              "comments": [],
+              "completed": true,
+              "completed_at": "2026-10-25T16:00:00Z",
+              "completion_version": 1,
+              "created_at": "2026-10-25T20:35:10Z",
+              "description": "Keep the selected occurrence notes",
+              "due_date": null,
+              "id": "ec240000-0000-4000-8000-000000000031",
+              "is_recurring": false,
+              "labels": [],
+              "priority": 4,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+              "reminders": [],
+              "subtasks": [],
+              "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+              "title": "Next workshop review",
+              "user_id": "ec240000-0000-4000-8000-000000000099"
+            },
+            "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+            "task_id": "ec240000-0000-4000-8000-000000000031",
+            "team_id": "ec240000-0000-4000-8000-000000000004"
+          }
+        ],
+        "operation": "complete",
+        "related_request": null,
+        "replayed": true,
+        "request_id": "b8905fae-b7dd-4bad-85e8-eeab425cc130",
+        "team_id": "ec240000-0000-4000-8000-000000000004"
+      },
+      "related_request": null,
+      "request_id": "b8905fae-b7dd-4bad-85e8-eeab425cc130",
+      "state": "recorded",
+      "team_id": "ec240000-0000-4000-8000-000000000004"
+    },
+    "snapshot": {
+      "pending": [
+        {
+          "fields": {},
+          "id": "B8905FAE-B7DD-4BAD-85E8-EEAB425CC130",
+          "method": "TEAM_BATCH",
+          "recordID": "b8905fae-b7dd-4bad-85e8-eeab425cc130",
+          "table": "tasks",
+          "teamTaskBatch": {
+            "account": "ec240000-0000-4000-8000-000000000001",
+            "items": [
+              {
+                "baseline": {
+                  "attachments": [],
+                  "comments": [],
+                  "completed": false,
+                  "completion_version": 0,
+                  "created_at": "2026-10-25T20:35:10Z",
+                  "description": "Original team notes",
+                  "due_date": null,
+                  "id": "ec240000-0000-4000-8000-000000000002",
+                  "is_recurring": false,
+                  "labels": [],
+                  "opaque_future": {
+                    "preserved": true
+                  },
+                  "priority": 4,
+                  "project_id": "ec240000-0000-4000-8000-000000000003",
+                  "reminders": [],
+                  "subtasks": [
+                    {
+                      "completed": false,
+                      "description": "Original child notes",
+                      "id": "ec240000-0000-4000-8000-000000000005",
+                      "opaque_child": true,
+                      "priority": 4,
+                      "subtasks": [],
+                      "title": "Review the layout"
+                    },
+                    {
+                      "completed": false,
+                      "description": "Unchanged sibling notes",
+                      "id": "ec240000-0000-4000-8000-000000000006",
+                      "subtasks": [],
+                      "title": "Keep the workshop notes"
+                    }
+                  ],
+                  "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                  "title": "Team editor proof",
+                  "user_id": "ec240000-0000-4000-8000-000000000099"
+                },
+                "fields": {},
+                "id": "6874E65C-59AE-41E0-B97A-BF4B53CE63BA",
+                "method": "TEAM_COMPLETE",
+                "recordID": "ec240000-0000-4000-8000-000000000002",
+                "table": "tasks",
+                "teamCompletion": {
+                  "completedAt": "2026-10-25T16:00:00Z",
+                  "inputZone": "Europe/Copenhagen",
+                  "nextGeneration": "a43b43c6-e25d-4f5d-a5f7-7de19a764a1a",
+                  "operation": "complete",
+                  "scope": {
+                    "account": "ec240000-0000-4000-8000-000000000001",
+                    "origin": "https://synthetic.example",
+                    "project": "ec240000-0000-4000-8000-000000000003",
+                    "team": "ec240000-0000-4000-8000-000000000004"
+                  },
+                  "seriesGeneration": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                  "seriesID": "ec240000-0000-4000-8000-000000000002",
+                  "seriesProject": "ec240000-0000-4000-8000-000000000003",
+                  "source": {
+                    "attachments": [],
+                    "comments": [],
+                    "completed": false,
+                    "completion_version": 0,
+                    "created_at": "2026-10-25T20:35:10Z",
+                    "description": "Original team notes",
+                    "due_date": null,
+                    "id": "ec240000-0000-4000-8000-000000000002",
+                    "is_recurring": false,
+                    "labels": [],
+                    "opaque_future": {
+                      "preserved": true
+                    },
+                    "priority": 4,
+                    "project_id": "ec240000-0000-4000-8000-000000000003",
+                    "reminders": [],
+                    "subtasks": [
+                      {
+                        "completed": false,
+                        "description": "Original child notes",
+                        "id": "ec240000-0000-4000-8000-000000000005",
+                        "opaque_child": true,
+                        "priority": 4,
+                        "subtasks": [],
+                        "title": "Review the layout"
+                      },
+                      {
+                        "completed": false,
+                        "description": "Unchanged sibling notes",
+                        "id": "ec240000-0000-4000-8000-000000000006",
+                        "subtasks": [],
+                        "title": "Keep the workshop notes"
+                      }
+                    ],
+                    "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                    "title": "Team editor proof",
+                    "user_id": "ec240000-0000-4000-8000-000000000099"
+                  }
+                }
+              },
+              {
+                "baseline": {
+                  "attachments": [],
+                  "comments": [],
+                  "completed": false,
+                  "completion_version": 0,
+                  "created_at": "2026-10-25T20:35:10Z",
+                  "description": "Keep the selected occurrence notes",
+                  "due_date": null,
+                  "id": "ec240000-0000-4000-8000-000000000031",
+                  "is_recurring": false,
+                  "labels": [],
+                  "priority": 4,
+                  "project_id": "ec240000-0000-4000-8000-000000000003",
+                  "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+                  "reminders": [],
+                  "subtasks": [],
+                  "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                  "title": "Next workshop review",
+                  "user_id": "ec240000-0000-4000-8000-000000000099"
+                },
+                "fields": {},
+                "id": "BD4BEA9F-6502-43E1-94CF-C20E59C516CB",
+                "method": "TEAM_COMPLETE",
+                "recordID": "ec240000-0000-4000-8000-000000000031",
+                "table": "tasks",
+                "teamCompletion": {
+                  "completedAt": "2026-10-25T16:00:00Z",
+                  "inputZone": "Europe/Copenhagen",
+                  "nextGeneration": "81eb5197-4269-4677-9147-4a76b32c4d4c",
+                  "operation": "complete",
+                  "scope": {
+                    "account": "ec240000-0000-4000-8000-000000000001",
+                    "origin": "https://synthetic.example",
+                    "project": "ec240000-0000-4000-8000-000000000003",
+                    "team": "ec240000-0000-4000-8000-000000000004"
+                  },
+                  "seriesGeneration": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                  "seriesID": "ec240000-0000-4000-8000-000000000031",
+                  "seriesProject": "ec240000-0000-4000-8000-000000000003",
+                  "source": {
+                    "attachments": [],
+                    "comments": [],
+                    "completed": false,
+                    "completion_version": 0,
+                    "created_at": "2026-10-25T20:35:10Z",
+                    "description": "Keep the selected occurrence notes",
+                    "due_date": null,
+                    "id": "ec240000-0000-4000-8000-000000000031",
+                    "is_recurring": false,
+                    "labels": [],
+                    "priority": 4,
+                    "project_id": "ec240000-0000-4000-8000-000000000003",
+                    "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+                    "reminders": [],
+                    "subtasks": [],
+                    "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                    "title": "Next workshop review",
+                    "user_id": "ec240000-0000-4000-8000-000000000099"
+                  }
+                }
+              }
+            ],
+            "operation": "complete",
+            "origin": "https://synthetic.example",
+            "team": "ec240000-0000-4000-8000-000000000004"
+          }
+        },
+        {
+          "baseline": {
+            "description": "Original team notes",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+            "title": "Team editor proof"
+          },
+          "fields": {
+            "description": "Keep these later workshop instructions",
+            "title": "Later selection draft proof"
+          },
+          "id": "2D419EEF-3230-430E-A8FA-EF5C5D774871",
+          "method": "PATCH",
+          "recordID": "ec240000-0000-4000-8000-000000000002",
+          "table": "tasks",
+          "teamTaskScope": {
+            "account": "ec240000-0000-4000-8000-000000000001",
+            "origin": "https://synthetic.example",
+            "project": "ec240000-0000-4000-8000-000000000003",
+            "team": "ec240000-0000-4000-8000-000000000004"
+          }
+        }
+      ],
+      "tables": {
+        "labels": [],
+        "projects": [
+          {
+            "id": "ec240000-0000-4000-8000-000000000003",
+            "name": "Design workshop",
+            "user_id": "ec240000-0000-4000-8000-000000000099"
+          }
+        ],
+        "tasks": [
+          {
+            "attachments": [],
+            "comments": [],
+            "completed": true,
+            "completed_at": "2026-10-25T16:00:00Z",
+            "completion_version": 1,
+            "created_at": "2026-10-25T20:35:10Z",
+            "description": "Keep these later workshop instructions",
+            "due_date": null,
+            "id": "ec240000-0000-4000-8000-000000000002",
+            "is_recurring": false,
+            "labels": [],
+            "opaque_future": {
+              "preserved": true
+            },
+            "priority": 4,
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "reminders": [],
+            "subtasks": [
+              {
+                "completed": false,
+                "description": "Original child notes",
+                "id": "ec240000-0000-4000-8000-000000000005",
+                "opaque_child": true,
+                "priority": 4,
+                "subtasks": [],
+                "title": "Review the layout"
+              },
+              {
+                "completed": false,
+                "description": "Unchanged sibling notes",
+                "id": "ec240000-0000-4000-8000-000000000006",
+                "subtasks": [],
+                "title": "Keep the workshop notes"
+              }
+            ],
+            "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+            "title": "Later selection draft proof",
+            "user_id": "ec240000-0000-4000-8000-000000000099"
+          },
+          {
+            "attachments": [],
+            "comments": [],
+            "completed": true,
+            "completed_at": "2026-10-25T16:00:00Z",
+            "completion_version": 1,
+            "created_at": "2026-10-25T20:35:10Z",
+            "description": "Keep the selected occurrence notes",
+            "due_date": null,
+            "id": "ec240000-0000-4000-8000-000000000031",
+            "is_recurring": false,
+            "labels": [],
+            "priority": 4,
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+            "reminders": [],
+            "subtasks": [],
+            "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+            "title": "Next workshop review",
+            "user_id": "ec240000-0000-4000-8000-000000000099"
+          },
+          {
+            "attachments": [],
+            "comments": [],
+            "completed": false,
+            "completion_version": 0,
+            "created_at": "2026-10-25T20:35:10Z",
+            "description": "Keep this unselected occurrence",
+            "due_date": null,
+            "id": "ec240000-0000-4000-8000-000000000032",
+            "is_recurring": false,
+            "labels": [],
+            "priority": 4,
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+            "reminders": [],
+            "subtasks": [],
+            "task_generation": "aee6527f-7bac-48db-b71f-af6046736d88",
+            "title": "Later workshop review",
+            "user_id": "ec240000-0000-4000-8000-000000000099"
+          }
+        ]
+      },
+      "teamWorkspace": {
+        "boundary": {
+          "origin": "https://synthetic.example",
+          "raw": {
+            "account": "ec240000-0000-4000-8000-000000000001",
+            "native_team_reads_enabled": true,
+            "projects": [
+              {
+                "archived": false,
+                "can_send_tasks": true,
+                "id": "ec240000-0000-4000-8000-000000000003",
+                "role": "editor",
+                "team_id": "ec240000-0000-4000-8000-000000000004"
+              }
+            ],
+            "setup_paused": false,
+            "teams": [
+              {
+                "access_revision": 1,
+                "id": "ec240000-0000-4000-8000-000000000004",
+                "revision": 1,
+                "state": "active"
+              }
+            ],
+            "token": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workspace_boundary_protocol": 1
+          }
+        },
+        "knownTasks": [
+          "ec240000-0000-4000-8000-000000000032",
+          "ec240000-0000-4000-8000-000000000002",
+          "ec240000-0000-4000-8000-000000000031"
+        ],
+        "knownTeams": {
+          "ec240000-0000-4000-8000-000000000003": "ec240000-0000-4000-8000-000000000004"
+        },
+        "quarantined": []
+      },
+      "widgetCompletion": {
+        "receiptOrder": [],
+        "receipts": {},
+        "states": {
+          "ec240000-0000-4000-8000-000000000002": {
+            "signature": "ee02197f8aecfae721032bd4bc6cf6e318033c5ef41bf252423f942c070386ff",
+            "token": "a76e85d1-66b7-4bb2-a141-3215399c76e7"
+          },
+          "ec240000-0000-4000-8000-000000000031": {
+            "signature": "c75257b314c1393faa7445277c965d358393564e09f2f35f944ab5a7ae3b6260",
+            "token": "b239a422-784b-45bc-9de4-277a063a5a0b"
+          },
+          "ec240000-0000-4000-8000-000000000032": {
+            "signature": "3791e7dee87803984ec11e47f5003c295608eefa97d98af2ab3d05469e7ceaf8",
+            "token": "38becc0f-d10e-41a1-b942-2c7607af8043"
+          }
+        }
+      }
+    },
+    "version": 1
+  },
+  "export": {
+    "changes": [
+      {
+        "fields": {},
+        "id": "B8905FAE-B7DD-4BAD-85E8-EEAB425CC130",
+        "method": "TEAM_BATCH",
+        "recordID": "b8905fae-b7dd-4bad-85e8-eeab425cc130",
+        "table": "tasks",
+        "teamTaskBatch": {
+          "account": "ec240000-0000-4000-8000-000000000001",
+          "items": [
+            {
+              "baseline": {
+                "attachments": [],
+                "comments": [],
+                "completed": false,
+                "completion_version": 0,
+                "created_at": "2026-10-25T20:35:10Z",
+                "description": "Original team notes",
+                "due_date": null,
+                "id": "ec240000-0000-4000-8000-000000000002",
+                "is_recurring": false,
+                "labels": [],
+                "opaque_future": {
+                  "preserved": true
+                },
+                "priority": 4,
+                "project_id": "ec240000-0000-4000-8000-000000000003",
+                "reminders": [],
+                "subtasks": [
+                  {
+                    "completed": false,
+                    "description": "Original child notes",
+                    "id": "ec240000-0000-4000-8000-000000000005",
+                    "opaque_child": true,
+                    "priority": 4,
+                    "subtasks": [],
+                    "title": "Review the layout"
+                  },
+                  {
+                    "completed": false,
+                    "description": "Unchanged sibling notes",
+                    "id": "ec240000-0000-4000-8000-000000000006",
+                    "subtasks": [],
+                    "title": "Keep the workshop notes"
+                  }
+                ],
+                "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                "title": "Team editor proof",
+                "user_id": "ec240000-0000-4000-8000-000000000099"
+              },
+              "fields": {},
+              "id": "6874E65C-59AE-41E0-B97A-BF4B53CE63BA",
+              "method": "TEAM_COMPLETE",
+              "recordID": "ec240000-0000-4000-8000-000000000002",
+              "table": "tasks",
+              "teamCompletion": {
+                "completedAt": "2026-10-25T16:00:00Z",
+                "inputZone": "Europe/Copenhagen",
+                "nextGeneration": "a43b43c6-e25d-4f5d-a5f7-7de19a764a1a",
+                "operation": "complete",
+                "scope": {
+                  "account": "ec240000-0000-4000-8000-000000000001",
+                  "origin": "https://synthetic.example",
+                  "project": "ec240000-0000-4000-8000-000000000003",
+                  "team": "ec240000-0000-4000-8000-000000000004"
+                },
+                "seriesGeneration": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                "seriesID": "ec240000-0000-4000-8000-000000000002",
+                "seriesProject": "ec240000-0000-4000-8000-000000000003",
+                "source": {
+                  "attachments": [],
+                  "comments": [],
+                  "completed": false,
+                  "completion_version": 0,
+                  "created_at": "2026-10-25T20:35:10Z",
+                  "description": "Original team notes",
+                  "due_date": null,
+                  "id": "ec240000-0000-4000-8000-000000000002",
+                  "is_recurring": false,
+                  "labels": [],
+                  "opaque_future": {
+                    "preserved": true
+                  },
+                  "priority": 4,
+                  "project_id": "ec240000-0000-4000-8000-000000000003",
+                  "reminders": [],
+                  "subtasks": [
+                    {
+                      "completed": false,
+                      "description": "Original child notes",
+                      "id": "ec240000-0000-4000-8000-000000000005",
+                      "opaque_child": true,
+                      "priority": 4,
+                      "subtasks": [],
+                      "title": "Review the layout"
+                    },
+                    {
+                      "completed": false,
+                      "description": "Unchanged sibling notes",
+                      "id": "ec240000-0000-4000-8000-000000000006",
+                      "subtasks": [],
+                      "title": "Keep the workshop notes"
+                    }
+                  ],
+                  "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                  "title": "Team editor proof",
+                  "user_id": "ec240000-0000-4000-8000-000000000099"
+                }
+              }
+            },
+            {
+              "baseline": {
+                "attachments": [],
+                "comments": [],
+                "completed": false,
+                "completion_version": 0,
+                "created_at": "2026-10-25T20:35:10Z",
+                "description": "Keep the selected occurrence notes",
+                "due_date": null,
+                "id": "ec240000-0000-4000-8000-000000000031",
+                "is_recurring": false,
+                "labels": [],
+                "priority": 4,
+                "project_id": "ec240000-0000-4000-8000-000000000003",
+                "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+                "reminders": [],
+                "subtasks": [],
+                "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                "title": "Next workshop review",
+                "user_id": "ec240000-0000-4000-8000-000000000099"
+              },
+              "fields": {},
+              "id": "BD4BEA9F-6502-43E1-94CF-C20E59C516CB",
+              "method": "TEAM_COMPLETE",
+              "recordID": "ec240000-0000-4000-8000-000000000031",
+              "table": "tasks",
+              "teamCompletion": {
+                "completedAt": "2026-10-25T16:00:00Z",
+                "inputZone": "Europe/Copenhagen",
+                "nextGeneration": "81eb5197-4269-4677-9147-4a76b32c4d4c",
+                "operation": "complete",
+                "scope": {
+                  "account": "ec240000-0000-4000-8000-000000000001",
+                  "origin": "https://synthetic.example",
+                  "project": "ec240000-0000-4000-8000-000000000003",
+                  "team": "ec240000-0000-4000-8000-000000000004"
+                },
+                "seriesGeneration": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                "seriesID": "ec240000-0000-4000-8000-000000000031",
+                "seriesProject": "ec240000-0000-4000-8000-000000000003",
+                "source": {
+                  "attachments": [],
+                  "comments": [],
+                  "completed": false,
+                  "completion_version": 0,
+                  "created_at": "2026-10-25T20:35:10Z",
+                  "description": "Keep the selected occurrence notes",
+                  "due_date": null,
+                  "id": "ec240000-0000-4000-8000-000000000031",
+                  "is_recurring": false,
+                  "labels": [],
+                  "priority": 4,
+                  "project_id": "ec240000-0000-4000-8000-000000000003",
+                  "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+                  "reminders": [],
+                  "subtasks": [],
+                  "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                  "title": "Next workshop review",
+                  "user_id": "ec240000-0000-4000-8000-000000000099"
+                }
+              }
+            }
+          ],
+          "operation": "complete",
+          "origin": "https://synthetic.example",
+          "team": "ec240000-0000-4000-8000-000000000004"
+        }
+      },
+      {
+        "baseline": {
+          "description": "Original team notes",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+          "title": "Team editor proof"
+        },
+        "fields": {
+          "description": "Keep these later workshop instructions",
+          "title": "Later selection draft proof"
+        },
+        "id": "2D419EEF-3230-430E-A8FA-EF5C5D774871",
+        "method": "PATCH",
+        "recordID": "ec240000-0000-4000-8000-000000000002",
+        "table": "tasks",
+        "teamTaskScope": {
+          "account": "ec240000-0000-4000-8000-000000000001",
+          "origin": "https://synthetic.example",
+          "project": "ec240000-0000-4000-8000-000000000003",
+          "team": "ec240000-0000-4000-8000-000000000004"
+        }
+      }
+    ],
+    "conversations": [],
+    "created_at": "2026-10-25T20:35:23Z",
+    "format": "com.taskfold.saved-edits",
+    "original": {
+      "fields": {},
+      "id": "B8905FAE-B7DD-4BAD-85E8-EEAB425CC130",
+      "method": "TEAM_BATCH",
+      "recordID": "b8905fae-b7dd-4bad-85e8-eeab425cc130",
+      "table": "tasks",
+      "teamTaskBatch": {
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "items": [
+          {
+            "baseline": {
+              "attachments": [],
+              "comments": [],
+              "completed": false,
+              "completion_version": 0,
+              "created_at": "2026-10-25T20:35:10Z",
+              "description": "Original team notes",
+              "due_date": null,
+              "id": "ec240000-0000-4000-8000-000000000002",
+              "is_recurring": false,
+              "labels": [],
+              "opaque_future": {
+                "preserved": true
+              },
+              "priority": 4,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "reminders": [],
+              "subtasks": [
+                {
+                  "completed": false,
+                  "description": "Original child notes",
+                  "id": "ec240000-0000-4000-8000-000000000005",
+                  "opaque_child": true,
+                  "priority": 4,
+                  "subtasks": [],
+                  "title": "Review the layout"
+                },
+                {
+                  "completed": false,
+                  "description": "Unchanged sibling notes",
+                  "id": "ec240000-0000-4000-8000-000000000006",
+                  "subtasks": [],
+                  "title": "Keep the workshop notes"
+                }
+              ],
+              "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+              "title": "Team editor proof",
+              "user_id": "ec240000-0000-4000-8000-000000000099"
+            },
+            "fields": {},
+            "id": "6874E65C-59AE-41E0-B97A-BF4B53CE63BA",
+            "method": "TEAM_COMPLETE",
+            "recordID": "ec240000-0000-4000-8000-000000000002",
+            "table": "tasks",
+            "teamCompletion": {
+              "completedAt": "2026-10-25T16:00:00Z",
+              "inputZone": "Europe/Copenhagen",
+              "nextGeneration": "a43b43c6-e25d-4f5d-a5f7-7de19a764a1a",
+              "operation": "complete",
+              "scope": {
+                "account": "ec240000-0000-4000-8000-000000000001",
+                "origin": "https://synthetic.example",
+                "project": "ec240000-0000-4000-8000-000000000003",
+                "team": "ec240000-0000-4000-8000-000000000004"
+              },
+              "seriesGeneration": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+              "seriesID": "ec240000-0000-4000-8000-000000000002",
+              "seriesProject": "ec240000-0000-4000-8000-000000000003",
+              "source": {
+                "attachments": [],
+                "comments": [],
+                "completed": false,
+                "completion_version": 0,
+                "created_at": "2026-10-25T20:35:10Z",
+                "description": "Original team notes",
+                "due_date": null,
+                "id": "ec240000-0000-4000-8000-000000000002",
+                "is_recurring": false,
+                "labels": [],
+                "opaque_future": {
+                  "preserved": true
+                },
+                "priority": 4,
+                "project_id": "ec240000-0000-4000-8000-000000000003",
+                "reminders": [],
+                "subtasks": [
+                  {
+                    "completed": false,
+                    "description": "Original child notes",
+                    "id": "ec240000-0000-4000-8000-000000000005",
+                    "opaque_child": true,
+                    "priority": 4,
+                    "subtasks": [],
+                    "title": "Review the layout"
+                  },
+                  {
+                    "completed": false,
+                    "description": "Unchanged sibling notes",
+                    "id": "ec240000-0000-4000-8000-000000000006",
+                    "subtasks": [],
+                    "title": "Keep the workshop notes"
+                  }
+                ],
+                "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+                "title": "Team editor proof",
+                "user_id": "ec240000-0000-4000-8000-000000000099"
+              }
+            }
+          },
+          {
+            "baseline": {
+              "attachments": [],
+              "comments": [],
+              "completed": false,
+              "completion_version": 0,
+              "created_at": "2026-10-25T20:35:10Z",
+              "description": "Keep the selected occurrence notes",
+              "due_date": null,
+              "id": "ec240000-0000-4000-8000-000000000031",
+              "is_recurring": false,
+              "labels": [],
+              "priority": 4,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+              "reminders": [],
+              "subtasks": [],
+              "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+              "title": "Next workshop review",
+              "user_id": "ec240000-0000-4000-8000-000000000099"
+            },
+            "fields": {},
+            "id": "BD4BEA9F-6502-43E1-94CF-C20E59C516CB",
+            "method": "TEAM_COMPLETE",
+            "recordID": "ec240000-0000-4000-8000-000000000031",
+            "table": "tasks",
+            "teamCompletion": {
+              "completedAt": "2026-10-25T16:00:00Z",
+              "inputZone": "Europe/Copenhagen",
+              "nextGeneration": "81eb5197-4269-4677-9147-4a76b32c4d4c",
+              "operation": "complete",
+              "scope": {
+                "account": "ec240000-0000-4000-8000-000000000001",
+                "origin": "https://synthetic.example",
+                "project": "ec240000-0000-4000-8000-000000000003",
+                "team": "ec240000-0000-4000-8000-000000000004"
+              },
+              "seriesGeneration": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+              "seriesID": "ec240000-0000-4000-8000-000000000031",
+              "seriesProject": "ec240000-0000-4000-8000-000000000003",
+              "source": {
+                "attachments": [],
+                "comments": [],
+                "completed": false,
+                "completion_version": 0,
+                "created_at": "2026-10-25T20:35:10Z",
+                "description": "Keep the selected occurrence notes",
+                "due_date": null,
+                "id": "ec240000-0000-4000-8000-000000000031",
+                "is_recurring": false,
+                "labels": [],
+                "priority": 4,
+                "project_id": "ec240000-0000-4000-8000-000000000003",
+                "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+                "reminders": [],
+                "subtasks": [],
+                "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+                "title": "Next workshop review",
+                "user_id": "ec240000-0000-4000-8000-000000000099"
+              }
+            }
+          }
+        ],
+        "operation": "complete",
+        "origin": "https://synthetic.example",
+        "team": "ec240000-0000-4000-8000-000000000004"
+      }
+    },
+    "tasks": [
+      {
+        "attachments": [],
+        "comments": [],
+        "completed": true,
+        "completed_at": "2026-10-25T16:00:00Z",
+        "completion_version": 1,
+        "created_at": "2026-10-25T20:35:10Z",
+        "description": "Keep these later workshop instructions",
+        "due_date": null,
+        "id": "ec240000-0000-4000-8000-000000000002",
+        "is_recurring": false,
+        "labels": [],
+        "opaque_future": {
+          "preserved": true
+        },
+        "priority": 4,
+        "project_id": "ec240000-0000-4000-8000-000000000003",
+        "reminders": [],
+        "subtasks": [
+          {
+            "completed": false,
+            "description": "Original child notes",
+            "id": "ec240000-0000-4000-8000-000000000005",
+            "opaque_child": true,
+            "priority": 4,
+            "subtasks": [],
+            "title": "Review the layout"
+          },
+          {
+            "completed": false,
+            "description": "Unchanged sibling notes",
+            "id": "ec240000-0000-4000-8000-000000000006",
+            "subtasks": [],
+            "title": "Keep the workshop notes"
+          }
+        ],
+        "task_generation": "3b2c9dc3-041b-45e8-8e78-8f88db9d6ac4",
+        "title": "Later selection draft proof",
+        "user_id": "ec240000-0000-4000-8000-000000000099"
+      },
+      {
+        "attachments": [],
+        "comments": [],
+        "completed": true,
+        "completed_at": "2026-10-25T16:00:00Z",
+        "completion_version": 1,
+        "created_at": "2026-10-25T20:35:10Z",
+        "description": "Keep the selected occurrence notes",
+        "due_date": null,
+        "id": "ec240000-0000-4000-8000-000000000031",
+        "is_recurring": false,
+        "labels": [],
+        "priority": 4,
+        "project_id": "ec240000-0000-4000-8000-000000000003",
+        "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+        "reminders": [],
+        "subtasks": [],
+        "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+        "title": "Next workshop review",
+        "user_id": "ec240000-0000-4000-8000-000000000099"
+      }
+    ],
+    "version": 1
+  },
+  "relaunch": {
+    "pending": [],
+    "tables": {
+      "labels": [],
+      "projects": [
+        {
+          "id": "ec240000-0000-4000-8000-000000000003",
+          "name": "Design workshop",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        }
+      ],
+      "tasks": [
+        {
+          "attachments": [],
+          "comments": [],
+          "completed": true,
+          "completed_at": "2026-10-25T16:00:00Z",
+          "completion_version": 1,
+          "created_at": "2026-10-25T20:35:10Z",
+          "description": "Keep the selected occurrence notes",
+          "due_date": null,
+          "id": "ec240000-0000-4000-8000-000000000031",
+          "is_recurring": false,
+          "labels": [],
+          "priority": 4,
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+          "reminders": [],
+          "subtasks": [],
+          "task_generation": "ff024558-ef25-483d-aeb3-b1bc71e94ee5",
+          "title": "Next workshop review",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        },
+        {
+          "attachments": [],
+          "comments": [],
+          "completed": false,
+          "completion_version": 0,
+          "created_at": "2026-10-25T20:35:10Z",
+          "description": "Keep this unselected occurrence",
+          "due_date": null,
+          "id": "ec240000-0000-4000-8000-000000000032",
+          "is_recurring": false,
+          "labels": [],
+          "priority": 4,
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "recurrence_parent_id": "ec240000-0000-4000-8000-000000000002",
+          "reminders": [],
+          "subtasks": [],
+          "task_generation": "aee6527f-7bac-48db-b71f-af6046736d88",
+          "title": "Later workshop review",
+          "user_id": "ec240000-0000-4000-8000-000000000099"
+        }
+      ]
+    },
+    "teamWorkspace": {
+      "boundary": {
+        "origin": "https://synthetic.example",
+        "raw": {
+          "account": "ec240000-0000-4000-8000-000000000001",
+          "native_team_reads_enabled": true,
+          "projects": [
+            {
+              "archived": false,
+              "can_send_tasks": false,
+              "id": "ec240000-0000-4000-8000-000000000003",
+              "role": "viewer",
+              "team_id": "ec240000-0000-4000-8000-000000000004"
+            }
+          ],
+          "setup_paused": false,
+          "teams": [
+            {
+              "access_revision": 2,
+              "id": "ec240000-0000-4000-8000-000000000004",
+              "revision": 1,
+              "state": "active"
+            }
+          ],
+          "token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "workspace_boundary_protocol": 1
+        }
+      },
+      "knownTasks": [
+        "ec240000-0000-4000-8000-000000000002",
+        "ec240000-0000-4000-8000-000000000031",
+        "ec240000-0000-4000-8000-000000000032"
+      ],
+      "knownTeams": {
+        "ec240000-0000-4000-8000-000000000003": "ec240000-0000-4000-8000-000000000004"
+      },
+      "quarantined": []
+    },
+    "widgetCompletion": {
+      "receiptOrder": [],
+      "receipts": {},
+      "states": {
+        "ec240000-0000-4000-8000-000000000031": {
+          "signature": "c75257b314c1393faa7445277c965d358393564e09f2f35f944ab5a7ae3b6260",
+          "token": "b239a422-784b-45bc-9de4-277a063a5a0b"
+        },
+        "ec240000-0000-4000-8000-000000000032": {
+          "signature": "3791e7dee87803984ec11e47f5003c295608eefa97d98af2ab3d05469e7ceaf8",
+          "token": "38becc0f-d10e-41a1-b942-2c7607af8043"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "retained": "Concise attempt JSON/logs and screenshots; accepted phone v4 result bundle and current signed products kept",
+  "removed": [
+    {
+      "name": "taskfold-audio-expired-native-phone-v1.xcresult",
+      "allocatedBytes": 53137408
+    },
+    {
+      "name": "taskfold-audio-expired-native-phone-v2.xcresult",
+      "allocatedBytes": 50532352
+    },
+    {
+      "name": "taskfold-audio-expired-native-phone-v3.xcresult",
+      "allocatedBytes": 48828416
+    }
+  ],
+  "allocatedBytesRemoved": 152498176
+}

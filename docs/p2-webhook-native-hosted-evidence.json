@@ -1,0 +1,424 @@
+{
+  "date": "2026-10-23",
+  "scope": "Scoped native hosted receiver, ordinary relaunch and account isolation",
+  "normalEntryEnabled": false,
+  "fullWebhooksComplete": false,
+  "fullPxComplete": false,
+  "runtimeSource": "iOS app and iOS-owned gateway",
+  "thisRepo": "TasskFold-MacOS",
+  "thisPlatformRuntimeAccepted": false,
+  "sourceSha256AtCheckpoint": {
+    "Taskfold/Views/WebhookAccessView.swift": "deb97e2f29f05a4dbacd8931a773e13d3a16875bacb53e6ffe439f8d345e93a3",
+    "Scripts/Diagnostics/webhook-hosted-base.sql": "922bc4b4435762b4a57b53f448ca245656dcbe36ab9deb3c1ae6eeee0837401c"
+  },
+  "controller": {
+    "date": "2026-10-23T08:12:11.886Z",
+    "project": "gboycabhzeaenkzczpqk",
+    "branchId": "b5010397-8455-48e9-b55c-2e61305e4910",
+    "checks": {
+      "scheduler-installed-inactive": true,
+      "unsigned-worker-rejected": true,
+      "unsigned-receiver-rejected": true,
+      "private-inspection-rejected": true,
+      "two-real-auth-sessions": true,
+      "native-phone-actual-task-delivered": true,
+      "native-phone-delivery-ui-completed": true,
+      "native-phone-isolation-ui-completed": true,
+      "native-tablet-actual-task-delivered": true,
+      "native-tablet-delivery-ui-completed": true,
+      "native-tablet-isolation-ui-completed": true
+    },
+    "realTasksChanged": 0,
+    "mainChanged": false,
+    "scheduledInvocationClaimed": true,
+    "sourceHashes": {
+      "supabase/functions/automation-webhooks/challenge.ts": "a63e02b59c7e701216861e240d49e79eae6e79f088d3317f33758325466520fc",
+      "supabase/functions/automation-webhooks/deno.json": "e21d64e061a61d3dfaa342b09bef5fac4e19a112942e42d3770e69f972a33433",
+      "supabase/functions/automation-webhooks/deno.lock": "126a6925947d55d70530530120c55b1046acdc1fbcaea7db048ffcd489f20c04",
+      "supabase/functions/automation-webhooks/handler.ts": "f4aa19ad0382e8224ada2f6977ade9e63c55e4563b0131162f21b4bc8f445edf",
+      "supabase/functions/automation-webhooks/handler_test.ts": "9be958b21b06e72871f0bc6d6afab614ce0041ff43e81fd6e8b7b674337f2e55",
+      "supabase/functions/automation-webhooks/index.ts": "5cf334e5f4be518c0228346e82d27dbb369a4dcd5927cf1a22cf103f75ce8bd4",
+      "supabase/functions/automation-webhooks/master-config.ts": "26363393ae9ebd079f0fe8a01ee0e5d629e57be46260e68d58e0869bd854744a",
+      "supabase/functions/automation-webhooks/schedule-auth.ts": "3aa743898ca5c9dd0e80bff07cdbfca7969504d0acefc1b48cbfc4f485d414a0",
+      "supabase/functions/automation-webhooks/schedule-auth_test.ts": "59478acf50ef037e01ebefbdc044fdf00f5c88cf82a827342649a3c4d3409f71",
+      "supabase/functions/automation-webhooks/secret.ts": "2c74c7f4051aa92d1f8b7b0f92e69bfae4f07424065fa965e1ac7b6e91a64da1",
+      "supabase/functions/automation-webhooks/socket.ts": "1611d0daeffae727b529fb33c58a29bcf5fea9ebbd3d4c3a14395e781572cc37",
+      "supabase/functions/automation-webhooks/socket_test.ts": "024a9dc60706987e6d909e7eebd0b77261c1b4386c72565fe5a6f389c512ba15",
+      "supabase/functions/automation-webhooks/transport.ts": "7c3b4ef94cafa46e9bed833307261c5708a33db1ff2946703ea8b1f3f1241bdd",
+      "supabase/functions/automation-webhooks/transport_test.ts": "30c9d1ebb80455bd01ab560df2774adfc137d9b8985ced4ae7648079387777e3",
+      "supabase/functions/automation-webhooks/worker.ts": "baa08d5749b5249afbd6b20e8cd1862a18274ae5c2a97c9b2b0b36ca5eb8fda9",
+      "supabase/functions/automation-webhooks/worker_test.ts": "c09f0132c3ac4f5c0efb9698a1d6ca71c87d83679f3948d2f812e521b5d3133d",
+      "supabase/functions/automation-keys/handler.ts": "2c1529714b7df36c4a674a2d8a15d177d5a5c4f3fd4e14a2fdc7e945b3849892",
+      "supabase/functions/automation-keys/handler_test.ts": "e7dff738665a2f1a5a1a4c331c464016c478fd7f2fd41646c51b7073092f36d1",
+      "supabase/functions/automation-keys/index.ts": "fbf48999a4352372885951e49b4d60d95fea511557e2129e7f2b450196d88c6f",
+      "supabase/functions/automation-tasks/handler.ts": "f404678fd8861481bbfea8223336a3acca274a93ae38caa26eb76be851e920b3",
+      "supabase/functions/automation-tasks/handler_test.ts": "6e76322be40979249925f5a5e9c6fa174994c123266696eee069fec0d0cc3852",
+      "supabase/functions/automation-tasks/index.ts": "372ed38c911916e4ddf979a94a7528516eac1e577a67f604322993ce24fd089c",
+      "supabase/functions/_shared/automation-admission.ts": "8d8eeb3965ed33c20892b42772a3e103c8a40464c7769c9be68eadaaad735865",
+      "supabase/functions/_shared/automation-admission_test.ts": "1478d6f54d659b909f25e5c12d77b73aa8f0f920f13f4747b376586d79c789e6",
+      "supabase/functions/dispatch-webhooks/index.ts": "516827ab9c09b4a479d36c6580abe03bfbf5e431dc65b47fcd6e503874251b9a",
+      "Scripts/Diagnostics/prepare-webhook-hosted.mjs": "6c27cc832ef49f8b06290240a0f930261e3caf0370640f7db49af942d08b5e21",
+      "Scripts/Diagnostics/test-webhook-delivery-hosted.mjs": "349d32fbf9b046e09ae931737fc2490744982cba2c25b1e1e601c90f6673b77f",
+      "Scripts/Diagnostics/webhook-hosted-base.sql": "cee7800deb68a196d01c2054d395a2b6d0d471b7d2c12bdeb47ccc9a771b9212",
+      "Scripts/Diagnostics/webhook-hosted-receiver.sql": "e2cca4ac6f2186caf37c3282b925b7d03cac06e488abb21f01e01a558ac48080",
+      "Scripts/Diagnostics/webhook-hosted-receiver.ts": "e518e833fd09bb3a6241c944fc3b55cdd780d849884ef614947104bc27d515b1",
+      "Scripts/Diagnostics/webhook-native-hosted.mjs": "1eb49b6441c8ae0dbe9e150ed9c6789bebb2ea313f04f8e65fc05a03d27c6a91"
+    },
+    "cleanup": {
+      "users": true,
+      "functions": true,
+      "secrets": true,
+      "files": true,
+      "scheduler": true
+    },
+    "phase": "passed",
+    "passed": true
+  },
+  "nativeCases": {
+    "passed": 4,
+    "skipped": 0,
+    "description": [
+      "Phone native delivery/relaunch",
+      "Phone A-B-A pending setup fence",
+      "Tablet native delivery/relaunch",
+      "Tablet A-B-A pending setup fence"
+    ],
+    "runs": {
+      "webhook-hosted-native-phone-v3": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792744049.654,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792743912.167,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "webhook-hosted-native-phone-isolation-v4": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792744263.319,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792744144.776,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "webhook-hosted-native-ipad-v5": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "finishTime": 1792744655.357,
+        "passedTests": 1,
+        "result": "Failed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792744355.125,
+        "statistics": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "TaskfoldUITests",
+            "testIdentifier": 2,
+            "testIdentifierString": "TaskfoldUITests/testHostedWebhookPendingSetupStaysWithItsAccount()",
+            "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHostedWebhookPendingSetupStaysWithItsAccount",
+            "testName": "testHostedWebhookPendingSetupStaysWithItsAccount()"
+          }
+        ],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      },
+      "webhook-hosted-native-ipad-isolation-v6": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792745495.44,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792744828.324,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      }
+    },
+    "acceptedCasesByRun": {
+      "webhook-hosted-native-phone-v3": [
+        "testHostedWebhookDeliveryAndPrivateRelaunch"
+      ],
+      "webhook-hosted-native-phone-isolation-v4": [
+        "testHostedWebhookPendingSetupStaysWithItsAccount"
+      ],
+      "webhook-hosted-native-ipad-v5": [
+        "testHostedWebhookDeliveryAndPrivateRelaunch"
+      ],
+      "webhook-hosted-native-ipad-isolation-v6": [
+        "testHostedWebhookPendingSetupStaysWithItsAccount"
+      ]
+    },
+    "versionNotes": [
+      "Phone delivery preceded the singular wording fix; the final tablet history visibly has 1 part and 1 attempt.",
+      "Interaction refinements dismiss password saving, activate the nested UISwitch and match/scroll to the pending name across accessibility representations. API/persistence code is unchanged.",
+      "Tablet isolation v5 reached the recovered setup but its exact StaticText name check failed. v6 resumed that same fixture and passed broader name matching plus scrolling the other account to check absence."
+    ]
+  },
+  "signing": {
+    "v3": {
+      "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      },
+      "TaskfoldUITests-Runner.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      }
+    },
+    "v4": {
+      "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      },
+      "TaskfoldUITests-Runner.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      }
+    },
+    "v5": {
+      "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      },
+      "TaskfoldUITests-Runner.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      }
+    },
+    "v6": {
+      "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      },
+      "TaskfoldUITests-Runner.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      }
+    }
+  },
+  "builds": {
+    "ios": "TEST BUILD SUCCEEDED",
+    "mac": "BUILD SUCCEEDED; CODE_SIGNING_ALLOWED=NO; not Mac runtime"
+  },
+  "fixtureRefinements": [
+    "Recorded preview web history lacks main native CRUD grants; inspected main privileges were mirrored on only the owned no-data branch. No RLS policies changed."
+  ],
+  "cleanup": {
+    "runner": {
+      "users": true,
+      "functions": true,
+      "secrets": true,
+      "files": true,
+      "scheduler": true
+    },
+    "apps": {
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+        "com.dbakp.taskfold.workflowtestswebhooks": {
+          "uninstalled": true
+        },
+        "com.dbakp.taskfold.workflowtestswebhooks.uitests.xctrunner": {
+          "uninstalled": true
+        }
+      },
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+        "com.dbakp.taskfold.workflowtestswebhooks": {
+          "uninstalled": true
+        },
+        "com.dbakp.taskfold.workflowtestswebhooks.uitests.xctrunner": {
+          "uninstalled": true
+        }
+      }
+    },
+    "branchDeleted": true,
+    "privateDirectoryRemoved": true,
+    "rawResultArchivesPrunedAfterExport": [
+      "webhook-hosted-native-phone-v3.xcresult",
+      "webhook-hosted-native-phone-isolation-v4.xcresult",
+      "webhook-hosted-native-ipad-v5.xcresult",
+      "webhook-hosted-native-ipad-isolation-v6.xcresult",
+      "webhook-hosted-native-ios"
+    ],
+    "typedPasswordLinesRedacted": true,
+    "receiverSecretsAbsentFromRetainedLogs": true,
+    "mainSchedulerAbsent": true,
+    "mainSubscriptionsAbsent": true,
+    "mainOutboxAbsent": true,
+    "mainCandidateMigrations": 0,
+    "realTasksChanged": 0
+  },
+  "remaining": [
+    "Genuine native hosted transport-loss, offline, token-expiry and master-key recovery variants",
+    "Webhook clipboard expiry and spoken native checks",
+    "Mac AppKit/private-Keychain runtime remains deferred with signing",
+    "Email intake, advanced teams and wearables",
+    "User remote-reminder, old-client and distribution deferrals remain in force"
+  ]
+}

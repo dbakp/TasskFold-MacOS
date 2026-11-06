@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-11",
+  "scope": "iOS native estimate chip touch target, complete accessibility strings, decline and literal-title persistence; Mac documentation only.",
+  "productionChange": {
+    "file": "Taskfold/Views/QuickAdd.swift",
+    "minimumLayoutHeightBefore": 44,
+    "minimumLayoutHeightAfter": 48,
+    "measuredNormalHeightBefore": 42.248779296875,
+    "measuredNormalHeightAfter": 46.089599609375,
+    "measuredLargestHeightAfter": 64.65341186523438
+  },
+  "nativeTests": {
+    "resultBundle": "estimate-chip-reading-phone-v3.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "checked": [
+      "Full 25 min from title button label and 25 min child label",
+      "Chip contains text and is hittable within window",
+      "Rendered height at least 44 points",
+      "Decline preserves exact Clip check ~25m title",
+      "Save, normal relaunch and editor reopen retain literal title and unset estimate",
+      "Editor save retains open task"
+    ]
+  },
+  "captures": {
+    "repository": "TaskFold-iOS",
+    "normal": "docs/estimate-chip-reading/normal.png",
+    "largest": "docs/estimate-chip-reading/largest.png",
+    "visuallyInspected": true
+  },
+  "build": "estimate-chip-reading-build-v4.log: TEST BUILD SUCCEEDED",
+  "strictSigning": "estimate-chip-reading-signing-v4.json",
+  "cloudReturn": {
+    "resultBundle": "estimate-chip-reading-cloud-return-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "preservation": {
+      "originalCloudSharedTablesUnchanged": 14,
+      "originalCloudPending": 0,
+      "returnedToCloudMode": true,
+      "localLiteralTask": {
+        "taskCount": 1,
+        "exactLiteralTitle": true,
+        "completed": false,
+        "durationMinutes": null,
+        "pending": 0
+      }
+    }
+  },
+  "retainedFailures": [
+    "v1 normal failed the 44-point requirement at 42.25pt; largest passed.",
+    "v2 normal passed; largest synthesized typing entered only Clip check, so the estimate chip did not exist. Final test types one character per native event and asserts the entire draft before proceeding.",
+    "v3 build was universal; strict signing validation refused it before mutation. Rebuilt arm64 with the established flags; v4 signing passed."
+  ],
+  "limits": [
+    "No unfiltered accessibility audit rerun or clipping-warning clearance claimed; retained audit findings remain 2 normal and 2 largest.",
+    "No accessibility suppression or threshold reduction.",
+    "Actual VoiceOver journey remains pending; no system setting changed.",
+    "Mac desktop controls have separate pointer/keyboard sizing; no Mac production code or runtime test changed.",
+    "Full P0 acceptance remains open."
+  ]
+}

@@ -1,0 +1,227 @@
+{
+  "date": "2026-10-23",
+  "thisRepo": "TasskFold-MacOS",
+  "productionBehaviorChanged": true,
+  "scope": "Conceal confirmed review after errors; classify rejected management/refresh sessions; fence late refresh errors",
+  "baseline": {
+    "repo": "TaskFold-iOS",
+    "scope": "Unchanged API-key and webhook models with synthetic service errors",
+    "executed": 2,
+    "failedTests": 2,
+    "failedAssertions": 5,
+    "log": "connection-conceal-baseline.log",
+    "rawSecretsPrinted": false
+  },
+  "core": {
+    "executed": 1397,
+    "passed": 1364,
+    "skipped": 33,
+    "failed": 0,
+    "log": "connection-recovery-all-core-mac.log",
+    "platform": "Mac-hosted Swift package tests",
+    "newCoverage": [
+      "API-key and webhook error concealment with unchanged private recovery",
+      "Same-intent control retry does not restore secret review; explicit enrollment reconfirmation does",
+      "Both management routes renew credentials once and replay the same request body",
+      "Repeated management 401 and four structured invalid-session refresh codes produce a fixed sign-in error",
+      "Transient/unknown renewal failures retain their separate classification",
+      "Late rejected refresh after an account switch becomes cancellation"
+    ]
+  },
+  "native": {
+    "runtimeRepo": "TaskFold-iOS",
+    "passed": 4,
+    "skipped": 0,
+    "runs": {
+      "phone": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792757942.458,
+        "passedTests": 2,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792757815.255,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      },
+      "tablet": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792757904.452,
+        "passedTests": 2,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792757815.255,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      }
+    },
+    "scope": "Production SwiftUI/model; exact isolated Debug local fixture throws a typed authorization refusal from an in-memory service. No real Auth/HTTP/Keychain acceptance is claimed by these UI cases.",
+    "checks": [
+      "Deliberate initial Reveal shows the synthetic secret",
+      "Verification refusal conceals every accessible raw-secret prefix",
+      "Pinned message says sign-in is required and setup was retained",
+      "Continuing the same setup restores masked controls with no automatic Reveal",
+      "Normal and largest text on iPhone and iPad Simulator"
+    ],
+    "nativeUIAcceptedForThisRepo": false,
+    "MacUIRuntimeAccepted": false,
+    "speechAccepted": false,
+    "transportScope": "The separate Core matrices use real URLSession on the Mac-hosted test target with a synthetic URLProtocol peer, not a hosted Auth service."
+  },
+  "builds": {
+    "iOS": "connection-recovery-acceptance-build.log: TEST BUILD SUCCEEDED",
+    "Mac": "connection-recovery-mac-build.log: BUILD SUCCEEDED; unsigned compile only"
+  },
+  "simulatorSigning": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "harnessCorrections": [
+    "Use the bidirectional form review helper instead of a forward-only swipe helper.",
+    "Assert name/address and enabled Create before testing the target flow.",
+    "Removed an unrelated fixture-name assertion on a virtualized offscreen row; exact intent identity remains covered in Core tests."
+  ],
+  "cleanup": {
+    "devices": {
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+        "ownedAppAndRunnerUninstalled": true
+      },
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+        "ownedAppAndRunnerUninstalled": true
+      }
+    },
+    "ownedNativeHostAndRawResultsRemoved": true,
+    "ownedMacBuildRemoved": true,
+    "logsRedacted": true,
+    "retainedCurrentIOSBuildCacheForNextNativeAcceptance": true,
+    "prunedMiB": 799.4,
+    "nativeScreenshots": [
+      "docs/screenshots/connection-recovery/phone-largest.png",
+      "docs/screenshots/connection-recovery/phone-normal.png",
+      "docs/screenshots/connection-recovery/tablet-largest.png",
+      "docs/screenshots/connection-recovery/tablet-normal.png"
+    ],
+    "noCloudResourcesCreated": true
+  },
+  "visualReview": {
+    "allFourMaskedScreenshotsInspected": true,
+    "runtimeRepo": "TaskFold-iOS",
+    "paths": [
+      "docs/screenshots/connection-recovery/phone-largest.png",
+      "docs/screenshots/connection-recovery/phone-normal.png",
+      "docs/screenshots/connection-recovery/tablet-largest.png",
+      "docs/screenshots/connection-recovery/tablet-normal.png"
+    ],
+    "scope": "Sign-in message fully readable with ordinary and uncapped largest text; no raw secret shown."
+  },
+  "sourceSha256AtCheckpoint": {
+    "Taskfold/Core/Backend.swift": "71b79dcd0abe9f7943b37986ac2d19408013eab0eb2a8aa6a6b96be4701c6b81",
+    "Taskfold/Core/AutomationAccess.swift": "bc96fdd7611dcb9caf708cfd2d595b1f1e4f841784f9d0d3fb81a69196e9b4ac",
+    "Taskfold/Core/WebhookAccess.swift": "e59a48e93ce058e0834cfe7ee05ee123ac0c3dc5e5f3d3a9e8750c92a6145aaa",
+    "Taskfold/Views/AutomationAccessView.swift": "026fbad51a9d82c9284b182091816aa5d487c02398c99711788374756dfaae06",
+    "Taskfold/Views/WebhookAccessView.swift": "bb6de673f82dff3fd1c39ccb161d2929f5d0db3cb388e0ed069c6379f89bc21b",
+    "TaskfoldTests/AccountTransportTests.swift": "f7dab8d6ce0eaa669370cba92669712b3f48e856958eb7b49e68f4f3374bb4de",
+    "TaskfoldTests/AutomationEnrollmentTests.swift": "4a0b0426e915a7ed5f3f0108f77895c2eece4d5ff74bc5bba8b6115566acdfcf",
+    "TaskfoldTests/WebhookAccessTests.swift": "388c09f845ed8398ad917ccf2fd17c8f806e7b270dd1cfd08c808dee3e492a61"
+  },
+  "normalFeatureEntriesEnabled": false,
+  "mainServiceChanged": false,
+  "realTasksChanged": 0,
+  "realAccountsChanged": 0,
+  "fullNativeReauthenticationComplete": false,
+  "fullPxComplete": false,
+  "remaining": [
+    "Hosted native expiry/refresh and full sign-in recovery walkthrough",
+    "In-place same-account reauthentication",
+    "Native API-key failure/review interaction acceptance",
+    "Mac UI/Keychain runtime acceptance",
+    "Wider consent/history speech",
+    "Verified email intake",
+    "Advanced teams",
+    "Wearable clients"
+  ],
+  "userDeferrals": [
+    "Remote reminders",
+    "Older-client safeguards",
+    "Distribution/signing/install-update verification",
+    "OAuth registration/provider acceptance",
+    "Physical location-reminder delivery"
+  ],
+  "references": [
+    "https://supabase.com/docs/guides/auth/debugging/error-codes"
+  ]
+}

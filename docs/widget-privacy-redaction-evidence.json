@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual owned SwiftUI views rendered with explicit .redacted(reason: .privacy); not installed WidgetKit, passcode, accessibility or system redaction acceptance.",
+  "defect": "Original Today task title/time and Focus title/schedule/project stayed readable under privacy redaction.",
+  "fix": "Mark Today task text group and Focus task title, per-task plan/priority and project as privacySensitive in each independently owned source.",
+  "reference": "https://developer.apple.com/documentation/swiftui/view/privacysensitive(_:)",
+  "familiesRendered": [
+    "Today small",
+    "Today medium",
+    "Focus small",
+    "Focus medium"
+  ],
+  "normalBeforeAfterByteEqual": true,
+  "normalAcrossReposByteEqual": true,
+  "privacyAcrossReposByteEqual": true,
+  "builds": {
+    "widget-privacy-ios-debug.log": {
+      "passed": true,
+      "sha256": "36f9581cbde7641f42168f5e18a7f64953312eda332320ac06637128ae31bd81"
+    },
+    "widget-privacy-ios-release.log": {
+      "passed": true,
+      "sha256": "dc5ea37f8576d6ae99d0f2d826fe0b0c4c7594c76ee9ec758281718ea0ab409c"
+    },
+    "widget-privacy-mac-debug.log": {
+      "passed": true,
+      "sha256": "e94b4f5e5b173bd09fe9f76e280176414bfa67b069a0b6b6711249cfd4f3957c"
+    },
+    "widget-privacy-mac-release.log": {
+      "passed": true,
+      "sha256": "2fc234636219d2a5440bf8f9d201c1481e386075c8930305067c289dbf606288"
+    }
+  },
+  "buildScope": "Owned WidgetKit extension targets only, unsigned Debug/Release for iOS Simulator and macOS. Full app and native tests were not repeated for annotation-only changes.",
+  "sourceHashes": {
+    "TaskFold-iOS/TaskfoldWidgets/TaskfoldWidgets.swift": "8f4af6c559f0b7404b0d2b04c04a08781c98149ae84a1b6fab472f1683f9c46e",
+    "TaskFold-iOS/Scripts/render_privacy_widget_previews.py": "f5c7caf5309a05d9ca5baea402556052f798fa9fda1e4194e48a8bdded5f67ce",
+    "TasskFold-MacOS/TaskfoldWidgets/TaskfoldWidgets.swift": "8f4af6c559f0b7404b0d2b04c04a08781c98149ae84a1b6fab472f1683f9c46e",
+    "TasskFold-MacOS/Scripts/render_privacy_widget_previews.py": "f5c7caf5309a05d9ca5baea402556052f798fa9fda1e4194e48a8bdded5f67ce"
+  },
+  "remaining": [
+    "Actual system-selected redaction on locked devices and Mac hosts.",
+    "Other widget families and accessibility labels under system privacy.",
+    "Existing P0 notification, VoiceOver, external-provider, continuity and distribution gates."
+  ],
+  "dataScope": "Synthetic in-memory preview task. No real account, backend, Todoist, installed app or fixture workspace used.",
+  "captures": [
+    {
+      "path": "widget-privacy/before-privacy.png",
+      "sha256": "4ba3b00128a802f27890b663574f076435deed17609cf72f74faf716774d7cc6",
+      "inspected": true
+    },
+    {
+      "path": "widget-privacy/normal.png",
+      "sha256": "073dd727053141419dd06979363e5f6da487e3a3770594e2e6b45674a974b888",
+      "inspected": true
+    },
+    {
+      "path": "widget-privacy/privacy.png",
+      "sha256": "93f244615190995a01b3853d579170988f2d2a7ce1ce1d0be41bb8af338660ce",
+      "inspected": true
+    }
+  ]
+}

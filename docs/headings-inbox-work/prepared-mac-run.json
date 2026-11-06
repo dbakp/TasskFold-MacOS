@@ -1,0 +1,13 @@
+{
+  "status": "prepared; native activation blocked by locked Mac",
+  "testTarget": "TaskfoldUITests",
+  "testClass": "TaskfoldMacUITests",
+  "cases": [
+    "testHeadingInboxGroupMoveReviewCancelUndoAndColdReturn",
+    "testHeadingPlannerChildScheduleUndoCompleteAndColdReturn",
+    "testHeadingTodayChildDetailsCompletionUndoAndColdReturn"
+  ],
+  "build": "/tmp/taskfold-mac-recovery-build",
+  "host": "/tmp/taskfold-mac-recovery-host",
+  "reason": "User reported unlocked; subsequent native access reported locked and XCTest failed to foreground isolated host. No completed app-flow claim."
+}

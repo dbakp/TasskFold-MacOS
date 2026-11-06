@@ -19,6 +19,11 @@ enum Linkify {
             return Match(range: range, url: fixed)
         }
     }
+    struct Reading {
+        let text: String
+        let matches: [Match]
+    }
+    static func reading(_ text: String) -> Reading { Reading(text: text, matches: links(in: text)) }
     static func urls(in text: String) -> [URL] {
         var seen = Set<String>()
         return links(in: text).map(\.url).filter { seen.insert($0.absoluteString).inserted }
@@ -36,7 +41,7 @@ enum Linkify {
 @MainActor @Observable
 final class LinkTitles {
     static let shared = LinkTitles()
-    private(set) var titles: [String: String] = (try? JSONDecoder().decode([String: String].self, from: UserDefaults.standard.data(forKey: "linkTitles") ?? Data())) ?? [:]
+    private(set) var titles: [String: String] = (try? TaskfoldJSONDecoder().decode([String: String].self, from: UserDefaults.standard.data(forKey: "linkTitles") ?? Data())) ?? [:]
     @ObservationIgnored private(set) var metadata: [String: LPLinkMetadata] = [:]
     @ObservationIgnored private var inFlight = Set<String>()
     @ObservationIgnored private var failed = Set<String>()
@@ -69,7 +74,7 @@ final class LinkTitles {
                 if let title = result.title?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
                     titles[key] = title.count > 70 ? String(title.prefix(67)) + "…" : title
                     if titles.count > 400 { titles = Dictionary(uniqueKeysWithValues: Array(titles.suffix(300))) }
-                    UserDefaults.standard.set(try? JSONEncoder().encode(titles), forKey: "linkTitles")
+                    UserDefaults.standard.set(try? TaskfoldJSONEncoder().encode(titles), forKey: "linkTitles")
                 }
             } else { failed.insert(key) }
             let callbacks = waiters.removeValue(forKey: key) ?? []
@@ -105,6 +110,7 @@ struct LinkText: NSViewRepresentable {
     var lineLimit = 2
     var accessibilityIdentifier: String? = nil
     var accessibilityLabel: String? = nil
+    var preparedLinks: Linkify.Reading? = nil
     @Environment(Workspace.self) private var workspace
 
     func makeNSView(context: Context) -> LinkAwareTextView {
@@ -116,15 +122,20 @@ struct LinkText: NSViewRepresentable {
         view.isVerticallyResizable = false; view.isHorizontallyResizable = false
         view.setContentHuggingPriority(.defaultLow, for: .horizontal)
         view.setAccessibilityRole(.staticText)
+        // Populate before the text view joins the table's accessibility hierarchy.
+        // Lazy row creation can itself happen during an accessibility traversal.
+        view.setInitialContent(attributed())
         return view
     }
     func updateNSView(_ view: LinkAwareTextView, context: Context) {
         view.workspace = workspace
         view.textContainer?.maximumNumberOfLines = lineLimit
-        view.textContainer?.lineBreakMode = .byTruncatingTail
+        view.textContainer?.lineBreakMode = lineLimit == 0 ? .byWordWrapping : .byTruncatingTail
         view.linkTextAttributes = [.foregroundColor: linkColor, .cursor: NSCursor.pointingHand]
         let content = attributed()
-        view.textStorage?.setAttributedString(content)
+        // Replacing identical text posts AppKit selection/accessibility notifications.
+        // During an accessibility traversal those notifications can reenter SwiftUI's graph.
+        view.updateContent(content)
         view.setAccessibilityIdentifier(accessibilityIdentifier)
         view.setAccessibilityLabel(accessibilityLabel ?? content.string)
         view.setAccessibilityValue(content.string)
@@ -139,11 +150,13 @@ struct LinkText: NSViewRepresentable {
     }
     /// Plain runs in `color`; each link run carries its URL and reads as the page title (or the host until it loads).
     private func attributed() -> NSAttributedString {
+        let reading = preparedLinks.flatMap { $0.text.utf8.elementsEqual(self.text.utf8) ? $0 : nil } ?? Linkify.reading(self.text)
+        let text = reading.text
         let result = NSMutableAttributedString()
         var base: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
         if strikethrough { base[.strikethroughStyle] = NSUnderlineStyle.single.rawValue; base[.strikethroughColor] = NSColor.secondaryLabelColor }
         var cursor = text.startIndex
-        for match in Linkify.links(in: text) {
+        for match in reading.matches {
             if match.range.lowerBound > cursor { result.append(NSAttributedString(string: String(text[cursor..<match.range.lowerBound]), attributes: base)) }
             var attributes = base
             attributes[.link] = match.url
@@ -161,6 +174,31 @@ struct LinkText: NSViewRepresentable {
 /// hover, and offers Open, Copy Link, and Share from the context menu.
 final class LinkAwareTextView: NSTextView, NSTextViewDelegate {
     weak var workspace: Workspace?
+    private var renderedContent: NSAttributedString?
+    private var pendingContent: NSAttributedString?
+    private var contentUpdateScheduled = false
+    func setInitialContent(_ content: NSAttributedString) {
+        renderedContent = NSAttributedString(attributedString: content)
+        textStorage?.setAttributedString(content)
+    }
+    func updateContent(_ content: NSAttributedString) {
+        pendingContent = NSAttributedString(attributedString: content)
+        guard !contentUpdateScheduled else { return }
+        guard renderedContent?.isEqual(to: content) != true else { pendingContent = nil; return }
+        contentUpdateScheduled = true
+        // AppKit can synchronously inspect table accessibility children while replacing
+        // text. Finish SwiftUI's graph update first, then apply the newest render once.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.contentUpdateScheduled = false
+            guard let next = self.pendingContent else { return }
+            self.pendingContent = nil
+            guard self.renderedContent?.isEqual(to: next) != true else { return }
+            self.renderedContent = next
+            self.textStorage?.setAttributedString(next)
+            self.invalidateIntrinsicContentSize()
+        }
+    }
     override init(frame frameRect: NSRect, textContainer container: NSTextContainer?) { super.init(frame: frameRect, textContainer: container); delegate = self }
     override init(frame frameRect: NSRect) { super.init(frame: frameRect); delegate = self }
     required init?(coder: NSCoder) { super.init(coder: coder); delegate = self }

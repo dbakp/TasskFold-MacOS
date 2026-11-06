@@ -1,0 +1,11 @@
+{
+  "/tmp/taskfold-audio-recovery-core-mac/debug/TaskfoldCore.o": "c12ddd0a348fda7c22f0bcda98f79116372fe904d874de403a9549ff69bbae33",
+  "/tmp/taskfold-audio-recovery-core-mac/debug/TaskfoldCoreTests.xctest/Contents/MacOS/TaskfoldCoreTests": "e431319c31102986d674c5ddcb5aeda94263f4d855efe325ed492a68257775dc",
+  "/tmp/taskfold-audio-recovery-core-ios/debug/TaskfoldCore.o": "f0ff8c2c7ac345cbc0c3830482b997c8108e4c086282ce2cca891e4d5af6687e",
+  "/tmp/taskfold-audio-recovery-core-ios/debug/TaskfoldCoreTests.xctest/Contents/MacOS/TaskfoldCoreTests": "2aa9e415eeb7bfbcd6cffea1ed3fb7a767b22f0260f4a6f7b79264b8d364c415",
+  "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold": "357752fababbf6016c82e641589b377ebed608d114f8c6cf64f0909f93e467a0",
+  "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "587e3ce85685046e1287d097ec71c6125d4a0c40758c2d54fcc121c420b2344c",
+  "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold": "f9ade301e40b20be4a15acd3fe0d9f4944f296af97daa70fc1cd102dd7e83fba",
+  "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib": "4e209851a6df109a9b20d101f2024de9dbc2641a8264d301d307c84edb1db362",
+  "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/TaskfoldUITests": "25e2a62559c505249d80789de7a3368ef9b8570164aba850b7497ff590f1a524"
+}

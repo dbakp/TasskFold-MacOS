@@ -1,0 +1,80 @@
+[
+  {
+    "device": "phone",
+    "undoCommands": 1,
+    "saved": true,
+    "seconds": 2.050212333,
+    "pending": 4001,
+    "error": null,
+    "commands": 4001,
+    "tasks": 1001,
+    "proof": "b158787a-018e-4a60-b75e-9eeaca8b185c",
+    "count": 1000,
+    "taskRevisionDelta": 1
+  },
+  {
+    "device": "phone",
+    "count": 5000,
+    "saved": true,
+    "commands": 20001,
+    "tasks": 5001,
+    "seconds": 13.297438417,
+    "undoCommands": 1,
+    "taskRevisionDelta": 1,
+    "error": null,
+    "proof": "2cd120b8-8456-4264-b40d-fa0a2862beea",
+    "pending": 20001
+  },
+  {
+    "device": "tablet",
+    "pending": 4001,
+    "count": 1000,
+    "tasks": 1001,
+    "error": null,
+    "proof": "d1a34739-d5b5-4843-889d-8491e4f7924b",
+    "seconds": 2.012292792,
+    "taskRevisionDelta": 1,
+    "saved": true,
+    "undoCommands": 1,
+    "commands": 4001
+  },
+  {
+    "device": "tablet",
+    "undoCommands": 1,
+    "error": null,
+    "saved": true,
+    "proof": "289bfa47-dd6d-41dc-8de5-ab22ad1ded69",
+    "count": 5000,
+    "pending": 20001,
+    "taskRevisionDelta": 1,
+    "seconds": 13.53762975,
+    "tasks": 5001,
+    "commands": 20001
+  },
+  {
+    "device": "mac",
+    "saved": true,
+    "proof": "fbee3669-a414-4363-bcc2-babaac7bb130",
+    "error": null,
+    "undoCommands": 1,
+    "taskRevisionDelta": 1,
+    "commands": 4001,
+    "seconds": 1.278671041,
+    "pending": 4001,
+    "count": 1000,
+    "tasks": 1001
+  },
+  {
+    "device": "mac",
+    "seconds": 11.380396459,
+    "undoCommands": 1,
+    "error": null,
+    "saved": true,
+    "tasks": 5001,
+    "proof": "7016093d-d3ca-4e2e-b00b-c6addeae1127",
+    "count": 5000,
+    "commands": 20001,
+    "pending": 20001,
+    "taskRevisionDelta": 1
+  }
+]

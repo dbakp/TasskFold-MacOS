@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-06",
+  "owner": "TasskFold-MacOS",
+  "sources": {
+    "Taskfold/Core/Store.swift": "9b312431653255d5c32ad809b14cc9360751db9d27527d69699751afcb6798d7",
+    "Taskfold/Views/FilterAssistanceView.swift": "750f82535fafe5e09812f04d2bef6a97485dc8691ab8d8086040bb5d6bb4b609"
+  },
+  "normalInstalledAppsUnchanged": true,
+  "cloudAssistance": false,
+  "checkpointPromotion": false
+}

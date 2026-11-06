@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-13",
+  "problem": "The task conflict banner offered Review while the generic list status also offered Retry for the same blocked edit. Retrying does not choose a conflict version.",
+  "change": {
+    "iOS": "Hide the generic online list status while task or Focus review is pending; retain the offline status without a competing conflict Retry.",
+    "macOS": "Hide the generic online list error and Retry during task/Focus review. Keep the task Review action in the sidebar and suppress its Focus-conflict Retry.",
+    "ordinaryErrors": "The existing notice/Retry path remains for failures with no conflict. Offline status remains eligible. These branches were inspected, not separately exercised in this bounded run."
+  },
+  "validation": {
+    "macInitial": "mac-conflict-guidance-v1.xcresult: 1 passed, no skips/failures/structured runtime warnings.",
+    "macFinal": "mac-conflict-guidance-v2.xcresult: 1 passed, no skips/failures/structured runtime warnings; Retry absent under both native button and link roles. Review/Later/Use synced preserves the later estimate, independent comment and full resolved workspace after relaunch.",
+    "iOS": "ios-conflict-guidance-v1.xcresult: 2 passed, no skips/failures/structured runtime warnings; Retry sync absent while Review remains. Both Keep my edit and Use synced preserve independent comments/later estimate and exact resolved workspace after relaunch.",
+    "fixtures": "Existing isolated local conflict fixtures now carry the same overlap notice as an actual sync conflict. No server or Todoist data touched.",
+    "sourceMatch": {
+      "macSwiftFiles": 63,
+      "iOSSwiftFiles": 47,
+      "difference": "Only existing isolated namespace replacements."
+    },
+    "builds": "Mac app/native UI tests and iOS app/widgets/native UI tests built successfully. iOS products signed with the existing development identity.",
+    "limits": [
+      "No new live paired conflict claim; that is covered separately by live-comment-pair-evidence.json.",
+      "No new actual Focus-conflict, offline or ordinary-error UI journey in this run.",
+      "No new spoken-output acceptance or distribution test. Isolated iOS stage retains older package metadata and is not a release candidate."
+    ]
+  },
+  "sourceSHA256": {
+    "TasskFold-MacOS": {
+      "Taskfold/Views/RootView.swift": "310e30bdd919c8b12b288e5fff32bb6f474e0ce1c0652391af7139c5593588d5",
+      "Taskfold/Views/TaskListView.swift": "d79ddf41c5e950f895eb0085d0416fcef3a5af0371ed64ec8136d467adcefe25",
+      "Taskfold/Views/SidebarView.swift": "29040a9cf596da556e841a53d5a702b5e8b9819d4af6651d4e4460e2124db1d5",
+      "TaskfoldUITests/TaskfoldMacUITests.swift": "a6497a9467aea53a26e3bedc1b2e06b69406af08c487c56e98fe356a5bdcc978"
+    },
+    "TaskFold-iOS": {
+      "Taskfold/TaskfoldApp.swift": "d9a241bddcee2e4c94a31f0947bd5a1ce260ace3eef55fa2f8b01db07b92a8b1",
+      "TaskfoldUITests/TaskfoldUITests.swift": "cbb470a289eaddcfb24cfe562f78a25a14de08d4913191d245ba8f0fdf1d84b9"
+    }
+  },
+  "cleanup": {
+    "macBaselineFilesExact": 28,
+    "protectedFilesExact": 100,
+    "retainedIOSFilesExact": 36,
+    "pendingDesktopWidgetExact": true,
+    "testAppClosed": true,
+    "isolatedSimulatorAppAndRunnerUninstalled": true,
+    "disposableSimulatorShutdown": true,
+    "pendingWidgetHostUntouched": 79318
+  }
+}

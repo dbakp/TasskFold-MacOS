@@ -1,0 +1,185 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-personal-headings-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TaskfoldUITests/testPersonalHeadingLostReplyPauseColdExactRetry" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPersonalHeadingMissingSupportBeforeSaveKeepsVisibleQueue" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing" -resultBundlePath /tmp/taskfold-personal-headings-phone.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-personal-headings-phone.xcresult
+
+2026-10-26 20:13:45.553993+0100 TaskfoldUITests-Runner[35132:23394121] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 20:13:53.635.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 20:13:53.636.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 20:13:53.636.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingLostReplyPauseColdExactRetry]' started.
+    t =     0.03s Start Test at 2026-10-26 20:13:53.662
+    t =     0.07s Set Up
+    t =     0.09s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.09s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 20:13:53.943 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:13:53.944 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[35132]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x104f74398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108578310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     3.32s         Setting up automation session
+    t =     9.52s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.24s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =    13.30s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =    13.30s         Checking existence of `"openTeamEditorFixture" Button`
+    t =    13.53s Tap "openTeamEditorFixture" Button
+    t =    13.53s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.54s     Find the "openTeamEditorFixture" Button
+    t =    13.56s     Check for interrupting elements affecting "openTeamEditorFixture" Button
+    t =    13.62s     Synthesize event
+    t =    14.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.18s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    16.21s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    16.21s         Checking existence of `"taskKindPicker" Any`
+    t =    16.58s Tap "taskKindPicker" Any
+    t =    16.58s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.59s     Find the "taskKindPicker" Any
+    t =    16.89s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    17.02s     Synthesize event
+    t =    17.32s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.60s Waiting 5.0s for "Heading" Button to exist
+    t =    19.64s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    19.65s         Checking existence of `"Heading" Button`
+    t =    19.75s Tap "Heading" Button
+    t =    19.75s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.76s     Find the "Heading" Button
+    t =    19.80s     Check for interrupting elements affecting "Heading" Button
+    t =    19.87s     Synthesize event
+    t =    20.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.88s Tap "saveTask" Button
+    t =    21.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.90s     Find the "saveTask" Button
+    t =    22.81s     Check for interrupting elements affecting "saveTask" Button
+    t =    23.04s     Synthesize event
+    t =    23.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+/tmp/taskfold-personal-headings-ios-host/TaskfoldUITests/TaskfoldUITests.swift:15867: error: -[TaskfoldUITests.TaskfoldUITests testPersonalHeadingLostReplyPauseColdExactRetry] : XCTAssertEqual failed: ("XCTWaiterResult(rawValue: 2)") is not equal to ("XCTWaiterResult(rawValue: 1)")
+    t =    45.32s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingLostReplyPauseColdExactRetry]' failed (45.607 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingMissingSupportBeforeSaveKeepsVisibleQueue]' started.
+    t =     0.00s Start Test at 2026-10-26 20:14:39.269
+    t =     0.03s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s         Terminate com.dbakp.taskfold.workflowteststeameditbridge:35158
+2026-10-26 20:14:40.512 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:14:40.512 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.90s         Setting up automation session
+    t =     7.75s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.21s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =    11.25s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =    11.25s         Checking existence of `"openTeamEditorFixture" Button`
+    t =    11.61s Tap "openTeamEditorFixture" Button
+    t =    11.61s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.62s     Find the "openTeamEditorFixture" Button
+    t =    11.64s     Check for interrupting elements affecting "openTeamEditorFixture" Button
+    t =    11.69s     Synthesize event
+    t =    12.06s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.14s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    14.18s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    14.18s         Checking existence of `"taskKindPicker" Any`
+    t =    14.53s Tap "taskKindPicker" Any
+    t =    14.53s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.53s     Find the "taskKindPicker" Any
+    t =    14.85s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    14.96s     Synthesize event
+    t =    15.27s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.55s Waiting 5.0s for "Heading" Button to exist
+    t =    17.58s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    17.58s         Checking existence of `"Heading" Button`
+    t =    17.64s Tap "Heading" Button
+    t =    17.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.64s     Find the "Heading" Button
+    t =    17.68s     Check for interrupting elements affecting "Heading" Button
+    t =    17.75s     Synthesize event
+    t =    18.05s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.62s Tap "saveTask" Button
+    t =    19.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.62s     Find the "saveTask" Button
+    t =    19.73s     Check for interrupting elements affecting "saveTask" Button
+    t =    19.80s     Synthesize event
+    t =    20.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.64s Terminate com.dbakp.taskfold.workflowteststeameditbridge:35264
+    t =    22.70s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    22.70s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 20:15:01.972 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:15:01.972 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    22.92s         Setting up automation session
+    t =    27.11s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.19s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =    30.22s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =    30.22s         Checking existence of `"openTeamEditorFixture" Button`
+    t =    31.42s Terminate com.dbakp.taskfold.workflowteststeameditbridge:35303
+    t =    32.51s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    32.52s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 20:15:11.787 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:15:11.787 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    32.73s         Setting up automation session
+    t =    36.93s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.04s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =    40.07s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =    40.07s         Checking existence of `"openTeamEditorFixture" Button`
+    t =    41.26s Terminate com.dbakp.taskfold.workflowteststeameditbridge:35345
+    t =    42.35s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingMissingSupportBeforeSaveKeepsVisibleQueue]' passed (42.417 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing]' started.
+    t =     0.00s Start Test at 2026-10-26 20:15:21.687
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 20:15:21.710 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:15:21.710 xcodebuild[35103:23393423] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.23s         Setting up automation session
+    t =     4.44s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.55s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =     7.59s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =     7.59s         Checking existence of `"openTeamEditorFixture" Button`
+    t =     7.70s Tap "openTeamEditorFixture" Button
+    t =     7.70s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.70s     Find the "openTeamEditorFixture" Button
+    t =     7.73s     Check for interrupting elements affecting "openTeamEditorFixture" Button
+    t =     7.76s     Synthesize event
+    t =     8.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.90s Waiting 10.0s for "taskTitle" TextField to exist
+    t =     9.93s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =     9.93s         Checking existence of `"taskTitle" TextField`
+    t =    10.07s Checking existence of `"taskKindPicker" Any`
+    t =    10.14s Tap "taskTitle" TextField
+    t =    10.14s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.15s     Find the "taskTitle" TextField
+    t =    10.22s     Check for interrupting elements affecting "taskTitle" TextField
+    t =    10.29s     Synthesize event
+    t =    10.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.76s Type ' revised' into "taskTitle" TextField
+    t =    11.76s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.77s     Find the "taskTitle" TextField
+    t =    11.89s     Check for interrupting elements affecting "taskTitle" TextField
+    t =    11.98s     Synthesize event
+    t =    12.33s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.33s Tap "saveTask" Button
+    t =    12.33s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.33s     Find the "saveTask" Button
+    t =    12.45s     Check for interrupting elements affecting "saveTask" Button
+    t =    12.54s     Synthesize event
+    t =    12.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.67s Terminate com.dbakp.taskfold.workflowteststeameditbridge:35362
+    t =    15.74s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing]' passed (15.794 seconds).
+Test Suite 'TaskfoldUITests' failed at 2026-10-26 20:15:37.481.
+	 Executed 3 tests, with 1 failure (0 unexpected) in 103.818 (103.845) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 20:15:37.494.
+	 Executed 3 tests, with 1 failure (0 unexpected) in 103.818 (103.858) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 20:15:37.494.
+	 Executed 3 tests, with 1 failure (0 unexpected) in 103.818 (103.859) seconds
+2026-10-26 20:15:37.829 xcodebuild[35103:23393423] [MT] IDETestOperationsObserverDebug: 120.159 elapsed -- Testing started completed.
+2026-10-26 20:15:37.829 xcodebuild[35103:23393423] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 20:15:37.829 xcodebuild[35103:23393423] [MT] IDETestOperationsObserverDebug: 120.159 sec, +120.159 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-personal-headings-phone.xcresult
+
+Failing tests:
+	TaskfoldUITests.testPersonalHeadingLostReplyPauseColdExactRetry()
+
+** TEST EXECUTE FAILED **
+
+Testing started

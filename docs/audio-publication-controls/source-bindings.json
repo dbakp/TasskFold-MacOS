@@ -1,0 +1,20 @@
+{
+  "repository": "TasskFold-MacOS",
+  "normalPublishingExposed": false,
+  "nativeRuntimeClaimed": false,
+  "releaseSigningClaimed": false,
+  "sources": {
+    "Taskfold/Core/AudioCommentPublishing.swift": "d980ce353116b2a89b823cbd07cf95590a432a24b0d03545651279049bae985f",
+    "Taskfold/Core/Backend.swift": "329417e602877534a5cb5739c6a667368bf4af208f0e9622f7f7b1e5ad5d0346",
+    "Taskfold/Core/AudioCommentVault.swift": "bf3976f3e57b574c37376e94c4c20887f76913caeaa1d4874a23c8cf57ab1cd3",
+    "Taskfold/AudioCommentCapture.swift": "96e4b96d74de8fd526bb8f3316db0c10e6ffea302542b2181d0e917873ef76ee",
+    "Taskfold/Views/AudioCommentDraftView.swift": "1de0ae2a49a46b0a20b82a21b89222926c6f17ed0f1d1777621ea36b3822c72f",
+    "Taskfold/Views/AudioCommentPublicationView.swift": "c192b3690dc169fc1ef3b7e8a765dc23007c747a290127b317ac411c39cea6de",
+    "TaskfoldTests/AudioCommentPublishingTests.swift": "f02f55ab524159908a264ce6092fb51333fabeecc6c5d33e8ca2a169b57e02bc",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "dcd70e61305a6944502688e544f0a343cb54553ce5e7a8dbba4a4c669e4820b2",
+    "Scripts/test_audio_comment_capture.py": "d67dc8b1aa2be4f0805cd5de186e991ea17cadd388a28e5f35803b33c853c18a",
+    "Scripts/configure_audio_comments.py": "a631bdc7c1d4e8f7c9348963b74f222ed431fe4c2ec6a959cdb923ee5a38cb30",
+    "Taskfold.xcodeproj/project.pbxproj": "652ea4a27d6270470b9029850416114e754497c2f26189029d08d1532779cd98",
+    "Package.swift": "90b2852e7e7d04d88d246d5e01816c05dcf5bd51bff0130eaae483e41b662c03"
+  }
+}

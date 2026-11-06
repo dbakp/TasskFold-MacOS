@@ -1,0 +1,47 @@
+{
+  "platform": "ipad",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "2564b0dfadc250689ea00c5edc0920fc5c32a874b7270991e87be594f6257c2b",
+    "Taskfold/Core/ChildTaskStructureCommands.swift": "14711c80cdd786377a2619d55eac48b3296a070c4523ba3d609c924bd99c9860",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "7675ca3ca8afa81aa6103aca0dad5524a895ec0fd0daa7e461ca4c6c8e64cc10",
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": "59a0eda5bc334e21529f4bdeecd8993a2cb0236b49850e197fe8fefd8f742ebc",
+    "Taskfold/Core/ChildTaskTransfers.swift": "05285b347472fd9adada212aff044d63decc54af8c5e0b8021cd2798b48cf461",
+    "Taskfold/Core/Store.swift": "20e32ae9bf15b6bb7273813c9dc8b9ba00fc1ecfa7e61ca7da59b08a711559ee",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "39e7b5fdafc3afc2858e505eccfe97bedc358cc13f65a8c4e8e2315177bdad64",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "22e0be62ae036aba753201a781bd920b5d7f4ed313392a2b1d9573d72deb7df3",
+    "Taskfold/Views/SubtaskOrganizer.swift": "c98bc7ca2e4b833eadf65489f17c634f6521c3d39f4434e4caedc0e82a8af3dc",
+    "Taskfold/Views/TaskEditor.swift": "d9620a80643035e09882ca3897055d62b5e108caeef228b2441207097a0af218",
+    "TaskfoldUITests/AudioCommentUITests.swift": "aab160815dc2cba140a02426dbd6081283e600058b30ddbe68b76dfab259a989"
+  },
+  "builtHostSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "2564b0dfadc250689ea00c5edc0920fc5c32a874b7270991e87be594f6257c2b",
+    "Taskfold/Core/ChildTaskStructureCommands.swift": "14711c80cdd786377a2619d55eac48b3296a070c4523ba3d609c924bd99c9860",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "7675ca3ca8afa81aa6103aca0dad5524a895ec0fd0daa7e461ca4c6c8e64cc10",
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": "59a0eda5bc334e21529f4bdeecd8993a2cb0236b49850e197fe8fefd8f742ebc",
+    "Taskfold/Core/ChildTaskTransfers.swift": "05285b347472fd9adada212aff044d63decc54af8c5e0b8021cd2798b48cf461",
+    "Taskfold/Core/Store.swift": "67c746bb379d3328dd04c9f8bb6e19b91adc8b7259bb7f3321a0063a941d6448",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "39e7b5fdafc3afc2858e505eccfe97bedc358cc13f65a8c4e8e2315177bdad64",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "22e0be62ae036aba753201a781bd920b5d7f4ed313392a2b1d9573d72deb7df3",
+    "Taskfold/Views/SubtaskOrganizer.swift": "c98bc7ca2e4b833eadf65489f17c634f6521c3d39f4434e4caedc0e82a8af3dc",
+    "Taskfold/Views/TaskEditor.swift": "d9620a80643035e09882ca3897055d62b5e108caeef228b2441207097a0af218",
+    "TaskfoldUITests/AudioCommentUITests.swift": "aab160815dc2cba140a02426dbd6081283e600058b30ddbe68b76dfab259a989"
+  },
+  "appSHA256": "b2a093fd192b19cba5c3076ddac2f65e9b9806b833400a94d719133cef6312ba",
+  "newSimulator": false,
+  "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": true,
+    "Taskfold/Core/ChildTaskStructureCommands.swift": true,
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": true,
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": true,
+    "Taskfold/Core/ChildTaskTransfers.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Views/ChildTaskFieldViews.swift": true,
+    "Taskfold/Views/ChildTaskStructureViews.swift": true,
+    "Taskfold/Views/SubtaskOrganizer.swift": true,
+    "Taskfold/Views/TaskEditor.swift": true,
+    "TaskfoldUITests/AudioCommentUITests.swift": true
+  },
+  "retainedV5DebugDylibSHA256": "baab861d7b9618a25167ae0940b067410a13f7dea168ee8b4f09199f155c2c3d",
+  "libraryObservation": "Recorded after both accepted v5 journeys; the retained v5 product was not rebuilt between them or before this observation, and its library predates each phase."
+}

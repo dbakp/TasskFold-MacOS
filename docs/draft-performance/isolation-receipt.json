@@ -1,0 +1,105 @@
+{
+  "sourceRepository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "workspace": "/private/tmp/taskfold-mac-recovery-host",
+  "bundleID": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "sandbox": true,
+  "productionURLAndFileRegistrationsRemoved": true,
+  "embeddedWidgetExtension": false,
+  "embeddedShareExtension": false,
+  "isolatedURLScheme": null,
+  "recordRouteTesting": false,
+  "isolatedAppGroup": null,
+  "signingTeam": null,
+  "namespaceOnlySourceChanges": {
+    "Taskfold/Workspace.swift": {
+      "originalSHA256": "fc871482c72bb2b1446d93d2e546073c96d9245bd0a8df9e5541437345d37269",
+      "isolatedSHA256": "8754efdfffbc39bf5f0d21f82430f5489e5ec243f9c08dbef3ca8d27bd19724c"
+    },
+    "Taskfold/AccountRemovalNativeFixture.swift": {
+      "originalSHA256": "9bf9004ba79bacd0c2370b1d6af5d99c6b05f63c8d3aeea5c7f4ffe67bee9587",
+      "isolatedSHA256": "fdcbf1de811af736e1df888a492e5c86bacb92bc175ede94956a8f81d9187446"
+    },
+    "Taskfold/Core/Backups.swift": {
+      "originalSHA256": "147c4a0c0bd29978d0a85aeea1c9d863fe6d1b85d8db36031811b245120eb86b",
+      "isolatedSHA256": "5f777122a215c02967c48fb7c4e2b9d6e1f95b4004728976e1ef7f7164faec21"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "originalSHA256": "171cf14659a412612b26e3c4a5f9cfa26a82cf7371ac0931f79f4a22ddbe3965",
+      "isolatedSHA256": "c05284c57b5d54743282b959e1966be07019a3630de5d7f297c8c653986b6997"
+    },
+    "Taskfold/Core/Store.swift": {
+      "originalSHA256": "165fa9aa9524bd4c2c2e68754c45f6a23ed0e5ed5a92c955a029722d6aeffeb2",
+      "isolatedSHA256": "10627c2c6c775c7403a1c168b873505880ba8fd0860a8a663d9e2678a0a128dc"
+    },
+    "Taskfold/Core/WidgetActions.swift": {
+      "originalSHA256": "9c0aa4ccbe6808e8ecb8c1cf5f5be32d65d94f0ea230f60444fbd8a16e6add8a",
+      "isolatedSHA256": "35a9ad129483bf504778b969d0ab6934c46217f23f163bcd3f5189c6caf058da"
+    },
+    "Taskfold/Core/SharedCapture.swift": {
+      "originalSHA256": "6c818d7a4aadef3997d41a36cab14e3bc6305394df838b75186c126d121e2fbf",
+      "isolatedSHA256": "fce120945b1d285af94c48c01af67b1ffd32514aa770019e6b619c364a99f832"
+    },
+    "Taskfold/Core/TeamCompletion.swift": {
+      "originalSHA256": "feb6a5d0af4cb66f101d24e567db90d066a9cf78b676cd9683faeadd6235df4d",
+      "isolatedSHA256": "feb6a5d0af4cb66f101d24e567db90d066a9cf78b676cd9683faeadd6235df4d"
+    },
+    "TaskfoldUITests/TaskfoldMacUITests.swift": {
+      "originalSHA256": "12a944b98972dc5839dcf6776484f7b0179e82b482cb4cd8db9916d98c224da4",
+      "isolatedSHA256": "d09224e16b1f6e64e1d690505767250f3fe4ae48f0d68de234a2e068a29b0e45"
+    },
+    "Taskfold/Collaboration.swift": {
+      "originalSHA256": "b9a2706d43cf3dd36b126ea1a1ed4171399f23db0b88ddf6420f00174393e8c7",
+      "isolatedSHA256": "b9a2706d43cf3dd36b126ea1a1ed4171399f23db0b88ddf6420f00174393e8c7"
+    },
+    "Taskfold/Views/TaskInspector.swift": {
+      "originalSHA256": "bd9d3ddcc88c1bfca2b8c91db354dd0cec0dfe7fa7d40e4878b55e2320d47507",
+      "isolatedSHA256": "bd9d3ddcc88c1bfca2b8c91db354dd0cec0dfe7fa7d40e4878b55e2320d47507"
+    },
+    "Taskfold/Core/TeamCompletionDraft.swift": {
+      "originalSHA256": "39c6e389ab3a59bd72b9d5c7580b2275c55b69164bec4c7093ebf2786f4c79d5",
+      "isolatedSHA256": "39c6e389ab3a59bd72b9d5c7580b2275c55b69164bec4c7093ebf2786f4c79d5"
+    },
+    "Taskfold/Core/TeamTaskBatch.swift": {
+      "originalSHA256": "6ca4a7b0ba4f6a3b3b2fe77f08c0a16baf94ce202b7dc7496ab00b9b49f8569d",
+      "isolatedSHA256": "6ca4a7b0ba4f6a3b3b2fe77f08c0a16baf94ce202b7dc7496ab00b9b49f8569d"
+    },
+    "Taskfold/Core/SharedComments.swift": {
+      "originalSHA256": "09ffe656ae5e0d27606824304c4daf2ccafa81bc40e9b81587e545faf9d8250a",
+      "isolatedSHA256": "09ffe656ae5e0d27606824304c4daf2ccafa81bc40e9b81587e545faf9d8250a"
+    },
+    "Taskfold/Core/Models.swift": {
+      "originalSHA256": "45ae61bbf26a087bfefe1956dc3cc7b4911dea51edc76432ddfc8013e3d4a715",
+      "isolatedSHA256": "45ae61bbf26a087bfefe1956dc3cc7b4911dea51edc76432ddfc8013e3d4a715"
+    },
+    "Taskfold/Core/PinnedNotes.swift": {
+      "originalSHA256": "08f717c1b50705193a1b763bb2b549bc24966336fb551e6e2f24370102eeb991",
+      "isolatedSHA256": "08f717c1b50705193a1b763bb2b549bc24966336fb551e6e2f24370102eeb991"
+    },
+    "Taskfold/Core/TeamProjectAccess.swift": {
+      "originalSHA256": "836ce04cb0fc7d6ae2b969f1206e42bd8a69730ad0ce2b3240dd251ba247c45b",
+      "isolatedSHA256": "836ce04cb0fc7d6ae2b969f1206e42bd8a69730ad0ce2b3240dd251ba247c45b"
+    },
+    "Taskfold/ConversationStore.swift": {
+      "originalSHA256": "3621966287c93f6bd5f4732a471f88160ec01c02eda5efe8c49070beffc863b0",
+      "isolatedSHA256": "3621966287c93f6bd5f4732a471f88160ec01c02eda5efe8c49070beffc863b0"
+    }
+  },
+  "replacements": {
+    "com.dbakp.taskfold.task": "com.dbakp.taskfold.mac.workflowteststeameditbridge.task",
+    "com.taskfold.ios.session": "com.taskfold.mac.workflowteststeameditbridge.session",
+    "com.taskfold.recovery.v1": "com.taskfold.mac.workflowteststeameditbridge.recovery.v1",
+    "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.mac.workflowteststeameditbridge"
+  },
+  "launchArguments": [
+    "--uitesting"
+  ],
+  "limitations": [
+    "Preparation only; no launch/install/runtime acceptance.",
+    "Unique keychain services; no production credential migration.",
+    "Production Push Notifications and keychain-group entitlements are absent only from the copied test app.",
+    "No signed-distribution, APNs or provider acceptance.",
+    "Cold OS launches omit --uitesting and use the isolated local workspace; fixture continuity must be verified separately."
+  ],
+  "workflowNamespace": "workflowteststeameditbridge",
+  "privateKeychainProfileRequired": false
+}

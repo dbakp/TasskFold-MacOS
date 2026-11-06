@@ -1,0 +1,238 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "6e36721d65b4ec52f217f46ea708a75cd2bfa87b",
+  "status": "Bulk shared deadline/estimate pickers and personal estimates implemented; scoped Core/build and installed phone/tablet acceptance passed. Wider rank 6/Px remains open.",
+  "rolloutEnabled": false,
+  "schemaChanged": false,
+  "hostedDataChanged": false,
+  "implementation": {
+    "shared": "Opening-time full-row/access admission; Set/Clear and field-only values; complete frozen review; Edit choice retains input; Cancel saves nothing; existing one-group Save and linked Undo.",
+    "personal": "Estimate picker captures workspace/account/backend session/origin and full source rows; current personal custody required; existing personal selection writer and Undo. No new atomic personal server endpoint.",
+    "bounds": "ASCII integer estimates 1 through 10080; clear ignores stale invalid text; deadline day validation. Shared 1\u2013100 distinct tasks, personal existing 1\u20131000 bound.",
+    "presentation": "Visible Minutes label, presets, existing deadline/estimate and planned-date context; short Review changes title avoids the observed phone header truncation.",
+    "ownership": "Each project registers and compiles its own source; no cross-repository build dependency."
+  },
+  "core": {
+    "repository": "TasskFold-MacOS",
+    "focusedSuiteTests": 493,
+    "failed": 0,
+    "skipped": 0,
+    "batchSuiteTests": 22,
+    "newBatchCases": 3,
+    "filter": "Team|EmailCapture|Webhook|Planner|SubtaskTree|TaskHierarchyIndex|MixedSelection",
+    "log": "bulk-planning-pickers/mac-core-full.log.gz"
+  },
+  "builds": {
+    "iOS": "Final isolated arm64 simulator app and UI runner build-for-testing passed; ad-hoc simulator signing.",
+    "macOS": "Final isolated arm64 Debug build passed with signing disabled; no installed Mac runtime acceptance claimed.",
+    "release": "Not attempted; user deferred signing/distribution."
+  },
+  "native": {
+    "scope": "Installed synthetic isolated iOS host, real Store/private cache with intercepted HTTP. No live hosted/Auth/Keychain acceptance.",
+    "appID": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "runnerID": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+    "testSourceRepository": "TaskFold-iOS",
+    "testSourceSHA256": "8d8a53283364221c1efb9982f22a4ac4a8782e77ca43a28080b9de2fb93ed12d",
+    "phone": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "summary": "bulk-planning-pickers/phone-accepted-summary.json",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "modelName": "iPhone 18 Pro",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      }
+    },
+    "tablet": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "summary": "bulk-planning-pickers/ipad-accepted-summary.json",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "modelName": "iPad Pro 13-inch (M5)",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      }
+    },
+    "scenarios": [
+      "Personal estimates Apply/Undo stays on the existing personal writer with no team command",
+      "Shared deadlines Set/Clear and Undo preserve planned dates/clocks and every unrelated field",
+      "Shared estimate Clear/Undo preserves plans, deadlines, notes and unselected tasks",
+      "Oversized estimate blocks Review; preset, Back, Cancel, Save and Undo preserve intended state",
+      "A saved source change during the picker refuses the original cohort without queueing changes"
+    ],
+    "visualScope": "Final phone/tablet picker, shared review and stale-source screenshots; standard light appearance only.",
+    "screenshots": [
+      {
+        "file": "bulk-planning-pickers/phone-14036F9A-BEA3-46A1-B5AB-027F3F2B4D91.png",
+        "device": "phone",
+        "test": "TeamTaskBatchDeletionUITests/testBulkPersonalEstimatesApplyAndUndoWithoutSharedRetargeting()",
+        "label": "Personal estimates use the existing undoable personal path_0_2FC0561C-B5E3-4F0D-94A9-FDD2FED1BA1D.png"
+      },
+      {
+        "file": "bulk-planning-pickers/phone-4376D2EA-6A7C-4981-ABAE-5683617990BE.png",
+        "device": "phone",
+        "test": "TeamTaskBatchDeletionUITests/testBulkSharedDeadlineSetAndClearPreservePlans()",
+        "label": "Shared deadline picker preserves original tasks before review_0_679E1363-E5B9-4B8A-8B1E-360F53EF7F11.png"
+      },
+      {
+        "file": "bulk-planning-pickers/phone-43B44100-53E2-43E9-8991-A6A85EF92B74.png",
+        "device": "phone",
+        "test": "TeamTaskBatchDeletionUITests/testBulkSharedEstimateValidationBackCancelSaveAndUndo()",
+        "label": "Shared estimates review includes every selected task and minute value_0_BEF7407F-B72A-4C6D-B243-D08A91C003DD.png"
+      },
+      {
+        "file": "bulk-planning-pickers/phone-0D570A2C-CFED-4BCC-B250-72FE0484CFBD.png",
+        "device": "phone",
+        "test": "TeamTaskBatchDeletionUITests/testBulkSharedPlanningInputRetainsOpeningSourceAdmission()",
+        "label": "Changed source blocks planning before choices become a command_0_937034C9-7B39-4C45-AB2A-E3F3B572FBCD.png"
+      },
+      {
+        "file": "bulk-planning-pickers/ipad-6E5A11C4-3356-4F48-A86C-FAC1BAEBA94F.png",
+        "device": "ipad",
+        "test": "TeamTaskBatchDeletionUITests/testBulkPersonalEstimatesApplyAndUndoWithoutSharedRetargeting()",
+        "label": "Personal estimates use the existing undoable personal path_0_4BCFD070-3C89-4363-ADEC-D1D176FEBA69.png"
+      },
+      {
+        "file": "bulk-planning-pickers/ipad-37B46D0E-1C84-4395-B29D-4221B47A694A.png",
+        "device": "ipad",
+        "test": "TeamTaskBatchDeletionUITests/testBulkSharedDeadlineSetAndClearPreservePlans()",
+        "label": "Shared deadline picker preserves original tasks before review_0_AF1238E3-94D8-4430-87FE-1C28A88D7662.png"
+      },
+      {
+        "file": "bulk-planning-pickers/ipad-35C9D198-6982-4BED-BB06-373F872915D6.png",
+        "device": "ipad",
+        "test": "TeamTaskBatchDeletionUITests/testBulkSharedEstimateValidationBackCancelSaveAndUndo()",
+        "label": "Shared estimates review includes every selected task and minute value_0_01D7453F-D771-4015-B630-3F00D5D1DBD9.png"
+      },
+      {
+        "file": "bulk-planning-pickers/ipad-D9498695-D661-4665-B4EF-635DC1282CD0.png",
+        "device": "ipad",
+        "test": "TeamTaskBatchDeletionUITests/testBulkSharedPlanningInputRetainsOpeningSourceAdmission()",
+        "label": "Changed source blocks planning before choices become a command_0_5207D025-F64E-4155-9924-C5AD6B8ADFD5.png"
+      }
+    ]
+  },
+  "diagnostics": [
+    "Initial builds failed when a view read Store private workspaceCacheReadable; validation moved inside Store. Corrected final builds pass.",
+    "After label/alignment polish, deleting or selecting the default estimate through automated system menu actions could enter 025 instead of 0. Native assertions caught this; no product validation failure was hidden.",
+    "Final test inserts oversized digits at any caret position, asserts their presence and refusal, then uses a preset. Zero and all numeric bounds are separately covered by Core; earlier native runs also exercised zero.",
+    "The phone typing collector PID 7504 and iPad final collector PID 8155 remained alive after failed suites ended. Exact owned commands were verified and those collectors terminated with SIGTERM (143). Logs are retained; neither run is claimed green.",
+    "iPad title run completed with 2 passing shared cases and the same typing diagnostic failure (exit 65). Final accepted suites supersede it.",
+    "An earlier screenshot showed a truncated long review title; final source uses Review changes and the final native test asserts that navigation title.",
+    "The first parallel phone summary export returned an xcresult view database error; retry after attachment export completed succeeded. Final retained summary confirms 5 passed, 0 failed, 0 skipped."
+  ],
+  "hostIsolation": "Temporary independent project copies use reserved bundle IDs/App Groups; native test source and feature sources match committed candidates apart from documented isolation literals in Store, Mac Workspace UTType and project/config identity inputs.",
+  "cleanup": {
+    "status": "Complete",
+    "hostChecks": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true,
+        "containerAbsent": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true,
+        "containerAbsent": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true,
+        "containerAbsent": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true,
+        "containerAbsent": true
+      }
+    ],
+    "baselineSimulatorsStillBooted": [
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378"
+    ],
+    "ownedTemporaryPrefix": "/tmp/taskfold-bulk-planning-*",
+    "temporaryEntriesRemoved": 67,
+    "removedDiskKiB": 1912908,
+    "sourceBuildCachePreserved": true,
+    "unrelatedAppsAndSimulatorServicesPreserved": true,
+    "MacRuntimeLaunchedThisStage": false
+  },
+  "remaining": [
+    "Mac installed/runtime/window and keyboard/spoken checks",
+    "Larger text, dark and contrast acceptance",
+    "Genuine hosted role/account/network acceptance and rollout",
+    "Remaining rank-6/team planning and wider Px backlog",
+    "All user-deferred signing/distribution, remote delivery, older-client rollout and provider/device dependencies"
+  ],
+  "sourceSHA256": {
+    "Taskfold.xcodeproj/project.pbxproj": "548765a44c3b40a9b01c93a5ee7e5cbef26045b20ceedcfe13b2156d89120594",
+    "Taskfold/Core/Planner.swift": "61fc07d9371100d6df0ba1301c1a7dcd27993628e4dd5ec1709ecf9c1e35d88b",
+    "Taskfold/Core/Store.swift": "5dc1b54b1c89661eea8fd51323f6be238a4cfe3a215922e81d49022ac279ca6e",
+    "Taskfold/Core/TeamTaskBatch.swift": "e4066544d33b62cb549add29a40230baa8a5840ab2a975c06f76d099b36ec7be",
+    "Taskfold/TaskfoldMacApp.swift": "d32ea50e9a19d93ead39a629fd8117484c2352380f429034a274cbab0b9b98f7",
+    "Taskfold/Views/RootView.swift": "a05a3f07f2a3b7f1d1a82f4978d6e12510efdfe3a0454d15bfca837638798aca",
+    "Taskfold/Views/TaskInspector.swift": "7f04706647d4fa790f27d37bc2ef999e3d5e320990fa4052b31dba277eb4682f",
+    "Taskfold/Views/TaskListView.swift": "18cafca94704ee40f0092f3ad10f4fd3aeb84064bed2473e0dfc65ba389f31b9",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "e9063e65646d3c52303c0d8839cc8e0862979c3e3a8da11eddb564ebb6da89a3",
+    "Taskfold/Workspace.swift": "e939add77f1dbb7aeb85865fa3d68d8ad7d3af4ff5746cf9262e799cf6c16e76",
+    "TaskfoldTests/TeamTaskBatchTests.swift": "ae845048e10300c630f53c0ed2e12602aefe93f2b580b403845879b5a7a10e26",
+    "Taskfold/Views/BulkPlanningEditor.swift": "29576093a9d1b9c48f0c1e26696d9c55a1b80c0a069cd1490684854dae6253e0"
+  },
+  "artifactSHA256": {
+    "ios-build-final.log.gz": "22923b1193cd7002d5b2ce8007169b44b40e7cdd29b5e93f676288c4d95288af",
+    "ios-build-fixed.log.gz": "c91e7551a36782e77456770936c0a1969b5b4c26f336f4807b02e2aefeaa9db1",
+    "ios-build-oversize.log.gz": "9bc96f42d1243cf73b8022a44f2a3fa8a6c67a1d206cf3f41d3c52ec244b31e7",
+    "ios-build-title.log.gz": "557e1447c7528a0fdbe92661dd54b631a65421306c6f303140817eb971ca7713",
+    "ios-build.log.gz": "611d2b21a8bfe5530454151b83afc34b692a94f6e7650100a498e935fd755291",
+    "ios-core-full.log.gz": "87c70eab8a275d114795c666179aabd1c7df307b8611484cb9e44747349ab3ba",
+    "ios-core.log.gz": "cb76a48d98324578a2bc155bb6c02382f638e1947ac1ee0eccefd77173452814",
+    "ipad-35C9D198-6982-4BED-BB06-373F872915D6.png": "648b612763dfdb0dbf581f7c906cc6e545891ae36c38e3f74b88543194f2fcfd",
+    "ipad-37B46D0E-1C84-4395-B29D-4221B47A694A.png": "1abdc3612761cbbf8917999e83680428fc5f191cd7d86fa1901ee6ffb8c87d39",
+    "ipad-6E5A11C4-3356-4F48-A86C-FAC1BAEBA94F.png": "0aaf5dfcce8a5654dd49fdf938f9b9c3dcf71d4ad2a9f6c4e19348a158f9497f",
+    "ipad-D9498695-D661-4665-B4EF-635DC1282CD0.png": "bc4c7fc4092a1dff81913bc25e9303c29a0d7855303f360ed43b1dfa2d048029",
+    "ipad-accepted-summary.json": "b82c93637c520d30ad83b9cda1e1b6665a84d8e4b13ab29c93b2654fd9c99e25",
+    "ipad-accepted.log.gz": "3375128ebd48e1898e893bd3aebf3e6ff86ea116aadc2250355a9f876f0656ac",
+    "ipad-final.log.gz": "697452478e37d7eb5371973a3d48b1b05fb1aad26b9bb9b20776f36611b09ca6",
+    "ipad-summary.json": "34c412defb8ae6078d31a1cd849b58e2bd6abb09684c5acb89a48e6777a7729e",
+    "ipad-title-summary.json": "42bc715604991066f76f35fb3be756eac37aa9fc2c29a57479bbf9e4eef87fd8",
+    "ipad-title.log.gz": "58dfc3875c3115b9636dfafb55217450e3abcb54749a4bb7aecd2e0326fc50fb",
+    "ipad.log.gz": "c76f088535c4fefebb83ebeda287d375533d842055623168328a30c3755ca686",
+    "mac-build-final.log.gz": "b1265e5db3a6b0496b1f5a4cf147facd27978e986327d8884dfd0f08f0ab3023",
+    "mac-build-fixed.log.gz": "958b8a2ab33c4daae536597624e64ad5d7e4df1f004b594b9cd3355f76f8627d",
+    "mac-build-title.log.gz": "881f04842291e3d241eb13b741a8f7377ef8e63d9e826a767690e14805cb4045",
+    "mac-build.log.gz": "bf378bc05080708ce3d7b8cd381eafc46af8ba6ba02350fad5ea8ff15868d7e2",
+    "mac-core-full.log.gz": "ba3e76fa9e4e35d72e9621440a1b9436737a6a32c5c0fd2054694d1cadbcea65",
+    "mac-core.log.gz": "77f64e67603c28490762c734c34df678ce6cfb78bdd16e7d91c2165f23cb7141",
+    "phone-0D570A2C-CFED-4BCC-B250-72FE0484CFBD.png": "9f33a16851cbb6549969267e3b42d693339c5df8d87ea7c1a0cb314ecbff6fb0",
+    "phone-14036F9A-BEA3-46A1-B5AB-027F3F2B4D91.png": "d59bc96c40b3d71131dd59b6e3da00c26b14b056b53d8ff1a6ab89e39ca8b965",
+    "phone-4376D2EA-6A7C-4981-ABAE-5683617990BE.png": "5a085de405757a7215362fb0cee74f55f38686afad3fce6baf28e15efeddc0b9",
+    "phone-43B44100-53E2-43E9-8991-A6A85EF92B74.png": "8ef71ab8bf5a7a51c67fec610e66413793a3056d6024baa4c29f004c79534215",
+    "phone-accepted-summary.json": "704d992a869507419cb9122d0889f7a4d74febf22497f8683e4a6e11ca3e65c7",
+    "phone-accepted.log.gz": "4454f2ae478e993471bb3e8a36d536166fdd2ba680d092acc09260abc3ea5524",
+    "phone-final-summary.json": "6b3ac7860958c0373edf8e87bd9ce4c99ee29b9426c674b0e0f622312f2a4cb0",
+    "phone-final.log.gz": "c657ff088d821746b455db85743d667ce6ba50a3c75e1089bb033bf40179ae34",
+    "phone-personal-estimates.png": "b7941bd99e347bba0efda0b0a84a031d346a3747b219667d0ba72d9b7bbadfdc",
+    "phone-selection-summary.json": "6aa75facf56d3b1e48b4eacf624da879301baa0ac932fdd4df3b6d59968f7790",
+    "phone-selection.log.gz": "bf017dd2fcf12880ef9b80a2186954beabafeb901b7578d5ebe283d8adadcf17",
+    "phone-summary.json": "9226888017e18b87cf561755424641dcae6fe83c50cd600d26ad9a855e485439",
+    "phone-typing.log.gz": "600a683fe2eb86df94c68f59eecebfd5d4820297facded3618a9cbc205dd0fb9",
+    "phone.log.gz": "4dc1f11b7d22f87b4775060a9cec6874a4027d2844a5fd1816987c43be6373b3",
+    "selection-build.log.gz": "d4d3f645912b4b992a229ac53ddc916f5b8e0cc1f0f74cbccb6422f699d2ea08",
+    "typing-build.log.gz": "61fbc96a76b472aa7c777062cd835572bf708c947e5892e785315bbc61fe1881"
+  }
+}

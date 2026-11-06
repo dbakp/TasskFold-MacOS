@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "focusedCases": 135,
+  "actualServerRows": 18,
+  "serverRelatedGroups": 6,
+  "scope": "Grouping, typed actual root/child rows, local append boundaries, prepared workflow encoding, field/order history, legacy bytes/dates and workspace contexts"
+}

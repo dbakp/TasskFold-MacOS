@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-13",
+  "scope": "Read-only current Mac startup and open-Settings relaunch against the original disposable imported owner; no Todoist request or product code change",
+  "ownerGuard": "Dedicated backupcanceltests runner, exact disposable owner UUID, taskfold-todoist-readonly- email suffix @example.invalid; private credentials never committed",
+  "native": {
+    "test": "testImportedWorkspaceStartupAndOpenSettingsRelaunchReadOnly",
+    "result": "mac-imported-runtime-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "strictVerifier": "passed",
+    "rawTableReentrancyWarnings": 0,
+    "rawAttributeGraphCycles": 0,
+    "cachedImportedAccountAbsentAtStart": true,
+    "startup": "Fresh sign-in; native Account opened while initial cloud loading may still be in progress",
+    "relaunch": "Settings left open at normal Quit; ApplePersistenceIgnoreState NO; no local fixture seed",
+    "accountControlsRestoredAutomatically": false,
+    "accountControlsReopenedSuccessfully": true,
+    "syncedCacheTablesExactAcrossNormalRelaunch": 14
+  },
+  "preservation": {
+    "serverTablesExact": 15,
+    "serverCounts": {
+      "favorites": 0,
+      "focus_sessions": 1,
+      "import_sources": 368,
+      "labels": 6,
+      "profiles": 1,
+      "project_collaborators": 0,
+      "projects": 24,
+      "reminder_preferences": 0,
+      "saved_views": 1,
+      "sections": 89,
+      "task_activity": 258,
+      "task_activity_epoch": 1,
+      "tasks": 256,
+      "view_orders": 3,
+      "view_preferences": 5
+    },
+    "protectedPrimaryFilesExact": 100,
+    "originalIsolatedMacFilesRestoredExact": 28,
+    "retainedIOSFilesExact": 36,
+    "pendingWidgetFingerprintExact": true,
+    "unusedTaskfoldMainAppsClosed": true
+  },
+  "limits": [
+    "Original warning has no causal stack; one current same-account/large-workspace run without recurrence is not proof of a historical causal fix",
+    "No automatic Settings restoration accepted: controls were not restored automatically in this run",
+    "Profile/avatar upload/removal and the earlier cloud-restore triggers were not replayed",
+    "No production source, backend schema, Todoist source, remote delivery or release-signing change",
+    "Mac-only runtime acceptance; iOS receives evidence, not a new iOS test claim"
+  ],
+  "captures": [
+    {
+      "path": "/private/tmp/taskfold-imported-runtime-captures-v1/7F466F3B-1C19-47FF-A1A4-EAB8E2EA62D6.png",
+      "sha256": "6fb3a453551cb9321cf9619efd4cfe1fef6ecf05e4a8d86bd864454f1db2b76d",
+      "inspected": true
+    },
+    {
+      "path": "/private/tmp/taskfold-imported-runtime-captures-v1/A579D6BC-1710-4F5E-A7C0-E33F9DF6734B.png",
+      "sha256": "6fb3a453551cb9321cf9619efd4cfe1fef6ecf05e4a8d86bd864454f1db2b76d",
+      "inspected": true
+    }
+  ]
+}

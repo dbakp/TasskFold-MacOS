@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-09",
+  "captures": [
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-phone-readable-captures/54FF8651-A209-4935-B88B-1DEF7583C1C4.png",
+      "file": "phone-readable-54FF8651-A209-4935-B88B-1DEF7583C1C4.png",
+      "SHA256": "98b2760a2e5c6fc5ed8fd21fba6af483c104aae4d860cb88a70118b612d0662d",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDarkLargestDeclineAndRelaunch()",
+      "caption": "Readable preview declined tasks after relaunch_0_57C5938F-A2A4-4547-88CF-F053FC128195.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-phone-readable-captures/B89B5001-4A3D-4B6D-953B-85C29F69556B.png",
+      "file": "phone-readable-B89B5001-4A3D-4B6D-953B-85C29F69556B.png",
+      "SHA256": "771e0c9a4973e68c14ba4b2faaa03c47bfbb0d231471569543dcd3ae7050e7a7",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDarkLargestDeclineAndRelaunch()",
+      "caption": "Readable preview editor_0_6F6324BC-2466-4CF0-8F54-32968DE19434.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-phone-readable-captures/50AC4519-BD0A-4B73-ABEA-E3DF8EC3B841.png",
+      "file": "phone-readable-50AC4519-BD0A-4B73-ABEA-E3DF8EC3B841.png",
+      "SHA256": "6c2d2994c30280988d4c46332dd1277676be183e8923203e60a81838244dbafc",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDarkLargestDeclineAndRelaunch()",
+      "caption": "Readable preview capture_0_C9841B3B-A8B7-40A2-8E90-F2F6B39A3323.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-phone-readable-captures/3C26E6CF-7E73-4B85-A420-981CC2361658.png",
+      "file": "phone-readable-3C26E6CF-7E73-4B85-A420-981CC2361658.png",
+      "SHA256": "94436539237500fa81d6c99562173c86522f7fc54f742775017962e6ff3fa881",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDeclineAndRelaunch()",
+      "caption": "Readable preview declined tasks after relaunch_0_B16E7699-0064-4693-B3A7-F5D1F09A53F5.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-phone-readable-captures/AA239151-2F71-439C-8EA2-32B58A534E5C.png",
+      "file": "phone-readable-AA239151-2F71-439C-8EA2-32B58A534E5C.png",
+      "SHA256": "71591fc1ad042ce5d0eb8bee1abaaf11bdd49b462af5d519a688cbe91ff96a71",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDeclineAndRelaunch()",
+      "caption": "Readable preview editor_0_C10E5B0E-37BB-4A55-AF5E-E90764EDC354.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-phone-readable-captures/E06DF41F-59B4-470D-AA68-2DC914CAB338.png",
+      "file": "phone-readable-E06DF41F-59B4-470D-AA68-2DC914CAB338.png",
+      "SHA256": "6767368b3cc755151dccb7c4fdfd6a5a3faf1be57f9a4c215247a0f1c09e2b73",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDeclineAndRelaunch()",
+      "caption": "Readable preview capture_0_CAA9D855-9AB9-49A7-9580-E2DB82C511A4.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-tablet-readable-captures/40EBA80F-E8A0-4A0C-B1AE-DB52D2FC2B5C.png",
+      "file": "tablet-readable-40EBA80F-E8A0-4A0C-B1AE-DB52D2FC2B5C.png",
+      "SHA256": "c9a7afa484bb3bb0d0da3b80a7472f0a5cb8522d045f21a455a751981882effa",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDarkLargestDeclineAndRelaunch()",
+      "caption": "Readable preview declined tasks after relaunch_0_9981529F-E261-45B2-81FB-20F380061C8E.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-tablet-readable-captures/377B4B2D-521B-46D6-8955-3B409B47B9A8.png",
+      "file": "tablet-readable-377B4B2D-521B-46D6-8955-3B409B47B9A8.png",
+      "SHA256": "4a267baa8faaebce1450aad1d9f08c24b78dbd53fd6a100525b383ed3d0f0796",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDarkLargestDeclineAndRelaunch()",
+      "caption": "Readable preview editor_0_13B6ED97-7363-476C-BA34-DFD4E7A2263A.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-tablet-readable-captures/BE640322-B111-41DC-94C6-723BF6E083A8.png",
+      "file": "tablet-readable-BE640322-B111-41DC-94C6-723BF6E083A8.png",
+      "SHA256": "f9ee6d27eadd26f9322c7b2a782bdbf60c55e66821dc61fb5de61dcca47cb6b0",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDarkLargestDeclineAndRelaunch()",
+      "caption": "Readable preview capture_0_7B613A6D-320A-4050-B4D3-8F4234EF5C7B.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-tablet-readable-captures/CADD0EC3-5565-487A-8A2B-14239E05F889.png",
+      "file": "tablet-readable-CADD0EC3-5565-487A-8A2B-14239E05F889.png",
+      "SHA256": "5ac61fbf1119a2c44c1b0d6ae42a5e2a3e7ced2dfaa58c470022c50ac67d6add",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDeclineAndRelaunch()",
+      "caption": "Readable preview declined tasks after relaunch_0_1DFEC171-A93E-4DF0-9F03-7B5BE50540CF.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-tablet-readable-captures/CE21B7DD-D213-4CA5-8DFA-E01E3A4AE29D.png",
+      "file": "tablet-readable-CE21B7DD-D213-4CA5-8DFA-E01E3A4AE29D.png",
+      "SHA256": "0740241a87059d00e864c0ec5af95d94196a0cc9cc8dafa4346bcf2df5dc6f6f",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDeclineAndRelaunch()",
+      "caption": "Readable preview editor_0_81EF1B7A-91D7-44FC-B50C-00BDA7706139.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v32-tablet-readable-captures/FE881EDE-7436-4164-8C55-448ACD1121F7.png",
+      "file": "tablet-readable-FE881EDE-7436-4164-8C55-448ACD1121F7.png",
+      "SHA256": "923848658cabef8a39e817eee7226acd6a6f3934284a428b568425e5427b3d68",
+      "test": "TaskfoldUITests/testCaptureWrappedPreviewsDeclineAndRelaunch()",
+      "caption": "Readable preview capture_0_3B2084EC-3A8F-46FE-9CAE-3BD6F1AA3823.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v34-phone-compound-captures/58DC9E37-5B2D-4E2E-B3E3-D41B6C44DA45.png",
+      "file": "phone-compound-58DC9E37-5B2D-4E2E-B3E3-D41B6C44DA45.png",
+      "SHA256": "a3724272ae24ce42f454f8efb3c4bf375ffd3aad46d004a76448d106c11b8434",
+      "test": "TaskfoldUITests/testCompoundDateCaptureFilterAndRelaunch()",
+      "caption": "Compound Date phrase capture previews_0_C7776A78-3861-4E94-BEE7-65441E728886.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v34-phone-compound-captures/7B7248F5-7D9E-41FE-B39C-A5119C91CBD4.png",
+      "file": "phone-compound-7B7248F5-7D9E-41FE-B39C-A5119C91CBD4.png",
+      "SHA256": "9ad1230d48d3a422b96f0371e894fec60154f4c51fa989f2a5edad710fe0b59a",
+      "test": "TaskfoldUITests/testCompoundDateDarkLargestCaptureFilterAndRelaunch()",
+      "caption": "Compound Date phrase capture previews_0_163A972F-10C3-4CB1-83D2-CB2F1CDD27AD.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v34-tablet-compound-captures/053B3B3F-0E57-4D98-A1AA-D2243787719B.png",
+      "file": "tablet-compound-053B3B3F-0E57-4D98-A1AA-D2243787719B.png",
+      "SHA256": "af739215842d4cfca0937f1d845b0776f65ea9a015d44d4b7e4cac7bb7dcb2ec",
+      "test": "TaskfoldUITests/testCompoundDateCaptureFilterAndRelaunch()",
+      "caption": "Compound Date phrase capture previews_0_E27A9930-89CD-49BD-8AE9-E7C8DED7DA45.png"
+    },
+    {
+      "source": "/tmp/taskfold-readable-capture-v34-tablet-compound-captures/AD4994BD-0466-4B4F-86BD-5C7910D8D4EA.png",
+      "file": "tablet-compound-AD4994BD-0466-4B4F-86BD-5C7910D8D4EA.png",
+      "SHA256": "bab0f9e534f3d34f294ac33cdfaeadc17fe86fe4f915994169a592656160fcff",
+      "test": "TaskfoldUITests/testCompoundDateDarkLargestCaptureFilterAndRelaunch()",
+      "caption": "Compound Date phrase capture previews_0_AD044C0F-46AA-48FF-934A-F0202C5E6511.png"
+    }
+  ],
+  "review": "All 16 original exported PNGs individually inspected. Planned date and deadline remain completely visible together with reachable Save in tested compact/editor viewports. Chip text wraps without sideways scrolling. Declined tasks survive relaunch. These are iOS Simulator captures, not Mac runtime evidence.",
+  "limits": "Largest title fields still use an internal viewport; long drafts and lists require vertical scrolling. Ordinary compact controls remain a horizontal strip, and the light compact sheet reveals a blurred pink control through its translucent surface. Largest navigation titles and partially visible adjacent list rows remain full-surface/accessibility polish. No VoiceOver, Mac UI or provisioned WidgetKit acceptance is claimed."
+}

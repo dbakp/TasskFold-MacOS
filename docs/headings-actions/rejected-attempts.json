@@ -1,0 +1,38 @@
+[
+  {
+    "attempt": "ios-core.log",
+    "accepted": false,
+    "errors": [
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/ReminderTests.swift:113: error: -[TaskfoldCoreTests.ReminderTests testSystemCalendarTriggerUsesUTCAndPreservesSecondDSTFold] : XCTAssertEqual failed: (\"Optional(2026-11-01 01:30:00 +0000)\") is not equal to (\"nil\")"
+    ]
+  },
+  {
+    "attempt": "mac-core.log",
+    "accepted": false,
+    "errors": [
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/ReminderTests.swift:113: error: -[TaskfoldCoreTests.ReminderTests testSystemCalendarTriggerUsesUTCAndPreservesSecondDSTFold] : XCTAssertEqual failed: (\"Optional(2026-11-01 01:30:00 +0000)\") is not equal to (\"nil\")"
+    ]
+  },
+  {
+    "attempt": "ios-recovery-core.log",
+    "accepted": false,
+    "errors": [
+      "error: SwiftCompile normal arm64 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/LocationHandoffRecoveryTests.swift failed with a nonzero exit code. Command line:     cd /Users/davidbakposada/.codex/workspaces/taskfold-acceptance",
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/TaskfoldTests/LocationHandoffRecoveryTests.swift:357:103: error: value of type 'LocationHandoffDeviceReview' has no member 'settings'",
+      "    |                                                                                                       `- error: value of type 'LocationHandoffDeviceReview' has no member 'settings'",
+      "error: Build failed",
+      "error: fatalError"
+    ]
+  },
+  {
+    "attempt": "mac-recovery-core.log",
+    "accepted": false,
+    "errors": [
+      "error: SwiftCompile normal arm64 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/LocationHandoffRecoveryTests.swift failed with a nonzero exit code. Command line:     cd /Users/davidbakposada/.codex/workspaces/taskfold-acceptance",
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/LocationHandoffRecoveryTests.swift:357:103: error: value of type 'LocationHandoffDeviceReview' has no member 'settings'",
+      "    |                                                                                                       `- error: value of type 'LocationHandoffDeviceReview' has no member 'settings'",
+      "error: Build failed",
+      "error: fatalError"
+    ]
+  }
+]

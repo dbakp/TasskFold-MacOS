@@ -1,0 +1,23 @@
+{
+  "mac": {
+    "signOutRedactedImmediately": true,
+    "staleResultRejected": true,
+    "latestRecovered": true,
+    "savedDataUnchanged": true,
+    "accessFenceRejected": true
+  },
+  "phone": {
+    "accessFenceRejected": true,
+    "savedDataUnchanged": true,
+    "signOutRedactedImmediately": true,
+    "latestRecovered": true,
+    "staleResultRejected": true
+  },
+  "tablet": {
+    "staleResultRejected": true,
+    "latestRecovered": true,
+    "signOutRedactedImmediately": true,
+    "savedDataUnchanged": true,
+    "accessFenceRejected": true
+  }
+}

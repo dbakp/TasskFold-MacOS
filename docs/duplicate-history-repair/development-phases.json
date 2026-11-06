@@ -1,0 +1,69 @@
+[
+  {
+    "phase": "mac",
+    "passed": false,
+    "checksBeforeStop": 282,
+    "failure": {
+      "message": "Unexpected reserved word"
+    },
+    "fixtureRemoved": true,
+    "superseded": true,
+    "acceptedFinalEvidence": false
+  },
+  {
+    "phase": "mac-v2",
+    "passed": false,
+    "checksBeforeStop": 314,
+    "failure": {
+      "code": "ERR_ASSERTION",
+      "message": "fresh reference with prior lifecycle stays blocked\n+ actual - expected\n\n+ null\n- 'history_custody'\n"
+    },
+    "fixtureRemoved": true,
+    "superseded": true,
+    "acceptedFinalEvidence": false
+  },
+  {
+    "phase": "mac-v3",
+    "passed": false,
+    "checksBeforeStop": 314,
+    "failure": {
+      "code": "ERR_ASSERTION",
+      "message": "fresh reference with prior lifecycle stays blocked\n+ actual - expected\n\n+ null\n- 'history_custody'\n"
+    },
+    "fixtureRemoved": true,
+    "superseded": true,
+    "acceptedFinalEvidence": false
+  },
+  {
+    "phase": "mac-v4",
+    "passed": false,
+    "checksBeforeStop": 314,
+    "failure": {
+      "message": "Unexpected end of JSON input"
+    },
+    "fixtureRemoved": true,
+    "superseded": true,
+    "acceptedFinalEvidence": false
+  },
+  {
+    "phase": "mac-v5",
+    "passed": true,
+    "checksBeforeStop": 328,
+    "failure": null,
+    "fixtureRemoved": true,
+    "superseded": true,
+    "acceptedFinalEvidence": false
+  },
+  {
+    "phase": "mac-final",
+    "passed": false,
+    "checksBeforeStop": 283,
+    "failure": {
+      "code": "42501",
+      "message": "permission denied for schema extensions"
+    },
+    "fixtureRemoved": true,
+    "superseded": true,
+    "acceptedFinalEvidence": false
+  }
+]

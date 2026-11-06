@@ -1,0 +1,8 @@
+{
+  "appSHA256": "998ed45412cb7dc16b7a134ddd3e0880be999aae8964a701831f588c4ed21815",
+  "coldReturnCorrectChild": true,
+  "coldTitle": "Selected list child saved",
+  "compactInspectorVerified": true,
+  "finalQuitVerified": true,
+  "scope": "Final v4 cold-return check; same field-save UI logic accepted in v3; v4 adds the iOS-used shared outline helper"
+}

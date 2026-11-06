@@ -1,0 +1,18 @@
+{
+  "exactAppProcessStopped": true,
+  "temporaryAppRegistrationRemoved": true,
+  "logsCapturesSigningIsolationAndPrivateBaselinesRetained": true,
+  "pruned": [
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-pin-retry",
+      "bytes": 254732644,
+      "files": 3760
+    },
+    {
+      "path": "/private/tmp/taskfold-isolated-mac-pin-retry-v1",
+      "bytes": 1689107,
+      "files": 99
+    }
+  ],
+  "bytesPruned": 256421751
+}

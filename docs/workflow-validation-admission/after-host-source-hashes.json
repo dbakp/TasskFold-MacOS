@@ -1,0 +1,8 @@
+{
+  "Taskfold/Core/Store.swift": "ced68272d2b2018048bb12a58dfcf673dd75d834be29ff2369a3b0228778ae22",
+  "Taskfold/Core/ProjectWorkflows.swift": "9f2fce2f2799fc26ccd7c88f60d336ddb0f88e7ff50d7cc68b5c39940aa0b3ec",
+  "Taskfold/Core/Models.swift": "de8ec421bec1ee31449cedc469f778d96a63310624b84df9de6a72ba2055404a",
+  "Taskfold/Core/TaskActivity.swift": "ede44f91af4b71f758dbe04368216040da171a5a75506f36a2b521cfdfae6880",
+  "Taskfold/TeamTemplateNativeFixture.swift": "72ba04bd8273be43e0ca21d03e245f6aa1d40ea6cc3ac8376ee634fd019d0f10",
+  "TaskfoldUITests/TaskfoldUITests.swift": "d22b2ae7e45b292bc6a287070b41929ec4f6797daf2969410a9d4c45a6a23424"
+}

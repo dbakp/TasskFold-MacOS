@@ -1,0 +1,13 @@
+file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/postgres-fixture.mjs:39
+      const failure = new Error("Owned PostgreSQL query failed");
+                      ^
+
+Error: Owned PostgreSQL query failed
+    at raw (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/postgres-fixture.mjs:39:23)
+    at async Object.scalar (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/postgres-fixture.mjs:45:46)
+    at async completionBatchChecks (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/team-completion-batch-checks.mjs:22:101)
+    at async file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-team-completion.mjs:808:25 {
+  code: 255
+}
+
+Node.js v20.19.0

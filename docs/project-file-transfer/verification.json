@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-05",
+  "platform": "mac",
+  "handlerTests": {
+    "passed": 24,
+    "failed": 0
+  },
+  "fullSchemaChecks": 81,
+  "completeOwnMigrationsReplayed": 209,
+  "normalUseEnabled": false,
+  "hostedDeployment": false,
+  "nativeAcceptance": false,
+  "fullProjectFileFeatureComplete": false,
+  "installedAppsUnchanged": true,
+  "serviceTransactionAccepted": "Eligible actor-owned personal project to team, reviewed immutable copies; originals kept private",
+  "normalInlineFilePreservedBytes": 5242880,
+  "boundedReferencesRefusedBeforeCopy": 1025,
+  "sources": {
+    "supabase/functions/project-files/handler.ts": "e6ecf9331dc9aae1476d75f2e989dc6444cd7ddc174ccbe8e0ad6a1853220a6c",
+    "supabase/functions/project-files/handler_test.ts": "327673d69613c3c7b3610c579a4e8dc38d17ca6aec6d70387c9e4812cf8d75e1",
+    "Scripts/Database/test-full-schema-project-file-transfer.ts": "441e2d25d00c643924fe1545ad81a859bf78a2377c9184289f05d923ad95f09e",
+    "supabase/migrations/20261105210740_reviewed_project_file_transfer.sql": "a90fcd5226635f6ba927e36125e0ebc5b43da94d5d8a6216ebaac9e07e57e136"
+  },
+  "remaining": [
+    "Native preparation/progress/consent, file-policy decoding and encrypted retry recovery",
+    "Combined file/recording/integration, broader lifecycle/history/account-removal cases",
+    "Legacy/unavailable references and other ownership/realm directions",
+    "Unresolved producer-terminal recovery and maintenance acceptance",
+    "Hosted providers and native accessibility/large-text/keyboard acceptance"
+  ]
+}

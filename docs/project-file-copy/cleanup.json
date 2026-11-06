@@ -1,0 +1,35 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 61473288192,
+  "actions": [],
+  "skipped": [],
+  "freeAfterBytes": 61473288192,
+  "actualFreeChangeBytes": 0,
+  "ownedFixtureContainersRemoved": true,
+  "simulatorsBooted": 0,
+  "appleBuildsRepeated": false,
+  "runPreflightFreeBytes": 60407451648,
+  "retiredGeneratedOutputs": [
+    {
+      "path": "/tmp/taskfold-project-file-copy.sql",
+      "bytes": 19565
+    },
+    {
+      "path": "/tmp/taskfold-project-copy-ios-full.json",
+      "bytes": 37770
+    },
+    {
+      "path": "/tmp/taskfold-project-copy-ios-full.log",
+      "bytes": 14171
+    },
+    {
+      "path": "/tmp/taskfold-project-copy-format.log",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/taskfold-project-copy-typecheck.log",
+      "bytes": 50
+    }
+  ],
+  "retiredBytes": 71556
+}

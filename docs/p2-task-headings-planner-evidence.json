@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-26",
+  "scope": "Heading-descendant planner scheduling and capacity; Today/Inbox integration is still separate outstanding work",
+  "implementation": [
+    "ProductiveTaskReading uses nearest ordinary work beneath headings, with existing routable hierarchy references and parent labels",
+    "Ordinary task checklists are not counted twice; only containment is inherited",
+    "Store caches the projection and invalidates it on task or archived-project changes",
+    "Planner lists/scheduling/completion use real child selections; no synthetic backend task rows",
+    "Planner and eight-day capacity publication share estimates, unknown tasks and overdue exclusions for carryover work",
+    "Headings retain dated context and cannot be completed; heading estimates/overlap warnings do not count as work",
+    "Unreadable or unaddressable grouped work exposes an incomplete reading; widget room is withheld and caption says Readable estimates only",
+    "Widget workIncomplete is additive and omitted when clear"
+  ],
+  "core": {
+    "passed": 82,
+    "failed": 0,
+    "newProductivePlannerCases": 10,
+    "headingProjectTotalCases": 22,
+    "log": "headings-planner-work/core-tests.log"
+  },
+  "nativeBuild": "passed app, widgets and UI test bundle",
+  "sourceBinding": "headings-planner-work/source-binding.json",
+  "sourceViewRenders": {
+    "count": 3,
+    "visuallyInspected": true,
+    "scope": "Actual widget SwiftUI source with synthetic model fixture; not installed WidgetKit acceptance",
+    "renderer": "Scripts/render_widget_previews.py --heading-capacity"
+  },
+  "remaining": [
+    "Today/Upcoming/Inbox review, their badges and primary widget task rows need the productive projection",
+    "Inbox child project moves need an explicit reviewed containing-heading policy",
+    "Wider calendar period views and descendant-dependent features still need integration",
+    "Execute corrected native Mac planner case while unlocked",
+    "Installed widget refresh/actions for this stage, broader spoken/large-text, shared adapters and cross-device/provider acceptance remain open",
+    "Normal heading authoring, hosted rollout and all deferred release/provider/device gates stay unchanged"
+  ],
+  "native": {
+    "macOS": "pending execution while unlocked; current-source prepared case builds",
+    "initialAttempt": "v1 failed to reach planner while Mac locked. The workflow seed also resets navigation to Inbox, so the test now explicitly selects Calendar. Long reference selectors also use predicates. Corrected harness builds. No native pass claimed."
+  },
+  "buildValidation": "headings-planner-work/build-validation.json"
+}

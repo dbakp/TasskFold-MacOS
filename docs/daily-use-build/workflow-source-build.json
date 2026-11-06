@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "platform": "mac",
+  "bundle": "com.dbakp.taskfold.mac",
+  "version": "1.2.0",
+  "build": "10",
+  "app": "/private/tmp/taskfold-source-mac-fixed-products/Taskfold.app",
+  "sourceFingerprint": "d9f429f49599427c5f982e046c5998cc99141106d88dbf597b4fac10efb4fc48",
+  "sourceRevision": "8523ffa787f12f225caca486ca17b63e889027ee",
+  "simulatorOnly": false,
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": true,
+  "published": false,
+  "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-10-mac-development.zip",
+  "archiveSHA256": "fd9504f6c1068c8cfd03ee8d9784c20c64b6216f5c04f7d06319ec1574949549",
+  "archivePayloadVerified": true,
+  "sourceWasDirty": true,
+  "change": "Searchable template sources with location captions, background indexing, bounded pages and live refresh",
+  "developmentProfileExpires": "2026-11-10T18:38:42Z",
+  "installedApp": "/Applications/Taskfold.app",
+  "startupVerified": true,
+  "syncVerified": true,
+  "observedSyncStatus": "Synced 22.54",
+  "nativeUIAccepted": true,
+  "sourceProductRetiredForStorage": true
+}

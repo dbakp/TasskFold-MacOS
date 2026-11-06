@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "platform": "macOS",
+  "appBundleID": "com.dbakp.taskfold.mac",
+  "widgetBundleID": "com.dbakp.taskfold.mac.widgets",
+  "minimumVersion": "1.2.0",
+  "minimumBuild": 3,
+  "pairedMinimum": {
+    "macOS": {
+      "version": "1.2.0",
+      "build": 3
+    },
+    "iOS": {
+      "version": "1.4.0",
+      "build": 19
+    }
+  },
+  "capabilities": [
+    "guarded-task-field-edits",
+    "task-generation-and-completion-revision",
+    "atomic-organization-order",
+    "strict-filter-document-preservation",
+    "independent-label-membership-rebase",
+    "independent-identified-collection-rebase",
+    "known-empty-and-nested-collection-deltas"
+  ],
+  "olderActiveWritersSupported": false,
+  "serverRejectsAllLegacyDirectWrites": false,
+  "distributionAccepted": false,
+  "shareBundleID": "com.dbakp.taskfold.mac.share"
+}

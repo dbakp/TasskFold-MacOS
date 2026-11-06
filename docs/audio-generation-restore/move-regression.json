@@ -1,0 +1,551 @@
+{
+  "checks": {
+    "pre-migration ordinary Undo remains reviewable": true,
+    "pre-migration Undo restores original project": true,
+    "legacy publication is not silently bound": true,
+    "unbound legacy media blocks move review": true,
+    "legacy media stays readable in original project": true,
+    "ordinary review reports zero recordings": true,
+    "ordinary request needs no audio acknowledgement": true,
+    "ordinary move remains available": true,
+    "personal pending publication remains available": true,
+    "project adoption cannot silently expose pending audio": true,
+    "personal sender can close after refused adoption": true,
+    "production gateway publishes a bound recording": true,
+    "publication creates exact task binding": true,
+    "new binding uses original generation": true,
+    "review counts recordings": true,
+    "review keeps companion file inventory": true,
+    "review states exact custody policy": true,
+    "unaware client cannot move recordings": true,
+    "wrong recording acknowledgement refuses": true,
+    "refused moves keep exact root": true,
+    "busy media refuses review without waiting": true,
+    "uncertified generation change remains closed": true,
+    "reviewed move changes project": true,
+    "recording follows current project": true,
+    "immutable ledger stays byte-exact": true,
+    "companion file follows mixed-media move": true,
+    "old project viewer loses audio": true,
+    "destination viewer reads current target": true,
+    "outside account gains no audio": true,
+    "object path remains unchanged": true,
+    "sender status survives the move": true,
+    "sender receipt remains original": true,
+    "lost-reply retry is a replay": true,
+    "retry does not alter custody": true,
+    "Undo reviews same recordings": true,
+    "Undo restores project audience": true,
+    "Undo restores source read access": true,
+    "Undo revokes destination read access": true,
+    "Undo keeps original ledger": true,
+    "Undo returns companion file custody": true,
+    "mid-download move withholds bytes": true,
+    "destination gateway downloads after move": true,
+    "recording bytes remain exact": true,
+    "old audience gateway refuses bytes": true,
+    "old audience cannot fetch provider bytes": true,
+    "keyset page follows current project": true,
+    "legacy list follows current project": true,
+    "whole-project team transfer requires audio review": true,
+    "whole-project detachment requires audio review": true,
+    "changed storage metadata invalidates signed review": true,
+    "reserve pending recording": true,
+    "pending publication blocks reviewed move": true,
+    "sender can close pending publication": true,
+    "unreviewed custody update refuses": true,
+    "missing provider metadata preserves last known custody": true,
+    "manager removes in current destination": true,
+    "removed recording invalidates move Undo": true,
+    "removal does not rewrite original target": true,
+    "published bytes await fenced cleanup": true,
+    "anon cannot directly update custody": true,
+    "authenticated cannot directly update custody": true,
+    "service_role cannot directly update custody": true,
+    "no new advisor findings": true
+  },
+  "candidateSHA256": "6ff15d6783bd142a4088d9c289aaee7fabf225bbaa6a49bc46a880ba508f84af",
+  "runnerSHA256": "7e65ea58d23187c310cf56ab8ac7d4daec315aad964fb3be4d3d0ef6d8fc0ac2",
+  "deployed": false,
+  "normalUseEnabled": false,
+  "genuineAuthOrStorage": false,
+  "baselineAdvisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+      }
+    ]
+  },
+  "clientSample": {
+    "origin": "https://synthetic.example",
+    "scope": {
+      "team_id": "93725c78-71d4-4aaa-8b5b-f42ef6946347",
+      "task_id": "fb16313f-9a04-4a07-979e-7e61d9ebe0e9",
+      "task_generation": "c985bc12-cc9b-4bda-93f5-dbef4995a7ed",
+      "source_project_id": "536caf2e-bb9a-4237-a167-0624811860f9",
+      "destination_project_id": "ea98da89-6b3a-463b-a4ff-ab7e823fc578"
+    },
+    "review": {
+      "task": {
+        "id": "fb16313f-9a04-4a07-979e-7e61d9ebe0e9",
+        "title": "Task with a published recording",
+        "labels": [],
+        "user_id": "f9204017-4edc-4bcf-94d5-e5d5f364d1fd",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-11-02T18:03:24.246004+00:00",
+        "is_heading": null,
+        "project_id": "536caf2e-bb9a-4237-a167-0624811860f9",
+        "section_id": null,
+        "assigned_to": null,
+        "attachments": [
+          {
+            "id": "04f589db-fa8f-4767-bfeb-0d6d0fbc2adf",
+            "name": "Synthetic companion.pdf",
+            "storage_object_id": "4349fce2-83ab-4c4e-871e-770dd29ee715"
+          }
+        ],
+        "description": null,
+        "completed_at": null,
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "c985bc12-cc9b-4bda-93f5-dbef4995a7ed",
+        "duration_minutes": null,
+        "completion_version": 0,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "account": "f9204017-4edc-4bcf-94d5-e5d5f364d1fd",
+      "task_id": "fb16313f-9a04-4a07-979e-7e61d9ebe0e9",
+      "team_id": "93725c78-71d4-4aaa-8b5b-f42ef6946347",
+      "expires_at": "2026-11-02T18:33:25Z",
+      "source_name": "Private audio project",
+      "review_token": "12875f71d9f7ecc9395aca128378237a708ddbed8202d78006967d490d716b03",
+      "related_request": null,
+      "task_generation": "c985bc12-cc9b-4bda-93f5-dbef4995a7ed",
+      "destination_name": "Private audio project",
+      "discussion_count": 0,
+      "source_project_id": "536caf2e-bb9a-4237-a167-0624811860f9",
+      "file_custody_count": 1,
+      "subtask_undo_count": 0,
+      "audio_custody_count": 1,
+      "cleared_assignments": 0,
+      "file_custody_policy": "task_bound_v1",
+      "subtask_undo_policy": "kept_private",
+      "audio_custody_policy": "published_same_generation_v1",
+      "move_review_protocol": 1,
+      "restored_assignments": 0,
+      "destination_project_id": "ea98da89-6b3a-463b-a4ff-ab7e823fc578",
+      "destination_visibility": "private"
+    },
+    "intent": {
+      "version": 1,
+      "account": "f9204017-4edc-4bcf-94d5-e5d5f364d1fd",
+      "operation_id": "6482bc72-84bc-4ead-835f-04317037697c",
+      "comment_id": "8499cc9e-97a7-46fe-a560-1ca3f59c22dc",
+      "asset_id": "c0a13b2b-3302-45e1-9328-8f93116ee6df",
+      "target": {
+        "task_id": "fb16313f-9a04-4a07-979e-7e61d9ebe0e9",
+        "task_generation": "c985bc12-cc9b-4bda-93f5-dbef4995a7ed",
+        "project_id": "536caf2e-bb9a-4237-a167-0624811860f9"
+      },
+      "caption": "Keep this exact recording café 🌿",
+      "audio": {
+        "version": 1,
+        "mime_type": "audio/mp4",
+        "byte_count": 59439,
+        "duration_ms": 1000,
+        "sha256": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb"
+      }
+    },
+    "senderReceipt": {
+      "audio": {
+        "sha256": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+        "version": 1,
+        "mime_type": "audio/mp4",
+        "byte_count": 59439,
+        "duration_ms": 1000
+      },
+      "state": "published",
+      "target": {
+        "task_id": "fb16313f-9a04-4a07-979e-7e61d9ebe0e9",
+        "project_id": "536caf2e-bb9a-4237-a167-0624811860f9",
+        "task_generation": "c985bc12-cc9b-4bda-93f5-dbef4995a7ed"
+      },
+      "account": "f9204017-4edc-4bcf-94d5-e5d5f364d1fd",
+      "caption": "Keep this exact recording café 🌿",
+      "asset_id": "c0a13b2b-3302-45e1-9328-8f93116ee6df",
+      "protocol": 1,
+      "author_id": "f9204017-4edc-4bcf-94d5-e5d5f364d1fd",
+      "comment_id": "8499cc9e-97a7-46fe-a560-1ca3f59c22dc",
+      "expires_at": "2026-11-03T18:03:24.713821+00:00",
+      "reserved_at": "2026-11-02T18:03:24.713821+00:00",
+      "operation_id": "6482bc72-84bc-4ead-835f-04317037697c",
+      "published_at": "2026-11-02T18:03:25.092794+00:00"
+    },
+    "command": {
+      "team_id": "93725c78-71d4-4aaa-8b5b-f42ef6946347",
+      "task_id": "fb16313f-9a04-4a07-979e-7e61d9ebe0e9",
+      "task_generation": "c985bc12-cc9b-4bda-93f5-dbef4995a7ed",
+      "source_project_id": "536caf2e-bb9a-4237-a167-0624811860f9",
+      "destination_project_id": "ea98da89-6b3a-463b-a4ff-ab7e823fc578",
+      "request_id": "a66020f9-fa44-43b0-8e0b-f353cf5d5a2f",
+      "expires_at": "2026-11-02T18:33:25Z",
+      "review_token": "12875f71d9f7ecc9395aca128378237a708ddbed8202d78006967d490d716b03",
+      "audio_custody_ack": {
+        "policy": "published_same_generation_v1",
+        "count": 1
+      }
+    },
+    "reply": {
+      "task": {
+        "id": "fb16313f-9a04-4a07-979e-7e61d9ebe0e9",
+        "title": "Task with a published recording",
+        "labels": [],
+        "user_id": "f9204017-4edc-4bcf-94d5-e5d5f364d1fd",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-11-02T18:03:24.246004+00:00",
+        "is_heading": null,
+        "project_id": "ea98da89-6b3a-463b-a4ff-ab7e823fc578",
+        "section_id": null,
+        "assigned_to": null,
+        "attachments": [
+          {
+            "id": "04f589db-fa8f-4767-bfeb-0d6d0fbc2adf",
+            "name": "Synthetic companion.pdf",
+            "storage_object_id": "4349fce2-83ab-4c4e-871e-770dd29ee715"
+          }
+        ],
+        "description": null,
+        "completed_at": null,
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "c985bc12-cc9b-4bda-93f5-dbef4995a7ed",
+        "duration_minutes": null,
+        "completion_version": 0,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "account": "f9204017-4edc-4bcf-94d5-e5d5f364d1fd",
+      "task_id": "fb16313f-9a04-4a07-979e-7e61d9ebe0e9",
+      "team_id": "93725c78-71d4-4aaa-8b5b-f42ef6946347",
+      "protocol": 1,
+      "replayed": false,
+      "operation": "move",
+      "request_id": "a66020f9-fa44-43b0-8e0b-f353cf5d5a2f",
+      "related_request": null,
+      "task_generation": "c985bc12-cc9b-4bda-93f5-dbef4995a7ed",
+      "source_project_id": "536caf2e-bb9a-4237-a167-0624811860f9",
+      "destination_project_id": "ea98da89-6b3a-463b-a4ff-ab7e823fc578"
+    },
+    "liveRead": {
+      "audio": {
+        "sha256": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+        "version": 1,
+        "mime_type": "audio/mp4",
+        "byte_count": 59439,
+        "duration_ms": 1000
+      },
+      "state": "published",
+      "target": {
+        "task_id": "fb16313f-9a04-4a07-979e-7e61d9ebe0e9",
+        "project_id": "ea98da89-6b3a-463b-a4ff-ab7e823fc578",
+        "task_generation": "c985bc12-cc9b-4bda-93f5-dbef4995a7ed"
+      },
+      "account": "3b3b85ad-31c2-4aad-a0cc-9190eeced1d0",
+      "caption": "Keep this exact recording café 🌿",
+      "asset_id": "c0a13b2b-3302-45e1-9328-8f93116ee6df",
+      "protocol": 1,
+      "author_id": "f9204017-4edc-4bcf-94d5-e5d5f364d1fd",
+      "comment_id": "8499cc9e-97a7-46fe-a560-1ca3f59c22dc",
+      "expires_at": "2026-11-03T18:03:24.713821+00:00",
+      "reserved_at": "2026-11-02T18:03:24.713821+00:00",
+      "operation_id": "6482bc72-84bc-4ead-835f-04317037697c",
+      "published_at": "2026-11-02T18:03:25.092794+00:00"
+    }
+  },
+  "finalAdvisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+      }
+    ]
+  },
+  "addedAdvisors": [],
+  "checkCount": 63,
+  "cleanupErrors": [],
+  "ownedPostgresContainerRemoved": true
+}

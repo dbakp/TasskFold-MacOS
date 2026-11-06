@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-04",
+  "affectedBuild": "25",
+  "exception": "EXC_BAD_ACCESS / SIGSEGV in main-thread stack guard",
+  "mainThreadStackKiB": 1008,
+  "symbolicatedOwner": "RootView.body, creating the workspace VStack",
+  "runtimeFrames": "Swift generic type-metadata decoding; SwiftUI layout",
+  "rawDiagnosticsStoredPrivately": true,
+  "fixBuild": "26",
+  "fix": "Extract concrete RootWorkspaceTabs and RootWorkspaceStatus views; retain selection, navigation paths and presentation state in RootView.",
+  "dataMigrationOrDeletionInFix": false,
+  "physicalDeviceInstallAndMainProcessVerified": true,
+  "humanObservedAppStaysOpen": true,
+  "ordinaryLaunchNoTestArguments": true,
+  "sourceSHA256": "343869401ba40143d73e22f1cb072e1f563d2eb25486a71a3dfff651ec8f099e"
+}

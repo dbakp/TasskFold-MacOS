@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-12",
+  "baseCommits": {
+    "TaskFold-iOS": "69a1ed7",
+    "TasskFold-MacOS": "38cfde2"
+  },
+  "problem": "Move to tomorrow ignored undated tasks and advanced future tasks beyond their existing plan instead of choosing tomorrow.",
+  "change": "Each repo independently owns TaskPlanner.tomorrowFields, based on the receiving device calendar next day and existing date-placement rules. Each Store notification action uses it; empty already-correct changes do not commit.",
+  "nativeScope": "Actual iPhone Simulator background local independent recurring reminder -> native Move to tomorrow -> persisted task -> process relaunch -> exact native editor -> cleanup. No Mac/physical/cold-process/account-change action acceptance is claimed.",
+  "nativeTest": "testSystemTomorrowActionPlansUndatedIndependentReminderAndPersists",
+  "beforeResult": "tomorrow-action-ios-before-v3.xcresult",
+  "before": {
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "failure": "After real action, due remained empty instead of 2026-10-13.",
+    "sourceHashes": {
+      "Taskfold/Core/Store.swift": "48b2906e5bb060a7cbf6038c6bd5953e9d088d3d685824cc85085f02866596e8",
+      "Taskfold/Core/Planner.swift": "4aa5c2c5008379d89a92f7d48dec21949d36225ad7552e3413a112ed0df943ae",
+      "TaskfoldUITests/TaskfoldUITests.swift": "621976af8aa5d112c6041c1e3369b6e35fa263c2da5928b73d78de2908daad4e"
+    }
+  },
+  "afterResult": "tomorrow-action-ios-after-v1.xcresult",
+  "after": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0,
+    "durationSeconds": 212.717,
+    "sourceHashes": {
+      "Taskfold/Core/Planner.swift": "d2c8402fcf91d1b4625ae884e038107e42dd46da9e08fec8bf195d5394bce653",
+      "Taskfold/Core/Store.swift": "d1d5a6df7899f3e9205403b43cfe598c2515622c393a6cdf90c056f3c2652571",
+      "TaskfoldUITests/TaskfoldUITests.swift": "ec8131d397fff374d6638b816d9be7b82e8712e2207a824f3f38598135396139"
+    }
+  },
+  "plannerTests": {
+    "TaskFold-iOS": {
+      "passed": 15,
+      "failed": 0,
+      "sha256": "02728b36527522cd151d6082782292ea420bc4c26c7588cbcb52ff96da0e8604",
+      "coverage": "Undated/overdue/today/already-tomorrow/future plans, unrelated fields, DST missing hour, fixed-zone travel/local clock and invalid clock."
+    },
+    "TasskFold-MacOS": {
+      "passed": 15,
+      "failed": 0,
+      "sha256": "2b970239e811694408fa94682a018acac7735a3e5eb8d7d84253305b83ecf7e8",
+      "coverage": "Undated/overdue/today/already-tomorrow/future plans, unrelated fields, DST missing hour, fixed-zone travel/local clock and invalid clock."
+    }
+  },
+  "builds": {
+    "tomorrow-action-ios-build-after-v2.log": {
+      "passed": true,
+      "sha256": "5e726a621e543744e33ca086bc2f848ce7aa67cdc5b4f920ffdf30888dabe216"
+    },
+    "tomorrow-action-ios-release-build-v1.log": {
+      "passed": true,
+      "sha256": "b601f949ccf69afba2a0e1f5cfa282583840144377a5eb5f3ca979da909c6a2b"
+    },
+    "tomorrow-action-mac-debug-build-v1.log": {
+      "passed": true,
+      "sha256": "ca5005437c7cb783f58f52050a9f98242ddd1548a1d18d7aa0fd6b90598d6ce3"
+    },
+    "tomorrow-action-mac-release-build-v1.log": {
+      "passed": true,
+      "sha256": "5ed1cd522c04c93ed03d22d0f83f5c809938c9b7571f8223cca6d0022537e4c1"
+    }
+  },
+  "preservation": "notification-tomorrow/preservation.json",
+  "signing": "notification-tomorrow/signing.json",
+  "accepted": [
+    "Native capture starts with exactly one undated task and two independently scheduled reminder occurrences.",
+    "Actual system alert exposes Move to tomorrow and receives native tap.",
+    "Only due_date changes to receiving device tomorrow; exact ID, open state and reminder rule preserved.",
+    "Native relaunch retains date and exact task editor shows Planned date on.",
+    "Native End fixture drains both pending notification occurrences.",
+    "Authenticated caches and protected primary phone/tablet file sets and hashes unchanged."
+  ],
+  "attempts": {
+    "before-v1": "Fixture title contained natural-language tomorrow; parser correctly made a task plan and removed token from title. Stopped before notification action; not product reproduction.",
+    "before-v2": "Correct undated task saved; helper incorrectly assumed one scheduled event for a two-occurrence rule. Stopped before action; corrected test selects nearest occurrence.",
+    "before-v3": "Real before-fix action reproduces exactly one empty-date failure.",
+    "after-v1": "Final real action, relaunch, native editor and cleanup pass. Test adds explicit Inbox navigation/editor switch and cleanup assertions after the shared action path."
+  },
+  "diagnostics": [
+    "Mac builds retain existing compiler warnings in KeyRouter/Links/Workspace; no warning suppression or clean-build-warning claim.",
+    "Earlier failed runs and final raw xcresults remain retained."
+  ],
+  "remaining": [
+    "Notification account-change and other action variants.",
+    "Actual Mac notification Open/actions and installed widgets; Mac was confirmed locked during preceding inspection, existing processes preserved.",
+    "Existing APNs/distribution, VoiceOver, external-provider and continuity gates."
+  ],
+  "sourceHashes": {
+    "TaskFold-iOS/Taskfold/Core/Planner.swift": "d2c8402fcf91d1b4625ae884e038107e42dd46da9e08fec8bf195d5394bce653",
+    "TaskFold-iOS/Taskfold/Core/Store.swift": "d1d5a6df7899f3e9205403b43cfe598c2515622c393a6cdf90c056f3c2652571",
+    "TaskFold-iOS/TaskfoldTests/PlannerTests.swift": "df27afe066f824204c52e1674ff65e2702868bf669eae4a830783dd261eebb05",
+    "TasskFold-MacOS/Taskfold/Core/Planner.swift": "d2c8402fcf91d1b4625ae884e038107e42dd46da9e08fec8bf195d5394bce653",
+    "TasskFold-MacOS/Taskfold/Core/Store.swift": "e4c503bdf36b5e192a8ebed78904e9f09c0bb99dc3630b6a88beb4c8bd98cc75",
+    "TasskFold-MacOS/TaskfoldTests/PlannerTests.swift": "df27afe066f824204c52e1674ff65e2702868bf669eae4a830783dd261eebb05"
+  },
+  "captures": [
+    {
+      "path": "notification-tomorrow/before-real-action.png",
+      "sha256": "3c4aca6eb4b4b0a646c0bace20edd9cdad3d3c71c8e658ac4aa00a089c1b0a8f",
+      "inspected": true
+    },
+    {
+      "path": "notification-tomorrow/real-action.png",
+      "sha256": "2ec46d0d02c911c1c9f4bdc099ab09a2149c74eda4ba6c448172785ff7cee66d",
+      "inspected": true
+    },
+    {
+      "path": "notification-tomorrow/relaunch-planned-editor.png",
+      "sha256": "5de66fd8fc94137e7921b9765bf2a31bc56d4d6b2cb1c60210b8a85d5661d793",
+      "inspected": true
+    }
+  ]
+}

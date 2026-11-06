@@ -1,0 +1,19 @@
+{
+  "ownedObsoleteRawResultOrDuplicateExportPathsPruned": [
+    "/tmp/taskfold-audio-expired-action-phone.xcresult",
+    "/tmp/taskfold-audio-expired-action-ipad.xcresult",
+    "/tmp/taskfold-audio-expired-action-phone-attachments",
+    "/tmp/taskfold-audio-expired-action-ipad-attachments",
+    "/tmp/taskfold-expired-discard-phone-attachments",
+    "/tmp/taskfold-expired-discard-ipad-attachments"
+  ],
+  "logicalBytesPruned": 5925200,
+  "latestNativeResultBundlesRetained": true,
+  "allRequiredSummariesLogsAndMobileScreenshotsRetainedInRepo": true,
+  "phoneAndIPadJobsTerminalAndStrictlyVerified": true,
+  "ownedSimulatorsConfirmedShutdown": true,
+  "noOwnedMacAppProcessRemaining": true,
+  "MacLockedNativeRuntimeGateRemainsOpen": true,
+  "reusableBuildCachesRetained": true,
+  "noGenuineAudioOrSystemPermissionChanges": true
+}

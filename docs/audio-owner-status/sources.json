@@ -1,0 +1,18 @@
+{
+  "Scripts/Database/audio-comments-http-fixture.ts": "55ccbacb1d48cde374ed4b57da6843d13bb8e69b2c702cb55f45d1647f964386",
+  "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "fdb62dbedf081247685354cafaa27c44b09db8315af4d0c04aac77e788901e2b",
+  "Scripts/Database/test-audio-native-publication.mjs": "5b8084dc9868f19ff80ec76530773d85189de31d723e6af400a26b160121ba26",
+  "Scripts/Database/test-audio-owner-native.mjs": "ee743901efd458401f7699e8255445383f6f926da9b5d561048a4c8d1b571cf3",
+  "Scripts/Database/test-audio-owner-status.mjs": "47a3815238f5d6844ce09aaa9dc4365a2d8002120fbc5b54d14d02d82573d08e",
+  "Scripts/Database/test-audio-terminal-publication.mjs": "edfd74bae1ae01a35c750ec520261dbdc971bcadefe8e3be6f8251ea62ace6ed",
+  "Scripts/fixtures/AudioCommentNativePublicationProof.swift": "282463332c8768d1e2a6a57d03a9647c2ff2a2ad86d45ccd357a749630cad118",
+  "Taskfold/AudioCommentCapture.swift": "12f84f3993b724400dbebd7a449c0bb2e5de6cd0504ca24ed8420cdeb747f670",
+  "Taskfold/Core/AudioCommentPublishing.swift": "42fa286dc9970ad4b2e5848d44d1d2dfdcb8dba6629e30800262eafbda07c437",
+  "Taskfold/Core/Backend.swift": "eca71c1226e2ddd0def0fd9e9eb033bb885cb8980c40d2f4171df9ca77660ea3",
+  "Taskfold/Views/AudioCommentPublicationView.swift": "561bc37fdfd5eb635f2dd5ee0623887fb584af8a086b2620e657480350bb793b",
+  "Taskfold/Views/AudioPendingPublicationView.swift": "9c2c7fb63f1c6259795a77f5a0a335a0ada976bb5f15eca697f992ea21be7731",
+  "TaskfoldTests/AudioCommentPublishingTests.swift": "7adb735a968abec319e7c893b72e0e0f6b0d7b89b82721965592f8ca1d5adde7",
+  "supabase/functions/audio-comments/handler.ts": "38f731c8335a4255e18dc9dc3d721a1ce13dfa66067ecbbad4097383933a5556",
+  "supabase/functions/audio-comments/handler_test.ts": "2708b4f1711628cbf6e355c5c30b515e5b98ac3c17424dfc65a676735447bf01",
+  "supabase/migrations/20261028212632_audio_owner_publication_status.sql": "0f50b4990debfc1cb7d4484f5ecfeae66d9fe509c0a7a0267a1236da186d1a11"
+}

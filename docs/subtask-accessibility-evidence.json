@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-10",
+  "scope": "Subtask editor controls and largest-text readability; isolated DEBUG local fixture only",
+  "defects": [
+    "All subtask completion controls had the generic label Toggle subtask without item or state",
+    "Single-line subtask titles truncated at largest text size in the phone editor"
+  ],
+  "implementation": {
+    "bothPlatforms": [
+      "Completion controls name the specific subtask and announce Completed or Not completed",
+      "Subtask titles use vertically expanding text fields",
+      "Blank legacy titles use untitled subtask as the action label"
+    ],
+    "iOS": [
+      "44 by 44 point completion target"
+    ],
+    "macOS": [
+      "Detail and remove actions also name their subtask"
+    ]
+  },
+  "nativeTests": {
+    "selector": "testSubtaskAccessibleActionsTargetOneItemAndPersistAfterRelaunch",
+    "phone": "/tmp/taskfold-subtask-accessibility-phone-v2.xcresult",
+    "tablet": "/tmp/taskfold-subtask-accessibility-tablet-v2.xcresult",
+    "actualPassed": 2,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0,
+    "appearance": "Dark, Accessibility XXXL, portrait",
+    "workflow": [
+      "Create parent and two distinct subtasks through native editors",
+      "Assert distinct completion/reopen labels, completion values and minimum first-checkbox target size",
+      "Complete first only and verify second remains open",
+      "Save, terminate and relaunch without reseeding",
+      "Assert first remains completed and second remains open, then complete second and save"
+    ],
+    "visualInspection": "Both retained final screenshots inspected. Phone titles wrap fully; tablet titles fit fully; Save and checkbox controls remain visible."
+  },
+  "iterations": [
+    "iOS initial test compile failed because screenshot helper arguments were reversed; corrected before any native run",
+    "Pre-wrapping v1 phone/tablet tests passed, but inspected phone pixels exposed truncation; source improved and both affected tests repeated as v2"
+  ],
+  "builds": {
+    "iOS": "/tmp/taskfold-subtask-accessibility-ios-build-v3.log",
+    "macOS": "/tmp/taskfold-subtask-accessibility-mac-build-v2.log"
+  },
+  "signatureReceipt": "/tmp/taskfold-subtask-accessibility-sign-v2.json",
+  "screenshotsRepository": "TaskFold-iOS",
+  "screenshots": {
+    "docs/native-continuity-previews/subtask-accessibility-phone.png": "75d687d296389dd90eff774274b2782dafacae408fa840b38932db1723503ec7",
+    "docs/native-continuity-previews/subtask-accessibility-tablet.png": "255370687e8011efc5b1c92d3753a676404ca99ecb5ea5061774dfaa5aef385b"
+  },
+  "dataScope": "Local ui-testing fixture in isolated com.dbakp.taskfold.assigneepatterntests bundle; no real task data or cloud account provisioned",
+  "limitations": [
+    "Semantic accessibility labels and native actions verified; full VoiceOver traversal, keyboard and switch-control acceptance remain open",
+    "Mac compiled for both architectures; Mac GUI and assistive technology were not launched",
+    "Portrait dark largest-text subtask editor only; no general accessibility acceptance inferred",
+    "P0 objective remains active"
+  ],
+  "ownSourceHashes": {
+    "Taskfold/Views/TaskInspector.swift": "ad3495d548ee23c2e5c6654a9d73d28e94a2e1c5535496bfe84fde80c194c0a6"
+  }
+}

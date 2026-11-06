@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native local Mac task-list keyboard follow-up; independently owned AppKit code only",
+  "bundle": "com.dbakp.taskfold.mac.p0grammaruitests",
+  "sourceSHA256": {
+    "Taskfold/Views/KeyRouter.swift": "f1e80fc2500f660d2fd780f5c78fd8beb87ca2dd27435759377e67d67958c468",
+    "Taskfold/Views/ProjectBoard.swift": "d362ce9aedd85d56dd0ee7b889b296aa4aa01b524aa6a0c1ee286f546852ce48",
+    "Taskfold/Views/CalendarView.swift": "95aa61d2a52196d83012373ee20c2c12e418be940144c6929eeff51663d37ccf"
+  },
+  "change": "Allow focused boardTaskList/calendarTaskList NSTableViews alongside taskList. Calendar day panel is a contained accessibility group, preserving its distinct child table identifier. Inspector and sidebar controls remain outside the keyboard monitor.",
+  "nativeChecks": {
+    "board": [
+      "Native Home project capture with today plan, switch Layout to Board.",
+      "Task-row Space completes; Command-Z restores; Down/Return opens exact task; row Escape clears selection.",
+      "Focused inspector Repeat click then Space leaves the task open."
+    ],
+    "calendar": [
+      "Day panel exposes separate calendarDayPanel container and calendarTaskList table.",
+      "Hide inspector so day panel remains visible at this window width; select actual table row.",
+      "Space completes exact task; Command-Z restores; Escape clears; Down/Return opens exact task inspector.",
+      "Repeat expands on click; focused Space collapses without completing task."
+    ]
+  },
+  "observationLimits": [
+    "CUA AX click initially reported board row offscreen although visible; inspected screenshot and clicked actual visible title.",
+    "Before day-panel containment, its outer identifier overrode the table identifier. Initial calendar attempt selected/opened the inspector and did not establish completion.",
+    "Calendar hides its day panel when inspector is visible in this window width. These are table shortcuts; calendar grid/card keyboard journeys remain open.",
+    "Board acceptance ran on v2 sources; final v3 changes only the calendar container accessibility grouping. No new Mac XCTest pass or VoiceOver acceptance."
+  ],
+  "build": "mac-task-surface-keyboard-build-v3.log: TEST BUILD SUCCEEDED, app-only ad-hoc diagnostic build",
+  "nativeLogs": [
+    "mac-task-surface-keyboard-native-v1.log",
+    "mac-task-surface-keyboard-native-v2.log"
+  ],
+  "preservation": {
+    "originalBoundedTaskExactlyUnchanged": true,
+    "otherReminderSpecsPreserved": true,
+    "syntheticKeyboardTask": {
+      "id": "25257f8b-c69c-43aa-98f9-26415d774aed",
+      "title": "Keyboard surface Mac 11Oct",
+      "due_date": "2026-10-11",
+      "completed": false
+    },
+    "taskCount": 3,
+    "pending": 0
+  },
+  "remaining": [
+    "Calendar grid/card keyboard critical journeys and actual VoiceOver.",
+    "All other current P0_RELEASE_STATUS requirements."
+  ]
+}

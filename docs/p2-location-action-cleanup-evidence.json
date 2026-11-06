@@ -1,0 +1,270 @@
+{
+  "milestone": "Explicit cleanup of permanently retired location-action receipts",
+  "date": "2026-10-22",
+  "repository": "TasskFold-MacOS",
+  "status": "Implemented experimental maintenance; full location/Px acceptance incomplete",
+  "parentCommit": "ff3942af7ccefcf2465791ba962b4988f86522de",
+  "sourceSHA256": {
+    "Taskfold/Core/LocationReminders.swift": "04d645147c146d11b492c19085ee840e8356ef2197161f5678ae9e89305bea81",
+    "TaskfoldTests/LocationActionCleanupTests.swift": "e8eac0a16230565cfe68fcda9c38e708d9494da2e0632c2f18ac84fa26c136d3"
+  },
+  "behavior": [
+    "Explicit confirmation/Cancel and no task/plan/pending-command mutation",
+    "Fresh readable private journal plus captured workspace required; empty ledger is a no-op without private setup",
+    "Only exact same-account/device closed permanently denied tickets can lose action receipts; private tombstones remain",
+    "Both durable and proposed ledgers filtered before ordinary monotonic merge; no new wire format or backend changes",
+    "Failed atomic save restores memory and leaves prior durable cache; retry clears known retired receipts",
+    "Active/actionable/unknown/other-account/other-installation history remains protected; restored receipts may be cleaned again without restoring private authority"
+  ],
+  "core": {
+    "reported": 1232,
+    "skipped": 33,
+    "actualPassed": 1199,
+    "failures": 0,
+    "newCleanupCases": 9,
+    "log": {
+      "file": "location-action-cleanup-verified-full-mac.log",
+      "sha256": "f0e29a3f0415c7f5b8cb1f5fc93e18d01029df5b062c0959aa9f061be3143840"
+    },
+    "scope": "Permanent versus actionable closure, revoked delivered receipt, active/prepared/reserved repeat, wrong account/install/unknown ticket, invalid authority/ledger, explicit versus ordinary persistence, mixed full 2048 ledger preserving active receipt, disallowed combined mutation and restore/reclean safety"
+  },
+  "combinedActualCorePassed": 2386,
+  "nativeIOS": {
+    "repository": "TaskFold-iOS",
+    "bundle": "com.dbakp.taskfold.workflowtestsp1",
+    "results": [
+      {
+        "device": "phone",
+        "resultBundle": "location-action-cleanup-phone-verified.xcresult",
+        "actualPassed": 1,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "location-action-cleanup-phone-verified-summary.json",
+          "sha256": "39cc6fb54a9a17f97f8ac151fc9672fd47a9c058299a524c509c4fdb1c31db97"
+        },
+        "log": {
+          "file": "location-action-cleanup-phone-verified.log",
+          "sha256": "b0e85619e1d69f13424dcbf59bc6bda6fa16aaa7890f6d3276034155af1c6686"
+        },
+        "proofs": {
+          "Retired action history cleanup and replay proof": {
+            "removed": 3,
+            "scope": "Synthetic task/private authority, real native time-snooze cancellation, injected response inputs; no region delivery proof",
+            "checks": {
+              "tasksAndCommandsUnchanged": true,
+              "failedSaveKeepsDisk": true,
+              "retiredHistoryCleared": true,
+              "permanentlyRetiredHistoryFound": true,
+              "activeHistoryKept": true,
+              "oldNativeSnoozeCannotMutate": true,
+              "undoCannotReviveOldAction": true,
+              "stoppedNativeSnoozeRemoved": true,
+              "undoRestoresTaskReference": true,
+              "failedSaveKeepsMemory": true,
+              "normalTaskSave": true,
+              "cleanupDurable": true
+            }
+          },
+          "Synthetic location responses and real native time snooze proof": {
+            "mode": "every-visit",
+            "fireAt": 1792672465,
+            "identifier": "taskfold.ls1.b8a49ba14516eae1796828290d9ea8eb43e77e7764d7262cc6afc870ba454852.snooze",
+            "scope": "Controlled boundary response/delivered-at inputs; actual native one-shot time requests; no region delivery proof",
+            "source": "la1:60ce1f4dc9355159a8e432f4291a3543291e4638cc84eab1344926df8e2d7626",
+            "checks": {
+              "undoRestoredTask": true,
+              "completeSaved": true,
+              "snoozeReplayKeepsFireTime": true,
+              "differentActionReplayIgnored": true,
+              "copiedPayloadRejected": true,
+              "realTimeTrigger": true,
+              "completionReceiptSaved": true,
+              "emptyHistoryNeedsNoPrivateSetup": true,
+              "routeRevalidated": true,
+              "openExactTask": true,
+              "notificationPermission": true,
+              "oldSnoozeConsumed": true,
+              "undoRetainsSpentReceipt": true,
+              "snoozeInstalled": true,
+              "laterVisitReplayIsRejected": true,
+              "privateActionsRequireAuthentication": true,
+              "unknownActionIgnored": true,
+              "bothNativeCategoriesRegistered": true,
+              "laterVisitCanActIndependently": true,
+              "tomorrowSaved": true,
+              "snoozedResponseCreatesNewIntent": true,
+              "completionReplayAfterUndoIgnored": true,
+              "snoozedOpenExactTask": true,
+              "snoozeStateExplainsCurrentAlert": true
+            }
+          }
+        }
+      },
+      {
+        "device": "ipad",
+        "resultBundle": "location-action-cleanup-ipad-verified.xcresult",
+        "actualPassed": 1,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "location-action-cleanup-ipad-verified-summary.json",
+          "sha256": "7d5f2b06b20983c86d2879231a2834cb526614c6e68feceefa1ce61f0b66e059"
+        },
+        "log": {
+          "file": "location-action-cleanup-ipad-verified.log",
+          "sha256": "8afc216df258dd70fe073571bf4fb4c0a4fb09bb1ae28d72273e1e1e4c22188e"
+        },
+        "proofs": {
+          "Retired action history cleanup and replay proof": {
+            "scope": "Synthetic task/private authority, real native time-snooze cancellation, injected response inputs; no region delivery proof",
+            "removed": 3,
+            "checks": {
+              "failedSaveKeepsMemory": true,
+              "permanentlyRetiredHistoryFound": true,
+              "stoppedNativeSnoozeRemoved": true,
+              "activeHistoryKept": true,
+              "undoRestoresTaskReference": true,
+              "failedSaveKeepsDisk": true,
+              "tasksAndCommandsUnchanged": true,
+              "oldNativeSnoozeCannotMutate": true,
+              "retiredHistoryCleared": true,
+              "normalTaskSave": true,
+              "cleanupDurable": true,
+              "undoCannotReviveOldAction": true
+            }
+          },
+          "Synthetic location responses and real native time snooze proof": {
+            "source": "la1:58d95d9ed8db32d1a75ff711476ac093612c340418992abd3786498a314b0058",
+            "fireAt": 1792672501,
+            "identifier": "taskfold.ls1.94cc56952596a2045ad25643d2a663b7a2771fa606df394a0ad8a3b232ff2cd2.snooze",
+            "checks": {
+              "undoRestoredTask": true,
+              "notificationPermission": true,
+              "snoozedOpenExactTask": true,
+              "completionReceiptSaved": true,
+              "laterVisitCanActIndependently": true,
+              "undoRetainsSpentReceipt": true,
+              "tomorrowSaved": true,
+              "snoozeReplayKeepsFireTime": true,
+              "differentActionReplayIgnored": true,
+              "laterVisitReplayIsRejected": true,
+              "completionReplayAfterUndoIgnored": true,
+              "copiedPayloadRejected": true,
+              "snoozedResponseCreatesNewIntent": true,
+              "snoozeInstalled": true,
+              "realTimeTrigger": true,
+              "emptyHistoryNeedsNoPrivateSetup": true,
+              "unknownActionIgnored": true,
+              "routeRevalidated": true,
+              "completeSaved": true,
+              "openExactTask": true,
+              "snoozeStateExplainsCurrentAlert": true,
+              "bothNativeCategoriesRegistered": true,
+              "oldSnoozeConsumed": true,
+              "privateActionsRequireAuthentication": true
+            },
+            "mode": "every-visit",
+            "scope": "Controlled boundary response/delivered-at inputs; actual native one-shot time requests; no region delivery proof"
+          }
+        }
+      }
+    ],
+    "scope": "12 cleanup checks per device using real private/cache files and actual native time-snooze cancellation, with injected received-alert inputs and save refusal. Existing repeat action fixture plus empty-history guard has 24 checks per device. Nonzero cleanup exercised through the real Store command; visible confirmation/Cancel and confirmed no-op tested through UI. No genuine geofence delivery or OS-origin boundary callback claim."
+  },
+  "nativeMac": "No Mac UI/service change. Independently owned common policy compiled and verified in full Mac Core suite; screenshots copied from iOS acceptance only.",
+  "artifacts": [
+    {
+      "file": "docs/location-action-cleanup/phone-0.png",
+      "sha256": "281a0c3498eb75ab6a937ce2e9f3bdc9430128baa8d4436d6f9adefb0823d5f0",
+      "label": "Ended reminder history maintenance_0_6A29B58B-11C1-4534-84C9-0CA4AF0C1DA1.png"
+    },
+    {
+      "file": "docs/location-action-cleanup/phone-1.json",
+      "sha256": "67206b0ce21a94032d4d73afd4c66d1c0b1eb9152536a702ac8f55b144418e82",
+      "label": "Retired action history cleanup and replay proof_0_BDC3F81A-A275-40FC-B4B6-5FFD2302CDBE.json"
+    },
+    {
+      "file": "docs/location-action-cleanup/phone-2.json",
+      "sha256": "31f30fc62bde301c80abc5e28873e5641589c89f3e933d82142a647288f4cdf5",
+      "label": "Synthetic location responses and real native time snooze proof_0_02DBF88E-0E08-4727-BF51-AF4DBF2FEB48.json"
+    },
+    {
+      "file": "docs/location-action-cleanup/ipad-0.png",
+      "sha256": "aeff13a6d6cb1c24ad6b49ac6bffc8b80818510221c197b327813d44c01899f0",
+      "label": "Ended reminder history maintenance_0_BC39B544-521F-4B5B-BEE5-0903505F6763.png"
+    },
+    {
+      "file": "docs/location-action-cleanup/ipad-1.json",
+      "sha256": "578c2bcac80ab76283911e52404039ce128817cc167a99078ca895b0af8371d3",
+      "label": "Retired action history cleanup and replay proof_0_1A66122B-4154-49F6-8670-A4FF7F2A7E83.json"
+    },
+    {
+      "file": "docs/location-action-cleanup/ipad-2.json",
+      "sha256": "5f592eff9b67863e506709ab47de4fcbf2df93d5e7081e2470d94b11bfd4eca0",
+      "label": "Synthetic location responses and real native time snooze proof_0_B76CD576-874D-45EC-8FBD-7BBFEEEE91A0.json"
+    }
+  ],
+  "earlierAttempts": [
+    {
+      "summary": {
+        "file": "location-action-cleanup-phone-failed-summary.json",
+        "sha256": "3f747f49bfb3773f9878f319473b87387ab36a23879b88f5f0fb45390e8ee355"
+      },
+      "log": {
+        "file": "location-action-cleanup-phone.log",
+        "sha256": "d1636d48847ff92d816c04c9ef500bf3c658249c764b62ab4fc6221606241edf"
+      },
+      "reason": "12 cleanup/native checks passed, but confirmationDialog had no accessible Cancel. Replaced with a standard alert, explicit Cancel and captured presentation data."
+    },
+    {
+      "log": {
+        "file": "location-action-cleanup-aborted-staging-build.log",
+        "sha256": "955c197b80ec8bfa61416ee8af90c9516dbdcbc519f16b38eeb21b38cee66723"
+      },
+      "reason": "Stopped verification build started in wrong directory after a copy-path error; redundant cache/result removed."
+    },
+    {
+      "log": {
+        "file": "location-action-cleanup-empty-fixture-build-failure.log",
+        "sha256": "d3569f7bad0f49b2883ed7680af89ce2395af0321ba1d6f25c344808c9e4911c"
+      },
+      "reason": "Empty-history fixture block initially inserted in notification setup instead of the DEBUG runner; corrected before final native run."
+    }
+  ],
+  "fixtureIsolation": "The initial empty-history check reused a previous ui-testing.json ledger, which normal persistence correctly retained. The final cleanup case deletes only that exact isolated test cache before launch; real data and ordinary Store merging are unchanged. Warm-cache failed summaries/logs are retained separately.",
+  "compatibility": "No task reference, notification identity, private journal or snapshot format change. Ordinary persistence still retains missing action receipts. Cleanup is an explicit in-process command using private terminal authority. General older-client rollout remains deferred.",
+  "remaining": [
+    "Unknown/previous-installation history cleanup, active-repeat rollover UX and complete private identity-reset recovery; private journal retains its 2048 bound",
+    "Public location setup/authoring stays gated",
+    "Capable-device geofence delivery and actual OS-origin callbacks, background/locked/cold/permission recovery",
+    "Private desktop-to-phone authoring, broader accessibility/native Mac acceptance and unresolved direct iPad Search tap while typing",
+    "Other P2_PLAN.md requirements remain open"
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall recovery",
+    "General older-client rollout",
+    "Distribution/signing/install/update acceptance",
+    "Genuine Google/Microsoft OAuth registrations/provider acceptance"
+  ],
+  "cleanup": {
+    "simulators": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "removedDisposableBundles": [
+          "com.dbakp.taskfold.workflowtestsp1",
+          "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner"
+        ]
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "removedDisposableBundles": [
+          "com.dbakp.taskfold.workflowtestsp1",
+          "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner"
+        ]
+      }
+    ],
+    "mainTaskfoldProcessesRemaining": 0,
+    "reusableBuildProductsAndCachesRetained": true,
+    "realTaskfoldAppsAccountsAndPhysicalDevicesUntouched": true,
+    "scope": "Only exact isolated Simulator host/runner removed, including their synthetic cache/private fixtures and app-owned pending alerts. Superseded failure results pruned after summaries/logs retained. Redundant build in repository-local BuildCache removed."
+  }
+}

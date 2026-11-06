@@ -1,0 +1,219 @@
+{
+  "date": "2026-10-21",
+  "status": "Shared/personal saved filters implemented in both independently owned apps; scoped phone/tablet acceptance passed, broader native/paired acceptance remains open",
+  "semantics": {
+    "shared": "Readable projects with another accepted member, independent of task authorship",
+    "personal": "Current user Inbox and owned projects without accepted collaborators",
+    "pending_and_declined": "Do not make a project shared",
+    "subprojects": "Use direct memberships, never inherited sharing",
+    "unknown": "Missing catalogs or ambiguous/inaccessible/malformed references do not become personal through NOT/OR; query validation asks for sync",
+    "offline": "Uses last synchronized membership snapshot, like other app data",
+    "capture": "No invented shared destination or invitation writes"
+  },
+  "implementation": {
+    "grammar": "Strict valueless shared/personal predicates in existing v1 envelopes, roundtrip expression and visual builder controls",
+    "catalog": "Grouped linear membership/project classification; query references carry optional sharing state, distinct from unknown",
+    "cache": "Membership-derived flags enter TaskQuery identity even with unchanged task rows",
+    "surfaces": "Same references in app list, preview, grouping, independent queries, child results and widget publication",
+    "widgets": "Resolved task IDs only; no collaborator rows, member identity or invitation email published",
+    "storage": "Only saved filter records added; no permission or database schema change",
+    "compatibility": "Older strict readers reject new fields as unsupported; deferred rollout enforcement unchanged"
+  },
+  "verification": {
+    "owned_full_core": {
+      "executed": 995,
+      "skipped": 32,
+      "failures": 0,
+      "log": "mac-p2-sharing-full.log"
+    },
+    "new_cases": 8,
+    "focused_log": "ios-p2-sharing-focused-v4.log",
+    "functional_catalog_case": {
+      "projects": 5000,
+      "memberships": 5000,
+      "shared": 2500,
+      "personal": 2500
+    },
+    "core_checks": [
+      "strict grammar/document values, roundtrip and explicit quoted search",
+      "genuine accepted membership, foreign owners and task authorship independence",
+      "pending/declined invitations and independent subprojects",
+      "unknown sharing stays excluded under NOT/OR with explicit validation error",
+      "membership-only cache invalidation and refresh",
+      "missing/duplicate/archived/foreign/malformed catalogs fail without guessing",
+      "nested and independent query scopes use the same sharing context",
+      "widget membership matches app and raw membership/email are omitted",
+      "saved-query queue/cache codec and conservative capture defaults"
+    ],
+    "native_test": "testSharedAndPersonalSavedFiltersUseAcceptedProjectMembership",
+    "native_checks": [
+      "Shared work created through expression editor",
+      "Personal work created through actual grouped condition picker",
+      "Shared shows exactly one accepted-project task",
+      "Personal shows Inbox plus pending-invitation project task",
+      "No shared task appears in Personal or vice versa",
+      "Normal relaunch without fixture reseeding preserves both views/results",
+      "Normal light phone/tablet captures visually inspected"
+    ],
+    "phone": {
+      "result": "ios-p2-sharing-phone.xcresult",
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0,
+      "captures": "tmp/sharing-phone/",
+      "persistence_and_actual_widget_publication": {
+        "snapshot_sha256": "03bd9e52c3480511705b219fe42da05b7e3c8d277172474d878a085a668cf1dd",
+        "widget_sha256": "7ce2e2c4c3a1873eeb0e628887fc1e9b0a3cbb0605e8534a9157e6adf42e67cd",
+        "task_rows": 3,
+        "all_tasks_open": true,
+        "project_rows": 2,
+        "membership_statuses": [
+          "accepted",
+          "pending"
+        ],
+        "saved_queries": {
+          "Shared work": {
+            "root": {
+              "field": "shared",
+              "value": "",
+              "op": "predicate"
+            },
+            "version": 1
+          },
+          "Personal work": {
+            "version": 1,
+            "root": {
+              "children": [
+                {
+                  "field": "personal",
+                  "value": "",
+                  "op": "predicate"
+                }
+              ],
+              "op": "and"
+            }
+          }
+        },
+        "widget_membership_counts": {
+          "Shared work": [
+            1
+          ],
+          "Personal work": [
+            2
+          ]
+        },
+        "pending": 0,
+        "invitation_email_and_member_identity_not_published": true
+      }
+    },
+    "tablet": {
+      "result": "ios-p2-sharing-tablet.xcresult",
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0,
+      "captures": "tmp/sharing-tablet/",
+      "persistence_and_actual_widget_publication": {
+        "snapshot_sha256": "ccc610cc730b18b402b2386d8b57b483bf15e10dc2ba3f4bdc026afecb2610e1",
+        "widget_sha256": "b786c6f1141e503802bd8c04a70074bfe58b47441fd1fe67200b3722462c973f",
+        "task_rows": 3,
+        "all_tasks_open": true,
+        "project_rows": 2,
+        "membership_statuses": [
+          "accepted",
+          "pending"
+        ],
+        "saved_queries": {
+          "Shared work": {
+            "version": 1,
+            "root": {
+              "op": "predicate",
+              "value": "",
+              "field": "shared"
+            }
+          },
+          "Personal work": {
+            "version": 1,
+            "root": {
+              "op": "and",
+              "children": [
+                {
+                  "op": "predicate",
+                  "value": "",
+                  "field": "personal"
+                }
+              ]
+            }
+          }
+        },
+        "widget_membership_counts": {
+          "Shared work": [
+            1
+          ],
+          "Personal work": [
+            2
+          ]
+        },
+        "pending": 0,
+        "invitation_email_and_member_identity_not_published": true
+      }
+    },
+    "mac_build": "mac-p2-sharing-build.log: BUILD SUCCEEDED",
+    "signatures": "Both isolated current app products pass codesign --verify --deep --strict",
+    "inputs": "p2-sharing-inputs.json",
+    "database": {
+      "project": "zqxflydiyfjeedqvyova",
+      "method": "Read-only information_schema, pg_policies, enum and FK inspection; no database or permission mutation",
+      "contract": {
+        "collaboration_rls": true,
+        "invitation_states": [
+          "pending",
+          "accepted",
+          "declined"
+        ],
+        "assigned_by_column_exists": false,
+        "accepted_members_visible_to_project_members": "(is_project_owner(auth.uid(), project_id) OR (user_id = auth.uid()) OR (has_project_access(auth.uid(), project_id) AND (status = 'accepted'::invitation_status)))"
+      },
+      "references": [
+        "https://supabase.com/changelog.md",
+        "https://supabase.com/docs/guides/database/postgres/row-level-security"
+      ]
+    },
+    "database_additional_checks": {
+      "saved_view_envelope": "Read-only live saved_views check constraint inspection and SELECT evaluation accept shared and personal version-1 documents",
+      "member_deletion": "Live FKs cascade user deletion; accepted members are concrete linked identities",
+      "activity_limit": "Existing TaskActivity state/ledger excludes assignment transitions, so its latest actor cannot identify the assigner",
+      "limits": "Metadata/envelope checks only, not genuine paired account write/access acceptance. No database, permission, credential or account mutation"
+    },
+    "tablet_diagnostic": {
+      "animation_waits": 6,
+      "test_duration_seconds": 435.786,
+      "result": "Same confirmed live XCTest run continued through six logged animation-complete waits and passed. The app was observed at 0% CPU in tool output; no restart or source replacement."
+    }
+  },
+  "remaining_gates": [
+    "native Mac sharing filter creation/list/command acceptance (Mac locked on direct CUA availability check)",
+    "genuine paired account invitation acceptance/removal/revocation, offline/account-switch and broad accessibility/large-text acceptance",
+    "installed WidgetKit presentation/action acceptance for the new conditions",
+    "assigned-by provenance and remaining rank-3 controls/headings",
+    "remaining rank-2 share acceptance and ranks 4\u20137"
+  ],
+  "assigned_by_plan": "Record actual authenticated assignment actors for root/child identities, reject client forgery, preserve unknown legacy provenance, define clear/import/move/recurrence/deletion semantics, then wire the same query/widget surfaces and genuine backend/native fixtures. No inferred author/inviter substitute.",
+  "user_deferrals_unchanged": [
+    "server-delivered reminders",
+    "older-client rollout enforcement",
+    "distribution signing/install/update verification",
+    "genuine Google/Microsoft OAuth registration/provider acceptance"
+  ],
+  "cleanup": {
+    "main_test_apps": "None remain after test teardown",
+    "disk_free_gib": 51,
+    "retained": "Accepted result bundles, compact proof and normal-light captures; reused warm app/core caches; no new app namespace or disposable device installation"
+  },
+  "source_sha256": {
+    "Taskfold/Core/Filters.swift": "c6a5735786554872bab3819b5497c4455294d275fde30d336cdaa21801660156",
+    "Taskfold/Core/Models.swift": "5b915212b8deb241086384630c894713d3729be2473213176f09b4e253414d74",
+    "Taskfold/Core/Store.swift": "834124429fd0084fb82736d13663978ece669a23b0e86276a227951eee601a5c",
+    "Taskfold/Views/SavedViews.swift": "1ae4b3fc42d5e60c520ca48c42ca03a922deae2274172ae1aee0c836793a9e30",
+    "TaskfoldTests/FilterTests.swift": "15d1ef39d899abd42113e0a44ecc8c717d7a125315b83a85ceb2bab00dc05fb0"
+  }
+}

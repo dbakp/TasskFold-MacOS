@@ -1,0 +1,31 @@
+{
+  "platform": "phone",
+  "sourceSHA256": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": "6a43dbb03c5b027a83d402eabe042994db42e180b9f1e4a59770511cc6fd64a9",
+    "Taskfold/ChildFieldNativeFixture.swift": "f4f2182b1c2976a0e83ddad623b987b7a2d6d4a72fcff8f9979e6cd4e9c99556",
+    "Taskfold/ChildRepairNativeFixture.swift": "a16461663f66e31b4ffd98730150adc6588f1145fd2ea711e21301f69cbfd91b",
+    "Taskfold/Core/ChildTaskRepair.swift": "c0e65dcf37247cec7e49aae90f37ba87c797177cbb07840088b14984f0e9599d",
+    "Taskfold/Views/ChildTaskRepairView.swift": "f5ddf3996537e8648c4176ec318ccf8a9f5c4944d3d39b2b8393721ca3b5f09b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "98232425ffec5bdc1739724096e5e547f121e7f245c064e89e3facb730983248"
+  },
+  "builtHostSHA256": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": "6a43dbb03c5b027a83d402eabe042994db42e180b9f1e4a59770511cc6fd64a9",
+    "Taskfold/ChildFieldNativeFixture.swift": "f4f2182b1c2976a0e83ddad623b987b7a2d6d4a72fcff8f9979e6cd4e9c99556",
+    "Taskfold/ChildRepairNativeFixture.swift": "a16461663f66e31b4ffd98730150adc6588f1145fd2ea711e21301f69cbfd91b",
+    "Taskfold/Core/ChildTaskRepair.swift": "c0e65dcf37247cec7e49aae90f37ba87c797177cbb07840088b14984f0e9599d",
+    "Taskfold/Views/ChildTaskRepairView.swift": "f5ddf3996537e8648c4176ec318ccf8a9f5c4944d3d39b2b8393721ca3b5f09b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "98232425ffec5bdc1739724096e5e547f121e7f245c064e89e3facb730983248"
+  },
+  "appSHA256": "9f6c1007439b9ee2c6c651d46e8d2a5d2c206c2ad518a17a4929441ced307be5",
+  "debugDylibSHA256": "32f9fb96c96153cb829181015150ae3fe610aad1d295ddae9f1ee99975a69fce",
+  "newSimulator": false,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": true,
+    "Taskfold/ChildFieldNativeFixture.swift": true,
+    "Taskfold/ChildRepairNativeFixture.swift": true,
+    "Taskfold/Core/ChildTaskRepair.swift": true,
+    "Taskfold/Views/ChildTaskRepairView.swift": true,
+    "TaskfoldUITests/AudioCommentUITests.swift": true
+  }
+}

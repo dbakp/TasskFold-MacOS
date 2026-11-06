@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-06",
+  "freeBeforeBytes": 59727253504,
+  "finish": {
+    "apply": true,
+    "freeBeforeBytes": 59727282176,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 679727104,
+        "projectedAllocatedBytes": 679727104
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 623443968,
+        "projectedAllocatedBytes": 623443968
+      }
+    ],
+    "freeAfterBytes": 59727273984,
+    "actualFreeChangeBytes": -8192
+  },
+  "retired": [
+    {
+      "path": "/tmp/taskfold-step-recovery-check.xcresult",
+      "allocatedBytes": 1081344,
+      "reason": "Terminal result; owning source-bound summary, warning context and necessary screenshots retained"
+    },
+    {
+      "path": "/tmp/taskfold-step-recovery-retry.xcresult",
+      "allocatedBytes": 1081344,
+      "reason": "Terminal result; owning source-bound summary, warning context and necessary screenshots retained"
+    },
+    {
+      "path": "/tmp/taskfold-step-recovery-stop.xcresult",
+      "allocatedBytes": 1052672,
+      "reason": "Terminal result; owning source-bound summary, warning context and necessary screenshots retained"
+    },
+    {
+      "path": "/tmp/taskfold-step-recovery-check-screens",
+      "allocatedBytes": 446464,
+      "reason": "Duplicate terminal attachment export; inspected images retained in both owners"
+    },
+    {
+      "path": "/tmp/taskfold-step-recovery-stop-screens",
+      "allocatedBytes": 397312,
+      "reason": "Duplicate terminal attachment export; inspected images retained in both owners"
+    }
+  ],
+  "coreCaches": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 672751616,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 616501248,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 59731333120,
+  "retiredAllocatedBytes": 4059136,
+  "preserved": "Current and rollback packages, normal apps/drafts, real data, test app/device contents, Keychain, Docker volumes and unrelated projects remain untouched. Each disposable stack removed itself."
+}

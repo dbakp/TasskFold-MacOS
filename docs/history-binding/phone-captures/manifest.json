@@ -1,0 +1,74 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "BC86CA26-78EA-4DB6-8E97-D913A524E3DE.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "All day scheduling portrait_0_6A679BAD-0001-4AE1-828D-8A16AE492EA0.png",
+        "timestamp" : 1792930495.783
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "26E5A4E9-B619-4097-A79A-7970E22E8709.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Hourly planner portrait_0_65A4A61A-FDBA-4D2B-9904-4680E0B907E9.png",
+        "timestamp" : 1792930493.941
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testHourlyPlannerSchedulingUndoAndRelaunch()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHourlyPlannerSchedulingUndoAndRelaunch"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "40ED8CCF-1821-446A-BB1A-2307A24F8171.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared labels Undo survives relaunch_0_C11A7839-8437-40F9-A3DE-AD58C1F72913.png",
+        "timestamp" : 1792930588.301
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "8B4BBE7E-EF02-4D1F-9708-E857F674853F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared label review preserves each task set_0_CD2AC641-D5D8-4974-A3E0-8D3ED13A469A.png",
+        "timestamp" : 1792930560.78
+      }
+    ],
+    "testIdentifier" : "TeamTaskBatchDeletionUITests/testBulkSharedLabelsReviewBackCancelSaveUndoAndRelaunch()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamTaskBatchDeletionUITests/testBulkSharedLabelsReviewBackCancelSaveUndoAndRelaunch"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "C1BEF19D-E1A9-4EA3-BDDF-AFC1270303F9.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Exact original Undo remains usable when its action returns_0_9094D21D-F491-4A18-95CE-2056D83BF5B2.png",
+        "timestamp" : 1792930632.394
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "ABFB904B-0477-4B7F-9D5B-3BE677FC57F2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Stale Undo at thirty entries cannot undo the newer edit_0_3119C615-AA91-4852-A687-9191F4CC7257.png",
+        "timestamp" : 1792930627.938
+      }
+    ],
+    "testIdentifier" : "TeamTaskBatchDeletionUITests/testCapturedUndoCannotRetargetAtHistoryLimit()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamTaskBatchDeletionUITests/testCapturedUndoCannotRetargetAtHistoryLimit"
+  }
+]

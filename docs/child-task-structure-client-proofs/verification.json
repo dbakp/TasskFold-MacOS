@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-30",
+  "selectedCoreTests": 146,
+  "newStructureCommandTests": 29,
+  "coreFailures": 0,
+  "structuralDatabaseChecks": 220,
+  "databaseFixturesRemoved": true,
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "strictDeepSignatures": {
+    "Taskfold.app": true,
+    "TaskfoldUITests-Runner.app": true
+  },
+  "sourceSHA256": {
+    "Package.swift": "b002d71e98c496e8849eeb43737be2155bcaae67e88612674c116ba02846746c",
+    "Taskfold.xcodeproj/project.pbxproj": "5d0c673ee132e0cb91462c87fd6f7b146a3b5786bc06687e68065b25748efd48",
+    "Taskfold/Core/ChildTaskStructureCommands.swift": "b4c9007321b1a6c184c34a83364033624b99ed392aa0dd1fc63dd46ab92ae253",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "5d90a2c75cf486f22c9b74b8296568f8a37619e87c61a520406dca34d1294a4c",
+    "TaskfoldTests/ChildTaskStructureCommandTests.swift": "8feaf5c1b8276c32db5e2ab3340ef9ea6e4e11a0dcb21ff763602f859006d05d",
+    "TaskfoldTests/Fixtures/child-task-structure-proofs.json": "4674980fb143a95749faf93977dedab5cc57693a6ca4fbc5efc1256ca1a9be0a",
+    "Scripts/Database/test-child-task-structure-commands.mjs": "15e0fd47aceaec67f00121ef0e2d69fb10ef018350d937b763396a81f9110caa"
+  },
+  "structureMigrationSHA256": "5a3d0bb095dade20a78427bb5a9615718c7acff21e6e36bd54d8878f14b35686",
+  "nativeFieldAdapterSHA256": "9cb9e5badc970b5bd9a5b031a17a776becd6e924cf178d7cc31ac3ac5603f9f2",
+  "ordinaryStructureReadsEnabled": false,
+  "hostedSchemaChanged": false,
+  "nativeRuntimeTested": false,
+  "fullLocalMigrationHistoryVerified": false,
+  "remaining": [
+    "bounded transport",
+    "encrypted journal and sender",
+    "terminal recovery and lifecycle/removal fences",
+    "native controls and genuine acceptance",
+    "broader migration/custody/Px scope"
+  ]
+}

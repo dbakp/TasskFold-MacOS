@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-20",
+  "scope": "Direct installed Mac widget text refresh and bounded accessibility wording repair. No new widget action, layout or account-route acceptance.",
+  "observations": {
+    "retainedHost": "mac-widget-host-v10; unchanged installed binary",
+    "normalLaunchWithoutSeedArguments": true,
+    "restoredWidgetText": [
+      "Today overdue task",
+      "configured My list task",
+      "Pinned note full edited three-line instructions",
+      "Focus saved ended session",
+      "Project pulse 0 of 1"
+    ],
+    "pulseHistoricalWindow": "14\u201320 October; prior events aged out; zero events is expected",
+    "wholeLocalCacheCanonicalEqualBeforeAfter": true,
+    "wholeLocalCacheByteEqual": false,
+    "wholeLocalCacheAfterSHA256": "e09c15a08d62e5387cfc90a8d724cc9d0d6b882731889e5f1f8afb79275025bb",
+    "baseline": "mac-widget-recheck-2026-10-20/local-before.json retained outside repositories",
+    "newWidgetActionsAccepted": false,
+    "limits": [
+      "Desktop AX action did not change host route",
+      "Desktop screenshot omitted widget pixels",
+      "Notification Center binding timed out",
+      "Desktop background context-menu attempt returned noWindowsAvailable",
+      "System Settings Desktop & Dock exposed widget preferences but no gallery entry; no preference changed"
+    ]
+  },
+  "repair": {
+    "platform": "macOS",
+    "source": "Taskfold/Views/TaskListView.swift",
+    "change": "Overdue accessibility heading now uses task for one and tasks otherwise",
+    "validation": "Mac Debug arm64 build passed; no native fixed-label or spoken acceptance claimed",
+    "buildLog": "mac-widget-recheck-2026-10-20/build.log retained outside repositories",
+    "installedTestHostReplaced": false,
+    "iOSInspection": "No equivalent task-noun Overdue accessibility label found; no iOS product change required"
+  },
+  "cleanup": {
+    "unusedCompileBytesRemoved": 361707253,
+    "retainedInstalledBuild": "mac-widget-host-v10",
+    "voiceOverEnabled": false
+  },
+  "remaining": "Representative installed Mac planning/aggregate interactions/layouts and real system widget privacy remain open. Spoken checks and release signing remain user-deferred."
+}

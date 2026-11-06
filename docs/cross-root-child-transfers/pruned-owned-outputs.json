@@ -1,0 +1,272 @@
+{
+  "date": "2026-10-30",
+  "ownedTemporaryFilesRemoved": [
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-cross-root.json",
+      "bytes": 55532,
+      "sha256": "b33928aa0fb1695dfc378bf2846ca98c3203f20716a218af7a8c16d6037d2948",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/cross-root.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-cross-root.log",
+      "bytes": 38,
+      "sha256": "709fd5831ec8137181e008b903f7752cb251938250e89db9a8b757964fd136ef",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/cross-root.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-personal.json",
+      "bytes": 23195,
+      "sha256": "fc837f8341f552c8a357ba5031b8182e576a213f08f567f60c71c188ef4e68f7",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/personal.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-personal.log",
+      "bytes": 38,
+      "sha256": "fbef2a1eeea91fe0e43998819c12a65fc6578134892bcc495febe2141f89a95e",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/personal.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-authority.json",
+      "bytes": 24700,
+      "sha256": "eb1ee8c43292fccaff5e60165194b1ccd68301e721585bcd4da39df149163342",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/authority.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-authority.log",
+      "bytes": 38,
+      "sha256": "61615d078c06900672366d4953315e35d0315af4917b4b3a00864b3f9a544593",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/authority.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-structure.json",
+      "bytes": 74201,
+      "sha256": "f771f83c6fe6a686b64f4154b599cd869016c1802cb2078d7a049927ee0175ae",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/structure.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-structure.log",
+      "bytes": 39,
+      "sha256": "18139033b6b7eccacec7a1e047070ed56cc63b2475e37b8d7005677184be91bf",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/structure.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-team.json",
+      "bytes": 11971,
+      "sha256": "489f429337b9f3f71ce9230fcfb15c93e4c1b247bd7d9e31d99b007acbbbb0be",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/team.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-team.log",
+      "bytes": 38,
+      "sha256": "5f49bee14369036777b271f9c48a6843ac2ea3206c45eaf67157a71d801ae981",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/team.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-adoption.json",
+      "bytes": 29653,
+      "sha256": "9635272ece05abe271be41a464220f6fffc340f8a1ab7de42b895ad0c13ecce3",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/adoption.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-mac-adoption.log",
+      "bytes": 38,
+      "sha256": "8417d9f5a97793c160675dbf7371bc73b848abdcf88a466bef4b1109c8491439",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/adoption.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-accepted-core.log",
+      "bytes": 163915,
+      "sha256": "bd0b4627a1209b90424c48d9928dabce25f6ca7b8be83bc4c91c687ca52d96bf",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/core.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-structure-ui-mac-cross-root-transfers-build.log",
+      "bytes": 41183,
+      "sha256": "2d92f519caa76c6c0e39cbd34261542191df74c1a829e9ba2802d565196cd97e",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/cross-root-child-transfers/build.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-cross-root.json",
+      "bytes": 55524,
+      "sha256": "24965320853720ee0ccde9c30b5170ba2577b2aa49f00aea29b241afcbb30a00",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/cross-root.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-cross-root.log",
+      "bytes": 38,
+      "sha256": "709fd5831ec8137181e008b903f7752cb251938250e89db9a8b757964fd136ef",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/cross-root.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-personal.json",
+      "bytes": 23195,
+      "sha256": "b601eaf911d538452e506e3c2f6bfca28f4917afdf65a917c5ff76997f9af020",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/personal.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-personal.log",
+      "bytes": 38,
+      "sha256": "fbef2a1eeea91fe0e43998819c12a65fc6578134892bcc495febe2141f89a95e",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/personal.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-authority.json",
+      "bytes": 24700,
+      "sha256": "d61e4c8cd3287c18ed1a0fcfbe2beb1eed300f7d081e850f6fcbcc7e876ee835",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/authority.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-authority.log",
+      "bytes": 38,
+      "sha256": "61615d078c06900672366d4953315e35d0315af4917b4b3a00864b3f9a544593",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/authority.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-structure.json",
+      "bytes": 74201,
+      "sha256": "2de8981480d075db4e99a372e327f88ab42a6d9debe6c083314a4bf26b3468f6",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/structure.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-structure.log",
+      "bytes": 39,
+      "sha256": "18139033b6b7eccacec7a1e047070ed56cc63b2475e37b8d7005677184be91bf",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/structure.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-team.json",
+      "bytes": 11971,
+      "sha256": "489f429337b9f3f71ce9230fcfb15c93e4c1b247bd7d9e31d99b007acbbbb0be",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/team.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-team.log",
+      "bytes": 38,
+      "sha256": "5f49bee14369036777b271f9c48a6843ac2ea3206c45eaf67157a71d801ae981",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/team.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-adoption.json",
+      "bytes": 29653,
+      "sha256": "857b262869d0c53aae23d6078214b25b1dd56ce1a096055de78c23ae3bcd3786",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/adoption.json"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-accepted-ios-adoption.log",
+      "bytes": 38,
+      "sha256": "8417d9f5a97793c160675dbf7371bc73b848abdcf88a466bef4b1109c8491439",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/adoption.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-ios-accepted-core.log",
+      "bytes": 164346,
+      "sha256": "0a10ac0ffcd8a88f17e2328310d609345e37fdd5011162314ba3b8ad06fd4aee",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/core.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-structure-ui-ios-cross-root-transfers-build.log",
+      "bytes": 56319,
+      "sha256": "fde65be0317de3748ba5110476710cc0e6daf9ab04fc2427982d0d5658b67160",
+      "retainedEvidence": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/docs/cross-root-child-transfers/build.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v1.json",
+      "bytes": 8298,
+      "sha256": "48efb03ff017b073a52369ae192a0b2782f215b73b0757e111eb490caac71d3a",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v1.log",
+      "bytes": 754,
+      "sha256": "24b3785ea424a1de78a96f36d3bab4909993908d673413a848785906e27867ab",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v2.json",
+      "bytes": 9828,
+      "sha256": "a91829e4831dffb7bff2a1ca6579ffd8658cc7aee5bc75ec3fc5f4ab35d9dcc6",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v2.log",
+      "bytes": 1929,
+      "sha256": "fd1301fbd74ae2c7d43fe3364a9be846c8fad257bba770df88f5a3cc71b46053",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v3.json",
+      "bytes": 20350,
+      "sha256": "c9575ea8dde2fec1cad3787a6bd010d0dc68239e92b4e739643b27c1eb798fc6",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v3.log",
+      "bytes": 1862,
+      "sha256": "52a6a64f6710155577a163c8af4d517527ec41d4c05126166a9bf19d3d865379",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v4.json",
+      "bytes": 39985,
+      "sha256": "a25758560f5be80e9388eafc593dfa94a27d4c810629ed794059d8116f96495d",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v4.log",
+      "bytes": 503,
+      "sha256": "c20b0b7937cdc204e859076fd0e7c047c31d3863a087f8e26f82a06b8a9b8f77",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v5.json",
+      "bytes": 48410,
+      "sha256": "ed5770594cde28af4a7222bfad8b7f685fa1f7209a5197dd421205169d38abd9",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v5.log",
+      "bytes": 38,
+      "sha256": "8eb3e8eaa002e07e880e9caded8948aab77484dfb5f85d2515ea36410fd60174",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v6.json",
+      "bytes": 54379,
+      "sha256": "66348250ad26711a0eea34cf1d92071ae39459e7ebce947b3e4d12cee6d2addf",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-v6.log",
+      "bytes": 38,
+      "sha256": "709fd5831ec8137181e008b903f7752cb251938250e89db9a8b757964fd136ef",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-final.json",
+      "bytes": 54489,
+      "sha256": "a6495ad27f81012d060ab1bab96f6a8ab896b69a288f58efbfc288e6240ad7b1",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-mac-final.log",
+      "bytes": 38,
+      "sha256": "709fd5831ec8137181e008b903f7752cb251938250e89db9a8b757964fd136ef",
+      "retainedEvidence": "earlier-phases.json; superseded by final source-bound acceptance"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-core-mac-v1.log",
+      "bytes": 29684,
+      "sha256": "da002a1deea5f527c0d533a86d6a41e492210edefe9fd59d5e13e9c9fc66ca8a",
+      "retainedEvidence": "superseded by accepted core.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-cross-root-core-mac-v2.log",
+      "bytes": 34056,
+      "sha256": "81c498dd31f180e9abd4b90f60ba50ad9e5890af802c5b7b0fc0f0310540250d",
+      "retainedEvidence": "superseded by accepted core.log.gz"
+    }
+  ],
+  "totalBytesRemoved": 1169358,
+  "userDataChanged": false,
+  "testHostsRetainedForReuse": true
+}

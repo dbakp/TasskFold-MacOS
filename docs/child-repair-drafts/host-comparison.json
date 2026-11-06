@@ -1,0 +1,5 @@
+{
+  "Taskfold/Core/ChildTaskRepair.swift": "Exact",
+  "Taskfold/Core/Store.swift": "Exact after isolated App Group substitution",
+  "Taskfold/Views/ChildTaskRepairView.swift": "Exact"
+}

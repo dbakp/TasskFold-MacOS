@@ -1,0 +1,71 @@
+{
+  "updated": "2026-10-22",
+  "milestone": "Native iPad source share review and largest-text dark acceptance",
+  "status": "Three focused native product cases passed; broader rank-2 acceptance remains open.",
+  "changes": [
+    "Independent nonvisual identifiers on extension/host review forms; no visual or persistent contract change.",
+    "Shared native test scrolls the exact modal, preserves actual source/title/notes, and verifies durable task/receipt/acknowledgement after quit/relaunch.",
+    "Exact Maps CardButtonTypeShare selector and onboarding wait prevent an unrelated Share My Location action.",
+    "Tablet-only large-text case verifies the complete preview-omission notice and reachable Save, then captures actual destination/Add controls."
+  ],
+  "native_runs": {
+    "share-tablet-maps-light-v2": {
+      "summary": "share-tablet-maps-light-v2-summary.json",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtime_warnings": 0
+    },
+    "share-tablet-maps-large-dark": {
+      "summary": "share-tablet-maps-large-dark-summary.json",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtime_warnings": 0
+    },
+    "share-tablet-phone-regression": {
+      "summary": "share-tablet-phone-regression-summary.json",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtime_warnings": 0
+    }
+  },
+  "native_scope": "Real Apple Maps synthetic public pin, actual OS share extension, editable literal title containing tomorrow/p1/#literal, containing host quit at Save, cold host review, explicit Add, exact one persisted task with source/notes and receipt, no due date/default priority, handled mailbox row absent after relaunch.",
+  "tablet_traits": {
+    "device": "iPad Pro 13-inch (M5), iPadOS 27.0 Simulator",
+    "light": "System light/large and app light.",
+    "dark": "System dark/accessibility-extra-extra-extra-large and app dark.",
+    "visual": "Exported normal-light source review, dark-largest source notice/pinned actions and host destination/Add/Cancel screenshots inspected; wrapping/scrolling retains complete text, controls remain reachable."
+  },
+  "failed_initial_run": {
+    "bundle": "share-tablet-maps-light.xcresult",
+    "summary": "share-tablet-maps-light-summary.json",
+    "scope": "Failed before Taskfold extension. Maps onboarding appeared after the short optional wait; broad Share selector selected Share My Location. Default XCTest interruption handling denied Maps location access; no access was granted. Exact place-card control plus longer onboarding wait fixed the test.",
+    "not_a_product_pass": true
+  },
+  "builds": {
+    "ios": "share-tablet-build-v2.log: TEST BUILD SUCCEEDED",
+    "mac": "share-tablet-mac-final-build.log: BUILD SUCCEEDED; current isolated unsigned app and extension, not distribution verification"
+  },
+  "core": "Core and Core-test sources unchanged from p2-share-provider-evidence.json; source hash and no Core diff checked. Prior complete suites remain applicable; not rerun for nonvisual form identifiers/test-only changes.",
+  "remaining": [
+    "Genuine cloud/offline/account-switch share transitions",
+    "Live native Mac share-menu/keyboard/layout and VoiceOver acceptance; current desktop access reports Mac locked",
+    "Spoken accessibility and wider third-party/tablet format acceptance",
+    "Wider rank-3 through rank-7 backlog; no complete Px claim",
+    "All explicit remote-reminder, general older-client, release/distribution and genuine OAuth deferrals remain unchanged"
+  ],
+  "owned_source_sha256": {
+    "Taskfold/Views/SharedDraftsView.swift": "ef7b64116d06ac900e9e9db0e3238b9983d03cf10fae8b7e57806a5adf609dd4",
+    "TaskfoldShare/ShareViewController.swift": "b92171187b4c340491563c79df7f3e475ac05a9684159baf10ca8bf846a1fcee"
+  },
+  "cleanup": {
+    "status": "Complete",
+    "simulator_settings": "Original iPad light/large restored and verified; Maps location reset to original unrequested state after denied initial prompt.",
+    "apps": "Exact isolated phone/tablet host and test runner uninstalled. Closed unsigned Mac test app product removed. No main Taskfold or test-runner process remains.",
+    "artifacts": "Superseded failed iPad result bundle removed after preserving summary/full failure log; final passing result bundles and inspected screenshots retained.",
+    "removed_bytes": 119128735,
+    "scope": "Only owned synthetic test installs/artifacts; no production task/account data deleted."
+  }
+}

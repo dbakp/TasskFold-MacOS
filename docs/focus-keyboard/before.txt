@@ -1,0 +1,23 @@
+Window: "", App: Taskfold P0 Signed Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Choose a task, Secondary Actions: Cancel
+		3 text field (settable) Description: Search tasks, projects, sections or notes, Value: proposal, Placeholder: Search tasks, ID: focusTaskSearch, Secondary Actions: Cancel
+		4 button Description: Clear task search, ID: clearFocusTaskSearch, Secondary Actions: Cancel
+		5 scroll area
+			6 list ID: focusTaskChoices, Secondary Actions: Cancel
+				7 row (selectable) Review the proposal, Home, Choose paint colours for the home renovation.
+				8 row (selectable) Review the proposal, Studio · Client launch, Check the café launch details before sending the proposal to the client.
+		9 button Description: Cancel, ID: cancelFocusTaskChoice
+10 menu bar
+	11 Taskfold
+	12 File
+	13 Edit
+	14 View
+	15 Fixture
+	16 Account
+	17 Task
+	18 Window
+	19 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

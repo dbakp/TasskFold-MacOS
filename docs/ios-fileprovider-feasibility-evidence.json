@@ -1,0 +1,317 @@
+{
+  "date": "2026-10-14",
+  "scope": "Historical standalone File Provider diagnostics; named transfer scope superseded by ios-external-provider-transfer-evidence.json. No universal provider compatibility claim.",
+  "environment": {
+    "platform": "iOS Simulator",
+    "os": "26.5",
+    "model": "iPhone 17 Pro",
+    "appIdentifier": "com.dbakp.taskfold.providerprobe",
+    "extensionIdentifier": "com.dbakp.taskfold.providerprobe.provider",
+    "fixturePayload": "{\"taskfold_provider_probe\":true}\\n",
+    "AppleAccountSignIn": false,
+    "networkTransfer": false
+  },
+  "findings": [
+    "Development-signed replicated extension with linked Simulator identity/app group registers through public NSFileProviderManager.add.",
+    "Before native Files activation, direct getUserVisibleURL lookup reports NSFileProviderErrorDomain -2011 (domainDisabled).",
+    "Files exposes the fixture under Taskfold Provider Probe. Its switch is unnamed and must be queried within the named location cell.",
+    "An enabled location switch does not complete first-use activation: opening its own location shows Turn On Taskfold Provider Probe.",
+    "Native test accepts Turn On for this synthetic location only. Direct getUserVisibleURL lookup then reports NSPOSIXErrorDomain 1 (operation not permitted).",
+    "No coordinated file read completed. This does not establish that actual document-picker selection is unsupported."
+  ],
+  "nativeResults": {
+    "3": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "testFailures": [
+        {
+          "failureText": "failed - Synthetic provider location not exposed",
+          "targetName": "ProbeUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+          "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+          "testName": "testEnableSyntheticProviderLocationAndRead()"
+        }
+      ]
+    },
+    "4": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+          "targetName": "ProbeUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+          "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+          "testName": "testEnableSyntheticProviderLocationAndRead()"
+        }
+      ]
+    },
+    "5": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+          "targetName": "ProbeUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+          "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+          "testName": "testEnableSyntheticProviderLocationAndRead()"
+        }
+      ]
+    },
+    "6": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+          "targetName": "ProbeUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+          "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+          "testName": "testEnableSyntheticProviderLocationAndRead()"
+        }
+      ]
+    }
+  },
+  "setupAttempts": {
+    "v1": "No test executed: requested xctestrun filename omitted generated x86_64 suffix.",
+    "v2": "Same nonexistent filename; explicit test selector did not repair it.",
+    "correction": "Used the actual generated arm64-x86_64 xctestrun; native tests then executed."
+  },
+  "retainedDiagnostics": {
+    "results": [
+      "ios-fileprovider-probe-ui-v1.xcresult",
+      "ios-fileprovider-probe-ui-v2.xcresult",
+      "ios-fileprovider-probe-ui-v3.xcresult",
+      "ios-fileprovider-probe-ui-v4.xcresult",
+      "ios-fileprovider-probe-ui-v5.xcresult",
+      "ios-fileprovider-probe-ui-v6.xcresult"
+    ],
+    "privateSource": "/private/tmp/taskfold-provider-probe-v1",
+    "runtimeReceipt": "/private/tmp/taskfold-provider-probe-runtime-v6.json",
+    "productionTargetsChanged": false
+  },
+  "cleanup": {
+    "ownProbeAndRunnerUninstalled": true,
+    "probeRunnerFilesSessionsClosed": true,
+    "simulatorShutdown": true,
+    "protectedFilesChecked": 164,
+    "protectedMismatches": [],
+    "inactiveBuildBytesPruned": 206248345
+  },
+  "nextAction": "Named representative external-file cases are accepted in transfer/recovery evidence; reuse them. Continue the remaining Mac widget/system-privacy and user-deferred requirements without inventing an exhaustive provider matrix.",
+  "sources": [
+    "https://developer.apple.com/documentation/fileprovider",
+    "https://developer.apple.com/documentation/fileprovider/synchronizing-files-using-file-provider-extensions",
+    "https://developer.apple.com/documentation/fileprovider/nsfileprovidermanager/add(_:completionhandler:)"
+  ],
+  "systemPickerFollowup": {
+    "date": "2026-10-14",
+    "scope": "Actual system picker feasibility only; no Taskfold restore or provider download/offline/late-callback acceptance.",
+    "replicated": {
+      "runtimes": [
+        "26.5",
+        "26.2 fresh disposable Simulator"
+      ],
+      "systemPickerReachedProvider": true,
+      "fileVisible": false,
+      "daemonFailure": "POSIX 1; libfssync.DocumentWharfError cannotCreate -> VFSFileError cannotSetMetadata",
+      "freshRuntimeSameFailure": true
+    },
+    "nonreplicated": {
+      "separateFixtureIdentifier": "com.dbakp.taskfold.legacyproviderprobe",
+      "systemPickerFileVisibleAndSelected": true,
+      "coordinatedReadSucceeded": false,
+      "readFailure": "NSCocoaErrorDomain 260",
+      "startProvidingItemCallbackNotObservedInRetainedLogs": true,
+      "downloadMetadataAndPlaceholderAdded": true,
+      "noClaimOfGeneralPlatformUnsupported": true,
+      "initialCrashes": "The obsolete same-identity probe had a replicated domain and a nonreplicated extension class. File Provider validation aborted that test extension. Removed obsolete fixture before subsequent runs."
+    },
+    "nativeResults": {
+      "ios-fileprovider-probe-ui-v7": {
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "ProbeUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+            "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+            "testName": "testEnableSyntheticProviderLocationAndRead()"
+          }
+        ]
+      },
+      "ios-fileprovider-probe-ui-v8": {
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "ProbeUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+            "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+            "testName": "testEnableSyntheticProviderLocationAndRead()"
+          }
+        ]
+      },
+      "ios-fileprovider-probe-ui-v9": {
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "ProbeUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+            "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+            "testName": "testEnableSyntheticProviderLocationAndRead()"
+          }
+        ]
+      },
+      "ios-fileprovider-probe-ui-v10": {
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "ProbeUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+            "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+            "testName": "testEnableSyntheticProviderLocationAndRead()"
+          }
+        ]
+      },
+      "ios-fileprovider-legacy-ui-v1": {
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "testFailures": [
+          {
+            "failureText": "Critical process Provider crashed in (null)",
+            "targetName": "ProbeUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+            "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+            "testName": "testEnableSyntheticProviderLocationAndRead()"
+          }
+        ]
+      },
+      "ios-fileprovider-legacy-ui-v2": {
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "testFailures": [
+          {
+            "failureText": "Critical process Provider crashed in (null)",
+            "targetName": "ProbeUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+            "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+            "testName": "testEnableSyntheticProviderLocationAndRead()"
+          }
+        ]
+      },
+      "ios-fileprovider-legacy-ui-v3": {
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+            "targetName": "ProbeUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+            "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+            "testName": "testEnableSyntheticProviderLocationAndRead()"
+          }
+        ]
+      },
+      "ios-fileprovider-legacy-ui-v4": {
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "testFailures": [
+          {
+            "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+            "targetName": "ProbeUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+            "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+            "testName": "testEnableSyntheticProviderLocationAndRead()"
+          }
+        ]
+      }
+    },
+    "client": "Standalone SwiftUI fileImporter, not Taskfold BackupFilePicker (UIDocumentPickerViewController, asCopy:false).",
+    "cleanup": {
+      "bothFixtureAppsAndRunnersUninstalledFromOriginalSimulator": true,
+      "originalSimulatorShutdown": true,
+      "publicRemovalResults": [
+        {
+          "identifier": "com.dbakp.taskfold.providerprobe",
+          "publicRemoval": {
+            "code": -2001,
+            "domain": "NSFileProviderErrorDomain",
+            "phase": "registration",
+            "state": "error"
+          }
+        },
+        {
+          "identifier": "com.dbakp.taskfold.legacyproviderprobe",
+          "publicRemoval": {
+            "code": -2001,
+            "domain": "NSFileProviderErrorDomain",
+            "phase": "registration",
+            "state": "error"
+          }
+        }
+      ],
+      "freshDevice": {
+        "device": "2F7686F8-CCBB-4E74-AB29-A144739399F7",
+        "initialDeleteError": "NSCocoaErrorDomain 513, POSIX 1 moving data to Deleting-*",
+        "laterBootError": "CoreSimulator 404 Unable to boot deleted device",
+        "publicDomainRemovalAttemptCouldNotLaunch": true
+      },
+      "freshDeviceStillListedShutdown": true,
+      "freshDeviceBootNowReportsDeleted": true,
+      "freshDataDirectoryRetainedAfterPermissionFailure": true,
+      "inactiveBuildBytesPruned": 817120560,
+      "protectedFilesExact": 164,
+      "normalMacLocalJSONExact": true,
+      "humanCompletedMacFixtureExact": true
+    },
+    "nextDistinctApproach": "Exercise the production-equivalent UIDocumentPickerViewController path with verified external materialization before claiming Taskfold provider acceptance. Do not repeat the unchanged replicated metadata failure or infer provider download from file visibility.",
+    "productFinding": "A coordinated file-access failure could expose a raw system message. Both independent readers now normalize file-access errors to the existing actionable retry guidance while preserving parser, size and cancellation behavior. See backup-file-access-guidance-evidence.json."
+  },
+  "latestStatus": "Corrected nonreplicated domain mapping and actual Taskfold server-backed transfer/restore/relaunch pass. Earlier picker differences were observed with invalid prototype mappings and are not general API limitations.",
+  "latestEvidence": "ios-external-provider-transfer-evidence.json",
+  "latestRecoveryEvidence": "ios-external-provider-recovery-evidence.json"
+}

@@ -9,19 +9,36 @@ struct RootView: View {
     @Environment(\.scenePhase) private var phase
     @State private var pinnedNote: PinnedNoteRequest?
     @State private var pulseRequest: ProjectPulseRequest?
+    @State private var mentionsRequest: MentionsRequest?
+    @State private var insightsRequest:InsightsRequest?
     @State private var focusRequest: FocusSessionRequest?
     @State private var inboxReview: InboxReviewRequest?
-    @State private var seeded = false
     @Environment(\.openSettings) private var openSettings
     @AppStorage("mac.pendingInvitations") private var pendingInvitations = false
+    private var labelsInput: Binding<BulkTaskLabelsRequest?> { Binding(get: { workspace.bulkLabels }, set: { workspace.bulkLabels = $0 }) }
+    private var assignmentInput: Binding<BulkTaskAssignmentRequest?> { Binding(get: { workspace.bulkAssignment }, set: { workspace.bulkAssignment = $0 }) }
+    private var planningInput: Binding<BulkTaskPlanningRequest?> { Binding(get: { workspace.bulkPlanning }, set: { workspace.bulkPlanning = $0 }) }
+    private var planningRequest: Binding<TeamTaskPlanningRequest?> { Binding(get: { workspace.teamTaskPlanning }, set: { workspace.teamTaskPlanning = $0 }) }
     var body: some View {
         @Bindable var store = store
         Group {
-            if store.signedIn { WorkspaceView().transition(.opacity) }
+            if store.signedIn {
+                VStack(spacing: 0) {
+                    if store.accessRecoveryPending { AccessRecoveryBanner() }
+                    WorkspaceView()
+                }.transition(.opacity)
+            }
             else { AuthView().transition(.opacity) }
+        }
+        .disabled(store.signingOut)
+        .overlay {
+            if store.signingOut {
+                ProgressView("Signing out…").padding(20).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+            }
         }
         .animation(Motion.respecting(reduceMotion, Motion.layout), value: store.signedIn)
         .onAppear { workspace.reduceMotion = reduceMotion; workspace.undoManager = undoManager; seed() }
+        .onChange(of: store.childTaskFieldRecoveryScope) { _, _ in workspace.clearChildCompletion() }
         .onChange(of: store.userID) { _, _ in workspace.clearNavigationMemory(); workspace.section = .today }
         .onChange(of: store.signedIn) { _, signedIn in if !signedIn { workspace.clearNavigationMemory() } }
         .onChange(of: reduceMotion) { _, value in workspace.reduceMotion = value }
@@ -29,10 +46,27 @@ struct RootView: View {
         .environment(\.startInboxReview, startInboxReview)
         .environment(\.openPinnedNotes, { pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openFocusSession, { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
+        .environment(\.openInsights,{insightsRequest=InsightsRequest(workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))})
+        .sheet(isPresented: Binding(get: { workspace.mixedGroupReview }, set: { workspace.mixedGroupReview = $0 })) {
+            WorkflowShell(title: "Saved task selections") { MixedTaskGroupRecoveryView() }
+        }
+        .sheet(isPresented: Binding(get: { workspace.childGroupReview }, set: { workspace.childGroupReview = $0 })) {
+            WorkflowShell(title: "Saved subtask selections") { ChildTaskGroupRecoveryView() }
+        }
+        .sheet(isPresented: Binding(get: { workspace.childCompletionReview }, set: { workspace.childCompletionReview = $0 })) {
+            WorkflowShell(title: "Saved subtask actions") { ChildTaskCompletionRecoveryView() }
+        }
+        .sheet(item:$insightsRequest) { InsightsView(request:$0) }
+        .environment(\.openMentions, { mentionsRequest = MentionsRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
+        .sheet(item: $mentionsRequest) { request in MentionsInboxView(request: request) { task in
+            guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), let current = store.record("tasks", id: task.id), current.string("task_generation") == task.string("task_generation"), current.string("project_id") == task.string("project_id") else { return }
+            mentionsRequest = nil; workspace.openExternalTask(current.id)
+        } }
         .environment(\.openProjectPulse, { project in pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: project) })
         .sheet(item: $pulseRequest) { request in ProjectPulseView(request: request) { task in
-            guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), store.record("tasks", id: task.id) != nil else { return }
-            pulseRequest = nil; workspace.openFromFinder(task.id)
+            guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration),
+                  let current = try? store.selectionRecord(task.id), current == task else { return }
+            pulseRequest = nil; workspace.openExternalTask(current.id)
         } }
         .sheet(item: $focusRequest) { FocusSessionView(request: $0) }
         .safeAreaInset(edge: .top) {
@@ -44,9 +78,19 @@ struct RootView: View {
         }
         .sheet(item: $pinnedNote) { PinnedNotesView(request: $0) }
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
-        .onChange(of: store.workspaceGeneration) { _, _ in inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil }
+        .onChange(of: store.workspaceGeneration) { _, _ in
+            workspace.clearNavigationMemory(); workspace.section = .today
+            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil; mentionsRequest = nil
+        }
+        .sheet(item: Binding(get: { workspace.teamTaskCreation }, set: { workspace.teamTaskCreation = $0 })) { opening in
+            TaskInspectorForm(taskID: opening.task.id, admission: opening.admission)
+                .frame(minWidth: 620, idealWidth: 680, minHeight: 620, idealHeight: 760)
+        }
+        .sheet(item: Binding(get: { workspace.teamTaskMove }, set: { workspace.teamTaskMove = $0 })) { TeamTaskMoveView(request: $0) }
+        .sheet(item: Binding(get: { workspace.teamTaskDeletion }, set: { workspace.teamTaskDeletion = $0 })) { TeamTaskDeletionReview(request: $0) }
+        .modifier(TeamTaskPlanningSheet(request: planningRequest, input: planningInput, assignment: assignmentInput, labels: labelsInput, completion: Binding(get: { workspace.teamTaskCompletion }, set: { workspace.teamTaskCompletion = $0 })))
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
-            BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
+            BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.records : []) { day in
                 try workspace.setDeadlines(request, day: day)
             }
         }
@@ -63,6 +107,9 @@ struct RootView: View {
         }
         .task(id: "realtime-\(store.signedIn)-\(store.localMode)") {
             guard store.signedIn, !store.localMode else { return }
+            #if DEBUG
+            if ChildFieldNativeIdentity.mainListTesting { return }
+            #endif
             while !Task.isCancelled {
                 do { try await store.backend.watchChanges { await store.sync() } }
                 catch { if Task.isCancelled { return } }
@@ -83,7 +130,7 @@ struct RootView: View {
             guard !Task.isCancelled, NotificationRoute.shared.taskRequest == route else { return }
             NotificationRoute.shared.taskRequest = nil
             guard let task = store.reminderTask(for: route) else { return }
-            workspace.open(task.id)
+            workspace.openExternalTask(task.id)
         }
         .task(id: "invitation-route-\(pendingInvitations)-\(store.signedIn)-\(store.localMode)") {
             guard pendingInvitations else { return }
@@ -95,41 +142,7 @@ struct RootView: View {
                 pendingInvitations = false
             }
         }
-        .onOpenURL { url in
-            if url.scheme == "taskfold", url.host == "pulse" {
-                guard let link = ProjectPulseLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This project widget belongs to another workspace or is unavailable. Open Project pulse in your current workspace."; return }
-                pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: link.project)
-                return
-            }
-            if url.scheme == "taskfold", url.host == "focus" {
-                guard let link = FocusSessionLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This Focus widget belongs to another workspace or is unavailable. Open Focus session in your current workspace."; return }
-                focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
-                return
-            }
-            if url.scheme == "taskfold", url.host == "note" || url.host == "notes" {
-                guard let note = PinnedNoteLink.parse(url), store.signedIn, note.account == store.userID else { store.error = "This note link belongs to another workspace or is unavailable. Open Pinned notes in your current workspace."; return }
-                pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), taskID: note.taskID)
-                return
-            }
-            if let review = InboxReviewLink.parse(url) {
-                guard store.signedIn, review.account == store.userID else { store.error = "This widget belongs to another workspace. Open Inbox to review your current tasks."; return }
-                workspace.section = .inbox; startInboxReview(review.batch)
-                return
-            }
-            if let day = PlannerWidgetRoute.day(url) { workspace.calendarDay = day; workspace.calendarMode = .day; workspace.section = .calendar }
-            if url.scheme == "taskfold" && url.host == "view" && !url.lastPathComponent.isEmpty { workspace.section = .saved(url.lastPathComponent) }
-            if url.scheme == "taskfold", url.host == "project", store.record("projects", id: url.lastPathComponent) != nil { workspace.section = .project(url.lastPathComponent) }
-            if url.scheme == "taskfold", url.host == "label", store.record("labels", id: url.lastPathComponent) != nil { workspace.section = .label(url.lastPathComponent) }
-            if url.scheme == "taskfold" && url.host == "today" { workspace.section = .today }
-            if url.scheme == "taskfold" && url.host == "inbox" { workspace.section = .inbox }
-            if url.scheme == "taskfold" && url.host == "all" { workspace.section = .all }
-            if url.scheme == "taskfold" && url.host == "upcoming" { workspace.section = .upcoming }
-            if url.scheme == "taskfold" && url.host == "add" { workspace.section = .inbox; workspace.quickAddFocusRequest += 1 }
-            if url.scheme == "taskfold", url.host == "invitations" {
-                pendingInvitations = true; workspace.settingsTab = .invitations; openSettings()
-            }
-            if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.open(url.lastPathComponent) }
-        }
+        .onOpenURL(perform: handleExternalURL)
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
         #if DEBUG
         .safeAreaInset(edge: .top) { if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") { WidgetActionTestPanel() } }
@@ -140,8 +153,51 @@ struct RootView: View {
         #endif
         .modifier(WidgetCapacityRefresh())
         .onChange(of: phase) { _, value in if value == .active { Task { await store.reschedule(); await store.sync() } } }
-        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await store.reschedule() } }
-        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in Task { await store.reschedule() } }
+        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
+    }
+
+    private func handleExternalURL(_ url: URL) {
+        guard store.allowsWidgetRecordLink(url) else {
+            store.error = "This widget belongs to another workspace or is unavailable. Open a task or list in your current workspace."
+            return
+        }
+        if url.scheme == "taskfold", url.host == "pulse" {
+            guard let link = ProjectPulseLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This project widget belongs to another workspace or is unavailable. Open Project pulse in your current workspace."; return }
+            pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: link.project)
+            return
+        }
+        if url.scheme == "taskfold", url.host == "focus" {
+            guard let link = FocusSessionLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This Focus widget belongs to another workspace or is unavailable. Open Focus session in your current workspace."; return }
+            focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+            return
+        }
+        if url.scheme == "taskfold", url.host == "note" || url.host == "notes" {
+            guard let note = PinnedNoteLink.parse(url), store.signedIn, note.account == store.userID else { store.error = "This note link belongs to another workspace or is unavailable. Open Pinned notes in your current workspace."; return }
+            pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), taskID: note.taskID)
+            return
+        }
+        if let review = InboxReviewLink.parse(url) {
+            guard store.signedIn, review.account == store.userID else { store.error = "This widget belongs to another workspace. Open Inbox to review your current tasks."; return }
+            workspace.section = .inbox; startInboxReview(review.batch)
+            return
+        }
+        if let day = PlannerWidgetRoute.day(url) { workspace.calendarDay = day; workspace.calendarMode = .day; workspace.section = .calendar }
+        if url.scheme == "taskfold" && url.host == "view" && !url.lastPathComponent.isEmpty { workspace.section = .saved(url.lastPathComponent) }
+        if url.scheme == "taskfold", url.host == "project", store.record("projects", id: url.lastPathComponent) != nil { workspace.section = .project(url.lastPathComponent) }
+        if url.scheme == "taskfold", url.host == "label", store.record("labels", id: url.lastPathComponent) != nil { workspace.section = .label(url.lastPathComponent) }
+        if url.scheme == "taskfold" && url.host == "today" { workspace.section = .today }
+        if url.scheme == "taskfold" && url.host == "inbox" { workspace.section = .inbox }
+        if url.scheme == "taskfold" && url.host == "all" { workspace.section = .all }
+        if url.scheme == "taskfold" && url.host == "upcoming" { workspace.section = .upcoming }
+        if url.scheme == "taskfold", url.host == "add", store.signedIn { workspace.section = .inbox; workspace.quickAddFocusRequest += 1 }
+        if url.scheme == "taskfold", url.host == "invitations" {
+            pendingInvitations = true; workspace.settingsTab = .invitations; openSettings()
+        }
+        if url.scheme == "taskfold" && url.host == "task" {
+            do { workspace.openExternalTask(try store.widgetLinkedTask(url).id) }
+            catch { store.error = error.localizedDescription }
+        }
     }
 
     private func startInboxReview(_ batch: InboxReviewBatch) {
@@ -151,8 +207,10 @@ struct RootView: View {
 
     /// Debug-only fixtures shared with the UI tests. Release builds ignore these arguments.
     private func seed() {
-        guard !seeded else { return }; seeded = true
         #if DEBUG
+        if ChildFieldNativeIdentity.mainListTesting { return }
+        // Every window shares this workspace; a new window must not reset active routes or data.
+        guard !workspace.fixturePrepared else { return }; workspace.fixturePrepared = true
         let arguments = ProcessInfo.processInfo.arguments
         // Debug options use --key=value so AppKit never mistakes a bare value for a document to open.
         func option(_ key: String) -> String? { arguments.first { $0.hasPrefix("--\(key)=") }.map { String($0.dropFirst(key.count + 3)) } }
@@ -217,6 +275,26 @@ struct RootView: View {
                 try? store.persist()
             }
         }
+        if ConversationFixture.enabled { store.startLocal(); store.seedConversationFixture(); workspace.section = .inbox }
+        if arguments.contains("--uitesting") && arguments.contains("--workflow-fixture") { store.startLocal(); store.seedWorkflowFixture(); workspace.section = .inbox }
+        // The sandboxed UI runner cannot write this app's protected cache.
+        // Seed only inside the reserved synthetic host, never a normal app build.
+        if arguments.contains("--uitesting"), arguments.contains("--assignment-tree-fixture"),
+           Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+           store.userID == "ui-testing", store.localMode {
+            do {
+                store.dailyBackupsEnabled = false; store.disableNotifications()
+                let origin = "a5110000-0000-4000-8000-000000000002", destination = "a5110000-0000-4000-8000-000000000003"
+                var task = Record.task(user: store.userID, project: origin, date: Date())
+                task["id"] = .string("a5110000-0000-4000-8000-000000000001"); task["title"] = .string("Project change preservation proof")
+                task["assigned_to"] = .string("ui-testing"); task["section_id"] = .null
+                let raw = arguments.contains("--assignment-tree-unsupported") ? #"{"future_container":"Keep this unsupported source"}"# : #"[{"id":"a5110000-0000-4000-8000-000000000004","title":"Preserve every detail","assigned_to":"alex","é":9007199254740993,"e\u0301":17,"future":{"keep":"exact"},"subtasks":[{"id":"a5110000-0000-4000-8000-000000000005","title":"Nested proof","assigned_to":"alex","subtasks":null}]},"Legacy text"]"#
+                task["subtasks"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(raw.utf8))
+                store.snapshot = Snapshot(tables: ["tasks": [task], "projects": [(origin, "Assignment origin"), (destination, "Assignment destination")].map { Record(["id": .string($0.0), "name": .string($0.1), "user_id": .string(store.userID)]) }, "sections": []])
+                try store.persist(); workspace.section = .today
+            } catch { store.error = error.localizedDescription }
+        }
+        if arguments.contains("--uitesting") && arguments.contains("--workflow-diagnostics") { try? store.persist() }
         if arguments.contains("--uitesting") && arguments.contains("--quick-entry-fixture") {
             store.startLocal(); store.snapshot = Snapshot.quickEntryFixture(user: store.userID); workspace.section = .inbox
             workspace.projectMembers["qe-work"] = store.rows("project_members:qe-work")
@@ -264,6 +342,7 @@ struct RootView: View {
             workspace.section = .today
             try? store.persist()
         }
+        if arguments.contains("--uitesting") && arguments.contains("--assignee-pattern-testing") { store.startLocal(); store.startAssigneePatternFixture(); workspace.section = .inbox }
         if arguments.contains("--uitesting") && arguments.contains("--date-phrase-testing") { store.startLocal(); store.startDatePhraseFixture(); workspace.section = .inbox }
         if arguments.contains("--uitesting") && arguments.contains("--clock-window-testing") {
             store.startLocal(); store.startClockWindowFixture(); workspace.section = .inbox
@@ -285,7 +364,7 @@ struct RootView: View {
         }
         if arguments.contains("--uitesting") && arguments.contains("--filter-primitives-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
-            store.snapshot = Snapshot.filterPrimitiveFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
+            store.snapshot = Snapshot.filterPrimitiveFixture(user: store.userID, unknownSettings: ProcessInfo.processInfo.arguments.contains("--filter-unknown-settings-fixture")); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--parity-fixture") {
             store.startLocal(); store.snapshot = Snapshot()
@@ -311,9 +390,10 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--invitation-link-fixture") { pendingInvitations = true }
+        if arguments.contains("--uitesting") && arguments.contains("--insights-fixture") { store.startLocal();store.seedInsightsFixture();workspace.section = .inbox }
         if arguments.contains("--uitesting") && arguments.contains("--widget-list-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
-            store.snapshot = Snapshot.widgetListFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
+            store.snapshot = arguments.contains("--widget-ordering-fixture") ? Snapshot.widgetOrderingFixture(user:store.userID) : Snapshot.widgetListFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--uitesting") && arguments.contains("--deadline-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
@@ -330,16 +410,19 @@ struct RootView: View {
             store.snapshot = Snapshot(); store.snapshot.tables["tasks"] = [task]; workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--conflict-fixture") {
-            store.startLocal(); store.snapshot = Snapshot()
+            store.startLocal(); store.dailyBackupsEnabled = false; store.snapshot = Snapshot()
             var local = Record.task(user: store.userID, date: Date())
             local["id"] = .string("conflict-task"); local["title"] = .string("Review launch copy")
-            let before: JSON = .array([.object(["id": .string("a"), "text": .string("Original comment")])])
+            let legacyEmpty = ProcessInfo.processInfo.arguments.contains("--legacy-null-collection-fixture")
+            let before: JSON = legacyEmpty ? .null : .array([.object(["id": .string("a"), "text": .string("Original comment")])])
             local["comments"] = .array([.object(["id": .string("a"), "text": .string("My revised comment")])])
             var remote = local
-            remote["comments"] = .array([.object(["id": .string("a"), "text": .string("Shared revised comment")]), .object(["id": .string("b"), "text": .string("Independent teammate comment")])])
-            let change = Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["comments": local["comments"]], baseline: ["comments": before])
-            store.snapshot.tables["tasks"] = [local]; store.snapshot.pending = [change]
+            remote["comments"] = .array([.object(["id": .string(legacyEmpty ? "remote" : "a"), "text": .string("Shared revised comment")]), .object(["id": .string("b"), "text": .string("Independent teammate comment")])])
+            let change = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["comments": local["comments"]], baseline: ["comments": before]), existing: local)
+            let later = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["duration_minutes": .number(45)], baseline: ["duration_minutes": .null]), existing: local)
+            store.snapshot.tables["tasks"] = [local]; store.snapshot.pending = [change, later]; store.snapshot.apply(later)
             store.syncConflict = SyncConflict(mutation: change, remote: remote)
+            store.notice = "Changes overlap on the same task. Review this edit to resume sync."
             workspace.section = .today
             try? store.persist()
         }
@@ -458,8 +541,13 @@ struct WorkspaceView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @State private var columns = NavigationSplitViewVisibility.all
+    @State private var printCommand = TaskPrintCommand()
     var body: some View {
         @Bindable var workspace = workspace
+        // Read during body evaluation so selection invalidates the inspector's
+        // presentation. A read only inside Binding.get can leave it stale.
+        let inspectorVisible = workspace.inspectorVisible
+        let inspectorSelection = workspace.actionSelection
         GeometryReader { window in
             NavigationSplitView(columnVisibility: $columns) {
                 SidebarView()
@@ -474,11 +562,12 @@ struct WorkspaceView: View {
                     else { TaskListView(scope: workspace.scope, preferenceKey: workspace.section.key) }
                 }
                 .id(workspace.section)
-                .inspector(isPresented: Binding(get: { workspace.inspectorVisible }, set: { shown in
+                .inspector(isPresented: Binding(get: { inspectorVisible }, set: { shown in
                     // Automatic hiding for an empty selection is not a user preference change.
                     if !workspace.actionSelection.isEmpty { workspace.inspectorShown = shown }
                 })) {
                     TaskInspector()
+                        .id(inspectorSelection)
                         .inspectorColumnWidth(min: 270, ideal: 310, max: 460)
                 }
             }
@@ -498,6 +587,8 @@ struct WorkspaceView: View {
             }
         }
         .modifier(KeyRouter())
+        .environment(printCommand)
+        .focusedSceneValue(\.taskfoldPrint, printCommand)
         .accessibilityIdentifier("nativeWorkspace")
     }
 }

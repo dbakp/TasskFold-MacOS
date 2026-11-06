@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-05",
+  "feature": "Searchable pinned-note library",
+  "implemented": [
+    "Search full note text, title and project/section/ancestor paths; accent-insensitive AND terms.",
+    "Precompute bounded readable previews and search on cancellable workers; initially 60 rows with explicit Show more.",
+    "Show project context and completed state; preserve archived and missing-project notes.",
+    "Refresh edited text; validate current pin, source identity, workspace readability and session before entering the reader.",
+    "Keep existing task-backed notes, editor, print, unpin and creation behavior; no schema, provider or rollout gate changes."
+  ],
+  "core": {
+    "ios": {
+      "tests": 20,
+      "failures": 0,
+      "catalogCases": 7,
+      "existingPinCases": 13,
+      "logSHA256": "11c32a23401a0beb3f909adbcb631c4d6514cac0d744b33afeb51af58bbd8c88",
+      "catalog3000Seconds": 0.21313703060150146,
+      "timingScope": "Core catalog construction diagnostic; does not establish rendering or device FPS."
+    },
+    "mac": {
+      "tests": 20,
+      "failures": 0,
+      "catalogCases": 7,
+      "existingPinCases": 13,
+      "logSHA256": "13af58d2320e1ca52e9ab6d087241df9fd4284d05132c4ae100f476a42a86df1",
+      "catalog3000Seconds": 0.21950793266296387,
+      "timingScope": "Core catalog construction diagnostic; does not establish rendering or device FPS."
+    }
+  },
+  "nativeScope": "Signed reserved iPhone 18 Pro Simulator, production library/reader with synthetic 122-note workspace. Normal and dark/largest accessibility text cases; data assertions compare tasks, pins, projects and sections. A deliberate DEBUG-only source refresh edits one fixture title/body. Cold loading may separately hydrate legacy view preferences.",
+  "nativeNormal": {
+    "accepted": true,
+    "boundedPaging": true,
+    "coldSavedState": true,
+    "duplicateTitlesAndCompletedPath": true,
+    "fullBodyAndProjectSearch": true,
+    "liveTextRefresh": true,
+    "productionLibraryAndReader": true,
+    "readOnlyTablesPreserved": true
+  },
+  "nativeLargestText": {
+    "accepted": true,
+    "doneAndCloseReachable": true,
+    "fullPathAvailable": true,
+    "largestText": true,
+    "productionLibrary": true,
+    "readOnlyTablesPreserved": true,
+    "softwareKeyboardVisible": true
+  },
+  "screenshotsReviewed": true,
+  "macScope": "Independent owning Core cases and signed ordinary Mac app/widget/Share compilation; native Mac interaction remains unaccepted.",
+  "installed": {
+    "ios": "1.4.0 (31)",
+    "mac": "1.2.0 (14)"
+  },
+  "uninstalledCandidates": {
+    "ios": "1.4.0 (32)",
+    "mac": "1.2.0 (20)"
+  },
+  "remaining": [
+    "Native Mac/iPad/speech and wider shared/account/accessibility contexts.",
+    "Physical rendering/FPS and broader editor workloads.",
+    "All previously recorded migration/provider/release deferrals."
+  ],
+  "progressAccounting": "74 curated checkpoints / 54 existing substeps unchanged. This is a bounded notes/browsing refinement, not another completion bar."
+}

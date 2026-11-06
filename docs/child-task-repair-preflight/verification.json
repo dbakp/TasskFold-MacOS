@@ -1,0 +1,28 @@
+{
+  "reviewedAt": "2026-10-30T20:50:02.902965+00:00",
+  "parent": "a45753f6dd9ccdfb3db937ed17c43bbfc6793c0f",
+  "sourceSHA256": {
+    "supabase/migrations/20261030204000_child_repair_bounded_originals.sql": "78b28364b5b6aa3345cab34c51110ad3258cbdb5a1f76bb857f3dca049464848",
+    "Scripts/Database/test-child-repair-bounded-originals.mjs": "d3e17002a0812e2f157ccccd6444d05ae9c5c08e55671204630a7b992b67c6ac",
+    "Scripts/Database/postgres-fixture.mjs": "75cfc46185da64e1be100680c9af3d15c5bc7fbbb9cf4cb9b9f4227f9ee14759",
+    "Scripts/Database/child-task-authority-schema.mjs": "ab0e1e07b584f66f7c2bdeb1ca4d334753c7ed70a424ef3470c01226149dda4e"
+  },
+  "databaseChecks": 313,
+  "baselineAdvisorFindings": 7,
+  "finalAdvisorFindings": 7,
+  "newAdvisorFindings": 0,
+  "ownedFixtureRemoved": true,
+  "ordinaryFlagsEnabled": false,
+  "hostedChanges": false,
+  "fullLocalMigrationListVerified": false,
+  "nativeAppSourcesUnchangedSinceGuidedAcceptance": true,
+  "supabaseCLI": "2.109.0",
+  "changelogSHA256": "0dac5c21d2b0041087f0af0284a414fdc37fdc79cff255f941c7967930af8d88",
+  "scope": "Bounded archive construction only; broader migration remains To build",
+  "limitations": [
+    "Serialized archive budget is not a hard total-memory ceiling; root/current-row serialization and database working memory remain.",
+    "Production index build lock, latency and full library-scale acceptance need deployment/workload review.",
+    "Full default local Supabase migration history could not connect; relevant fixture dependency chain passed.",
+    "No genuine HTTP/PostgREST or additional native acceptance in this SQL-only phase."
+  ]
+}

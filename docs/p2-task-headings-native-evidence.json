@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-26",
+  "stage": "Gated local native task-heading editors and productive projections",
+  "platform": "mac",
+  "fullHeadingFeatureComplete": false,
+  "normalAppAuthoringEnabled": false,
+  "hostedDeployment": false,
+  "realDataChanged": false,
+  "sourceSHA256": {
+    "Taskfold/Core/FocusSession.swift": "a279252c9a2824f7a98aa0b03607bac46b85dfae0a37939aa72d179695d484cd",
+    "Taskfold/Core/InboxReview.swift": "136c2b1dc52bba1e9d10b7bbb61c703db38781c34dd6e0d5142437d21eb05aee",
+    "Taskfold/Core/Models.swift": "c20580b0040eec265e5a999ae8ee60adfa5692064bbec4fc9bd5cd43f2c7e7d5",
+    "Taskfold/Core/Planner.swift": "e97ff598fae993f7aa0d1639aab2399b40345705e6042395f34255d21c7395a4",
+    "Taskfold/Core/ProjectPulseWidget.swift": "74a12f51216f6785fd195e8e5abfd0e80fe9526422a4124bd592f853f4040379",
+    "Taskfold/Core/RowGesture.swift": "559cab71492b61d10370ce7938b0917a5c83bdbfa37074ebd736d5956b553cd9",
+    "Taskfold/Core/Store.swift": "b853a35af383c4183c6aaece501aa8e91684ca68b79e72b2da13a909c502242f",
+    "Taskfold/Core/SubtaskTree.swift": "f5900c683dbb57398d0a10874475f94da36a55858d2937561b5a13554aa91034",
+    "Taskfold/Core/TaskActivity.swift": "40ffe6edb6f56400347db7605b4e76268d92ecea4541f208e0eedaf52d429bd7",
+    "Taskfold/Views/ProjectPulseView.swift": "0148ded74cf33f102e3c8d6078c9f92d99769138b509077f4a36d7c2f157b0ae",
+    "Taskfold/Views/RowSwipe.swift": "5cb1fe8633c6110e2a964146b30864cd56514c93e5639594113f335f2019766b",
+    "Taskfold/Views/SidebarView.swift": "10aa5569a0c643fa7a29c9af2cf41690a6d62f4a16086e271bdff1b93d90737e",
+    "Taskfold/Views/SubtaskOrganizer.swift": "331b92ae84e1e66acaa3cf731291300e622c13c4faedb663cb465a7de224becc",
+    "Taskfold/Views/TaskInspector.swift": "70669c59ac1d8a316414cee26fb71c4637b1866f8741a6887576819f293234d4",
+    "Taskfold/Views/TaskListView.swift": "757faa3d201745c55e3e349f8785ef9016a8226f5bea3bb30fa4ba53ae899deb",
+    "Taskfold/Views/TaskRowView.swift": "2ac84ad52b0c2caa525a1ce515068373569200d1098af9aa6f4351d2711fec67",
+    "Taskfold/Workspace.swift": "ac417cde030ba3142fd09570869f147e5169e0d68e1fe1cea864cd0dc3900983",
+    "TaskfoldTests/RowGestureTests.swift": "0092173d408e670f387f667ba8d78837141e1ee108f075789f7270965082cd18",
+    "TaskfoldTests/TaskKindTests.swift": "9f95999b1bbd7df5ea567df38100e0a44c19d28a16010456cfc68c67958c8cb1",
+    "Scripts/prepare_task_heading_native_test.py": "5d5784b8801c4072114afe23c057fbe75809cb32dfc96e913779314011d060c7"
+  },
+  "preparedSourceProof": "headings-native/source-proof.json",
+  "core": {
+    "commandFilter": "TaskKind|Subtask|WidgetAction|InboxReview|Planner|Pulse|Focus|RowGesture",
+    "executed": 172,
+    "failures": 0,
+    "optionalSkips": 3,
+    "taskKindCases": 29,
+    "watchCases": null,
+    "watchNewCases": null,
+    "evidence": "headings-native/core.log"
+  },
+  "build": {
+    "accepted": true,
+    "arm64": true,
+    "debug": true,
+    "strictSignature": true,
+    "nativeMacAcceptance": false,
+    "evidence": "headings-native/build-summary.json"
+  },
+  "iosInstalledAcceptance": {
+    "scope": "Current signed isolated iOS source; companion evidence only for the Mac repository",
+    "iphonePassed": 2,
+    "ipadPassed": 2,
+    "failures": 0,
+    "skips": 0,
+    "cases": [
+      "Root Task/Heading Cancel preserves the saved task; Save with note pin retains all checked metadata; real fast Inbox swipe reveals Delete without executing it; cold return and explicit Task conversion preserve pin and expected revision.",
+      "Nested child type choice survives child Save, organizer Cancel preserves the original stored root, a later complete Save survives relaunch and keeps ordinary descendant controls and notes/identity."
+    ],
+    "evidence": [
+      "headings-native/iphone-summary.json",
+      "headings-native/ipad-summary.json",
+      "headings-native/iphone-native.log",
+      "headings-native/ipad-native.log",
+      "headings-native/iphone-synthetic-cache.json",
+      "headings-native/ipad-synthetic-cache.json"
+    ]
+  },
+  "visualReview": {
+    "inspected": [
+      "iphone-heading.png",
+      "iphone-nested.png",
+      "ipad-heading.png",
+      "ipad-nested.png"
+    ],
+    "scope": "Normal text light root card and dark nested organizer; no largest-text/spoken claim"
+  },
+  "database": {
+    "migrationUnchanged": true,
+    "sourceContractChecksPreviouslyPassedPerRepo": 58,
+    "rerunInThisStage": false,
+    "hostedChanged": false
+  },
+  "remaining": [
+    "Template/duplication/import/export/backup type interoperability and source-specific Todoist mapping",
+    "Checklist progress still counts heading nodes; finish broader count/history consistency",
+    "Remaining Focus/notification/shortcut/calendar and other completion presentation/action acceptance",
+    "New/completed-task, Undo/Redo/recovery, largest text, actual spoken and Mac keyboard/window/runtime acceptance",
+    "Shared type command/receipt/recovery adapters and capability negotiation",
+    "Deferred older-client rollout dependency before hosted exposure"
+  ],
+  "goalStatus": "Headings, rank 3, rank 6, Watch acceptance and full Px remain active; all user deferrals remain deferred."
+}

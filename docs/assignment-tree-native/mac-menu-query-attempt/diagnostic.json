@@ -1,0 +1,6 @@
+{
+  "accepted": false,
+  "stage": "Native picker opened; ambiguous destination query stopped before selection",
+  "reason": "The destination name appears in both the inspector popup and the Task menu. The test now scopes the action to the project picker itself, so it cannot accidentally exercise the menu route.",
+  "logSHA256": "e337c81a86839fd4f766e72c30a4fe22d0e27c77861982fafaa9254b20072af1"
+}

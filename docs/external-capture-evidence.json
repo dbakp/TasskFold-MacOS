@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-10",
+  "problem": "Neutral taskfold://add capture scheduled tasks for today on iOS, whereas Mac Inbox capture is undated. The preceding installed Quick capture walk saved Captured from Home Screen with plannedDate 2026-10-10.",
+  "change": "iOS external capture selects Inbox and creates an undated task. A one-shot workspace-bound pending request handles Inbox first appearance as well as existing views; stale workspace requests are rejected. Native Today-screen adding remains dated. Both apps describe the widget action as capture in Inbox.",
+  "result": {
+    "bundle": "/tmp/taskfold-external-capture-phone-v1.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": 0,
+    "checks": [
+      "Public XCUIApplication URL delivery while running from Today opens undated Inbox capture",
+      "URL delivery after explicit termination opens undated Inbox capture despite a Today default-view preference",
+      "Both saved tasks persist after relaunch; full editor Planned date switches remain off",
+      "Native Today-screen Add task retains its Today date control"
+    ]
+  },
+  "data": {
+    "snapshotSHA256": "49cd47c4569783b83e8b2d6adc53c744559e88778a68c584ef1ba390ddb13d2e",
+    "pendingCount": 0,
+    "tasks": [
+      {
+        "id": "955cfda7-8aa0-46b9-909c-9c9cf2621049",
+        "title": "External warm capture",
+        "plannedDate": null,
+        "project": null,
+        "completed": false
+      },
+      {
+        "id": "1bd6dee3-aaa7-4ac9-8835-022389ca4d9d",
+        "title": "External cold capture",
+        "plannedDate": null,
+        "project": null,
+        "completed": false
+      }
+    ]
+  },
+  "builds": [
+    "iOS build-for-testing v2 passed and real team signatures verified",
+    "Independent Mac app Debug build passed with code signing disabled"
+  ],
+  "mac": "Existing RootView add route selects Inbox; TaskListView captureDate is nil for Inbox. Matching widget label/description updated independently. Native Mac GUI was not launched. Existing data-contract/continuity evidence reused; no fields or serialization changed.",
+  "limits": [
+    "Phone portrait normal/light. This checkpoint uses the public URL API, not another installed gallery walk. The preceding installed-widget routing and rendering result is reused for the unchanged taskfold://add destination.",
+    "No actual Control Center tap, physical delivery, Mac host, VoiceOver or keyboard acceptance.",
+    "Native Today date is asserted; its screenshot caught the presentation transition and is not retained as visual acceptance.",
+    "No live cloud account used; saved local queue is empty."
+  ],
+  "sources": {
+    "ios/Taskfold/TaskfoldApp.swift": "b770885d64fd2554d85a421cbcd284a3bae279086caa8fd3e5486836bd98719c",
+    "ios/TaskfoldUITests/TaskfoldUITests.swift": "1724bc54de03c154fd5ccb7ac713cea3e7c14812e5e41e86bbe04bd6e54c1614",
+    "ios/TaskfoldWidgets/TaskfoldWidgets.swift": "67e559cfdd00bc79bc5b1193932c3c29555ce884b7c1c8d519d5ca2340f57587",
+    "mac/Taskfold/Views/RootView.swift": "eab90a1580daf7b04a99228b48363e86542ceb9fc5bf4a9e1d13b75932b0a2bb",
+    "mac/Taskfold/Views/TaskListView.swift": "a28fce536fc9690520fc5ae4c5078a185468ef71d3a6879330c85b24737fd23a",
+    "mac/TaskfoldWidgets/TaskfoldWidgets.swift": "67e559cfdd00bc79bc5b1193932c3c29555ce884b7c1c8d519d5ca2340f57587"
+  }
+}

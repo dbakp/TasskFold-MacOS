@@ -1,0 +1,38 @@
+{
+  "sourceSHA256": {
+    "Package.swift": "89823796d62d6a8d9f27cb46e1c37d5f7df18fcd925905071adc6bfd57756505",
+    "Taskfold.xcodeproj/project.pbxproj": "1f893e260984fe263a65117458cfc45e856352de7e6c30d8ed5796ac02d816b6",
+    "Taskfold/Core/Models.swift": "0225790ac361bed3e823c8d2e2eced3186bdd470287186a88a5cc9d386e445a6",
+    "Taskfold/Core/PrintDocument.swift": "295ce4865ec7e5e9d7c23238b5f2c3e14f3a590e3a9f6a738927984c0d3b5f11",
+    "Taskfold/Core/ReviewedTaskOutput.swift": "fa3f3b2482cc6aa8236e4662e31f6ca33cc8fb45811377ddcb15bec9ef2ad196",
+    "Taskfold/Core/Store.swift": "3f0c34d312c51b30382f007b5f94311edbb633fdf90a4f72ad0c230a0397afe9",
+    "Taskfold/Views/PrintReviewView.swift": "86f0037d1e7366bab6d9cbb51e049e77ad9b0748fddec811ecf874d3c001b3c0",
+    "Taskfold/Views/PinnedNotesView.swift": "b241f6928e46c0142e608e0761cb43983126dbb735482c03157798baf6afea51",
+    "Taskfold/Views/TaskListView.swift": "6f8db9804b1d829466e1152408a1188a7dfd9ba5cb7f82983209ad7ddd01d528",
+    "Taskfold/Core/TaskPrintRenderer.swift": "80e56c6930100de8df179d43862f844d8a4bc9ef088b23e68ec78642f9fb99eb",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "ee0c29d4f2ae782028d67ee9fffc60fbba67d1817c90fb891c9053cc5cefd142",
+    "TaskfoldTests/ReviewedTaskOutputTests.swift": "601813f213e145424ef410261af4e966b0bf38787b194c8c994198354c0d1f68",
+    "TaskfoldTests/PrintDocumentSourceTests.swift": "c67056881186414c9de348165190813a965ad233596eb44b72a1d9b9fd83bcc3"
+  },
+  "binary": {
+    "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+    "sha256": "9046066fd5ec1854e4fd2a2f29f2bd4d31c45f7efeb8937fcbcf9fca92812fb5"
+  },
+  "core": {
+    "executed": 107,
+    "passed": 105,
+    "skipped": 2,
+    "newCases": 14,
+    "failures": 0
+  },
+  "native": {
+    "mac": 4
+  },
+  "limits": [
+    "Core suites execute on the Mac host against each repo independently; native phone/tablet runtime coverage is separate.",
+    "A Store incarnation change is not a real signed-in account-picker journey.",
+    "Spoken output, largest-text output and external cloud-provider delivery remain open.",
+    "Data already released to a provider cannot be recalled.",
+    "No real audio, permissions or distribution acceptance is claimed."
+  ]
+}

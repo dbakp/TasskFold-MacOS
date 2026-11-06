@@ -1,0 +1,257 @@
+{
+  "structureIncarnations": {
+    "review": "ec990000-0000-4000-8000-000000000006",
+    "nested": "63686f79-8f3b-465d-bd02-4190932e12c1",
+    "concept": "ec990000-0000-4000-8000-000000000005"
+  },
+  "structureRevision": 4,
+  "receipts": {},
+  "transferDestinationRevision": 4,
+  "requests": 0,
+  "transferDestination": {
+    "subtasks": [
+      {
+        "subtasks": [
+          {
+            "id": "nested",
+            "title": "Collect supporting notes",
+            "future": {
+              "keep": true
+            },
+            "description": "Keep these nested instructions"
+          }
+        ],
+        "future": {
+          "keep": true
+        },
+        "priority": 4,
+        "completed": false,
+        "title": "Prepare the review",
+        "id": "concept",
+        "description": "Original saved notes"
+      }
+    ],
+    "task_generation": "ec990000-0000-4000-8000-000000000021",
+    "project_id": null,
+    "completed": false,
+    "user_id": "ec990000-0000-4000-8000-000000000001",
+    "title": "Transfer destination",
+    "id": "ec990000-0000-4000-8000-000000000020",
+    "is_heading": true
+  },
+  "transferWrites": 3,
+  "versions": {
+    "nested": 4,
+    "review": 1,
+    "concept": 4
+  },
+  "root": {
+    "project_id": null,
+    "subtasks": [
+      {
+        "id": "review",
+        "title": "Publish the summary",
+        "future": {
+          "keep": true
+        },
+        "priority": 4,
+        "description": "Original saved notes",
+        "completed": false
+      }
+    ],
+    "title": "Native child workspace",
+    "task_generation": "ec990000-0000-4000-8000-000000000003",
+    "id": "ec990000-0000-4000-8000-000000000002",
+    "user_id": "ec990000-0000-4000-8000-000000000001"
+  },
+  "transferReceipts": {
+    "cfc1d573-7962-4ab6-b13d-54872446985d": {
+      "result": {
+        "moved_count": 2,
+        "destination_id": "ec990000-0000-4000-8000-000000000002",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "undo_of": "7843dc88-dbed-4c2a-820f-20a2a3a15316",
+        "return_parent": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "node_key": "concept",
+        "destination_project": null,
+        "source_id": "ec990000-0000-4000-8000-000000000020",
+        "return_index": 0,
+        "replayed": false,
+        "state": "applied",
+        "destination_revision": 2,
+        "request_id": "cfc1d573-7962-4ab6-b13d-54872446985d",
+        "protocol": 1,
+        "source_revision": 2,
+        "action": "undo",
+        "destination_generation": "ec990000-0000-4000-8000-000000000003",
+        "source_project": null,
+        "source_generation": "ec990000-0000-4000-8000-000000000021"
+      },
+      "inverse": {
+        "kind": "array",
+        "parent": null
+      },
+      "body": {
+        "action": "undo",
+        "node_key": "concept",
+        "subtree_versions": {
+          "concept": {
+            "incarnation": "ec990000-0000-4000-8000-000000000005",
+            "revision": 2
+          },
+          "nested": {
+            "incarnation": "63686f79-8f3b-465d-bd02-4190932e12c1",
+            "revision": 2
+          }
+        },
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "request_id": "cfc1d573-7962-4ab6-b13d-54872446985d",
+        "protocol": 1,
+        "source": {
+          "task_generation": "ec990000-0000-4000-8000-000000000021",
+          "structure_revision": 2,
+          "task_id": "ec990000-0000-4000-8000-000000000020",
+          "project_id": null
+        },
+        "destination": {
+          "task_id": "ec990000-0000-4000-8000-000000000002",
+          "parent_incarnation": null,
+          "structure_revision": 2,
+          "index": 0,
+          "project_id": null,
+          "parent_key": null,
+          "task_generation": "ec990000-0000-4000-8000-000000000003"
+        },
+        "undo_of": "7843dc88-dbed-4c2a-820f-20a2a3a15316"
+      }
+    },
+    "7843dc88-dbed-4c2a-820f-20a2a3a15316": {
+      "reversed": true,
+      "result": {
+        "moved_count": 2,
+        "source_generation": "ec990000-0000-4000-8000-000000000003",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "undo_of": null,
+        "return_parent": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "destination_project": null,
+        "source_id": "ec990000-0000-4000-8000-000000000002",
+        "return_index": 0,
+        "replayed": false,
+        "node_key": "concept",
+        "state": "applied",
+        "destination_revision": 1,
+        "request_id": "7843dc88-dbed-4c2a-820f-20a2a3a15316",
+        "protocol": 1,
+        "source_revision": 1,
+        "action": "transfer",
+        "destination_generation": "ec990000-0000-4000-8000-000000000021",
+        "source_project": null,
+        "destination_id": "ec990000-0000-4000-8000-000000000020"
+      },
+      "inverse": {
+        "kind": "array",
+        "parent": null
+      },
+      "body": {
+        "node_key": "concept",
+        "action": "transfer",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "subtree_versions": {
+          "concept": {
+            "incarnation": "ec990000-0000-4000-8000-000000000005",
+            "revision": 1
+          },
+          "nested": {
+            "incarnation": "63686f79-8f3b-465d-bd02-4190932e12c1",
+            "revision": 1
+          }
+        },
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "request_id": "7843dc88-dbed-4c2a-820f-20a2a3a15316",
+        "protocol": 1,
+        "destination": {
+          "task_id": "ec990000-0000-4000-8000-000000000020",
+          "parent_incarnation": null,
+          "structure_revision": 1,
+          "index": 0,
+          "project_id": null,
+          "parent_key": null,
+          "task_generation": "ec990000-0000-4000-8000-000000000021"
+        },
+        "source": {
+          "structure_revision": 1,
+          "project_id": null,
+          "task_generation": "ec990000-0000-4000-8000-000000000003",
+          "task_id": "ec990000-0000-4000-8000-000000000002"
+        }
+      }
+    },
+    "644cb126-5c95-4eda-8856-8b70a84d9b48": {
+      "result": {
+        "moved_count": 2,
+        "destination_id": "ec990000-0000-4000-8000-000000000020",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "undo_of": null,
+        "return_parent": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "node_key": "concept",
+        "destination_project": null,
+        "return_index": 0,
+        "replayed": false,
+        "source_id": "ec990000-0000-4000-8000-000000000002",
+        "state": "applied",
+        "destination_revision": 3,
+        "request_id": "644cb126-5c95-4eda-8856-8b70a84d9b48",
+        "protocol": 1,
+        "source_revision": 3,
+        "action": "transfer",
+        "destination_generation": "ec990000-0000-4000-8000-000000000021",
+        "source_project": null,
+        "source_generation": "ec990000-0000-4000-8000-000000000003"
+      },
+      "inverse": {
+        "kind": "array",
+        "parent": null
+      },
+      "body": {
+        "node_key": "concept",
+        "action": "transfer",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "request_id": "644cb126-5c95-4eda-8856-8b70a84d9b48",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "subtree_versions": {
+          "nested": {
+            "revision": 3,
+            "incarnation": "63686f79-8f3b-465d-bd02-4190932e12c1"
+          },
+          "concept": {
+            "revision": 3,
+            "incarnation": "ec990000-0000-4000-8000-000000000005"
+          }
+        },
+        "protocol": 1,
+        "destination": {
+          "parent_incarnation": null,
+          "task_id": "ec990000-0000-4000-8000-000000000020",
+          "structure_revision": 3,
+          "index": 0,
+          "project_id": null,
+          "parent_key": null,
+          "task_generation": "ec990000-0000-4000-8000-000000000021"
+        },
+        "source": {
+          "structure_revision": 3,
+          "project_id": null,
+          "task_generation": "ec990000-0000-4000-8000-000000000003",
+          "task_id": "ec990000-0000-4000-8000-000000000002"
+        }
+      }
+    }
+  },
+  "transferRequests": 3,
+  "lost": false,
+  "writes": 0
+}

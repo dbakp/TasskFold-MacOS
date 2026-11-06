@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "platform": "mac",
+  "scope": "Full app and strict signature; runtime keyboard acceptance open",
+  "buildLogSHA256": "800597e77c6647f7c0fa87cea4ccae51eb062c1aa7df2326b4a282c4b38dfa45",
+  "debugDylibSHA256": "74ee075db2065b1cda6d3ea4387e16536c2a29ff7d14468523bcd7685a4d5d94",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": true,
+    "Taskfold/Core/ChildTaskStructureCommands.swift": true,
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": true,
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": true,
+    "Taskfold/Core/ChildTaskTransfers.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Views/ChildTaskFieldViews.swift": true,
+    "Taskfold/Views/ChildTaskStructureViews.swift": true,
+    "Taskfold/Views/SubtaskOrganizer.swift": true,
+    "Taskfold/Views/TaskInspector.swift": true,
+    "Taskfold/Workspace.swift": true
+  },
+  "productionGateEnablement": false
+}

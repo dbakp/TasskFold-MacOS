@@ -1,0 +1,163 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-personal-headings-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPersonalHeadingLostReplyPauseColdExactRetry" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPersonalHeadingMissingSupportBeforeAutosaveKeepsVisibleQueue" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing" -resultBundlePath /tmp/taskfold-personal-headings-mac.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-personal-headings-mac.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 20:13:39.165376+0100 TaskfoldUITests-Runner[35111:23393688] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 20:13:39.474.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 20:13:39.475.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-26 20:13:39.475.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPersonalHeadingLostReplyPauseColdExactRetry]' started.
+    t =     0.00s Start Test at 2026-10-26 20:13:39.476
+    t =     0.57s Set Up
+    t =     0.60s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.60s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 20:13:40.489 xcodebuild[35107:23393448] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:13:40.489 xcodebuild[35107:23393448] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.72s         Wait for accessibility to load
+    t =     1.98s         Setting up automation session
+    t =     2.06s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.52s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.54s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.00s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.54s Waiting 15.0s for "taskTitle" Any to exist
+    t =     4.58s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" Any`
+    t =     4.58s         Checking existence of `"taskTitle" Any`
+    t =     5.03s Waiting 8.0s for "taskKindPicker" Any to exist
+    t =     6.07s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =     6.07s         Checking existence of `"taskKindPicker" Any`
+    t =     6.23s Click "taskKindPicker" Any
+    t =     6.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.23s     Find the "taskKindPicker" Any
+    t =     6.34s     Check for interrupting elements affecting "taskKindPicker" PopUpButton
+    t =     6.38s     Synthesize event
+    t =     6.91s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.93s Waiting 5.0s for "Heading" MenuItem to exist
+    t =     7.98s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" MenuItem`
+    t =     7.98s         Checking existence of `"Heading" MenuItem`
+    t =     8.10s Click "Heading" MenuItem
+    t =     8.10s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.12s     Find the "Heading" MenuItem
+    t =     8.21s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     8.22s     Synthesize event
+    t =     8.22s         Checking existence of `"menuAction:" MenuItem`
+    t =     8.29s         Hover menu item 'Heading'
+    t =     8.29s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.30s             Find the "menuAction:" MenuItem
+    t =     8.38s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     8.38s             Synthesize event
+    t =     8.64s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.66s         Find the "menuAction:" MenuItem
+    t =     9.69s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+/tmp/taskfold-personal-headings-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4987: error: -[TaskfoldUITests.SharedHeadingNativeTests testPersonalHeadingLostReplyPauseColdExactRetry] : XCTAssertEqual failed: ("XCTWaiterResult(rawValue: 2)") is not equal to ("XCTWaiterResult(rawValue: 1)")
+    t =    30.05s Tear Down
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPersonalHeadingLostReplyPauseColdExactRetry]' failed (31.548 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPersonalHeadingMissingSupportBeforeAutosaveKeepsVisibleQueue]' started.
+    t =     0.00s Start Test at 2026-10-26 20:14:11.028
+    t =     0.62s Set Up
+    t =     0.63s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.63s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.63s         Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:35133
+2026-10-26 20:14:12.705 xcodebuild[35107:23393448] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:14:12.705 xcodebuild[35107:23393448] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.04s         Wait for accessibility to load
+    t =     3.29s         Setting up automation session
+    t =     3.34s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.56s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.58s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.76s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.24s Waiting 15.0s for "taskTitle" Any to exist
+    t =     6.27s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" Any`
+    t =     6.27s         Checking existence of `"taskTitle" Any`
+    t =     6.80s Waiting 8.0s for "taskKindPicker" Any to exist
+    t =     7.82s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =     7.82s         Checking existence of `"taskKindPicker" Any`
+    t =     7.98s Click "taskKindPicker" Any
+    t =     7.98s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.00s     Find the "taskKindPicker" Any
+    t =     8.13s     Check for interrupting elements affecting "taskKindPicker" PopUpButton
+    t =     8.18s     Synthesize event
+    t =     8.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.85s Waiting 5.0s for "Heading" MenuItem to exist
+    t =     9.89s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" MenuItem`
+    t =     9.89s         Checking existence of `"Heading" MenuItem`
+    t =    10.03s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:35202
+2026-10-26 20:14:22.121391+0100 TaskfoldUITests-Runner[35111:23393688] [Default] Exception attempting to serialize sanitized error of issue. All userInfo with be discarded except localized description: NSInvalidUnarchiveOperationException: The data couldn’t be read because it isn’t in the correct format.
+/tmp/taskfold-personal-headings-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4971: error: -[TaskfoldUITests.SharedHeadingNativeTests testPersonalHeadingMissingSupportBeforeAutosaveKeepsVisibleQueue] : failed: caught error: "Error Domain=NSCocoaErrorDomain Code=513 "You don’t have permission to save the file “TaskfoldPersonalHeadingNativeFixture-workflowteststeameditbridge.json” in the folder “Application Support”." UserInfo={NSFilePath=/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/TaskfoldPersonalHeadingNativeFixture-workflowteststeameditbridge.json, NSURL=file:///Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application%20Support/TaskfoldPersonalHeadingNativeFixture-workflowteststeameditbridge.json, NSUnderlyingError=0x9c6c902a0 {Error Domain=NSPOSIXErrorDomain Code=1 "Operation not permitted"}}"
+    t =    11.10s Tear Down
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPersonalHeadingMissingSupportBeforeAutosaveKeepsVisibleQueue]' failed (11.563 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing]' started.
+    t =     0.00s Start Test at 2026-10-26 20:14:22.591
+    t =     0.47s Set Up
+    t =     0.47s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.48s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 20:14:23.076 xcodebuild[35107:23393448] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:14:23.077 xcodebuild[35107:23393448] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.23s         Wait for accessibility to load
+    t =     1.47s         Setting up automation session
+    t =     1.49s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.57s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.58s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.60s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.18s Waiting 15.0s for "taskTitle" Any to exist
+    t =     3.28s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" Any`
+    t =     3.28s         Checking existence of `"taskTitle" Any`
+    t =     3.63s Checking existence of `"taskKindPicker" Any`
+    t =     3.76s Checking existence of `"taskTitle" TextField`
+    t =     3.88s Click "taskTitle" TextField
+    t =     3.88s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.90s     Find the "taskTitle" TextField
+    t =     3.97s     Check for interrupting elements affecting "taskTitle" TextField
+    t =     4.01s     Synthesize event
+    t =     4.77s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.80s Type 'a' key with modifiers '⌘' (0x10)
+    t =     4.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.81s     Find the "taskTitle" TextField
+    t =     5.08s     Check for interrupting elements affecting "taskTitle" TextField
+    t =     5.27s     Synthesize event
+2026-10-26 20:14:27.901896+0100 TaskfoldUITests-Runner[35111:23393688] [DisplayManager] Found 1 displays containing rect (685.0, 373.0, 686.0, 22.0): [1]
+    t =     5.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.62s Type 'Personal heading p...' into "taskTitle" TextField
+    t =     5.62s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.64s     Find the "taskTitle" TextField
+<unknown>:0: warning: -[TaskfoldUITests.SharedHeadingNativeTests testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+    t =     5.85s     Check for interrupting elements affecting "taskTitle" TextField
+    t =     5.91s     Synthesize event
+2026-10-26 20:14:28.540677+0100 TaskfoldUITests-Runner[35111:23393688] [DisplayManager] Found 1 displays containing rect (685.0, 373.0, 686.0, 22.0): [1]
+    t =    10.17s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.18s Type '⇥' key (XCUIKeyboardKeyTab) with no modifiers
+    t =    10.18s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.18s     Find the "taskTitle" TextField
+    t =    10.38s     Check for interrupting elements affecting "taskTitle" TextField
+    t =    10.48s     Synthesize event
+2026-10-26 20:14:33.067723+0100 TaskfoldUITests-Runner[35111:23393688] [DisplayManager] Found 1 displays containing rect (685.0, 373.0, 686.0, 22.0): [1]
+    t =    10.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.84s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:35226
+    t =    12.89s Tear Down
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing]' passed (13.450 seconds).
+Test Suite 'SharedHeadingNativeTests' failed at 2026-10-26 20:14:36.040.
+	 Executed 3 tests, with 2 failures (1 unexpected) in 56.562 (56.565) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 20:14:36.041.
+	 Executed 3 tests, with 2 failures (1 unexpected) in 56.562 (56.566) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 20:14:36.041.
+	 Executed 3 tests, with 2 failures (1 unexpected) in 56.562 (56.568) seconds
+2026-10-26 20:14:36.367 xcodebuild[35107:23393448] [MT] IDETestOperationsObserverDebug: 58.660 elapsed -- Testing started completed.
+2026-10-26 20:14:36.368 xcodebuild[35107:23393448] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 20:14:36.368 xcodebuild[35107:23393448] [MT] IDETestOperationsObserverDebug: 58.660 sec, +58.660 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-personal-headings-mac.xcresult
+
+Failing tests:
+	SharedHeadingNativeTests.testPersonalHeadingLostReplyPauseColdExactRetry()
+	SharedHeadingNativeTests.testPersonalHeadingMissingSupportBeforeAutosaveKeepsVisibleQueue()
+
+** TEST EXECUTE FAILED **
+
+Testing started

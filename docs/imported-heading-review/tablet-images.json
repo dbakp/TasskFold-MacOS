@@ -1,0 +1,32 @@
+[
+  {
+    "file": "tablet-child-action.png",
+    "test": "TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn()",
+    "title": "Largest text iPad ordinary child remains actionable_0_56AA2416-42F7-4E4C-AA96-0E51A53A9014.png"
+  },
+  {
+    "file": "tablet-edited-choice.png",
+    "test": "TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn()",
+    "title": "Largest text explicit marker choice and preserved-work explanation_0_02AEFF6C-CBE3-440D-927A-9B773C0A9844.png"
+  },
+  {
+    "file": "tablet-visible-switch.png",
+    "test": "TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn()",
+    "title": "Largest text marker switch fully visible before activation_0_128289AF-1BB9-4B54-9DE7-FF9369CB511D.png"
+  },
+  {
+    "file": "tablet-current-wording.png",
+    "test": "TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn()",
+    "title": "Largest text current edited heading wording_0_FE3E3685-D252-4905-ACCE-8BAB3F0C0B24.png"
+  },
+  {
+    "file": "tablet-source.png",
+    "test": "TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn()",
+    "title": "Largest text imported heading source_0_97074302-54CB-4AE9-ACD0-8792887A2CFD.png"
+  },
+  {
+    "file": "tablet-review.png",
+    "test": "TaskfoldUITests/testImportedHeadingReviewCancelApplySaveAndColdReturn()",
+    "title": "Reviewed older import heading conversion_0_580D7D81-0751-4E82-8C00-A6F948372824.png"
+  }
+]

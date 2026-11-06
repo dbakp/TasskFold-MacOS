@@ -1,0 +1,12 @@
+{
+  "appSHA256": "eed7e85c4e47bac56182441bf00cffa9936b8a29b170c3010492fcb3ef76bb54",
+  "saveSendConfirmed": true,
+  "writes": 1,
+  "requests": 1,
+  "childMetadataStructuralDecimalReadback": true,
+  "unicodeUTF8KeySpellings": 2,
+  "quitVerified": true,
+  "coldReturnConfirmed": true,
+  "coldChildMetadataVerified": true,
+  "finalQuitVerified": true
+}

@@ -1,0 +1,188 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native iPhone Simulator Month date selection, Today return, collapsed day navigation and exact-task route; largest-text Year regression.",
+  "productChanges": [
+    "Accessibility Month view uses full-width wrapping weekday/date rows and task counts instead of clipping a seven-column grid. Vertical row scrolling keeps Month expanded.",
+    "Month opens at the selected date. Today reveals its date even when already selected; a stable toolbar identifier supports the native check.",
+    "Normal Month cells have a 48-point minimum height, with the pager and scaled weekday header sized to fit all six weeks.",
+    "Accessibility period title wraps above period navigation. The collapsed calendar shows a measured full date plus Previous day/Next day controls instead of seven clipped dates.",
+    "Selected-day summaries wrap, use a shorter date and scaled caption at accessibility sizes; the empty summary says No tasks so the floating add button does not obscure Nothing planned."
+  ],
+  "build": "Build-for-testing v7 succeeded. Genuine Apple Development signing receipt ios-month-route-signing-v4.json; signing checks enabled.",
+  "accepted": [
+    "v3 normal/light Month: first and last date targets >=44x44, selected traits, Today return, exact task title, Cancel and normal relaunch retaining both open Today tasks.",
+    "v4 accessibility XXXL/dark Month: first and last full rows reachable, selected, >=44x44 and fully inside the viewport; empty summary No tasks; Today returns the entire row without extra scrolling after scrolling away while today remains selected; exact count 2 tasks.",
+    "v4 collapsed largest: full selected-date accessibility label, actual Previous day then Next day, original date return, exact original task title, Cancel/relaunch and retained open tasks.",
+    "v3 accessibility XXXL/dark Year: all twelve full month rows reachable inside the scroll viewport, selected current month opens Month, today selected, exact task route and retained open tasks after relaunch."
+  ],
+  "acceptanceBuildLimits": "v3 normal Month and Year ran on build v6. Final build v7 changes only the zero-task accessibility summary wording and adds its assertion; v4 re-executes the affected largest Month case. Normal summary text and Year tested two-task summary are unchanged.",
+  "intermediateResults": [
+    "v1 largest baseline fails its first target-height assertion: an empty date is 38 points high. Its inspected capture shows severely clipped two-digit dates, weekday labels and month/year title.",
+    "v2: normal Month passes, largest Month return-to-today and Year March containment fail. These remain failed evidence; captures alone do not override failed hit/viewport checks.",
+    "v3: all three pass after selected-date/Today restoration, shorter summary, and slow centered drags replacing edge gestures. The selected empty-day capture still shows Nothing planned partly obscured by the floating add button.",
+    "v4: the affected largest Month case passes after No tasks wording and a new native summary assertion."
+  ],
+  "preservation": {
+    "entireCacheExactlyEqual": true,
+    "allRawTablesExactlyEqual": true,
+    "sharedTableCount": 14,
+    "allSharedTablesExactlyEqual": true,
+    "pendingBefore": 0,
+    "pendingAfter": 0,
+    "pendingExactlyEqual": true,
+    "localMode": false
+  },
+  "localFixture": {
+    "taskCount": 3,
+    "originalIDsTitlesEstimatesAndOpenStatesPreserved": true,
+    "pending": 0
+  },
+  "runs": [
+    {
+      "resultBundle": "ios-month-route-native-v1.xcresult",
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "ios-month-route-native-v2.xcresult",
+      "passedTests": 1,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "ios-month-route-native-v3.xcresult",
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "ios-month-route-native-v4.xcresult",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    }
+  ],
+  "limits": [
+    "iPhone Simulator only; no new iPad, physical device, Mac runtime or spoken VoiceOver acceptance.",
+    "The Month walk selects first, last and today; it does not individually render/audit every date or every locale.",
+    "Some immediately-after-selection captures include in-progress text transitions. The stable v3 collapsed-date capture is also retained; its layout is unchanged by the final zero-task caption edit.",
+    "Current normal Month and largest selected-date/Today/collapsed captures are visually inspected. Current Year October is visually inspected; all twelve Year rows have native hit/viewport checks.",
+    "Full Day/3 days/5 days/Week large-text layouts and broader task-list usability remain open.",
+    "The prior unfiltered capture/editor accessibility audit remains failing with two normal and two largest clipping findings; it was not rerun unchanged.",
+    "Console Apple WebKit/WebCore duplicate-class and debugger-version warnings remain; structured runtimeWarnings are retained below.",
+    "No persistence, sync, widget or release contract changed. Mac receives evidence/docs only; its independent desktop calendar implementation is unchanged."
+  ],
+  "storage": {
+    "duplicateExportBytesPruned": 12319248,
+    "retained": "Original xcresults, logs, summaries, signing receipts, manifests, scoped captures and the two in-flight v2 diagnostic screenshots"
+  },
+  "captures": [
+    {
+      "run": 1,
+      "configuration": "largest",
+      "caption": "Month calendar before date selection",
+      "file": "ios-month-route/v1-largest-month-calendar-before-date-selection.png",
+      "sha256": "0f0570f92a907a439c9d34b8aa732c4d57b8b8e0672f68d0e48b4ca538698715"
+    },
+    {
+      "run": 3,
+      "configuration": "normal",
+      "caption": "Month route opens exact original task",
+      "file": "ios-month-route/v3-normal-month-route-opens-exact-original-task.png",
+      "sha256": "897a3f8dc0cb46e8f09373c6a86f5efa7b7d8a36b3340659f00e21108983eda0"
+    },
+    {
+      "run": 3,
+      "configuration": "normal",
+      "caption": "Month Today returns to the selected date",
+      "file": "ios-month-route/v3-normal-month-today-returns-to-the-selected-date.png",
+      "sha256": "a7e7372b4fee752c713f1748cfad2a4be2cb26f57d9f0ca91d5c1d71e94e04be"
+    },
+    {
+      "run": 3,
+      "configuration": "normal",
+      "caption": "Month calendar before date selection",
+      "file": "ios-month-route/v3-normal-month-calendar-before-date-selection.png",
+      "sha256": "c9c8220d299660da697a4a7ed6bf71ac7a11b61eed103b354ec7ac40f9532966"
+    },
+    {
+      "run": 3,
+      "configuration": "largest",
+      "caption": "Month collapsed date remains readable and navigable",
+      "file": "ios-month-route/v3-largest-month-collapsed-date-remains-readable-and-navigable.png",
+      "sha256": "b0ca08b1a6805b97aa234b0ab3713d3ef0797f9af1cfb694d7e02f3ca696ef71"
+    },
+    {
+      "run": 3,
+      "configuration": "largest",
+      "caption": "Month selected date 2026-10-31",
+      "file": "ios-month-route/v3-largest-month-selected-date-2026-10-31.png",
+      "sha256": "503b5ec6ae8314fe3d0aa77464d4d32e74327ee731cb77691fbaaa9851758381"
+    },
+    {
+      "run": 3,
+      "configuration": "year-largest",
+      "caption": "Year calendar current month fully reachable",
+      "file": "ios-month-route/v3-year-largest-year-calendar-current-month-fully-reachable.png",
+      "sha256": "1c503a0f789163771a1429ec91ef90e1ddd53eb66047f9c7f7efbbc557223aa3"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Month route opens exact original task",
+      "file": "ios-month-route/v4-largest-month-route-opens-exact-original-task.png",
+      "sha256": "fc712e877b7bcb32090258bc324a5b314509720d5dff3e39047cba8663d69218"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Month collapsed date remains readable and navigable",
+      "file": "ios-month-route/v4-largest-month-collapsed-date-remains-readable-and-navigable.png",
+      "sha256": "a9b51aec0d581b612e5fb5298e9bb0e7378f0bac3d8c38c2916fc5b0447900f7"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Month Today returns to the selected date",
+      "file": "ios-month-route/v4-largest-month-today-returns-to-the-selected-date.png",
+      "sha256": "0349be18773180a158643c99df3977a1ab4b982104fa906741cc255b510b8337"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Month selected date 2026-10-31",
+      "file": "ios-month-route/v4-largest-month-selected-date-2026-10-31.png",
+      "sha256": "caa0687f6c2aadb6365d1c1169ed326f2edacd34faf4e74d574f30c0e17fd4e8"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Month selected date 2026-10-01",
+      "file": "ios-month-route/v4-largest-month-selected-date-2026-10-01.png",
+      "sha256": "3521dbd1413736160b9a91117b1f61e63cffb337cbf02701816ddc09e97b1f10"
+    },
+    {
+      "run": 4,
+      "configuration": "largest",
+      "caption": "Month calendar before date selection",
+      "file": "ios-month-route/v4-largest-month-calendar-before-date-selection.png",
+      "sha256": "6096b2cf9bb844511f25224a0283eba16dd32b581dfb09a84520fad746359f32"
+    }
+  ],
+  "sourceSHA256": {
+    "Taskfold/Views/CalendarView.swift": "6c18284002db02bf7f8728677d7c8c27b3fb68348316afb216c6fd4563ec5d96",
+    "TaskfoldUITests/TaskfoldUITests.swift": "6ee7a5cfc15257ce79e623d13628fb0da4d0fed4efe4c5f19a7788a01de7f394"
+  },
+  "cloudReturn": {
+    "resultBundle": "ios-month-route-restore-v2.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  }
+}

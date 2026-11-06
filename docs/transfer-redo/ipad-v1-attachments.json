@@ -1,0 +1,71 @@
+[
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "C7611F6E-CD14-426B-ADE6-4CA30E5EF60D.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Move Undo Redo Undo preserves the branch after relaunch_0_F135FC78-355E-45BB-9BAF-623F139A0A86.png",
+        "timestamp": 1793468036.1
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "3EAA13B9-5927-446E-8B5E-B4713A188131.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Redo moves the same branch with a fresh request_0_0F931A80-9BF1-463B-AE02-F25B1E5B2EB5.png",
+        "timestamp": 1793467956.75
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "26656079-3D96-4D65-B9C5-9E52B5FF733B.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Saved Undo offers readable Redo at largest text_0_44F86E07-27CF-4E8D-A487-1D86EA60DBEA.png",
+        "timestamp": 1793467950.854
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "412256B5-05B4-48FF-8665-C6DD87D31C53.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Certified Undo restores original branch after relaunch_0_65EC6E87-8901-48AB-8D0D-E97690AFD4D3.png",
+        "timestamp": 1793467923.538
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "AEAB7336-590A-4AF6-8D16-FE02DCD956BE.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Largest text Undo action remains readable and reachable_0_1B253193-E312-40D8-9574-2E5478C260F3.png",
+        "timestamp": 1793467886.267
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "9736C530-7CE8-4433-BA19-453A035A0504.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Transfer confirmation remains open after source row disappears_0_5B9AD5AE-8003-4D00-9B49-4B1E4458AEE8.png",
+        "timestamp": 1793467883.95
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "04EC1081-DD0E-4410-8C6D-43DD8B91F5F2.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Subtask transfer review preserves nested work_0_FEEE29E3-8A16-49AD-B90F-F228B9EC7B61.png",
+        "timestamp": 1793467874.948
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testChildTransferNativeMoveColdUndoAndReturn()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testChildTransferNativeMoveColdUndoAndReturn"
+  }
+]

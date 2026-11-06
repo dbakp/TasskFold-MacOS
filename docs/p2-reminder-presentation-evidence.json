@@ -1,0 +1,176 @@
+{
+  "feature": "Opt-in local Time Sensitive reminder presentation",
+  "date": "2026-10-21",
+  "scope": "Rank 5 progress; neither full reminder/platform delivery acceptance nor remaining Px completion",
+  "core": {
+    "ios": {
+      "reported": 1055,
+      "skipped": 13,
+      "failed": 0,
+      "passed": 1042,
+      "newPresentationCases": 12,
+      "log": "ios-reminder-presentation-full-core-final.log",
+      "logSHA256": "f6790af46348cf827347b4d296ef1e7147c7d0efe4dccc1b94675de852002bad"
+    },
+    "mac": {
+      "reported": 1087,
+      "skipped": 33,
+      "failed": 0,
+      "passed": 1054,
+      "newPresentationCases": 12,
+      "log": "mac-reminder-presentation-full-core-final.log",
+      "logSHA256": "1b3ad5505010bc239b931a8703103fe630209c774b003b3d53c1c41b9cff6951"
+    }
+  },
+  "native": {
+    "phone": {
+      "resultBundle": "ios-reminder-presentation-phone-final.xcresult",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [],
+      "startTime": 1792606081.601,
+      "finishTime": 1792606231.437,
+      "strictVerifier": "Passed; two actual cases, zero runtime warnings"
+    },
+    "tablet": {
+      "resultBundle": "ios-reminder-presentation-tablet.xcresult",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [],
+      "startTime": 1792606249.297,
+      "finishTime": 1792606382.103,
+      "strictVerifier": "Passed; two actual cases, zero runtime warnings"
+    },
+    "cases": [
+      "TaskfoldUITests/testTimeSensitiveReminderReviewCancelSaveAndDeviceChoice",
+      "TaskfoldUITests/testTimeSensitivePresentationLargestTextDarkCancel"
+    ],
+    "proved": [
+      "explicit default-off reminder choice",
+      "Cancel leaves task data unchanged",
+      "Done waits for task Save",
+      "saved version-4 wrapper, version-1 relative base, exact offset and local channel",
+      "normal relaunch preserves authored choice",
+      "device allowance toggles do not edit tasks; original allowance restored",
+      "turning presentation off saves original normal version and clears wrapper fields",
+      "largest-text dark control/Cancel reachable, task tables unchanged"
+    ],
+    "limits": [
+      "No genuine Focus interruption, notification delivery/action UI or system-setting recovery acceptance",
+      "Largest-text capture shows normal scroll crop, not a complete footer traversal",
+      "Phone predates a device-footer copy correction from you mark to marked; tablet and current Mac compilation contain final copy"
+    ]
+  },
+  "compatibility": {
+    "ios": {
+      "revision": "6bec6a53e5bfe1f99d62d71ffc90ce7c994e9659",
+      "oldReminderSourceSHA256": "a8bd8e420287eaddff5b6448b897cd72c5918af011500e2ec9faa62d99396e8a",
+      "fixtureSHA256": "ab8160a0f90b9d183ecc3cff50a1372feca1657a9cd3a61868c8930b73a5e2e2",
+      "passed": 1,
+      "checks": [
+        "unsupported rather than planned-time reinterpretation",
+        "title/planned-toggle edits preserve opaque presentation",
+        "exact saved record roundtrip",
+        "recurring successor retains opaque settings",
+        "no substitute notifications"
+      ],
+      "scope": "This selected previous native Core reader only; no claim all older versions enforce new behavior."
+    },
+    "mac": {
+      "revision": "b6044a6bcee0bb20b5a56f73e6549a5f8097befb",
+      "oldReminderSourceSHA256": "a8bd8e420287eaddff5b6448b897cd72c5918af011500e2ec9faa62d99396e8a",
+      "fixtureSHA256": "ab8160a0f90b9d183ecc3cff50a1372feca1657a9cd3a61868c8930b73a5e2e2",
+      "passed": 1,
+      "checks": [
+        "unsupported rather than planned-time reinterpretation",
+        "title/planned-toggle edits preserve opaque presentation",
+        "exact saved record roundtrip",
+        "recurring successor retains opaque settings",
+        "no substitute notifications"
+      ],
+      "scope": "This selected previous native Core reader only; no claim all older versions enforce new behavior."
+    }
+  },
+  "buildIntegrity": {
+    "simulatorMachOTimeSensitiveCapability": true,
+    "signatureVerified": true,
+    "scope": "Simulator linker entitlements, not device provisioning or actual Focus-interruption acceptance",
+    "appBinarySHA256": "eeb64b0c961017d0d458300165a74dd0b85d30c5224ffcf88c565f9549f70007"
+  },
+  "mac": {
+    "currentSourceCompile": "mac-reminder-presentation-current-source-compile.log",
+    "codeSigningAllowed": false,
+    "compileSucceeded": true,
+    "signedAttempt": "mac-reminder-presentation-build.log",
+    "signedAttemptOutcome": "Blocked: no matching Mac development provisioning profile for isolated bundle and new capability. No provisioning or account changes made.",
+    "componentManifest": {
+      "sourceSHA256": {
+        "Taskfold/Core/Reminders.swift": "cab6cc218967022c5f6a88fc1fdf6b2971eeb7f0e15b0edd571ce3dfa4a8f4c8",
+        "Taskfold/Views/ReminderEditor.swift": "2f6db1a9fb364241ac2c7a221ad6b45039bb5d465761732401fb13f596703d5c"
+      },
+      "images": {
+        "travel-dark-bottom.png": "b3f6cb5ca6bf07eade98d0ddc95ab89733b47f4713eb4be3ecdf27bee74fa511",
+        "travel-dark-top.png": "4461643b6eeb3ff477edea45b47be0cab1f91ec37961cd37198a591882e97105",
+        "travel-light-bottom.png": "ff656991b2577124be68f483bdb3527f58e5b1ea01c701b13a3ade6bd1de6250",
+        "travel-light-top.png": "781dfaaaafc87d3740eee0fd86d22833cbf03fcba1c81e2df50d620121f59870",
+        "zone-picker-dark-top.png": "99da04c9ed948ac0212cdc269f2b3aff11ae9f95fb523b2190dcab7110098c62",
+        "zone-picker-light-top.png": "c4b5d852c35d1fd9464fc33d2c07d70dce03e182a45fc7fd726b5cf5ba7c5595"
+      },
+      "scope": "Production Mac editor/picker bodies with read-only synthetic state, tested owned Core, offscreen light/dark rendering. Picker query seeded by fixture-only extension. Window chrome/native interaction/VoiceOver/notification delivery not accepted by these components."
+    },
+    "limits": "Offscreen production components, not app keyboard/VoiceOver interaction or signed capability delivery"
+  },
+  "initialFailures": [
+    {
+      "artifact": "ios-reminder-presentation-phone.xcresult",
+      "outcome": "Both tests failed: surrounding SwiftUI switch row was tapped, native control remained off. Corrected tests to tap the nested native switch. No application behavior was changed to hide this failure."
+    }
+  ],
+  "runtime": {
+    "mainTaskfoldProcesses": 0,
+    "realTasksAccountsPermissionsOrBackendMutated": false,
+    "syntheticSimulatorDataOnly": true,
+    "persistentPowerSettingsChanged": false
+  },
+  "open": [
+    "Actual signed capability-enabled installation and Focus interruption on each platform",
+    "Disabled/enabled OS Time Sensitive setting recovery and wider background lifecycle through actual system delivery",
+    "Mac native edit/keyboard/VoiceOver acceptance",
+    "Paired cloud/offline layout/accessibility acceptance beyond scoped tests",
+    "Holiday source/region/update/date-boundary/count policy; location; floating-device clock; remainder of Px",
+    "User-deferred remote delivery, older-client rollout, distribution and genuine calendar OAuth/provider acceptance"
+  ],
+  "repository": "TasskFold-MacOS",
+  "sourceSHA256": {
+    "Taskfold/Core/Reminders.swift": "cab6cc218967022c5f6a88fc1fdf6b2971eeb7f0e15b0edd571ce3dfa4a8f4c8",
+    "Taskfold/Core/Store.swift": "51929cc9ac38622aee4427f32faf39d0457ec848be7f615e15c72c84f87db4f6",
+    "Taskfold/Views/ReminderEditor.swift": "2f6db1a9fb364241ac2c7a221ad6b45039bb5d465761732401fb13f596703d5c",
+    "Taskfold/Taskfold.entitlements": "b0c1a6c8696fa44a309696b2ddd3eddc555f3914060735674942eed707a1f18f",
+    "TaskfoldTests/ReminderPresentationTests.swift": "3cf30561834e434a423608eaa157a4e8d42aa3ca34796aece173a66118e19949",
+    "Scripts/test_presentation_old_reader.py": "2a3a5bcecd53b7f316e93534da217c6ae4cf2a79ec372e4be02827393c4cb6e1",
+    "Scripts/fixtures/OldPresentationReaderTests.swift": "ab8160a0f90b9d183ecc3cff50a1372feca1657a9cd3a61868c8930b73a5e2e2"
+  },
+  "recordedImages": {
+    "docs/reminder-presentation/mac-dark-editor.png": "4461643b6eeb3ff477edea45b47be0cab1f91ec37961cd37198a591882e97105",
+    "docs/reminder-presentation/mac-light-editor.png": "781dfaaaafc87d3740eee0fd86d22833cbf03fcba1c81e2df50d620121f59870"
+  },
+  "cleanup": {
+    "temporaryKeepAwakeStopped": true,
+    "mainTaskfoldApps": 0,
+    "removed": [
+      {
+        "ownedArtifact": "tmp/mac-reminder-presentation-previews",
+        "bytes": 758523
+      },
+      {
+        "ownedArtifact": "BuildCache/mac-project-workflows-native-v2/Build/Products/Debug/Taskfold.app",
+        "bytes": 46602997
+      }
+    ],
+    "kept": "Current simulator/debug product, current proof bundles/logs, final component previews and device data. No real workspace or account changes."
+  }
+}

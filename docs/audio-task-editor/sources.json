@@ -1,0 +1,10 @@
+{
+  "Taskfold/Core/AudioComments.swift": "aafcf8d8acc9cc11a3234a55d67670c77c0d05e3f53431bdd85117e39e49fca4",
+  "Taskfold/Core/AudioCommentVault.swift": "7393085467a2f7fa4fa83d338793e9920b53149ac18384dacb7389a893f04b85",
+  "Taskfold/AudioCommentCapture.swift": "0a4e7ee568d9d8e4abea24c1a382f6e07622f5a8a1ce0af2eb1ff70b5afe4c27",
+  "Taskfold/AudioCommentNativeFixture.swift": "b2acf0926db9cda9e48eaed7d803b98d55b896cdefcfe6cc04cf1f2d81d9ca26",
+  "Taskfold/Views/AudioCommentDraftView.swift": "5e3091f17354ead6710178c26f14618140a82b5b7bac8cbb099cf84dd3173217",
+  "Taskfold/Views/TaskInspector.swift": "39409813e54a94e2b5b251217f2efa1fd5a33d1a62bd50a8d6941e21d30155a4",
+  "TaskfoldTests/AudioCommentTaskAdmissionTests.swift": "083ebc143d67107ceac9fb388ff0efe2902670343de9dfc74ebd8ef3ee0c4317",
+  "Scripts/fixtures/AudioCommentCaptureProof.swift": "de8e52bd6c50c4a455a02abe9bcb2532a789097f6dcc683a77b6b1140f0be236"
+}

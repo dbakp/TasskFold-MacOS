@@ -1,0 +1,293 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /tmp/taskfold-owner-review-mac-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -derivedDataPath /tmp/taskfold-workflow-native-mac-build -destination platform=macOS -parallel-testing-enabled NO -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 180 -maximum-test-execution-time-allowance 240 -resultBundlePath /tmp/taskfold-assignment-native-mac-v6.xcresult "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testProjectChangePreservesExactChecklistThroughSaveAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource" test-without-building
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/tmp/taskfold-assignment-native-mac-v6.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00006000-000C59161EC3801E, name:My Mac }
+2026-11-01 20:32:58.652745+0100 TaskfoldUITests-Runner[97574:40521366] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-11-01 20:32:58.765.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-11-01 20:32:58.765.
+Test Suite 'TaskfoldMacUITests' started at 2026-11-01 20:32:58.765.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testProjectChangePreservesExactChecklistThroughSaveAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-11-01 20:32:58.766
+    t =     0.12s Set Up
+    t =     0.13s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.14s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-11-01 20:32:58.961 xcodebuild[97558:40521108] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-01 20:32:58.961 xcodebuild[97558:40521108] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.67s         Wait for accessibility to load
+    t =     1.78s         Setting up automation session
+    t =     1.80s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.88s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.89s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.90s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.72s Waiting 15.0s for "openTemplates" Button to exist
+    t =     3.75s     Checking `Expect predicate `existsNoRetry == 1` for object "openTemplates" Button`
+    t =     3.76s         Checking existence of `"openTemplates" Button`
+    t =     4.06s Waiting 10.0s for "Today" StaticText to exist
+    t =     5.10s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" StaticText`
+    t =     5.10s         Checking existence of `"Today" StaticText`
+    t =     5.11s Click "Today" StaticText
+    t =     5.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.12s     Find the "Today" StaticText
+    t =     5.13s     Check for interrupting elements affecting "Today" StaticText
+    t =     5.17s     Synthesize event
+    t =     5.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.69s Waiting 12.0s for "title-a5110000-0000-4000-8000-000000000001" StaticText to exist
+    t =     6.73s     Checking `Expect predicate `existsNoRetry == 1` for object "title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =     6.73s         Checking existence of `"title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =     6.84s Click "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =     6.84s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.85s     Find the "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =     6.92s     Check for interrupting elements affecting "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =     6.96s     Synthesize event
+    t =     7.88s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.10s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =     8.10s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.12s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =     8.38s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =     8.38s     Synthesize event
+2026-11-01 20:33:07.287274+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 20:33:07.290446+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =     9.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.30s Waiting 8.0s for "taskTitle" TextField to exist
+    t =    10.34s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    10.34s         Checking existence of `"taskTitle" TextField`
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testProjectChangePreservesExactChecklistThroughSaveAndColdReturn] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+    t =    10.58s Added attachment named 'Original project change source'
+    t =    10.58s Checking existence of `ScrollView (First Match)`
+    t =    10.66s Find the "taskProjectPicker" PopUpButton
+    t =    10.81s Find the "taskProjectPicker" PopUpButton
+    t =    10.95s Find the "taskProjectPicker" PopUpButton
+    t =    11.11s Find the "taskProjectPicker" PopUpButton
+    t =    11.26s Find the "taskProjectPicker" PopUpButton
+    t =    11.40s Find the "taskProjectPicker" PopUpButton
+    t =    11.67s Find the "taskProjectPicker" PopUpButton
+    t =    11.82s Find the "taskProjectPicker" PopUpButton
+    t =    11.97s Find the "taskProjectPicker" PopUpButton
+    t =    12.12s Find the "taskProjectPicker" PopUpButton
+    t =    12.26s Find the "taskProjectPicker" PopUpButton
+    t =    12.40s Find the "taskProjectPicker" PopUpButton
+    t =    12.56s Find the "taskProjectPicker" PopUpButton
+    t =    12.71s Click "taskProjectPicker" PopUpButton
+    t =    12.71s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.71s     Find the "taskProjectPicker" PopUpButton
+    t =    12.84s     Check for interrupting elements affecting "taskProjectPicker" PopUpButton
+    t =    12.86s     Synthesize event
+2026-11-01 20:33:11.625938+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    13.35s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.36s Waiting 8.0s for "Assignment destination" MenuItem to exist
+    t =    14.40s     Checking `Expect predicate `existsNoRetry == 1` for object "Assignment destination" MenuItem`
+    t =    14.40s         Checking existence of `"Assignment destination" MenuItem`
+    t =    14.54s Click "Assignment destination" MenuItem
+    t =    14.54s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.55s     Find the "Assignment destination" MenuItem
+    t =    14.69s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    14.69s     Synthesize event
+2026-11-01 20:33:13.462676+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    14.70s         Checking existence of `"menuAction:" MenuItem`
+    t =    14.79s         Hover menu item 'Assignment destination'
+    t =    14.79s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.80s             Find the "menuAction:" MenuItem
+    t =    14.91s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    14.91s             Synthesize event
+2026-11-01 20:33:13.678642+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    15.17s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.18s         Find the "menuAction:" MenuItem
+    t =    16.18s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.26s Added attachment named 'Actual saved project change cache'
+    t =    17.26s Checking existence of `Window (First Match)`
+    t =    17.27s Find the Window (First Match)
+2026-11-01 20:33:16.047216+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    17.38s Added attachment named 'Mac native project destination saved'
+    t =    17.39s Type 'q' key with modifiers '⌘' (0x10)
+    t =    17.39s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.39s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    17.49s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    17.49s     Synthesize event
+2026-11-01 20:33:16.264519+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 20:33:16.265625+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    17.79s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.79s Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to become Not Running
+    t =    17.79s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    17.80s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-11-01 20:33:16.573 xcodebuild[97558:40521108] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-01 20:33:16.573 xcodebuild[97558:40521108] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    18.33s         Wait for accessibility to load
+    t =    18.43s         Setting up automation session
+    t =    18.44s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.50s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    18.50s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    18.51s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.24s Waiting 10.0s for "Today" StaticText to exist
+    t =    20.28s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" StaticText`
+    t =    20.28s         Checking existence of `"Today" StaticText`
+    t =    20.30s Click "Today" StaticText
+    t =    20.30s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.31s     Find the "Today" StaticText
+    t =    20.32s     Check for interrupting elements affecting "Today" StaticText
+    t =    20.43s     Synthesize event
+2026-11-01 20:33:19.196623+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    20.90s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.91s Waiting 12.0s for "title-a5110000-0000-4000-8000-000000000001" StaticText to exist
+    t =    21.95s     Checking `Expect predicate `existsNoRetry == 1` for object "title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =    21.95s         Checking existence of `"title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =    22.22s Added attachment named 'Actual saved project change cache'
+    t =    22.22s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:97620
+    t =    23.33s Tear Down
+    t =    23.71s Checking for reports corresponding to termination of 1 app(s).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testProjectChangePreservesExactChecklistThroughSaveAndColdReturn]' passed (23.715 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource]' started.
+    t =     0.00s Start Test at 2026-11-01 20:33:22.482
+    t =     0.14s Set Up
+    t =     0.15s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.15s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-11-01 20:33:22.631 xcodebuild[97558:40521108] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-01 20:33:22.631 xcodebuild[97558:40521108] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.73s         Wait for accessibility to load
+    t =     0.81s         Setting up automation session
+    t =     0.83s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.88s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.89s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.90s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.66s Waiting 15.0s for "openTemplates" Button to exist
+    t =     2.70s     Checking `Expect predicate `existsNoRetry == 1` for object "openTemplates" Button`
+    t =     2.70s         Checking existence of `"openTemplates" Button`
+    t =     3.02s Waiting 10.0s for "Today" StaticText to exist
+    t =     4.05s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" StaticText`
+    t =     4.06s         Checking existence of `"Today" StaticText`
+    t =     4.07s Click "Today" StaticText
+    t =     4.07s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.08s     Find the "Today" StaticText
+    t =     4.09s     Check for interrupting elements affecting "Today" StaticText
+    t =     4.14s     Synthesize event
+    t =     4.65s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.67s Waiting 12.0s for "title-a5110000-0000-4000-8000-000000000001" StaticText to exist
+    t =     5.70s     Checking `Expect predicate `existsNoRetry == 1` for object "title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =     5.71s         Checking existence of `"title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =     5.81s Click "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =     5.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.82s     Find the "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =     5.89s     Check for interrupting elements affecting "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =     5.92s     Synthesize event
+    t =     6.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.03s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =     7.04s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.09s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =     7.33s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =     7.33s     Synthesize event
+2026-11-01 20:33:29.942812+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 20:33:29.947574+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =     8.22s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.24s Waiting 8.0s for "taskTitle" TextField to exist
+    t =     9.29s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =     9.29s         Checking existence of `"taskTitle" TextField`
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+    t =     9.52s Added attachment named 'Unsupported project change source'
+    t =     9.52s Checking existence of `ScrollView (First Match)`
+    t =     9.60s Find the "taskProjectPicker" PopUpButton
+    t =     9.75s Find the "taskProjectPicker" PopUpButton
+    t =     9.89s Find the "taskProjectPicker" PopUpButton
+    t =    10.04s Find the "taskProjectPicker" PopUpButton
+    t =    10.17s Find the "taskProjectPicker" PopUpButton
+    t =    10.31s Find the "taskProjectPicker" PopUpButton
+    t =    10.45s Find the "taskProjectPicker" PopUpButton
+    t =    10.63s Find the "taskProjectPicker" PopUpButton
+    t =    10.77s Find the "taskProjectPicker" PopUpButton
+    t =    10.92s Find the "taskProjectPicker" PopUpButton
+    t =    11.06s Find the "taskProjectPicker" PopUpButton
+    t =    11.20s Find the "taskProjectPicker" PopUpButton
+    t =    11.33s Find the "taskProjectPicker" PopUpButton
+    t =    11.47s Click "taskProjectPicker" PopUpButton
+    t =    11.47s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.47s     Find the "taskProjectPicker" PopUpButton
+    t =    11.61s     Check for interrupting elements affecting "taskProjectPicker" PopUpButton
+    t =    11.64s     Synthesize event
+2026-11-01 20:33:34.121294+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    12.14s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.15s Waiting 8.0s for "Assignment destination" MenuItem to exist
+    t =    13.18s     Checking `Expect predicate `existsNoRetry == 1` for object "Assignment destination" MenuItem`
+    t =    13.19s         Checking existence of `"Assignment destination" MenuItem`
+    t =    13.32s Click "Assignment destination" MenuItem
+    t =    13.32s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.33s     Find the "Assignment destination" MenuItem
+    t =    13.45s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    13.45s     Synthesize event
+2026-11-01 20:33:35.931112+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    13.46s         Checking existence of `"menuAction:" MenuItem`
+    t =    13.54s         Hover menu item 'Assignment destination'
+    t =    13.54s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.55s             Find the "menuAction:" MenuItem
+    t =    13.65s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    13.65s             Synthesize event
+2026-11-01 20:33:36.141260+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    13.88s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.89s         Find the "menuAction:" MenuItem
+    t =    14.88s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.91s Waiting 8.0s for "taskProjectMoveFailure" StaticText to exist
+    t =    15.93s     Checking `Expect predicate `existsNoRetry == 1` for object "taskProjectMoveFailure" StaticText`
+    t =    15.94s         Checking existence of `"taskProjectMoveFailure" StaticText`
+    t =    16.09s Find the "taskProjectMoveFailure" StaticText
+    t =    16.22s Find the "taskProjectPicker" PopUpButton
+    t =    17.36s Find the "taskProjectMoveFailure" StaticText
+    t =    17.53s Find the "taskProjectMoveFailure" StaticText
+    t =    17.65s Find the "inspector" ScrollView
+    t =    17.78s Find the "taskProjectMoveFailure" StaticText
+    t =    17.91s Find the "inspector" ScrollView
+    t =    18.03s Checking existence of `Window (First Match)`
+    t =    18.05s Find the Window (First Match)
+2026-11-01 20:33:40.540476+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    18.12s Added attachment named 'Mac unsupported project move keeps original selection'
+    t =    18.12s Added attachment named 'Unsupported source after refusal'
+    t =    18.12s Type 'q' key with modifiers '⌘' (0x10)
+    t =    18.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.12s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    18.19s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    18.19s     Synthesize event
+2026-11-01 20:33:40.672754+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 20:33:40.673472+0100 TaskfoldUITests-Runner[97574:40521366] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    18.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.50s Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to become Not Running
+    t =    18.50s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    18.51s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-11-01 20:33:40.990 xcodebuild[97558:40521108] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-01 20:33:40.990 xcodebuild[97558:40521108] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    19.02s         Wait for accessibility to load
+    t =    19.10s         Setting up automation session
+    t =    19.11s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.18s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    19.18s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    19.18s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.93s Waiting 12.0s for "openTemplates" Button to exist
+    t =    20.96s     Checking `Expect predicate `existsNoRetry == 1` for object "openTemplates" Button`
+    t =    20.96s         Checking existence of `"openTemplates" Button`
+    t =    21.28s Added attachment named 'Unsupported source after cold return'
+    t =    21.28s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:97682
+    t =    22.36s Tear Down
+    t =    22.72s Checking for reports corresponding to termination of 1 app(s).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource]' passed (22.725 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-11-01 20:33:45.207.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 46.440 (46.442) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-11-01 20:33:45.208.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 46.440 (46.443) seconds
+Test Suite 'Selected tests' passed at 2026-11-01 20:33:45.209.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 46.440 (46.444) seconds
+2026-11-01 20:33:45.500 xcodebuild[97558:40521108] [MT] IDETestOperationsObserverDebug: 47.677 elapsed -- Testing started completed.
+2026-11-01 20:33:45.500 xcodebuild[97558:40521108] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-01 20:33:45.500 xcodebuild[97558:40521108] [MT] IDETestOperationsObserverDebug: 47.677 sec, +47.677 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-assignment-native-mac-v6.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

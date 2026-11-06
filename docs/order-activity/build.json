@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "scope": "App build and strict signing verification; mobile build-for-testing, Mac app-only",
+  "executableSHA256": "2db1398c26af44efb4fa183889480827f07f627ee548723f4309ebb50d902373",
+  "debugDylibSHA256": "ea5e24465418f70f7787053ad89e72bb05924d59a759f8d6f24c707479217fd1",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/Core/TaskActivity.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Views/ProjectPulseView.swift": true
+  }
+}

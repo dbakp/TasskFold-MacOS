@@ -1,0 +1,68 @@
+{
+  "verifiedUTC": "2026-10-24T06:25:33.693878+00:00",
+  "platform": "mac",
+  "hostedDeployment": false,
+  "realDataChanged": false,
+  "nativeTeamUIEnabled": false,
+  "nativeRuntimeAcceptanceClaimed": false,
+  "distributionAcceptanceClaimed": false,
+  "databaseChecks": 452,
+  "databaseReports": {
+    "p2-team-checklist-evidence.json": {
+      "sha256": "42d07fba3f5315fd5d86c1cbdd6ff16d8541e41373e0664f5336e094b9909eed",
+      "checks": 221
+    },
+    "p2-team-checklist-lifecycle-regression.json": {
+      "sha256": "a4586464d5fa5e0f7dd89e9d5d6333102d56a27f4df0fd3c3f6e3c126a41c3b9",
+      "checks": 89
+    },
+    "p2-team-checklist-batch-regression.json": {
+      "sha256": "884142d5567f4b42c19e39283a5c20b64dcd60c888672250665c9ce81686746a",
+      "checks": 72
+    },
+    "p2-team-checklist-conversation-regression.json": {
+      "sha256": "7dccd7c7473405b33ae2c185777297c7b09e420469af6fccf586fc7b4865447d",
+      "checks": 70
+    }
+  },
+  "selectedSwiftTests": 196,
+  "swiftFailures": 0,
+  "swiftSkipped": 0,
+  "swiftLogSHA256": "5e4d150f57cdd3ef95f607432bef76b78b0018338f6a9df9f70358f44c8f2b60",
+  "unsignedDebugAppAndExtensionsBuild": true,
+  "appBuildLogSHA256": "aced0aa36cd43039e172163f19ef8d4e5f47ff1e76f82f33d5193bb3f3798400",
+  "sources": {
+    "Package.swift": "b3e510e71f0fadfb74bdf53a785b01fb2db5a6c9b32aad9ad22f8704c7e77d59",
+    "Taskfold.xcodeproj/project.pbxproj": "972bca2910a5054f146285bcdfec24d1d7d20b329c6710c872dfeebd45f869e3",
+    "Taskfold/Core/TeamChecklist.swift": "0aea065eab465b918d1f30b22173025ad73e4c82717cd84bd9b25e2cce7e5303",
+    "Taskfold/Core/TeamProjectAccess.swift": "b98d6a77451830006aa43d01f9a7161691a4a30d759da4305b560105efa7b822",
+    "Taskfold/Core/Models.swift": "4ba1031e1e46b56508e3d656c9af3251dd45b1a3f376b24f6dd26425b7dddac7",
+    "Taskfold/Core/Backend.swift": "aaad1b2bddd110732ced07f633ddda8881ec9175538cd2a2d3c7b8c142157f0f",
+    "TaskfoldTests/TeamChecklistTests.swift": "cc3ce91ba94a4fa54ca9edbd155e78aabbdacab9e0a94159d81ba2a90d7b58e9",
+    "TaskfoldTests/TeamTaskEditTests.swift": "957ccb4c4002cca3ee7e3df179a5ee3b29b17d67e33e032f6da6101766a5c01b",
+    "TaskfoldTests/Fixtures/team-checklist-v1.json": "776f06d75f26ede7a964c3e29b548e23013b021bb92b073b5151c0f8305fa705",
+    "Scripts/Database/team-checklist-checks.mjs": "a69efc39fefe7a867c3a8e073f9004968a162021b5ad6acc4797dbb2addadf13",
+    "Scripts/Database/team-checklist-schema.mjs": "5472b4e399f74fbe16ba2e5ab7123a5ad98b03d273f792b208bc7f45938859a6",
+    "Scripts/Database/test-team-task-edits.mjs": "aa41a4406a953504bb78e9e7def9a7c2ba00418eb9a9e36bc9dd6c2bd35ec670",
+    "Scripts/Database/test-team-task-batches.mjs": "1cfbeaabd88f9a66a483694bc4603235c61f8b2aef21d9e63ab498802de66d73",
+    "Scripts/Database/test-team-task-lifecycle.mjs": "188fd3a9540ee996b1aa7e34ad325e8669ef1739593c856076fd1224e02c6f75",
+    "Scripts/Database/test-team-conversation-recovery.mjs": "f7d7e731ceb3dfb6e9aa40d80b35dc75ae2d8cf85f2652cd84df3fba267aab4d",
+    "supabase/migrations/20261024055617_team_checklist_edits.sql": "7e5e97e8b28ae4ae02c95a2506e84977c9d56fd244107b361b2e370a3ee6cb83"
+  },
+  "cleanup": {
+    "temporaryAppLaunched": false,
+    "temporaryBuildRemoved": true,
+    "temporaryMacRegistrationUnregistered": true,
+    "removedBuildBytes": 1135264580
+  },
+  "appBuildVerifiedUTC": "2026-10-24T06:19:54.742185+00:00",
+  "appBuildSourceHashes": {
+    "Package.swift": "b3e510e71f0fadfb74bdf53a785b01fb2db5a6c9b32aad9ad22f8704c7e77d59",
+    "Taskfold.xcodeproj/project.pbxproj": "972bca2910a5054f146285bcdfec24d1d7d20b329c6710c872dfeebd45f869e3",
+    "Taskfold/Core/TeamChecklist.swift": "0aea065eab465b918d1f30b22173025ad73e4c82717cd84bd9b25e2cce7e5303",
+    "Taskfold/Core/TeamProjectAccess.swift": "b98d6a77451830006aa43d01f9a7161691a4a30d759da4305b560105efa7b822",
+    "Taskfold/Core/Models.swift": "4ba1031e1e46b56508e3d656c9af3251dd45b1a3f376b24f6dd26425b7dddac7",
+    "Taskfold/Core/Backend.swift": "aaad1b2bddd110732ced07f633ddda8881ec9175538cd2a2d3c7b8c142157f0f"
+  },
+  "appBuildReusedForDatabaseOnlyCorrection": true
+}

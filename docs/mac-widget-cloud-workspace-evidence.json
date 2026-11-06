@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-14",
+  "status": "NAMED_AUTHENTICATED_WIDGET_CYCLE_ACCEPTED",
+  "scope": "Retained Mac v10 normal local \u2192 two existing authenticated disposable accounts \u2192 normal local cycle; direct installed desktop accessibility text, first-account human-triggered My list cold route and exact data return. Bounded scope, not every configuration/layout.",
+  "appSourceHeads": {
+    "macOS": "38893b2",
+    "iOS": "0e9f316"
+  },
+  "native": {
+    "result": "mac-widget-cloud-first-v1.xcresult",
+    "test": "TaskfoldMacUITests.testInstalledWidgetHostCloudPhaseReadOnly",
+    "phase": "first",
+    "actualPassed": 1,
+    "failures": 0,
+    "skips": 0,
+    "structuredRuntimeWarnings": 0,
+    "normalAppLaunchNoArguments": true,
+    "nativeLeaveLocalAndRealSignIn": true,
+    "cloudTasksSynced": 3,
+    "pendingMutations": 0,
+    "normalQuitConfirmed": true,
+    "fullNormalLocalWorkspaceExact": true
+  },
+  "preservation": {
+    "serverTablesExactPerDisposableAccount": 14,
+    "accountsVerified": 2,
+    "primaryProtectedFilesExact": 100,
+    "retainedHostAppAndWidgetBinariesExact": true
+  },
+  "driver": {
+    "extensionSHA256": "4449da4c81a9ef2c177e3b895e7450fd5180e161f63ead03b0505973b8e39da1",
+    "runnerGuard": "com.dbakp.taskfold.mac.p0widgethosts.runner",
+    "credentialsRemainPrivate": true,
+    "clipboardRestored": true,
+    "retargetedExistingHost": true,
+    "inactiveDuplicateProductBytesPruned": 40964217
+  },
+  "next": "Remaining distinct planning/aggregate installed classes and actual system privacy. Use direct desktop text inspection whenever available. VoiceOver deferred by user; original local host restored and closed.",
+  "limits": [
+    "Installed first-account My list heading safe cold route accepted; second-account direct AX click returned without launching, so that click is not accepted.",
+    "Direct desktop text proves the named rendered-content scope. Finder screenshot omits widget layer; no new pixel-layout or system-selected privacy claim.",
+    "Local-owned widget selections remained configured through the cycle; no claim that cloud A-owned per-instance selection was configured before switching to B.",
+    "VoiceOver remaining observations explicitly deferred by user until later.",
+    "Wording repair compiled in both owned sources/full Mac widget extension, but retained installed host intentionally unchanged.",
+    "No new identity, credential rotation, service setting, task data edit or production signing change."
+  ],
+  "cycle": {
+    "nativePhases": {
+      "first": {
+        "result": "mac-widget-cloud-first-v1.xcresult",
+        "actualPassed": 1,
+        "failures": 0,
+        "skips": 0,
+        "structuredRuntimeWarnings": 0
+      },
+      "second": {
+        "result": "mac-widget-cloud-second-v1.xcresult",
+        "actualPassed": 1,
+        "failures": 0,
+        "skips": 0,
+        "structuredRuntimeWarnings": 0
+      },
+      "local": {
+        "result": "mac-widget-cloud-local-v1.xcresult",
+        "actualPassed": 1,
+        "failures": 0,
+        "skips": 0,
+        "structuredRuntimeWarnings": 0
+      }
+    },
+    "directInstalledDesktopText": {
+      "first": {
+        "MyList": "Choose your list",
+        "PinnedNote": "Keep a thought close",
+        "Focus": "Session ended; current cloud account task",
+        "ProjectPulse": "Project unavailable",
+        "localContentAbsent": true
+      },
+      "second": {
+        "MyList": "Choose your list",
+        "PinnedNote": "Keep a thought close",
+        "Focus": "One useful step; no session",
+        "ProjectPulse": "Project unavailable",
+        "localAndFirstAccountFocusContentAbsent": true
+      },
+      "returnedLocal": {
+        "Today": "Prepare the design review",
+        "MyList": "Desktop widget workshop, 1; Prepare the design review",
+        "PinnedNote": "Prepare the design review; exact edited three-line instructions",
+        "Focus": "Session ended; 00:06; Prepare the design review",
+        "ProjectPulse": "Desktop widget workshop; 0 of 1; 1 completion and 1 reopen event",
+        "fullPinnedBodyReadDirectly": true
+      }
+    },
+    "firstInstalledMyListColdRoute": {
+      "humanClickedMyListHeading": true,
+      "humanSaidMostClearedContent": true,
+      "allKindsClearedNotProven": false,
+      "mainProcessBeforeCUABinding": [
+        "78299 Wed Oct 14 08:12:14 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+      ],
+      "nativeColdLaunchAllTasksCurrentAccount": true,
+      "nativeOldLocalProjectNotOpened": true,
+      "desktopAXNowReadable": true,
+      "desktopObserved": {
+        "MyList": "Choose your list",
+        "PinnedNote": "Keep a thought close",
+        "Focus": "Session ended \u2014 Continuity 9a8bfc3d revised",
+        "ProjectPulse": "Project unavailable",
+        "Today": "Continuity 9a8bfc3d revised"
+      },
+      "localTaskProjectNoteContentAbsentInAllReadWidgets": true,
+      "currentAccountAggregateFocusContentExpected": true,
+      "observationScope": "Direct installed desktop accessibility text, not a new pixel/layout or system-privacy acceptance."
+    },
+    "secondAutomatedClickNotAccepted": true,
+    "desktopAXClickReturnedWithoutLaunching": true,
+    "finderScreenshotOmitsWidgetLayer": true,
+    "fullLocalWorkspaceExact": true,
+    "bothServerBaselinesExact14TablesEach": true,
+    "primaryProtectedFilesExact": 100,
+    "priorHumanCompletedFixtureExact": true,
+    "retainedHostBinariesExact": true,
+    "mainAppSessions": 0,
+    "inactiveCompileProductsBytesPruned": 295353973,
+    "testResultsRunnerAndHostRetained": true,
+    "voiceOverDeferredByUser": true,
+    "grammarRepair": {
+      "trigger": "Direct installed Today accessibility text was 1 scheduled tasks",
+      "change": "Use singular task for count 1 in both independently owned widgets",
+      "bothWidgetModelBuildsPassed": true,
+      "macFullWidgetExtensionBuildPassed": true,
+      "newInstalledWordingNotClaimed": true
+    }
+  },
+  "wordingOwnSourceSHA256": "2da9ce8a2e7cbd2a482e062c6c1c3cc5647f360886e96c4722d5848f00272a9c"
+}

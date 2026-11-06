@@ -1,0 +1,14 @@
+{
+  "reviewed": "2026-11-05",
+  "owner": "TasskFold-MacOS",
+  "selectedCoreTests": 30,
+  "newPreparationTests": 6,
+  "iphoneNativeJourneys": 2,
+  "iphoneNativeFailures": 0,
+  "iphoneNativeSkips": 0,
+  "macBuildSigned": true,
+  "macRuntimeAccepted": false,
+  "physicalFPSAccepted": false,
+  "ordinaryAppsReplaced": false,
+  "scope": "Source implementation, signed phone Simulator journeys and current own Mac build; no new daily-use package or install."
+}

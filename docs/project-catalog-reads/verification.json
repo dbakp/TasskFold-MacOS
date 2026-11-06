@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-03",
+  "repository": "TasskFold-MacOS",
+  "selectedCore": {
+    "reported": 174,
+    "passed": 170,
+    "skipped": 4,
+    "failures": 0,
+    "logSHA256": "c81db4e8132d8681c0d74ff5a03915a9c2817b662355d4080dea31295fc53365"
+  },
+  "fullAppAndRunnerBuild": true,
+  "strictDevelopmentSignatures": true,
+  "macNativeRuntimeClaim": false,
+  "counterpartIPhoneJourneyAccepted": true,
+  "nativeFPSClaim": false,
+  "cloudOrRealAuthClaim": false,
+  "deployed": false,
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "e55251efd0d7826667fe1c40ab6ead15f9d770dd9501ac9cfb314e76907b49c4",
+    "Taskfold/Core/Store.swift": "123dd5d4edb7f0c7ffab1bc57f25f77ed7455c17361d06a8744364df1c1f50c5",
+    "Taskfold/Core/TeamWorkspace.swift": "254020669d7d0ccb5add223f7a3225a6d6101ddbfdadb2ae46e99438fe7c3097",
+    "Taskfold/TeamTemplateNativeFixture.swift": "cd5ce56b6cc91610a65a551cbcac9b572a3522b8b137a6ea70d3da8dc88d7d5b",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "f5a374c488ee361369da5b193725548e090b70aa1fe08096c68d7b15cb78ef73"
+  },
+  "buildDriverSHA256": "ea844f2ab1e7d21f3b3741d339ee8dffa2d3cb3dc1bff1daa3fc0043423c14a3"
+}

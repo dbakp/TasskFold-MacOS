@@ -1,0 +1,14 @@
+Test Case '-[TaskfoldCoreTests.ConfirmedHistoryBridgeTests testNewActionAfterUndoDropsRedoAndKeepsOrderedEarlierActions]' started.
+Test Case '-[TaskfoldCoreTests.ConfirmedHistoryBridgeTests testNewActionAfterUndoDropsRedoAndKeepsOrderedEarlierActions]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.ConfirmedHistoryBridgeTests testNewEditDuringPendingConfirmationKeepsNewHistoryAndRejectsLateInverse]' started.
+Test Case '-[TaskfoldCoreTests.ConfirmedHistoryBridgeTests testNewEditDuringPendingConfirmationKeepsNewHistoryAndRejectsLateInverse]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ConfirmedHistoryBridgeTests testScopeChangeDuringAwaitCannotInstallAnInverse]' started.
+Test Case '-[TaskfoldCoreTests.ConfirmedHistoryBridgeTests testScopeChangeDuringAwaitCannotInstallAnInverse]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ConfirmedHistoryBridgeTests testUndoRegistersRedoSynchronouslyButCannotRunUntilConfirmation]' started.
+Test Case '-[TaskfoldCoreTests.ConfirmedHistoryBridgeTests testUndoRegistersRedoSynchronouslyButCannotRunUntilConfirmation]' passed (0.002 seconds).
+Test Suite 'ConfirmedHistoryBridgeTests' passed at 2026-10-31 19:33:35.843.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-31 19:33:35.843.
+	 Executed 133 tests, with 0 failures (0 unexpected) in 2.243 (2.255) seconds
+Test Suite 'Selected tests' passed at 2026-10-31 19:33:35.843.
+	 Executed 133 tests, with 0 failures (0 unexpected) in 2.243 (2.257) seconds

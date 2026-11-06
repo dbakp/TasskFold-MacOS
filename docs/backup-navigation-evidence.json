@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-12",
+  "scope": "Held backup read, settings navigation, local workspace exit/return, same-file retry, cancelled restore review and exact saved workspace after relaunch.",
+  "productionChange": "Each independently owned BackupPresentation cancels an active file read when its view disappears, releasing coordination even after the workspace observer and Cancel control disappear. Other backup operations are unaffected.",
+  "reproducedFailure": {
+    "platform": "iPhone Simulator",
+    "result": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-backup-navigation-native-v1.xcresult",
+    "behavior": "After popping Data & Sync and leaving/returning to the local workspace, same-file Retry never opened restore review. The saved workspace remained unchanged."
+  },
+  "finalResults": {
+    "mac": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-backup-navigation-native-v4.xcresult",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "cases": [
+        "Picker Cancel/reopen",
+        "Held read Cancel/retry and normal Quit/relaunch",
+        "Held read navigation and local workspace exit/return"
+      ]
+    },
+    "iphone": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-backup-navigation-native-v2.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "cases": [
+        "Held read Cancel/retry",
+        "Held read navigation and local workspace exit/return"
+      ]
+    }
+  },
+  "accepted": [
+    "Real native file pickers and registered NSFilePresenter hold the actual read; no direct cancellation injection",
+    "Retry opens review after local workspace return on both platforms",
+    "Cancelling review and relaunch preserve the entire persisted workspace dictionary exactly",
+    "Three new journey captures inspected per platform; Mac review capture shows contents rather than the entire overflowing sheet"
+  ],
+  "earlierMacDriverCorrections": [
+    "Removed an incorrect expectation that switching Settings tabs must cancel a retained view",
+    "Scoped Leave to the confirmation sheet rather than an ambiguous global button query",
+    "Used the actual Use locally accessibility link instead of a button query"
+  ],
+  "verification": [
+    "Both isolated build-for-testing configurations pass",
+    "Mac deep strict code signature verification passes before product pruning",
+    "Both terminal results accepted by verify_ui_result.py"
+  ],
+  "cleanup": {
+    "protectedExact": 100,
+    "prunedLogicalBytes": 1083322406,
+    "testApps": "No Taskfold main app or UI runner remains; only system-managed widget extensions remain",
+    "simulator": "Disposable iPhone app and runner removed; disposable Simulator shut down; primary phone and tablet untouched",
+    "retained": "Logs, xcresults, staged source and scoped screenshots; installed widgets preserved"
+  },
+  "limitations": [
+    "Local workspace exit/return does not prove authenticated account A/B switching during a pending read",
+    "Deterministic local coordination does not prove actual remote provider failure or offline iOS transfer",
+    "No broader P0 or distribution completion claimed"
+  ],
+  "captures": {
+    "mac": {
+      "waiting.png": "85b2cd2adaf6550452d75c5c8a0aba31c4b38e1139b3ca2b35040c77e526c1ae",
+      "retry-review.png": "1f564a0ba7dc9f67be398e5b093a245c0e47580c87b980006af2cc6d99a63a59",
+      "preserved-after-relaunch.png": "41c92dc23d80ab82eb870a333b6240ea3b3ca4458389441e231e765ec0c34749"
+    },
+    "iphone": {
+      "waiting.png": "ad34300d7d036f3d05f1a5480c2f0ea1a11ceebdbbd22fcdf381af6c0d1a354d",
+      "retry-review.png": "1852c3c8d8f2c29758debf4b20d05abf37755f48d73ddbf23296bb25e56410f6",
+      "preserved-after-relaunch.png": "cd4129f9b833b30eb6fe2bd94879826246a6274cea136920a0a32e6798d647e0"
+    }
+  }
+}

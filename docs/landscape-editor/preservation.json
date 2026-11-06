@@ -1,0 +1,13 @@
+{
+  "authenticatedCacheSemanticEquality": true,
+  "protectedDevices": {
+    "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705": {
+      "exactHashSetMatch": true,
+      "fileCount": 43
+    },
+    "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969": {
+      "exactHashSetMatch": true,
+      "fileCount": 26
+    }
+  }
+}

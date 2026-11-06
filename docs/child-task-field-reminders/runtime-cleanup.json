@@ -1,0 +1,12 @@
+{
+  "phone": {
+    "restored_VoiceOverTouchEnabled": 1,
+    "simulator": "shutdown",
+    "owned_apps": "terminated"
+  },
+  "tablet": {
+    "restored_VoiceOverTouchEnabled": 0,
+    "simulator": "shutdown",
+    "owned_apps": "terminated"
+  }
+}

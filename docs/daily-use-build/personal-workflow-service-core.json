@@ -1,0 +1,8 @@
+{
+  "scope": "Independent workflow capability, cache, transport and prior workflow Undo regressions",
+  "executed": 21,
+  "failures": 0,
+  "newCases": 15,
+  "logSHA256": "e66ebe1efaf8cc7e90f65e2eab6a381d510354575d3f6a3d151384f8bca5b116",
+  "nativeStoreAcceptance": false
+}

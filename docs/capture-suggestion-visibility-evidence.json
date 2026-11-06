@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-11",
+  "scope": "Keep iOS quick-capture suggestions fully visible above keyboard controls, including largest text; size suggestion lists to their content in both independent apps.",
+  "changes": [
+    "iOS suggestions sit outside the scrolling draft, above the fixed controls, with layout priority.",
+    "Explicit detent selection expands the presented iOS sheet while a suggestion is active.",
+    "Both owned suggestion lists measure their content, with a 44-point minimum and the existing 190-point scrolling cap. No persistent data contracts change."
+  ],
+  "nativePhone": {
+    "resultBundle": "capture-suggestion-reveal-phone-final-v5.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "cases": [
+      "testLiveLongPlanningSuggestionIsVisibleWithoutScrolling",
+      "testLiveLongPlanningSuggestionIsVisibleDarkLargest"
+    ],
+    "coverage": "Long quoted project/section plus planned reminder; complete option lies within the screen above keyboard controls without manual scrolling, can be selected, preserves resolved section/reminder chips and leaves Save hittable. Preview discarded without submitting.",
+    "visualInspection": "Four retained screenshots inspected individually. Full reminder name and shortcut visible at normal/light and largest/dark sizes; normal panel has no fixed-height blank area. The draft remains scrollable."
+  },
+  "builds": {
+    "iOS": {
+      "log": "capture-suggestion-reveal-build-v8.log",
+      "result": "TEST BUILD SUCCEEDED",
+      "signingReceipt": "capture-suggestion-reveal-signing-v8.json"
+    },
+    "macOS": {
+      "log": "capture-suggestion-mac-build-v1.log",
+      "result": "BUILD SUCCEEDED",
+      "scope": "Independent full app and extension, unsigned compile; native changed-panel acceptance remains pending."
+    }
+  },
+  "dataProof": {
+    "completeCacheMatchesBaseline": true,
+    "baseline": "profile-switch-first-cache.json",
+    "baselineSHA256": "046048a2933280e349de4babc31a75c479590703cb03ddf8c7623157f3b4db28",
+    "afterSHA256": "6bc742421ea9a512d6da3d5837e39052bc8c0b7a247a94f3d989fefc7caced52",
+    "draftSubmitted": false
+  },
+  "earlierAttempts": {
+    "failedResultBundles": [
+      "capture-suggestion-reveal-phone-v1.xcresult",
+      "capture-suggestion-reveal-phone-largest-v1.xcresult",
+      "capture-suggestion-reveal-phone-final-v1.xcresult",
+      "capture-suggestion-reveal-phone-final-v2.xcresult",
+      "capture-suggestion-reveal-phone-final-v3.xcresult"
+    ],
+    "explanation": "Replacing allowed detents alone did not expand the live sheet. Scroll-to-anchor attempts overshot the active option. Pinning the menu without layout priority clipped its lower edge at largest text. These attempts remain failed; final acceptance uses only final-v5.",
+    "supersededPassingResults": [
+      "capture-suggestion-reveal-phone-v2.xcresult",
+      "capture-suggestion-reveal-phone-final-v4.xcresult"
+    ]
+  },
+  "platformScope": "Mac capture uses its native content-sized sheet and has no mobile keyboard/fixed-bottom-bar overlap. Only content-sized list behavior is mirrored there. The running isolated Mac app is an older build; no new Mac native acceptance is claimed. iPad and VoiceOver were not rerun for this follow-up. Broader P0 provider, distribution and native Mac gates remain open.",
+  "sourceSHA256": {
+    "TaskFold-iOS/Taskfold/Views/QuickAdd.swift": "34e749f342c22115126e3c6f9eba0923d8e12fed6a32a79638860ac54e7b76a7",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "8ceafe749e7d2c00e23b2c6fe5c4aa4f63606abade41bb6d5994f941f1782276",
+    "TasskFold-MacOS/Taskfold/Views/TaskListView.swift": "d266747abe957a0378bb2003b159abf92cde1fe3c637f9a68b4460e8f42063e9"
+  },
+  "captures": {
+    "docs/usability-previews/phone-capture-suggestion-normal.png": "ae1f1c2712bf964bc99f89bba9a7dc440ae61ede1f386ff7f3160f119e779f0a",
+    "docs/usability-previews/phone-capture-suggestion-largest.png": "9fddf38ed9bb84a54acc18a18f4281c5342f17849f328a62dcf8ee29fd04d07e",
+    "docs/usability-previews/phone-capture-suggestion-chosen-normal.png": "a32826b7bb23eb5ff1a9e01c30fe9b337987cc9604e4822e3c439edb9d8d385e",
+    "docs/usability-previews/phone-capture-suggestion-chosen-largest.png": "5c7c9ad95aabb1264b9938bcfc9d83770a0dbf1c1d258a8f4d1f1d1512bd5555"
+  },
+  "storageCleanup": {
+    "removed": [
+      {
+        "path": "BuildCache/mac-capture-panel",
+        "allocatedKiB": 352216
+      },
+      {
+        "path": "capture-suggestion-reveal-phone-final-v1-all",
+        "allocatedKiB": 16436
+      },
+      {
+        "path": "capture-suggestion-reveal-phone-final-v2-captures",
+        "allocatedKiB": 936
+      },
+      {
+        "path": "capture-suggestion-reveal-phone-final-v3-captures",
+        "allocatedKiB": 916
+      },
+      {
+        "path": "capture-suggestion-reveal-phone-final-v4-captures",
+        "allocatedKiB": 1316
+      },
+      {
+        "path": "capture-suggestion-reveal-phone-largest-v1-all",
+        "allocatedKiB": 10632
+      },
+      {
+        "path": "capture-suggestion-reveal-phone-v1-all",
+        "allocatedKiB": 6792
+      },
+      {
+        "path": "capture-suggestion-reveal-phone-v1-captures",
+        "allocatedKiB": 4
+      },
+      {
+        "path": "capture-suggestion-reveal-phone-v2-captures",
+        "allocatedKiB": 492
+      }
+    ],
+    "allocatedMiBPruned": 380.6,
+    "retained": "All native xcresults, build logs, final exported captures, both active isolated build caches and original cloud cache proof."
+  }
+}

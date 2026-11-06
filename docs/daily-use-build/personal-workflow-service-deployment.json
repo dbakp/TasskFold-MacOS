@@ -1,0 +1,100 @@
+{
+  "project": "zqxflydiyfjeedqvyova",
+  "sourceMigration": "supabase/migrations/20261103212921_taskfold_personal_workflow_undo_service.sql",
+  "sourceSHA256": "ce0c652590dfca10adc67aad27f2dc20abe340348eb7c7ca30638847b4eb29ed",
+  "expectedFunctionBodies": {
+    "taskfold_private.require_workflow_actor()": "70273382ab65699fe18e566d5cdc98d1",
+    "taskfold_private.undo_private_workflow(uuid,jsonb)": "e10df976dd4c01fddcaaf225f9f26898",
+    "public.taskfold_undo_private_workflow(uuid,jsonb)": "e5a12b7d563585344c89a1eeb5a59617",
+    "public.taskfold_workflow_undo_capabilities()": "b0cd499d5e2e06d955c7b2a77e7ce0f8"
+  },
+  "before": {
+    "undo": false,
+    "actor": false,
+    "teams": false,
+    "boundary": false,
+    "patchMD5": "7ee251352383bd82460a1a231d938f73",
+    "policies": "f47d73f4af02a1d7a6f4af0fb2cd75c4",
+    "receipts": false,
+    "privateUndo": false,
+    "capabilities": false,
+    "publicTables": "41a583b2b31941afd8ab1adb17ce23ed",
+    "taskTriggers": "201b08161aa0754a82e7e93dd228df6a",
+    "projectAccessMD5": "4546075427ba75e7e02df4db3838c6d6"
+  },
+  "deployed": true,
+  "rollbackPreservesReceipts": true,
+  "scope": "Fresh personal template runs; ordinary multiline capture retains its existing separate history path.",
+  "testedMigration": "supabase/migrations/20261103202756_personal_workflow_undo_service.sql",
+  "after": {
+    "metadata": {
+      "undo": true,
+      "actor": true,
+      "teams": false,
+      "boundary": false,
+      "patchMD5": "7ee251352383bd82460a1a231d938f73",
+      "policies": "f47d73f4af02a1d7a6f4af0fb2cd75c4",
+      "receipts": true,
+      "privateUndo": true,
+      "capabilities": true,
+      "publicTables": "41a583b2b31941afd8ab1adb17ce23ed",
+      "taskTriggers": "201b08161aa0754a82e7e93dd228df6a",
+      "projectAccessMD5": "4546075427ba75e7e02df4db3838c6d6"
+    },
+    "functions": [
+      {
+        "bodyMD5": "e5a12b7d563585344c89a1eeb5a59617",
+        "definer": false,
+        "settings": [
+          "search_path=\"\""
+        ],
+        "anonymous": false,
+        "signature": "public.taskfold_undo_private_workflow(uuid, jsonb)",
+        "authenticated": true
+      },
+      {
+        "bodyMD5": "b0cd499d5e2e06d955c7b2a77e7ce0f8",
+        "definer": false,
+        "settings": [
+          "search_path=\"\""
+        ],
+        "anonymous": false,
+        "signature": "public.taskfold_workflow_undo_capabilities()",
+        "authenticated": true
+      },
+      {
+        "bodyMD5": "70273382ab65699fe18e566d5cdc98d1",
+        "definer": true,
+        "settings": [
+          "search_path=\"\"",
+          "lock_timeout=3s"
+        ],
+        "anonymous": false,
+        "signature": "taskfold_private.require_workflow_actor()",
+        "authenticated": true
+      },
+      {
+        "bodyMD5": "e10df976dd4c01fddcaaf225f9f26898",
+        "definer": true,
+        "settings": [
+          "search_path=\"\"",
+          "lock_timeout=3s"
+        ],
+        "anonymous": false,
+        "signature": "taskfold_private.undo_private_workflow(uuid, jsonb)",
+        "authenticated": true
+      }
+    ],
+    "migration": {
+      "name": "taskfold_personal_workflow_undo_service",
+      "version": "20261103212921"
+    },
+    "receiptProtection": {
+      "rls": true,
+      "anonymousSelect": false,
+      "authenticatedSelect": false
+    }
+  },
+  "liveTaskRowsRead": false,
+  "liveTaskRowsWritten": false
+}

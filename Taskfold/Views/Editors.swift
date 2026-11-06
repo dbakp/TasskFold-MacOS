@@ -8,11 +8,14 @@ struct NamedEditor: View {
     let table: String
     @State var record: Record
     @State private var confirmDelete = false
+    @State private var workflowBinding: WorkspaceBinding?
+    @State private var workflowBaseline: Record?
     @FocusState private var nameFocused: Bool
     private let palette = [("Rose", "#e31e4b"), ("Red", "#ef4444"), ("Orange", "#f97316"), ("Green", "#22c55e"), ("Blue", "#3b82f6"), ("Purple", "#8b5cf6"), ("Teal", "#14b8a6"), ("Gray", "#6b7280")]
     private var isNew: Bool { store.record(table, id: record.id) == nil }
     private var noun: String { table == "projects" ? "Project" : "Label" }
     var body: some View {
+        let parentChoices = table == "projects" ? ProjectOrganization.parentChoices(for:record,account:store.userID,projects:store.allProjects):[]
         VStack(alignment: .leading, spacing: 16) {
             Text(isNew ? "New \(noun)" : "Edit \(noun)").font(.headline)
             Form {
@@ -28,7 +31,14 @@ struct NamedEditor: View {
                         }
                     }
                 }
-                if table == "projects" { TextField("Description", text: Binding(get: { record.string("description") }, set: { record["description"] = .string($0) }), axis: .vertical).lineLimit(2...4) }
+                if table == "projects" { TextField("Description", text: Binding(get: { record.string("description") }, set: { record["description"] = .string($0) }), axis: .vertical).lineLimit(2...4)
+                    ProjectParentPickerField(record:$record,choices:parentChoices,binding:workflowBinding)
+                    if !record.string("parent_id").isEmpty { Text("Subprojects share organization, not access. Sharing stays separate for each project.").font(.caption).foregroundStyle(.secondary) }
+                    if store.record("projects", id: record.id) != nil && record.string("user_id") == store.userID {
+                        Toggle("Archived", isOn: Binding(get: { record["is_archived"].flag }, set: { record["is_archived"] = .bool($0) })).accessibilityIdentifier("projectArchived")
+                        Text("Archiving preserves this project and its subprojects. Independently archived children remain archived when you restore the parent.").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
             }.formStyle(.columns)
             HStack {
                 if !isNew && (table != "projects" || record.string("user_id") == store.userID) {
@@ -40,19 +50,20 @@ struct NamedEditor: View {
             }
         }
         .padding(20).frame(width: 420)
-        .onAppear { nameFocused = true }
+        .onAppear { nameFocused = true; if workflowBinding == nil { workflowBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); workflowBaseline = store.record(table, id: record.id) } }
         .confirmationDialog("Delete this \(noun.lowercased())?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
                 workspace.run("Delete \(noun)") { store.remove(table, record.id) }
                 if workspace.section == (table == "projects" ? .project(record.id) : .label(record.id)) { workspace.section = .today }
                 dismiss()
             }
-        } message: { if table == "projects" { Text("Its tasks move to Inbox.") } }
+        } message: { if table == "projects" { Text("Its tasks move to Inbox. Subprojects remain saved at the top level.") } }
     }
     private var canSave: Bool { !record.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     private func save() {
+        guard store.workflowReady(workflowBinding) else { return }
         record["name"] = .string(record.name.trimmingCharacters(in: .whitespacesAndNewlines))
-        if workspace.save(table, record, name: isNew ? "Add \(noun)" : "Edit \(noun)") {
+        if workspace.save(table, record, name: isNew ? "Add \(noun)" : "Edit \(noun)", baseline: workflowBaseline) {
             if isNew { workspace.section = table == "projects" ? .project(record.id) : .label(record.id) }
             dismiss()
         }
@@ -66,18 +77,18 @@ struct SectionsEditor: View {
     @Environment(\.dismiss) private var dismiss
     let projectID: String
     @State private var name = ""
-    private var sections: [Record] { store.rows("sections").filter { $0.string("project_id") == projectID }.sorted { $0["order_index"].integer < $1["order_index"].integer } }
+    private var sections: [Record] { OrganizationOrder.sorted(store.rows("sections").filter { $0.string("project_id") == projectID }) }
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Sections").font(.headline)
             List {
                 ForEach(sections) { section in
                     HStack {
-                        TextField("Section name", text: Binding(get: { store.record("sections", id: section.id)?.name ?? section.name }, set: { var changed = section; changed["name"] = .string($0); workspace.save("sections", changed, name: "Rename Section") })).textFieldStyle(.plain)
+                        TextField("Section name", text: Binding(get: { store.record("sections", id: section.id)?.name ?? section.name }, set: { var changed = section; changed["name"] = .string($0); workspace.save("sections", changed, name: "Rename Section") })).textFieldStyle(.plain).accessibilityIdentifier("section-" + section.id)
                         Button { workspace.run("Delete Section") { store.remove("sections", section.id) } } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Delete \(section.name)")
                     }
                 }
-                .onMove { source, destination in var list = sections; list.move(fromOffsets: source, toOffset: destination); workspace.run("Reorder Sections") { for (i, var row) in list.enumerated() { row["order_index"] = .number(Double(i)); store.save("sections", row) } } }
+                .onMove { source, destination in var list = sections; list.move(fromOffsets: source, toOffset: destination); workspace.run("Reorder Sections") { store.reorderOrganization("sections", ids: list.map(\.id), projectID: projectID) } }
                 if sections.isEmpty { Text("No sections yet.").foregroundStyle(.secondary) }
             }.frame(minHeight: 160)
             HStack {
@@ -163,7 +174,7 @@ struct CollaboratorsView: View {
         busy = true; defer { busy = false }
         do {
             let data = try await store.backend.request("/rest/v1/rpc/get_project_collaborators_safe", method: "POST", body: ["_project_id": .string(project.id)])
-            collaborators = try JSONDecoder().decode([Record].self, from: data)
+            collaborators = try TaskfoldJSONDecoder().decode([Record].self, from: data)
             await store.sync()
             await workspace.refreshMemberDirectory(force: [project.id])
         } catch { message = error.localizedDescription }
@@ -242,37 +253,53 @@ struct TodoistImportView: View {
             if let preview = flow.preview {
                 Section("Ready to import") {
                     ForEach(TodoistImportFlow.countKeys, id: \.self) { key in
-                        LabeledContent(key.capitalized, value: "\(preview["counts"].object[key]?.integer ?? 0)").accessibilityIdentifier("todoistCount-" + key)
+                        LabeledContent(key.capitalized, value: "\(preview["counts"].object[key]?.integer ?? 0)")
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(key.capitalized)
+                            .accessibilityValue("\(preview["counts"].object[key]?.integer ?? 0)")
+                            .accessibilityIdentifier("todoistCount-" + key)
                     }
-                }
+                    if flow.headingCount > 0 {
+                        LabeledContent("Headings included above", value: String(flow.headingCount)).accessibilityIdentifier("todoistHeadingCount")
+                        Text(flow.headingImportAvailable ? "These will stay open as headings, with their notes and child tasks." : "Heading import is not available in this workspace yet. Your source is unchanged; keep using Todoist until support is enabled.")
+                            .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistHeadingAvailability")
+                    }
+                }.accessibilityElement(children: .contain)
             }
             if !flow.warnings.isEmpty {
                 Section("Before you leave Todoist") {
                     ForEach(Array(flow.warnings.enumerated()), id: \.offset) { index, warning in
-                        Text(warning).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistWarning-\(index)")
+                        Text(warning).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            .accessibilityElement(children: .ignore).accessibilityLabel(warning)
+                            .accessibilityIdentifier("todoistWarning-\(index)")
                     }
-                }
+                }.accessibilityElement(children: .contain)
             }
             if flow.preview != nil {
                 Section {
-                    Button("Import into Taskfold") { run(previewOnly: false) }.disabled(flow.busy).accessibilityIdentifier("todoistImport")
+                    if let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }
+                    Button(flow.busy ? "Importing…" : flow.message == nil ? "Import into Taskfold" : "Retry import") { run(previewOnly: false) }.disabled(!flow.canImport).accessibilityIdentifier("todoistImport")
                 } footer: { Text("Source IDs prevent duplicates when you retry this account. Existing imported tasks keep your Taskfold edits.") }
             }
             if let result = flow.result {
                 Section("Import complete") {
                     ForEach(TodoistImportFlow.resultKeys, id: \.self) { key in
-                        LabeledContent(TodoistImportFlow.resultTitle(key), value: "\(result[key].integer)").accessibilityIdentifier("todoistReceipt-" + key)
+                        LabeledContent(TodoistImportFlow.resultTitle(key), value: "\(result[key].integer)")
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(TodoistImportFlow.resultTitle(key))
+                            .accessibilityValue("\(result[key].integer)")
+                            .accessibilityIdentifier("todoistReceipt-" + key)
                     }
-                }
+                }.accessibilityElement(children: .contain)
             }
             if flow.busy { HStack { ProgressView(); Text(flow.active?.previewOnly == true ? "Preparing preview…" : "Importing your tasks…") }.accessibilityIdentifier("todoistImportBusy") }
-            if let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }
+            if flow.preview == nil, let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }
         }.formStyle(.grouped).accessibilityIdentifier("todoistImportForm")
         .onChange(of: store.workspaceGeneration) { _, _ in flow.reset() }
         .onDisappear { if flow.active?.previewOnly != false { flow.reset() } }
     }
     private func run(previewOnly: Bool) {
-        guard let request = try? flow.begin(previewOnly: previewOnly, workspace: store.workspaceGeneration) else { return }
+        guard let request = try? flow.begin(previewOnly: previewOnly, workspace: store.workspaceGeneration, supportsHeadings: store.taskHeadingsAuthoringEnabled) else { return }
         Task {
             do {
                 let data: Data
@@ -282,7 +309,7 @@ struct TodoistImportView: View {
                 #else
                 data = try await store.backend.request("/functions/v1/import-todoist", method: "POST", body: request.body)
                 #endif
-                let row = try JSONDecoder().decode(Record.self, from: data)
+                let row = try TaskfoldJSONDecoder().decode(Record.self, from: data)
                 if try flow.accept(row, request: request, workspace: store.workspaceGeneration) { await store.sync() }
             } catch { flow.fail(error, request: request, workspace: store.workspaceGeneration) }
         }
@@ -292,18 +319,25 @@ struct TodoistImportView: View {
     private func fixtureResponse(_ request: TodoistImportFlow.Request) async throws -> Data {
         try await Task.sleep(for: .seconds(1))
         if request.token == "fixture-rejected-token" { throw AppFailure(message: "Todoist rejected this API token. Check the token and its permissions.") }
-        if request.token == "fixture-malformed-token" { return try JSONEncoder().encode(Record(["preview": .bool(true), "sourceAccount": .string("fixture-source"), "counts": .object([:]), "warnings": .array([])])) }
+        if request.token == "fixture-malformed-token" { return try TaskfoldJSONEncoder().encode(Record(["preview": .bool(true), "sourceAccount": .string("fixture-source"), "counts": .object([:]), "warnings": .array([])])) }
         var fields: [String: JSON] = ["sourceAccount": .string("fixture-source"), "warnings": .array([.string("Completed history and archived projects are not imported."), .string("Reminder settings and saved filters stay in Todoist.")])]
         if request.previewOnly {
             fields["preview"] = .bool(true)
             fields["counts"] = .object(["projects": .number(2), "sections": .number(3), "labels": .number(2), "tasks": .number(4), "subtasks": .number(2), "comments": .number(3)])
+            if request.supportsHeadings { fields["headings"] = .object(["version": .number(1), "roots": .number(0), "subtasks": .number(0), "available": .bool(false)]) }
+            if request.token == "fixture-heading-blocked-token" || request.token == "fixture-heading-ready-token" {
+                fields["headings"] = .object(["version": .number(1), "roots": .number(1), "subtasks": .number(1), "available": .bool(request.supportsHeadings && request.token == "fixture-heading-ready-token")])
+            }
+
         } else {
             fixtureAttempts += 1
             if fixtureAttempts == 1 { throw AppFailure(message: "The connection was lost while saving. Preview and retry: source IDs prevent duplicate imports.") }
             fields["success"] = .bool(true)
+            if request.token == "fixture-heading-ready-token" { fields["formatVersion"] = .number(2); fields["capabilities"] = .array([.string("task_headings")]) }
+
             for key in TodoistImportFlow.resultKeys { fields[key] = .number(key.hasSuffix("Skipped") ? (key == "tasksSkipped" ? 4 : 2) : 0) }
         }
-        return try JSONEncoder().encode(Record(fields))
+        return try TaskfoldJSONEncoder().encode(Record(fields))
     }
     #endif
 }

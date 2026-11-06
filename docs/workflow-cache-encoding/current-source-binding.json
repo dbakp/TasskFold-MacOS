@@ -1,0 +1,22 @@
+{
+  "Taskfold/Core/Models.swift": {
+    "source": "e772a69ed12dbae35370ebf5e3e68c2f9fdb77a89ad55e7d1e218edcd2a6aa1b",
+    "staged": "e772a69ed12dbae35370ebf5e3e68c2f9fdb77a89ad55e7d1e218edcd2a6aa1b"
+  },
+  "Taskfold/Core/TaskActivity.swift": {
+    "source": "997d49d3500668a0b9af727319e034677b7f21b5ef41d166e02149108508cef5",
+    "staged": "997d49d3500668a0b9af727319e034677b7f21b5ef41d166e02149108508cef5"
+  },
+  "Taskfold/Core/Store.swift": {
+    "source": "a09b3a063916bc7842d62b14920e99e30dc72e31d07972d992576ad724e48aca",
+    "staged": "d0387d61e997262e713bc3810b6f411b219a2bbe7c6dec6e79ff769f72d3958a"
+  },
+  "Taskfold/TeamTemplateNativeFixture.swift": {
+    "source": "601c0e7c0ad7af2234b2aa4d8c6aa03599378135d381c689b434e21a57e4f8b8",
+    "staged": "601c0e7c0ad7af2234b2aa4d8c6aa03599378135d381c689b434e21a57e4f8b8"
+  },
+  "TaskfoldUITests/TaskfoldMacUITests.swift": {
+    "source": "fa1fede50f2244de92813c1969d16d3a8a40bc5412d9d6243f567287e8d5d7c2",
+    "staged": "fa1fede50f2244de92813c1969d16d3a8a40bc5412d9d6243f567287e8d5d7c2"
+  }
+}

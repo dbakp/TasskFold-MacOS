@@ -1,0 +1,83 @@
+{
+  "syntheticOnly": true,
+  "account": "b887c72f-604d-4694-a72c-01265fae1412",
+  "origin": "https://synthetic.example",
+  "intent": {
+    "version": 1,
+    "account": "b887c72f-604d-4694-a72c-01265fae1412",
+    "operation_id": "c1753c5a-8f78-43cf-b8f3-7baaeda5bdba",
+    "comment_id": "b7f73bb3-4c73-41fa-8b76-28775b12ba3f",
+    "asset_id": "cbcda8bf-21cd-459c-a67a-785b894906f9",
+    "target": {
+      "task_id": "27f7b31a-9244-47be-84b0-578e6d74e0b3",
+      "task_generation": "11059345-0b97-4e66-9bf0-b1fb3bdb05c9",
+      "project_id": "af683502-650d-40da-abd3-aa0bbb0ac7f8"
+    },
+    "caption": "Audience approval synthetic proof",
+    "audio": {
+      "version": 1,
+      "mime_type": "audio/mp4",
+      "byte_count": 59439,
+      "duration_ms": 1000,
+      "sha256": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb"
+    }
+  },
+  "personalApproval": {
+    "token": "8b1d6c88bc9115bb3746b7e37f7cdf08d4977ea703350763502e073c579cdd1f",
+    "target": {
+      "task_id": "27f7b31a-9244-47be-84b0-578e6d74e0b3",
+      "project_id": "af683502-650d-40da-abd3-aa0bbb0ac7f8",
+      "task_generation": "11059345-0b97-4e66-9bf0-b1fb3bdb05c9"
+    },
+    "account": "b887c72f-604d-4694-a72c-01265fae1412",
+    "audience": {
+      "kind": "personal",
+      "team_id": null,
+      "visibility": "personal"
+    },
+    "protocol": 1,
+    "expires_at": "2026-11-03T02:35:41.844123Z"
+  },
+  "teamApproval": {
+    "token": "e650586380216dc3a34316eda50c368ebeab5d33a05c13d3c72eff51796b2624",
+    "target": {
+      "task_id": "27f7b31a-9244-47be-84b0-578e6d74e0b3",
+      "project_id": "af683502-650d-40da-abd3-aa0bbb0ac7f8",
+      "task_generation": "11059345-0b97-4e66-9bf0-b1fb3bdb05c9"
+    },
+    "account": "b887c72f-604d-4694-a72c-01265fae1412",
+    "audience": {
+      "kind": "team",
+      "team_id": "8f2e119f-d0c2-4cf7-940d-a4278bcb6a7b",
+      "visibility": "team"
+    },
+    "protocol": 1,
+    "expires_at": "2026-11-03T02:35:42.743960Z"
+  },
+  "receipt": {
+    "audio": {
+      "sha256": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+      "version": 1,
+      "mime_type": "audio/mp4",
+      "byte_count": 59439,
+      "duration_ms": 1000
+    },
+    "state": "published",
+    "target": {
+      "task_id": "27f7b31a-9244-47be-84b0-578e6d74e0b3",
+      "project_id": "af683502-650d-40da-abd3-aa0bbb0ac7f8",
+      "task_generation": "11059345-0b97-4e66-9bf0-b1fb3bdb05c9"
+    },
+    "account": "b887c72f-604d-4694-a72c-01265fae1412",
+    "caption": "Audience approval synthetic proof",
+    "asset_id": "cbcda8bf-21cd-459c-a67a-785b894906f9",
+    "protocol": 1,
+    "author_id": "b887c72f-604d-4694-a72c-01265fae1412",
+    "comment_id": "b7f73bb3-4c73-41fa-8b76-28775b12ba3f",
+    "expires_at": "2026-11-04T02:25:43.240331+00:00",
+    "reserved_at": "2026-11-03T02:25:43.240331+00:00",
+    "operation_id": "c1753c5a-8f78-43cf-b8f3-7baaeda5bdba",
+    "published_at": "2026-11-03T02:25:43.602297+00:00"
+  },
+  "containerRemoved": true
+}

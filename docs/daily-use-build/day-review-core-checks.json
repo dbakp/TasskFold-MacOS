@@ -1,0 +1,44 @@
+{
+  "ios": {
+    "passed": 74,
+    "failed": 0,
+    "groups": {
+      "durableMemo": 7,
+      "plannerDates": 15,
+      "widgetPublication": 5,
+      "preservingJSON": 27,
+      "preparedEncoding": 10,
+      "timeSnooze": 10
+    },
+    "attachmentReadDiagnostic": {
+      "bytes": 2592193,
+      "firstDecodeSeconds": 0.09063100814819336,
+      "meanWarmReadSeconds": 0.0009335994720458985,
+      "reads": 20,
+      "everyReadReadsActualFile": true,
+      "fullDecodeCount": 1,
+      "deviceFPSClaim": false
+    }
+  },
+  "mac": {
+    "passed": 74,
+    "failed": 0,
+    "groups": {
+      "durableMemo": 7,
+      "plannerDates": 15,
+      "widgetPublication": 5,
+      "preservingJSON": 27,
+      "preparedEncoding": 10,
+      "timeSnooze": 10
+    },
+    "attachmentReadDiagnostic": {
+      "bytes": 2592193,
+      "firstDecodeSeconds": 0.07730400562286377,
+      "meanWarmReadSeconds": 0.0004488527774810791,
+      "reads": 20,
+      "everyReadReadsActualFile": true,
+      "fullDecodeCount": 1,
+      "deviceFPSClaim": false
+    }
+  }
+}

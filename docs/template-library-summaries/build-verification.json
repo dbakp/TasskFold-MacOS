@@ -1,0 +1,20 @@
+{
+  "platform": "mac",
+  "debugAppAndRunnerBuild": true,
+  "strictSignatureVerified": true,
+  "hostMatchesOwnChangedSource": true,
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "4be723fcce42135ab5479db4968b9dfcf944aa51d8016b95a2f866f2c3e56ef0",
+    "Taskfold/Core/Store.swift": "5c71ca7c4abf98ca0c3294a32fae0bcebabe4fb49a41739362a3fcf3b7f398d0",
+    "Taskfold/TeamTemplateNativeFixture.swift": "d80fde2d6a5cb24b1ac01f4ad4a0e586c8f277d05f5850f7bb89b173799e41ae",
+    "Taskfold/Views/WorkflowViews.swift": "841917a283318eb196d3709e73a00b8f5e9d98b4db0d6a6437e3d41700308a2f"
+  },
+  "codeSHA256": {
+    "Taskfold.app/Taskfold": "7988f297ee7bc35b4a9087e3967864da1df05f537141fe7fbcb9c853a3ebcf8d",
+    "Taskfold.app/Taskfold.debug.dylib": "9ca6fa77c0698eb2fc4401fb0241e82b3f59e6d3dceb6d7ea661354d199594c4",
+    "TaskfoldUITests-Runner.app/TaskfoldUITests-Runner": "78bef1ead00af196051f6778e25c9139ddba63f07237eaac8f82be562fa707c9"
+  },
+  "buildLogSHA256": "3b5ff95f4638655be2acee2ae1d1d1efdceeee92be40f2b40f8f6688e54a7241",
+  "releaseDistributionVerified": false,
+  "nativeMacInteractionVerified": false
+}

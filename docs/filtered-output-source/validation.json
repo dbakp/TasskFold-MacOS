@@ -1,0 +1,46 @@
+{
+  "scope": "Exact filtered root/child source admission; Core and native build/sign evidence. Native passing and failed diagnostic scopes are detailed in README.md.",
+  "passingCoreTests": 104,
+  "beforeNewCases": 3,
+  "beforeFailedCases": 2,
+  "beforeFailingAssertions": 13,
+  "sources": {
+    "Taskfold/Core/PrintDocument.swift": "a1a3092662a0723d392211ecf49364fcca4e1fc8eccc7539f14bf46e1c567e30",
+    "TaskfoldTests/PrintHierarchyRawSourceTests.swift": "8392723533908cad66b1d17a1debdb0add97af95b37edc656f944e99caefa577"
+  },
+  "strictSignatureVerified": true,
+  "binaries": {
+    "Contents/MacOS/Taskfold.debug.dylib": "f44f76492ac46ca490e767af516555210485db33a90127c108c45b078598eaf9",
+    "Contents/MacOS/__preview.dylib": "b49eaa4f46f4fd96bc90e9889b622f29d21bc6c921f4cfe668d76828ac3ff259",
+    "Contents/MacOS/Taskfold": "68a9035a0bbe5ed1a5e3140effaac4ccdd80da41b4492eb7e3f36d181c5af23e"
+  },
+  "beforeProductionCommit": "9193a10f0b3cb63c352f1ac85ab442628fe9ccd0",
+  "beforePrintSourceSHA256": "295ce4865ec7e5e9d7c23238b5f2c3e14f3a590e3a9f6a738927984c0d3b5f11",
+  "beforeRegressionTestSHA256": "1ded63bd0956d53f90e080a45697e1ed804c8dfc069c23698c51177ca595f7a3",
+  "nativeAcceptance": {
+    "initialIpad": {
+      "passed": 3,
+      "failed": 0,
+      "runtimeWarnings": 0
+    },
+    "initialPhone": {
+      "passed": 2,
+      "failed": 1,
+      "runtimeWarnings": 0
+    },
+    "unchangedPhoneRetry": {
+      "passed": 0,
+      "failed": 1
+    },
+    "unshippedUniqueFilenameDriver": {
+      "passed": 0,
+      "failed": 2
+    },
+    "fullPhoneRepeatSaveAcceptance": "open"
+  },
+  "cleanup": {
+    "ownedSimulatorsShutdown": true,
+    "ownedTemporaryResultBundlesPrunedAfterEvidenceRetention": true,
+    "experimentalDriverSourceRestored": true
+  }
+}

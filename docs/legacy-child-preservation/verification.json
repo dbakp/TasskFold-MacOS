@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-01",
+  "repository": "mac",
+  "sourceBaselineCommit": "72db5aa5aa283d04df251a5134b5d829b4efc294",
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "7923fb029b64e788334cb4f8b86c4805121889da4e9adc674d67d023746896c6",
+    "TaskfoldTests/ExactChildFieldProjectionTests.swift": "22925b3b5c198e96e8ca160107ba2e14120784c78362dab376987075f7adc93e"
+  },
+  "core": {
+    "passedTests": 219,
+    "failedTests": 0,
+    "filter": "ExactChildFieldProjectionTests|ChildTaskListCompletionTests|ChecklistRecoveryTests|Hierarchy|WidgetActionTests|TaskActivity|SubtaskTreeTests|ChildTaskTransferTests",
+    "logSHA256": "2ed5e672774237108b06c366e572115e126c697cc7b710f9b50a452393e5e2d7"
+  },
+  "build": {
+    "phase": "legacy-child-preservation",
+    "appAndRunnerSignaturesVerified": true,
+    "sourceProof": {
+      "Taskfold/Core/SubtaskTree.swift": {
+        "sourceSHA256": "7923fb029b64e788334cb4f8b86c4805121889da4e9adc674d67d023746896c6",
+        "hostSHA256": "7923fb029b64e788334cb4f8b86c4805121889da4e9adc674d67d023746896c6",
+        "matchesDocumentedIsolation": true
+      }
+    },
+    "appBinariesSHA256": {
+      "Contents/MacOS/Taskfold": "fc17e9d9ac1a45a452e6292025ba7bf4e8befdfcddbe536a52075082770ee1d3",
+      "Contents/MacOS/Taskfold.debug.dylib": "68365886863e6fba726fcc1b845304d6e696f0063cf729028b8b2ba7d2c96152"
+    }
+  },
+  "newLegacyGuardNativeRuntimeAccepted": false,
+  "priorIPadAcceptance": "../child-copy-mapping-native/ipad-verification.json (recorded indexed-child-routing build, before these separate legacy-helper guards)",
+  "hostedChanges": false,
+  "normalUseEnabled": false,
+  "remaining": "Broader legacy-transform/cache/editor integration, native opaque rows, Mac/wider history acceptance, complex recipient/recurrence histories and shared custody remain open."
+}

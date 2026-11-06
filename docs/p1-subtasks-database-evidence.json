@@ -1,0 +1,27 @@
+{
+  "observedOn": "2026-10-20",
+  "migration": "20261020194217_subtask_structure_review.sql",
+  "generatedByCLIAs": "20261020194137_subtask_structure_review.sql",
+  "alignedToAppliedRemoteVersion": true,
+  "actualRoleFixture": "supabase/tests/subtask_structure_review.sql",
+  "checks": {
+    "concurrentMoveRequiresReview": true,
+    "concurrentReorderRequiresReview": true,
+    "independentFieldEditsStillMerge": true,
+    "reviewedLayoutRetainsRemoteAddition": true,
+    "exactRetryIsIdempotent": true,
+    "outsiderReadAndWriteDenied": true,
+    "fixtureUsersRemaining": 0,
+    "anonHelperExecute": false,
+    "patchSecurityDefiner": false,
+    "helperSecurityDefiner": false,
+    "liveFixtureUsersRemaining": 0,
+    "liveFixtureTasksRemaining": 0
+  },
+  "securityAdvisors": {
+    "before": 6,
+    "after": 6,
+    "newWarnings": 0
+  },
+  "boundary": "Adds a conservative structural-conflict guard to the existing current-client task RPC. It does not close the user-deferred legacy direct-writer rollout gate."
+}

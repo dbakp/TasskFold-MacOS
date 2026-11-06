@@ -1,0 +1,154 @@
+{
+  "date": "2026-10-11",
+  "scope": "Real Todoist first import into a confirmed-empty disposable destination; native iPhone Simulator loss of one real accepted save response, same-preview Retry, receipt, process relaunch and original-account return.",
+  "native": {
+    "test": "testAuthorizedRealTodoistFirstImportLostResponseRetry",
+    "resultBundle": "first-import-phone-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "durationSeconds": 180.389,
+    "structuredRuntimeWarnings": 0,
+    "device": "iPhone 17 Pro / iOS 26.5",
+    "bundle": "com.dbakp.taskfold.firstimporttests",
+    "uncertaintyMessageAndRetryVerified": true,
+    "falseSuccessAbsent": true,
+    "allSixPreviewAndTenReplayReceiptCountsVerified": true,
+    "successClearsToken": true,
+    "emptyImporterAfterRelaunch": true,
+    "originalAccountReturnVerified": true
+  },
+  "firstResponse": {
+    "labelsSkipped": 0,
+    "commentsImported": 94,
+    "httpStatus": 200,
+    "labelsImported": 5,
+    "sectionsSkipped": 0,
+    "projectsImported": 23,
+    "projectsSkipped": 0,
+    "tasksSkipped": 0,
+    "tasksImported": 252,
+    "sectionsImported": 88,
+    "subtasksImported": 24,
+    "realResponseDiscarded": true
+  },
+  "destination": {
+    "fiveImportTablesEmptyBeforeNativeLaunch": true,
+    "hostSnapshotVerifiedBeforeNativeRetry": true,
+    "completeCommittedRowsExactlyEqualAfterRetry": true,
+    "tables": {
+      "tasks": {
+        "count": 252,
+        "canonicalSha256": "f8000a4e3356211594187b366bd60af97ce04b0c2c1ceab9f5dc498d8601d536"
+      },
+      "projects": {
+        "count": 23,
+        "canonicalSha256": "2df6ca237135933332690298c56bc7eb7906fb89fb1dfa133717c405534526a5"
+      },
+      "sections": {
+        "count": 88,
+        "canonicalSha256": "a49553e98e10b61f45f262de3ab4b2b526f0f23c15d1735426411c0e34d50eff"
+      },
+      "labels": {
+        "count": 5,
+        "canonicalSha256": "1d88bd10a3c96cd0a6d3d8a632671dc81bb34b5e266ce2175ad581a667cc1b29"
+      },
+      "import_sources": {
+        "count": 368,
+        "canonicalSha256": "327b3c432286e9dfe67ccb4d2d4a2e980885d353792b63ec313f1477093a47bb"
+      }
+    }
+  },
+  "preservation": {
+    "todoistSourceMethods": "GET only",
+    "sourceFourTableFingerprintsExactBeforeAfter": true,
+    "sourceFingerprints": {
+      "projects": {
+        "count": 24,
+        "sha256": "8ba2e39e3b67b7682a2475fc431e0e3387e5da148703eab9d6abc0b2d1ce5a3f"
+      },
+      "sections": {
+        "count": 88,
+        "sha256": "f0cff4d29f874c253c39d178e16ac40a83e130bd26296cab13c003b13481576d"
+      },
+      "labels": {
+        "count": 5,
+        "sha256": "e6e96dbc92493f67d26be605fb6d8c871483e7f05b0f1ab74d0de3d043ae4dda"
+      },
+      "tasks": {
+        "count": 276,
+        "sha256": "bbf51e1e53430835e500ff6bf08ab2795dbd797d9e32cd3f6110247765ee74ba"
+      }
+    },
+    "sourceCommentsSeparatelyFingerprinted": false,
+    "existingImportedAccountCompleteTablesExact": 15,
+    "originalAccountCompleteTablesExact": 15,
+    "protectedSimulatorFiles": [
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "files": 26,
+        "fullFileSetAndHashesExact": true
+      },
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "files": 43,
+        "fullFileSetAndHashesExact": true
+      }
+    ],
+    "transientTodoistTokenRemovedFromBothPrivateFixtures": true,
+    "clipboardTokenCleared": true
+  },
+  "testControls": {
+    "debugOnly": true,
+    "exactDisposableUserEmailAndBundlePairsRequired": true,
+    "explicitFlagAndUUIDReceiptRequired": true,
+    "actualHTTPS200ResponseDiscarded": true,
+    "mockResponseUsed": false,
+    "firstSuccessfulSavePerBackendInstanceOnly": true,
+    "independentlyOwnedBothRepos": true,
+    "absentFromBothReleaseBackendObjects": true
+  },
+  "validation": {
+    "focusedImportCoreTestsEachRepo": 8,
+    "coreFailures": 0,
+    "releaseCoreBuildsSucceededBothRepos": true,
+    "iosNativeTestBuildSucceeded": true,
+    "strictAppWidgetRunnerSigning": "first-import-recovery/signing.json",
+    "sourceSha256": {
+      "TaskFold-iOS": {
+        "Taskfold/Core/Backend.swift": "9d6ff12c2403ef273f4ac43f3e286df8add7afa324375a5aa867ba66067ffe5a",
+        "TaskfoldUITests/TaskfoldUITests.swift": "65d915f14653d0b9948ad64e359460bf2fb0570fea50bfd2cda432c575ecc4ef",
+        "Scripts/sign_simulator_test_products.py": "4a6af9ac948fe9d60beea98ca1c3153231570705931d4a1bd06d658ed02df30a"
+      },
+      "TasskFold-MacOS": {
+        "Taskfold/Core/Backend.swift": "228eb6b5e64ebfef42182a04c50a323f4d649fd3a3ac1423d79bedb5b5a912a7"
+      }
+    }
+  },
+  "capture": "first-import-recovery/retry.png",
+  "cleanup": {
+    "duplicateExportBytes": 340892,
+    "rebuildableIntermediates": [
+      {
+        "directory": "BuildCache/ios-first-import/Build/Intermediates.noindex",
+        "bytes": 246279216
+      },
+      {
+        "directory": "BuildCache/ios-first-import/ModuleCache.noindex",
+        "bytes": 33630691
+      },
+      {
+        "directory": "BuildCache/ios-first-import/Index.noindex",
+        "bytes": 41529352
+      }
+    ],
+    "retained": "Original native result/logs, host driver/snapshots, final signed build products, installed isolated app, inspected screenshot"
+  },
+  "limits": [
+    "Deliberate local discard after a genuine committed HTTP 200, not a spontaneous wire outage.",
+    "First-import response-loss acceptance is iPhone only. Native Mac discard/retry still requires a rebuilt isolated app; the currently running Mac local-test binary predates the hook.",
+    "Source comments were imported and counted, but not independently fingerprinted before/after.",
+    "The host driver requires an empty destination before launch and captures all five tables before releasing Retry. This exact disposable account is now imported; do not present a rerun on it as another first import.",
+    "No notification, widget-host, accessibility, provider or distribution gates are closed by this result."
+  ]
+}

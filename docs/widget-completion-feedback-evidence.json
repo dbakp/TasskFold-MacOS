@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-12",
+  "scope": "Installed large Mac My list completion and new brief completion acknowledgement",
+  "installedCompletion": {
+    "userObservedTaskDisappear": true,
+    "taskID": "1c0c6814-7bbc-41fd-9257-0b4857442bde",
+    "changedTaskFields": [
+      "completed",
+      "completed_at",
+      "completion_version"
+    ],
+    "durableReceipt": true,
+    "pendingEdits": 0,
+    "fullSnapshotExactAfterNormalRelaunch": true,
+    "nativeCompletedRowObserved": true
+  },
+  "feedback": {
+    "platforms": [
+      "macOS",
+      "iOS"
+    ],
+    "behavior": "After durable save only, show a checkmark, Completed and privacy-aware title in the relevant My list for an eight-second timeline window. Tap opens the completed task.",
+    "scopeProtection": "Account and list membership, completion token, persisted receipt, still-completed task and bounded timestamp; old caches remain readable.",
+    "timingLimit": "WidgetKit schedules rendering; exact wall-clock duration is not guaranteed.",
+    "undo": "No direct widget Undo added in this change. The completed task can be opened; safe occurrence-aware Undo remains a separate design/verification task.",
+    "dismissal": "Added an explicit close button with a durable acknowledgement marker scoped to exact account, task and saved timestamp. It cannot mutate completion or suppress a newer acknowledgement. Installed dismissal acceptance pending."
+  },
+  "verification": {
+    "macWidgetActionTests": 12,
+    "iosWidgetActionTests": 12,
+    "failures": 0,
+    "macSignedDebugAppAndExtension": "passed",
+    "macStrictDeepSignature": "passed",
+    "iosArm64SimulatorDebug": "passed",
+    "sourceRendersInspected": [
+      "small/medium/large completion",
+      "hidden names",
+      "last task completed"
+    ],
+    "nativeFeedbackTransition": "User saw Completed after actual widget completion, but it remained visible past the requested expiry. Automatic expiry is not accepted.",
+    "dismissalBuilds": "macOS v8 signed Debug app/extension plus strict deep signatures and iOS arm64 Simulator Debug passed.",
+    "installedDismissal": {
+      "result": "Passed on installed large Mac My list v8",
+      "humanObservation": "Completed appeared; \u00d7 returned widget to All clear.",
+      "savedState": "Task remained completed, zero pending edits; dismissal account/task/savedAt exactly matched persisted feedback.",
+      "scope": "Mac installed large acknowledgement/dismissal accepted; independent iPhone medium acceptance is recorded separately."
+    },
+    "v8HostRecovery": {
+      "failure": "macOS launched the unregistered v7 extension path; ExtensionFoundation reported Invalid bundle record before app code.",
+      "resolution": "Verified old processes stopped, removed inactive v6/v7 Build products, registered v8 and normally relaunched host.",
+      "currentHostPID": 37154,
+      "currentExtensionPID": 37060,
+      "timeline": "TaskfoldMyList systemLarge success at 12:18:59",
+      "openProjectedTasks": 1,
+      "inactiveBuildBytesPruned": 255435318,
+      "limit": "Actual dismissal still pending."
+    },
+    "installedIOSDismissal": {
+      "test": "testIsolatedInstalledCompletionFeedbackDismissal",
+      "resultBundle": "ios-widget-feedback-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "scope": "Installed medium iPhone My list: project selection, actual completion, acknowledgement, dismiss to All clear, unrelated task retained and completion survives normal relaunch. Two screenshots inspected.",
+      "cleanup": "Temporary widget removed; Simulator shutdown. All 9 isolated original files restored/exact; all 100 other protected files exact.",
+      "testInfrastructure": "SpringBoard took repeated 60-second animation idle waits; test continued successfully. Install remapped the isolated data container; original retained account cache and backups were unchanged.",
+      "inactiveBuildBytesPruned": 345952560
+    }
+  },
+  "cleanup": {
+    "syntheticTaskAndProjectRemovedNatively": true,
+    "tasks": 0,
+    "projects": 0,
+    "pendingEdits": 0,
+    "nonActivityTablesEqualBeforeTest": true,
+    "protectedFilesHashExact": 100,
+    "expectedTestActivityRetained": true
+  },
+  "expiryFollowUp20261013": {
+    "rootCause": "Completion expiry was appended to WindowProvider, which never displays the acknowledgement. ListProvider, which displays it, scheduled only ordinary list transitions.",
+    "fixed": "Independently owned My list providers now use completionTimelineDates: retain list day/clock transitions and add the visible account/list-scoped acknowledgement expiry. Remove the unused acknowledgement expiry from A small window.",
+    "evidence": "widget-completion-expiry-evidence.json",
+    "installedAutomaticExpiry": "Accepted on installed Mac My list by human observation with saved-state proof, and on phone by the separate native journeys; see widget-completion-expiry-evidence.json."
+  }
+}

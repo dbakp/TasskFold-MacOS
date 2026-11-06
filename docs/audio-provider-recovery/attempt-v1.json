@@ -1,0 +1,29 @@
+{
+  "checks": {
+    "ambiguous upload returns retry": true,
+    "stored upload remains pending": true
+  },
+  "maintenance": [],
+  "actualLocalStorage": true,
+  "genuineAuth": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "error": {
+    "message": "Unexpected token 'o', \"open\" is not valid JSON"
+  },
+  "provider": [
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    }
+  ],
+  "checkCount": 2,
+  "cleanupErrors": [],
+  "storageRemoved": true,
+  "databaseRemoved": true
+}

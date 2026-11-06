@@ -1,0 +1,38 @@
+{
+  "onlyChangedTaskFields": [
+    "completed",
+    "completed_at",
+    "completion_version"
+  ],
+  "originalTaskIDRetained": true,
+  "taskCount": 1,
+  "pendingMutationCount": 0,
+  "otherTablesExceptActivityParsedEqual": true,
+  "newActivityCount": 1,
+  "newActivityKinds": [
+    "completed"
+  ],
+  "completionReceiptRetained": true,
+  "protectedApps": {
+    "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705:com.dbakp.taskfold.calendaraccessibilitytests": {
+      "exactFileSetAndHashes": true,
+      "fileCount": 4
+    },
+    "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969:com.dbakp.taskfold.calendaraccessibilitytests": {
+      "exactFileSetAndHashes": true,
+      "fileCount": 4
+    },
+    "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D:com.dbakp.taskfold.calendaraccessibilitytests": {
+      "exactFileSetAndHashes": true,
+      "fileCount": 17
+    },
+    "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705:com.dbakp.taskfold.assigneepatterntests": {
+      "exactFileSetAndHashes": true,
+      "fileCount": 43
+    },
+    "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969:com.dbakp.taskfold.assigneepatterntests": {
+      "exactFileSetAndHashes": true,
+      "fileCount": 26
+    }
+  }
+}

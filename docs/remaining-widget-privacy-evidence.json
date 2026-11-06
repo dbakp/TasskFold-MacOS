@@ -1,0 +1,90 @@
+{
+  "date": "2026-10-12",
+  "families": [
+    "Deadline radar",
+    "Small window",
+    "Day capacity",
+    "Inbox reset",
+    "Pinned note",
+    "Focus session",
+    "Week ahead",
+    "Project pulse"
+  ],
+  "findings": {
+    "Deadline radar and Small window": "Native links exposed visually redacted task/project names and dates/estimates.",
+    "Inbox reset": "Review 5 of 6 exposed the hidden count.",
+    "Week ahead and Project pulse": "Workload/progress details remained exposed.",
+    "Focus session": "Timing/session state remained exposed.",
+    "Day capacity and Pinned note": "Placeholder glyphs were not useful accessible guidance; Capacity retained calendar status."
+  },
+  "fix": "Explicit privacy branches replace workspace content with readable generic cards and avoid hidden-task/note/project root routes. Normal branches retained. Quick capture has only static public content and is unchanged.",
+  "verification": {
+    "normalMedium": "All four pairs match after normalizing numeric AX element IDs and the live Focus countdown (19:52 before, 19:53 after). Exact comparison initially caught this expected one-second timer difference.",
+    "privateMediumAndSmall": "All eight views expose public heading, generic private message, instruction and branding only.",
+    "visual": "All four small-layout captures inspected. Week is medium-only in the product; its forced small preview is not a supported-family claim.",
+    "builds": {
+      "mac-debug": {
+        "path": "/private/tmp/taskfold-remaining-privacy-mac-debug.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "2f6ecafb011db283f7ef28b01e9385d4f12663636fa331e4beb38672af7cbd90"
+      },
+      "mac-release": {
+        "path": "/private/tmp/taskfold-remaining-privacy-mac-release.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "ba978b974ffbba0259850797017f2839c2b9dcd7b68d9dc038acb2bdc4b48a1c"
+      },
+      "ios-debug": {
+        "path": "/private/tmp/taskfold-remaining-privacy-ios-debug.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "15aab9abb49817b402ba29aabffc5ea0369a704b4ea3ddd196fb6cd042755f1d"
+      },
+      "ios-release": {
+        "path": "/private/tmp/taskfold-remaining-privacy-ios-release.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "9aeae62f4423a03e7fad0281508753715d84607fd3119944b230cdc8f16e8d12"
+      }
+    },
+    "ownedSources": "Medium native host compiled from Mac source; small native host compiled from independently owned iOS source; both run on macOS.",
+    "scriptSyntax": "Python AST passed in both repos."
+  },
+  "limitations": [
+    "Explicit SwiftUI privacy redaction does not prove system-selected locked-device privacy.",
+    "Spoken VoiceOver and native iOS privacy runtime remain unaccepted.",
+    "Large layouts use the same branch but were not captured this turn.",
+    "Other existing P0 gates remain open."
+  ],
+  "dataSafety": "Only synthetic in-memory previews. No task/link actions, real app replacement, real task changes or installed widget changes. All preview hosts quit normally.",
+  "cleanup": {
+    "prunedBytes": 308576804,
+    "removed": [
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/remaining-privacy-mac",
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/remaining-privacy-ios",
+      "/private/tmp/taskfold-remaining-privacy-before-v1/Taskfold Widget Privacy Test.app",
+      "/private/tmp/taskfold-remaining-privacy-after-v1/Taskfold Widget Privacy Test.app",
+      "/private/tmp/taskfold-remaining-privacy-small-v1/Taskfold Widget Privacy Test.app"
+    ],
+    "retained": "Generated sources, logs, captures and receipt."
+  },
+  "captures": {
+    "small-planning.png": "f9445530aad873003e689749801bc85ed8004373f9638c5db08783bd64853bdd",
+    "after-week-pulse-ax.txt": "2af90ccb67946911bce2675ee39b0791c23ecb247ecabb03e8988d9ff5c63199",
+    "after-week-pulse.png": "a4a3216b1453959b953b70bb0d3c12e7b3093d41d5c9f70da357dba1d68a98b0",
+    "before-week-pulse-ax.txt": "35e2a6edebeb83dc6b5f190b99ae09921a11dd4a3b11d9148b9a66ac06291f91",
+    "after-workload-ax.txt": "4a49dc4c30cb6e7ecf47bb20af7164f2880aae80edaef051600a84fcef5cda72",
+    "after-planning-ax.txt": "76238012ded5f6e37c83165163c0606443ea0e40af48c89540be8604e9e03dc3",
+    "small-notes-focus.png": "43761c873a7258420ff33b0fd2af4f6082ac9a312a82420d370bc8b6f26824ad",
+    "before-notes-focus-ax.txt": "3fafdd8e876107a92387d0c27711246e7a52c8b391f643d951c58c1a4cedd30e",
+    "after-workload.png": "b9e50cf9ac9151269138f31fc7ec8eaf0274ecc1d3c8a518e171c79d70f40e44",
+    "small-week-pulse-ax.txt": "7283fbb5002bc691fa04a4e65c61826c6bd8ce22b4cb2a109b8f3b7123a3818a",
+    "small-week-pulse.png": "609aae38d57e6469d49d7a3e72face09fc8f63fb408f7076e962a50a55a842c1",
+    "after-notes-focus-ax.txt": "8015c5576748191290b0c4428792cd8fad67d0a338a65d4ec1d51a6b57962bf5",
+    "after-planning.png": "a0e8c02f5989dd279e059d402919eaf7d650b07abf87240127ac0985fe72d915",
+    "small-planning-ax.txt": "ba04ec90dd070992123339ea0d3ba0a2e4b5b83060fb453d2e8e3f0c565b6e73",
+    "after-notes-focus.png": "35ee57444e9e041120be675695b8fe10490832ceed30a5fd865f16036a3c78c7",
+    "small-workload-ax.txt": "51de255e2b4dcae756745e54a06989a3be5f2ed94ceda0e540bf6d504edf2e67",
+    "small-notes-focus-ax.txt": "65289788fa09c148d9545f9aac38c14c52288d132a947858b3aa1c0f48cb2497",
+    "before-workload-ax.txt": "fd24f4506ebb42640914db1905f2e3fc853638053d0b02237528e6cd8fe5d53f",
+    "before-planning-ax.txt": "252f47ba3307b5b460e490628b19b790e9f10fe1640fb74f139923071297f5aa",
+    "small-workload.png": "82e7ab2cfd5b2eee78c28fa96a48c0e6010dc3e5496cacf2c889e4d89a9036d0"
+  }
+}

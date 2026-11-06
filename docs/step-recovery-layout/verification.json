@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-06",
+  "nativeJourneys": {
+    "check": {
+      "checks": 9,
+      "passedTests": 1,
+      "runtimeWarnings": [],
+      "servicesRemoved": true,
+      "simulatorRestored": true
+    },
+    "review": {
+      "checks": 7,
+      "passedTests": 1,
+      "runtimeWarnings": [],
+      "servicesRemoved": true,
+      "simulatorRestored": true
+    },
+    "retry": {
+      "checks": 9,
+      "passedTests": 1,
+      "runtimeWarnings": [],
+      "servicesRemoved": true,
+      "simulatorRestored": true
+    },
+    "stop": {
+      "checks": 10,
+      "passedTests": 1,
+      "runtimeWarnings": [],
+      "servicesRemoved": true,
+      "simulatorRestored": true
+    }
+  },
+  "nativeTests": 4,
+  "genuineAPIAndUIAssertions": 35,
+  "seededProposalsOnly": true,
+  "realGenerationAccepted": false,
+  "hostedOrNormalGateChanges": false,
+  "nativeMacOrIPadAcceptance": false,
+  "normalAppsInstalledThisRun": false,
+  "sourceSHA256": {
+    "Taskfold/Views/ReviewedTaskStepsView.swift": "4c4ab19c65f481dcb79b00e8b9256988bf4fdcfd89a0ac2a0b2844dde7605f67"
+  },
+  "originatingFrameworkBacktraceEstablished": false,
+  "observedWarningEliminatedInNamedJourneys": true
+}

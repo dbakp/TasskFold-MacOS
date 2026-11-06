@@ -1,0 +1,31 @@
+# Fenced file cleanup — disabled local candidate
+
+Reviewed 2 November 2026. Each app repository owns its migration, service and tests. Nothing was deployed, scheduled or enabled for normal use.
+
+## Result
+
+An upload now gets a server-generated random object path and one tracked write ticket before its first Storage POST. A retry observes that same unresolved ticket or verifies an already committed object; it never starts a second POST against either. Old unleased admission is refused, and pre-existing unversioned allocations are not silently upgraded. A terminal transport acknowledgement settles a write. After a lost response, only complete matching bytes plus the sole admitted ticket and exact private Storage metadata can settle it. Timeout, missing bytes, cancellation and elapsed time cannot prove an in-flight write has stopped.
+
+The maintenance worker accepts no caller-supplied path. It probes unresolved closed uploads, then claims only versioned cancelled/expired allocations with no open writer. It verifies the full saved length/hash before deleting bytes through the Storage API, verifies object absence afterward, and confirms the exact durable SQL claim. SQL independently requires matching unexpired token/path, closed state, no open ticket and absent Storage metadata before marking the allocation eligible for quota release. A repeated matching confirmation replays safely; foreign/expired/replaced tokens cannot release quota. Failed deletion, wrong bytes, unexplained metadata and unresolved writers retain their allocations. Zero-ticket rows with unexpected objects are quarantined.
+
+Bare sender-stop markers confer no file ownership or deletion authority. They allocate no path and never enter the worker's candidate query. Published files and old unleased rows are excluded. Cleanup does not depend on the sender's remaining session/account, and grants no publication or task-reading authority. Private tickets/claims/helpers have no native grants; the previous service coordinator cannot bypass the writer wrapper. Existing caller validation, session checks, admission limits, task-generation bindings, project moves, Undo and sender history remain covered.
+
+The worker is off by default and keeps platform JWT verification enabled. An operator must also provide a separate maintenance secret of 32–256 characters. It accepts POST with an empty body or `{}`, runs bounded sequential batches of at most 25 probes and 25 claims, follows no redirects and returns counts only. No scheduler or deployment is installed. The initial candidate accepted only `NoSuchKey` with HTTP 404; the real-provider follow-up below adds the exact wrapped HTTP 400/404 response. Other provider/proxy errors stay unresolved. Compatibility with the eventual hosted Storage version remains a rollout check.
+
+## Verification and limits
+
+Each repo passes 118 actual database checks and 52 typechecked service tests, plus lint. The owning repository's `database.json` records the actual local PostgreSQL run, migration SHA, advisor baseline/comparison, synthetic claim/renewal and fixture removal. The suite includes the inherited cancellation/reservation lock-wait race and current-access checks. Service HTTP tests use injected requests/responses, covering no-duplicate retries, timeout/unresolved writes, deletion/readback failures, hash mismatch, false absence, claim refusal and deadline/auth/path boundaries. Type checking and lint pass.
+
+These checks prove database behavior and service orchestration separately. SQL uses synthetic Storage metadata; injected HTTP is not real provider delivery. Full Supabase-stack migration-history parity, genuine Storage integration, hosted deployment and native file interaction are not claimed. No native source changed in this batch, so the previous app/Core build evidence is unchanged, not rerun or counted as new acceptance. Viewer entrypoints, native picker/save-copy/cold/account/window/accessibility acceptance, real delivery and wider file/audio/legacy migration remain open. Shared-custody checkpoint totals stay unchanged.
+
+A failed early migration parse was corrected before acceptance. Fixture reads now JSON-encode scalar paths, and cleanup cases start in a separate synthetic admission window so the inherited per-minute creation cap does not masquerade as a legacy-protocol rejection. Limits were preserved.
+
+## Reproduce
+
+Run `python3 Scripts/check_test_storage.py --path /tmp` first (20 GiB floor). Set `TASKFOLD_TASK_FILE_STOP_SQL` and `TASKFOLD_TASK_FILE_CLEANUP_SQL` to this repo's corresponding sender-stop and cleanup migration paths, then run `node Scripts/Database/test-task-file-upload.mjs /tmp/taskfold-cleanup-sql.json`. The fixture owns and removes its PostgreSQL container. Run `deno test supabase/functions/task-files/handler_test.ts supabase/functions/task-files/sql_contract_test.ts supabase/functions/task-file-maintenance/handler_test.ts`, followed by `deno lint supabase/functions/task-files supabase/functions/task-file-maintenance`.
+
+Implementation follows the current official [Storage deletion guidance](https://supabase.com/docs/guides/storage/management/delete-objects) and [error-code contract](https://supabase.com/docs/guides/storage/debugging/error-codes). Production SQL reads Storage metadata; only the test fixture inserts/deletes synthetic metadata. The current changelog and database-function guidance were reviewed; no engine/SDK change or hosted operation was required.
+
+## Follow-up: real local provider integration
+
+The later [provider run](../task-file-provider/README.md) supersedes the earlier untested-provider limitation for its explicit local file-backend scope. It also fixes the worker to recognize the actual wrapped NoSuchKey response. Full hosted Auth/S3 and rollout remain unaccepted; the historical counts above were not rerun or inflated.

@@ -1,0 +1,29 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+    "-destination",
+    "platform=macOS,arch=arm64",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-mac-notes-cache.xcresult",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testMacNotesFormattingCancelPreservesWholeWorkspace",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testMacNotesSelectionPreviewApplyUndoAndColdReturn",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testMacNotesStaleApplyPreservesNewerSavedNote"
+  ],
+  "returncode": 0,
+  "cases": [
+    "testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry",
+    "testMacNotesFormattingCancelPreservesWholeWorkspace",
+    "testMacNotesSelectionPreviewApplyUndoAndColdReturn",
+    "testMacNotesStaleApplyPreservesNewerSavedNote"
+  ],
+  "started": 1793088108.168,
+  "finished": 1793088219.654
+}

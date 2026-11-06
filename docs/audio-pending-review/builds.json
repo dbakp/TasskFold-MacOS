@@ -1,0 +1,24 @@
+{
+  "ios": {
+    "platform": "ios",
+    "build": "BUILD SUCCEEDED",
+    "signingAllowed": false,
+    "bundleIdentifier": "com.dbakp.taskfold.pendingcompilecheck",
+    "architectures": "x86_64 arm64",
+    "binarySHA256": "285c1ec9cb0996be30613305634be9ab3c67edcb2e30f14c5dd4bd228659354f",
+    "normalDraftFlag": null,
+    "normalPublishingFlag": null,
+    "nativeRuntimeClaimed": false
+  },
+  "mac": {
+    "platform": "mac",
+    "build": "BUILD SUCCEEDED",
+    "signingAllowed": false,
+    "bundleIdentifier": "com.dbakp.taskfold.pendingcompilecheck",
+    "architectures": "arm64",
+    "binarySHA256": "7a2231c6327b65d5e81467bf1f793379f6c5b4a6c161b5fc8fdc1167deab7f2f",
+    "normalDraftFlag": null,
+    "normalPublishingFlag": null,
+    "nativeRuntimeClaimed": false
+  }
+}

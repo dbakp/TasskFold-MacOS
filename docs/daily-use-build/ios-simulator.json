@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "platform": "ios",
+  "bundle": "com.dbakp.taskfold",
+  "version": "1.4.0",
+  "build": "19",
+  "app": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app",
+  "sourceFingerprint": "af0d67cf22bcaaa53db72c6f467ea62294170f6efafe8971e12ba5f5dbac498e",
+  "sourceRevision": "7e144b45e5ba99f0014d278bfa04e5aed5eebda1",
+  "simulatorOnly": true,
+  "signatureVerified": false,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "published": false
+}

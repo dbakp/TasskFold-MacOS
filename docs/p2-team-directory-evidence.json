@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-24",
+  "milestone": "Scoped team directory identity presentation",
+  "platform": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamOrganization.swift": "4967d92d9bf71020ae9d1ed1568d6500cd73a66b6bde86f23aa14040c3c1334d",
+    "Taskfold/Views/TeamOrganizationView.swift": "dbf796fd409ec8ecbd3839befad0d80d3a17594d3a1bd744b372d138e1da8a4d",
+    "Taskfold/Views/TeamMembershipFixture.swift": "dd4655e559370c53fb850cf99305162e6c8b37a9053d1233366436d77418f166",
+    "TaskfoldTests/TeamOrganizationTests.swift": "67fd08189932ed1ac0c3fde72be7873538d1f5ac2774c442331a63a966504893",
+    "TaskfoldTests/Fixtures/team-directory-v1.json": "3196a1f827ec968f8b0db0a3beb681054201560ad2d07f631b5c6824de420dd1",
+    "Scripts/Database/test-team-organization.mjs": "73171f24ed5ec8fb69e3c4dc8bb2afe617bbd7e8b557be59a95694f49a0524b8",
+    "supabase/migrations/20261024161156_team_directory_identity.sql": "30ffaaa50c427158ebca5b46040ad12737de0247221625e0f136c922f93864bd"
+  },
+  "deployed": false,
+  "teamSetupEnabled": false,
+  "realDataChanged": false,
+  "emailSent": false,
+  "nativeTeamTaskWritesEnabled": false,
+  "core": {
+    "status": "passed",
+    "selectedTests": 91,
+    "newIdentityTests": 6,
+    "log": "/tmp/taskfold-team-identity-mac-core-final.log"
+  },
+  "database": {
+    "status": "passed",
+    "checks": 213,
+    "commandReceipts": 42,
+    "actionsCovered": 18,
+    "advisorsRan": true,
+    "newTeamAdvisorFindings": 0,
+    "containerRemoved": true,
+    "report": "p2-team-directory-postgres-evidence.json",
+    "fixture": "TaskfoldTests/Fixtures/team-directory-v1.json",
+    "scope": [
+      "Existing eighteen-action organization regressions",
+      "Owner/admin directory with duplicate names and confirmed emails",
+      "Lower-role/outsider/extra-target/direct-table/helper denial",
+      "Malformed/missing profiles, changed/unconfirmed email, banned/removal-pending targets",
+      "Editable metadata/claim spoofing cannot supply identity",
+      "Queued get demoted while waiting returns lower role without directory"
+    ]
+  },
+  "build": {
+    "status": "passed",
+    "target": "Independent isolated unsigned arm64 Mac app/extensions",
+    "log": "/tmp/taskfold-team-identity-mac-build-visible.log"
+  },
+  "remaining": [
+    "Live authenticated service and private-Keychain/native role/account/draft-cohort acceptance",
+    "Native Mac runtime and spoken accessibility; current Mac was locked",
+    "Remaining team project/task adapters and wider team rollout gates",
+    "All existing user-deferred release, remote notification, older-client, OAuth, location and email-provider work remains deferred"
+  ],
+  "native": {
+    "status": "not run",
+    "reason": "Mac locked; isolated app was never launched"
+  },
+  "cleanup": {
+    "ownedBuildsRemoved": true,
+    "ownedSimulatorAppsAndRunnersUninstalled": true,
+    "macTestAppNeverLaunched": true,
+    "approximateBytesReclaimedAcrossBothRepos": 1161621294,
+    "smallLogsAndCoreBuildCachesRetained": true
+  }
+}

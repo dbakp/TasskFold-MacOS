@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-05",
+  "implementation": "Focused Edit note from the existing pinned-note reader, with Write/Preview, formatting and explicit Save. Full task details remain available. Text saves use existing task admission, guarded personal/shared writers, normal durable queue and Undo. No pin/reminder/default/schema/rollout-gate changes.",
+  "core": {
+    "ios": {
+      "passed": 6,
+      "failed": 0
+    },
+    "mac": {
+      "passed": 6,
+      "failed": 0
+    }
+  },
+  "nativeIPhone": {
+    "normal": "direct-note-native-ios.json",
+    "conflict": "direct-note-conflict-ios.json",
+    "largestText": "direct-note-largest-text.json",
+    "acceptedCases": 3,
+    "failedCases": 0,
+    "skippedCases": 0,
+    "reportedRuntimeWarnings": 0,
+    "sameFinalSourceAndAppProductHashes": true,
+    "reviewedScreenshots": [
+      "focused-note-preview.png",
+      "conflicting-note-keeps-draft.png",
+      "largest-text-note-preview.png"
+    ],
+    "scope": "Production reader/editor; actual Store description-only Save, disjoint rename/priority preservation, pin/completion/checklist/opaque/unrelated-task preservation, Undo/Redo and cold data; conflict refusal with retained unsent text; separate AX XXXL dark preview/Cancel. Synthetic local workspace only."
+  },
+  "macBuild": {
+    "version": "1.2.0 (16)",
+    "compileSignAndBothExtensions": "passed",
+    "evidence": "direct-note-mac-build.json",
+    "packagedOrInstalled": false,
+    "nativeInteractionAccepted": false
+  },
+  "pendingPackages": "The already reviewed Mac14/phone30 packages and working Mac10/phone26 remain unchanged pending saved-draft confirmation. This source refinement is not silently substituted into those packages.",
+  "limits": [
+    "A captured text intent grants no permission; the live Store checks workspace/session/admission, pin, incarnation, current notes and authoring access.",
+    "Wider Mac/iPad/shared/account/speech/provider/external-file and interrupted-session acceptance remain separate.",
+    "Existing advanced-storage/remote-notification/distribution deferrals and normal-use gates remain unchanged."
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/PinnedNotes.swift": "1ebd09f67859d40d9837040bda0e013c6a32cca88c9608a09cdf04d1704e256a",
+    "Taskfold/Views/PinnedNotesView.swift": "79337317f4e571fbfa825140783537bf5172f2c4fcfa370945b054595c47c932",
+    "Taskfold/Views/NoteFormattingView.swift": "531f824f87a3a8db2f732a6fa6dcbd184dfa5f69e1884c1b872a710de2355ffd",
+    "TaskfoldTests/NoteMarkupTests.swift": "d7a9a7b6b4737972fc3be3655c8c046699cca0e0221922eb64bdb9c1768a96ec",
+    "Taskfold/Core/Store.swift": "632e63cac53a015fd62327e329ee6176cc312b0493db623a3839fd30a09adefa"
+  },
+  "testSetupCorrections": [
+    "First iPhone run exposed test-only long controls in the toolbar; move them into normal-size fixture content so Save stays in the ordinary toolbar.",
+    "The conflict test explicitly chooses normal text size instead of inheriting the Simulator accessibility setting.",
+    "The final three cases use the same current signed app and compiled test inputs. Earlier failures do not count as accepted flows."
+  ],
+  "coreEvidence": "direct-note-core-checks.json",
+  "cleanupEvidence": "direct-note-storage.json",
+  "freeGiB": 65.5
+}

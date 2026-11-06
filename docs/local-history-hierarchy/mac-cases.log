@@ -1,0 +1,23 @@
+Test Suite 'Selected tests' started at 2026-10-27 10:43:17.846.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 10:43:17.847.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-27 10:43:17.847.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (10.814 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' passed (10.944 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' passed (18.642 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' passed (8.989 seconds).
+Test Suite 'SharedHeadingNativeTests' passed at 2026-10-27 10:44:07.240.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 49.389 (49.393) seconds
+Test Suite 'TaskfoldMacUITests' started at 2026-10-27 10:44:07.241.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' started.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' passed (11.960 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-10-27 10:44:19.202.
+	 Executed 1 test, with 0 failures (0 unexpected) in 11.960 (11.961) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 10:44:19.203.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 61.349 (61.357) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 10:44:19.204.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 61.349 (61.358) seconds
+** TEST EXECUTE SUCCEEDED **

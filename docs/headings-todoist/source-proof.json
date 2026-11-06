@@ -1,0 +1,17 @@
+{
+  "Taskfold/Core/TodoistImport.swift": {
+    "sourceSHA256": "8313da450e30eed210c930807948711b22a38da5174e66de9e2403793a944823",
+    "preparedSHA256": "8313da450e30eed210c930807948711b22a38da5174e66de9e2403793a944823",
+    "matchesIsolatedSource": true
+  },
+  "Taskfold/Views/Editors.swift": {
+    "sourceSHA256": "95d027b314b26a12f77ebf10883744b039f71a9e65b783254d2a1cb2163db203",
+    "preparedSHA256": "95d027b314b26a12f77ebf10883744b039f71a9e65b783254d2a1cb2163db203",
+    "matchesIsolatedSource": true
+  },
+  "TaskfoldUITests/TaskfoldMacUITests.swift": {
+    "sourceSHA256": "b9e4e4b23a0008939c16e23309c34cd6239be526b89dc6ab50cdc3f84041bafe",
+    "preparedSHA256": "88c2ab1d5838ef23b16cf2b4bb257d61bf1c34562b92bf32a4f2390420d0b335",
+    "matchesIsolatedSource": true
+  }
+}

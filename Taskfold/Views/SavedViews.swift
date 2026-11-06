@@ -18,19 +18,43 @@ struct SavedViewEditor: View {
     @State private var deleting = false
     @State private var baseline: Record?
     @State private var loadFailure: String?
+    @State private var saveFailure: String?
+    @State private var targetRequest: SavedFilterTargetRequest?
+    @State private var assistance: FilterAssistanceRequest?
+    private struct AppliedSuggestion { let request: FilterAssistanceRequest; let proposal: FilterSuggestion }
+    @State private var appliedSuggestion: AppliedSuggestion?
+    @State private var openingWorkspace: WorkspaceBinding?
+    @State private var openingSession: UUID?
+    private var assistanceSource: JSON {
+        .object(["record": .object(record.fields), "saved": store.record("saved_views", id: record.id).map { .object($0.fields) } ?? .null,
+            "advanced": .bool(advanced), "expression": .string(expression), "match_any": .bool(matchAny),
+            "conditions": .array(conditions.map { .object(["id": .string($0.id.uuidString), "rule": $0.rule.json]) })])
+    }
+    private var workspaceCurrent: Bool {
+        openingWorkspace.map { store.workflowPreviewReady($0) } == true && openingSession == store.backend.reminderSessionIncarnation
+    }
+    private func openAssistance() {
+        guard loadFailure == nil, workspaceCurrent, let openingWorkspace, let openingSession else { return }
+        let original: String
+        if advanced { original = expression }
+        else if case .success(let rule) = parsed { original = rule.expression(in: store.filterContext) }
+        else { original = "" }
+        assistance = FilterAssistanceRequest(workspace: openingWorkspace, session: openingSession, source: assistanceSource, expression: original, includeCompleted: record["include_completed"].flag)
+    }
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
-        ("all","All tasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
-        ("priority","Priority"),("project","Project"),("project_name","Project name matches"),("section","Section"),("section_name","Section name matches"),("label","Label"),("label_name","Label name matches"),("completed","Completion"),("assigned","Assigned tasks"),("assignee","Assigned to"),
+        ("all","All tasks"),("root","Main tasks"),("subtask","Subtasks"),("parent","Tasks with subtasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_next_days","Planned in next days"),("planned_past_days","Planned in past days"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_next_days","Due in next days"),("effective_due_past_days","Due in past days"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_next_days","Deadline within days"),("deadline_past_days","Deadline in past days"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
+        ("priority","Priority"),("project","Project"),("project_tree","Project and subprojects"),("project_name","Project name matches"),("section","Section"),("section_name","Section name matches"),("label","Label"),("label_name","Label name matches"),("completed","Completion"),("shared","Shared projects"),("personal","Personal work"),("assigned","Assigned tasks"),("assignee","Assigned to"),("assigned_by","Assigned by"),("assignee_name","Assigned name matches"),
         ("due","Planned on date"),("before","Planned before date"),("deadline_today","Deadline today"),("deadline_overdue","Past deadline"),("deadline_next","Deadline in next days"),("no_deadline","No deadline"),("deadline","Deadline on date"),("deadline_before","Deadline before date"),("duration_max","Estimate up to minutes"),("no_estimate","No estimate")]
     private static let conditionGroups: [(String, [String])] = [
         ("Basics", ["all", "search", "recurring", "inbox", "no_labels", "priority"]),
-        ("Planned dates", ["planned_on", "planned_before", "planned_after", "today", "overdue", "next", "no_date"]),
-        ("Effective due", ["effective_due_on", "effective_due_before", "effective_due_after"]),
-        ("Deadlines", ["deadline_on", "deadline_before_day", "deadline_after", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline"]),
+        ("Task structure", ["root", "subtask", "parent"]),
+        ("Planned dates", ["planned_next_days", "planned_past_days", "planned_on", "planned_before", "planned_after", "today", "overdue", "next", "no_date"]),
+        ("Effective due", ["effective_due_next_days", "effective_due_past_days", "effective_due_on", "effective_due_before", "effective_due_after"]),
+        ("Deadlines", ["deadline_next_days", "deadline_past_days", "deadline_on", "deadline_before_day", "deadline_after", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline"]),
         ("Times and estimates", ["planned_time_on", "planned_time_before", "planned_time_after", "no_time", "duration_max", "no_estimate"]),
-        ("Projects and labels", ["project", "project_name", "section", "section_name", "label", "label_name"]),
-        ("People and status", ["assigned", "assignee", "completed"]),
+        ("Projects and labels", ["project", "project_tree", "project_name", "section", "section_name", "label", "label_name"]),
+        ("People and status", ["shared", "personal", "assigned", "assignee", "assigned_by", "assignee_name", "completed"]),
         ("Creation dates", ["created_on", "created_before", "created_after"]),
         ("Exact dates", ["due", "before", "deadline", "deadline_before"])
     ]
@@ -47,6 +71,9 @@ struct SavedViewEditor: View {
         var seen = Set<String>()
         return store.projects.flatMap { store.projectMembers($0.id) }.filter { $0.id != store.userID && seen.insert($0.id).inserted }.sorted { $0.string("display_name") < $1.string("display_name") }
     }
+    private var needsMemberDirectory: Bool {
+        ProjectMemberDemand.needsDirectory(expression: advanced ? expression : nil, fields: conditions.map(\.field), context: store.filterContext)
+    }
     private var parsed: Result<FilterRule, Error> {
         Result {
             if let loadFailure { throw FilterFailure(message: loadFailure) }
@@ -60,19 +87,25 @@ struct SavedViewEditor: View {
     }
     private var queryFailure: String? {
         if case .failure(let error) = parsed { return error.localizedDescription }
+        if case .success(let rule) = parsed { return store.hierarchyFilterError(rule) }
         return nil
     }
     private var failure: String? { nameFailure ?? queryFailure }
     private var previewCount: Int {
         guard case .success(let rule) = parsed else { return 0 }
-        let cache = TaskCache(); cache.update(store.tasks)
-        return cache.matching(TaskQuery(scope: .all, includeCompleted: record["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion), today: store.calendarContext.today, filter: rule, now: store.calendarContext.minute, datePreferences: store.datePhrasePreferences, filterLabels: store.labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: store.projects.map { FilterReference(id: $0.id, name: $0.name) }, filterSections: store.rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, userID: store.userID, timeZone: store.calendarContext.timeZone)).count
+        return store.previewFilterCount(rule, includeCompleted: record["include_completed"].flag)
     }
     private func text(_ field: String, fallback: String = "") -> Binding<String> { Binding(get: { record.fields[field]?.text ?? fallback }, set: { record[field] = .string($0) }) }
     var body: some View {
         NavigationStack {
             Form {
                 Section {
+                    Text(store.record("saved_views", id: record.id) == nil ? "New filter" : "Edit filter")
+                        .font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                }
+                Section {
+                    Button("Suggest a filter", systemImage: "wand.and.stars", action: openAssistance)
+                        .disabled(!loaded || loadFailure != nil || !workspaceCurrent).accessibilityIdentifier("suggestSavedFilter")
                     TextField("Filter name", text: text("name")).focused($focusedField, equals: "name").accessibilityIdentifier("savedViewName")
                     if let nameFailure { Label(nameFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterNameValidationError") }
                     Toggle("Edit expression", isOn: Binding(get: { advanced }, set: { value in
@@ -92,10 +125,13 @@ struct SavedViewEditor: View {
                         }
                         if let queryFailure { validationFeedback(queryFailure) }
                         DisclosureGroup("Syntax examples") {
-                            Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me, assigned, assigned to:others, assigned to:\"Alex Smith\". Collaborator names/emails resolve to a stable identity; quote names with spaces. Name patterns for people are not supported. Separate queries with commas to show ordered lists, for example overdue, today. A matching task can appear in each list. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
+                            Text("Use AND, OR, NOT and parentheses. Day ranges: 3 days (today and the next two), -3 days (the three days before today), deadline:3 days, effective-due:-3 days. Use in 3 days for one exact day. Examples: ##Work (project and subprojects), project-tree:\"Work\", #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me, assigned, assigned to:others, assigned to:\"Alex Smith\". Collaborator names/emails resolve to a stable identity; quote names with spaces. Use assigned to: M* Smith for matching display names, or assignee matching:\"M* Smith\". Quote an exact name containing * to keep it literal. Separate queries with commas to show ordered lists, for example overdue, today. A matching task can appear in each list. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
                             Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan. Add a time: date before:\"today at 2pm\". Date-and-time conditions exclude tasks without a planned time. Try date before:+4 hours or date after:now for a window that updates each minute.").font(.caption).foregroundStyle(.secondary)
                             Text("Creation examples: created:today, created before:-30 days, created after:yesterday. Uses the recorded creation date in your current time zone. Before and after exclude the chosen day. Plans and deadlines do not change when a task was created.").font(.caption).foregroundStyle(.secondary)
                             Text("Name patterns: %home*, #*Work, /*Meetings*. Use * for any characters, or project matching:\"*Work Admin*\" for spaces. Pattern results follow name changes; exact targets retain their identity.").font(.caption).foregroundStyle(.secondary)
+                            Text("Task structure: subtask, parent (tasks with subtasks), root (main tasks). Combine with dates, priority or projects: subtask & p1. Each comma-separated query keeps its own task scope.").font(.caption).foregroundStyle(.secondary)
+                            Text("Sharing: shared selects projects with another accepted member. personal selects your Inbox and projects you own without accepted collaborators. Pending invitations do not count. Each subproject uses its own membership; sharing is not inherited.").font(.caption).foregroundStyle(.secondary)
+                            Text("Assignment history: assigned-by:me, assigned-by:others, assigned-by:unknown. Excluding a person keeps unknown history out; add Unknown history as another condition when needed.").font(.caption).foregroundStyle(.secondary)
                             Text("Time examples: today & time before:14:00, time after:6pm. Time-only conditions compare the planned clock on any day in your current time zone. Combine with a date to choose a day.").font(.caption).foregroundStyle(.secondary)
                         }.font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterSyntaxExamples")
                         Text("Nested expressions stay in expression mode so switching views cannot discard conditions.").font(.caption).foregroundStyle(.secondary)
@@ -121,7 +157,7 @@ struct SavedViewEditor: View {
                 Section("View") {
                     Picker("Layout", selection: text("layout", fallback: "list")) { Text("List").tag("list"); Text("Board").tag("board") }.accessibilityIdentifier("savedViewLayout")
                     Picker("Group by", selection: text("grouping", fallback: "none")) { Text("None").tag("none"); Text("Project").tag("project"); Text("Priority").tag("priority"); Text("Planned date").tag("date"); Text("Deadline").tag("deadline") }.accessibilityIdentifier("savedViewGrouping")
-                    Picker("Sort", selection: text("sort_by", fallback: "manual")) { Text("Priority and your order").tag("manual"); Text("Planned date").tag("date"); Text("Deadline").tag("deadline"); Text("Estimate").tag("duration"); Text("Title").tag("title") }
+                    sortControl
                     Toggle("Include completed", isOn: Binding(get: { record["include_completed"].flag }, set: { record["include_completed"] = .bool($0) }))
                 }
                 Section {
@@ -135,8 +171,8 @@ struct SavedViewEditor: View {
             #if DEBUG
             .modifier(CalendarContextFixtureControls(editor: true))
             #endif
-            .navigationTitle(store.record("saved_views", id: record.id) == nil ? "New filter" : "Edit filter")
             #if os(iOS)
+            .navigationTitle(store.record("saved_views", id: record.id) == nil ? "New filter" : "Edit filter")
             .navigationBarTitleDisplayMode(.inline)
             // Keep the keyboard dismissal control in the sheet's measured safe area.
             // A keyboard ToolbarItem emits invalid-frame warnings as this Form gains focus.
@@ -160,13 +196,43 @@ struct SavedViewEditor: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(record.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || failure != nil).accessibilityIdentifier("saveSavedView") }
             }
             .onAppear(perform: load)
-            .task(id: advanced || conditions.contains { $0.field == "assignee" }) {
-                guard !store.localMode, advanced || conditions.contains(where: { $0.field == "assignee" }) else { return }
-                for project in store.projects { _ = try? await store.refreshProjectMembers(project.id) }
+            .alert("Could not save filter", isPresented: Binding(get: { saveFailure != nil }, set: { if !$0 { saveFailure = nil } })) {
+                Button("OK") { saveFailure = nil }
+            } message: { Text(saveFailure ?? "") }
+            .task(id: [needsMemberDirectory, appliedSuggestion == nil, assistance == nil]) {
+                guard !store.localMode, needsMemberDirectory, appliedSuggestion == nil, assistance == nil else { return }
+                for project in store.projects {
+                    guard !Task.isCancelled, workspaceCurrent else { return }
+                    _ = try? await store.refreshProjectMembers(project.id)
+                }
             }
             .confirmationDialog("Delete this filter?", isPresented: $deleting, titleVisibility: .visible) { Button("Delete", role: .destructive) { store.remove("saved_views", record.id); dismiss() } } message: { Text("Your tasks stay in place.") }
         }
         .tint(Color.taskfold)
+        // The editor owns this sheet outside reusable Form rows. In accessibility
+        // layouts the condition row also has a link; target taps must not push both.
+        .sheet(item: $assistance) { request in
+            FilterAssistanceView(request: request, source: { assistanceSource }, onApply: { proposal in
+                guard workspaceCurrent, request.matches(assistanceSource, workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation) else { throw FilterFailure(message: "This filter or workspace changed. Reopen its current details.") }
+                advanced = true; expression = proposal.expression
+                appliedSuggestion = AppliedSuggestion(request: request, proposal: proposal)
+            })
+        }
+        .onChange(of: expression) { _, value in
+            if let appliedSuggestion, !appliedSuggestion.proposal.expression.utf8.elementsEqual(value.utf8) { self.appliedSuggestion = nil }
+        }
+        .onChange(of: advanced) { _, value in if !value { appliedSuggestion = nil } }
+        .onChange(of: store.workspaceGeneration) { _, _ in if loaded && !workspaceCurrent { assistance = nil; dismiss() } }
+        .sheet(item: $targetRequest) { request in
+            NavigationStack {
+                SavedFilterTargetChooser(request: request, selected: conditions.first { $0.id == request.condition }?.value ?? "") { id in
+                    guard store.workflowPreviewReady(request.workspace), request.session == store.backend.reminderSessionIncarnation,
+                          let index = conditions.firstIndex(where: { $0.id == request.condition && $0.field == request.field }) else { return "This filter changed. Reopen its target chooser." }
+                    conditions[index].value = id; return nil
+                }
+            }.tint(Color.taskfold)
+                .frame(minWidth: 450, idealWidth: 500, minHeight: 500, idealHeight: 650)
+        }
     }
     private func validationFeedback(_ message: String) -> some View {
         Label(message, systemImage: "exclamationmark.triangle")
@@ -191,6 +257,7 @@ struct SavedViewEditor: View {
                 .accessibilityLabel("Condition")
                 .accessibilityValue(Self.choices.first { $0.0 == condition.wrappedValue.field }?.1 ?? "Condition")
                 .accessibilityIdentifier("filterCondition-" + condition.wrappedValue.id.uuidString)
+                .buttonStyle(.borderless)
             }
         } else {
             Menu { conditionOptions(condition) } label: {
@@ -207,16 +274,38 @@ struct SavedViewEditor: View {
     }
     @ViewBuilder private func valueControl(_ condition: Binding<FilterCondition>) -> some View {
         let field = condition.wrappedValue.field
-        if ["project", "section", "label"].contains(field) {
-            let rows = field == "project" ? store.projects : field == "section" ? store.rows("sections") : store.labels
-            Picker("Target", selection: condition.value) {
-                Text("Choose…").tag("")
-                if !condition.wrappedValue.value.isEmpty && !rows.contains(where: { $0.id == condition.wrappedValue.value }) { Text("Unavailable target").tag(condition.wrappedValue.value) }
-                ForEach(rows) { row in Text(row.name + (field == "section" ? " · " + (store.record("projects", id: row.string("project_id"))?.name ?? "") : "")).tag(row.id) }
-            }
+        if ["root", "subtask", "parent"].contains(field) {
+            Text(field == "root" ? "Main tasks at the first level, with or without subtasks." : field == "subtask" ? "Subtasks at every level. Results use each subtask's own plan, labels and completion." : "Tasks that contain subtasks, including nested parents.").font(.caption).foregroundStyle(.secondary)
+        } else if ["shared", "personal"].contains(field) {
+            Text(field == "shared" ? "Projects with another accepted member. Pending invitations and parent-project sharing do not count." : "Your Inbox and projects you own with no accepted collaborators. Pending invitations do not count.").font(.caption).foregroundStyle(.secondary)
+        } else if ["project", "project_tree", "section", "label"].contains(field) {
+            let selected = FilterTargetCatalog.current(condition.wrappedValue.value, field: field, projects: store.allProjects, sections: store.rows("sections"), labels: store.labels)
+            let conditionID = condition.wrappedValue.id
+            Button {
+                focusedField = nil
+                targetRequest = SavedFilterTargetRequest(field: field, condition: conditionID,
+                    workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation)
+            } label: {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Target").foregroundStyle(.primary); Spacer()
+                    Text(selected?.name ?? (condition.wrappedValue.value.isEmpty ? "Choose…" : "Unavailable target"))
+                        .foregroundStyle(.secondary).multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
+                }.frame(minHeight: 44).contentShape(Rectangle())
+            }.buttonStyle(.borderless).accessibilityLabel("Target").accessibilityValue(selected?.name ?? (condition.wrappedValue.value.isEmpty ? "Choose a target" : "Unavailable target"))
+                .accessibilityIdentifier("filterTargetPicker-" + conditionID.uuidString)
+            if field == "project_tree" { Text("Includes this project and its accessible subprojects. Results follow project moves; sharing is never inherited. New tasks still need a destination.").font(.caption).foregroundStyle(.secondary) }
         } else if field == "priority" { Picker("Priority", selection: condition.value) { ForEach(1...4, id: \.self) { Text("Priority \($0)").tag(String($0)) } } }
         else if field == "completed" { Picker("State", selection: condition.value) { Text("Open").tag("false"); Text("Completed").tag("true") } }
         else if field == "assigned" { Text("Tasks with a person assigned, including you. Exclude matches to show unassigned tasks.").font(.caption).foregroundStyle(.secondary) }
+        else if field == "assigned_by" {
+            Picker("Assigned by", selection: condition.value) {
+                Text("Me").tag("me"); Text("Others").tag("others"); Text("Unknown history").tag("unknown")
+                if !["me", "others", "unknown"].contains(condition.wrappedValue.value) && !people.contains(where: { $0.id == condition.wrappedValue.value }) { Text("Unavailable collaborator").tag(condition.wrappedValue.value) }
+                ForEach(people) { person in Text(person.string("display_name")).tag(person.id) }
+            }.accessibilityIdentifier("filterAssigner-" + condition.wrappedValue.id.uuidString)
+            Text("Who made the assignment. Older work and recurring copies may have unknown history. Changes waiting to sync stay unconfirmed.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("assignmentHistoryDetails")
+        }
         else if field == "assignee" {
             Picker("Person", selection: condition.value) {
                 Text("Me").tag("me"); Text("Others").tag("others"); Text("Unassigned").tag("unassigned")
@@ -225,8 +314,15 @@ struct SavedViewEditor: View {
             }.accessibilityIdentifier("filterAssignee-" + condition.wrappedValue.id.uuidString)
         }
         else if FilterNamePattern.expressions[field] != nil {
-            TextField("Name pattern, such as *Work*", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
-            Text("Use * for any characters. Matches the whole name; letter case and accents do not matter. Results follow renames and newly matching names. Exact target conditions keep their identity.").font(.caption).foregroundStyle(.secondary)
+            TextField(field == "assignee_name" ? "Display name pattern, such as M* Smith" : "Name pattern, such as *Work*", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
+            if field == "assignee_name" {
+                Text("Use * to match display names, not emails.").font(.caption).foregroundStyle(.secondary)
+                DisclosureGroup("Matching details") {
+                    Text("Matches the whole name; letter case and accents do not matter. Results follow current names and memberships. Choose Assigned to for one fixed person. Tasks with unavailable names stay hidden, even when you exclude matches.")
+                }.font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("assigneePatternDetails")
+            } else {
+                Text("Use * for any characters. Matches the whole name; letter case and accents do not matter. Results follow renames and newly matching names. Exact target conditions keep their identity.").font(.caption).foregroundStyle(.secondary)
+            }
         }
         else if FilterCreationReference.expressions[field] != nil {
             TextField("Creation date or phrase", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
@@ -238,7 +334,7 @@ struct SavedViewEditor: View {
         }
         else if FilterDateReference.expressions[field] != nil {
             TextField("Date or phrase", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
-            Text("Try today, tomorrow, next week, this weekend or in 7 days. Relative dates stay relative and use your Date phrases settings. Before and after exclude the chosen day or minute.").font(.caption).foregroundStyle(.secondary)
+            Text("Try tomorrow, next week, in 7 days or 1 week after next week. Relative dates stay relative and use your Date phrases settings. Before and after exclude the chosen day or minute.").font(.caption).foregroundStyle(.secondary)
             if !field.hasPrefix("deadline") { Text("Add a time: today at 14:00. Uses your current time zone; timed conditions exclude tasks without a time.").font(.caption).foregroundStyle(.secondary) }
             if FilterClockWindow.fields.contains(field) { Text("Try now, +4 hours or -30 minutes. These windows use timed plans and update each minute while the app is open. Before and after exclude the boundary minute.").font(.caption).foregroundStyle(.secondary) }
             if field.hasPrefix("effective_due_") { Text(FilterTimeReference.split(condition.wrappedValue.value) == nil && FilterClockWindow.offset(condition.wrappedValue.value) == nil ? "Uses the planned date. If there is no plan, uses the deadline." : "Timed conditions require a planned date and time.").font(.caption).foregroundStyle(.secondary) }
@@ -247,14 +343,44 @@ struct SavedViewEditor: View {
             TextField("Words in title or description", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
             Text("Matches every word, in any order. Letter case and accents do not matter.").font(.caption).foregroundStyle(.secondary)
         }
+        else if FilterDayWindow.expressions[field] != nil {
+            TextField("Days", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
+            Text(field.hasSuffix("_past_days") ? "The previous 1–3650 calendar days, excluding today." : "1–3650 calendar days, including today. Three days means today and the next two days.").font(.caption).foregroundStyle(.secondary)
+            if field.hasPrefix("effective_due_") { Text("Uses the planned date. If there is no plan, uses the deadline.").font(.caption).foregroundStyle(.secondary) }
+        }
         else if ["next", "deadline_next", "duration_max"].contains(field) { TextField(field == "duration_max" ? "Minutes" : "Days", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString) }
         else if ["due", "before", "deadline", "deadline_before"].contains(field) { DatePicker("Date", selection: Binding(get: { Dates.parse(condition.wrappedValue.value) ?? Date() }, set: { condition.wrappedValue.value = Dates.day($0) }), displayedComponents: .date) }
     }
+    private static let sortChoices: [(String, String)] = [("manual", "Priority and your order"), ("date", "Planned date"), ("deadline", "Deadline"), ("duration", "Estimate"), ("title", "Title")]
+    @ViewBuilder private var sortControl: some View {
+        if textSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Sort").font(.caption).foregroundStyle(.secondary)
+                Menu {
+                    Picker("Sort", selection: text("sort_by", fallback: "manual")) {
+                        ForEach(Self.sortChoices, id: \.0) { Text($0.1).tag($0.0) }
+                    }
+                } label: {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(Self.sortChoices.first { $0.0 == (record.fields["sort_by"]?.text ?? "manual") }?.1 ?? "Priority and your order")
+                            .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.up.chevron.down")
+                    }.frame(minHeight: 44).contentShape(.rect)
+                }.accessibilityLabel("Sort").accessibilityValue(Self.sortChoices.first { $0.0 == (record.fields["sort_by"]?.text ?? "manual") }?.1 ?? "Priority and your order").accessibilityIdentifier("savedViewSort")
+            }
+        } else {
+            Picker("Sort", selection: text("sort_by", fallback: "manual")) {
+                ForEach(Self.sortChoices, id: \.0) { Text($0.1).tag($0.0) }
+            }.accessibilityIdentifier("savedViewSort")
+        }
+    }
     private func defaultValue(_ field: String) -> String {
+        if FilterDayWindow.expressions[field] != nil { return "3" }
         if FilterDateReference.expressions[field] != nil || FilterCreationReference.expressions[field] != nil { return "today" }
         if FilterTimeReference.expressions[field] != nil { return "14:00" }
         if FilterNamePattern.expressions[field] != nil { return "*" }
-        switch field { case "priority": return "1"; case "next", "deadline_next": return "7"; case "duration_max": return "25"; case "completed": return "false"; case "assignee": return "me"; case "due", "before", "deadline", "deadline_before": return store.calendarContext.today; default: return "" }
+        switch field { case "priority": return "1"; case "next", "deadline_next": return "7"; case "duration_max": return "25"; case "completed": return "false"; case "assignee", "assigned_by": return "me"; case "due", "before", "deadline", "deadline_before": return store.calendarContext.today; default: return "" }
     }
     private func simpleConditions(_ rule: FilterRule) -> ([FilterCondition], Bool)? {
         let rules: [FilterRule], any: Bool
@@ -272,6 +398,7 @@ struct SavedViewEditor: View {
     private func load() {
         guard !loaded else { return }
         loaded = true; baseline = store.record("saved_views", id: record.id)
+        openingWorkspace = .init(account: store.userID, generation: store.workspaceGeneration); openingSession = store.backend.reminderSessionIncarnation
         do {
             let rule = try FilterRule(document: record["query_ast"])
             expression = rule.expression(in: store.filterContext)
@@ -282,9 +409,24 @@ struct SavedViewEditor: View {
         }
     }
     private func save() {
-        guard case .success(let rule) = parsed else { return }
+        guard workspaceCurrent else { saveFailure = "The workspace changed. Reopen the filter before saving. Your saved filter is unchanged."; return }
+        guard case .success(let rule) = parsed, failure == nil else { return }
+        if let appliedSuggestion, advanced {
+            do {
+                guard store.workflowPreviewReady(appliedSuggestion.request.workspace), appliedSuggestion.request.session == store.backend.reminderSessionIncarnation else { throw FilterFailure(message: "The workspace changed. Reopen the filter before saving.") }
+                let checked = try appliedSuggestion.proposal.revalidated(in: store.filterContext)
+                guard AuthoredValueComparison.exactJSON(checked.rule.document, rule.document) else { throw FilterFailure(message: "The expression changed. Review it again before saving.") }
+            } catch { saveFailure = error.localizedDescription + " Reopen Suggest a filter and check its preview. Your draft is still here."; return }
+        }
         record["name"] = .string(record.name.trimmingCharacters(in: .whitespacesAndNewlines)); record["query_ast"] = rule.document
-        if store.save("saved_views", record, baseline: baseline) { dismiss() }
+        if store.save("saved_views", record, baseline: baseline) {
+            dismiss()
+        } else {
+            // Consume this synchronous save error before the workspace-wide alert can interrupt the sheet.
+            let message = store.error ?? "Your filter could not be saved."
+            store.error = nil
+            saveFailure = message + "\n\nYour draft is still here. Try Save again when the problem is resolved."
+        }
     }
 }
 
@@ -304,7 +446,7 @@ struct SavedFilterBoard: View {
                 HStack(alignment: .top, spacing: 16) {
                     ForEach(groups) { group in
                         VStack(alignment: .leading, spacing: 12) {
-                            HStack(alignment: .firstTextBaseline) { Text(group.name).font(.headline).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true); Spacer(); Text("\(group.tasks.count)").foregroundStyle(.secondary).monospacedDigit() }
+                            HStack(alignment: .firstTextBaseline) { Text(group.name).font(.headline).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true); Spacer(); Text(TaskKind.listCountLabel(group.tasks)).foregroundStyle(.secondary).monospacedDigit() }
                             let orderKey = "scope:" + scope.preferenceKey + ":group:" + group.id
                             let ordered = store.viewValue(scope, field: "sort_by", fallback: .string("manual")).text == "manual" ? DayPlacement.arranged(group.tasks, ids: store.record(DayPlacement.table, id: orderKey)?["ids"].list.map(\.text) ?? []) : group.tasks
                             ScrollView(.vertical) {
@@ -365,5 +507,111 @@ private struct SavedFilterConditionChooser: View {
             .navigationBarBackButtonHidden()
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+    }
+}
+
+private struct SavedFilterTargetRequest: Identifiable {
+    let id = UUID()
+    let field: String
+    let condition: UUID
+    let workspace: WorkspaceBinding
+    let session: UUID
+}
+
+private struct SavedFilterTargetChooser: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: SavedFilterTargetRequest
+    let selected: String
+    let choose: (String) -> String?
+    private struct Version: Equatable {
+        let readable: Bool
+        let projects: [Record]
+        let sections: [Record]
+        let labels: [Record]
+    }
+    @FocusState private var searchFocused: Bool
+    @State private var query = ""
+    @State private var limit = FilterTargetCatalog.pageSize
+    @State private var catalog: FilterTargetCatalog?
+    @State private var loaded: Version?
+    @State private var message: String?
+    private var readable: Bool { store.workflowPreviewReady(request.workspace) && request.session == store.backend.reminderSessionIncarnation }
+    private var version: Version {
+        Version(readable: readable, projects: request.field == "label" ? [] : store.allProjects,
+            sections: request.field == "section" ? store.rows("sections") : [], labels: request.field == "label" ? store.labels : [])
+    }
+    private var kind: String { request.field == "label" ? "label" : request.field == "section" ? "section" : "project" }
+    var body: some View {
+        let current = version
+        VStack(spacing: 0) {
+            if readable {
+                HStack {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
+                    TextField("Find a name or project", text: $query)
+                        .focused($searchFocused).onSubmit { searchFocused = false }
+                        .textFieldStyle(.plain).accessibilityLabel("Search targets").accessibilityIdentifier("filterTargetSearch")
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.search)
+                        #endif
+                    if !query.isEmpty {
+                        Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
+                            .buttonStyle(.borderless).accessibilityLabel("Clear search").accessibilityIdentifier("clearFilterTargetSearch")
+                    }
+                }.padding().background(.bar)
+            }
+            if !readable {
+                ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Reopen this filter in your current workspace."))
+            } else if let catalog, loaded == current {
+                let page = catalog.page(query: query, limit: limit)
+                List {
+                    if page.total == 0 {
+                        ContentUnavailableView(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "No targets yet" : "No targets found", systemImage: "magnifyingglass", description: Text("Try another name or project."))
+                            .accessibilityIdentifier("filterTargetNoResults")
+                    }
+                    ForEach(page.options) { option in
+                        Button {
+                            guard readable, FilterTargetCatalog.current(option.id, field: request.field, projects: store.allProjects, sections: store.rows("sections"), labels: store.labels) != nil else { message = "This target changed. Choose an available target."; return }
+                            if let failure = choose(option.id) { message = failure } else { dismiss() }
+                        } label: {
+                            HStack(alignment: .firstTextBaseline) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(option.title).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
+                                    Text(option.location).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                }
+                                Spacer()
+                                if option.id == selected { Image(systemName: "checkmark").foregroundStyle(.tint).accessibilityHidden(true) }
+                            }.frame(minHeight: 44).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel(option.title).accessibilityValue(option.location + (option.id == selected ? ", Selected" : ""))
+                            .accessibilityIdentifier("filterTarget-" + option.id)
+                    }
+                    if page.options.count < page.total {
+                        Text("Showing \(page.options.count) of \(page.total) targets").font(.caption).foregroundStyle(.secondary)
+                        Button("Show more") { limit += FilterTargetCatalog.pageSize }.accessibilityIdentifier("showMoreFilterTargets")
+                    }
+                    if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("filterTargetError") }
+                }
+            } else if let message, loaded == current {
+                ContentUnavailableView("Targets unavailable", systemImage: "exclamationmark.triangle", description: Text(message))
+            } else { ProgressView("Loading targets…") }
+        }
+        .navigationTitle("Choose a " + kind)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden()
+        #endif
+        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.accessibilityIdentifier("closeFilterTargets") } }
+        .onChange(of: query) { _, _ in limit = FilterTargetCatalog.pageSize; message = nil }
+        .task(id: current) {
+            catalog = nil; loaded = nil; message = nil
+            guard readable else { return }
+            do {
+                let value = try await FilterTargetCatalog.load(field: request.field, projects: current.projects, sections: current.sections, labels: current.labels)
+                try Task.checkCancellation()
+                guard readable, version == current else { return }
+                catalog = value; loaded = current
+            } catch is CancellationError { }
+            catch { guard readable, version == current else { return }; message = error.localizedDescription; loaded = current }
+        }
     }
 }

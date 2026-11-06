@@ -1,0 +1,429 @@
+{
+  "account": "ec240000-0000-4000-8000-000000000001",
+  "origin": "https://backend.example",
+  "phases": {
+    "unrecorded": {
+      "action": "inspect",
+      "command": {
+        "team_id": "ec240000-0000-4000-8000-000000000004",
+        "request_id": "e2b5ef3a-2b89-4526-877e-b52fae61a6be",
+        "restores": "4b27bf43-bb55-4d51-bfe4-5c1e47059d7e",
+        "items": [
+          {
+            "team_id": "ec240000-0000-4000-8000-000000000004",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "task_id": "d672028d-29be-4724-a488-84c5f08d5aa6",
+            "task_generation": "a27619ef-3edc-4cf5-ac36-78b380c4fa37",
+            "task_type_lifecycle_protocol": 1,
+            "request_id": "d9c29908-3993-4245-99ac-ea310a15ce45",
+            "record": {
+              "id": "d672028d-29be-4724-a488-84c5f08d5aa6",
+              "title": "Unrecorded selection member",
+              "labels": [],
+              "user_id": "ec240000-0000-4000-8000-000000000099",
+              "comments": [],
+              "due_date": null,
+              "due_time": null,
+              "priority": 4,
+              "subtasks": [],
+              "completed": false,
+              "reminders": [],
+              "time_zone": null,
+              "created_at": "2026-11-02T21:44:08.958935+00:00",
+              "is_heading": null,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "section_id": null,
+              "assigned_to": null,
+              "attachments": [],
+              "description": null,
+              "completed_at": null,
+              "is_recurring": false,
+              "scheduled_at": null,
+              "deadline_date": null,
+              "reminder_specs": [],
+              "source_metadata": {},
+              "task_generation": "a27619ef-3edc-4cf5-ac36-78b380c4fa37",
+              "duration_minutes": null,
+              "completion_version": 0,
+              "recurrence_pattern": null,
+              "recurrence_end_date": null,
+              "notification_sent_at": null,
+              "recurrence_parent_id": null
+            },
+            "restore_from": "cb9ed0dd-935c-4392-9bb4-807b3e156d81"
+          },
+          {
+            "team_id": "ec240000-0000-4000-8000-000000000004",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "task_id": "ec240000-0000-4000-8000-000000000002",
+            "task_generation": "dc9b8719-57be-4bf3-947a-abaa60015411",
+            "task_type_lifecycle_protocol": 1,
+            "request_id": "8c8715f1-5732-471e-ba5b-c87710941f55",
+            "record": {
+              "id": "ec240000-0000-4000-8000-000000000002",
+              "title": "Team editor proof",
+              "labels": [],
+              "user_id": "ec240000-0000-4000-8000-000000000099",
+              "comments": [],
+              "due_date": null,
+              "due_time": null,
+              "priority": 4,
+              "subtasks": [],
+              "completed": false,
+              "reminders": [],
+              "time_zone": null,
+              "created_at": "2026-11-02T21:43:55.745697+00:00",
+              "is_heading": null,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "section_id": null,
+              "assigned_to": null,
+              "attachments": [],
+              "description": "Native audio service original",
+              "completed_at": null,
+              "is_recurring": false,
+              "scheduled_at": null,
+              "deadline_date": null,
+              "reminder_specs": [],
+              "source_metadata": {},
+              "task_generation": "dc9b8719-57be-4bf3-947a-abaa60015411",
+              "duration_minutes": null,
+              "completion_version": 0,
+              "recurrence_pattern": null,
+              "recurrence_end_date": null,
+              "notification_sent_at": null,
+              "recurrence_parent_id": null
+            },
+            "audio_restoration_ack": {
+              "policy": "published_restore_v1",
+              "count": 1,
+              "retention_days": 30
+            },
+            "restore_from": "e3488286-0538-4b42-a590-91f321b62f96"
+          }
+        ]
+      },
+      "reply": {
+        "items": [
+          {
+            "task_id": "d672028d-29be-4724-a488-84c5f08d5aa6",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "request_id": "d9c29908-3993-4245-99ac-ea310a15ce45",
+            "task_generation": "a27619ef-3edc-4cf5-ac36-78b380c4fa37"
+          },
+          {
+            "task_id": "ec240000-0000-4000-8000-000000000002",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "request_id": "8c8715f1-5732-471e-ba5b-c87710941f55",
+            "task_generation": "dc9b8719-57be-4bf3-947a-abaa60015411"
+          }
+        ],
+        "state": "unrecorded",
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "team_id": "ec240000-0000-4000-8000-000000000004",
+        "protocol": 1,
+        "restores": "4b27bf43-bb55-4d51-bfe4-5c1e47059d7e",
+        "request_id": "e2b5ef3a-2b89-4526-877e-b52fae61a6be"
+      }
+    },
+    "recorded": {
+      "action": "inspect",
+      "command": {
+        "team_id": "ec240000-0000-4000-8000-000000000004",
+        "request_id": "e2b5ef3a-2b89-4526-877e-b52fae61a6be",
+        "restores": "4b27bf43-bb55-4d51-bfe4-5c1e47059d7e",
+        "items": [
+          {
+            "team_id": "ec240000-0000-4000-8000-000000000004",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "task_id": "d672028d-29be-4724-a488-84c5f08d5aa6",
+            "task_generation": "a27619ef-3edc-4cf5-ac36-78b380c4fa37",
+            "task_type_lifecycle_protocol": 1,
+            "request_id": "d9c29908-3993-4245-99ac-ea310a15ce45",
+            "record": {
+              "id": "d672028d-29be-4724-a488-84c5f08d5aa6",
+              "title": "Unrecorded selection member",
+              "labels": [],
+              "user_id": "ec240000-0000-4000-8000-000000000099",
+              "comments": [],
+              "due_date": null,
+              "due_time": null,
+              "priority": 4,
+              "subtasks": [],
+              "completed": false,
+              "reminders": [],
+              "time_zone": null,
+              "created_at": "2026-11-02T21:44:08.958935+00:00",
+              "is_heading": null,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "section_id": null,
+              "assigned_to": null,
+              "attachments": [],
+              "description": null,
+              "completed_at": null,
+              "is_recurring": false,
+              "scheduled_at": null,
+              "deadline_date": null,
+              "reminder_specs": [],
+              "source_metadata": {},
+              "task_generation": "a27619ef-3edc-4cf5-ac36-78b380c4fa37",
+              "duration_minutes": null,
+              "completion_version": 0,
+              "recurrence_pattern": null,
+              "recurrence_end_date": null,
+              "notification_sent_at": null,
+              "recurrence_parent_id": null
+            },
+            "restore_from": "cb9ed0dd-935c-4392-9bb4-807b3e156d81"
+          },
+          {
+            "team_id": "ec240000-0000-4000-8000-000000000004",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "task_id": "ec240000-0000-4000-8000-000000000002",
+            "task_generation": "dc9b8719-57be-4bf3-947a-abaa60015411",
+            "task_type_lifecycle_protocol": 1,
+            "request_id": "8c8715f1-5732-471e-ba5b-c87710941f55",
+            "record": {
+              "id": "ec240000-0000-4000-8000-000000000002",
+              "title": "Team editor proof",
+              "labels": [],
+              "user_id": "ec240000-0000-4000-8000-000000000099",
+              "comments": [],
+              "due_date": null,
+              "due_time": null,
+              "priority": 4,
+              "subtasks": [],
+              "completed": false,
+              "reminders": [],
+              "time_zone": null,
+              "created_at": "2026-11-02T21:43:55.745697+00:00",
+              "is_heading": null,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "section_id": null,
+              "assigned_to": null,
+              "attachments": [],
+              "description": "Native audio service original",
+              "completed_at": null,
+              "is_recurring": false,
+              "scheduled_at": null,
+              "deadline_date": null,
+              "reminder_specs": [],
+              "source_metadata": {},
+              "task_generation": "dc9b8719-57be-4bf3-947a-abaa60015411",
+              "duration_minutes": null,
+              "completion_version": 0,
+              "recurrence_pattern": null,
+              "recurrence_end_date": null,
+              "notification_sent_at": null,
+              "recurrence_parent_id": null
+            },
+            "audio_restoration_ack": {
+              "policy": "published_restore_v1",
+              "count": 1,
+              "retention_days": 30
+            },
+            "restore_from": "e3488286-0538-4b42-a590-91f321b62f96"
+          }
+        ]
+      },
+      "reply": {
+        "items": [
+          {
+            "task_id": "d672028d-29be-4724-a488-84c5f08d5aa6",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "request_id": "d9c29908-3993-4245-99ac-ea310a15ce45",
+            "task_generation": "a27619ef-3edc-4cf5-ac36-78b380c4fa37"
+          },
+          {
+            "task_id": "ec240000-0000-4000-8000-000000000002",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "request_id": "8c8715f1-5732-471e-ba5b-c87710941f55",
+            "task_generation": "dc9b8719-57be-4bf3-947a-abaa60015411"
+          }
+        ],
+        "state": "recorded",
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "team_id": "ec240000-0000-4000-8000-000000000004",
+        "protocol": 1,
+        "restores": "4b27bf43-bb55-4d51-bfe4-5c1e47059d7e",
+        "request_id": "e2b5ef3a-2b89-4526-877e-b52fae61a6be"
+      }
+    },
+    "closed": {
+      "action": "inspect",
+      "command": {
+        "team_id": "ec240000-0000-4000-8000-000000000004",
+        "request_id": "60b002a1-3ddf-492d-8fb7-6db3139d333e",
+        "restores": "32a570c6-eb43-425c-bcd2-7c77bac1429e",
+        "items": [
+          {
+            "team_id": "ec240000-0000-4000-8000-000000000004",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "task_id": "d672028d-29be-4724-a488-84c5f08d5aa6",
+            "task_generation": "533a0734-faea-4dc4-9893-a2d91831fd0f",
+            "request_id": "f3d7b3e4-84f0-461c-8183-bdb97c0cc55a",
+            "task_type_lifecycle_protocol": 1,
+            "record": {
+              "id": "d672028d-29be-4724-a488-84c5f08d5aa6",
+              "title": "Unrecorded selection member",
+              "labels": [],
+              "user_id": "ec240000-0000-4000-8000-000000000099",
+              "comments": [],
+              "due_date": null,
+              "due_time": null,
+              "priority": 4,
+              "subtasks": [],
+              "completed": false,
+              "reminders": [],
+              "time_zone": null,
+              "created_at": "2026-11-02T21:44:08.958935+00:00",
+              "is_heading": null,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "section_id": null,
+              "assigned_to": null,
+              "attachments": [],
+              "description": null,
+              "completed_at": null,
+              "is_recurring": false,
+              "scheduled_at": null,
+              "deadline_date": null,
+              "reminder_specs": [],
+              "source_metadata": {},
+              "task_generation": "533a0734-faea-4dc4-9893-a2d91831fd0f",
+              "duration_minutes": null,
+              "completion_version": 0,
+              "recurrence_pattern": null,
+              "recurrence_end_date": null,
+              "notification_sent_at": null,
+              "recurrence_parent_id": null
+            },
+            "audio_restoration_ack": {
+              "policy": "published_restore_v1",
+              "count": 1,
+              "retention_days": 30
+            },
+            "restore_from": "80af4402-bddf-4490-b6d8-20ab322d723c"
+          },
+          {
+            "team_id": "ec240000-0000-4000-8000-000000000004",
+            "project_id": "7d48ee07-5d94-4221-bad8-1d74fb95d93c",
+            "task_id": "e2c6a3ca-c0fd-42e7-895c-57925c6ab773",
+            "task_generation": "e3456f88-24de-4126-a815-2f012b676aec",
+            "request_id": "e98e9723-706c-4a8d-9a14-e4bf13bf14d4",
+            "task_type_lifecycle_protocol": 1,
+            "record": {
+              "id": "e2c6a3ca-c0fd-42e7-895c-57925c6ab773",
+              "title": "Task without recordings",
+              "labels": [],
+              "user_id": "ec240000-0000-4000-8000-000000000099",
+              "comments": [],
+              "due_date": null,
+              "due_time": null,
+              "priority": 4,
+              "subtasks": [],
+              "completed": false,
+              "reminders": [],
+              "time_zone": null,
+              "created_at": "2026-11-02T21:44:11.739197+00:00",
+              "is_heading": null,
+              "project_id": "7d48ee07-5d94-4221-bad8-1d74fb95d93c",
+              "section_id": null,
+              "assigned_to": null,
+              "attachments": [],
+              "description": null,
+              "completed_at": null,
+              "is_recurring": false,
+              "scheduled_at": null,
+              "deadline_date": null,
+              "reminder_specs": [],
+              "source_metadata": {},
+              "task_generation": "e3456f88-24de-4126-a815-2f012b676aec",
+              "duration_minutes": null,
+              "completion_version": 0,
+              "recurrence_pattern": null,
+              "recurrence_end_date": null,
+              "notification_sent_at": null,
+              "recurrence_parent_id": null
+            },
+            "restore_from": "0224e6bc-c484-4ee5-ac2f-94155fabc0ae"
+          },
+          {
+            "team_id": "ec240000-0000-4000-8000-000000000004",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "task_id": "ec240000-0000-4000-8000-000000000002",
+            "task_generation": "43137f0a-4d91-4094-8b51-f5a2c6c76d02",
+            "request_id": "a0f180eb-7b73-4f27-a0fa-754ff677bf4f",
+            "task_type_lifecycle_protocol": 1,
+            "record": {
+              "id": "ec240000-0000-4000-8000-000000000002",
+              "title": "Team editor proof",
+              "labels": [],
+              "user_id": "ec240000-0000-4000-8000-000000000099",
+              "comments": [],
+              "due_date": null,
+              "due_time": null,
+              "priority": 4,
+              "subtasks": [],
+              "completed": false,
+              "reminders": [],
+              "time_zone": null,
+              "created_at": "2026-11-02T21:43:55.745697+00:00",
+              "is_heading": null,
+              "project_id": "ec240000-0000-4000-8000-000000000003",
+              "section_id": null,
+              "assigned_to": null,
+              "attachments": [],
+              "description": "Native audio service original",
+              "completed_at": null,
+              "is_recurring": false,
+              "scheduled_at": null,
+              "deadline_date": null,
+              "reminder_specs": [],
+              "source_metadata": {},
+              "task_generation": "43137f0a-4d91-4094-8b51-f5a2c6c76d02",
+              "duration_minutes": null,
+              "completion_version": 0,
+              "recurrence_pattern": null,
+              "recurrence_end_date": null,
+              "notification_sent_at": null,
+              "recurrence_parent_id": null
+            },
+            "audio_restoration_ack": {
+              "policy": "published_restore_v1",
+              "count": 1,
+              "retention_days": 30
+            },
+            "restore_from": "2097557e-2836-4a6b-9b18-7b102e2c0cde"
+          }
+        ]
+      },
+      "reply": {
+        "items": [
+          {
+            "task_id": "d672028d-29be-4724-a488-84c5f08d5aa6",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "request_id": "f3d7b3e4-84f0-461c-8183-bdb97c0cc55a",
+            "task_generation": "533a0734-faea-4dc4-9893-a2d91831fd0f"
+          },
+          {
+            "task_id": "e2c6a3ca-c0fd-42e7-895c-57925c6ab773",
+            "project_id": "7d48ee07-5d94-4221-bad8-1d74fb95d93c",
+            "request_id": "e98e9723-706c-4a8d-9a14-e4bf13bf14d4",
+            "task_generation": "e3456f88-24de-4126-a815-2f012b676aec"
+          },
+          {
+            "task_id": "ec240000-0000-4000-8000-000000000002",
+            "project_id": "ec240000-0000-4000-8000-000000000003",
+            "request_id": "a0f180eb-7b73-4f27-a0fa-754ff677bf4f",
+            "task_generation": "43137f0a-4d91-4094-8b51-f5a2c6c76d02"
+          }
+        ],
+        "state": "closed",
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "team_id": "ec240000-0000-4000-8000-000000000004",
+        "protocol": 1,
+        "restores": "32a570c6-eb43-425c-bcd2-7c77bac1429e",
+        "request_id": "60b002a1-3ddf-492d-8fb7-6db3139d333e"
+      }
+    }
+  }
+}

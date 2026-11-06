@@ -1,0 +1,36 @@
+{
+  "platform": "mac",
+  "currentAppAndUITestsBuild": true,
+  "strictAppAndRunnerSignatures": true,
+  "releaseDistributionVerified": false,
+  "nativeMacRuntimeVerified": false,
+  "normalUseFlagsEffective": {
+    "TaskfoldChildRepairEnabled": false,
+    "TaskfoldChildAdoptionEnabled": false
+  },
+  "normalUseFlagsAbsentFromSourcePlist": [
+    "TaskfoldChildRepairEnabled",
+    "TaskfoldChildAdoptionEnabled"
+  ],
+  "flagRule": "Store requires an explicit Bool true; an absent flag is disabled",
+  "sourceSHA256": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": "2c54752c83098ed8a1cad5d3b62a09fc8e517a7c5343594af9fa5d7d7a6a1f2f",
+    "Taskfold/ChildFieldNativeFixture.swift": "97523393521d9ff93032555471b7856e187488df4df7fcd9d95592756cdcf265",
+    "Taskfold/Core/Backend.swift": "aca574a6c24439da90d698d993acd75eb9f30755ecf771733e5e22748576b28f",
+    "Taskfold/Core/ChildTaskRepair.swift": "b02276e0e75367aebf249cb3ab4e55ccc87fbe8304320070f39f71edeb1c2e31",
+    "Taskfold/Core/Store.swift": "3151d779a412e8774457abf37219b7472bda2d9ced57368b0f963198ae98fd31",
+    "Taskfold/Views/ChildTaskRepairView.swift": "5c3ceb09ca5e4c80cb633013299776e5514064795a11b93ebcef9c1a1e2e4c36",
+    "TaskfoldUITests/AudioCommentUITests.swift": "a7c2386196a570a643627ab9d812714906c41b1e16151c635a4b5a8d051390c0"
+  },
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": true,
+    "Taskfold/ChildFieldNativeFixture.swift": true,
+    "Taskfold/Core/Backend.swift": true,
+    "Taskfold/Core/ChildTaskRepair.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Views/ChildTaskRepairView.swift": true,
+    "TaskfoldUITests/AudioCommentUITests.swift": true
+  },
+  "appExecutableSHA256": "cb40d0069c3504551039be49895548c1a5753bb305ac27cd07eb92ea130345dd",
+  "debugDylibSHA256": "122f5535d815775a1c37335960d1a6ae5a3330886a7dc9acd6251b132b7d474a"
+}

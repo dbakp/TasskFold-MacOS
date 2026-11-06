@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "b5696030183b806e7083e8a5ff69f9190dfeaa94",
+  "status": "Personal connection destination selection and unsupported action explanations implemented; project adoption and wider Px acceptance remain open",
+  "core": {
+    "passed": 413,
+    "failed": 0,
+    "newDestinationCases": 6,
+    "filter": "Team|EmailCapture|Webhook",
+    "coverage": [
+      "Certified personal owner and personal collaborator projects remain supported",
+      "Historical team custody excludes a project after access loss, even with an old row",
+      "Foreign account/server and unavailable server origin fail closed with a boundary",
+      "Missing rows or missing current access do not grant personal status",
+      "Pre-team personal sharing remains compatible; explicit or malformed team markers are excluded",
+      "Explanations retain safe recovery actions without embedding private names"
+    ]
+  },
+  "appBuild": {
+    "platform": "macOS arm64",
+    "configuration": "Debug",
+    "scope": "Isolated reserved team-editor test copy; app and widget targets compile; not installed or launched",
+    "signing": "Disabled for compile verification"
+  },
+  "logs": {
+    "core": {
+      "retainedLog": "personal-connection-settings/core.log.gz",
+      "originalSHA256": "3df1d375b1e3aa32c7b3e54a35d479cc90ad736675785ae16a37bed6325a9a20",
+      "compressedSHA256": "561a5333cae69af77de4ab281f8bf8d888c7e1d08bad1f9f65bf37a6a9b1820e"
+    },
+    "build": {
+      "retainedLog": "personal-connection-settings/build.log.gz",
+      "originalSHA256": "d324c96808619bc7c7b3c52166bd3d0dc667bb3cf15d0b8c30318aef452a1864",
+      "compressedSHA256": "2e20187e492e16e035945503ce2cf8266e5e30ebd3cd69aaa0f3f7d3cb6fc5bd"
+    }
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "6134cdc077be362178fbd061a2a4d664701fe73a0ec8c5a716a31458e15beab5",
+    "Taskfold/Core/TeamWorkspace.swift": "d5ff4694303403d7f974b4899dbe2fb3e0672c8f9e3ebeaf66e72a0f41011e4e",
+    "Taskfold/Views/EmailCaptureView.swift": "6177d5d2a48267222d3707ae64c7ffaced4044c56dc8dd380f5365c8ee862725",
+    "Taskfold/Views/WebhookAccessView.swift": "929605520a8efde049443f0312754d1db7c08adfe5147cb58b54965a06012806",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "b703f1629ad834ab5b57093db288b34054e0ce9812c5ac2243428a5360012ed0"
+  },
+  "behavior": [
+    "New setup lists Inbox and supported active personal projects; a selection lost during refresh disables Create",
+    "Rows explain team/unavailable destinations; Resume, verification and email rotation are disabled for unsupported projects",
+    "Pause, revoke, delivery history and exact saved request recovery remain available",
+    "Unfinished setup cannot be continued into an unsupported destination; discard and local secret acknowledgement remain available",
+    "All personal tasks explicitly includes personal sharing and excludes teams"
+  ],
+  "diagnostics": [
+    "An initial destination-list assertion omitted the fixture\u2019s supported personal collaborator project. The expected result now preserves that project and excludes only the team project; no implementation guard was weakened."
+  ],
+  "limits": [
+    "No new installed UI, visual layout, keyboard, spoken accessibility, physical device or hosted/provider acceptance claimed",
+    "Existing server enforcement remains the authority for races and older clients; this stage changes no backend schema or rollout",
+    "Supported destination retarget/reauthorization, persistent busy-send preparation, file/provider custody and remaining adoption/native/hosted acceptance are still open",
+    "The wider Px goal remains active; user-deferred release/distribution/provider/device work remains deferred"
+  ],
+  "cleanup": {
+    "ownedTemporaryEntriesRemoved": 12,
+    "allocatedBytesRemoved": 1162653696,
+    "testAppsInstalledOrLaunched": false,
+    "baselineSimulatorsPreserved": true,
+    "sourceBuildCachesPreserved": true
+  }
+}

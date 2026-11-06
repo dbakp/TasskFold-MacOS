@@ -1,0 +1,20 @@
+{
+  "com.dbakp.taskfold.mac.p0widgethosts": {
+    "actualTeam": "3UZ4C73FM2",
+    "strictSignaturePassed": true,
+    "group": [
+      "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts"
+    ],
+    "sandbox": true,
+    "binarySHA256": "6b27c1627efa8649248c5718ee62b42b4c19dc761a0b65643ac6de2e8c09d6c6"
+  },
+  "com.dbakp.taskfold.mac.p0widgethosts.widgets": {
+    "actualTeam": "3UZ4C73FM2",
+    "strictSignaturePassed": true,
+    "group": [
+      "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts"
+    ],
+    "sandbox": true,
+    "binarySHA256": "353af84b95b378a68695b682c4734233bcbb70cc1ade1926aa2404a9545142ed"
+  }
+}

@@ -16,6 +16,12 @@ Reviews identify the exact queued mutation. Stale/mismatched requests cannot res
 
 Older queues may lack a baseline or individual baseline fields. Those edits require explicit review before any update is sent. The review explains that Keep my edit uses the shown values in full, including comments/subtasks in the affected fields; automatic collection merging cannot reconstruct an unknown original state. An intentional clear remains a clear after that choice. New task edits capture all affected baselines normally.
 
+## Label membership
+
+Task labels use membership semantics. With a known original baseline, Keep my edit applies only this edit's additions and removals to the synced labels; independent remote additions survive, and a remotely removed label that was unchanged locally stays removed. Later queued label edits are rebased individually after the review choice, including their guarded request baselines. Use synced can therefore discard the reviewed addition without resurrecting it through a later edit. Undo/Redo uses the same baseline-relative membership behavior.
+
+This logic is restricted to valid label collections and compatible task generations. It does not reinterpret arbitrary ordered arrays or silently approve unsupported later baselines. Older work without a reconstructable baseline retains the existing explicit-review behavior. See `label-conflict-preservation-evidence.json` for reproduced loss and regression coverage, and `live-label-pair-evidence.json` for the bounded actual Mac/phone conflict and relaunch acceptance.
+
 ## Verification
 
 `CollaborationTests.swift` covers reference identity, nested merge behavior, reviewed versus later queued edits, stale/mismatched requests, durable encoding, old-baseline clearing, RPC confirmation and rejection of unknown-baseline transport. `NativeConflictIntegrationTests.swift` is an opt-in live test of two native Backend instances with separately authenticated URLSessions against a disposable account. It exercises independent title/deadline edits, independent comments, retry deduplication, same-field rejection, persisted resolution/rebase and a second conflict when the server changes during review. It deletes the task it creates. The operator must revoke/delete the disposable account afterward.
@@ -41,3 +47,7 @@ Task editor saves use the revision from the original form baseline when changing
 Sync captures its workspace account for each queue run. Backend sends reject a stale account before HTTP, retain account/session-generation guards across response awaits and 401 retries, and prevent joined token refreshes from restoring an older sign-in. `AccountTransportTests.swift` exercises late 401, stale shared-task/Focus transport and joined-refresh races through held responses. These deterministic regressions do not replace native paired/offline account-switch acceptance.
 
 Focus has its own revision/action guarded slot and review: [Focus sessions](FOCUS_SESSIONS.md). Use synced removes the dependent Focus command chain; Keep this device rebases its final desired state while retaining unrelated queued task edits. Timer commands are excluded from ordinary task Undo history.
+
+## Supported candidate versions
+
+The P0 continuity candidate floor is Mac **1.2.0 (3)** and iPhone/iPad **1.4.0 (19)**. Older active writers are unsupported and must be upgraded or retired before enabling a workspace; the server still permits their legacy direct writes. Release-floor checks do not enforce server access or establish runtime/distribution acceptance. See [rollout and pending-work preservation](CONTINUITY_RELEASE_POLICY.md).

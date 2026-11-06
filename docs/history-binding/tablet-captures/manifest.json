@@ -1,0 +1,26 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "AB8028F5-06C7-410A-B3E9-8D9A0F3717A5.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "All day scheduling portrait_0_80661A82-D0ED-4DA3-A925-B872F7C7223D.png",
+        "timestamp" : 1792930497.2
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "D37ED551-DA84-425A-AEC5-58C2F12A4065.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Hourly planner portrait_0_CC4C8AE8-8CD7-4390-AEAB-3BCB0276C076.png",
+        "timestamp" : 1792930495.041
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testHourlyPlannerSchedulingUndoAndRelaunch()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testHourlyPlannerSchedulingUndoAndRelaunch"
+  }
+]

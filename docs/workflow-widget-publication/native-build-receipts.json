@@ -1,0 +1,12 @@
+{
+  "ios": {
+    "result": "TEST BUILD SUCCEEDED",
+    "command": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project /tmp/taskfold-workflow-commit-ios-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination \"platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4\" -derivedDataPath /tmp/taskfold-workflow-commit-ios-build ARCHS=arm64 ONLY_ACTIVE_ARCH=YES",
+    "logSHA256": "204d7801914b1f639440ff57c346f120846a14d08988026638347d503f87f3e2"
+  },
+  "mac": {
+    "result": "TEST BUILD SUCCEEDED",
+    "command": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project /tmp/taskfold-workflow-native-mac-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=macOS,arch=arm64 -derivedDataPath /tmp/taskfold-workflow-native-mac-build DEVELOPMENT_TEAM=3UZ4C73FM2 \"CODE_SIGN_IDENTITY=Apple Development\"",
+    "logSHA256": "94ced5a2117872bbdb09c9d2ef203fde9149610033b8dd6ece6cc3c91d995c15"
+  }
+}

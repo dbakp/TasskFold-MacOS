@@ -1,0 +1,21 @@
+{
+  "reviewed": "2026-11-05",
+  "owner": "TasskFold-MacOS",
+  "optimizedDailyDefault": true,
+  "debugExplicitlyAvailable": true,
+  "ordinaryReleaseProjectModified": false,
+  "macHostOnly": true,
+  "continuityTestsPerRepository": 12,
+  "iOSProjectCopyTests": 2,
+  "cleanupTestsPerRepository": 9,
+  "mac22Packaged": true,
+  "iPhone34Packaged": true,
+  "bothZIPPayloadsVerified": true,
+  "normalAppsReplaced": false,
+  "newOptimizedRuntimeAccepted": false,
+  "physicalFPSAccepted": false,
+  "installPrerequisites": {
+    "mac": "Saved-draft update window requested; no answer yet.",
+    "iphone": "Physical device unavailable in current inventory; saved-draft update window still needed."
+  }
+}

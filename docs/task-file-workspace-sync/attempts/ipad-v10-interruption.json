@@ -1,0 +1,11 @@
+{
+  "reviewed": "2026-11-02",
+  "accepted": false,
+  "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+  "ownedXcodePID": 55638,
+  "ownedWrapperPID": 55622,
+  "repeated60SecondWaits": 9,
+  "pointerRefreshDidNotResolve": true,
+  "reason": "Stopped this one owned repeated-wait regression run before completion. No case in this run is accepted. Preserve four separate normal-sync mobile flows and seven accepted phone cases. No more broad retries of this runtime condition.",
+  "action": "SIGINT exact owned xcodebuild; allow wrapper cleanup to close app and restore its Simulator."
+}

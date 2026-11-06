@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-25",
+  "stage": "Reviewed native shared-task deletion",
+  "repo": "TasskFold-MacOS",
+  "source_team_client_flag_enabled": false,
+  "hosted_changes": false,
+  "real_data_changed": false,
+  "new_migration_or_endpoint": false,
+  "independent_repo_owned_inputs": true,
+  "core": {
+    "executed": 230,
+    "failed": 0,
+    "skipped": 0,
+    "new_deletion_cases": 8,
+    "command": "swift test --jobs 2 --filter 'TeamWorkspace|TeamTaskLifecycle|TeamTaskBatch|BackupTests|TeamCompletion|TeamTaskRemindersTests'",
+    "log_sha256": "252323d87627bf6e99a3a8564d53861b7320d5e8d908bf91900c9c1a46feba6d"
+  },
+  "server": {
+    "checks": 70,
+    "report": "p2-team-deletion-service-evidence.json",
+    "report_sha256": "c6f10775e8f72b197b36e1aa336d22ae67856ba49c7d3cfd00fde3852f387552",
+    "command": "TASKFOLD_TEAM_CURRENT_DELETE_REGRESSION=1 node Scripts/Database/test-team-conversation-recovery.mjs <report>",
+    "scope": "Owned synthetic PostgreSQL fixture; current workspace/lifecycle loader; existing encrypted conversation archive/restore, roles, retries, identity and expiry checks",
+    "linked_batch_complete": false
+  },
+  "native_build": {
+    "passed": true,
+    "scope": "unsigned arm64 app; isolated helper omits widget target",
+    "log_sha256": "63e53dcf42126d266defdc9b3a1270ae7198ba9ec63180079a673cab925cf022",
+    "repository_input_sha256": {
+      "Taskfold/Core/TeamWorkspace.swift": "f3761559c66bb32f3a4fb14c198a6d22dd33017cf5e9796fca4296ae06490a6d",
+      "Taskfold/Core/Store.swift": "11cd7483736abd04727bcfbb898c9994a12ebae1de570e7dada39fe856b97a77",
+      "Taskfold/Views/TeamTaskDeletionReview.swift": "10477981b76daceec007cc5bf879239478cbdc4dfc0f5ef5efc459daa18bff17",
+      "Taskfold/Views/TaskInspector.swift": "56b9af1663d33deebe3c51e225aea79a2c0608c8670447bf46698f66d244fb02",
+      "Taskfold/Workspace.swift": "9146c5c605efba6b1884e1d13ae0b7847e4c2b67768c59a807b94daeee9fdfef",
+      "Taskfold/Views/RootView.swift": "c56889c560b2ec34cc86fd95cc8998426d5765cc3bbb3658f98c396759aa7110"
+    },
+    "tested_host_input_sha256": {
+      "Taskfold/Core/TeamWorkspace.swift": "f3761559c66bb32f3a4fb14c198a6d22dd33017cf5e9796fca4296ae06490a6d",
+      "Taskfold/Core/Store.swift": "a40625a04ea49d1971ab9c3b769b7cdb9a4eb747205e9158cd57d46247b84436",
+      "Taskfold/Views/TeamTaskDeletionReview.swift": "10477981b76daceec007cc5bf879239478cbdc4dfc0f5ef5efc459daa18bff17",
+      "Taskfold/Views/TaskInspector.swift": "56b9af1663d33deebe3c51e225aea79a2c0608c8670447bf46698f66d244fb02",
+      "Taskfold/Workspace.swift": "9146c5c605efba6b1884e1d13ae0b7847e4c2b67768c59a807b94daeee9fdfef",
+      "Taskfold/Views/RootView.swift": "c56889c560b2ec34cc86fd95cc8998426d5765cc3bbb3658f98c396759aa7110"
+    },
+    "isolation_transformations": "Store app group renamed in prepared host; reserved signed-test allowlist entry also replaced on Mac. All other listed input text matches exactly."
+  },
+  "native_acceptance": {
+    "phone": {
+      "full_flows_passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "final_paused_appearance_check_passed": 1
+    },
+    "tablet": {
+      "full_flows_passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "final_paused_appearance_check_passed": 1
+    },
+    "mac_runtime": false,
+    "spoken_voiceover": false,
+    "evidence_location": "docs/evidence/team-deletion in iOS repository",
+    "final_polish": "After the complete seven-flow run, only the destructive button label styling changed: an explicit semantic secondary color makes its disabled state visible. Rebuilt both apps and reran the paused-state case on each device; refreshed paused screenshots replace the original ones.",
+    "ios_evidence_commit": "3d514538339ea6fce361d1fc8c753bbdb5dd2c85",
+    "cross_repo_build_dependency": false
+  },
+  "verified": [
+    "Frozen whole-task deletion source and operation identity; no silent rebase",
+    "Deletion and Undo keep creator/content and carry the exact scoped receipt with a fresh task generation",
+    "Queue and restored contents survive normal relaunch",
+    "Cancel keeps saved task and queue exact",
+    "Changed source and changed role stop confirmation; paused review hides source task/project content",
+    "Injected out-of-space save leaves saved cache intact and retry queues one deletion",
+    "Actual production TaskScreen row context menu opens review, then its standard Undo toast restores the task",
+    "Actual title editing prevents deletion; role loss verifies private recovery and protected Close"
+  ],
+  "visual_review": {
+    "images_retained": 8,
+    "inspected": true,
+    "appearance": "default light",
+    "result": "Review, failure, paused and private recovery text are readable on phone and tablet. Longer cards scroll naturally, including the iPad failure view. Final paused action uses a semantic secondary color."
+  },
+  "limits": [
+    "Team client stays gated; no hosted deletion/recovery or rollout acceptance claimed",
+    "Mac interaction/keyboard Undo, spoken accessibility, wider account/session/role/fault/large-text variants remain open",
+    "Native linked batches and child actions remain open; the shared root review cannot delete an embedded checklist item as its parent",
+    "Existing lifecycle request size limits still apply; oversized records are refused without truncation",
+    "Current-session device history and current project permissions bound Undo; this is not a permanent trash bin",
+    "Server linkedBatchComplete remains false in this scoped recovery suite",
+    "All user-deferred remote delivery, old-client rollout, distribution/provider/device work remains deferred"
+  ],
+  "evidence_files_sha256": {
+    "phone-review.png": "1f5c6d63f4c0da003bcebc296115a1fb29df380a4da4211507c0c8ca165c5b03",
+    "tablet-summary.json": "72c1395a004e30f58948397b991347165dd8b2dad07eebfc70c910494f2975fb",
+    "tablet-paused.png": "4a4edd0dd9467e5b532e76724189958b9f931bf48dabead0701b1131d9948660",
+    "phone-unsent.png": "8c654cc20bdd59749bbc44530d2137be127eed0783a9662e26cee8358f26fe0a",
+    "phone-failure.png": "a1df6f380e46d766a2a85b036b005b15f61d3b43eb042165c39944609a8acd00",
+    "tablet-review.png": "550eff177633788115d14fcfa15f240f24d75ea07d21306007f7bde5a68adf3b",
+    "phone-summary.json": "b55366405368489830e222cd6c365982b8da8a11e3689f563ef6a12ae43679d4",
+    "phone-paused.png": "a579510088ce7b3aedd7f275f83838712960f9ae75f1a7fbfcce1cb9e4aa91d4",
+    "tablet-polish-summary.json": "95485cf6cbb653907bf5f8388f8db1531e965aed390b1d8476519565b5319cfa",
+    "tablet-failure.png": "5860638d9659475e7819fe215d4a436d8d995ccf39b35ab36b89e95a75248baf",
+    "tablet-unsent.png": "ddb9f49254aa3c4df0a9208b3384d6dde834f23f028cbf2d6fc80ff89efbd02f",
+    "phone-polish-summary.json": "ac27b0228dd63a859a2ef2f04d2ee2fac6a0fa873183ccea83d352f2339533c0"
+  },
+  "cleanup": {
+    "owned_temp_roots_removed": 47,
+    "allocated_bytes_removed": 1256529920,
+    "isolated_app_and_runner_removed_from_both_simulators": true,
+    "native_taskfold_processes_remaining": 0,
+    "owned_postgres_containers_removed": true,
+    "baseline_simulator_states_and_core_caches_preserved": true
+  }
+}

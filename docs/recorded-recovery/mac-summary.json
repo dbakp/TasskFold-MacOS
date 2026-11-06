@@ -1,0 +1,51 @@
+{
+  "totalTestCount": 5,
+  "passedTests": 5,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "runtimeWarnings": [],
+  "result": "Passed",
+  "qualification": "Five distinct cases passed across the four successful cases from the suite and corrected one-case export rerun. Initial suite and first rerun had test-selector failures; its compact failure summary remains.",
+  "runs": [
+    "mac-save-summary.json",
+    "mac-save-group-summary.json",
+    "mac-save-confirmed-summary.json"
+  ],
+  "caseResults": [
+    {
+      "name": "testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry()",
+      "nodeIdentifier": "TeamCompletionRecoveryMacUITests/testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry()",
+      "result": "Passed"
+    },
+    {
+      "name": "testRecordedDraftCacheFailurePreservesQueueAndReusesArchiveOnRetry()",
+      "nodeIdentifier": "TeamCompletionRecoveryMacUITests/testRecordedDraftCacheFailurePreservesQueueAndReusesArchiveOnRetry()",
+      "result": "Passed"
+    },
+    {
+      "name": "testRecordedDraftVaultFailurePreservesQueueBeforeRetry()",
+      "nodeIdentifier": "TeamCompletionRecoveryMacUITests/testRecordedDraftVaultFailurePreservesQueueBeforeRetry()",
+      "result": "Passed"
+    },
+    {
+      "name": "testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch()",
+      "nodeIdentifier": "TeamCompletionRecoveryMacUITests/testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch()",
+      "result": "Failed"
+    },
+    {
+      "name": "testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch()",
+      "nodeIdentifier": "TeamCompletionRecoveryMacUITests/testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch()",
+      "result": "Passed"
+    },
+    {
+      "name": "testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch()",
+      "nodeIdentifier": "TeamCompletionRecoveryMacUITests/testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch()",
+      "result": "Failed"
+    },
+    {
+      "name": "testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch()",
+      "nodeIdentifier": "TeamCompletionRecoveryMacUITests/testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch()",
+      "result": "Passed"
+    }
+  ]
+}

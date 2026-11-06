@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-04",
+  "platform": "mac",
+  "executed": 5,
+  "failures": 0,
+  "starterCount": 4,
+  "scope": [
+    "Account-free JSON/CSV transfer",
+    "Fresh run identities, section order and notes",
+    "No imposed dates, repeat or reminders",
+    "Atomic run Undo/Redo preserves original work and saved definition",
+    "Title and purpose search"
+  ],
+  "logSHA256": "06757301fdaa20ce3af5b38e975797ac2c945d4c7080210ebab6d7713345d227",
+  "sources": {
+    "Taskfold/Core/ProjectWorkflows.swift": "f8285fea9315022d0bddf5942ca54d9836f7b54f68376d56761fd3137ef8d099",
+    "TaskfoldTests/WorkflowStarterTests.swift": "5c30c6d3656925b307e72fcb3e1aac22aacb77489ee8064b75bc13c4de0e2d72"
+  },
+  "nativeUIAccepted": false
+}

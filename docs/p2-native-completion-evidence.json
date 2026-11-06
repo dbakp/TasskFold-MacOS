@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-25",
+  "scope": "Native single-root shared completion/reopen admission, existing atomic command and scoped edit; no service/schema change",
+  "platform": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamCompletion.swift": "c618fb8ef30049f161317cc2b64e8e66b70ca8f3e8810b3d261f4ff2d30d6c6a",
+    "Taskfold/Core/Store.swift": "bcea5d925c415a1ae98d331cf6e47dfc7bb9bcc7903b55afd9ff3acfda06b67c",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "e2204b25474d572f82264ad19125f858000881af1c5f62271d9cfac1536b0619",
+    "Taskfold/Workspace.swift": "7382303039d26e4f4c1cbfa72383d8f856fabe033c2cfaa9c306f763d0cb95be"
+  },
+  "core": {
+    "selectedRegressionCases": 551,
+    "newAdmissionCases": 6,
+    "failures": 0,
+    "initialFailure": "Six assertions failed because synthetic apply snapshots omitted the existing required project row; fixture corrected, original logs retained."
+  },
+  "builds": {
+    "ios": "Final reserved signed Simulator app/test build passed",
+    "mac": "Own final arm64 Debug app build passed, signing disabled"
+  },
+  "native": {
+    "status": "Two actual cases pass per signed iPhone/iPad host, no failures/skips/runtime warnings",
+    "network": "Intercepted synthetic transport; no hosted delivery",
+    "sourceParity": "Changed source and native UI test verified against prepared copy with namespace substitutions only",
+    "cases": [
+      "Real shared list checkbox, one TEAM_COMPLETE queue entry, other rows unchanged, captured Undo and full cache equality after normal relaunch",
+      "Thirty-entry history cap, stale Undo refusal, newer edit Undo, original batch Undo and Redo"
+    ],
+    "savedState": "Retained actual synthetic final cache per device: two TEAM_COMPLETE entries (original + inverse), source reopened. History proofs retain all four true guards at depth 30.",
+    "identities": "Strict installed app signatures verified; executable/debug dylib/Info hashes match final built products on both Simulators.",
+    "visual": "Inspected phone/tablet completion cards and feedback: no clipped text. The iPad Undo/relaunch capture includes a navigation transition; it is functional state evidence, not stable final layout acceptance.",
+    "limits": [
+      "No hosted sync, real auth delivery or Mac runtime/spoken acceptance",
+      "No claim for iPad planner check that failed in preceding stage",
+      "No installed recurring successor/reopen UI claim; covered here by Core/model checks only"
+    ]
+  },
+  "open": [
+    "Atomic multi-task shared completion",
+    "Other rank-6 adapters and remaining ranked Px",
+    "Mac runtime/spoken/window and genuine hosted acceptance",
+    "All standing release/provider/physical-device deferrals"
+  ],
+  "cleanup": {
+    "ownedScratchPrefix": "/tmp/taskfold-native-completion-",
+    "removedAllocatedGiB": 1.32,
+    "reservedHostAndRunnerRemovedFromBothSimulators": true,
+    "baselineSimulatorPowerStatesPreserved": true,
+    "repoBuildCachesPreserved": true,
+    "earlierReadyMacHostAndBuildPreserved": true,
+    "globalCleanup": false
+  }
+}

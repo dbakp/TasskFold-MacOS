@@ -1,0 +1,30 @@
+{
+  "phone": {
+    "passed": 2,
+    "failed": 3,
+    "passedCases": [
+      "Audio-only reader Play/Stop/Close",
+      "Actual Simulator VoiceOver across shared text and audio"
+    ],
+    "failures": [
+      "Mentions below visible Browse viewport; old helper did not scroll",
+      "Missing DEBUG fixture Plays probe after successful audio-access-loss UI assertions",
+      "Alert exposed duplicate matching button IDs; test required firstMatch, consistent with existing audio-only test"
+    ]
+  },
+  "ipad": {
+    "passed": 3,
+    "failed": 2,
+    "passedCases": [
+      "Audio-only reader Play/Stop/Close",
+      "Mention-to-current-task editor",
+      "Actual Simulator VoiceOver across shared text and audio"
+    ],
+    "failures": [
+      "Missing DEBUG fixture Plays probe",
+      "Ambiguous duplicate alert button match"
+    ]
+  },
+  "changes": "DEBUG probe and test lookup/navigation corrections only; no production model/view changes for the rerun.",
+  "ipadDiagnostics": "XCTest suite completed with 3 passes/2 failures, then xcodebuild remained in collectSimulatorDiagnostics (confirmed by process sample). Interrupt did not end collection; the exact owned diagnostic process was terminated before the corrected run. The unfinished raw bundle is not counted as final acceptance."
+}

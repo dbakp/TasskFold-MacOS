@@ -1,0 +1,96 @@
+[
+  {
+    "phase": "phone",
+    "partialResultBundle": true,
+    "knownSuiteResult": "3 failed cases; cancelled only the still-live diagnostic collector after the runner quit and all test cases were terminal"
+  },
+  {
+    "phase": "phone-v2",
+    "result": "Failed",
+    "passed": 0,
+    "failed": 1,
+    "runtimeWarnings": [],
+    "failures": [
+      {
+        "test": "TaskfoldUITests/testChildFieldsNativeSaveSendColdReceipt()",
+        "message": "XCTAssertTrue failed - Attributes: Application, 0x109ec6bc0, pid: 89282, label: 'Taskfold Team Editor Test'\nElement subtree:\n \u2192Application, 0x109ec6bc0, pid: 89282, label: 'Taskfold Team Editor Test'\n    Window (Main), 0x109ec7200"
+      }
+    ]
+  },
+  {
+    "phase": "phone-v3",
+    "result": "Failed",
+    "passed": 0,
+    "failed": 1,
+    "runtimeWarnings": [],
+    "failures": [
+      {
+        "test": "TaskfoldUITests/testChildFieldsNativeSaveSendColdReceipt()",
+        "message": "XCTAssertTrue failed"
+      }
+    ]
+  },
+  {
+    "phase": "phone-v4",
+    "result": "Failed",
+    "passed": 3,
+    "failed": 2,
+    "runtimeWarnings": [],
+    "failures": [
+      {
+        "test": "TaskfoldUITests/testChildFieldsNativeLargestTextPreservesUnsentTypingCold()",
+        "message": "XCTAssertTrue failed - Attributes: Application, 0x111190640, pid: 90809, label: 'Taskfold Team Editor Test'\nElement subtree:\n \u2192Application, 0x111190640, pid: 90809, label: 'Taskfold Team Editor Test'\n    Window (Main), 0x111190780"
+      },
+      {
+        "test": "TaskfoldUITests/testChildFieldsNativeUncertainDiscardCancelAndColdState()",
+        "message": "XCTAssertTrue failed"
+      }
+    ]
+  },
+  {
+    "phase": "phone-v6a",
+    "result": "Failed",
+    "passed": 0,
+    "failed": 2,
+    "runtimeWarnings": [],
+    "failures": [
+      {
+        "test": "TaskfoldUITests/testChildFieldsNativeLargestTextPreservesUnsentTypingCold()",
+        "message": "XCTAssertTrue failed - Attributes: Application, 0x104e835c0, pid: 92077, label: 'Taskfold Team Editor Test'\nElement subtree:\n \u2192Application, 0x104e835c0, pid: 92077, label: 'Taskfold Team Editor Test'\n    Window (Main), 0x104e830c0"
+      },
+      {
+        "test": "TaskfoldUITests/testChildFieldsNativeUncertainDiscardCancelAndColdState()",
+        "message": "XCTAssertEqual failed: (\"Optional(\"A discarded receipt cannot undo this changePrepare the review\")\") is not equal to (\"Optional(\"A discarded receipt cannot undo this change\")\")"
+      }
+    ]
+  },
+  {
+    "phase": "phone-v7a",
+    "result": "Failed",
+    "passed": 1,
+    "failed": 1,
+    "runtimeWarnings": [],
+    "failures": [
+      {
+        "test": "TaskfoldUITests/testChildFieldsNativeLargestTextPreservesUnsentTypingCold()",
+        "message": "XCTAssertTrue failed - Attributes: Application, 0x10b27f700, pid: 92883, label: 'Taskfold Team Editor Test'\nElement subtree:\n \u2192Application, 0x10b27f700, pid: 92883, label: 'Taskfold Team Editor Test'\n    Window (Main), 0x10b27fe80"
+      }
+    ]
+  },
+  {
+    "phase": "phone-v9",
+    "result": "Passed",
+    "passed": 5,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "failures": []
+  },
+  {
+    "phase": "tablet-v9",
+    "result": "Passed",
+    "passed": 5,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "failures": []
+  }
+]

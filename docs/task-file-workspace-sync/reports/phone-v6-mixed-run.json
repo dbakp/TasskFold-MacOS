@@ -1,0 +1,88 @@
+{
+  "platform": "ios",
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+  "initialState": "Shutdown",
+  "cases": [
+    "testRecordingBackupImportReviewCancelSaveAndColdReturn",
+    "testRecordingBackupCancelSaveReadbackAndColdReturn"
+  ],
+  "cacheAccounts": {
+    "testRecordingBackupImportReviewCancelSaveAndColdReturn": "ui-testing",
+    "testRecordingBackupCancelSaveReadbackAndColdReturn": "ui-testing"
+  },
+  "implicitCacheFallback": false,
+  "testSourceSHA256": "2de2dc826b8d6c67a41164e3070cdfe4cda80b9e35dd4493e6a4e863f4681ddc",
+  "command": [
+    "xcodebuild",
+    "-project",
+    "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",
+    "-scheme",
+    "Taskfold",
+    "-configuration",
+    "Debug",
+    "-derivedDataPath",
+    "/tmp/taskfold-prepared-undo-signed-ios-build",
+    "-destination",
+    "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testRecordingBackupImportReviewCancelSaveAndColdReturn",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testRecordingBackupCancelSaveReadbackAndColdReturn",
+    "-resultBundlePath",
+    "/tmp/taskfold-cache-reaccept-phone-v6.xcresult",
+    "test-without-building"
+  ],
+  "xcodeExitCode": 65,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 1,
+    "finishTime": 1793606452.834,
+    "passedTests": 1,
+    "result": "Failed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793605887.198,
+    "statistics": [],
+    "testFailures": [
+      {
+        "failureText": "XCTAssertTrue failed - The real file picker must finish selecting before review",
+        "targetName": "TaskfoldUITests",
+        "testIdentifier": 2,
+        "testIdentifierString": "TaskfoldUITests/testRecordingBackupImportReviewCancelSaveAndColdReturn()",
+        "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testRecordingBackupImportReviewCancelSaveAndColdReturn",
+        "testName": "testRecordingBackupImportReviewCancelSaveAndColdReturn()"
+      }
+    ],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 2
+  },
+  "error": "",
+  "ownedSimulatorRestored": true,
+  "logSHA256": "244f84e6e98830a968afee4447ae082f4bc85af5254113fb232c4f3b5620ca04"
+}
