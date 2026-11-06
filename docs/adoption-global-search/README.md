@@ -2,7 +2,7 @@
 
 The Subtask storage review screen now searches task titles on the server, including tasks beyond the first loaded page and matches after the displayed title prefix. Clearing the query returns to browsing. Search is debounced, paged and bound to the current query/account/session/workspace/access scope; late results cannot populate another search or a selected review. Long-tail matches receive a bounded excerpt. Existing saved-upgrade and fresh single-task review paths are unchanged.
 
-This is a functional discovery improvement, not completion of the broader older-work/history migration. Normal migration rollout gates remain Off. The independently owned matching SQL migration must be applied before future search activation. No hosted database, installed app, original task, draft, receipt or history was changed by this batch. Frozen Mac29/phone41 packages predate this change and do not contain it. Mac installation still awaits the saved-draft reply; phone installation remains deferred.
+This is a functional discovery improvement, not completion of the broader older-work/history migration. Normal migration rollout gates remain Off. The independently owned matching SQL migration must be applied before future search activation. No hosted database, installed app, original task, draft, receipt or history was changed by this batch. Frozen Mac29/phone41 packages predate this change and do not contain it. At completion of this implementation batch, Mac installation was waiting for a saved-draft reply. It has since been installed under standing restart authorization; see [current installation status](../mac29-installation/README.md). Phone installation remains deferred.
 
 ## Contract and access
 
