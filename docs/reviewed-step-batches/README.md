@@ -48,3 +48,10 @@ The Mac screen check could not proceed because computer use reported the Mac loc
 ## Remaining
 
 Accept Mac review controls, wider iPad/text-size/accessibility behavior, normal keyboard menus/focus, pending inverse controls and Stop after a committed/lost reply, and wider account/access/window contexts. Genuine on-device quality/latency needs an eligible enabled device; no cloud fallback is planned. Remaining legacy payload/lifecycle acceptance stays separate. Further physical iPhone installation and the three agreed release/remote-reminder/older-client deferrals remain.
+
+
+## 6 November · Activity clarity and bounded Mac control attempt
+
+Reading and updating now share one accessible inline activity row; saving takes precedence. The current loading-row iPhone Check journey passes its genuine local-service assertions, but still records one pending-to-settled frame warning. This is not a warning fix. A native Form-row redesign was reverted after retaining the warning; debugger attempts were inconclusive and are not an originating stack trace.
+
+The actual Mac controls accepted an edited literal first title and excluded third proposal, then visibly showed confirmed Add and Undo. Server-side Redo titles/fresh identities/three receipts passed, but the verifier checked disk before settlement and terminated the app; final saved-cache and Redo-screen acceptance remain open. A corrected 30-second saved-cache wait was prepared; subsequent attempts could not exercise Add because computer control reported the Mac locked. No end-to-end Mac review acceptance is inferred. The owning Mac runner preserves this pending scope separately from automated Store evidence.

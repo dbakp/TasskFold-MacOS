@@ -49,13 +49,21 @@ struct ReviewedTaskStepsView: View {
         guard !steps.isEmpty else { return nil }
         do { _ = try TaskBreakdownRequest.titles(selected); return nil } catch { return error.localizedDescription }
     }
+    private var activity: String? {
+        if model?.busy == true { return "Updating saved steps…" }
+        return reading ? "Reading task…" : nil
+    }
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     Text("Work with saved subtasks. Any unsaved changes in the task editor stay separate.").font(.callout).foregroundStyle(.secondary)
-                    if reading { ProgressView("Reading task…") }
-                    if model?.busy == true { ProgressView("Updating saved steps…").accessibilityIdentifier("reviewedStepsWorking") }
+                    if let activity {
+                        HStack(spacing: 10) {
+                            ProgressView().progressViewStyle(.circular).controlSize(.small).accessibilityHidden(true)
+                            Text(activity)
+                        }.accessibilityElement(children: .combine).accessibilityIdentifier("reviewedStepsWorking")
+                    }
                     if let error { Text(error).foregroundStyle(.red).accessibilityIdentifier("reviewedStepsError") }
                     if let message = model?.message { Text(message).accessibilityIdentifier("reviewedStepsStatus") }
                 }

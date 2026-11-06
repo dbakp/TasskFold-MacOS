@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-06",
+  "platformOwner": "mac",
+  "passed": 52,
+  "failed": 0,
+  "logSHA256": "caec28b2e96a1619e6011ad5dc7b82b4a93a3c9470038058005b676103d2111d",
+  "newNamedTests": 5,
+  "sourceBytes": 708080,
+  "uncachedSummaryCalls": 12,
+  "beforeActualProductionMilliseconds": 202.06904411315918,
+  "afterMilliseconds": 5.623102188110352,
+  "scope": "Debug Core on this Mac; no timing assertion, device FPS or universal smoothness claim",
+  "sourceSHA256": {
+    "Taskfold/Core/NoteMarkup.swift": "5c3a33a0c65ff4153931a322a3bd165afbc19793f57506a896919e72e4c164f2",
+    "TaskfoldTests/BoundedNoteExcerptTests.swift": "240ebfed231dfa910e25c6a829c94c0caf1d715982111f6360979d735746ceb8"
+  }
+}

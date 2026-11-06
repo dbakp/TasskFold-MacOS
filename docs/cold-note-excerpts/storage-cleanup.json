@@ -1,0 +1,81 @@
+{
+  "date": "2026-11-06",
+  "retiredResults": {
+    "freeBeforeBytes": 60554129408,
+    "removed": [
+      {
+        "path": "/tmp/taskfold-step-rows-check.xcresult",
+        "allocatedBytes": 1122304
+      },
+      {
+        "path": "/tmp/taskfold-step-rows-diagnostic.xcresult",
+        "allocatedBytes": 1208320
+      },
+      {
+        "path": "/tmp/taskfold-step-rows-diagnostic-fault.xcresult",
+        "allocatedBytes": 1216512
+      },
+      {
+        "path": "/tmp/taskfold-step-rows-diagnostic-filtered.xcresult",
+        "allocatedBytes": 1200128
+      },
+      {
+        "path": "/tmp/taskfold-step-rows-diagnostic-emitter.xcresult",
+        "allocatedBytes": 1200128
+      },
+      {
+        "path": "/tmp/taskfold-step-rows-diagnostic-all-levels.xcresult",
+        "allocatedBytes": 1122304
+      },
+      {
+        "path": "/tmp/taskfold-step-rows-diagnostic-exact.xcresult",
+        "allocatedBytes": 1142784
+      },
+      {
+        "path": "/tmp/taskfold-step-loading-check.xcresult",
+        "allocatedBytes": 1069056
+      },
+      {
+        "path": "/tmp/taskfold-cold-note-library.xcresult",
+        "allocatedBytes": 1040384
+      },
+      {
+        "path": "/tmp/taskfold-cold-note-library-attachments",
+        "allocatedBytes": 274432
+      }
+    ],
+    "freeAfterBytes": 60564746240,
+    "preserved": "Owning concise reports, source hashes and reviewed library screenshot; normal apps/data, current and rollback archives, shared services and device data untouched."
+  },
+  "finishTestRun": {
+    "apply": true,
+    "freeBeforeBytes": 60566585344,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 681779200,
+        "projectedAllocatedBytes": 681779200
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 623636480,
+        "projectedAllocatedBytes": 623636480
+      }
+    ],
+    "freeAfterBytes": 60566560768,
+    "actualFreeChangeBytes": -24576
+  },
+  "coreCacheAllocatedBytes": {
+    "ios": 672903168,
+    "mac": 617787392
+  },
+  "ownedPhoneFinalState": "Shutdown",
+  "remainingTaskfoldProcesses": [
+    "/Applications/Taskfold.app/Contents/MacOS/Taskfold"
+  ],
+  "normalInstalledAppPreserved": true,
+  "freeFinalBytes": 60570628096
+}

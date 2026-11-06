@@ -7975,3 +7975,8 @@ Both filter editors now include optional on-device expression generation with ed
 ### 2026-11-05 — Project file review and assistance decision
 
 The project-transfer candidate now inventories task/subtask and inline-comment file references, closing a comments-only custody-review omission. Inaccessible provider references remain opaque; material metadata changes invalidate review, while read bookkeeping does not. Normal 5 MiB inline files stay supported. Actual file custody transfer, consent and native/provider lifecycle integration remain unfinished and gated. [Scope and verification](project-file-inventory/README.md). The user chose on-device-only assistance and deferred further iPhone installation; no cloud provider or fallback is planned.
+
+
+### 6 November · Cold compact-note preparation
+
+Compact summaries avoid whole-note copies/normalization before clipping. Each owner passes 52 focused checks; the 12-call 708 KB Debug diagnostic drops from about 202 ms to 5.4–5.6 ms on this Mac. Current source builds/signs and the iPhone note-library search/paging/refresh/cold journey passes. Full accessibility conversion, wider native rendering and physical FPS remain open. The reviewed-step layout warning remains unresolved. No installed-app or gate changes. [Evidence](cold-note-excerpts/README.md).

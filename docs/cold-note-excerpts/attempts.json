@@ -1,0 +1,114 @@
+[
+  {
+    "run": "taskfold-step-rows-check",
+    "reportSHA256": "fbcec59645b9fd2c0f1a8a350e91a4222c5454c3ad106c93df6416bfba37c024",
+    "accepted": true,
+    "xcodeExitCode": null,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "note": null
+  },
+  {
+    "run": "taskfold-step-rows-diagnostic",
+    "reportSHA256": "0b4eeed8ca3cb5e0633881c467d47cb4eab2dc946cf48ccff7216ce4582f3ab2",
+    "accepted": true,
+    "xcodeExitCode": null,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "note": "Retained outcome is scoped; debugger warning diagnosis was inconclusive."
+  },
+  {
+    "run": "taskfold-step-rows-diagnostic-fault",
+    "reportSHA256": "535c4e2a85dba50e1b1620c74ca40ab4afe3d071a9faf051fe51246d583f2676",
+    "accepted": true,
+    "xcodeExitCode": null,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "note": "Retained outcome is scoped; debugger warning diagnosis was inconclusive."
+  },
+  {
+    "run": "taskfold-step-rows-diagnostic-filtered",
+    "reportSHA256": "5bb4076041e36bee573c272d985e8ddd4e22c75eac4e74f5610cc478c5b9eac4",
+    "accepted": true,
+    "xcodeExitCode": null,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "note": "Retained outcome is scoped; debugger warning diagnosis was inconclusive."
+  },
+  {
+    "run": "taskfold-step-rows-diagnostic-emitter",
+    "reportSHA256": "8a53edaaa7bc95bfd58fed05ebb6f2b8f53c4c0cead6eb3bbd03967aea8b8b9e",
+    "accepted": true,
+    "xcodeExitCode": null,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "note": "Retained outcome is scoped; debugger warning diagnosis was inconclusive."
+  },
+  {
+    "run": "taskfold-step-rows-diagnostic-all-levels",
+    "reportSHA256": "79f5f4e43ac97fed52619463e304d3d6c37c29b5f50548cde3efb751a99689cd",
+    "accepted": true,
+    "xcodeExitCode": null,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "note": "Retained outcome is scoped; debugger warning diagnosis was inconclusive."
+  },
+  {
+    "run": "taskfold-step-rows-diagnostic-exact",
+    "reportSHA256": "907a96033a2cdee4930858bed426bea37a0f20b0019bf2f879113fdbf558dced",
+    "accepted": true,
+    "xcodeExitCode": null,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "note": "Retained outcome is scoped; debugger warning diagnosis was inconclusive."
+  },
+  {
+    "run": "taskfold-step-loading-check",
+    "reportSHA256": "aa99a6e6aed97551d8fa8243b937ffc82e5285c65a23b93d22a66fc2192c03ce",
+    "accepted": true,
+    "xcodeExitCode": null,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "note": null
+  },
+  {
+    "run": "taskfold-cold-note-library",
+    "reportSHA256": "53b75e6c4a1ba429d9adaf4829cbdb562f4d42a8980bdf41f71c113ac9d5a7f0",
+    "accepted": true,
+    "xcodeExitCode": 0,
+    "runtimeWarnings": [],
+    "note": null
+  }
+]

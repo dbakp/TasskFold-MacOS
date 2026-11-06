@@ -1,0 +1,11 @@
+{
+  "fixed": false,
+  "warning": "Invalid frame dimension (negative or non-finite).",
+  "attempts": [
+    "Separate Form rows: functionality passed; warning retained; layout reverted",
+    "Combined activity row: functionality passed; warning retained; clarity change kept",
+    "Bounded LLDB passes: no originating warning frame; unrelated log hits excluded"
+  ],
+  "temporaryUITestPauseRemoved": true,
+  "limits": "No clean-runtime, exact warning diagnosis or Mac end-to-end acceptance."
+}

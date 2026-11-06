@@ -14,5 +14,6 @@
     "stopped original after cold reopening"
   ],
   "fixed": false,
-  "limits": "No clean-runtime, broader layout, speech or physical rendering acceptance is inferred."
+  "limits": "No clean-runtime, broader layout, speech or physical rendering acceptance is inferred.",
+  "followUp": "Separate Form rows and one combined activity indicator both retained the warning. Bounded debugger attempts did not isolate an originating frame; unrelated log hits are not a diagnosis. Original card layout restored; one activity indicator retained for clarity."
 }

@@ -177,25 +177,48 @@ enum NoteMarkup {
         if let previous { result += " (" + previous.absoluteString + ")" }
         return result
     }
-    static func excerpt(_ raw: String, characters: Int, bytes: Int) -> (String, Bool) {
-        let value = raw.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
+    static func excerpt<S: StringProtocol>(_ raw: S, characters: Int, bytes: Int) -> (String, Bool) {
+        guard characters > 0, bytes > 0 else { return ("", !raw.isEmpty) }
+        let limit = min(characters, bytes)
+        let window = limit > (Int.max - 2) / 2 ? Int.max : limit * 2 + 2
+        let end = raw.index(raw.startIndex, offsetBy: window, limitedBy: raw.endIndex) ?? raw.endIndex
+        // Bound the replacements themselves. Extra complete graphemes retain
+        // Foundation's canonical newline/combining-mark matching context.
+        let value = String(raw[..<end]).replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
         var result = "", count = 0, used = 0
         for character in value {
             let chunk = String(character), size = chunk.utf8.count
             guard count < characters, used + size <= bytes else { return (result, true) }
             result += chunk; count += 1; used += size
         }
-        return (result, false)
+        return (result, end != raw.endIndex)
     }
     /// Bound markup work before parsing compact lists/widgets. The canonical note is never changed.
-    static func preview(_ raw: String, characters: Int, bytes: Int, includeLinkDestinations: Bool = false) -> (String, Bool) {
+    static func preview<S: StringProtocol>(_ raw: S, characters: Int, bytes: Int, includeLinkDestinations: Bool = false) -> (String, Bool) {
         guard characters > 0, bytes > 0 else { return ("", !raw.isEmpty) }
         let source = excerpt(raw, characters: min(characters, 10_000) * 2, bytes: min(bytes, 50_000) * 2)
         let result = excerpt(plainText(source.0, includeLinkDestinations: includeLinkDestinations), characters: characters, bytes: bytes)
         return (result.0, source.1 || result.1)
     }
+    /// Match Foundation scalar trimming without copying ordinary long notes.
+    /// Long whitespace edges use its bulk trimming instead of a scalar walk.
+    private static func trimmedPreviewSource(_ raw: String) -> Substring {
+        let scalars = raw.unicodeScalars, whitespace = CharacterSet.whitespacesAndNewlines
+        var lower = scalars.startIndex, upper = scalars.endIndex, probed = 0
+        while lower < upper, whitespace.contains(scalars[lower]) {
+            scalars.formIndex(after: &lower); probed += 1
+            if probed == 256 { return raw.trimmingCharacters(in: whitespace)[...] }
+        }
+        while lower < upper {
+            let previous = scalars.index(before: upper)
+            guard whitespace.contains(scalars[previous]) else { break }
+            upper = previous; probed += 1
+            if probed == 256 { return raw.trimmingCharacters(in: whitespace)[...] }
+        }
+        return raw[lower..<upper]
+    }
     static func summary(_ raw: String, includeLinkDestinations: Bool = false) -> String {
-        let value = preview(raw.trimmingCharacters(in: .whitespacesAndNewlines), characters: 320, bytes: 1600, includeLinkDestinations: includeLinkDestinations)
+        let value = preview(trimmedPreviewSource(raw), characters: 320, bytes: 1600, includeLinkDestinations: includeLinkDestinations)
         return value.0 + (value.1 ? "…" : "")
     }
 
