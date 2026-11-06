@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-06",
+  "owner": "TasskFold-MacOS",
+  "coreTests": 52,
+  "coreFailures": 0,
+  "newInlineTests": 7,
+  "baselineOwner": "TaskFold-iOS",
+  "baselineTests": 1,
+  "baselineFailures": 4,
+  "currentPhoneSourceAccepted": true,
+  "currentTabletSourceAccepted": true,
+  "macBuildAndStrictSignature": true,
+  "nativeMacInteractionAccepted": false,
+  "physicalFPSAccepted": false,
+  "systemSettingsChanged": false,
+  "hostedServicesChanged": false,
+  "normalGatesChanged": false,
+  "installedAppsChanged": false,
+  "currentFeaturePackaged": false,
+  "installedMacBuild": "30",
+  "installedMacStartupPending": true,
+  "phoneInstallationDeferred": true,
+  "sourceSHA256": {
+    "Taskfold/Core/NoteFormatting.swift": "eb86a6cc243a088ce2d10a34d544762679434bee65dba4dfe243e0b541ec92eb",
+    "Taskfold/Views/NoteFormattingView.swift": "31ceb7228f0ca776ed0853905ba236abde03309395ba4437cbe9bc28a5283d8f",
+    "TaskfoldTests/NoteInlineFormattingTests.swift": "adb30abaf0f3ef153b672393ec7f9593f48c377175068462adb9a0f047abbd21"
+  }
+}

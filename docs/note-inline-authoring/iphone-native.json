@@ -1,0 +1,103 @@
+{
+  "date": "2026-11-06",
+  "buildOnly": false,
+  "nativeSyntheticPeer": true,
+  "integratedSQLGatewayStorage": false,
+  "installedAppsUnchanged": true,
+  "normalGatesChanged": false,
+  "case": "consent",
+  "deviceFamily": "iphone",
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "preparedSourcesSHA256": "38a2ab4d8014f3595dce639afdf7432cf7840580397d7f30eefc5b7e197bb2d1",
+  "ownUITestsSHA256": "3217ff368399b4edd4f079652d3d7904698162afff37d810684beec41479ba89",
+  "packet": {
+    "combined": false,
+    "combinedContractSHA256": null,
+    "fileContractSHA256": "897a68fc8ddc38c7dd126885512181dffea1234a4f0dcbe5769c03b57f40ce76",
+    "files": true,
+    "sourceFixtureSHA256": "04e2558d6509c5b959debd13ce2cf7d857d1688f0532542cc998cf793a5e6aa8",
+    "recordingContractSHA256": null,
+    "preparedPacketSHA256": "60f105fa99227099167cffe8ced017916c0225694230505aa155cb68032bba41",
+    "recordings": false,
+    "privateHistory": false,
+    "reusedHost": true,
+    "namespace": "workflowteststeameditbridge",
+    "syntheticOnly": true,
+    "network": "All requests intercepted in the reserved DEBUG host; no real account/provider access",
+    "launch": [
+      "--team-editor-testing",
+      "--project-adoption-testing",
+      "--team-editor-reset"
+    ]
+  },
+  "contentSize": {
+    "original": "large",
+    "tested": "large"
+  },
+  "xcodeExitCode": 0,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793997157.29,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793997079.728,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "proof": {
+    "accepted": true,
+    "actualStoreUndoRedo": true,
+    "coldSavedState": true,
+    "descriptionOnlySave": true,
+    "pinAndUnrelatedTablesPreserved": true,
+    "previewDoesNotSave": true,
+    "selectionToggleRoundTrip": true,
+    "strikethroughControl": true
+  },
+  "acceptedNativeControls": true,
+  "contentSizeRestored": true,
+  "ownedSimulatorRestored": true,
+  "cleanup": {
+    "apply": true,
+    "freeBeforeBytes": 59670540288,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 685883392,
+        "projectedAllocatedBytes": 685883392
+      }
+    ],
+    "freeAfterBytes": 59670396928,
+    "actualFreeChangeBytes": -143360
+  }
+}

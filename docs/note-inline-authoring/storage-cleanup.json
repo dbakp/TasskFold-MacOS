@@ -1,0 +1,158 @@
+{
+  "date": "2026-11-06",
+  "freeBeforeBytes": 59626254336,
+  "finishRun": {
+    "apply": true,
+    "freeBeforeBytes": 59619540992,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 685883392,
+        "projectedAllocatedBytes": 685883392
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 625496064,
+        "projectedAllocatedBytes": 625496064
+      }
+    ],
+    "freeAfterBytes": 59619532800,
+    "actualFreeChangeBytes": -8192
+  },
+  "retired": [
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-v2-native.xcresult",
+      "allocatedBytes": 11911168
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-v3-native.xcresult",
+      "allocatedBytes": 10780672
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-native.xcresult",
+      "allocatedBytes": 9973760
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-v4-native.xcresult",
+      "allocatedBytes": 962560
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ipad-native.xcresult",
+      "allocatedBytes": 1216512
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ipad-native.log",
+      "allocatedBytes": 20480
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-v3-native.log",
+      "allocatedBytes": 36864
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ipad-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ios-build-v3-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-frame.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-v3-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ios-core.log",
+      "allocatedBytes": 40960
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-v4-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ios-build-v4-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ios-build-v4.log",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-mac-build.log",
+      "allocatedBytes": 40960
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-v4-native.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-native.log",
+      "allocatedBytes": 12288
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ios-build-v3.log",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ios-build-v2.log",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-mac-core.log",
+      "allocatedBytes": 40960
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ios-build-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-v2-native.log",
+      "allocatedBytes": 40960
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ios-build.log",
+      "allocatedBytes": 135168
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-baseline.log",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-mac-build-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ios-build-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-failure-attachments",
+      "allocatedBytes": 9461760
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-iphone-attachments",
+      "allocatedBytes": 344064
+    },
+    {
+      "path": "/tmp/taskfold-note-inline-ipad-attachments",
+      "allocatedBytes": 585728
+    }
+  ],
+  "retiredAllocatedBytes": 45830144,
+  "freeAfterBytes": 59671965696,
+  "preserved": "Concise baseline/final Core and native gzip logs, signed build/source reports, final inspected screenshots, reusable products, installed Mac30 process and packages/rollback/private safety copies. No app/device/user data erased."
+}

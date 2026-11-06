@@ -2,7 +2,7 @@ import Foundation
 
 /// Selection-based edits are pure text transformations; callers decide when to save.
 enum NoteFormatting {
-    enum Style: String, CaseIterable, Sendable { case bold, italic, code, heading, bullet, numbered, quote, link }
+    enum Style: String, CaseIterable, Sendable { case bold, italic, strikethrough, code, heading, bullet, numbered, quote, link }
     enum ParagraphStyle: String, CaseIterable, Sendable {
         case body, heading1, heading2, heading3
         var title: String { switch self { case .body: "Body"; case .heading1: "Heading 1"; case .heading2: "Heading 2"; case .heading3: "Heading 3" } }
@@ -10,6 +10,10 @@ enum NoteFormatting {
     }
     struct Edit: Equatable, Sendable { let text: String; let selection: NSRange }
     static func apply(_ style: Style, to text: String, selection: NSRange, url: String = "") throws -> Edit {
+        let edit = try applying(style, to: text, selection: selection, url: url)
+        return try checkedEdit(text: edit.text, selection: edit.selection)
+    }
+    private static func applying(_ style: Style, to text: String, selection: NSRange, url: String) throws -> Edit {
         let range = try checkedRange(in: text, selection: selection)
         let chosen = String(text[range]), before = String(text[..<range.lowerBound]), after = String(text[range.upperBound...])
         func wrapping(_ marker: String, placeholder: String) -> Edit {
@@ -27,6 +31,7 @@ enum NoteFormatting {
         switch style {
         case .bold: return wrapping("**", placeholder: "bold text")
         case .italic: return wrapping("_", placeholder: "italic text")
+        case .strikethrough: return wrapping("~~", placeholder: "struck text")
         case .code:
             let longest = chosen.split(whereSeparator: { $0 != "`" }).map(\.count).max() ?? 0
             if !chosen.contains("\n") {
