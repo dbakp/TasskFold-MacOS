@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-06",
+  "genuineTransferAndProducerChecks": 141,
+  "genuineCopyRegressions": 69,
+  "handlerTests": 34,
+  "fullSchemaServicesRemoved": true,
+  "copyServicesRemoved": true,
+  "nativeRebuildNeeded": false,
+  "reason": "No Swift/resource/client wire-contract changes in this service milestone",
+  "hostedChanges": false,
+  "normalUseEnabled": false,
+  "advisorFindingsMatchPreviousSchema": true,
+  "normalAppsOrArchivesChanged": false,
+  "unresolvedProcessDeathOrIndeterminateWritesRemainFenced": true
+}

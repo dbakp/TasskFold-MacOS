@@ -115,6 +115,7 @@ function failed(value: Row): never {
       "review",
       "verification_failed",
       "busy",
+      "producer_closed",
       "quota",
     ].includes(String(value.status))
   ) throw new Failure(409, String(value.status));
@@ -386,66 +387,116 @@ export function createProjectFilesHandler(
         throw new Failure(409, "source_changed");
       }
       const digest = await sha(original);
-      const reserved = await rpc("reserve", {
-        ...body,
-        byte_count: original.length,
-        sha256: digest,
-      });
-      if (reserved.status === "plan") return json({ plan: plan(reserved) });
-      if (!["upload", "verify"].includes(String(reserved.status))) {
-        failed(reserved);
-      }
-      exact(reserved, [
-        "status",
-        "object_name",
-        "sha256",
-        "byte_count",
-        "mime",
-        "ticket_id",
-      ]);
-      const name = reserved.object_name;
-      if (
-        typeof name !== "string" ||
-        !/^team-task-files\/v1\/[a-f0-9-]{36}\/[a-f0-9-]{36}$/.test(name) ||
-        name.split("/")[2] !== body.operation_id || !id(name.split("/")[3]) ||
-        !id(reserved.ticket_id) || reserved.sha256 !== digest ||
-        reserved.byte_count !== original.length || reserved.mime !== source.mime
-      ) throw new Failure(503, "retry");
-      if (reserved.status === "upload") {
-        try {
-          const r = await call(
-            "/storage/v1/object/task-attachments/" + path(name),
-            {
-              method: "POST",
-              headers: {
-                ...service,
-                "Content-Type": String(source.mime),
-                "x-upsert": "false",
+      const producer = crypto.randomUUID();
+      let writeAttempted = false, providerTerminal = false, reconciled = false;
+      try {
+        const reserved = await rpc("reserve_producer", {
+          ...body,
+          producer_id: producer,
+          byte_count: original.length,
+          sha256: digest,
+        });
+        if (reserved.status === "plan") return json({ plan: plan(reserved) });
+        if (!["upload", "verify"].includes(String(reserved.status))) {
+          failed(reserved);
+        }
+        exact(reserved, [
+          "status",
+          "object_name",
+          "sha256",
+          "byte_count",
+          "mime",
+          "ticket_id",
+        ]);
+        const name = reserved.object_name;
+        if (
+          typeof name !== "string" ||
+          !/^team-task-files\/v1\/[a-f0-9-]{36}\/[a-f0-9-]{36}$/.test(name) ||
+          name.split("/")[2] !== body.operation_id || !id(name.split("/")[3]) ||
+          !id(reserved.ticket_id) || reserved.sha256 !== digest ||
+          reserved.byte_count !== original.length ||
+          reserved.mime !== source.mime
+        ) throw new Failure(503, "retry");
+        if (reserved.status === "upload") {
+          try {
+            signal.throwIfAborted();
+            writeAttempted = true;
+            const r = await call(
+              "/storage/v1/object/task-attachments/" + path(name),
+              {
+                method: "POST",
+                headers: {
+                  ...service,
+                  "Content-Type": String(source.mime),
+                  "x-upsert": "false",
+                },
+                body: new Uint8Array(original),
               },
-              body: new Uint8Array(original),
-            },
-          );
-          // A lost response is reconciled by fully reading committed bytes. It
-          // never licenses another POST or settles an absent/unfinished write.
-          await read(r, 64000, signal);
-        } catch {
-          signal.throwIfAborted();
+            );
+            providerTerminal = r.ok || r.status === 409;
+            // A lost response is reconciled by fully reading committed bytes. It
+            // never licenses another POST or settles an absent/unfinished write.
+            await read(r, 64000, signal);
+          } catch {
+            signal.throwIfAborted();
+          }
+        }
+        const copied = await get(name);
+        if (copied.length !== original.length || await sha(copied) !== digest) {
+          throw new Failure(409, "verification_required");
+        }
+        const observed = await rpc("upload_reconcile", {
+          operation_id: body.operation_id,
+          ticket_id: reserved.ticket_id,
+          stored_bytes: copied.length,
+          stored_sha256: digest,
+        }, true);
+        if (observed.protocol !== 1 || observed.settled !== true) {
+          throw new Failure(409, "verification_required");
+        }
+        reconciled = true;
+        return json({ plan: plan(await rpc("verify", body)) });
+      } finally {
+        // This invocation attests only its own producer. Aborting the client
+        // request must not abort a bounded, private settlement observation.
+        // An indeterminate POST is deliberately left open for positive proof.
+        if (!writeAttempted || providerTerminal || reconciled) {
+          const terminalSignal = AbortSignal.timeout(2000);
+          try {
+            const pending = send(
+              new Request(
+                origin.origin +
+                  "/rest/v1/rpc/taskfold_project_file_producer_terminal",
+                {
+                  method: "POST",
+                  headers: { ...service, "Content-Type": "application/json" },
+                  redirect: "error",
+                  signal: terminalSignal,
+                  body: JSON.stringify({
+                    _actor: actor,
+                    _body: {
+                      ...body,
+                      producer_id: producer,
+                      proof: !writeAttempted
+                        ? "not_started"
+                        : providerTerminal
+                        ? "provider_terminal"
+                        : "verified",
+                    },
+                  }),
+                },
+              ),
+            );
+            pending.then((r) => {
+              if (terminalSignal.aborted) void r.body?.cancel().catch(() => {});
+            }, () => {});
+            const reply = await bounded(pending, terminalSignal);
+            // The private observation cannot replace the preparation outcome.
+            // Failed/lost acknowledgements leave the original fence retained.
+            await read(reply, 4096, terminalSignal);
+          } catch { /* No terminal proof is inferred from failed cleanup. */ }
         }
       }
-      const copied = await get(name);
-      if (copied.length !== original.length || await sha(copied) !== digest) {
-        throw new Failure(409, "verification_required");
-      }
-      const observed = await rpc("upload_reconcile", {
-        operation_id: body.operation_id,
-        ticket_id: reserved.ticket_id,
-        stored_bytes: copied.length,
-        stored_sha256: digest,
-      }, true);
-      if (observed.protocol !== 1 || observed.settled !== true) {
-        throw new Failure(409, "verification_required");
-      }
-      return json({ plan: plan(await rpc("verify", body)) });
     } catch (error) {
       return error instanceof Failure
         ? json({ code: error.code }, error.status)

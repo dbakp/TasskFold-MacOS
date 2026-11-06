@@ -1,0 +1,12 @@
+{
+  "passed": 34,
+  "failed": 0,
+  "logSHA256": "f496cb445c3b7264d0cb1c9572246c62ac5a2479416e953c795d78170abb1014",
+  "sourceSHA256": {
+    "supabase/functions/project-files/handler.ts": "a2d403ca66daf14e0ed52adbca9ab77d29a2382d37caaa64b3688b0a3d3f5fe4",
+    "supabase/functions/project-files/handler_test.ts": "43b35b5802475bb748f083384877bfd4b15b45a8905b484fe99c3500a2045df4",
+    "supabase/migrations/20261106073018_project_file_producer_terminal_recovery.sql": "4975f6729bfb6bea727333779806996a0761924e2967228854372b1de5511f49"
+  },
+  "installedAppsChanged": false,
+  "hostedChanges": false
+}

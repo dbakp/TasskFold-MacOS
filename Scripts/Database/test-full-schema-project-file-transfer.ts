@@ -4,6 +4,7 @@ import {Buffer} from 'node:buffer';
 import {randomUUID,createHash} from 'node:crypto';
 import {readFile,writeFile} from 'node:fs/promises';
 import {createFullSchemaRuntime} from './full-schema-runtime.mjs';
+import {exerciseProjectFileProducers} from './project-file-producer-cases.ts';
 import {createProjectFilesHandler} from '../../supabase/functions/project-files/handler.ts';
 import {createTaskFilesHandler} from '../../supabase/functions/task-files/handler.ts';
 const output=Deno.args[0];assert(/^\/tmp\/taskfold-[^/]+\.json$/.test(output));
@@ -11,7 +12,7 @@ const report={checks:{},genuineLocalAuth:true,genuineLocalPostgREST:true,genuine
 const check=(name,value,expected=true)=>{assert.deepEqual(value,expected,name);report.checks[name]=true;console.log('passed',name)};
 const ok=(name,r,status=200)=>{if(r.status!==status)report.lastFailure={name,status:r.status,value:r.value};check(name,r.status,status);return r.value};
 const lit=x=>"'"+String(x).replaceAll("'","''")+"'";
-const sourcePaths=['supabase/functions/project-files/handler.ts','supabase/functions/task-files/handler.ts','Scripts/Database/test-full-schema-project-file-transfer.ts','supabase/migrations/20261105210740_reviewed_project_file_transfer.sql','supabase/migrations/20261105214041_native_project_file_preparation_recovery.sql','supabase/migrations/20261105221349_canonical_project_file_copy_receipts.sql'];
+const sourcePaths=['Scripts/Database/project-file-producer-cases.ts','supabase/migrations/20261106073018_project_file_producer_terminal_recovery.sql','supabase/functions/project-files/handler.ts','supabase/functions/task-files/handler.ts','Scripts/Database/test-full-schema-project-file-transfer.ts','supabase/migrations/20261105210740_reviewed_project_file_transfer.sql','supabase/migrations/20261105214041_native_project_file_preparation_recovery.sql','supabase/migrations/20261105221349_canonical_project_file_copy_receipts.sql'];
 const hash=async p=>createHash('sha256').update(await readFile(new URL('../../'+p,import.meta.url))).digest('hex');
 report.sourceSHA256=Object.fromEntries(await Promise.all(sourcePaths.map(async p=>[p,await hash(p)])));
 let runtime,contract;
@@ -125,6 +126,7 @@ try {
  check('paused replay does not duplicate upload',uploads,1);check('paused replay preserves current task',ok('read after replay',await request('/tasks?id=eq.'+task.id,undefined,'GET'))[0],after);
  revokeAfterRead=true;check('access loss crossing actual download withholds bytes',(await call(files,'download',download,users.member)).status,404);
  check('no pending file-admission authority remains',await runtime.raw('select count(*) from taskfold_private.task_file_admission_scope'),'0');
+ await exerciseProjectFileProducers(runtime,check);
  check('scheduler stays disabled',await runtime.raw('show cron.launch_active_jobs'),'off');check('no outbound jobs queued',await runtime.raw('select count(*) from net.http_request_queue'),'0');report.advisors=await runtime.advisors();const oldKeys=new Set(report.baselineAdvisors.result.map(x=>x.cache_key));check('no new advisor findings',report.advisors.result.filter(x=>!oldKeys.has(x.cache_key)),[]);
  for(const p of sourcePaths)assert.equal(await hash(p),report.sourceSHA256[p],p+' changed during verification');report.currentSourceUnchanged=true;report.accepted=true;
 }catch(error){report.error={message:error.message,code:error.code,migration:error.migration};throw error}finally{if(runtime)report.runtimeRemoved=await runtime.close();report.checkCount=Object.keys(report.checks).length;await writeFile(output,JSON.stringify(report,null,2)+'\n');if(Deno.args.includes('--export-native-fixture')&&report.accepted&&report.runtimeRemoved){await writeFile(new URL('../../TaskfoldTests/Fixtures/project-file-preparation-native-v1.json',import.meta.url),JSON.stringify({syntheticOnly:true,containerRemoved:true,...contract},null,2)+'\n')}}

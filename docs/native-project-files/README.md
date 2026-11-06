@@ -78,3 +78,8 @@ The same production Swift candidate now passes all three standard-size journeys 
 The owning iOS driver now selects either of the two existing acceptance devices with `--device iphone` or `--device ipad`. No Simulator is created, no physical app is installed and no normal gate changes. [Follow-up evidence](tablet-native-verification.json).
 
 The Mac walkthrough is still unobserved: computer use reported the Mac locked. One manual-unlock request was issued while independent iPad work continued. The one verified isolated process was closed after testing; the normal app and its drafts were left untouched. The signed candidate remains ready for the Mac check when unlocked.
+
+
+## 6 November · Producer observations and real cleanup
+
+A producer-specific service follow-up now closes an unacknowledged reservation when the same handler can attest that no upload was issued, blocks its late reservation, and records definitive provider/positive-byte proof separately. Another verifier cannot settle the original writer. Cancelled copies then use the existing real Storage maintenance path; settlement alone never releases quota. Each owner passes 141 genuine transfer/producer checks, 69 copy regressions and 34 handler tests. Unknown POST/process-death outcomes without an observation or positive bytes still remain unresolved; no timeout/absence erasure is inferred. [Detailed scope, service-only boundaries and evidence](../project-file-producers/README.md). Swift/client response shapes, installed apps, hosted schema and normal gates are unchanged.

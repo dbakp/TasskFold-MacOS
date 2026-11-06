@@ -58,6 +58,10 @@ type Faults = {
   reserved?: string;
   corrupt?: boolean;
   lost?: boolean;
+  reserveLost?: boolean;
+  missingCopy?: boolean;
+  terminalLost?: boolean;
+  abortReserve?: AbortController;
   plan?: (p: ReturnType<typeof plan>) => unknown;
   auth?: unknown;
   blocked?: boolean;
@@ -66,6 +70,7 @@ type Faults = {
 };
 function fixture(f: Faults = {}) {
   const calls: { path: string; method: string }[] = [];
+  const observations: Record<string, unknown>[] = [], producers: string[] = [];
   const handler = createProjectFilesHandler({
     url: "https://project-files.example.invalid",
     serviceKey: "private-service-key",
@@ -87,6 +92,12 @@ function fixture(f: Faults = {}) {
       if (path.startsWith("/rest/v1/rpc/")) {
         const b = await req.json();
         assert.equal(b._actor, actor);
+        if (path.endsWith("taskfold_project_file_producer_terminal")) {
+          observations.push(b._body);
+          assert.equal(req.signal.aborted, false);
+          if (f.terminalLost) throw Error("lost terminal acknowledgement");
+          return response({ protocol: 1, settled: true });
+        }
         assert.equal(b._session, session);
         if (b._action === "source") {
           return response(
@@ -98,7 +109,10 @@ function fixture(f: Faults = {}) {
             },
           );
         }
-        if (b._action === "reserve") {
+        if (b._action === "reserve_producer") {
+          producers.push(b._body.producer_id);
+          if (f.reserveLost) throw Error("lost reservation acknowledgement");
+          f.abortReserve?.abort();
           return response({
             status: f.reserved ?? "upload",
             object_name: destination,
@@ -123,6 +137,7 @@ function fixture(f: Faults = {}) {
         if (f.lost) throw Error("lost response");
         return response({ ok: true });
       }
+      if (f.missingCopy && path.endsWith(nonce)) return response({}, 404);
       return new Response(
         f.corrupt && path.endsWith(nonce)
           ? new Uint8Array(bytes.length).fill(1)
@@ -140,12 +155,12 @@ function fixture(f: Faults = {}) {
         method: "POST",
         headers: { Authorization: "Bearer " + auth },
         body: JSON.stringify(body),
-        signal: f.abort?.signal,
+        signal: (f.abortReserve ?? f.abort)?.signal,
       }),
     );
     return { status: r.status, value: await r.json(), headers: r.headers };
   };
-  return { call, calls };
+  return { call, calls, observations, producers };
 }
 Deno.test("copy verifies committed bytes and hides all grants", async () => {
   const f = fixture();
@@ -177,7 +192,7 @@ Deno.test("open ticket grants verification only", async () => {
     false,
   );
 });
-Deno.test("corrupt copied bytes cannot mark ready or settle writer", async () => {
+Deno.test("corrupt copied bytes cannot mark ready or positively reconcile", async () => {
   const f = fixture({ corrupt: true });
   assert.equal((await f.call()).status, 409);
   assert.equal(
@@ -362,4 +377,69 @@ Deno.test("empty identity never claims ready or committed", async () => {
       503,
     );
   }
+});
+
+Deno.test("unacknowledged reservation attests only this producer never posted", async () => {
+  const f = fixture({ reserveLost: true });
+  assert.equal((await f.call()).status, 503);
+  assert.equal(f.producers.length, 1);
+  assert(/^[a-f0-9-]{36}$/.test(f.producers[0]));
+  assert.deepEqual(f.observations, [{
+    plan_id: planID,
+    operation_id: operation,
+    producer_id: f.producers[0],
+    proof: "not_started",
+  }]);
+  assert.equal(
+    f.calls.some((c) => c.method === "POST" && c.path.startsWith("/storage/")),
+    false,
+  );
+});
+Deno.test("independent terminal observation survives request abort before POST", async () => {
+  const f = fixture({ abortReserve: new AbortController() });
+  assert.equal((await f.call()).status, 503);
+  assert.equal(f.observations.length, 1);
+  assert.equal(f.observations[0].proof, "not_started");
+  assert.equal(
+    f.calls.some((c) => c.method === "POST" && c.path.startsWith("/storage/")),
+    false,
+  );
+});
+Deno.test("provider acknowledgement remains terminal even if copied bytes are corrupt", async () => {
+  const f = fixture({ corrupt: true });
+  assert.equal((await f.call()).status, 409);
+  assert.equal(f.observations[0].proof, "provider_terminal");
+});
+Deno.test("lost POST reply attests verified bytes only after positive reconcile", async () => {
+  const f = fixture({ lost: true });
+  assert.equal((await f.call()).status, 200);
+  assert.equal(f.observations[0].proof, "verified");
+});
+Deno.test("an indeterminate POST and missing object produce no terminal claim", async () => {
+  const f = fixture({ lost: true, missingCopy: true });
+  assert.equal((await f.call()).status, 409);
+  assert.equal(f.observations.length, 0);
+});
+Deno.test("lost terminal acknowledgement cannot change verified preparation outcome", async () => {
+  const f = fixture({ terminalLost: true });
+  assert.equal((await f.call()).status, 200);
+  assert.equal(f.observations.length, 1);
+  assert.equal(
+    f.calls.filter((c) => c.method === "POST" && c.path.startsWith("/storage/"))
+      .length,
+    1,
+  );
+});
+Deno.test("native callers cannot supply a producer identity", async () => {
+  const f = fixture();
+  assert.equal(
+    (await f.call("copy", {
+      plan_id: planID,
+      operation_id: operation,
+      producer_id: nonce,
+    })).status,
+    400,
+  );
+  assert.equal(f.producers.length, 0);
+  assert.equal(f.observations.length, 0);
 });
