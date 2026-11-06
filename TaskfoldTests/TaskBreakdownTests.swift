@@ -92,15 +92,32 @@ final class TaskBreakdownTests: XCTestCase {
         run.close()
         XCTAssertNil(run.begin(workspace: workspace, session: session))
     }
+    func testCancelledGenerationStopsBeforeInputOrAvailabilityChecks() async throws {
+        for input in ["", "Prepare a workshop"] {
+            let worker = Task {
+                withUnsafeCurrentTask { $0?.cancel() }
+                return try await TaskBreakdownEngine.generate(input)
+            }
+            do { _ = try await worker.value; XCTFail("A cancelled request returned suggestions") }
+            catch { XCTAssertTrue(error is CancellationError, "Cancellation must win over input or availability: \(error)") }
+        }
+    }
     func testActualOnDeviceEngineWhenExplicitlyRequested() async throws {
         guard ProcessInfo.processInfo.environment["TASKFOLD_TEST_ON_DEVICE_MODEL"] == "1" else { throw XCTSkip("Actual model probe is opt-in; ordinary checks never run inference.") }
         if let reason = TaskBreakdownEngine.unavailableReason {
             print("TASK_BREAKDOWN_MODEL_UNAVAILABLE " + reason)
             throw XCTSkip(reason)
         }
-        let result = try await TaskBreakdownEngine.generate("Prepare a small picnic at a local park")
-        XCTAssertTrue((3...8).contains(result.count))
-        XCTAssertEqual(try TaskBreakdownRequest.titles(result), result)
-        print("TASK_BREAKDOWN_MODEL_ACCEPTED steps=\(result.count); synthetic input; no task writes")
+        for goal in ["Prepare a small picnic at a local park", "Review and submit a five-minute project presentation", "Preparar una presentación de cinco minutos"] {
+            let start = ContinuousClock.now
+            let result = try await TaskBreakdownEngine.generate(goal)
+            let duration = start.duration(to: .now).components
+            let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
+            let observation: [String: Any] = ["engine": "steps", "syntheticGoal": goal, "seconds": seconds, "titles": result]
+            print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
+            XCTAssertTrue((3...8).contains(result.count))
+            XCTAssertEqual(try TaskBreakdownRequest.titles(result), result)
+        }
+        print("TASK_BREAKDOWN_MODEL_ACCEPTED three synthetic goals; no task writes")
     }
 }

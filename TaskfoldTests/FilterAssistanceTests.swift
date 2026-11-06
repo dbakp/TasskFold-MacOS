@@ -142,13 +142,62 @@ final class FilterAssistanceTests: XCTestCase {
         do { _ = try await cancelled.value; XCTFail("Cancelled preparation returned") }
         catch { XCTAssertTrue(error is CancellationError) }
     }
+    func testCancelledGenerationStopsBeforeInputOrAvailabilityChecks() async throws {
+        for input in ["", "Prepare a workshop"] {
+            let worker = Task {
+                withUnsafeCurrentTask { $0?.cancel() }
+                return try await FilterAssistanceEngine.generate(input)
+            }
+            do { _ = try await worker.value; XCTFail("A cancelled request returned suggestions") }
+            catch { XCTAssertTrue(error is CancellationError, "Cancellation must win over input or availability: \(error)") }
+        }
+    }
+    private func qualityFixture() -> (FilterContext, String, [Record], [(String, [String], String, String)]) {
+        // A future reference day catches invented absolute dates for "today".
+        let today = "2032-04-05"
+        var modelContext = context()
+        modelContext.projects.append(Record(["id": .string("child-project"), "name": .string("Workshop"), "parent_id": .string("project-a"), "user_id": .string("owner")]))
+        let rows = [
+            Record(["id": .string("today"), "project_id": .string("project-a"), "due_date": .string(today), "deadline_date": .string("2032-04-06"), "priority": .number(1)]),
+            Record(["id": .string("old"), "project_id": .string("project-a"), "due_date": .string("2032-04-04"), "priority": .number(1)]),
+            Record(["id": .string("deadline"), "project_id": .string("project-a"), "due_date": .string("2032-04-06"), "deadline_date": .string(today), "priority": .number(1)]),
+            Record(["id": .string("low"), "due_date": .string(today), "priority": .number(3)]),
+            Record(["id": .string("done"), "project_id": .string("project-a"), "due_date": .string(today), "priority": .number(1), "completed": .bool(true)]),
+            Record(["id": .string("child-project-task"), "project_id": .string("child-project"), "due_date": .string("2032-04-06"), "priority": .number(1)])
+        ]
+        let cases: [(String, [String], String, String)] = [
+            ("Show open priority 1 tasks planned today or overdue", ["today", "old"], "(today OR overdue) AND p1 AND open", "today OR overdue OR p1"),
+            ("Show tasks with a deadline today", ["deadline"], "deadline:today", "today"),
+            ("Show unfinished tasks in project Work", ["today", "old", "deadline"], "project:\"Work\" AND open", "project-tree:\"Work\" AND open")
+        ]
+        return (modelContext, today, rows, cases)
+    }
+    func testModelQualityOracleDistinguishesPlannedDateDeadlineAndExactProject() throws {
+        let (modelContext, today, rows, cases) = qualityFixture()
+        for (goal, expected, correct, incorrect) in cases {
+            let intended = try FilterSuggestion(expression: correct, context: modelContext)
+            let wrong = try FilterSuggestion(expression: incorrect, context: modelContext)
+            XCTAssertEqual(rows.filter { intended.rule.resultMatches($0, context: modelContext, today: today, timeZone: "UTC") }.map(\.id), expected, goal)
+            XCTAssertNotEqual(rows.filter { wrong.rule.resultMatches($0, context: modelContext, today: today, timeZone: "UTC") }.map(\.id), expected, "A plausible wrong expression must fail the oracle: " + goal)
+        }
+    }
     func testActualOnDeviceFilterEngineWhenExplicitlyRequested() async throws {
         guard ProcessInfo.processInfo.environment["TASKFOLD_TEST_ON_DEVICE_MODEL"] == "1" else { throw XCTSkip("Actual model probe is opt-in.") }
         if let reason = OnDeviceAssistance.unavailableReason {
             print("FILTER_ASSISTANCE_MODEL_UNAVAILABLE " + reason); throw XCTSkip(reason)
         }
-        let text = try await FilterAssistanceEngine.generate("Show unfinished high-priority tasks planned today or overdue")
-        _ = try FilterSuggestion(expression: text, context: context())
-        print("FILTER_ASSISTANCE_MODEL_ACCEPTED synthetic input; no saved-filter or task writes")
+        let (modelContext, today, rows, cases) = qualityFixture()
+        for (goal, expected, _, _) in cases {
+            let start = ContinuousClock.now
+            let text = try await FilterAssistanceEngine.generate(goal)
+            let duration = start.duration(to: .now).components
+            let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
+            let suggestion = try FilterSuggestion(expression: text, context: modelContext)
+            let matches = rows.filter { suggestion.rule.resultMatches($0, context: modelContext, today: today, timeZone: "UTC") }.map(\.id)
+            let observation: [String: Any] = ["engine": "filter", "syntheticGoal": goal, "seconds": seconds, "expression": text, "matchedIDs": matches, "expectedIDs": expected]
+            print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
+            XCTAssertEqual(matches, expected, "The generated query must mean what was requested: " + text)
+        }
+        print("FILTER_ASSISTANCE_MODEL_ACCEPTED three semantic samples; no saved-filter or task writes")
     }
 }

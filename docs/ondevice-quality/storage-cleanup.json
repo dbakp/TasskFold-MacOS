@@ -1,0 +1,65 @@
+{
+  "retirement": {
+    "date": "2026-11-06",
+    "initialFreeBytes": 55646064640,
+    "freeBeforeRetirement": 55170281472,
+    "removed": [
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-26-mac-development.zip",
+        "bytes": 20123758,
+        "sha256": "8562ab5d7fb99871adf64b9526208caef08768c06e605ced7916cb9768121b07",
+        "kind": "supersededUninstalledArchive"
+      },
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-38-iphone-development.zip",
+        "bytes": 24095236,
+        "sha256": "4a336024e3b28e5dd324acfca52e4b0c946d7d344c56dc35dcfc2aa3a507c8cc",
+        "kind": "supersededUninstalledArchive"
+      }
+    ],
+    "simulatorsBooted": [],
+    "dockerStarted": false,
+    "settingsChangedByAgent": false,
+    "coreCaches": [
+      {
+        "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+        "allocatedBytes": 675291136,
+        "within768MiB": true,
+        "removed": false
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+        "allocatedBytes": 618258432,
+        "within768MiB": true,
+        "removed": false
+      }
+    ],
+    "retiredLogicalBytes": 44218994,
+    "freeAfterRetirement": 55170248704
+  },
+  "finalDailyCacheCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 55170461696,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 570540032,
+        "projectedAllocatedBytes": 570540032
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 524955648,
+        "projectedAllocatedBytes": 524955648
+      }
+    ],
+    "freeAfterBytes": 55169482752,
+    "actualFreeChangeBytes": -978944
+  },
+  "normalAppsReplaced": false,
+  "settingsChangedByAgent": false,
+  "dockerStarted": false,
+  "simulatorsBooted": []
+}

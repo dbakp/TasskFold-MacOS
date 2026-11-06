@@ -12,7 +12,7 @@ enum OnDeviceAssistance {
             case .available:
                 return SystemLanguageModel.default.supportsLocale() ? nil : "Apple Intelligence doesn’t support the current language for suggestions. You can still edit manually."
             case .unavailable(.appleIntelligenceNotEnabled):
-                return "Turn on Apple Intelligence in system settings to suggest steps on this device."
+                return "Turn on Apple Intelligence in system settings to use on-device suggestions."
             case .unavailable(.modelNotReady):
                 return "Apple Intelligence is still getting ready. Try again after its model finishes downloading."
             case .unavailable(.deviceNotEligible):

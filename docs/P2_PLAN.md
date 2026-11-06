@@ -2,7 +2,7 @@
 
 ## Latest recorded scope · 6 November 2026
 
-Normal Mac23 remains installed and phone34 is the last verified phone installation. Optimized signed Mac26 and iPhone38 are prepared with note paragraph/list tools, recent library/filter improvements and clean filter/step review keyboard controls. Neither update is installed; phone installation remains deferred. The current filter journey and four reviewed-step iPhone journeys pass with zero runtime warnings and preserved work through cold return. Actual on-device inference quality/latency, wider device/accessibility/account/lifecycle, child migration and hosted checks remain open. Development expiry remains 10 November for Mac and 11 November for phone. All explicitly deferred rollout/provider/distribution work remains paused. See [step recovery evidence and limits](step-recovery-layout/README.md).
+Normal Mac23 and the last verified phone34 remain installed. Signed optimized Mac27 and iPhone39 are prepared with cancellation-first on-device engines, explicit system-model selection and the prior note/filter/step improvements; neither is installed. Each owner passes 26 ordinary checks. Two explicit model tests skipped in the final real probe because Apple Intelligence remained disabled; zero examples were generated and no model quality/latency is accepted. The user intends to enable it, and no setting was changed by the agent. The six-example output/timing probe is ready. Current iPhone filter and four step-recovery journeys remain accepted in their recorded scope. Wider inference/device/accessibility/account/lifecycle, child migration and hosted scope remain. Phone installation and all explicit provider/rollout/distribution deferrals stay paused. Development expiry remains 10 November for Mac and 11 November for phone. [Current scope and probe](ondevice-quality/README.md).
 
 ## 6 November 2026 · Consistent note lists
 
@@ -15,6 +15,10 @@ Suggest a filter now uses the existing iPhone/iPad header slot for Done while ed
 ## 6 November 2026 · Clean reviewed-step recovery
 
 Header Done replaces the reviewed-step keyboard accessory toolbar on iPhone/iPad. Four current signed iPhone journeys now pass with zero runtime warnings: editable selected Add/Undo/Redo/cold history, genuine lost-response Check, original Retry, and unsent Stop/cold return. The 35 named UI/API/cache assertions preserve existing work, one exact original receipt, no duplicate steps and a durable refusal to resend a closed request. The native driver now rejects warnings only after preserving the functional checks. Every disposable service stack is removed and the Simulator restored. Actual inference, other device/accessibility and wider account/lifecycle scope remain; normal gates and installed apps are unchanged. [Current evidence](step-recovery-layout/README.md).
+
+## 6 November 2026 · On-device readiness and cancellation
+
+Already-cancelled generation now stops before goal or availability errors in both engines. Both explicitly select SystemLanguageModel.default; setup guidance is shared correctly by task and filter suggestions. Each owner passes 26 ordinary checks, including new cancellation and semantic-oracle coverage. The opt-in six-example probe captures real outputs/monotonic durations, requires semantic filter matches and refuses unavailable/partial/changed-source success. Apple Intelligence remained Off in the final SDK/UI observations, so actual quality and speed stay unaccepted while the user configures it. No settings, hosted services or normal gates change. [Evidence and exact command](ondevice-quality/README.md).
 
 ## Current daily-use candidates · 4 November 2026
 

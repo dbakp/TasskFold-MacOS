@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Reviewed steps · Clean recovery",
-  "latest": "Reviewed-step recovery now passes all four current signed iPhone journeys with zero runtime warnings: editable Add/Undo/Redo and cold history, genuine lost-response Check, original Retry and unsent Stop/cold return. Thirty-five named UI/API/cache checks preserve existing work, one original receipt with no duplicate steps and a durable closure that refuses later resend. Header Done replaces the keyboard accessory toolbar; the native driver now rejects warnings after retaining functional evidence. Signed optimized Mac26/iPhone38 packages pass archive readback and signature/profile checks; neither is installed. Mac23 and phone34 stay unchanged. Every disposable service stack is removed and the Simulator restored. Actual generation quality/latency and wider device/accessibility/lifecycle acceptance remain; no rollout gates changed. Cleanup retired completed raw results and superseded packages; about 52.3 GiB is free.",
+  "focus": "On-device suggestions · Readiness and Stop",
+  "latest": "Both engines now stop an already-cancelled request before input or model-availability checks, and explicitly select the system on-device model. Setup guidance now fits both tasks and filters. Each owner passes 26 ordinary Core checks, including two cancellation regressions and a semantic oracle that distinguishes dates, deadlines and exact projects. The explicit six-example quality/latency probe records actual outputs and timings, but the final API check still reported Apple Intelligence disabled: zero generations, two skipped model tests, and a non-success probe result. The user intends to enable it; no setting was changed by the agent. Real model quality/speed remains unaccepted. Signed Mac27/iPhone39 packages are prepared, not installed; Mac23/phone34 stay unchanged. Cleanup retained working rollbacks and bounded caches; about 51.4 GiB is free.",
   "next": [
-    "FIRST: Mac26 and iPhone38 are signed and packaged with note/list improvements and clean filter/step recovery controls; neither is installed. Installed Mac23 and phone34 stay unchanged, and further phone installation remains deferred. Superseded uninstalled Mac25/phone37 are retired after verified replacements. Keep working rollback archives and private backups.",
-    "NEXT: verify real on-device suggestion quality and latency using synthetic input, then finish remaining ordinary task-heading/child adapters and independent-subtask/shared-media work. Reuse the now-clean current iPhone filter and step review/recovery journeys. Mac combined protected transfer still needs its own development profile/Xcode account. Preserve wider device/accessibility/account/lifecycle, hosted and all explicitly deferred provider/distribution scope; no cloud inference fallback.",
+    "FIRST: signed Mac27/iPhone39 are prepared with cancellation-first on-device engines and the prior note/filter/step improvements; neither is installed. Installed Mac23 and phone34 remain unchanged, and further phone installation is deferred. Superseded uninstalled Mac26/phone38 were retired after verified replacements; keep working rollback archives and private backups.",
+    "NEXT: run the actual six-example on-device quality/latency probe once Apple Intelligence is ready. The user intends to enable it, but the final SDK check and observed switch were still Off. Do not count skipped model tests as success or substitute cloud inference. While setup is pending, continue remaining ordinary task-heading/child adapters and independent-subtask/shared-media work. Preserve the recorded Mac protected-profile, wider device/accessibility/account/lifecycle, hosted and explicit provider/distribution gaps.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -666,7 +666,7 @@
             {
               "state": "verify",
               "title": "Reviewed task and filter assistance",
-              "detail": "Both apps own on-device task-step and filter-expression review with no cloud inference fallback. Saved root/nested additions support editable literal titles, selected atomic Add, source/access checks, encrypted exact Check/Retry/Stop and guarded Undo/Redo with fresh original-slot identities. Four current signed iPhone journeys against genuine local Auth/REST now pass with zero runtime warnings: editable Add/Undo/Redo/cold history, committed lost-response Check, original Retry and unsent Stop/cold reopening. The 35 named UI/API/cache checks preserve original task fields/children, one exact addition receipt without duplicates and a durable closure that refuses later resend. Header Done removes the formerly observed pending-to-settled keyboard-toolbar warning in these named paths; broader layout or speech is not inferred. Filter review has an exact count and five read-only task samples, empty/completed guidance, Clear, header Done and fresh source/date/destination checks. Its complete current iPhone typing/preview/Use/Cancel/cold journey passes without runtime warnings and preserves all saved tables. Use updates only the draft; the filter editor still requires Save. A scoped Mac root edit/exclusion/Add/Undo/Redo walkthrough also has recorded literal-title, fresh-identity and disk/receipt proof; current Mac/iPad wider interactions remain separate. These journeys use seeded proposals. Actual on-device inference quality/latency, filter live task/access/date races, wider nesting, sharing, accounts, windows, background use, keyboard, speech and largest text and hosted acceptance remain open. Existing core/service proofs are retained; they were not rerun for this view-only repair. Prepared Mac26/phone38 are uninstalled, installed Mac23/phone34 are unchanged, phone installation remains deferred and ordinary advanced gates stay off."
+              "detail": "Both apps own on-device task-step and filter-expression review with no cloud inference fallback. Saved root/nested additions support editable literal titles, selected atomic Add, source/access checks, encrypted exact Check/Retry/Stop and guarded Undo/Redo with fresh original-slot identities. Four current signed iPhone journeys against genuine local Auth/REST now pass with zero runtime warnings: editable Add/Undo/Redo/cold history, committed lost-response Check, original Retry and unsent Stop/cold reopening. The 35 named UI/API/cache checks preserve original task fields/children, one exact addition receipt without duplicates and a durable closure that refuses later resend. Header Done removes the formerly observed pending-to-settled keyboard-toolbar warning in these named paths; broader layout or speech is not inferred. Filter review has an exact count and five read-only task samples, empty/completed guidance, Clear, header Done and fresh source/date/destination checks. Its complete current iPhone typing/preview/Use/Cancel/cold journey passes without runtime warnings and preserves all saved tables. Use updates only the draft; the filter editor still requires Save. A scoped Mac root edit/exclusion/Add/Undo/Redo walkthrough also has recorded literal-title, fresh-identity and disk/receipt proof; current Mac/iPad wider interactions remain separate. These journeys use seeded proposals. Actual on-device inference quality/latency, filter live task/access/date races, wider nesting, sharing, accounts, windows, background use, keyboard, speech and largest text and hosted acceptance remain open. Existing core/service proofs are retained; they were not rerun for this view-only repair. Prepared Mac26/phone38 are uninstalled, installed Mac23/phone34 are unchanged, phone installation remains deferred and ordinary advanced gates stay off. Cancellation now wins before input/setup checks; both owners pass 26 ordinary checks plus two intentionally skipped default model tests. Explicit on-device model selection and a six-example output/timing probe are implemented. The semantic oracle independently rejects plausible wrong date/deadline/project queries. A final real probe found Apple Intelligence Off and generated nothing; the user intends to enable it. Actual generation quality and latency remain unaccepted."
             }
           ],
           "sources": [
@@ -719,7 +719,14 @@
             "step-recovery-layout/stop.json",
             "step-recovery-layout/build.json",
             "step-recovery-layout/package.json",
-            "step-recovery-layout/storage-cleanup.json"
+            "step-recovery-layout/storage-cleanup.json",
+            "ondevice-quality/README.md",
+            "ondevice-quality/core.json",
+            "ondevice-quality/before.json",
+            "ondevice-quality/model-probe.json",
+            "ondevice-quality/build.json",
+            "ondevice-quality/package.json",
+            "ondevice-quality/storage-cleanup.json"
           ],
           "focus": true
         },
@@ -1438,13 +1445,20 @@
     "step-recovery-layout/stop.json",
     "step-recovery-layout/build.json",
     "step-recovery-layout/package.json",
-    "step-recovery-layout/storage-cleanup.json"
+    "step-recovery-layout/storage-cleanup.json",
+    "ondevice-quality/README.md",
+    "ondevice-quality/core.json",
+    "ondevice-quality/before.json",
+    "ondevice-quality/model-probe.json",
+    "ondevice-quality/build.json",
+    "ondevice-quality/package.json",
+    "ondevice-quality/storage-cleanup.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "e1dafb136ab4db41c1fde0602a625e45c577e534ffa138195cd249a75e8112d1",
+    "P2_PLAN.md": "484cbf07863f2c6c460956fa2c4e67a35e59b408001d1c274e4ae10911dac882",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1738,6 +1752,13 @@
     "note-section-navigation/current-progress-validation.json": "5bf71208e51ca210a82a04345ea571988c7c947fb52d361dd7a136b75f174520",
     "note-section-navigation/routing-diagnosis.json": "50b255c506002e0bb58cc382d9672f14b147ff3e0181cbf6b3922236faf9d854",
     "note-section-navigation/verification.json": "8432ed3a3aea0e08726e77849c1ca1faa367af8d6d3a0b3ee8d3530607959d66",
+    "ondevice-quality/README.md": "99c872fae1bd4030bf7069d093207964c536090820ea39a3a8ee95a46d1aecb0",
+    "ondevice-quality/before.json": "4c3a6f028f2ac2a3c4cf5beab04b2caaf9273e9c2b47040e93927cd6326022c9",
+    "ondevice-quality/build.json": "4ec71bf68dece3452b5649c51ee6dfb40a7fdcfd9faca94bab7477503c87495c",
+    "ondevice-quality/core.json": "62f1ab268b5379ffca0976160c9ebb15a83cce2960bc7a2f240a87b4f711ae49",
+    "ondevice-quality/model-probe.json": "f1b065655a3589e0345445e6dcb61b6e0eae67c864b496a691df27cdebfc8491",
+    "ondevice-quality/package.json": "17db6d123ff988acc6d0417f80e3a3cbc94f8630190c65fc3f3517b351a01067",
+    "ondevice-quality/storage-cleanup.json": "2c6d774e83bf392eb40317557a3edb6a54474566ac3ca06fe03f0f19b00f00e2",
     "optimized-daily-update/README.md": "70c1f27240bf107e7450e507a51be66ed216c9e5950ce57fc0a579ab8daa45fe",
     "optimized-daily-update/iphone-verification.json": "b0106d1eaf624ef8d3cbf6265a9d816f795ec98de7ebc7cd547eed194888d47a",
     "optimized-daily-update/mac-verification.json": "2a616a282ee6cf18c9ae6549d6ae50785255e5c63e181593f6ecb1d6e3a318ec",

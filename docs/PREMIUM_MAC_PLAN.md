@@ -1,5 +1,10 @@
 # Taskfold macOS polish plan
 
+## 6 November 2026 · On-device readiness
+
+The engines stop already-cancelled requests before input/setup checks and explicitly select the system on-device model. Twenty-six ordinary checks per owner pass; the final actual-model probe skipped both tests because Apple Intelligence was still Off. Real output quality/latency remains unaccepted while the user enables it. Signed Mac27/phone39 are prepared, not installed; ordinary gates and installed apps are unchanged. [Current source, probe and cleanup](ondevice-quality/README.md).
+
+
 ## 6 November 2026 · Reviewed-step recovery layout
 
 The iPhone/iPad source uses header Done instead of a keyboard accessory. Four genuine local iPhone journeys now accept Add/Undo/Redo, Check, Retry and Stop through cold return with zero runtime warnings and preserved originals. Mac’s existing header behavior is unchanged; actual inference, Mac/iPad interactions and broader contexts remain open. Normal Mac23 stays installed. [Source, evidence and limits](step-recovery-layout/README.md).

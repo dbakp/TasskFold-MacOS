@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-06",
+  "owner": "Mac Core",
+  "cancellationTests": 2,
+  "assertionFailures": 3,
+  "observed": "Already-cancelled inputs could throw validation or availability errors before CancellationError.",
+  "initialRealProbes": 2,
+  "initialActualGenerations": 0,
+  "initialAvailabilityReason": "Apple Intelligence not enabled",
+  "realInferenceAccepted": false,
+  "agentChangedSystemSettings": false,
+  "systemSettingsObservation": {
+    "pane": "Apple Intelligence & Siri",
+    "appleIntelligence": "Off",
+    "unrelatedSettingValuesRetained": false
+  }
+}
