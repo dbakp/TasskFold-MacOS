@@ -1,5 +1,8 @@
 # See matching tasks before using a filter · 6 November 2026
 
+**Current follow-up:** the later header Done control passes the complete strict iPhone journey with zero runtime warnings. The warning records below describe the earlier source. See [current fix and limits](../filter-keyboard-layout/README.md).
+
+
 Both owners now show a read-only sample of up to five matching tasks alongside the exact existing count and meaning in Suggest a filter. Each sample includes a task title, current project name (or Inbox) and explicit completion state. A separate empty state explains that a zero-match expression can still be useful for future tasks. The sample follows the same access-filtered, archived-project-aware matching query as the ordinary preview count; the cap limits displayed samples, not the count. Samples have no completion or navigation action.
 
 Editing the expression invalidates the proposal/sample. After asynchronous checks, freshness is checked again immediately before updating the draft; an observed stale preview also cancels in-flight work. Changes to the observed task revision, workspace access/project revision, day, time zone or date preferences clear a checked preview; minute changes apply to clock-window queries. Use expression checks the same revision stamp directly as well as retaining the existing fresh catalog/date/workspace/source validation. The selected expression still updates only the draft; the separate filter-editor Save remains required. The expression has a Clear control; the two fields have distinct focus targets, and iPhone text entry offers an explicit keyboard Done action.

@@ -1,0 +1,74 @@
+{
+  "retirement": {
+    "date": "2026-11-06",
+    "initialFreeBytes": 57926569984,
+    "beforeRetirementFreeBytes": 57574957056,
+    "removed": [
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-24-mac-development.zip",
+        "kind": "supersededUninstalledArchive",
+        "bytes": 20123571,
+        "sha256": "b4ee1ed649e6581d221983c8edd9d13b8f7fdcffd0e877427d3ca844c7f1e8cd"
+      },
+      {
+        "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-36-iphone-development.zip",
+        "kind": "supersededUninstalledArchive",
+        "bytes": 24094936,
+        "sha256": "599c00643623f870f5f6873bc898f342371e38f4143b34cbae17335fc5974370"
+      },
+      {
+        "path": "/tmp/taskfold-filter-keyboard-inset-native.xcresult",
+        "kind": "completedRawUIArtifacts",
+        "bytes": 11229449
+      },
+      {
+        "path": "/tmp/taskfold-filter-keyboard-header-native.xcresult",
+        "kind": "completedRawUIArtifacts",
+        "bytes": 3066139
+      },
+      {
+        "path": "/tmp/taskfold-filter-keyboard-inset-attachments",
+        "kind": "completedRawUIArtifacts",
+        "bytes": 312901
+      },
+      {
+        "path": "/tmp/taskfold-filter-keyboard-header-attachments",
+        "kind": "completedRawUIArtifacts",
+        "bytes": 301248
+      }
+    ],
+    "installedAppsAndPrivateDataUntouched": true,
+    "afterRetirementFreeBytes": 57590734848,
+    "retiredLogicalBytes": 59128244
+  },
+  "finalCacheAndSimulatorCheck": {
+    "apply": true,
+    "freeBeforeBytes": 57590169600,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 679829504,
+        "projectedAllocatedBytes": 679829504
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 576339968,
+        "projectedAllocatedBytes": 576339968
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 547766272,
+        "projectedAllocatedBytes": 547766272
+      }
+    ],
+    "freeAfterBytes": 57588076544,
+    "actualFreeChangeBytes": -2093056
+  },
+  "installedMacBuildStill23": true,
+  "phoneInstallationDeferred": true,
+  "privateDataAndUnrelatedDevicesUntouched": true
+}

@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-06",
+  "fixed": false,
+  "message": "Invalid frame dimension (negative or non-finite).",
+  "observed": "During first expression-field keyboard focus in the actual iPhone review journey.",
+  "originatingFrameEstablished": false,
+  "functionalTests": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "strictWrapperAccepted": false,
+  "noWarningSuppression": true,
+  "limits": "Readable sample and title screenshots do not establish clean keyboard runtime, wider layout or physical rendering.",
+  "sourceSHA256": "750f82535fafe5e09812f04d2bef6a97485dc8691ab8d8086040bb5d6bb4b609",
+  "note": "The FilterAssistanceView source in both owners exactly matched the previous warning-producing implementation before this work."
+}

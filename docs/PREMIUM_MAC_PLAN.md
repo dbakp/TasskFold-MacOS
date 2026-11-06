@@ -1,5 +1,10 @@
 # Taskfold macOS polish plan
 
+## 6 November 2026 · Filter review keyboard
+
+The shared source now uses header Done on iPhone/iPad while editing; Mac keeps its existing Use behavior. The current iPhone strict journey passes with no runtime warnings and all saved tables unchanged, closing the former filter-focus warning in that scope. See [keyboard repair, rejected attempt and limits](filter-keyboard-layout/README.md). Current optimized Mac package verification is recorded separately; installed Mac23 remains running.
+
+
 ## 6 November 2026 · Clean list conversion
 
 Existing note toolbar actions now replace supported list markers instead of stacking them. Bullet/number toggles, quotes, Unicode and exact line-ending preservation pass 48 focused checks, including 11 new cases. Normal Mac23 remains running; current build/package and remaining acceptance scopes are in [note list styles](note-list-styles/README.md).
@@ -7,7 +12,7 @@ Existing note toolbar actions now replace supported list markers instead of stac
 
 ## 6 November 2026 · Mac 23 installed
 
-Normal Mac 1.2.0 (23) is now installed, launched and synced after the user saved drafts. All five cached workspaces retain exactly the same task and pending rows before and after sync. Its verified build14 rollback is retained. Signed optimized iPhone 1.4.0 (36) and Mac24 are prepared with clean list styling; the last verified installed phone build remains34 and further installation is deferred. The packages include note paragraph styles, prepared reading/section navigation and recent list/filter/library improvements. Independent cached-profile preflight and archive/readback tools pass seven focused checks per owner. Development expiry remains 10 November for Mac and 11 November for phone; cached signing does not renew it. Wider native/accessibility/hardware acceptance and all agreed rollout/provider/distribution deferrals remain. See [daily update evidence](daily-update-23/README.md).
+Normal Mac 1.2.0 (23) is now installed, launched and synced after the user saved drafts. All five cached workspaces retain exactly the same task and pending rows before and after sync. Its verified build14 rollback is retained. Signed optimized iPhone 1.4.0 (37) and Mac25 are prepared with clean list styling and the filter keyboard repair; the last verified installed phone build remains34 and further installation is deferred. The packages include note paragraph styles, prepared reading/section navigation and recent list/filter/library improvements. Independent cached-profile preflight and archive/readback tools pass seven focused checks per owner. Development expiry remains 10 November for Mac and 11 November for phone; cached signing does not renew it. Wider native/accessibility/hardware acceptance and all agreed rollout/provider/distribution deferrals remain. See [daily update evidence](daily-update-23/README.md).
 
 ## 5 November 2026 · Genuine mixed recording custody and cleanup
 

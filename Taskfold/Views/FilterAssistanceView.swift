@@ -135,18 +135,16 @@ struct FilterAssistanceView: View {
             .formStyle(.grouped)
             .navigationTitle("Suggest a filter")
             .toolbar {
-                #if os(iOS)
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done", systemImage: "keyboard.chevron.compact.down") { focusedField = nil }
-                        .accessibilityIdentifier("filterAssistanceKeyboardDone")
-                }
-                #endif
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { close(); dismiss() }.accessibilityIdentifier("filterAssistanceCancel") }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Use") { check(applying: true) }
-                        .disabled(busy != nil || proposal == nil || checkedStamp != previewStamp || applied || run.closed || !isCurrent)
-                        .accessibilityLabel("Use expression").accessibilityIdentifier("filterAssistanceApply")
+                    #if os(iOS)
+                    if focusedField != nil {
+                        Button("Done") { focusedField = nil }
+                            .accessibilityLabel("Hide keyboard").accessibilityIdentifier("filterAssistanceKeyboardDone")
+                    } else { useExpressionAction }
+                    #else
+                    useExpressionAction
+                    #endif
                 }
             }
         }
@@ -178,6 +176,11 @@ struct FilterAssistanceView: View {
         }
         .onChange(of: error) { _, value in if isCurrent, let value { AccessibilityNotification.Announcement(value).post() } }
         .onDisappear(perform: close)
+    }
+    private var useExpressionAction: some View {
+        Button("Use") { check(applying: true) }
+            .disabled(busy != nil || proposal == nil || checkedStamp != previewStamp || applied || run.closed || !isCurrent)
+            .accessibilityLabel("Use expression").accessibilityIdentifier("filterAssistanceApply")
     }
     private func clearPreview() { proposal = nil; previewCount = nil; previewCaption = nil; previewTasks = []; checkedStamp = nil }
     private func stop() { work?.cancel(); work = nil; run.stop(); busy = nil }
