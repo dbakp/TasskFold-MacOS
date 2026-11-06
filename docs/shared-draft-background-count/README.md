@@ -19,3 +19,5 @@ This fixes the badge-count read path. Explicit shared-draft review/cleanup, capt
 Mac29 remains installed, running and synced. Neither its frozen package nor deferred phone41 includes this source change. No new ordinary rollout gate, hosted deployment, physical-phone installation or normal-app data mutation occurred. A later verified Mac feature pack can be installed under the user's standing authorization without asking about drafts.
 
 Repeat Core checks with `bash Scripts/test_core.sh --filter 'SharedCapture(CountReader)?Tests'`. Native case: `WorkflowSourceSelectionUITests.testSharedDraftBadgeReadStaysResponsiveAndRejectsChangedReceipts` in the reserved signed host. There are no database migrations or provider prerequisites for this local change.
+
+Subsequent delivery: this source is packaged and installed in Mac30. Its system permission/startup status is recorded separately in [Mac30 installation](../mac30-installation/README.md); phone installation remains deferred.

@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-06",
+  "freeBeforeBytes": 59773337600,
+  "finishRun": {
+    "apply": true,
+    "freeBeforeBytes": 59755847680,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 527302656,
+        "projectedAllocatedBytes": 527302656
+      }
+    ],
+    "freeAfterBytes": 59755847680,
+    "actualFreeChangeBytes": 0
+  },
+  "retired": [
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-23-mac-development.zip",
+      "allocatedBytes": 20123648,
+      "reason": "Older than the verified previously running Mac29 rollback; current Mac30 and rollback29 archives both reverified"
+    },
+    {
+      "path": "/tmp/taskfold-mac30-daily-build-driver.log",
+      "allocatedBytes": 4096,
+      "reason": "Completed output; exact package receipts and compressed source-bound build evidence retained"
+    },
+    {
+      "path": "/tmp/taskfold-mac30-package.log",
+      "allocatedBytes": 4096,
+      "reason": "Completed output; exact package receipts and compressed source-bound build evidence retained"
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/taskfold-daily-mac.log",
+      "allocatedBytes": 200704,
+      "reason": "Completed output; exact package receipts and compressed source-bound build evidence retained"
+    }
+  ],
+  "retiredAllocatedBytes": 20332544,
+  "freeAfterBytes": 59793604608,
+  "preserved": "Mac30 current package, verified previously running Mac29 rollback, immutable old receipts, private safety copies and all app/user data. Pending installed process is untouched."
+}
