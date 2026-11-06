@@ -7,6 +7,11 @@
 
 - Before heavy local builds, Simulator runs or Docker fixtures, run `python3 Scripts/check_test_storage.py --path /tmp` and require its default 20 GiB free-space floor. Reuse current test hosts/products, run resource-heavy platforms sequentially, and prune approved obsolete outputs after retaining concise evidence. Never reset Docker volumes or erase real app data as cleanup.
 
+## Complete GitHub delivery
+
+- The user requires completed changes to be committed, pushed, and merged every time. Create or update a pull request against the repository’s default branch, wait for required checks, merge without bypassing branch protection, and verify the merged branch contains the completed commit. Pushing a feature branch alone is not completion.
+- Keep each app independently owned. Merging source does not authorize enabling deferred rollout gates, publishing a release, changing hosted services, or restarting an installed app with unsaved work.
+
 ## Maintain the progress dashboard
 
 - The user wants a small, continuously maintained HTML progress artifact. After each meaningful Px milestone, changed blocker or user deferral, review the current evidence and update `docs/px-progress.json`. Keep its review date accurate.
