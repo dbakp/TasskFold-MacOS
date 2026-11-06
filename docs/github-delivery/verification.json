@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-06",
+  "repository": "dbakp/TasskFold-MacOS",
+  "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/2",
+  "merged": true,
+  "mergedHead": "0dcb72ace503021ef421f020fbc852b4986b8904",
+  "mergeCommit": "e5220e95584838656d2b080820bc9df75c16b396",
+  "verifiedRemoteDefaultBranch": "e5220e95584838656d2b080820bc9df75c16b396",
+  "headIsAncestorOfMain": true,
+  "mergedTreeEqualsCompletedTree": true,
+  "mergeMethod": "merge",
+  "adminBypassUsed": false,
+  "commitStatusesReported": [],
+  "prWorkflowRunsReported": [],
+  "localVerificationScope": "Existing source-bound feature reports remain individually scoped; no claim of one complete backlog test run",
+  "installedAppsChanged": false,
+  "hostedMigrationsApplied": false
+}

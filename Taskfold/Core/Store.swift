@@ -7312,13 +7312,18 @@ extension Store {
             let scope = try TeamProjectAdoptionScope(account: c.account, origin: backend.accountRemovalOrigin, team: c.sibling, roots: [project.uuidString.lowercased()], visibility: .team, folder: nil, parent: nil)
             guard let stamp = projectTransferAuthorStamp(scope, projects: scope.roots) else { throw AppFailure(message: "Current Store does not admit project transfer authoring") }
             let inspection = try await backend.inspectProjectAdoption(scope)
-            guard inspection.recordingInventory?.published == 1, inspection.supportedRecordingPolicy == .published else { throw AppFailure(message: "Actual recording inventory is not ready") }
+            let mixed = ProcessInfo.processInfo.arguments.contains("--full-schema-mixed-recordings-testing")
+            let policy: TeamProjectRecordingPolicy = mixed ? .privateHistory : .published
+            guard let inventory = inspection.recordingInventory, inventory.published == 1,
+                  inventory.pending == (mixed ? 1 : 0), inventory.retained == (mixed ? 1 : 0), inventory.unavailable == 0,
+                  inspection.supportedRecordingPolicy == policy else { throw AppFailure(message: "Actual recording inventory is not ready") }
             let decisions = try inspection.people.map { person -> TeamProjectAdoptionDecision in
                 guard let user = person.user else { throw TeamProjectAdoptionValue.invalid }
                 return try TeamProjectAdoptionDecision(project: person.project, user: user, choice: .retire)
             }
-            let review = try await backend.reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil, recordingPolicy: .published)
-            guard review.canCommit, review.recordingCount == 1 else { throw AppFailure(message: "Current recording review is not committable") }
+            let review = try await backend.reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil, recordingPolicy: policy)
+            guard review.canCommit, review.recordingCount == 1,
+                  review.unfinishedRecordingCount == (mixed ? 1 : nil), review.retainedRecordingCount == (mixed ? 1 : nil) else { throw AppFailure(message: "Current recording review is not committable") }
             let command = try TeamProjectAdoptionCommand(review: review)
             // Reachability can change between authoring and transport. Preserve the
             // actual queued request instead of pretending that a send succeeded.

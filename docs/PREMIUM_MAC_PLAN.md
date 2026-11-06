@@ -11119,3 +11119,8 @@ The combined scenario now adapts each owning genuine service contract into the i
 ### 6 November · Selectable note paragraph styles
 
 Both owning editors now offer **Body**, **Heading 1**, **Heading 2** and **Heading 3** with matching scalable preview sizes and hardware shortcut declarations. Changing an existing heading replaces its level: `## Notes` → `# Notes` → `### Notes` → `Notes`, rather than stacking prefixes. Selected-line edits preserve adjacent UTF-8, Unicode/grapheme boundaries, indentation, blanks and original line endings, and refuse oversized results. Each owner passes 37 focused note checks, including 8 new paragraph cases. The final iPhone interaction accepts level changes/Body, guarded Save, exact original view, actual Store Undo/Redo and cold text, preserving unrelated task fields, pin and completion. Mac builds/signs; new Mac/iPad, keyboard/speech and wider lifecycle/shared contexts remain open. Ordinary installations, task-heading rollout and schema/provider/distribution deferrals are unchanged. [Owning evidence](note-paragraph-styles/README.md).
+
+
+### 6 November · Source delivery and mixed recording transfer
+
+The accumulated Mac branch is merged into main. The Mac-owned reserved integration now supports the same explicit mixed published/in-flight/removed recording policy as iOS. The genuine iPhone native proof passes 50 checks; this is not a Mac runtime pass. The dedicated Mac protected-vault identity/profile prerequisite remains, with no normal identity or weaker storage substituted. Existing premium UI, installed Mac23, frozen Mac28 and normal gates are unchanged. [Scope](native-mixed-recording-transfers/README.md), [delivery](github-delivery/README.md).
