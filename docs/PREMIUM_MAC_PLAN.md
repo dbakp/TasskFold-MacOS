@@ -11199,3 +11199,10 @@ Each owner passes 29 sharing Core checks (seven new review cases); current-sourc
 ### 2026-11-06 — Mac30 installed; system permission pending
 
 The current merged app source is packaged as optimized signed Mac 1.2.0 (30), including widget and incoming Share extensions. The exact archive readback, development profiles, installed payload and strict signature are verified. A private safety copy and verified Mac29 rollback precede the authorized update; every saved cache byte and five task/pending caches are unchanged before launch. The installed process is running but waiting for the macOS SystemPolicyAppData prompt; main-window and post-sync data checks are still pending. No normal gate/hosted change or phone installation occurred. See [current installation scope](mac30-installation/README.md). This is delivery progress, not another completed feature checkpoint or full distribution/native/FPS acceptance.
+
+
+### 2026-11-06 — Complete inline note authoring
+
+Write/Preview now includes a native Strikethrough control using the existing safe reader syntax and selected-text toggle. All formatting results pass the reader's UTF-8 limit before reaching the editor, including inline markers, link escaping and multiline code fences; shrinking an already-full note remains possible. The prior iOS implementation reproduces four over-limit failures; both final owners pass 52 focused note checks, including seven new inline cases.
+
+Current-source signed phone/tablet journeys verify actual button toggles, visually inspected preview, no save during preview, description-only explicit Save, unchanged completion/children/pins/unrelated work, actual Store Undo/Redo and cold readback. The independent Mac build/signature passes without a native Mac control claim. See [scope and evidence](note-inline-authoring/README.md). This source is not packaged or installed; Mac30 remains intact pending its system app-data prompt and native inspection also reports the Mac locked. No task-schema, hosted, normal-gate or system-setting changes. Phone installation stays deferred; wider notes/Px and account/window/speech cases remain open.

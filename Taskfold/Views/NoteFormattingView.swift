@@ -232,6 +232,7 @@ struct NoteFormattingView: View {
                             HStack(spacing: 10) {
                                 tool("Bold", "bold", .bold)
                                 tool("Italic", "italic", .italic)
+                                tool("Strikethrough", "strikethrough", .strikethrough)
                                 paragraphStyles
                                 tool("Bullets", "list.bullet", .bullet)
                                 tool("Numbered list", "list.number", .numbered)
