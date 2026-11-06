@@ -23,3 +23,7 @@ Apple’s [Foundation Models generation guide](https://developer.apple.com/docum
 ## 6 November — independent child-step service foundation
 
 A separate atomic reviewed-step service now exists behind a default-Off gate. Its owning full-schema checks pass, but the current editor review is not yet connected to it; typed requests, saved recovery/history and native acceptance remain. See [current implementation and gaps](../reviewed-step-batches/README.md). Further physical iPhone installation is deferred; suggestions remain on-device only.
+
+## 6 November — saved-record review and encrypted recovery built
+
+The saved-subtask organizer now has a separate root/nested on-device review, atomic selected Add, encrypted cold retry/check/stop and a dedicated one-batch Undo. It does not silently save surrounding drafts. Owning client/service checks and signed builds are recorded in [reviewed step batches](../reviewed-step-batches/README.md). Native Store/Backend/screen acceptance, genuine generation and global Undo/Redo integration remain; no normal gate or installed app changed.

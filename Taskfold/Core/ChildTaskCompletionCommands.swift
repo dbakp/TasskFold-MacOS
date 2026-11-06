@@ -1080,11 +1080,16 @@ struct ChildTaskActionAdmission: Sendable {
     private func refuse(_ roots: Set<String>, overlapping pending: Set<String>) throws {
         guard roots.isDisjoint(with: pending) else { throw ChildTaskActionAdmissionFailure() }
     }
-    func checkOther(_ roots: Set<String>) throws {
+    func checkOther(_ roots: Set<String>, includeSteps: Bool = true) throws {
+        if includeSteps { try checkSteps(roots) }
         let groups = try read(ChildTaskCompletionBatchState.self, folder: "Child completion groups")
         let pending = Set((groups?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.flatMap { $0.command.items.map { $0.body["task_id"]!.text } })
         try refuse(roots, overlapping: pending)
         try checkMixed(roots)
+    }
+    private func checkSteps(_ roots: Set<String>) throws {
+        let steps = try read(ReviewedTaskStepsState.self, folder: "Reviewed task steps")
+        try refuse(roots, overlapping: Set((steps?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.root }))
     }
     func checkMixed(_ roots: Set<String>) throws {
         let state = try read(MixedTaskCompletionState.self, folder: "Task selection requests")
@@ -1095,7 +1100,8 @@ struct ChildTaskActionAdmission: Sendable {
         let groups = try read(ChildTaskCompletionBatchState.self, folder: "Child completion groups")
         try refuse(roots, overlapping: Set((groups?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.flatMap { $0.command.items.map { $0.body["task_id"]!.text } }))
     }
-    func checkBatch(_ roots: Set<String>, includeMixed: Bool = true) throws {
+    func checkBatch(_ roots: Set<String>, includeMixed: Bool = true, includeSteps: Bool = true) throws {
+        if includeSteps { try checkSteps(roots) }
         var pending = Set<String>()
         let fields = try read(ChildTaskFieldJournalState.self, folder: "Child field requests")
         pending.formUnion((fields?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })

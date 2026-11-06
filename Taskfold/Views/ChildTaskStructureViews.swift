@@ -65,6 +65,7 @@ struct SavedChildTaskStructureLink: View {
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         Group {
+            SavedReviewedTaskStepsLink()
             SavedChildTaskTransfersLink()
             SavedChildTaskAdoptionsLink()
             if scope != nil, store.hasSavedChildRecovery(.hierarchy) || Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true {
@@ -89,6 +90,7 @@ struct ChildTaskStructureView: View {
     @State private var modelScope: ChildTaskFieldClientScope?
     @State private var read: ChildTaskStructureRead?
     @State private var review: HierarchyReviewRequest?
+    @State private var stepOpening: ReviewedTaskStepsOpening?
     @State private var recovery = false
     @State private var transfer: ChildTaskTransferOpening?
     @State private var appeared = false
@@ -121,6 +123,10 @@ struct ChildTaskStructureView: View {
                     Button("Add subtask", systemImage: "plus") { review = .init(root: rootID, source: .add, opening: try? .init(read: read)) }
                         .disabled(pending || model?.busy == true).accessibilityIdentifier("childStructureAdd")
                 }
+                Section {
+                    Button("Suggest steps for this task", systemImage: "wand.and.stars") { stepOpening = .init(root: rootID) }
+                        .disabled(pending || model?.busy == true || !store.online).accessibilityIdentifier("reviewSavedTaskSteps")
+                }
                 if read.records.orderedNodes.isEmpty { ContentUnavailableView("Room for your next step", systemImage: "list.bullet", description: Text("Add a subtask to start shaping this task.")) }
                 ForEach(read.records.orderedNodes, id: \.hierarchyRecoveryRowID) { node in
                     VStack(alignment: .leading, spacing: 8) {
@@ -136,6 +142,9 @@ struct ChildTaskStructureView: View {
                                 .accessibilityIdentifier("removeChildStructure-" + node.key)
                         }.font(.callout).buttonStyle(.borderless)
                             .disabled(pending || model?.busy == true)
+                        Button("Suggest steps", systemImage: "wand.and.stars") { stepOpening = .init(root: rootID, parent: node.key) }
+                            .font(.callout).buttonStyle(.borderless).disabled(pending || model?.busy == true || !store.online || node.fields["completed"] == .bool(true) || node.fields["is_heading"] == .bool(true))
+                            .accessibilityIdentifier("reviewSavedChildSteps-" + node.key)
                         ChildTaskTransferLink(rootID: rootID, nodeKey: node.key, show: { transfer = .init(nodeKey: node.key) })
                             .font(.callout).buttonStyle(.borderless).disabled(pending || model?.busy == true)
                     }.padding(.leading, CGFloat(min(node.path.count - 1, 5)) * 12).padding(.vertical, 5)
@@ -173,11 +182,12 @@ struct ChildTaskStructureView: View {
             guard let value = store.childHistoryNotice, value.kind == .hierarchy, value.scope == scope else { return }
             notice = value.message; Task { await returned() }
         }
-        .onDisappear { appeared = false; if review == nil && !recovery && transfer == nil { clear() } }
+        .onDisappear { appeared = false; if review == nil && !recovery && transfer == nil && stepOpening == nil { clear() } }
         .sheet(item: $review, onDismiss: { Task { await returned() } }) { request in
             if let model, modelScope == scope { ChildHierarchyReviewView(request: request, model: model, feedback: { notice = $0 }) }
         }
         .sheet(isPresented: $recovery, onDismiss: { Task { await returned() } }) { WorkflowShell(title: "Saved hierarchy actions") { ChildTaskStructureRecoveryView() } }
+        .sheet(item: $stepOpening, onDismiss: { Task { await returned() } }) { ReviewedTaskStepsView(opening: $0) }
         .sheet(item: $transfer, onDismiss: { Task { await returned() } }) { opening in
             WorkflowShell(title: "Move subtask") { ChildTaskTransferView(rootID: rootID, nodeKey: opening.nodeKey) }
         }

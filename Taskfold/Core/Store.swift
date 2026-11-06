@@ -617,6 +617,30 @@ final class Store {
     var childTaskStructureEditingEnabled: Bool {
         childTaskCompletionEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureWritesEnabled") as? Bool == true
     }
+    func reviewedTaskStepsJournal(account: String, origin: String) throws -> ReviewedTaskStepsJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Reviewed task steps", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ReviewedTaskStepsState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if FullSchemaNativeFixture.enabled { return try FullSchemaNativeFixture.journalKey(account) }
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkBatch($0, includeSteps: false); try admission.checkOther($0, includeSteps: false) })
+    }
+    func reviewedTaskStepsModel() throws -> ReviewedTaskStepsModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try reviewedTaskStepsJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canSend: { [weak self] in guard let self else { return false }; return self.permitsChildTaskRequest(account: $0.account, origin: $0.origin, identity: $0.body, enabled: self.childTaskStructureEditingEnabled, sending: true) },
+                     isCurrent: { [weak self] in self?.childTaskFieldComparisonIsCurrent($0.records) == true },
+                     refresh: { [weak self] in guard let self, self.childTaskFieldRecoveryScope == scope else { return }; await self.sync() })
+    }
     func childTaskStructureJournal(account: String, origin: String) throws -> ChildTaskStructureJournal {
         let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
@@ -2567,6 +2591,7 @@ final class Store {
         try await childTaskCompletionJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskCompletionBatchJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskStructureJournal(account: account, origin: command.origin).removeAccount()
+        try await reviewedTaskStepsJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskStructureDraftJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskTransferJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskAdoptionJournal(account: account, origin: command.origin).removeAccount()

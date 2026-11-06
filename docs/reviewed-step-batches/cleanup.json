@@ -1,64 +1,71 @@
 {
   "apply": true,
-  "freeBeforeBytes": 61385846784,
+  "freeBeforeBytes": 60208472064,
   "actions": [],
-  "skipped": [],
-  "freeAfterBytes": 61385990144,
-  "actualFreeChangeBytes": 143360,
-  "retiredSupersededEvidence": [
+  "skipped": [
     {
-      "path": "/tmp/taskfold-step-batch-ios-v1.json",
-      "bytes": 38254
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 675577856,
+      "projectedAllocatedBytes": 675577856
     },
     {
-      "path": "/tmp/taskfold-step-batch-ios-v1.log",
-      "bytes": 14216
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-ios-v2.json",
-      "bytes": 38796
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-ios-v2.log",
-      "bytes": 14742
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-ios-v3.json",
-      "bytes": 39172
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-ios-v3.log",
-      "bytes": 15139
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-ios-v4.json",
-      "bytes": 39843
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-ios-v4.log",
-      "bytes": 15726
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-mac-v1.json",
-      "bytes": 39016
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-mac-v1.log",
-      "bytes": 15087
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-mac-v2.json",
-      "bytes": 39687
-    },
-    {
-      "path": "/tmp/taskfold-step-batch-mac-v2.log",
-      "bytes": 15674
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 537636864,
+      "projectedAllocatedBytes": 537636864
     }
   ],
-  "fixtureCleanup": {
-    "iosRemoved": true,
-    "macRemoved": true,
-    "remainingContainers": [],
-    "remainingNetworks": []
-  }
+  "freeAfterBytes": 60208791552,
+  "actualFreeChangeBytes": 319488,
+  "retiredSupersededEvidence": [
+    {
+      "path": "/tmp/taskfold-step-client-ios-core.log",
+      "bytes": 30213
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-core-v2.log",
+      "bytes": 47547
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-core-v3.log",
+      "bytes": 55565
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-core-v4.log",
+      "bytes": 29367
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-core-final.log",
+      "bytes": 72592
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-build.json",
+      "bytes": 1260
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-build.log",
+      "bytes": 137054
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-build.signing-prepare.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-build.signing.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-service.json",
+      "bytes": 46042
+    },
+    {
+      "path": "/tmp/taskfold-step-client-ios-service.log",
+      "bytes": 16448
+    }
+  ],
+  "simulatorsBooted": [],
+  "normalAppsLaunchedOrClosed": false,
+  "remainingFixtureContainers": [],
+  "remainingFixtureNetworks": []
 }

@@ -971,6 +971,15 @@ final class Backend: NSObject {
             throw ChildTaskTransferFailure(reason: .unconfirmed)
         }
     }
+    func reviewedTaskSteps(_ command: ReviewedTaskStepsCommand, operation: ReviewedTaskStepsOperation, session expected: UUID) async throws -> ReviewedTaskStepsResult {
+        let data = try await childStructureData("/rest/v1/rpc/taskfold_child_steps", body: ["_operation": .string(operation.rawValue), "_body": .object(command.body)], account: command.account, origin: command.origin, session: expected)
+        return try childStructureDecode(data, account: command.account, origin: command.origin, session: expected) { try ReviewedTaskStepsResult(data: $0, command: command, applying: operation == .apply) }
+    }
+    func reviewedTaskStepsAvailability(_ read: ChildTaskStructureRead) async throws -> ReviewedTaskStepsAvailability {
+        let c = read.context
+        let data = try await childStructureData("/rest/v1/rpc/taskfold_child_steps_available", body: ["_id": .string(c.root.id), "_generation": c.root["task_generation"]], account: c.account, origin: c.origin, session: c.session)
+        return try childStructureDecode(data, account: c.account, origin: c.origin, session: c.session) { try ReviewedTaskStepsAvailability(data: $0, read: read) }
+    }
     func childTaskStructureCommand(_ command: ChildTaskStructureCommand, session expected: UUID) async throws -> ChildTaskStructureReceipt {
         let data = try await childStructureData("/rest/v1/rpc/taskfold_edit_child_structure", body: ["_body": .object(command.body)], account: command.account, origin: command.origin, session: expected)
         return try childStructureDecode(data, account: command.account, origin: command.origin, session: expected) { try ChildTaskStructureReceipt(command: command, data: $0) }

@@ -11026,3 +11026,8 @@ The owning iOS repository accepts the same three project-file consent/recovery j
 ### 6 November — atomic reviewed task steps, service foundation
 
 The owning Mac schema adds 1–12 reviewed literal steps with one write/revision and one Undo, including exact request resolution/closure and shared editing admission. Owning genuine local verification is recorded in `reviewed-step-batches/full-schema.json`; no native integration or hosted deployment is implied. Typed clients, saved recovery/history, pre-generation availability and review-screen integration remain to build. Assistance is on-device only; further iPhone installation is deferred. Normal gates/apps stay unchanged. [Scope and remaining work](reviewed-step-batches/README.md).
+
+
+### 6 November — saved-subtask suggestion controls and encrypted recovery
+
+The Mac independently owns the new root/nested on-device review, availability checks, encrypted original-request history, Check/Retry/Stop and a dedicated one-batch Undo. It uses saved records separately from inspector autosave. Current signatures and owning client/service checks are recorded in `reviewed-step-batches/README.md`. Native Store/Backend/screen acceptance, actual model generation and normal global Undo/Redo remain open. No installed app, normal gate, hosted project or permission changed; further iPhone installation stays deferred.

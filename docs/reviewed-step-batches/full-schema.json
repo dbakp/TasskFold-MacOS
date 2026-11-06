@@ -4,12 +4,20 @@
     "signup other": true,
     "create synthetic task": true,
     "read current task": true,
+    "read typed client fixture": true,
+    "availability while paused": true,
+    "paused availability explicit": true,
+    "availability leaves row": true,
     "new batch default off": true,
     "paused attempt leaves exact row": true,
+    "enabled availability": true,
+    "enabled availability explicit": true,
+    "foreign availability denied": true,
     "atomic selected steps": true,
     "one structure revision": true,
     "receipt count": true,
     "metadata-only receipt": true,
+    "read after-step client fixture": true,
     "selected order and literal grammar": true,
     "unrelated existing node preserved": true,
     "notes preserved": true,
@@ -70,8 +78,12 @@
     "inspect real team adoption": true,
     "review real team adoption": true,
     "commit real team adoption": true,
+    "read shared manager availability": true,
+    "shared manager availability": true,
     "team manager adds one batch": true,
     "shared write has existing team admission": true,
+    "read shared viewer availability": true,
+    "shared viewer availability disabled": true,
     "shared viewer cannot add steps": true,
     "shared editor adds selected steps": true,
     "shared editor undoes only own batch": true,
@@ -99,6 +111,7 @@
   "normalUseEnabled": false,
   "nativeAccepted": false,
   "migrationSHA256": "02fb87f132290d403566c3b05177103cf2b2b806acd79b37e997bf38dd002ae4",
+  "availabilityMigrationSHA256": "b250fc606005c94184afbd8badba4a18c2c8d5570565674fbadd3262dd78e395",
   "migrations": [
     {
       "file": "20251118212653_67743dd3-a019-467d-a926-84ca4a11b94a.sql",
@@ -947,6 +960,10 @@
     {
       "file": "20261105235518_reviewed_child_step_batches.sql",
       "sha256": "02fb87f132290d403566c3b05177103cf2b2b806acd79b37e997bf38dd002ae4"
+    },
+    {
+      "file": "20261106003008_reviewed_child_steps_availability.sql",
+      "sha256": "b250fc606005c94184afbd8badba4a18c2c8d5570565674fbadd3262dd78e395"
     }
   ],
   "baselineAdvisors": {
@@ -973,6 +990,334 @@
       }
     ]
   },
+  "fixtureRoot": {
+    "id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "user_id": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "title": "Prepare the workshop",
+    "description": "Keep these notes",
+    "completed": false,
+    "priority": 4,
+    "due_date": null,
+    "due_time": null,
+    "project_id": null,
+    "section_id": null,
+    "labels": [],
+    "subtasks": [
+      {
+        "id": "existing",
+        "title": "Existing work",
+        "future": {
+          "keep": [
+            false,
+            null,
+            "x"
+          ]
+        },
+        "subtasks": null
+      }
+    ],
+    "reminders": [],
+    "attachments": [],
+    "comments": [],
+    "created_at": "2026-11-06T00:59:48.118368+00:00",
+    "completed_at": null,
+    "recurrence_pattern": null,
+    "is_recurring": false,
+    "recurrence_parent_id": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "assigned_to": null,
+    "deadline_date": null,
+    "duration_minutes": null,
+    "time_zone": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "scheduled_at": null,
+    "completion_version": 0,
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256",
+    "is_heading": null
+  },
+  "fixtureCommand": {
+    "protocol": 1,
+    "account": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "request_id": "e0da2d23-3041-429e-a130-7fa536624ebd",
+    "task_id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256",
+    "project_id": null,
+    "structure_revision": 1,
+    "action": "insert",
+    "parent_key": null,
+    "parent_incarnation": null,
+    "parent_revision": null,
+    "source_title": "Prepare the workshop",
+    "index": 1,
+    "steps": [
+      {
+        "id": "a5de1c54-331a-4eb6-b0a6-4bd66b9e04f4",
+        "title": "Inspect the brief"
+      },
+      {
+        "id": "a41df26c-42d9-4db1-9ab7-67a629ab0c47",
+        "title": "Tomorrow #work @Pat"
+      }
+    ]
+  },
+  "fixtureRead": {
+    "account": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "records": [
+      {
+        "fields": {
+          "id": "existing",
+          "title": "Existing work",
+          "future": {
+            "keep": [
+              false,
+              null,
+              "x"
+            ]
+          }
+        },
+        "node_key": "existing",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "b7435f65-9502-4514-bdde-e1a5e4f51190",
+        "children_kind": "null",
+        "identity_path": [
+          "existing"
+        ],
+        "sibling_order": 0
+      }
+    ],
+    "task_id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "protocol": 2,
+    "root_kind": "array",
+    "project_id": null,
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256",
+    "structure_revision": 1,
+    "projection_revision": 1
+  },
+  "fixturePausedAvailability": {
+    "account": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "enabled": false,
+    "task_id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "protocol": 1,
+    "project_id": null,
+    "maximum_steps": 12,
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256",
+    "structure_revision": 1
+  },
+  "fixtureAvailability": {
+    "account": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "enabled": true,
+    "task_id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "protocol": 1,
+    "project_id": null,
+    "maximum_steps": 12,
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256",
+    "structure_revision": 1
+  },
+  "fixtureReceipt": {
+    "count": 2,
+    "nodes": [
+      {
+        "node_key": "a5de1c54-331a-4eb6-b0a6-4bd66b9e04f4",
+        "incarnation": "92c9cb8a-dc44-4f34-9f63-3447765835e3"
+      },
+      {
+        "node_key": "a41df26c-42d9-4db1-9ab7-67a629ab0c47",
+        "incarnation": "6dd6b825-4d05-4f78-a380-0d568540ba1e"
+      }
+    ],
+    "action": "insert",
+    "account": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "task_id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "undo_of": null,
+    "protocol": 1,
+    "replayed": false,
+    "project_id": null,
+    "request_id": "e0da2d23-3041-429e-a130-7fa536624ebd",
+    "after_revision": 2,
+    "before_revision": 1,
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256"
+  },
+  "fixtureAfterRoot": {
+    "id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "user_id": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "title": "Prepare the workshop",
+    "description": "Keep these notes",
+    "completed": false,
+    "priority": 4,
+    "due_date": null,
+    "due_time": null,
+    "project_id": null,
+    "section_id": null,
+    "labels": [],
+    "subtasks": [
+      {
+        "id": "existing",
+        "title": "Existing work",
+        "future": {
+          "keep": [
+            false,
+            null,
+            "x"
+          ]
+        },
+        "subtasks": null
+      },
+      {
+        "id": "a5de1c54-331a-4eb6-b0a6-4bd66b9e04f4",
+        "title": "Inspect the brief",
+        "completed": false,
+        "completed_at": null,
+        "taskfold_completion_v1": {
+          "epoch": "49b93286-54d5-41d3-b324-b65b70666bbd",
+          "version": 0
+        }
+      },
+      {
+        "id": "a41df26c-42d9-4db1-9ab7-67a629ab0c47",
+        "title": "Tomorrow #work @Pat",
+        "completed": false,
+        "completed_at": null,
+        "taskfold_completion_v1": {
+          "epoch": "3c816a71-7f94-413f-9bd5-68914da92fdb",
+          "version": 0
+        }
+      }
+    ],
+    "reminders": [],
+    "attachments": [],
+    "comments": [],
+    "created_at": "2026-11-06T00:59:48.118368+00:00",
+    "completed_at": null,
+    "recurrence_pattern": null,
+    "is_recurring": false,
+    "recurrence_parent_id": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "assigned_to": null,
+    "deadline_date": null,
+    "duration_minutes": null,
+    "time_zone": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "scheduled_at": null,
+    "completion_version": 0,
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256",
+    "is_heading": null
+  },
+  "fixtureAfterRead": {
+    "account": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "records": [
+      {
+        "fields": {
+          "id": "a41df26c-42d9-4db1-9ab7-67a629ab0c47",
+          "title": "Tomorrow #work @Pat",
+          "completed": false,
+          "completed_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "3c816a71-7f94-413f-9bd5-68914da92fdb",
+            "version": 0
+          }
+        },
+        "node_key": "a41df26c-42d9-4db1-9ab7-67a629ab0c47",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "6dd6b825-4d05-4f78-a380-0d568540ba1e",
+        "children_kind": "absent",
+        "identity_path": [
+          "a41df26c-42d9-4db1-9ab7-67a629ab0c47"
+        ],
+        "sibling_order": 2
+      },
+      {
+        "fields": {
+          "id": "a5de1c54-331a-4eb6-b0a6-4bd66b9e04f4",
+          "title": "Inspect the brief",
+          "completed": false,
+          "completed_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "49b93286-54d5-41d3-b324-b65b70666bbd",
+            "version": 0
+          }
+        },
+        "node_key": "a5de1c54-331a-4eb6-b0a6-4bd66b9e04f4",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "92c9cb8a-dc44-4f34-9f63-3447765835e3",
+        "children_kind": "absent",
+        "identity_path": [
+          "a5de1c54-331a-4eb6-b0a6-4bd66b9e04f4"
+        ],
+        "sibling_order": 1
+      },
+      {
+        "fields": {
+          "id": "existing",
+          "title": "Existing work",
+          "future": {
+            "keep": [
+              false,
+              null,
+              "x"
+            ]
+          }
+        },
+        "node_key": "existing",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "b7435f65-9502-4514-bdde-e1a5e4f51190",
+        "children_kind": "null",
+        "identity_path": [
+          "existing"
+        ],
+        "sibling_order": 0
+      }
+    ],
+    "task_id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "protocol": 2,
+    "root_kind": "array",
+    "project_id": null,
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256",
+    "structure_revision": 2,
+    "projection_revision": 2
+  },
+  "fixtureUndoCommand": {
+    "protocol": 1,
+    "account": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "request_id": "7e1f71f4-b5a7-4bed-b322-24d2bac96203",
+    "task_id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256",
+    "project_id": null,
+    "structure_revision": 2,
+    "action": "undo",
+    "undo_of": "e0da2d23-3041-429e-a130-7fa536624ebd"
+  },
+  "fixtureUndoReceipt": {
+    "count": 2,
+    "nodes": [
+      {
+        "node_key": "a5de1c54-331a-4eb6-b0a6-4bd66b9e04f4",
+        "incarnation": "92c9cb8a-dc44-4f34-9f63-3447765835e3"
+      },
+      {
+        "node_key": "a41df26c-42d9-4db1-9ab7-67a629ab0c47",
+        "incarnation": "6dd6b825-4d05-4f78-a380-0d568540ba1e"
+      }
+    ],
+    "action": "undo",
+    "account": "1aee9589-bcb5-44e7-b325-1e40a151cafe",
+    "task_id": "edec5239-b2a5-4893-a73a-7b8923cce671",
+    "undo_of": "e0da2d23-3041-429e-a130-7fa536624ebd",
+    "protocol": 1,
+    "replayed": false,
+    "project_id": null,
+    "request_id": "7e1f71f4-b5a7-4bed-b322-24d2bac96203",
+    "after_revision": 3,
+    "before_revision": 2,
+    "task_generation": "108cf555-6d50-4d56-8415-cef509d6b256"
+  },
   "advisors": {
     "ran": true,
     "source": "Official CLI on complete owned local schema",
@@ -997,6 +1342,6 @@
       }
     ]
   },
-  "passed": 92,
+  "passed": 104,
   "fixtureRemoved": true
 }
