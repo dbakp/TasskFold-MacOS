@@ -5,7 +5,7 @@ import LinkPresentation
 /// Finds web links in free text (with or without a scheme) and shows them by page title, the way the iOS app does.
 enum Linkify {
     private static let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
-    struct Match: Equatable {
+    struct Match: Equatable, Sendable {
         var range: Range<String.Index>
         var url: URL
     }
@@ -19,11 +19,24 @@ enum Linkify {
             return Match(range: range, url: fixed)
         }
     }
-    struct Reading {
+    struct Reading: Sendable {
         let text: String
         let matches: [Match]
     }
     static func reading(_ text: String) -> Reading { Reading(text: text, matches: links(in: text)) }
+    static func prepareReading(_ text: String) async throws -> Reading {
+        let worker = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
+            let result = reading(text)
+            try Task.checkCancellation()
+            return result
+        }
+        return try await withTaskCancellationHandler(operation: {
+            let result = try await worker.value
+            try Task.checkCancellation()
+            return result
+        }, onCancel: { worker.cancel() })
+    }
     static func urls(in text: String) -> [URL] {
         var seen = Set<String>()
         return links(in: text).map(\.url).filter { seen.insert($0.absoluteString).inserted }

@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-06",
+  "owningRepository": "TasskFold-MacOS",
+  "passed": 33,
+  "failed": 0,
+  "newBackgroundCases": 8,
+  "sourceSHA256": {
+    "Taskfold/Core/NoteMarkup.swift": "3ba8b911d064f40ff2a04b9263ea5b089ae27fda1b1f0c4ece5b07c981c4a2cb",
+    "TaskfoldTests/TaskNotePreviewReadTests.swift": "2e022e86e253d823f0151520dc4fa0f330727cdd98338d748b69f483031943fc"
+  },
+  "logSHA256": "3bf3915afb803a3677cfcbeaad785a16cdbefd616fc838203cdda2b26a18f99e",
+  "physicalFPSClaim": false
+}

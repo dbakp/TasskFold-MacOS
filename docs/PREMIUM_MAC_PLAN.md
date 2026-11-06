@@ -11149,3 +11149,16 @@ current-source largest-text picker attempts remain unaccepted; this is no new
 Mac runtime or UX acceptance. Keep the protected-session profile and hosted
 activation prerequisites open and continue feature work without repeating the
 unchanged picker matrix. Normal premium UI and installed app are unchanged.
+
+
+### 6 November · Full note preparation in task rows
+
+The Mac owns serial background full-note preparation and cancellable link
+readings, retaining its existing fonts, selection colors and row controls.
+Accessibility-sized rows can show complete notes while compact mode stays
+bounded. Current source, workspace/session/access checks and disappearance
+prevent stale presentation; cached text remains bounded and memory-only.
+Own Core33 and full build/strict signature pass. The separately owned phone/tablet
+production-row journeys pass; Mac interaction, speech and hardware FPS remain
+unaccepted. Normal app and archived package are unchanged.
+[Evidence](background-note-rows/README.md).

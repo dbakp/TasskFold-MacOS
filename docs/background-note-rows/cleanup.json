@@ -1,0 +1,94 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 60902121472,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 687599616,
+      "projectedAllocatedBytes": 687599616
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 625360896,
+      "projectedAllocatedBytes": 625360896
+    }
+  ],
+  "freeAfterBytes": 60900941824,
+  "actualFreeChangeBytes": -1179648,
+  "runStartFreeBytes": 58842931200,
+  "retiredCompletedOutputs": [
+    {
+      "path": "/tmp/taskfold-background-note-ios-build.log",
+      "logicalBytes": 169834
+    },
+    {
+      "path": "/tmp/taskfold-background-note-ios-build-2.log",
+      "logicalBytes": 49391
+    },
+    {
+      "path": "/tmp/taskfold-background-note-ios-build-final.log",
+      "logicalBytes": 93513
+    },
+    {
+      "path": "/tmp/taskfold-background-note-mac-build.log",
+      "logicalBytes": 116439
+    },
+    {
+      "path": "/tmp/taskfold-background-note-core-ios.log",
+      "logicalBytes": 53864
+    },
+    {
+      "path": "/tmp/taskfold-background-note-core-mac.log",
+      "logicalBytes": 53816
+    },
+    {
+      "path": "/tmp/taskfold-background-note-core-ios-final.log",
+      "logicalBytes": 34167
+    },
+    {
+      "path": "/tmp/taskfold-background-note-core-mac-final.log",
+      "logicalBytes": 33734
+    },
+    {
+      "path": "/tmp/taskfold-background-note-iphone.log",
+      "logicalBytes": 16944
+    },
+    {
+      "path": "/tmp/taskfold-background-note-iphone-final.log",
+      "logicalBytes": 10934
+    },
+    {
+      "path": "/tmp/taskfold-background-note-ipad.log",
+      "logicalBytes": 13805
+    },
+    {
+      "path": "/tmp/taskfold-background-note-iphone.xcresult",
+      "logicalBytes": 11548778
+    },
+    {
+      "path": "/tmp/taskfold-background-note-iphone-final.xcresult",
+      "logicalBytes": 623202
+    },
+    {
+      "path": "/tmp/taskfold-background-note-ipad.xcresult",
+      "logicalBytes": 690063
+    },
+    {
+      "path": "/tmp/taskfold-background-note-iphone-final.attachments",
+      "logicalBytes": 227451
+    },
+    {
+      "path": "/tmp/taskfold-background-note-ipad.attachments",
+      "logicalBytes": 276864
+    }
+  ],
+  "realDataRemoved": false,
+  "installedAppsChanged": false,
+  "coreCacheAllocatedBytes": {
+    "TaskFold-iOS": 678334464,
+    "TasskFold-MacOS": 621293568
+  }
+}

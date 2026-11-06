@@ -1,0 +1,65 @@
+{
+  "accepted": true,
+  "syntheticOnly": true,
+  "productionTaskRow": true,
+  "deviceFamily": "iphone",
+  "hardwareFPSClaim": false,
+  "installedAppsChanged": false,
+  "preparedSourcesSHA256": "c18fc45c76fa4717dfd62b0573679b54f007aa1b524b4441a18311aa3513bcfe",
+  "ownUITestsSHA256": "cabb9ab17b352508c53d9f7bbf8b243dfe2fef1b75ade7bdadc696b9fe586350",
+  "codeSHA256": {
+    "Taskfold.app/Taskfold": "e84ad2792d60e271ed66ba709b384c1239b99a82a004dc9847aba9296b30f276",
+    "Taskfold.app/Taskfold.debug.dylib": "9b63a4231a4b3ad112b5c762d6e6d38a09a658584ff5f71de8df657ea47c9512",
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/TaskfoldUITests": "5582b8053e4595540b360258d6807e449eff06d537e23d6fc11335a9c22a67fb"
+  },
+  "xcodeExitCode": 0,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793982239.543,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793982162.021,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "observations": {
+    "accepted": true,
+    "allOtherTaskFieldsPreserved": true,
+    "coldFullTextAndAllTablesPreserved": true,
+    "compactAndFullSwitch": true,
+    "fullTextAndTailAvailable": true,
+    "liveSourceRefresh": true,
+    "productionTaskRow": true,
+    "returnPreparesCurrentText": true,
+    "unreadableBoundaryHidesText": true
+  },
+  "ownedSimulatorRestored": true
+}

@@ -19,6 +19,8 @@ struct TaskRowView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("mac.taskDensity") private var density = "roomy"
     let task: Record
+    @State private var fullNote: (request: TaskNotePreviewReadCache.Request, reading: Linkify.Reading)?
+    @State private var notePresentation: UUID?
     var compactDate = false
     @State private var hovering = false
     @State private var choosingDate = false
@@ -36,8 +38,10 @@ struct TaskRowView: View {
         return overdue || !task.string("due_time").isEmpty || task["is_recurring"].flag
     }
     var body: some View {
-        let notePreview = store.taskNotePreview(task)
-        let titleLinks = Linkify.reading(task.title), previewLinks = Linkify.reading(notePreview)
+        let fullRequest = dynamicTypeSize.isAccessibilitySize ? store.fullTaskNotePreviewRequest(task) : nil
+        let fullReading = fullNote?.request == fullRequest ? fullNote?.reading : nil
+        let notePreview = fullReading?.text ?? store.taskNotePreview(task)
+        let titleLinks = Linkify.reading(task.title), previewLinks = fullReading ?? Linkify.reading(notePreview)
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             if !workspace.hierarchyFilter && !workspace.independentWorkRow(task) && workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1).accessibilityHidden(true) }
             if workspace.canExpandTask(task) {
@@ -100,6 +104,10 @@ struct TaskRowView: View {
                                  accessibilityIdentifier: "notes-\(task.id)", preparedLinks: previewLinks)
                     }
                 }
+                if let fullRequest, fullReading == nil, !fullRequest.source.text.isEmpty {
+                    ProgressView("Preparing full note…").controlSize(.small).font(.caption)
+                        .accessibilityIdentifier("taskNotesPreparing-" + task.id)
+                }
                 if workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {
                     Text(parent).font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1)
                 }
@@ -146,6 +154,27 @@ struct TaskRowView: View {
         .animation(workspace.layout, value: checked)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("task-\(task.id)")
+        .task(id: fullRequest) {
+            let ticket = UUID(); notePresentation = ticket
+            guard let fullRequest else { fullNote = nil; return }
+            guard fullNote?.request != fullRequest else { return }
+            fullNote = nil
+            while !Task.isCancelled, store.fullTaskNotePreviewRequest(task) == fullRequest {
+                do {
+                    let text = try await store.prepareFullTaskNotePreview(fullRequest)
+                    let reading = try await Linkify.prepareReading(text)
+                    guard !Task.isCancelled, notePresentation == ticket, store.fullTaskNotePreviewRequest(task) == fullRequest else { return }
+                    fullNote = (fullRequest, reading)
+                    return
+                } catch is CancellationError {
+                    // A same-context cache invalidation can cancel preparation
+                    // without cancelling this row. Retry only while still current.
+                    if Task.isCancelled { return }
+                    await Task.yield()
+                } catch { return }
+            }
+        }
+        .onDisappear { notePresentation = nil; fullNote = nil }
     }
     @ViewBuilder private var projectOptions: some View {
         Button("Inbox") { workspace.move([task.id], toProject: "") }
