@@ -24,3 +24,54 @@ enum SharedCapturePlan {
         return .create(Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields, insertOnly: true))
     }
 }
+
+// App-side presentation work; the incoming Share extension owns only the mailbox contract.
+/// A read-only badge request. File access and decoding never run on the
+/// interface executor; retain one active read and only the newest pending read.
+@MainActor final class SharedCaptureCountReader {
+    struct Context: Equatable, Sendable {
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let access: UUID
+        let origin: String
+        let receipts: [String: String]
+    }
+    typealias Read = @Sendable () async throws -> Int
+    private struct Request {
+        let id: UUID
+        let read: Read
+        let complete: @MainActor (Result<Int, Error>) -> Void
+    }
+    private var pending: Request?
+    private var latest: UUID?
+    private var active: Task<Int, Error>?
+    private(set) var isIdle = true
+
+    func refresh(read: @escaping Read, complete: @escaping @MainActor (Result<Int, Error>) -> Void) {
+        let request = Request(id: UUID(), read: read, complete: complete)
+        latest = request.id; pending = request
+        active?.cancel()
+        guard isIdle else { return }
+        isIdle = false
+        Task { await drain() }
+    }
+    func invalidate() { latest = nil; pending = nil; active?.cancel() }
+    private func drain() async {
+        while let request = pending {
+            pending = nil
+            let read = request.read
+            let worker = Task.detached(priority: .utility) {
+                try Task.checkCancellation()
+                let count = try await read()
+                try Task.checkCancellation()
+                guard (0...SharedCaptureDisk.capacity).contains(count) else { throw SharedCaptureFailure("Saved sharing data needs attention.") }
+                return count
+            }
+            active = worker
+            let result = await worker.result
+            active = nil
+            if latest == request.id { request.complete(result) }
+        }
+        isIdle = true
+    }
+}

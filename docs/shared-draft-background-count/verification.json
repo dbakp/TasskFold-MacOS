@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-06",
+  "owner": "TasskFold-MacOS",
+  "coreTests": 22,
+  "coreFailures": 0,
+  "newReaderTests": 8,
+  "fullMailboxRows": 64,
+  "fullMailboxBytesGreaterThan": 5000000,
+  "actualFullMailboxCountOffMainThread": true,
+  "mailboxBytesPreserved": true,
+  "nativePhoneAccepted": true,
+  "nativeTabletAccepted": true,
+  "nativeMacInteractiveAccepted": false,
+  "macBuildAndStrictSignature": true,
+  "normalAppDataChanged": false,
+  "normalGatesChanged": false,
+  "hostedServicesChanged": false,
+  "physicalFPSAccepted": false,
+  "currentInstalledMacBuild": "29",
+  "currentFeaturePackaged": false
+}

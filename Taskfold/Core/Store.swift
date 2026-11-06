@@ -1222,10 +1222,16 @@ final class Store {
     private var accountGeneration = UUID() { didSet {
         subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
         projectMemberReads.cancelAll()
+        sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0
         snapshotRevision = UUID()
         widgetPublicationQueue.invalidate()
         syncSignInWorkspace = nil; syncAfterSignInRequested = nil; conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
     @ObservationIgnored private var consumingWidgetActions = false
+    #if DEBUG
+    var sharedCaptureCountNativeStatus = "Ready for count read"
+    var sharedCaptureCountNativeTaps = 0
+    #endif
+    @ObservationIgnored let sharedCaptureCountReader = SharedCaptureCountReader()
     @ObservationIgnored var sharedCapturePublishedWorkspace: SharedCaptureWorkspace?
     @ObservationIgnored var sharedCapturePublicationReady = false
     @ObservationIgnored private var widgetCalendarWindow: CalendarCapacityWindow?
@@ -1237,7 +1243,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {if !workspaceCacheReadable {sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0};subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"

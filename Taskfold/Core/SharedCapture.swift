@@ -113,6 +113,7 @@ struct SharedCaptureDraft: Codable, Equatable, Identifiable, Sendable {
     var taskID: String { id.uuidString.lowercased() }
 }
 
+
 /// A credential-free, locked draft mailbox shared by the app and its native extension.
 /// Its workspace binding is rechecked inside the same lock as every save.
 final class SharedCaptureDisk: @unchecked Sendable {
@@ -144,8 +145,8 @@ final class SharedCaptureDisk: @unchecked Sendable {
         return try body()
     }
     private var url: URL { directory.appendingPathComponent("shared-capture.json") }
-    private func read() throws -> State {
-        guard FileManager.default.fileExists(atPath: url.path) else { return State() }
+    private func readBytes() throws -> Data? {
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         let handle = try FileHandle(forReadingFrom: url); defer { try? handle.close() }
         var data = Data()
         while data.count <= Self.maximumFileBytes {
@@ -153,6 +154,10 @@ final class SharedCaptureDisk: @unchecked Sendable {
             data.append(part)
         }
         guard data.count <= Self.maximumFileBytes else { throw SharedCaptureFailure("Saved sharing data needs attention. Open Taskfold before trying again.") }
+        return data
+    }
+    private func decode(_ data: Data?) throws -> State {
+        guard let data else { return State() }
         let state: State
         do { state = try TaskfoldJSONDecoder().decode(State.self, from: data) }
         catch { throw SharedCaptureFailure("Saved drafts couldn’t be read. They have been kept on this device, and your tasks are unchanged.") }
@@ -162,6 +167,19 @@ final class SharedCaptureDisk: @unchecked Sendable {
         try state.workspace?.validate()
         for draft in state.drafts { try draft.validate() }
         return state
+    }
+    private func read() throws -> State { try decode(readBytes()) }
+    /// Snapshot only bytes under the shared lock. Validation/decoding happens
+    /// after release so a large badge read does not hold up mailbox writers.
+    func unhandledDraftCount(account: String, receipts: [String: String]) throws -> Int {
+        try Task.checkCancellation()
+        let data = try locked { try readBytes() }
+        try Task.checkCancellation()
+        let state = try decode(data)
+        guard !account.isEmpty, state.workspace?.account == account else { return 0 }
+        return state.drafts.reduce(0) { count, draft in
+            count + (draft.workspace.account == account && receipts[draft.taskID] != draft.taskID ? 1 : 0)
+        }
     }
     private func write(_ state: State) throws {
         let data = try TaskfoldJSONEncoder().encode(state)

@@ -1,0 +1,114 @@
+{
+  "date": "2026-11-06",
+  "freeBeforeBytes": 60016746496,
+  "finishRun": {
+    "apply": true,
+    "freeBeforeBytes": 60017102848,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 684146688,
+        "projectedAllocatedBytes": 684146688
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 623800320,
+        "projectedAllocatedBytes": 623800320
+      }
+    ],
+    "freeAfterBytes": 60016123904,
+    "actualFreeChangeBytes": -978944
+  },
+  "retired": [
+    {
+      "path": "/tmp/taskfold-shared-count-iphone-native.xcresult",
+      "allocatedBytes": 585728
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ipad-native.xcresult",
+      "allocatedBytes": 606208
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-build-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-build-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-build-v2.log",
+      "allocatedBytes": 151552
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-build-v3-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-build-v3.log",
+      "allocatedBytes": 53248
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-build.log",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-core-final-v2.log",
+      "allocatedBytes": 32768
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-core-final.log",
+      "allocatedBytes": 53248
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-core-v2.log",
+      "allocatedBytes": 32768
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-core-v3.log",
+      "allocatedBytes": 32768
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ios-core.log",
+      "allocatedBytes": 49152
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ipad-native-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-ipad-native.log",
+      "allocatedBytes": 8192
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-iphone-native-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-iphone-native.log",
+      "allocatedBytes": 8192
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-mac-build-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-mac-build.log",
+      "allocatedBytes": 135168
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-mac-core-final.log",
+      "allocatedBytes": 53248
+    },
+    {
+      "path": "/tmp/taskfold-shared-count-mac-core.log",
+      "allocatedBytes": 53248
+    }
+  ],
+  "preserved": "Concise current Core/native gzip logs, signed build/native JSON proof, reusable products, normal app/package/rollback and all user data",
+  "freeAfterBytes": 60018397184,
+  "retiredAllocatedBytes": 1908736
+}

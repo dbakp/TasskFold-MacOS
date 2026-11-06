@@ -612,6 +612,15 @@ import CryptoKit
         NavigationStack {
             Form {
                 Text(status).accessibilityIdentifier("workspaceReadStatus")
+                if SharedCaptureCountNativeFixture.enabled {
+                    Text(store.sharedCaptureCountNativeStatus).accessibilityIdentifier("sharedCountNativeStatus")
+                    Text("Interface taps: \(store.sharedCaptureCountNativeTaps)").accessibilityIdentifier("sharedCountNativeTaps")
+                    Text("Shared drafts: \(store.sharedCaptureDraftCount)").accessibilityIdentifier("sharedCountNativeBadge")
+                    Button("Hold background count read") { Task { await store.beginSharedCaptureCountNative() } }.accessibilityIdentifier("sharedCountNativeBegin")
+                    Button("Use interface while count waits") { store.sharedCaptureCountNativeTaps += 1 }.accessibilityIdentifier("sharedCountNativeTap")
+                    Button("Release count and verify") { Task { await store.finishSharedCaptureCountNative() } }.accessibilityIdentifier("sharedCountNativeRelease")
+                }
+
                 Button("Measure row reads") {
                     do { if WorkspaceReadNativeFixture.projectParents { try store.measureProjectParentFixture() } else if WorkspaceReadNativeFixture.projectCatalog { try store.measureProjectCatalogFixture() } else { try store.measureWorkspaceReadFixture() }; status = "Reads verified" }
                     catch { status = error.localizedDescription }

@@ -79,6 +79,22 @@
       "headIsAncestorOfMain": true,
       "mergedTreeEqualsCompletedTree": true,
       "adminBypassUsed": false
+    },
+    {
+      "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/11",
+      "mergedHead": "7deba75db3ec6c327d561a3272d2eb414bd68dd3",
+      "verifiedRemoteDefaultBranch": "9ec1e76bc15cb1a669a48ff2d2f6d0536713b732",
+      "headIsAncestorOfMain": true,
+      "mergedTreeEqualsCompletedTree": true,
+      "adminBypassUsed": false
+    },
+    {
+      "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/12",
+      "mergedHead": "fa919f70d6bcfa4d00a9288ec5808820cc727b53",
+      "verifiedRemoteDefaultBranch": "b614d0e5c43b294eb86cbdb2e685c6558a6755fb",
+      "headIsAncestorOfMain": true,
+      "mergedTreeEqualsCompletedTree": true,
+      "adminBypassUsed": false
     }
   ]
 }
