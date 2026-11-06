@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "On-device suggestions · Readiness and Stop",
-  "latest": "Both engines now stop an already-cancelled request before input or model-availability checks, and explicitly select the system on-device model. Setup guidance now fits both tasks and filters. Each owner passes 26 ordinary Core checks, including two cancellation regressions and a semantic oracle that distinguishes dates, deadlines and exact projects. The explicit six-example quality/latency probe records actual outputs and timings, but the final API check still reported Apple Intelligence disabled: zero generations, two skipped model tests, and a non-success probe result. The user intends to enable it; no setting was changed by the agent. Real model quality/speed remains unaccepted. Signed Mac27/iPhone39 packages are prepared, not installed; Mac23/phone34 stay unchanged. Cleanup retained working rollbacks and bounded caches; about 51.4 GiB is free.",
+  "focus": "Subtask organizer · Faster row updates",
+  "latest": "The ordinary checklist organizer now reuses one bounded read-only draft index for titles and move availability. Each owner passes 47 focused Core checks, and the signed iPhone Simulator journey passes recovery review, movement, title/completion editing, Cancel, draft Save, parent Save and cold saved state with zero runtime warnings. Unknown fields and grandchildren stay intact. A 256-row Debug calculation improves from about 200 ms to 10 ms; this does not accept device frame rate or wider Mac/iPad/speech/large-library behavior. Signed optimized Mac28 and iPhone40 pass app/extension and archive checks; neither is installed. Mac23 and phone34 remain installed. Real model quality remains pending Apple Intelligence readiness. Completed result bundles and superseded Mac27/phone39 archives were retired; 50.2 GiB is free.",
   "next": [
-    "FIRST: signed Mac27/iPhone39 are prepared with cancellation-first on-device engines and the prior note/filter/step improvements; neither is installed. Installed Mac23 and phone34 remain unchanged, and further phone installation is deferred. Superseded uninstalled Mac26/phone38 were retired after verified replacements; keep working rollback archives and private backups.",
-    "NEXT: run the actual six-example on-device quality/latency probe once Apple Intelligence is ready. The user intends to enable it, but the final SDK check and observed switch were still Off. Do not count skipped model tests as success or substitute cloud inference. While setup is pending, continue remaining ordinary task-heading/child adapters and independent-subtask/shared-media work. Preserve the recorded Mac protected-profile, wider device/accessibility/account/lifecycle, hosted and explicit provider/distribution gaps.",
+    "FIRST: signed optimized Mac28/iPhone40 are prepared with the organizer performance improvement and prior on-device, note, filter and step improvements; neither is installed. Installed Mac23 and phone34 remain unchanged, and further phone installation is deferred. Superseded uninstalled Mac27/phone39 were retired after verified replacements; preserve working rollback archives and private backups.",
+    "NEXT: run the actual six-example on-device quality/latency probe once Apple Intelligence is ready. The user intends to enable it; the last recorded probe was unavailable, with no accepted real generation. Do not count skipped tests as success or substitute cloud inference. Continue remaining ordinary heading/child adapters and independent-subtask/shared-media work. Preserve the recorded Mac protected-profile, wider device/accessibility/account/lifecycle, hosted and explicit provider/distribution gaps.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -728,7 +728,7 @@
             "ondevice-quality/package.json",
             "ondevice-quality/storage-cleanup.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-reminders",
@@ -783,7 +783,7 @@
             {
               "state": "verify",
               "title": "New subtask organizer and recovery",
-              "detail": "Phone/iPad checks cover organizer drafts and cross-task destination/placement review, retained confirmation, cold-launch Undo and lost-reply retry without duplicate writes. Direct Mac personal move/cold Undo now passes. Spoken, shared-account/window lifecycle and wider acceptance remain; normal use stays gated."
+              "detail": "Phone/iPad checks cover organizer drafts and cross-task destination/placement review, retained confirmation, cold-launch Undo and lost-reply retry without duplicate writes. Direct Mac personal move/cold Undo now passes. Spoken, shared-account/window lifecycle and wider acceptance remain; normal use stays gated. Ordinary organizer rows now reuse a bounded draft index. Each owner passes 47 focused checks; current iPhone recovery, edit, move, Cancel, Save and cold state pass with zero runtime warnings. Mac28 and phone40 are signed, archived and uninstalled. Wider rendering, speech and lifecycle acceptance remains."
             },
             {
               "state": "verify",
@@ -1222,9 +1222,15 @@
             "combined-project-custody/storage-cleanup.json",
             "combined-project-custody/native/README.md",
             "combined-project-custody/native/verification.json",
-            "combined-project-custody/native/storage-cleanup.json"
+            "combined-project-custody/native/storage-cleanup.json",
+            "organizer-reading/README.md",
+            "organizer-reading/core.json",
+            "organizer-reading/native-ios.json",
+            "organizer-reading/build.json",
+            "organizer-reading/package.json",
+            "organizer-reading/storage-cleanup.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-watch",
@@ -1452,13 +1458,19 @@
     "ondevice-quality/model-probe.json",
     "ondevice-quality/build.json",
     "ondevice-quality/package.json",
-    "ondevice-quality/storage-cleanup.json"
+    "ondevice-quality/storage-cleanup.json",
+    "organizer-reading/README.md",
+    "organizer-reading/core.json",
+    "organizer-reading/native-ios.json",
+    "organizer-reading/build.json",
+    "organizer-reading/package.json",
+    "organizer-reading/storage-cleanup.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "484cbf07863f2c6c460956fa2c4e67a35e59b408001d1c274e4ae10911dac882",
+    "P2_PLAN.md": "f9d6c2820a037aa17516e99b8caf6c6466a5ad95c72defba58766d4a83473301",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1767,6 +1779,12 @@
     "optimized-daily-update/verification.json": "47eb1387e26bfb52611717010ca825fdc9eec8c608fb212be43b403866e41720",
     "order-activity/README.md": "140bf1dc708445d5c9713f4f9e7e5897507a7397b17f12966ec0f9fbe1f896a6",
     "order-activity/verification.json": "e6c987f9ca69abbe66fd64effe1b14addbda5a52f7c04085d00654dcac2d291b",
+    "organizer-reading/README.md": "09322f9e693b9d283e234c67311b624c836ef7865b1351b6c132a534592c5df7",
+    "organizer-reading/build.json": "c187848d22cc46e90557118f4dc1f9a9da772bbc38c92d862bd0b60a3bed9d91",
+    "organizer-reading/core.json": "d2a9cbfbeffb4606d2beb338d0cea7cc485fe116b79c88b623542a83ce7e0aa9",
+    "organizer-reading/native-ios.json": "7ea7e41b769a37cc57c4d86adf69bfb332d13e8b1b2338996fe5260510b6786b",
+    "organizer-reading/package.json": "3057239099f616af1661972651aebecef22a4a946ae6c848b59a7d2c4a656440",
+    "organizer-reading/storage-cleanup.json": "796c58134d5217fe5beba37b8d56aff31f4566a212c10f4302bf9aa08912e5d3",
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",
     "p1-completion-audit.json": "247195c4d7743f3eca09f8c8461e0a971aa9dbe89dd5c839a81c5454082ae41a",
     "pending-approval-boundaries/README.md": "ea940aad882654ad908b0c6a295f8ef551eab2b225550ed7fd4ed96a97fde99d",

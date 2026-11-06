@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-06",
+  "passed": 47,
+  "failed": 0,
+  "newCases": 6,
+  "suiteFilter": "SubtaskOrganizerReadTests|SubtaskTreeTests|ChecklistRecoveryTests|SubtaskProgressReadTests",
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "92efb6ff63f23a788fc121fcc6bf154f815f477f4422892055d54e294c7cbc67",
+    "Taskfold/Views/SubtaskOrganizer.swift": "4f8c9cf1bd9035271cf8e9cffcff23e90cba308102ba3a897034a99297f7260e",
+    "TaskfoldTests/SubtaskOrganizerReadTests.swift": "9270c86d7724d3f47d6fe31c2be2365e0034d6985df0e8cbf7cc227362bdeeb2"
+  },
+  "diagnostic": {
+    "build": "Debug",
+    "nodes": 256,
+    "legacyPresentationMilliseconds": 197.9449987411499,
+    "indexedPresentationMilliseconds": 9.809017181396484,
+    "computations": 1,
+    "deviceFrameRateAccepted": false
+  },
+  "scope": [
+    "canonical move-availability equivalence for prepared trees",
+    "read-only original metadata preservation",
+    "same-count and nested copy-on-write invalidation",
+    "workspace/session/access/task/depth invalidation",
+    "cache budgets and malformed/truncated input refusal"
+  ]
+}

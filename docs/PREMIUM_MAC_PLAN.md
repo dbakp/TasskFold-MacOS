@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 6 November 2026 · Responsive checklist organizer
+
+The ordinary organizer now reuses a bounded read-only draft index; actual moves still use the existing validation. Forty-seven focused checks per owner pass. The iPhone editor journey accepts scoped draft/save/cold behavior with zero runtime warnings; Mac28 builds, signs and passes archive readback, without claiming new Mac native or large-workload rendering acceptance. Mac23 remains installed. Superseded Mac27/phone39 candidate archives are retired after verified Mac28/phone40 replacements. Real on-device model quality stays pending readiness. [Scope, source and cleanup](organizer-reading/README.md).
+
 ## 6 November 2026 · On-device readiness
 
 The engines stop already-cancelled requests before input/setup checks and explicitly select the system on-device model. Twenty-six ordinary checks per owner pass; the final actual-model probe skipped both tests because Apple Intelligence was still Off. Real output quality/latency remains unaccepted while the user enables it. Signed Mac27/phone39 are prepared, not installed; ordinary gates and installed apps are unchanged. [Current source, probe and cleanup](ondevice-quality/README.md).

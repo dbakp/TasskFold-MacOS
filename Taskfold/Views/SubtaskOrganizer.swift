@@ -88,6 +88,7 @@ private struct SubtaskOrganizer: View {
     @State private var addingChild = false
     @State private var removing: SubtaskTree.Item?
     @State private var childTitle = ""
+    @State private var outlineCache = SubtaskOrganizerReadCache()
 
     init(children: Binding<JSON>, taskID: String, baseDepth: Int, projectID: String, admission:TaskEditorAdmission, saveAndOpen: ((JSON, [String]) -> Bool)?) {
         _children = children; self.taskID = taskID; self.baseDepth = baseDepth; self.projectID = projectID; self.admission=admission;self.saveAndOpen = saveAndOpen
@@ -95,7 +96,12 @@ private struct SubtaskOrganizer: View {
         _originalTaskID = State(initialValue: taskID)
         _draft = State(initialValue: .array([]))
     }
-    private var items: [SubtaskTree.Item] { SubtaskTree.outline(draft) }
+    private var reading: SubtaskTree.OrganizerReading {
+        outlineCache.read(draft, baseDepth: baseDepth, context: .init(
+            workspace: .init(account: store.userID, generation: store.workspaceGeneration),
+            session: store.backend.reminderSessionIncarnation, access: store.workspaceReadRevision, taskID: taskID))
+    }
+    private var items: [SubtaskTree.Item] { reading.items }
     private var available: Bool {
         guard !accessStopped,admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)),store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record,teamDraft:admission.teamDraft) else {return false}
         guard let binding,let sourceRecord else {return true}
@@ -140,8 +146,8 @@ private struct SubtaskOrganizer: View {
         .onChange(of:draft) {_,_ in checkpoint()}
         .onChange(of:newTitle) {_,_ in checkpoint()}
         .onChange(of:childTitle) {_,_ in checkpoint()}
-        .onChange(of:available) {_,value in if !value {checkpoint();accessStopped=true}}
-        .onDisappear {checkpoint()}
+        .onChange(of:available) {_,value in if !value {checkpoint();accessStopped=true;outlineCache.clear()}}
+        .onDisappear {checkpoint();outlineCache.clear()}
     }
     private var editingBody: some View {
         NavigationStack {
@@ -178,7 +184,7 @@ private struct SubtaskOrganizer: View {
                                         .accessibilityLabel(TaskKind(item.record) == .heading ? "Heading, stays open" : "Task type unavailable")
                                 }
                                 TextField("Subtask", text: Binding(get: {
-                                    SubtaskTree.outline(draft).first { $0.id == item.id }?.record.title ?? ""
+                                    reading.item(item.id)?.record.title ?? ""
                                 }, set: { title in draft = SubtaskTree.changing(draft, id: item.id, fields: ["title": .string(title)]) }), axis: .vertical)
                                     .labelsHidden().textFieldStyle(.plain).multilineTextAlignment(.leading)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -235,7 +241,7 @@ private struct SubtaskOrganizer: View {
             .navigationTitle("Organize subtasks")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") {if recoverySession?.finish() != false {dismiss()}}.keyboardShortcut(.cancelAction).accessibilityIdentifier("cancelSubtaskOrganizer") }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).keyboardShortcut("s", modifiers: .command).disabled(preparing || recovery != nil || loadError != nil || items.contains { $0.record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }).accessibilityIdentifier("saveSubtaskOrganizer") }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).keyboardShortcut("s", modifiers: .command).disabled(preparing || recovery != nil || loadError != nil || reading.hasEmptyTitle).accessibilityIdentifier("saveSubtaskOrganizer") }
             }
             .sheet(isPresented: $showingOriginal) { if let originalText { OriginalChecklistView(text: originalText) } }
 
@@ -301,7 +307,7 @@ private struct SubtaskOrganizer: View {
         #endif
     }
     private func canMove(_ item: SubtaskTree.Item, _ direction: SubtaskTree.Move) -> Bool {
-        (try? SubtaskTree.moving(draft, id: item.id, direction: direction, baseDepth: baseDepth)) != nil
+        reading.canMove(item.id, direction)
     }
     private func move(_ item: SubtaskTree.Item, _ direction: SubtaskTree.Move) {
         do { draft = try SubtaskTree.moving(draft, id: item.id, direction: direction, baseDepth: baseDepth); message = nil }

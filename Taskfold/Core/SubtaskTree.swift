@@ -102,13 +102,13 @@ enum SubtaskTree {
         }
         return result
     }
-    struct Item: Identifiable {
+    struct Item: Identifiable, Equatable, Sendable {
         let record: Record
         let parent: String?
         let depth: Int
         var id: String { record.id }
     }
-    enum Move { case up, down, indent, outdent }
+    enum Move: CaseIterable, Sendable { case up, down, indent, outdent }
 
     static func prepared(_ value: JSON) throws -> JSON {
         guard value == .null || { if case .array = value { return true }; return false }() else {
@@ -1296,5 +1296,109 @@ struct ChildTaskStructureRead: Sendable {
             entries[id] = Entry(rows: rows, reading: result, used: clock); retainedNodes += result.visited
         }
         return (result.completed, result.total)
+    }
+}
+
+extension SubtaskTree {
+    /// Presentation only. Actual actions still go through `moving` and editor admission.
+    struct OrganizerReading: Sendable {
+        let items: [Item]
+        let hasEmptyTitle: Bool
+        let truncated: Bool
+        private let positions: [String: Int]
+        private let moves: [MoveOptions]
+        private struct MoveOptions: Sendable {
+            var up = false, down = false, indent = false, outdent = false
+            func contains(_ direction: Move) -> Bool {
+                switch direction { case .up: up; case .down: down; case .indent: indent; case .outdent: outdent }
+            }
+        }
+        init(_ source: JSON, baseDepth: Int) {
+            let outline = SubtaskTree.outline(source)
+            items = outline
+            hasEmptyTitle = outline.contains { $0.record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            truncated = outline.contains { $0.depth == SubtaskTree.readableDepth && !$0.record["subtasks"].list.isEmpty }
+            var index: [String: Int] = [:], ambiguous = Set<String>(), supported = !truncated
+            var siblings: [String?: [Int]] = [:]
+            for (position, item) in outline.enumerated() {
+                siblings[item.parent, default: []].append(position)
+                if item.id.isEmpty || index[item.id] != nil || ambiguous.contains(item.id) {
+                    ambiguous.insert(item.id); index[item.id] = nil; supported = false
+                } else { index[item.id] = position }
+            }
+            // Only normalized editable containers can offer moves. Opaque/malformed
+            // originals remain readable, without becoming arbitrary editing targets.
+            if source != .null { if case .array = source {} else { supported = false } }
+            for (parent, children) in siblings {
+                let raw: [JSON]
+                if let parent, let position = index[parent] { raw = outline[position].record["subtasks"].list }
+                else if parent == nil { raw = source.list }
+                else { supported = false; continue }
+                guard raw.count == children.count else { supported = false; continue }
+                for (offset, position) in children.enumerated() {
+                    guard case .object(let fields) = raw[offset], case .string(let id)? = fields["id"],
+                          id == outline[position].id, case .string? = fields["title"],
+                          SubtaskTree.hasListContainer(fields["subtasks"] ?? .null) else { supported = false; continue }
+                }
+            }
+            positions = index
+            var options = Array(repeating: MoveOptions(), count: outline.count)
+            if supported {
+                var heights = Array(repeating: 0, count: outline.count)
+                for position in outline.indices.reversed() {
+                    if let parent = outline[position].parent, let parentPosition = index[parent] {
+                        heights[parentPosition] = max(heights[parentPosition], heights[position] + 1)
+                    }
+                }
+                for (_, children) in siblings {
+                    for (offset, position) in children.enumerated() {
+                        let item = outline[position]
+                        options[position].up = offset > 0
+                        options[position].down = offset + 1 < children.count
+                        options[position].outdent = item.parent != nil
+                        // Bound each operand before adding, including hostile caller depths.
+                        options[position].indent = offset > 0 && baseDepth >= 0 && baseDepth < maximumDepth &&
+                            item.depth < maximumDepth && heights[position] < maximumDepth &&
+                            baseDepth + item.depth + heights[position] + 1 < maximumDepth
+                    }
+                }
+            }
+            moves = options
+        }
+        func item(_ id: String) -> Item? { positions[id].map { items[$0] } }
+        func canMove(_ id: String, _ direction: Move) -> Bool { positions[id].map { moves[$0].contains(direction) } ?? false }
+    }
+}
+
+/// One immutable draft reading per organizer. No disk persistence or write authority.
+@MainActor final class SubtaskOrganizerReadCache {
+    struct Context: Equatable {
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let access: UUID
+        let taskID: String
+    }
+    private let maximumNodes: Int
+    private var context: Context?
+    private var baseDepth: Int?
+    private var rows: [JSON]?
+    private var reading: SubtaskTree.OrganizerReading?
+    private(set) var computationCount = 0
+    var retainedNodes: Int { reading?.items.count ?? 0 }
+    init(maximumNodes: Int = 32_768) { self.maximumNodes = max(0, maximumNodes) }
+    func clear() { context = nil; baseDepth = nil; rows = nil; reading = nil }
+    func read(_ value: JSON, baseDepth nextDepth: Int, context next: Context) -> SubtaskTree.OrganizerReading {
+        if context != next || baseDepth != nextDepth { clear(); context = next; baseDepth = nextDepth }
+        if case .array(let current) = value, let rows, let reading, current.count == rows.count,
+           current.withUnsafeBufferPointer({ a in rows.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }) { return reading }
+        // Release the prior source before building the replacement. Retaining an
+        // immutable array makes copy-on-write edits distinguishable by allocation.
+        rows = nil; reading = nil
+        let result = SubtaskTree.OrganizerReading(value, baseDepth: nextDepth)
+        computationCount += 1
+        if case .array(let current) = value, maximumNodes > 0, result.items.count <= maximumNodes, !result.truncated {
+            rows = current; reading = result
+        }
+        return result
     }
 }
