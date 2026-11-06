@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-06",
+  "owner": "TasskFold-MacOS",
+  "coreTests": 29,
+  "coreFailures": 0,
+  "newReviewTests": 7,
+  "fullMailboxRows": 64,
+  "fullMailboxBytesGreaterThan": 5000000,
+  "currentPhoneAppSourceAccepted": true,
+  "currentTabletAppSourceAccepted": true,
+  "unsavedEditorSurvivesReceiptRefresh": true,
+  "exactSavedCacheAndMailboxBytesPreserved": true,
+  "nativeMacInteractionAccepted": false,
+  "macBuildAndStrictSignature": true,
+  "physicalFPSAccepted": false,
+  "normalAppDataChanged": false,
+  "normalGatesChanged": false,
+  "hostedServicesChanged": false,
+  "currentFeaturePackaged": false,
+  "installedMacBuild": "29",
+  "reviewCoreSourceSHA256": {
+    "Taskfold/Core/SharedCapture.swift": "5cf9bc3dbe37f273324eede929abbd91843703d01f6d407ef36eba3b1729122e",
+    "Taskfold/Core/SharedCapturePlan.swift": "4aa0a5e8e58df0fe3b77d4eafbe96497ac46d07c4b1cfd78544049c6eab450ac",
+    "TaskfoldTests/SharedCaptureReviewReaderTests.swift": "47cf4cd528ef54118704f45d0a630a06a7c8ea6c5234a54ecb6abfb2944c3d35"
+  }
+}

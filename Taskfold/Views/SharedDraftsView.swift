@@ -7,6 +7,8 @@ struct SharedDraftsView: View {
     @State private var drafts: [SharedCaptureDraft] = []
     @State private var selected: SharedCaptureDraft?
     @State private var discarding: SharedCaptureDraft?
+    @State private var loading = false
+    @State private var reader = SharedCaptureReviewReader()
     @State private var message: String?
     var body: some View {
         WorkflowShell(title: "Shared drafts") {
@@ -15,8 +17,14 @@ struct SharedDraftsView: View {
                     Text("Capture a thought or web link with the Share menu in another app. Review it here, choose its destination and add it when you’re ready.").foregroundStyle(.secondary)
                     Text("Drafts stay on this device and belong to the workspace where they were captured.").font(.caption).foregroundStyle(.secondary)
                 }
+                #if DEBUG
+                if SharedCaptureCountNativeFixture.enabled && SharedCaptureCountNativeFixture.reviewEnabled {
+                    Button("Release review read") { Task { await SharedCaptureCountNativeFixture.reviewGate?.resume() } }.accessibilityIdentifier("releaseSharedReview")
+                }
+                #endif
                 if let message { Section { Text(message).foregroundStyle(.red); Button("Try again", action: refresh) } }
-                if drafts.isEmpty && message == nil {
+                if loading { Section { ProgressView("Loading shared drafts…").accessibilityIdentifier("sharedDraftsLoading") } }
+                if !loading && drafts.isEmpty && message == nil {
                     ContentUnavailableView("A place for shared thoughts", systemImage: "square.and.arrow.down", description: Text("Choose Taskfold in another app’s Share menu to save a draft."))
                 }
                 ForEach(drafts) { draft in
@@ -35,12 +43,19 @@ struct SharedDraftsView: View {
                 }
             }
         }
+        .toolbar { Button("Refresh", systemImage: "arrow.clockwise", action: refresh).accessibilityIdentifier("refreshSharedDrafts") }
         .onAppear {
             if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) }
             refresh()
         }
         .onChange(of: phase) { _, phase in if phase == .active { refresh() } }
-        .onChange(of: store.workspaceGeneration) { _, _ in drafts = []; selected = nil; discarding = nil; message = "Reopen shared drafts in your current workspace." }
+        .onChange(of: store.sharedCaptureReadContext) { before, after in
+            // Receipt and destination refreshes must not discard an open edit.
+            // Loss/change of the private workspace or session still closes it.
+            if before?.workspace != after?.workspace || before?.session != after?.session || before?.origin != after?.origin { selected = nil }
+            discarding = nil; refresh()
+        }
+        .onDisappear { reader.invalidate(); loading = false; drafts = [] }
         .sheet(item: $selected, onDismiss: refresh) { draft in SharedDraftReview(draft: draft, binding: binding) }
         .confirmationDialog("Discard this draft?", isPresented: Binding(get: { discarding != nil }, set: { if !$0 { discarding = nil } })) {
             Button("Discard draft", role: .destructive) {
@@ -51,8 +66,14 @@ struct SharedDraftsView: View {
         } message: { Text("Only this saved draft will be removed. Your tasks stay unchanged.") }
     }
     private func refresh() {
-        do { drafts = try store.sharedCaptureDrafts(binding); message = nil }
-        catch { drafts = []; message = error.localizedDescription }
+        drafts = []; message = nil; loading = true
+        store.loadSharedCaptureDrafts(binding, reader: reader) { result in
+            loading = false
+            switch result {
+            case .success(let loaded): drafts = loaded; message = nil
+            case .failure(let error): drafts = []; message = error.localizedDescription
+            }
+        }
     }
 }
 
@@ -73,6 +94,14 @@ private struct SharedDraftReview: View {
         WorkflowShell(title: "Review shared draft") {
             if binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true {
                 Form {
+                    #if DEBUG
+                    if SharedCaptureCountNativeFixture.enabled && SharedCaptureCountNativeFixture.reviewEnabled {
+                        Section {
+                            Button("Refresh another receipt") { store.refreshSharedReviewReceiptNative() }.accessibilityIdentifier("refreshSharedReviewReceipt")
+                            Button("Restore test receipts") { store.refreshSharedReviewReceiptNative(restore: true) }.accessibilityIdentifier("restoreSharedReviewReceipt")
+                        }
+                    }
+                    #endif
                     Section("Task") {
                         TextField("Title", text: $title, axis: .vertical).accessibilityIdentifier("sharedDraftTitle")
                         TextField("Notes", text: $notes, axis: .vertical).lineLimit(3...12).accessibilityIdentifier("sharedDraftNotes")

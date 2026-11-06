@@ -75,3 +75,44 @@ enum SharedCapturePlan {
         isIdle = true
     }
 }
+
+/// View-owned bounded review loader. Closing the screen discards its pending
+/// request and result; an uninterruptible file read cannot create a task backlog.
+@MainActor final class SharedCaptureReviewReader {
+    typealias Read = @Sendable () async throws -> [SharedCaptureDraft]
+    private struct Request {
+        let id: UUID
+        let read: Read
+        let complete: @MainActor (Result<[SharedCaptureDraft], Error>) -> Void
+    }
+    private var pending: Request?
+    private var latest: UUID?
+    private var active: Task<[SharedCaptureDraft], Error>?
+    private(set) var isIdle = true
+    func refresh(read: @escaping Read, complete: @escaping @MainActor (Result<[SharedCaptureDraft], Error>) -> Void) {
+        let request = Request(id: UUID(), read: read, complete: complete)
+        latest = request.id; pending = request; active?.cancel()
+        guard isIdle else { return }
+        isIdle = false
+        Task { await drain() }
+    }
+    func invalidate() { latest = nil; pending = nil; active?.cancel() }
+    private func drain() async {
+        while let request = pending {
+            pending = nil
+            let read = request.read
+            let worker = Task.detached(priority: .userInitiated) {
+                try Task.checkCancellation()
+                let drafts = try await read()
+                try Task.checkCancellation()
+                guard drafts.count <= SharedCaptureDisk.capacity else { throw SharedCaptureFailure("Saved sharing data needs attention.") }
+                return drafts
+            }
+            active = worker
+            let result = await worker.result
+            active = nil
+            if latest == request.id { request.complete(result) }
+        }
+        isIdle = true
+    }
+}
