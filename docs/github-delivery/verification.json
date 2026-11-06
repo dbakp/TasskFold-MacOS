@@ -14,5 +14,15 @@
   "prWorkflowRunsReported": [],
   "localVerificationScope": "Existing source-bound feature reports remain individually scoped; no claim of one complete backlog test run",
   "installedAppsChanged": false,
-  "hostedMigrationsApplied": false
+  "hostedMigrationsApplied": false,
+  "subsequentVerifiedMerges": [
+    {
+      "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/3",
+      "mergedHead": "e1e503c84a3b0ddc2597cc660db833c8b54d9377",
+      "verifiedRemoteDefaultBranch": "e3975a21c6340157e910995ed88be016baad71d8",
+      "headIsAncestorOfMain": true,
+      "mergedTreeEqualsCompletedTree": true,
+      "adminBypassUsed": false
+    }
+  ]
 }

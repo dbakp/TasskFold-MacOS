@@ -793,8 +793,10 @@ private final class FullSchemaNativeProtocol:URLProtocol,@unchecked Sendable {
         worker=Task {
             do {
                 let c=try FullSchemaNativeFixture.configuration()
-                guard let original=request.url,var target=URLComponents(string:original.path=="/functions/v1/audio-comments" ? (c.audioOrigin ?? c.origin):c.origin),let path=URLComponents(url:original,resolvingAgainstBaseURL:false) else{throw URLError(.badURL)}
-                target.percentEncodedPath=path.percentEncodedPath;target.percentEncodedQuery=path.percentEncodedQuery
+                guard let original=request.url,let path=URLComponents(url:original,resolvingAgainstBaseURL:false) else{throw URLError(.badURL)}
+                let fileRoute = FullSchemaNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--full-schema-combined-custody-testing") ? ["/functions/v1/project-files":"/project-files", "/functions/v1/task-files":"/task-files"][original.path] : nil
+                guard var target=URLComponents(string:original.path=="/functions/v1/audio-comments" || fileRoute != nil ? (c.audioOrigin ?? c.origin):c.origin) else{throw URLError(.badURL)}
+                target.percentEncodedPath=fileRoute ?? path.percentEncodedPath;target.percentEncodedQuery=path.percentEncodedQuery
                 var forwarded=request;forwarded.url=try target.url.unwrapFullSchema();forwarded.setValue(nil,forHTTPHeaderField:"Host")
                 let (data,response)=try await Self.forwarding.data(for:forwarded)
                 guard !Task.isCancelled,let http=response as? HTTPURLResponse else{throw CancellationError()}
