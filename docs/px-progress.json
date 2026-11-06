@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "P2 · Saving shared drafts",
-  "latest": "Shared-draft Save and Discard now move mailbox file work off the interface, with visible progress and safe retry. Both owners pass 32 focused checks; current phone/tablet controls pass changed-receipt refusal, full notes, exact acknowledgement, Discard, Undo/Redo and cold saved state. Mac builds/signs; its native interaction remains separate. Source is not packaged. Mac30 is preserved; approval was reported, but startup inspection still awaits unlock. Agreed deferrals remain.",
+  "focus": "P2 · Mac31 update prepared",
+  "latest": "Mac31 now packages the merged note-authoring and background shared-draft actions as an optimized signed app with widgets and Share. Exact archive readback and profiles pass. Installation is pending: the new private safety copy hit a 20-second file-access deadline, and the Mac is locked. Mac30 and its rollback remain intact. Routine updates are already authorized. Startup/data checks, remaining Px and phone installation deferral remain.",
   "next": [
-    "Finish installed Mac30 startup and saved-data checks after unlock. The user reports allowing its data prompt; keep that process intact and retain the verified Mac29 rollback. Phone installation remains deferred.",
-    "Package and install the merged note-authoring and shared-draft improvements in the next Mac update after the current startup check. Keep the phone installation deferred.",
+    "After unlock and restored private-storage access, complete the fresh safety copy and verify current saved-cache hashes. Keep Mac30 and its rollback intact until then.",
+    "Install the verified Mac31 package without another draft-readiness question, then verify startup and preserved data. Phone installation stays deferred.",
     "Prioritize startup disk-publication responsiveness and remaining durable-save pauses while preserving exact acknowledgements and workspace privacy. Shared-draft counts, review loading and mailbox actions now run in the background.",
     "Continue ordinary notes/headings, workflow and browsing performance, actual drag/rendering and larger workloads. Keep platform, shared/cloud/account/window, speech and physical FPS acceptance distinct.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
@@ -457,7 +457,7 @@
             {
               "state": "verify",
               "title": "Rich-note formatting and heading authoring",
-              "detail": "Strikethrough authoring now uses the existing safe attributed reader, with selected-text toggling and output-size guards for all inline tools. Both owners pass 52 focused checks; actual phone/tablet taps, preview, description-only Save, unchanged task/pin data, Store Undo/Redo and cold readback pass. Mac builds/signs; its control/speech and wider cases remain separate. Focused pinned-note Edit note now uses the existing Write/Preview tools and guarded text-only Save. Six Core intent checks pass per app. Current signed iPhone tests accept Cancel/Save, unchanged pin/completion/children/opaque/unrelated work, external title/priority preservation, actual Store Undo/Redo, cold content, conflicting-note refusal and separate largest-text preview/Cancel. Native Mac/iPad, wider shared/cloud/speech/accessibility and heading contexts remain open; no ordinary rollout gate changes. Block/inline note previews now prepare off the interface thread and retain source-bound render models. Both repos pass 30 focused note checks; current iPhone tests accept revised preview content, exact original toggle and largest-text Preview/Cancel, plus unchanged Save/history/cold preservation. Mac builds/signs; wider runtime and heading acceptance remain. New section navigation and lazy formatted-block layout are implemented in both readers/previews. Normal text uses a menu; accessibility sizes use a full-height list, with source-bound headings, separate content anchors and routing after dismissal. A reproduced largest-text reverse-jump failure is fixed with explicit lazy scroll targets. Current normal iPhone reader/editor-preview and largest-text reader journeys pass first/last navigation, exact original-text toggles, unchanged all-table snapshots and cold return. Each owner passes 47 focused checks and current build/sign verification. Exact UTF-8 source guards distinguish canonically equal Unicode URL paths. Mac/iPad interaction, speech, wider contexts and physical FPS remain open; no broad acceptance promotion. Note paragraphs now support explicit Body and H1/H2/H3 styles, exact level replacement and distinct scalable preview sizes. Each owner passes 37 focused checks (8 new paragraph cases); the current normal-text iPhone menu/preview/Save/Store Undo/Redo/cold flow passes. Mac compiles/signs; new Mac/iPad, hardware-keyboard, speech and wider shared/lifecycle acceptance remain. Task-heading rollout is unchanged. List style conversion now replaces recognized bullet/number markers rather than stacking them, matches the reader grammar and preserves every supported source line ending. Both owners pass 48 focused checks including 11 new cases; optimized signed Mac24/phone36 packages are prepared. Native gestures/keyboard/speech and hardware smoothness remain separate; installed apps are unchanged.",
+              "detail": "The accumulated note tools are now prepared in Mac31; installation awaits the required private safety copy, with Mac30 retained. Strikethrough authoring now uses the existing safe attributed reader, with selected-text toggling and output-size guards for all inline tools. Both owners pass 52 focused checks; actual phone/tablet taps, preview, description-only Save, unchanged task/pin data, Store Undo/Redo and cold readback pass. Mac builds/signs; its control/speech and wider cases remain separate. Focused pinned-note Edit note now uses the existing Write/Preview tools and guarded text-only Save. Six Core intent checks pass per app. Current signed iPhone tests accept Cancel/Save, unchanged pin/completion/children/opaque/unrelated work, external title/priority preservation, actual Store Undo/Redo, cold content, conflicting-note refusal and separate largest-text preview/Cancel. Native Mac/iPad, wider shared/cloud/speech/accessibility and heading contexts remain open; no ordinary rollout gate changes. Block/inline note previews now prepare off the interface thread and retain source-bound render models. Both repos pass 30 focused note checks; current iPhone tests accept revised preview content, exact original toggle and largest-text Preview/Cancel, plus unchanged Save/history/cold preservation. Mac builds/signs; wider runtime and heading acceptance remain. New section navigation and lazy formatted-block layout are implemented in both readers/previews. Normal text uses a menu; accessibility sizes use a full-height list, with source-bound headings, separate content anchors and routing after dismissal. A reproduced largest-text reverse-jump failure is fixed with explicit lazy scroll targets. Current normal iPhone reader/editor-preview and largest-text reader journeys pass first/last navigation, exact original-text toggles, unchanged all-table snapshots and cold return. Each owner passes 47 focused checks and current build/sign verification. Exact UTF-8 source guards distinguish canonically equal Unicode URL paths. Mac/iPad interaction, speech, wider contexts and physical FPS remain open; no broad acceptance promotion. Note paragraphs now support explicit Body and H1/H2/H3 styles, exact level replacement and distinct scalable preview sizes. Each owner passes 37 focused checks (8 new paragraph cases); the current normal-text iPhone menu/preview/Save/Store Undo/Redo/cold flow passes. Mac compiles/signs; new Mac/iPad, hardware-keyboard, speech and wider shared/lifecycle acceptance remain. Task-heading rollout is unchanged. List style conversion now replaces recognized bullet/number markers rather than stacking them, matches the reader grammar and preserves every supported source line ending. Both owners pass 48 focused checks including 11 new cases; optimized signed Mac24/phone36 packages are prepared. Native gestures/keyboard/speech and hardware smoothness remain separate; installed apps are unchanged.",
               "steps": [
                 {
                   "state": "done",
@@ -503,7 +503,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Shared-draft counts, review loading, Save preflight, exact acknowledgement and Discard now use bounded background work with current-workspace checks. Both owners pass 32 focused sharing checks; current phone/tablet controls accept held Save responsiveness, changed-receipt refusal, exact saved bytes, full notes on retry, one task/receipt, Discard, Store Undo/Redo and cold return. Independent Mac builds/signs; native Mac interaction is separate. Scoped reuse/background preparation already covers filters, people, workflows, catalogs, searches, Insights, navigation counts, checklist progress and note reading/previews. Seven-task day review counts only successful saves; dated-list drops use one commit and Undo. Startup publication and durable task-cache writes remain synchronous. Actual drag/rendering, larger workloads, wider shared/cloud/account/window/accessibility contexts, speech and physical FPS remain unfinished. Mac30 is installed with startup inspection pending after reported approval; this new source is not packaged and phone installation remains deferred.",
+              "detail": "Shared-draft counts, review loading, Save preflight, exact acknowledgement and Discard now use bounded background work with current-workspace checks. Both owners pass 32 focused sharing checks; current phone/tablet controls accept held Save responsiveness, changed-receipt refusal, exact saved bytes, full notes on retry, one task/receipt, Discard, Store Undo/Redo and cold return. Independent Mac builds/signs; native Mac interaction is separate. Scoped reuse/background preparation already covers filters, people, workflows, catalogs, searches, Insights, navigation counts, checklist progress and note reading/previews. Seven-task day review counts only successful saves; dated-list drops use one commit and Undo. Startup publication and durable task-cache writes remain synchronous. Actual drag/rendering, larger workloads, wider shared/cloud/account/window/accessibility contexts, speech and physical FPS remain unfinished. The accumulated note/shared-draft source is now prepared in Mac31 with exact archive/signature/profile checks. Installation awaits a verified private safety copy after a bounded file-access timeout; the Mac is locked and Mac30 remains intact. Phone installation stays deferred.",
               "steps": [
                 {
                   "state": "done",
@@ -680,7 +680,12 @@
             "shared-draft-actions/iphone.json",
             "shared-draft-actions/ipad.json",
             "shared-draft-actions/mac-build.json",
-            "shared-draft-actions/storage-cleanup.json"
+            "shared-draft-actions/storage-cleanup.json",
+            "mac31-daily-update/README.md",
+            "mac31-daily-update/preparation.json",
+            "mac31-daily-update/verification.json",
+            "mac31-daily-update/safety-copy.json",
+            "mac31-daily-update/storage-cleanup.json"
           ],
           "focus": true
         },
@@ -1595,7 +1600,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "5a69b7a2a7a82bf2d6803ed75ac9863415ee6c12375c009421eee57b58be342f",
+    "P2_PLAN.md": "9696f90068eb599353e74b0757131f59e87a975e456e9002a374ef07dc16ff0f",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "56eb14bc98bf37b5ff7e35d3323eb73191f2c8a079dd74a14f1f780b4582fcdc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1851,7 +1856,7 @@
     "genuine-structure-recovery/native.json": "2177dba043344491262626ed929b357033ff42cd1ca29f97eabadd968a8f5791",
     "genuine-structure-recovery/verification.json": "58a9b3f2afea3deab2c5963148e5355657352f9f09c35f82576463955f35a187",
     "github-delivery/README.md": "878c3a31c4aca872d3159d9137842268dcf403c7403df631988d7090a6a67b62",
-    "github-delivery/verification.json": "ce932fd83d8e360d8f3b4e76c362491bf5bcdbcba80699a4b192edc36286adfe",
+    "github-delivery/verification.json": "31758f05627290d52ee27dee272a7f796a58958672a1c0163cda8c349e81387c",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
     "indexed-child-source/README.md": "17dbc3ab03caca89cba0cd58913841825bdac4adbd8be66e50859276e53ec592",
@@ -1873,6 +1878,11 @@
     "mac30-installation/build.json": "63e8b13709cf20abb3f71b073bf68cc34ff3a8dae29081d910c9793c2257262b",
     "mac30-installation/storage-cleanup.json": "d1489c9794a262e36d738b13c4e8d864384e88589f65d5b64c3cf5860f423f00",
     "mac30-installation/verification.json": "f6e0f7271d2c5551fbeeb5dca08a39157a73f7defaa89ac974a6fb6906f122f3",
+    "mac31-daily-update/README.md": "ccec8c3f4c3d466c1c63c31c2a452474432e3a1fa01e69b97052542ef621457a",
+    "mac31-daily-update/preparation.json": "25434f3d21dda6ff81c6272f55b0773ce816e39028c6c7a6e058fa78c23b4811",
+    "mac31-daily-update/safety-copy.json": "c7206e0c9e228f703f11947a52fb7c12c754062bf84fbe81dc871a35def5a6a4",
+    "mac31-daily-update/storage-cleanup.json": "471efe9b989bf40adbac5b4d2a6e638e94be46541fe3c19f6eea1e8f58421dcf",
+    "mac31-daily-update/verification.json": "dd38f7a3b011a7cce62624546f1ad9ede3d2ded9fa424e7af94dd937b2b4ed9b",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",
     "mixed-task-completion-native/verification.json": "e94f3ce96eba46de16f86d30d567751faa8079c57118dd1a6665101f1ea5de8f",
     "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",
@@ -1925,7 +1935,7 @@
     "navigation-counts/README.md": "7364071d0757b755a1699119d69a331ec9905027be48d1b0281b9aeadb16ddd9",
     "navigation-counts/core-verification.json": "af06a56cfd3fa931c2f88710cb5f7cf5352ec1d5a95a693683921af937c64e7c",
     "navigation-counts/signed-build.json": "5c9ff0a3d39b20b0ec0bc529e5834433fb464762765384dd3839a0ebf3782ae8",
-    "note-inline-authoring/README.md": "2fdb8ecbd954d254cac6d39faa471e73b0c1d5635a6943fa5336275492d82968",
+    "note-inline-authoring/README.md": "bccf7ad0474e34d1e1bb86ffe0de06eb5592670956897d283816d083b5a50f28",
     "note-inline-authoring/ios-build.json": "ce42806c27923043090bb2493a760374f41c87045779f6c48cf1256dabd465b7",
     "note-inline-authoring/ipad-native.json": "180e889df91f1c929a32e87ae9ec075861edeb32b79b59021210dfdd4fed3a7f",
     "note-inline-authoring/iphone-native.json": "b997ce189f852c4cb330fd745ca7f55f07f7ee32ea8c87a83b1ba1f809961cc8",
@@ -2096,7 +2106,7 @@
     "saved-copy-selection/phone-proof.json": "ff630c3b283eec760c05b9b2e26ae10fb2f222cff853a0f81b216171967c7d89",
     "saved-copy-selection/symbol-verification.json": "8cbae5b8d86418540ba082924cb86d86aad0aec83f53a9793282540e38cbddc1",
     "shared-array-reads/verification.json": "ebbfbd53afefdd58b56a141e44a877d034a9877bb41e6800612fa7240dd05456",
-    "shared-draft-actions/README.md": "87ec05e1fe42a5e21f664d6579d1d93f7a721a8dd2270c5fc56926b04785cefc",
+    "shared-draft-actions/README.md": "c3a9580d4474be0873e60227aa0241050091d3e16692f35a0dea5c6d59dc9030",
     "shared-draft-actions/ipad.json": "63a52f66bf99098908f4ec1984f3cca1d32929af30acefdff92c1b7da72bc9eb",
     "shared-draft-actions/iphone.json": "f608c24f9fcc48dd224718195a70e04bb951c8212d4acf9c7311643ded4a3677",
     "shared-draft-actions/mac-build.json": "e47316ee8b5336dfcad677aca1e9167af414e5699dbf6ece05d5615002523d5f",

@@ -1,0 +1,8 @@
+{
+  "verified": false,
+  "deadlineExceeded": true,
+  "deadlineSeconds": 20,
+  "childTerminal": true,
+  "appStopped": false,
+  "installedAppChanged": false
+}

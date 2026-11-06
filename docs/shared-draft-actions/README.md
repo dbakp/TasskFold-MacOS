@@ -9,3 +9,6 @@ Each owner passes 32 focused sharing Core checks, including five new action case
 `verification.json` records six preparation corrections, keeping the failed attempts separate from final acceptance: extension dependency, XCTest attachment naming, off-screen control navigation, the existing Redo generation contract and the ordinary first-load overdue preference migration and iPad virtualized-control navigation. The phone and final tablet use the identical app-source fingerprint; the tablet uses a later navigation-only test-harness revision. The final cold comparison includes every table after establishing that ordinary loaded baseline. `core.log`, the signed build reports, native reports and compressed logs retain the evidence.
 
 This is local mailbox work. Startup shared-storage publication and durable task-cache writes remain synchronous; wider Mac interaction, account/window/speech, external-provider and physical smoothness acceptance remain open. No schema, hosted service, normal rollout gate, system setting or installed app changes. Physical iPhone installation remains deferred.
+
+
+Delivery update, 6 November: the accumulated source is now prepared in [Mac 1.2.0 (31)](../mac31-daily-update/README.md). Installation remains pending the new private safety copy; the installed app stays on Mac30. Phone installation remains deferred.

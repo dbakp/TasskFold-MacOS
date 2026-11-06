@@ -1,0 +1,39 @@
+{
+  "freeBeforeBytes": 59409866752,
+  "freeAfterBytes": 59409989632,
+  "removedGeneratedLogs": [
+    {
+      "path": "/tmp/taskfold-mac31-release-build.log",
+      "bytes": 928
+    },
+    {
+      "path": "/tmp/taskfold-mac31-package.log",
+      "bytes": 376
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/taskfold-daily-mac.log",
+      "bytes": 121037
+    }
+  ],
+  "removedBytes": 122341,
+  "conciseBuildAndPackageEvidenceRetained": true,
+  "preparedMac31InstalledMac30AndExistingRollbackRetained": true,
+  "privatePartialBackupRetained": true,
+  "realAppDataKeychainDockerUntouched": true,
+  "simulatorsUsed": [],
+  "cacheCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 59409903616,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 526700544,
+        "projectedAllocatedBytes": 526700544
+      }
+    ],
+    "freeAfterBytes": 59409903616,
+    "actualFreeChangeBytes": 0
+  }
+}
