@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-06",
+  "owner": "TaskFold-iOS",
+  "baselineRevision": "aff4b0cb51a9def1b27e3268ebbdebaf1a2b2d6d",
+  "selectedCases": 2,
+  "failedCases": 2,
+  "assertionFailures": 5,
+  "observed": "Bullets to numbers produced 1. - Review and retained * / + markers. Supported alternate marker toggles also failed.",
+  "commands": "bash Scripts/test_core.sh --filter NoteListFormattingTests/testSwitchBulletsAndNumbersWithoutStackedMarkers|NoteListFormattingTests/testAllSupportedMarkersToggleToPlainText",
+  "baselineIsSharedImplementation": true
+}

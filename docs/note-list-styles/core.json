@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-06",
+  "coreTests": 48,
+  "newListCases": 11,
+  "passed": true,
+  "scope": "Pure transformations and existing formatting/paragraph/markup/source-binding regressions. No native gesture, keyboard, speech, rendering, shared-account or physical smoothness acceptance inferred.",
+  "sourceSHA256": {
+    "Taskfold/Core/NoteFormatting.swift": "5515f3d68b6b81264e17864f6140651676c7c0294cdcb7ba8fb50861c494d9a2",
+    "TaskfoldTests/NoteListFormattingTests.swift": "b223f6d278779bc64c11774135e295d33fe3da609e1df906f65f780554f62cc0"
+  },
+  "normalMacInstalledBuild": "23",
+  "normalPhoneLastVerifiedBuild": "34",
+  "normalAppsReplacedThisTurn": false,
+  "schemaOrRolloutGatesChanged": false
+}

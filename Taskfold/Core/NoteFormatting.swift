@@ -50,35 +50,55 @@ enum NoteFormatting {
             return Edit(text: before + "[" + label + "](" + target + ")" + after, selection: NSRange(location: before.utf16.count + 1, length: label.utf16.count))
         case .heading: return try paragraph(.heading2, to: text, selection: selection, toggle: true)
         case .bullet, .numbered, .quote:
-            let linesRange = (text as NSString).lineRange(for: selection)
-            guard let lines = Range(linesRange, in: text) else { throw AppFailure(message: "Select the lines again before formatting them.") }
-            let original = String(text[lines]); var rows = original.components(separatedBy: "\n")
-            let prefix = style == .bullet ? "- " : style == .quote ? "> " : "1. "
-            func parts(_ row: String) -> (String, String) { let indent = row.prefix { $0 == " " || $0 == "\t" }; return (String(indent), String(row.dropFirst(indent.count))) }
-            func numberedBody(_ body: String) -> String? {
-                let digits = body.prefix { $0.isASCII && $0.isNumber }
-                return !digits.isEmpty && body.dropFirst(digits.count).hasPrefix(". ") ? String(body.dropFirst(digits.count + 2)) : nil
-            }
-            if rows.allSatisfy({ $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
-                let placeholder = style == .quote ? "Quote" : "List item"
-                let indent = parts(rows[0]).0
-                rows[0] = indent + prefix + placeholder + (rows[0].hasSuffix("\r") ? "\r" : "")
-                let replacement = rows.joined(separator: "\n")
-                return Edit(text: text[..<lines.lowerBound] + replacement + text[lines.upperBound...], selection: NSRange(location: linesRange.location + indent.utf16.count + prefix.utf16.count, length: placeholder.utf16.count))
-            }
-            let active = rows.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            let remove = !active.isEmpty && active.allSatisfy { row in let body = parts(row).1; return style == .numbered ? numberedBody(body) != nil : body.hasPrefix(prefix) }
-            var number = 0
-            for index in rows.indices {
-                let (indent, body) = parts(rows[index])
-                guard !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
-                if remove { rows[index] = indent + (style == .numbered ? numberedBody(body)! : String(body.dropFirst(prefix.count))) }
-                else if style == .numbered { number += 1; rows[index] = indent + "\(number). " + (numberedBody(body) ?? body) }
-                else { rows[index] = indent + (body.hasPrefix(prefix) ? body : prefix + body) }
-            }
-            let replacement = rows.joined(separator: "\n")
-            return Edit(text: text[..<lines.lowerBound] + replacement + text[lines.upperBound...], selection: NSRange(location: linesRange.location, length: replacement.utf16.count - (replacement.hasSuffix("\r\n") ? 2 : replacement.hasSuffix("\n") ? 1 : 0)))
+            return try lineStyle(style, to: text, selection: selection)
         }
+    }
+
+    /// List styles replace a supported existing list marker; quote keeps its contents literal.
+    /// Keep source line terminators separate so pasted notes round-trip without normalization.
+    private static func lineStyle(_ style: Style, to text: String, selection: NSRange) throws -> Edit {
+        let span = (text as NSString).lineRange(for: selection)
+        guard let range = Range(span, in: text) else { throw AppFailure(message: "Select the lines again before formatting them.") }
+        var rows = lines(String(text[range]))
+        func parts(_ row: String) -> (indent: String, body: String, marker: Style?) {
+            let indent = String(row.prefix { $0 == " " || $0 == "\t" }), body = String(row.dropFirst(indent.count))
+            if style == .quote {
+                return body.hasPrefix("> ") ? (indent, String(body.dropFirst(2)), .quote) : (indent, body, nil)
+            }
+            if ["- ", "* ", "+ "].contains(where: body.hasPrefix) { return (indent, String(body.dropFirst(2)), .bullet) }
+            let digits = body.prefix { $0.isASCII && $0.isNumber }
+            if (1...9).contains(digits.count), [". ", ") "].contains(where: { body.dropFirst(digits.count).hasPrefix($0) }) {
+                return (indent, String(body.dropFirst(digits.count + 2)), .numbered)
+            }
+            return (indent, body, nil)
+        }
+        let active = rows.indices.filter { !rows[$0].body.trimmingCharacters(in: .whitespaces).isEmpty }
+        if active.isEmpty {
+            let placeholder = style == .quote ? "Quote" : "List item"
+            let prefix = style == .quote ? "> " : style == .bullet ? "- " : "1. "
+            let indent = parts(rows[0].body).indent
+            rows[0].body = indent + prefix + placeholder
+            let replacement = rows.map { $0.body + $0.ending }.joined()
+            return try checkedEdit(text: String(text[..<range.lowerBound]) + replacement + text[range.upperBound...], selection: NSRange(location: span.location + indent.utf16.count + prefix.utf16.count, length: placeholder.utf16.count))
+        }
+        let remove = active.allSatisfy { parts(rows[$0].body).marker == style }
+        for (offset, index) in active.enumerated() {
+            let row = parts(rows[index].body)
+            let prefix = remove ? "" : style == .bullet ? "- " : style == .quote ? "> " : "\(offset + 1). "
+            rows[index].body = row.indent + prefix + row.body
+        }
+        let replacement = rows.map { $0.body + $0.ending }.joined()
+        return try checkedEdit(text: String(text[..<range.lowerBound]) + replacement + text[range.upperBound...], selection: NSRange(location: span.location, length: replacement.utf16.count - (rows.last?.ending.utf16.count ?? 0)))
+    }
+    private static func lines(_ text: String) -> [(body: String, ending: String)] {
+        var result: [(body: String, ending: String)] = [], start = text.startIndex
+        let endings: Set<Character> = ["\n", "\r", "\r\n", "\u{2028}", "\u{2029}"]
+        for index in text.indices where endings.contains(text[index]) {
+            result.append((String(text[start..<index]), String(text[index])))
+            start = text.index(after: index)
+        }
+        if start != text.endIndex || result.isEmpty { result.append((String(text[start...]), "")) }
+        return result
     }
 
     /// Set a paragraph style instead of stacking Markdown heading prefixes.
@@ -91,13 +111,7 @@ enum NoteFormatting {
         let span = (text as NSString).lineRange(for: selection)
         guard let range = Range(span, in: text) else { throw AppFailure(message: "Select the lines again before formatting them.") }
         let original = String(text[range])
-        var rows: [(body: String, ending: String)] = [], start = original.startIndex
-        let endings: Set<Character> = ["\n", "\r", "\r\n", "\u{2028}", "\u{2029}"]
-        for index in original.indices where endings.contains(original[index]) {
-            rows.append((String(original[start..<index]), String(original[index])))
-            start = original.index(after: index)
-        }
-        if start != original.endIndex || rows.isEmpty { rows.append((String(original[start...]), "")) }
+        var rows = lines(original)
         func parts(_ row: String) -> (indent: String, body: String, level: Int?) {
             let indent = String(row.prefix { $0 == " " || $0 == "\t" }), body = String(row.dropFirst(indent.count))
             let hashes = body.prefix { $0 == "#" }
