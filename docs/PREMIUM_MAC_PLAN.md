@@ -11044,3 +11044,7 @@ The owning Mac review form now shares explicit focus handling and scroll keyboar
 ### 6 November — checklist progress without repeated descendant outlines
 
 Task rows and planning cards now reuse immutable checklist progress within the current workspace/session/access scope. Cold reads count directly; account/readability/access changes clear retained readings. The owning Core selection passes 167 cases, including eight new equivalence, nested completion/reversal, identity, boundary and budget cases. The 4,096-node/100-read Debug diagnostic drops about 333 ms to 2 ms with one computation; this is not rendering/FPS acceptance. Signed build scope, limits, cleanup and remaining native checks are recorded in [the progress-reading evidence](subtask-progress-reading/README.md). Installed apps and normal gates remain unchanged.
+
+### 6 November — reused task-row note and link readings
+
+The owning Mac row now requests its compact note preview once and retains exact-source formatting within the current workspace/session/access scope. Its LinkText receives source-bound detected matches while continuing to refresh page titles and styles. Fifty-five selected Core checks pass, including nine new preview/output/budget/boundary cases; signed app-build evidence is separate. The 100-read Debug diagnostic drops about 101 ms to 1 ms compact and 385 ms to 4 ms full text. Native link/speech/layout acceptance and cold long-note work remain open. Normal apps/gates and deployment deferrals are unchanged. [Evidence and limits](task-row-note-reading/README.md).

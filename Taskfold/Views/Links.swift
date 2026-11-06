@@ -19,6 +19,11 @@ enum Linkify {
             return Match(range: range, url: fixed)
         }
     }
+    struct Reading {
+        let text: String
+        let matches: [Match]
+    }
+    static func reading(_ text: String) -> Reading { Reading(text: text, matches: links(in: text)) }
     static func urls(in text: String) -> [URL] {
         var seen = Set<String>()
         return links(in: text).map(\.url).filter { seen.insert($0.absoluteString).inserted }
@@ -105,6 +110,7 @@ struct LinkText: NSViewRepresentable {
     var lineLimit = 2
     var accessibilityIdentifier: String? = nil
     var accessibilityLabel: String? = nil
+    var preparedLinks: Linkify.Reading? = nil
     @Environment(Workspace.self) private var workspace
 
     func makeNSView(context: Context) -> LinkAwareTextView {
@@ -144,11 +150,13 @@ struct LinkText: NSViewRepresentable {
     }
     /// Plain runs in `color`; each link run carries its URL and reads as the page title (or the host until it loads).
     private func attributed() -> NSAttributedString {
+        let reading = preparedLinks.flatMap { $0.text.utf8.elementsEqual(self.text.utf8) ? $0 : nil } ?? Linkify.reading(self.text)
+        let text = reading.text
         let result = NSMutableAttributedString()
         var base: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
         if strikethrough { base[.strikethroughStyle] = NSUnderlineStyle.single.rawValue; base[.strikethroughColor] = NSColor.secondaryLabelColor }
         var cursor = text.startIndex
-        for match in Linkify.links(in: text) {
+        for match in reading.matches {
             if match.range.lowerBound > cursor { result.append(NSAttributedString(string: String(text[cursor..<match.range.lowerBound]), attributes: base)) }
             var attributes = base
             attributes[.link] = match.url

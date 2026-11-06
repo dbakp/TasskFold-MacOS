@@ -27,8 +27,6 @@ struct TaskRowView: View {
     // A key window can still have a gray list selection while its inspector has focus.
     private var selectedForeground: Color { appearsActive && listFocused ? Color(nsColor: .alternateSelectedControlTextColor) : Color(nsColor: .labelColor) }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
-    // Trim only the display preview; editors and persistence retain the original text.
-    private var notePreview: String { NoteMarkup.summary(task.string("description"), includeLinkDestinations: true) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
     private var overdue: Bool { if let due = TaskPlanner.dayDate(task) { return TaskKind.mayComplete(task) && due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
     private var dueToday: Bool { TaskPlanner.plannedDay(task) == Dates.day(Date()) }
@@ -38,6 +36,8 @@ struct TaskRowView: View {
         return overdue || !task.string("due_time").isEmpty || task["is_recurring"].flag
     }
     var body: some View {
+        let notePreview = store.taskNotePreview(task)
+        let titleLinks = Linkify.reading(task.title), previewLinks = Linkify.reading(notePreview)
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             if !workspace.hierarchyFilter && !workspace.independentWorkRow(task) && workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1).accessibilityHidden(true) }
             if workspace.canExpandTask(task) {
@@ -72,7 +72,7 @@ struct TaskRowView: View {
                     .accessibilityLabel(TaskKind(task) == .heading ? "Heading, stays open" : "Task type unavailable")
             }
             VStack(alignment: .leading, spacing: 3) {
-                if Linkify.links(in: task.title).isEmpty {
+                if titleLinks.matches.isEmpty {
                     Text(task.title.isEmpty ? "Untitled task" : task.title)
                         .fontWeight(TaskKind(task) == .heading ? .semibold : .regular)
                         .accessibilityAddTraits(TaskKind(task) == .heading ? .isHeader : [])
@@ -86,10 +86,10 @@ struct TaskRowView: View {
                              color: NSColor(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary),
                              linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold),
                              strikethrough: checked, lineLimit: 2,
-                             accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary)
+                             accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary, preparedLinks: titleLinks)
                 }
                 if !notePreview.isEmpty {
-                    if Linkify.links(in: notePreview).isEmpty {
+                    if previewLinks.matches.isEmpty {
                         Text(notePreview).font(.callout).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary)
                             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1).fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("notes-\(task.id)")
@@ -97,7 +97,7 @@ struct TaskRowView: View {
                         LinkText(text: notePreview, font: .preferredFont(forTextStyle: .callout),
                                  color: NSColor(isSelected ? selectedForeground.opacity(0.9) : Color.secondary),
                                  linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold), lineLimit: dynamicTypeSize.isAccessibilitySize ? 0 : 1,
-                                 accessibilityIdentifier: "notes-\(task.id)")
+                                 accessibilityIdentifier: "notes-\(task.id)", preparedLinks: previewLinks)
                     }
                 }
                 if workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {

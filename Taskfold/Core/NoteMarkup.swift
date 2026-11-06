@@ -189,3 +189,55 @@ enum NoteMarkup {
     }
 
 }
+
+/// Reuse display text only. Source/result UTF-8 bytes are bounded in memory;
+/// no preview is ever used to save a note or authorize access to its task.
+@MainActor final class TaskNotePreviewReadCache {
+    struct Context: Equatable {
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let access: UUID
+    }
+    private struct Key: Hashable { let id: String; let fullText: Bool }
+    private struct Entry { let source: String; let result: String; let bytes: Int; var used: UInt64 }
+    private var context: Context?
+    private var entries: [Key: Entry] = [:]
+    private var clock: UInt64 = 0
+    private let maximumEntries: Int, maximumTextBytes: Int
+    private(set) var retainedTextBytes = 0
+    private(set) var computationCount = 0
+    var count: Int { entries.count }
+    init(maximumEntries: Int = 128, maximumTextBytes: Int = 8 * 1024 * 1024) {
+        self.maximumEntries = max(0, maximumEntries); self.maximumTextBytes = max(0, maximumTextBytes)
+    }
+    func clear() { context = nil; entries.removeAll(); retainedTextBytes = 0; clock = 0 }
+    private static func sameSource(_ a: String, _ b: String) -> Bool {
+        // Both buffers remain borrowed and alive together. No address escapes;
+        // independently allocated/canonically equivalent strings still need exact bytes.
+        let shared = a.utf8.withContiguousStorageIfAvailable { x in
+            b.utf8.withContiguousStorageIfAvailable { y in x.count == y.count && x.baseAddress == y.baseAddress } ?? false
+        } ?? false
+        return shared || a.utf8.elementsEqual(b.utf8)
+    }
+    func read(_ source: String, id: String, fullText: Bool, context next: Context) -> String {
+        if context != next { clear(); context = next }
+        let key = Key(id: id, fullText: fullText); clock &+= 1
+        if var entry = entries[key], Self.sameSource(source, entry.source) {
+            entry.used = clock; entries[key] = entry; return entry.result
+        }
+        if let old = entries.removeValue(forKey: key) { retainedTextBytes -= old.bytes }
+        guard !source.isEmpty else { return "" }
+        computationCount += 1
+        let result = fullText ? NoteMarkup.plainText(source, includeLinkDestinations: true).trimmingCharacters(in: .whitespacesAndNewlines)
+                              : NoteMarkup.summary(source, includeLinkDestinations: true)
+        let bytes = source.utf8.count + result.utf8.count
+        if maximumEntries > 0, bytes <= maximumTextBytes {
+            while entries.count >= maximumEntries || retainedTextBytes + bytes > maximumTextBytes {
+                guard let key = entries.min(by: { $0.value.used < $1.value.used })?.key else { break }
+                if let old = entries.removeValue(forKey: key) { retainedTextBytes -= old.bytes }
+            }
+            entries[key] = Entry(source: source, result: result, bytes: bytes, used: clock); retainedTextBytes += bytes
+        }
+        return result
+    }
+}

@@ -94,7 +94,7 @@ final class Store {
     @ObservationIgnored private var workflowFixtureFailureConsumed = false
     @ObservationIgnored private var sharedCaptureFixtureFailureConsumed = false
     #endif
-    private(set) var workspaceReadRevision = UUID() { didSet { subtaskProgressReadCache.clear() } }
+    private(set) var workspaceReadRevision = UUID() { didSet { subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear() } }
     var workspaceAccessToken: String? { (activeTeamMask ?? snapshot.teamWorkspace)?.boundary.raw["token"]?.text }
     var nativeConversationTeamCache: TeamWorkspaceCache? { activeTeamMask ?? snapshot.teamWorkspace }
     @ObservationIgnored private var workflowPresentationDeferred = false
@@ -124,7 +124,7 @@ final class Store {
     private var teamAccessMask:TeamWorkspaceCache? {
         didSet {
             presentationAccessEpoch = UUID()
-            subtaskProgressReadCache.clear()
+            subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
             presentationReadCache.clear()
             assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
             if oldValue?.boundary != teamAccessMask?.boundary {workspaceReadRevision = UUID()}
@@ -145,6 +145,13 @@ final class Store {
     @ObservationIgnored private let assigneeDisplayCache = AssigneeDisplayReadCache()
     @ObservationIgnored private let projectCatalogReadCache = WorkspaceProjectCatalogReadCache()
     @ObservationIgnored private let subtaskProgressReadCache = SubtaskProgressReadCache()
+    @ObservationIgnored private let taskNotePreviewReadCache = TaskNotePreviewReadCache()
+    func taskNotePreview(_ task: Record, fullText: Bool = false) -> String {
+        taskNotePreviewReadCache.read(task.string("description"), id: task.id, fullText: fullText,
+            context: .init(workspace: .init(account: userID, generation: workspaceGeneration),
+                           session: backend.reminderSessionIncarnation, access: presentationAccessEpoch))
+    }
+
     func subtaskProgress(_ task: Record) -> (completed: Int, total: Int) {
         subtaskProgressReadCache.read(task["subtasks"], id: task.id,
             context: .init(workspace: .init(account: userID, generation: workspaceGeneration),
@@ -1196,7 +1203,7 @@ final class Store {
     private let monitor = NWPathMonitor()
     @ObservationIgnored private let projectMemberReads = ProjectMemberReads()
     private var accountGeneration = UUID() { didSet {
-        subtaskProgressReadCache.clear()
+        subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
         projectMemberReads.cancelAll()
         snapshotRevision = UUID()
         widgetPublicationQueue.invalidate()
@@ -1213,7 +1220,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {subtaskProgressReadCache.clear();presentationReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"

@@ -15,12 +15,13 @@ import XCTest
     }
     func testOnePassMatchesExistingOutlineAcrossMixedLegacyTrees() async throws {
         let opaque = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("9999999999999999999999999999999999999999".utf8))
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
         for seed in 0..<120 {
             let children = (0..<5).map { n in node("leaf-\(n)", done: (seed+n)%3 == 0, kind: n == seed%5 ? .bool(true) : .null) }
             let source: JSON = .array([node("parent", done: seed%2 == 0, children: children),node("heading", done: true, kind: .bool(true), children: [node("under-heading", done: true)]),node("future-kind", kind: .string("future"), children: [node("under-future")]), .string("Legacy text"), .number(2), .null, opaque])
-            let before = try TaskfoldJSONEncoder().encode(source), expected = legacy(source), actual = SubtaskTree.progress(source)
+            let before = try encoder.encode(source), expected = legacy(source), actual = SubtaskTree.progress(source)
             XCTAssertEqual(actual.completed, expected.completed); XCTAssertEqual(actual.total, expected.total)
-            XCTAssertEqual(try TaskfoldJSONEncoder().encode(source), before)
+            XCTAssertEqual(try encoder.encode(source), before)
         }
         for source: JSON in [.null, .string("unsupported root"), .object([:])] { XCTAssertEqual(SubtaskTree.progress(source).total, 0) }
     }

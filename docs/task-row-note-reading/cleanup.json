@@ -1,0 +1,55 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 59964567552,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 678273024,
+      "projectedAllocatedBytes": 678273024
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 540037120,
+      "projectedAllocatedBytes": 540037120
+    }
+  ],
+  "freeAfterBytes": 59963273216,
+  "actualFreeChangeBytes": -1294336,
+  "retiredSupersededEvidence": [
+    {
+      "path": "/tmp/taskfold-note-row-ios-build.log",
+      "bytes": 95027
+    },
+    {
+      "path": "/tmp/taskfold-note-row-mac-build.log",
+      "bytes": 81228
+    },
+    {
+      "path": "/tmp/taskfold-note-row-ios-core.log",
+      "bytes": 59380
+    },
+    {
+      "path": "/tmp/taskfold-note-row-tests.swift",
+      "bytes": 6857
+    },
+    {
+      "path": "/tmp/taskfold-note-row-edit.py",
+      "bytes": 7931
+    }
+  ],
+  "simulatorsBooted": [],
+  "currentAndRollbackArchivesPreserved": true,
+  "coreCaches": {
+    "core-ios": {
+      "allocatedBytes": 673214464,
+      "within768MiB": true
+    },
+    "core-mac": {
+      "allocatedBytes": 616128512,
+      "within768MiB": true
+    }
+  }
+}
