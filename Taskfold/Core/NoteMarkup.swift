@@ -5,6 +5,17 @@ import Foundation
 enum NoteMarkup {
     static let maximumBytes = 512_000
     static let maximumBlocks = 512
+    /// Source identity is exact UTF-8, including canonically equivalent URL paths.
+    struct Source: Equatable, Sendable {
+        let text: String
+        init(_ text: String) { self.text = text }
+        static func == (a: Self, b: Self) -> Bool {
+            let shared = a.text.utf8.withContiguousStorageIfAvailable { x in
+                b.text.utf8.withContiguousStorageIfAvailable { y in x.count == y.count && x.baseAddress == y.baseAddress } ?? false
+            } ?? false
+            return shared || a.text.utf8.elementsEqual(b.text.utf8)
+        }
+    }
     struct Block: Identifiable, Equatable, Sendable {
         enum Kind: Equatable, Sendable { case paragraph, heading(Int), bullet, numbered(String), quote, code(String), divider, space }
         let id: Int

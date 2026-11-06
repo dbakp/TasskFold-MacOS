@@ -38,7 +38,7 @@ struct NoteMarkupPreview: View {
     #endif
     var body: some View {
         Group {
-            if let reading = prepared, reading.source == text {
+            if let reading = prepared, NoteMarkup.Source(reading.source) == NoteMarkup.Source(text) {
                 VStack(alignment: .leading, spacing: 12) {
                     #if DEBUG
                     if observesBlocks { Text("Loaded blocks: \(observedBlocks.count)").font(.caption).accessibilityIdentifier("noteRealizedBlocks") }
@@ -58,7 +58,7 @@ struct NoteMarkupPreview: View {
             }
         }
         .toolbar {
-            if let reading = prepared, reading.source == text, reading.headings.count > 1, !originalText, scrollToHeading != nil {
+            if let reading = prepared, NoteMarkup.Source(reading.source) == NoteMarkup.Source(text), reading.headings.count > 1, !originalText, scrollToHeading != nil {
                 ToolbarItem(placement: .primaryAction) {
                     contentsControl(reading)
                 }
@@ -67,8 +67,8 @@ struct NoteMarkupPreview: View {
         .sheet(isPresented: $contentsPresented, onDismiss: finishContentsSelection) { contentsSheet }
         .textSelection(.enabled)
         .environment(\.openURL, OpenURLAction { url in NoteMarkup.safeURL(url.absoluteString) == nil ? .discarded : .systemAction(url) })
-        .task(id: text) {
-            guard prepared?.source != text else { return }
+        .task(id: NoteMarkup.Source(text)) {
+            guard prepared.map({ NoteMarkup.Source($0.source) == NoteMarkup.Source(text) }) != true else { return }
             prepared = nil; originalText = false; selectedHeading = nil; contentsPresented = false
             #if DEBUG
             observedBlocks = []
@@ -82,7 +82,7 @@ struct NoteMarkupPreview: View {
         }
     }
     private func jump(_ id: Int, source: String) {
-        guard prepared?.source == source, text == source, !originalText else { return }
+        guard prepared.map({ NoteMarkup.Source($0.source) == NoteMarkup.Source(source) }) == true, NoteMarkup.Source(text) == NoteMarkup.Source(source), !originalText else { return }
         scrollToHeading?(id)
     }
     private func contentsControl(_ reading: NoteMarkup.Prepared) -> some View {
@@ -101,7 +101,7 @@ struct NoteMarkupPreview: View {
     private var contentsSheet: some View {
         NavigationStack {
             List {
-                if let reading = prepared, reading.source == text {
+                if let reading = prepared, NoteMarkup.Source(reading.source) == NoteMarkup.Source(text) {
                     ForEach(reading.headings) { heading in
                         Button {
                             selectedHeading = .init(source: reading.source, id: heading.id); contentsPresented = false
@@ -156,7 +156,7 @@ struct NoteMarkupPreview: View {
                 .onAppear { if observesBlocks { observedBlocks.insert(block.id) } }
                 #endif
             }
-        }
+        }.scrollTargetLayout()
     }
     private func list(_ block: NoteMarkup.Block, marker: String, text: AttributedString) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
@@ -181,6 +181,7 @@ struct NoteFormattingView: View {
     @State private var text: String
     @State private var selection: TextSelection?
     @State private var preview = false
+    @State private var previewScrollID: String?
     @State private var link = false
     @State private var url = "https://"
     @State private var linkSelection: NSRange?
@@ -199,7 +200,7 @@ struct NoteFormattingView: View {
     }
     private func checkpoint() {
         guard !editorFinished else {return}
-        guard text != request.original else {_=recoverySession?.finish();return}
+        guard NoteMarkup.Source(text) != NoteMarkup.Source(request.original) else {_=recoverySession?.finish();return}
         if recoverySession?.closed==true,let sourceRecord,request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) {recoverySession=try? store.beginEditorSession(sourceRecord)}
         guard let session=recoverySession else {return}
         var draft=session.original;draft["description"] = .string(text)
@@ -221,12 +222,10 @@ struct NoteFormattingView: View {
                         else { modePicker.pickerStyle(.segmented) }
                     }.padding()
                     if preview {
-                        ScrollViewReader { proxy in
-                            ScrollView {
-                                if text.isEmpty { ContentUnavailableView("Your note starts here", systemImage: "text.alignleft", description: Text("Write a few words, then preview the formatting.")) }
-                                else { NoteMarkupPreview(text: text, scrollToHeading: { proxy.scrollTo(NoteMarkup.scrollID($0), anchor: .top) }).padding(20).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("noteFormatPreview") }
-                            }
-                        }
+                        ScrollView {
+                            if text.isEmpty { ContentUnavailableView("Your note starts here", systemImage: "text.alignleft", description: Text("Write a few words, then preview the formatting.")) }
+                            else { NoteMarkupPreview(text: text, scrollToHeading: { previewScrollID = NoteMarkup.scrollID($0) }).padding(20).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("noteFormatPreview") }
+                        }.scrollPosition(id: $previewScrollID, anchor: .top)
                     } else {
                         if message == nil {
                         ScrollView(.horizontal) {
@@ -282,7 +281,7 @@ struct NoteFormattingView: View {
                 .onChange(of: store.workspaceGeneration) { _, _ in link = false; focused = false }
                 .onChange(of: focused) { _, editing in if editing { message = nil } }
                 .onChange(of: preview) { _, reading in if reading { focused = false } }
-                .interactiveDismissDisabled(text != request.original)
+                .interactiveDismissDisabled(NoteMarkup.Source(text) != NoteMarkup.Source(request.original))
                 .confirmationDialog("Discard your formatting changes?", isPresented: $discard, titleVisibility: .visible) { Button("Discard changes", role: .destructive) {if recoverySession?.finish() != false {editorFinished=true;dismiss()}} }
                 .sheet(isPresented: $link) {
                     NavigationStack {
@@ -313,7 +312,7 @@ struct NoteFormattingView: View {
             do {recoverySession=try store.beginEditorSession(original)} catch {message="Your note could not be protected. Keep this editor open and retry."}
             if request.focusOnOpen, recoverySession != nil { focused = true }
         }
-        .onChange(of:text) {_,_ in checkpoint()}
+        .onChange(of: NoteMarkup.Source(text)) { _, _ in previewScrollID = nil; checkpoint() }
         .onChange(of:available) {_,value in if !value {checkpoint();accessStopped=true;link=false;focused=false}}
         .onDisappear {checkpoint()}
         #if os(macOS)
@@ -345,7 +344,7 @@ struct NoteFormattingView: View {
             message = nil; focused = true
         } catch { focused = false; message = error.localizedDescription }
     }
-    private func cancel() { if !available {checkpoint();if recoverySession?.latest==nil || recoverySession?.flush()==true {editorFinished=true;dismiss()}} else if text != request.original { discard = true } else { dismiss() } }
+    private func cancel() { if !available {checkpoint();if recoverySession?.latest==nil || recoverySession?.flush()==true {editorFinished=true;dismiss()}} else if NoteMarkup.Source(text) != NoteMarkup.Source(request.original) { discard = true } else { dismiss() } }
     private func copyText() {
         guard available else { return }
         #if os(iOS)

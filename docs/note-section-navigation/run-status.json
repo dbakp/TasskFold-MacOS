@@ -1,10 +1,11 @@
 {
-  "currentNativeNavigationAccepted": false,
-  "macLocked": true,
-  "phoneConnected": false,
-  "freeBytes": 63686393856,
-  "coreCacheAllocatedBytes": 589230080,
-  "normalMacProcess": "/Applications/Taskfold.app/Contents/MacOS/Taskfold",
+  "date": "2026-11-06",
+  "currentIPhoneNormalNavigationAccepted": true,
+  "currentIPhoneLargestReaderAccepted": true,
+  "currentOwnPlatformRuntimeAccepted": false,
+  "owningBuildAndSignatureAccepted": true,
   "normalAppsReplaced": false,
+  "phoneInstallationDeferred": true,
+  "currentCleanup": "current-cleanup.json",
   "noKeychainOrUserDataCleanup": true
 }
