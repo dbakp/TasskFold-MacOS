@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-06",
+  "reason": "Mac29 startup/sync and exact task/pending preservation accepted; verified previous installed23 retained as rollback",
+  "retiredArchive": "Taskfold-1.2.0-14-mac-development.zip",
+  "retiredArchiveSHA256": "92a74a61ae2c04d12cfaf13edd2cc2b127e0eed8026b015ebd5e9c948aff5651",
+  "retiredAllocatedBytes": 32874496,
+  "retainedArchives": [
+    "Taskfold-1.2.0-23-mac-development.zip",
+    "Taskfold-1.2.0-29-mac-development.zip"
+  ],
+  "retainedArchivesSHA256Verified": true,
+  "freeBeforeBytes": 60318334976,
+  "freeAfterBytes": 60351188992
+}

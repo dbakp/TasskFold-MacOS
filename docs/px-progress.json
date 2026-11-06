@@ -5,9 +5,9 @@
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
   "focus": "P2 · Finding older tasks for review",
-  "latest": "Older-task review now searches all accessible task titles on the server, including tasks beyond the first page and matches after a shortened title. Query-bound paging, literal punctuation, live access checks and unchanged originals pass 29 Core, 211 local database, 6 channel-validation and 12 SQL-channel checks per owner. Current iPhone and iPad largest-text search, fresh review, return, replacement and clear journeys pass. Empty-search feedback now appears before controls and instructions are hidden while searching. The final independent Mac screen also builds and signs. Wider Mac interaction, speech, history/identity/ownership and large-library acceptance remain. Normal migration gates stay off and no hosted deployment occurred. Mac29 is now installed with a private safety copy and five exact task/pending caches preserved before launch; startup awaits a macOS app-data permission prompt. Its frozen package predates this search change; phone41 installation remains deferred. Routine Mac updates/restarts are now authorized without a saved-draft question. Remaining broad checkpoints are unchanged.",
+  "latest": "Older-task review now searches all accessible task titles on the server, including tasks beyond the first page and matches after a shortened title. Query-bound paging, literal punctuation, live access checks and unchanged originals pass 29 Core, 211 local database, 6 channel-validation and 12 SQL-channel checks per owner. Current iPhone and iPad largest-text search, fresh review, return, replacement and clear journeys pass. Empty-search feedback now appears before controls and instructions are hidden while searching. The final independent Mac screen also builds and signs. Wider Mac interaction, speech, history/identity/ownership and large-library acceptance remain. Normal migration gates stay off and no hosted deployment occurred. Mac29 is installed and running, with its main window and synced state verified after the user allowed macOS app-data access. A private safety copy is retained; all five task/pending caches remain exact after startup and sync. Its frozen package predates this search change; phone41 installation remains deferred. Routine Mac updates/restarts are now authorized without a saved-draft question. Remaining broad checkpoints are unchanged.",
   "next": [
-    "Routine verified Mac updates/restarts are authorized without draft confirmation. Mac29 is installed; verify its main window and postlaunch data once macOS app-data access is cleared. Keep phone41 installation deferred.",
+    "Mac29 is installed, running and synced with saved tasks/pending edits preserved. Install future verified Mac updates/restarts directly under standing authorization; keep phone41 installation deferred.",
     "Global older-task title search is implemented. Finish migration of older tasks and history, including wider identity and ownership cases. Keep shared files and recordings with the right workspace; preserve existing rollout safeguards.",
     "Continue remaining workflow and browsing performance work. Full-note text/link preparation now has phone/tablet proof; Mac interaction, wider rendering and physical FPS remain.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
@@ -797,7 +797,7 @@
             {
               "state": "verify",
               "title": "New subtask organizer and recovery",
-              "detail": "Phone/iPad checks cover organizer drafts and cross-task destination/placement review, retained confirmation, cold-launch Undo and lost-reply retry without duplicate writes. Direct Mac personal move/cold Undo now passes. Spoken, shared-account/window lifecycle and wider acceptance remain; normal use stays gated. Ordinary organizer rows now reuse a bounded draft index. Each owner passes 47 focused checks; current iPhone recovery, edit, move, Cancel, Save and cold state pass with zero runtime warnings. Mac29 and phone41 now supersede the earlier28/40 signed candidates; Mac29 is installed with task/pending caches preserved before launch (system app-data prompt pending); phone41 installation is deferred. Wider rendering, speech and lifecycle acceptance remains."
+              "detail": "Phone/iPad checks cover organizer drafts and cross-task destination/placement review, retained confirmation, cold-launch Undo and lost-reply retry without duplicate writes. Direct Mac personal move/cold Undo now passes. Spoken, shared-account/window lifecycle and wider acceptance remain; normal use stays gated. Ordinary organizer rows now reuse a bounded draft index. Each owner passes 47 focused checks; current iPhone recovery, edit, move, Cancel, Save and cold state pass with zero runtime warnings. Mac29 and phone41 now supersede the earlier28/40 signed candidates; Mac29 is installed/running/synced with task/pending caches preserved after startup; phone41 installation remains deferred. Wider rendering, speech and lifecycle acceptance remains."
             },
             {
               "state": "verify",
@@ -1683,7 +1683,7 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
-    "daily-candidates-29-41/README.md": "cf6fbb4f5e6aba624c67c73181545419907f3480b20b0afca332276e895fee0f",
+    "daily-candidates-29-41/README.md": "9696107ef2e5b4d4dc5e7fce6e7c203aed9b8631a8a598c15a550fd93bdf2cec",
     "daily-candidates-29-41/package.json": "8d7c3417c6ff074801b2894610eaf5528917f7978bd01cfdebb16b4eec8289d7",
     "daily-candidates-29-41/verification.json": "dd5f41b01475012c070c6dae3f1afa40363b5c869675aad4f14b4f0ed2eb54c6",
     "daily-update-23/README.md": "a500ee53f3cadf6732bb2edda951dea6c3ab1f0ed14e72b8a5fe9f203047a3ad",
@@ -1816,8 +1816,8 @@
     "mac-hierarchy-keyboard/verification.json": "0fa849940f2c95467d41fb97ecd628732ff12abdf2bcf018cefeaf594e264d3c",
     "mac-transfer-keyboard/README.md": "c616adc8ff2f748d03a915c84704869d4aa68b4f3da89ffb53c3a25e83c47906",
     "mac-transfer-keyboard/verification.json": "9fbafaa53559350bc8a2697aa618845258098f7b65919d59acee97c8914d3a6e",
-    "mac29-installation/README.md": "140d39096f11c6450ee4c953eb7c8c039e6d564db20f778414b2c2deca91de63",
-    "mac29-installation/verification.json": "cd8a78e5927a063acdc9f9ed3abba1eeb01a49c40fad095631534bab8f2654b6",
+    "mac29-installation/README.md": "c9ef080e3f35f8960b97cba27790441ab9aef5fd81d5d080d04d6534bf459c3c",
+    "mac29-installation/verification.json": "cfb1452f9597091988d23b9d3a8e120d4fceb71b3205be4d88f83f6c1af2fdc9",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",
     "mixed-task-completion-native/verification.json": "e94f3ce96eba46de16f86d30d567751faa8079c57118dd1a6665101f1ea5de8f",
     "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",

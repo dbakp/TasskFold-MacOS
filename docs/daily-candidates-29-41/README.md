@@ -54,4 +54,4 @@ reset quota or install on a device. Installer preparation/approval remains separ
 
 ## Subsequent installation on 6 November
 
-Mac29 is now installed over23 with a private safety copy, exact archive/signature verification and five task/pending caches preserved before launch. Startup awaits the macOS app-data permission prompt; see [installation status](../mac29-installation/README.md). The user has authorized future routine Mac updates without draft confirmation. Phone41 remains deferred. These package receipts remain frozen preparation evidence.
+Mac29 is now installed over23 with a private safety copy, exact archive/signature verification and five task/pending caches preserved before launch. The user cleared the macOS app-data prompt; its normal main window and synced state are verified, with all five task/pending caches still exact. See [installation status](../mac29-installation/README.md). The user has authorized future routine Mac updates without draft confirmation. Phone41 remains deferred. These package receipts remain frozen preparation evidence.
