@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Project transfer · one review for files, recordings and connections",
-  "latest": "Combined project custody now passes 82 genuine local service checks per owning schema: private file copies, published/pending/removed recordings and selected connection pauses share one signed review, atomic rollback, exact paused replay and actual cleanup. Owning Core tests bind the real contract to saved recovery and reject omitted/changed effects. This verifies existing transfer composition; no new visible feature, normal app update, hosted change or gate enablement is claimed. Combined native UI and broader lifecycle/provider work remain.",
+  "focus": "Combined transfer · phone/tablet verified; Mac signing pending",
+  "latest": "The combined native review now passes independently on iPhone and iPad at normal text: separate consent, exact final counts, Back with unchanged source tables, actual cold recovery and exact retry without another file copy. These are network-blocked native peers; the 82 genuine service checks per owner remain separate. Mac compiles/signs, but protected recovery needs its own development profile; Xcode reports No Accounts and no matching profile. No storage fallback, normal app identity reuse, installed update or gate change. Test apps closed; concise evidence retained and large result bundles removed.",
   "next": [
-    "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Current normal/largest-text iPhone note navigation is accepted in its recorded Simulator scope. Continue Mac assistant controls and package later source changes after their bounded checks. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
-    "NEXT: accept the combined file/recording/connection review in native apps, then continue remaining independent-subtask/shared-media work. Combined genuine service composition and saved client contract now have scoped proof; do not repeat those unchanged cases. Known stopped copy producers have service-only cleanup proof; indeterminate/process-death, wider retention and hosted cases remain. Mac root reviewed-step controls are observed and saved-cache verified. Assistance stays on-device only; further phone installation and all agreed rollout/provider/distribution work stay deferred.",
+    "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Current normal/largest-text iPhone note navigation is accepted in its recorded Simulator scope. Mac reviewed-step edit/Add/Undo/Redo is now observed and saved-cache verified. Package later source changes after their bounded checks. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
+    "NEXT: continue remaining independent-subtask/shared-media and premium notes work. Combined normal-text phone/tablet peer consent and cold retry now pass; do not repeat unchanged accepted cases. Mac protected native review awaits an own isolated development profile/Xcode account. Keep genuine integrated-native API, indeterminate/process-death, wider retention, lifecycle and hosted cases open. Assistance stays on-device only; further phone installation and all agreed rollout/provider/distribution work stay deferred.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -760,7 +760,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Independent subtask editing, conflict review and cold retry have scoped iPhone/Mac proof. Legacy-tree review preserves supported older work and refuses malformed/stale requests. Project files pass inventory, private preparation and the reviewed atomic local service move. Production-screen iPhone and iPad peer journeys now verify explicit consent, exact cold transfer retry, lost preparation/cancellation and held-copy Stop/cold Continue through real saved-request storage. Accessible file counts and a saved-transfer file summary are fixed; both apps build/sign. Mac native screens, wider iPad sizes, wider accessibility/account/window/locked-storage, combined policies, wider legacy/history/lifecycle/ownership and hosted acceptance remain. Advanced gates stay off. Known stopped project-copy producers now have service-only no-POST/terminal/verified observations and exact private ticket binding. Each owner passes 141 genuine transfer/producer checks, 69 copy regressions and 34 handler tests. A closed producer refuses late reservations; another verifier cannot settle its writer. Actual maintenance releases charges only after provider cleanup, including logout and paused gates. Indeterminate POSTs or process death without proof remain fenced; wider lifecycle, combined policies, native and hosted acceptance remain open. Combined file/recording/connection custody now passes 82 genuine local service checks per owner and saved client-contract recovery: one review, atomic rollback, exact paused replay, selected connection isolation and actual audio cleanup preserving private originals/published file copies. Combined native UI, hosted and wider lifecycle acceptance remain open; curated status stays unchanged.",
+              "detail": "Independent subtask editing, conflict review and cold retry have scoped iPhone/Mac proof. Legacy-tree review preserves supported older work and refuses malformed/stale requests. Project files pass inventory, private preparation and the reviewed atomic local service move. Production-screen iPhone and iPad peer journeys now verify explicit consent, exact cold transfer retry, lost preparation/cancellation and held-copy Stop/cold Continue through real saved-request storage. Accessible file counts and a saved-transfer file summary are fixed; both apps build/sign. Mac native screens, wider iPad sizes, wider accessibility/account/window/locked-storage, combined policies, wider legacy/history/lifecycle/ownership and hosted acceptance remain. Advanced gates stay off. Known stopped project-copy producers now have service-only no-POST/terminal/verified observations and exact private ticket binding. Each owner passes 141 genuine transfer/producer checks, 69 copy regressions and 34 handler tests. A closed producer refuses late reservations; another verifier cannot settle its writer. Actual maintenance releases charges only after provider cleanup, including logout and paused gates. Indeterminate POSTs or process death without proof remain fenced; wider lifecycle, combined policies, native and hosted acceptance remain open. Combined file/recording/connection custody now passes 82 genuine local service checks per owner and saved client-contract recovery: one review, atomic rollback, exact paused replay, selected connection isolation and actual audio cleanup preserving private originals/published file copies. Combined normal-text iPhone/iPad peer walkthroughs now pass separate consent, Back with unchanged source, cold summaries and exact retry without another copy. Mac protected review awaits its own development profile/Xcode account. Integrated native APIs, hosted and wider lifecycle acceptance remain open; curated status stays unchanged.",
               "steps": [
                 {
                   "state": "done",
@@ -1176,7 +1176,10 @@
             "combined-project-custody/README.md",
             "combined-project-custody/full-schema.json",
             "combined-project-custody/verification.json",
-            "combined-project-custody/storage-cleanup.json"
+            "combined-project-custody/storage-cleanup.json",
+            "combined-project-custody/native/README.md",
+            "combined-project-custody/native/verification.json",
+            "combined-project-custody/native/storage-cleanup.json"
           ],
           "focus": true
         },
@@ -1365,13 +1368,14 @@
     "reviewed-step-batches/native-store-verification.json",
     "subtask-progress-reading/README.md",
     "task-row-note-reading/README.md",
-    "combined-project-custody/README.md"
+    "combined-project-custody/README.md",
+    "combined-project-custody/native/README.md"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "c83362234772d438cbca8bab323385c22b8555a1c96920b9cbf50bae413870d5",
+    "P2_PLAN.md": "b5c0895f0bc09bd1d29d0c17ab8ad7fba9e9ff7406d8428432e3bfa64186b1ae",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1475,6 +1479,9 @@
     "cold-note-excerpts/storage-cleanup.json": "8188e5eaf8711ee9339ab20b1042f0d7fd8f60ebf51615ed1fae0376135758f0",
     "combined-project-custody/README.md": "af4cd00dd0edd6e6223506c61f2524fe004ea209bc3401e38bdaaddbd16f14a0",
     "combined-project-custody/full-schema.json": "c7cbfd2f0f488886cba75433185e30ace54c2ffe3ccd5d48c8bbe93b06416131",
+    "combined-project-custody/native/README.md": "a17e12da734e27fa1438b6b4ea0fb7878cd405cffb6f93ba088d720825f6ed7a",
+    "combined-project-custody/native/storage-cleanup.json": "509c87e0a983fc87a228d9197cc67a23a21160842db7e3bc60261155b94e8006",
+    "combined-project-custody/native/verification.json": "023c9bb515a1db68e0dce8b280024a8a44a552dfa13ae16840b630a7c3dafc7a",
     "combined-project-custody/storage-cleanup.json": "3452f96478d1bd2b70d0ca31b038acfd794c7aab80a6b61bcfa3e6ed6a6bcb64",
     "combined-project-custody/verification.json": "6d58c74a6e01cf209bdb1662f5900a12b464d5e0037cbb52d9e060d7d2e0aa20",
     "completion-redo/README.md": "905efde8175424a745feec2cf2a81c0b7f43f907aab27866fbdafb9394276889",

@@ -1,0 +1,44 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 56708669440,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 680615936,
+      "projectedAllocatedBytes": 680615936
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 622919680,
+      "projectedAllocatedBytes": 622919680
+    }
+  ],
+  "freeAfterBytes": 56702173184,
+  "actualFreeChangeBytes": -6496256,
+  "retiredOutputs": [
+    {
+      "path": "/tmp/taskfold-combined-native-iphone.xcresult",
+      "allocatedBytes": 9347072
+    },
+    {
+      "path": "/tmp/taskfold-combined-native-ipad.xcresult",
+      "allocatedBytes": 10870784
+    },
+    {
+      "path": "/tmp/taskfold-combined-native-attachments",
+      "allocatedBytes": 868352
+    },
+    {
+      "path": "/tmp/taskfold-combined-native-ipad-attachments",
+      "allocatedBytes": 1146880
+    }
+  ],
+  "freeAfterOutputRetirementBytes": 56723087360,
+  "acceptedTestSummariesAndSelectedScreensPreserved": true,
+  "normalApplicationsPreserved": true,
+  "runFreeStartBytes": 59216035840,
+  "freeSpaceAttribution": "Other apps and OS activity are concurrent; free-space movement is not attributed solely to Taskfold."
+}
