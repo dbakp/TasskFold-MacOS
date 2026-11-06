@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 6 November 2026 · Native recording transfer integration
+
+The transfer sheet now uses the same Store model factory as the genuine service integration. Each owner passes 59 transfer/vault Core regressions; iPhone passes 44 native data-engine checks, including actual lost-reply recovery, paused-gate original retry, live audience fencing, current Store refresh and exact media/task preservation. Mac compiles/signs, but its transfer fails at protected-vault preparation after 25 partial checks. Its isolated signed app lacks a provisioned app ID/profile; cached profiles cover normal app/extensions only. The Mac runner now refuses this setup before services. This is an open test prerequisite, not a normal-app signing change or a completed distribution gate. Do not weaken WhenUnlocked/Data Protection storage or borrow the normal app identity. Native GUI/mixed policies, wider account/lifecycle and full migration remain open. [Source, accepted scope and failure evidence](native-project-recordings/README.md).
+
 ## 6 November 2026 · Responsive checklist organizer
 
 The ordinary organizer now reuses a bounded read-only draft index; actual moves still use the existing validation. Forty-seven focused checks per owner pass. The iPhone editor journey accepts scoped draft/save/cold behavior with zero runtime warnings; Mac28 builds, signs and passes archive readback, without claiming new Mac native or large-workload rendering acceptance. Mac23 remains installed. Superseded Mac27/phone39 candidate archives are retired after verified Mac28/phone40 replacements. Real on-device model quality stays pending readiness. [Scope, source and cleanup](organizer-reading/README.md).

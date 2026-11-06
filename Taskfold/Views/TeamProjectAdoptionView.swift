@@ -463,9 +463,8 @@ struct TeamProjectAdoptionView: View {
     private func resetReview() { shareFileCopies = false; epoch = UUID(); inspection = nil; review = nil; stamp = nil; choices = [:]; pauseConnections = false; recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false; message = nil }
     private func start() async {
         model?.close(); files?.close(); files = nil; resetReview(); selected = []; accepted = nil; preparing = false
-        guard store.projectTransferRecoveryAvailable, let origin = try? store.backend.accountRemovalOrigin else { loaded = nil; model = nil; return }
-        let captured = lifecycle, account = store.userID, workspace = WorkspaceBinding(account: account, generation: store.workspaceGeneration), session = store.backend.reminderSessionIncarnation
-        let value = TeamProjectAdoptionModel(account: account, origin: origin, vault: store.projectAdoptionVault, service: store.backend, current: { store.projectTransferContext(account: account, origin: origin, workspace: workspace, session: session) })
+        guard let value = try? store.projectTransferModel() else { loaded = nil; model = nil; return }
+        let captured = lifecycle
         model = value; loaded = captured; await value.load(); guard loaded == captured else { return }; await loadFiles()
     }
     private func inspect() async {

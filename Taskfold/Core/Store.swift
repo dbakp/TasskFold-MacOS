@@ -5693,6 +5693,15 @@ extension Store {
 extension Store {
     var projectTransferRecoveryAvailable: Bool { signedIn && !localMode && !signingOut && !accountRemovalBlocked }
     var projectTransferAuthoringAvailable: Bool { projectTransferRecoveryAvailable && nativeTeamEditorEnabled && workspaceCacheReadable }
+    /// Recovery stays available independently of fresh transfer authoring gates.
+    func projectTransferModel() throws -> TeamProjectAdoptionModel {
+        guard projectTransferRecoveryAvailable else { throw TeamProjectAdoptionValue.invalid }
+        let account = userID, origin = try backend.accountRemovalOrigin
+        let workspace = WorkspaceBinding(account: account, generation: workspaceGeneration), session = backend.reminderSessionIncarnation
+        return TeamProjectAdoptionModel(account: account, origin: origin, vault: projectAdoptionVault, service: backend, current: { [weak self] in
+            self?.projectTransferContext(account: account, origin: origin, workspace: workspace, session: session) == true
+        })
+    }
     func projectTransferContext(account: String, origin: String, workspace: WorkspaceBinding, session: UUID) -> Bool {
         projectTransferRecoveryAvailable && account == userID && origin == (try? backend.accountRemovalOrigin) && workspace.matches(account: userID, generation: workspaceGeneration) && session == backend.reminderSessionIncarnation
     }
@@ -7287,6 +7296,75 @@ extension Store {
         try TaskfoldJSONEncoder().encode(report).write(to: FullSchemaNativeFixture.root.appendingPathComponent("capture.json"), options: .atomic)
     }
 
+    /// Uses the same Store factory, durable vault and Backend as the transfer sheet.
+    /// Only the reserved synthetic host can invoke these cold process phases.
+    private func runFullSchemaProjectRecordingPhase() async throws {
+        guard FullSchemaNativeFixture.enabled else { throw CancellationError() }
+        let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
+        dailyBackupsEnabled = false
+        guard backend.session?.user.id == c.account, signedIn, !localMode else { throw AppFailure(message: "Project transfer session was not reopened") }
+        let model = try projectTransferModel(); defer { model.close() }
+        await model.load()
+        var refreshed = false, downloaded = false
+        if phase == "audio-project-queue" {
+            FullSchemaNativeNetwork.offline = false; online = true; try await fullSchemaSyncSettled()
+            guard let task = record("tasks", id: c.task), let project = UUID(uuidString: task.string("project_id")) else { throw AppFailure(message: "Original recording project is missing") }
+            let scope = try TeamProjectAdoptionScope(account: c.account, origin: backend.accountRemovalOrigin, team: c.sibling, roots: [project.uuidString.lowercased()], visibility: .team, folder: nil, parent: nil)
+            guard let stamp = projectTransferAuthorStamp(scope, projects: scope.roots) else { throw AppFailure(message: "Current Store does not admit project transfer authoring") }
+            let inspection = try await backend.inspectProjectAdoption(scope)
+            guard inspection.recordingInventory?.published == 1, inspection.supportedRecordingPolicy == .published else { throw AppFailure(message: "Actual recording inventory is not ready") }
+            let decisions = try inspection.people.map { person -> TeamProjectAdoptionDecision in
+                guard let user = person.user else { throw TeamProjectAdoptionValue.invalid }
+                return try TeamProjectAdoptionDecision(project: person.project, user: user, choice: .retire)
+            }
+            let review = try await backend.reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil, recordingPolicy: .published)
+            guard review.canCommit, review.recordingCount == 1 else { throw AppFailure(message: "Current recording review is not committable") }
+            let command = try TeamProjectAdoptionCommand(review: review)
+            // Reachability can change between authoring and transport. Preserve the
+            // actual queued request instead of pretending that a send succeeded.
+            FullSchemaNativeNetwork.offline = true
+            await model.send(command, canAuthor: { self.projectTransferAuthorStamp(scope, projects: inspection.projects.map(\.id)) == stamp })
+            guard model.pending == command, model.receipt == nil else { throw AppFailure(message: model.message ?? "Offline transfer was not preserved") }
+        } else if phase == "audio-project-loss" || phase == "audio-project-replay" {
+            guard let command = model.pending, try fullSchemaReviewFingerprint(command) == c.queuedFingerprint else { throw AppFailure(message: "The original recording transfer changed across launch") }
+            FullSchemaNativeNetwork.offline = false; online = true
+            if phase == "audio-project-loss" { FullSchemaNativeNetwork.armDrop() }
+            await model.retry()
+            if phase == "audio-project-loss" {
+                guard model.pending == command, model.receipt == nil, FullSchemaNativeNetwork.dropped == 1 else { throw AppFailure(message: model.message ?? "Lost transfer confirmation was not preserved (pending: \(model.pending != nil), dropped: \(FullSchemaNativeNetwork.dropped))") }
+            } else {
+                guard let receipt = model.receipt, receipt.command == command, model.pending == nil else { throw AppFailure(message: model.message ?? "Original transfer confirmation was not recovered") }
+                refreshed = await refreshAfterProjectTransfer(receipt)
+                guard refreshed, let task = record("tasks", id: c.task), nativeConversationTeamCache?.knownTeams[task.string("project_id")] == c.sibling else { throw AppFailure(message: "Confirmed transfer did not refresh the current team workspace") }
+                let target = try AudioCommentTarget(task: UUID(uuidString: c.task)!, generation: UUID(uuidString: task.string("task_generation"))!, project: UUID(uuidString: task.string("project_id")))
+                let comments = try await backend.listAudio(account: UUID(uuidString: c.account)!, target: target, origin: backend.accountRemovalOrigin, incarnation: backend.reminderSessionIncarnation)
+                guard comments.count == 1, let comment = comments.first else { throw AppFailure(message: "Transferred recording is not visible to the current audience") }
+                let clip = try await backend.downloadAudio(comment, origin: backend.accountRemovalOrigin, incarnation: backend.reminderSessionIncarnation)
+                let folder = FullSchemaNativeFixture.root.appendingPathComponent("audio-" + c.nonce.uuidString.lowercased(), isDirectory: true)
+                let source = try AudioCommentVault(applicationSupport: folder, owner: .init(c.account)).drafts()
+                guard source.count == 1, clip.data == source[0].clip.data else { throw AppFailure(message: "Transferred recording bytes changed") }
+                downloaded = true
+            }
+        } else {
+            guard phase == "audio-project-verify", FullSchemaNativeNetwork.offline, model.pending == nil,
+                  let task = record("tasks", id: c.task), nativeConversationTeamCache?.knownTeams[task.string("project_id")] == c.sibling else { throw AppFailure(message: "Transferred workspace did not survive offline reopening") }
+        }
+        let pending = try await projectAdoptionVault.pending(account: c.account, origin: backend.accountRemovalOrigin)
+        guard pending == model.pending, snapshot.pending.isEmpty,
+              try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) == snapshot else { throw AppFailure(message: "Transfer journal or saved workspace differs from the current Store") }
+        let folder = FullSchemaNativeFixture.root.appendingPathComponent("audio-" + c.nonce.uuidString.lowercased(), isDirectory: true)
+        let source = try AudioCommentVault(applicationSupport: folder, owner: .init(c.account)).drafts()
+        guard source.count == 1 else { throw AppFailure(message: "Private source recording was lost during transfer") }
+        let raw = AudioCommentVault(applicationSupport: folder, owner: try .init(c.account)).directory.appendingPathComponent("draft-" + source[0].id.uuidString.lowercased() + ".bin")
+        let fingerprint = try pending.map(fullSchemaReviewFingerprint) ?? c.queuedFingerprint ?? ""
+        let report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase),
+            "pending": .bool(pending != nil), "commandFingerprint": .string(fingerprint), "command": pending.map { .object($0.body) } ?? .null,
+            "receipt": model.receipt.map { .object(["request_id": .string($0.command.id), "replayed": .bool($0.replayed), "command": .object($0.command.body)]) } ?? .null, "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)),
+            "workspaceRefreshed": .bool(refreshed), "downloadedExactBytes": .bool(downloaded), "offline": .bool(FullSchemaNativeNetwork.offline),
+            "rawDraftSHA256": .string(SHA256.hash(data: try Data(contentsOf: raw)).map { String(format: "%02x", $0) }.joined()), "diskMatchesStore": .bool(true)]
+        try FullSchemaNativeFixture.writeReport(report, phase: phase)
+    }
+
     func runFullSchemaAudioPhase() async throws {
         guard FullSchemaNativeFixture.enabled else { throw CancellationError() }
         let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
@@ -7475,6 +7553,7 @@ extension Store {
 
     func runFullSchemaNativePhase() async throws {
         if FullSchemaNativeFixture.phase.hasPrefix("step-") { try await runFullSchemaStepPhase(); return }
+        if FullSchemaNativeFixture.phase.hasPrefix("audio-project-") { try await runFullSchemaProjectRecordingPhase(); return }
         if FullSchemaNativeFixture.phase.hasPrefix("audio-") { try await runFullSchemaAudioPhase(); return }
         if FullSchemaNativeFixture.phase == "capture" { try await runFullSchemaCapturePhase(); return }
         if FullSchemaNativeFixture.phase.hasPrefix("adoption-") {try await runFullSchemaAdoptionPhase();return}

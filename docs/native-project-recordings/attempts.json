@@ -1,0 +1,21 @@
+{
+  "acceptedRun": "ios.json",
+  "rejectedPreparations": [
+    {
+      "report": "taskfold-native-project-recording-ios.json",
+      "reason": "Driver did not yet account for the existing isolated BackupVault namespace transformation; stopped before services."
+    },
+    {
+      "report": "taskfold-native-project-recording-ios-v2.json",
+      "reason": "Strict binding still found the copied DEBUG backup-host allowlist; exact namespace transformations were reconciled before continuing."
+    },
+    {
+      "report": "taskfold-native-project-recording-ios-v3.log",
+      "reason": "Unsupported host Node 20 exited during readiness. Verified three labeled tmpfs services and their owned network were removed; the driver now requires Node >=22."
+    },
+    {
+      "report": "taskfold-native-project-recording-ios-v4.json",
+      "reason": "29 checks passed before the new transfer reply-loss hook failed to inspect a consumed request body; no lost-reply success was claimed. Services/app were closed. Final hook uses the actual committed response receipt."
+    }
+  ]
+}

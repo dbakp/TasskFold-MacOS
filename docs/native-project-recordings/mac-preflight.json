@@ -1,0 +1,37 @@
+{
+  "platform": "mac",
+  "nativeProjectTransferRequested": true,
+  "actualAppPublicationFlow": true,
+  "genuineLocalAuthRESTStorage": true,
+  "scopedAudioTLS": true,
+  "protectedKeychainOrReleaseTrustAccepted": false,
+  "nativeKeychainRequested": true,
+  "releaseTrustAccepted": false,
+  "normalGatesChanged": false,
+  "hostedChanges": false,
+  "checks": {},
+  "phases": {},
+  "serviceSourceSHA256": {
+    "Scripts/Database/test-native-audio-publication.mjs": "aa1930f3dee4f7d3e0a569bda31568c6e2f38d3786df5b8cc25e1ca44cfc12c2",
+    "Scripts/Database/full-schema-runtime.mjs": "bb5036b6455ff88fb1ac28cb27174265aba3ef94fe2e8e2812c081c86b13cc24",
+    "Scripts/Database/full-schema-gateway.mjs": "64a1a3d08fcf48e7ff7e2559653a74bbae4533848d71e3d8e0abb1c64f42c65e",
+    "Scripts/Database/full-schema-audio-fixture.mjs": "1c93468c202c49641d8f0f5673bf43b4149d883a9929cdbe5c63283218c2b353",
+    "Scripts/Database/full-schema-audio-server.ts": "a9752c67aa82356242b88d0ece01a5c23db10e6254bcd9e36d3045c4b3176217",
+    "supabase/functions/audio-comment-maintenance/handler.ts": "e8a02a14521bdd2a4fb598eae0c084392ea2799fb4e3b134f9f579f800383d5c",
+    "supabase/functions/audio-comments/handler.ts": "00515c3741d98d8cf77b427cc94cff71b38cbeee27fae9925a6d90d7b8e05316",
+    "supabase/functions/audio-comments/wire.ts": "2c3aae590fe9104847f3e71e6cfc4c281d009b1fd26fc0b6a11ff93c302df30c"
+  },
+  "macProtectedVaultIdentity": {
+    "applicationIdentifier": null,
+    "embeddedProfile": false,
+    "runtimeAccepted": false
+  },
+  "error": {
+    "message": "The isolated Mac app needs its own provisioned app identity for the Data Protection Keychain transfer vault. Configure dedicated test signing; do not reuse the normal app identity or weaken the vault.",
+    "code": "ERR_ASSERTION"
+  },
+  "appClosed": true,
+  "pendingPrivateFiles": [],
+  "privateIOBlocked": false,
+  "checkCount": 0
+}

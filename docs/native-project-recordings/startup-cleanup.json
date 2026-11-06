@@ -1,0 +1,22 @@
+{
+  "cause": "Node 20 ran below the documented Node 22 requirement; exited 13 during service readiness with no result file",
+  "containers": [
+    {
+      "name": "taskfold-full-schema-59d79615-auth",
+      "owner": "59d79615-1f12-4112-845a-3e401932b196",
+      "created": "2026-11-06T13:13:51.958241294Z"
+    },
+    {
+      "name": "taskfold-full-schema-59d79615-gateway",
+      "owner": "59d79615-1f12-4112-845a-3e401932b196",
+      "created": "2026-11-06T13:13:51.071762502Z"
+    },
+    {
+      "name": "taskfold-full-schema-59d79615-db",
+      "owner": "59d79615-1f12-4112-845a-3e401932b196",
+      "created": "2026-11-06T13:13:45.8595185Z"
+    }
+  ],
+  "network": "taskfold-full-schema-59d79615",
+  "removed": true
+}

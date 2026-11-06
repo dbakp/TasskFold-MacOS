@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-06",
+  "initialRunFreeBytes": 54930673664,
+  "completedCacheCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 60227575808,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 680628224,
+        "projectedAllocatedBytes": 680628224
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 626200576,
+        "projectedAllocatedBytes": 626200576
+      }
+    ],
+    "freeAfterBytes": 60244475904,
+    "actualFreeChangeBytes": 16900096
+  },
+  "coreCaches": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 675991552
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 620220416
+    }
+  ],
+  "retiredRawLogs": [
+    {
+      "path": "/tmp/taskfold-project-recording-build-ios.log",
+      "bytes": 84727
+    },
+    {
+      "path": "/tmp/taskfold-project-recording-build-ios-v2.log",
+      "bytes": 50675
+    },
+    {
+      "path": "/tmp/taskfold-project-recording-mac-build.log",
+      "bytes": 88140
+    },
+    {
+      "path": "/tmp/taskfold-native-project-recording-ios.log",
+      "bytes": 812
+    },
+    {
+      "path": "/tmp/taskfold-native-project-recording-ios-v2.log",
+      "bytes": 812
+    },
+    {
+      "path": "/tmp/taskfold-native-project-recording-ios-v3.log",
+      "bytes": 0
+    }
+  ],
+  "unsupportedRuntimeCleanup": {
+    "cause": "Node 20 ran below the documented Node 22 requirement; exited 13 during service readiness with no result file",
+    "containers": [
+      {
+        "name": "taskfold-full-schema-59d79615-auth",
+        "owner": "59d79615-1f12-4112-845a-3e401932b196",
+        "created": "2026-11-06T13:13:51.958241294Z"
+      },
+      {
+        "name": "taskfold-full-schema-59d79615-gateway",
+        "owner": "59d79615-1f12-4112-845a-3e401932b196",
+        "created": "2026-11-06T13:13:51.071762502Z"
+      },
+      {
+        "name": "taskfold-full-schema-59d79615-db",
+        "owner": "59d79615-1f12-4112-845a-3e401932b196",
+        "created": "2026-11-06T13:13:45.8595185Z"
+      }
+    ],
+    "network": "taskfold-full-schema-59d79615",
+    "removed": true
+  },
+  "allCompletedNativeServicesRemoved": true,
+  "usedIPhoneFinallyShutdown": true,
+  "newSimulators": 0,
+  "installedAppsUnchanged": true,
+  "frozenDailyPackagesUnchanged": [
+    "Mac28",
+    "iPhone40"
+  ],
+  "privateBackupsAndRealDataUntouched": true,
+  "note": "The global free-space delta includes macOS/other projects and is not a measurement of Taskfold allocation. Only listed completed Taskfold outputs and nonce-labeled disposable services were removed.",
+  "freeAfterFinalRetirementBytes": 61049634816
+}

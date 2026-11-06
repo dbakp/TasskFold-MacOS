@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-06",
+  "owner": "TasskFold-MacOS",
+  "passed": 59,
+  "failed": 0,
+  "newCoreCases": 0,
+  "scope": "Existing transfer/vault regression suite; Store factory is exercised through the actual native app instead of a duplicated mock; the later Mac-only identity preflight is separately exercised in mac-preflight.json",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "17b7118346a6240597e83b91b6b5597134ad4191db7dd1017d038167714eb07d",
+    "Taskfold/Core/TeamProjectAdoption.swift": "1effa533fbced7a347588f4a5c41140b8bb294a318e836fd1884581501986e82",
+    "Taskfold/Core/TeamOrganizationCommand.swift": "242b0a2f026dafb9d98770e1fe0a91b6b978af795eb6865530f912d119bf034e",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "050895af6ca56d6807d7f4accd8ef89c82af11a5bbcc75fe3b40665e8648eeda",
+    "Taskfold/TeamTemplateNativeFixture.swift": "70374d8e9ee44861ee726d49946370576671f60b1c15913ae3110f76c9d81212",
+    "Scripts/Database/test-native-audio-publication.mjs": "aa1930f3dee4f7d3e0a569bda31568c6e2f38d3786df5b8cc25e1ca44cfc12c2"
+  }
+}
