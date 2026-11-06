@@ -11,12 +11,12 @@ import {createFullSchemaAudioFixture} from './full-schema-audio-fixture.mjs';
 assert(Number(process.versions.node.split('.')[0])>=22,'Native full-schema tests require Node 22 or newer; use the bundled runtime.');
 const exec=promisify(execFile),[platform,output,mode,transferFlag]=process.argv.slice(2),repo=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 assert(mode===undefined||mode==='--keychain');const protectedStorage=mode==='--keychain';
-assert(transferFlag===undefined||['--project-transfer','--project-transfer-mixed','--project-transfer-combined','--project-transfer-connected'].includes(transferFlag));const connectedCustody=transferFlag==='--project-transfer-connected',combinedCustody=connectedCustody||transferFlag==='--project-transfer-combined',mixedRecordings=combinedCustody||transferFlag==='--project-transfer-mixed',projectTransfer=transferFlag!==undefined;assert(!projectTransfer||protectedStorage,'Project transfer requires the actual protected session fixture');
+assert(transferFlag===undefined||['--project-transfer','--project-transfer-mixed','--project-transfer-combined','--project-transfer-connected','--project-transfer-paged'].includes(transferFlag));const pagedFiles=transferFlag==='--project-transfer-paged',fileCount=pagedFiles?101:1,connectedCustody=pagedFiles||transferFlag==='--project-transfer-connected',combinedCustody=connectedCustody||transferFlag==='--project-transfer-combined',mixedRecordings=combinedCustody||transferFlag==='--project-transfer-mixed',projectTransfer=transferFlag!==undefined;assert(!projectTransfer||protectedStorage,'Project transfer requires the actual protected session fixture');
 assert(['ios','mac'].includes(platform));assert(/^\/tmp\/taskfold-[^/]+\.json$/.test(output));assert(!(await fsStat(output).catch(()=>null)));
 const device='F2ACCCB5-E5B3-426F-B962-955A113D4EF4',bundle=platform==='ios'?'com.dbakp.taskfold.workflowteststeameditbridge':'com.dbakp.taskfold.mac.workflowteststeameditbridge';
 const product=platform==='ios'?'/tmp/taskfold-source-native-ios-products/Debug-iphonesimulator/Taskfold.app':'/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app';
 const host=platform==='ios'?'/tmp/taskfold-source-selection-ios-host':'/tmp/taskfold-owner-review-mac-host';
-const report={platform,nativeProjectTransferRequested:projectTransfer,mixedRecordingsRequested:mixedRecordings,combinedCustodyRequested:combinedCustody,connectedCustodyRequested:connectedCustody,actualAppPublicationFlow:true,genuineLocalAuthRESTStorage:true,scopedAudioTLS:true,protectedKeychainOrReleaseTrustAccepted:false,nativeKeychainRequested:protectedStorage,releaseTrustAccepted:false,normalGatesChanged:false,hostedChanges:false,checks:{},phases:{}};
+const report={platform,nativeProjectTransferRequested:projectTransfer,mixedRecordingsRequested:mixedRecordings,combinedCustodyRequested:combinedCustody,connectedCustodyRequested:connectedCustody,pagedFilesRequested:pagedFiles,expectedFileCount:fileCount,phaseMilliseconds:{},actualAppPublicationFlow:true,genuineLocalAuthRESTStorage:true,scopedAudioTLS:true,protectedKeychainOrReleaseTrustAccepted:false,nativeKeychainRequested:protectedStorage,releaseTrustAccepted:false,normalGatesChanged:false,hostedChanges:false,checks:{},phases:{}};
 const command=async(...args)=>(await exec(args[0],args.slice(1),{timeout:90000,maxBuffer:1024*1024})).stdout.trim();
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));const hash=data=>createHash('sha256').update(data).digest('hex');const lit=s=>"'"+String(s).replaceAll("'","''")+"'";
 const check=(name,value)=>{assert.equal(value,true,name);report.checks[name]=true;console.log('passed',name)};
@@ -41,7 +41,7 @@ async function stop(){
  if(pid){try{const comm=await command('ps','-p',String(pid),'-o','comm=');assert(await realpath(comm)===await realpath(product+'/Contents/MacOS/Taskfold'));process.kill(pid,'SIGTERM');for(let i=0;i<30;i++){try{process.kill(pid,0)}catch{pid=null;return}await sleep(100)}throw Error('Owned Mac app did not close')}catch(error){if(error.code===1){pid=null;return}throw error}}
 }
 async function launch(name){
- await stop();activePhase=name;const flags=['--team-editor-testing','--full-schema-native-testing','--full-schema-phase='+name,...(protectedStorage?['--full-schema-keychain-testing']:[]),...(mixedRecordings?['--full-schema-mixed-recordings-testing']:[]),...(combinedCustody?['--full-schema-combined-custody-testing']:[]),...(connectedCustody?['--full-schema-connected-custody-testing']:[])];
+ await stop();activePhase=name;const flags=['--team-editor-testing','--full-schema-native-testing','--full-schema-phase='+name,...(protectedStorage?['--full-schema-keychain-testing']:[]),...(mixedRecordings?['--full-schema-mixed-recordings-testing']:[]),...(combinedCustody?['--full-schema-combined-custody-testing']:[]),...(connectedCustody?['--full-schema-connected-custody-testing']:[]),...(pagedFiles?['--full-schema-paged-files-testing']:[])];
  if(protectedStorage&&platform==='mac')flags.push('--full-schema-config='+join(root,'config.json'));
  if(platform==='ios'){const text=await command('xcrun','simctl','launch',device,bundle,...flags);pid=Number(text.match(/: (\d+)$/)?.[1]);assert(pid)}
  else if(protectedStorage){
@@ -51,8 +51,8 @@ async function launch(name){
 }
 async function files(path){let result=[];for(const entry of await readdir(path,{withFileTypes:true})){const p=join(path,entry.name);if(entry.isDirectory())result.push(...await files(p));else if(entry.isFile())result.push(p)}return result}
 async function phase(name){
- const path=join(root,name+'.json');if(!(protectedStorage&&platform==='mac'))await rm(path,{force:true});streamed.delete(name);await launch(name);const deadline=Date.now()+90000;
- while(Date.now()<deadline){try{const data=protectedStorage&&platform==='mac'?streamed.get(name):JSON.parse(await readFile(path,'utf8'));if(data?.nonce===config.nonce&&data.phase===name){report.phases[name]=data;if(data.accepted!==true)throw Error('Native '+name+' refused: '+(data.message??'unknown result'));check('actual native phase '+name,true);await stop();return data}}catch(error){if(error.code!=='ENOENT'&&!(error instanceof SyntaxError))throw error}await sleep(150)}throw Error('Actual native '+name+' exceeded deadline');
+ const path=join(root,name+'.json');if(!(protectedStorage&&platform==='mac'))await rm(path,{force:true});streamed.delete(name);await launch(name);const started=Date.now(),deadline=started+(pagedFiles&&name.startsWith('audio-project-')?600000:90000);let nextProgress=started+30000;
+ while(Date.now()<deadline){try{const data=protectedStorage&&platform==='mac'?streamed.get(name):JSON.parse(await readFile(path,'utf8'));if(data?.nonce===config.nonce&&data.phase===name){report.phases[name]=data;if(data.accepted!==true)throw Error('Native '+name+' refused: '+(data.message??'unknown result'));check('actual native phase '+name,true);report.phaseMilliseconds[name]=Date.now()-started;await stop();return data}}catch(error){if(error.code!=='ENOENT'&&!(error instanceof SyntaxError))throw error}if(pagedFiles&&Date.now()>=nextProgress){nextProgress=Date.now()+30000;console.log('native progress',name,await runtime.raw("select count(*) filter(where phase='ready')||'/'||count(*) from taskfold_private.project_file_preparation_items"))}await sleep(150)}throw Error('Actual native '+name+' exceeded deadline');
 }
 try{
  await command('python3',join(repo,'Scripts/check_test_storage.py'),'--path','/tmp');await command('codesign','--verify','--deep','--strict',product);
@@ -78,7 +78,7 @@ try{
  }else if(!protectedStorage){
   home=join(homedir(),'Library/Containers',bundle,'Data');assert(await stat(home),'Existing reserved Mac sandbox is required');
  }
- runtime=await createFullSchemaRuntime();if(projectTransfer)report.baselineAdvisors=await runtime.advisors();audio=await createFullSchemaAudioFixture(runtime,{projectFiles:combinedCustody});report.migrations=runtime.migrations;report.images=runtime.images;
+ runtime=await createFullSchemaRuntime();if(projectTransfer)report.baselineAdvisors=await runtime.advisors();audio=await createFullSchemaAudioFixture(runtime,{projectFiles:combinedCustody,interruptible:pagedFiles});report.migrations=runtime.migrations;report.images=runtime.images;
  const nonce=randomUUID(),password=randomBytes(24).toString('base64url'),email='native-audio-'+nonce+'@example.invalid';
  const signup=await runtime.request('auth','/signup',{method:'POST',body:{email,password}});assert.equal(signup.status,200);const account=signup.value.user.id,authorization=signup.value.access_token,task=randomUUID(),project=randomUUID();
  const api=(path,body)=>runtime.request('rest',path,{method:'POST',authorization,body,headers:{Prefer:'return=representation'}});
@@ -95,12 +95,17 @@ try{
   await runtime.raw(`insert into taskfold_private.teams(id,owner_id,name) values(${lit(team)},${lit(account)},'Native recording transfer');insert into taskfold_private.team_members(team_id,user_id,role) values(${lit(team)},${lit(account)},'admin'),(${lit(team)},${lit(transferUsers.new.id)},'member');update taskfold_private.team_config set enabled=true;update taskfold_private.team_project_config set native_reads_enabled=true,native_task_edits_enabled=true,native_project_adoption_enabled=true;update taskfold_private.audio_comment_config set team_publication_enabled=true,project_transfer_enabled=true;set local request.jwt.claim.sub=${lit(account)};set local request.jwt.claims=${lit(JSON.stringify({sub:account,session_id:claims.session_id}))};insert into public.project_collaborators(id,project_id,invited_email,invited_by) values(gen_random_uuid(),${lit(project)},${lit(transferUsers.old.email)},${lit(account)});update public.project_collaborators set status='accepted' where project_id=${lit(project)};`);
  }
 
- const fileBytes=Buffer.from('%PDF-1.7\nNative combined custody\n%%EOF\n'),fileName=account+'/'+randomUUID()+'.pdf';let originalFile;
+ const originals=[];
  if(combinedCustody){
-  const upload=await fetch(runtime.urls.storage+'/object/task-attachments/'+fileName,{method:'POST',headers:{apikey:runtime.anon,Authorization:'Bearer '+authorization,'Content-Type':'application/pdf','x-upsert':'false'},body:fileBytes});assert.equal(upload.status,200);await upload.arrayBuffer();
-  originalFile=JSON.parse(await runtime.raw("select to_jsonb(o) from storage.objects o where bucket_id='task-attachments' and name="+lit(fileName)));
-  const ref={id:randomUUID(),storage_object_id:originalFile.id,name:'Keep original alias.pdf',url:'https://old-provider.example.invalid/private',future:{keep:[null,false,'exact']}};
-  const edit=await runtime.request('rest','/tasks?id=eq.'+task,{method:'PATCH',authorization,headers:{Prefer:'return=representation'},body:{attachments:[ref],comments:[{id:randomUUID(),text:'Keep this file discussion',attachment:{...ref,id:randomUUID(),name:'Discussion alias.pdf'}}]}});assert.equal(edit.status,200);
+  const attachments=[],comments=[];
+  for(let index=1;index<=fileCount;index++){
+   const bytes=Buffer.from(pagedFiles?'%PDF-1.7\nNative paged custody '+index+'\n%%EOF\n':'%PDF-1.7\nNative combined custody\n%%EOF\n'),name=account+'/'+randomUUID()+'.pdf';
+   const upload=await fetch(runtime.urls.storage+'/object/task-attachments/'+name,{method:'POST',headers:{apikey:runtime.anon,Authorization:'Bearer '+authorization,'Content-Type':'application/pdf','x-upsert':'false'},body:bytes});assert.equal(upload.status,200);await upload.arrayBuffer();
+   const original=JSON.parse(await runtime.raw("select to_jsonb(o) from storage.objects o where bucket_id='task-attachments' and name="+lit(name)));
+   const ref={id:randomUUID(),storage_object_id:original.id,name:'Keep original alias '+index+'.pdf',url:'https://old-provider.example.invalid/private',future:{keep:[null,false,'exact'],...(pagedFiles?{fixture_index:index}:{})}};
+   attachments.push(ref);comments.push({id:randomUUID(),text:'Keep this file discussion '+index,attachment:{...ref,id:randomUUID(),name:'Discussion alias '+index+'.pdf'}});originals.push({bytes,name,id:original.id});
+  }
+  const edit=await runtime.request('rest','/tasks?id=eq.'+task,{method:'PATCH',authorization,headers:{Prefer:'return=representation'},body:{attachments,comments}});assert.equal(edit.status,200);
   await runtime.raw('update taskfold_private.project_file_preparation_config set enabled=true,transfer_enabled=true;update taskfold_private.task_file_upload_config set enabled=true');
  }
  const connectionIDs={email:randomUUID(),hook:randomUUID(),pending:randomUUID(),global:randomUUID(),otherEmail:randomUUID(),otherHook:randomUUID()},otherProject=randomUUID(),otherTask=randomUUID();
@@ -121,7 +126,7 @@ try{
  mediaFolder=platform==='mac'&&protectedStorage?undefined:join(root,'audio-'+nonce);mediaFile=join(root,'audio-media-'+nonce+'.m4a');
  const media=await readFile(new URL('../../TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a',import.meta.url));await writeFile(mediaFile,media,{mode:0o600});
  const der=pem=>Buffer.from(pem.replace(/-----[^\n]+-----/g,'').replace(/\s/g,''),'base64').toString('base64');
- config={version:1,nonce,account,task,sibling:team??randomUUID(),origin:new URL(runtime.urls.auth).origin,key:runtime.anon,email,password,audioOrigin:audio.endpoint,audioCA:der(audio.certificateAuthority),...(protectedStorage?{protectedStorage:true}:{})};
+ config={version:1,nonce,account,task,sibling:team??randomUUID(),origin:new URL(runtime.urls.auth).origin,key:runtime.anon,email,password,audioOrigin:audio.endpoint,audioCA:der(audio.certificateAuthority),expectedFileCount:fileCount,...(protectedStorage?{protectedStorage:true}:{})};
  cache=platform==='mac'&&protectedStorage?undefined:join(home,'Library/Application Support/Taskfold',account+'.json');
  const save=()=>writeFile(join(root,'config.json'),JSON.stringify(config),{mode:0o600});await save();if(!protectedStorage)await rm(join(root,'session.json'),{force:true});
  if(protectedStorage)report.retainedTestKeychainItems=[{service:'com.taskfold.full-schema.session.'+nonce,account:'supabase'},{service:'com.taskfold.full-schema.backup.'+nonce,account}];
@@ -177,6 +182,7 @@ try{
    queued=await phase('audio-project-queue');check('actual Store preserves one original reviewed recording transfer',queued.pending&&queued.command.recording_policy===(mixedRecordings?'move_recordings_keep_removed_private_v1':'published_recordings_v1')&&queued.rawDraftSHA256===originalDraft&&queued.diskMatchesStore);
    if(mixedRecordings)check('actual native review binds published unfinished and retained counts',queued.command.recording_count===1&&queued.command.unfinished_recording_count===1&&queued.command.retained_recording_count===1);
    if(combinedCustody)check('actual native private-copy consent and saved preparation agree',queued.filePreparationPending&&/^[a-f0-9]{64}$/.test(queued.filePreparationFingerprint)&&queued.command.file_policy?.action==='share_copies_keep_originals');
+   if(pagedFiles)check('native consent includes both complete manifest pages',queued.filePageCount===2&&queued.fileItemCount===fileCount&&/^[a-f0-9]{64}$/.test(queued.fileManifestFingerprint));
    if(connectedCustody)check('native review binds only selected connection effects',queued.command.connection_policy==='pause'&&isDeepStrictEqual(queued.connectionEffects,{email_routes_paused:1,project_webhooks_paused:1,pending_webhooks_cancelled:1,global_webhooks_excluded:1,queued_updates_discarded:selectedQueued.length}));
    config.queuedFingerprint=queued.commandFingerprint;await save();
    check('offline original send has not transferred the project',await runtime.raw(`select count(*) from taskfold_private.team_content_projects where project_id=${lit(project)}`)==='0');
@@ -184,13 +190,25 @@ try{
    audio.state.afterStorageGet=async()=>{audio.state.afterStorageGet=null;try{transferLoss=await phase('audio-project-loss')}catch(error){transferError=error;throw error}};
    let crossing;try{crossing=await read(transferUsers.old,loss.comment,404)}catch(error){throw transferError??error};check('native project commit withholds an old-audience download already in flight',JSON.parse(crossing.toString()).code==='unavailable'&&transferLoss?.pending&&transferLoss.droppedReplies===1&&transferLoss.commandFingerprint===queued.commandFingerprint&&isDeepStrictEqual(transferLoss.command,queued.command));
   };
-  if(mixedRecordings){
+  if(pagedFiles){
+   let finishHook,interrupted=false,hookError;const hookDone=new Promise(resolve=>{finishHook=resolve});
+   audio.state.afterStoragePut=async()=>{audio.state.afterStoragePut=null;try{await audio.interruptHandler();interrupted=true}catch(error){hookError=error}finally{finishHook()}};
+   let transportLost=false;try{await call(transferUsers.old,'publish',{intent:pending,approval:pendingApproval,audio_base64:media.toString('base64')})}catch{transportLost=true}
+   let timer;await Promise.race([hookDone,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Owned upload-interruption hook did not finish')),5000)})]).finally(()=>clearTimeout(timer));if(hookError)throw hookError;
+   check('real interrupted handler leaves original unfinished publication',transportLost&&interrupted&&await runtime.raw('select state from taskfold_private.audio_comment_publications where operation_id='+lit(pending.operation_id))==='pending');
+   await audio.restartHandler();config.audioOrigin=audio.endpoint;await save();report.ownedHandlerRestarted=true;
+   await transfer();
+   crossingSend=await call(transferUsers.old,'publish',{intent:pending,approval:pendingApproval,audio_base64:media.toString('base64')});
+   check('interrupted original upload confirms closed without another upload',isDeepStrictEqual(crossingSend.closed,{protocol:1,intent:pending,state:'closed'})&&audio.state.uploads===fileCount+3);
+   check('interrupted and removed histories remain privately fenced',isDeepStrictEqual(JSON.parse(await runtime.raw('select jsonb_agg(operation_id order by operation_id) from taskfold_private.audio_project_private_history')),[removed.operation_id,pending.operation_id].sort()));
+  }else if(mixedRecordings){
    let callbackError;audio.state.afterStoragePut=async()=>{audio.state.afterStoragePut=null;try{await transfer()}catch(error){callbackError=error;throw error}};
    try{crossingSend=await call(transferUsers.old,'publish',{intent:pending,approval:pendingApproval,audio_base64:media.toString('base64')})}catch(error){throw callbackError??error}
    if(callbackError)throw callbackError;
    check('native mixed transfer stops the real in-flight upload',isDeepStrictEqual(crossingSend.closed,{protocol:1,intent:pending,state:'closed'}));
    check('only stopped and removed originals receive private fences',isDeepStrictEqual(JSON.parse(await runtime.raw("select jsonb_agg(operation_id order by operation_id) from taskfold_private.audio_project_private_history")),[removed.operation_id,pending.operation_id].sort()));
   }else await transfer();
+  if(pagedFiles)check('cold preparation recovers every original page and item',transferLoss.filePageCount===2&&transferLoss.fileItemCount===fileCount&&transferLoss.fileManifestFingerprint===queued.fileManifestFingerprint);
   if(connectedCustody)check('cold lost reply retains exact reviewed connection effects',isDeepStrictEqual(transferLoss.connectionEffects,queued.connectionEffects));
   if(combinedCustody)check('cold file preparation retains exact original identity',transferLoss.filePreparationPending&&transferLoss.filePreparationFingerprint===queued.filePreparationFingerprint);
   check('actual native original transfer committed exactly one custody record',await runtime.raw(`select (select count(*) from taskfold_private.team_content_projects where project_id=${lit(project)} and team_id=${lit(team)})=1 and (select count(*) from taskfold_private.audio_comment_custody)=1`)==='t');
@@ -198,6 +216,7 @@ try{
   if(combinedCustody)await runtime.raw('update taskfold_private.project_file_preparation_config set enabled=false,transfer_enabled=false');
   const replay=await phase('audio-project-replay');check('cold original retry confirms while new transfers are paused',!replay.pending&&replay.receipt.replayed&&replay.receipt.request_id===queued.command.request_id&&isDeepStrictEqual(replay.receipt.command,queued.command)&&replay.commandFingerprint===queued.commandFingerprint);
   if(connectedCustody)check('cold confirmation binds the original connection effects',isDeepStrictEqual(replay.connectionEffects,queued.connectionEffects)&&replay.receipt.command.connection_policy==='pause');
+  if(pagedFiles)check('cold committed preparation recovers the complete original manifest',replay.filePageCount===2&&replay.fileItemCount===fileCount&&replay.fileManifestFingerprint===queued.fileManifestFingerprint);
   check('real Store refresh exposes current team and exact original recording',replay.workspaceRefreshed&&replay.downloadedExactBytes&&replay.diskMatchesStore&&replay.rawDraftSHA256===originalDraft);
   if(combinedCustody)check('actual Backend verifies copied file and clears only confirmed preparation',replay.downloadedExactFileBytes&&replay.clearedFilePreparation&&!replay.filePreparationPending);
   check('new current team audience receives exact original bytes',(await read(transferUsers.new,loss.comment,200)).equals(media));
@@ -206,7 +225,7 @@ try{
   const cold=await phase('audio-project-verify');check('transferred Store and cleared original journal survive offline cold reopening',cold.offline&&!cold.pending&&cold.diskMatchesStore&&cold.rawDraftSHA256===originalDraft&&cold.commandFingerprint===queued.commandFingerprint);
   check('offline transferred workspace performs no audio service requests',isDeepStrictEqual(beforeCold,{auth:audio.state.authRequests,rpc:audio.state.rpcRequests,downloads:audio.state.downloads}));
   check('project transfer and cold retries preserve original publication ledger',await stableLedger()===originalLedger);
-  check('project transfer and retries preserve original Storage objects',await runtime.raw("select coalesce(jsonb_agg(to_jsonb(o) order by id),'[]'::jsonb) from storage.objects o where bucket_id='taskfold-audio-v1'")===originalObjects&&audio.state.uploads===(combinedCustody?4:mixedRecordings?3:1));
+  check('project transfer and retries preserve original Storage objects',await runtime.raw("select coalesce(jsonb_agg(to_jsonb(o) order by id),'[]'::jsonb) from storage.objects o where bucket_id='taskfold-audio-v1'")===originalObjects&&audio.state.uploads===(combinedCustody?fileCount+3:mixedRecordings?3:1));
   if(mixedRecordings){
    for(const value of [removed,pending]){const before=audio.state.downloads;await read(transferUsers.new,value.comment_id,404);check('private history is refused before Storage '+value.operation_id,audio.state.downloads===before)}
    const uploads=audio.state.uploads;const retry=await call(transferUsers.old,'publish',{intent:pending,approval:pendingApproval,audio_base64:media.toString('base64')});check('stopped original stays closed after cold native confirmation',isDeepStrictEqual(retry.closed,crossingSend.closed)&&audio.state.uploads===uploads);
@@ -216,13 +235,29 @@ try{
   if(combinedCustody){
    const strip=value=>{const copy={...value};delete copy.attachments;delete copy.comments;return copy};
    check('combined native transfer preserves all other canonical and older nested fields',isDeepStrictEqual(strip(transferredTask),strip(originalTask)));
-   const attachment=transferredTask.attachments[0],comment=transferredTask.comments[0];
-   check('combined native transfer preserves aliases opaque fields and discussion',attachment.name===originalTask.attachments[0].name&&comment.attachment.name===originalTask.comments[0].attachment.name&&comment.text===originalTask.comments[0].text&&isDeepStrictEqual(attachment.future,originalTask.attachments[0].future));
-   check('one copied file identity serves both references',attachment.storage_object_id!==originalFile.id&&comment.attachment.storage_object_id===attachment.storage_object_id&&await runtime.raw('select count(*) from taskfold_private.project_file_preparations')==='1'&&await runtime.raw('select count(*) from taskfold_private.task_file_uploads')==='1');
-   const body={object_id:attachment.storage_object_id,task_id:task,task_generation:transferredTask.task_generation};
-   const teamFile=await audio.taskFiles(transferUsers.new.token,'download',body);check('new team receives exact copied file bytes',teamFile.status===200&&Buffer.from(await teamFile.arrayBuffer()).equals(fileBytes));
-   const before=audio.state.downloads,oldFile=await audio.taskFiles(transferUsers.old.token,'download',body);await oldFile.arrayBuffer();check('retired audience cannot reach copied file Storage',oldFile.status===404&&audio.state.downloads===before);
-   const original=await fetch(runtime.urls.storage+'/object/authenticated/task-attachments/'+fileName,{headers:{apikey:runtime.anon,Authorization:'Bearer '+authorization}});check('original file remains exact and privately readable',original.status===200&&Buffer.from(await original.arrayBuffer()).equals(fileBytes));
+   const attachments=transferredTask.attachments,comments=transferredTask.comments;
+   check('all task and discussion file references survive transfer',attachments.length===fileCount&&comments.length===fileCount);
+   check('combined native transfer preserves aliases opaque fields and discussion',attachments.every((a,i)=>a.name===originalTask.attachments[i].name&&isDeepStrictEqual(a.future,originalTask.attachments[i].future))&&comments.every((c,i)=>c.text===originalTask.comments[i].text&&c.attachment.name===originalTask.comments[i].attachment.name));
+   const copies=attachments.map(a=>a.storage_object_id);
+   check('one copied file identity serves each pair of references',new Set(copies).size===fileCount&&comments.every((c,i)=>c.attachment.storage_object_id===copies[i])&&copies.every(id=>!originals.some(o=>o.id===id))&&await runtime.raw('select count(*) from taskfold_private.project_file_preparations')==='1'&&await runtime.raw('select count(*) from taskfold_private.task_file_uploads')===String(fileCount)&&await runtime.raw('select count(*) from taskfold_private.team_content_files')===String(fileCount));
+   const readFile=async(token,body)=>{
+    for(let attempt=0;attempt<3;attempt++){
+     const response=await audio.taskFiles(token,'download',body);if(response.status!==429)return response;
+     const delay=Number(response.headers.get('Retry-After'));assert(Number.isInteger(delay)&&delay>=1&&delay<=60);await response.arrayBuffer();assert(attempt<2,'Verifier rate retry exhausted');console.log('verifier respects real rate delay',delay);await sleep(delay*1000);
+    }
+   };
+   let copiedExact=true,privateExact=true,oldDenied=true,originalPrivate=true;
+   for(let i=0;i<fileCount;i++){
+    const body={object_id:copies[i],task_id:task,task_generation:transferredTask.task_generation};
+    const teamFile=await readFile(transferUsers.new.token,body);copiedExact&&=teamFile.status===200&&Buffer.from(await teamFile.arrayBuffer()).equals(originals[i].bytes);
+    const before=audio.state.downloads,oldFile=await readFile(transferUsers.old.token,body);await oldFile.arrayBuffer();oldDenied&&=oldFile.status===404&&audio.state.downloads===before;
+    const original=await fetch(runtime.urls.storage+'/object/authenticated/task-attachments/'+originals[i].name,{headers:{apikey:runtime.anon,Authorization:'Bearer '+authorization}});privateExact&&=original.status===200&&Buffer.from(await original.arrayBuffer()).equals(originals[i].bytes);
+    if(pagedFiles){const refused=await fetch(runtime.urls.storage+'/object/authenticated/task-attachments/'+originals[i].name,{headers:{apikey:runtime.anon,Authorization:'Bearer '+transferUsers.new.token}});const bytes=Buffer.from(await refused.arrayBuffer());originalPrivate&&=refused.status!==200&&!bytes.equals(originals[i].bytes)}
+   }
+   check('new team receives every exact copied file',copiedExact);
+   check('retired audience cannot reach any copied file Storage',oldDenied);
+   check('every original file remains exact and privately readable',privateExact);
+   if(pagedFiles){check('new team cannot read any original private file',originalPrivate);check('real rate limits are respected during large preparation and reads',audio.state.rateLimitedRPCs>0);report.nativePagedProjectFilesAccepted=true}
    check('offline cold confirmation keeps preparation cleared',!cold.filePreparationPending);
    report.nativeCombinedFileRecordingTransferAccepted=true;
   }else check('project transfer keeps exact task fields and older nested content',isDeepStrictEqual(transferredTask,originalTask));
@@ -242,7 +277,7 @@ try{
   report.nativeProjectTransferAccepted=true;
  }
  for(const path of paths)assert.equal(hash(await readFile(join(repo,path))),report.sourceSHA256[path],path+' changed during native acceptance');
- for(const path of servicePaths)assert.equal(hash(await readFile(join(repo,path))),report.serviceSourceSHA256[path],path+' changed during native acceptance');report.sourceUnchanged=true;report.handlerCounters={auth:audio.state.authRequests,rpc:audio.state.rpcRequests,uploads:audio.state.uploads,downloads:audio.state.downloads};report.checkCount=Object.keys(report.checks).length;report.accepted=true;
+ for(const path of servicePaths)assert.equal(hash(await readFile(join(repo,path))),report.serviceSourceSHA256[path],path+' changed during native acceptance');report.sourceUnchanged=true;report.handlerCounters={auth:audio.state.authRequests,rpc:audio.state.rpcRequests,uploads:audio.state.uploads,downloads:audio.state.downloads,rateLimitedRPCs:audio.state.rateLimitedRPCs};report.checkCount=Object.keys(report.checks).length;report.accepted=true;
 }catch(error){report.error={message:error.message,code:error.code};process.exitCode=1}
 finally{
  try{if(protectedStorage&&report.phases['audio-create']){const result=await phase('audio-cleanup');report.syntheticAppFilesRemoved=result.syntheticFilesRemoved;report.testKeychainRetained=result.testKeychainRetained}await stop();report.appClosed=true}catch(error){report.cleanupError=error.message;report.accepted=false;process.exitCode=1;try{await stop();report.appClosed=true}catch{}}

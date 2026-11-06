@@ -1,0 +1,17 @@
+{
+  "owner": "TasskFold-MacOS",
+  "date": "2026-11-06",
+  "corePassed": 58,
+  "newCoreCases": 5,
+  "handlerPassed": 35,
+  "newHandlerCases": 1,
+  "sourceSHA256": {
+    "Taskfold/Core/TaskFileUpload.swift": "a860858d2a8dc2b18cd35b8f14386a1a3645e310d9f41297f44b9da05615819e",
+    "Taskfold/Core/ProjectFilePreparation.swift": "8b179d1f7934da1861331354c23760841a21b2cec8191cfe5d845ee2c7cc7e33",
+    "Taskfold/Core/Backend.swift": "85983e26963d9a913de75398f60c2a28873f9b6474fedfeb24f97c6b04033693",
+    "TaskfoldTests/ProjectFilePreparationTests.swift": "3afeb8c36c57d15b61c766b7aa35c0b3b69852c01db17482d3a045ac918a8fb8",
+    "supabase/functions/project-files/handler.ts": "3da08bb34759b07aaa3244fc353180fa0d56c90b9540c4326ccbd045a4861fdd",
+    "supabase/functions/project-files/handler_test.ts": "c6204370499319c9fd84181b7b46061fe32a0200ceb0f040459c1b1f6b72fe97"
+  },
+  "scope": "Focused own client/handler contracts; actual native result is separately source-bound to the iOS owner"
+}

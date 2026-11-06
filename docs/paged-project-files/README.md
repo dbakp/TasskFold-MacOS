@@ -1,0 +1,29 @@
+# Paginated project files and rate-limit recovery · 6 November 2026
+
+Large private-copy preparations now honor a well-formed bounded Retry-After notice instead of turning the service's request budget into a generic failure. The project-files handler preserves its existing 1–60 second delay; the client validates the exact error body and canonical bounded delay. Project preparation retries the same saved request/action at most twice, with a short human-readable pause status. Stop, close, task cancellation and account/workspace/session changes fence another attempt; waits check context every 100 ms. Managed file downloads use the same bounded read retry. Invalid notices and exhausted retries preserve recovery. The server's real request limit, ordinary network timeout, ownership rules and upload fencing are unchanged. The matching project-files handler must accompany client deployment; no hosted deployment is included here.
+
+The reserved actual-app case uses 101 distinct synthetic files, each referenced by a task and its inline discussion. It requires two genuine 100-item manifest pages, unique byte-checked copies, exact manifests across cold processes, reviewed connection effects and published/in-flight/removed recordings. An actual owned upload handler is abruptly stopped after a successful Storage POST and before its acknowledgement. Restarting only that owned handler keeps Auth/REST/Storage and the original unfinished operation intact; the transfer later closes the exact original without another upload. This avoids holding a publication request open during a large preparation. No database publication state is fabricated or request budget reset.
+
+The app's production Store factories, private journals, Backend and AAC/file decoders run against the complete owning schema, genuine disposable Auth/REST/Storage and production handlers over scoped verified TLS. Each 30-second network timeout remains unchanged; the test-only overall paginated phase deadline allows ten minutes for many sequential operations and real server cooldowns. Named progress reads inspect actual prepared counts without changing them. The handler restart API is available only to explicitly opted-in owned fixtures and targets their captured child process.
+
+Reproduce after building the current signed own isolated host with Node 22 or later:
+
+```
+node Scripts/Database/test-native-audio-publication.mjs ios /tmp/taskfold-new-paged-files.json --keychain --project-transfer-paged
+```
+
+No normal app installation, hosted change, real account, microphone, new device or weaker trust store is involved. The Mac protected-transfer runtime still requires its dedicated provisioned test identity/profile. Other realm/history/lifecycle cases, actual transfer-screen interaction, physical protection, hosted S3 and provider delivery remain separate. Ordinary rollout gates and all explicit deferrals remain.
+
+## Recorded result
+
+The iOS-owned signed actual-app flow passes all 76 checks (`ios.json`). Preparation, cold lost-reply recovery and committed recovery each load 2 pages containing all 101 unique original item identities with the same manifest fingerprint. Real Backend reads verify all 101 distinct copied payloads; a current team member receives every copy, the retired audience is refused before provider reads, and the new team is refused access to every original private file. Both journals stay clear after offline cold reopening. Exactly 104 uploads cross the production-handler gateway: 101 file copies and 3 recording uploads; 101 original personal files were uploaded separately through authenticated Storage. Neither interrupted original confirmation nor cold retry adds a POST.
+
+The real server returns five rate-limit notices across the case; no budget is changed/reset. Preparation takes about 98.8 seconds and cold readback about 108.4 seconds in this Debug local fixture, including intentional service cooldowns. These are scoped test timings, not physical-device or hosted performance claims. The actually killed handler is restarted with its own scoped TLS identity; Auth/REST/Storage state stays intact. An unresolved old upload fence remains protected: this case proves transfer/closure, not eventual media erasure after process death.
+
+Each owner passes 58 focused Core cases (5 new retry/Stop/account/limit cases) and 35 typechecked project-file handler cases (1 new bounded-delay contract). Malformed or unbounded notices never authorize a wait; repeated limits stop after the retry bound while preserving recovery. UI text uses the existing neutral preparation-status line and Stop control; no modal/layout redesign is introduced. Native iOS evidence retained in the Mac repository supports shared progress only and is not Mac runtime acceptance.
+
+## Build, ownership and cleanup
+
+Both owning candidates build and pass strict signatures, and each owns independent client/service/test source. Mac protected-transfer runtime remains unaccepted; its dedicated identity/profile prerequisite is unchanged. No blocked matrix was repeated. The new workflow substep records the rate-limit UX fix without changing the 74 curated bar checkpoints.
+
+The actual app, owned restarted handler and complete service stack/internal network are closed/removed, the used Simulator is restored to shutdown, and temporary private fixture files are removed. Isolated test Keychain items are retained; normal Keychain items and real data are untouched. Both reusable compiler caches and separately measured Core caches stay within 768 MiB. Completed raw compiler/Core/handler logs are retired after compressed copies and concise reports. No new Simulator or daily package was created. Cleanup leaves about 57.3 GiB free; global free-space movement is not attributed solely to this run. User backups, installed apps, frozen packages, unrelated devices, shared developer support and Docker user volumes are untouched.

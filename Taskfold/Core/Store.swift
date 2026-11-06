@@ -7317,6 +7317,13 @@ extension Store {
         let combined = ProcessInfo.processInfo.arguments.contains("--full-schema-combined-custody-testing")
         let files = combined ? try projectFilePreparationModel() : nil
         defer { files?.close() }
+        let paged = ProcessInfo.processInfo.arguments.contains("--full-schema-paged-files-testing")
+        let expectedFileCount = c.expectedFileCount ?? 1
+        var filePageCount = 0, fileItemIDs: [String] = []
+        func captureFileManifest() {
+            filePageCount = files?.pages.count ?? 0
+            fileItemIDs = files?.pages.flatMap { $0.items.map(\.id) } ?? []
+        }
         var refreshed = false, downloaded = false, downloadedFile = false, clearedFiles = false
         if combined && phase != "audio-project-verify" { await files?.load() }
         if phase == "audio-project-queue" {
@@ -7336,10 +7343,12 @@ extension Store {
             }
             var fileConsent: ProjectFileConsent?
             if combined {
-                guard inspection.filePreparationSupported, inspection.fileInventory?.stored == 1, let files, files.request == nil else { throw AppFailure(message: "Original file inventory is not ready") }
+                guard inspection.filePreparationSupported, inspection.fileInventory?.stored == expectedFileCount, let files, files.request == nil else { throw AppFailure(message: "Original file inventory is not ready") }
                 await files.prepare(inspection)
-                guard let consent = files.consent(for: inspection), consent.count == 1 else { throw AppFailure(message: files.message ?? "Private file copies are not ready") }
+                guard let consent = files.consent(for: inspection), consent.count == expectedFileCount else { throw AppFailure(message: files.message ?? "Private file copies are not ready") }
                 fileConsent = consent
+                captureFileManifest()
+                guard fileItemIDs.count == expectedFileCount, Set(fileItemIDs).count == expectedFileCount else { throw AppFailure(message: "Prepared file manifest is incomplete") }
             }
             let connected = ProcessInfo.processInfo.arguments.contains("--full-schema-connected-custody-testing")
             let connectionEffects = connected ? try inspection.expectedConnectionEffects() : nil
@@ -7370,6 +7379,7 @@ extension Store {
                 guard let consent = command.fileConsent, files?.request == consent.request,
                       files?.page?.id == consent.plan, files?.page?.state == (phase == "audio-project-loss" ? .ready : .committed) else { throw AppFailure(message: files?.message ?? "Original file preparation was not recovered") }
             }
+            if combined { captureFileManifest(); guard fileItemIDs.count == expectedFileCount else { throw AppFailure(message: "Recovered file manifest is incomplete") } }
             if phase == "audio-project-loss" { FullSchemaNativeNetwork.armDrop() }
             await model.retry()
             if phase == "audio-project-loss" {
@@ -7387,11 +7397,17 @@ extension Store {
                 guard source.count == 1, clip.data == source[0].clip.data else { throw AppFailure(message: "Transferred recording bytes changed") }
                 downloaded = true
                 if combined {
-                    guard case .array(let attachments) = task["attachments"], let first = attachments.first,
-                          case .object(let fields) = first else { throw AppFailure(message: "Transferred file reference is missing") }
+                    guard case .array(let attachments) = task["attachments"], attachments.count == expectedFileCount else { throw AppFailure(message: "Transferred file references are incomplete") }
                     let target = Record(["task_id": .string(c.task), "task_generation": task["task_generation"]])
-                    let bytes = try await backend.downloadTaskFile(Record(fields), target: target, account: c.account, origin: backend.accountRemovalOrigin, incarnation: backend.reminderSessionIncarnation)
-                    guard bytes == Data("%PDF-1.7\nNative combined custody\n%%EOF\n".utf8) else { throw AppFailure(message: "Transferred file bytes changed") }
+                    var indexes = Set<Int>()
+                    for attachment in attachments {
+                        guard case .object(let fields) = attachment else { throw AppFailure(message: "Transferred file reference is missing") }
+                        let index = paged ? fields["future"]?.object["fixture_index"]?.integer ?? 0 : 1
+                        guard (1...expectedFileCount).contains(index), indexes.insert(index).inserted else { throw AppFailure(message: "Transferred file index changed") }
+                        let bytes = try await backend.downloadTaskFile(Record(fields), target: target, account: c.account, origin: backend.accountRemovalOrigin, incarnation: backend.reminderSessionIncarnation)
+                        let expected = paged ? Data("%PDF-1.7\nNative paged custody \(index)\n%%EOF\n".utf8) : Data("%PDF-1.7\nNative combined custody\n%%EOF\n".utf8)
+                        guard bytes == expected else { throw AppFailure(message: "Transferred file bytes changed") }
+                    }
                     downloadedFile = true
                     await files?.clearCommitted()
                     guard files?.request == nil, files?.recoveryLoaded == true else { throw AppFailure(message: files?.message ?? "Confirmed file preparation was not cleared") }
@@ -7422,6 +7438,8 @@ extension Store {
             "workspaceRefreshed": .bool(refreshed), "downloadedExactBytes": .bool(downloaded), "offline": .bool(FullSchemaNativeNetwork.offline),
             "downloadedExactFileBytes": .bool(downloadedFile), "clearedFilePreparation": .bool(clearedFiles), "filePreparationPending": .bool(savedFiles != nil),
             "connectionEffects": model.pending?.connectionEffects?.body ?? model.receipt?.command.connectionEffects?.body ?? .null,
+            "filePageCount": .number(Double(filePageCount)), "fileItemCount": .number(Double(fileItemIDs.count)),
+            "fileManifestFingerprint": .string(try fullSchemaReviewFingerprint(fileItemIDs)),
             "filePreparationFingerprint": .string(try savedFiles.map(fullSchemaReviewFingerprint) ?? ""),
             "rawDraftSHA256": .string(SHA256.hash(data: try Data(contentsOf: raw)).map { String(format: "%02x", $0) }.joined()), "diskMatchesStore": .bool(true)]
         try FullSchemaNativeFixture.writeReport(report, phase: phase)

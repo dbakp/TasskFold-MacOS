@@ -122,7 +122,8 @@ enum ProjectFilePreparationAction: Equatable, Sendable {
     private let account: String, origin: String, incarnation: UUID
     private var closed = false
     private var run = UUID()
-    init(account: String, origin: String, incarnation: UUID, vault: ProjectFilePreparationVault, service: any ProjectFilePreparationService, current: @escaping () -> Bool) { self.account = account; self.origin = origin; self.incarnation = incarnation; self.vault = vault; self.service = service; self.current = current }
+    private let retrySleep: (UInt64) async throws -> Void
+    init(account: String, origin: String, incarnation: UUID, vault: ProjectFilePreparationVault, service: any ProjectFilePreparationService, current: @escaping () -> Bool, retrySleep: @escaping (UInt64) async throws -> Void = { try await Task.sleep(nanoseconds: $0) }) { self.account = account; self.origin = origin; self.incarnation = incarnation; self.vault = vault; self.service = service; self.current = current; self.retrySleep = retrySleep }
     func close() { closed = true; run = UUID(); busy = false; paused = true; lease.cancel(); request = nil; pages = []; message = nil; recoveryLoaded = false }
     func stop() {
         guard !closed, busy else { return }
@@ -150,7 +151,7 @@ enum ProjectFilePreparationAction: Equatable, Sendable {
         await perform { id in
             try await self.recover(id); guard let request = self.request else { return }
             let knownPlan = self.page?.id
-            guard let page = try await self.service.projectFilePreparation(request, action: .cancelRequest, incarnation: self.incarnation), page.request == request, page.state == .cancelled, knownPlan == nil || knownPlan == page.id else { throw ProjectFilePreparationRequest.invalid }
+            guard let page = try await self.requestPage(request, action: .cancelRequest, id: id), page.request == request, page.state == .cancelled, knownPlan == nil || knownPlan == page.id else { throw ProjectFilePreparationRequest.invalid }
             try self.check(id); try await self.vault.clear(request, lease: self.lease); try self.check(id); self.request = nil; self.pages = []; self.message = "Preparation cancelled. Original files are unchanged."
         }
     }
@@ -162,14 +163,14 @@ enum ProjectFilePreparationAction: Equatable, Sendable {
         }
     }
     private func resolve(_ request: ProjectFilePreparationRequest, id: UUID) async throws {
-        let first = try await service.projectFilePreparation(request, action: .resolve, incarnation: incarnation); try check(id)
+        let first = try await requestPage(request, action: .resolve, id: id); try check(id)
         guard let first else { pages = []; return }; try await collect(first, id: id)
     }
     private func collect(_ first: ProjectFilePreparationPage, id: UUID) async throws {
         guard first.request == request, first.after == nil else { throw ProjectFilePreparationRequest.invalid }
         var result = [first], next = first.next
         while let cursor = next {
-            guard result.count < 100, let page = try await service.projectFilePreparation(first.request, action: .check(plan: first.id, after: cursor), incarnation: incarnation) else { throw ProjectFilePreparationRequest.invalid }
+            guard result.count < 100, let page = try await requestPage(first.request, action: .check(plan: first.id, after: cursor), id: id) else { throw ProjectFilePreparationRequest.invalid }
             try check(id); guard page.id == first.id, page.request == first.request, page.after == cursor, page.total == first.total, page.state == first.state else { throw ProjectFilePreparationRequest.invalid }
             result.append(page); next = page.next
         }
@@ -177,13 +178,13 @@ enum ProjectFilePreparationAction: Equatable, Sendable {
         pages = result
     }
     private func copy(_ request: ProjectFilePreparationRequest, id: UUID) async throws {
-        guard let first = try await service.projectFilePreparation(request, action: .prepare, incarnation: incarnation) else { throw ProjectFilePreparationRequest.invalid }
+        guard let first = try await requestPage(request, action: .prepare, id: id) else { throw ProjectFilePreparationRequest.invalid }
         try check(id); try await collect(first, id: id)
         guard first.state == .preparing else { return }
         let work = pages.flatMap(\.items).filter { $0.phase != .ready }
         for item in work {
             try check(id)
-            guard let page = try await service.projectFilePreparation(request, action: .copy(plan: first.id, operation: item.id), incarnation: incarnation) else { throw ProjectFilePreparationRequest.invalid }
+            guard let page = try await requestPage(request, action: .copy(plan: first.id, operation: item.id), id: id) else { throw ProjectFilePreparationRequest.invalid }
             try check(id); guard page.id == first.id, page.request == request else { throw ProjectFilePreparationRequest.invalid }
             if page.state != .preparing { try await collect(page, id: id); return }
             // Progress replies contain the first page. Do not reload a whole
@@ -191,6 +192,19 @@ enum ProjectFilePreparationAction: Equatable, Sendable {
             pages = [page]
         }
         try await resolve(request, id: id)
+    }
+    private func requestPage(_ request: ProjectFilePreparationRequest, action: ProjectFilePreparationAction, id: UUID) async throws -> ProjectFilePreparationPage? {
+        for attempt in 0..<3 {
+            try check(id)
+            do { return try await service.projectFilePreparation(request, action: action, incarnation: incarnation) }
+            catch let delay as FileServiceRetryDelay {
+                guard attempt < 2 else { throw delay }
+                message = "Preparation will continue shortly. Your original files are safe."
+                try await delay.wait(check: { try self.check(id) }, sleep: retrySleep)
+                try check(id); message = nil
+            }
+        }
+        throw ProjectFilePreparationRequest.invalid
     }
     private func perform(_ action: (UUID) async throws -> Void) async {
         guard !closed, current(), !busy else { return }; let id = UUID(); run = id; busy = true; paused = false; message = nil

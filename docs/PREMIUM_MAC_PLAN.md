@@ -11134,3 +11134,8 @@ The Mac-owned transfer screen now uses the Store file-preparation factory with i
 ### 6 November · Connection consent with combined custody
 
 The Mac-owned reserved integration now includes explicit connection pause together with file copies and mixed recordings. The actual iOS-owned app proof passes 69 checks: exact saved/replayed effects, selected-only queue cancellation, unfinished verification retirement and preservation of unrelated data/settings. Mac protected runtime remains pending its dedicated profile, and no blocked matrix or normal identity was reused. Premium UI, installed app and normal gates are unchanged. [Scope](native-connected-project-transfers/README.md).
+
+
+### 6 November · Safe waits during large file preparation
+
+The Mac-owned client/service source now preserves bounded delay notices and retries an original file operation without replacing its identity. Existing neutral status and Stop controls stay in place; waits fence account/context changes. Own Core/handler suites pass 58/35 cases. The real iPhone combined 101-file/two-page flow passes 76 checks with five real cooldowns and an actual interrupted upload handler. This does not establish Mac runtime or GUI acceptance; the dedicated protected-vault profile remains required. Installed app, archive and normal gates are unchanged. [Scope](paged-project-files/README.md).

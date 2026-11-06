@@ -162,6 +162,46 @@ function fixture(f: Faults = {}) {
   };
   return { call, calls, observations, producers };
 }
+Deno.test("rate notices preserve a bounded retry delay without provider access", async () => {
+  for (const delay of [1, 60, 0, 61, "3", null]) {
+    let calls = 0;
+    const handler = createProjectFilesHandler({
+      url: "https://project-files.example.invalid",
+      serviceKey: "private-service-key",
+      enabled: true,
+    }, {
+      send: async (req) => {
+        calls++;
+        if (new URL(req.url).pathname === "/auth/v1/user") {
+          return response({ id: actor });
+        }
+        assert.equal(
+          new URL(req.url).pathname,
+          "/rest/v1/rpc/taskfold_project_file_preparation",
+        );
+        return response({ status: "rate_limited", retry_after: delay });
+      },
+    });
+    const r = await handler(
+      new Request("https://client.invalid/?action=copy", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token },
+        body: JSON.stringify({ plan_id: planID, operation_id: operation }),
+      }),
+    );
+    const value = await r.json();
+    assert.equal(calls, 2);
+    if (typeof delay === "number" && delay >= 1 && delay <= 60) {
+      assert.equal(r.status, 429);
+      assert.equal(r.headers.get("Retry-After"), String(delay));
+      assert.deepEqual(value, { code: "rate_limited" });
+    } else {
+      assert(r.status !== 429);
+      assert.equal(r.headers.get("Retry-After"), null);
+    }
+    assert.equal(r.headers.get("Cache-Control"), "private, no-store");
+  }
+});
 Deno.test("copy verifies committed bytes and hides all grants", async () => {
   const f = fixture();
   const r = await f.call();
