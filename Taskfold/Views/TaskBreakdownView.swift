@@ -17,6 +17,15 @@ struct TaskBreakdownView: View {
     @State private var error: String?
     @State private var unavailable: String?
     private struct Step: Identifiable { let id = UUID(); var title: String; var included = true }
+    // Disappearing controls can read their binding after a save/removal clears the row.
+    // Resolve by identity on each access instead of retaining an array-index binding.
+    private func stepBinding<Value>(_ step: Step, _ path: WritableKeyPath<Step, Value>) -> Binding<Value> {
+        Binding(get: { steps.first { $0.id == step.id }?[keyPath: path] ?? step[keyPath: path] }, set: { value in
+            guard let index = steps.firstIndex(where: { $0.id == step.id }) else { return }
+            steps[index][keyPath: path] = value
+        })
+    }
+
     init(request: TaskBreakdownRequest, current: @escaping () -> Record?, onApply: @escaping (JSON) throws -> Void) {
         self.request = request; self.current = current; self.onApply = onApply
         _generation = State(initialValue: TaskBreakdownSession(request: request))
@@ -61,12 +70,12 @@ struct TaskBreakdownView: View {
                 }
                 if !steps.isEmpty {
                     Section("Review steps") {
-                        ForEach($steps) { $step in
+                        ForEach(steps) { step in
                             VStack(alignment: .leading, spacing: 8) {
-                                TextField("Step title", text: $step.title, axis: .vertical).lineLimit(1...4)
+                                TextField("Step title", text: stepBinding(step, \.title), axis: .vertical).lineLimit(1...4)
                                     .accessibilityIdentifier("breakdownStep-" + step.id.uuidString)
                                 HStack {
-                                    Toggle("Include this step", isOn: $step.included).accessibilityLabel("Include " + step.title)
+                                    Toggle("Include this step", isOn: stepBinding(step, \.included)).accessibilityLabel("Include " + step.title)
                                     Button(role: .destructive) {
                                         let id = step.id; steps.removeAll { $0.id == id }
                                     } label: { Image(systemName: "trash").frame(minWidth: 44, minHeight: 44) }

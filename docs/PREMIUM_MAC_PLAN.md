@@ -11036,3 +11036,7 @@ The Mac independently owns the new root/nested on-device review, availability ch
 ### 6 November — reviewed-step normal history and consecutive reversals
 
 The Mac independently owns normal Undo/Redo registration, durable inverse/Redo lineage and fresh original-slot reconstruction. The service preserves later live children when undoing earlier null-origin additions and retains changed-step digests. Current owning client, schema, signatures and platform production-store results are recorded in `reviewed-step-batches/README.md`. Actual review-screen/keyboard/accessibility and real generation acceptance remain; no normal gate, installed app or normal session service name changed. The isolated test adapter now handles both legacy session prefixes.
+
+### 6 November — reviewed-step control acceptance and keyboard dismissal
+
+The owning Mac review form now shares explicit focus handling and scroll keyboard dismissal; the iOS owner adds a keyboard Done control. Both sources build/sign. Two genuine local-service iPhone screen journeys accept editing/exclusion, Add, explicit Undo/Redo, cold reopening and Cancel with scoped saved-state checks; the review journey’s final external row/receipt assertions were not reached after Xcode relocated its container. Mac actual controls, keyboard menus/focus, accessibility and real model generation remain open; no acceptance is inferred from the sibling screen run. On-device-only assistance and deferred phone installation are reaffirmed. [Evidence and limits](reviewed-step-batches/README.md).

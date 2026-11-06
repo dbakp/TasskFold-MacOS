@@ -699,7 +699,7 @@ enum FullSchemaNativeFixture {
         let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:externalConfiguration ?? root.appendingPathComponent("config.json")))
         guard c.version==1,UUID(uuidString:c.account) != nil,UUID(uuidString:c.task) != nil,UUID(uuidString:c.sibling) != nil,c.email.hasSuffix("@example.invalid"),
               let u=URLComponents(string:c.origin),u.scheme=="http",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.query==nil,u.fragment==nil,u.path.isEmpty,
-              ["step-queue","step-loss","step-replay","step-verify","step-history","step-history-verify","step-close-queue","step-close","step-close-verify","audio-cleanup","audio-create","audio-deny","audio-loss","audio-check","audio-verify","capture","initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
+              ["step-ui","step-queue","step-loss","step-replay","step-verify","step-history","step-history-verify","step-close-queue","step-close","step-close-verify","audio-cleanup","audio-create","audio-deny","audio-loss","audio-check","audio-verify","capture","initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
               (!phase.hasPrefix("child-") && !phase.hasPrefix("structure-") && !phase.hasPrefix("field-review-")) || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
         if protectedStorageRequested {
             guard c.protectedStorage == true, c.email == "native-audio-" + c.nonce.uuidString.lowercased() + "@example.invalid" else { throw AppFailure(message: "Invalid protected test scope") }
@@ -720,7 +720,7 @@ enum FullSchemaNativeFixture {
         return SymmetricKey(data:SHA256.hash(data:Data((c.nonce.uuidString+account).utf8)))
     }
     @MainActor static func backend()->Backend {
-        FullSchemaNativeNetwork.offline = !["step-queue","capture","initial","child-queue","structure-queue","field-review-queue","structure-review-queue","adoption-queue"].contains(phase)
+        FullSchemaNativeNetwork.offline = !["step-ui","step-queue","capture","initial","child-queue","structure-queue","field-review-queue","structure-review-queue","adoption-queue"].contains(phase)
         let c=try? configuration()
         let saved=protectedStorageRequested ? nil : (try? Data(contentsOf:root.appendingPathComponent("session.json"))).flatMap{try? TaskfoldJSONDecoder().decode(SavedSession.self,from:$0)}
         let session=protectedStorageRequested ? SecureSession.read() : (saved?.nonce==c?.nonce && saved?.session.user.id==c?.account ? saved?.session:nil)
@@ -809,12 +809,14 @@ private extension Optional where Wrapped==URL {func unwrapFullSchema()throws->UR
 @MainActor struct FullSchemaNativeView:View {
     @Environment(Store.self) private var store
     @State private var status="Starting genuine Store check"
+    @State private var stepReview: ReviewedTaskStepsOpening?
     var body:some View {
         VStack(alignment:.leading,spacing:12){Text("Offline recovery").font(.title2);Text(status).accessibilityIdentifier("fullSchemaNativeStatus");if let c=try? FullSchemaNativeFixture.configuration(),let task=store.record("tasks",id:c.task){Text(task.title).font(.headline);Text(task.string("description"))}}.padding().task {
             guard status=="Starting genuine Store check" else{return}
-            do{try await store.runFullSchemaNativePhase();status="Verified "+FullSchemaNativeFixture.phase}
+            do{try await store.runFullSchemaNativePhase();status="Verified "+FullSchemaNativeFixture.phase; if FullSchemaNativeFixture.phase == "step-ui" { stepReview = .init(root: try FullSchemaNativeFixture.configuration().task) }}
             catch{status=error.localizedDescription;try? store.writeFullSchemaNativeFailure(error)}
         }
+        .sheet(item: $stepReview) { ReviewedTaskStepsView(opening: $0) }
     }
 }
 #endif

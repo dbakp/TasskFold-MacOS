@@ -7375,9 +7375,13 @@ extension Store {
     private func runFullSchemaStepPhase() async throws {
         let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
         dailyBackupsEnabled = false
-        if phase == "step-queue" {
+        if phase == "step-queue" || phase == "step-ui" {
             guard try await backend.signIn(email: c.email, password: c.password, signup: false) else { throw AppFailure(message: "Genuine step sign-in failed") }
             await authenticated(); online = true; try await fullSchemaSyncSettled()
+            if phase == "step-ui" {
+                try FullSchemaNativeFixture.writeReport(["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase), "reviewScreenPrepared": .bool(true)], phase: phase)
+                return
+            }
             let read = try await readChildTaskStructure(c.task), model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
             guard let saved = await model.queue(try .init(titles: ["Tomorrow #work @Pat", "Review workshop layout"], parent: nil, read: read), read: read), !saved.undoing else { throw AppFailure(message: model.message ?? "Step review was not saved") }
         } else {

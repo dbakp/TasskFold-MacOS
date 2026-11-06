@@ -1,116 +1,246 @@
 {
   "apply": true,
-  "freeBeforeBytes": 60063703040,
+  "freeBeforeBytes": 59968442368,
   "actions": [],
   "skipped": [
     {
       "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
       "reason": "Reusable compiler cache within 768 MiB budget",
-      "allocatedBytes": 676139008,
-      "projectedAllocatedBytes": 676139008
+      "allocatedBytes": 678043648,
+      "projectedAllocatedBytes": 678043648
     },
     {
       "cache": "/private/tmp/taskfold-workflow-native-mac-build",
       "reason": "Reusable compiler cache within 768 MiB budget",
-      "allocatedBytes": 538955776,
-      "projectedAllocatedBytes": 538955776
+      "allocatedBytes": 539697152,
+      "projectedAllocatedBytes": 539697152
     }
   ],
-  "freeAfterBytes": 60043161600,
-  "actualFreeChangeBytes": -20541440,
+  "freeAfterBytes": 60014436352,
+  "actualFreeChangeBytes": 45993984,
   "retiredSupersededEvidence": [
     {
-      "path": "/tmp/taskfold-step-history-ios-core-v1.log",
-      "bytes": 28412
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-core-v2.log",
-      "bytes": 29068
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-core-v3.log",
-      "bytes": 40883
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-core-v4.log",
-      "bytes": 30147
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-schema-v1.json",
-      "bytes": 51165
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-schema-v1.log",
-      "bytes": 17202
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-native-v1.json",
-      "bytes": 84068
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-native-v1.log",
-      "bytes": 1173
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-native-v2.json",
-      "bytes": 84413
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-native-v2.log",
-      "bytes": 1219
-    },
-    {
-      "path": "/tmp/taskfold-step-history-ios-build.json",
+      "path": "/tmp/taskfold-step-review-ui-build.json",
       "bytes": 1260
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-build.log",
-      "bytes": 135861
+      "path": "/tmp/taskfold-step-review-ui-build.log",
+      "bytes": 83442
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-build.signing.json",
+      "path": "/tmp/taskfold-step-review-ui-build.signing.json",
       "bytes": 705
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-build.signing-prepare.json",
+      "path": "/tmp/taskfold-step-review-ui-build.signing-prepare.json",
       "bytes": 177
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-config-build.json",
+      "path": "/tmp/taskfold-step-review-ui-keyboard-build.json",
+      "bytes": 1257
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-keyboard-build.log",
+      "bytes": 32952
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-keyboard-build.signing-prepare.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-done-build.json",
+      "bytes": 1258
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-done-build.log",
+      "bytes": 12444
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-done-build.signing-prepare.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-focus-build.json",
       "bytes": 1260
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-config-build.log",
-      "bytes": 21954
+      "path": "/tmp/taskfold-step-review-ui-focus-build.log",
+      "bytes": 79860
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-config-build.signing.json",
+      "path": "/tmp/taskfold-step-review-ui-focus-build.signing.json",
       "bytes": 705
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-config-build.signing-prepare.json",
+      "path": "/tmp/taskfold-step-review-ui-focus-build.signing-prepare.json",
       "bytes": 177
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-final-build.json",
+      "path": "/tmp/taskfold-step-review-ui-typing-build.json",
       "bytes": 1260
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-final-build.log",
-      "bytes": 92987
+      "path": "/tmp/taskfold-step-review-ui-typing-build.log",
+      "bytes": 41177
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-final-build.signing.json",
+      "path": "/tmp/taskfold-step-review-ui-typing-build.signing.json",
       "bytes": 705
     },
     {
-      "path": "/tmp/taskfold-step-history-ios-final-build.signing-prepare.json",
+      "path": "/tmp/taskfold-step-review-ui-typing-build.signing-prepare.json",
       "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-selection-build.json",
+      "bytes": 1260
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-selection-build.log",
+      "bytes": 41177
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-selection-build.signing.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-selection-build.signing-prepare.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-stable-build.json",
+      "bytes": 1260
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-stable-build.log",
+      "bytes": 54429
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-stable-build.signing.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-stable-build.signing-prepare.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-actions-build.json",
+      "bytes": 1260
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-actions-build.log",
+      "bytes": 49473
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-actions-build.signing.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-actions-build.signing-prepare.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-journey.json",
+      "bytes": 37852
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-journey.log",
+      "bytes": 1675
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-journey.xcode.log",
+      "bytes": 41239
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-journey.xcresult",
+      "bytes": 11375504
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-fixed.json",
+      "bytes": 36231
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-fixed.log",
+      "bytes": 118
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-fixed.xcode.log",
+      "bytes": 29012
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-fixed.xcresult",
+      "bytes": 5187304
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-edits.json",
+      "bytes": 36231
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-edits.log",
+      "bytes": 118
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-edits.xcode.log",
+      "bytes": 7046
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-edits.xcresult",
+      "bytes": 5006185
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-controls.json",
+      "bytes": 36231
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-controls.log",
+      "bytes": 118
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-controls.xcode.log",
+      "bytes": 9955
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-controls.xcresult",
+      "bytes": 8941411
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-final.json",
+      "bytes": 36345
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-final.log",
+      "bytes": 118
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-final.xcode.log",
+      "bytes": 41660
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-final.xcresult",
+      "bytes": 11027827
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-cancel.json",
+      "bytes": 36403
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-cancel.log",
+      "bytes": 118
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-cancel.xcode.log",
+      "bytes": 22226
+    },
+    {
+      "path": "/tmp/taskfold-step-review-ui-cancel.xcresult",
+      "bytes": 2758749
+    },
+    {
+      "path": "/tmp/taskfold-step-review-current.png",
+      "bytes": 3086220
     }
   ],
-  "normalAppsChanged": false,
-  "isolatedAppsClosed": true,
-  "ownedSimulatorRestored": true,
-  "remainingFixtureContainers": [],
-  "remainingFixtureNetworks": []
+  "currentAndRollbackArchivesPreserved": true,
+  "passedNativeResultsAndScreenshotsPreserved": true,
+  "ownedServicesRemoved": true
 }

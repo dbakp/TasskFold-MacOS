@@ -17,6 +17,7 @@ struct ReviewedTaskStepsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var model: ReviewedTaskStepsModel?
     @State private var read: ChildTaskStructureRead?
+    @FocusState private var editing: Bool
     @State private var goal = ""
     @State private var steps: [Step] = []
     @State private var ready = false
@@ -25,9 +26,21 @@ struct ReviewedTaskStepsView: View {
     @State private var generating = false
     @State private var token = UUID()
     @State private var generation: Task<Void, Never>?
+    #if DEBUG
+    @State private var fixtureSeeded = false
+    #endif
     @State private var error: String?
     @State private var forgetting: ReviewedTaskStepsCommand?
     private struct Step: Identifiable { let id = UUID(); var title: String; var included = true }
+    // Disappearing controls can read their binding after a save/removal clears the row.
+    // Resolve by identity on each access instead of retaining an array-index binding.
+    private func stepBinding<Value>(_ step: Step, _ path: WritableKeyPath<Step, Value>) -> Binding<Value> {
+        Binding(get: { steps.first { $0.id == step.id }?[keyPath: path] ?? step[keyPath: path] }, set: { value in
+            guard let index = steps.firstIndex(where: { $0.id == step.id }) else { return }
+            steps[index][keyPath: path] = value
+        })
+    }
+
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     private var current: Bool { guard let read, model?.scope == scope, scope != nil else { return false }; return store.childTaskFieldComparisonIsCurrent(read.records) }
     private var selected: [String] { steps.filter(\.included).map(\.title) }
@@ -48,7 +61,7 @@ struct ReviewedTaskStepsView: View {
                 }
                 if current, ready, !pending {
                     Section("Suggest steps") {
-                        TextField("Task to break down", text: $goal, axis: .vertical).lineLimit(2...6).disabled(generating || model?.busy == true)
+                        TextField("Task to break down", text: $goal, axis: .vertical).lineLimit(2...6).focused($editing).disabled(generating || model?.busy == true)
                             .accessibilityIdentifier("reviewedStepsGoal")
                         Text("Apple Intelligence uses only this text, on this device. Review and edit every step before adding it.").font(.callout).foregroundStyle(.secondary)
                         if !store.online { Text("Connect to check this saved task before suggesting or adding steps.").font(.callout).foregroundStyle(.secondary) }
@@ -65,10 +78,10 @@ struct ReviewedTaskStepsView: View {
                     }
                     if !steps.isEmpty {
                         Section("Review steps") {
-                            ForEach($steps) { $step in
+                            ForEach(steps) { step in
                                 VStack(alignment: .leading, spacing: 8) {
-                                    TextField("Step title", text: $step.title, axis: .vertical).lineLimit(1...4)
-                                    Toggle("Include this step", isOn: $step.included).accessibilityLabel("Include " + step.title)
+                                    TextField("Step title", text: stepBinding(step, \.title), axis: .vertical).lineLimit(1...4).focused($editing).accessibilityIdentifier("reviewedStepTitle-" + step.id.uuidString)
+                                    Toggle("Include this step", isOn: stepBinding(step, \.included)).accessibilityLabel("Include " + step.title).accessibilityIdentifier("reviewedStepIncluded-" + step.id.uuidString)
                                 }.disabled(generating || model?.busy == true)
                             }
                             if let selectionProblem { Text(selectionProblem).foregroundStyle(.red) }
@@ -106,7 +119,7 @@ struct ReviewedTaskStepsView: View {
                                     if model.canRedo(entry) { Button("Redo added steps") { Task { await reverse(entry) } }.disabled(!store.online || !store.childTaskStructureEditingEnabled).accessibilityIdentifier("reviewedStepsRedo") }
                                     Button("Remove saved history", role: .destructive) { forgetting = entry.command }
                                 }
-                            }.disabled(model.busy).padding(.vertical, 4)
+                            }.buttonStyle(.borderless).disabled(model.busy).padding(.vertical, 4)
                         }
                     }
                 }
@@ -114,14 +127,31 @@ struct ReviewedTaskStepsView: View {
                     Button("Refresh task") { Task { await refresh() } }.disabled(reading || generating || model?.busy == true || !store.online)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
+            .accessibilityIdentifier("reviewedStepsForm")
             .formStyle(.grouped).navigationTitle("Reviewed steps")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
+            #if os(iOS)
+            .toolbar { ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { editing = false }.accessibilityIdentifier("reviewedStepsKeyboardDone")
+            } }
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("reviewedStepsDismiss") } }
         }
         #if os(macOS)
         .frame(minWidth: 440, idealWidth: 540, minHeight: 440, idealHeight: 650)
         #endif
         .privacySensitive()
         .task(id: scope) { await open() }
+        #if DEBUG
+        .task(id: ready) {
+            guard ready, !fixtureSeeded, FullSchemaNativeFixture.enabled, FullSchemaNativeFixture.phase == "step-ui", ProcessInfo.processInfo.arguments.contains("--reviewed-steps-seed") else { return }
+            await Task.yield()
+            guard ready, current, !Task.isCancelled else { return }
+            fixtureSeeded = true
+            steps = ["Inspect the brief", "Review workshop layout", "Publish the checklist"].map { Step(title: $0) }
+        }
+        #endif
         .onChange(of: store.childHistoryNotice?.id) { _, _ in
             guard let notice = store.childHistoryNotice, notice.kind == .steps, notice.scope == scope else { return }
             Task { await model?.load(); await refresh(synchronize: false) }
