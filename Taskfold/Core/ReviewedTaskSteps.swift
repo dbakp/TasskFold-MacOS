@@ -400,7 +400,9 @@ extension Backend: ReviewedTaskStepsService {}
                 if result.applied || result.closed { try await journal.settle(command, result: result, lease: lease); try check() }
             }
             try await update()
-            message = result.applied ? (command.undoing ? "Added steps removed." : "\(result.receipt!["count"]!.integer) steps added.") : result.closed ? "Addition stopped. This request can’t add steps later." : "No saved confirmation yet. Retry the original request or stop it before starting another."
+            if result.applied { message = command.undoing ? "Added steps removed." : "\(result.receipt!["count"]!.integer) steps added." }
+            else if result.closed { message = command.undoing ? "Undo stopped. This request can’t remove steps later." : "Addition stopped. This request can’t add steps later." }
+            else { message = "No saved confirmation yet. Retry the original request or stop it before starting another." }
             if result.applied { await refresh(); try check() }
         }
         if (try? check()) != nil, let applied = entries.first(where: { $0.command == command && $0.phase == .applied }) {

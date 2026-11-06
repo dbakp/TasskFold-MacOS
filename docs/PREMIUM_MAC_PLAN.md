@@ -11053,3 +11053,8 @@ The owning Mac row now requests its compact note preview once and retains exact-
 ### 6 November · Long-note reverse navigation and source guards
 
 Both owners now route note sections with explicit lazy scroll targets and reset position when the exact UTF-8 source changes. The largest-text reverse-jump defect was reproduced before the fix. Current iPhone Simulator normal reader/editor-preview and largest-text reader journeys pass first/last jumps, exact original toggles, all-table preservation and cold return. Four new Unicode/source binding cases join 47 selected Core checks per owner; current Mac build/signature verifies. Mac/iPad interaction, VoiceOver and physical performance remain open. Normal apps and deferred installations/rollout gates are unchanged. [Current proof and limits](note-section-navigation/README.md).
+
+
+### 6 November · Reviewed-step recovery labels and original-request decisions
+
+The owning Mac UI distinguishes Send saved request/Retry and Stop undo; the model correctly explains a stopped removal. Seventeen focused owning tests pass, including a saved Undo closure that preserves the applied addition through cold journal return, and the current app builds/signs. Separate iPhone control journeys accept Check/Retry after a genuinely committed lost reply and Stop before sending, with exact cache/server receipt/closure checks. The Mac was locked for interactive inspection; broader Mac/iPad/speech/inference and the recorded pending-to-settled layout warning remain open. Normal apps, on-device-only policy, gates and deferred installations are unchanged. [Evidence and limits](reviewed-step-batches/README.md).

@@ -1,5 +1,9 @@
 # Remaining product backlog
 
+## Latest recorded scope · 6 November 2026
+
+Normal phone34 and Mac14 remain installed; further phone installation is deferred, and the verified Mac22 archive awaits its update window. Later source work now includes exact-source note reuse, accepted normal/largest-text iPhone section navigation, and actual Check/Retry/Stop recovery controls for reviewed on-device step additions. The recovery paths preserve the original receipt/closure through cold return against genuine local services; a transition layout warning and wider Mac/iPad/speech/inference/custody work remain open. No ordinary advanced gates or hosted schema changed. The P1 provider-registration deferral and the three rollout/distribution deferrals remain. See [current progress](PX_PROGRESS.html) and [reviewed-step proof and limits](reviewed-step-batches/README.md); earlier dated entries below retain their historical scopes.
+
 ## Current daily-use candidates · 4 November 2026
 
 Signed Mac build 8 and ordinary iOS Simulator build 23 are packaged with the four starter workflows. Each owning repo retains its five passing Core checks; both exact archive payloads verify. The Simulator package is not a phone installation. Starter UI acceptance remains open. Installed Mac build 7 still waits opening shared widget/capture storage in the same process; no Keychain failure or successful startup/sync is inferred. No physical iOS device currently has a connected tunnel, so development signing and actual phone installation remain unverified.

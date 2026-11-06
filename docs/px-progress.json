@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Notes · reliable long-note section navigation and exact-source previews",
-  "latest": "Long-note section jumps now use explicit lazy scroll targets in both apps. Current iPhone Simulator checks pass normal reader/editor-preview and largest-text reader navigation, exact original-text toggles, unchanged saved tables and cold return. Each owner passes 47 focused note checks and current development builds/signatures. Revised Unicode URL spellings invalidate old previews and retained destinations. Mac/iPad interaction, speech, physical rendering/FPS and broader contexts remain open; on-device assistance only and deferred phone installation are unchanged.",
+  "focus": "On-device steps · clear recovery controls and verified original-request decisions",
+  "latest": "Both apps now distinguish sending an unsent reviewed-step request from retrying an uncertain one, and correctly label/confirm stopping an Undo. Current iPhone Simulator Check/Retry/Stop journeys pass against genuine disposable local services: one original receipt with no duplicate steps, or one closure with exact task preservation and later resend refusal. Each owner passes 17 focused checks and build/sign verification. A pending-to-settled layout warning, Mac/iPad interaction, actual inference and broader cases remain open. No installs, hosted changes or normal gate changes.",
   "next": [
     "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Current normal/largest-text iPhone note navigation is accepted in its recorded Simulator scope. Continue Mac assistant controls and package later source changes after their bounded checks. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
-    "NEXT: continue Mac assistance controls and broader rendering/scrolling, account/accessibility acceptance. Current iPhone normal reader/editor-preview and largest-text reader section navigation, exact original toggles and cold return pass. Task-row note previews already have exact-source reuse and source-bound links; do not repeat unchanged accepted matrices. Assistance stays on-device only; preserve explicit iOS Save/Mac autosave, deferred phone installation and the three agreed rollout/distribution deferrals.",
+    "NEXT: continue the remaining advanced feature/custody work and bounded Mac/iPad assistance acceptance. Current phone Check/Retry/Stop controls now have exact original-request, cold-cache and genuine local service proof; do not repeat them unchanged. Diagnose the recorded pending-to-settled layout warning separately. On-device-only assistance, explicit iOS Save/Mac autosave, deferred phone installation and agreed rollout/distribution deferrals remain.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -620,7 +620,7 @@
             "note-section-navigation/current-cleanup.json",
             "note-section-navigation/current-progress-validation.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-voice",
@@ -644,7 +644,7 @@
             {
               "state": "verify",
               "title": "Reviewed task and filter assistance",
-              "detail": "Both apps independently own on-device task-step and filter-expression review. Filters use ordinary grammar, preview and fresh destination/date validation. Saved subtask additions support root/nested review, editable literal titles, selected atomic Add, availability checks, encrypted exact Check/Retry/Stop and normal Undo/Redo with fresh original-slot identities. Current owning evidence records 106 client/history, 123 service and 25 production Store/history checks per platform. Two native iPhone journeys now accept editing/exclusion, keyboard Done, Add, explicit Undo/Redo, cold reopening and Cancel against genuine local services, preserving existing work. Mac sources build/sign; Mac review controls, wider iPad/accessibility/account/window cases and real generation quality/latency remain open. On-device assistance only was reaffirmed on 6 November; no cloud fallback. Installed phone34/Mac14 and normal default-Off gates are unchanged; further phone installation is deferred. This checkpoint remains Built/checks left."
+              "detail": "Both apps independently own on-device task-step and filter-expression review. Filters use ordinary grammar, preview and fresh destination/date validation. Saved subtask additions support root/nested review, editable literal titles, selected atomic Add, availability checks, encrypted exact Check/Retry/Stop and normal Undo/Redo with fresh original-slot identities. Current owning evidence records 106 client/history, 123 service and 25 production Store/history checks per platform. Two native iPhone journeys now accept editing/exclusion, keyboard Done, Add, explicit Undo/Redo, cold reopening and Cancel against genuine local services, preserving existing work. Mac sources build/sign; Mac review controls, wider iPad/accessibility/account/window cases and real generation quality/latency remain open. On-device assistance only was reaffirmed on 6 November; no cloud fallback. Installed phone34/Mac14 and normal default-Off gates are unchanged; further phone installation is deferred. This checkpoint remains Built/checks left. Pending-request recovery now has three current iPhone screen journeys: actual Check and Retry after a genuinely committed lost reply preserve one original receipt/two steps; Stop before sending preserves the exact task, records one closure and refuses later resend. Each owner passes 17 focused reviewed-step checks, including stopped-Undo cold preservation, and current signed builds. Unsent requests say Send saved request, uncertain results say Retry, and stopping Undo is labeled correctly. The pending-to-settled Form transition still emits an unlocated Invalid frame dimension warning; no clean-layout or broader speech/physical inference follows."
             }
           ],
           "sources": [
@@ -659,9 +659,17 @@
             "reviewed-step-batches/signed-build.json",
             "reviewed-step-batches/core-cache-storage.json",
             "reviewed-step-batches/history-verification.json",
-            "reviewed-step-batches/native-store-verification.json"
+            "reviewed-step-batches/native-store-verification.json",
+            "reviewed-step-batches/ios-recovery-check.json",
+            "reviewed-step-batches/ios-recovery-retry.json",
+            "reviewed-step-batches/ios-recovery-stop.json",
+            "reviewed-step-batches/recovery-core.json",
+            "reviewed-step-batches/recovery-signed-build.json",
+            "reviewed-step-batches/recovery-layout-warning.json",
+            "reviewed-step-batches/recovery-cleanup.json",
+            "reviewed-step-batches/recovery-progress-validation.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-reminders",
@@ -1336,7 +1344,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "bda7a106fceffe7b7be00860cfe7c5532f121cc5b10f0df45ee81e4827478dc0",
+    "P2_PLAN.md": "e0eeb1198246c9178367a3d6108b48cdb3e089459c0a0b2d7cf6ab88b10247d8",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1663,13 +1671,21 @@
     "reviewed-child-adoption-client/verification.json": "5c69918aaf693d69ca9509616024cf4fb9ea79f43c56ada94e9254430e9e8f64",
     "reviewed-child-adoption-native/verification.json": "0b1d67d06dd2b65172d4b8ebb4c3e3677df460d7b1a0f26a9b907a987b7ab5fd",
     "reviewed-child-adoption/verification.json": "488443346a14f4df5aa1cc16cdb53aadbf5f3334d4a1940b99088ad3ccef462c",
-    "reviewed-step-batches/README.md": "73ddac00dc3e375bdf6013736c34dc3979026053d3184df325a5f7d563497d13",
+    "reviewed-step-batches/README.md": "9779073c65be5a58dae896487d064c759b14b9c3851f1028c9978c5de296934d",
     "reviewed-step-batches/cleanup.json": "36784132acec5774871367d04c5ade8c8489a1c9720503861a4a9adf8c85f8bf",
     "reviewed-step-batches/client-verification.json": "5dbf36d3c7ce9d85290b9a07d9bfc5de03d64f556aa9fe6dcac67225b5203484",
     "reviewed-step-batches/core-cache-storage.json": "7089938837cb049c81d9a3e38efb450b4d358f6c6c06a7b86068493dc889f6c1",
     "reviewed-step-batches/full-schema.json": "dc85f56e8b19439eb192618b961f496e013238d54f230859da16985c46cdc1ae",
     "reviewed-step-batches/history-verification.json": "03a6d82ffb9ede0af7f1eb1502693135e903166c1d3eb903799deecbeabb2f37",
+    "reviewed-step-batches/ios-recovery-check.json": "e5f748f1b290e4a0ccfbd1318f848ad1a0bd19eacce2255f9ebf4113c17e1efa",
+    "reviewed-step-batches/ios-recovery-retry.json": "042319c3eedf845bab74bd1cadebf94dd8ff97967107975cb2c12cd940c6121d",
+    "reviewed-step-batches/ios-recovery-stop.json": "652f64f8a77c4605259d37a679d863f0c49a9583b43ded1ec997cca8c5edef35",
     "reviewed-step-batches/native-store-verification.json": "eed11eed9883545927a9b7a669f696658e6af8f402bd6271943a419bdd9c6600",
+    "reviewed-step-batches/recovery-cleanup.json": "ac8ea633113e9c2eae3f554b01464b6bf7b29d1ef030680ecf0493ff573f6a11",
+    "reviewed-step-batches/recovery-core.json": "527beb1ea7346397304d751d99d280351e5a0eee9b38b85605aa5c2cd8a49b6d",
+    "reviewed-step-batches/recovery-layout-warning.json": "a9ae354f61b68a037c2bedd86e5ba19ebc8b9ac94ad3561003f983602166f123",
+    "reviewed-step-batches/recovery-progress-validation.json": "5bf71208e51ca210a82a04345ea571988c7c947fb52d361dd7a136b75f174520",
+    "reviewed-step-batches/recovery-signed-build.json": "00329569927fff4fc13fedccf3848712bf50c6f91a47691cb60c8bf6277fa6c1",
     "reviewed-step-batches/signed-build.json": "605b0200e8fe4eea7a2cd93f6d3cd0ca6b1fa00346356858c20f3519d14f6433",
     "rich-workflow-creation/README.md": "103f64cbe3d00dc570f9abaee707ed76f88630e15899983614042bd61a8118f6",
     "rich-workflow-creation/before-failed-native.json": "db0060240f0596766118ba9b3362ab6014320d94dc25ba2d8db3c9ccdb56f9a4",

@@ -111,9 +111,13 @@ struct ReviewedTaskStepsView: View {
                                 }
                                 if entry.phase == .queued || entry.phase == .attempted {
                                     ForEach(Array((entry.command.body["steps"]?.list ?? []).enumerated()), id: \.offset) { _, row in Text(row.object["title"]!.text).font(.callout) }
+                                    Text(entry.phase == .queued
+                                         ? "This request is saved on this device and hasn’t been sent."
+                                         : "The result hasn’t been confirmed. Check status or retry this same saved request. Stopping leaves any confirmed changes in place.")
+                                        .font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("reviewedStepsRecoveryHelp")
                                     Button("Check status") { Task { await run(entry.command, .resolve) } }.accessibilityIdentifier("reviewedStepsCheck")
-                                    Button("Retry original request") { Task { await run(entry.command, .apply) } }.disabled(!store.online || !store.childTaskStructureEditingEnabled).accessibilityIdentifier("reviewedStepsRetry")
-                                    Button("Stop addition", role: .destructive) { Task { await run(entry.command, .close) } }.accessibilityIdentifier("reviewedStepsCloseRequest")
+                                    Button(entry.phase == .queued ? "Send saved request" : "Retry original request") { Task { await run(entry.command, .apply) } }.disabled(!store.online || !store.childTaskStructureEditingEnabled).accessibilityIdentifier("reviewedStepsRetry")
+                                    Button(entry.command.undoing ? "Stop undo" : "Stop addition", role: .destructive) { Task { await run(entry.command, .close) } }.accessibilityIdentifier("reviewedStepsCloseRequest")
                                 } else {
                                     if model.canUndo(entry) { Button("Undo added steps") { Task { await reverse(entry) } }.disabled(!store.online || !store.childTaskStructureEditingEnabled).accessibilityIdentifier("reviewedStepsUndo") }
                                     if model.canRedo(entry) { Button("Redo added steps") { Task { await reverse(entry) } }.disabled(!store.online || !store.childTaskStructureEditingEnabled).accessibilityIdentifier("reviewedStepsRedo") }

@@ -153,6 +153,29 @@ final class ReviewedTaskStepsTests: XCTestCase {
         let refused = await model.run(c, operation: .apply); XCTAssertFalse(refused); XCTAssertEqual(service.operations, [.resolve])
         service.result = try result(c, outcome: "closed"); let stopped = await model.run(c, operation: .close); XCTAssertTrue(stopped); XCTAssertEqual(model.entries.first?.phase, .closed); XCTAssertEqual(service.operations, [.resolve, .close])
     }
+    @MainActor func testStoppingSavedUndoKeepsTheAdditionAndExplainsTheStoppedRemoval() async throws {
+        let original = try command(), applied = try result(original), undo = try undoFixture().0
+        let read = try read(), scope = ChildTaskFieldClientScope(read.context)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-step-stop-undo-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let key = SymmetricKey(size: .bits256), lease = CalendarReadLease()
+        let io = ReviewedTeamCommandFileIO<ReviewedTaskStepsState>(directory: root.appendingPathComponent("vault"), account: original.account, origin: origin, encryptionKey: { key })
+        let journal = try ReviewedTaskStepsJournal(account: original.account, origin: origin, io: io, coordinationDirectory: root.appendingPathComponent("locks"), removalDirectory: root)
+        _ = try await journal.enqueue(original, lease: lease)
+        _ = try await journal.attempt(original, lease: lease, resolving: false)
+        try await journal.settle(original, result: applied, lease: lease)
+        _ = try await journal.enqueue(undo, lease: lease)
+        let service = Stub(availability: try .init(data: bytes(fixture()["fixtureAvailability"]!.object), read: read), result: try result(undo, outcome: "closed"))
+        let model = ReviewedTaskStepsModel(scope: scope, journal: journal, service: service, current: { scope }, canSend: { _ in false }, isCurrent: { _ in true }, refresh: {})
+        await model.load()
+        let stopped = await model.run(undo, operation: .close)
+        XCTAssertTrue(stopped); XCTAssertEqual(service.operations, [.close])
+        XCTAssertEqual(model.entries.map(\.phase), [.applied, .closed])
+        XCTAssertEqual(model.message, "Undo stopped. This request can’t remove steps later.")
+        let cold = try await journal.load()
+        XCTAssertEqual(cold.entries.first?.result, applied)
+        XCTAssertEqual(cold.entries.last?.phase, .closed)
+    }
     private func undoFixture() throws -> (ReviewedTaskStepsCommand, ReviewedTaskStepsResult) {
         let f = try fixture(), b = f["fixtureUndoCommand"]!.object
         let c = try ReviewedTaskStepsCommand(account: b["account"]!.text, origin: origin, body: b)

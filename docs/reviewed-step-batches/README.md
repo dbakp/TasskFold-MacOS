@@ -27,6 +27,24 @@ Two owning XCTest journeys use the signed reserved Simulator app against genuine
 
 These are two passed native journeys plus saved-state/service assertions, not added progress checkpoints. Recorded screenshots were inspected; VoiceOver, broader text sizes, real inference, account/window changes and normal keyboard/menu integration remain separate.
 
+## Pending-request recovery controls · 6 November
+
+Both apps now distinguish **Send saved request** for an unsent addition from **Retry original request** after an uncertain result. Pending rows explain that stopping leaves confirmed changes in place. A pending inverse says **Stop undo**, and its stopped confirmation correctly says it cannot remove steps later. These are interface/feedback changes; request, receipt, encryption and service contracts are unchanged.
+
+Each owner passes [17 focused reviewed-step checks](recovery-core.json), including a new real-journal case that stops a saved Undo while keeping the original applied addition and cold closure. Current owning app/test builds and development signatures verify in [the build receipt](recovery-signed-build.json). The unchanged broad service/client matrices are not repeated.
+
+Three current signed iPhone Simulator journeys use disposable genuine local Auth/PostgREST and the production Store/Backend, encrypted journal and actual review controls:
+
+- [Check status](ios-recovery-check.json): production Store commits the original two literal steps, deliberately loses its successful reply, then the actual Check status control recovers the original confirmation. Cold UI history and the saved cache agree; exactly one original server receipt exists.
+- [Retry](ios-recovery-retry.json): the same committed/lost-reply setup, with the actual Retry original request control. The result still has exactly the two original steps and one receipt; cold UI and a separate authenticated status request bind the exact original identity.
+- [Stop](ios-recovery-stop.json): the actual Stop addition control closes an unsent saved request. The exact server task stays unchanged; a single matching closure and zero addition receipts exist. After cold UI return, resending that same body receives 410 and still leaves the task unchanged.
+
+All three native journeys pass without skips; 25 external assertions check identity, original children/opaque fields/notes, saved cache and real server outcomes. These counts do not add dashboard checkpoints. The runner verifies all owning app Swift files and exact owning test source before/after, resolves Xcode's current data container, removes only its own disposable services/control credentials, closes the test app and restores the Simulator. No real account, hosted change, ordinary gate, system setting or installed-app update is involved.
+
+Pending and cold settled screenshots were inspected. All three result summaries still report [a layout warning](recovery-layout-warning.json); the Check log locates it during pending-to-confirmed content replacement, with no source location/backtrace. Its cause is unproven and remains open. This acceptance covers the controls and saved data, not clean layout diagnostics or VoiceOver.
+
+The Mac screen check could not proceed because computer use reported the Mac locked; no unlock request was repeated. Mac/iPad interaction, pending Undo/Redo buttons, Stop after an already committed request, offline/access/window directions and actual generation remain separate. [Run cleanup](recovery-cleanup.json) preserves only concise current proof and necessary images.
+
 ## Remaining
 
-Accept Mac review controls, wider iPad/text-size/accessibility behavior, normal keyboard menus/focus, actual recovery Check/Retry/Stop controls after a lost reply, and wider account/access/window contexts. Genuine on-device quality/latency needs an eligible enabled device; no cloud fallback is planned. Remaining legacy payload/lifecycle acceptance stays separate. Further physical iPhone installation and the three agreed release/remote-reminder/older-client deferrals remain.
+Accept Mac review controls, wider iPad/text-size/accessibility behavior, normal keyboard menus/focus, pending inverse controls and Stop after a committed/lost reply, and wider account/access/window contexts. Genuine on-device quality/latency needs an eligible enabled device; no cloud fallback is planned. Remaining legacy payload/lifecycle acceptance stays separate. Further physical iPhone installation and the three agreed release/remote-reminder/older-client deferrals remain.
