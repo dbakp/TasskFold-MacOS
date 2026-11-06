@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-06",
+  "message": "Invalid frame dimension (negative or non-finite).",
+  "observedVariants": [
+    "check",
+    "retry",
+    "stop"
+  ],
+  "checkTiming": "After tapping Check status at 27.05s, during pending-to-confirmed Form content transition, before the Undo button assertion at 27.81s.",
+  "sourceLocation": "Xcode reports <unknown>:0; the result activity has no source/backtrace. A specific cause is not established.",
+  "settledScreensVisuallyReviewed": [
+    "pending controls/help readable",
+    "confirmed original with Undo after cold reopening",
+    "stopped original after cold reopening"
+  ],
+  "fixed": false,
+  "limits": "No clean-runtime, broader layout, speech or physical rendering acceptance is inferred.",
+  "followUp": "Separate Form rows and one combined activity indicator both retained the warning. Bounded debugger attempts did not isolate an originating frame; unrelated log hits are not a diagnosis. Original card layout restored; one activity indicator retained for clarity.",
+  "sourceSHA256": "c4ff811177fc068d259c746c399bd6dc28492bc4048d0117fe4357cfaa502485",
+  "note": "Historical Check/Retry/Stop warning before replacing the keyboard accessory toolbar. Previous row/activity changes did not fix it."
+}

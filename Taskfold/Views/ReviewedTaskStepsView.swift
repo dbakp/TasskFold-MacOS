@@ -142,13 +142,17 @@ struct ReviewedTaskStepsView: View {
             .scrollDismissesKeyboard(.interactively)
             .accessibilityIdentifier("reviewedStepsForm")
             .formStyle(.grouped).navigationTitle("Reviewed steps")
-            #if os(iOS)
-            .toolbar { ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { editing = false }.accessibilityIdentifier("reviewedStepsKeyboardDone")
-            } }
-            #endif
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("reviewedStepsDismiss") } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("reviewedStepsDismiss") }
+                #if os(iOS)
+                ToolbarItem(placement: .confirmationAction) {
+                    if editing {
+                        Button("Done") { editing = false }
+                            .accessibilityLabel("Hide keyboard").accessibilityIdentifier("reviewedStepsKeyboardDone")
+                    }
+                }
+                #endif
+            }
         }
         #if os(macOS)
         .frame(minWidth: 440, idealWidth: 540, minHeight: 440, idealHeight: 650)

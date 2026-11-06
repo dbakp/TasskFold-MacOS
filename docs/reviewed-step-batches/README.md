@@ -1,5 +1,8 @@
 # Reviewed on-device steps — 6 November 2026
 
+**Current follow-up:** editable Add/Undo/Redo and lost-response Check/Retry/Stop now pass four genuine local iPhone journeys with zero runtime warnings. The earlier warning-producing results below retain their historical scope. See [current header repair and limits](../step-recovery-layout/README.md).
+
+
 ## Implemented
 
 The saved-subtask organizer offers root/nested on-device review, explicit selected Add, availability checks, encrypted saved requests and Check/Retry/Stop. Existing unsaved iPhone drafts and Mac autosave remain separate. The model receives only the editable goal; selected titles save literally without date/label/person parsing. Normal rollout gates remain Off and installed apps are unchanged.

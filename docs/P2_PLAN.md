@@ -2,7 +2,7 @@
 
 ## Latest recorded scope · 6 November 2026
 
-Normal Mac 1.2.0 (23) remains installed and synced with all five cached workspaces’ task/pending rows preserved. Signed optimized Mac25 and iPhone37 are now prepared, including note paragraph styles, clean list conversion, recent library/filter improvements and the header keyboard repair. Neither is installed; phone34 remains the last verified phone installation and further installation is deferred. Current iPhone filter preview/typing/Cancel/cold flow passes with zero runtime warnings and saved tables intact. Wider feature, inference, device/accessibility and lifecycle checks remain; the separate reviewed-step transition warning is still open. Development expiry remains 10 November for Mac and 11 November for phone. All rollout/provider/distribution deferrals remain. See [current daily-update scope](filter-keyboard-layout/README.md).
+Normal Mac23 remains installed and phone34 is the last verified phone installation. Optimized signed Mac26 and iPhone38 are prepared with note paragraph/list tools, recent library/filter improvements and clean filter/step review keyboard controls. Neither update is installed; phone installation remains deferred. The current filter journey and four reviewed-step iPhone journeys pass with zero runtime warnings and preserved work through cold return. Actual on-device inference quality/latency, wider device/accessibility/account/lifecycle, child migration and hosted checks remain open. Development expiry remains 10 November for Mac and 11 November for phone. All explicitly deferred rollout/provider/distribution work remains paused. See [step recovery evidence and limits](step-recovery-layout/README.md).
 
 ## 6 November 2026 · Consistent note lists
 
@@ -11,6 +11,10 @@ Selected note items now switch cleanly between bullet and numbered styles, repla
 ## 6 November 2026 · Filter review keyboard repair
 
 Suggest a filter now uses the existing iPhone/iPad header slot for Done while editing, then returns to guarded Use. This removes the keyboard accessory toolbar while keeping Cancel available and the form geometry stable. The complete current signed iPhone journey passes with zero runtime warnings: Clear/typing/Done, exact count and five samples, empty/completed expressions, edit invalidation, draft-only Use, Cancel and cold all-table preservation. A bottom-inset attempt lost focus and was discarded. Mac’s existing action remains; real generation, broader sizes/platforms/accessibility and the separate reviewed-step transition warning remain open. No gates or service contracts change. [Current scope and evidence](filter-keyboard-layout/README.md).
+
+## 6 November 2026 · Clean reviewed-step recovery
+
+Header Done replaces the reviewed-step keyboard accessory toolbar on iPhone/iPad. Four current signed iPhone journeys now pass with zero runtime warnings: editable selected Add/Undo/Redo/cold history, genuine lost-response Check, original Retry, and unsent Stop/cold return. The 35 named UI/API/cache assertions preserve existing work, one exact original receipt, no duplicate steps and a durable refusal to resend a closed request. The native driver now rejects warnings only after preserving the functional checks. Every disposable service stack is removed and the Simulator restored. Actual inference, other device/accessibility and wider account/lifecycle scope remain; normal gates and installed apps are unchanged. [Current evidence](step-recovery-layout/README.md).
 
 ## Current daily-use candidates · 4 November 2026
 
