@@ -1,0 +1,40 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 61921107968,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 680587264,
+      "projectedAllocatedBytes": 680587264
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 625618944,
+      "projectedAllocatedBytes": 625618944
+    }
+  ],
+  "freeAfterBytes": 61928640512,
+  "actualFreeChangeBytes": 7532544,
+  "retiredCompletedRawLogs": {
+    "ios": {
+      "rawSHA256": "2e4769b93d67c428445d833fe866936bdf591ede3a0a4685690af39aaecbd1af",
+      "rawBytes": 47575,
+      "compressedBytes": 5618
+    },
+    "mac": {
+      "rawSHA256": "c2a38ad13750944d9bb933d3821af5362157787fe7ab0c881d846d1eca76ea97",
+      "rawBytes": 36439,
+      "compressedBytes": 4826
+    }
+  },
+  "servicesRemoved": true,
+  "usedSimulatorRestored": true,
+  "normalAppsAndRealDataChanged": false,
+  "coreCachesKiB": {
+    "ios": 660148,
+    "mac": 605684
+  }
+}
