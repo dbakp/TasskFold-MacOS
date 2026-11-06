@@ -91,31 +91,67 @@ extension Store {
             complete(result)
         }
     }
-    func discardSharedCapture(_ draft: SharedCaptureDraft, binding: WorkspaceBinding?) throws {
-        guard binding?.matches(account: userID, generation: workspaceGeneration) == true, sharedCaptureAvailable, draft.workspace.account == userID else { throw SharedCaptureFailure("Reopen this draft in its original workspace.") }
-        try sharedCaptureDisk().acknowledge(draft, account: userID)
+    private func sharedCaptureActionPause() -> @Sendable () async -> Void {
+        #if DEBUG
+        let gate = SharedCaptureCountNativeFixture.enabled && SharedCaptureCountNativeFixture.actionsEnabled ? SharedCaptureCountNativeFixture.actionGate : nil
+        return { await gate?.hold() }
+        #else
+        return {}
+        #endif
+    }
+    func discardSharedCapture(_ draft: SharedCaptureDraft, binding: WorkspaceBinding?) async throws {
+        guard binding?.matches(account: userID, generation: workspaceGeneration) == true,
+              let context = sharedCaptureReadContext, draft.workspace.account == context.workspace.account else {
+            throw SharedCaptureFailure("Reopen this draft in its original workspace.")
+        }
+        let source = sharedCaptureCountSource(), pause = sharedCaptureActionPause()
+        try await sharedCaptureActionWorker.perform(before: pause) {
+            try source().acknowledge(draft, account: context.workspace.account, generation: context.workspace.generation)
+        }
+        guard sharedCaptureReadContext == context else { return }
         refreshSharedCaptureDraftCount()
     }
-    @discardableResult func addSharedCapture(_ draft: SharedCaptureDraft, content: SharedCaptureContent, project: String, binding: WorkspaceBinding?) -> Bool {
-        guard workflowReady(binding) else { return false }
-        do {
-            let disk = try sharedCaptureDisk()
-            if snapshot.sharedCaptureReceipts?[draft.taskID] == draft.taskID {
-                try disk.acknowledge(draft, account: userID); return true
+    @discardableResult func addSharedCapture(_ draft: SharedCaptureDraft, content: SharedCaptureContent, project: String,
+                                            binding: WorkspaceBinding?, commitTask: ((Mutation) -> Bool)? = nil) async throws -> Bool {
+        guard workflowReady(binding), let context = sharedCaptureReadContext,
+              draft.workspace.account == context.workspace.account else {
+            throw SharedCaptureFailure("Reopen this draft in its original workspace.")
+        }
+        let source = sharedCaptureCountSource()
+        let alreadySaved = snapshot.sharedCaptureReceipts?[draft.taskID] == draft.taskID
+        if !alreadySaved {
+            let pause = sharedCaptureActionPause()
+            let exists = try await sharedCaptureActionWorker.perform(before: pause) {
+                try source().drafts(account: context.workspace.account).contains(draft)
             }
-            guard try disk.drafts(account: userID).contains(draft) else { throw SharedCaptureFailure("This draft was already handled. Refresh shared drafts.") }
+            // A permission prompt or another window can keep the read pending.
+            // Revalidate before constructing a mutation from the current Store.
+            guard sharedCaptureReadContext == context, !Task.isCancelled else {
+                throw SharedCaptureFailure("Your workspace or shared drafts changed. Please try again.")
+            }
+            guard exists else { throw SharedCaptureFailure("This draft was already handled. Refresh shared drafts.") }
             switch try SharedCapturePlan.prepare(draft, content: content, account: userID, project: project, snapshot: snapshot) {
             case .saved: break
             case .create(let change):
-                guard commit([change], sharedCaptureReceipt: draft) else { return false }
+                let saved = commitTask?(change) ?? commit([change], sharedCaptureReceipt: draft)
+                guard saved else { return false }
             }
-            // A failed acknowledgement leaves a harmless review row. Its atomic receipt
-            // prevents a retry from recreating a task after editing, completion, deletion or Undo.
-            do { try disk.acknowledge(draft, account: userID) }
-            catch { notice = "Task added. The saved draft will clear when shared drafts is refreshed." }
-            refreshSharedCaptureDraftCount()
-            return true
-        } catch { self.error = error.localizedDescription; return false }
+        }
+        // The task and its duplicate-prevention receipt are durable before this
+        // background cleanup. An ambiguous write never authorizes another task.
+        do {
+            try await sharedCaptureActionWorker.perform {
+                try source().acknowledge(draft, account: context.workspace.account, generation: context.workspace.generation)
+            }
+        } catch {
+            if sharedCaptureReadContext?.workspace == context.workspace,
+               sharedCaptureReadContext?.session == context.session {
+                notice = "Task added. The saved draft will clear when shared drafts is refreshed."
+            }
+        }
+        if sharedCaptureReadContext?.workspace == context.workspace,
+           sharedCaptureReadContext?.session == context.session { refreshSharedCaptureDraftCount() }
+        return true
     }
 }
 
@@ -145,7 +181,9 @@ extension Store {
         ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && (ProcessInfo.processInfo.arguments.contains("--shared-capture-count-native") || reviewEnabled)
     }
     static var directory: URL { URL.applicationSupportDirectory.appendingPathComponent("Shared capture count native", isDirectory: true) }
-    static var reviewEnabled: Bool { ProcessInfo.processInfo.arguments.contains("--shared-capture-review-native") }
+    static var reviewEnabled: Bool { ProcessInfo.processInfo.arguments.contains("--shared-capture-review-native") || actionsEnabled }
+    static var actionsEnabled: Bool { ProcessInfo.processInfo.arguments.contains("--shared-capture-actions-native") }
+    static var actionGate: SharedCaptureCountNativeGate?
     static var reviewGate: SharedCaptureCountNativeGate?
     static var gate: SharedCaptureCountNativeGate?
     static var original: Snapshot?
@@ -188,7 +226,8 @@ extension Store {
                 try disk.save(SharedCaptureDraft(id: id, workspace: workspace, content: SharedCaptureContent(title: "Shared thought \(n)", notes: "Keep every line.\nCafé notes 🪴\nLast instruction.")))
             }
             SharedCaptureCountNativeFixture.original = snapshot
-            SharedCaptureCountNativeFixture.reviewGate = SharedCaptureCountNativeGate()
+            SharedCaptureCountNativeFixture.reviewGate = SharedCaptureCountNativeFixture.actionsEnabled ? nil : SharedCaptureCountNativeGate()
+            SharedCaptureCountNativeFixture.actionGate = SharedCaptureCountNativeFixture.actionsEnabled ? SharedCaptureCountNativeGate() : nil
             sharedCaptureCountNativeStatus = "Review ready"
         } catch { sharedCaptureCountNativeStatus = error.localizedDescription }
     }

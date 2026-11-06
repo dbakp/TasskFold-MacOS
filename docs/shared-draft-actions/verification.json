@@ -1,0 +1,61 @@
+{
+  "date": "2026-11-06",
+  "platform": "mac",
+  "focusedCoreTests": 32,
+  "newActionChecks": 5,
+  "failures": 0,
+  "coreAccepted": true,
+  "normalAppsChanged": false,
+  "phoneInstallationDeferred": true,
+  "sourceNotPackaged": true,
+  "nativeMacAccepted": false,
+  "startupPublicationStillSynchronous": true,
+  "durableTaskCommitStillSynchronous": true,
+  "checks": [
+    "Background action keeps main actor available and refuses a concurrent backlog",
+    "Cancellation before acknowledgement preserves exact mailbox bytes",
+    "Same-account new-generation refusal preserves exact bytes",
+    "Corrupt input preserved; worker can recover",
+    "Large acknowledgement keeps all 63 other drafts exactly",
+    "Existing duplicate receipts, task collision, destination and review contracts remain accepted"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/SharedCapture.swift": "2c6c48072334025c522cb962b46138c254b4fe0f1a79422f5261864450c2aa87",
+    "Taskfold/Core/SharedCapturePlan.swift": "04978db65dea7033d5d8066afc8617de0467426fbbb11bcdfad964a4bacbce1e",
+    "Taskfold/Core/Store.swift": "a1b87eb40238ee65feaf2067dc4ea80656250376c5858ac00b4d772e9ae49250",
+    "Taskfold/SharedCaptureStore.swift": "a3d4c4097dabbfd6207d57339fb63c8d36d093b8fe78c553ccb144d7efc01342",
+    "Taskfold/Views/SharedDraftsView.swift": "45402e637bab1c57c2a8dddaf988b3149eba2a8a43d45f94d09bee6b267e38e5"
+  },
+  "preparationCorrections": [
+    {
+      "stage": "build",
+      "issue": "Share extension cannot import the app-only WorkspaceBinding type",
+      "resolution": "Mailbox acknowledgement takes an optional existing UUID generation instead; app and extension now build."
+    },
+    {
+      "stage": "test compilation",
+      "issue": "Local Add button name shadowed XCTest.add",
+      "resolution": "Attachment calls use self.add."
+    },
+    {
+      "stage": "native controls",
+      "issue": "Warning was outside the visible form; first screen run did not establish its presence",
+      "resolution": "Bring controls inside the actual form bounds before tapping/reading; failed run kept both drafts and created no task."
+    },
+    {
+      "stage": "Redo assertion",
+      "issue": "Expected the old task generation after delete and Redo",
+      "resolution": "Require a fresh valid generation and compare every other task field; normal lifetime fences remain intact."
+    },
+    {
+      "stage": "cold baseline",
+      "issue": "First load added the two existing local overdue-display preferences",
+      "resolution": "Establish the ordinary cold-loaded baseline before actions, then require exact all-table cold equality."
+    },
+    {
+      "stage": "iPad navigation",
+      "issue": "A header control was unmaterialized in the smaller floating form",
+      "resolution": "Scroll toward the requested end of the actual form; no production source or assertions changed."
+    }
+  ]
+}

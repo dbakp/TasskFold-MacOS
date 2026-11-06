@@ -116,3 +116,24 @@ enum SharedCapturePlan {
         isIdle = true
     }
 }
+
+/// One mailbox action per Store. Slow permissions, locks and large JSON work
+/// stay off the interface executor without building an unbounded task queue.
+@MainActor final class SharedCaptureActionWorker {
+    private(set) var busy = false
+    func perform<Value: Sendable>(before: @escaping @Sendable () async -> Void = {}, _ operation: @escaping @Sendable () throws -> Value) async throws -> Value {
+        guard !busy else { throw SharedCaptureFailure("Another shared draft is being handled. Please try again when it finishes.") }
+        busy = true; defer { busy = false }
+        let worker = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
+            await before()
+            try Task.checkCancellation()
+            return try operation()
+        }
+        return try await withTaskCancellationHandler {
+            let value = try await worker.value
+            try Task.checkCancellation()
+            return value
+        } onCancel: { worker.cancel() }
+    }
+}

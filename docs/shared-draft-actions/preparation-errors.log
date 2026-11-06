@@ -1,0 +1,4 @@
+/tmp/taskfold-source-selection-ios-host/Taskfold/Core/SharedCapture.swift:250:79: error: cannot find type 'WorkspaceBinding' in scope
+    |                                                                               `- error: cannot find type 'WorkspaceBinding' in scope
+/tmp/taskfold-source-selection-ios-host/TaskfoldUITests/WorkflowSourceSelectionUITests.swift:1271:158: error: cannot call value of non-function type 'XCUIElement'
+     |                                                                                                                                                              `- error: cannot call value of non-function type 'XCUIElement'
