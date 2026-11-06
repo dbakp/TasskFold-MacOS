@@ -9,8 +9,8 @@ import {fileURLToPath} from 'node:url';
 const exec=promisify(execFile);
 export async function createFullSchemaAudioFixture(runtime,options={}){
  const folder=await mkdtemp('/tmp/taskfold-full-audio-');await chmod(folder,0o700);
- const certPath=folder+'/cert.pem',keyPath=folder+'/key.pem',caPath=folder+'/ca.pem',caKey=folder+'/ca-key.pem';let child,server,closed=false;
- const state={authRequests:0,rpcRequests:0,uploads:0,downloads:0,deletes:0,afterStorageGet:null,afterStoragePut:null};
+ const certPath=folder+'/cert.pem',keyPath=folder+'/key.pem',caPath=folder+'/ca.pem',caKey=folder+'/ca-key.pem';let child,server,port,closed=false;
+ const state={authRequests:0,rpcRequests:0,uploads:0,downloads:0,deletes:0,rateLimitedRPCs:0,afterStorageGet:null,afterStoragePut:null};
  const maintenanceKey=randomBytes(32).toString('hex');
  const close=async()=>{
   if(closed)return;closed=true;
@@ -37,22 +37,27 @@ export async function createFullSchemaAudioFixture(runtime,options={}){
     const reply=await fetch(origin+req.url,{method:req.method,headers,redirect:'error',signal:AbortSignal.timeout(30000),...(parts.length?{body:Buffer.concat(parts)}:{})});
     const bytes=Buffer.from(await reply.arrayBuffer());
     if(req.url.startsWith('/auth/'))state.authRequests++;
-    if(req.url.startsWith('/rest/'))state.rpcRequests++;
+    if(req.url.startsWith('/rest/')){state.rpcRequests++;try{if(JSON.parse(bytes).status==='rate_limited')state.rateLimitedRPCs++}catch{}}
     if(req.url.startsWith('/storage/')&&req.method==='POST'&&reply.ok){state.uploads++;if(state.afterStoragePut)await state.afterStoragePut()}
     if(req.url.startsWith('/storage/')&&req.method==='DELETE'&&reply.ok)state.deletes++;
     if(req.url.startsWith('/storage/')&&req.method==='GET'&&reply.ok){state.downloads++;if(state.afterStorageGet)await state.afterStorageGet()}
+    if(res.destroyed)return;
     const outgoing=Object.fromEntries(reply.headers);delete outgoing['content-encoding'];delete outgoing['content-length'];delete outgoing['transfer-encoding'];
     res.writeHead(reply.status,{...outgoing,'Content-Length':bytes.length});res.end(bytes);
    }catch{if(!res.headersSent)res.writeHead(503,{'Content-Type':'application/json'});res.end('{"error":"Owned upstream operation failed"}')}
   });
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve)});
+  const startHandler=async()=>{
+   assert(!closed&&!child,'Owned handler must be stopped before restart');
   child=spawn('deno',['run','--cert',caPath,'--allow-net=127.0.0.1','--allow-read='+certPath+','+keyPath,'--allow-env=TASKFOLD_AUDIO_LOCAL_URL,TASKFOLD_AUDIO_LOCAL_SERVICE,TASKFOLD_AUDIO_LOCAL_CERT,TASKFOLD_AUDIO_LOCAL_KEY,TASKFOLD_AUDIO_LOCAL_MAINTENANCE,TASKFOLD_AUDIO_LOCAL_PROJECT_FILES',fileURLToPath(new URL('./full-schema-audio-server.ts',import.meta.url))],{env:{PATH:process.env.PATH,TASKFOLD_AUDIO_LOCAL_URL:'https://127.0.0.1:'+server.address().port,TASKFOLD_AUDIO_LOCAL_SERVICE:runtime.service,TASKFOLD_AUDIO_LOCAL_CERT:certPath,TASKFOLD_AUDIO_LOCAL_KEY:keyPath,TASKFOLD_AUDIO_LOCAL_MAINTENANCE:maintenanceKey,TASKFOLD_AUDIO_LOCAL_PROJECT_FILES:options.projectFiles===true?'1':'0'},stdio:['ignore','pipe','pipe']});
   let diagnostic='';child.stderr.on('data',x=>diagnostic=(diagnostic+x).slice(-1500));
-  const port=await new Promise((resolve,reject)=>{
+  port=await new Promise((resolve,reject)=>{
    let buffer='';const timer=setTimeout(()=>reject(Error('Owned TLS handler startup timed out')),15000);
    child.once('error',()=>{clearTimeout(timer);reject(Error('Owned TLS handler could not start'))});child.once('exit',()=>{clearTimeout(timer);reject(Error('Owned TLS handler exited: '+diagnostic))});
    child.stdout.on('data',part=>{buffer+=part;for(const line of buffer.split('\n'))try{const value=JSON.parse(line);if(Number.isInteger(value.ready)){clearTimeout(timer);resolve(value.ready)}}catch{}});
   });
+  };
+  await startHandler();
   const untrustedTLSRejected=await new Promise(resolve=>{
    const request=https.request({hostname:'127.0.0.1',port,path:'/',servername:'localhost',rejectUnauthorized:true},response=>{response.resume();resolve(false)});
    request.setTimeout(5000,()=>{request.destroy();resolve(false)});request.once('error',error=>resolve(['UNABLE_TO_VERIFY_LEAF_SIGNATURE','SELF_SIGNED_CERT_IN_CHAIN','CERT_UNTRUSTED'].includes(error.code)));request.end();
@@ -62,6 +67,13 @@ export async function createFullSchemaAudioFixture(runtime,options={}){
    request.setTimeout(30000,()=>request.destroy(Error('Owned TLS handler request timed out')));request.once('error',reject);request.end(bytes);
   });
   const assertProjectFiles=()=>{if(options.projectFiles!==true)throw Error('Combined file fixture is not enabled')};
-  return {call,projectFiles:(token,action,body)=>{assertProjectFiles();return call(token,action,body,'project-files')},taskFiles:(token,action,body)=>{assertProjectFiles();return call(token,action,body,'task-files')},maintain:()=>call(null,'__maintenance',{}),state,close,tlsVerified:true,untrustedTLSRejected,endpoint:'https://127.0.0.1:'+port,certificateAuthority:ca.toString('utf8')};
+  const interruptHandler=async()=>{
+   assert(options.interruptible===true&&!closed&&child&&child.exitCode===null,'Explicit live owned handler required');
+   const owned=child;
+   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Owned interrupted handler did not stop')),5000);owned.once('exit',()=>{clearTimeout(timer);resolve()});owned.kill('SIGKILL')});
+   child=null;
+  };
+  const restartHandler=async()=>{assert(options.interruptible===true);await startHandler()};
+  return {call,interruptHandler,restartHandler,projectFiles:(token,action,body)=>{assertProjectFiles();return call(token,action,body,'project-files')},taskFiles:(token,action,body)=>{assertProjectFiles();return call(token,action,body,'task-files')},maintain:()=>call(null,'__maintenance',{}),state,close,tlsVerified:true,untrustedTLSRejected,get endpoint(){return 'https://127.0.0.1:'+port},certificateAuthority:ca.toString('utf8')};
  }catch(error){await close();throw error}
 }

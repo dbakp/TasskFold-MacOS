@@ -2,6 +2,22 @@ import Foundation
 import CryptoKit
 import Observation
 
+/// Only a bounded, well-formed notice from the fixed file gateway permits a wait.
+struct FileServiceRetryDelay: Error, Equatable, Sendable, LocalizedError {
+    let seconds: Int
+    var errorDescription: String? { "The file service is busy. Try again shortly." }
+    init?(header: String?, data: Data) {
+        guard let header, let seconds = Int(header), String(seconds) == header, (1...60).contains(seconds), data.count <= 1024,
+              let body = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data),
+              body == ["code": .string("rate_limited")] || body == ["error": .string("rate_limited")] else { return nil }
+        self.seconds = seconds
+    }
+    @MainActor func wait(check: () throws -> Void, sleep: (UInt64) async throws -> Void = { try await Task.sleep(nanoseconds: $0) }) async throws {
+        for _ in 0..<(seconds * 10) { try Task.checkCancellation(); try check(); try await sleep(100_000_000) }
+        try Task.checkCancellation(); try check()
+    }
+}
+
 /// Frozen local bytes and server intent. Never placed in the optimistic task queue.
 struct TaskFileUploadJournal: ReviewedTeamFileCommand, CustomStringConvertible, CustomDebugStringConvertible {
     enum Phase: String, Codable, Sendable { case queued, attempted, published, cancelled, expired }

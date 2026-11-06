@@ -1894,7 +1894,9 @@ extension Backend: TaskFileUploadTransport {
             }
             try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
         } catch { bytes.task.cancel(); throw error }
-        guard let response = incoming as? HTTPURLResponse, response.url == url, (200..<300).contains(response.statusCode) else { throw TaskFileUploadJournal.invalid }
+        guard let response = incoming as? HTTPURLResponse, response.url == url else { throw TaskFileUploadJournal.invalid }
+        if response.statusCode == 429, let delay = FileServiceRetryDelay(header: response.value(forHTTPHeaderField: "Retry-After"), data: data) { throw delay }
+        guard (200..<300).contains(response.statusCode) else { throw TaskFileUploadJournal.invalid }
         return data
     }
     func downloadTaskFile(_ attachment: Record, target: Record, account: String, origin: String, incarnation: UUID) async throws -> Data {
@@ -1904,9 +1906,17 @@ extension Backend: TaskFileUploadTransport {
         try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
         try await refreshIfNeeded(); try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
         let body = try TaskfoldJSONEncoder().encode(Record(["object_id": attachment["storage_object_id"], "task_id": target["task_id"], "task_generation": target["task_generation"]]))
-        let bytes = try await fileRequest(body, action: "download", account: account, origin: origin, incarnation: incarnation, maximum: TaskFileUploadJournal.maximumBytes)
-        guard bytes.count == Int(size), TaskFileUploadJournal.digest(bytes) == attachment.string("sha256") else { throw TaskFileUploadJournal.invalid }
-        return bytes
+        for attempt in 0..<3 {
+            do {
+                let bytes = try await fileRequest(body, action: "download", account: account, origin: origin, incarnation: incarnation, maximum: TaskFileUploadJournal.maximumBytes)
+                guard bytes.count == Int(size), TaskFileUploadJournal.digest(bytes) == attachment.string("sha256") else { throw TaskFileUploadJournal.invalid }
+                return bytes
+            } catch let delay as FileServiceRetryDelay {
+                guard attempt < 2 else { throw delay }
+                try await delay.wait(check: { try self.checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation) })
+            }
+        }
+        throw TaskFileUploadJournal.invalid
     }
 }
 

@@ -13,11 +13,13 @@ private final class FilePreparationIO: CalendarSecureItemIO, @unchecked Sendable
     let raw: [String: JSON]
     var calls: [(ProjectFilePreparationRequest, ProjectFilePreparationAction)] = []
     var stored: ProjectFilePreparationRequest?
+    var limitedCopies = 0
     var ready = false, losePrepare = false, cancelled = false, foreign = false, holdCopy = false
     var continuation: CheckedContinuation<Void, Never>?
     init(_ raw: [String: JSON]) { self.raw = raw }
     func projectFilePreparation(_ request: ProjectFilePreparationRequest, action: ProjectFilePreparationAction, incarnation: UUID) async throws -> ProjectFilePreparationPage? {
         calls.append((request, action))
+        if case .copy = action, limitedCopies > 0 { limitedCopies -= 1; throw FileServiceRetryDelay(header: "1", data: Data("{\"code\":\"rate_limited\"}".utf8))! }
         if action == .resolve && stored == nil { return nil }
         let hadPlan = stored != nil
         if stored == nil { stored = request }; guard stored == request else { throw ProjectFilePreparationRequest.invalid }
@@ -73,6 +75,55 @@ final class ProjectFilePreparationTests: XCTestCase {
         XCTAssertEqual(raw["syntheticOnly"], .bool(true)); XCTAssertEqual(raw["containerRemoved"], .bool(true))
         let request = try ProjectFilePreparationRequest(account: raw["account"]!.text, origin: raw["origin"]!.text, body: raw["request"]!.object, expectedCount: raw["expectedCount"]!.integer)
         return try (raw, TeamProjectAdoptionInspection(raw["inspection"]!.object, scope: request.scope), request, ProjectFilePreparationPage(raw["ready"]!.object, request: request))
+    }
+    func testRateNoticeRequiresBoundedCanonicalDelayAndExactBody() throws {
+        let valid = Data("{\"code\":\"rate_limited\"}".utf8)
+        XCTAssertEqual(FileServiceRetryDelay(header: "1", data: valid)?.seconds, 1)
+        XCTAssertEqual(FileServiceRetryDelay(header: "60", data: Data("{\"error\":\"rate_limited\"}".utf8))?.seconds, 60)
+        for header in [nil, "0", "61", "-1", "1.5", "01", "+1", "tomorrow"] { XCTAssertNil(FileServiceRetryDelay(header: header, data: valid)) }
+        for body in ["{}", "{\"code\":\"retry\"}", "{\"code\":\"rate_limited\",\"object\":\"private\"}"] { XCTAssertNil(FileServiceRetryDelay(header: "1", data: Data(body.utf8))) }
+    }
+    @MainActor func testRateWaitRetriesOnlyTheExactSavedCopyAndReturnsConsent() async throws {
+        let (raw, inspection, _, _) = try fixture(), peer = FilePreparationPeer(raw), vault = ProjectFilePreparationVault(io: FilePreparationIO())
+        peer.limitedCopies = 1
+        var sleeps = 0
+        let model = ProjectFilePreparationModel(account: inspection.scope.account, origin: inspection.scope.origin, incarnation: UUID(), vault: vault, service: peer, current: { true }, retrySleep: { nanos in XCTAssertEqual(nanos, 100_000_000); sleeps += 1 })
+        await model.prepare(inspection)
+        let saved = try XCTUnwrap(model.request), copies = peer.calls.filter { if case .copy = $0.1 { return true }; return false }
+        XCTAssertEqual(copies.count, 2); XCTAssertEqual(copies[0].1, copies[1].1); XCTAssertTrue(copies.allSatisfy { $0.0 == saved })
+        XCTAssertEqual(sleeps, 10); XCTAssertNotNil(model.consent); XCTAssertNil(model.message); XCTAssertFalse(model.busy)
+        let pending = try await vault.pending(account: saved.account, origin: saved.origin); XCTAssertEqual(pending, saved)
+    }
+    @MainActor func testStopDuringRateWaitPreventsAnotherRequestAndKeepsOriginalRecovery() async throws {
+        let (raw, inspection, _, _) = try fixture(), peer = FilePreparationPeer(raw), vault = ProjectFilePreparationVault(io: FilePreparationIO())
+        peer.limitedCopies = 99
+        var onWait: (() -> Void)?
+        let model = ProjectFilePreparationModel(account: inspection.scope.account, origin: inspection.scope.origin, incarnation: UUID(), vault: vault, service: peer, current: { true }, retrySleep: { _ in onWait?() })
+        onWait = { [weak model] in model?.stop() }
+        await model.prepare(inspection)
+        let saved = try XCTUnwrap(model.request)
+        XCTAssertEqual(peer.calls.filter { if case .copy = $0.1 { return true }; return false }.count, 1)
+        XCTAssertFalse(model.busy); XCTAssertTrue(model.paused); XCTAssertNil(model.consent)
+        let pending = try await vault.pending(account: saved.account, origin: saved.origin); XCTAssertEqual(pending, saved)
+        peer.limitedCopies = 0; await model.resume(); XCTAssertEqual(model.request, saved); XCTAssertNotNil(model.consent)
+    }
+    @MainActor func testAccountChangeDuringRateWaitPreventsAnotherRequest() async throws {
+        let (raw, inspection, _, _) = try fixture(), peer = FilePreparationPeer(raw)
+        peer.limitedCopies = 99
+        var current = true
+        let model = ProjectFilePreparationModel(account: inspection.scope.account, origin: inspection.scope.origin, incarnation: UUID(), vault: ProjectFilePreparationVault(io: FilePreparationIO()), service: peer, current: { current }, retrySleep: { _ in current = false })
+        await model.prepare(inspection)
+        XCTAssertEqual(peer.calls.filter { if case .copy = $0.1 { return true }; return false }.count, 1)
+        XCTAssertNotNil(model.request); XCTAssertNil(model.consent); XCTAssertFalse(model.busy)
+    }
+    @MainActor func testRepeatedRateLimitsStopAtTheBoundAndKeepRecovery() async throws {
+        let (raw, inspection, _, _) = try fixture(), peer = FilePreparationPeer(raw)
+        peer.limitedCopies = 99
+        var sleeps = 0
+        let model = ProjectFilePreparationModel(account: inspection.scope.account, origin: inspection.scope.origin, incarnation: UUID(), vault: ProjectFilePreparationVault(io: FilePreparationIO()), service: peer, current: { true }, retrySleep: { _ in sleeps += 1 })
+        await model.prepare(inspection)
+        XCTAssertEqual(peer.calls.filter { if case .copy = $0.1 { return true }; return false }.count, 3)
+        XCTAssertEqual(sleeps, 20); XCTAssertNotNil(model.request); XCTAssertNil(model.consent); XCTAssertNotNil(model.message); XCTAssertFalse(model.busy)
     }
     func testGenuineServiceContractProducesExplicitSignedCommandAndExactColdReceipt() throws {
         let (raw, inspection, request, ready) = try fixture()

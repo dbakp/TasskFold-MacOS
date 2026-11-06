@@ -691,7 +691,7 @@ enum FullSchemaNativeFixture {
         } else { try bytes.write(to: root.appendingPathComponent(phase + ".json"), options: .atomic) }
     }
     static var phase: String {ProcessInfo.processInfo.arguments.first(where:{$0.hasPrefix("--full-schema-phase=")}).map{String($0.dropFirst("--full-schema-phase=".count))} ?? "invalid"}
-    struct Configuration: Codable,Sendable {let version:Int;let nonce:UUID;let account:String;let task:String;let sibling:String;let origin:String;let key:String;let email:String;let password:String;let queuedFingerprint:String?;let child:String?;let audioOrigin:String?;let audioCA:String?;let protectedStorage:Bool?}
+    struct Configuration: Codable,Sendable {let version:Int;let nonce:UUID;let account:String;let task:String;let sibling:String;let origin:String;let key:String;let email:String;let password:String;let queuedFingerprint:String?;let child:String?;let audioOrigin:String?;let audioCA:String?;let protectedStorage:Bool?;let expectedFileCount:Int?}
     struct SavedSession:Codable {let nonce:UUID;let session:Session}
     static func configuration() throws -> Configuration {
         guard enabled else{throw CancellationError()}
@@ -707,6 +707,7 @@ enum FullSchemaNativeFixture {
                 guard externalConfiguration.deletingLastPathComponent().lastPathComponent == "taskfold-native-audio-control-" + c.nonce.uuidString.lowercased() else { throw CancellationError() }
             }
         }
+        if let count = c.expectedFileCount { guard (1...10000).contains(count) else { throw AppFailure(message: "Invalid isolated file count") } }
         if phase.hasPrefix("audio-") {
             guard let origin=c.audioOrigin,let u=URLComponents(string:origin),u.scheme=="https",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.path.isEmpty,u.query==nil,u.fragment==nil,
                   let ca=c.audioCA,ca.utf8.count<32000,Data(base64Encoded:ca) != nil else {throw AppFailure(message:"Invalid isolated audio TLS configuration")}

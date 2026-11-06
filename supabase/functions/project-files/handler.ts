@@ -7,7 +7,11 @@ type Config = {
 };
 type Dependencies = { send?: (request: Request) => Promise<Response> };
 class Failure extends Error {
-  constructor(readonly status: number, readonly code: string) {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+    readonly retryAfter = 0,
+  ) {
     super(code);
   }
 }
@@ -48,8 +52,15 @@ const headers = {
   "X-Content-Type-Options": "nosniff",
   "Content-Type": "application/json",
 };
-const json = (value: unknown, status = 200) =>
-  new Response(JSON.stringify(value), { status, headers });
+const json = (
+  value: unknown,
+  status = 200,
+  extra: Record<string, string> = {},
+) =>
+  new Response(JSON.stringify(value), {
+    status,
+    headers: { ...headers, ...extra },
+  });
 async function bounded<T>(
   promise: Promise<T>,
   signal: AbortSignal,
@@ -107,7 +118,10 @@ async function read(
 function failed(value: Row): never {
   if (value.status === "disabled") throw new Failure(503, "disabled");
   if (value.status === "unavailable") throw new Failure(404, "unavailable");
-  if (value.status === "rate_limited") throw new Failure(429, "rate_limited");
+  if (
+    value.status === "rate_limited" && Number.isInteger(value.retry_after) &&
+    Number(value.retry_after) >= 1 && Number(value.retry_after) <= 60
+  ) throw new Failure(429, "rate_limited", Number(value.retry_after));
   if (
     [
       "source_changed",
@@ -499,7 +513,11 @@ export function createProjectFilesHandler(
       }
     } catch (error) {
       return error instanceof Failure
-        ? json({ code: error.code }, error.status)
+        ? json(
+          { code: error.code },
+          error.status,
+          error.retryAfter ? { "Retry-After": String(error.retryAfter) } : {},
+        )
         : json({ code: "retry" }, 503);
     } finally {
       if (timer !== undefined) clearTimeout(timer);
