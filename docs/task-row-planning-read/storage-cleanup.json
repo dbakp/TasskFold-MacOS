@@ -1,0 +1,126 @@
+{
+  "date": "2026-11-07",
+  "freeBeforeBytes": 47246049280,
+  "boundedCaches": {
+    "apply": true,
+    "freeBeforeBytes": 47246004224,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 691712000,
+        "projectedAllocatedBytes": 691712000
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 657461248,
+        "projectedAllocatedBytes": 657461248
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 527671296,
+        "projectedAllocatedBytes": 527671296
+      }
+    ],
+    "freeAfterBytes": 47245488128,
+    "actualFreeChangeBytes": -516096
+  },
+  "retiredCompletedOutputs": [
+    {
+      "name": "taskfold-row-planning-ios-build.log",
+      "bytes": 167367
+    },
+    {
+      "name": "taskfold-row-planning-phone-native.log",
+      "bytes": 8398
+    },
+    {
+      "name": "taskfold-row-planning-mac-core.log",
+      "bytes": 52479
+    },
+    {
+      "name": "taskfold-row-planning-ios-core.log",
+      "bytes": 49731
+    },
+    {
+      "name": "taskfold-save-stages-before.log",
+      "bytes": 25229
+    },
+    {
+      "name": "taskfold-save-stages-before-detail.log",
+      "bytes": 25157
+    },
+    {
+      "name": "taskfold-ascii-save-mac-first.log",
+      "bytes": 37495
+    },
+    {
+      "name": "taskfold-ascii-save-mac-second.log",
+      "bytes": 34113
+    },
+    {
+      "name": "taskfold-ascii-save-mac-third.log",
+      "bytes": 39254
+    },
+    {
+      "name": "taskfold-json-probe-run.log",
+      "bytes": 2683
+    },
+    {
+      "name": "taskfold-daily-mac.log",
+      "bytes": 168990
+    },
+    {
+      "name": "taskfold-mac32-release-build.log",
+      "bytes": 922
+    },
+    {
+      "name": "taskfold-mac32-package.log",
+      "bytes": 376
+    },
+    {
+      "name": "taskfold-row-planning-phone-native.xcresult",
+      "allocatedBytes": 802816
+    },
+    {
+      "name": "taskfold-row-planning-phone-attachments",
+      "allocatedBytes": 176128
+    },
+    {
+      "name": "taskfold-json-probe-baseline",
+      "bytes": 275456
+    },
+    {
+      "name": "taskfold-json-probe-candidate",
+      "bytes": 275552
+    }
+  ],
+  "coreCachesAllocatedBytes": {
+    "ios": 686899200,
+    "mac": 629628928
+  },
+  "normalMac31ProcessKept": true,
+  "retainedMacBuilds": [
+    32,
+    31
+  ],
+  "privateBackupsRealDataKeychainAndDockerPreserved": true,
+  "devicesErased": false,
+  "freeAfterBytes": 47255687168,
+  "additionalPackageRetirement": {
+    "date": "2026-11-07",
+    "removed": "Taskfold-1.2.0-30-mac-development.zip",
+    "bytes": 20196187,
+    "reason": "Mac31 normal startup/sync and preserved work were accepted; its archive is reverified and is the known-good rollback for prepared32.",
+    "retainedVerifiedPackages": [
+      32,
+      31
+    ],
+    "privateBackupsAndNumberedReceiptsPreserved": true,
+    "freeBeforeBytes": 47255719936,
+    "freeAfterBytes": 47255699456
+  }
+}

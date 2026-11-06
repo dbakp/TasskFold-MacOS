@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-07",
+  "owner": "mac",
+  "tests": 23,
+  "failures": 0,
+  "newRowCases": 8,
+  "filter": "TaskRowPlanningReadTests|PlannerTests|TaskPlanningTests",
+  "rows": 40,
+  "swiftOptimization": "-Onone",
+  "repeatedMedianSeconds": 0.06911897659301758,
+  "singleMedianSeconds": 0.010606050491333008,
+  "logSHA256": "7e740d62952f6e672dbb7c66c7e0041acd42135b5644e369cac428e79951b3b8"
+}

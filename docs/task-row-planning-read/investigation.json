@@ -1,0 +1,53 @@
+{
+  "reviewDate": "2026-11-07",
+  "decision": "Do not ship the parser candidate. Optimized gains were small and dense-escape cases regressed; leave the preserving codec unchanged and reduce repeated row planning reads instead.",
+  "initialDebugWorkload": "200 and 2000 synthetic tasks with one large legacy attachment and one exact future number",
+  "debugEncodingSeconds": [
+    0.5061450004577637,
+    0.7883989810943604
+  ],
+  "debugPlainEncodingSeconds": [
+    0.011352062225341797,
+    0.024629950523376465
+  ],
+  "optimizedProbe": [
+    {
+      "tasks": 200,
+      "payload": "base64-like",
+      "oldEncodeSeconds": 0.012768030166625977,
+      "candidateEncodeSeconds": 0.009218931198120117,
+      "oldDecodeSeconds": 0.010028958320617676,
+      "candidateDecodeSeconds": 0.008596062660217285
+    },
+    {
+      "tasks": 200,
+      "payload": "dense-slashes",
+      "oldEncodeSeconds": 0.01661503314971924,
+      "candidateEncodeSeconds": 0.017256975173950195,
+      "oldDecodeSeconds": 0.026961922645568848,
+      "candidateDecodeSeconds": 0.026978015899658203
+    },
+    {
+      "tasks": 2000,
+      "payload": "base64-like",
+      "oldEncodeSeconds": 0.03273499011993408,
+      "candidateEncodeSeconds": 0.02800905704498291,
+      "oldDecodeSeconds": 0.022915959358215332,
+      "candidateDecodeSeconds": 0.020466923713684082
+    },
+    {
+      "tasks": 2000,
+      "payload": "dense-slashes",
+      "oldEncodeSeconds": 0.03606998920440674,
+      "candidateEncodeSeconds": 0.037439942359924316,
+      "oldDecodeSeconds": 0.03874003887176514,
+      "candidateDecodeSeconds": 0.04001200199127197
+    }
+  ],
+  "probeUsesProductionCodec": true,
+  "probeUsesFullStore": false,
+  "probeUsesOrdinaryTaskModel": false,
+  "baselineCodecSHA256": "f29aa14b033e09ae8ca63f2c7831613dcc15e8f0547d08ec10b3257c68fc2f52",
+  "discardedCandidateSHA256": "348c7cc3159f20a30f2531379d1f117e86fc082e38841aa9a3d6c9605662f39e",
+  "codecChangedInFinalImplementation": false
+}
