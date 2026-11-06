@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-07",
+  "owner": "ios",
+  "tests": 23,
+  "failures": 0,
+  "newRowCases": 8,
+  "filter": "TaskRowPlanningReadTests|PlannerTests|TaskPlanningTests",
+  "rows": 40,
+  "swiftOptimization": "-Onone",
+  "repeatedMedianSeconds": 0.07025706768035889,
+  "singleMedianSeconds": 0.010568976402282715,
+  "logSHA256": "58a788b95b5d0aef66c7d12c29072a88d18d20f39335e385bd6476ffcb78b73f"
+}

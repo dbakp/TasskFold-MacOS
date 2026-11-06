@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-07",
+  "onePlanningReadPerRowRender": true,
+  "fixedInstantResolvedOnce": true,
+  "existingDateClockZoneAndStateRulesPreserved": true,
+  "independentCore": {
+    "ios": {
+      "date": "2026-11-07",
+      "owner": "ios",
+      "tests": 23,
+      "failures": 0,
+      "newRowCases": 8,
+      "filter": "TaskRowPlanningReadTests|PlannerTests|TaskPlanningTests",
+      "rows": 40,
+      "swiftOptimization": "-Onone",
+      "repeatedMedianSeconds": 0.07025706768035889,
+      "singleMedianSeconds": 0.010568976402282715,
+      "logSHA256": "58a788b95b5d0aef66c7d12c29072a88d18d20f39335e385bd6476ffcb78b73f"
+    },
+    "mac": {
+      "date": "2026-11-07",
+      "owner": "mac",
+      "tests": 23,
+      "failures": 0,
+      "newRowCases": 8,
+      "filter": "TaskRowPlanningReadTests|PlannerTests|TaskPlanningTests",
+      "rows": 40,
+      "swiftOptimization": "-Onone",
+      "repeatedMedianSeconds": 0.06911897659301758,
+      "singleMedianSeconds": 0.010606050491333008,
+      "logSHA256": "7e740d62952f6e672dbb7c66c7e0041acd42135b5644e369cac428e79951b3b8"
+    }
+  },
+  "owningPhoneNativeAccepted": true,
+  "owningPhoneNativeProof": {
+    "accepted": true,
+    "actualStoreUndoRedo": true,
+    "exactColdTablesAndBadges": true,
+    "floatingRowPreserved": true,
+    "nativeTimings": {
+      "actualNativeApp": true,
+      "equivalentDerivedValues": true,
+      "repeatedMedianSeconds": 0.16085898876190186,
+      "rows": 40,
+      "samples": 5,
+      "singleMedianSeconds": 0.02463209629058838
+    },
+    "notesChildrenPriorityAndUnrelatedWorkPreserved": true,
+    "onlyPlanningFieldsChanged": true,
+    "planningBadgeChangedAfterSave": true,
+    "productionTaskRows": true
+  },
+  "nativeAppSwiftOptimization": "-Onone",
+  "phoneRuntimeWarnings": [],
+  "optimizedFrameRateClaimed": false,
+  "fullNavigationOrDragAcceptanceClaimed": false,
+  "macRuntimeAccepted": false,
+  "macControlReportedLocked": true,
+  "mac32Prepared": true,
+  "mac32Installed": false,
+  "normalInstalledBuild": "31",
+  "normalMac31KeptRunning": true,
+  "normalDataEdited": false,
+  "codecChanged": false,
+  "schemaChanged": false,
+  "hostedChanges": false,
+  "normalGatesChanged": false,
+  "phoneInstallationDeferred": true,
+  "owner": "mac",
+  "sourceRevision": "ea8c64fbb9ea58e6c0e239e684ffa84bc6b9f840"
+}

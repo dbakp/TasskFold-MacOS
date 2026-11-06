@@ -1,0 +1,2 @@
+{"platform": "macOS", "version": "1.2.0", "build": "32", "releaseFloorSatisfied": true, "signingAndRuntimeAcceptance": "separate required checks"}
+{"platform": "mac", "version": "1.2.0", "build": "32", "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-32-mac-development.zip", "archivePayloadVerified": true, "installed": false}

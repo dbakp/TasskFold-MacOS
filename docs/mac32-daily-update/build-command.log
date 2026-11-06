@@ -1,0 +1,19 @@
+{"path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac", "freeBytes": 47330009088, "requiredBytes": 21474836480, "canStartHeavyTests": true}
+{"platform": "macOS", "version": "1.2.0", "build": "32", "releaseFloorSatisfied": true, "signingAndRuntimeAcceptance": "separate required checks"}
+{
+  "apply": true,
+  "freeBeforeBytes": 47297196032,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 527671296,
+      "projectedAllocatedBytes": 527671296
+    }
+  ],
+  "freeAfterBytes": 47297196032,
+  "actualFreeChangeBytes": 0
+}
+Daily-use development candidate: /Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Release/Taskfold.app
+Build receipt: /Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/taskfold-daily-mac.json

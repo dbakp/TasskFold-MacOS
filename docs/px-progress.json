@@ -1,12 +1,13 @@
 {
   "schema": 1,
-  "updated": "2026-11-06",
+  "updated": "2026-11-07",
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "P2 · Mac31 installed; initial shared-storage wait removed",
-  "latest": "Mac31 is installed, opens normally and syncs with saved tasks/pending queues preserved. The next source batch moves initial widget/shared-draft storage access off the interface thread, with bounded work and stale-write privacy checks. Each owner passes 45 focused checks; actual iPhone controls verify held-write usability, task Save, sign-out redaction, local return and exact cold data. Mac builds/signs; its new native check is pending because the screen locked again. This startup source is not installed in31. Wider pauses/Px and phone installation remain open.",
+  "focus": "P2 · Task rows reuse planning reads; Mac32 prepared",
+  "latest": "Task rows now resolve planning once per render and reuse it for date/time/zone badges and state. Each owner passes 23 focused checks; current iPhone components accept Save, live badge refresh, unchanged other work, Store Undo/Redo and exact cold tables/badges with no runtime warnings. Debug native planning reads for 40 rows are about 161 ms → 25 ms; this is not a physical-FPS or optimized-release claim. Signed optimized Mac32 packages this and the earlier startup fix, with exact archive/profile checks. It is prepared, not installed: Mac31 stays running while Mac control is locked. Broader saves/navigation/Px and phone installation remain open.",
   "next": [
+    "Install prepared Mac32 after a fresh private safety copy, normal quit and startup/data checks when Mac control is available. Routine updates already have authorization; keep Mac31 and the verified rollback intact. Phone installation stays deferred.",
     "Continue durable-save and remaining browsing/rendering pauses. Initial widget/shared-draft publication now runs in the background; immediate privacy/receipt barriers and private cache writes remain synchronous. Mac native, fresh system-permission and wider account/window acceptance remain separate.",
     "Continue ordinary notes/headings, workflow and browsing performance, actual drag/rendering and larger workloads. Keep platform, shared/cloud/account/window, speech and physical FPS acceptance distinct.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
@@ -501,7 +502,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Shared-draft counts, review loading, Save preflight, exact acknowledgement and Discard now use bounded background work with current-workspace checks. Both owners pass 32 focused sharing checks; current phone/tablet controls accept held Save responsiveness, changed-receipt refusal, exact saved bytes, full notes on retry, one task/receipt, Discard, Store Undo/Redo and cold return. Independent Mac builds/signs; native Mac interaction is separate. Scoped reuse/background preparation already covers filters, people, workflows, catalogs, searches, Insights, navigation counts, checklist progress and note reading/previews. Seven-task day review counts only successful saves; dated-list drops use one commit and Undo. Initial shared-storage publication now uses one background worker and one newest pending request. Under-lock ticket checks preserve immediate sign-out/account/access and receipt barriers. Both owners pass 45 focused checks; actual iPhone controls accept held-write usability, private Save, immediate redaction, late-worker refusal, local return and exact all-table cold readback. Mac builds/signs; native Mac, tablet and fresh system-prompt acceptance remain separate. Critical privacy/receipt paths, Keychain, private durable writes and Watch IO are not claimed nonblocking. Actual drag/rendering, larger workloads, wider shared/cloud/account/window/accessibility contexts, speech and physical FPS remain unfinished. The accumulated note/shared-draft source is installed in Mac31 after private safety-copy and exact archive/signature/profile checks. Normal startup/sync and saved-task/queue preservation are verified; Mac30 remains the rollback. Phone installation stays deferred.",
+              "detail": "Task rows now share one immutable planning read per render across date/time/zone badges, state and Mac fitting layouts. Both owners pass 23 focused checks; actual iPhone components accept date Save, current badge, unchanged other work, Store Undo/Redo and exact cold tables/badges. Debug native derived-value timing for 40 rows is 161 ms → 25 ms, with no optimized-release/FPS claim. Mac32 Release builds/signs and passes exact archive/profile checks but is not installed while Mac control is locked; Mac31 stays intact. The JSON parser candidate was discarded after weak optimized gains/regressions; the codec is unchanged. Shared-draft counts, review loading, Save preflight, exact acknowledgement and Discard now use bounded background work with current-workspace checks. Both owners pass 32 focused sharing checks; current phone/tablet controls accept held Save responsiveness, changed-receipt refusal, exact saved bytes, full notes on retry, one task/receipt, Discard, Store Undo/Redo and cold return. Independent Mac builds/signs; native Mac interaction is separate. Scoped reuse/background preparation already covers filters, people, workflows, catalogs, searches, Insights, navigation counts, checklist progress and note reading/previews. Seven-task day review counts only successful saves; dated-list drops use one commit and Undo. Initial shared-storage publication now uses one background worker and one newest pending request. Under-lock ticket checks preserve immediate sign-out/account/access and receipt barriers. Both owners pass 45 focused checks; actual iPhone controls accept held-write usability, private Save, immediate redaction, late-worker refusal, local return and exact all-table cold readback. Mac builds/signs; native Mac, tablet and fresh system-prompt acceptance remain separate. Critical privacy/receipt paths, Keychain, private durable writes and Watch IO are not claimed nonblocking. Actual drag/rendering, larger workloads, wider shared/cloud/account/window/accessibility contexts, speech and physical FPS remain unfinished. The accumulated note/shared-draft source is installed in Mac31 after private safety-copy and exact archive/signature/profile checks. Normal startup/sync and saved-task/queue preservation are verified; Mac30 remains the rollback. Phone installation stays deferred.",
               "steps": [
                 {
                   "state": "done",
@@ -562,6 +563,10 @@
                 {
                   "state": "done",
                   "title": "Keep the window usable during initial shared-storage waits; verify phone Save, sign-out privacy and exact cold data (Mac built; native separate)"
+                },
+                {
+                  "state": "done",
+                  "title": "Reuse one planning read for task-row dates, clocks and zones; verify phone badge refresh, Save, Undo/Redo and cold data (Mac32 prepared)"
                 }
               ]
             }
@@ -696,7 +701,18 @@
             "startup-publication/mac-build.json",
             "startup-publication/iphone-native.json",
             "startup-publication/mac-native.json",
-            "startup-publication/storage-cleanup.json"
+            "startup-publication/storage-cleanup.json",
+            "task-row-planning-read/README.md",
+            "task-row-planning-read/verification.json",
+            "task-row-planning-read/ios-core.json",
+            "task-row-planning-read/mac-core.json",
+            "task-row-planning-read/ios-build.json",
+            "task-row-planning-read/iphone-native.json",
+            "task-row-planning-read/investigation.json",
+            "task-row-planning-read/storage-cleanup.json",
+            "mac32-daily-update/README.md",
+            "mac32-daily-update/preparation.json",
+            "mac32-daily-update/verification.json"
           ],
           "focus": true
         },
@@ -1614,13 +1630,24 @@
     "startup-publication/mac-build.json",
     "startup-publication/iphone-native.json",
     "startup-publication/mac-native.json",
-    "startup-publication/storage-cleanup.json"
+    "startup-publication/storage-cleanup.json",
+    "task-row-planning-read/README.md",
+    "task-row-planning-read/verification.json",
+    "task-row-planning-read/ios-core.json",
+    "task-row-planning-read/mac-core.json",
+    "task-row-planning-read/ios-build.json",
+    "task-row-planning-read/iphone-native.json",
+    "task-row-planning-read/investigation.json",
+    "task-row-planning-read/storage-cleanup.json",
+    "mac32-daily-update/README.md",
+    "mac32-daily-update/preparation.json",
+    "mac32-daily-update/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "6645469d917e0eb52184f088853bcb56abedaabd1162eb2604d2726590662f4f",
+    "P2_PLAN.md": "3874f12a2c60a25aa51fe9ac3a983c5357dd345434eec5af1acdc5dd08bb14f9",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "56eb14bc98bf37b5ff7e35d3323eb73191f2c8a079dd74a14f1f780b4582fcdc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1876,7 +1903,7 @@
     "genuine-structure-recovery/native.json": "2177dba043344491262626ed929b357033ff42cd1ca29f97eabadd968a8f5791",
     "genuine-structure-recovery/verification.json": "58a9b3f2afea3deab2c5963148e5355657352f9f09c35f82576463955f35a187",
     "github-delivery/README.md": "878c3a31c4aca872d3159d9137842268dcf403c7403df631988d7090a6a67b62",
-    "github-delivery/verification.json": "02b6da2d1f91f91ed6fed439e1d5b5537b1c4a3419b8cfaf0ac25891dbae5476",
+    "github-delivery/verification.json": "2db1bdf0fd73e936330f42763478550a9845b0688f4bc7888858f2967e9f12c1",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
     "indexed-child-source/README.md": "17dbc3ab03caca89cba0cd58913841825bdac4adbd8be66e50859276e53ec592",
@@ -1894,7 +1921,7 @@
     "mac-transfer-keyboard/verification.json": "9fbafaa53559350bc8a2697aa618845258098f7b65919d59acee97c8914d3a6e",
     "mac29-installation/README.md": "c9ef080e3f35f8960b97cba27790441ab9aef5fd81d5d080d04d6534bf459c3c",
     "mac29-installation/verification.json": "cfb1452f9597091988d23b9d3a8e120d4fceb71b3205be4d88f83f6c1af2fdc9",
-    "mac30-installation/README.md": "75a8cfdaff59583e3f1b8ea7bd0bbc241c746b641228b94336f5244bd1a96aae",
+    "mac30-installation/README.md": "e88750773d396db3089feef2c9b9eda92c1cc11bd21f0eaf600edf2fe6409626",
     "mac30-installation/build.json": "63e8b13709cf20abb3f71b073bf68cc34ff3a8dae29081d910c9793c2257262b",
     "mac30-installation/storage-cleanup.json": "d1489c9794a262e36d738b13c4e8d864384e88589f65d5b64c3cf5860f423f00",
     "mac30-installation/verification.json": "075fb43e8395378644628b09ebe1f7bcbb4445518e36f9426dae87d3db535383",
@@ -1903,6 +1930,9 @@
     "mac31-daily-update/safety-copy.json": "c7206e0c9e228f703f11947a52fb7c12c754062bf84fbe81dc871a35def5a6a4",
     "mac31-daily-update/storage-cleanup.json": "471efe9b989bf40adbac5b4d2a6e638e94be46541fe3c19f6eea1e8f58421dcf",
     "mac31-daily-update/verification.json": "d9884b59d35e9047e50922f7c4fc93f4776f32f58e204be868d97ad1d50809cc",
+    "mac32-daily-update/README.md": "ff8ae208263f232b0c064cddedda99bedcc8003c363b43df9129db1476cf639c",
+    "mac32-daily-update/preparation.json": "76a89e301a70c6eecd1e4b7e8dccff142f12c0cd397702283232fd5a8a694445",
+    "mac32-daily-update/verification.json": "2716e15818d16313634329deb110c1f070895b86ad924ee23be2dbbce4204357",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",
     "mixed-task-completion-native/verification.json": "e94f3ce96eba46de16f86d30d567751faa8079c57118dd1a6665101f1ea5de8f",
     "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",
@@ -2185,6 +2215,14 @@
     "task-file-workspace-sync/oracle-audit.json": "6809c719fc359ff0a33c2cf3f3d807ec7626f3237842f5bed6990e6a274c3178",
     "task-file-workspace-sync/verification.json": "61c9fd3a1d07534cf1fdf2ee7c7a6bcbc5218cf0a801b10620bbe323362e6eed",
     "task-row-note-reading/README.md": "40d02068d4a0a777d856bd0948a73d9080040f1fb7f22ed06d2f4f2711845270",
+    "task-row-planning-read/README.md": "a97eeb02e7ca48e8d846086e1be3f4244239dcd46ca4ba01c8ccbf4afe1976c8",
+    "task-row-planning-read/investigation.json": "d196b8c28b75bf11007bc24e915a3d9f8566226db90f505e94ed31a3fe5e60b7",
+    "task-row-planning-read/ios-build.json": "b913ff9763d1a385a3d5da383517a352642902f48caf49dbb2a16f376cd98a4e",
+    "task-row-planning-read/ios-core.json": "27c1bee9cd106531b91e9aa85b40fa84221135e5c28344c644396bc6adc10525",
+    "task-row-planning-read/iphone-native.json": "797cc9bf6f81219b639efeea0a814c931b35db8504d30ca0385a5c5e3c4dd545",
+    "task-row-planning-read/mac-core.json": "20e9bea1340a9ac5ba80195029772fa800219da70c67f12b3ed5f3b83e356ac3",
+    "task-row-planning-read/storage-cleanup.json": "e0faf65408fbd788cc2643811cab65105b4124df57a072b1454a80210f8dccf0",
+    "task-row-planning-read/verification.json": "f729c0911ba606ec57629e61fabeb0ad7a4a5a131010c8331ba4b98a7a8ea0ae",
     "team-audio-authority/README.md": "ee2e92981ca21a5b882cc226a0641008b8bfed73fd179fd4bb56697ed6d6b9ee",
     "team-audio-authority/verification.json": "b79e231a640858272650853cb09e0d29ff55abcef0fdc57d84d3eebdbef34c8c",
     "team-audio-client/README.md": "0e7cff648181223d539bc75f615b9deda9c8d418be230a0a4e8ab2383f63deef",

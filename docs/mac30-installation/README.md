@@ -7,3 +7,5 @@ Under the user's standing instruction, Mac29 was closed and replaced with Mac30 
 After unlock, Mac30's normal main window and Synced status were verified. All five original workspace task/pending snapshots were preserved. The later authorized Mac31 update supersedes Mac30; its verified archive remains the rollback. See [Mac31 installation](../mac31-daily-update/README.md).
 
 Phone41 installation remains deferred. These are development builds with existing profiles expiring on 10 November; cached signing does not renew them. App Store/distribution verification and the other agreed deferrals remain open. Native Mac review of large/held mailboxes, wider account/window/speech cases and physical FPS remain separate from source/build/phone/tablet evidence.
+
+Delivery update, 7 November: Mac31's normal startup/sync and preserved work are accepted, and its frozen archive is reverified as rollback for prepared Mac32. The obsolete Mac30 ZIP has been retired; numbered receipts and all private backups remain.
