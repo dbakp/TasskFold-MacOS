@@ -1,0 +1,63 @@
+{
+  "runInitialFreeBytes": 57601638400,
+  "finalCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 58193989632,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 577052672,
+        "projectedAllocatedBytes": 577052672
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 539512832,
+        "projectedAllocatedBytes": 539512832
+      }
+    ],
+    "freeAfterBytes": 58193219584,
+    "actualFreeChangeBytes": -770048
+  },
+  "packageRetirement": {
+    "date": "2026-11-06",
+    "beforeFreeBytes": 58161356800,
+    "keptReceipts": [
+      "daily-use-ios/build-34-iphone.json",
+      "daily-use-ios/build-35-iphone.json",
+      "daily-use-mac/build-14.json",
+      "daily-use-mac/build-23.json"
+    ],
+    "removed": [
+      {
+        "archive": "Taskfold-1.4.0-30-iphone-development.zip",
+        "bytes": 34569206,
+        "sha256": "64ac268cb80a7473dc10b2ac953cac0167f7b37fd2cbb6b35572e89f26c6816c"
+      },
+      {
+        "archive": "Taskfold-1.4.0-31-iphone-development.zip",
+        "bytes": 37278087,
+        "sha256": "e01eb92ca37f6a76cad69f2ee468f7a5ab027eefa186e9f91e6417ef060fb2ae"
+      },
+      {
+        "archive": "Taskfold-1.2.0-10-mac-development.zip",
+        "bytes": 32734183,
+        "sha256": "fd9504f6c1068c8cfd03ee8d9784c20c64b6216f5c04f7d06319ec1574949549"
+      },
+      {
+        "archive": "Taskfold-1.2.0-22-mac-development.zip",
+        "bytes": 19507689,
+        "sha256": "4cfdb8069d7102090dd3e7809538324c4bfe33a6ce27a443698df0ee8318e2ae"
+      }
+    ],
+    "scope": "Only superseded Taskfold-generated package ZIPs. Receipts, current packages, one rollback per platform, private data backups and running Mac app retained.",
+    "afterFreeBytes": 58194001920,
+    "removedBytes": 124089165
+  },
+  "simulatorsBooted": [],
+  "dockerStarted": false,
+  "privateBackupRetained": true,
+  "normalMac23LeftRunning": true
+}

@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "configuration": "Release",
+  "platform": "mac",
+  "bundle": "com.dbakp.taskfold.mac",
+  "version": "1.2.0",
+  "build": "23",
+  "app": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Release/Taskfold.app",
+  "sourceFingerprint": "3ed86a85a3cbe5c7ce725a1604f43d21b0f6145d95aa550a5d0ae13c2b655d2c",
+  "sourceRevision": "e99fc86fafade456c78f2927155e379315d6d4ca",
+  "simulatorOnly": false,
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": true,
+  "published": false,
+  "cachedProfileSigning": {
+    "mode": "existing-development-profiles-only",
+    "identitySHA1": "9421BFBE87503809AB8274B2B84048C65BE9D2FC",
+    "profiles": {
+      "com.dbakp.taskfold.mac": {
+        "uuid": "8d7498f4-1e66-4f06-a95f-a9e433e719a3",
+        "expires": "2026-11-10T18:38:42+00:00",
+        "xcodeManaged": true
+      },
+      "com.dbakp.taskfold.mac.widgets": {
+        "uuid": "9fddc085-4a2d-40cb-86ed-dff551baf84e",
+        "expires": "2026-11-10T18:32:04+00:00",
+        "xcodeManaged": true
+      },
+      "com.dbakp.taskfold.mac.share": {
+        "uuid": "25d8c570-2916-4cf4-8c05-881dcb51fbda",
+        "expires": "2026-11-10T18:32:07+00:00",
+        "xcodeManaged": true
+      }
+    },
+    "profileCreationAllowed": false,
+    "networkProvisioningAllowed": false,
+    "embeddedProfilesVerified": true
+  },
+  "buildToolsSHA256": {
+    "build_daily.py": "270f95dcd826cc81c99c20f68b63674c1897d16516b5a764a0ce60b25053314a",
+    "cached_development_signing.py": "319da92eff45402826db9d8a5e9c54cb64a754f3abafe67585719261bcfa54a9"
+  },
+  "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-23-mac-development.zip",
+  "archiveSHA256": "4746875554017fa1da1a66e581bc2b4a03ad7eb3f1d74e558dd2f8c7e0aae5f8",
+  "archivePayloadVerified": true,
+  "readbackMetadataIsolated": true,
+  "sourceWasDirty": true,
+  "packagingToolSHA256": "a32fa10f83913f227e36cd2676131809631b03aab21a16533c06120ed44958ed",
+  "installationNote": "Installed in place at user authorization; normal startup and sync verified with all five cached task/pending arrays unchanged.",
+  "installedBaseline": "1.2.0 (14)",
+  "developmentProfileExpires": "2026-11-10T18:32:04+00:00",
+  "installation": {
+    "date": "2026-11-06",
+    "checkedAt": "2026-11-06T10:30:26.019032+00:00",
+    "version": "1.2.0",
+    "build": "23",
+    "replacesBuild": "14",
+    "userDraftsSaved": true,
+    "installed": true,
+    "installedPath": "/Applications/Taskfold.app",
+    "launchedNormalRoot": true,
+    "sameAccountAndUpcomingContext": true,
+    "syncStatusObserved": "Synced 11.27",
+    "strictSignatureVerified": true,
+    "installedPayloadMatchesVerifiedArchive": true,
+    "cachedWorkspacesChecked": 5,
+    "allTaskAndPendingRowsUnchangedBeforeAndAfterSync": true,
+    "privateSafetyCopyRetained": true,
+    "realTaskEditsForTesting": false,
+    "scope": "Normal startup, existing workspace context, completed sync and cached task/pending preservation; no universal feature, hardware FPS or distribution acceptance."
+  }
+}

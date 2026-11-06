@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 6 November 2026 · Mac 23 installed
+
+Normal Mac 1.2.0 (23) is now installed, launched and synced after the user saved drafts. All five cached workspaces retain exactly the same task and pending rows before and after sync. Its verified build14 rollback is retained. Signed optimized iPhone 1.4.0 (35) is prepared offline; the last verified installed phone build remains34 and further installation is deferred. The packages include note paragraph styles, prepared reading/section navigation and recent list/filter/library improvements. Independent cached-profile preflight and archive/readback tools pass seven focused checks per owner. Development expiry remains 10 November for Mac and 11 November for phone; cached signing does not renew it. Wider native/accessibility/hardware acceptance and all agreed rollout/provider/distribution deferrals remain. See [daily update evidence](daily-update-23/README.md).
+
 ## 5 November 2026 · Genuine mixed recording custody and cleanup
 
 Both complete own schemas pass 58 genuine local Auth/REST/Storage/TLS checks for a parent/child project containing published, uploading and removed recordings. The production handlers preserve original published bytes/receipts, close the crossing upload, enforce exact private fences, roll back all effects on injected failure, confirm paused original requests and purge two retired objects through the real Storage API. No production handler/schema or ordinary flag changes. Native adoption/protected Keychain, legacy/other realms, hosted S3 and wider lifecycle remain open. All local services/private TLS directories are removed; optimized Mac22/iPhone34 packages still match current app inputs and wait for the existing update window. [Evidence and limits](genuine-mixed-recordings/README.md).
