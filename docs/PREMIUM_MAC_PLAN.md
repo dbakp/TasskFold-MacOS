@@ -11139,3 +11139,13 @@ The Mac-owned reserved integration now includes explicit connection pause togeth
 ### 6 November · Safe waits during large file preparation
 
 The Mac-owned client/service source now preserves bounded delay notices and retries an original file operation without replacing its identity. Existing neutral status and Stop controls stay in place; waits fence account/context changes. Own Core/handler suites pass 58/35 cases. The real iPhone combined 101-file/two-page flow passes 76 checks with five real cooldowns and an actual interrupted upload handler. This does not establish Mac runtime or GUI acceptance; the dedicated protected-vault profile remains required. Installed app, archive and normal gates are unchanged. [Scope](paged-project-files/README.md).
+
+
+### 6 November · Recovery acceptance isolation
+
+The Mac debug fixture now observes the same backup-key query as BackupVault,
+including its reserved service, without reading secret key bytes. The iOS-owned
+current-source largest-text picker attempts remain unaccepted; this is no new
+Mac runtime or UX acceptance. Keep the protected-session profile and hosted
+activation prerequisites open and continue feature work without repeating the
+unchanged picker matrix. Normal premium UI and installed app are unchanged.

@@ -559,6 +559,15 @@ struct BackupVault: Sendable {
         return [kSecClass as String: kSecClassGenericPassword,
                 kSecAttrService as String: service, kSecAttrAccount as String: account]
     }
+    #if DEBUG && !SWIFT_PACKAGE
+    /// Inspect the same scoped item used by save/removal without reading key bytes.
+    static func deviceKeyStatus(account: String) -> OSStatus {
+        var query = deviceKeyQuery(account: account)
+        query[kSecReturnAttributes as String] = true
+        var result: CFTypeRef?
+        return SecItemCopyMatching(query as CFDictionary, &result)
+    }
+    #endif
     static func removeDeviceKey(account: String) throws {
         let query = deviceKeyQuery(account: account)
         let status = SecItemDelete(query as CFDictionary)

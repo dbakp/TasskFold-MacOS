@@ -28,10 +28,7 @@ enum AccountRemovalNativeFixture {
     static var sharedRoot: URL { root.appendingPathComponent("Shared", isDirectory: true) }
     static var result: URL { root.appendingPathComponent("result.json") }
     static func backupKeyStatus(_ account: String) -> OSStatus {
-        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "com.taskfold.recovery.v1", kSecAttrAccount as String: account,
-            kSecReturnAttributes as String: true]
-        var result: CFTypeRef?; return SecItemCopyMatching(query as CFDictionary, &result)
+        BackupVault.deviceKeyStatus(account: account)
     }
     static func session(_ account: String) throws -> Session {
         try Foundation.JSONDecoder().decode(Session.self, from: JSONSerialization.data(withJSONObject: ["access_token": account == owner ? "synthetic-A" : "synthetic-B", "refresh_token": "synthetic-refresh", "expires_at": Date().addingTimeInterval(3600).timeIntervalSince1970, "user": ["id": account, "email": "taskfold-removal-proof@example.invalid"]]))
