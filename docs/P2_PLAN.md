@@ -8055,3 +8055,15 @@ Both own app builds/signatures pass; Mac interaction, speech, wider layout and
 physical FPS remain open. No installed archive, normal gate or hosted change.
 The progress next-step list also rejects malformed sentence input.
 [Scope and current evidence](background-note-rows/README.md).
+
+
+### 6 November · Current merged source packaged for daily use
+
+Own optimized signed Mac29/phone41 candidates pass exact archive readback,
+baseline/source/tool checks and embedded-profile verification. Main-app compiler
+invocations use -O. Normal feature flags and hosted services are unchanged.
+Mac23 remains running while saved-draft readiness is pending; phone34 is the last
+verified installed build and phone installation stays deferred. Existing signing
+expires 10/11 November; it is not renewed. This adds delivery evidence, not a new
+completed Px feature or distribution/FPS claim.
+[Current package scope](daily-candidates-29-41/README.md).

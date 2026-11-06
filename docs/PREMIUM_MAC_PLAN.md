@@ -11162,3 +11162,14 @@ Own Core33 and full build/strict signature pass. The separately owned phone/tabl
 production-row journeys pass; Mac interaction, speech and hardware FPS remain
 unaccepted. Normal app and archived package are unchanged.
 [Evidence](background-note-rows/README.md).
+
+
+### 6 November · Optimized daily-use candidate29
+
+Current merged Mac source is now in a clean-source signed Release archive with
+exact payload/symlink/permission readback, strict signature/profile/extension
+checks and observed -O compiler flags. Its normal feature gates match prior28.
+Installed Mac23 remains running with the same binary; saved-draft readiness is
+pending before update. The existing profile expires10 November. This is a
+personal development candidate, not fresh Mac UI/FPS or distribution acceptance.
+[Receipt and scope](daily-candidates-29-41/README.md).

@@ -55,6 +55,14 @@
       "headIsAncestorOfMain": true,
       "mergedTreeEqualsCompletedTree": true,
       "adminBypassUsed": false
+    },
+    {
+      "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/8",
+      "mergedHead": "7e3c3b8193c28c27ad82b822ab52635a9c70df5b",
+      "verifiedRemoteDefaultBranch": "08d8dbbfb334834b989247794ce46e92071ae367",
+      "headIsAncestorOfMain": true,
+      "mergedTreeEqualsCompletedTree": true,
+      "adminBypassUsed": false
     }
   ]
 }

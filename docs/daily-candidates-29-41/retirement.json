@@ -1,0 +1,25 @@
+{
+  "retiredSupersededUninstalledArchives": [
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-28-mac-development.zip",
+      "bytes": 20130374,
+      "sha256": "d2e1868edbdcbe9c31d56252946685dd381be2c828024986c7d2ba5efb5e4c4f",
+      "replacedBy": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-29-mac-development.zip",
+      "installedBaselinesPreserved": [
+        "build-23.json",
+        "build-14.json"
+      ]
+    },
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-40-iphone-development.zip",
+      "bytes": 24103946,
+      "sha256": "7644ccb33b4d4a053b1f3e1502a57ef86894e29e43dc614d9605186d201411b9",
+      "replacedBy": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-41-iphone-development.zip",
+      "installedBaselinesPreserved": [
+        "build-34-iphone.json"
+      ]
+    }
+  ],
+  "realAppDataTouched": false,
+  "rollbackArchivesVerified": true
+}
