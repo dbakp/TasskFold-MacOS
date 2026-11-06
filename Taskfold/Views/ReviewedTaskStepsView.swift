@@ -8,6 +8,9 @@ struct ReviewedTaskStepsOpening: Identifiable {
 
 /// Operates on saved records, separately from any surrounding editor draft.
 struct ReviewedTaskStepsView: View {
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
     let opening: ReviewedTaskStepsOpening
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
@@ -39,6 +42,7 @@ struct ReviewedTaskStepsView: View {
                 Section {
                     Text("Work with saved subtasks. Any unsaved changes in the task editor stay separate.").font(.callout).foregroundStyle(.secondary)
                     if reading { ProgressView("Reading task…") }
+                    if model?.busy == true { ProgressView("Updating saved steps…").accessibilityIdentifier("reviewedStepsWorking") }
                     if let error { Text(error).foregroundStyle(.red).accessibilityIdentifier("reviewedStepsError") }
                     if let message = model?.message { Text(message).accessibilityIdentifier("reviewedStepsStatus") }
                 }
@@ -47,13 +51,15 @@ struct ReviewedTaskStepsView: View {
                         TextField("Task to break down", text: $goal, axis: .vertical).lineLimit(2...6).disabled(generating || model?.busy == true)
                             .accessibilityIdentifier("reviewedStepsGoal")
                         Text("Apple Intelligence uses only this text, on this device. Review and edit every step before adding it.").font(.callout).foregroundStyle(.secondary)
+                        if !store.online { Text("Connect to check this saved task before suggesting or adding steps.").font(.callout).foregroundStyle(.secondary) }
+                        if (try? TaskBreakdownRequest.goal(goal)) == nil { Text("Use a shorter, nonempty task description.").foregroundStyle(.red).accessibilityIdentifier("reviewedStepsGoalWarning") }
                         if let reason = TaskBreakdownEngine.unavailableReason { Text(reason).foregroundStyle(.secondary) }
                         if generating {
                             ProgressView("Suggesting steps…")
                             Button("Stop", action: stopGeneration).accessibilityIdentifier("reviewedStepsStopGeneration")
                         } else {
                             Button(steps.isEmpty ? "Suggest steps" : "Try different steps", systemImage: "wand.and.stars", action: generate)
-                                .disabled(model?.busy == true || TaskBreakdownEngine.unavailableReason != nil || (try? TaskBreakdownRequest.goal(goal)) == nil)
+                                .disabled(!store.online || model?.busy == true || TaskBreakdownEngine.unavailableReason != nil || (try? TaskBreakdownRequest.goal(goal)) == nil)
                                 .accessibilityIdentifier("reviewedStepsGenerate")
                         }
                     }
@@ -68,7 +74,7 @@ struct ReviewedTaskStepsView: View {
                             if let selectionProblem { Text(selectionProblem).foregroundStyle(.red) }
                             Text("Selected steps are added together after existing subtasks, with one Undo.").font(.callout).foregroundStyle(.secondary)
                             Button("Add selected") { Task { await add() } }
-                                .disabled(generating || model?.busy == true || selected.isEmpty || selectionProblem != nil)
+                                .disabled(!store.online || generating || model?.busy == true || selected.isEmpty || selectionProblem != nil)
                                 .accessibilityValue("\(selected.count) steps").accessibilityIdentifier("reviewedStepsApply")
                         }
                     }
@@ -79,19 +85,25 @@ struct ReviewedTaskStepsView: View {
                 }
                 if let model, model.scope == scope, model.loaded {
                     Section("Saved step additions") {
-                        let entries = model.entries.filter { $0.command.root == opening.root }
+                        let entries = Array(model.entries.filter { $0.command.root == opening.root }.reversed())
                         if entries.isEmpty { Text("No saved additions").foregroundStyle(.secondary) }
                         ForEach(entries, id: \.command.id) { entry in
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(entry.command.undoing ? "Undo step addition" : "Add \(entry.command.body["steps"]!.list.count) steps").font(.headline)
                                 Text(status(entry.phase)).font(.callout).foregroundStyle(.secondary)
+                                if !entry.command.undoing, entry.phase == .applied {
+                                    DisclosureGroup("Review added steps") {
+                                        ForEach(Array(entry.command.body["steps"]!.list.enumerated()), id: \.offset) { _, row in Text(row.object["title"]!.text).font(.callout) }
+                                    }
+                                }
                                 if entry.phase == .queued || entry.phase == .attempted {
                                     ForEach(Array((entry.command.body["steps"]?.list ?? []).enumerated()), id: \.offset) { _, row in Text(row.object["title"]!.text).font(.callout) }
                                     Button("Check status") { Task { await run(entry.command, .resolve) } }.accessibilityIdentifier("reviewedStepsCheck")
                                     Button("Retry original request") { Task { await run(entry.command, .apply) } }.disabled(!store.online || !store.childTaskStructureEditingEnabled).accessibilityIdentifier("reviewedStepsRetry")
                                     Button("Stop addition", role: .destructive) { Task { await run(entry.command, .close) } }.accessibilityIdentifier("reviewedStepsCloseRequest")
                                 } else {
-                                    if model.canUndo(entry) { Button("Undo added steps") { Task { await undo(entry) } }.disabled(!store.online).accessibilityIdentifier("reviewedStepsUndo") }
+                                    if model.canUndo(entry) { Button("Undo added steps") { Task { await reverse(entry) } }.disabled(!store.online || !store.childTaskStructureEditingEnabled).accessibilityIdentifier("reviewedStepsUndo") }
+                                    if model.canRedo(entry) { Button("Redo added steps") { Task { await reverse(entry) } }.disabled(!store.online || !store.childTaskStructureEditingEnabled).accessibilityIdentifier("reviewedStepsRedo") }
                                     Button("Remove saved history", role: .destructive) { forgetting = entry.command }
                                 }
                             }.disabled(model.busy).padding(.vertical, 4)
@@ -110,6 +122,10 @@ struct ReviewedTaskStepsView: View {
         #endif
         .privacySensitive()
         .task(id: scope) { await open() }
+        .onChange(of: store.childHistoryNotice?.id) { _, _ in
+            guard let notice = store.childHistoryNotice, notice.kind == .steps, notice.scope == scope else { return }
+            Task { await model?.load(); await refresh(synchronize: false) }
+        }
         .onChange(of: current) { _, value in if !value { stopGeneration(); steps = [] } }
         .onChange(of: goal) { _, _ in stopGeneration(); steps = [] }
         .onChange(of: model?.message) { _, value in if let value { AccessibilityNotification.Announcement(value).post() } }
@@ -122,19 +138,35 @@ struct ReviewedTaskStepsView: View {
         switch phase { case .queued: "Saved · not sent"; case .attempted: "Needs attention · original request kept"; case .applied: "Confirmed"; case .closed: "Stopped" }
     }
     private func stopGeneration() { token = UUID(); generation?.cancel(); generation = nil; generating = false }
+    private func makeModel() throws -> ReviewedTaskStepsModel {
+        #if os(macOS)
+        let owner = workspace
+        return try store.reviewedTaskStepsModel(didApply: { [weak owner] entry, scope in owner?.rememberReviewedTaskSteps(entry, scope: scope) })
+        #else
+        let owner = store
+        return try store.reviewedTaskStepsModel(didApply: { [weak owner] entry, scope in
+            guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
+            let step = owner.reviewedTaskStepsHistoryStep(entry, scope: scope)
+            if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, owner.viewHistory.acceptConfirmedInverse(of: parent, next: step) { return }
+            owner.viewHistory.record(step)
+        })
+        #endif
+    }
     private func open() async {
         stopGeneration(); model?.close(); model = nil; read = nil; steps = []; goal = ""; error = nil; ready = false; forgetting = nil; readToken = UUID(); reading = false
         guard let captured = scope else { return }
         do {
-            let owner = try store.reviewedTaskStepsModel(); guard captured == scope else { owner.close(); return }; model = owner
+            let owner = try makeModel(); guard captured == scope else { owner.close(); return }; model = owner
             await owner.load(); guard captured == scope, !Task.isCancelled else { return }; await refresh()
         } catch { guard captured == scope else { return }; self.error = "Saved step additions couldn’t be read. Your work is kept." }
     }
-    private func refresh() async {
+    private func refresh(synchronize: Bool = true) async {
         guard !reading, let model, model.scope == scope else { return }
         stopGeneration(); steps = []; ready = false; reading = true; let ticket = UUID(); readToken = ticket; defer { if readToken == ticket { reading = false } }
         do {
-            let value = try await store.readCurrentChildTaskStructure(opening.root)
+            let value: ChildTaskStructureRead
+            if synchronize { value = try await store.readCurrentChildTaskStructure(opening.root) }
+            else { value = try await store.readChildTaskStructure(opening.root) }
             guard model.scope == scope, readToken == ticket, !Task.isCancelled else { return }
             read = value
             let node = opening.parent.flatMap { value.records.nodes[$0] }
@@ -171,15 +203,14 @@ struct ReviewedTaskStepsView: View {
         guard let model, model.scope == scope else { return }
         stopGeneration(); _ = await model.run(command, operation: operation)
         guard model.scope == scope else { return }
-        if model.entries.first(where: { $0.command == command })?.phase == .applied { await refresh() }
+        if model.entries.first(where: { $0.command == command })?.phase == .applied { await refresh(synchronize: false) }
     }
-    private func undo(_ entry: ReviewedTaskStepsState.Entry) async {
-        guard let model, model.canUndo(entry), let proof = entry.result else { return }
+    private func reverse(_ entry: ReviewedTaskStepsState.Entry) async {
+        guard let model, model.canUndo(entry) || model.canRedo(entry) else { return }
         do {
             let value = try await store.readCurrentChildTaskStructure(entry.command.root)
             guard model.scope == scope else { return }
-            let command = try ReviewedTaskStepsCommand(undo: entry.command, receipt: proof, read: value)
-            if let saved = await model.queue(command, read: value) { await run(saved, .apply) }
+            if let saved = await model.queueInverse(entry, read: value) { await run(saved, .apply) }
         } catch { self.error = "These steps changed since they were added. Your newer work is kept; refresh before reviewing them." }
     }
 }

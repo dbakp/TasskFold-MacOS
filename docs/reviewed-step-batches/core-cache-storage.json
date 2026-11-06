@@ -1,10 +1,10 @@
 {
   "core-ios": {
-    "allocatedBytes": 670826496,
+    "allocatedBytes": 670601216,
     "within768MiB": true
   },
   "core-mac": {
-    "allocatedBytes": 613625856,
+    "allocatedBytes": 614252544,
     "within768MiB": true
   }
 }

@@ -27,3 +27,7 @@ A separate atomic reviewed-step service now exists behind a default-Off gate. It
 ## 6 November — saved-record review and encrypted recovery built
 
 The saved-subtask organizer now has a separate root/nested on-device review, atomic selected Add, encrypted cold retry/check/stop and a dedicated one-batch Undo. It does not silently save surrounding drafts. Owning client/service checks and signed builds are recorded in [reviewed step batches](../reviewed-step-batches/README.md). Native Store/Backend/screen acceptance, genuine generation and global Undo/Redo integration remain; no normal gate or installed app changed.
+
+## 6 November — normal history and production-store recovery
+
+Confirmed saved-record additions now enter normal Undo/Redo, with durable exact inverse lineage and fresh original-slot Redo. Consecutive reversals preserve unchanged added steps and unrelated live container contents. Owning current client, service and production-store results are in [reviewed steps](../reviewed-step-batches/README.md). Actual review-screen/keyboard/accessibility and genuine model acceptance remain; installed apps and normal gates are unchanged.

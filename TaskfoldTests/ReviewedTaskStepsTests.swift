@@ -9,11 +9,11 @@ final class ReviewedTaskStepsTests: XCTestCase {
         return try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
     }
     private func bytes(_ value: [String: JSON]) throws -> Data { try TaskfoldJSONEncoder().encode(value) }
-    private func read(revision: Double? = nil) throws -> ChildTaskStructureRead {
+    private func read(revision: Double? = nil, context: ChildTaskRecordContext? = nil) throws -> ChildTaskStructureRead {
         let f = try fixture(); var raw = f["fixtureRead"]!.object
         if let revision { raw["structure_revision"] = .number(revision) }
-        let context = try ChildTaskRecordContext(account: f["fixtureCommand"]!.object["account"]!.text, origin: origin, workspace: UUID(), session: UUID(), access: UUID(), snapshot: UUID(), root: Record(f["fixtureRoot"]!.object))
-        return try .init(data: bytes(raw), context: context)
+        let binding = try context ?? ChildTaskRecordContext(account: f["fixtureCommand"]!.object["account"]!.text, origin: origin, workspace: UUID(), session: UUID(), access: UUID(), snapshot: UUID(), root: Record(f["fixtureRoot"]!.object))
+        return try .init(data: bytes(raw), context: binding)
     }
     private func command() throws -> ReviewedTaskStepsCommand {
         let b = try fixture()["fixtureCommand"]!.object; return try .init(account: b["account"]!.text, origin: origin, body: b)
@@ -79,7 +79,7 @@ final class ReviewedTaskStepsTests: XCTestCase {
         let c = try command(), r = try result(c), current = try read(revision: Double(r.receipt!["after_revision"]!.integer))
         let undo = try ReviewedTaskStepsCommand(undo: c, receipt: r, read: current)
         XCTAssertEqual(undo.body["undo_of"], .string(c.id)); XCTAssertNil(undo.body["steps"])
-        XCTAssertThrowsError(try ReviewedTaskStepsCommand(undo: c, receipt: r, read: read(revision: 3)))
+        XCTAssertNoThrow(try ReviewedTaskStepsCommand(undo: c, receipt: r, read: read(revision: 3)))
         let entry = ReviewedTaskStepsState.Entry(command: c, phase: .applied, result: r)
         var rawProof = try fixture()["fixtureUndoReceipt"]!.object; rawProof["request_id"] = undo.body["request_id"]
         let value = try undo.result(["protocol": .number(1), "account": .string(c.account), "request_id": .string(undo.id), "outcome": .string("applied"), "receipt": .object(rawProof)])
@@ -152,6 +152,89 @@ final class ReviewedTaskStepsTests: XCTestCase {
         await model.load(); let checked = await model.run(c, operation: .resolve); XCTAssertTrue(checked); XCTAssertEqual(model.entries.first?.phase, .attempted)
         let refused = await model.run(c, operation: .apply); XCTAssertFalse(refused); XCTAssertEqual(service.operations, [.resolve])
         service.result = try result(c, outcome: "closed"); let stopped = await model.run(c, operation: .close); XCTAssertTrue(stopped); XCTAssertEqual(model.entries.first?.phase, .closed); XCTAssertEqual(service.operations, [.resolve, .close])
+    }
+    private func undoFixture() throws -> (ReviewedTaskStepsCommand, ReviewedTaskStepsResult) {
+        let f = try fixture(), b = f["fixtureUndoCommand"]!.object
+        let c = try ReviewedTaskStepsCommand(account: b["account"]!.text, origin: origin, body: b)
+        return (c, try result(c))
+    }
+    private func proof(_ c: ReviewedTaskStepsCommand, original: ReviewedTaskStepsResult? = nil) throws -> ReviewedTaskStepsResult {
+        var r = try fixture()["fixtureReceipt"]!.object
+        r["request_id"] = .string(c.id); r["action"] = c.body["action"]; r["undo_of"] = c.body["undo_of"] ?? .null
+        r["before_revision"] = c.body["structure_revision"]; r["after_revision"] = .number(Double(c.body["structure_revision"]!.integer + 1))
+        if c.undoing { r["nodes"] = original!.receipt!["nodes"] }
+        else { r["nodes"] = .array(c.body["steps"]!.list.map { .object(["node_key": $0.object["id"]!, "incarnation": .string(UUID().uuidString.lowercased())]) }) }
+        return try c.result(["protocol": .number(1), "account": .string(c.account), "request_id": .string(c.id), "outcome": .string("applied"), "receipt": .object(r)])
+    }
+    func testRedoKeepsReviewedTitlesAndPlacementButUsesFreshIdentities() throws {
+        let original = try command(), receipt = try result(original), (undo, reversed) = try undoFixture(), current = try read(revision: Double(reversed.receipt!["after_revision"]!.integer))
+        let redo = try ReviewedTaskStepsCommand(redo: original, receipt: receipt, undo: undo, undoReceipt: reversed, read: current)
+        XCTAssertNotEqual(redo.id, original.id); XCTAssertNotEqual(redo.id, undo.id)
+        XCTAssertEqual(redo.body["steps"]!.list.map { $0.object["title"]! }, original.body["steps"]!.list.map { $0.object["title"]! })
+        XCTAssertNotEqual(redo.body["steps"], original.body["steps"])
+        for field in ["source_title", "index", "parent_key", "parent_incarnation"] { XCTAssertEqual(redo.body[field], original.body[field]) }
+        for field in ["source_title", "index", "steps"] {
+            var b = redo.body
+            if field == "source_title" { b[field] = .string("A different goal") }
+            else if field == "index" { b[field] = .number(0) }
+            else { b[field] = original.body["steps"] }
+            let changed = try ReviewedTaskStepsCommand(account: redo.account, origin: redo.origin, body: b)
+            XCTAssertThrowsError(try changed.validateRedo(original: original, receipt: receipt, undo: undo, undoReceipt: reversed), field)
+        }
+        XCTAssertNoThrow(try ReviewedTaskStepsCommand(redo: original, receipt: receipt, undo: undo, undoReceipt: reversed, read: read(revision: current.structureRevision + 1)))
+    }
+    func testHistoricalRedoRestoresOriginalSlotAheadOfUnrelatedLaterWork() throws {
+        let f = try fixture(), original = try command(), receipt = try result(original), (undo, reversed) = try undoFixture()
+        var raw = f["fixtureRead"]!.object, root = Record(f["fixtureRoot"]!.object), later = raw["records"]!.list[0].object
+        later["node_key"] = .string("later"); later["incarnation"] = .string(UUID().uuidString.lowercased()); later["sibling_order"] = .number(1); later["identity_path"] = .array([.string("later")])
+        var fields = later["fields"]!.object; fields["id"] = .string("later"); fields["title"] = .string("Unrelated later work"); later["fields"] = .object(fields)
+        raw["records"] = .array(raw["records"]!.list + [.object(later)]); raw["structure_revision"] = .number(Double(reversed.receipt!["after_revision"]!.integer + 2)); fields["subtasks"] = .null; root["subtasks"] = .array(root["subtasks"].list + [.object(fields)])
+        let scope = try ChildTaskRecordContext(account: original.account, origin: origin, workspace: UUID(), session: UUID(), access: UUID(), snapshot: UUID(), root: root)
+        let current = try ChildTaskStructureRead(data: bytes(raw), context: scope)
+        let redo = try ReviewedTaskStepsCommand(redo: original, receipt: receipt, undo: undo, undoReceipt: reversed, read: current)
+        XCTAssertEqual(redo.body["index"], .number(1)); XCTAssertEqual(current.records.nodes["later"]?.fields["title"], .string("Unrelated later work"))
+    }
+    func testRedoJournalVersionLineageAndFullFamilyForget() async throws {
+        let original = try command(), receipt = try result(original), (undo, reversed) = try undoFixture(), current = try read(revision: Double(reversed.receipt!["after_revision"]!.integer))
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-step-redo-" + UUID().uuidString); defer { try? FileManager.default.removeItem(at: root) }
+        let key = SymmetricKey(size: .bits256), io = ReviewedTeamCommandFileIO<ReviewedTaskStepsState>(directory: root.appendingPathComponent("vault"), account: original.account, origin: origin, encryptionKey: { key })
+        func journal() throws -> ReviewedTaskStepsJournal { try .init(account: original.account, origin: origin, io: io, coordinationDirectory: root.appendingPathComponent("locks"), removalDirectory: root) }
+        let a = try journal(), b = try journal(), lease = CalendarReadLease()
+        for (c, r) in [(original, receipt), (undo, reversed)] { _ = try await a.enqueue(c, lease: lease); _ = try await a.attempt(c, lease: lease, resolving: false); try await a.settle(c, result: r, lease: lease) }
+        let redo = try ReviewedTaskStepsCommand(redo: original, receipt: receipt, undo: undo, undoReceipt: reversed, read: current)
+        let competitor = try ReviewedTaskStepsCommand(redo: original, receipt: receipt, undo: undo, undoReceipt: reversed, read: current)
+        let saved = try await a.enqueue(redo, lease: lease, redoOf: undo.id), recovered = try await b.enqueue(competitor, lease: lease, redoOf: undo.id)
+        XCTAssertEqual(saved, recovered)
+        let state = try await b.load(), data = try TaskfoldJSONEncoder().encode(state)
+        XCTAssertEqual(try ReviewedTaskStepsState(data: data), state); XCTAssertEqual(Set(try ReviewedTaskStepsState.families(state.entries).values), [original.id])
+        var raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data); XCTAssertEqual(raw["version"], .number(2)); raw["version"] = .number(1)
+        XCTAssertThrowsError(try ReviewedTaskStepsState(data: bytes(raw)))
+        var missing = state.entries; missing.remove(at: 1); XCTAssertThrowsError(try ReviewedTaskStepsState(account: original.account, origin: origin, entries: missing))
+        do { try await a.forget(original, lease: lease); XCTFail("Keep a pending Redo") } catch {}
+        _ = try await b.attempt(saved, lease: lease, resolving: false); try await b.settle(saved, result: proof(saved), lease: lease)
+        try await a.forget(saved, lease: lease); let empty = try await b.load(); XCTAssertTrue(empty.entries.isEmpty)
+    }
+    @MainActor func testConfirmedScreenInverseAdvancesNativeHistoryWithoutSendingTwice() async throws {
+        let c = try command(), read = try read(), scope = ChildTaskFieldClientScope(read.context)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-step-history-" + UUID().uuidString); defer { try? FileManager.default.removeItem(at: root) }
+        let key = SymmetricKey(size: .bits256), io = ReviewedTeamCommandFileIO<ReviewedTaskStepsState>(directory: root.appendingPathComponent("vault"), account: c.account, origin: origin, encryptionKey: { key })
+        let journal = try ReviewedTaskStepsJournal(account: c.account, origin: origin, io: io, coordinationDirectory: root.appendingPathComponent("locks"), removalDirectory: root)
+        let service = Stub(availability: try .init(data: bytes(fixture()["fixtureAvailability"]!.object), read: read), result: try result(c))
+        let manager = UndoManager(); manager.groupsByEvent = false; let history = ConfirmedHistoryBridge(manager: manager)
+        var active: ChildTaskFieldClientScope? = scope, confirmations: [String] = []
+        let model = ReviewedTaskStepsModel(scope: scope, journal: journal, service: service, current: { active }, canSend: { _ in true }, isCurrent: { _ in true }, refresh: {}, didApply: { entry, _ in
+            confirmations.append(entry.command.id)
+            let step = ConfirmedHistoryBridge.Step(name: "Add Task Steps", key: entry.command.id, retained: { active == scope })
+            if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, history.acceptConfirmedInverse(of: parent, next: step) { return }
+            history.record(step)
+        })
+        await model.load(); let queued = await model.queue(c, read: read); XCTAssertNotNil(queued)
+        let applied = await model.run(c, operation: .apply); XCTAssertTrue(applied); XCTAssertTrue(history.canUndo); XCTAssertEqual(confirmations, [c.id])
+        let repeated = await model.run(c, operation: .resolve); XCTAssertTrue(repeated); XCTAssertEqual(confirmations.count, 1)
+        let original = try XCTUnwrap(model.entries.first), nextRead = try self.read(revision: Double(service.result.receipt!["after_revision"]!.integer), context: read.context)
+        let pendingUndo = await model.queueInverse(original, read: nextRead); let u = try XCTUnwrap(pendingUndo); service.result = try proof(u, original: original.result)
+        let undone = await model.run(u, operation: .apply); XCTAssertTrue(undone); XCTAssertFalse(history.canUndo); XCTAssertTrue(history.canRedo); XCTAssertEqual(confirmations, [c.id, u.id]); XCTAssertEqual(service.operations, [.apply, .apply])
+        active = nil; XCTAssertFalse(history.canRedo)
     }
     @MainActor private final class Stub: ReviewedTaskStepsService {
         let availability: ReviewedTaskStepsAvailability

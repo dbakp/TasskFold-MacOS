@@ -16,7 +16,7 @@ struct ReviewedTaskStepsCommand: Codable, Equatable, Sendable, CustomStringConve
     static func == (a: Self, b: Self) -> Bool {
         a.account == b.account && a.origin == b.origin && ChildTaskStructureCommand.exact(.object(a.body), .object(b.body))
     }
-    init(titles: [String], parent: String?, read: ChildTaskStructureRead, requestID: UUID = UUID()) throws {
+    init(titles: [String], parent: String?, read: ChildTaskStructureRead, index: Int? = nil, requestID: UUID = UUID()) throws {
         let node = parent.flatMap { read.records.nodes[$0] }
         guard parent == nil || node != nil else { throw Self.invalid }
         var b = Self.base(read, requestID: requestID)
@@ -24,18 +24,34 @@ struct ReviewedTaskStepsCommand: Codable, Equatable, Sendable, CustomStringConve
         b["parent_incarnation"] = node.map { .string($0.incarnation) } ?? .null
         b["parent_revision"] = node.map { .number($0.revision) } ?? .null
         b["source_title"] = node?.fields["title"] ?? .string(read.context.root.title)
-        b["index"] = .number(Double(read.records.orderedNodes.filter { $0.parent == parent }.count))
+        b["index"] = .number(Double(index ?? read.records.orderedNodes.filter { $0.parent == parent }.count))
         b["steps"] = .array(try TaskBreakdownRequest.titles(titles).map { .object(["id": .string(UUID().uuidString.lowercased()), "title": .string($0)]) })
         try self.init(account: read.context.account, origin: read.context.origin, body: b)
         try review(read)
     }
     init(undo original: Self, receipt: ReviewedTaskStepsResult, read: ChildTaskStructureRead, requestID: UUID = UUID()) throws {
         guard !original.undoing, try original.result(receipt.raw) == receipt, receipt.applied,
-              receipt.receipt?["after_revision"] == .number(read.structureRevision) else { throw Self.invalid }
+              receipt.receipt!["after_revision"]!.integer <= Int(read.structureRevision) else { throw Self.invalid }
         var b = Self.base(read, requestID: requestID); b["action"] = .string("undo"); b["undo_of"] = .string(original.id)
         try self.init(account: original.account, origin: original.origin, body: b)
         try review(read)
         guard Self.scopeKeys.allSatisfy({ ChildTaskStructureCommand.exact(b[$0], original.body[$0]) }) else { throw Self.invalid }
+    }
+    init(redo original: Self, receipt: ReviewedTaskStepsResult, undo: Self, undoReceipt: ReviewedTaskStepsResult, read: ChildTaskStructureRead, requestID: UUID = UUID()) throws {
+        let parent = original.body["parent_key"] == .null ? nil : original.body["parent_key"]!.text
+        try self.init(titles: original.body["steps"]!.list.map { $0.object["title"]!.text }, parent: parent, read: read, index: original.body["index"]!.integer, requestID: requestID)
+        try validateRedo(original: original, receipt: receipt, undo: undo, undoReceipt: undoReceipt)
+    }
+    func validateRedo(original: Self, receipt: ReviewedTaskStepsResult, undo: Self, undoReceipt: ReviewedTaskStepsResult) throws {
+        guard !undoing, !original.undoing, undo.undoing, receipt.applied, undoReceipt.applied,
+              try original.result(receipt.raw) == receipt, try undo.result(undoReceipt.raw) == undoReceipt,
+              undo.body["undo_of"] == .string(original.id), id != original.id, id != undo.id,
+              Self.scopeKeys.allSatisfy({ ChildTaskStructureCommand.exact(body[$0], original.body[$0]) && ChildTaskStructureCommand.exact(body[$0], undo.body[$0]) }),
+              body["structure_revision"]!.integer >= undoReceipt.receipt!["after_revision"]!.integer, undo.body["structure_revision"]!.integer >= receipt.receipt!["after_revision"]!.integer,
+              undoReceipt.receipt?["nodes"] == receipt.receipt?["nodes"],
+              ["parent_key", "parent_incarnation", "source_title", "index"].allSatisfy({ ChildTaskStructureCommand.exact(body[$0], original.body[$0]) }),
+              ChildTaskStructureCommand.exact(.array(body["steps"]!.list.map { $0.object["title"]! }), .array(original.body["steps"]!.list.map { $0.object["title"]! })),
+              Set(body["steps"]!.list.map { $0.object["id"]!.text }).isDisjoint(with: Set(original.body["steps"]!.list.map { $0.object["id"]!.text })) else { throw Self.invalid }
     }
     private static func base(_ read: ChildTaskStructureRead, requestID: UUID) -> [String: JSON] {
         ["protocol": .number(1), "account": .string(read.context.account), "request_id": .string(requestID.uuidString.lowercased()),
@@ -94,7 +110,7 @@ struct ReviewedTaskStepsCommand: Codable, Equatable, Sendable, CustomStringConve
         guard !read.context.root.completed, TaskKind.mayComplete(read.context.root), !target.completed, TaskKind.mayComplete(target),
               (node?.path.count ?? 0) < 24, read.records.nodes.count + body["steps"]!.list.count <= 1000,
               ChildTaskStructureCommand.exact(body["source_title"], .string(target.title)),
-              body["index"] == .number(Double(read.records.orderedNodes.filter { $0.parent == parent }.count)) else { throw Self.invalid }
+              body["index"]!.integer <= read.records.orderedNodes.filter { $0.parent == parent }.count else { throw Self.invalid }
         if parent != nil {
             guard let node, body["parent_incarnation"] == .string(node.incarnation), body["parent_revision"] == .number(node.revision),
                   ["null", "array", "absent"].contains(node.childrenKind) else { throw Self.invalid }
@@ -165,15 +181,18 @@ struct ReviewedTaskStepsState: ReviewedTeamFileCommand, CustomStringConvertible,
         let command: ReviewedTaskStepsCommand
         var phase: Phase = .queued
         var result: ReviewedTaskStepsResult?
-        init(command: ReviewedTaskStepsCommand, phase: Phase = .queued, result: ReviewedTaskStepsResult? = nil) { self.command = command; self.phase = phase; self.result = result }
-        private enum CodingKeys: CodingKey { case command, phase, result }
+        let redoOf: String?
+        init(command: ReviewedTaskStepsCommand, phase: Phase = .queued, result: ReviewedTaskStepsResult? = nil, redoOf: String? = nil) { self.command = command; self.phase = phase; self.result = result; self.redoOf = redoOf }
+        private enum CodingKeys: CodingKey { case command, phase, result, redoOf }
         init(from decoder: Decoder) throws {
-            try structureKeys(decoder, ["command", "phase", "result"])
             let c = try decoder.container(keyedBy: CodingKeys.self)
+            try structureKeys(decoder, c.contains(.redoOf) ? ["command", "phase", "result", "redoOf"] : ["command", "phase", "result"])
+            redoOf = try c.decodeIfPresent(String.self, forKey: .redoOf)
+            if c.contains(.redoOf), redoOf == nil { throw ReviewedTaskStepsState.invalid }
             command = try c.decode(ReviewedTaskStepsCommand.self, forKey: .command); phase = try c.decode(Phase.self, forKey: .phase); result = try c.decodeIfPresent(ReviewedTaskStepsResult.self, forKey: .result)
         }
         func encode(to encoder: Encoder) throws {
-            var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(command, forKey: .command); try c.encode(phase, forKey: .phase); try c.encode(result, forKey: .result)
+            var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(command, forKey: .command); try c.encode(phase, forKey: .phase); try c.encode(result, forKey: .result); try c.encodeIfPresent(redoOf, forKey: .redoOf)
         }
     }
     static let storagePrefix = "reviewed-task-steps-v1."
@@ -193,26 +212,47 @@ struct ReviewedTaskStepsState: ReviewedTeamFileCommand, CustomStringConvertible,
             if entry.phase == .applied || entry.phase == .closed {
                 guard let r = entry.result, try c.result(r.raw) == r, (entry.phase == .applied ? r.applied : r.closed) else { throw Self.invalid }
             } else { guard entry.result == nil, pending.insert(c.root).inserted else { throw Self.invalid } }
+            if let parent = entry.redoOf {
+                guard !c.undoing, let undo = entries.first(where: { $0.command.id == parent }), undo.phase == .applied, let reversed = undo.result,
+                      let original = entries.first(where: { $0.command.id == undo.command.body["undo_of"]?.text }), original.phase == .applied, let proof = original.result else { throw Self.invalid }
+                try c.validateRedo(original: original.command, receipt: proof, undo: undo.command, undoReceipt: reversed)
+                if entry.phase != .closed { guard undos.insert("redo:" + parent).inserted else { throw Self.invalid } }
+            }
             if c.undoing {
                 guard let original = entries.first(where: { $0.command.id == c.body["undo_of"]!.text }), !original.command.undoing,
                       original.phase == .applied, let r = original.result?.receipt,
                       ReviewedTaskStepsCommand.scopeKeys.allSatisfy({ ChildTaskStructureCommand.exact(c.body[$0], original.command.body[$0]) }),
-                      c.body["structure_revision"] == r["after_revision"] else { throw Self.invalid }
+                      c.body["structure_revision"]!.integer >= r["after_revision"]!.integer else { throw Self.invalid }
                 if entry.phase != .closed { guard undos.insert(original.command.id).inserted else { throw Self.invalid } }
                 if let nodes = entry.result?.receipt?["nodes"] { guard nodes == r["nodes"] else { throw Self.invalid } }
             }
         }
+        _ = try Self.families(entries)
         self.account = account; self.origin = origin; self.entries = entries
+    }
+    static func families(_ entries: [Entry]) throws -> [String: String] {
+        var rows: [String: Entry] = [:], result: [String: String] = [:]
+        for e in entries { guard rows.updateValue(e, forKey: e.command.id) == nil else { throw invalid } }
+        for entry in entries {
+            var id = entry.command.id, seen = Set<String>()
+            while true {
+                guard seen.insert(id).inserted, let row = rows[id] else { throw invalid }
+                guard let parent = row.redoOf ?? row.command.body["undo_of"]?.text else { result[entry.command.id] = id; break }
+                id = parent
+            }
+        }
+        return result
     }
     private enum CodingKeys: CodingKey { case version, account, origin, entries }
     init(from decoder: Decoder) throws {
         try structureKeys(decoder, ["version", "account", "origin", "entries"])
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        guard try c.decode(Int.self, forKey: .version) == 1 else { throw Self.invalid }
-        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), entries: c.decode([Entry].self, forKey: .entries))
+        let version = try c.decode(Int.self, forKey: .version), entries = try c.decode([Entry].self, forKey: .entries)
+        guard [1, 2].contains(version), version != 1 || !entries.contains(where: { $0.redoOf != nil }) else { throw Self.invalid }
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), entries: entries)
     }
     func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(1, forKey: .version); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(entries, forKey: .entries)
+        var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(entries.contains(where: { $0.redoOf != nil }) ? 2 : 1, forKey: .version); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(entries, forKey: .entries)
     }
     init(data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: [["version"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "command", "body", "structure_revision"], ["entries", "[]", "command", "body", "index"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "receipt", "protocol"], ["entries", "[]", "result", "raw", "receipt", "before_revision"], ["entries", "[]", "result", "raw", "receipt", "after_revision"], ["entries", "[]", "result", "raw", "receipt", "count"]], nullableIntegerPaths: [["entries", "[]", "command", "body", "parent_revision"]])
@@ -242,18 +282,25 @@ actor ReviewedTaskStepsJournal {
     }
     func load() throws -> ReviewedTaskStepsState { try guarded(nil) { try read() } }
     /// Exact Undo recovery is chosen while holding the shared account lock.
-    func enqueue(_ command: ReviewedTaskStepsCommand, lease: CalendarReadLease) throws -> ReviewedTaskStepsCommand {
+    func enqueue(_ command: ReviewedTaskStepsCommand, lease: CalendarReadLease, redoOf: String? = nil) throws -> ReviewedTaskStepsCommand {
         try guarded(lease) {
             guard command.account == account, command.origin == origin else { throw ReviewedTaskStepsState.invalid }
             var entries = try read().entries
-            if let prior = entries.first(where: { $0.command.id == command.id }) { guard prior.command == command, prior.phase != .closed else { throw ReviewedTaskStepsState.invalid }; return prior.command }
+            if let prior = entries.first(where: { $0.command.id == command.id }) { guard prior.command == command, prior.redoOf == redoOf, prior.phase != .closed else { throw ReviewedTaskStepsState.invalid }; return prior.command }
+            if let redoOf {
+                guard let undo = entries.first(where: { $0.command.id == redoOf }), undo.phase == .applied, let reversed = undo.result,
+                      let original = entries.first(where: { $0.command.id == undo.command.body["undo_of"]?.text }), original.phase == .applied, let proof = original.result else { throw ReviewedTaskStepsState.invalid }
+                try command.validateRedo(original: original.command, receipt: proof, undo: undo.command, undoReceipt: reversed)
+                if let existing = entries.first(where: { $0.redoOf == redoOf && $0.phase != .closed }) { return existing.command }
+            }
             if command.undoing {
+                guard redoOf == nil else { throw ReviewedTaskStepsState.invalid }
                 guard let original = entries.first(where: { $0.command.id == command.body["undo_of"]?.text }), original.phase == .applied, !original.command.undoing,
                       ReviewedTaskStepsCommand.scopeKeys.allSatisfy({ ChildTaskStructureCommand.exact(command.body[$0], original.command.body[$0]) }),
-                      command.body["structure_revision"] == original.result?.receipt?["after_revision"] else { throw ReviewedTaskStepsState.invalid }
+                      command.body["structure_revision"]!.integer >= original.result!.receipt!["after_revision"]!.integer else { throw ReviewedTaskStepsState.invalid }
                 if let existing = entries.first(where: { $0.command.body["undo_of"] == command.body["undo_of"] && $0.phase != .closed }) { return existing.command }
             }
-            try admit([command.root]); entries.append(.init(command: command)); try write(entries, lease: lease); return command
+            try admit([command.root]); entries.append(.init(command: command, redoOf: redoOf)); try write(entries, lease: lease); return command
         }
     }
     func attempt(_ command: ReviewedTaskStepsCommand, lease: CalendarReadLease, resolving: Bool) throws -> ReviewedTaskStepsState.Entry {
@@ -274,10 +321,11 @@ actor ReviewedTaskStepsJournal {
     func forget(_ command: ReviewedTaskStepsCommand, lease: CalendarReadLease) throws {
         try guarded(lease) {
             var entries = try read().entries
-            let family = command.body["undo_of"]?.text ?? command.id
-            let rows = entries.filter { $0.command.id == family || $0.command.body["undo_of"] == .string(family) }
+            let families = try ReviewedTaskStepsState.families(entries)
+            guard let family = families[command.id] else { throw ReviewedTaskStepsState.invalid }
+            let rows = entries.filter { families[$0.command.id] == family }
             guard rows.contains(where: { $0.command == command }), rows.allSatisfy({ $0.phase == .applied || $0.phase == .closed }) else { throw ReviewedTaskStepsState.invalid }
-            entries.removeAll { $0.command.id == family || $0.command.body["undo_of"] == .string(family) }; try write(entries, lease: lease)
+            entries.removeAll { families[$0.command.id] == family }; try write(entries, lease: lease)
         }
     }
     func removeAccount() throws { try lock.withExclusive(account: account) { try io.remove(key: key) } }
@@ -300,11 +348,12 @@ extension Backend: ReviewedTaskStepsService {}
     private let current: () -> ChildTaskFieldClientScope?
     private let canSend: (ReviewedTaskStepsCommand) -> Bool
     private let isCurrent: (ChildTaskStructureRead) -> Bool
+    private let didApply: (ReviewedTaskStepsState.Entry, ChildTaskFieldClientScope) -> Void
     private let refresh: () async -> Void
     private let lease = CalendarReadLease()
     private var closed = false
-    init(scope: ChildTaskFieldClientScope, journal: ReviewedTaskStepsJournal, service: any ReviewedTaskStepsService, current: @escaping () -> ChildTaskFieldClientScope?, canSend: @escaping (ReviewedTaskStepsCommand) -> Bool, isCurrent: @escaping (ChildTaskStructureRead) -> Bool, refresh: @escaping () async -> Void) {
-        self.scope = scope; self.journal = journal; self.service = service; self.current = current; self.canSend = canSend; self.isCurrent = isCurrent; self.refresh = refresh
+    init(scope: ChildTaskFieldClientScope, journal: ReviewedTaskStepsJournal, service: any ReviewedTaskStepsService, current: @escaping () -> ChildTaskFieldClientScope?, canSend: @escaping (ReviewedTaskStepsCommand) -> Bool, isCurrent: @escaping (ChildTaskStructureRead) -> Bool, refresh: @escaping () async -> Void, didApply: @escaping (ReviewedTaskStepsState.Entry, ChildTaskFieldClientScope) -> Void = { _, _ in }) {
+        self.scope = scope; self.journal = journal; self.service = service; self.current = current; self.canSend = canSend; self.isCurrent = isCurrent; self.refresh = refresh; self.didApply = didApply
     }
     func close() { closed = true; lease.cancel(); entries = []; busy = false; loaded = false; message = nil }
     private func check() throws { try lease.check(); try Task.checkCancellation(); guard !closed, current() == scope else { throw CancellationError() } }
@@ -325,21 +374,22 @@ extension Backend: ReviewedTaskStepsService {}
         try check(); guard ChildTaskFieldClientScope(read.context) == scope, isCurrent(read) else { throw CancellationError() }
         let result = try await service.reviewedTaskStepsAvailability(read); try check(); guard isCurrent(read) else { throw CancellationError() }; return result.enabled
     }
-    func queue(_ command: ReviewedTaskStepsCommand, read: ChildTaskStructureRead) async -> ReviewedTaskStepsCommand? {
+    func queue(_ command: ReviewedTaskStepsCommand, read: ChildTaskStructureRead, redoOf: String? = nil) async -> ReviewedTaskStepsCommand? {
         var saved: ReviewedTaskStepsCommand?
         let success = await work {
             guard ChildTaskFieldClientScope(read.context) == scope, isCurrent(read), canSend(command) else { throw ReviewedTaskStepsCommand.invalid }
             try command.review(read)
             if !command.undoing { guard try await available(read) else { throw AppFailure(message: "Adding reviewed steps is unavailable right now. Your task is unchanged.") } }
-            saved = try await journal.enqueue(command, lease: lease); try check(); try await update()
+            saved = try await journal.enqueue(command, lease: lease, redoOf: redoOf); try check(); try await update()
         }
         return success ? saved : nil
     }
     @discardableResult func run(_ command: ReviewedTaskStepsCommand, operation: ReviewedTaskStepsOperation) async -> Bool {
-        await work {
+        var alreadyApplied = false
+        let completed = await work {
             guard command.account == scope.account, command.origin == scope.origin else { throw CancellationError() }
             if operation == .apply { guard canSend(command) else { throw ReviewedTaskStepsCommand.invalid } }
-            let entry = try await journal.attempt(command, lease: lease, resolving: operation != .apply); try check()
+            let entry = try await journal.attempt(command, lease: lease, resolving: operation != .apply); try check(); alreadyApplied = entry.phase == .applied
             let result: ReviewedTaskStepsResult
             if let old = entry.result { result = old }
             else {
@@ -353,6 +403,24 @@ extension Backend: ReviewedTaskStepsService {}
             message = result.applied ? (command.undoing ? "Added steps removed." : "\(result.receipt!["count"]!.integer) steps added.") : result.closed ? "Addition stopped. This request can’t add steps later." : "No saved confirmation yet. Retry the original request or stop it before starting another."
             if result.applied { await refresh(); try check() }
         }
+        if (try? check()) != nil, let applied = entries.first(where: { $0.command == command && $0.phase == .applied }) {
+            if !alreadyApplied { didApply(applied, scope) }; return true
+        }
+        return completed
+    }
+    func canRedo(_ entry: ReviewedTaskStepsState.Entry) -> Bool {
+        entries.contains(entry) && entry.phase == .applied && entry.command.undoing && !entries.contains { $0.redoOf == entry.command.id && $0.phase != .closed }
+    }
+    func queueInverse(_ entry: ReviewedTaskStepsState.Entry, read: ChildTaskStructureRead) async -> ReviewedTaskStepsCommand? {
+        do {
+            try check(); guard entries.contains(entry), let receipt = entry.result else { throw ReviewedTaskStepsCommand.invalid }
+            if !entry.command.undoing {
+                guard canUndo(entry) else { throw ReviewedTaskStepsCommand.invalid }
+                return await queue(try .init(undo: entry.command, receipt: receipt, read: read), read: read)
+            }
+            guard canRedo(entry), let original = entries.first(where: { $0.command.id == entry.command.body["undo_of"]?.text }), let proof = original.result else { throw ReviewedTaskStepsCommand.invalid }
+            return await queue(try .init(redo: original.command, receipt: proof, undo: entry.command, undoReceipt: receipt, read: read), read: read, redoOf: entry.command.id)
+        } catch { guard (try? check()) != nil else { close(); return nil }; message = "This change needs review. Your original steps and saved requests are kept."; return nil }
     }
     func canUndo(_ entry: ReviewedTaskStepsState.Entry) -> Bool {
         entries.contains(entry) && entry.phase == .applied && !entry.command.undoing && !entries.contains { $0.command.body["undo_of"] == .string(entry.command.id) && $0.phase != .closed }

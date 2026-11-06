@@ -384,6 +384,14 @@ final class Workspace {
             self.confirmation?.mixedGroupReview = value.needsReview
         })
     }
+    func rememberReviewedTaskSteps(_ entry: ReviewedTaskStepsState.Entry, scope: ChildTaskFieldClientScope) {
+        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
+        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
+        guard let history = completionHistory, !history.contains(key: entry.command.id) else { return }
+        let step = store.reviewedTaskStepsHistoryStep(entry, scope: scope) { [weak self] notice in self?.confirm(notice.message, undoable: false) }
+        if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, history.acceptConfirmedInverse(of: parent, next: step) { return }
+        history.record(step)
+    }
     func rememberChildStructure(_ entry: ChildTaskStructureJournalState.Entry, scope: ChildTaskFieldClientScope) {
         guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
         if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }

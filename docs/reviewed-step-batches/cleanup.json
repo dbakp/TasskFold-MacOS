@@ -1,71 +1,116 @@
 {
   "apply": true,
-  "freeBeforeBytes": 60208472064,
+  "freeBeforeBytes": 60063703040,
   "actions": [],
   "skipped": [
     {
       "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
       "reason": "Reusable compiler cache within 768 MiB budget",
-      "allocatedBytes": 675577856,
-      "projectedAllocatedBytes": 675577856
+      "allocatedBytes": 676139008,
+      "projectedAllocatedBytes": 676139008
     },
     {
       "cache": "/private/tmp/taskfold-workflow-native-mac-build",
       "reason": "Reusable compiler cache within 768 MiB budget",
-      "allocatedBytes": 537636864,
-      "projectedAllocatedBytes": 537636864
+      "allocatedBytes": 538955776,
+      "projectedAllocatedBytes": 538955776
     }
   ],
-  "freeAfterBytes": 60208791552,
-  "actualFreeChangeBytes": 319488,
+  "freeAfterBytes": 60043161600,
+  "actualFreeChangeBytes": -20541440,
   "retiredSupersededEvidence": [
     {
-      "path": "/tmp/taskfold-step-client-ios-core.log",
-      "bytes": 30213
+      "path": "/tmp/taskfold-step-history-ios-core-v1.log",
+      "bytes": 28412
     },
     {
-      "path": "/tmp/taskfold-step-client-ios-core-v2.log",
-      "bytes": 47547
+      "path": "/tmp/taskfold-step-history-ios-core-v2.log",
+      "bytes": 29068
     },
     {
-      "path": "/tmp/taskfold-step-client-ios-core-v3.log",
-      "bytes": 55565
+      "path": "/tmp/taskfold-step-history-ios-core-v3.log",
+      "bytes": 40883
     },
     {
-      "path": "/tmp/taskfold-step-client-ios-core-v4.log",
-      "bytes": 29367
+      "path": "/tmp/taskfold-step-history-ios-core-v4.log",
+      "bytes": 30147
     },
     {
-      "path": "/tmp/taskfold-step-client-ios-core-final.log",
-      "bytes": 72592
+      "path": "/tmp/taskfold-step-history-ios-schema-v1.json",
+      "bytes": 51165
     },
     {
-      "path": "/tmp/taskfold-step-client-ios-build.json",
+      "path": "/tmp/taskfold-step-history-ios-schema-v1.log",
+      "bytes": 17202
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-native-v1.json",
+      "bytes": 84068
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-native-v1.log",
+      "bytes": 1173
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-native-v2.json",
+      "bytes": 84413
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-native-v2.log",
+      "bytes": 1219
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-build.json",
       "bytes": 1260
     },
     {
-      "path": "/tmp/taskfold-step-client-ios-build.log",
-      "bytes": 137054
+      "path": "/tmp/taskfold-step-history-ios-build.log",
+      "bytes": 135861
     },
     {
-      "path": "/tmp/taskfold-step-client-ios-build.signing-prepare.json",
-      "bytes": 177
-    },
-    {
-      "path": "/tmp/taskfold-step-client-ios-build.signing.json",
+      "path": "/tmp/taskfold-step-history-ios-build.signing.json",
       "bytes": 705
     },
     {
-      "path": "/tmp/taskfold-step-client-ios-service.json",
-      "bytes": 46042
+      "path": "/tmp/taskfold-step-history-ios-build.signing-prepare.json",
+      "bytes": 177
     },
     {
-      "path": "/tmp/taskfold-step-client-ios-service.log",
-      "bytes": 16448
+      "path": "/tmp/taskfold-step-history-ios-config-build.json",
+      "bytes": 1260
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-config-build.log",
+      "bytes": 21954
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-config-build.signing.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-config-build.signing-prepare.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-final-build.json",
+      "bytes": 1260
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-final-build.log",
+      "bytes": 92987
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-final-build.signing.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-step-history-ios-final-build.signing-prepare.json",
+      "bytes": 177
     }
   ],
-  "simulatorsBooted": [],
-  "normalAppsLaunchedOrClosed": false,
+  "normalAppsChanged": false,
+  "isolatedAppsClosed": true,
+  "ownedSimulatorRestored": true,
   "remainingFixtureContainers": [],
   "remainingFixtureNetworks": []
 }

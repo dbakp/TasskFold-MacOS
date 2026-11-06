@@ -633,13 +633,37 @@ final class Store {
         })
         return try .init(account: account, origin: origin, io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkBatch($0, includeSteps: false); try admission.checkOther($0, includeSteps: false) })
     }
-    func reviewedTaskStepsModel() throws -> ReviewedTaskStepsModel {
+    func reviewedTaskStepsModel(didApply: @escaping (ReviewedTaskStepsState.Entry, ChildTaskFieldClientScope) -> Void = { _, _ in }) throws -> ReviewedTaskStepsModel {
         guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
         return .init(scope: scope, journal: try reviewedTaskStepsJournal(account: scope.account, origin: scope.origin), service: backend,
                      current: { [weak self] in self?.childTaskFieldRecoveryScope },
                      canSend: { [weak self] in guard let self else { return false }; return self.permitsChildTaskRequest(account: $0.account, origin: $0.origin, identity: $0.body, enabled: self.childTaskStructureEditingEnabled, sending: true) },
                      isCurrent: { [weak self] in self?.childTaskFieldComparisonIsCurrent($0.records) == true },
-                     refresh: { [weak self] in guard let self, self.childTaskFieldRecoveryScope == scope else { return }; await self.sync() })
+                     refresh: { [weak self] in guard let self, self.childTaskFieldRecoveryScope == scope else { return }; await self.sync() }, didApply: didApply)
+    }
+    func reviewedTaskStepsHistoryStep(_ entry: ReviewedTaskStepsState.Entry, scope: ChildTaskFieldClientScope, name: String? = nil, report: @escaping (ChildTaskHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
+        let actionName = name ?? (entry.command.undoing ? "Remove Added Steps" : "Add Task Steps")
+        return .init(name: actionName, key: entry.command.id, retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope }, available: { [weak self] in
+            guard let self else { return false }
+            return !self.childTransferHistoryBusy && !self.childListCompletionBusy && self.permitsChildTaskRequest(account: entry.command.account, origin: entry.command.origin, identity: entry.command.body, enabled: self.childTaskStructureEditingEnabled, sending: true)
+        }, perform: { [weak self] in
+            guard let self, !self.childTransferHistoryBusy, self.childTaskFieldRecoveryScope == scope else { return nil }
+            self.childTransferHistoryBusy = true; defer { self.childTransferHistoryBusy = false }
+            do {
+                let model = try self.reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+                let read = try await self.readCurrentChildTaskStructure(entry.command.root)
+                guard self.childTaskFieldRecoveryScope == scope,
+                      let saved = await model.queueInverse(entry, read: read), await model.run(saved, operation: .apply),
+                      let next = model.entries.first(where: { $0.command == saved && $0.phase == .applied }) else { throw ReviewedTaskStepsCommand.invalid }
+                let notice = ChildTaskHistoryNotice(kind: .steps, scope: scope, commandID: saved.id, message: saved.undoing ? "Removed added steps" : "Restored added steps")
+                self.childHistoryNotice = notice; report(notice)
+                return self.reviewedTaskStepsHistoryStep(next, scope: scope, name: actionName, report: report)
+            } catch {
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(kind: .steps, scope: scope, commandID: nil, message: "These steps need review. Open Saved step additions to check the original request.")
+                self.childHistoryNotice = notice; report(notice); return nil
+            }
+        })
     }
     func childTaskStructureJournal(account: String, origin: String) throws -> ChildTaskStructureJournal {
         let admission = childTaskActionAdmission(account: account, origin: origin)
@@ -7348,7 +7372,85 @@ extension Store {
         try FullSchemaNativeFixture.writeReport(report, phase: phase)
     }
 
+    private func runFullSchemaStepPhase() async throws {
+        let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
+        dailyBackupsEnabled = false
+        if phase == "step-queue" {
+            guard try await backend.signIn(email: c.email, password: c.password, signup: false) else { throw AppFailure(message: "Genuine step sign-in failed") }
+            await authenticated(); online = true; try await fullSchemaSyncSettled()
+            let read = try await readChildTaskStructure(c.task), model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            guard let saved = await model.queue(try .init(titles: ["Tomorrow #work @Pat", "Review workshop layout"], parent: nil, read: read), read: read), !saved.undoing else { throw AppFailure(message: model.message ?? "Step review was not saved") }
+        } else {
+            guard backend.session?.user.id == c.account, signedIn, !localMode else { throw AppFailure(message: "Genuine step session was not reopened") }
+            online = false
+        }
+        let journal = try reviewedTaskStepsJournal(account: c.account, origin: backend.accountRemovalOrigin), original = try await journal.load()
+        guard let first = original.entries.first else { throw AppFailure(message: "Missing original step addition") }
+        let fingerprint = try fullSchemaReviewFingerprint(first.command)
+        if phase != "step-queue" { guard fingerprint == c.queuedFingerprint else { throw AppFailure(message: "Original step request changed across launch") } }
+        var undoObserved = false, redoObserved = false, historyActionName = ""
+        if phase == "step-loss" || phase == "step-replay" {
+            if phase == "step-loss" { FullSchemaNativeNetwork.armDrop() }
+            FullSchemaNativeNetwork.offline = false; online = true
+            let model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            let sent = await model.run(first.command, operation: .apply)
+            if phase == "step-loss" {
+                FullSchemaNativeNetwork.offline = true; online = false
+                guard !sent, FullSchemaNativeNetwork.dropped == 1, model.entries.first?.phase == .attempted else { throw AppFailure(message: model.message ?? "Lost step response did not retain its request") }
+            } else { guard sent, model.entries.first?.phase == .applied else { throw AppFailure(message: model.message ?? "Step retry was not confirmed") }; try await fullSchemaSyncSettled() }
+        }
+        if phase == "step-history" {
+            FullSchemaNativeNetwork.offline = false; online = true; try await fullSchemaSyncSettled()
+            guard original.entries.count == 1, first.phase == .applied else { throw AppFailure(message: "Unexpected step history before Undo") }
+            let model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            let read = try await readCurrentChildTaskStructure(c.task)
+            guard let second = await model.queue(try .init(titles: ["Second reviewed addition"], parent: nil, read: read), read: read), await model.run(second, operation: .apply),
+                  let secondEntry = model.entries.first(where: { $0.command == second && $0.phase == .applied }), let scope = childTaskFieldRecoveryScope else { throw AppFailure(message: model.message ?? "Second step addition failed") }
+            #if os(macOS)
+            let manager = UndoManager(); manager.groupsByEvent = false
+            let history = ConfirmedHistoryBridge(manager: manager)
+            #else
+            let history = viewHistory
+            #endif
+            history.record(reviewedTaskStepsHistoryStep(first, scope: scope)); history.record(reviewedTaskStepsHistoryStep(secondEntry, scope: scope))
+            for _ in 0..<2 {
+                guard history.canUndo else { throw AppFailure(message: "Native stacked Undo was unavailable") }; history.undo()
+                let deadline = ContinuousClock.now.advanced(by: .seconds(40))
+                while history.busy { guard ContinuousClock.now < deadline else { throw AppFailure(message: "Step Undo did not finish") }; try await Task.sleep(for: .milliseconds(20)) }
+            }
+            let undone = try await journal.load()
+            guard history.canRedo, !history.canUndo, undone.entries.count == 4, undone.entries.suffix(2).allSatisfy({ $0.command.undoing && $0.phase == .applied }), record("tasks", id: c.task)?["subtasks"].list.count == 2 else { throw AppFailure(message: childHistoryNotice?.message ?? "Stacked native Undo did not confirm") }
+            undoObserved = true
+            for _ in 0..<2 {
+                guard history.canRedo else { throw AppFailure(message: "Native stacked Redo was unavailable") }; history.redo()
+                let deadline = ContinuousClock.now.advanced(by: .seconds(40))
+                while history.busy { guard ContinuousClock.now < deadline else { throw AppFailure(message: "Step Redo did not finish") }; try await Task.sleep(for: .milliseconds(20)) }
+            }
+            let redone = try await journal.load()
+            guard history.canUndo, !history.canRedo, redone.entries.count == 6, redone.entries.suffix(2).allSatisfy({ $0.redoOf != nil && $0.phase == .applied }), record("tasks", id: c.task)?["subtasks"].list.count == 5 else { throw AppFailure(message: childHistoryNotice?.message ?? "Stacked native Redo did not confirm") }
+            redoObserved = true; historyActionName = history.manager.undoActionName
+            guard historyActionName == "Add Task Steps" else { throw AppFailure(message: "Native history changed the original action label") }
+        }
+        if phase == "step-close-queue" {
+            FullSchemaNativeNetwork.offline = false; online = true; try await fullSchemaSyncSettled()
+            let read = try await readChildTaskStructure(c.task), model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            guard let child = c.child, await model.queue(try .init(titles: ["Cancelled nested step"], parent: child, read: read), read: read) != nil else { throw AppFailure(message: model.message ?? "Nested test addition was not saved") }
+        }
+        if phase == "step-close" {
+            FullSchemaNativeNetwork.offline = false; online = true
+            let model = try reviewedTaskStepsModel(); defer { model.close() }; await model.load()
+            guard let last = model.entries.last, last.phase == .queued, await model.run(last.command, operation: .close), model.entries.last?.phase == .closed else { throw AppFailure(message: model.message ?? "Nested step request was not closed") }
+        }
+        let disk = try await journal.load()
+        guard try fullSchemaReviewFingerprint(disk.entries.first!.command) == fingerprint, snapshot.pending.isEmpty,
+              try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) == snapshot else { throw AppFailure(message: "Step recovery changed its original request or ordinary task queue") }
+        let history = disk.entries.map { JSON.object(["command": .object($0.command.body), "phase": .string($0.phase.rawValue), "result": $0.result.map { .object($0.raw) } ?? .null, "redoOf": $0.redoOf.map(JSON.string) ?? .null]) }
+        let report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase), "account": .string(userID), "task": .string(c.task), "pending": .number(Double(snapshot.pending.count)), "commandFingerprint": .string(fingerprint), "history": .array(history), "diskMatchesStore": .bool(true), "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)), "nativeUndoObserved": .bool(undoObserved), "nativeRedoObserved": .bool(redoObserved), "historyActionName": .string(historyActionName)]
+        try FullSchemaNativeFixture.writeReport(report, phase: phase)
+    }
+
     func runFullSchemaNativePhase() async throws {
+        if FullSchemaNativeFixture.phase.hasPrefix("step-") { try await runFullSchemaStepPhase(); return }
         if FullSchemaNativeFixture.phase.hasPrefix("audio-") { try await runFullSchemaAudioPhase(); return }
         if FullSchemaNativeFixture.phase == "capture" { try await runFullSchemaCapturePhase(); return }
         if FullSchemaNativeFixture.phase.hasPrefix("adoption-") {try await runFullSchemaAdoptionPhase();return}

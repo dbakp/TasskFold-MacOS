@@ -11031,3 +11031,8 @@ The owning Mac schema adds 1–12 reviewed literal steps with one write/revision
 ### 6 November — saved-subtask suggestion controls and encrypted recovery
 
 The Mac independently owns the new root/nested on-device review, availability checks, encrypted original-request history, Check/Retry/Stop and a dedicated one-batch Undo. It uses saved records separately from inspector autosave. Current signatures and owning client/service checks are recorded in `reviewed-step-batches/README.md`. Native Store/Backend/screen acceptance, actual model generation and normal global Undo/Redo remain open. No installed app, normal gate, hosted project or permission changed; further iPhone installation stays deferred.
+
+
+### 6 November — reviewed-step normal history and consecutive reversals
+
+The Mac independently owns normal Undo/Redo registration, durable inverse/Redo lineage and fresh original-slot reconstruction. The service preserves later live children when undoing earlier null-origin additions and retains changed-step digests. Current owning client, schema, signatures and platform production-store results are recorded in `reviewed-step-batches/README.md`. Actual review-screen/keyboard/accessibility and real generation acceptance remain; no normal gate, installed app or normal session service name changed. The isolated test adapter now handles both legacy session prefixes.

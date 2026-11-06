@@ -489,7 +489,7 @@ extension Backend: ChildTaskTransferService {}
 
 /// Transient, workspace-bound feedback; command/proof contents remain private.
 struct ChildTaskHistoryNotice: Identifiable {
-    enum Kind { case transfer, fields, hierarchy }
+    enum Kind { case transfer, fields, hierarchy, steps }
     var kind: Kind = .transfer
     let id = UUID()
     let scope: ChildTaskFieldClientScope

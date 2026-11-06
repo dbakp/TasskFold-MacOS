@@ -27,7 +27,7 @@ if a.reuse_host:
   assert info['CFBundleIdentifier']=='com.dbakp.taskfold.mac.workflowteststeameditbridge'
   assert 'group.com.dbakp.taskfold.workflowteststeameditbridge' in (output/'Taskfold/Core/Store.swift').read_text()
   backend=(output/'Taskfold/Core/Backend.swift').read_text()
-  assert 'com.taskfold.workflowteststeameditbridge.session' in backend and 'com.taskfold.mac.session' not in backend
+  assert 'com.taskfold.workflowteststeameditbridge.session' in backend and all(x not in backend for x in ['com.taskfold.mac.session','com.taskfold.ios.session'])
  assert 'com.dbakp.taskfold.workflowteststeameditbridge' in (output/'Taskfold.xcodeproj/project.pbxproj').read_text() or 'com.dbakp.taskfold.mac.workflowteststeameditbridge' in (output/'Taskfold.xcodeproj/project.pbxproj').read_text()
 else:
  subprocess.run([sys.executable,str(Path(__file__).with_name('prepare_team_editor_native_test.py')),'--output',str(output)],check=True)

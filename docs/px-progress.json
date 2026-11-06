@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Reviewed task steps · native controls built; acceptance and global history next",
-  "latest": "Saved-subtask step suggestions now have native root/nested review, availability checking, encrypted request recovery and one dedicated batch Undo in both app sources. Each owning schema passes 104 genuine local checks; each selected client run has 102 passes and one explicit real-model skip. Both app sources build and sign. The new screens/Swift Backend still need native acceptance and normal global Undo/Redo integration. Apple Intelligence is disabled here; assistance stays on-device only. Installed apps and gates are unchanged; further iPhone installation remains deferred.",
+  "focus": "Reviewed task steps · history connected; native controls and generation checks next",
+  "latest": "Reviewed step additions now pass 25 production Store/network/history checks on each platform, including two consecutive Undos/Redos, preserved action names, cold retry/stop and fresh identities. Each owner also passes 106 client/history and 123 genuine service checks; current sources build and sign. Actual review-screen taps, keyboard focus/accessibility and real on-device generation remain unaccepted. Installed apps and normal gates are unchanged; phone installation stays deferred.",
   "next": [
     "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Unlock Mac for current normal/largest-text note and assistant flows, then package later source changes. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
-    "ACCEPT NEXT: exercise the new saved-subtask review/Add/Undo and cold Check/Retry/Stop through each actual native Store/Backend, then integrate normal global Undo/Redo. Availability and encrypted request handling now build and pass owning client/service checks; do not equate them with native or generated-quality acceptance. Keep on-device generation only and preserve iOS explicit draft Save/Mac autosave. Retain accepted iPhone/iPad file journeys; the existing Mac file-screen unlock request is still pending.",
+    "ACCEPT NEXT: exercise the actual reviewed-step form, selected Add, explicit Undo/Redo, native keyboard focus/menus and accessible feedback. Normal history, multi-action reversal, encrypted cold Check/Retry/Stop and original-slot Redo now have owning code and recorded production-store evidence; do not repeat accepted unchanged journeys. Keep generation on-device only. The existing Mac file-screen unlock request and other agreed deferrals remain; preserve iOS explicit Save/Mac autosave.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -614,7 +614,7 @@
         },
         {
           "id": "p2-voice",
-          "title": "4 · Reviewed voice drafts",
+          "title": "4 · Voice and on-device assistance",
           "items": [
             {
               "state": "done",
@@ -632,9 +632,9 @@
               "detail": "You asked to do genuine audio testing later."
             },
             {
-              "state": "build",
+              "state": "verify",
               "title": "Reviewed task and filter assistance",
-              "detail": "On-device task-step and filter-expression review flows are implemented independently in both apps. Filter suggestions validate through the ordinary grammar and task preview, bind current targets/date settings and revalidate at Use and Save. Helper directory reads occur only for person lookups; ordinary date/priority/Inbox requests do not trigger them. Each owning Core suite passes 123 cases plus two explicit real-model skips, and both signed app sources build. Apple Intelligence is disabled on this Mac; genuine generation, native review, Stop, Cancel, Use, Save, Undo, cold reopening, account changes and accessibility, directory delivery, generated quality/latency and independent child-record insertion remain open. The user chose on-device assistance only on 5 November; no cloud provider or fallback is planned. Installed phone34 and Mac14 do not contain these flows; later source packaging and native acceptance remain separate. The separate atomic reviewed-step service now passes 92 genuine owning local Auth/REST checks, including one Undo, nested/null destinations, exact paused retry, closure, shared permissions and late rollback. Its default gate remains Off; typed clients, saved batch recovery/history and review-screen integration still need implementation. This does not advance this checkpoint to verified. Saved-record assistance now has native root/nested review, pre-generation availability, encrypted exact recovery and explicit one-batch Undo. Each owner passes 104 genuine service checks and 102 selected client cases plus one disabled-model skip; current app builds sign. Native Store/Backend interaction, generated quality and normal global Undo/Redo remain. This checkpoint stays To build until those implementation gaps close."
+              "detail": "On-device task-step and filter-expression review flows are implemented independently in both apps. Filter suggestions validate through the ordinary grammar and task preview, bind current targets/date settings and revalidate at Use and Save. Helper directory reads occur only for person lookups; ordinary date/priority/Inbox requests do not trigger them. Each owning Core suite passes 123 cases plus two explicit real-model skips, and both signed app sources build. Apple Intelligence is disabled on this Mac; genuine generation, native review, Stop, Cancel, Use, Save, Undo, cold reopening, account changes and accessibility, directory delivery, generated quality/latency and independent child-record insertion remain open. The user chose on-device assistance only on 5 November; no cloud provider or fallback is planned. Installed phone34 and Mac14 do not contain these flows; later source packaging and native acceptance remain separate. The separate atomic reviewed-step service now passes 92 genuine owning local Auth/REST checks, including one Undo, nested/null destinations, exact paused retry, closure, shared permissions and late rollback. Its default gate remains Off; typed clients, saved batch recovery/history and review-screen integration still need implementation. This does not advance this checkpoint to verified. Saved-record assistance now has native root/nested review, pre-generation availability, encrypted exact recovery and explicit one-batch Undo. Each owner passes 104 genuine service checks and 102 selected client cases plus one disabled-model skip; current app builds sign. Native Store/Backend interaction, generated quality and normal global Undo/Redo remain. This checkpoint stays To build until those implementation gaps close. Normal Undo/Redo integration and consecutive reversal are now implemented, including encrypted versioned lineage, exact inverse reuse and fresh original-slot Redo. Current owning runs pass 106 client/history and 123 service checks with signed builds; platform production-store evidence is linked. This checkpoint moves from To build to Built/checks left, not Verified. Actual review form, keyboard focus/accessibility, wider contexts and real on-device generation remain."
             }
           ],
           "sources": [
@@ -647,7 +647,9 @@
             "reviewed-step-batches/cleanup.json",
             "reviewed-step-batches/client-verification.json",
             "reviewed-step-batches/signed-build.json",
-            "reviewed-step-batches/core-cache-storage.json"
+            "reviewed-step-batches/core-cache-storage.json",
+            "reviewed-step-batches/history-verification.json",
+            "reviewed-step-batches/native-store-verification.json"
           ],
           "focus": true
         },
@@ -1314,7 +1316,9 @@
     "reviewed-step-batches/cleanup.json",
     "reviewed-step-batches/client-verification.json",
     "reviewed-step-batches/signed-build.json",
-    "reviewed-step-batches/core-cache-storage.json"
+    "reviewed-step-batches/core-cache-storage.json",
+    "reviewed-step-batches/history-verification.json",
+    "reviewed-step-batches/native-store-verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1639,12 +1643,14 @@
     "reviewed-child-adoption-client/verification.json": "5c69918aaf693d69ca9509616024cf4fb9ea79f43c56ada94e9254430e9e8f64",
     "reviewed-child-adoption-native/verification.json": "0b1d67d06dd2b65172d4b8ebb4c3e3677df460d7b1a0f26a9b907a987b7ab5fd",
     "reviewed-child-adoption/verification.json": "488443346a14f4df5aa1cc16cdb53aadbf5f3334d4a1940b99088ad3ccef462c",
-    "reviewed-step-batches/README.md": "bdb7b38fb9b43cdb8fbc1c6450b7c5ba5f653f8ab9c67fd163611f896b26cd4f",
-    "reviewed-step-batches/cleanup.json": "3d17480381af5587cbd5aa069b57f2a44ca896aedf862d647779486dfc3e5a98",
-    "reviewed-step-batches/client-verification.json": "b56e20055c63b28c5f5d657a2d6e7c1cf687249d353f176b681a9d430adad347",
-    "reviewed-step-batches/core-cache-storage.json": "a36673b1addf301e09ddbb5cb3fba5d9acb92a26722445036961d6301e257789",
-    "reviewed-step-batches/full-schema.json": "5c7ff16c612d50016c938d97e7c67f91ee093c9604f2171236cb51c6369b2ac1",
-    "reviewed-step-batches/signed-build.json": "c2103f5241498a32cd34ae7f922cf15577e96a22f331a871ba0ea16331b0514d",
+    "reviewed-step-batches/README.md": "996cb326bbc5966b2779a95a963c7105f4c167a215e8ca8e5b0050e429d765b4",
+    "reviewed-step-batches/cleanup.json": "002b07a85f814bb568c3874b65a6238b9915df1edd30261f9e4e7a18cbadf333",
+    "reviewed-step-batches/client-verification.json": "5dbf36d3c7ce9d85290b9a07d9bfc5de03d64f556aa9fe6dcac67225b5203484",
+    "reviewed-step-batches/core-cache-storage.json": "3040c3383dd54213741e8fa20bfcdef4014195ceedf2e788d2c8b7f65f97c7ea",
+    "reviewed-step-batches/full-schema.json": "dc85f56e8b19439eb192618b961f496e013238d54f230859da16985c46cdc1ae",
+    "reviewed-step-batches/history-verification.json": "03a6d82ffb9ede0af7f1eb1502693135e903166c1d3eb903799deecbeabb2f37",
+    "reviewed-step-batches/native-store-verification.json": "eed11eed9883545927a9b7a669f696658e6af8f402bd6271943a419bdd9c6600",
+    "reviewed-step-batches/signed-build.json": "5b3ef5e5d81c62261842ebb790477c90db11da8556e36864133da94e0ba709c1",
     "rich-workflow-creation/README.md": "103f64cbe3d00dc570f9abaee707ed76f88630e15899983614042bd61a8118f6",
     "rich-workflow-creation/before-failed-native.json": "db0060240f0596766118ba9b3362ab6014320d94dc25ba2d8db3c9ccdb56f9a4",
     "rich-workflow-creation/before-partial-diagnostic.json": "7bbce31bdbf4cec67f6f9195cf1e354c115b5108908032bc1483602455373cde",
@@ -1668,7 +1674,7 @@
     "saved-copy-selection/phone-proof.json": "ff630c3b283eec760c05b9b2e26ae10fb2f222cff853a0f81b216171967c7d89",
     "saved-copy-selection/symbol-verification.json": "8cbae5b8d86418540ba082924cb86d86aad0aec83f53a9793282540e38cbddc1",
     "shared-array-reads/verification.json": "ebbfbd53afefdd58b56a141e44a877d034a9877bb41e6800612fa7240dd05456",
-    "task-breakdown/README.md": "89d233d4b162b2d6617d33dedd8ace4f2bc5176ef3a6a16486ecdad0a6788b0f",
+    "task-breakdown/README.md": "467952bbf8f5573cc2330828c182854d392a6400498cd8eb194109ddd32552bd",
     "task-file-cleanup/verification.json": "0797f7fbae6e215131c8324fda2ee3d6d4cf204d2272aab12d12582e02ba4090",
     "task-file-client/verification.json": "11cfb240b700e3bc8950708066d553853ca5a272e83b89990c60947bedde95dc",
     "task-file-custody/verification.json": "2d8b4b3c3a0628ee62101f49e34e2338f13086f6cdcb5be1449ae90ed8fc8d7f",

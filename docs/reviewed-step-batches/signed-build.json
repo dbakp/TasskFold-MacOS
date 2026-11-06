@@ -2,16 +2,20 @@
   "platform": "mac",
   "xcodeExitCode": 0,
   "strictSignatureVerified": true,
-  "binarySHA256": "890d385e4fa52549edef604906d14a7915ad63f642215485f85f2ecbaec8a2bc",
-  "buildOnly": true,
-  "reviewedStepScreensAccepted": false,
+  "binarySHA256": "4b245d70b6286dd312deac64d9c6af58b0397a68776d6a3d80d741253681b675",
   "normalAppsChanged": false,
+  "normalGatesChanged": false,
+  "isolatedChildGatesEnabled": true,
+  "reviewScreenAccepted": false,
   "sourceSHA256": {
-    "Taskfold/Core/ReviewedTaskSteps.swift": "d041cb248599ab7de4fefe003ac4011acf2c04eea2318c231f5e017f3a46a5e9",
-    "Taskfold/Core/Backend.swift": "48a4038becca9f7d14e4f168d55d700153c450203e0ec959c4a49e18a40c3e06",
-    "Taskfold/Core/Store.swift": "a6815fd9697e0618715273661a277656e1c2d61f56b754a1de0c0bc2b90eeb8b",
-    "Taskfold/Core/ChildTaskCompletionCommands.swift": "5a91e4d8eb7f60ac678fb9df681af0af763296c93a543f4f1d0db6d0e1ed195a",
-    "Taskfold/Views/ReviewedTaskStepsView.swift": "af68c7df6826084991a1e330cb90d8bbf21796301af619ab7c8431ea7158c225",
-    "Taskfold/Views/ChildTaskStructureViews.swift": "1893d4c7aad6e6b74b4ab662e6ea8d3423b8d18f6eca0a5dd5427504598e4f26"
-  }
+    "Taskfold/Core/ReviewedTaskSteps.swift": "3044c5e16e3a8f7c8788fa19be6a140d9414c15068e1f84aa39c3dbc6585138f",
+    "Taskfold/Core/Store.swift": "b27b4c501122e7302829fefb6dd659800962e0bcb4368bda0d5ee6699dd32118",
+    "Taskfold/Core/ChildTaskTransfers.swift": "7e60a0d7a45b1cff30cda3496b2ed149bee05f43b9dd830771e0dd0f1152c5e6",
+    "Taskfold/TeamTemplateNativeFixture.swift": "adad8619fae98750734210bab89ee33155f7d265aaddf4ac7ccab2b3d154f6fd",
+    "Taskfold/Views/ReviewedTaskStepsView.swift": "9acd40b20288fb7a3b37e83a9a36123ff119978d3e4e1569230592b96731b866",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "e485b2853fab4f073bb8963b3c986361eab181e062c255f25b21ffb07e435e5d",
+    "Taskfold/Workspace.swift": "e2c5927970ec53ad6436289affca9a47dbc96a6caa6a77bd9fd568a7c728caff"
+  },
+  "nativeCriticalSourcesMatchCurrent": true,
+  "reviewOrganizerRefreshCompiled": true
 }
