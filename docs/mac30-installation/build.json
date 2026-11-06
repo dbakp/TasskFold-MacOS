@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "configuration": "Release",
+  "platform": "mac",
+  "bundle": "com.dbakp.taskfold.mac",
+  "version": "1.2.0",
+  "build": "30",
+  "app": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Release/Taskfold.app",
+  "sourceFingerprint": "b4e8e1bc6a65f0ac19b19e7bbe26ee56a0f0d175629da210ea3a89e5a640d48d",
+  "sourceRevision": "7371258fce50e850ec744db6d0457e3338d3321c",
+  "simulatorOnly": false,
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "published": false,
+  "cachedProfileSigning": {
+    "mode": "existing-development-profiles-only",
+    "identitySHA1": "9421BFBE87503809AB8274B2B84048C65BE9D2FC",
+    "profiles": {
+      "com.dbakp.taskfold.mac": {
+        "uuid": "8d7498f4-1e66-4f06-a95f-a9e433e719a3",
+        "expires": "2026-11-10T18:38:42+00:00",
+        "xcodeManaged": true
+      },
+      "com.dbakp.taskfold.mac.widgets": {
+        "uuid": "9fddc085-4a2d-40cb-86ed-dff551baf84e",
+        "expires": "2026-11-10T18:32:04+00:00",
+        "xcodeManaged": true
+      },
+      "com.dbakp.taskfold.mac.share": {
+        "uuid": "25d8c570-2916-4cf4-8c05-881dcb51fbda",
+        "expires": "2026-11-10T18:32:07+00:00",
+        "xcodeManaged": true
+      }
+    },
+    "profileCreationAllowed": false,
+    "networkProvisioningAllowed": false,
+    "embeddedProfilesVerified": true
+  },
+  "buildToolsSHA256": {
+    "build_daily.py": "82c77051f4845176d305f8ef0f5df039e51ce318ff0b5947dd23c74ed6579b58",
+    "cached_development_signing.py": "319da92eff45402826db9d8a5e9c54cb64a754f3abafe67585719261bcfa54a9"
+  },
+  "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-30-mac-development.zip",
+  "archiveSHA256": "6b62b8ecd86eaa02f5c707fb7ea64a834f708cec51718b2bca91f226308a9beb",
+  "archivePayloadVerified": true,
+  "readbackMetadataIsolated": true,
+  "sourceWasDirty": false,
+  "packagingToolSHA256": "a32fa10f83913f227e36cd2676131809631b03aab21a16533c06120ed44958ed",
+  "installationNote": "Prepared only; existing app session and data are preserved.",
+  "installedBaseline": "1.2.0 (29)",
+  "developmentProfileExpires": "2026-11-10T18:32:04+00:00"
+}

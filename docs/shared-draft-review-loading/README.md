@@ -17,3 +17,5 @@ Signed current-source iPhone and iPad journeys use the ordinary Shared drafts sc
 The first native attempts used the wrong XCTest element kinds for a spinner and multiline TextField; identifier-based queries corrected those test assumptions. All fixture controls are DEBUG-only, exact-test-bundle/flag restricted and use a private synthetic mailbox. No real account or normal shared app-group data is used. Core reproduction: `bash Scripts/test_core.sh --filter 'SharedCapture(ReviewReader|CountReader)?Tests'`. Native case: `WorkflowSourceSelectionUITests.testSharedDraftReviewLoadsWithoutBlockingAndRetriesUnreadableMailbox`.
 
 The final independent Mac app builds and passes strict signature verification. Native Mac interaction/speech and physical rendering are not claimed by that build result. See the source-bound reports and the retained final phone/tablet screenshots.
+
+Subsequent delivery: this source is packaged and installed in Mac30. Its system permission/startup status is recorded separately in [Mac30 installation](../mac30-installation/README.md); phone installation remains deferred.
