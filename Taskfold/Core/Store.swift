@@ -7341,7 +7341,16 @@ extension Store {
                 guard let consent = files.consent(for: inspection), consent.count == 1 else { throw AppFailure(message: files.message ?? "Private file copies are not ready") }
                 fileConsent = consent
             }
-            let review = try await backend.reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil, recordingPolicy: policy, fileConsent: fileConsent)
+            let connected = ProcessInfo.processInfo.arguments.contains("--full-schema-connected-custody-testing")
+            let connectionEffects = connected ? try inspection.expectedConnectionEffects() : nil
+            if let effects = connectionEffects?.values {
+                guard inspection.hasConnections, inspection.supportsConnectionPause,
+                      effects["email_routes_paused"] == 1, effects["project_webhooks_paused"] == 1,
+                      effects["pending_webhooks_cancelled"] == 1, effects["global_webhooks_excluded"] == 1,
+                      (effects["queued_updates_discarded"] ?? 0) > 0 else { throw AppFailure(message: "Actual connection effects are not ready") }
+            }
+            let review = try await backend.reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: connected ? .pause : nil, recordingPolicy: policy, fileConsent: fileConsent)
+            guard review.connectionPolicy == (connected ? .pause : nil), review.connectionEffects == connectionEffects else { throw AppFailure(message: "Connection consent changed during review") }
             guard review.fileConsent == fileConsent else { throw AppFailure(message: "File consent changed during review") }
             guard review.canCommit, review.recordingCount == 1,
                   review.unfinishedRecordingCount == (mixed ? 1 : nil), review.retainedRecordingCount == (mixed ? 1 : nil) else { throw AppFailure(message: "Current recording review is not committable") }
@@ -7412,6 +7421,7 @@ extension Store {
             "receipt": model.receipt.map { .object(["request_id": .string($0.command.id), "replayed": .bool($0.replayed), "command": .object($0.command.body)]) } ?? .null, "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)),
             "workspaceRefreshed": .bool(refreshed), "downloadedExactBytes": .bool(downloaded), "offline": .bool(FullSchemaNativeNetwork.offline),
             "downloadedExactFileBytes": .bool(downloadedFile), "clearedFilePreparation": .bool(clearedFiles), "filePreparationPending": .bool(savedFiles != nil),
+            "connectionEffects": model.pending?.connectionEffects?.body ?? model.receipt?.command.connectionEffects?.body ?? .null,
             "filePreparationFingerprint": .string(try savedFiles.map(fullSchemaReviewFingerprint) ?? ""),
             "rawDraftSHA256": .string(SHA256.hash(data: try Data(contentsOf: raw)).map { String(format: "%02x", $0) }.joined()), "diskMatchesStore": .bool(true)]
         try FullSchemaNativeFixture.writeReport(report, phase: phase)

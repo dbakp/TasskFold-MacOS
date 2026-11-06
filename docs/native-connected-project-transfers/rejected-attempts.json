@@ -1,0 +1,47 @@
+{
+  "firstCompile": {
+    "accepted": false,
+    "xcodeExitCode": 65,
+    "cause": "Throwing derived-effects call inside short-circuit operators in the DEBUG helper; compute once before comparison",
+    "nativeAppStarted": false
+  },
+  "firstNative": {
+    "accepted": false,
+    "checkCount": 26,
+    "phase": {
+      "nonce": "52d24ad1-eaa0-41cc-9ac2-6619a43796a1",
+      "accepted": false,
+      "message": "Actual connection effects are not ready",
+      "phase": "audio-project-queue",
+      "notice": "",
+      "pending": 0
+    },
+    "cleanup": {
+      "appClosed": true,
+      "handlerClosed": true,
+      "servicesRemoved": true,
+      "simulatorRestored": true,
+      "testKeychainRetained": true
+    },
+    "sourceSHA256": {
+      "Taskfold/Core/Store.swift": "786eceaa7e51a340530e3ca3195d419465576d28d431c9331368c387fd344131",
+      "Taskfold/Core/Backend.swift": "60090db73c2395000607117efbf72cb962e126ea7803b462c49e8d2012b9faf1",
+      "Taskfold/Core/Backups.swift": "f74554e10a7920d2a847093e10632c5ee51bc01662622de2d371eb9057d54824",
+      "Taskfold/Core/Models.swift": "f93233a2f1a98b8ac5127e08ceea76783ac54aff70d8aa761baac42de2c49837",
+      "Taskfold/Core/AudioComments.swift": "ec787cda66dc924d08a4a25ec5c23b6495378364fc00c81096349bd934619757",
+      "Taskfold/Core/AudioCommentVault.swift": "aa9925268ad9ecccc89816c77423e5077acc9062e548c6247a253c8e32ef8809",
+      "Taskfold/Core/AudioCommentPublishing.swift": "a53e6e108668847b1050ad9fd5c4cad7fa140e09839ebea547e42b64e0acd99d",
+      "Taskfold/Core/AudioCommentPending.swift": "68f0a7e4c91476c32312211d6b4321162d67dd8b83734bc05e2d695f233e17a8",
+      "Taskfold/Core/AudioCommentDecoding.swift": "d21dbbfa6223b185b8683c4ccdfdaf685eeed894b6e83e6fc3284cf2f384213f",
+      "Taskfold/TeamTemplateNativeFixture.swift": "f0db9ba81397fe39f4f21ff7d9fba4a023d493a7eec75d9712acf40af0098c65",
+      "Taskfold/Core/TeamProjectAdoption.swift": "1effa533fbced7a347588f4a5c41140b8bb294a318e836fd1884581501986e82",
+      "Taskfold/Core/TeamOrganizationCommand.swift": "242b0a2f026dafb9d98770e1fe0a91b6b978af795eb6865530f912d119bf034e",
+      "Taskfold/Views/TeamProjectAdoptionView.swift": "1485e548c221429a492d37c0bd2125762aedc5e658215992d40c32a4619f9219",
+      "Taskfold/Core/ProjectFilePreparation.swift": "3444263a3725199c8c971b53d8747c02da4f4d965f42f0a5ad0439c0bc25741b",
+      "Taskfold/Core/TaskFileUpload.swift": "4765c6cf1b3d3021ab1f6d2347be6c4d9ed0052095e0188211b53abc19151c2f"
+    },
+    "cause": "The helper required connection-only availability even though prepared-file consent enables the combined review. Production UI already uses protocol support; require it plus the actual typed review.canCommit instead.",
+    "diagnosticFix": "Always surface the saved Storage callback failure even if publication resolves the real stored object afterward."
+  },
+  "scope": "Rejected test preparation/integration attempts; no normal app or hosted service changed"
+}

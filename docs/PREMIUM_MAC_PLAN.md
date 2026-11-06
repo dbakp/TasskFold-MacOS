@@ -11129,3 +11129,8 @@ The accumulated Mac branch is merged into main. The Mac-owned reserved integrati
 ### 6 November · Combined file/audio recovery integration
 
 The Mac-owned transfer screen now uses the Store file-preparation factory with its existing workspace/session recovery fence. The reserved native integration supports private-copy consent, both saved journals and exact Backend file reads alongside mixed audio. The iOS-owned genuine native proof passes 59 checks; this does not establish a Mac runtime pass. Its dedicated protected-vault identity/profile remains required. Normal premium controls, installed app, frozen package and rollout gates are unchanged. [Scope](native-combined-project-transfer/README.md).
+
+
+### 6 November · Connection consent with combined custody
+
+The Mac-owned reserved integration now includes explicit connection pause together with file copies and mixed recordings. The actual iOS-owned app proof passes 69 checks: exact saved/replayed effects, selected-only queue cancellation, unfinished verification retirement and preservation of unrelated data/settings. Mac protected runtime remains pending its dedicated profile, and no blocked matrix or normal identity was reused. Premium UI, installed app and normal gates are unchanged. [Scope](native-connected-project-transfers/README.md).

@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-06",
+  "buildOnly": true,
+  "nativeSyntheticPeer": true,
+  "integratedSQLGatewayStorage": false,
+  "installedAppsUnchanged": true,
+  "normalGatesChanged": false,
+  "case": "consent",
+  "deviceFamily": "iphone",
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "preparedSourcesSHA256": "15dcfffba7386e15c9c2b2d1d9601160b67784f40224bd59652439b9701cee8d",
+  "ownUITestsSHA256": "1e4779ba5b015ce4bc04b333ab3932a1d9af945ce31a657b15cba177d68bc73e",
+  "packet": {
+    "combined": false,
+    "combinedContractSHA256": null,
+    "fileContractSHA256": "897a68fc8ddc38c7dd126885512181dffea1234a4f0dcbe5769c03b57f40ce76",
+    "files": true,
+    "sourceFixtureSHA256": "04e2558d6509c5b959debd13ce2cf7d857d1688f0532542cc998cf793a5e6aa8",
+    "recordingContractSHA256": null,
+    "preparedPacketSHA256": "60f105fa99227099167cffe8ced017916c0225694230505aa155cb68032bba41",
+    "recordings": false,
+    "privateHistory": false,
+    "reusedHost": true,
+    "namespace": "workflowteststeameditbridge",
+    "syntheticOnly": true,
+    "network": "All requests intercepted in the reserved DEBUG host; no real account/provider access",
+    "launch": [
+      "--team-editor-testing",
+      "--project-adoption-testing",
+      "--team-editor-reset"
+    ]
+  },
+  "xcodeExitCode": 0,
+  "strictSignatureVerified": true
+}
