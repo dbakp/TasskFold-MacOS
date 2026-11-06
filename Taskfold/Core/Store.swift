@@ -821,9 +821,9 @@ final class Store {
         guard context.root["task_generation"] == command.body["task_generation"], context.root["project_id"] == command.body["project_id"] else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
         return context.root.title
     }
-    func childTaskAdoptionTargets(after: String? = nil) async throws -> ChildTaskAdoptionTargetPage {
+    func childTaskAdoptionTargets(after: String? = nil, query: ChildTaskAdoptionSearch? = nil) async throws -> ChildTaskAdoptionTargetPage {
         guard childTaskAdoptionEnabled, online, let scope = childTaskFieldRecoveryScope else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
-        let page = try await backend.childTaskAdoptionTargets(scope: scope, after: after)
+        let page = try await backend.childTaskAdoptionTargets(scope: scope, after: after, query: query)
         try Task.checkCancellation()
         guard childTaskFieldRecoveryScope == scope, childTaskAdoptionEnabled else { throw CancellationError() }
         return page

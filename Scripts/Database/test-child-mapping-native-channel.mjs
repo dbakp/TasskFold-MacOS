@@ -44,3 +44,13 @@ test('native discovery rejects foreign roots and invalid pagination before SQL',
  }
  assert.equal(calls,0);
 });
+
+test('search channel validates query and cursor before SQL and quotes literal text',async()=>{
+ let calls=0;
+ const pg={raw:async(sql)=>{calls++;assert.ok(sql.includes("public.taskfold_search_child_adoption_targets('O''Brien %_"));return JSON.stringify({value:'{}',code:null});}};
+ const channel=createMappingSQLChannel(pg,{session:randomUUID(),nonce:'test-run-nonce'});
+ const base={_query:"O'Brien %_",_after:null,_limit:100};
+ const request=body=>({...make(),path:'/rest/v1/rpc/taskfold_search_child_adoption_targets',body:Buffer.from(JSON.stringify(body)).toString('base64')});
+ for(const change of [{_query:null},{_query:''},{_query:'x'.repeat(257)},{_query:'🪴'.repeat(257)},{_query:'a\0b'},{_limit:0},{_after:"bad' cursor"},{_id:identity.root}])await assert.rejects(channel.dispatch(request({...base,...change})));
+ assert.equal(calls,0);await channel.dispatch(request(base));assert.equal(calls,1);
+});

@@ -8067,3 +8067,10 @@ verified installed build and phone installation stays deferred. Existing signing
 expires 10/11 November; it is not renewed. This adds delivery evidence, not a new
 completed Px feature or distribution/FPS claim.
 [Current package scope](daily-candidates-29-41/README.md).
+
+
+### 2026-11-06 — Global older-task discovery search
+
+Subtask storage now searches all accessible task titles instead of filtering only loaded entries. The independent version-2 RPC uses live-session/rollout checks and caller RLS, literal NFC/case-insensitive matching, bounded title/excerpt metadata and UUID keyset pages. Empty query retains version-1 browsing; opening a result still performs the existing fresh identity lookup and review. Debounced UI requests are fenced by query, selection and full recovery scope. Original task/record/history fingerprints remain exact.
+
+Each owner passes 29 Core, 211 real local PostgreSQL, six channel-validation and 12 genuine SQL-channel checks. Current iPhone/iPad largest-text search/review/return/replace/clear passes after putting empty feedback first and hiding instructions while searching; Mac builds and signs. See [scoped evidence](adoption-global-search/README.md) for final tablet and build results, setup corrections and acceptance limits. This does not finish the broader migration, activate normal gates, deploy a hosted service or update an installed app. Frozen Mac29/phone41 predate the change. Mac interaction/speech, broader identities/history/ownership, large libraries and previous agreed deferrals remain open. Curated progress bars and detailed-step states are unchanged.

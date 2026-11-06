@@ -104,7 +104,7 @@ import CryptoKit
         result.merge(["copy_digest": .string(digest), "state": .string("different"), "authoritative_source": .string("records"), "copies": .array(try [summary("task",tree), summary("projection",projectionTree), summary("records",recordTree)]), "task_tree": tree, "projection_tree": projectionTree, "record_tree": recordTree, "export_bundle": .object(bundle)], uniquingKeysWith: { _, b in b })
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]; return try encoder.encode(result)
     }
-    static let paths: Set<String> = ["/rest/v1/rpc/taskfold_review_child_copies", "/rest/v1/rpc/taskfold_child_adoption_targets", "/rest/v1/rpc/taskfold_review_child_adoption", "/rest/v1/rpc/taskfold_adopt_child_records"]
+    static let paths: Set<String> = ["/rest/v1/rpc/taskfold_search_child_adoption_targets", "/rest/v1/rpc/taskfold_review_child_copies", "/rest/v1/rpc/taskfold_child_adoption_targets", "/rest/v1/rpc/taskfold_review_child_adoption", "/rest/v1/rpc/taskfold_adopt_child_records"]
     static func hash(_ value: JSON) throws -> String {
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return SHA256.hash(data: try encoder.encode(value)).map { String(format: "%02x", $0) }.joined()
@@ -140,6 +140,27 @@ import CryptoKit
     static func response(path: String, body: [String: JSON], state: inout [String: JSON]) throws -> (Data,Bool) {
         guard enabled, Store.shared.userID == ChildFieldNativeIdentity.account else { throw ChildFieldNativeRefusal(code:"42501") }
         let root = Record(state["root"]!.object)
+        if ProcessInfo.processInfo.arguments.contains("--child-adoption-search"), path.hasSuffix("taskfold_child_adoption_targets") || path.hasSuffix("taskfold_search_child_adoption_targets") {
+            let searching = path.hasSuffix("taskfold_search_child_adoption_targets")
+            guard Set(body.keys) == (searching ? ["_query", "_after", "_limit"] : ["_id", "_after", "_limit"]),
+                  let limit = body["_limit"]?.integer, (1...100).contains(limit) else { throw ChildFieldNativeRefusal(code: "22023") }
+            let query = try ChildTaskAdoptionSearch(searching ? body["_query"]?.text ?? "" : "")
+            var items = (1...130).map { index -> [String: JSON] in
+                ["task_id": .string(String(format: "a0000000-0000-4000-8000-%012d", index)), "task_generation": .null, "project_id": .null, "title": .string("Library filler \(index)"), "title_truncated": .bool(false)]
+            }
+            items.append(["task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": root["project_id"], "title": .string(root.title), "title_truncated": .bool(false)])
+            items = items.filter { item in
+                (searching || body["_id"] == .null || body["_id"] == item["task_id"]) &&
+                (body["_after"] == .null || body["_after"]!.text < item["task_id"]!.text) &&
+                (!searching || item["title"]!.text.localizedCaseInsensitiveContains(query.text))
+            }.sorted { $0["task_id"]!.text < $1["task_id"]!.text }
+            let more = items.count > limit
+            items = Array(items.prefix(limit))
+            if searching { items = items.map { var value = $0; value["match_excerpt"] = .null; return value } }
+            var envelope: [String: JSON] = ["protocol": .number(searching ? 2 : 1), "account": .string(ChildFieldNativeIdentity.account), "items": .array(items.map(JSON.object)), "next_after": more ? items.last!["task_id"]! : .null]
+            if searching { envelope["query"] = .string(query.text) }
+            return (try TaskfoldJSONEncoder().encode(envelope), false)
+        }
         if path.hasSuffix("taskfold_child_adoption_targets") {
             guard Set(body.keys) == ["_after", "_limit", "_id"] else { throw ChildFieldNativeRefusal(code:"22023") }
             let item: [String: JSON] = ["task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": root["project_id"], "title": .string(root.title), "title_truncated": .bool(false)]

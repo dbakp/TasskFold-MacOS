@@ -20,6 +20,9 @@ export function createMappingSQLChannel(pg,{session,nonce,loseFirstSave=false,be
   const bytes=Buffer.from(request.body,'base64');if(bytes.toString('base64')!==request.body||bytes.length>600000)throw new Error('Invalid request bytes');
   const body=JSON.parse(bytes.toString('utf8'));let expression;
   switch(request.path){
+   case '/rest/v1/rpc/taskfold_search_child_adoption_targets':
+    if(Object.keys(body).sort().join(',')!=='_after,_limit,_query'||typeof body._query!=='string'||![...body._query].length||[...body._query].length>256||Buffer.byteLength(body._query)>1024||body._query.includes('\0')||!Number.isInteger(body._limit)||body._limit<1||body._limit>100||body._after!==null&&!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body._after??''))throw new Error('Invalid search scope');
+    expression=`public.taskfold_search_child_adoption_targets(${lit(body._query)},${body._after===null?'null':lit(body._after)},${body._limit})`;break;
    case '/rest/v1/rpc/taskfold_child_adoption_targets':
     if(Object.keys(body).sort().join(',')!=='_after,_id,_limit'||!Number.isInteger(body._limit)||body._limit<1||body._limit>100||body._id!==null&&body._id!==identity.root||body._after!==null&&!/^[a-f0-9-]{36}$/.test(body._after??''))throw new Error('Invalid discovery scope');
     expression=`public.taskfold_child_adoption_targets(${body._after===null?'null':lit(body._after)},${body._limit},${body._id===null?'null':lit(body._id)})`;break;

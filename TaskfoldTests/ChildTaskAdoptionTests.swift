@@ -311,4 +311,65 @@ final class ChildTaskAdoptionTests: XCTestCase {
         XCTAssertFalse(String(decoding:data,as:UTF8.self).contains("subtasks"))
     }
 
+    func testSearchNormalizesOnlyQueryAndBoundsUnicodeScalars() throws {
+        XCTAssertEqual(try ChildTaskAdoptionSearch(" \nCafe\u{301} %_\\ \t").text, "Café %_\\")
+        XCTAssertTrue(try ChildTaskAdoptionSearch(" \n ").isEmpty)
+        XCTAssertEqual(try ChildTaskAdoptionSearch(String(repeating: "🪴", count: 256)).text.utf8.count, 1024)
+        XCTAssertThrowsError(try ChildTaskAdoptionSearch(String(repeating: "x", count: 257)))
+        XCTAssertThrowsError(try ChildTaskAdoptionSearch("bad\0query"))
+    }
+    func searchBytes(_ account: String, query: String, items: [[String: JSON]], next: String? = nil) throws -> Data {
+        try bytes(["protocol": .number(2), "account": .string(account), "query": .string(query), "items": .array(items.map(JSON.object)), "next_after": next.map(JSON.string) ?? .null])
+    }
+    func testSearchPageBindsExactQueryAndRejectsLeakedContentAndStaleCursors() throws {
+        let raw = try fixture()["review"]!.object, account = raw["account"]!.text, query = try ChildTaskAdoptionSearch("café")
+        var item = discoveryItem(raw); item["match_excerpt"] = .string("Match beyond the title prefix: café")
+        let data = try searchBytes(account, query: query.text, items: [item], next: item["task_id"]!.text)
+        let page = try ChildTaskAdoptionTargetPage(data: data, account: account, after: nil, limit: 1, id: nil, query: query)
+        XCTAssertEqual(page.targets.first?.matchExcerpt, "Match beyond the title prefix: café")
+        for bad in ["other", "CAFÉ", "cafe\u{301}"] {
+            XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: searchBytes(account, query: bad, items: [item]), account: account, after: nil, limit: 1, id: nil, query: query))
+        }
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: data, account: account, after: item["task_id"]!.text, limit: 1, id: nil, query: query))
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: data, account: account, after: nil, limit: 1, id: item["task_id"]!.text, query: query))
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: data, account: account, after: nil, limit: 1, id: nil))
+        item["subtasks"] = .array([])
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: searchBytes(account, query: query.text, items: [item]), account: account, after: nil, limit: 1, id: nil, query: query))
+        item.removeValue(forKey: "subtasks"); item["match_excerpt"] = .string(String(repeating: "x", count: 129))
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: searchBytes(account, query: query.text, items: [item]), account: account, after: nil, limit: 1, id: nil, query: query))
+    }
+    @MainActor func testSearchTransportUsesSeparateRPCAndPreservesSingleLookup() async throws {
+        let f = try fixture(), c = try command(f), config = URLSessionConfiguration.ephemeral; config.protocolClasses = [AdoptionHTTP.self]
+        let session = try JSONDecoder().decode(Session.self, from: bytes(["access_token": .string("synthetic"), "refresh_token": .string("synthetic"), "expires_in": .number(3600), "user": .object(["id": .string(c.account)])]))
+        let api = Backend(configuration: ["URL": origin, "Key": "synthetic-public"], http: URLSession(configuration: config), session: session, persistSession: {_ in})
+        let context = try context(f["review"]!.object, session: api.reminderSessionIncarnation), scope = ChildTaskFieldClientScope(context)
+        let query = try ChildTaskAdoptionSearch(" %_\\ ")
+        var item = discoveryItem(f["review"]!.object); item["match_excerpt"] = .null
+        let reply = try searchBytes(c.account, query: query.text, items: [item]); var paths: [String] = []
+        AdoptionHTTP.handler = { request, peer in
+            paths.append(request.url!.path)
+            self.verifyEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store")
+            peer.finish(200, reply)
+        }; defer { AdoptionHTTP.handler = nil }
+        let page = try await api.childTaskAdoptionTargets(scope: scope, query: query)
+        XCTAssertEqual(page.targets.first?.id, c.rootID)
+        verifyEqual(paths, ["/rest/v1/rpc/taskfold_search_child_adoption_targets"])
+        do { _ = try await api.childTaskAdoptionTargets(scope: scope, limit: 1, id: c.rootID, query: query); XCTFail("Search cannot replace fresh identity lookup") } catch {}
+        verifyEqual(paths.count, 1)
+        AdoptionHTTP.handler = { request, peer in paths.append(request.url!.path); peer.finish(200, try! self.discoveryBytes(c.account, items: [self.discoveryItem(f["review"]!.object)])) }
+        _ = try await api.childTaskAdoptionTargets(scope: scope, limit: 1, id: c.rootID, query: try ChildTaskAdoptionSearch(" "))
+        verifyEqual(paths.last, "/rest/v1/rpc/taskfold_child_adoption_targets")
+    }
+
+    func testActualOwnedSQLSearchReplyDecodesWithoutOriginalPayload() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-adoption-search-v2", withExtension: "json", subdirectory: "Fixtures"))
+        let data = try Data(contentsOf: url), raw = try JSONDecoder().decode([String: JSON].self, from: data)
+        let query = try ChildTaskAdoptionSearch(raw["query"]!.text)
+        let page = try ChildTaskAdoptionTargetPage(data: data, account: raw["account"]!.text, after: nil, limit: 100, id: nil, query: query)
+        XCTAssertEqual(page.targets.map(\.id), ["ffffffff-ffff-4fff-bfff-fffffffffff0"])
+        XCTAssertTrue(try XCTUnwrap(page.targets.first?.matchExcerpt).contains("Café"))
+        XCTAssertTrue(page.targets[0].titleTruncated); XCTAssertNil(page.next)
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("subtasks"))
+    }
+
 }

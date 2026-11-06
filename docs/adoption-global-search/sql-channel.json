@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "scope": "owned local PostgreSQL and file channel; not native-control or hosted acceptance",
+  "checks": [
+    "live native target discovery uses actual SQL",
+    "query-bound native search channel uses actual SQL without changing saved work",
+    "real scoped comparison through file channel",
+    "real mapped preview",
+    "lost reply occurs after actual committed save",
+    "status recovery and exact request replay with write gates closed",
+    "committed root published before response becomes visible",
+    "original canonical bytes survive channel unchanged",
+    "foreign scope and arbitrary SQL routes fail closed",
+    "stale channel nonce rejected",
+    "one receipt after replay and refused requests",
+    "one neutral reconciliation event from real transaction"
+  ],
+  "fixtureRemoved": true
+}

@@ -9,6 +9,7 @@ import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
 import {identity,atomicFile,boundedFile,createMappingSQLChannel,relocatedSimulatorChannel} from './child-mapping-native-channel.mjs';
 const migrations=["20261030093035_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104147_personal_child_record_task_moves.sql", "20261030114138_cross_root_child_task_transfers.sql", "20261030134132_reviewed_child_record_adoption.sql", "20261030170753_child_adoption_metadata_discovery.sql", "20261030183133_child_task_repair_previews.sql", "20261030184402_child_task_repair_commits.sql", "20261030192638_child_repair_original_history_access.sql", "20261030204000_child_repair_bounded_originals.sql", "20261101062555_activity_operation_groups.sql", "20261101071304_reviewed_duplicate_history_preservation.sql"];
+migrations.push("20261106173430_child_adoption_global_search.sql");
 const smoke=process.argv.includes('--smoke'),position=process.argv.indexOf('--directory');
 if(!smoke&&(position<0||!process.argv[position+1]))throw new Error('Use --smoke or --directory PATH');
 let directory=smoke?await mkdtemp(tmpdir()+'/taskfold-mapping-channel-'):resolve(process.argv[position+1]);
@@ -53,6 +54,7 @@ try {
    const response=JSON.parse(await boundedFile(directory+'/'+id+'.reply',14000000));await unlink(directory+'/'+id+'.reply');assert.equal(response.id,id);return {...response,value:JSON.parse(Buffer.from(response.data,'base64'))};
   };
   const targets=await call('taskfold_child_adoption_targets',{_after:null,_limit:1,_id:identity.root});assert.equal(targets.code,null);assert.equal(targets.value.items.length,1);assert.equal(targets.value.items[0].task_id,identity.root);report.checks.push('live native target discovery uses actual SQL');
+  const searched=await call('taskfold_search_child_adoption_targets',{_query:'Native',_after:null,_limit:100});assert.equal(searched.code,null);assert.equal(searched.value.protocol,2);assert.equal(searched.value.query,'Native');assert.equal(searched.value.items[0].task_id,identity.root);report.checks.push('query-bound native search channel uses actual SQL without changing saved work');
   const review=(await call('taskfold_review_child_adoption',{_id:identity.root,_generation:identity.generation})).value;
   const body=Object.fromEntries(['protocol','account','task_id','task_generation','project_id','workspace_id','review_digest'].map(k=>[k,review[k]]));
   const copies=(await call('taskfold_review_child_copies',{_body:body})).value;

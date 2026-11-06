@@ -1,6 +1,19 @@
 import Foundation
 import Observation
 
+/// Search normalization applies only to the query, never to saved task content.
+struct ChildTaskAdoptionSearch: Equatable, Sendable {
+    let text: String
+    init(_ input: String) throws {
+        let value = input.trimmingCharacters(in: .whitespacesAndNewlines).precomposedStringWithCanonicalMapping
+        guard value.unicodeScalars.count <= 256, value.utf8.count <= 1024, !value.utf8.contains(0) else {
+            throw AppFailure(message: "Search with up to 256 characters.")
+        }
+        text = value
+    }
+    var isEmpty: Bool { text.isEmpty }
+}
+
 /// Read-only discovery metadata. Never insert these partial rows into Snapshot.
 struct ChildTaskAdoptionTarget: Identifiable, Sendable {
     let id: String
@@ -8,14 +21,26 @@ struct ChildTaskAdoptionTarget: Identifiable, Sendable {
     let project: JSON
     let title: String
     let titleTruncated: Bool
-    init(_ raw: [String: JSON]) throws {
-        guard Set(raw.keys) == ["task_id", "task_generation", "project_id", "title", "title_truncated"],
+    let matchExcerpt: String?
+    init(_ raw: [String: JSON], searching: Bool = false) throws {
+        var keys: Set<String> = ["task_id", "task_generation", "project_id", "title", "title_truncated"]
+        if searching { keys.insert("match_excerpt") }
+        guard Set(raw.keys) == keys,
               case .string(let id)? = raw["task_id"], UUID(uuidString: id)?.uuidString.lowercased() == id,
               case .bool(let shortened)? = raw["title_truncated"] else { throw ChildTaskAdoptionCommand.invalid }
         for key in ["task_generation", "project_id"] { _ = try TeamProjectValue.optionalID(raw[key]) }
         let title: String
         switch raw["title"] { case .string(let s)?: title = s; case .null?: title = ""; default: throw ChildTaskAdoptionCommand.invalid }
         guard title.utf8.count <= 2048 else { throw ChildTaskAdoptionCommand.invalid }
+        if searching {
+            switch raw["match_excerpt"] {
+            case .string(let text)?:
+                guard !text.isEmpty, text.unicodeScalars.count <= 128, text.utf8.count <= 512 else { throw ChildTaskAdoptionCommand.invalid }
+                matchExcerpt = text
+            case .null?: matchExcerpt = nil
+            default: throw ChildTaskAdoptionCommand.invalid
+            }
+        } else { matchExcerpt = nil }
         self.id = id; generation = raw["task_generation"]!; project = raw["project_id"]!
         self.title = title.isEmpty ? "Untitled task" : title; titleTruncated = shortened
     }
@@ -28,17 +53,22 @@ struct ChildTaskAdoptionTargetPage: Sendable {
     static let maximumBytes = 300_000
     let targets: [ChildTaskAdoptionTarget]
     let next: String?
-    init(data: Data, account: String, after: String?, limit: Int, id: String?) throws {
+    init(data: Data, account: String, after: String?, limit: Int, id: String?, query: ChildTaskAdoptionSearch? = nil) throws {
+        let searching = query?.isEmpty == false
+        guard !searching || id == nil else { throw ChildTaskAdoptionCommand.invalid }
         guard (1...100).contains(limit), id == nil || after == nil && limit == 1 else { throw ChildTaskAdoptionCommand.invalid }
         for value in [after, id].compactMap({ $0 }) { guard UUID(uuidString: value)?.uuidString.lowercased() == value else { throw ChildTaskAdoptionCommand.invalid } }
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes, integerPaths: [["protocol"]])
         let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
-        guard Set(raw.keys) == ["protocol", "account", "items", "next_after"], raw["protocol"] == .number(1), raw["account"] == .string(account),
+        var keys: Set<String> = ["protocol", "account", "items", "next_after"]
+        if searching { keys.insert("query") }
+        guard !searching || raw["query"]?.text.utf8.elementsEqual(query!.text.utf8) == true else { throw ChildTaskAdoptionCommand.invalid }
+        guard Set(raw.keys) == keys, raw["protocol"] == .number(searching ? 2 : 1), raw["account"] == .string(account),
               case .array(let items)? = raw["items"], items.count <= limit else { throw ChildTaskAdoptionCommand.invalid }
         var targets: [ChildTaskAdoptionTarget] = [], previous = after
         for item in items {
             guard case .object(let value) = item else { throw ChildTaskAdoptionCommand.invalid }
-            let target = try ChildTaskAdoptionTarget(value)
+            let target = try ChildTaskAdoptionTarget(value, searching: searching)
             guard previous == nil || previous! < target.id, id == nil || id == target.id else { throw ChildTaskAdoptionCommand.invalid }
             targets.append(target); previous = target.id
         }
