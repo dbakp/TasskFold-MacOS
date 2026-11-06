@@ -8040,3 +8040,18 @@ Connected project transfers now pass 69 checks in the iPhone app using real loca
 ### 6 November · Large file preparation and paginated native recovery
 
 Large file preparations now honor bounded service waits and retry the exact saved operation, with Stop and account changes fencing further work. Each owner passes 58 focused client tests (5 new) and 35 handler tests (1 new). The real iPhone flow passes 76 checks with 101 distinct files across two manifest pages, mixed recording history and connection consent. An actual owned upload-handler interruption leaves an unfinished original; the transfer closes it without another upload. Every copied byte and alias survives cold recovery; originals remain private. Five real rate-limit responses are respected without resetting budgets, adding copies or weakening per-request timeouts. Mac protected-transfer runtime still needs its dedicated provisioned test identity/profile. Real transfer-screen interaction, other history/lifecycle/realms, physical protection and hosted/provider delivery remain open. The source handler preserves Retry-After and the clients use bounded, cancellable waits; matching handler deployment remains required and is not performed here. The new workflow substep records this concrete UX fix without changing the 74 curated bar checkpoints. [Scope and evidence](paged-project-files/README.md).
+
+
+### 6 November · Full task-note rows prepare in the background
+
+At accessibility text sizes, both owners now prepare complete readable note text
+and link matches away from the interface path. Exact-source/workspace/session/
+access/read-revision checks, cancellation and row disappearance reject stale
+results; empty notes release old readings. Compact text stays visible during a
+neutral preparation state and full text is preserved. Each owner passes 33
+focused checks (eight new). Current signed iPhone/iPad production-row size,
+refresh, hidden/returned access and exact all-table cold-preservation flows pass.
+Both own app builds/signatures pass; Mac interaction, speech, wider layout and
+physical FPS remain open. No installed archive, normal gate or hosted change.
+The progress next-step list also rejects malformed sentence input.
+[Scope and current evidence](background-note-rows/README.md).

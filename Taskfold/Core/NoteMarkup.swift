@@ -227,24 +227,40 @@ enum NoteMarkup {
 /// Reuse display text only. Source/result UTF-8 bytes are bounded in memory;
 /// no preview is ever used to save a note or authorize access to its task.
 @MainActor final class TaskNotePreviewReadCache {
-    struct Context: Equatable {
+    struct Context: Equatable, Sendable {
         let workspace: WorkspaceBinding
         let session: UUID
         let access: UUID
+        var revision: UUID? = nil
     }
+    struct Request: Equatable, Sendable {
+        let id: String
+        let source: NoteMarkup.Source
+        let context: Context
+    }
+    typealias Preparation = @Sendable (String) async throws -> String
     private struct Key: Hashable { let id: String; let fullText: Bool }
     private struct Entry { let source: String; let result: String; let bytes: Int; var used: UInt64 }
     private var context: Context?
     private var entries: [Key: Entry] = [:]
     private var clock: UInt64 = 0
+    private var epoch = UUID()
+    private var jobs: [UUID: Task<String, Error>] = [:]
+    private let prepare: Preparation
     private let maximumEntries: Int, maximumTextBytes: Int
     private(set) var retainedTextBytes = 0
     private(set) var computationCount = 0
     var count: Int { entries.count }
-    init(maximumEntries: Int = 128, maximumTextBytes: Int = 8 * 1024 * 1024) {
+    init(maximumEntries: Int = 128, maximumTextBytes: Int = 8 * 1024 * 1024, prepare: Preparation? = nil) {
         self.maximumEntries = max(0, maximumEntries); self.maximumTextBytes = max(0, maximumTextBytes)
+        let worker = TaskNotePreviewPreparation()
+        self.prepare = prepare ?? { try await worker.read($0) }
     }
-    func clear() { context = nil; entries.removeAll(); retainedTextBytes = 0; clock = 0 }
+    func clear() {
+        epoch = UUID()
+        for job in jobs.values { job.cancel() }
+        jobs.removeAll(); context = nil; entries.removeAll(); retainedTextBytes = 0; clock = 0
+    }
     private static func sameSource(_ a: String, _ b: String) -> Bool {
         // Both buffers remain borrowed and alive together. No address escapes;
         // independently allocated/canonically equivalent strings still need exact bytes.
@@ -264,6 +280,40 @@ enum NoteMarkup {
         computationCount += 1
         let result = fullText ? NoteMarkup.plainText(source, includeLinkDestinations: true).trimmingCharacters(in: .whitespacesAndNewlines)
                               : NoteMarkup.summary(source, includeLinkDestinations: true)
+        retain(result, source: source, key: key)
+        return result
+    }
+    /// A cold accessibility reading never parses markup on the interface actor.
+    /// A changed boundary or cancelled row cannot publish or retain its result.
+    func load(_ request: Request) async throws -> String {
+        try Task.checkCancellation()
+        if context != request.context { clear(); context = request.context }
+        let key = Key(id: request.id, fullText: true)
+        clock &+= 1
+        if var entry = entries[key], Self.sameSource(request.source.text, entry.source) {
+            entry.used = clock; entries[key] = entry; return entry.result
+        }
+        if let old = entries.removeValue(forKey: key) { retainedTextBytes -= old.bytes }
+        guard !request.source.text.isEmpty else { return "" }
+        let captured = epoch, token = UUID(), prepare = self.prepare
+        let job = Task {
+            try Task.checkCancellation()
+            let result = try await prepare(request.source.text)
+            try Task.checkCancellation()
+            return result
+        }
+        jobs[token] = job; computationCount += 1
+        defer { jobs.removeValue(forKey: token) }
+        let result = try await withTaskCancellationHandler(operation: {
+            try await job.value
+        }, onCancel: { job.cancel() })
+        try Task.checkCancellation()
+        guard epoch == captured, context == request.context else { throw CancellationError() }
+        retain(result, source: request.source.text, key: key)
+        return result
+    }
+    private func retain(_ result: String, source: String, key: Key) {
+        if let old = entries.removeValue(forKey: key) { retainedTextBytes -= old.bytes }
         let bytes = source.utf8.count + result.utf8.count
         if maximumEntries > 0, bytes <= maximumTextBytes {
             while entries.count >= maximumEntries || retainedTextBytes + bytes > maximumTextBytes {
@@ -272,6 +322,17 @@ enum NoteMarkup {
             }
             entries[key] = Entry(source: source, result: result, bytes: bytes, used: clock); retainedTextBytes += bytes
         }
+    }
+}
+
+/// One serial worker per cache prevents a screenful of cold rows from starting
+/// concurrent Foundation markdown conversions. Queued cancelled jobs do no work.
+private actor TaskNotePreviewPreparation {
+    func read(_ source: String) throws -> String {
+        try Task.checkCancellation()
+        let result = NoteMarkup.plainText(source, includeLinkDestinations: true)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        try Task.checkCancellation()
         return result
     }
 }

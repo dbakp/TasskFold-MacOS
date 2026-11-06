@@ -4,9 +4,18 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Account recovery · Current-source verification limits",
-  "latest": "Both GitHub owners are up to date on merged main. The isolated recovery check now observes the same backup-key namespace as the real vault; the iOS runner requires current source, strict signatures and stable products, with bounded execution. The largest-text Files picker still did not deliver its selection callback in two bounded attempts, so refusal acceptance remains open and no checkpoint is added. Earlier normal-size completion and cold preservation remain separately accepted. Mac protected-session runtime and hosted recovery activation remain open; the three rollout deferrals stay paused. Installed apps and frozen packages are unchanged. Resume feature and daily-UX work rather than repeating this unchanged picker matrix. Both owning app builds and strict signatures pass. Completed raw logs/results were retired after evidence preservation; reusable compiler caches are within 768 MiB each and about 55.7 GiB remains free.",
-  "next": "Continue the remaining feature and daily-UX backlog. Revisit largest-text recovery only with a changed Files interaction or environment; keep protected Mac and hosted activation prerequisites visible.",
+  "focus": "Smoother task rows · Complete note text",
+  "latest": "At larger accessibility text sizes, task rows now prepare full notes and links in the background. Rows keep a compact preview while loading, then show the complete readable note. Changed notes, accounts or access reject stale results. Leaving a row releases its prepared text, and clearing a note releases its old cached reading. Each owner passes 33 focused Core checks, including eight new background cases. The current signed iPhone and iPad flows pass full text, size switching, live edits, hidden/returned access and exact saved-table preservation after cold launch. Mac interaction, speech, broader layout and physical FPS remain open. Recovery and the three paused rollout gates retain their recorded limits. Installed Mac23/phone34 and frozen Mac28/phone40 stay unchanged. Both owning app builds and strict signatures pass. Completed test logs/results were retired after preserving concise evidence; reusable compiler caches are within budget and about 56.7 GiB is free.",
+  "next": [
+    "Prepare the next daily-use update candidates from merged source. Keep phone installation deferred and preserve open Mac drafts.",
+    "Finish migration of older tasks and history, including remaining identity and ownership cases. Keep shared files and recordings with the right workspace; preserve existing rollout safeguards.",
+    "Continue remaining workflow and browsing performance work. Full-note text/link preparation now has phone/tablet proof; Mac interaction, wider rendering and physical FPS remain.",
+    "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
+    "Finish protected Mac deletion/recovery and disposable hosted residual-file repair and issuer/verifier checks when their stated prerequisites are available. Never erase device copies without bound confirmation.",
+    "Keep agreed remote-reminder, older-client rollout, distribution, provider-registration/email, physical-location and genuine-audio deferrals paused. On-device assistance quality still requires ready local models.",
+    "Finish Mac branch-move/removal keyboard and wider shared-account, window, background, access, speech and large-library cases. Keep each recorded acceptance scope distinct.",
+    "Ship bounded independently owned app updates after checks and merges. Preserve saved drafts, frozen packages, install deferrals and storage cleanup on every run."
+  ],
   "stages": [
     {
       "id": "p0",
@@ -486,7 +495,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Read reuse/background preparation now covers filters and assignment captions, rich workflows, template previews/captions, project/parent catalogs, filter/task/note searches and Insights. Exact-byte durable reads avoid repeated attachment parsing; dated-list drops use one commit/Undo. Recorded iPhone journeys accept bounded scrolling, source refresh, draft/save/cold preservation, seven-task review and the new scope/range/persistent-day interactions. Insights has owning Core71 and independent Mac21 build proof. Optimized phone34 is now installed from its frozen archive, with launch and all 205 prior task IDs/titles/notes/attachments/children preserved. Mac23 is installed; signed prepared Mac25/iPhone37 include later personal-workflow improvements but remain uninstalled. Broader editor/rendering/FPS, actual sibling drag, native Mac/iPad/speech, shared/cloud/account/window/access and overnight-clock contexts remain open. Pinned-note readers and editor previews now remove repeated synchronous markup parsing from their view bodies. Current signed iPhone content/toggle/history/cold and largest-text checks pass; Mac source builds/signs. This is not a physical FPS or long-note layout claim. Daily builds now select optimized Release code by default, with actual main-app compiler flags, signatures, profile validity and ZIP payloads verified. Mac compilation is host-only. Phone34 launch and critical task-field preservation now pass separately; Mac25 is prepared while Mac23 stays installed and physical FPS remains unaccepted. Formatted readers now use lazy blocks and prepared heading captions. Current 12-section iPhone normal reader/editor-preview and largest-text reader navigation pass after explicit lazy scroll-target routing. Exact original/cold/all-table preservation passes; the largest-text opening realizes three blocks. Mac/iPad interaction, VoiceOver and physical FPS remain unaccepted. Shared nested-array exact reads now skip redundant walks for the same immutable backing storage. Own Debug diagnostics on this Mac drop about 20 ms to under 0.01 ms for a 4,096-entry retained payload; 116 selected Core cases per repo and current signed app builds pass, with edited-buffer invalidation and exact Unicode/numeric/opaque preservation. Actual rendering/FPS and the pending note-navigation screen checks remain open. Dense planner columns now use temporary end/free heaps while retaining exact existing placement. Both owning Core suites pass 32 selected checks, including 240 equivalence inputs and a 4,096-overlap diagnostic (about 527–538 ms to 14 ms in Debug on this Mac). Current source is not in the frozen daily packages; native rendering/FPS remains open. Navigation badges now aggregate once per task/catalog/archive change; project rows and Mac label rows no longer rescan the work library individually. ID/name overlap counts once, headings and incomplete markers are preserved. Six new checks per repo plus existing heading regressions pass (54 iOS, 53 Mac), including 4,096 tasks and 100 retained read rounds with one computation. Full native/physical acceptance and packaging this follow-up remain separate. Task-row and planning-card checklist progress now uses scoped retained reads and a direct cold count instead of allocating full descendant/filter arrays. Each owner passes 167 selected checks including eight new equivalence/invalidation/budget cases. The 4,096-item, 100-read Debug diagnostic drops about 326–333 ms to 2 ms with one computation. Current owning builds/signatures are recorded separately; native rendering, Store boundary hooks in a live account-switch flow and physical FPS remain unaccepted. Cache limits are 128 readings/32,768 visited nodes, with no disk persistence; all existing rollout/install deferrals remain. Task-row compact/full note previews now reuse exact-source readings within workspace/session/access scope; rendered links are detected once per displayed text and shared by renderer/accessibility. Each owner passes 55 selected checks, including nine new preview cases. Debug diagnostics for 100 reads drop about 100 ms to 1 ms compact and 368–385 ms to 4 ms full; this is not device rendering/FPS acceptance. Cache limits are 128 readings/8 MiB of source/result UTF-8 content, with no disk persistence. Full-text accessibility conversion, native link/speech/layout cases and broader responsiveness remain open. Cold compact-note preparation now avoids whole-source copying/normalization, with 52 focused checks per owner and a 12-call 708 KB Debug diagnostic dropping about 202 ms to 5.4–5.6 ms on this Mac. Current iPhone library paging/search/text-refresh/original-toggle/cold preservation passes. Full accessibility conversion, broader rendering and physical FPS remain open. Large file preparation now waits safely through service limits. Exact original retries, Stop/account fences and a genuine 101-file iPhone flow pass; broader native UI and physical performance remain separate.",
+              "detail": "Scoped reuse/background preparation covers filters, assignee names, workflows, template/project/parent catalogs, task/note searches, Insights, navigation badges, checklist counts and note previews. Seven-task day review counts only successful saves; dated-list drops use one commit and Undo. Exact nested-byte, Unicode, source, workspace and access guards remain. Full accessible task-note text and its link detection now prepare away from the interface thread, with cancellation, current-source checks, bounded retention and release on disappearance/empty text. Each owner passes 33 focused note checks including eight new cases. Current signed iPhone/iPad production-row journeys pass full text, size switching, live refresh, access loss/return and exact all-table cold preservation. Mac interaction, real drag/rendering, larger workloads, shared/cloud/account/window contexts, speech and physical FPS remain unfinished. Installed Mac23/phone34 and frozen Mac28/phone40 are unchanged; current source is not implied to be in those archives.",
               "steps": [
                 {
                   "state": "done",
@@ -527,6 +536,10 @@
                 {
                   "state": "done",
                   "title": "Keep large file preparation usable during service limits: exact retry, Stop and account fences tested; 101-file iPhone recovery verified"
+                },
+                {
+                  "state": "done",
+                  "title": "Prepare complete task-note text and links off the interface thread; verify phone/tablet refresh, read boundaries and exact cold saved state"
                 }
               ]
             }
@@ -633,9 +646,14 @@
             "note-list-styles/before.json",
             "note-list-styles/build.json",
             "note-list-styles/package.json",
-            "note-list-styles/storage-cleanup.json"
+            "note-list-styles/storage-cleanup.json",
+            "background-note-rows/README.md",
+            "background-note-rows/checks.json",
+            "background-note-rows/verification.json",
+            "background-note-rows/iphone.json",
+            "background-note-rows/ipad.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-voice",
@@ -1235,7 +1253,7 @@
             "native-project-recordings/ondevice-probe.json",
             "native-project-recordings/storage-cleanup.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-watch",
@@ -1511,7 +1529,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "12007b0e65f504b5350743563c7568e79ce7adeeef99c043732dca46bfd427f6",
+    "P2_PLAN.md": "12e42e0574e13af22b645677a21da5cc76dd7a31d8e290fcf796f4884f8c465c",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "56eb14bc98bf37b5ff7e35d3323eb73191f2c8a079dd74a14f1f780b4582fcdc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1562,6 +1580,11 @@
     "audio-selection-platform-native/verification.json": "67d0bd1ef0d344be5fbbe41864387d6ae747922de806402087af33280d83c892",
     "audio-sync-attention-recovery/README.md": "79d1d16772e2423d2e87accfcd8e335507c522898c4fcf4b7215ae2a6615235b",
     "audio-sync-attention-recovery/verification.json": "fa379ffc2e3ad0e4674970850fc2b9d5469d21daa721624ddf730484bd195e48",
+    "background-note-rows/README.md": "6e8d698da65475e51364ed67141263e1ca22f8e3c2dcb2d701109f0cfb2f9283",
+    "background-note-rows/checks.json": "c5e39d34ad95bf4fbe2502ec8706f6d64436ae1d5471fc6ae19e4f8f5d3a6f6c",
+    "background-note-rows/ipad.json": "679b12cd34549b8f92287990ff00eebc3391ca7eea7ab9accd0f3209637eea90",
+    "background-note-rows/iphone.json": "d3becaed66b33e45a9a18f1c2373c396a6982c51830716c22b824c95c644f794",
+    "background-note-rows/verification.json": "f4e2337770a97f8b35711d9149d76629608b219e8a57ec82b2ae9691172d5cbf",
     "child-adoption-discovery/verification.json": "0025219a93180f6bdc7918eb372aa3d61a0437b0af48a4b7286e23a62d15e0a7",
     "child-adoption-original-export/verification.json": "d9a5dfce308d7ce39e45f897e3c735bf15a1621eca9cbf18417f13332f6b824b",
     "child-bulk-list-completion/verification.json": "02faef41d645b895990ec194507da81396d352a430a6c30f92fb48fbb6929026",
@@ -1749,7 +1772,7 @@
     "genuine-structure-recovery/native.json": "2177dba043344491262626ed929b357033ff42cd1ca29f97eabadd968a8f5791",
     "genuine-structure-recovery/verification.json": "58a9b3f2afea3deab2c5963148e5355657352f9f09c35f82576463955f35a187",
     "github-delivery/README.md": "878c3a31c4aca872d3159d9137842268dcf403c7403df631988d7090a6a67b62",
-    "github-delivery/verification.json": "278f9a4c81d3b167cb919659a04c834b704ea35885ce2880016bb333808d8c79",
+    "github-delivery/verification.json": "fdb2f4fe70ac98f9b25395d5fb42f982ea28daa23caca8e5b0b7255c362f1ae3",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
     "indexed-child-source/README.md": "17dbc3ab03caca89cba0cd58913841825bdac4adbd8be66e50859276e53ec592",

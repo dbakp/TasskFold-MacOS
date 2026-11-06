@@ -24,6 +24,8 @@ STATES = {
 def validate(data):
     assert data['schema'] == 1
     date.fromisoformat(data['updated'])
+    assert isinstance(data['next'], list) and 1 <= len(data['next']) <= 16, 'Next steps must be a list'
+    assert all(isinstance(step, str) and step.strip() for step in data['next']), 'Next steps must contain nonempty text'
     assert [s['id'] for s in data['stages']] == ['p0', 'p1', 'p2']
     seen = set()
     sources = set(data['sources'])

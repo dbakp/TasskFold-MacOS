@@ -83,4 +83,97 @@ import XCTest
         }
         XCTAssertEqual(cache.computationCount,2)
     }
+    func testBackgroundFullReadingPreservesCompleteTextAndCompactCache() async throws {
+        let cache=TaskNotePreviewReadCache(),c=context()
+        let source="# Workshop\r\n"+String(repeating:"Review **contrast** and [the brief](https://example.invalid/brief).\n",count:300)
+        let request=TaskNotePreviewReadCache.Request(id:"task",source:.init(source),context:c)
+        let compact=cache.read(source,id:"task",fullText:false,context:c)
+        let result=try await cache.load(request)
+        XCTAssertTrue(result.utf8.elementsEqual(expected(source,full:true).utf8))
+        XCTAssertGreaterThan(result.count,10_000);XCTAssertTrue(result.contains("https://example.invalid/brief"))
+        let retained=try await cache.load(request);XCTAssertEqual(retained,result)
+        XCTAssertEqual(cache.read(source,id:"task",fullText:false,context:c),compact)
+        XCTAssertEqual(cache.computationCount,2);XCTAssertEqual(cache.count,2)
+    }
+    func testBackgroundReadingKeepsExactUnicodeReplacementsAndFallbacks() async throws {
+        let cache=TaskNotePreviewReadCache(),c=context()
+        for source in ["[Café](https://example.invalid/Caf\u{e9})","[Café](https://example.invalid/Cafe\u{301})","![literal](file:///private)","  \r\n ",String(repeating:"**word** ",count:60_000)] {
+            let result=try await cache.load(.init(id:"same",source:.init(source),context:c))
+            XCTAssertTrue(result.utf8.elementsEqual(expected(source,full:true).utf8))
+        }
+        XCTAssertEqual(cache.computationCount,5)
+    }
+    func testBackgroundReadingHonorsEntryAndByteBudgets() async throws {
+        let cache=TaskNotePreviewReadCache(maximumEntries:2,maximumTextBytes:12),c=context()
+        for (id,source) in [("A","one"),("B","two"),("A","one"),("C","six")] {
+            let result=try await cache.load(.init(id:id,source:.init(source),context:c));XCTAssertEqual(result,source)
+        }
+        XCTAssertEqual(cache.count,2);XCTAssertEqual(cache.retainedTextBytes,12);XCTAssertEqual(cache.computationCount,3)
+        let large="An uncached full note"
+        let oversized=try await cache.load(.init(id:"large",source:.init(large),context:c));XCTAssertEqual(oversized,large)
+        XCTAssertEqual(cache.count,2);XCTAssertEqual(cache.retainedTextBytes,12)
+    }
+    func testEmptyBackgroundReadingReleasesThePreviousFullText() async throws {
+        let cache=TaskNotePreviewReadCache(),c=context()
+        _ = try await cache.load(.init(id:"task",source:.init("Private full note"),context:c))
+        XCTAssertEqual(cache.count,1);XCTAssertGreaterThan(cache.retainedTextBytes,0)
+        let empty=try await cache.load(.init(id:"task",source:.init(""),context:c))
+        XCTAssertEqual(empty,"");XCTAssertEqual(cache.count,0);XCTAssertEqual(cache.retainedTextBytes,0)
+        XCTAssertEqual(cache.computationCount,1)
+    }
+    func testCancellationBeforeBackgroundReadingDoesNotStartOrRetainWork() async {
+        let cache=TaskNotePreviewReadCache(),c=context()
+        let job=Task { () throws -> String in
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await cache.load(.init(id:"task",source:.init("Private text"),context:c))
+        }
+        do {_=try await job.value;XCTFail("Cancelled work returned text")}catch {XCTAssertTrue(error is CancellationError)}
+        XCTAssertEqual(cache.computationCount,0);XCTAssertEqual(cache.count,0)
+    }
+    func testCancelledRowCannotPublishOrRetainLateBackgroundResult() async {
+        let gate=NotePreviewGate(),cache=TaskNotePreviewReadCache(prepare:{try await gate.read($0)}),c=context()
+        let job=Task {try await cache.load(.init(id:"task",source:.init("Private text"),context:c))}
+        await gate.waitUntilStarted();job.cancel();await gate.release("Late private text")
+        do {_=try await job.value;XCTFail("Cancelled row returned text")}catch {XCTAssertTrue(error is CancellationError)}
+        XCTAssertEqual(cache.count,0);XCTAssertEqual(cache.retainedTextBytes,0)
+    }
+    func testBoundaryChangesRefuseLateReadingAndPreserveCurrentCache() async {
+        let c=context()
+        let scopes=[context("B",generation:c.workspace.generation,session:c.session,access:c.access),context(generation:UUID(),session:c.session,access:c.access),context(generation:c.workspace.generation,session:UUID(),access:c.access),context(generation:c.workspace.generation,session:c.session,access:UUID()),TaskNotePreviewReadCache.Context(workspace:c.workspace,session:c.session,access:c.access,revision:UUID())]
+        for next in scopes {
+            let gate=NotePreviewGate(),cache=TaskNotePreviewReadCache(prepare:{try await gate.read($0)})
+            let job=Task {try await cache.load(.init(id:"same",source:.init("Old private text"),context:c))}
+            await gate.waitUntilStarted()
+            XCTAssertEqual(cache.read("New current text",id:"same",fullText:false,context:next),"New current text")
+            await gate.release("Old private result")
+            do {_=try await job.value;XCTFail("Old boundary returned text")}catch {XCTAssertTrue(error is CancellationError)}
+            XCTAssertEqual(cache.count,1);XCTAssertEqual(cache.read("New current text",id:"same",fullText:false,context:next),"New current text")
+            XCTAssertEqual(cache.computationCount,2)
+        }
+    }
+    func testExplicitInvalidationRefusesLateReadingThenAllowsFreshPreparation() async throws {
+        let gate=NotePreviewGate(),cache=TaskNotePreviewReadCache(prepare:{try await gate.read($0)}),c=context()
+        let request=TaskNotePreviewReadCache.Request(id:"task",source:.init("Same source"),context:c)
+        let first=Task {try await cache.load(request)}
+        await gate.waitUntilStarted();cache.clear();await gate.release("Late result")
+        do {_=try await first.value;XCTFail("Invalidated work returned text")}catch {XCTAssertTrue(error is CancellationError)}
+        XCTAssertEqual(cache.count,0)
+        let next=try await cache.load(request);XCTAssertEqual(next,"Same source");XCTAssertEqual(cache.count,1)
+    }
+
+}
+
+/// Deliberately ignores cancellation until released, just like an in-progress
+/// Foundation parse. The cache must fence the eventual result itself.
+private actor NotePreviewGate {
+    private var started=false
+    private var released=false
+    private var continuation:CheckedContinuation<String,Never>?
+    func read(_ source:String) async throws -> String {
+        if released {return source}
+        started=true
+        return await withCheckedContinuation { continuation=$0 }
+    }
+    func waitUntilStarted() async {while !started {await Task.yield()}}
+    func release(_ text:String) {released=true;continuation?.resume(returning:text);continuation=nil}
 }

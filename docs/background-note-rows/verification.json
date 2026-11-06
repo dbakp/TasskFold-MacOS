@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-06",
+  "owningRepository": "TasskFold-MacOS",
+  "corePassed": 33,
+  "newCoreCases": 8,
+  "ownAppBuildAndStrictSignaturePassed": true,
+  "ownBuildEvidence": "mac-build.json",
+  "iosOwnedNative": {
+    "iphoneAccepted": true,
+    "ipadAccepted": true,
+    "productionTaskRow": true,
+    "syntheticStoreOnly": true,
+    "fullTextAndSizeSwitch": true,
+    "liveSourceRefresh": true,
+    "hiddenAndReturnedAccess": true,
+    "allOtherFieldsAndColdTablesExact": true,
+    "initialFailureWasNotAccepted": true
+  },
+  "macRowInteractionAccepted": false,
+  "physicalFPSAccepted": false,
+  "voiceOverSpeechAccepted": false,
+  "ordinaryGatesChanged": false,
+  "installedAppsChanged": false,
+  "hostedServicesChanged": false,
+  "cache": {
+    "maximumReadings": 128,
+    "maximumSourceResultUTF8Bytes": 8388608,
+    "diskPersistence": false,
+    "rowsReleaseOnDisappearance": true,
+    "emptyReadReleasesOldEntry": true
+  },
+  "progressNextStepSchemaRegressionRejected": true,
+  "sourceSHA256": {
+    "Taskfold/Core/NoteMarkup.swift": "3ba8b911d064f40ff2a04b9263ea5b089ae27fda1b1f0c4ece5b07c981c4a2cb",
+    "Taskfold/Core/Store.swift": "ecb8f60ea03023a7e1dcfd3ecdd566838d079f683ec6eeabebd00110fb1b91e7",
+    "Taskfold/Views/Links.swift": "8424d36e259913ce47618f255bcee08008751cdaa6b5ffd3ef647763298085fa",
+    "TaskfoldTests/TaskNotePreviewReadTests.swift": "2e022e86e253d823f0151520dc4fa0f330727cdd98338d748b69f483031943fc",
+    "Scripts/render_px_progress.py": "d8046ebcce695eb3d721d9071bdfe7491b3e82400efd57efbf46e5032482a1a7",
+    "Taskfold/Views/TaskRowView.swift": "7dbc35898ed217d2e4101e55401fc5653dda43657e1f859e4f15ec8803ab45cc"
+  }
+}

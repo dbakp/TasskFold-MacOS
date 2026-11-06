@@ -146,10 +146,27 @@ final class Store {
     @ObservationIgnored private let projectCatalogReadCache = WorkspaceProjectCatalogReadCache()
     @ObservationIgnored private let subtaskProgressReadCache = SubtaskProgressReadCache()
     @ObservationIgnored private let taskNotePreviewReadCache = TaskNotePreviewReadCache()
-    func taskNotePreview(_ task: Record, fullText: Bool = false) -> String {
-        taskNotePreviewReadCache.read(task.string("description"), id: task.id, fullText: fullText,
-            context: .init(workspace: .init(account: userID, generation: workspaceGeneration),
-                           session: backend.reminderSessionIncarnation, access: presentationAccessEpoch))
+    func taskNotePreview(_ task: Record) -> String {
+        taskNotePreviewReadCache.read(task.string("description"), id: task.id, fullText: false,
+            context: taskNotePreviewContext)
+    }
+
+    private var taskNotePreviewContext: TaskNotePreviewReadCache.Context {
+        .init(workspace: .init(account: userID, generation: workspaceGeneration),
+              session: backend.reminderSessionIncarnation, access: presentationAccessEpoch,
+              revision: workspaceReadRevision)
+    }
+    func fullTaskNotePreviewRequest(_ task: Record) -> TaskNotePreviewReadCache.Request? {
+        guard workspaceCacheReadable, !signingOut, !accountRemovalBlocked else { return nil }
+        return .init(id: task.id, source: .init(task.string("description")), context: taskNotePreviewContext)
+    }
+    func prepareFullTaskNotePreview(_ request: TaskNotePreviewReadCache.Request) async throws -> String {
+        guard workspaceCacheReadable, !signingOut, !accountRemovalBlocked,
+              request.context == taskNotePreviewContext else { throw CancellationError() }
+        let text = try await taskNotePreviewReadCache.load(request)
+        guard workspaceCacheReadable, !signingOut, !accountRemovalBlocked,
+              request.context == taskNotePreviewContext else { throw CancellationError() }
+        return text
     }
 
     func subtaskProgress(_ task: Record) -> (completed: Int, total: Int) {
