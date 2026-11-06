@@ -604,6 +604,7 @@ import CryptoKit
     }
 }
 @MainActor struct WorkspaceReadNativeFixtureView: View {
+    @State private var startupTaps = 0
     @Environment(Store.self) private var store
     @State private var status = "Preparing"
     @State private var projectEditor: Record?
@@ -612,6 +613,17 @@ import CryptoKit
         NavigationStack {
             Form {
                 Text(status).accessibilityIdentifier("workspaceReadStatus")
+                if SharedStartupNativeFixture.enabled {
+                    Text(store.startupSharedStorageReady ? "Connected" : "Preparing").accessibilityIdentifier("startupNativeStorageStatus")
+                    Text("Interface taps: \(startupTaps)").accessibilityIdentifier("startupNativeTaps")
+                    Button("Use interface") { startupTaps += 1 }.accessibilityIdentifier("startupNativeTap")
+                    Button("Save startup task") { store.saveStartupNativeTask() }.accessibilityIdentifier("startupNativeSave")
+                    Button("Leave workspace") { Task { await store.signOut() } }.accessibilityIdentifier("startupNativeLeave")
+                    Button("Release startup write") { Task { await SharedStartupNativeFixture.gate.resume() } }.accessibilityIdentifier("startupNativeRelease")
+                    Button("Return to workspace") { store.startLocal() }.accessibilityIdentifier("startupNativeReturn")
+                    Text(store.startupNativeWriterIdle ? "Writer idle" : "Writer waiting").accessibilityIdentifier("startupNativeWriterStatus")
+                }
+
                 if SharedCaptureCountNativeFixture.enabled && SharedCaptureCountNativeFixture.reviewEnabled {
                     Button("Prepare shared review") { store.prepareSharedCaptureReviewNative() }.accessibilityIdentifier("prepareSharedReview")
                     NavigationLink("Open shared review") { SharedDraftsView() }.accessibilityIdentifier("openSharedReview")

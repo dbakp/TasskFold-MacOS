@@ -94,7 +94,7 @@ final class Store {
     @ObservationIgnored private var workflowFixtureFailureConsumed = false
     @ObservationIgnored private var sharedCaptureFixtureFailureConsumed = false
     #endif
-    private(set) var workspaceReadRevision = UUID() { didSet { subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear() } }
+    private(set) var workspaceReadRevision = UUID() { didSet { subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear(); invalidateStartupPublication(privacy: !initializingStore && !startupSharedStorageReady) } }
     var workspaceAccessToken: String? { (activeTeamMask ?? snapshot.teamWorkspace)?.boundary.raw["token"]?.text }
     var nativeConversationTeamCache: TeamWorkspaceCache? { activeTeamMask ?? snapshot.teamWorkspace }
     @ObservationIgnored private var workflowPresentationDeferred = false
@@ -1225,6 +1225,7 @@ final class Store {
         sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0
         snapshotRevision = UUID()
         widgetPublicationQueue.invalidate()
+        invalidateStartupPublication(privacy: !initializingStore)
         syncSignInWorkspace = nil; syncAfterSignInRequested = nil; conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
     @ObservationIgnored private var consumingWidgetActions = false
     #if DEBUG
@@ -1239,6 +1240,16 @@ final class Store {
     @ObservationIgnored private var widgetCalendarRevision = -1
     @ObservationIgnored private var capacityRequest: (UUID, String)?
     @ObservationIgnored private let widgetPublicationQueue = WidgetPublicationQueue()
+    @ObservationIgnored private let startupPublicationQueue = StartupPublicationQueue<StartupPublicationResult>()
+    @ObservationIgnored private var initializingStore = true
+    @ObservationIgnored private var urgentSharedPublication = false
+    #if DEBUG
+    @ObservationIgnored private var startupNativePrepared = false
+    #endif
+    private(set) var startupSharedStorageReady = false
+    private(set) var startupSharingWorking = false
+    private(set) var startupSharingFailed = false
+
     private(set) var widgetPublicationRevision = 0
     private var workspaceRepairFingerprint: String?
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
@@ -2029,6 +2040,16 @@ final class Store {
             UserDefaults.standard.set(false, forKey: "localMode")
         }
         #endif
+        #if DEBUG
+        let bundle = Bundle.main.bundleIdentifier ?? "", args = ProcessInfo.processInfo.arguments
+        let preparedTest = (bundle.contains(".workflowtests") || bundle.contains(".p0")) && (args.contains("--uitesting") || args.contains("--team-editor-testing") || args.contains("--live-auth-ui-test"))
+        if preparedTest && !SharedStartupNativeFixture.enabled { startupSharedStorageReady = true }
+        SharedStartupNativeFixture.reset()
+        #endif
+        defer {
+            initializingStore = false
+            backend.onSessionContextChange = { [weak self] in self?.invalidateStartupPublication(privacy: true) }
+        }
         localMode = UserDefaults.standard.bool(forKey: "localMode")
         #if DEBUG
         if TeamEditorNativeFixture.enabled { localMode = false }
@@ -2063,6 +2084,9 @@ final class Store {
         }
         monitor.start(queue: DispatchQueue(label: "taskfold.connectivity"))
         Task { await refreshRemoteReminderRegistration() }
+        #if DEBUG
+        if SharedStartupNativeFixture.enabled { try? prepareSharedStartupNativeWorkspace() }
+        #endif
     }
     func rows(_ table: String) -> [Record] { presentedTables[table] ?? [] }
     func record(_ table: String, id: String) -> Record? { rows(table).first { $0.id == id } }
@@ -2128,7 +2152,7 @@ final class Store {
                 snapshot.tables[DayPlacement.table] = legacy.map { row in var row = row; row["user_id"] = .string(userID); return row }
             }
         }
-        catch { if !workspaceCacheDecoded { workspaceRepairFingerprint = try? backupVault.unreadableFingerprint(cacheURL) }; self.error = "Could not read saved tasks: \(error.localizedDescription)"; if let disk = try? widgetActionDisk() { try? disk.clearProjection() } }
+        catch { if !workspaceCacheDecoded { workspaceRepairFingerprint = try? backupVault.unreadableFingerprint(cacheURL) }; self.error = "Could not read saved tasks: \(error.localizedDescription)"; if startupSharedStorageReady { if let disk = try? widgetActionDisk() { try? disk.clearProjection() } } else { publishWidgetSnapshot(scheduleCapacityRefresh: false) } }
     }
     #if DEBUG
     func failNextWorkflowNativeSave() {
@@ -2185,8 +2209,13 @@ final class Store {
     /// The private cache is saved before its actionable projection is published.
     private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true, background: Bool = false) {
         if !background { widgetPublicationQueue.invalidate() }
-        publishSharedCaptureWorkspace()
-        guard let disk = try? widgetActionDisk() else { widgetPublicationQueue.invalidate(); return }
+        let immediate = !initializingStore && (urgentSharedPublication || signingOut || accountRemovalBlocked || !workspaceCacheReadable)
+        let deferredStartup = !startupSharedStorageReady && !immediate
+        if !deferredStartup {
+            startupPublicationQueue.invalidate(); startupSharingWorking = false
+            if immediate { sharedCapturePublicationReady = false }
+            publishSharedCaptureWorkspace()
+        }
         let account = sharedCaptureAvailable ? userID : ""
         let busy = CalendarBusyStore.shared; busy.bind(account: account)
         let current = widgetCalendarWindow.flatMap { value -> CalendarCapacityWindow? in
@@ -2205,7 +2234,10 @@ final class Store {
         input.people = filterContext.people; input.viewPreferences = rows("view_preferences")
         input.viewOrders = rows("view_orders"); input.collaborators = filterCollaborators; input.assignments = assignmentCatalog
         if let feedback = snapshot.widgetCompletion.feedback, widgetFeedbackIsCurrent(feedback) { input.feedback = feedback }
-        if background, !account.isEmpty {
+        if deferredStartup {
+            enqueueStartupPublication(input)
+        } else if let disk = try? widgetActionDisk() {
+        if background, !immediate, !account.isEmpty {
             let captured = input, generation = accountGeneration, revision = workspaceReadRevision
             let session = backend.reminderSessionIncarnation
             #if DEBUG
@@ -2226,11 +2258,78 @@ final class Store {
             // Account removal, sign-out and widget receipts keep their immediate
             // publication/acknowledgement semantics. No late worker may undo them.
             widgetPublicationQueue.invalidate()
-            finishWidgetPublication(Result { try input.encoded() }, disk: disk)
+            if finishWidgetPublication(Result { try input.encoded() }, disk: disk), sharedCapturePublicationReady {
+                startupSharedStorageReady = true; startupSharingFailed = false
+            }
         }
+        }
+        if immediate { urgentSharedPublication = false }
         if scheduleCapacityRefresh, !account.isEmpty, workspaceCacheReadable, current == nil, capacityRequest?.1 != account {
             capacityRequest = (UUID(), account)
             Task { await refreshWidgetCapacity() }
+        }
+    }
+
+    #if DEBUG
+    var startupPublicationIdle: Bool { startupPublicationQueue.isIdle }
+    func prepareSharedStartupNativeWorkspace() throws {
+        guard SharedStartupNativeFixture.enabled else { throw CancellationError() }
+        guard !startupNativePrepared else { return }; startupNativePrepared = true
+        localMode = true; signedIn = true; teamAccessMask = nil; workspaceCacheReadable = true; dailyBackupsEnabled = false
+        if ProcessInfo.processInfo.arguments.contains("--shared-startup-cold") { load(); return }
+        var original = Record.task(user: userID, project: "")
+        original["id"] = .string("da850000-0000-4000-8000-000000000002")
+        original["title"] = .string("Keep this task"); original["description"] = .string("Keep these original notes.")
+        original["subtasks"] = .array([.object(["title": .string("Keep this child"), "completed": .bool(true), "opaque": .bool(true)])])
+        var other = Record.task(user: userID, project: "")
+        other["id"] = .string("da850000-0000-4000-8000-000000000003"); other["title"] = .string("Keep completed work"); other["completed"] = .bool(true)
+        snapshot = Snapshot(tables: ["tasks": [original, other], "projects": []]); migrateOrganization(); try persist()
+    }
+    #endif
+    private func invalidateStartupPublication(privacy: Bool = false) {
+        startupPublicationQueue.invalidate(); startupSharingWorking = false
+        if privacy { urgentSharedPublication = true }
+    }
+    func retryStartupPublication() { publishWidgetSnapshot(scheduleCapacityRefresh: false) }
+    private func enqueueStartupPublication(_ input: WidgetPublicationInput) {
+        let generation = accountGeneration, revision = workspaceReadRevision, session = backend.reminderSessionIncarnation
+        let account = sharedCaptureAvailable ? userID : ""
+        let workspace = account.isEmpty ? nil : SharedCaptureWorkspace(account: account, generation: workspaceGeneration,
+            label: localMode ? "Local workspace" : backend.session?.user.email ?? "Taskfold workspace")
+        let sharedSource = sharedCaptureCountSource(), widgetSource = widgetActionDiskSource()
+        #if DEBUG
+        let gate = SharedStartupNativeFixture.enabled ? SharedStartupNativeFixture.gate : nil
+        #endif
+        startupSharingWorking = true; startupSharingFailed = false
+        startupPublicationQueue.enqueue(write: { ticket in
+            let data = Result { try input.encoded() }
+            #if DEBUG
+            await gate?.hold()
+            #endif
+            try Task.checkCancellation()
+            var shared = false, widget = false
+            do { try sharedSource().publish(workspace, admitting: { ticket.isCurrent }); shared = true }
+            catch is CancellationError { throw CancellationError() }
+            catch { }
+            do { try widgetSource().publish(data.get(), admitting: { ticket.isCurrent }); widget = true }
+            catch is CancellationError { throw CancellationError() }
+            catch { if let disk = try? widgetSource() { try? disk.clearProjection(admitting: { ticket.isCurrent }) } }
+            return StartupPublicationResult(workspacePublished: shared, widgetPublished: widget)
+        }) { [weak self] result in
+            guard let self, self.accountGeneration == generation, self.workspaceReadRevision == revision,
+                  self.backend.reminderSessionIncarnation == session,
+                  (self.sharedCaptureAvailable ? self.userID : "") == account else { return }
+            self.startupSharingWorking = false
+            guard case .success(let published) = result else { self.startupSharingFailed = true; return }
+            self.sharedCapturePublicationReady = published.workspacePublished
+            if published.workspacePublished { self.sharedCapturePublishedWorkspace = workspace }
+            if published.widgetPublished { self.widgetPublicationRevision += 1 }
+            self.startupSharedStorageReady = published.workspacePublished && published.widgetPublished
+            self.startupSharingFailed = !self.startupSharedStorageReady
+            if self.startupSharedStorageReady { self.refreshSharedCaptureDraftCount(); self.consumeWidgetCompletions() }
+            #if canImport(WidgetKit)
+            WidgetCenter.shared.reloadAllTimelines()
+            #endif
         }
     }
 
@@ -2304,12 +2403,14 @@ final class Store {
     }
     #endif
 
-    private func finishWidgetPublication(_ result: Result<Data, Error>, disk: WidgetActionDisk) {
-        do { try disk.publish(result.get()); widgetPublicationRevision += 1 }
+    @discardableResult private func finishWidgetPublication(_ result: Result<Data, Error>, disk: WidgetActionDisk) -> Bool {
+        var success = false
+        do { try disk.publish(result.get()); widgetPublicationRevision += 1; success = true }
         catch { try? disk.clearProjection() }
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif
+        return success
     }
 
     /// Calendar reads remain in the app. Publication never blocks a durable task save.
@@ -2330,13 +2431,21 @@ final class Store {
         publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
     }
 
-    private func widgetActionDisk() throws -> WidgetActionDisk {
+    private func widgetActionDisk() throws -> WidgetActionDisk { try widgetActionDiskSource()() }
+    private func widgetActionDiskSource() -> @Sendable () throws -> WidgetActionDisk {
         #if DEBUG
-        if AccountRemovalNativeFixture.enabled { return WidgetActionDisk(directory: AccountRemovalNativeFixture.sharedRoot) }
+        if SharedStartupNativeFixture.enabled {
+            let directory = SharedStartupNativeFixture.directory.appendingPathComponent("Widgets")
+            return { WidgetActionDisk(directory: directory) }
+        }
+        #endif
+        #if DEBUG
+        if AccountRemovalNativeFixture.enabled { let directory = AccountRemovalNativeFixture.sharedRoot; return { WidgetActionDisk(directory: directory) } }
         #endif
         #if DEBUG
         if calendarContextFixtureEnabled || clockWindowFixtureEnabled || datePhraseFixtureEnabled || assigneePatternFixtureEnabled {
-            return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "CalendarContextTests", directoryHint: .isDirectory))
+            let directory = cacheURL.deletingLastPathComponent().appending(path: "CalendarContextTests", directoryHint: .isDirectory)
+            return { WidgetActionDisk(directory: directory) }
         }
         // These isolated native test apps have no App Group entitlement. Keep each
         // projection in its own sandbox without requiring the widget fixture's UI overlay.
@@ -2348,13 +2457,15 @@ final class Store {
             "com.dbakp.taskfold.mac.workflowteststeameditbridge"
         ]
         if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") || isolatedNativeBundles.contains(Bundle.main.bundleIdentifier ?? "") {
-            return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "WidgetActionTests", directoryHint: .isDirectory))
+            let directory = cacheURL.deletingLastPathComponent().appending(path: "WidgetActionTests", directoryHint: .isDirectory)
+            return { WidgetActionDisk(directory: directory) }
         }
         #endif
-        return try WidgetActionDisk.system()
+        return { try WidgetActionDisk.system() }
     }
     /// Intent execution returns only after task edits, queue and receipt are saved together.
     func performWidgetCompletion(_ incoming: WidgetCompletionRequest) throws {
+        invalidateStartupPublication(privacy: true)
         guard signedIn || localMode, workspaceCacheReadable, userID == incoming.account else {
             throw WidgetActionFailure("Open the widget's workspace in Taskfold before completing this task.")
         }
@@ -2382,7 +2493,7 @@ final class Store {
     /// Startup, foreground refresh and connectivity retry the same credential-free handoff.
     func consumeWidgetCompletions() {
         refreshSharedCaptureDraftCount()
-        guard !consumingWidgetActions, workspaceCacheReadable, signedIn || localMode,
+        guard startupSharedStorageReady, !consumingWidgetActions, workspaceCacheReadable, signedIn || localMode,
               let disk = try? widgetActionDisk() else { return }
         consumingWidgetActions = true; defer { consumingWidgetActions = false }
         // A successful local retry returns before cloud sync can clear the banner.
@@ -6567,6 +6678,7 @@ extension Store {
 extension Store {
     func prepareWorkspaceReadFixture() throws {
         guard WorkspaceReadNativeFixture.enabled else { throw CancellationError() }
+        if SharedStartupNativeFixture.enabled { try prepareSharedStartupNativeWorkspace(); return }
         if WorkspaceReadNativeFixture.templateLibrary { try prepareTemplateLibraryReadFixture(); return }
         if WorkspaceReadNativeFixture.projectCatalog { try prepareProjectCatalogFixture(); return }
         dailyBackupsEnabled = false

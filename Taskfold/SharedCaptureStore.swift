@@ -3,6 +3,7 @@ import Foundation
 extension Store {
     func sharedCaptureDisk() throws -> SharedCaptureDisk {
         #if DEBUG
+        if SharedStartupNativeFixture.enabled { return SharedCaptureDisk(directory: SharedStartupNativeFixture.directory.appendingPathComponent("Mailbox")) }
         if SharedCaptureCountNativeFixture.enabled { return SharedCaptureDisk(directory: SharedCaptureCountNativeFixture.directory) }
         if AccountRemovalNativeFixture.enabled { return SharedCaptureDisk(directory: AccountRemovalNativeFixture.sharedRoot) }
         #endif
@@ -32,8 +33,12 @@ extension Store {
     }
     /// Resolve the group in the worker too: the OS can pause file access for a
     /// permission decision. No Store or mutable workspace crosses that boundary.
-    private func sharedCaptureCountSource() -> @Sendable () throws -> SharedCaptureDisk {
+    func sharedCaptureCountSource() -> @Sendable () throws -> SharedCaptureDisk {
         #if DEBUG
+        if SharedStartupNativeFixture.enabled {
+            let directory = SharedStartupNativeFixture.directory.appendingPathComponent("Mailbox")
+            return { SharedCaptureDisk(directory: directory) }
+        }
         if SharedCaptureCountNativeFixture.enabled {
             let directory = SharedCaptureCountNativeFixture.directory
             return { SharedCaptureDisk(directory: directory) }
@@ -279,6 +284,36 @@ extension Store {
             snapshot = original; SharedCaptureCountNativeFixture.gate = nil
             sharedCaptureCountNativeStatus = error.localizedDescription
         }
+    }
+}
+#endif
+
+#if DEBUG
+@MainActor enum SharedStartupNativeFixture {
+    static var enabled: Bool {
+        ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") &&
+        ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && ProcessInfo.processInfo.arguments.contains("--shared-startup-native")
+    }
+    static var directory: URL { URL.applicationSupportDirectory.appendingPathComponent("Shared startup native", isDirectory: true) }
+    static let gate = SharedCaptureCountNativeGate()
+    static func reset() {
+        guard enabled, ProcessInfo.processInfo.arguments.contains("--shared-startup-reset"), directory.lastPathComponent == "Shared startup native" else { return }
+        try? FileManager.default.removeItem(at: directory)
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    var startupNativeWriterIdle: Bool { startupPublicationIdle }
+    func saveStartupNativeTask() {
+        guard SharedStartupNativeFixture.enabled, localMode, sharedCaptureAvailable else { return }
+        let id = "da850000-0000-4000-8000-000000000001"
+        guard record("tasks", id: id) == nil else { return }
+        var task = Record.task(user: userID, project: "")
+        task["id"] = .string(id); task["title"] = .string("Startup capture proof")
+        task["description"] = .string("Keep every line.\nCafé notes 🪴")
+        _ = save("tasks", task)
     }
 }
 #endif

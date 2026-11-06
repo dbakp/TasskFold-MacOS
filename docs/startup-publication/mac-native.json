@@ -1,0 +1,8 @@
+{
+  "date": "2026-11-06",
+  "accepted": false,
+  "status": "not-run",
+  "reason": "Computer control reports the Mac locked after the existing normal Mac31 install/startup/sync checks; no repeat unlock question or permission reset.",
+  "normalMac31KeptRunning": true,
+  "normalStartupAcceptanceAlreadyRecordedSeparately": true
+}

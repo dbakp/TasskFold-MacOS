@@ -171,3 +171,28 @@ private struct SharedDraftReview: View {
         } catch { message = error.localizedDescription }
     }
 }
+
+/// Storage permission can wait independently of the first app window.
+struct SharedStorageSetupBanner: View {
+    @Environment(Store.self) private var store
+    @State private var visible = false
+    var body: some View {
+        VStack(spacing: 0) {
+            if visible && !store.startupSharedStorageReady {
+                HStack(spacing: 10) {
+                    if store.startupSharingWorking { ProgressView().controlSize(.small) }
+                    Text(store.startupSharingFailed ? "Widgets and shared drafts aren’t connected." : "Connecting widgets and shared drafts…")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("startupSharedStorageStatus")
+                    Spacer(minLength: 0)
+                    if !store.startupSharingWorking {
+                        Button("Try again") { store.retryStartupPublication() }.font(.caption)
+                    }
+                }.padding(.horizontal, 14).padding(.vertical, 8).background(.bar)
+            }
+        }.task(id: store.startupSharedStorageReady) {
+            if store.startupSharedStorageReady { visible = false; return }
+            do { try await Task.sleep(for: .milliseconds(350)); visible = true } catch { }
+        }
+    }
+}

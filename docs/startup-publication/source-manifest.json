@@ -1,0 +1,12 @@
+{
+  "Taskfold/Core/Backend.swift": "b658f41118dd1cf7ba5b15d0e5769fbd812b419089cb396dc36e98c7d9f176d9",
+  "Taskfold/Core/SharedCapture.swift": "6c66a14d9141b55e3b0a6e4ae19d624de9c3600d46e109ea347f5cbd69b8970a",
+  "Taskfold/Core/SharedCapturePlan.swift": "d9574b3e782eb1f8bfdaca72b25b0f6e9ec5f75fb3289ea9af02d8176a4795f5",
+  "Taskfold/Core/Store.swift": "36e9ef486412707fa4f9980e54060b7bba2d1e5906c7913b14b4dda41d157eac",
+  "Taskfold/Core/WidgetActions.swift": "b403c468d483d0878e61f51d058388631dda7cbe421dcee88622244039558021",
+  "Taskfold/SharedCaptureStore.swift": "882532bb0d7a5603cb72f8cb3c81be2b24ca180bf152015cc9f8c3b1617c7fd9",
+  "Taskfold/TaskfoldMacApp.swift": "08f927b98f83977c4da7c593165dcd9ec3fdcf2a4976e420fc17a5449924d145",
+  "Taskfold/TeamTemplateNativeFixture.swift": "04aecd24779da1209d341711e5a6112c11fad09eaca4b1ba0d5fcabffa8a0e5b",
+  "Taskfold/Views/SharedDraftsView.swift": "747a9d249703e0c7d16817a24831f0067129f0c66b0679920acc3cb0fea30e7f",
+  "TaskfoldTests/WidgetPublicationTests.swift": "6a39102e37540f189ac07fcc4a961b51c041333629280053b53d7e48ef96047e"
+}

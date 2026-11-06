@@ -1,0 +1,9 @@
+{
+  "date": "2026-11-06",
+  "platformOwner": "mac",
+  "filter": "StartupPublicationTests|WidgetPublicationTests|SharedCaptureTests|SharedCapturePlanTests|WidgetActionTests",
+  "exitCode": 0,
+  "tests": 45,
+  "failures": 0,
+  "logSHA256": "e341bc934b22eaddc3bef45b933d20b67cc23a35492e7e4e56a3df31cbefb15a"
+}

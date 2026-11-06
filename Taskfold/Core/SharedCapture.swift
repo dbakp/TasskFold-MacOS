@@ -220,9 +220,14 @@ final class SharedCaptureDisk: @unchecked Sendable {
             try write(state)
         }
     }
-    func publish(_ workspace: SharedCaptureWorkspace?) throws {
+    func publish(_ workspace: SharedCaptureWorkspace?, admitting: @Sendable () -> Bool = { true }) throws {
         try workspace?.validate()
-        try locked { var state = try read(); state.workspace = workspace; try write(state) }
+        try locked {
+            guard admitting() else { throw CancellationError() }
+            var state = try read()
+            guard admitting() else { throw CancellationError() }
+            state.workspace = workspace; try write(state)
+        }
     }
     func workspace() throws -> SharedCaptureWorkspace? { try locked { try read().workspace } }
     /// Idempotent within a share presentation, including a callback retried after a successful write.

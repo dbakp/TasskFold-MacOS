@@ -7,14 +7,14 @@
   "sourceRevision": "7371258fce50e850ec744db6d0457e3338d3321c",
   "installed": true,
   "processLaunched": true,
-  "mainWindowVerified": false,
+  "mainWindowVerified": true,
   "strictSignatureVerified": true,
   "installedPayloadVerified": true,
   "privateSafetyCopy": true,
   "prelaunchAllCacheBytesUnchanged": true,
   "workspaceTaskPendingCachesPreservedBeforeLaunch": 5,
-  "postlaunchTaskDataVerification": "Pending native startup inspection after unlock",
-  "startupStatus": "Installed process retained; user reported Allow; native inspection remains blocked by the locked Mac",
+  "postlaunchTaskDataVerification": "Task and pending caches compared from the verified before-Mac31 copy",
+  "startupStatus": "Main window and synced state verified after unlock; superseded by installed Mac31",
   "normalGateChanges": false,
   "hostedServiceChanges": false,
   "containsBackgroundSharedDraftBadgeAndReview": true,
@@ -22,5 +22,8 @@
   "phoneInstallationDeferred": true,
   "futureMacUpdatesAuthorizedWithoutDraftQuestion": true,
   "archiveSHA256": "6b62b8ecd86eaa02f5c707fb7ea64a834f708cec51718b2bca91f226308a9beb",
-  "userReportedAppDataApproval": true
+  "userReportedAppDataApproval": true,
+  "syncStatusVerified": true,
+  "postlaunchSavedDataVerified": true,
+  "snapshotCachesVerified": 5
 }

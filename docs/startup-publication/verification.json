@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-06",
+  "owner": "mac",
+  "initialSharedFileIOOnBackgroundWorker": true,
+  "oneActiveOneNewestPending": true,
+  "ticketAdmissionUnderExistingFileLocks": true,
+  "immediatePrivacyAndReceiptBarriersPreserved": true,
+  "independentCoreTests": {
+    "mac": {
+      "date": "2026-11-06",
+      "platformOwner": "mac",
+      "filter": "StartupPublicationTests|WidgetPublicationTests|SharedCaptureTests|SharedCapturePlanTests|WidgetActionTests",
+      "exitCode": 0,
+      "tests": 45,
+      "failures": 0,
+      "logSHA256": "e341bc934b22eaddc3bef45b933d20b67cc23a35492e7e4e56a3df31cbefb15a"
+    },
+    "ios": {
+      "date": "2026-11-06",
+      "platformOwner": "ios",
+      "filter": "StartupPublicationTests|WidgetPublicationTests|SharedCaptureTests|SharedCapturePlanTests|WidgetActionTests",
+      "exitCode": 0,
+      "tests": 45,
+      "failures": 0,
+      "logSHA256": "b8feeed04791bbce34ec464be8e6e0a6bb2324459449c6aa0abf83934b51546c"
+    }
+  },
+  "currentIOSBuildAndStrictSignaturePassed": true,
+  "currentMacBuildAndStrictSignaturePassed": true,
+  "owningIPhoneNativeAccepted": true,
+  "owningIPhoneTests": 1,
+  "owningIPhoneRuntimeWarnings": 0,
+  "owningIPhoneProof": {
+    "accepted": true,
+    "allWorkTablesPreserved": true,
+    "coldWindowAndDataVerified": true,
+    "lateProducerCannotUndoRedaction": true,
+    "privateTaskSaveWhileHeld": true,
+    "returnRestoresSavedTask": true,
+    "signOutRedactedImmediately": true,
+    "windowUsableBeforeInitialStorageWrite": true
+  },
+  "macNativeAccepted": false,
+  "macNativeReason": "Computer control reports the Mac locked; no repeat unlock question.",
+  "ipadNewCaseAccepted": false,
+  "freshSystemPermissionPromptAccepted": false,
+  "allStartupPathsNonblocking": false,
+  "privateDurableWritesRemainSynchronous": true,
+  "physicalFPSAccepted": false,
+  "normalGatesChanged": false,
+  "hostedChanges": false,
+  "phoneInstallationDeferred": true,
+  "normalMac31InstalledAndSyncedSeparately": true,
+  "startupSourceInstalledInMac31": false
+}

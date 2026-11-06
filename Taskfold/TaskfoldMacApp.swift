@@ -60,7 +60,7 @@ struct TaskfoldMacApp: App {
     var body: some Scene {
         WindowGroup("Taskfold") {
             mainContent
-                .safeAreaInset(edge: .top, spacing: 0) { AccountRemovalRecoveryBanner().environment(store) }
+                .safeAreaInset(edge: .top, spacing: 0) { VStack(spacing: 0) { SharedStorageSetupBanner().environment(store); AccountRemovalRecoveryBanner().environment(store) } }
                 .task {
                     #if DEBUG
                     if TeamEditorNativeFixture.enabled || TeamOrganizationFixture.enabled || AutomationManagementFixture.enabled || AccountRemovalNativeFixture.enabled { return }

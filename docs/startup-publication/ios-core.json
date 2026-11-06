@@ -1,0 +1,9 @@
+{
+  "date": "2026-11-06",
+  "platformOwner": "ios",
+  "filter": "StartupPublicationTests|WidgetPublicationTests|SharedCaptureTests|SharedCapturePlanTests|WidgetActionTests",
+  "exitCode": 0,
+  "tests": 45,
+  "failures": 0,
+  "logSHA256": "b8feeed04791bbce34ec464be8e6e0a6bb2324459449c6aa0abf83934b51546c"
+}
