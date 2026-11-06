@@ -4930,7 +4930,11 @@ extension Store {
 
 extension Store {
     func previewFilterCount(_ rule: FilterRule, includeCompleted: Bool) -> Int {
-        matching(TaskQuery(scope: .all, includeCompleted: includeCompleted || (!rule.hasQuerySections && rule.includesCompletion), filter: rule, now: calendarContext.minute, datePreferences: datePhrasePreferences, filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: filterContext.projectReferences, filterSections: rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: filterContext.personReferences, userID: userID)).count
+        previewFilterMatches(rule, includeCompleted: includeCompleted).count
+    }
+    /// Use the same access-filtered query for the count and read-only sample.
+    func previewFilterMatches(_ rule: FilterRule, includeCompleted: Bool) -> [Record] {
+        matching(TaskQuery(scope: .all, includeCompleted: includeCompleted || (!rule.hasQuerySections && rule.includesCompletion), filter: rule, now: calendarContext.minute, datePreferences: datePhrasePreferences, filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: filterContext.projectReferences, filterSections: rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: filterContext.personReferences, userID: userID))
     }
 }
 

@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-06",
+  "freeBeforeRetirementBytes": 58309349376,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-filter-preview-native.xcresult",
+      "allocatedBytes": 11517952
+    },
+    {
+      "path": "/tmp/taskfold-filter-preview-native-current.xcresult",
+      "allocatedBytes": 21311488
+    },
+    {
+      "path": "/tmp/taskfold-filter-preview-native-focused.xcresult",
+      "allocatedBytes": 29741056
+    },
+    {
+      "path": "/tmp/taskfold-filter-preview-native-settled.xcresult",
+      "allocatedBytes": 3170304
+    },
+    {
+      "path": "/tmp/taskfold-filter-preview-native-final.xcresult",
+      "allocatedBytes": 3170304
+    },
+    {
+      "path": "/tmp/taskfold-filter-preview-native-compact.xcresult",
+      "allocatedBytes": 3166208
+    },
+    {
+      "path": "/tmp/taskfold-filter-preview-failure-attachments",
+      "allocatedBytes": 10997760
+    },
+    {
+      "path": "/tmp/taskfold-filter-preview-final-attachments",
+      "allocatedBytes": 307200
+    },
+    {
+      "path": "/tmp/taskfold-filter-preview-compact-attachments",
+      "allocatedBytes": 307200
+    }
+  ],
+  "retiredAllocatedBytes": 83689472,
+  "freeAfterRetirementBytes": 58393120768,
+  "compilerCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 58314088448,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 683601920,
+        "projectedAllocatedBytes": 683601920
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 624074752,
+        "projectedAllocatedBytes": 624074752
+      }
+    ],
+    "freeAfterBytes": 58314022912,
+    "actualFreeChangeBytes": -65536
+  },
+  "ownedPhoneFinalState": "Shutdown",
+  "remainingTaskfoldProcesses": [
+    "/Applications/Taskfold.app/Contents/MacOS/Taskfold"
+  ],
+  "newSimulatorsOrArchivesCreated": false,
+  "preserved": "Normal app/drafts and real task data, all device contents, Keychain, Docker volumes, current/rollback archives and reusable signed products."
+}

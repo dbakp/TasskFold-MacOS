@@ -15,6 +15,23 @@ struct FilterAssistanceView: View {
     @State private var activeQuery: String?
     @State private var generatedDescription: String?
     @State private var proposal: FilterSuggestion?
+    private struct PreviewStamp: Equatable {
+        let tasks: Int
+        let access: UUID
+        let minute: Date?
+        let day: String
+        let timeZone: String
+        let dates: DatePhrasePreferences?
+    }
+    private var previewStamp: PreviewStamp {
+        .init(tasks: store.taskRevision, access: store.workspaceReadRevision,
+              minute: proposal?.rule.usesClockWindow == true ? store.calendarContext.minute : nil,
+              day: store.calendarContext.today, timeZone: store.calendarContext.timeZone, dates: store.datePhrasePreferences)
+    }
+    @State private var checkedStamp: PreviewStamp?
+    @State private var previewTasks: [Record] = []
+    private enum Field: Hashable { case description, expression }
+    @FocusState private var focusedField: Field?
     @State private var previewCount: Int?
     @State private var previewCaption: String?
     @State private var unavailable: String?
@@ -42,7 +59,7 @@ struct FilterAssistanceView: View {
                 if isCurrent {
                     Section("Describe what to show") {
                         TextField("For example, overdue high-priority tasks in Inbox", text: $description, axis: .vertical)
-                            .lineLimit(2...6).disabled(busy != nil).accessibilityIdentifier("filterAssistanceDescription")
+                            .lineLimit(2...6).focused($focusedField, equals: .description).disabled(busy != nil).accessibilityIdentifier("filterAssistanceDescription")
                         Text("Apple Intelligence uses only the description above, on this device. Your tasks, saved query and project directory aren’t sent to the model.")
                             .font(.callout).foregroundStyle(.secondary)
                         if let descriptionIssue { Text(descriptionIssue).foregroundStyle(.red) }
@@ -56,18 +73,52 @@ struct FilterAssistanceView: View {
                         }
                     }
                     Section("Review expression") {
-                        TextField("today AND p1", text: $expression, axis: .vertical)
-                            .lineLimit(2...8).autocorrectionDisabled().disabled(busy != nil)
-                            .accessibilityIdentifier("filterAssistanceExpression")
-                            #if os(iOS)
-                            .textInputAutocapitalization(.never)
-                            #endif
+                        HStack(alignment: .top) {
+                            TextField("today AND p1", text: $expression, axis: .vertical)
+                                .lineLimit(2...8).focused($focusedField, equals: .expression).autocorrectionDisabled().disabled(busy != nil)
+                                .accessibilityIdentifier("filterAssistanceExpression")
+                                #if os(iOS)
+                                .textInputAutocapitalization(.never)
+                                #endif
+                            if !expression.isEmpty {
+                                Button { expression = ""; focusedField = .expression } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
+                                    .buttonStyle(.borderless).disabled(busy != nil)
+                                    .accessibilityLabel("Clear expression").accessibilityIdentifier("filterAssistanceClear")
+                            }
+                        }
                         Button("Check preview") { check() }
                             .disabled(busy != nil || run.closed || (try? FilterSuggestion.boundedExpression(expression)) == nil)
                             .accessibilityIdentifier("filterAssistancePreview")
                         if let previewCount, let previewCaption {
-                            Text("\(previewCount) matching tasks").font(.headline).accessibilityIdentifier("filterAssistanceCount")
+                            Text(previewCount == 1 ? "1 matching task" : "\(previewCount) matching tasks").font(.headline).accessibilityIdentifier("filterAssistanceCount")
                             Text(previewCaption).foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceMeaning")
+                            if previewCount == 0 {
+                                Text("No tasks match yet. You can still use this expression for future tasks.")
+                                    .foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceEmpty")
+                            } else {
+                                Text(previewCount > previewTasks.count ? "A few matches" : "Matching tasks")
+                                    .font(.subheadline).foregroundStyle(.secondary)
+                                ForEach(Array(previewTasks.enumerated()), id: \.offset) { index, task in
+                                    HStack(alignment: .top, spacing: 10) {
+                                        Image(systemName: task.completed ? "checkmark.circle.fill" : "circle")
+                                            .foregroundStyle(.secondary).accessibilityHidden(true)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(task.title.isEmpty ? "Untitled task" : task.title)
+                                                .lineLimit(3)
+                                            Text(task.string("project_id").isEmpty ? "Inbox" : store.record("projects", id: task.string("project_id"))?.name ?? "Project unavailable")
+                                                .font(.caption).foregroundStyle(.secondary)
+                                            if task.completed { Text("Completed").font(.caption).foregroundStyle(.secondary) }
+                                        }
+                                    }.accessibilityElement(children: .combine)
+                                        .accessibilityIdentifier("filterAssistanceMatch-" + String(index))
+                                }
+                                if previewCount > previewTasks.count {
+                                    Text("Showing \(previewTasks.count) of \(previewCount) matching tasks.")
+                                        .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceSampleLimit")
+                                }
+                            }
+                            Text("Read-only preview. Checking or using an expression never changes these tasks.")
+                                .font(.caption).foregroundStyle(.secondary)
                         }
                         Text("Use expression updates this draft. Save in the filter editor to keep it.")
                             .font(.callout).foregroundStyle(.secondary)
@@ -84,11 +135,18 @@ struct FilterAssistanceView: View {
             .formStyle(.grouped)
             .navigationTitle("Suggest a filter")
             .toolbar {
+                #if os(iOS)
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done", systemImage: "keyboard.chevron.compact.down") { focusedField = nil }
+                        .accessibilityIdentifier("filterAssistanceKeyboardDone")
+                }
+                #endif
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { close(); dismiss() }.accessibilityIdentifier("filterAssistanceCancel") }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Use expression") { check(applying: true) }
-                        .disabled(busy != nil || proposal == nil || applied || run.closed || !isCurrent)
-                        .accessibilityIdentifier("filterAssistanceApply")
+                    Button("Use") { check(applying: true) }
+                        .disabled(busy != nil || proposal == nil || checkedStamp != previewStamp || applied || run.closed || !isCurrent)
+                        .accessibilityLabel("Use expression").accessibilityIdentifier("filterAssistanceApply")
                 }
             }
         }
@@ -108,6 +166,12 @@ struct FilterAssistanceView: View {
                 stop(); clearPreview(); expression = ""; self.generatedDescription = nil; activeQuery = nil; error = nil
             }
         }
+        .onChange(of: previewStamp) { _, current in
+            if let checkedStamp, checkedStamp != current {
+                stop(); clearPreview()
+                error = "Tasks or date settings changed. Check the preview again before using this expression."
+            }
+        }
         .onChange(of: phase) { _, value in
             if value == .background { stop() }
             if value == .active { unavailable = OnDeviceAssistance.unavailableReason; refreshedProjects = nil }
@@ -115,7 +179,7 @@ struct FilterAssistanceView: View {
         .onChange(of: error) { _, value in if isCurrent, let value { AccessibilityNotification.Announcement(value).post() } }
         .onDisappear(perform: close)
     }
-    private func clearPreview() { proposal = nil; previewCount = nil; previewCaption = nil }
+    private func clearPreview() { proposal = nil; previewCount = nil; previewCaption = nil; previewTasks = []; checkedStamp = nil }
     private func stop() { work?.cancel(); work = nil; run.stop(); busy = nil }
     private func close() { stop(); run.close() }
     private func failed(_ failure: Error, token: UUID, checking: Bool) {
@@ -138,7 +202,13 @@ struct FilterAssistanceView: View {
         }
     }
     private func check(applying: Bool = false) {
+        if applying, checkedStamp != previewStamp {
+            clearPreview()
+            error = "Tasks or date settings changed. Check the preview again before using this expression."
+            return
+        }
         guard isCurrent, busy == nil, !applied, !applying || proposal != nil, let token = run.begin() else { return }
+        focusedField = nil
         let text = expression, reviewed = applying ? proposal : nil
         activeQuery = text; error = nil; busy = "Checking expression…"
         work = Task {
@@ -182,11 +252,16 @@ struct FilterAssistanceView: View {
         guard FilterSuggestion.sameInputs(context, store.filterContext) else { throw FilterFailure(message: "Your workspace changed during the check. Check the preview again.") }
         if let problem = store.hierarchyFilterError(value.rule) { throw FilterFailure(message: problem) }
         if applying {
+            guard checkedStamp == previewStamp else {
+                throw FilterFailure(message: "Tasks or date settings changed. Check the preview again before using this expression.")
+            }
             try onApply(value); applied = true; close(); dismiss()
         } else {
             proposal = value
-            let count = store.previewFilterCount(value.rule, includeCompleted: request.includeCompleted)
-            previewCount = count; previewCaption = value.rule.sectionTitle(in: context)
+            let matches = store.previewFilterMatches(value.rule, includeCompleted: request.includeCompleted)
+            let count = matches.count
+            previewCount = count; previewTasks = Array(matches.prefix(5)); checkedStamp = previewStamp
+            previewCaption = value.rule.sectionTitle(in: context)
             run.stop(); busy = nil; work = nil
             AccessibilityNotification.Announcement("Preview ready. \(count) matching tasks.").post()
         }

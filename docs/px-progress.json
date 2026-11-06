@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Responsiveness · faster cold compact-note preparation",
-  "latest": "Compact note summaries now avoid whole-note copies and normalization before clipping. On this Mac, 12 uncached 708 KB summaries drop from about 202 ms to 5.4–5.6 ms in Debug. Each owner passes 52 focused checks and current build/sign verification. Current iPhone library search, paging, text refresh, original toggle and cold saved-state checks pass. Physical FPS, broader native contexts and the separate reviewed-step frame warning remain open. Installed apps and rollout gates are unchanged.",
+  "focus": "Filters · inspect matching tasks before using an expression",
+  "latest": "Both apps now show up to five real matching tasks in filter review, with the exact count, project/completion captions and an empty state. Clear, distinct field focus and iPhone keyboard Done support editing; observed task/access/date changes invalidate the preview. Current builds/signatures pass. The iPhone functional query/edit/Use/Cancel/cold journey preserves every saved table, and the compact Use button leaves the title readable. One keyboard-focus frame warning still fails strict acceptance; actual generation, live invalidation and broader native contexts remain open. Installed apps and gates are unchanged.",
   "next": [
     "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Current normal/largest-text iPhone note navigation is accepted in its recorded Simulator scope. Continue Mac assistant controls and package later source changes after their bounded checks. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
-    "NEXT: continue remaining feature/custody work and bounded Mac/iPad assistance acceptance. Current compact-summary optimization and iPhone library journey are accepted only in recorded scope; do not repeat unchanged checks. Full accessibility conversion, actual rendering and broader workloads remain open. On-device-only assistance, explicit iOS Save/Mac autosave, deferred phone installation and agreed rollout/distribution deferrals remain.",
+    "NEXT: continue reviewed project-file custody and remaining independent-subtask/shared-media integration. Filter review now has scoped iPhone matching-sample/edit/Use/Cancel/cold proof; retain its warning, live-invalidation, generation and wider native gaps without repeating unchanged matrices. Assistance stays on-device only, phone installation stays deferred, and agreed rollout/provider/distribution deferrals remain.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -626,7 +626,7 @@
             "cold-note-excerpts/storage-cleanup.json",
             "cold-note-excerpts/mac-controls-final-locked.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-voice",
@@ -650,7 +650,7 @@
             {
               "state": "verify",
               "title": "Reviewed task and filter assistance",
-              "detail": "Both apps independently own on-device task-step and filter-expression review. Filters use ordinary grammar, preview and fresh destination/date validation. Saved subtask additions support root/nested review, editable literal titles, selected atomic Add, availability checks, encrypted exact Check/Retry/Stop and normal Undo/Redo with fresh original-slot identities. Current owning evidence records 106 client/history, 123 service and 25 production Store/history checks per platform. Two native iPhone journeys now accept editing/exclusion, keyboard Done, Add, explicit Undo/Redo, cold reopening and Cancel against genuine local services, preserving existing work. Mac sources build/sign; Mac review controls, wider iPad/accessibility/account/window cases and real generation quality/latency remain open. On-device assistance only was reaffirmed on 6 November; no cloud fallback. Installed phone34/Mac14 and normal default-Off gates are unchanged; further phone installation is deferred. This checkpoint remains Built/checks left. Pending-request recovery now has three current iPhone screen journeys: actual Check and Retry after a genuinely committed lost reply preserve one original receipt/two steps; Stop before sending preserves the exact task, records one closure and refuses later resend. Each owner passes 17 focused reviewed-step checks, including stopped-Undo cold preservation, and current signed builds. Unsent requests say Send saved request, uncertain results say Retry, and stopping Undo is labeled correctly. The pending-to-settled Form transition still emits an unlocated Invalid frame dimension warning; no clean-layout or broader speech/physical inference follows."
+              "detail": "Both apps independently own on-device task-step and filter-expression review. Filters use ordinary grammar, preview and fresh destination/date validation. Saved subtask additions support root/nested review, editable literal titles, selected atomic Add, availability checks, encrypted exact Check/Retry/Stop and normal Undo/Redo with fresh original-slot identities. Current owning evidence records 106 client/history, 123 service and 25 production Store/history checks per platform. Two native iPhone journeys now accept editing/exclusion, keyboard Done, Add, explicit Undo/Redo, cold reopening and Cancel against genuine local services, preserving existing work. Mac sources build/sign; Mac review controls, wider iPad/accessibility/account/window cases and real generation quality/latency remain open. On-device assistance only was reaffirmed on 6 November; no cloud fallback. Installed phone34/Mac14 and normal default-Off gates are unchanged; further phone installation is deferred. This checkpoint remains Built/checks left. Pending-request recovery now has three current iPhone screen journeys: actual Check and Retry after a genuinely committed lost reply preserve one original receipt/two steps; Stop before sending preserves the exact task, records one closure and refuses later resend. Each owner passes 17 focused reviewed-step checks, including stopped-Undo cold preservation, and current signed builds. Unsent requests say Send saved request, uncertain results say Retry, and stopping Undo is labeled correctly. The pending-to-settled Form transition still emits an unlocated Invalid frame dimension warning; no clean-layout or broader speech/physical inference follows. Filter review now includes a read-only sample of up to five matching tasks, exact count, project/completion captions, zero-match guidance, Clear and iPhone keyboard Done. Separate focus targets fix the observed Clear-to-description focus jump. Current owning builds/signatures pass; the iPhone functional query/sample/edit/Use/Cancel/cold journey preserves all saved tables. Compact Use keeps the title readable. A keyboard-focus frame warning still rejects strict runtime acceptance; actual generation, live task/access/date invalidation and broader Mac/iPad/speech/largest-text contexts remain open."
             }
           ],
           "sources": [
@@ -673,9 +673,16 @@
             "reviewed-step-batches/recovery-signed-build.json",
             "reviewed-step-batches/recovery-layout-warning.json",
             "reviewed-step-batches/recovery-cleanup.json",
-            "reviewed-step-batches/recovery-progress-validation.json"
+            "reviewed-step-batches/recovery-progress-validation.json",
+            "filter-match-preview/README.md",
+            "filter-match-preview/source.json",
+            "filter-match-preview/owning-build.json",
+            "filter-match-preview/iphone-functional.json",
+            "filter-match-preview/iphone-strict-run.json",
+            "filter-match-preview/layout-warning.json",
+            "filter-match-preview/storage-cleanup.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-reminders",
@@ -1350,7 +1357,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "08b79710cf010af1c9614a4de0c548ea94bf5e7290b59c6cca19cc0a772ca92b",
+    "P2_PLAN.md": "f26fda2c22983358b177836047ce2365e8e70b35b14cc388ff0aa4126ce12f3b",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1519,6 +1526,13 @@
     "filter-directory-responsiveness/README.md": "4af3303cbe1a86ce259d8fc88549e8b09cfa8ba9ca9579ba0252a01c15fe518c",
     "filter-directory-responsiveness/core-verification.json": "06b5126192cf171a9a0a38ac44eb246017a05e45c692c42039406d802ed0dcbb",
     "filter-directory-responsiveness/signed-build.json": "202f088e3fba9318a9dfab171f725fc377de889758c4d3356458909bb8fa5dd1",
+    "filter-match-preview/README.md": "de3261911983c3f9af2c6d11ac5b3c0f8333974f90c6aa8960be8e14062f50c6",
+    "filter-match-preview/iphone-functional.json": "dea65383241486021fceee00a93839395a986924deddbf739413d6cdd445d55a",
+    "filter-match-preview/iphone-strict-run.json": "fa29686866bd200cb591ff8a92ad197098e7955b029c3a6b3292989455aefb13",
+    "filter-match-preview/layout-warning.json": "b826f4dbe836310db8296119d0d8e38eb3bc33bee82edecd821740119d990399",
+    "filter-match-preview/owning-build.json": "59d0fd2b443fdfb07efcd771528e520c7ea246b2437922aa83d5428901871b3f",
+    "filter-match-preview/source.json": "244b6c6dbe227bbc3a9845da7f4c134bdc7bc0fea2b92d771dacc3747e03c31d",
+    "filter-match-preview/storage-cleanup.json": "0a5f2c28cbd455ea874b8780895a132284b5e34e9142749d5dd5bf47642701b7",
     "full-schema-sync/README.md": "a6c1b27f9d1d78550bb722849da08533ff0f37281404a45f09e3222c51c61ec9",
     "full-schema-sync/full-schema.json": "cca29b765fa47d52704398755ab2e9511fad6eb203e2e5fcbce5ccfb868a8174",
     "full-schema-sync/historical-provenance.json": "a2e9f7f02800a4233a9bcbf6a78638176e5593a144a4c0d8ed631a20332b5a45",

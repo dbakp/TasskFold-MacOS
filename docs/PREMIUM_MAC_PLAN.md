@@ -11063,3 +11063,8 @@ The owning Mac UI distinguishes Send saved request/Retry and Stop undo; the mode
 ### 6 November · Cold compact-note preparation
 
 Compact summaries avoid whole-note copies/normalization before clipping. Each owner passes 52 focused checks; the 12-call 708 KB Debug diagnostic drops from about 202 ms to 5.4–5.6 ms on this Mac. Current source builds/signs and the iPhone note-library search/paging/refresh/cold journey passes. Full accessibility conversion, wider native rendering and physical FPS remain open. The reviewed-step layout warning remains unresolved. No installed-app or gate changes. [Evidence](cold-note-excerpts/README.md).
+
+
+### 6 November · Inspect filter matches before Use
+
+Both filter assistants now show a read-only five-task sample alongside the exact matching count, with project/completion captions, a useful empty state, Clear and iPhone keyboard Done. Preview freshness is bound to task/access/date observations and checked again after asynchronous preparation; Use still changes only the draft. Current owning builds/signatures pass. The current iPhone functional journey passes query/count/sample/edit/Clear/Done/Use/Cancel and exact all-table cold preservation. A keyboard-focus frame warning remains and the strict wrapper rejects it; no clean-runtime, actual generation or broader native acceptance is claimed. The visible Use label no longer crowds the sheet title. Installed apps, archives, service schema and rollout gates are unchanged. [Scope and evidence](filter-match-preview/README.md).

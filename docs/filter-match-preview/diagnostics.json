@@ -1,0 +1,47 @@
+[
+  {
+    "run": "native",
+    "logSHA256": "9f563899ec7063f1f405148915e0bf7174325fd874aa39879a67afb3d70e6d48",
+    "diagnostics": [
+      "<unknown>:0: warning: -[TaskfoldUITests.WorkflowSourceSelectionUITests testReadOnlyFilterAssistanceMatchPreview] : Invalid frame dimension (negative or non-finite).",
+      "/tmp/taskfold-source-selection-ios-host/TaskfoldUITests/WorkflowSourceSelectionUITests.swift:963: error: -[TaskfoldUITests.WorkflowSourceSelectionUITests testReadOnlyFilterAssistanceMatchPreview] : XCTAssertTrue failed"
+    ]
+  },
+  {
+    "run": "native-current",
+    "logSHA256": "e2c4917c52008b3139214663bc7503e9fd63b74e95f23757e83ef0560479abea",
+    "diagnostics": [
+      "<unknown>:0: warning: -[TaskfoldUITests.WorkflowSourceSelectionUITests testReadOnlyFilterAssistanceMatchPreview] : Invalid frame dimension (negative or non-finite).",
+      "/tmp/taskfold-source-selection-ios-host/TaskfoldUITests/WorkflowSourceSelectionUITests.swift:957: error: -[TaskfoldUITests.WorkflowSourceSelectionUITests testReadOnlyFilterAssistanceMatchPreview] : Failed to synthesize event: Neither element nor any descendant has keyboard focus. Event dispatch snapshot: TextField, {{32.0, 471.0}, {338.0, 42.3}}, identifier: 'filterAssistanceExpression', placeholderValue: 'today AND p1', value: today AND p1"
+    ]
+  },
+  {
+    "run": "native-focused",
+    "logSHA256": "a0617bab3cbfe832ac693a06b93d4be64fdca1d3f0d0eb8454012d3636acaefb",
+    "diagnostics": [
+      "<unknown>:0: warning: -[TaskfoldUITests.WorkflowSourceSelectionUITests testReadOnlyFilterAssistanceMatchPreview] : Invalid frame dimension (negative or non-finite).",
+      "/tmp/taskfold-source-selection-ios-host/TaskfoldUITests/WorkflowSourceSelectionUITests.swift:983: error: -[TaskfoldUITests.WorkflowSourceSelectionUITests testReadOnlyFilterAssistanceMatchPreview] : XCTAssertEqual failed: (\"Optional({"
+    ]
+  },
+  {
+    "run": "native-settled",
+    "logSHA256": "26a9668a5e56f17570080edf15d1b3bb3060aded224b540bd96c775e2b9114e9",
+    "diagnostics": [
+      "<unknown>:0: warning: -[TaskfoldUITests.WorkflowSourceSelectionUITests testReadOnlyFilterAssistanceMatchPreview] : Invalid frame dimension (negative or non-finite)."
+    ]
+  },
+  {
+    "run": "native-final",
+    "logSHA256": "143a8db89ce1c9cc79af37ffffecb23bc72d645febb49b253e4a8454c23a81cc",
+    "diagnostics": [
+      "<unknown>:0: warning: -[TaskfoldUITests.WorkflowSourceSelectionUITests testReadOnlyFilterAssistanceMatchPreview] : Invalid frame dimension (negative or non-finite)."
+    ]
+  },
+  {
+    "run": "native-compact",
+    "logSHA256": "a0f027a99d1c23e530385e326fc67d131793e7319ac91928a76e7558a9ef5afe",
+    "diagnostics": [
+      "<unknown>:0: warning: -[TaskfoldUITests.WorkflowSourceSelectionUITests testReadOnlyFilterAssistanceMatchPreview] : Invalid frame dimension (negative or non-finite)."
+    ]
+  }
+]
