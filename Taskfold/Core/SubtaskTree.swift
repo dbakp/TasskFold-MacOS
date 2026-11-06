@@ -151,8 +151,30 @@ enum SubtaskTree {
         return result
     }
     static func progress(_ value: JSON) -> (completed: Int, total: Int) {
-        let items = outline(value).filter { TaskKind.mayComplete($0.record) }
-        return (items.filter { $0.record.completed }.count, items.count)
+        let result = progressReading(value)
+        return (result.completed, result.total)
+    }
+    struct ProgressReading: Equatable {
+        var completed = 0, total = 0, visited = 0
+        var truncated = false
+    }
+    /// Match outline's existing depth/type semantics without allocating every item.
+    static func progressReading(_ value: JSON) -> ProgressReading {
+        var result = ProgressReading()
+        func visit(_ rows: [JSON], depth: Int) {
+            guard depth <= 32 else { if !rows.isEmpty { result.truncated = true }; return }
+            for value in rows {
+                let row = Record(value.object)
+                result.visited += 1
+                if TaskKind.mayComplete(row) {
+                    result.total += 1
+                    if row.completed { result.completed += 1 }
+                }
+                visit(row["subtasks"].list, depth: depth + 1)
+            }
+        }
+        visit(value.list, depth: 0)
+        return result
     }
     static func changing(_ value: JSON, id: String, fields: [String: JSON]) -> JSON {
         guard case .array(let values) = value else { return value }
@@ -1228,5 +1250,51 @@ struct ChildTaskStructureRead: Sendable {
         }
         let saved = try SubtaskTree.detailChanges(original: original, edited: edited, current: Record(values[index].object))
         return replacing(index, with: .object(saved.fields))
+    }
+}
+
+/// Read-only, workspace-bound progress reuse. Retaining the immutable array keeps
+/// its backing allocation alive; copy-on-write edits must use another allocation.
+/// No pointer escapes the comparison and no count grants editing permission.
+@MainActor final class SubtaskProgressReadCache {
+    struct Context: Equatable {
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let access: UUID
+    }
+    private struct Entry {
+        let rows: [JSON]
+        let reading: SubtaskTree.ProgressReading
+        var used: UInt64
+    }
+    private let maximumEntries: Int, maximumNodes: Int
+    private var context: Context?
+    private var entries: [String: Entry] = [:]
+    private var clock: UInt64 = 0
+    private(set) var computationCount = 0
+    private(set) var retainedNodes = 0
+    var count: Int { entries.count }
+    init(maximumEntries: Int = 128, maximumNodes: Int = 32_768) {
+        self.maximumEntries = max(0, maximumEntries); self.maximumNodes = max(0, maximumNodes)
+    }
+    func clear() { context = nil; entries.removeAll(); retainedNodes = 0; clock = 0 }
+    func read(_ value: JSON, id: String, context next: Context) -> (completed: Int, total: Int) {
+        if context != next { clear(); context = next }
+        clock &+= 1
+        if case .array(let rows) = value, var entry = entries[id], rows.count == entry.rows.count,
+           rows.withUnsafeBufferPointer({ a in entry.rows.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }) {
+            entry.used = clock; entries[id] = entry
+            return (entry.reading.completed, entry.reading.total)
+        }
+        if let old = entries.removeValue(forKey: id) { retainedNodes -= old.reading.visited }
+        let result = SubtaskTree.progressReading(value); computationCount += 1
+        if case .array(let rows) = value, maximumEntries > 0, !result.truncated, result.visited <= maximumNodes {
+            while entries.count >= maximumEntries || retainedNodes + result.visited > maximumNodes {
+                guard let key = entries.min(by: { $0.value.used < $1.value.used })?.key else { break }
+                if let old = entries.removeValue(forKey: key) { retainedNodes -= old.reading.visited }
+            }
+            entries[id] = Entry(rows: rows, reading: result, used: clock); retainedNodes += result.visited
+        }
+        return (result.completed, result.total)
     }
 }

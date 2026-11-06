@@ -193,7 +193,7 @@ struct TaskRowView: View {
                 .background(Color.secondary.opacity(0.12), in: .capsule)
         }
         if !task["subtasks"].list.isEmpty {
-                let progress = SubtaskTree.progress(task["subtasks"])
+                let progress = store.subtaskProgress(task)
             if progress.total > 0 {
 Label("\(progress.completed)/\(progress.total)", systemImage: "checklist")
                 .accessibilityLabel("\(progress.completed) of \(progress.total) subtasks completed")

@@ -119,7 +119,7 @@ struct PlanDayView: View {
                 }
             }
             if !task["subtasks"].list.isEmpty {
-                let progress = SubtaskTree.progress(task["subtasks"])
+                let progress = store.subtaskProgress(task)
                 Label("\(progress.completed) of \(progress.total) subtasks done", systemImage: "checklist").font(.caption).foregroundStyle(.secondary)
             }
         }

@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-06",
+  "platformOwner": "mac",
+  "testCommand": "bash Scripts/test_core.sh --filter 'SubtaskProgressReadTests|SubtaskTreeTests|Heading'",
+  "selectedTestsPassed": 167,
+  "failures": 0,
+  "newProgressTests": 8,
+  "logSHA256": "1876450ecf50d00acdc518495be61f7363339deaaf7215d78a05b9016d0411c9",
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "cde6020430231e87391f5a963f6302ac0d8933e84722ed54e8510c63ee0e331f",
+    "Taskfold/Core/Store.swift": "4330fb5006dcb0711880cbebc8b088259410c12a1b0980d75554a8f550aa9a1c",
+    "Taskfold/Views/PlanDayView.swift": "b7d29c0cb421b6e5fe1368d9f60316e983324347fd4623fc4b87ec9b398223ab",
+    "TaskfoldTests/SubtaskProgressReadTests.swift": "70d4aa9314009931ea3c867512b633297dfa25ff9e270fc93b9fcbf5f862722d",
+    "Taskfold/Views/TaskRowView.swift": "007b761a215e7511316468ac974328c511d681c308024f71bfa857c43460e9f2"
+  },
+  "diagnostic": {
+    "configuration": "Debug on this Mac; not physical rendering/FPS",
+    "nodes": 4096,
+    "reads": 100,
+    "oldOutlineMilliseconds": 333.2810401916504,
+    "retainedMillisecondsIncludingFirstCount": 1.9758939743041992,
+    "countComputations": 1
+  },
+  "bounds": {
+    "entries": 128,
+    "visitedNodes": 32768,
+    "truncatedTreesRetained": false,
+    "oversizedTreesRetained": false,
+    "diskPersistence": false
+  },
+  "nativeRenderingAccepted": false,
+  "storeBoundaryHooksRuntimeAccepted": false,
+  "installedAppsChanged": false,
+  "normalRolloutGatesChanged": false,
+  "skippedTests": 0
+}
