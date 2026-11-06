@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 
 /// One renderer at a time, with only the newest pending projection retained.
 /// Cancellation is advisory: a renderer that finishes after invalidation must
@@ -42,6 +43,56 @@ import Foundation
             let result = await worker.result
             active = nil
             if latest == request.id { request.complete(result) }
+        }
+        isIdle = true
+    }
+}
+
+/// Invalidated on the interface executor; checked under the cross-process file
+/// lock before writing. A late producer cannot overwrite a newer privacy barrier.
+final class SharedPublicationTicket: @unchecked Sendable {
+    private let lock = NSLock()
+    private var valid = true
+    var isCurrent: Bool { lock.lock(); defer { lock.unlock() }; return valid }
+    func invalidate() { lock.lock(); valid = false; lock.unlock() }
+}
+
+/// Initial storage can wait on an OS permission decision. Keep one active
+/// operation and one newest replacement without occupying the interface thread.
+@Observable @MainActor final class StartupPublicationQueue<Value: Sendable> {
+    private struct Request {
+        let ticket: SharedPublicationTicket
+        let write: @Sendable (SharedPublicationTicket) async throws -> Value
+        let complete: @MainActor (Result<Value, Error>) -> Void
+    }
+    private var pending: Request?
+    private var latest: SharedPublicationTicket?
+    private var active: Task<Value, Error>?
+    private(set) var isIdle = true
+    func enqueue(write: @escaping @Sendable (SharedPublicationTicket) async throws -> Value,
+                 complete: @escaping @MainActor (Result<Value, Error>) -> Void) {
+        latest?.invalidate(); active?.cancel()
+        let request = Request(ticket: SharedPublicationTicket(), write: write, complete: complete)
+        latest = request.ticket; pending = request
+        guard isIdle else { return }
+        isIdle = false
+        Task { await drain() }
+    }
+    func invalidate() { latest?.invalidate(); latest = nil; pending = nil; active?.cancel() }
+    private func drain() async {
+        while let request = pending {
+            pending = nil
+            let write = request.write, ticket = request.ticket
+            let worker = Task.detached(priority: .utility) {
+                try Task.checkCancellation()
+                let value = try await write(ticket)
+                try Task.checkCancellation()
+                return value
+            }
+            active = worker
+            let result = await worker.result
+            active = nil
+            if request.ticket.isCurrent { request.complete(result) }
         }
         isIdle = true
     }
@@ -186,8 +237,8 @@ public final class WidgetActionDisk: @unchecked Sendable {
     private func write(_ queue: Queue) throws {
         try TaskfoldJSONEncoder().encode(queue).write(to: directory.appendingPathComponent("widget-actions.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
     }
-    public func publish(_ data: Data) throws {
-        try locked { try data.write(to: directory.appendingPathComponent("widget.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
+    public func publish(_ data: Data, admitting: @Sendable () -> Bool = { true }) throws {
+        try locked { guard admitting() else { throw CancellationError() }; try data.write(to: directory.appendingPathComponent("widget.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
     }
     public func removeAccount(_ account: String) throws {
         try locked {
@@ -204,8 +255,9 @@ public final class WidgetActionDisk: @unchecked Sendable {
             }
         }
     }
-    public func clearProjection() throws {
+    public func clearProjection(admitting: @Sendable () -> Bool = { true }) throws {
         try locked {
+            guard admitting() else { throw CancellationError() }
             let url = directory.appendingPathComponent("widget.json")
             if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
         }

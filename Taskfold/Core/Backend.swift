@@ -193,7 +193,8 @@ private final class LocationHandoffRedirectRefusal: NSObject, URLSessionTaskDele
 
 @MainActor
 final class Backend: NSObject {
-    var session: Session?
+    var session: Session? { didSet { if oldValue?.user.id != session?.user.id { onSessionContextChange?() } } }
+    var onSessionContextChange: (() -> Void)?
     #if DEBUG
     private var discardedTodoistResponse = false
     private var discardedWebhookCreateResponse = false
@@ -203,7 +204,7 @@ final class Backend: NSObject {
     #endif
     private let http: URLSession
     private let saveSession: (Session?) async throws -> Void
-    private var sessionGeneration = UUID()
+    private var sessionGeneration = UUID() { didSet { onSessionContextChange?() } }
     private var sessionTransition = false
     private var authenticationAttempt: UUID?
     private var reauthenticationAttempt: (context: UUID, attempt: UUID)?

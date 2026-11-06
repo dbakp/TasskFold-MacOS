@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-06",
+  "reason": "Mac31 installed and normal startup/sync verified; exact Mac30 rollback retained",
+  "removed": "Taskfold-1.2.0-29-mac-development.zip",
+  "removedBytes": 20164057,
+  "retainedVerifiedBuilds": [
+    31,
+    30
+  ],
+  "privateBackupsPreserved": true,
+  "numberedReceiptsPreserved": true,
+  "freeBytesBefore": 47102906368,
+  "freeBytesAfter": 47102881792
+}

@@ -1,0 +1,86 @@
+{
+  "date": "2026-11-06",
+  "freeBeforeBytes": 47034355712,
+  "boundedCaches": {
+    "apply": true,
+    "freeBeforeBytes": 47034322944,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 692240384,
+        "projectedAllocatedBytes": 692240384
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 627884032,
+        "projectedAllocatedBytes": 627884032
+      }
+    ],
+    "freeAfterBytes": 47034437632,
+    "actualFreeChangeBytes": 114688
+  },
+  "retiredCompletedRawOutputs": [
+    {
+      "name": "taskfold-startup-ios-build.log",
+      "bytes": 110582
+    },
+    {
+      "name": "taskfold-startup-ios-build-v2.log",
+      "bytes": 131986
+    },
+    {
+      "name": "taskfold-startup-ios-build-v3.log",
+      "bytes": 132976
+    },
+    {
+      "name": "taskfold-startup-phone-native.log",
+      "bytes": 9642
+    },
+    {
+      "name": "taskfold-startup-mac-build.log",
+      "bytes": 97381
+    },
+    {
+      "name": "taskfold-startup-final-mac-core.log",
+      "bytes": 37026
+    },
+    {
+      "name": "taskfold-startup-final-ios-core.log",
+      "bytes": 37329
+    },
+    {
+      "name": "taskfold-startup-phone-native.xcresult",
+      "allocatedBytes": 634880
+    },
+    {
+      "name": "taskfold-startup-phone-attachments",
+      "allocatedBytes": 151552
+    }
+  ],
+  "retiredOldPackage": {
+    "date": "2026-11-06",
+    "reason": "Mac31 installed and normal startup/sync verified; exact Mac30 rollback retained",
+    "removed": "Taskfold-1.2.0-29-mac-development.zip",
+    "removedBytes": 20164057,
+    "retainedVerifiedBuilds": [
+      31,
+      30
+    ],
+    "privateBackupsPreserved": true,
+    "numberedReceiptsPreserved": true,
+    "freeBytesBefore": 47102906368,
+    "freeBytesAfter": 47102881792
+  },
+  "coreCachesAllocatedBytes": {
+    "ios": 686747648,
+    "mac": 628260864
+  },
+  "normalMac31ProcessKept": true,
+  "privateBackupsAndRealDataPreserved": true,
+  "devicesErased": false,
+  "dockerChanged": false,
+  "freeAfterBytes": 47035498496
+}

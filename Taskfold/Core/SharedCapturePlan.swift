@@ -137,3 +137,8 @@ enum SharedCapturePlan {
         } onCancel: { worker.cancel() }
     }
 }
+
+struct StartupPublicationResult: Sendable {
+    let workspacePublished: Bool
+    let widgetPublished: Bool
+}

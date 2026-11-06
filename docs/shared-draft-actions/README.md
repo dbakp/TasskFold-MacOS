@@ -11,4 +11,6 @@ Each owner passes 32 focused sharing Core checks, including five new action case
 This is local mailbox work. Startup shared-storage publication and durable task-cache writes remain synchronous; wider Mac interaction, account/window/speech, external-provider and physical smoothness acceptance remain open. No schema, hosted service, normal rollout gate, system setting or installed app changes. Physical iPhone installation remains deferred.
 
 
-Delivery update, 6 November: the accumulated source is now prepared in [Mac 1.2.0 (31)](../mac31-daily-update/README.md). Installation remains pending the new private safety copy; the installed app stays on Mac30. Phone installation remains deferred.
+Delivery update, 6 November: the accumulated source is installed in [Mac 1.2.0 (31)](../mac31-daily-update/README.md). The normal main window, sync and preserved tasks/pending queues are verified after a private safety copy and exact archive/signature checks. Wider feature acceptance remains scoped; phone installation remains deferred.
+
+Follow-up source: initial widget/shared-draft storage publication now runs in the background with under-lock stale-write admission; immediate privacy/receipt barriers and private task-cache writes keep their existing semantics. See [startup evidence and limits](../startup-publication/README.md). This follow-up is not included in installed Mac31.
