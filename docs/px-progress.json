@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "P2 · Responsive shared-draft badges",
-  "latest": "Shared-draft badge counts now resolve/read/decode the mailbox away from the interface thread. One active read and one newest pending request prevent a backlog; Checks of the account, workspace, session, access, server and receipts reject outdated results. Large mailbox decoding releases the file lock first. Each owner passes 22 focused sharing checks (8 new), including a real 64-draft mailbox larger than 5 MB with exact unchanged bytes. Current signed phone/tablet Store journeys remain interactive during a held read, reject a changed-receipt reply and preserve all active cache/mailbox bytes. Independent Mac build/signing passes; Mac interaction, speech and physical FPS are not claimed. Shared-draft review, synchronous publication/startup permission waits and wider responsiveness remain open. Mac29 is installed/running/synced, but its frozen package and deferred phone41 do not contain this source change. Normal gates and hosted services are unchanged.",
+  "focus": "P2 · Responsive shared-draft review",
+  "latest": "Shared-draft reviews now load and clean imported drafts away from the interface thread, with loading, refresh and retry. Current-source phone/tablet journeys preserve exact multiline notes and unsaved editor text across unrelated receipt updates, then cancel and recover unreadable input without changing saved cache or mailbox bytes. Each owner passes 29 sharing Core tests, including a real 64-draft mailbox above 5 MB; the independent Mac build/signature passes. Native Mac interaction and physical FPS remain separate. Startup publication and save/discard transactions are still synchronous. Mac29 remains installed; this source is not packaged and phone installation stays deferred.",
   "next": [
     "Assemble the next verified ordinary-workflow Mac feature pack and install directly under standing restart authorization. Mac29 is currently running/synced; phone41 installation remains deferred.",
-    "Prioritize remaining ordinary shared-draft review loading and startup disk-publication responsiveness, preserving exact acknowledgement and workspace-privacy boundaries. Badge counts now read in the background.",
+    "Prioritize startup disk-publication responsiveness and remaining import/save/discard pauses while preserving exact durable acknowledgements and workspace privacy. Shared-draft badges and review loading now read in the background.",
     "Continue ordinary notes/headings, workflow and browsing performance, actual drag/rendering and larger workloads. Keep platform, shared/cloud/account/window, speech and physical FPS acceptance distinct.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
     "Finish the full older-task/history migration, wider identity and ownership cases, and shared file/recording custody. Global title search is merged; ordinary advanced rollout safeguards stay in place.",
@@ -496,7 +496,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Shared-draft badge counts now use one background read plus one latest pending refresh, release the file lock before large JSON decoding and reject outdated workspace/session/access/origin/receipt results. Each owner passes 22 focused sharing checks; current phone/tablet held-read and receipt-race journeys preserve exact active cache/mailbox bytes. Independent Mac build/signing passes. Full review/cleanup and startup publication are still synchronous and remain to improve. Scoped reuse/background preparation covers filters, assignee names, workflows, template/project/parent catalogs, task/note searches, Insights, navigation badges, checklist counts and note previews. Seven-task day review counts only successful saves; dated-list drops use one commit and Undo. Exact nested-byte, Unicode, source, workspace and access guards remain. Full accessible task-note text and its link detection now prepare away from the interface thread, with cancellation, current-source checks, bounded retention and release on disappearance/empty text. Each owner passes 33 focused note checks including eight new cases. Current signed iPhone/iPad production-row journeys pass full text, size switching, live refresh, access loss/return and exact all-table cold preservation. Mac interaction, real drag/rendering, larger workloads, shared/cloud/account/window contexts, speech and physical FPS remain unfinished. The earlier full-note-reading source is packaged as Mac29/phone41. Mac29 is installed/running/synced; phone34 is last verified installed and phone41 installation remains deferred. The new badge-read source is not yet packaged; earlier28/40 candidates are superseded.",
+              "detail": "Shared-draft review loading and imported-draft cleanup now run in the background, with loading/retry and unsaved-editor preservation during routine receipt refreshes. Each owner passes 29 sharing Core checks; phone/tablet current-source journeys preserve exact saved bytes and multiline text. Mac builds/signs; native Mac interaction is separate. Startup publication and save/discard remain synchronous. Shared-draft badge counts now use one background read plus one latest pending refresh, release the file lock before large JSON decoding and reject outdated workspace/session/access/origin/receipt results. Each owner passes 22 focused sharing checks; current phone/tablet held-read and receipt-race journeys preserve exact active cache/mailbox bytes. Independent Mac build/signing passes. Full review/cleanup and startup publication are still synchronous and remain to improve. Scoped reuse/background preparation covers filters, assignee names, workflows, template/project/parent catalogs, task/note searches, Insights, navigation badges, checklist counts and note previews. Seven-task day review counts only successful saves; dated-list drops use one commit and Undo. Exact nested-byte, Unicode, source, workspace and access guards remain. Full accessible task-note text and its link detection now prepare away from the interface thread, with cancellation, current-source checks, bounded retention and release on disappearance/empty text. Each owner passes 33 focused note checks including eight new cases. Current signed iPhone/iPad production-row journeys pass full text, size switching, live refresh, access loss/return and exact all-table cold preservation. Mac interaction, real drag/rendering, larger workloads, shared/cloud/account/window contexts, speech and physical FPS remain unfinished. The earlier full-note-reading source is packaged as Mac29/phone41. Mac29 is installed/running/synced; phone34 is last verified installed and phone41 installation remains deferred. The new badge-read source is not yet packaged; earlier28/40 candidates are superseded.",
               "steps": [
                 {
                   "state": "done",
@@ -545,6 +545,10 @@
                 {
                   "state": "done",
                   "title": "Read shared-draft badges off the interface thread; verify phone/tablet receipt races and exact saved bytes (Mac build separate)"
+                },
+                {
+                  "state": "done",
+                  "title": "Load shared-draft reviews in the background; verify retry, exact notes and unsaved-editor preservation on phone/tablet (Mac build separate)"
                 }
               ]
             }
@@ -1550,13 +1554,20 @@
     "shared-draft-background-count/mac-build.json",
     "shared-draft-background-count/iphone-native.json",
     "shared-draft-background-count/ipad-native.json",
-    "shared-draft-background-count/storage-cleanup.json"
+    "shared-draft-background-count/storage-cleanup.json",
+    "shared-draft-review-loading/README.md",
+    "shared-draft-review-loading/verification.json",
+    "shared-draft-review-loading/ios-build.json",
+    "shared-draft-review-loading/mac-build.json",
+    "shared-draft-review-loading/iphone-native.json",
+    "shared-draft-review-loading/ipad-native.json",
+    "shared-draft-review-loading/storage-cleanup.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "63221d7e840e7d63d955bcd25bd7338f5767681040b5028bd37e3d215104d8f4",
+    "P2_PLAN.md": "b9c8f38cb8692538c09fe4f05baf9811230fd6ed4ec1e2f1fffaaca9a453b567",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "56eb14bc98bf37b5ff7e35d3323eb73191f2c8a079dd74a14f1f780b4582fcdc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1812,7 +1823,7 @@
     "genuine-structure-recovery/native.json": "2177dba043344491262626ed929b357033ff42cd1ca29f97eabadd968a8f5791",
     "genuine-structure-recovery/verification.json": "58a9b3f2afea3deab2c5963148e5355657352f9f09c35f82576463955f35a187",
     "github-delivery/README.md": "878c3a31c4aca872d3159d9137842268dcf403c7403df631988d7090a6a67b62",
-    "github-delivery/verification.json": "76fa0e52e5f5b2e462ba08160f9b963bd5ac17b6a999305f0810a8bfe0f61610",
+    "github-delivery/verification.json": "6e681245bc7bcab2f8c937afe77dd5e0bfe236f4a78341062fdeaf284fb43492",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
     "indexed-child-source/README.md": "17dbc3ab03caca89cba0cd58913841825bdac4adbd8be66e50859276e53ec592",
@@ -2053,6 +2064,13 @@
     "shared-draft-background-count/mac-build.json": "5b3d720f02de07d34dd92a64ece953cdc345d9bd6924846d6ae538f518b681a3",
     "shared-draft-background-count/storage-cleanup.json": "a3dc9442656abad106a96f903f104a28ea7b31d34b9b480780c89f634eca7666",
     "shared-draft-background-count/verification.json": "1d294ea9a1aac4532322152f5005049ee15ed91fd0cb36467125c12873ac4007",
+    "shared-draft-review-loading/README.md": "8c13472e38aaeb90299a18dac28821f5dcf9c3c2ff31f1a81f499b026f1cee7d",
+    "shared-draft-review-loading/ios-build.json": "cfafa3ac6d99c8c15fa379e755618b73b26c0cea1dd496950fe5b457d6b0157c",
+    "shared-draft-review-loading/ipad-native.json": "8731bdf7e26498e5f605e92d02f6f87e7d2e1564cda7205977bb2a5c6f43cabc",
+    "shared-draft-review-loading/iphone-native.json": "08e9c472ca9dd423d048328b5966d9136a3dc43fee743cc9df984683fc64cf92",
+    "shared-draft-review-loading/mac-build.json": "9089bfe52f63ec010cd05c3edb186670ef71f5a72bf181a5c3b7fc04ff673813",
+    "shared-draft-review-loading/storage-cleanup.json": "8f6ec83e5f2c3e0482d72ac6318a231a71bc6b858a23dfd9a88ddb2aeb06bfe2",
+    "shared-draft-review-loading/verification.json": "348ddeb20e1b68f8f6ec4daffbdf35cf7390b331c0cdbb73571b79cd7253e39a",
     "step-recovery-layout/README.md": "6cc310b69d8d959524fbb88593dca3921d186c4144c2f5baebbe3813c1c00c80",
     "step-recovery-layout/before.json": "6b73f6144310c31550badd122c37b61bfdbf7d30a98a4629411737f3e96ce3da",
     "step-recovery-layout/build.json": "a0cd1b637e6cd65288400be4311e980147f51e9913c48922484b4b5c46e8712c",

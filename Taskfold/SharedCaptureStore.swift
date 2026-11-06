@@ -24,7 +24,7 @@ extension Store {
             // displays the actual storage error, and the extension rechecks publication on Save.
         }
     }
-    private var sharedCaptureCountContext: SharedCaptureCountReader.Context? {
+    var sharedCaptureReadContext: SharedCaptureCountReader.Context? {
         guard sharedCaptureAvailable else { return nil }
         return .init(workspace: .init(account: userID, generation: workspaceGeneration),
                      session: backend.reminderSessionIncarnation, access: workspaceReadRevision,
@@ -46,7 +46,7 @@ extension Store {
         return { try SharedCaptureDisk.system() }
     }
     func refreshSharedCaptureDraftCount() {
-        guard let context = sharedCaptureCountContext else {
+        guard let context = sharedCaptureReadContext else {
             sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0; return
         }
         let source = sharedCaptureCountSource()
@@ -59,19 +59,37 @@ extension Store {
             #endif
             return try source().unhandledDraftCount(account: context.workspace.account, receipts: context.receipts)
         }) { [weak self] result in
-            guard let self, self.sharedCaptureCountContext == context else { return }
+            guard let self, self.sharedCaptureReadContext == context else { return }
             self.sharedCaptureDraftCount = (try? result.get()) ?? 0
         }
     }
-    func sharedCaptureDrafts(_ binding: WorkspaceBinding?) throws -> [SharedCaptureDraft] {
-        guard binding?.matches(account: userID, generation: workspaceGeneration) == true, sharedCaptureAvailable else { throw SharedCaptureFailure("Reopen shared drafts in your current workspace.") }
-        sharedCaptureCountReader.invalidate() // An older badge read cannot replace this exact review count.
-        let disk = try sharedCaptureDisk()
-        let drafts = try disk.drafts(account: userID)
-        for draft in drafts where snapshot.sharedCaptureReceipts?[draft.taskID] == draft.taskID { try? disk.acknowledge(draft, account: userID) }
-        let visible = drafts.filter { snapshot.sharedCaptureReceipts?[$0.taskID] != $0.taskID }
-        sharedCaptureDraftCount = visible.count
-        return visible
+    func loadSharedCaptureDrafts(_ binding: WorkspaceBinding?, reader: SharedCaptureReviewReader,
+                                complete: @escaping @MainActor (Result<[SharedCaptureDraft], Error>) -> Void) {
+        guard binding?.matches(account: userID, generation: workspaceGeneration) == true,
+              let context = sharedCaptureReadContext else {
+            reader.invalidate()
+            complete(.failure(SharedCaptureFailure("Reopen shared drafts in your current workspace.")))
+            return
+        }
+        sharedCaptureCountReader.invalidate()
+        let source = sharedCaptureCountSource()
+        #if DEBUG
+        let gate = SharedCaptureCountNativeFixture.reviewEnabled ? SharedCaptureCountNativeFixture.reviewGate : nil
+        #endif
+        reader.refresh(read: {
+            #if DEBUG
+            await gate?.hold()
+            #endif
+            return try source().reviewDrafts(account: context.workspace.account, receipts: context.receipts)
+        }) { [weak self] result in
+            guard let self else { return }
+            guard self.sharedCaptureReadContext == context else {
+                complete(.failure(SharedCaptureFailure("Your workspace or shared drafts changed. Please try again.")))
+                return
+            }
+            if case .success(let drafts) = result { self.sharedCaptureCountReader.invalidate(); self.sharedCaptureDraftCount = drafts.count }
+            complete(result)
+        }
     }
     func discardSharedCapture(_ draft: SharedCaptureDraft, binding: WorkspaceBinding?) throws {
         guard binding?.matches(account: userID, generation: workspaceGeneration) == true, sharedCaptureAvailable, draft.workspace.account == userID else { throw SharedCaptureFailure("Reopen this draft in its original workspace.") }
@@ -124,9 +142,11 @@ extension Store {
 @MainActor enum SharedCaptureCountNativeFixture {
     static var enabled: Bool {
         ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") &&
-        ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && ProcessInfo.processInfo.arguments.contains("--shared-capture-count-native")
+        ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && (ProcessInfo.processInfo.arguments.contains("--shared-capture-count-native") || reviewEnabled)
     }
     static var directory: URL { URL.applicationSupportDirectory.appendingPathComponent("Shared capture count native", isDirectory: true) }
+    static var reviewEnabled: Bool { ProcessInfo.processInfo.arguments.contains("--shared-capture-review-native") }
+    static var reviewGate: SharedCaptureCountNativeGate?
     static var gate: SharedCaptureCountNativeGate?
     static var original: Snapshot?
     static var originalMailbox: Data?
@@ -146,6 +166,32 @@ actor SharedCaptureCountNativeGate {
     func resume() { released = true; release?.resume(); release = nil }
 }
 extension Store {
+    func refreshSharedReviewReceiptNative(restore: Bool = false) {
+        guard SharedCaptureCountNativeFixture.enabled, SharedCaptureCountNativeFixture.reviewEnabled,
+              let original = SharedCaptureCountNativeFixture.original else { return }
+        if restore { snapshot.sharedCaptureReceipts = original.sharedCaptureReceipts }
+        else {
+            if snapshot.sharedCaptureReceipts == nil { snapshot.sharedCaptureReceipts = [:] }
+            snapshot.sharedCaptureReceipts?["da690000-0000-4000-8000-000000000099"] = "da690000-0000-4000-8000-000000000099"
+        }
+    }
+    func prepareSharedCaptureReviewNative() {
+        guard SharedCaptureCountNativeFixture.enabled, SharedCaptureCountNativeFixture.reviewEnabled, sharedCaptureAvailable else { return }
+        do {
+            let folder = SharedCaptureCountNativeFixture.directory
+            if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
+            let disk = try sharedCaptureDisk()
+            let workspace = SharedCaptureWorkspace(account: userID, generation: workspaceGeneration, label: "Review test workspace")
+            try disk.publish(workspace)
+            for n in 1...2 {
+                let id = UUID(uuidString: String(format: "da690000-0000-4000-8000-%012d", n))!
+                try disk.save(SharedCaptureDraft(id: id, workspace: workspace, content: SharedCaptureContent(title: "Shared thought \(n)", notes: "Keep every line.\nCafé notes 🪴\nLast instruction.")))
+            }
+            SharedCaptureCountNativeFixture.original = snapshot
+            SharedCaptureCountNativeFixture.reviewGate = SharedCaptureCountNativeGate()
+            sharedCaptureCountNativeStatus = "Review ready"
+        } catch { sharedCaptureCountNativeStatus = error.localizedDescription }
+    }
     func beginSharedCaptureCountNative() async {
         guard SharedCaptureCountNativeFixture.enabled, sharedCaptureAvailable else { return }
         do {

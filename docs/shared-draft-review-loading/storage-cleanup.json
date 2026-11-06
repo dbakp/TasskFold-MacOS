@@ -1,0 +1,202 @@
+{
+  "date": "2026-11-06",
+  "freeBeforeBytes": 60004847616,
+  "finishRun": {
+    "apply": true,
+    "freeBeforeBytes": 59996078080,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 685514752,
+        "projectedAllocatedBytes": 685514752
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 625545216,
+        "projectedAllocatedBytes": 625545216
+      }
+    ],
+    "freeAfterBytes": 59996065792,
+    "actualFreeChangeBytes": -12288
+  },
+  "retired": [
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-v5-native.xcresult",
+      "allocatedBytes": 806912
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-v4-native.xcresult",
+      "allocatedBytes": 13479936
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-native.xcresult",
+      "allocatedBytes": 692224
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-v3-native.xcresult",
+      "allocatedBytes": 667648
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-v4-native.xcresult",
+      "allocatedBytes": 729088
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-v2-native.xcresult",
+      "allocatedBytes": 5623808
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-native.xcresult",
+      "allocatedBytes": 4206592
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build.log",
+      "allocatedBytes": 200704
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-native.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-v4-native.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-native.log",
+      "allocatedBytes": 16384
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build-v4.log",
+      "allocatedBytes": 135168
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build-v5-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build-v5.log",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-v4-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-core.log",
+      "allocatedBytes": 53248
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build-v2.log",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build-v3.log",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-core-final.log",
+      "allocatedBytes": 36864
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-v4-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-v3-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-v3-native.log",
+      "allocatedBytes": 12288
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-v4-native.log",
+      "allocatedBytes": 20480
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-mac-build-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-mac-build-v2.log",
+      "allocatedBytes": 40960
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-mac-build.log",
+      "allocatedBytes": 135168
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-mac-build-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-mac-core-final.log",
+      "allocatedBytes": 57344
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build-v4-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ios-build-v3-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-v2-native.log",
+      "allocatedBytes": 12288
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-v5-native.log",
+      "allocatedBytes": 20480
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-v5-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-v2-driver.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-iphone-final-attachments",
+      "allocatedBytes": 180224
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-v4-failure-attachments",
+      "allocatedBytes": 13049856
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-attachments",
+      "allocatedBytes": 180224
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-attachments",
+      "allocatedBytes": 188416
+    },
+    {
+      "path": "/tmp/taskfold-shared-review-ipad-final-attachments",
+      "allocatedBytes": 188416
+    }
+  ],
+  "retiredAllocatedBytes": 40960000,
+  "freeAfterBytes": 60045590528,
+  "preserved": "Current concise source-bound Core/native/build evidence and screenshots; compressed harness adjustment evidence; reusable test products; installed app, frozen packages, rollback and all real data"
+}

@@ -612,6 +612,10 @@ import CryptoKit
         NavigationStack {
             Form {
                 Text(status).accessibilityIdentifier("workspaceReadStatus")
+                if SharedCaptureCountNativeFixture.enabled && SharedCaptureCountNativeFixture.reviewEnabled {
+                    Button("Prepare shared review") { store.prepareSharedCaptureReviewNative() }.accessibilityIdentifier("prepareSharedReview")
+                    NavigationLink("Open shared review") { SharedDraftsView() }.accessibilityIdentifier("openSharedReview")
+                }
                 if SharedCaptureCountNativeFixture.enabled {
                     Text(store.sharedCaptureCountNativeStatus).accessibilityIdentifier("sharedCountNativeStatus")
                     Text("Interface taps: \(store.sharedCaptureCountNativeTaps)").accessibilityIdentifier("sharedCountNativeTaps")

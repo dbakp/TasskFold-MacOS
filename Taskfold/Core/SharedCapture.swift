@@ -181,6 +181,31 @@ final class SharedCaptureDisk: @unchecked Sendable {
             count + (draft.workspace.account == account && receipts[draft.taskID] != draft.taskID ? 1 : 0)
         }
     }
+    /// Read a validated review snapshot off the interface thread. Imported drafts
+    /// are retired in one best-effort transaction, preserving concurrent new drafts.
+    func reviewDrafts(account: String, receipts: [String: String]) throws -> [SharedCaptureDraft] {
+        try Task.checkCancellation()
+        let state = try decode(locked { try readBytes() })
+        try Task.checkCancellation()
+        guard !account.isEmpty, state.workspace?.account == account else { return [] }
+        let owned = state.drafts.filter { $0.workspace.account == account }
+        let handled = owned.filter { receipts[$0.taskID] == $0.taskID }
+        if !handled.isEmpty {
+            try Task.checkCancellation()
+            // Cleanup is opportunistic. A failed write must not prevent review;
+            // durable receipts still prevent duplicate task creation on retry.
+            try? locked {
+                try Task.checkCancellation()
+                var current = try read()
+                guard current.workspace == state.workspace else { return }
+                let before = current.drafts.count
+                current.drafts.removeAll { handled.contains($0) }
+                if current.drafts.count != before { try write(current) }
+            }
+        }
+        try Task.checkCancellation()
+        return owned.filter { receipts[$0.taskID] != $0.taskID }
+    }
     private func write(_ state: State) throws {
         let data = try TaskfoldJSONEncoder().encode(state)
         guard data.count <= Self.maximumFileBytes else { throw SharedCaptureFailure("Open Taskfold to review saved drafts before sharing more.") }
