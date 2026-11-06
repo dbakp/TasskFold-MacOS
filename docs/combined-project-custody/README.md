@@ -1,0 +1,15 @@
+# Combined project transfer · 6 November 2026
+
+One review must bind all effects when a selected project branch contains stored files, published recordings, a pending recording, removed recording history and active connections. Separate file/audio tests do not establish that combined contract.
+
+The owning full-schema driver uses real disposable Auth sessions, PostgREST, Storage and the production file/audio handlers through a validated loopback TLS endpoint. It creates a selected parent/child branch and an unrelated project, uploads an original PDF and synthetic audio, and queues an actual project webhook update. Its receiver domains are `.invalid`; schedulers remain disabled and no external notification is sent.
+
+The explicit review shares one deduplicated private file copy, moves published audio, stops pending publication, retains removed history privately and pauses only selected email/project-webhook connections. Omission of a policy or changed counts is refused. An injected late private-history failure must roll back projects, tasks, file plans/ledgers/custody, recordings, connections, outbox and content epochs together. The same confirmation then commits, replays exactly with rollout gates paused and never uploads twice. A retired personal collaborator loses copied-file access; the new team member downloads exact file/audio bytes. Audio maintenance removes only retired recordings while original private files and published copies survive.
+
+The captured synthetic contract is consumed by each owning app’s Core tests. They reconstruct the review and command, persist/decode it as a cold recovery, accept its exact service receipt and reject missing or changed file, recording or connection effects. The fixture intentionally contains no passwords, API keys, access tokens or session IDs. The signed inspection/review values authorize only disposable users whose entire runtime has been removed.
+
+This is service composition and client contract acceptance. It does not establish a combined native UI walkthrough, hosted Edge/S3 behavior, physical storage protection, every legacy realm, all retention/process-death cases or rollout readiness. Normal gates, installed apps, signed packages and hosted configuration remain unchanged. Existing remote-reminder, older-client, distribution and provider deferrals remain.
+
+Run `node Scripts/Database/test-full-schema-combined-custody.mjs /tmp/taskfold-combined-OWNER.json`, then use its `clientContract` as the owning `TaskfoldTests/Fixtures/combined-project-custody-v1.json` and run `Scripts/test_core.sh --filter CombinedProjectCustodyTests`. Both repositories own their driver, runtime, schema, fixture and tests independently; neither reads its sibling at runtime or build time.
+
+Accepted results: 82 genuine service checks and 3 focused Core tests per owner. The progress dashboard remains 74 curated checkpoints and 54 substeps; this milestone does not promote a broader native/provider checkpoint. Six width/theme checks pass with no browser errors. Temporary runtimes/TLS services are closed; both reusable Core caches stay below 768 MiB, and approximately 55 GiB remains free.

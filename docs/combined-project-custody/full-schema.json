@@ -1,0 +1,1424 @@
+{
+  "checks": {
+    "real signup owner": true,
+    "real session owner": true,
+    "real signup old": true,
+    "real session old": true,
+    "real signup new": true,
+    "real session new": true,
+    "real project created": true,
+    "real task created": true,
+    "real original file upload": true,
+    "real file references saved before review": true,
+    "real task update queues connection work": true,
+    "positive scoped TLS trust": true,
+    "negative TLS trust refusal": true,
+    "review HTTP 200": true,
+    "publish HTTP 200": true,
+    "remove HTTP 200": true,
+    "adoption inspect HTTP 200": true,
+    "real mixed inventory": true,
+    "adoption review HTTP 409": true,
+    "explicit mixed capability": true,
+    "combined file prepare": true,
+    "combined file copy": true,
+    "combined copies remain private before consent": true,
+    "adoption review HTTP 200": true,
+    "combined review binds exact file count and bytes": true,
+    "combined review binds explicit connection pause": true,
+    "combined review pauses exact selected connections": true,
+    "combined review includes actual queued work": true,
+    "signed review binds every effect": true,
+    "adoption adopt HTTP 409": true,
+    "adoption adopt HTTP 400": true,
+    "real rollback error code": true,
+    "atomic rollback preserves all source state": true,
+    "failed transfer leaves no private authority": true,
+    "adoption adopt HTTP 200": true,
+    "combined receipt preserves exact file facts": true,
+    "combined receipt preserves exact connection effects": true,
+    "mixed receipt binds all effects": true,
+    "crossing send closes the original request": true,
+    "published original ledger remains immutable": true,
+    "removed ledger remains private and exact": true,
+    "unselected publication remains exact": true,
+    "adoption leaves real provider objects exact": true,
+    "combined transfer preserves all other canonical task fields": true,
+    "combined transfer preserves inline discussion text": true,
+    "combined transfer preserves file aliases": true,
+    "combined transfer installs one exact copied identity": true,
+    "combined transfer preserves opaque file fields": true,
+    "new team downloads copied file through actual TLS gateway": true,
+    "new team receives exact file bytes": true,
+    "retired personal audience cannot download copied file": true,
+    "combined transfer pauses selected connections only": true,
+    "published clip alone gets new custody": true,
+    "stopped and removed originals both get private fences": true,
+    "download HTTP 200": true,
+    "new team receives exact published bytes": true,
+    "download HTTP 404": true,
+    "private refusal precedes provider read 10f0a448-570d-4d0a-9f56-6c6b68f85612": true,
+    "private refusal precedes provider read 9423cc64-456f-4d00-880d-e093168406c1": true,
+    "resolve HTTP 200": true,
+    "published receipt remains exact": true,
+    "unselected receipt remains exact": true,
+    "only original recordings and one private file copy uploaded": true,
+    "exact mixed lost-reply confirmation works while paused": true,
+    "closed original replay stays closed": true,
+    "replay never uploads again": true,
+    "production maintenance succeeds": true,
+    "actual Storage received cleanup deletes": true,
+    "closed history reaches purged 10f0a448-570d-4d0a-9f56-6c6b68f85612": true,
+    "closed history reaches purged 9423cc64-456f-4d00-880d-e093168406c1": true,
+    "only live and unrelated provider objects remain": true,
+    "exact private fences survive actual deletion": true,
+    "original sender confirms closure after real cleanup": true,
+    "unselected ledger survives maintenance": true,
+    "selected published bytes survive maintenance": true,
+    "audio maintenance preserves published file copy": true,
+    "published file bytes survive audio cleanup": true,
+    "original file remains privately readable": true,
+    "original private bytes stay exact": true,
+    "no outbound jobs queued": true,
+    "scheduler remains off": true,
+    "no new advisor findings": true
+  },
+  "genuineLocalAuthRESTStorage": true,
+  "validatedLoopbackTLS": true,
+  "productionPublicationAndMaintenanceHandlers": true,
+  "hostedChanges": false,
+  "ordinaryGatesChanged": false,
+  "nativeAppAccepted": false,
+  "storageBackend": "Disposable tmpfs file backend; not hosted S3",
+  "sourceSHA256": {
+    "supabase/functions/project-files/handler.ts": "a2d403ca66daf14e0ed52adbca9ab77d29a2382d37caaa64b3688b0a3d3f5fe4",
+    "supabase/functions/task-files/handler.ts": "3622a2f2c270b566951f4c3dffde63529a81b9b30f4e18c57bd7011ed88da2e5",
+    "Scripts/Database/test-full-schema-combined-custody.mjs": "ee0d3b1aa6aa408f2a70a60812e2ded41f1b380541cdfafea095db44e90269b9",
+    "Scripts/Database/full-schema-runtime.mjs": "bb5036b6455ff88fb1ac28cb27174265aba3ef94fe2e8e2812c081c86b13cc24",
+    "Scripts/Database/full-schema-gateway.mjs": "64a1a3d08fcf48e7ff7e2559653a74bbae4533848d71e3d8e0abb1c64f42c65e",
+    "Scripts/Database/full-schema-audio-fixture.mjs": "1c93468c202c49641d8f0f5673bf43b4149d883a9929cdbe5c63283218c2b353",
+    "Scripts/Database/full-schema-audio-server.ts": "a9752c67aa82356242b88d0ece01a5c23db10e6254bcd9e36d3045c4b3176217",
+    "supabase/functions/audio-comments/handler.ts": "00515c3741d98d8cf77b427cc94cff71b38cbeee27fae9925a6d90d7b8e05316",
+    "supabase/functions/audio-comments/wire.ts": "2c3aae590fe9104847f3e71e6cfc4c281d009b1fd26fc0b6a11ff93c302df30c",
+    "supabase/functions/audio-comment-maintenance/handler.ts": "e8a02a14521bdd2a4fb598eae0c084392ea2799fb4e3b134f9f579f800383d5c"
+  },
+  "migrations": [
+    {
+      "file": "20251118212653_67743dd3-a019-467d-a926-84ca4a11b94a.sql",
+      "sha256": "a86f09cd48f2cec33b42e5a799b6607a0c616b9c0e3d1a130a4d383e4f4b7955"
+    },
+    {
+      "file": "20251118212713_dea496e4-7982-44a1-92ab-678947c6070c.sql",
+      "sha256": "770e37a55b339e0d11c4fdfe586a755186644c09d5f4ebdb7282aede1ab0265e"
+    },
+    {
+      "file": "20251118213316_e9b17409-b96a-4dd2-bfed-bfd82f396f3d.sql",
+      "sha256": "ce4179b650998b2d8c4a8660252f7cbd431a3dd0fd19e183e3751ec40b681bd8"
+    },
+    {
+      "file": "20251118213326_b76e20ab-c4ef-4af8-846d-2b90a04c3b74.sql",
+      "sha256": "09c902d08abfe6a54edc4d974cfaf9ef7a390fbe2df74a87a9ed61067fa5dc79"
+    },
+    {
+      "file": "20251118213436_bc4a66bb-3389-440b-9972-828e2470201c.sql",
+      "sha256": "ac2460b0471482bb2cfd35501c277d3edd3ac95e6e01bbc64ab915799046569f"
+    },
+    {
+      "file": "20251118223636_800d6c0a-e880-44bf-939f-d7be6a433216.sql",
+      "sha256": "275d52c776d59391bb831b2f551b51908912a82ccda471d5d69daf3c318b1c2d"
+    },
+    {
+      "file": "20251124212256_5431e487-ed6e-417b-a3d2-d166c4847a29.sql",
+      "sha256": "a539ba65391d1a7495343ac1393d39659cbba2093f7603dc4d693cf373cb5911"
+    },
+    {
+      "file": "20251124221857_6152345e-9b2a-40d9-ae5b-94fd8a09299f.sql",
+      "sha256": "82d130ae79f3b675d9a8522da365912e910bf4a3395461c9d1021776daa1f6ea"
+    },
+    {
+      "file": "20251124223214_6c43e42f-8d53-4396-ba71-f72d9f8e2a0c.sql",
+      "sha256": "ee0eea02bef540b61a38af65106d7749646a06c2c22d94f4edd61f9ffd3ae997"
+    },
+    {
+      "file": "20251127192132_19bf2192-c1cd-456e-a6dd-87cf6d754921.sql",
+      "sha256": "2b1ab7a9df0c7939ca7a5788642e416e5d3319b159ab8c6f0c6c18007526718f"
+    },
+    {
+      "file": "20251128191201_1a45dba1-d8de-40f3-b759-341e5ef71326.sql",
+      "sha256": "7ada45a8d0f47729661fe36e3991d2f2068f2101cb5dad66a22ac5457b252367"
+    },
+    {
+      "file": "20251128193512_d0fcb106-811b-444f-8a47-74e79d13d61f.sql",
+      "sha256": "1c40432360aafe9f217d434b47d43d76ba00260ab50a32460aef45b719d3659c"
+    },
+    {
+      "file": "20251128195757_568dc67f-9a9b-48d7-8c4c-696459837bff.sql",
+      "sha256": "f09d06a941e8ae032f75e6b5ff640c7d85158c331c5886e83513e4d134a46e0d"
+    },
+    {
+      "file": "20251128200733_0c384174-efe4-4b99-a2b1-5805ff652b94.sql",
+      "sha256": "3d69eef2a1d117fb43352680ba7cf1f69b5fcf7c07caaf408f6269ba6986475d"
+    },
+    {
+      "file": "20251128200954_7650c7fb-5df8-4a29-959d-c0aba4f3a479.sql",
+      "sha256": "e99622f886dd4f9f5c1887d6d1657093fcdc008a84d20c519b582ba0203aa4ee"
+    },
+    {
+      "file": "20251128201256_7d3d1709-5ce7-431b-88d1-118f617b2de7.sql",
+      "sha256": "4f7d4a1eac51a4c208ef435a19dbc635a9813fdcdceb0a86bf9b99fef219f10b"
+    },
+    {
+      "file": "20251128202147_6b4972ea-ed2a-4782-ae35-642f21547bde.sql",
+      "sha256": "3b1e307b4594107f2f44084428d372c31412e65900f7feb501e29a90441e0f82"
+    },
+    {
+      "file": "20251128202521_805c82ba-ea96-4232-b385-2341259f66c4.sql",
+      "sha256": "9af87718af740c85924934518a44dd0125db6897e58cb0f1c8c3e33f00c1ba34"
+    },
+    {
+      "file": "20251130222030_0a6ea91e-9762-4e6b-bd1e-5b800217b8ac.sql",
+      "sha256": "3fd1b890fd328e473e08a266928ee070bb17706678708019f48ae83e483afe55"
+    },
+    {
+      "file": "20251201185822_ee7ac5c9-984d-4faf-b2fb-f87b1a4cfbeb.sql",
+      "sha256": "3695a714a42740fd6e434185043422ad835171fd6986727c693a64e04de7e301"
+    },
+    {
+      "file": "20251201190440_681401f2-c7fa-4a68-82ac-87472aa08836.sql",
+      "sha256": "c27b1965c617681dda1794027a29255149a93976267d76901a4572bd0872dce4"
+    },
+    {
+      "file": "20251201201605_80c82006-c8ad-4ec9-8eb3-c12a2f958699.sql",
+      "sha256": "8f38055dc7b7f9b3fe0bc54a69bbb124aea19b3a55f3b8385ea5f92f59a73981"
+    },
+    {
+      "file": "20251201202321_e18ce16b-e8e8-41c6-b9b2-f5bf6285ee6b.sql",
+      "sha256": "244735c219e153316737344cb3b6844269fbd3637271791e9a7d85bf9ec0bd07"
+    },
+    {
+      "file": "20251201210213_d58ad0d1-3695-4306-b5dd-f47a30a7f8ea.sql",
+      "sha256": "eda1ba0a88d3c1911362d663a0ed36e2df0b8e937da42419b3b6d04b1cf5e08b"
+    },
+    {
+      "file": "20251202204721_6a7dda46-b134-48c8-b735-5ba5cdc22024.sql",
+      "sha256": "20a5db40520108a95f39702e7f2b45d4d8ea68cdde02f2565c91938cbaf9468c"
+    },
+    {
+      "file": "20251202205026_775782e8-0444-4400-aae7-444a10030c18.sql",
+      "sha256": "2896b9d8ea77f6f14ec9285fd6830fad5a8336294af192c963a79cc97953e0e2"
+    },
+    {
+      "file": "20251202205047_45691107-4f1c-4dac-9b03-7eb4a49cb126.sql",
+      "sha256": "edda178b6d7922f02947ffb9a446409303aef34ef2a9869bd060003e6cc02432"
+    },
+    {
+      "file": "20251203213111_60af1675-17d7-4bcf-b057-6b69fa23e9c1.sql",
+      "sha256": "68b82f776d37c93041bf043b6c118798c9151dda4fb5462b159f69a7c7335a92"
+    },
+    {
+      "file": "20260911123547_collaboration_foundation.sql",
+      "sha256": "3f37737fd34de859cb6f7f54f08aac9b6900dd3ed49ac010ca83c12f29b6af23"
+    },
+    {
+      "file": "20260911124351_clear_departed_assignments.sql",
+      "sha256": "19a4469e6e6d6f5a95aa0113e49f8f283cb4336103330a22c876cd78d98e7ad6"
+    },
+    {
+      "file": "20260911124524_assignment_project_moves.sql",
+      "sha256": "9e986fce802df36c0154dc72149ef07aa2e19c35c90f18dec9d5bf1b3427f8c9"
+    },
+    {
+      "file": "20261005183520_p0_planning_foundation.sql",
+      "sha256": "03a4e59914434abd247e37ec55b95f8f3915974e6e72bd6d43609e923c0f5f6c"
+    },
+    {
+      "file": "20261005184007_fixed_planning_instants.sql",
+      "sha256": "8138fde93f43f50fee561b0c00ed26508a43431e1f5ed370d0daf69e549a3a63"
+    },
+    {
+      "file": "20261005184954_restrict_legacy_email_lookup.sql",
+      "sha256": "43e085c1e484e93e09a6d3a54fab93c36c04d2e5dc7519a8883d126ad379dee1"
+    },
+    {
+      "file": "20261005190632_saved_views_and_preferences.sql",
+      "sha256": "f9d8a112136011fc262bf2e3cc68f2b132d076375ca95b55cd4e10817e6bb84c"
+    },
+    {
+      "file": "20261005190838_synced_list_order.sql",
+      "sha256": "915f7ba6e5249f95410d6f6a98e5acab9ebb0bc000e93eb62bc2f03f7f50387e"
+    },
+    {
+      "file": "20261005191736_require_saved_filter_document.sql",
+      "sha256": "6b369e56091fde3c885d2709ff090d90266f5998a44e80ce01baf7bf5cf3c115"
+    },
+    {
+      "file": "20261005192545_project_creation_visibility.sql",
+      "sha256": "77567262bd9fec2eab5f53d8eb8dd74f03c55b81430fbbe8543a8b399f3c6d0b"
+    },
+    {
+      "file": "20261005201542_planner_working_hours.sql",
+      "sha256": "17d5172ac8b9c8dce81ea0fc03ab0f4da43ba13642975dea7d964ea90235f03d"
+    },
+    {
+      "file": "20261005201544_semantic_planning_timestamp_edits.sql",
+      "sha256": "3921699cc77540683b9db82747638e592a4e89ca7ef2ac4520de885594c261a4"
+    },
+    {
+      "file": "20261005201746_semantic_planning_clock_edits.sql",
+      "sha256": "d57477e449a19ab4e69e81abac2b7c17cfeb675eefa562bacd80cef82262227b"
+    },
+    {
+      "file": "20261006022339_guard_task_deletion.sql",
+      "sha256": "82aff473d87e164b95940c4a10cd09c1442114ef51dbcd210d3a71406a423738"
+    },
+    {
+      "file": "20261006031648_completion_revision.sql",
+      "sha256": "87de44e29abe0ea5a6a8502f2a96ced7f4ce4ef3636530b92678bf502b0f6c8e"
+    },
+    {
+      "file": "20261006073641_durable_focus_session.sql",
+      "sha256": "c0ff0c6df769b7eeac5a2c753a0f1f14cec52396793a650ce64871f4922ab338"
+    },
+    {
+      "file": "20261006075121_focus_session_resume_access.sql",
+      "sha256": "655f26e54aefce2b56e11ed73ddaae9f57460425c12244e6e4e60050f69d68a0"
+    },
+    {
+      "file": "20261006100647_task_activity_history.sql",
+      "sha256": "556ca29bfd1d3d4bb8049143926c99d45c0ff771a7ae98fe6854a24096354f17"
+    },
+    {
+      "file": "20261006100920_task_activity_cascade_authorization.sql",
+      "sha256": "7e9befea4143b57d56f75e2c77219e7ce3dd75be835fc10064a5537b3e06aa50"
+    },
+    {
+      "file": "20261006112647_reminder_device_bindings.sql",
+      "sha256": "2b4e8120b09d7468a984a66f058ef42540212f48811d26ec7bf7ffba674728c4"
+    },
+    {
+      "file": "20261006112835_reminder_device_direct_access_policy.sql",
+      "sha256": "5f80eae25c65d387d6df75620087a72431ac4cefa7b95abb7d423fb085dc049d"
+    },
+    {
+      "file": "20261006120049_remote_reminder_jobs.sql",
+      "sha256": "e48b79ff0208f92832e1a1663bf9a1b343cffe76b6f5299b93eb4df784222d9b"
+    },
+    {
+      "file": "20261006120520_reminder_queue_session_privacy.sql",
+      "sha256": "dc0bb2ff0313750a62eee41fbcf10fb6a860cc85ce339386d54cdfbb0d95e8d5"
+    },
+    {
+      "file": "20261006124947_task_generations_and_reminder_eligibility.sql",
+      "sha256": "60a04a2abeeca6b0feb05f8446b63a39cf98d8567e66b78429bcecceb9849748"
+    },
+    {
+      "file": "20261006134519_reminder_provider_retry_delay.sql",
+      "sha256": "b7cf993edfb455b72ef414c1c05e1a71e197f2381eb84d2eb953e256da143bdb"
+    },
+    {
+      "file": "20261006134836_reminder_provider_payload_bounds.sql",
+      "sha256": "ae9fd33031362988858d8835bff7c871eff80aa5eeb558761ee222edd0453e60"
+    },
+    {
+      "file": "20261006143713_reminder_worker_cursor.sql",
+      "sha256": "a8c9490ad27f5a2bba2008fc26c1a988c43b1fdd9e058690e0d503654680c26a"
+    },
+    {
+      "file": "20261006143800_reminder_sweep_direct_access_policy.sql",
+      "sha256": "8d05d57bacf60a7b73f5828202c2d6240ba6add6124f7ac9e6f2966d638cee80"
+    },
+    {
+      "file": "20261006225340_calendar_reminder_occurrences.sql",
+      "sha256": "a508e2a21e0f13f4c7d357d08e70337159ced77dc5b05b06f138185a71264a05"
+    },
+    {
+      "file": "20261006225450_calendar_reminder_projection_aliases.sql",
+      "sha256": "c600434f840494e489f54e482946d5969861095eae7fd840541ef51c1798bc38"
+    },
+    {
+      "file": "20261006225915_calendar_reminder_projection_performance.sql",
+      "sha256": "2b15efbb4c0aa8a8eb9753cdda1acfbb7d2add00d29625d8ff042c31c51dad40"
+    },
+    {
+      "file": "20261006230025_calendar_reminder_history_counts.sql",
+      "sha256": "410f00fd9514f14e159ed022f0c95c46710efb30462b416b9268a9ff891111ed"
+    },
+    {
+      "file": "20261006230525_calendar_reminder_validation_budget.sql",
+      "sha256": "f09343aafd82417b58ed675aa41fcace3ba2ac4a0ad281853abbaebf468a7423"
+    },
+    {
+      "file": "20261006233453_calendar_reminder_null_bounds.sql",
+      "sha256": "ef36ed948345a727b70273432389160164f4ff4c04bc641a33d59a27f22c5b48"
+    },
+    {
+      "file": "20261007055145_reminder_calendar_cohort_budget.sql",
+      "sha256": "d612b6426ee386c67e177a40fa2eb6032eb32bf13832bcde121070918e0b2b23"
+    },
+    {
+      "file": "20261007065249_reminder_snooze_preferences.sql",
+      "sha256": "687ae845f6be8c50abda466d17ce94f318b6b6944a315ba31fdf099a116f1a20"
+    },
+    {
+      "file": "20261007101832_automatic_reminder_preferences.sql",
+      "sha256": "f68c469120e046dae8778f04306e7440085adfa939196ca09b013c9ea04a3f0c"
+    },
+    {
+      "file": "20261007130553_reminder_delivery_authority.sql",
+      "sha256": "36f5bc4468c3fa096c54c15c02de51c0dd10d67b9593777c236fac34490024d6"
+    },
+    {
+      "file": "20261007131151_private_reminder_availability.sql",
+      "sha256": "1226eacce5029edcacb69b51c6538b2d4f6c61afd5ad6329a91c8589402f3e6b"
+    },
+    {
+      "file": "20261008053217_date_phrase_preferences.sql",
+      "sha256": "dd6deb3d08789c2b725af4bd90f808deb6466b9240306c192a08fd3e2ceb7042"
+    },
+    {
+      "file": "20261011100214_atomic_organization_order.sql",
+      "sha256": "9d403db51e8980ffadcc63e59a1ac415d5ff736ab3eec1f4962eba04727f98e0"
+    },
+    {
+      "file": "20261020174132_project_workflow_foundation.sql",
+      "sha256": "4a5318d040a080d0fe7860b46c13f5a757180bc2411cc5dbcd115f898dbb3588"
+    },
+    {
+      "file": "20261020194217_subtask_structure_review.sql",
+      "sha256": "97ec0cebfa7acf8d2cd6e2d05910efbded309fd11924f699833bf05c39cddafb"
+    },
+    {
+      "file": "20261020204903_template_edit_review.sql",
+      "sha256": "833b8e1cecc4e1e568ae34612bd31bd951fba7c33d3978cdef48ded43b28bf2c"
+    },
+    {
+      "file": "20261020205307_template_review_error_response.sql",
+      "sha256": "289c4e2a11e626bad7c0907d2ed9ecd030e160af3116bba8d3c53d2f7881a4b9"
+    },
+    {
+      "file": "20261020221933_productivity_goals_review.sql",
+      "sha256": "3a4d01d71e002caf7dd4e1f4853cbddb1d7777b87eea2b6597f61d5e37d154d1"
+    },
+    {
+      "file": "20261020231600_monthly_date_sets.sql",
+      "sha256": "989202c78e552c741ccfeef48ea8c8742690fb925093854489bc599dd8d5ea69"
+    },
+    {
+      "file": "20261021020423_shared_comments_and_mentions.sql",
+      "sha256": "fbd1adba72223942f938f83d2b2281e3774c1494c2d934184124aacf38110f5d"
+    },
+    {
+      "file": "20261021023452_conversation_inbox_summary.sql",
+      "sha256": "9a01936889feee4c7006d14d38f6a0a3f9c94e0e8f1c3c8b4c830da7e79ad8b7"
+    },
+    {
+      "file": "20261021122959_assignment_provenance.sql",
+      "sha256": "aa456e8a973ce03c04c48ddbaa76fe8ac09b1878d23a672b03912d5e33ed3c1f"
+    },
+    {
+      "file": "20261022145128_private_location_handoffs.sql",
+      "sha256": "a987e8a30d0c8c647fcde039141bb0983ed3e6a72d6ac1c6f52298c3c3803e07"
+    },
+    {
+      "file": "20261022193804_account_removal_service.sql",
+      "sha256": "93dd54c808919926a6546ba59d696086234b91b80cc728136e8fcd4d6fc5474c"
+    },
+    {
+      "file": "20261022203333_account_removal_status_proofs.sql",
+      "sha256": "e96fa9f54e7ab8969a8e5c77b82dcad49791a1fd8ec99b875a4476c468113a39"
+    },
+    {
+      "file": "20261022212224_automation_access.sql",
+      "sha256": "fa99b465eb59908864591ba05613d4b660cd0302df1a60565a400ea880b50f23"
+    },
+    {
+      "file": "20261022215836_automation_recurrence_plan.sql",
+      "sha256": "519093c056e7267cfb3d33dce69fd3b4e6dc969b4783b7dc6dd19ef324bd45bb"
+    },
+    {
+      "file": "20261022220821_automation_task_access.sql",
+      "sha256": "876db26d2fa60d6b8b651879fab7d72faedcfb66d7ff272e1e9cfb177122d602"
+    },
+    {
+      "file": "20261022222726_automation_task_writes.sql",
+      "sha256": "b121e8aa1a4525fdbfaa7f7903abbc44a2f7cc6d5a593f7f185d71424af9dd59"
+    },
+    {
+      "file": "20261022225439_automation_task_mutations.sql",
+      "sha256": "639d3d16283892c205f4cb3af8e2ed53db2847d0ffdab986675e9e2e6a54227e"
+    },
+    {
+      "file": "20261023002825_automation_enrollment_cancellation.sql",
+      "sha256": "4ee55a85d54a627900239e5e1a6a656cc75633da84dce9b754682482124b7cf1"
+    },
+    {
+      "file": "20261023010559_automation_destinations.sql",
+      "sha256": "141aa63e4e0cb593cbf56c96c6975f7eb4a53cbcc38d2f3449e7c2c73888ec7b"
+    },
+    {
+      "file": "20261023011251_automation_portable_reminders.sql",
+      "sha256": "648e2e32944d91bbea245e86ae0bddcf9f7646dec3181a20a542a0fbcad46ce6"
+    },
+    {
+      "file": "20261023012417_automation_ingress_limits.sql",
+      "sha256": "d13ec1c00c09d509c9a23283480c6cf0a88dc67a3cba5e0321fed11396f22469"
+    },
+    {
+      "file": "20261023031416_automation_management_deadlines.sql",
+      "sha256": "9810ed952870ede4bcc33b613e29263c3f8f921b085ca18b162f1cecf9bb4178"
+    },
+    {
+      "file": "20261023050732_webhook_subscriptions.sql",
+      "sha256": "7e0011738fbcaa92fbb5e21473a1c96bde92450f300af81c1a5c60f7c1f4a3d1"
+    },
+    {
+      "file": "20261023054251_webhook_outbox.sql",
+      "sha256": "252fac8c4b53b13491c7097cdcc4064c7af0fffd0e57081376b70cb01251264c"
+    },
+    {
+      "file": "20261023074744_webhook_scheduler.sql",
+      "sha256": "3c6fb5c9adbe1795a4fcf7e11e3257d097ac6c7f4e3cd8c3d2648164af962bb3"
+    },
+    {
+      "file": "20261023150729_email_intake_journal.sql",
+      "sha256": "5cb06c4aed1708168d03a5339fdd07c1feb068c8b3974f3a1393c8cfe3ef27c3"
+    },
+    {
+      "file": "20261023162006_email_domain_binding.sql",
+      "sha256": "b2413f116b40243323f4873c8fd6e72a17271f9332b2d748ad12c17e7d0535f0"
+    },
+    {
+      "file": "20261023182542_email_inactive_maintenance.sql",
+      "sha256": "340281d7368f06efc207e2c7cee484c3c380381bd12970473bd298e17182d354"
+    },
+    {
+      "file": "20261024021629_team_organization.sql",
+      "sha256": "13f053c9686ca68def2ca71cd796f1afaf915040e0b066c9c1ff71f77616c667"
+    },
+    {
+      "file": "20261024022352_team_content_custody.sql",
+      "sha256": "7800055c92c039a35db941291061550b5fac5b794705609d4c1c5d80c3ce0ac8"
+    },
+    {
+      "file": "20261024025423_team_project_access.sql",
+      "sha256": "4553312642ff14205ddc1933b31bed6947cef1aa6b9ca5370bc9f5c1d7cef0e3"
+    },
+    {
+      "file": "20261024040403_team_task_edits.sql",
+      "sha256": "61cc2cc98e265e1110c6125a3ed3e0ba94a4922570e24be6d80c43b94d278b0a"
+    },
+    {
+      "file": "20261024041605_team_task_lifecycle.sql",
+      "sha256": "bf96bb4cda0dafcae052a9cec0111771cb142a8b7b8e7f3782faf7eb4e89ab07"
+    },
+    {
+      "file": "20261024043412_team_conversation_recovery.sql",
+      "sha256": "02baf514bd24859d6520c6dcf00914fccb00f8e82395f6e6b58bf03845aba079"
+    },
+    {
+      "file": "20261024045918_team_task_batches.sql",
+      "sha256": "24e6f7893e80536aa001c6c0aa22fee1ab53737bdbd22921324d000566d6b7af"
+    },
+    {
+      "file": "20261024054229_team_task_planning_edits.sql",
+      "sha256": "ede5ac910a422aa139488308a8ce5dc4ff084a1207b8ca7ee847dfdd57c41b99"
+    },
+    {
+      "file": "20261024055617_team_checklist_edits.sql",
+      "sha256": "7e5e97e8b28ae4ae02c95a2506e84977c9d56fd244107b361b2e370a3ee6cb83"
+    },
+    {
+      "file": "20261024063514_team_recurring_completion.sql",
+      "sha256": "e7584b94e6e0638b9bafdb7a118f86d452225291b12b04342e7dc1a9361c6ed5"
+    },
+    {
+      "file": "20261024071232_team_completion_review.sql",
+      "sha256": "06ec6579335ffc74e70947305679c0913adaef6145b9e99a2e541e8958903729"
+    },
+    {
+      "file": "20261024072504_team_completion_cancellation.sql",
+      "sha256": "7148ee558cbdf952b9b44ecd1627a97293eb8748a2ef90495cbe74a051b4c058"
+    },
+    {
+      "file": "20261024074022_team_completion_rebase_capabilities.sql",
+      "sha256": "a713ce29af6b3cc946f5ca7471638254e62ea837567b9ee4d7cf2d2de122276a"
+    },
+    {
+      "file": "20261024080409_team_provisional_generation_retirement.sql",
+      "sha256": "924917186b1bf3e787a6aee721bc02e1492422db4f302e40d47f231d9c90dc73"
+    },
+    {
+      "file": "20261024090623_team_saved_draft_copy.sql",
+      "sha256": "a8627f8df64348c82f337378ce4e6d7b4ec744dd72f588c2d45f3e9ca8090502"
+    },
+    {
+      "file": "20261024094010_team_workspace_boundary.sql",
+      "sha256": "d8bb58f8aa8bb532fc6ea97648195cac8e131289daaf4b39c916305a164f29b6"
+    },
+    {
+      "file": "20261024161155_team_directory_identity.sql",
+      "sha256": "30ffaaa50c427158ebca5b46040ad12737de0247221625e0f136c922f93864bd"
+    },
+    {
+      "file": "20261024163752_team_project_presentation.sql",
+      "sha256": "47c696d2212c3cb67a45ea61a7b16426354fba4d019d72e2efb25d839c294177"
+    },
+    {
+      "file": "20261024172109_team_project_archiving.sql",
+      "sha256": "823b09e482e3048c70388777b97e06983ee3d6b08cb7f041792478fa9c72f3cf"
+    },
+    {
+      "file": "20261024182336_team_project_hierarchy.sql",
+      "sha256": "1184a40635d5a0ce96ef0dd71488d4670e49fb0f5c1b11bbf13507b326b52694"
+    },
+    {
+      "file": "20261024204332_team_task_recipients.sql",
+      "sha256": "c72fa01559ed405a4d21b59e407c46393882e371b5f1e693576b4acf6a5abc7a"
+    },
+    {
+      "file": "20261024222451_team_task_repeat_edits.sql",
+      "sha256": "edaec9140839e0fb87e0ab77c536bfc9f1831ad273ca3d061b8a4e0f3b81a7d6"
+    },
+    {
+      "file": "20261025000653_team_task_moves.sql",
+      "sha256": "a1e0d69b2152eb3a45a3dfdcc20525eab40d1c4e4faa1037f82597a442a774eb"
+    },
+    {
+      "file": "20261025011154_team_project_ownership_fences.sql",
+      "sha256": "7c26a424623a3919c048499a913e4987a6c7603e7361a19e06110748776f21b3"
+    },
+    {
+      "file": "20261025014040_team_project_adoption_review.sql",
+      "sha256": "6f84f1b145f95d3a7f3e5258ef7068a7fae625a6887bf92343ea94625e5b1aad"
+    },
+    {
+      "file": "20261025031915_team_project_adoption_connection_fences.sql",
+      "sha256": "bba7084ce1062aa4cd65fc40b5d71a63c5d682c726e17af6b8f9a9115f036fcd"
+    },
+    {
+      "file": "20261025033903_team_project_adoption_connection_policy.sql",
+      "sha256": "b6c922cab8f2c340ea02f2c40b5dc56ef85d2dee48a879a8ef6b04aab8a5bb46"
+    },
+    {
+      "file": "20261025044350_team_task_planning_batches.sql",
+      "sha256": "a5170773f5390b856bc2304f5f4e91050cec0e461ad0e23e4bb4a4d21d565f60"
+    },
+    {
+      "file": "20261025060438_team_task_assignment_batches.sql",
+      "sha256": "cb2572cff5a1c1e61aae86e76f728d60e15c5a53602010e9f540d908f2ecfb98"
+    },
+    {
+      "file": "20261025064636_team_workflow_template_library.sql",
+      "sha256": "cf81b1e12fdc35005a1abc5ecffc9879898b5214df1b3244449a44f951ddfef2"
+    },
+    {
+      "file": "20261025092534_team_workflow_runs.sql",
+      "sha256": "c6e8380d755e57ea5fc85c481ece877cdcf8c10e1aaea671d26ca7a59b4bfff1"
+    },
+    {
+      "file": "20261025111218_team_task_label_batches.sql",
+      "sha256": "eead42f9f94e22635269c14b9470e28d534453dd9f800a4921f9171afeb3a9a2"
+    },
+    {
+      "file": "20261025123326_team_completion_batches.sql",
+      "sha256": "cae8bbfb7568e931c87c6295dbf422fb188972b7758496a9db0d7a4fbb55c22b"
+    },
+    {
+      "file": "20261025140005_team_completion_batch_recovery.sql",
+      "sha256": "a65c0c58f169e8f181ece433b1c19686ea6867bb3179bee1368be59fd8b5018b"
+    },
+    {
+      "file": "20261026032336_task_headings_contract.sql",
+      "sha256": "b92bf9ea977f104e1f9b915c38019748d350f9328aa6486ab3650748719457fb"
+    },
+    {
+      "file": "20261026053029_todoist_heading_import.sql",
+      "sha256": "64f9abfac0570fcb3ebb917935a2a744972b4b71b5ec55ad887c91c3b3783058"
+    },
+    {
+      "file": "20261026095807_task_node_activity_history.sql",
+      "sha256": "6e9a067a793714db686cdd524707a140eee7f1ea05ccd1c635980f783d1c1687"
+    },
+    {
+      "file": "20261026104450_task_activity_root_context.sql",
+      "sha256": "9ed35d72212eff58ebe25cd9ec2da9ddf909bcc70dcf8f34bf1924a2ebb78831"
+    },
+    {
+      "file": "20261026113556_task_node_activity_custody.sql",
+      "sha256": "ea35e156c70703d28007197760dfaeeeb44c87a35ace81b50b81f6afbef833df"
+    },
+    {
+      "file": "20261026121332_task_node_project_adoption_review.sql",
+      "sha256": "d2e437af083dafb9024c9276549ba612efae5e3358cb7affc52e1a9844722d7b"
+    },
+    {
+      "file": "20261026122805_reviewed_history_custody.sql",
+      "sha256": "f7294640c81bcde00897076d7e634565c0fe185ec2ff96485db6f568b5a71b15"
+    },
+    {
+      "file": "20261026155711_team_task_heading_commands.sql",
+      "sha256": "bf8c7ab22709bda362a9df909bd8e8888ba0c61201740540aaf1e85bae7dab32"
+    },
+    {
+      "file": "20261026161001_team_task_heading_lifecycle.sql",
+      "sha256": "e7a5a8c4e4174bc08a324d2fa1c8caaa2f6893df78719960e195c75851a38829"
+    },
+    {
+      "file": "20261026165807_shared_workflow_task_headings.sql",
+      "sha256": "809c8f968aa69d8788326c6138ef4d5aee8bdbc50418478dc4e94ed3b4e53b7e"
+    },
+    {
+      "file": "20261026185357_personal_heading_capability.sql",
+      "sha256": "e9b8b3de8b1136b577445e8b192bb544242f89bf2e1676f87a4809d9c4d02ddb"
+    },
+    {
+      "file": "20261026194848_guarded_workflow_undo.sql",
+      "sha256": "c4e6e97900293747a091fb6908040367c1c542dbebcedd7afb6cbb45fda7e8af"
+    },
+    {
+      "file": "20261026202554_workflow_undo_bulk.sql",
+      "sha256": "18034c5dcf289208d9a6ee311dd28a4f81be81bd6e8195d7940b5f6f4104f538"
+    },
+    {
+      "file": "20261028134424_audio_comment_publication_ledger.sql",
+      "sha256": "3e6522149e52bdf52918ae66b2e7b68205fd7f290bd3276c8c09d464517efaa3"
+    },
+    {
+      "file": "20261028145414_audio_comment_gateway_boundary.sql",
+      "sha256": "ac9a9005a8198994e2b0cec8adf4113e9d7bb8b80303b8d078a6d39cc169cb24"
+    },
+    {
+      "file": "20261028151901_audio_comment_cleanup_fencing.sql",
+      "sha256": "7260264fa5c4419695f3a37e90d5a2a86ca822f74c7728b8a2d5b1b33ab36718"
+    },
+    {
+      "file": "20261028153218_audio_comment_upload_recovery.sql",
+      "sha256": "fde3d58c4cd031b8e648e86660bcdf812645624791d700ce07d2792b1d70386f"
+    },
+    {
+      "file": "20261028153219_audio_comment_maintenance_scheduler.sql",
+      "sha256": "f37a22b92bc353ebaab0e1101689be3fa18511287047f427e831cc34dcd1fc80"
+    },
+    {
+      "file": "20261028185429_audio_comment_keyset_pages.sql",
+      "sha256": "28e601c74c3c04cbec73c9761b2c73dd0d48e5f14068f58e53427069a7913e03"
+    },
+    {
+      "file": "20261028191118_audio_comment_shared_reads.sql",
+      "sha256": "592857c6a4c54014531bbf0f17273c8ee672d0969e34b59bde3f0bb34db3591b"
+    },
+    {
+      "file": "20261028212632_audio_owner_publication_status.sql",
+      "sha256": "0f50b4990debfc1cb7d4484f5ecfeae66d9fe509c0a7a0267a1236da186d1a11"
+    },
+    {
+      "file": "20261028235056_independent_child_record_projection.sql",
+      "sha256": "ec8220b6ce0b8d47623a23eee2db0670e83b3d7898448ba91afadaf1762cbc93"
+    },
+    {
+      "file": "20261029001127_child_task_record_reads.sql",
+      "sha256": "9347c066832ea5b3e5881f5fc0884e1b7fd4697b52f8e1e0ee767095c7af2ed3"
+    },
+    {
+      "file": "20261029005723_child_task_field_edits.sql",
+      "sha256": "41716915a49b14020bc9399cffc34b5eee7898a90d3f43e46977f00715855032"
+    },
+    {
+      "file": "20261029194600_child_task_field_resolution.sql",
+      "sha256": "dddfd037d9411d21fb8a5910b89cf4558432c5551c6860189a0d38d7c6ab2539"
+    },
+    {
+      "file": "20261029211038_child_task_completion_commands.sql",
+      "sha256": "2f52b22df713261440a2e2b401334a91058847b7b8d479093d415a6a054ac2e3"
+    },
+    {
+      "file": "20261029215232_child_task_completion_resolution.sql",
+      "sha256": "2d27894ff2fa45a610b7357734fef5531f508de8b72cde4e4a6a40f89afec748"
+    },
+    {
+      "file": "20261030002245_child_structure_revision_and_assignment_bridge.sql",
+      "sha256": "949dd0ea6e5d9300a55cfeb81c4b3239aef112e5e2b6cc3f5923b6381ab0e682"
+    },
+    {
+      "file": "20261030004452_independent_child_structure_commands.sql",
+      "sha256": "5a3d0bb095dade20a78427bb5a9615718c7acff21e6e36bd54d8878f14b35686"
+    },
+    {
+      "file": "20261030012858_native_team_child_field_adapter.sql",
+      "sha256": "9cb9e5badc970b5bd9a5b031a17a776becd6e924cf178d7cc31ac3ac5603f9f2"
+    },
+    {
+      "file": "20261030090934_child_task_record_authority.sql",
+      "sha256": "b2ff634e9b7e82daf35081643ba23c1effe09d77b4c3fbbbef8be91a9c067a99"
+    },
+    {
+      "file": "20261030093035_child_record_reviewed_team_transfers.sql",
+      "sha256": "6715c30856cec9634676c2337ac81c1ad67a7eefcc1be57948be7d865b621f1b"
+    },
+    {
+      "file": "20261030102036_child_record_project_adoption_custody.sql",
+      "sha256": "a93e6f5487b0cfbdbf2aff93abd5f92243c9bbd3454b2dccaba5058288510dc4"
+    },
+    {
+      "file": "20261030104147_personal_child_record_task_moves.sql",
+      "sha256": "98da78036c4f9f2a08cf8c61e6bfbbfbedc38a92deebdb7a9fdb559eb74c989a"
+    },
+    {
+      "file": "20261030114138_cross_root_child_task_transfers.sql",
+      "sha256": "e3006f881dbd13ed52f5f7db5d5e125b9f5b7c424ad288ad2bb18782db9cb6cc"
+    },
+    {
+      "file": "20261030134132_reviewed_child_record_adoption.sql",
+      "sha256": "71ada450f12087c5b8e34b643b9e01315a54389495e4a707b008e86122fea7c2"
+    },
+    {
+      "file": "20261030170753_child_adoption_metadata_discovery.sql",
+      "sha256": "34785f153d112ee2ef518eb960d982b404cb36f53a3c5ec3954f30d13357038d"
+    },
+    {
+      "file": "20261030183133_child_task_repair_previews.sql",
+      "sha256": "6243775ed7bc1bbcfb038762a903c9064d536f82f323f1819af576d5895c2ab6"
+    },
+    {
+      "file": "20261030184402_child_task_repair_commits.sql",
+      "sha256": "dd725f87e55165a7e4d2af4418dcfb1a79f54d2ace747ed5a6c96ed5e08a571f"
+    },
+    {
+      "file": "20261030192638_child_repair_original_history_access.sql",
+      "sha256": "b0503d3aaf01059087ff8763d92d7e409caa134923c22eaa9451e057d52eb771"
+    },
+    {
+      "file": "20261030204000_child_repair_bounded_originals.sql",
+      "sha256": "78b28364b5b6aa3345cab34c51110ad3258cbdb5a1f76bb857f3dca049464848"
+    },
+    {
+      "file": "20261031001141_child_task_completion_batches.sql",
+      "sha256": "972400d1864983e2cb10f92766094547c31bb406853236fcb44eb4fbbfbf8793"
+    },
+    {
+      "file": "20261031031909_completion_selection_root_observations.sql",
+      "sha256": "b376784c194687470687eb1783b9e3e14687350704d0a8cf2e1762df423a4d37"
+    },
+    {
+      "file": "20261031040011_mixed_task_completion_transactions.sql",
+      "sha256": "86da93374be5c3a6d32dc92eba90978967033f3cee4f48eca010a5833245e1dd"
+    },
+    {
+      "file": "20261031050018_mixed_task_completion_undo.sql",
+      "sha256": "234162c9a7635e48b7eb7dbbf4bca180f785779c90718f26f0b8e6c6841a9581"
+    },
+    {
+      "file": "20261031180359_child_field_history_removals.sql",
+      "sha256": "0831a3ce0d673984a5fb8b37fa487e70780750a54b43e25d7be8816f846e7fbc"
+    },
+    {
+      "file": "20261031204437_child_field_activity_details.sql",
+      "sha256": "ef059fb6f7a8ea2ed32945b3424071f761ee43e8b92b6d10eb28d33166563b2c"
+    },
+    {
+      "file": "20261101041509_child_order_activity.sql",
+      "sha256": "521f9b92ece30c56f9ace24d49bbc756104cae2fe26a65dbfe0dd1d923bf827e"
+    },
+    {
+      "file": "20261101062555_activity_operation_groups.sql",
+      "sha256": "b098318aee63ac5c85ba5bb505b5a4bd15cc812a39955632d7d1d5155baf25df"
+    },
+    {
+      "file": "20261101071304_reviewed_duplicate_history_preservation.sql",
+      "sha256": "363e44c7ae5962e808889083c4c327236ad4cd0165a9c94d9ab04c394222a11c"
+    },
+    {
+      "file": "20261101091417_reviewed_child_copy_comparison.sql",
+      "sha256": "f1b6613820e01405caedc21b5af8bd81483606c59d6cda530547a5a4efe26ae9"
+    },
+    {
+      "file": "20261101101059_reviewed_saved_copy_reconciliation.sql",
+      "sha256": "7a25e9dcd57c46b81713521daa26443f4a766da9dae7f92a50dad8706fde1247"
+    },
+    {
+      "file": "20261101123154_reviewed_child_history_reconciliation.sql",
+      "sha256": "ddf413624e19aab8b74634903f962f07e30e08d4803bf3ef940c68f5f01160cf"
+    },
+    {
+      "file": "20261101124928_atomic_child_copy_mapping.sql",
+      "sha256": "cc84badc25526576ded6013b758b329010ed894312b5173df5cfd36e8f3dd430"
+    },
+    {
+      "file": "20261101201038_scoped_task_assignment_guard.sql",
+      "sha256": "3e6a6f8653c55851f7ad9a0d33db83f832b7c06444b8e30c87a2933f944f19f9"
+    },
+    {
+      "file": "20261101212844_task_bound_file_custody.sql",
+      "sha256": "c713005f967a4ba9a290d00942543c79f583fb2e8aaa83b37c6f31a828f8fca1"
+    },
+    {
+      "file": "20261101220633_task_file_upload_admission.sql",
+      "sha256": "b2bbfd638392b497e61f973844832e8d69dade539bba86877887b2277cb4c705"
+    },
+    {
+      "file": "20261101225002_task_file_sender_stop.sql",
+      "sha256": "30e9316ed6137df9b4702cbfa31ee8bfa8c94d3fdb35d528422f7724bdbac17d"
+    },
+    {
+      "file": "20261101232206_task_file_upload_cleanup.sql",
+      "sha256": "16dbc20d3d95c48bf43e24d175a51eef237001fd78d18aefafa5e13099c71496"
+    },
+    {
+      "file": "20261102143104_team_audio_write_authority.sql",
+      "sha256": "4286eb0e84b25a52fed63403a0c977bdb54c66aa539d126c42847c8cfe3cfeea"
+    },
+    {
+      "file": "20261102150524_reviewed_audio_project_custody.sql",
+      "sha256": "e1d3fa7a489556b7693a98792314a88caeced8923d0e0b9e05ba3168f0be3eda"
+    },
+    {
+      "file": "20261102175200_reviewed_audio_generation_restore.sql",
+      "sha256": "a4cde59f4f9f477227b2ef5ae343191a1932a6a55dbc4719df770fea08553fa8"
+    },
+    {
+      "file": "20261102181442_audio_lifecycle_native_review.sql",
+      "sha256": "d4a0e7792a9e409606e459c34aa45c5da2ecfe8edb9dea8de73a676b8cd1679e"
+    },
+    {
+      "file": "20261102194929_recording_restore_recovery_fence.sql",
+      "sha256": "e340d7bb6c59125674bd71f4fbc6361aaee7c54451b925919496684c2e58ddbf"
+    },
+    {
+      "file": "20261102212850_recording_selection_recovery_fence.sql",
+      "sha256": "865365d2363926b4ec80440a5722587db8d46bcb15ded59615a8506f9a002fb6"
+    },
+    {
+      "file": "20261103010517_reviewed_project_recording_inventory.sql",
+      "sha256": "e6f2b3323b0772901c50536710c69e125e2976fb2d73cd7c3d84fd0683ca3524"
+    },
+    {
+      "file": "20261103013213_reviewed_project_recording_transfer.sql",
+      "sha256": "38a48b36e7bda3c456a1bd0919ac2b56fefcbf71b9d730e0ff3c5e910bb18663"
+    },
+    {
+      "file": "20261103021256_reviewed_audio_publication_audience.sql",
+      "sha256": "2ef1353d3f0e177ebe820066fcb983b0700b1242e55ec49d574f0fe8077aeef1"
+    },
+    {
+      "file": "20261103050051_reviewed_project_unfinished_recordings.sql",
+      "sha256": "a7e4640a730f5e8d703abb8f97609c36d22b991b9ea09c281b06509578e85fb3"
+    },
+    {
+      "file": "20261103072324_reviewed_project_private_recording_history.sql",
+      "sha256": "f1959eae23f184715d23477f6f8e3d25afa2e501c7ae136e52d646bf55d8b591"
+    },
+    {
+      "file": "20261103105727_account_removal_residual_repair.sql",
+      "sha256": "999c04e2da68c19f7042a93a22adec1ea31edd7318c52750270cdb2b40d7afe9"
+    },
+    {
+      "file": "20261103161738_legacy_policy_auth_initplans.sql",
+      "sha256": "90b90780b656c6dafb94aa0bddca8fce80136173aec5b45b078abb56468af8d4"
+    },
+    {
+      "file": "20261103201254_taskfold_daily_scoped_assignment_guard.sql",
+      "sha256": "3e6a6f8653c55851f7ad9a0d33db83f832b7c06444b8e30c87a2933f944f19f9"
+    },
+    {
+      "file": "20261103212921_taskfold_personal_workflow_undo_service.sql",
+      "sha256": "ce0c652590dfca10adc67aad27f2dc20abe340348eb7c7ca30638847b4eb29ed"
+    },
+    {
+      "file": "20261104190311_taskfold_capture_workflow_undo.sql",
+      "sha256": "edf4a9e90c8158b1aade72234e6b11324a1306efb1728c32c9b415795427d8bc"
+    },
+    {
+      "file": "20261105190459_reviewed_project_file_inventory.sql",
+      "sha256": "da18d4ecdc75f92cf3435724cec3e50446f2dfda1647549afb4417462adfa44f"
+    },
+    {
+      "file": "20261105203116_project_file_copy_preparation.sql",
+      "sha256": "bb21031aca263ee3bfd6fb81213f22d7b8b75f0b71dc87f739efdaed4c38aba0"
+    },
+    {
+      "file": "20261105210740_reviewed_project_file_transfer.sql",
+      "sha256": "a90fcd5226635f6ba927e36125e0ebc5b43da94d5d8a6216ebaac9e07e57e136"
+    },
+    {
+      "file": "20261105214041_native_project_file_preparation_recovery.sql",
+      "sha256": "25f3f983ce58f70db319aa2394d1ae8e9276f0644f8c6b9188a423c2589257b4"
+    },
+    {
+      "file": "20261105221349_canonical_project_file_copy_receipts.sql",
+      "sha256": "423a288198d0570bc53ddd998e5f38691bd23c956442b7f29fbb0c574c51e84b"
+    },
+    {
+      "file": "20261105235518_reviewed_child_step_batches.sql",
+      "sha256": "02fb87f132290d403566c3b05177103cf2b2b806acd79b37e997bf38dd002ae4"
+    },
+    {
+      "file": "20261106003008_reviewed_child_steps_availability.sql",
+      "sha256": "b250fc606005c94184afbd8badba4a18c2c8d5570565674fbadd3262dd78e395"
+    },
+    {
+      "file": "20261106014046_reviewed_step_history_reversal.sql",
+      "sha256": "0f4339ad549a16995fedb8226c226d82ab4fd344d5cd49de0cb6a616ec1841d8"
+    },
+    {
+      "file": "20261106073018_project_file_producer_terminal_recovery.sql",
+      "sha256": "4975f6729bfb6bea727333779806996a0761924e2967228854372b1de5511f49"
+    }
+  ],
+  "images": {
+    "db": "supabase/postgres@sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
+    "auth": "supabase/gotrue@sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b",
+    "rest": "postgrest/postgrest@sha256:c7cd7e265a85b05248abf53f4473fcec7e327c282d0bd0cf60f1551996d09fcf",
+    "storage": "supabase/storage-api@sha256:0194c53a03977e8ca0194636a27172158b39e3ae7a5e12da1dca5717086dd849",
+    "gateway": "node@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43"
+  },
+  "baselineAdvisors": {
+    "ran": true,
+    "source": "Official CLI on complete owned local schema",
+    "result": [
+      {
+        "name": "extension_in_public",
+        "title": "Extension in Public",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects extensions installed in the `public` schema.",
+        "detail": "Extension `pg_net` is installed in the public schema. Move it to another schema.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+        "metadata": {
+          "name": "pg_net",
+          "type": "extension",
+          "schema": "public"
+        },
+        "cache_key": "extension_in_public_pg_net"
+      }
+    ]
+  },
+  "clientContract": {
+    "syntheticOnly": true,
+    "account": "1edf5829-47eb-46e7-b1ed-7aa6195b7695",
+    "origin": "https://combined.example.invalid",
+    "expectedCount": 1,
+    "request": {
+      "request_id": "01aa6297-30c8-4199-9439-d2215cf5636b",
+      "scope": {
+        "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+        "roots": [
+          "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+        ],
+        "visibility": "team",
+        "folder_id": null,
+        "parent_id": null
+      },
+      "inspection_token": "e6a74e563e97ab48e8f3d44889f605f58c30474813c0adad546739953abdc098"
+    },
+    "inspection": {
+      "roots": [
+        "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+      ],
+      "account": "1edf5829-47eb-46e7-b1ed-7aa6195b7695",
+      "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+      "contents": {
+        "counts": {
+          "tasks": 3,
+          "projects": 2,
+          "sections": 0,
+          "task_activity": 3,
+          "task_comments": 0,
+          "task_mentions": 0,
+          "task_node_activity": 0,
+          "project_collaborators": 1,
+          "task_assignment_provenance": 3
+        },
+        "webhooks": 2,
+        "attachments": 2,
+        "email_routes": 1,
+        "file_custody": {
+          "legacy": 0,
+          "stored": 1,
+          "protocol": 1,
+          "unavailable": 0
+        },
+        "inline_files": 0,
+        "content_bytes": 16616,
+        "external_files": 0,
+        "provider_files": 2,
+        "global_webhooks": 1,
+        "project_webhooks": 1,
+        "recording_custody": {
+          "pending": 1,
+          "protocol": 1,
+          "retained": 1,
+          "published": 1,
+          "unavailable": 0
+        },
+        "recording_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "subtask_undo_policy": "kept_private_no_restore",
+        "queued_webhook_events": 2,
+        "inflight_webhook_events": 0,
+        "pending_project_webhooks": 0,
+        "private_subtask_undo_count": 0,
+        "child_record_custody_protocol": 1,
+        "recording_unfinished_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "recording_private_history_transfer": {
+          "protocol": 1,
+          "supported": true
+        }
+      },
+      "projects": [
+        {
+          "id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+          "name": "Mixed recording workshop",
+          "depth": 1,
+          "root_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+          "parent_id": null,
+          "is_archived": false,
+          "source_ancestor_archived": false
+        },
+        {
+          "id": "e75e6fd3-6408-472c-a30b-f0b608c73f03",
+          "name": "Mixed recording workshop",
+          "depth": 2,
+          "root_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+          "parent_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+          "is_archived": false,
+          "source_ancestor_archived": false
+        }
+      ],
+      "folder_id": null,
+      "parent_id": null,
+      "team_name": "Mixed recording workshop",
+      "visibility": "team",
+      "collaborators": [
+        {
+          "id": "4b0caef0-ed5d-4c29-99b5-ee5fea70d327",
+          "email": "mixed-old@example.invalid",
+          "status": "accepted",
+          "user_id": "857d58bd-ae01-4cef-a175-f1abdba5c431",
+          "eligible": false,
+          "project_id": "e75e6fd3-6408-472c-a30b-f0b608c73f03"
+        }
+      ],
+      "automatic_undo": false,
+      "commit_supported": false,
+      "file_preparation": {
+        "enabled": true,
+        "protocol": 1
+      },
+      "inspection_token": "e6a74e563e97ab48e8f3d44889f605f58c30474813c0adad546739953abdc098",
+      "sends_invitations": false,
+      "team_member_count": 2,
+      "creates_memberships": false,
+      "destination_archived": false,
+      "child_history_protocol": 1,
+      "history_custody_protocol": 1,
+      "connection_pause_protocol": 1,
+      "project_adoption_protocol": 1,
+      "connection_pause_supported": false,
+      "child_record_custody_protocol": 1
+    },
+    "ready": {
+      "next": null,
+      "items": [
+        {
+          "type": "application/pdf",
+          "label": "Keep original alias.pdf",
+          "state": "ready",
+          "byte_count": 42,
+          "operation_id": "3d7fd46d-3de4-4653-b73d-9de2c9686723"
+        }
+      ],
+      "scope": {
+        "roots": [
+          "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+        ],
+        "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+        "folder_id": null,
+        "parent_id": null,
+        "visibility": "team"
+      },
+      "state": "ready",
+      "total": 1,
+      "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+      "prepared": 1,
+      "protocol": 1,
+      "expires_at": "2026-11-07T08:22:45.163410Z",
+      "request_id": "01aa6297-30c8-4199-9439-d2215cf5636b",
+      "project_transferred": false
+    },
+    "review": {
+      "roots": [
+        "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+      ],
+      "account": "1edf5829-47eb-46e7-b1ed-7aa6195b7695",
+      "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+      "contents": {
+        "counts": {
+          "tasks": 3,
+          "projects": 2,
+          "sections": 0,
+          "task_activity": 3,
+          "task_comments": 0,
+          "task_mentions": 0,
+          "task_node_activity": 0,
+          "project_collaborators": 1,
+          "task_assignment_provenance": 3
+        },
+        "webhooks": 2,
+        "attachments": 2,
+        "email_routes": 1,
+        "file_custody": {
+          "legacy": 0,
+          "stored": 1,
+          "protocol": 1,
+          "unavailable": 0
+        },
+        "inline_files": 0,
+        "content_bytes": 16616,
+        "external_files": 0,
+        "provider_files": 2,
+        "global_webhooks": 1,
+        "project_webhooks": 1,
+        "recording_custody": {
+          "pending": 1,
+          "protocol": 1,
+          "retained": 1,
+          "published": 1,
+          "unavailable": 0
+        },
+        "recording_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "subtask_undo_policy": "kept_private_no_restore",
+        "queued_webhook_events": 2,
+        "inflight_webhook_events": 0,
+        "pending_project_webhooks": 0,
+        "private_subtask_undo_count": 0,
+        "child_record_custody_protocol": 1,
+        "recording_unfinished_transfer": {
+          "protocol": 1,
+          "supported": false
+        },
+        "recording_private_history_transfer": {
+          "protocol": 1,
+          "supported": true
+        }
+      },
+      "projects": [
+        {
+          "id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+          "name": "Mixed recording workshop",
+          "depth": 1,
+          "root_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+          "parent_id": null,
+          "is_archived": false,
+          "source_ancestor_archived": false
+        },
+        {
+          "id": "e75e6fd3-6408-472c-a30b-f0b608c73f03",
+          "name": "Mixed recording workshop",
+          "depth": 2,
+          "root_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+          "parent_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+          "is_archived": false,
+          "source_ancestor_archived": false
+        }
+      ],
+      "decisions": [
+        {
+          "role": null,
+          "user_id": "857d58bd-ae01-4cef-a175-f1abdba5c431",
+          "project_id": "e75e6fd3-6408-472c-a30b-f0b608c73f03",
+          "effective_role": null
+        }
+      ],
+      "folder_id": null,
+      "parent_id": null,
+      "team_name": "Mixed recording workshop",
+      "expires_at": "2026-11-06T08:37:45.360532Z",
+      "visibility": "team",
+      "file_policy": {
+        "action": "share_copies_keep_originals",
+        "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+        "protocol": 1
+      },
+      "review_token": "ad2c5043c411d0ddb8a51691ebb1f4d057fc563da749a7107819a81b5ca4e548",
+      "collaborators": [
+        {
+          "id": "4b0caef0-ed5d-4c29-99b5-ee5fea70d327",
+          "email": "mixed-old@example.invalid",
+          "status": "accepted",
+          "user_id": "857d58bd-ae01-4cef-a175-f1abdba5c431",
+          "eligible": false,
+          "project_id": "e75e6fd3-6408-472c-a30b-f0b608c73f03"
+        }
+      ],
+      "file_transfer": {
+        "count": 1,
+        "action": "share_copies_keep_originals",
+        "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+        "protocol": 1,
+        "byte_count": 42,
+        "inventory_token": "4737e62799918350d71f4068de06973e550d08788a11c1ac21422a243db53972",
+        "originals_kept_private": true
+      },
+      "automatic_undo": false,
+      "recording_count": 1,
+      "commit_supported": false,
+      "file_preparation": {
+        "enabled": true,
+        "protocol": 1
+      },
+      "inspection_token": "e6a74e563e97ab48e8f3d44889f605f58c30474813c0adad546739953abdc098",
+      "recording_policy": "move_recordings_keep_removed_private_v1",
+      "connection_policy": "pause",
+      "sends_invitations": false,
+      "team_member_count": 2,
+      "connection_effects": {
+        "email_routes_paused": 1,
+        "project_webhooks_paused": 1,
+        "global_webhooks_excluded": 1,
+        "queued_updates_discarded": 2,
+        "pending_webhooks_cancelled": 0
+      },
+      "invitations_closed": 1,
+      "assignments_cleared": 0,
+      "creates_memberships": false,
+      "destination_archived": false,
+      "child_history_protocol": 1,
+      "history_custody_protocol": 1,
+      "retained_recording_count": 1,
+      "connection_pause_protocol": 1,
+      "project_adoption_protocol": 1,
+      "requires_provider_custody": false,
+      "connection_pause_supported": false,
+      "requires_integration_pause": false,
+      "unfinished_recording_count": 1,
+      "child_record_custody_protocol": 1
+    },
+    "command": {
+      "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+      "roots": [
+        "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null,
+      "inspection_token": "e6a74e563e97ab48e8f3d44889f605f58c30474813c0adad546739953abdc098",
+      "decisions": [
+        {
+          "project_id": "e75e6fd3-6408-472c-a30b-f0b608c73f03",
+          "user_id": "857d58bd-ae01-4cef-a175-f1abdba5c431",
+          "role": null
+        }
+      ],
+      "review_token": "ad2c5043c411d0ddb8a51691ebb1f4d057fc563da749a7107819a81b5ca4e548",
+      "expires_at": "2026-11-06T08:37:45.360532Z",
+      "request_id": "45d4a142-f7d3-4127-9f60-11865fe6e2cb",
+      "connection_policy": "pause",
+      "file_policy": {
+        "protocol": 1,
+        "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+        "action": "share_copies_keep_originals"
+      },
+      "recording_policy": "move_recordings_keep_removed_private_v1",
+      "recording_count": 1,
+      "unfinished_recording_count": 1,
+      "retained_recording_count": 1
+    },
+    "receipt": {
+      "roots": [
+        "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+      ],
+      "account": "1edf5829-47eb-46e7-b1ed-7aa6195b7695",
+      "applied": true,
+      "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+      "replayed": false,
+      "folder_id": null,
+      "parent_id": null,
+      "request_id": "45d4a142-f7d3-4127-9f60-11865fe6e2cb",
+      "visibility": "team",
+      "project_ids": [
+        "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+        "e75e6fd3-6408-472c-a30b-f0b608c73f03"
+      ],
+      "file_transfer": {
+        "count": 1,
+        "action": "share_copies_keep_originals",
+        "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+        "protocol": 1,
+        "byte_count": 42,
+        "originals_kept_private": true
+      },
+      "automatic_undo": false,
+      "recording_count": 1,
+      "recording_policy": "move_recordings_keep_removed_private_v1",
+      "connection_policy": "pause",
+      "connection_effects": {
+        "email_routes_paused": 1,
+        "project_webhooks_paused": 1,
+        "global_webhooks_excluded": 1,
+        "queued_updates_discarded": 2,
+        "pending_webhooks_cancelled": 0
+      },
+      "invitations_closed": 1,
+      "assignments_cleared": 0,
+      "retained_recording_count": 1,
+      "project_adoption_protocol": 1,
+      "unfinished_recording_count": 1
+    }
+  },
+  "maintenance": {
+    "protocol": 1,
+    "claimed": 2,
+    "recovered": 0,
+    "probe_unresolved": 0,
+    "blocked_uploads": 0,
+    "purged": 2,
+    "unresolved": 0
+  },
+  "advisors": {
+    "ran": true,
+    "source": "Official CLI on complete owned local schema",
+    "result": [
+      {
+        "name": "extension_in_public",
+        "title": "Extension in Public",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects extensions installed in the `public` schema.",
+        "detail": "Extension `pg_net` is installed in the public schema. Move it to another schema.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+        "metadata": {
+          "name": "pg_net",
+          "type": "extension",
+          "schema": "public"
+        },
+        "cache_key": "extension_in_public_pg_net"
+      }
+    ]
+  },
+  "sourceUnchanged": true,
+  "handlerCounters": {
+    "auth": 22,
+    "rpc": 67,
+    "uploads": 5,
+    "downloads": 10,
+    "deletes": 2
+  },
+  "checkCount": 82,
+  "accepted": true,
+  "handlerClosed": true,
+  "servicesRemoved": true
+}

@@ -1,0 +1,381 @@
+{
+  "syntheticOnly": true,
+  "account": "1edf5829-47eb-46e7-b1ed-7aa6195b7695",
+  "origin": "https://combined.example.invalid",
+  "expectedCount": 1,
+  "request": {
+    "request_id": "01aa6297-30c8-4199-9439-d2215cf5636b",
+    "scope": {
+      "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+      "roots": [
+        "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+      ],
+      "visibility": "team",
+      "folder_id": null,
+      "parent_id": null
+    },
+    "inspection_token": "e6a74e563e97ab48e8f3d44889f605f58c30474813c0adad546739953abdc098"
+  },
+  "inspection": {
+    "roots": [
+      "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+    ],
+    "account": "1edf5829-47eb-46e7-b1ed-7aa6195b7695",
+    "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+    "contents": {
+      "counts": {
+        "tasks": 3,
+        "projects": 2,
+        "sections": 0,
+        "task_activity": 3,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 0,
+        "project_collaborators": 1,
+        "task_assignment_provenance": 3
+      },
+      "webhooks": 2,
+      "attachments": 2,
+      "email_routes": 1,
+      "file_custody": {
+        "legacy": 0,
+        "stored": 1,
+        "protocol": 1,
+        "unavailable": 0
+      },
+      "inline_files": 0,
+      "content_bytes": 16616,
+      "external_files": 0,
+      "provider_files": 2,
+      "global_webhooks": 1,
+      "project_webhooks": 1,
+      "recording_custody": {
+        "pending": 1,
+        "protocol": 1,
+        "retained": 1,
+        "published": 1,
+        "unavailable": 0
+      },
+      "recording_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 2,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1,
+      "recording_unfinished_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "recording_private_history_transfer": {
+        "protocol": 1,
+        "supported": true
+      }
+    },
+    "projects": [
+      {
+        "id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+        "name": "Mixed recording workshop",
+        "depth": 1,
+        "root_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      },
+      {
+        "id": "e75e6fd3-6408-472c-a30b-f0b608c73f03",
+        "name": "Mixed recording workshop",
+        "depth": 2,
+        "root_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+        "parent_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Mixed recording workshop",
+    "visibility": "team",
+    "collaborators": [
+      {
+        "id": "4b0caef0-ed5d-4c29-99b5-ee5fea70d327",
+        "email": "mixed-old@example.invalid",
+        "status": "accepted",
+        "user_id": "857d58bd-ae01-4cef-a175-f1abdba5c431",
+        "eligible": false,
+        "project_id": "e75e6fd3-6408-472c-a30b-f0b608c73f03"
+      }
+    ],
+    "automatic_undo": false,
+    "commit_supported": false,
+    "file_preparation": {
+      "enabled": true,
+      "protocol": 1
+    },
+    "inspection_token": "e6a74e563e97ab48e8f3d44889f605f58c30474813c0adad546739953abdc098",
+    "sends_invitations": false,
+    "team_member_count": 2,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "connection_pause_supported": false,
+    "child_record_custody_protocol": 1
+  },
+  "ready": {
+    "next": null,
+    "items": [
+      {
+        "type": "application/pdf",
+        "label": "Keep original alias.pdf",
+        "state": "ready",
+        "byte_count": 42,
+        "operation_id": "3d7fd46d-3de4-4653-b73d-9de2c9686723"
+      }
+    ],
+    "scope": {
+      "roots": [
+        "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+      ],
+      "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+      "folder_id": null,
+      "parent_id": null,
+      "visibility": "team"
+    },
+    "state": "ready",
+    "total": 1,
+    "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+    "prepared": 1,
+    "protocol": 1,
+    "expires_at": "2026-11-07T08:22:45.163410Z",
+    "request_id": "01aa6297-30c8-4199-9439-d2215cf5636b",
+    "project_transferred": false
+  },
+  "review": {
+    "roots": [
+      "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+    ],
+    "account": "1edf5829-47eb-46e7-b1ed-7aa6195b7695",
+    "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+    "contents": {
+      "counts": {
+        "tasks": 3,
+        "projects": 2,
+        "sections": 0,
+        "task_activity": 3,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 0,
+        "project_collaborators": 1,
+        "task_assignment_provenance": 3
+      },
+      "webhooks": 2,
+      "attachments": 2,
+      "email_routes": 1,
+      "file_custody": {
+        "legacy": 0,
+        "stored": 1,
+        "protocol": 1,
+        "unavailable": 0
+      },
+      "inline_files": 0,
+      "content_bytes": 16616,
+      "external_files": 0,
+      "provider_files": 2,
+      "global_webhooks": 1,
+      "project_webhooks": 1,
+      "recording_custody": {
+        "pending": 1,
+        "protocol": 1,
+        "retained": 1,
+        "published": 1,
+        "unavailable": 0
+      },
+      "recording_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 2,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1,
+      "recording_unfinished_transfer": {
+        "protocol": 1,
+        "supported": false
+      },
+      "recording_private_history_transfer": {
+        "protocol": 1,
+        "supported": true
+      }
+    },
+    "projects": [
+      {
+        "id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+        "name": "Mixed recording workshop",
+        "depth": 1,
+        "root_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      },
+      {
+        "id": "e75e6fd3-6408-472c-a30b-f0b608c73f03",
+        "name": "Mixed recording workshop",
+        "depth": 2,
+        "root_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+        "parent_id": "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "decisions": [
+      {
+        "role": null,
+        "user_id": "857d58bd-ae01-4cef-a175-f1abdba5c431",
+        "project_id": "e75e6fd3-6408-472c-a30b-f0b608c73f03",
+        "effective_role": null
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Mixed recording workshop",
+    "expires_at": "2026-11-06T08:37:45.360532Z",
+    "visibility": "team",
+    "file_policy": {
+      "action": "share_copies_keep_originals",
+      "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+      "protocol": 1
+    },
+    "review_token": "ad2c5043c411d0ddb8a51691ebb1f4d057fc563da749a7107819a81b5ca4e548",
+    "collaborators": [
+      {
+        "id": "4b0caef0-ed5d-4c29-99b5-ee5fea70d327",
+        "email": "mixed-old@example.invalid",
+        "status": "accepted",
+        "user_id": "857d58bd-ae01-4cef-a175-f1abdba5c431",
+        "eligible": false,
+        "project_id": "e75e6fd3-6408-472c-a30b-f0b608c73f03"
+      }
+    ],
+    "file_transfer": {
+      "count": 1,
+      "action": "share_copies_keep_originals",
+      "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+      "protocol": 1,
+      "byte_count": 42,
+      "inventory_token": "4737e62799918350d71f4068de06973e550d08788a11c1ac21422a243db53972",
+      "originals_kept_private": true
+    },
+    "automatic_undo": false,
+    "recording_count": 1,
+    "commit_supported": false,
+    "file_preparation": {
+      "enabled": true,
+      "protocol": 1
+    },
+    "inspection_token": "e6a74e563e97ab48e8f3d44889f605f58c30474813c0adad546739953abdc098",
+    "recording_policy": "move_recordings_keep_removed_private_v1",
+    "connection_policy": "pause",
+    "sends_invitations": false,
+    "team_member_count": 2,
+    "connection_effects": {
+      "email_routes_paused": 1,
+      "project_webhooks_paused": 1,
+      "global_webhooks_excluded": 1,
+      "queued_updates_discarded": 2,
+      "pending_webhooks_cancelled": 0
+    },
+    "invitations_closed": 1,
+    "assignments_cleared": 0,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "retained_recording_count": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "requires_provider_custody": false,
+    "connection_pause_supported": false,
+    "requires_integration_pause": false,
+    "unfinished_recording_count": 1,
+    "child_record_custody_protocol": 1
+  },
+  "command": {
+    "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+    "roots": [
+      "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+    ],
+    "visibility": "team",
+    "folder_id": null,
+    "parent_id": null,
+    "inspection_token": "e6a74e563e97ab48e8f3d44889f605f58c30474813c0adad546739953abdc098",
+    "decisions": [
+      {
+        "project_id": "e75e6fd3-6408-472c-a30b-f0b608c73f03",
+        "user_id": "857d58bd-ae01-4cef-a175-f1abdba5c431",
+        "role": null
+      }
+    ],
+    "review_token": "ad2c5043c411d0ddb8a51691ebb1f4d057fc563da749a7107819a81b5ca4e548",
+    "expires_at": "2026-11-06T08:37:45.360532Z",
+    "request_id": "45d4a142-f7d3-4127-9f60-11865fe6e2cb",
+    "connection_policy": "pause",
+    "file_policy": {
+      "protocol": 1,
+      "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+      "action": "share_copies_keep_originals"
+    },
+    "recording_policy": "move_recordings_keep_removed_private_v1",
+    "recording_count": 1,
+    "unfinished_recording_count": 1,
+    "retained_recording_count": 1
+  },
+  "receipt": {
+    "roots": [
+      "0ab14bea-2414-4ab0-989d-52eaaacdf957"
+    ],
+    "account": "1edf5829-47eb-46e7-b1ed-7aa6195b7695",
+    "applied": true,
+    "team_id": "e2ad88be-4da7-494b-b45c-17e4d54b6f44",
+    "replayed": false,
+    "folder_id": null,
+    "parent_id": null,
+    "request_id": "45d4a142-f7d3-4127-9f60-11865fe6e2cb",
+    "visibility": "team",
+    "project_ids": [
+      "0ab14bea-2414-4ab0-989d-52eaaacdf957",
+      "e75e6fd3-6408-472c-a30b-f0b608c73f03"
+    ],
+    "file_transfer": {
+      "count": 1,
+      "action": "share_copies_keep_originals",
+      "plan_id": "64cefe9b-6a68-4366-aa41-caf5d53e2df2",
+      "protocol": 1,
+      "byte_count": 42,
+      "originals_kept_private": true
+    },
+    "automatic_undo": false,
+    "recording_count": 1,
+    "recording_policy": "move_recordings_keep_removed_private_v1",
+    "connection_policy": "pause",
+    "connection_effects": {
+      "email_routes_paused": 1,
+      "project_webhooks_paused": 1,
+      "global_webhooks_excluded": 1,
+      "queued_updates_discarded": 2,
+      "pending_webhooks_cancelled": 0
+    },
+    "invitations_closed": 1,
+    "assignments_cleared": 0,
+    "retained_recording_count": 1,
+    "project_adoption_protocol": 1,
+    "unfinished_recording_count": 1
+  }
+}
