@@ -1,0 +1,64 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 61385846784,
+  "actions": [],
+  "skipped": [],
+  "freeAfterBytes": 61385990144,
+  "actualFreeChangeBytes": 143360,
+  "retiredSupersededEvidence": [
+    {
+      "path": "/tmp/taskfold-step-batch-ios-v1.json",
+      "bytes": 38254
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-ios-v1.log",
+      "bytes": 14216
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-ios-v2.json",
+      "bytes": 38796
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-ios-v2.log",
+      "bytes": 14742
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-ios-v3.json",
+      "bytes": 39172
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-ios-v3.log",
+      "bytes": 15139
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-ios-v4.json",
+      "bytes": 39843
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-ios-v4.log",
+      "bytes": 15726
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-mac-v1.json",
+      "bytes": 39016
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-mac-v1.log",
+      "bytes": 15087
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-mac-v2.json",
+      "bytes": 39687
+    },
+    {
+      "path": "/tmp/taskfold-step-batch-mac-v2.log",
+      "bytes": 15674
+    }
+  ],
+  "fixtureCleanup": {
+    "iosRemoved": true,
+    "macRemoved": true,
+    "remainingContainers": [],
+    "remainingNetworks": []
+  }
+}

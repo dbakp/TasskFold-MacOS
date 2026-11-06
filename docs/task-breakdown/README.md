@@ -19,3 +19,7 @@ The independently stored child-record rollout remains gated; this milestone does
 ## API basis
 
 Apple’s [Foundation Models generation guide](https://developer.apple.com/documentation/foundationmodels/generating-content-and-performing-tasks-with-foundation-models), [guided generation](https://developer.apple.com/documentation/foundationmodels/generating-swift-data-structures-with-guided-generation) and [language/locale guidance](https://developer.apple.com/documentation/foundationmodels/supporting-languages-and-locales-with-foundation-models) were reviewed alongside the installed Xcode 27 SDK interfaces. Runtime use is guarded for iOS/macOS 26; model availability and locale support are checked before inference. This is the on-device SystemLanguageModel, with no cloud fallback.
+
+## 6 November — independent child-step service foundation
+
+A separate atomic reviewed-step service now exists behind a default-Off gate. Its owning full-schema checks pass, but the current editor review is not yet connected to it; typed requests, saved recovery/history and native acceptance remain. See [current implementation and gaps](../reviewed-step-batches/README.md). Further physical iPhone installation is deferred; suggestions remain on-device only.

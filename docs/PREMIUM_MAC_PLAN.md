@@ -11021,3 +11021,8 @@ Final-review/result file counts now expose explicit accessibility label/value pa
 ### 6 November — tablet scope accepted; Mac walkthrough awaits unlock
 
 The owning iOS repository accepts the same three project-file consent/recovery journeys on its existing iPad Pro Simulator, with no runtime warnings and the same production Swift candidate as the accepted phone runs. This does not establish Mac runtime acceptance. The signed Mac fixture was launched, but computer use reports a locked Mac; one unlock request is pending, and the isolated process was closed to avoid clutter. Normal Taskfold stays untouched. See `native-project-files/tablet-native-verification.json`.
+
+
+### 6 November — atomic reviewed task steps, service foundation
+
+The owning Mac schema adds 1–12 reviewed literal steps with one write/revision and one Undo, including exact request resolution/closure and shared editing admission. Owning genuine local verification is recorded in `reviewed-step-batches/full-schema.json`; no native integration or hosted deployment is implied. Typed clients, saved recovery/history, pre-generation availability and review-screen integration remain to build. Assistance is on-device only; further iPhone installation is deferred. Normal gates/apps stay unchanged. [Scope and remaining work](reviewed-step-batches/README.md).
