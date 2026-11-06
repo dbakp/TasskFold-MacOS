@@ -1,0 +1,160 @@
+{
+  "freeBeforeBytes": 59398098944,
+  "freeAfterBytes": 59479052288,
+  "retiredRawResults": [
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-native.xcresult",
+      "bytes": 6373437
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-v2-native.xcresult",
+      "bytes": 14033473
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-v3-native.xcresult",
+      "bytes": 17690837
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-v4-native.xcresult",
+      "bytes": 832093
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ipad-native.xcresult",
+      "bytes": 25360473
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ipad-v2-native.xcresult",
+      "bytes": 915469
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-failure-attachments",
+      "bytes": 4
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-v2-attachments",
+      "bytes": 13416518
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-final-attachments",
+      "bytes": 183055
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ipad-final-attachments",
+      "bytes": 184374
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ios-build-v4.log",
+      "bytes": 41197
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-mac-core-final.log",
+      "bytes": 33513
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-v2-native.log",
+      "bytes": 21886
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ipad-attachment-export.log",
+      "bytes": 406
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ios-build.log",
+      "bytes": 21794
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ios-build-v5.log",
+      "bytes": 41197
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ios-build-v7.log",
+      "bytes": 41197
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ipad-v2-native.log",
+      "bytes": 29433
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-attachments-export.log",
+      "bytes": 408
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ios-build-v6.log",
+      "bytes": 41197
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ios-build-v2.log",
+      "bytes": 130592
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ios-build-v3.log",
+      "bytes": 124328
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-mac-build-validation.log",
+      "bytes": 366
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ios-core-validation.log",
+      "bytes": 52260
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ipad-native-validation.log",
+      "bytes": 280
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-mac-core-validation.log",
+      "bytes": 35341
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-ipad-native.log",
+      "bytes": 41360
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-native.log",
+      "bytes": 12060
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-mac-build.log",
+      "bytes": 83238
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-v3-native.log",
+      "bytes": 34582
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-mac-core.log",
+      "bytes": 55089
+    },
+    {
+      "path": "/tmp/taskfold-shared-actions-iphone-v4-native.log",
+      "bytes": 19566
+    }
+  ],
+  "removedRawBytes": 79851023,
+  "conciseEvidencePreservedInBothOwners": true,
+  "currentMacPackageAndRollbackRetained": true,
+  "normalMacProcessPreserved": true,
+  "realAppDataBackupsKeychainDockerUntouched": true,
+  "cacheCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 59479068672,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 688705536,
+        "projectedAllocatedBytes": 688705536
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 625852416,
+        "projectedAllocatedBytes": 625852416
+      }
+    ],
+    "freeAfterBytes": 59479056384,
+    "actualFreeChangeBytes": -12288
+  }
+}

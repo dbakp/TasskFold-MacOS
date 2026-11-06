@@ -247,12 +247,18 @@ final class SharedCaptureDisk: @unchecked Sendable {
         }
     }
     /// Removing one exact draft never clears another account's drafts or a newer edited copy.
-    func acknowledge(_ draft: SharedCaptureDraft, account: String) throws {
+    func acknowledge(_ draft: SharedCaptureDraft, account: String, generation: UUID? = nil) throws {
         try locked {
             var state = try read()
             guard !account.isEmpty, state.workspace?.account == account, draft.workspace.account == account else {
                 throw SharedCaptureFailure("Reopen shared drafts in their original workspace.")
             }
+            if let generation {
+                guard state.workspace?.generation == generation else {
+                    throw SharedCaptureFailure("Your sharing workspace changed. Reopen the draft and try again.")
+                }
+            }
+            try Task.checkCancellation()
             state.drafts.removeAll { $0 == draft }; try write(state)
         }
     }

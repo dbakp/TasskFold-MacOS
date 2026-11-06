@@ -13,13 +13,14 @@
   "privateSafetyCopy": true,
   "prelaunchAllCacheBytesUnchanged": true,
   "workspaceTaskPendingCachesPreservedBeforeLaunch": 5,
-  "postlaunchTaskDataVerification": "Pending system app-data permission",
-  "startupStatus": "Installed process waiting for macOS SystemPolicyAppData permission",
+  "postlaunchTaskDataVerification": "Pending native startup inspection after unlock",
+  "startupStatus": "Installed process retained; user reported Allow; native inspection remains blocked by the locked Mac",
   "normalGateChanges": false,
   "hostedServiceChanges": false,
   "containsBackgroundSharedDraftBadgeAndReview": true,
   "containsLaterGlobalSearchCode": true,
   "phoneInstallationDeferred": true,
   "futureMacUpdatesAuthorizedWithoutDraftQuestion": true,
-  "archiveSHA256": "6b62b8ecd86eaa02f5c707fb7ea64a834f708cec51718b2bca91f226308a9beb"
+  "archiveSHA256": "6b62b8ecd86eaa02f5c707fb7ea64a834f708cec51718b2bca91f226308a9beb",
+  "userReportedAppDataApproval": true
 }

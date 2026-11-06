@@ -1,0 +1,83 @@
+Build complete! (14,35 secs)
+Test Suite 'Selected tests' started at 2026-11-06 22:13:03.909.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-11-06 22:13:03.910.
+Test Suite 'SharedCaptureActionWorkerTests' started at 2026-11-06 22:13:03.910.
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testActionFailureReleasesWorkerAndPreservesCorruptMailbox]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testActionFailureReleasesWorkerAndPreservesCorruptMailbox]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testBlockedActionLeavesMainActorAvailableAndRefusesConcurrentBacklog]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testBlockedActionLeavesMainActorAvailableAndRefusesConcurrentBacklog]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testCancelledAcknowledgementKeepsEveryMailboxByteAndCanRetry]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testCancelledAcknowledgementKeepsEveryMailboxByteAndCanRetry]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testLargeAcknowledgementKeepsExactOtherDraftsAndRunsOffMain]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testLargeAcknowledgementKeepsExactOtherDraftsAndRunsOffMain]' passed (0.948 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testSameAccountNewSessionRefusesLateAcknowledgementWithoutChangingBytes]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureActionWorkerTests testSameAccountNewSessionRefusesLateAcknowledgementWithoutChangingBytes]' passed (0.004 seconds).
+Test Suite 'SharedCaptureActionWorkerTests' passed at 2026-11-06 22:13:04.870.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.960 (0.960) seconds
+Test Suite 'SharedCapturePlanTests' started at 2026-11-06 22:13:04.870.
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testArchivedAndUnavailableProjectsAreRejected]' started.
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testArchivedAndUnavailableProjectsAreRejected]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testExistingTaskCollisionCannotBecomeAnUpdate]' started.
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testExistingTaskCollisionCannotBecomeAnUpdate]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testOlderCachesDecodeAndPortableBackupsExcludeLocalReceipts]' started.
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testOlderCachesDecodeAndPortableBackupsExcludeLocalReceipts]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testReceiptDoesNotAuthorizeAnotherAccount]' started.
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testReceiptDoesNotAuthorizeAnotherAccount]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testReceiptPreventsRecreationAfterTaskDeletionOrUndo]' started.
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testReceiptPreventsRecreationAfterTaskDeletionOrUndo]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testReviewCreatesOnlyOneCreateOnlyTaskWithoutInferringPlanning]' started.
+Test Case '-[TaskfoldCoreTests.SharedCapturePlanTests testReviewCreatesOnlyOneCreateOnlyTaskWithoutInferringPlanning]' passed (0.000 seconds).
+Test Suite 'SharedCapturePlanTests' passed at 2026-11-06 22:13:04.874.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'SharedCaptureReviewReaderTests' started at 2026-11-06 22:13:04.874.
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testCancelledReviewCannotRetireImportedDrafts]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testCancelledReviewCannotRetireImportedDrafts]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testFullMailboxReviewRunsOffMainAndKeepsAllUnimportedTextAndBytes]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testFullMailboxReviewRunsOffMainAndKeepsAllUnimportedTextAndBytes]' passed (0.507 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testHeldReadKeepsInterfaceAvailableAndCoalescesRefreshes]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testHeldReadKeepsInterfaceAvailableAndCoalescesRefreshes]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testInvalidMailboxNeverRewritesInput]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testInvalidMailboxNeverRewritesInput]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testLeavingReviewDiscardsHeldAndPendingReplies]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testLeavingReviewDiscardsHeldAndPendingReplies]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testReadErrorCanRetryWithoutReusingFailedResult]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testReadErrorCanRetryWithoutReusingFailedResult]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testReceiptCleanupPreservesOtherAccountsAndWrongReceiptValues]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureReviewReaderTests testReceiptCleanupPreservesOtherAccountsAndWrongReceiptValues]' passed (0.003 seconds).
+Test Suite 'SharedCaptureReviewReaderTests' passed at 2026-11-06 22:13:05.427.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.553 (0.553) seconds
+Test Suite 'SharedCaptureTests' started at 2026-11-06 22:13:05.427.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testAcknowledgementIsExactIdempotentAndKeepsOtherDrafts]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testAcknowledgementIsExactIdempotentAndKeepsOtherDrafts]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testCapacityRejectsWithoutDroppingOldDrafts]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testCapacityRejectsWithoutDroppingOldDrafts]' passed (0.202 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testConcurrentInstancesDoNotLoseDrafts]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testConcurrentInstancesDoNotLoseDrafts]' passed (0.039 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testCorruptFutureAndOversizedFilesArePreservedRatherThanReset]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testCorruptFutureAndOversizedFilesArePreservedRatherThanReset]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testEmptyOversizedAndUnicodeContentIsBoundedInBytes]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testEmptyOversizedAndUnicodeContentIsBoundedInBytes]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testExistingDraftsReturnOnlyInOriginalAccountAfterNormalRelaunch]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testExistingDraftsReturnOnlyInOriginalAccountAfterNormalRelaunch]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testLinkAndSingleLineSuggestionsDoNotNeedDuplicateNotes]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testLinkAndSingleLineSuggestionsDoNotNeedDuplicateNotes]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testLongSuggestedHeadingDoesNotLoseOriginalText]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testLongSuggestedHeadingDoesNotLoseOriginalText]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testSameIdentityWithDifferentContentNeverOverwritesSavedDraft]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testSameIdentityWithDifferentContentNeverOverwritesSavedDraft]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testSaveRelaunchAndExactRetryRemainOneDraft]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testSaveRelaunchAndExactRetryRemainOneDraft]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testSharedSelectionIsPreservedWithoutParsingCommands]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testSharedSelectionIsPreservedWithoutParsingCommands]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testSignOutAndSameAccountNewSessionInvalidateOpenShare]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testSignOutAndSameAccountNewSessionInvalidateOpenShare]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testUnsupportedAndCredentialedLinksFailBeforeSaving]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testUnsupportedAndCredentialedLinksFailBeforeSaving]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testWorkspaceChangeDuringShareCannotRetargetDraft]' started.
+Test Case '-[TaskfoldCoreTests.SharedCaptureTests testWorkspaceChangeDuringShareCannotRetargetDraft]' passed (0.002 seconds).
+Test Suite 'SharedCaptureTests' passed at 2026-11-06 22:13:05.702.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.274 (0.275) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-11-06 22:13:05.702.
+	 Executed 32 tests, with 0 failures (0 unexpected) in 1.790 (1.792) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 22:13:05.702.
+	 Executed 32 tests, with 0 failures (0 unexpected) in 1.790 (1.793) seconds

@@ -1232,6 +1232,7 @@ final class Store {
     var sharedCaptureCountNativeTaps = 0
     #endif
     @ObservationIgnored let sharedCaptureCountReader = SharedCaptureCountReader()
+    @ObservationIgnored let sharedCaptureActionWorker = SharedCaptureActionWorker()
     @ObservationIgnored var sharedCapturePublishedWorkspace: SharedCaptureWorkspace?
     @ObservationIgnored var sharedCapturePublicationReady = false
     @ObservationIgnored private var widgetCalendarWindow: CalendarCapacityWindow?

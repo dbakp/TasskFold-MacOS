@@ -4,11 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "P2 · Inline note authoring",
-  "latest": "Write/Preview now exposes Strikethrough and bounds every formatting result before editing. Both owners pass 52 focused note checks (7 new); the prior iOS run reproduces 4 inline-limit failures. Signed current-source phone/tablet journeys accept actual toggles, preview without saving, description-only Save, preserved completion/children/pins, actual Store Undo/Redo and cold readback; final previews were inspected. Mac builds/signs; native Mac control/speech and physical FPS stay separate. This source is not packaged. Installed Mac30 still awaits its app-data prompt and the Mac is locked; that process remains intact. Phone installation and agreed deferrals remain.",
+  "focus": "P2 · Saving shared drafts",
+  "latest": "Shared-draft Save and Discard now move mailbox file work off the interface, with visible progress and safe retry. Both owners pass 32 focused checks; current phone/tablet controls pass changed-receipt refusal, full notes, exact acknowledgement, Discard, Undo/Redo and cold saved state. Mac builds/signs; its native interaction remains separate. Source is not packaged. Mac30 is preserved; approval was reported, but startup inspection still awaits unlock. Agreed deferrals remain.",
   "next": [
-    "Finish the installed Mac30 startup and saved-data checks after the user clears its macOS app-data prompt. Keep that process intact; retain the verified Mac29 rollback. Phone41 installation remains deferred.",
-    "Prioritize startup disk-publication responsiveness and remaining import/save/discard pauses while preserving exact durable acknowledgements and workspace privacy. Shared-draft badges and review loading now read in the background.",
+    "Finish installed Mac30 startup and saved-data checks after unlock. The user reports allowing its data prompt; keep that process intact and retain the verified Mac29 rollback. Phone installation remains deferred.",
+    "Package and install the merged note-authoring and shared-draft improvements in the next Mac update after the current startup check. Keep the phone installation deferred.",
+    "Prioritize startup disk-publication responsiveness and remaining durable-save pauses while preserving exact acknowledgements and workspace privacy. Shared-draft counts, review loading and mailbox actions now run in the background.",
     "Continue ordinary notes/headings, workflow and browsing performance, actual drag/rendering and larger workloads. Keep platform, shared/cloud/account/window, speech and physical FPS acceptance distinct.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
     "Finish the full older-task/history migration, wider identity and ownership cases, and shared file/recording custody. Global title search is merged; ordinary advanced rollout safeguards stay in place.",
@@ -502,7 +503,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Mac30 now packages the background shared-draft work and is installed, with exact cache bytes preserved before launch. Its system app-data permission, main window and after-sync data checks are pending; Mac29 rollback is retained. Shared-draft review loading and imported-draft cleanup now run in the background, with loading/retry and unsaved-editor preservation during routine receipt refreshes. Each owner passes 29 sharing Core checks; phone/tablet current-source journeys preserve exact saved bytes and multiline text. Mac builds/signs; native Mac interaction is separate. Startup publication and save/discard remain synchronous. Shared-draft badge counts now use one background read plus one latest pending refresh, release the file lock before large JSON decoding and reject outdated workspace/session/access/origin/receipt results. Each owner passes 22 focused sharing checks; current phone/tablet held-read and receipt-race journeys preserve exact active cache/mailbox bytes. Independent Mac build/signing passes. Full review/cleanup and startup publication are still synchronous and remain to improve. Scoped reuse/background preparation covers filters, assignee names, workflows, template/project/parent catalogs, task/note searches, Insights, navigation badges, checklist counts and note previews. Seven-task day review counts only successful saves; dated-list drops use one commit and Undo. Exact nested-byte, Unicode, source, workspace and access guards remain. Full accessible task-note text and its link detection now prepare away from the interface thread, with cancellation, current-source checks, bounded retention and release on disappearance/empty text. Each owner passes 33 focused note checks including eight new cases. Current signed iPhone/iPad production-row journeys pass full text, size switching, live refresh, access loss/return and exact all-table cold preservation. Mac interaction, real drag/rendering, larger workloads, shared/cloud/account/window contexts, speech and physical FPS remain unfinished. The earlier full-note-reading source is packaged as Mac29/phone41. Mac29 is installed/running/synced; phone34 is last verified installed and phone41 installation remains deferred. The new badge-read source is not yet packaged; earlier28/40 candidates are superseded.",
+              "detail": "Shared-draft counts, review loading, Save preflight, exact acknowledgement and Discard now use bounded background work with current-workspace checks. Both owners pass 32 focused sharing checks; current phone/tablet controls accept held Save responsiveness, changed-receipt refusal, exact saved bytes, full notes on retry, one task/receipt, Discard, Store Undo/Redo and cold return. Independent Mac builds/signs; native Mac interaction is separate. Scoped reuse/background preparation already covers filters, people, workflows, catalogs, searches, Insights, navigation counts, checklist progress and note reading/previews. Seven-task day review counts only successful saves; dated-list drops use one commit and Undo. Startup publication and durable task-cache writes remain synchronous. Actual drag/rendering, larger workloads, wider shared/cloud/account/window/accessibility contexts, speech and physical FPS remain unfinished. Mac30 is installed with startup inspection pending after reported approval; this new source is not packaged and phone installation remains deferred.",
               "steps": [
                 {
                   "state": "done",
@@ -555,6 +556,10 @@
                 {
                   "state": "done",
                   "title": "Load shared-draft reviews in the background; verify retry, exact notes and unsaved-editor preservation on phone/tablet (Mac build separate)"
+                },
+                {
+                  "state": "done",
+                  "title": "Save and discard shared drafts with background mailbox work; verify phone/tablet retry, exact receipt, history and cold state (Mac build separate)"
                 }
               ]
             }
@@ -669,7 +674,13 @@
             "background-note-rows/ipad.json",
             "daily-candidates-29-41/README.md",
             "daily-candidates-29-41/verification.json",
-            "daily-candidates-29-41/package.json"
+            "daily-candidates-29-41/package.json",
+            "shared-draft-actions/README.md",
+            "shared-draft-actions/verification.json",
+            "shared-draft-actions/iphone.json",
+            "shared-draft-actions/ipad.json",
+            "shared-draft-actions/mac-build.json",
+            "shared-draft-actions/storage-cleanup.json"
           ],
           "focus": true
         },
@@ -1584,7 +1595,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "2e08d519934f5c3fd62458aa39c142b63b325d313a4c5348f438363f776903aa",
+    "P2_PLAN.md": "5a69b7a2a7a82bf2d6803ed75ac9863415ee6c12375c009421eee57b58be342f",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "56eb14bc98bf37b5ff7e35d3323eb73191f2c8a079dd74a14f1f780b4582fcdc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1840,7 +1851,7 @@
     "genuine-structure-recovery/native.json": "2177dba043344491262626ed929b357033ff42cd1ca29f97eabadd968a8f5791",
     "genuine-structure-recovery/verification.json": "58a9b3f2afea3deab2c5963148e5355657352f9f09c35f82576463955f35a187",
     "github-delivery/README.md": "878c3a31c4aca872d3159d9137842268dcf403c7403df631988d7090a6a67b62",
-    "github-delivery/verification.json": "5773da0bcca2ae7293b2918158fd9af3683b70368f6d7c35f7de10bf34c8f8b9",
+    "github-delivery/verification.json": "ce932fd83d8e360d8f3b4e76c362491bf5bcdbcba80699a4b192edc36286adfe",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
     "indexed-child-source/README.md": "17dbc3ab03caca89cba0cd58913841825bdac4adbd8be66e50859276e53ec592",
@@ -1858,10 +1869,10 @@
     "mac-transfer-keyboard/verification.json": "9fbafaa53559350bc8a2697aa618845258098f7b65919d59acee97c8914d3a6e",
     "mac29-installation/README.md": "c9ef080e3f35f8960b97cba27790441ab9aef5fd81d5d080d04d6534bf459c3c",
     "mac29-installation/verification.json": "cfb1452f9597091988d23b9d3a8e120d4fceb71b3205be4d88f83f6c1af2fdc9",
-    "mac30-installation/README.md": "da8da5b1d760c2f6e6696847f3921742d5561dd2b3b418825284a0ba3ae5572a",
+    "mac30-installation/README.md": "b540707d2792f048e3668c06eac9697d3a1be7be1bd4a9f728c66e1bbb1569ff",
     "mac30-installation/build.json": "63e8b13709cf20abb3f71b073bf68cc34ff3a8dae29081d910c9793c2257262b",
     "mac30-installation/storage-cleanup.json": "d1489c9794a262e36d738b13c4e8d864384e88589f65d5b64c3cf5860f423f00",
-    "mac30-installation/verification.json": "73ee00ef12d8bc9a5e76d8bf2a4f25e5e3544b11cef9c5f2d101e3584c307de6",
+    "mac30-installation/verification.json": "f6e0f7271d2c5551fbeeb5dca08a39157a73f7defaa89ac974a6fb6906f122f3",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",
     "mixed-task-completion-native/verification.json": "e94f3ce96eba46de16f86d30d567751faa8079c57118dd1a6665101f1ea5de8f",
     "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",
@@ -2085,6 +2096,12 @@
     "saved-copy-selection/phone-proof.json": "ff630c3b283eec760c05b9b2e26ae10fb2f222cff853a0f81b216171967c7d89",
     "saved-copy-selection/symbol-verification.json": "8cbae5b8d86418540ba082924cb86d86aad0aec83f53a9793282540e38cbddc1",
     "shared-array-reads/verification.json": "ebbfbd53afefdd58b56a141e44a877d034a9877bb41e6800612fa7240dd05456",
+    "shared-draft-actions/README.md": "87ec05e1fe42a5e21f664d6579d1d93f7a721a8dd2270c5fc56926b04785cefc",
+    "shared-draft-actions/ipad.json": "63a52f66bf99098908f4ec1984f3cca1d32929af30acefdff92c1b7da72bc9eb",
+    "shared-draft-actions/iphone.json": "f608c24f9fcc48dd224718195a70e04bb951c8212d4acf9c7311643ded4a3677",
+    "shared-draft-actions/mac-build.json": "e47316ee8b5336dfcad677aca1e9167af414e5699dbf6ece05d5615002523d5f",
+    "shared-draft-actions/storage-cleanup.json": "d1003891dad94d2967ac38826d77a037f523368fd9604e06f0d03c239d915b89",
+    "shared-draft-actions/verification.json": "a17b8e080d351ce46b8fd1cfb7694fbcb17789600b42da2799a096398bec39f3",
     "shared-draft-background-count/README.md": "e3f5becae542978d64919c80ec97855c7d0ea772796277fae2a3c55c75b27414",
     "shared-draft-background-count/ios-build.json": "5d5f636384e98deece8b2d3fbc2429a70805f43210340c2ea1626e472a1fb2d5",
     "shared-draft-background-count/ipad-native.json": "ec330716e79a7064f74db64f32331221bca74ac972c08b06783d6d293fc05fc6",
