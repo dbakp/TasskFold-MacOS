@@ -3,14 +3,14 @@ import Foundation
 /// Selection-based edits are pure text transformations; callers decide when to save.
 enum NoteFormatting {
     enum Style: String, CaseIterable, Sendable { case bold, italic, code, heading, bullet, numbered, quote, link }
+    enum ParagraphStyle: String, CaseIterable, Sendable {
+        case body, heading1, heading2, heading3
+        var title: String { switch self { case .body: "Body"; case .heading1: "Heading 1"; case .heading2: "Heading 2"; case .heading3: "Heading 3" } }
+        var level: Int? { switch self { case .body: nil; case .heading1: 1; case .heading2: 2; case .heading3: 3 } }
+    }
     struct Edit: Equatable, Sendable { let text: String; let selection: NSRange }
     static func apply(_ style: Style, to text: String, selection: NSRange, url: String = "") throws -> Edit {
-        guard text.utf8.count <= NoteMarkup.maximumBytes else { throw AppFailure(message: "This note is too long for the formatting tools. Its text is unchanged.") }
-        guard selection.location != NSNotFound, selection.location >= 0, selection.length >= 0,
-              selection.location <= text.utf16.count, selection.length <= text.utf16.count - selection.location,
-              let range = Range(selection, in: text),
-              (range.lowerBound == text.endIndex || text.indices.contains(range.lowerBound)),
-              (range.upperBound == text.endIndex || text.indices.contains(range.upperBound)) else { throw AppFailure(message: "Select the text again before formatting it.") }
+        let range = try checkedRange(in: text, selection: selection)
         let chosen = String(text[range]), before = String(text[..<range.lowerBound]), after = String(text[range.upperBound...])
         func wrapping(_ marker: String, placeholder: String) -> Edit {
             if before.hasSuffix(marker), after.hasPrefix(marker) {
@@ -48,18 +48,19 @@ enum NoteFormatting {
             let label = (chosen.isEmpty ? "link text" : chosen).replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "[", with: "\\[").replacingOccurrences(of: "]", with: "\\]")
             let target = destination.absoluteString.replacingOccurrences(of: "(", with: "%28").replacingOccurrences(of: ")", with: "%29").replacingOccurrences(of: "\\", with: "%5C")
             return Edit(text: before + "[" + label + "](" + target + ")" + after, selection: NSRange(location: before.utf16.count + 1, length: label.utf16.count))
-        case .heading, .bullet, .numbered, .quote:
+        case .heading: return try paragraph(.heading2, to: text, selection: selection, toggle: true)
+        case .bullet, .numbered, .quote:
             let linesRange = (text as NSString).lineRange(for: selection)
             guard let lines = Range(linesRange, in: text) else { throw AppFailure(message: "Select the lines again before formatting them.") }
             let original = String(text[lines]); var rows = original.components(separatedBy: "\n")
-            let prefix = style == .heading ? "## " : style == .bullet ? "- " : style == .quote ? "> " : "1. "
+            let prefix = style == .bullet ? "- " : style == .quote ? "> " : "1. "
             func parts(_ row: String) -> (String, String) { let indent = row.prefix { $0 == " " || $0 == "\t" }; return (String(indent), String(row.dropFirst(indent.count))) }
             func numberedBody(_ body: String) -> String? {
                 let digits = body.prefix { $0.isASCII && $0.isNumber }
                 return !digits.isEmpty && body.dropFirst(digits.count).hasPrefix(". ") ? String(body.dropFirst(digits.count + 2)) : nil
             }
             if rows.allSatisfy({ $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
-                let placeholder = style == .heading ? "Heading" : style == .quote ? "Quote" : "List item"
+                let placeholder = style == .quote ? "Quote" : "List item"
                 let indent = parts(rows[0]).0
                 rows[0] = indent + prefix + placeholder + (rows[0].hasSuffix("\r") ? "\r" : "")
                 let replacement = rows.joined(separator: "\n")
@@ -78,5 +79,59 @@ enum NoteFormatting {
             let replacement = rows.joined(separator: "\n")
             return Edit(text: text[..<lines.lowerBound] + replacement + text[lines.upperBound...], selection: NSRange(location: linesRange.location, length: replacement.utf16.count - (replacement.hasSuffix("\r\n") ? 2 : replacement.hasSuffix("\n") ? 1 : 0)))
         }
+    }
+
+    /// Set a paragraph style instead of stacking Markdown heading prefixes.
+    /// Only the selected lines change; line endings, indentation and all other bytes stay intact.
+    static func paragraph(_ style: ParagraphStyle, to text: String, selection: NSRange) throws -> Edit {
+        try paragraph(style, to: text, selection: selection, toggle: false)
+    }
+    private static func paragraph(_ style: ParagraphStyle, to text: String, selection: NSRange, toggle: Bool) throws -> Edit {
+        _ = try checkedRange(in: text, selection: selection)
+        let span = (text as NSString).lineRange(for: selection)
+        guard let range = Range(span, in: text) else { throw AppFailure(message: "Select the lines again before formatting them.") }
+        let original = String(text[range])
+        var rows: [(body: String, ending: String)] = [], start = original.startIndex
+        let endings: Set<Character> = ["\n", "\r", "\r\n", "\u{2028}", "\u{2029}"]
+        for index in original.indices where endings.contains(original[index]) {
+            rows.append((String(original[start..<index]), String(original[index])))
+            start = original.index(after: index)
+        }
+        if start != original.endIndex || rows.isEmpty { rows.append((String(original[start...]), "")) }
+        func parts(_ row: String) -> (indent: String, body: String, level: Int?) {
+            let indent = String(row.prefix { $0 == " " || $0 == "\t" }), body = String(row.dropFirst(indent.count))
+            let hashes = body.prefix { $0 == "#" }
+            guard (1...6).contains(hashes.count), body.dropFirst(hashes.count).first == " " else { return (indent, body, nil) }
+            return (indent, String(body.dropFirst(hashes.count + 1)), hashes.count)
+        }
+        let nonempty = rows.filter { !$0.body.trimmingCharacters(in: .whitespaces).isEmpty }
+        let target = toggle && !nonempty.isEmpty && nonempty.allSatisfy({ parts($0.body).level == style.level }) ? nil : style.level
+        let prefix = target.map { String(repeating: "#", count: $0) + " " } ?? ""
+        if nonempty.isEmpty, target != nil {
+            let indent = parts(rows[0].body).indent
+            rows[0].body = indent + prefix + "Heading"
+            let replacement = rows.map { $0.body + $0.ending }.joined()
+            return try checkedEdit(text: String(text[..<range.lowerBound]) + replacement + text[range.upperBound...], selection: NSRange(location: span.location + indent.utf16.count + prefix.utf16.count, length: 7))
+        }
+        for index in rows.indices {
+            guard !rows[index].body.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
+            let value = parts(rows[index].body)
+            rows[index].body = value.indent + prefix + value.body
+        }
+        let replacement = rows.map { $0.body + $0.ending }.joined(), lastEnding = rows.last?.ending.utf16.count ?? 0
+        return try checkedEdit(text: String(text[..<range.lowerBound]) + replacement + text[range.upperBound...], selection: NSRange(location: span.location, length: replacement.utf16.count - lastEnding))
+    }
+    private static func checkedRange(in text: String, selection: NSRange) throws -> Range<String.Index> {
+        guard text.utf8.count <= NoteMarkup.maximumBytes else { throw AppFailure(message: "This note is too long for the formatting tools. Its text is unchanged.") }
+        guard selection.location != NSNotFound, selection.location >= 0, selection.length >= 0,
+              selection.location <= text.utf16.count, selection.length <= text.utf16.count - selection.location,
+              let range = Range(selection, in: text),
+              (range.lowerBound == text.endIndex || text.indices.contains(range.lowerBound)),
+              (range.upperBound == text.endIndex || text.indices.contains(range.upperBound)) else { throw AppFailure(message: "Select the text again before formatting it.") }
+        return range
+    }
+    private static func checkedEdit(text: String, selection: NSRange) throws -> Edit {
+        guard text.utf8.count <= NoteMarkup.maximumBytes else { throw AppFailure(message: "The formatted note would be too long. Its text is unchanged.") }
+        return Edit(text: text, selection: selection)
     }
 }

@@ -5471,10 +5471,15 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(app.textViews["taskDescription"].value as? String, "**Keep the original notes.**")
         XCTAssertEqual(try noteProofTables(), saved)
     }
+    @MainActor private func noteProofHeading(_ app: XCUIApplication) {
+        app.descendants(matching: .any).matching(identifier: "noteFormat-heading").firstMatch.click()
+        let item = app.menuItems["Heading 2"].firstMatch
+        XCTAssertTrue(item.waitForExistence(timeout: 5), app.debugDescription); item.click()
+    }
     @MainActor func testMacNotesFormattingCancelPreservesWholeWorkspace() throws {
         let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app)
         let before = try noteProofTables(), cacheBefore = try noteProofCache(), editor = noteProofFormat(app)
-        app.buttons["noteFormat-heading"].click(); XCTAssertEqual(editor.value as? String, "## Keep the original notes.")
+        noteProofHeading(app); XCTAssertEqual(editor.value as? String, "## Keep the original notes.")
         XCTAssertEqual(try noteProofTables(), before)
         app.sheets.buttons["Cancel"].firstMatch.click()
         let discard = app.windows.buttons["Discard changes"].firstMatch; XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.click()
@@ -5486,7 +5491,7 @@ extension TaskfoldMacUITests {
     @MainActor func testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry() throws {
         let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app, flags: ["--note-save-failure-once"])
         let before = try noteProofTables(), cacheBefore = try noteProofCache(), editor = noteProofFormat(app)
-        app.buttons["noteFormat-heading"].click(); app.buttons["applyNoteFormatting"].click()
+        noteProofHeading(app); app.buttons["applyNoteFormatting"].click()
         let error = app.staticTexts["noteFormatError"]; XCTAssertTrue(error.waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertTrue(error.isHittable); XCTAssertTrue(app.buttons["Copy text"].isHittable); XCTAssertTrue(app.buttons["applyNoteFormatting"].isHittable)
         XCTAssertEqual(editor.value as? String, "## Keep the original notes."); XCTAssertEqual(try noteProofTables(), before)
@@ -5498,7 +5503,7 @@ extension TaskfoldMacUITests {
     }
     @MainActor func testMacNotesStaleApplyPreservesNewerSavedNote() throws {
         let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app, flags: ["--note-format-concurrent-edit"])
-        let editor = noteProofFormat(app); app.buttons["noteFormat-heading"].click()
+        let editor = noteProofFormat(app); noteProofHeading(app)
         app.buttons["simulateConcurrentNoteEdit"].click()
         noteProofWait { try self.noteProofTask()["description"] as? String == "Updated elsewhere while formatting." }
         let newer = try noteProofTables(), newerCache = try noteProofCache()

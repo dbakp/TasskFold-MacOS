@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Combined transfer · phone/tablet verified; Mac signing pending",
-  "latest": "The combined native review now passes independently on iPhone and iPad at normal text: separate consent, exact final counts, Back with unchanged source tables, actual cold recovery and exact retry without another file copy. These are network-blocked native peers; the 82 genuine service checks per owner remain separate. Mac compiles/signs, but protected recovery needs its own development profile; Xcode reports No Accounts and no matching profile. No storage fallback, normal app identity reuse, installed update or gate change. Test apps closed; concise evidence retained and large result bundles removed.",
+  "focus": "Notes · Body and three heading levels",
+  "latest": "Both apps now have a Text style menu for Body and Heading 1/2/3. Changing levels replaces the existing prefix instead of stacking it; previews use distinct scalable heading sizes. Each owner passes 37 focused note checks, including 8 new paragraph cases. The current iPhone interaction passes the menu, preview, explicit Save, exact original view, Store Undo/Redo and cold return while preserving unrelated fields/pin/completion. Mac compiles and signs; its new controls, broader accessibility and shared contexts remain unaccepted. No normal app update, task-heading gate or schema change. Test app closed and bulky result bundles retired.",
   "next": [
-    "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Current normal/largest-text iPhone note navigation is accepted in its recorded Simulator scope. Mac reviewed-step edit/Add/Undo/Redo is now observed and saved-cache verified. Package later source changes after their bounded checks. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
-    "NEXT: continue remaining independent-subtask/shared-media and premium notes work. Combined normal-text phone/tablet peer consent and cold retry now pass; do not repeat unchanged accepted cases. Mac protected native review awaits an own isolated development profile/Xcode account. Keep genuine integrated-native API, indeterminate/process-death, wider retention, lifecycle and hosted cases open. Assistance stays on-device only; further phone installation and all agreed rollout/provider/distribution work stay deferred.",
+    "FIRST: normal iPhone34 and Mac14 remain installed. Package later source changes, including the new note paragraph styles, as bounded daily-use updates after relevant checks. Mac22 remains an older frozen candidate awaiting its saved-draft update window. No current-source normal update has been installed. Further physical phone installation stays deferred at the user’s request; do not treat earlier connection prompts as current installation work.",
+    "NEXT: continue premium note editing, remaining task-heading/child adapters and independent-subtask/shared-media work. Body/H1/H2/H3 paragraph controls and the normal-text phone Save/Undo/cold journey now pass; do not repeat unchanged cases. Mac combined protected transfer still awaits an own development profile/Xcode account. Preserve integrated-native API, process-death/retention, wider lifecycle/hosted gaps, on-device-only assistance and all agreed rollout/provider/distribution deferrals.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -457,7 +457,7 @@
             {
               "state": "verify",
               "title": "Rich-note formatting and heading authoring",
-              "detail": "Focused pinned-note Edit note now uses the existing Write/Preview tools and guarded text-only Save. Six Core intent checks pass per app. Current signed iPhone tests accept Cancel/Save, unchanged pin/completion/children/opaque/unrelated work, external title/priority preservation, actual Store Undo/Redo, cold content, conflicting-note refusal and separate largest-text preview/Cancel. Native Mac/iPad, wider shared/cloud/speech/accessibility and heading contexts remain open; no ordinary rollout gate changes. Block/inline note previews now prepare off the interface thread and retain source-bound render models. Both repos pass 30 focused note checks; current iPhone tests accept revised preview content, exact original toggle and largest-text Preview/Cancel, plus unchanged Save/history/cold preservation. Mac builds/signs; wider runtime and heading acceptance remain. New section navigation and lazy formatted-block layout are implemented in both readers/previews. Normal text uses a menu; accessibility sizes use a full-height list, with source-bound headings, separate content anchors and routing after dismissal. A reproduced largest-text reverse-jump failure is fixed with explicit lazy scroll targets. Current normal iPhone reader/editor-preview and largest-text reader journeys pass first/last navigation, exact original-text toggles, unchanged all-table snapshots and cold return. Each owner passes 47 focused checks and current build/sign verification. Exact UTF-8 source guards distinguish canonically equal Unicode URL paths. Mac/iPad interaction, speech, wider contexts and physical FPS remain open; no broad acceptance promotion."
+              "detail": "Focused pinned-note Edit note now uses the existing Write/Preview tools and guarded text-only Save. Six Core intent checks pass per app. Current signed iPhone tests accept Cancel/Save, unchanged pin/completion/children/opaque/unrelated work, external title/priority preservation, actual Store Undo/Redo, cold content, conflicting-note refusal and separate largest-text preview/Cancel. Native Mac/iPad, wider shared/cloud/speech/accessibility and heading contexts remain open; no ordinary rollout gate changes. Block/inline note previews now prepare off the interface thread and retain source-bound render models. Both repos pass 30 focused note checks; current iPhone tests accept revised preview content, exact original toggle and largest-text Preview/Cancel, plus unchanged Save/history/cold preservation. Mac builds/signs; wider runtime and heading acceptance remain. New section navigation and lazy formatted-block layout are implemented in both readers/previews. Normal text uses a menu; accessibility sizes use a full-height list, with source-bound headings, separate content anchors and routing after dismissal. A reproduced largest-text reverse-jump failure is fixed with explicit lazy scroll targets. Current normal iPhone reader/editor-preview and largest-text reader journeys pass first/last navigation, exact original-text toggles, unchanged all-table snapshots and cold return. Each owner passes 47 focused checks and current build/sign verification. Exact UTF-8 source guards distinguish canonically equal Unicode URL paths. Mac/iPad interaction, speech, wider contexts and physical FPS remain open; no broad acceptance promotion. Note paragraphs now support explicit Body and H1/H2/H3 styles, exact level replacement and distinct scalable preview sizes. Each owner passes 37 focused checks (8 new paragraph cases); the current normal-text iPhone menu/preview/Save/Store Undo/Redo/cold flow passes. Mac compiles/signs; new Mac/iPad, hardware-keyboard, speech and wider shared/lifecycle acceptance remain. Task-heading rollout is unchanged."
             },
             {
               "state": "done",
@@ -624,9 +624,13 @@
             "cold-note-excerpts/owning-build.json",
             "cold-note-excerpts/iphone-library.json",
             "cold-note-excerpts/storage-cleanup.json",
-            "cold-note-excerpts/mac-controls-final-locked.json"
+            "cold-note-excerpts/mac-controls-final-locked.json",
+            "note-paragraph-styles/README.md",
+            "note-paragraph-styles/verification.json",
+            "note-paragraph-styles/signed-build.json",
+            "note-paragraph-styles/storage-cleanup.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-voice",
@@ -1181,7 +1185,7 @@
             "combined-project-custody/native/verification.json",
             "combined-project-custody/native/storage-cleanup.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-watch",
@@ -1369,13 +1373,14 @@
     "subtask-progress-reading/README.md",
     "task-row-note-reading/README.md",
     "combined-project-custody/README.md",
-    "combined-project-custody/native/README.md"
+    "combined-project-custody/native/README.md",
+    "note-paragraph-styles/README.md"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "b5c0895f0bc09bd1d29d0c17ab8ad7fba9e9ff7406d8428432e3bfa64186b1ae",
+    "P2_PLAN.md": "f830616ac85d4ff16067f97209d9c8a790352dbd37dc2eeeab620e72e14fbcab",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1635,6 +1640,10 @@
     "navigation-counts/README.md": "7364071d0757b755a1699119d69a331ec9905027be48d1b0281b9aeadb16ddd9",
     "navigation-counts/core-verification.json": "af06a56cfd3fa931c2f88710cb5f7cf5352ec1d5a95a693683921af937c64e7c",
     "navigation-counts/signed-build.json": "5c9ff0a3d39b20b0ec0bc529e5834433fb464762765384dd3839a0ebf3782ae8",
+    "note-paragraph-styles/README.md": "fe2267e31a9953759f9ec39fc2258bd1c4b3f131dad6e7155f9bc4c962adfdb0",
+    "note-paragraph-styles/signed-build.json": "ada1352d8dea67cab89018fd547fde9f27030a64703e218fb1976fbe5b33c59f",
+    "note-paragraph-styles/storage-cleanup.json": "9d01027cf6d7f836a22b449aed35b1dbd85eaff48210b51bde0e0d9aa09f1944",
+    "note-paragraph-styles/verification.json": "4ee6276d44010a39ca3d0ff3c43879b003a7f0b2599e890d1d632c83f97bd456",
     "note-section-navigation/README.md": "7d17f1c5ad3284bdbd87483856ca23874739e578ff94ac40291f428986fea272",
     "note-section-navigation/current-cleanup.json": "842267a8a6e927872f4888af9e60d32e79353454979032352573770b3b06dc2d",
     "note-section-navigation/current-core.json": "796766624caa11a697c0e67549f9971f4f924b04f6bc706a09039f43ccb5e3cc",

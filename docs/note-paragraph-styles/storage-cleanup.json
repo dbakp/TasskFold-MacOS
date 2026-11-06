@@ -1,0 +1,43 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 57570549760,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 682602496,
+      "projectedAllocatedBytes": 682602496
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 624328704,
+      "projectedAllocatedBytes": 624328704
+    }
+  ],
+  "freeAfterBytes": 57561653248,
+  "actualFreeChangeBytes": -8896512,
+  "retiredOutputs": [
+    {
+      "path": "/tmp/taskfold-note-paragraph-native-phone.xcresult",
+      "allocatedBytes": 26046464
+    },
+    {
+      "path": "/tmp/taskfold-note-paragraph-native-phone-v2.xcresult",
+      "allocatedBytes": 1306624
+    },
+    {
+      "path": "/tmp/taskfold-note-paragraph-native-attachments",
+      "allocatedBytes": 155648
+    },
+    {
+      "path": "/tmp/taskfold-note-paragraph-failure-attachments",
+      "allocatedBytes": 4096
+    }
+  ],
+  "freeAfterOutputRetirementBytes": 57622831104,
+  "runFreeStartBytes": 58782105600,
+  "attribution": "Other apps and OS activity are concurrent; changes in free space are not attributed solely to Taskfold.",
+  "conciseResultsAndScreenshotPreserved": true
+}

@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-06",
+  "coreTests": 37,
+  "newParagraphCases": 8,
+  "corePassed": true,
+  "sourceSHA256": {
+    "Taskfold/Core/NoteFormatting.swift": "288d97ee61c92bff0c5816ed850d9613e405297756c748244ae38dcf4428d93c",
+    "Taskfold/Views/NoteFormattingView.swift": "027a47a8c93c6bc999c1dd1e07195b0c79d1b83a8726907af52394659aa70e83",
+    "TaskfoldTests/NoteParagraphTests.swift": "013e533b2633fa9e9fdf4b186116f34ab7da3e66ccb2b36e193f08a3a4d684ee"
+  },
+  "normalAppsChanged": false,
+  "ordinaryRolloutGatesChanged": false,
+  "taskHeadingRolloutChanged": false,
+  "schemaOrProviderChanged": false,
+  "physicalInstallation": "Deferred",
+  "hardwareKeyboardOrSpeechAccepted": false,
+  "nativeMacAccepted": false,
+  "macUITestMenuAdaptationSyntaxChecked": true,
+  "macUnprovisionedCompileOnly": true
+}

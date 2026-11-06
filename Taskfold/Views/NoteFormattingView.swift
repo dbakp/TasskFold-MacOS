@@ -132,7 +132,7 @@ struct NoteMarkupPreview: View {
                     case .paragraph:
                         Text(reading.inlineText[block.id] ?? AttributedString(block.text)).frame(maxWidth: .infinity, alignment: .leading)
                     case .heading(let level):
-                        Text(reading.inlineText[block.id] ?? AttributedString(block.text)).font(level <= 2 ? .title3.weight(.semibold) : .headline)
+                        Text(reading.inlineText[block.id] ?? AttributedString(block.text)).font(level == 1 ? .title2.weight(.semibold) : level == 2 ? .title3.weight(.semibold) : .headline)
                             .accessibilityAddTraits(.isHeader).frame(maxWidth: .infinity, alignment: .leading)
                     case .bullet:
                         list(block, marker: "•", text: reading.inlineText[block.id] ?? AttributedString(block.text))
@@ -232,7 +232,7 @@ struct NoteFormattingView: View {
                             HStack(spacing: 10) {
                                 tool("Bold", "bold", .bold)
                                 tool("Italic", "italic", .italic)
-                                tool("Heading", "textformat.size", .heading)
+                                paragraphStyles
                                 tool("Bullets", "list.bullet", .bullet)
                                 tool("Numbered list", "list.number", .numbered)
                                 tool("Quote", "text.quote", .quote)
@@ -329,6 +329,27 @@ struct NoteFormattingView: View {
             return NSRange(range, in: text)
         }
         return NSRange(location: text.utf16.count, length: 0)
+    }
+    private var paragraphStyles: some View {
+        Menu {
+            ForEach(NoteFormatting.ParagraphStyle.allCases, id: \.self) { style in
+                Button(style.title) { formatParagraph(style) }
+                    .accessibilityIdentifier("noteParagraph-" + style.rawValue)
+                    .keyboardShortcut(KeyEquivalent(Character(String(style.level ?? 0))), modifiers: [.command, .option])
+            }
+        } label: { Label("Text style", systemImage: "textformat.size") }
+            .accessibilityIdentifier("noteFormat-heading")
+            .help("Choose a heading level or return to body text")
+    }
+    private func formatParagraph(_ style: NoteFormatting.ParagraphStyle) {
+        do {
+            guard available else { return }
+            guard let span = selectedRange else { throw AppFailure(message: "Choose one text selection before formatting it.") }
+            let edit = try NoteFormatting.paragraph(style, to: text, selection: span)
+            text = edit.text
+            if let range = Range(edit.selection, in: text) { selection = TextSelection(range: range) }
+            message = nil; focused = true
+        } catch { focused = false; message = error.localizedDescription }
     }
     private func tool(_ title: String, _ symbol: String, _ style: NoteFormatting.Style) -> some View {
         Button { format(style) } label: { Label(title, systemImage: symbol) }
