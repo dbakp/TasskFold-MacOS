@@ -31,8 +31,7 @@ candidate targets this host architecture; general Mac distribution stays deferre
 
 ## Current installation boundary
 
-Mac23 remains installed and running with the same binary payload. Mac29 awaits
-saved-draft readiness before the running app is closed. Phone34 is the last
+At packaging time, Mac23 remained installed and running with the same binary payload. This historical boundary is now superseded by the Mac29 installation receipt below; future routine Mac updates no longer require a saved-draft question. Phone34 is the last
 verified installed version; phone41 installation stays explicitly deferred even
 though a paired phone is visible. Neither packaging command installs, launches,
 quits an app, reads task rows or exports private keys. No new native normal-app
@@ -52,3 +51,7 @@ From each owning repo, use `Scripts/build_daily.py --cached-profiles
 also use its already registered `--device`, `--offline-device` and documented
 `--without-share` variant. This does not configure an account, renew profiles,
 reset quota or install on a device. Installer preparation/approval remains separate.
+
+## Subsequent installation on 6 November
+
+Mac29 is now installed over23 with a private safety copy, exact archive/signature verification and five task/pending caches preserved before launch. Startup awaits the macOS app-data permission prompt; see [installation status](../mac29-installation/README.md). The user has authorized future routine Mac updates without draft confirmation. Phone41 remains deferred. These package receipts remain frozen preparation evidence.

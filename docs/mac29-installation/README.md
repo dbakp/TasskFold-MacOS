@@ -1,0 +1,7 @@
+# Mac 29 installation
+
+The user explicitly authorized routine Mac updates/restarts without future saved-draft questions. Verified frozen Mac 1.2.0 (29) was installed over 23 by a staged app-file replacement, after a private safety copy and exact comparison with the retained rollback archive. The new app payload and strict signature match the verified archive. Five workspace task/pending caches match before and immediately after app-file replacement. Private backups and user content are not committed.
+
+The installed process is running from `/Applications/Taskfold.app`. Startup currently waits at macOS's SystemPolicyAppData prompt while opening the shared widget/capture lock file. The system log confirms the prompt; the main window and postlaunch data are not yet verified. A separate system-permission action was requested, not another update/restart approval. No second process, app replacement, permission bypass or account change is being attempted while it waits. A read-only verifier was stopped rather than leaving another app-data read blocked behind the prompt.
+
+This package's source is `08d8dbb`; the later global migration-search change is merged separately and is not in Mac29. Build and package receipts remain immutable records of preparation; this installation receipt records deployment. Phone41 installation remains deferred. Mac development profiles still expire on 10 November; App Store distribution remains deferred.
