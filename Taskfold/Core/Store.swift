@@ -534,6 +534,8 @@ final class Store {
                 let state = try await self.childTaskAdoptionJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
             case .repairs:
                 let state = try await self.childTaskRepairJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty || !state.drafts.isEmpty
+            case .restorations:
+                let state = try await self.childTaskRestoreJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
             }
         }
     }
@@ -1026,6 +1028,54 @@ final class Store {
         let revision = snapshotRevision
         let original = try await backend.childTaskRepairOriginal(entry.command, result: result, session: scope.session)
         try Task.checkCancellation(); guard scope == childTaskFieldRecoveryScope, revision == snapshotRevision else { throw CancellationError() }; return original
+    }
+    var childTaskOriginalRestorationEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalRestorationEnabled") as? Bool == true }
+    var childTaskOriginalReversalsEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalReversalsEnabled") as? Bool == true }
+    private func permitsChildTaskRestore(_ command: ChildTaskRestoreCommand, sending: Bool) -> Bool {
+        permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body,
+            enabled: command.mode == .restore ? childTaskOriginalRestorationEnabled && childTaskOriginalReversalsEnabled : childTaskOriginalReversalsEnabled, sending: sending)
+    }
+    func childTaskRestoreReviewIsCurrent(_ review: ChildTaskRestoreReview) -> Bool {
+        online && review.scope == childTaskFieldRecoveryScope && review.snapshot == snapshotRevision
+        && !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == review.metadata["task_id"]!.text })
+    }
+    func readChildTaskRestoreReview(identity: [String: JSON], mode: ChildTaskRestoreMode, restorationID: String? = nil) async throws -> ChildTaskRestoreReview {
+        guard let scope = childTaskFieldRecoveryScope, online,
+              mode == .restore ? childTaskOriginalRestorationEnabled && childTaskOriginalReversalsEnabled : childTaskOriginalReversalsEnabled,
+              !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == identity["task_id"]?.text }) else { throw ChildTaskRestoreCommand.invalid }
+        let revision = snapshotRevision
+        let value = try await backend.childTaskRestoreReview(identity: identity, mode: mode, restorationID: restorationID, scope: scope, snapshot: revision)
+        try Task.checkCancellation(); guard childTaskRestoreReviewIsCurrent(value) else { throw CancellationError() }; return value
+    }
+    func childTaskRestoreJournal(account: String, origin: String) throws -> ChildTaskRestoreJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true).appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child original restoration requests", isDirectory: true).appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ChildTaskRestoreState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root,
+            admit: { try admission.checkBatch($0, includeRestores: false) })
+    }
+    func childTaskRestoreModel() throws -> ChildTaskRestoreModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskRestoreJournal(account: scope.account, origin: scope.origin), service: backend,
+            current: { [weak self] in self?.childTaskFieldRecoveryScope },
+            canSend: { [weak self] in self?.permitsChildTaskRestore($0, sending: true) == true },
+            admit: { [weak self] command in
+                guard let self, self.permitsChildTaskRestore(command, sending: false) else { throw ChildTaskRestoreCommand.invalid }
+                let captured = self.childTaskFieldRecoveryScope
+                try ChildTaskAdoptionAdmission.requireClear(root: command.rootID, pending: [], openEditors: self.childAdoptionOpenEditorRoots())
+                try self.childTaskActionAdmission(account: command.account, origin: command.origin).checkBatch([command.rootID], includeRestores: false)
+                try await ChildTaskAdoptionAdmission.checkPreservedEdits(root: command.rootID, vault: self.backupVault, origin: command.origin)
+                try Task.checkCancellation()
+                guard captured == self.childTaskFieldRecoveryScope, self.permitsChildTaskRestore(command, sending: false) else { throw CancellationError() }
+                try ChildTaskAdoptionAdmission.requireClear(root: command.rootID, pending: [], openEditors: self.childAdoptionOpenEditorRoots())
+            }, reviewCurrent: { [weak self] in self?.childTaskRestoreReviewIsCurrent($0) == true })
     }
     var childTaskRepairArchiveCleanupEnabled: Bool {
         Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRepairArchiveCleanupEnabled") as? Bool ?? false
