@@ -1,0 +1,8 @@
+{
+  "files": {
+    "Taskfold/Core/Store.swift": "3ca39a138214c926b534f8c5d0fcfbe8104bbb0aaa7b68db7807ecdbe88b967f",
+    "Taskfold/Views/CalendarView.swift": "b8c70cd0fd76aed82087dffd95204f1e5c0c3c58c7a5695ecb1a23492487cb76"
+  },
+  "independentOwner": "TasskFold-MacOS",
+  "normalGatesAndDataContractUnchanged": true
+}

@@ -1,0 +1,8 @@
+{
+  "selected": 10,
+  "skipped": 0,
+  "failed": 0,
+  "terminalExit": 0,
+  "mode": "Existing owning Core binary; entire Core/package/test inputs unchanged. Store.swift is excluded from the Core package; current Store/view compiled and exercised separately in native tests.",
+  "logSHA256": "9a1025ae048d2a9f3579b09af906f898826b3f367cd17355d8b91c7d24f7efd2"
+}
