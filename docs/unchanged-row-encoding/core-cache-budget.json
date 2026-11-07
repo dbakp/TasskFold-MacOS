@@ -1,0 +1,8 @@
+{
+  "allocatedBytes": {
+    "core-mac": 647262208,
+    "core-ios": 706162688
+  },
+  "limitPerCache": 805306368,
+  "allWithinBudget": true
+}

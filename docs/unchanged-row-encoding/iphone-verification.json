@@ -1,0 +1,18 @@
+{
+  "terminalExit": 0,
+  "selected": 2,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "configuration": "Debug -Onone inline DWARF",
+  "hostAndOwningSourceMatch": true,
+  "signatureVerified": true,
+  "warmAndColdDrops": 4,
+  "taskCount": 2004,
+  "unrelatedTaskCount": 2003,
+  "pendingPreserved": true,
+  "largeEditedPayloadExact": true,
+  "physicalFPSClaim": false,
+  "logSHA256": "13759d9da2bc74468c37ecb51ba9c01db1c83bb865f18b3d9f69f0eff5a76488"
+}

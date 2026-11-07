@@ -1,0 +1,12 @@
+{
+  "selected": 74,
+  "passed": 74,
+  "failed": 0,
+  "skipped": 0,
+  "configuration": "owning Debug Core",
+  "logSHA256": "6f9dad4747fa2dc7cebddd6785c42451e991fa7dd984e4ac74feca1d1ccf252e",
+  "diagnosticRequested": true,
+  "scope": "Codec, exact metadata, durable read and prepared encoding; not broad app acceptance",
+  "unrelatedExistingCompilerWarnings": true,
+  "newRowTestCompilerWarnings": false
+}

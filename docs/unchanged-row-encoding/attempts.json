@@ -1,0 +1,38 @@
+{
+  "originalBaseline": {
+    "session": 59757,
+    "terminalExit": 65,
+    "testsRan": false,
+    "reason": "Incorrect XCTest expectation initializer; corrected before retry",
+    "logSHA256": "dffe342543d7292223131bbf5db07e57cd6d48ec0d16ab5b899e2d047e40b7af"
+  },
+  "retryReason": "Verified terminal source/API failure, not a polling timeout",
+  "fixedInitializerRun": {
+    "session": 68419,
+    "terminalExit": 65,
+    "testsRan": true,
+    "failure": "Legacy StaticText exists but is not hittable; current UI exposes identified task-detail Buttons. Corrected to the exact observed button identifiers. No drag or save ran.",
+    "runtimeWarnings": [],
+    "logSHA256": "a3bded7d52def5fdbf858855f3ee0198dd1e256b30b6dcbb3bcb38d71d439784"
+  },
+  "firstRowWriterNativeBuild": {
+    "session": 85042,
+    "terminalExit": 65,
+    "testsRan": false,
+    "reason": "App-only row cache appended outside existing share/widget exclusion guard. Both owners now use the existing app-only compilation condition.",
+    "logSHA256": "ca623d5f124bca5881acffa93adee5d2ed0572c00158709327f7cd597f515ffc"
+  },
+  "finalDepthBoundaryRegression": {
+    "selected": 74,
+    "failed": 1,
+    "reason": "The new row writer admitted 508 nested arrays where the original whole-envelope Foundation encoder refused them. Tightened structural bound and preserved ordinary fallback. Corrected current 74-case run passes in each owner.",
+    "logSHA256": "ba2009ae3cb99d20a74950f4437dcbec9e7399b4e944340c9c915002f890dea5"
+  },
+  "movedPayloadFixtureCompile": {
+    "session": 33090,
+    "exit": 65,
+    "testsRan": false,
+    "reason": "Synthetic fixture attempted nil assignment to nonoptional JSON subscript. Corrected to remove the field through its authored dictionary API. Compiler had reported a type-check timeout in the surrounding fixture closure.",
+    "logSHA256": "6fdf58970ae4f28770515995531a01bd9c2c830fa7a1048e508af818021cac97"
+  }
+}

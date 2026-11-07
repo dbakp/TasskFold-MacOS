@@ -1,0 +1,30 @@
+{
+  "freeBeforeBytes": 38175174656,
+  "freeAfterBytes": 38337605632,
+  "removed": [
+    {
+      "kind": "obsolete build38 code only",
+      "bytes": 81305228
+    },
+    {
+      "kind": "obsolete build38 code only",
+      "bytes": 81305228
+    },
+    {
+      "kind": "obsolete build36 ZIP",
+      "bytes": 20367596
+    },
+    {
+      "kind": "obsolete build38 ZIP",
+      "bytes": 20374226
+    }
+  ],
+  "preserved": [
+    "installed44",
+    "verified42 rollback and ZIP",
+    "44 ZIP",
+    "all private data backups",
+    "historical receipts"
+  ],
+  "realAppDataDeleted": false
+}

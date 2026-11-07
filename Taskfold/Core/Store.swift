@@ -193,6 +193,53 @@ final class Store {
     }
     var presentationSnapshot:Snapshot {var visible=snapshot;visible.tables=presentedTables;return visible}
     @ObservationIgnored private let durableSnapshotReadCache = DurableSnapshotReadCache()
+    private struct RowEncodingWork {
+        let id: UUID
+        let request: DurableSnapshotReadCache.RowPreparationRequest
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let access: UUID
+        let revision: UUID
+    }
+    @ObservationIgnored private var rowEncodingPreparation: Task<Void, Never>?
+    @ObservationIgnored private var rowEncodingWorker: Task<DurableSnapshotReadCache.RowPreparation, Error>?
+    @ObservationIgnored private var pendingRowEncoding: RowEncodingWork?
+    @ObservationIgnored private var rowEncodingPreparationID = UUID()
+    private func prepareRowEncodingInBackground() {
+        guard workspaceCacheReadable, !signingOut, !accountRemovalBlocked,
+              let request = durableSnapshotReadCache.rowPreparationRequest() else { return }
+        let token = UUID(); rowEncodingPreparationID = token
+        pendingRowEncoding = RowEncodingWork(id: token, request: request,
+            workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation,
+            access: presentationAccessEpoch, revision: workspaceReadRevision)
+        rowEncodingWorker?.cancel()
+        // One worker and one replaceable pending request bound memory even when
+        // a burst of saves arrives before a large row finishes preparing.
+        guard rowEncodingPreparation == nil else { return }
+        rowEncodingPreparation = Task { [weak self] in
+            guard let self else { return }
+            defer { self.rowEncodingPreparation = nil; self.rowEncodingWorker = nil; self.pendingRowEncoding = nil }
+            while !Task.isCancelled, let work = self.pendingRowEncoding {
+                self.pendingRowEncoding = nil
+                let request = work.request
+                let worker = Task.detached(priority: .utility) { try DurableSnapshotReadCache.prepareRows(request) }
+                self.rowEncodingWorker = worker
+                let prepared: DurableSnapshotReadCache.RowPreparation?
+                do {
+                    prepared = try await withTaskCancellationHandler(operation: { try await worker.value }, onCancel: { worker.cancel() })
+                } catch { prepared = nil }
+                self.rowEncodingWorker = nil
+                guard !Task.isCancelled else { break }
+                guard self.rowEncodingPreparationID == work.id, self.workspaceCacheReadable,
+                      !self.signingOut, !self.accountRemovalBlocked,
+                      work.workspace == WorkspaceBinding(account: self.userID, generation: self.workspaceGeneration),
+                      work.session == self.backend.reminderSessionIncarnation,
+                      work.access == self.presentationAccessEpoch, work.revision == self.workspaceReadRevision else { continue }
+                if let prepared { self.durableSnapshotReadCache.adoptRows(prepared) }
+                else { self.durableSnapshotReadCache.declineRows(request) }
+            }
+        }
+    }
     @ObservationIgnored private let taskCache = TaskCache()
     private(set) var taskRevision = 0
     private(set) var calendarContext = TaskCalendarContext()
@@ -2260,6 +2307,7 @@ final class Store {
         }
         #endif
         scheduleDailyBackup()
+        prepareRowEncodingInBackground()
     }
     func makeInboxReview(batch: InboxReviewBatch = .five, excluding: Set<String> = []) -> InboxReviewRequest? {
         guard signedIn || localMode, workspaceCacheReadable else { error = "Open a readable workspace before reviewing Inbox."; return nil }

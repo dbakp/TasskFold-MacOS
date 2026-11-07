@@ -1,0 +1,27 @@
+{
+  "version": "1.2.0",
+  "build": "45",
+  "configuration": "Release",
+  "sourceRevision": "2d62cf79b9a5ecb01cdb5d2502398acbf36b883e",
+  "sourceFingerprint": "359449fd12044c2f1b568ec355d71ec8a206d7e2fa9cfbfd14427676aad4f36d",
+  "signatureVerified": true,
+  "archivePayloadVerified": true,
+  "archiveSHA256": "3f3f8445f78876c2db9b3f83d619e7ccc63f2cbf1c66c0cc4fc6455712030929",
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "published": false,
+  "sourceWasDirty": false,
+  "buildTerminalExit": 0,
+  "packageTerminalExit": 0,
+  "normalFeatureFlagsUnchanged": true,
+  "designatedRequirementNonemptyAndEqualToInstalled": true,
+  "preparedOnly": true,
+  "installedBuild": "44",
+  "verifiedDataRollbackBuild": "42",
+  "awaiting": "Existing44 access/readback completion before a fresh safety copy and routine installation; do not replace the pending app",
+  "buildLogSHA256": "1be3a90012f39f088136a5bc1bd7f35fdd0c8f60efd0baf10778333e11640c80"
+}

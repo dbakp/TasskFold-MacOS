@@ -1,0 +1,16 @@
+{
+  "build": "44",
+  "installed": true,
+  "installationSafetyCopyVerified": true,
+  "prelaunchCacheFiles": 9,
+  "prelaunchCacheBytesExact": true,
+  "installedPayloadAndSignatureVerified": true,
+  "rollbackBuild": "42",
+  "normalMainWindow": "Upcoming \u2014 2 tasks",
+  "syncObserved": "Synced 19.38",
+  "sharedStorageBannerCleared": false,
+  "postlaunchDataReadback": "Original readonly job 63522 remains blocked in file open; no restart or duplicate job",
+  "sourceChangesAfter44": "New row encoding optimization is separate and not installed",
+  "correction": "Full AX observation shows startupSharedStorageStatus still present; earlier partial diff was misread.",
+  "currentRowEncodingFixInstalled": false
+}
