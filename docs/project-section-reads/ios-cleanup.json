@@ -1,0 +1,62 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 42284036096,
+  "actions": [
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Index.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 61460480
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/CompilationCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/SDKExplicitPrecompiledModules",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 193204224
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex/XCBuildData",
+      "kind": "completedBuildMetadata",
+      "allocatedBytes": 22847488
+    }
+  ],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 711176192,
+      "projectedAllocatedBytes": 711176192,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 42562801664,
+  "actualFreeChangeBytes": 278765568,
+  "retiredNativeDuplicates": [
+    {
+      "name": "taskfold-project-section-iphone.xcresult",
+      "allocatedBytes": 73728,
+      "reason": "Concise cause/outcome retained; keep accepted v4 plus successful v5 native bundles"
+    },
+    {
+      "name": "taskfold-project-section-iphone-v2.xcresult",
+      "allocatedBytes": 446464,
+      "reason": "Concise cause/outcome retained; keep accepted v4 plus successful v5 native bundles"
+    },
+    {
+      "name": "taskfold-project-section-iphone-v3.xcresult",
+      "allocatedBytes": 73256960,
+      "reason": "Concise cause/outcome retained; keep accepted v4 plus successful v5 native bundles"
+    },
+    {
+      "name": "taskfold-project-section-failure-shots",
+      "allocatedBytes": 561152,
+      "reason": "Concise cause/outcome retained; keep accepted v4 plus successful v5 native bundles"
+    }
+  ],
+  "privateAppDataKeychainDockerAndOtherProjectsUntouched": true,
+  "normalMac36LeftRunning": true,
+  "freeAfterRetirementBytes": 42234060800
+}
