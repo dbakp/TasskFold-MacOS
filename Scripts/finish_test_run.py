@@ -54,7 +54,8 @@ def finish(simulators=(), build_caches=(), apply=False):
             if path.is_symlink() or (path.exists() and not path.resolve().is_relative_to(cache)):
                 raise ValueError('Unexpected compiler cache link')
         sizes = {path: allocated(path) for path in candidates}
-        total = sum(sizes.values())
+        initial_total = allocated(cache)
+        total = initial_total
         healthy = shutil.disk_usage(cache).free >= 30 * 1024**3
         budget = 768 * 1024**2
         retired = []
@@ -74,7 +75,8 @@ def finish(simulators=(), build_caches=(), apply=False):
             if apply: shutil.rmtree(metadata)
             total -= size
         if healthy:
-            report['skipped'].append({'cache': str(cache), 'reason': 'Reusable compiler cache within 768 MiB budget' if apply or sum(sizes.values()) <= budget else 'Dry-run budget trim; no files removed', 'allocatedBytes': total if apply else sum(sizes.values()), 'projectedAllocatedBytes': total})
+            reason = ('Reusable compiler cache within 768 MiB budget' if total <= budget else 'Protected products/evidence exceed budget; reviewed cleanup needed') if apply or initial_total <= budget else 'Dry-run budget trim; no files removed'
+            report['skipped'].append({'cache': str(cache), 'reason': reason, 'allocatedBytes': total if apply else initial_total, 'projectedAllocatedBytes': total, 'within768MiB': total <= budget})
     report['freeAfterBytes'] = shutil.disk_usage('/tmp').free
     report['actualFreeChangeBytes'] = report['freeAfterBytes'] - report['freeBeforeBytes']
     return report

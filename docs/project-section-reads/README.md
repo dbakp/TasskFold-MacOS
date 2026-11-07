@@ -13,3 +13,7 @@ Broader rendering/drag, native Mac behavior, physical FPS, shared/cloud/account/
 ## Focused Core result
 
 iOS passes89 checks (90selected); Mac88 (89selected). Each intentionally skips the unrequested prior workload benchmark. Current source section-preparation medians are73.57→1.07ms (iOS owner) and72.18→1.07ms (Mac). Exact per-group records match the prior algorithm, including the separate source/identity cases. These are same-Mac Debug measurements, not rendering or physical-device FPS.
+
+## Bounded cache follow-up
+
+The first Simulator attempt stopped before tests with a missing Foundation .scan referenced by stale Xcode metadata after the preceding module trim. Only generated XCBuildData was retired; the same existing host/cache/products were reused. The cleanup tool now retires stale dependency plans with module inputs and budgets the entire selected cache, including protected products/evidence, rather than only candidate scratch. It reports an untrimmable protected remainder without deleting it. Each owner passes13 real temporary-file cleanup cases, including dry-run/healthy/live-build preservation and symlink refusal.

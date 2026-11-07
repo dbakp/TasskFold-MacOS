@@ -3,5 +3,10 @@
   "testsStarted": false,
   "cause": "Missing Foundation serialized dependency .scan after completed explicit-module cleanup; no app test executed",
   "repair": "Retire only stale XCBuildData scheduling metadata; reuse same compiler cache/products and regenerate dependency plan",
-  "retiredMetadataBytes": 47982314
+  "retiredMetadataBytes": 47982314,
+  "cleanupToolFixed": true,
+  "cleanupChecksPassed": 13,
+  "fullCacheBudgetIncludesProtectedProducts": true,
+  "dependencyPlanRetiredAfterModuleTrim": true,
+  "normalApplicationProductsAndEvidencePreserved": true
 }
