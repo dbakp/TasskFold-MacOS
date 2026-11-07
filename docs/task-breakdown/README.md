@@ -31,3 +31,8 @@ The saved-subtask organizer now has a separate root/nested on-device review, ato
 ## 6 November — normal history and production-store recovery
 
 Confirmed saved-record additions now enter normal Undo/Redo, with durable exact inverse lineage and fresh original-slot Redo. Consecutive reversals preserve unchanged added steps and unrelated live container contents. Owning current client, service and production-store results are in [reviewed steps](../reviewed-step-batches/README.md). Actual review-screen/keyboard/accessibility and genuine model acceptance remain; installed apps and normal gates are unchanged.
+
+
+## 7 November — Model now ready; real samples recorded
+
+The earlier disabled-model observation is superseded. Three actual English/Spanish synthetic goals return valid bounded title arrays on the Mac in 15–27 seconds. No task was written or native review activated. This does not accept a full generated native workflow, iOS-device inference or universal model quality. Filter quality remains open. [Current evidence and limits](../natural-filter-forms/README.md).

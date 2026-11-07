@@ -1,0 +1,173 @@
+{
+  "date": "2026-11-07",
+  "initialModelReady": {
+    "checkedAt": "2026-11-07T03:25:22Z",
+    "ready": true,
+    "reason": ""
+  },
+  "inferenceHost": "Physical Mac; owning Mac Core tests, not Taskfold native controls or iOS-device inference",
+  "taskStepSamples": [
+    {
+      "engine": "steps",
+      "seconds": 21.836381375,
+      "syntheticGoal": "Prepare a small picnic at a local park",
+      "titles": [
+        "Gather picnic supplies",
+        "Select a park",
+        "Plan the menu",
+        "Pack the picnic",
+        "Arrive at the park",
+        "Set up the picnic area",
+        "Enjoy the picnic",
+        "Clean up after the picnic"
+      ]
+    },
+    {
+      "engine": "steps",
+      "seconds": 15.123244417,
+      "syntheticGoal": "Review and submit a five-minute project presentation",
+      "titles": [
+        "Prepare presentation slides.",
+        "Practice delivery.",
+        "Review content for clarity.",
+        "Check technical equipment.",
+        "Submit presentation."
+      ]
+    },
+    {
+      "engine": "steps",
+      "seconds": 26.802564959,
+      "syntheticGoal": "Preparar una presentaci\u00f3n de cinco minutos",
+      "titles": [
+        "Selecciona un tema",
+        "Organiza los puntos principales",
+        "Elabora diapositivas",
+        "Practica la presentaci\u00f3n",
+        "Revisa y ajusta"
+      ]
+    }
+  ],
+  "currentEngineFilterSamples": [
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "expression": "open AND priority 1 AND (planned today OR overdue)",
+      "matchedIDs": [
+        "today",
+        "old"
+      ],
+      "seconds": 19.556318333,
+      "syntheticGoal": "Show open priority 1 tasks planned today or overdue"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "deadline"
+      ],
+      "expression": "deadline today",
+      "matchedIDs": [
+        "deadline"
+      ],
+      "seconds": 9.10591925,
+      "syntheticGoal": "Show tasks with a deadline today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "expression": "project:Work AND open",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "seconds": 8.797117875,
+      "syntheticGoal": "Show unfinished tasks in project Work"
+    }
+  ],
+  "filterQualityAccepted": false,
+  "currentEngineFourthInput": "Find unfinished priority 3 tasks planned for today",
+  "currentEngineFourthOutput": "unfinished priority 3 tasks planned today",
+  "currentEngineFailure": "Parser correctly refuses a description without query joins; fifth input was not reached",
+  "rejectedWrapperObservations": [
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "expression": "(today OR overdue) AND (p1 OR p2 OR p3 OR p4) AND open",
+      "matchedIDs": [
+        "today",
+        "old",
+        "low",
+        "old-low"
+      ],
+      "seconds": 19.561266416,
+      "syntheticGoal": "Show open priority 1 tasks planned today or overdue"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "deadline"
+      ],
+      "expression": "deadline today AND open",
+      "matchedIDs": [
+        "deadline"
+      ],
+      "seconds": 17.980376375,
+      "syntheticGoal": "Show tasks with a deadline today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "expression": "project:Work AND open",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "seconds": 27.858994334,
+      "syntheticGoal": "Show unfinished tasks in project Work"
+    }
+  ],
+  "rejectedWrapperAdopted": false,
+  "structuredCandidatesAdopted": false,
+  "ordinaryCore": [
+    {
+      "owner": "TasskFold-MacOS",
+      "host": "Mac Swift package from owning repository",
+      "selected": 127,
+      "passed": 125,
+      "intentionalModelSkips": 2,
+      "failures": 0
+    },
+    {
+      "owner": "TaskFold-iOS",
+      "host": "Mac Swift package from owning repository",
+      "selected": 127,
+      "passed": 125,
+      "intentionalModelSkips": 2,
+      "failures": 0
+    }
+  ],
+  "installedOrPackaged": false,
+  "modelInput": "Synthetic description only; no directory, saved tasks, account data, tools or cloud fallback",
+  "remaining": [
+    "Correct real filter inference across all five semantic cases and broader intents",
+    "Real generated review/Save/Undo/cold/account/keyboard/speech/large-text journeys",
+    "Physical iPhone/iPad inference and full app builds/packages for this repair",
+    "Wider quality and latency; three task samples are not universal model acceptance"
+  ],
+  "oldAcceptedMarkerWarning": "Some rejected prototype logs print an unconditional accepted marker despite failed assertions. Exit status and semantic assertions govern acceptance; both current model tests now print acceptance only after their assertions pass."
+}

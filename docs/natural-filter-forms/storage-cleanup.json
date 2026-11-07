@@ -1,0 +1,162 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 45323890688,
+  "actions": [],
+  "skipped": [],
+  "freeAfterBytes": 45323890688,
+  "actualFreeChangeBytes": 0,
+  "runStartFreeBytes": 45894303744,
+  "simulatorsBooted": [],
+  "coreCaches": [
+    {
+      "name": "core-mac",
+      "allocatedBytes": 633577472,
+      "within768MiB": true,
+      "reused": true
+    },
+    {
+      "name": "core-ios",
+      "allocatedBytes": 691036160,
+      "within768MiB": true,
+      "reused": true
+    }
+  ],
+  "retiredOwnedScratch": [
+    {
+      "name": "taskfold-real-assistance-mac.log",
+      "allocatedBytes": 28672
+    },
+    {
+      "name": "taskfold-real-filter-mac-final.log",
+      "allocatedBytes": 28672
+    },
+    {
+      "name": "taskfold-real-filter-tokens-mac.log",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-real-shaped-filter-mac.log",
+      "allocatedBytes": 49152
+    },
+    {
+      "name": "taskfold-real-plan-filter-mac.log",
+      "allocatedBytes": 49152
+    },
+    {
+      "name": "taskfold-real-flat-filter-mac.log",
+      "allocatedBytes": 49152
+    },
+    {
+      "name": "taskfold-real-priority-filter-mac.log",
+      "allocatedBytes": 49152
+    },
+    {
+      "name": "taskfold-real-greedy-filter-mac.log",
+      "allocatedBytes": 28672
+    },
+    {
+      "name": "taskfold-real-natural-filter-mac.log",
+      "allocatedBytes": 28672
+    },
+    {
+      "name": "taskfold-real-prefix-filter-mac.log",
+      "allocatedBytes": 28672
+    },
+    {
+      "name": "taskfold-real-wrapped-filter-mac.log",
+      "allocatedBytes": 28672
+    },
+    {
+      "name": "taskfold-filter-grammar-core-mac.log",
+      "allocatedBytes": 53248
+    },
+    {
+      "name": "taskfold-filter-tokens-mac.log",
+      "allocatedBytes": 49152
+    },
+    {
+      "name": "taskfold-assistance-final-core-mac.log",
+      "allocatedBytes": 61440
+    },
+    {
+      "name": "taskfold-assistance-final-core-ios.log",
+      "allocatedBytes": 61440
+    },
+    {
+      "name": "model-probe/main.swift",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "model-probe/probe",
+      "allocatedBytes": 73728
+    },
+    {
+      "name": "taskfold-filter-grammar-edit.py",
+      "allocatedBytes": 8192
+    },
+    {
+      "name": "taskfold-filter-tokens-edit.py",
+      "allocatedBytes": 12288
+    },
+    {
+      "name": "taskfold-filter-shaped-tokens-edit.py",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-filter-plan-edit.py",
+      "allocatedBytes": 12288
+    },
+    {
+      "name": "taskfold-flat-filter-edit.py",
+      "allocatedBytes": 8192
+    },
+    {
+      "name": "taskfold-priority-alias-edit.py",
+      "allocatedBytes": 8192
+    },
+    {
+      "name": "taskfold-assistance-replay-edit.py",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-filter-prefix-edit.py",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-local-assistance-document.py",
+      "allocatedBytes": 16384
+    },
+    {
+      "name": "taskfold-assistance-cleanup.py",
+      "allocatedBytes": 4096
+    },
+    {
+      "name": "taskfold-assistance-core-runs.py",
+      "allocatedBytes": 4096
+    }
+  ],
+  "retainedPackages": [
+    {
+      "name": "Taskfold-1.4.0-34-iphone-development.zip",
+      "bytes": 23480205,
+      "sha256": "b01bc8c67cbbf82ee14bb8e0542801250cc66d6156807bcabb13e79f3de227e7"
+    },
+    {
+      "name": "Taskfold-1.4.0-42-iphone-development.zip",
+      "bytes": 24255569,
+      "sha256": "1a7a8c055625b4e040c2ac6a9ac0f8a32d1293f0bd946d0b808dc59386c378cc"
+    },
+    {
+      "name": "Taskfold-1.2.0-31-mac-development.zip",
+      "bytes": 20213802,
+      "sha256": "37c2f2b2ba93cc461ad8e8391b7b65340be2de2bc310320641720ff482751f5e"
+    },
+    {
+      "name": "Taskfold-1.2.0-34-mac-development.zip",
+      "bytes": 20279317,
+      "sha256": "b08c560c6d3d7bcda5a1c4367b425634a5ce2b0637115f13b261362ce5f01fa9"
+    }
+  ],
+  "freeAfterOwnedCleanupBytes": 45331775488,
+  "ownedScratchRemovedBytes": 761856
+}

@@ -108,6 +108,7 @@ final class TaskBreakdownTests: XCTestCase {
             print("TASK_BREAKDOWN_MODEL_UNAVAILABLE " + reason)
             throw XCTSkip(reason)
         }
+        var allAccepted = true
         for goal in ["Prepare a small picnic at a local park", "Review and submit a five-minute project presentation", "Preparar una presentación de cinco minutos"] {
             let start = ContinuousClock.now
             let result = try await TaskBreakdownEngine.generate(goal)
@@ -115,9 +116,11 @@ final class TaskBreakdownTests: XCTestCase {
             let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
             let observation: [String: Any] = ["engine": "steps", "syntheticGoal": goal, "seconds": seconds, "titles": result]
             print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
+            let checked = try TaskBreakdownRequest.titles(result)
+            if !(3...8).contains(result.count) || checked != result { allAccepted = false }
             XCTAssertTrue((3...8).contains(result.count))
-            XCTAssertEqual(try TaskBreakdownRequest.titles(result), result)
+            XCTAssertEqual(checked, result)
         }
-        print("TASK_BREAKDOWN_MODEL_ACCEPTED three synthetic goals; no task writes")
+        if allAccepted { print("TASK_BREAKDOWN_MODEL_ACCEPTED three synthetic goals; no task writes") }
     }
 }

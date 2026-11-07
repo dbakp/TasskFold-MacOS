@@ -690,5 +690,37 @@
     "documentationViewportChecks": 6,
     "githubStatuses": [],
     "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TaskFold-iOS",
+    "pullRequest": "https://github.com/dbakp/TaskFold-iOS/pull/25",
+    "mergedHead": "8ee0f5bd75cb9bda438a0a1358aeea1767dc73dd",
+    "verifiedRemoteMain": "69263045e6ee7dbd25679c5a57f2bbcee827f8a1",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "documentationViewportChecks": 6,
+    "localValidationScope": "Optimized signed iPhone42 build and exact package/profile verification; documentation only in both PRs; no installation or physical FPS acceptance",
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TasskFold-MacOS",
+    "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/26",
+    "mergedHead": "c0e50c3cb9d56433660024c196b90e409d4f3357",
+    "verifiedRemoteMain": "b8d7dd6c9a2f4ec6d997cbe21bca2dda1d3b16c2",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "documentationViewportChecks": 6,
+    "localValidationScope": "Optimized signed iPhone42 build and exact package/profile verification; documentation only in both PRs; no installation or physical FPS acceptance",
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
   }
 ]

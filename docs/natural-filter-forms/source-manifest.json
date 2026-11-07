@@ -1,0 +1,18 @@
+{
+  "TaskFold-iOS": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/FilterAssistance.swift": "3becd8c3d8a62218f071a3fc5dbc035b8d1c9b431d8c976f47727a1e18d70432",
+    "Taskfold/Core/Filters.swift": "8aaf2e5eef90ae3feba32647fdf79ab1204328e84085d119d9b7f8e807ac9f2d",
+    "TaskfoldTests/TaskBreakdownTests.swift": "68e89c575c67705c7ef9e4c1659511d26da7551181438f5a3f5e9cf71dfe805f",
+    "TaskfoldTests/FilterAssistanceTests.swift": "b0a29e2f215cd9f085eaffd683fb7307adf6def603c73b2285a15a2bfe6ac66b"
+  },
+  "TasskFold-MacOS": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/FilterAssistance.swift": "3becd8c3d8a62218f071a3fc5dbc035b8d1c9b431d8c976f47727a1e18d70432",
+    "Taskfold/Core/Filters.swift": "8aaf2e5eef90ae3feba32647fdf79ab1204328e84085d119d9b7f8e807ac9f2d",
+    "TaskfoldTests/TaskBreakdownTests.swift": "68e89c575c67705c7ef9e4c1659511d26da7551181438f5a3f5e9cf71dfe805f",
+    "TaskfoldTests/FilterAssistanceTests.swift": "b0a29e2f215cd9f085eaffd683fb7307adf6def603c73b2285a15a2bfe6ac66b"
+  }
+}
