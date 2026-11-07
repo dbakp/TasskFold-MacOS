@@ -49,19 +49,30 @@ def finish(simulators=(), build_caches=(), apply=False):
         # Preserve costly app objects when healthy storage only needs a budget
         # trim. SDK modules regenerate more cheaply than the entire app.
         candidates = [cache / name for name in ['Index.noindex', 'CompilationCache.noindex', 'SDKExplicitPrecompiledModules', 'ModuleCache.noindex', 'SDKStatCaches.noindex', 'Build/Intermediates.noindex']]
-        for path in candidates:
+        metadata = cache / 'Build/Intermediates.noindex/XCBuildData'
+        for path in candidates + [metadata]:
             if path.is_symlink() or (path.exists() and not path.resolve().is_relative_to(cache)):
                 raise ValueError('Unexpected compiler cache link')
         sizes = {path: allocated(path) for path in candidates}
         total = sum(sizes.values())
         healthy = shutil.disk_usage(cache).free >= 30 * 1024**3
         budget = 768 * 1024**2
+        retired = []
         for path in candidates:
             if healthy and total <= budget: break
             if path.exists():
                 report['actions'].append({'path': str(path), 'kind': 'completedCompilerCache', 'allocatedBytes': sizes[path]})
                 if apply: shutil.rmtree(path)
+                retired.append(path)
                 total -= sizes[path]
+        # Xcode's saved dependency plan can still reference a removed module's
+        # .scan file. Retire that generated plan too, while keeping app objects,
+        # products and test evidence. The next build must rescan its inputs.
+        if any(path.name != 'Index.noindex' for path in retired) and not any(metadata.is_relative_to(path) for path in retired) and metadata.exists():
+            size = allocated(metadata)
+            report['actions'].append({'path': str(metadata), 'kind': 'completedBuildMetadata', 'allocatedBytes': size})
+            if apply: shutil.rmtree(metadata)
+            total -= size
         if healthy:
             report['skipped'].append({'cache': str(cache), 'reason': 'Reusable compiler cache within 768 MiB budget' if apply or sum(sizes.values()) <= budget else 'Dry-run budget trim; no files removed', 'allocatedBytes': total if apply else sum(sizes.values()), 'projectedAllocatedBytes': total})
     report['freeAfterBytes'] = shutil.disk_usage('/tmp').free

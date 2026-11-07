@@ -105,11 +105,11 @@ struct TaskListView: View {
             return store.filterGroups(scope, tasks: filtered, includeCompleted: showCompleted).map { Group(title: $0.name, key: "scope:" + scope.preferenceKey + ":group:" + $0.id, tasks: ordered($0.tasks, day: "scope:" + scope.preferenceKey + ":group:" + $0.id)) }
         }
         if !projectID.isEmpty {
-            let sections = OrganizationOrder.sorted(store.rows("sections").filter { $0.string("project_id") == projectID })
-            let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(regularTasks.filter { $0.string("section_id").isEmpty }, day: groupKey(section: nil)))
-            return [loose] + sections.map { section in
+            let read = ProjectSectionTaskRead(project: projectID, sections: store.rows("sections"), tasks: regularTasks)
+            let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(read.tasks(in: ""), day: groupKey(section: nil)))
+            return [loose] + read.sections.map { section in
                 let key = groupKey(section: section.id)
-                return Group(title: section.name, key: key, tasks: ordered(regularTasks.filter { $0.string("section_id") == section.id }, day: key))
+                return Group(title: section.name, key: key, tasks: ordered(read.tasks(in: section.id), day: key))
             }
         }
         let key = groupKey(section: nil)
@@ -124,10 +124,12 @@ struct TaskListView: View {
         })
     }
     private var boardColumns: [ProjectColumn] {
-        groups.map { group in
+        // Board columns include overdue work; list groups intentionally omit it.
+        let rowsBySection = Dictionary(grouping: filtered, by: { $0.string("section_id") })
+        return groups.map { group in
             let section = group.key.split(separator: ":").last.map(String.init) ?? "none"
             return ProjectColumn(id: group.key, sectionID: section == "none" ? "" : section, title: group.title.isEmpty ? "Tasks" : group.title,
-                                 tasks: ordered(filtered.filter { $0.string("section_id") == (section == "none" ? "" : section) }, day: group.key))
+                                 tasks: ordered(rowsBySection[section == "none" ? "" : section] ?? [], day: group.key))
         }
     }
     private var displayedTaskIDs: [String] {

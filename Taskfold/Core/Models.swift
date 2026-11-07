@@ -1705,6 +1705,18 @@ final class TaskCache {
 }
 
 
+/// One immutable native project read, without retaining workspace or edit authority.
+/// Preserve source order and duplicate rows; unknown sections are not reassigned.
+struct ProjectSectionTaskRead {
+    let sections: [Record]
+    private let rowsBySection: [String: [Record]]
+    init(project: String, sections: [Record], tasks: [Record]) {
+        self.sections = OrganizationOrder.sorted(sections.filter { $0.string("project_id") == project })
+        rowsBySection = Dictionary(grouping: tasks, by: { $0.string("section_id") })
+    }
+    func tasks(in section: String) -> [Record] { rowsBySection[section] ?? [] }
+}
+
 /// Day placement and due-date mutations share the durable, account-owned sync queue.
 enum DayPlacement {
     /// Stable ordinary order upserts remain compatible with legacy rows. A

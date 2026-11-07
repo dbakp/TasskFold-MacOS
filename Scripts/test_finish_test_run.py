@@ -30,6 +30,34 @@ class CleanupTests(unittest.TestCase):
         self.assertTrue(self.product.exists());self.assertTrue(self.result.exists());self.assertEqual(dependency.read_text(),'keep dependency')
         self.assertEqual(len(result['actions']),2)
         self.assertLessEqual(result['skipped'][-1]['allocatedBytes'],768*1024**2)
+    def test_module_trim_retires_stale_dependency_plan_and_preserves_objects(self):
+        sdk=self.cache/'SDKExplicitPrecompiledModules';sdk.mkdir();(sdk/'module.pcm').write_text('generated')
+        metadata=self.scratch/'XCBuildData';metadata.mkdir();(metadata/'build.db').write_text('references removed module.scan')
+        actual=module.allocated
+        def measured(path):return 800*1024**2 if path.resolve()==sdk.resolve() else actual(path)
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=60*1024**3)),patch.object(module,'allocated',side_effect=measured):
+            report=module.finish(build_caches=[self.cache],apply=True)
+        self.assertFalse(sdk.exists());self.assertFalse(metadata.exists())
+        self.assertTrue((self.scratch/'object.o').exists());self.assertTrue(self.product.exists());self.assertTrue(self.result.exists())
+        self.assertEqual([x['kind'] for x in report['actions']],['completedCompilerCache','completedBuildMetadata'])
+    def test_dependency_plan_is_kept_on_dry_run_healthy_or_running_build(self):
+        sdk=self.cache/'SDKExplicitPrecompiledModules';sdk.mkdir();(sdk/'module.pcm').write_text('generated')
+        metadata=self.scratch/'XCBuildData';metadata.mkdir();(metadata/'build.db').write_text('keep plan')
+        actual=module.allocated
+        def measured(path):return 800*1024**2 if path.resolve()==sdk.resolve() else actual(path)
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=60*1024**3)):
+            self.assertEqual(module.finish(build_caches=[self.cache],apply=True)['actions'],[])
+            with patch.object(module,'allocated',side_effect=measured):
+                self.assertEqual(len(module.finish(build_caches=[self.cache],apply=False)['actions']),2)
+                with patch.object(module.subprocess,'check_output',return_value='xcodebuild -derivedDataPath '+str(self.cache)):
+                    self.assertEqual(module.finish(build_caches=[self.cache],apply=True)['actions'],[])
+        self.assertTrue(sdk.exists());self.assertEqual((metadata/'build.db').read_text(),'keep plan')
+    def test_dependency_plan_symlink_is_rejected_before_cleanup(self):
+        outside=self.home/'unrelated';outside.mkdir();(outside/'keep').write_text('real data')
+        (self.scratch/'XCBuildData').symlink_to(outside,target_is_directory=True)
+        with patch.object(module.subprocess,'check_output',return_value=''),self.assertRaises(ValueError):
+            module.finish(build_caches=[self.cache],apply=True)
+        self.assertTrue((self.scratch/'object.o').exists());self.assertEqual((outside/'keep').read_text(),'real data')
     def test_budget_dry_run_and_healthy_symlink_never_remove_files(self):
         sdk=self.cache/'SDKExplicitPrecompiledModules';sdk.mkdir();(sdk/'module.pcm').write_text('generated')
         actual=module.allocated
