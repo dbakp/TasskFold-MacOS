@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-07",
+  "workloadRows": 124,
+  "measured": "DragRowContainer body evaluations from lift until durable commit",
+  "comparison": {
+    "currentGestureTargetReuse": {
+      "before": {
+        "destinationReads": 1,
+        "pointerUpdates": 15,
+        "rowBodyEvaluations": 1494,
+        "slotChanges": 1,
+        "sourceReads": 1,
+        "targetReads": 16
+      },
+      "after": {
+        "destinationReads": 1,
+        "pointerUpdates": 16,
+        "rowBodyEvaluations": 249,
+        "slotChanges": 1,
+        "sourceReads": 1,
+        "targetReads": 17
+      },
+      "reductionFraction": 0.8333333333333334
+    },
+    "freshReadAfterNavigation": {
+      "before": {
+        "destinationReads": 1,
+        "pointerUpdates": 15,
+        "rowBodyEvaluations": 1494,
+        "slotChanges": 1,
+        "sourceReads": 1,
+        "targetReads": 16
+      },
+      "after": {
+        "destinationReads": 1,
+        "pointerUpdates": 16,
+        "rowBodyEvaluations": 249,
+        "slotChanges": 1,
+        "sourceReads": 1,
+        "targetReads": 17
+      },
+      "reductionFraction": 0.8333333333333334
+    }
+  },
+  "signedCurrentSourceIPhoneNativeAccepted": true,
+  "twoActualDropsAndExactUndo": true,
+  "fourTodayUpcomingSwitches": true,
+  "actualVerticalScrollAndAllSavedTablesUnchanged": true,
+  "appRuntimeWarnings": [],
+  "optimization": "-Onone",
+  "optimizedReleaseTimingOrPhysicalFPS": false,
+  "baselineSourceMatchesBuiltFingerprints": true,
+  "macProductSourceChanged": false,
+  "macFrozenPackageSource": "a16956344b220d5bcb3dcc96a61f688ba76e5e94",
+  "preparedMac": "1.2.0 (34)",
+  "installedMac": "1.2.0 (31)",
+  "phoneInstallationDeferred": true,
+  "remaining": [
+    "Slot changes still invalidate row wrappers",
+    "Eager dated-list geometry and broader rendering/navigation workload",
+    "Mac normal update installation/startup after native control becomes available",
+    "Wider account/window/accessibility and physical FPS acceptance"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "baseCommit": "8ad1e19ee5444d35780c3bfac8ccd1ba1f65871e",
+  "reconstructedBaselineMatchesBuiltPreparedSources": true,
+  "baselineUITestSHA256": "5aa31003c5dfb6058e637b16a210cb4fb58145ac1a40a3cb2d6ab8587ba49e0c",
+  "baselinePreparedSourcesSHA256": "4a36f7421006f025a44cc57eb4f4318ff05bd5c10b7160ffb3144bdc1a39aeb4",
+  "baselineRowSourceSHA256": "559b9bbb15e95cbdbfccc62dd13095eb286f4a89bbc616d8493bcf4d5cd2b1c9",
+  "instrumentationPatchSHA256": "a4a62e96920249e6c1002fa47c4782d4c4054ac1c4078dacee2d6010d6e0783d"
+}

@@ -592,5 +592,37 @@
     "localFocusedTests": 32,
     "githubStatuses": [],
     "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TaskFold-iOS",
+    "pullRequest": "https://github.com/dbakp/TaskFold-iOS/pull/22",
+    "sourceCommit": "fb75ae505e6a5f3d495f121f8b4ffc516758957c",
+    "mergedHead": "c6cc74959ef685b7b2202a255a174020ced42fe0",
+    "verifiedRemoteMain": "8ad1e19ee5444d35780c3bfac8ccd1ba1f65871e",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localFocusedTests": 23,
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TasskFold-MacOS",
+    "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/23",
+    "sourceCommit": "a16956344b220d5bcb3dcc96a61f688ba76e5e94",
+    "mergedHead": "b7cb8a7768d425041edf8a367c8726bc14c8f264",
+    "verifiedRemoteMain": "dc9329384a3cdaf46817cb7f7bff962a297b8a8f",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localFocusedTests": 32,
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
   }
 ]

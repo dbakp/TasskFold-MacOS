@@ -1,0 +1,119 @@
+--- a/Taskfold/Views/DayDrag.swift
++++ b/Taskfold/Views/DayDrag.swift
+@@ -31,6 +31,15 @@
+         var collapses: Bool
+     }
+ 
++    #if DEBUG
++    @ObservationIgnored var rowBodyEvaluations = 0
++    @ObservationIgnored var pointerUpdates = 0
++    @ObservationIgnored var slotChanges = 0
++    func recordRowBody() {
++        if ProcessInfo.processInfo.arguments.contains("--day-drag-fixture") { rowBodyEvaluations += 1 }
++    }
++    #endif
++
+     var session: Session?
+     var target: DragSlot?
+     var cardOrigin: CGPoint = .zero
+@@ -90,6 +99,9 @@
+         if let prepareDrop { guard let action = prepareDrop(id) else { return }; preparedDrop = action }
+         else { preparedDrop = nil }
+         preparedNormalize = prepareNormalize?(id)
++        #if DEBUG
++        rowBodyEvaluations = 0; pointerUpdates = 0; slotChanges = 0
++        #endif
+         let frame = rowFrames[id]!
+         cachedOrder = orderProvider()
+         let inList = cachedOrder.contains { $0.day == day }
+@@ -208,6 +220,9 @@
+     }
+ 
+     private func refresh(fingerContent: CGPoint) {
++        #if DEBUG
++        pointerUpdates += 1
++        #endif
+         guard let current = session else { return }
+         let restingX = current.liftFrame.minX
+         let x = restingX + (fingerContent.x - current.grab.x - restingX) * 0.1
+@@ -220,6 +235,9 @@
+             if nowConstrained { Haptics.warning() }
+         }
+         if slot != target {
++            #if DEBUG
++            slotChanges += 1
++            #endif
+             animate(Motion.layout) { target = slot }
+             if !nowConstrained { Haptics.tick() }
+         }
+@@ -422,6 +440,9 @@
+     let day: String
+     @ViewBuilder var content: Content
+     var body: some View {
++        #if DEBUG
++        let _ = controller.recordRowBody()
++        #endif
+         content
+             .modifier(DragFrameReporter(controller: controller, key: id, day: day, isDay: false))
+             .padding(.bottom, 8)
+--- a/Taskfold/TaskfoldApp.swift
++++ b/Taskfold/TaskfoldApp.swift
+@@ -513,6 +513,16 @@
+                         task["id"] = .string("drag-fixture-\(index)")
+                         task["title"] = .string(sample.1)
+                         return task
++                    }
++                    if ProcessInfo.processInfo.arguments.contains("--day-drag-large-fixture") {
++                        store.snapshot.tables["tasks", default: []] += (0..<120).map { index in
++                            let offset = index < 80 ? 0 : 1 + index % 14
++                            var task = Record.task(user: store.userID, date: Calendar.current.date(byAdding: .day, value: offset, to: Date())!)
++                            task["id"] = .string("drag-workload-\(index)")
++                            task["title"] = .string("Workload sample \(index): review the upcoming design and delivery notes")
++                            if index % 3 == 0 { task["description"] = .string("Keep the approved details and planning context intact during a date move.") }
++                            return task
++                        }
+                     }
+                     if ProcessInfo.processInfo.arguments.contains("--upcoming-viewport-fixture") {
+                         store.snapshot.tables["tasks"] = [(-1, "Older overdue one"), (-1, "Older overdue two"), (-1, "Overdue sample"), (0, "Today sample"), (1, "Tomorrow sample")].enumerated().map { index, sample in
+@@ -1603,7 +1613,11 @@
+         if saved, ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--day-drag-fixture") {
+             let folder = URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance")
+             try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+-            try? JSONSerialization.data(withJSONObject: store.dayDragTargetReadProof, options: [.sortedKeys]).write(to: folder.appendingPathComponent("drag-target-read.json"), options: .atomic)
++            var proof = store.dayDragTargetReadProof
++            proof["rowBodyEvaluations"] = drag.rowBodyEvaluations
++            proof["pointerUpdates"] = drag.pointerUpdates
++            proof["slotChanges"] = drag.slotChanges
++            try? JSONSerialization.data(withJSONObject: proof, options: [.sortedKeys]).write(to: folder.appendingPathComponent("drag-target-read.json"), options: .atomic)
+         }
+         #endif
+         return saved
+--- a/TaskfoldUITests/WorkflowSourceSelectionUITests.swift
++++ b/TaskfoldUITests/WorkflowSourceSelectionUITests.swift
+@@ -813,7 +813,7 @@
+             XCTAssertTrue(undo.waitForExistence(timeout: 8)); XCTAssertTrue(undo.isEnabled)
+             undo.tap()
+         }
+-        app.launchArguments = ["--uitesting", "--day-drag-fixture", "-appearance", "light", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]; app.launch()
++        app.launchArguments = ["--uitesting", "--day-drag-fixture", "--day-drag-large-fixture", "-appearance", "light", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]; app.launch()
+         let overdue = app.buttons["taskDetails-drag-fixture-0"]
+         XCTAssertTrue(overdue.waitForExistence(timeout: 25))
+         let before = try dragSnapshot()
+@@ -825,7 +825,7 @@
+         let moved = try XCTUnwrap(rows.first { $0["title"] as? String == "Overdue sample" })
+         let todayRow = try XCTUnwrap(rows.first { $0["title"] as? String == "Today first" })
+         XCTAssertEqual(moved["due_date"] as? String, todayRow["due_date"] as? String)
+-        XCTAssertEqual(rows.count, 4)
++        XCTAssertEqual(rows.count, 124)
+         let targetRead = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: home().appendingPathComponent("Library/Application Support/WorkspaceReadPerformance/drag-target-read.json"))) as? [String: Int])
+         XCTAssertGreaterThan(try XCTUnwrap(targetRead["targetReads"]), try XCTUnwrap(targetRead["sourceReads"]))
+         XCTAssertGreaterThan(try XCTUnwrap(targetRead["destinationReads"]), 0)
+@@ -856,7 +856,7 @@
+         XCTAssertTrue(app.buttons["overdueToggle"].waitForExistence(timeout: 8))
+         XCTAssertEqual(normalizedScheduledAt(try XCTUnwrap(try dragSnapshot()["tasks"])), normalizedScheduledAt(try XCTUnwrap(before["tasks"])))
+         let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Actual list drop Undo and tab navigation"; shot.lifetime = .keepAlways; add(shot)
+-        try plannerProof("day-drag-ui.json", ["accepted": true, "realDragGestureSaved": true, "actualUndoRestoresTasks": true, "navigationRoundTrip": true, "currentGestureTargetReuse": targetRead, "freshReadAfterNavigation": nextTargetRead, "dropSecondsIncludingGestureAndXCTest": dropSeconds, "tabSecondsIncludingXCTest": tabs])
++        try plannerProof("day-drag-ui.json", ["accepted": true, "workloadRows": 124, "realDragGestureSaved": true, "actualUndoRestoresTasks": true, "navigationRoundTrip": true, "currentGestureTargetReuse": targetRead, "freshReadAfterNavigation": nextTargetRead, "dropSecondsIncludingGestureAndXCTest": dropSeconds, "tabSecondsIncludingXCTest": tabs])
+     }
+     @MainActor private func dragSnapshot() throws -> [String: [[String: Any]]] {
+         let path = try home().appendingPathComponent("Library/Application Support/Taskfold/ui-testing.json")
