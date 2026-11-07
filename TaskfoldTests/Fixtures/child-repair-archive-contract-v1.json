@@ -1,0 +1,162 @@
+{
+  "page": {
+    "next": "2f1d3fab-d331-4526-86ef-86c4ad1bcfc0",
+    "account": "8f77a7df-9138-437d-99c9-62276caa2d29",
+    "entries": [
+      {
+        "receipt": {
+          "state": "applied",
+          "account": "8f77a7df-9138-437d-99c9-62276caa2d29",
+          "task_id": "a7c09aa3-4bf2-4efb-8e33-2be5f9b5ad45",
+          "protocol": 1,
+          "replayed": false,
+          "archive_id": "c278face-ff88-4af0-ae8c-0499579728b6",
+          "node_count": 2,
+          "project_id": "88c0de79-d2a8-40d4-bb9a-bcafa35d5709",
+          "request_id": "1a711438-f1a5-4d57-a18d-62c61f65b694",
+          "workspace_id": null,
+          "archive_bytes": 2361,
+          "repair_digest": "97b897562226e5f593d45fade588f2608b3088461bfe83604f8b8378a63f1bf2",
+          "review_digest": "98f510c3364fb66196ed7827c8b6c327ef523d7be61b968ea574cebab32a9bce",
+          "archive_digest": "10386ec0d43b22706f3316b173393c00f8d096a5fe52c466f0b60719cce77476",
+          "task_generation": "fda1223c-06d9-4d6a-875c-1079a0faa1ae"
+        },
+        "created_at": "2026-11-07T05:57:09.940122+00:00",
+        "current_title": "Private repair original 0",
+        "title_truncated": false,
+        "content_retained": true
+      },
+      {
+        "receipt": {
+          "state": "applied",
+          "account": "8f77a7df-9138-437d-99c9-62276caa2d29",
+          "task_id": "267e4a98-9ed2-438b-95dd-586325b05f21",
+          "protocol": 1,
+          "replayed": false,
+          "archive_id": "699e5052-0fea-4687-9eb7-3352bdf20267",
+          "node_count": 2,
+          "project_id": "88c0de79-d2a8-40d4-bb9a-bcafa35d5709",
+          "request_id": "2f1d3fab-d331-4526-86ef-86c4ad1bcfc0",
+          "workspace_id": null,
+          "archive_bytes": 2363,
+          "repair_digest": "37e4d117864e5b3c28e71f8e000e40c15a029da565e955dbec805a75d8455a36",
+          "review_digest": "4737a781d4fb1bc2581d60199c19bc627e8d8ada3ad280615b2b751d816ce725",
+          "archive_digest": "b066263b284366d1d1f19ad3d3d4a1c31549821a118899f1fe9644799607284b",
+          "task_generation": "517e9e8a-3b26-4f5c-868f-a5ce6179e22d"
+        },
+        "created_at": "2026-11-07T05:57:09.990082+00:00",
+        "current_title": "Private repair original 1",
+        "title_truncated": false,
+        "content_retained": true
+      }
+    ],
+    "protocol": 1
+  },
+  "originalReply": {
+    "account": "8f77a7df-9138-437d-99c9-62276caa2d29",
+    "original": {
+      "root": {
+        "id": "a7c09aa3-4bf2-4efb-8e33-2be5f9b5ad45",
+        "title": "Private repair original 0",
+        "labels": [],
+        "user_id": "8f77a7df-9138-437d-99c9-62276caa2d29",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [
+          {
+            "id": "1fae675e-283c-45c3-9d4c-b7efd51021d8",
+            "title": "Parent",
+            "future": {
+              "precise": "Keep this string"
+            },
+            "subtasks": [
+              "Legacy text 0"
+            ]
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-11-07T05:57:09.881794+00:00",
+        "is_heading": null,
+        "project_id": "88c0de79-d2a8-40d4-bb9a-bcafa35d5709",
+        "section_id": null,
+        "assigned_to": null,
+        "attachments": [],
+        "description": "Keep every detail",
+        "completed_at": null,
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "fda1223c-06d9-4d6a-875c-1079a0faa1ae",
+        "duration_minutes": null,
+        "completion_version": 0,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "records": [],
+      "protocol": 1,
+      "authority": null,
+      "projection": null,
+      "child_history": [
+        {
+          "id": "54bc47d0-bbc8-4cae-9223-704414360e27",
+          "kinds": [
+            "coverage_gap"
+          ],
+          "task_id": "a7c09aa3-4bf2-4efb-8e33-2be5f9b5ad45",
+          "user_id": "8f77a7df-9138-437d-99c9-62276caa2d29",
+          "actor_id": "8f77a7df-9138-437d-99c9-62276caa2d29",
+          "node_key": "",
+          "sequence": 1,
+          "after_path": [],
+          "type_after": null,
+          "work_after": false,
+          "after_state": {
+            "due_date": null,
+            "due_time": null,
+            "completed": false,
+            "time_zone": null,
+            "project_id": "88c0de79-d2a8-40d4-bb9a-bcafa35d5709",
+            "section_id": null,
+            "completed_at": null,
+            "scheduled_at": null,
+            "deadline_date": null,
+            "recurrence_parent_id": null
+          },
+          "before_path": [],
+          "recorded_at": "2026-11-07T05:57:09.88307+00:00",
+          "type_before": null,
+          "work_before": false,
+          "before_state": {},
+          "effective_at": "2026-11-07T05:57:09.88307+00:00",
+          "order_context": null,
+          "changed_fields": [],
+          "format_version": 1,
+          "task_generation": "fda1223c-06d9-4d6a-875c-1079a0faa1ae",
+          "transfer_context": null,
+          "operation_context": {
+            "id": "b1b4ebba-9a35-5643-cd70-2aad501e6291",
+            "origin": "server_transaction",
+            "version": 1
+          },
+          "completion_version": 0
+        }
+      ],
+      "repair_digest": "97b897562226e5f593d45fade588f2608b3088461bfe83604f8b8378a63f1bf2",
+      "review_digest": "98f510c3364fb66196ed7827c8b6c327ef523d7be61b968ea574cebab32a9bce",
+      "subtasks_sql_null": false
+    },
+    "protocol": 1,
+    "archive_id": "c278face-ff88-4af0-ae8c-0499579728b6",
+    "request_id": "1a711438-f1a5-4d57-a18d-62c61f65b694",
+    "archive_digest": "10386ec0d43b22706f3316b173393c00f8d096a5fe52c466f0b60719cce77476"
+  },
+  "originalWire": "{\"account\": \"8f77a7df-9138-437d-99c9-62276caa2d29\", \"original\": {\"root\": {\"id\": \"a7c09aa3-4bf2-4efb-8e33-2be5f9b5ad45\", \"title\": \"Private repair original 0\", \"labels\": [], \"user_id\": \"8f77a7df-9138-437d-99c9-62276caa2d29\", \"comments\": [], \"due_date\": null, \"due_time\": null, \"priority\": 4, \"subtasks\": [{\"id\": \"1fae675e-283c-45c3-9d4c-b7efd51021d8\", \"title\": \"Parent\", \"future\": {\"precise\": \"Keep this string\"}, \"subtasks\": [\"Legacy text 0\"]}], \"completed\": false, \"reminders\": [], \"time_zone\": null, \"created_at\": \"2026-11-07T05:57:09.881794+00:00\", \"is_heading\": null, \"project_id\": \"88c0de79-d2a8-40d4-bb9a-bcafa35d5709\", \"section_id\": null, \"assigned_to\": null, \"attachments\": [], \"description\": \"Keep every detail\", \"completed_at\": null, \"is_recurring\": false, \"scheduled_at\": null, \"deadline_date\": null, \"reminder_specs\": [], \"source_metadata\": {}, \"task_generation\": \"fda1223c-06d9-4d6a-875c-1079a0faa1ae\", \"duration_minutes\": null, \"completion_version\": 0, \"recurrence_pattern\": null, \"recurrence_end_date\": null, \"notification_sent_at\": null, \"recurrence_parent_id\": null}, \"records\": [], \"protocol\": 1, \"authority\": null, \"projection\": null, \"child_history\": [{\"id\": \"54bc47d0-bbc8-4cae-9223-704414360e27\", \"kinds\": [\"coverage_gap\"], \"task_id\": \"a7c09aa3-4bf2-4efb-8e33-2be5f9b5ad45\", \"user_id\": \"8f77a7df-9138-437d-99c9-62276caa2d29\", \"actor_id\": \"8f77a7df-9138-437d-99c9-62276caa2d29\", \"node_key\": \"\", \"sequence\": 1, \"after_path\": [], \"type_after\": null, \"work_after\": false, \"after_state\": {\"due_date\": null, \"due_time\": null, \"completed\": false, \"time_zone\": null, \"project_id\": \"88c0de79-d2a8-40d4-bb9a-bcafa35d5709\", \"section_id\": null, \"completed_at\": null, \"scheduled_at\": null, \"deadline_date\": null, \"recurrence_parent_id\": null}, \"before_path\": [], \"recorded_at\": \"2026-11-07T05:57:09.88307+00:00\", \"type_before\": null, \"work_before\": false, \"before_state\": {}, \"effective_at\": \"2026-11-07T05:57:09.88307+00:00\", \"order_context\": null, \"changed_fields\": [], \"format_version\": 1, \"task_generation\": \"fda1223c-06d9-4d6a-875c-1079a0faa1ae\", \"transfer_context\": null, \"operation_context\": {\"id\": \"b1b4ebba-9a35-5643-cd70-2aad501e6291\", \"origin\": \"server_transaction\", \"version\": 1}, \"completion_version\": 0}], \"repair_digest\": \"97b897562226e5f593d45fade588f2608b3088461bfe83604f8b8378a63f1bf2\", \"review_digest\": \"98f510c3364fb66196ed7827c8b6c327ef523d7be61b968ea574cebab32a9bce\", \"subtasks_sql_null\": false}, \"protocol\": 1, \"archive_id\": \"c278face-ff88-4af0-ae8c-0499579728b6\", \"request_id\": \"1a711438-f1a5-4d57-a18d-62c61f65b694\", \"archive_digest\": \"10386ec0d43b22706f3316b173393c00f8d096a5fe52c466f0b60719cce77476\"}"
+}

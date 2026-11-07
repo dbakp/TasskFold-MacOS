@@ -892,6 +892,11 @@ final class Store {
         childTaskAdoptionEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRepairEnabled") as? Bool == true
     }
     var childTaskRepairWritesAvailable: Bool { childTaskRepairEnabled && workspaceCacheDecoded && workspaceCacheReadable }
+    /// Read-only recovery can remain available if repair authoring is disabled.
+    /// The independent switch is absent/off in normal app configuration.
+    var childTaskRepairArchiveReadsEnabled: Bool {
+        childTaskRepairEnabled || Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRepairArchiveReadsEnabled") as? Bool == true
+    }
     func childTaskRepairJournal(account: String, origin: String) throws -> ChildTaskRepairJournal {
         let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
@@ -970,6 +975,17 @@ final class Store {
         guard let scope = childTaskFieldRecoveryScope, entry.command.account == scope.account, entry.command.origin == scope.origin, let result = entry.result, result.applied else { throw ChildTaskRepairFailure(reason: .unavailable) }
         let revision = snapshotRevision
         let original = try await backend.childTaskRepairOriginal(entry.command, result: result, session: scope.session)
+        try Task.checkCancellation(); guard scope == childTaskFieldRecoveryScope, revision == snapshotRevision else { throw CancellationError() }; return original
+    }
+    func readChildTaskRepairArchives(after: String? = nil) async throws -> ChildTaskRepairArchivePage {
+        guard let scope = childTaskFieldRecoveryScope else { throw ChildTaskRepairFailure(reason: .unavailable) }
+        let page = try await backend.childTaskRepairArchives(scope: scope, after: after)
+        try Task.checkCancellation(); guard scope == childTaskFieldRecoveryScope else { throw CancellationError() }; return page
+    }
+    func readDiscoveredChildTaskRepairOriginal(_ archive: ChildTaskRepairArchive) async throws -> ChildTaskRepairOriginal {
+        guard let scope = childTaskFieldRecoveryScope, archive.scope == scope else { throw ChildTaskRepairFailure(reason: .unavailable) }
+        let revision = snapshotRevision
+        let original = try await backend.childTaskDiscoveredRepairOriginal(archive, scope: scope)
         try Task.checkCancellation(); guard scope == childTaskFieldRecoveryScope, revision == snapshotRevision else { throw CancellationError() }; return original
     }
     var childTaskTransfersEnabled: Bool {

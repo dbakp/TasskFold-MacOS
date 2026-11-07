@@ -1,0 +1,85 @@
+[
+  {
+    "phase": "mac",
+    "passed": false,
+    "checks": 65,
+    "failure": {
+      "message": "Full-schema SQL failed: ERROR:  23514: new row for relation \"child_task_repair_originals\" violates check constraint \"child_task_repair_originals_check\""
+    },
+    "lastFailure": null,
+    "cleanup": true
+  },
+  {
+    "phase": "mac-final",
+    "passed": false,
+    "checks": 71,
+    "failure": {
+      "message": "expired session cannot discover\n\nfalse !== true\n"
+    },
+    "lastFailure": null,
+    "cleanup": true
+  },
+  {
+    "phase": "mac-verified",
+    "passed": true,
+    "checks": 76,
+    "failure": null,
+    "lastFailure": null,
+    "cleanup": true
+  },
+  {
+    "phase": "mac-title",
+    "passed": true,
+    "checks": 80,
+    "failure": null,
+    "lastFailure": null,
+    "cleanup": true
+  },
+  {
+    "phase": "mac-custody",
+    "passed": false,
+    "checks": 53,
+    "failure": {
+      "message": "Full-schema SQL failed: ERROR:  P0001: Sign in to manage invitations"
+    },
+    "lastFailure": null,
+    "cleanup": true
+  },
+  {
+    "phase": "mac-final-parity",
+    "passed": false,
+    "checks": 53,
+    "failure": {
+      "message": "owner invites actual collaborator\n\nfalse !== true\n"
+    },
+    "lastFailure": {
+      "name": "owner invites actual collaborator",
+      "status": 400,
+      "code": "23514",
+      "message": "new row for relation \"project_collaborators\" violates check constraint \"user_or_email\""
+    },
+    "cleanup": true
+  },
+  {
+    "phase": "first Core compile",
+    "failure": "type Dates has no member instant; corrected to the existing TaskPlanning.instant"
+  },
+  {
+    "phase": "first Core suite",
+    "selected": 87,
+    "failed": 1,
+    "failure": "Mapped fixture read used contract instead of its actual value envelope; corrected to the existing capture shape."
+  },
+  {
+    "phase": "copied source preparation",
+    "failure": "Older iOS copied host lacked a current source file; fresh isolated source-only hosts were prepared while retaining the stable build caches."
+  },
+  {
+    "phase": "personal collaborator fixture direct SQL",
+    "failure": "Invitation trigger correctly refused an unauthenticated direct insert; switched to actual invite/accept APIs."
+  },
+  {
+    "phase": "personal collaborator invitation fields",
+    "failure": "API fixture supplied user_id but omitted required invited_email; corrected to the existing real invitation contract. Final invite, accept, repair, export and revoke all pass."
+  }
+]

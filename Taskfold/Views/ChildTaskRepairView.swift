@@ -682,3 +682,113 @@ private struct ChildMappingHistoryPicker: View {
         }.accessibilityIdentifier("childMappingHistory-" + stored.id)
     }
 }
+
+/// A fresh device can browse originals without recreating old repair commands.
+/// Metadata is ephemeral; original bytes are fetched only for explicit export.
+struct ChildTaskRepairArchivesView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @Environment(\.dismiss) private var dismiss
+    @State private var entries: [ChildTaskRepairArchive] = []
+    @State private var next: String?
+    @State private var loaded = false
+    @State private var busy = false
+    @State private var ticket = UUID()
+    @State private var message: String?
+    @State private var document: WorkspaceDocument?
+    @State private var exporting = false
+    @State private var exportScope: ChildTaskFieldClientScope?
+    @State private var visible = true
+    private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
+    var body: some View {
+        NavigationStack {
+            List {
+                if scope != nil {
+                    Section {
+                        Text("Find originals saved before a repair, even on a new device. Names reflect current tasks; exports keep their original content and check your current access.")
+                            .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
+                        Button("Refresh") { Task { await load() } }.disabled(busy).accessibilityIdentifier("childRepairArchivesRefresh")
+                    }
+                    if busy { ProgressView("Reading saved originals…").accessibilityIdentifier("childRepairArchivesProgress") }
+                    if let message { Text(message).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRepairArchivesFeedback") }
+                    if loaded && entries.isEmpty && !busy {
+                        ContentUnavailableView("No saved originals", systemImage: "archivebox", description: Text("Original copies appear after a subtask repair is saved to this account."))
+                            .accessibilityIdentifier("childRepairArchivesEmpty")
+                    }
+                    ForEach(entries.filter { $0.scope == scope }.sorted { $0.createdAt == $1.createdAt ? $0.requestID < $1.requestID : $0.createdAt > $1.createdAt }) { entry in
+                        Section {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(archiveTitle(entry)).font(.headline).fixedSize(horizontal: false, vertical: true)
+                                Text(entry.createdAt, format: .dateTime.year().month().day().hour().minute()).foregroundStyle(.secondary)
+                                Text(ByteCountFormatter.string(fromByteCount: Int64(entry.bytes), countStyle: .file))
+                                    .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            }
+                            if entry.contentRetained {
+                                Button { Task { await export(entry) } } label: { ChildRepairActionLabel(title: "Export original", symbol: "square.and.arrow.up") }
+                                    .disabled(busy).accessibilityLabel("Export original: \(archiveTitle(entry))")
+                                    .accessibilityHint("Save a copy of this original without changing your tasks.")
+                                    .accessibilityIdentifier("childRepairArchiveExport-" + entry.id)
+                            } else {
+                                Text("Original content is no longer available. Its repair confirmation is kept.")
+                                    .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
+                            }
+                        }.accessibilityIdentifier("childRepairArchive-" + entry.id)
+                    }
+                    if let next {
+                        Button(entries.count >= 500 ? "Continue to next page" : "Load more") { Task { await load(after: next) } }
+                            .disabled(busy).accessibilityIdentifier("childRepairArchivesMore")
+                    }
+                } else {
+                    Text("Return to your signed-in workspace to view saved originals.").foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("Saved originals")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() }.keyboardShortcut(.cancelAction) } }
+        }
+        .onAppear { visible = true }
+        .task { await load() }
+        .onChange(of: scope) { _, after in clear(); if after != nil { Task { await load() } } }
+        .onDisappear { visible = false; clear() }
+        .fileExporter(isPresented: $exporting, document: scope == exportScope ? document : nil, contentType: .json, defaultFilename: "Taskfold-original-" + Dates.day(Date())) { result in
+            guard let scope, exportScope == scope else { return }; document = nil; exportScope = nil
+            switch result {
+            case .success: message = "Original exported."
+            case .failure(let error): message = (error as NSError).code == NSUserCancelledError ? nil : "Export couldn’t finish. The original is still kept."
+            }
+        }
+    }
+    private func archiveTitle(_ entry: ChildTaskRepairArchive) -> String {
+        guard let title = entry.title, !title.isEmpty else { return "Saved original" }
+        return title + (entry.titleTruncated ? "…" : "")
+    }
+    private func clear() {
+        ticket = UUID(); entries = []; next = nil; loaded = false; busy = false
+        message = nil; document = nil; exportScope = nil; exporting = false
+    }
+    private func load(after: String? = nil) async {
+        guard visible, let captured = scope, !busy else { return }; let work = UUID(); ticket = work; busy = true; message = nil
+        defer { if ticket == work { busy = false } }
+        do {
+            let page = try await store.readChildTaskRepairArchives(after: after)
+            guard scope == captured, ticket == work, !Task.isCancelled else { return }
+            let replacing = after == nil || entries.count >= 500
+            guard replacing || Set(entries.map(\.id)).isDisjoint(with: page.entries.map(\.id)) else { throw ChildTaskRepairCommand.invalid }
+            entries = replacing ? page.entries : entries + page.entries; next = page.next; loaded = true
+        } catch {
+            guard scope == captured, ticket == work, !Task.isCancelled else { return }
+            message = "Saved originals couldn’t be loaded. Check your connection and account access, then refresh."
+        }
+    }
+    private func export(_ entry: ChildTaskRepairArchive) async {
+        guard visible, let captured = scope, captured == entry.scope, !busy else { return }; let work = UUID(); ticket = work; busy = true; message = nil
+        defer { if ticket == work { busy = false } }
+        do {
+            let original = try await store.readDiscoveredChildTaskRepairOriginal(entry)
+            guard scope == captured, ticket == work, !Task.isCancelled else { return }
+            document = WorkspaceDocument(data: original.data); exportScope = captured; exporting = true
+        } catch {
+            guard scope == captured, ticket == work, !Task.isCancelled else { return }
+            message = "This original couldn’t be opened with your current access. Its repair confirmation is kept."
+        }
+    }
+}

@@ -384,6 +384,63 @@ struct ChildTaskRepairResult: Codable, Equatable, Sendable {
     func agrees(_ other: Self) -> Bool { ChildTaskStructureCommand.exact(.object(raw.filter { $0.key != "replayed" }), .object(other.raw.filter { $0.key != "replayed" })) }
 }
 
+/// Server originals outlive a device journal. These entries authorize no writes
+/// and contain no archived title, source tree, chosen mappings or authored notes.
+/// A current title is returned only under current caller read policies.
+struct ChildTaskRepairArchive: Identifiable, Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    let scope: ChildTaskFieldClientScope
+    let receipt: [String: JSON]
+    let createdAt: Date
+    let contentRetained: Bool
+    let title: String?
+    let titleTruncated: Bool
+    var id: String { receipt["archive_id"]!.text }
+    var requestID: String { receipt["request_id"]!.text }
+    var rootID: String { receipt["task_id"]!.text }
+    var nodeCount: Int { receipt["node_count"]!.integer }
+    var bytes: Int { receipt["archive_bytes"]!.integer }
+    var description: String { "Private saved repair archive" }
+    var debugDescription: String { description }
+    fileprivate init(raw: [String: JSON], scope: ChildTaskFieldClientScope) throws {
+        guard Set(raw.keys) == ["receipt", "created_at", "content_retained", "current_title", "title_truncated"], case .object(let r)? = raw["receipt"],
+              Set(r.keys) == ChildTaskRepairCommand.keys.subtracting(["changes"]).union(["state", "replayed", "archive_id", "archive_digest", "archive_bytes", "node_count"]),
+              r["protocol"] == .number(1), r["account"] == .string(scope.account), r["state"] == .string("applied"), r["replayed"] == .bool(false),
+              case .bool(let retained)? = raw["content_retained"], case .string(let date)? = raw["created_at"], date.utf8.count <= 64,
+              let created = TaskPlanning.instant(date), ChildTaskAdoptionCommand.digest(r["review_digest"]), ChildTaskAdoptionCommand.digest(r["repair_digest"]),
+              ChildTaskAdoptionCommand.digest(r["archive_digest"]), try ChildTaskAdoptionReview.count(r["archive_bytes"], maximum: 8_000_000) > 0 else { throw ChildTaskRepairCommand.invalid }
+        let title: String?
+        if raw["current_title"] == .null { title = nil }
+        else { guard case .string(let value)? = raw["current_title"], value.unicodeScalars.count <= 512 else { throw ChildTaskRepairCommand.invalid }; title = value }
+        guard case .bool(let shortened)? = raw["title_truncated"], !shortened || title?.unicodeScalars.count == 512 else { throw ChildTaskRepairCommand.invalid }
+        _ = try ChildTaskAdoptionReview.count(r["node_count"], maximum: 1000)
+        for key in ["account", "request_id", "task_id", "archive_id"] { _ = try TeamOrganizationValue.id(r[key]) }
+        for key in ["task_generation", "project_id", "workspace_id"] { _ = try TeamProjectValue.optionalID(r[key]) }
+        self.scope = scope; receipt = r; createdAt = created; contentRetained = retained; self.title = title; titleTruncated = shortened
+    }
+}
+struct ChildTaskRepairArchivePage: Sendable {
+    static let maximumBytes = 200_000
+    let entries: [ChildTaskRepairArchive]
+    let next: String?
+    init(data: Data, scope: ChildTaskFieldClientScope, after: String?, limit: Int = 50) throws {
+        guard (1...50).contains(limit), after == nil || UUID(uuidString: after!)?.uuidString.lowercased() == after else { throw ChildTaskRepairCommand.invalid }
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes, integerPaths: [["protocol"], ["entries", "[]", "receipt", "protocol"], ["entries", "[]", "receipt", "node_count"], ["entries", "[]", "receipt", "archive_bytes"]])
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        guard Set(raw.keys) == ["protocol", "account", "entries", "next"], raw["protocol"] == .number(1), raw["account"] == .string(scope.account),
+              case .array(let rows)? = raw["entries"], rows.count <= limit else { throw ChildTaskRepairCommand.invalid }
+        var entries: [ChildTaskRepairArchive] = [], previous = after, archives = Set<String>()
+        for row in rows {
+            guard case .object(let fields) = row else { throw ChildTaskRepairCommand.invalid }
+            let entry = try ChildTaskRepairArchive(raw: fields, scope: scope)
+            guard UUID(uuidString: entry.requestID)?.uuidString.lowercased() == entry.requestID, previous == nil || entry.requestID > previous!, archives.insert(entry.id).inserted else { throw ChildTaskRepairCommand.invalid }
+            entries.append(entry); previous = entry.requestID
+        }
+        let next = try TeamProjectValue.optionalID(raw["next"])
+        guard next == nil || entries.count == limit && next == entries.last?.requestID else { throw ChildTaskRepairCommand.invalid }
+        self.entries = entries; self.next = next
+    }
+}
+
 /// Original retrieval is separately authorized by the server. Its opaque bytes
 /// are suitable for exact export, never for installing partial editable rows.
 struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
@@ -444,6 +501,23 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
         if choice?["kind"] == .string(ChildTaskRepairChange.Kind.chooseCopy.rawValue) {
             guard let archived = header.copyChoice, ChildTaskStructureCommand.exact(.object(archived.raw), .object(choice!)) else { throw ChildTaskRepairCommand.invalid }
         } else { guard header.copyChoice == nil else { throw ChildTaskRepairCommand.invalid } }
+        self.data = parts.value
+    }
+    /// Export-only recovery from an immutable server receipt. A missing original
+    /// command cannot be reconstructed or queued for a mutation from this path.
+    init(data: Data, archive: ChildTaskRepairArchive) throws {
+        guard archive.contentRetained else { throw ChildTaskRepairCommand.invalid }
+        let parts = try ChildTaskRecordRead.separatingJSONField("original", data: data, maximum: Self.maximumBytes, integerPaths: [["protocol"], ["original", "protocol"]], nullableIntegerPaths: [])
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata), r = archive.receipt
+        guard Set(raw.keys) == ["protocol", "account", "request_id", "archive_id", "archive_digest", "original"], raw["protocol"] == .number(1),
+              raw["account"] == .string(archive.scope.account), raw["request_id"] == .string(archive.requestID), raw["archive_id"] == .string(archive.id),
+              raw["archive_digest"] == r["archive_digest"], parts.value.count == archive.bytes,
+              SHA256.hash(data: parts.value).map({ String(format: "%02x", $0) }).joined() == r["archive_digest"]?.text else { throw ChildTaskRepairCommand.invalid }
+        let header = try TaskfoldJSONDecoder().decode(Header.self, from: parts.value)
+        guard header.protocolVersion == 1, header.root.id == archive.rootID,
+              header.root.task_generation == (try TeamProjectValue.optionalID(r["task_generation"])), header.root.project_id == (try TeamProjectValue.optionalID(r["project_id"])),
+              header.reviewDigest == r["review_digest"]?.text, header.repairDigest == r["repair_digest"]?.text else { throw ChildTaskRepairCommand.invalid }
+        if let context = header.mappingContext { guard context.request == archive.requestID, context.archive == archive.id else { throw ChildTaskRepairCommand.invalid } }
         self.data = parts.value
     }
 }
