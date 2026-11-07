@@ -1062,5 +1062,33 @@
     "statuses": [],
     "workflowRuns": [],
     "ciClaim": "No reported statuses or PR workflows; local checks recorded separately."
+  },
+  {
+    "repository": "dbakp/TaskFold-iOS",
+    "pullRequest": "https://github.com/dbakp/TaskFold-iOS/pull/38",
+    "mergedHead": "8b8077185a5d5173aeb097d87912085020b5770c",
+    "verifiedRemoteMain": "54bed93c9af7f2fd41384988b7dac54fd57239e0",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "statuses": [],
+    "workflowRuns": [],
+    "ciClaim": "No reported statuses/PR workflows; actual local Core/native/build checks recorded separately."
+  },
+  {
+    "repository": "dbakp/TasskFold-MacOS",
+    "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/39",
+    "mergedHead": "43f696386c3b6b84fe295510c953ae05c900fff4",
+    "verifiedRemoteMain": "7f4a18c8deb47c2b7d4285f84a651afface36b1c",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "statuses": [],
+    "workflowRuns": [],
+    "ciClaim": "No reported statuses/PR workflows; actual local Core/native/build checks recorded separately."
   }
 ]
