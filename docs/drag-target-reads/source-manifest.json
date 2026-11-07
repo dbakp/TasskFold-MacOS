@@ -1,0 +1,10 @@
+{
+  "owner": "mac",
+  "sourceCommit": "a16956344b220d5bcb3dcc96a61f688ba76e5e94",
+  "files": {
+    "Taskfold/Core/RowGesture.swift": "0235935fdeee0b034ad22dc034c1fbb297a2a63959e408bd8ca567dd7591a880",
+    "Taskfold/Core/Store.swift": "0c474eb7cb5dfa88b7a3abe606a7d269b484e180558e133b51de8b9ff41d866d",
+    "TaskfoldTests/DragTargetReadTests.swift": "e0511f0a91e3e9c038fdd7cd8b88c5cdf47a8f5eb6ccf22a8b9bc8104faf9e6b",
+    "Taskfold/Workspace.swift": "1d1b139b40497baf10b976c5f9bc2b4cac24f8e023d3916de6e56b30bbdf48f3"
+  }
+}
