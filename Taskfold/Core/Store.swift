@@ -1989,14 +1989,25 @@ final class Store {
             return changes.isEmpty || commit(changes)
         } catch { self.error = error.localizedDescription; return false }
     }
+    private var projectCatalogContext: WorkspaceProjectCatalogReadCache.Context {
+        .init(source: snapshotRevision, access: presentationAccessEpoch,
+            workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation,
+            origin: try? backend.accountRemovalOrigin)
+    }
     private var projectCatalog: ProjectOrganization.Catalog {
         // Keep observation and current access filtering on every read, including hits.
         let projects = presentedTables["projects"] ?? []
         guard workspaceCacheReadable else { projectCatalogReadCache.clear(); return ProjectOrganization.Catalog([]) }
-        let context = WorkspaceProjectCatalogReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
-            workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation,
-            origin: try? backend.accountRemovalOrigin)
-        return projectCatalogReadCache.catalog(for: context) { projects }
+        return projectCatalogReadCache.catalog(for: projectCatalogContext) { projects }
+    }
+    var projectOrderRequest: ProjectOrderRequest {
+        let projects = presentedTables["projects"] ?? []
+        let context = projectCatalogContext
+        guard workspaceCacheReadable else {
+            projectCatalogReadCache.clear()
+            return ProjectOrderRequest(workspace: context.workspace, session: context.session, projects: [])
+        }
+        return projectCatalogReadCache.orderRequest(for: context) { projects }
     }
     var allProjects: [Record] { projectCatalog.all }
     var projects: [Record] { projectCatalog.active }

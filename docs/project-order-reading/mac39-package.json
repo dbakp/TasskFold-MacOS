@@ -1,0 +1,32 @@
+{
+  "configuration": "Release",
+  "platform": "mac",
+  "bundle": "com.dbakp.taskfold.mac",
+  "version": "1.2.0",
+  "build": "39",
+  "sourceFingerprint": "ee1d05b225c674fe62179bb4cd92c955f5584152caa29d9e04a2662c61790c51",
+  "sourceRevision": "64952328dd1e2113f516de7a9d1abd42f4273330",
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "archiveSHA256": "6fe23e85731d71c4314fa1a6cee0f3acfaa817b631bc6f756f6fec2be9ba3a97",
+  "archivePayloadVerified": true,
+  "sourceWasDirty": false,
+  "developmentProfileExpires": "2026-11-10T18:32:04+00:00",
+  "installed": false,
+  "published": false,
+  "baselineBuild": "38",
+  "baselinePayloadEqualsCurrentInstalled": true,
+  "sameNonemptyDesignatedRequirementAs38": true,
+  "stagingVerified": true,
+  "currentNormalMacBuild": "38",
+  "current38PostlaunchVerified": true,
+  "waitingForManualUnlock": true,
+  "fresh39BackupNotTaken": true,
+  "phoneInstallationDeferred": true
+}

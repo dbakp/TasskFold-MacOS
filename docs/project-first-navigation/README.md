@@ -1,5 +1,7 @@
 # Put projects before the expanded tools
 
+Subsequent approval: Mac38’s original postlaunch job completed successfully after the user allowed its existing app-data prompt. All tasks/pending work are preserved in nine cache files; native shared-storage readiness and sync are observed. See [safe readback](mac38-postlaunch-readback.json) and the updated install receipt. The later [ordering-cache batch](../project-order-reading/README.md) owns its separate current source and prepared Mac39.
+
 The added Browse tools occupied multiple standalone sections before projects, so the ordinary synthetic Studio project required scrolling even at normal iPhone text size. Both native surfaces now place Favorites/Projects ahead of Filters and Tools. iOS keeps the existing All tasks, Completed and Labels quick links first, then groups the prior separate tool sections under Tools. Mac retains daily navigation and the three task scopes, followed by Favorites, Projects, Filters, Labels and Tools. User-curated Favorites keep their own existing order; arbitrary long personal lists are not capped or automatically collapsed.
 
 Existing row identifiers, route handlers, counters, project hierarchy indentation, archive entries, context menus, drag/reorder bindings, editor sheets and native styling remain intact. This changes presentation order and grouping, not task data or permission/context admission. Source and deployment inputs remain independently owned.

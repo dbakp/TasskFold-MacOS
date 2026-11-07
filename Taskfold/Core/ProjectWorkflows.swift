@@ -219,12 +219,14 @@ enum ProjectOrganization {
     struct Catalog: Sendable {
         let all: [Record]
         let active: [Record]
+        let activeOutline: [Item]
         let archived: [Item]
         let archivedIDs: Set<String>
         init(_ projects: [Record]) {
             all = OrganizationOrder.sorted(projects)
             archivedIDs = ProjectOrganization.archivedIDs(in: all)
-            active = ProjectOrganization.outline(sorted: all, archivedIDs: archivedIDs, showArchived: false).map(\.project)
+            activeOutline = ProjectOrganization.outline(sorted: all, archivedIDs: archivedIDs, showArchived: false)
+            active = activeOutline.map(\.project)
             archived = ProjectOrganization.outline(sorted: all, archivedIDs: archivedIDs, showArchived: true)
         }
     }
@@ -1993,6 +1995,12 @@ struct ProjectOrderRequest: Sendable {
         self.workspace = workspace; self.session = session; self.projects = projects
         ordering = ProjectOrganization.Ordering(projects)
     }
+    /// A presentation request may reuse a derived ordering. Mutations still
+    /// compare its full source and current workspace/session through matches.
+    init(workspace: WorkspaceBinding, session: UUID, catalog: ProjectOrganization.Catalog) {
+        self.workspace = workspace; self.session = session
+        projects = catalog.all; ordering = ProjectOrganization.Ordering(catalog: catalog)
+    }
     func matches(workspace: WorkspaceBinding, session: UUID, projects: [Record]) -> Bool {
         self.workspace == workspace && self.session == session && self.projects == projects
     }
@@ -2006,9 +2014,15 @@ extension ProjectOrganization {
         private let peerIDs: [String: [String]]
         private let valid: Bool
         init(_ projects: [Record]) {
-            rows = OrganizationOrder.sorted(projects)
+            self.init(sorted: OrganizationOrder.sorted(projects), items: ProjectOrganization.outline(projects))
+        }
+        init(catalog: ProjectOrganization.Catalog) {
+            self.init(sorted: catalog.all, items: catalog.activeOutline)
+        }
+        private init(sorted projects: [Record], items proposed: [Item]) {
+            rows = projects
             valid = projects.count <= 10000 && projects.allSatisfy { !$0.id.isEmpty } && Set(projects.map(\.id)).count == projects.count
-            let items = valid ? ProjectOrganization.outline(projects) : []
+            let items = valid ? proposed : []
             visible = items
             let visibleIDs = Set(items.map(\.id))
             let keys = Dictionary(uniqueKeysWithValues: items.map { ($0.id, visibleIDs.contains($0.project.string("parent_id")) ? $0.project.string("parent_id") : "") })

@@ -1,0 +1,13 @@
+{
+  "files": {
+    "Taskfold/Core/ProjectWorkflows.swift": "478c5f81a311b9316225e4705943eb6388cf7d552789e7aab852112a35e5bcf6",
+    "Taskfold/Core/TeamWorkspace.swift": "8747c02abc7300bb16ce76ff2df6ed3ecdfb4cc0ce45789c1324ef5ebf19e1f9",
+    "Taskfold/Core/Store.swift": "4de107f3c6eb1fbeba5b56c63bdb0cf86670c88cd95bd7cf6ce15926a80469e3",
+    "Taskfold/Views/BrowseView.swift": "a3e502f13c1674d63790b3b436403de291bb1b0964dca980566ae0009bc59c52",
+    "Taskfold/TaskfoldApp.swift": "7420a841f9454102691ea9dd3fc7ca05b549a5fce32c2c080e2605e89ef0e94b",
+    "TaskfoldUITests/TaskfoldUITests.swift": "f4a2edbcf038f792c7c88679baa4dd4a5f6aac9fbc270e40d1a494cb31dd5ce3",
+    "Taskfold/Core/FilterAssistance.swift": "3becd8c3d8a62218f071a3fc5dbc035b8d1c9b431d8c976f47727a1e18d70432"
+  },
+  "sameReservedHost": true,
+  "newDeviceCreated": false
+}

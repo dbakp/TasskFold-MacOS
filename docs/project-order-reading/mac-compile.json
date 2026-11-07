@@ -1,0 +1,19 @@
+{
+  "configuration": "Release",
+  "optimizationFlagObserved": true,
+  "terminalExitCode": 0,
+  "compileOnly": true,
+  "signingAllowed": false,
+  "installationClaim": false,
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "cabca3d4792aa39cf80042ec3267f7d16cd318db829293d207efea9afe255b73",
+    "Taskfold/Core/TeamWorkspace.swift": "8747c02abc7300bb16ce76ff2df6ed3ecdfb4cc0ce45789c1324ef5ebf19e1f9",
+    "Taskfold/Core/Store.swift": "217ed1ef7f4bc6fcd00b21f14f3e67530bfabb7362d03ae898347cd3eaed956f",
+    "Taskfold/Views/SidebarView.swift": "1ab670768169623aa798c2ec0ae174ebe062cb8b8847b72dad4a3ac3a8b0b09b",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "a52012c007690e2f62dc18d4ec7a6c628adf93994634cd495f124ca48933f983",
+    "TaskfoldTests/FilterAssistanceTests.swift": "33985e8e0fc08913d15b3ebdb6d97936fce7028191d8510f9d37940d7b1caed5",
+    "Scripts/test_ondevice_quality.py": "44343ef24bb8ff4b007d4fa1de1f35bfe045d7a8ed7362e9934044df836e6940"
+  },
+  "logSHA256": "3e4be38c7cbcbb92ab3affae25ecd1be2911d8687f93a4bfa97c0d7e71cef419",
+  "sourceUnchanged": true
+}

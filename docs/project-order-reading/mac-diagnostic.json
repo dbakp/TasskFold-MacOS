@@ -1,0 +1,11 @@
+{
+  "baselineSeconds" : 0.52559270826168358,
+  "cachedSecondsIncludingColdCatalog" : 0.027286166790872812,
+  "debugDiagnosticOnly" : true,
+  "evaluations" : 20,
+  "exactSourceAndOutlinePreserved" : true,
+  "physicalFPSClaim" : false,
+  "projects" : 4000,
+  "sourceReads" : 1,
+  "visibleProjects" : 3600
+}

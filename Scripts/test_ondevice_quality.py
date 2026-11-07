@@ -40,7 +40,7 @@ def main():
     engines = list(selections) if args.engine == 'all' else [args.engine]
     selection = '|'.join(selections[engine] for engine in engines)
     report['engines'] = engines
-    report['expectedObservationCounts'] = {engine: (3 if engine == 'steps' else 5) if engine in engines else 0 for engine in selections}
+    report['expectedObservationCounts'] = {engine: (3 if engine == 'steps' else 12) if engine in engines else 0 for engine in selections}
     with log.open('x') as stream:
         log.chmod(0o600)
         try:

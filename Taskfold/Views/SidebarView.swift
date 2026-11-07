@@ -19,8 +19,7 @@ struct SidebarView: View {
     var body: some View {
         let navigationCounts = store.navigationCounts
         let reading = store.productiveReading
-        let projectOrder = ProjectOrderRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration),
-            session: store.backend.reminderSessionIncarnation, projects: store.allProjects)
+        let projectOrder = store.projectOrderRequest
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
             Button { workspace.finderPresented = true } label: {

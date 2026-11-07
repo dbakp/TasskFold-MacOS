@@ -1,0 +1,21 @@
+{
+  "freeBeforeBytes": 40860585984,
+  "actions": [
+    {
+      "name": "taskfold-project-first-iphone-v2.xcresult",
+      "kind": "supersededCompletedTestBundle",
+      "allocatedBytes": 2682880,
+      "conciseCommittedEvidenceRetained": true
+    },
+    {
+      "name": "taskfold-project-first-ipad.xcresult",
+      "kind": "supersededCompletedTestBundle",
+      "allocatedBytes": 1236992,
+      "conciseCommittedEvidenceRetained": true
+    }
+  ],
+  "freeAfterBytes": 40864485376,
+  "currentPhoneResultRetained": true,
+  "privateDataBackupsAndFrozenPackagesRetained": true,
+  "duplicateMoved36RetiredAfterReverification": true
+}

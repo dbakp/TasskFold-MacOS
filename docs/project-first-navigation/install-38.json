@@ -12,7 +12,7 @@
   "signatureAndProfilesVerified": true,
   "mainWindowVerified": true,
   "mainWindowTasks": 2,
-  "nativeSyncObserved": "Synced12.32",
+  "nativeSyncObserved": "Synced13.19",
   "sidebarOrderObserved": [
     "Browse",
     "Favorites",
@@ -22,14 +22,46 @@
     "Tools"
   ],
   "sidebarOrderClaim": "Current normal signed-in startup only; no real data changed to test routes",
-  "sharedStorageReady": false,
+  "sharedStorageReady": true,
   "appDataPromptConfirmedBySystemLog": true,
   "promptService": "kTCCServiceSystemPolicyAppData",
-  "postlaunchReadbackPending": true,
+  "postlaunchReadbackPending": false,
   "postlaunchReadbackExecSession": 54253,
   "postlaunchReadbackPID": 99255,
   "normalUpdateAlreadyAuthorized": true,
   "phoneInstallationDeferred": true,
   "normalGateChanges": false,
-  "hostedChanges": false
+  "hostedChanges": false,
+  "postlaunchReadbackComplete": true,
+  "postlaunchReadbackExitCode": 0,
+  "appDataPromptApproved": true,
+  "nativeSharedStorageBannerCleared": true,
+  "postlaunchCachePreservation": {
+    "cacheFiles": 9,
+    "byteExactFiles": 7,
+    "allTasksAndPendingPreserved": true,
+    "signedZeroAndDecimalAware": true,
+    "differences": [
+      {
+        "bytesEqual": false,
+        "changedTopLevelKeys": [
+          "dates"
+        ],
+        "tasksEqual": true,
+        "pendingEqual": true
+      },
+      {
+        "bytesEqual": false,
+        "changedTopLevelKeys": [
+          "tables"
+        ],
+        "tasksEqual": true,
+        "pendingEqual": true,
+        "changedTables": [
+          "_conversation_views"
+        ]
+      }
+    ],
+    "privateReportSHA256": "b0a7aeebe3a99ff0337c200a42b870273893f2de614d7de0ae025f67bfd0fdae"
+  }
 }
