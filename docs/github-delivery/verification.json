@@ -656,5 +656,39 @@
     "localValidationScope": "Documentation and six dashboard viewport/theme checks; Mac product inputs unchanged",
     "githubStatuses": [],
     "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TaskFold-iOS",
+    "pullRequest": "https://github.com/dbakp/TaskFold-iOS/pull/24",
+    "mergedHead": "04a0d4d8c6d40517a5b054f0ba4fba1a9ed06f87",
+    "verifiedRemoteMain": "e955315b632950126f913f26e9876bd55591f4b9",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localFocusedTests": 33,
+    "localNativeTests": 4,
+    "documentationViewportChecks": 6,
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TasskFold-MacOS",
+    "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/25",
+    "mergedHead": "917d1f991af1cf760b07a2cd47e6f3f5317bc6d9",
+    "verifiedRemoteMain": "009327854e01ff39ccc25082db7f2260be3310f3",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localFocusedTests": 0,
+    "localNativeTests": 0,
+    "documentationViewportChecks": 6,
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
   }
 ]

@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Responsive dated lists and stable drops",
-  "latest": "Dated cards now load lazily inside measured date sections, retaining the existing pinned-header design and task identity. iOS passes 33 focused Core checks (10 new); signed iPhone/iPad controls pass four cases: 124-task drops/Undo/navigation, scrolled reorder with all 82 IDs, unchanged-table scrolling, exact empty-day cold data, a 32-point landing and 3-point pinned handoff in normal/largest text. Debug first-drag row work falls 249 → 39; this is not physical FPS. Initial geometry and empty-target failures were fixed without relaxing those tolerances. Mac product source is unchanged; Mac34 stays prepared and normal31 installed. Wider performance/Px remain open.",
+  "focus": "Current iPhone update prepared; installation deferred",
+  "latest": "Signed optimized iPhone42 now includes the accumulated notes, background preparation, save and dated-list improvements from clean merged source. App/widget signatures, cached profiles and exact ZIP readback pass; flags and capability limits match41. Not installed: normal phone34 remains the last verified install. The prior 33 Core and four signed phone/tablet cases remain scoped debug behavior evidence, not physical FPS. Mac34 stays prepared, normal31 installed; computer control still reports locked after the unlock response. Only current42 and rollback34 phone ZIPs remain. No checkpoint totals change.",
   "next": [
-    "Install the verified coherent Mac34 update with a fresh private safety copy when native control is available; verify normal startup/sync and saved task/queue continuity. Normal31 and its rollback remain intact. Routine updates are authorized; phone installation stays deferred.",
+    "Install verified Mac34 with a fresh private safety copy when native control is available; verify startup/sync and saved task/queue continuity. Normal31 and rollback remain intact. Routine Mac updates are authorized. Phone42 is prepared but installation remains deferred; cached phone signing expires 11 November.",
     "Continue measured rendering/navigation and larger multi-project workloads. Dated row cards are now lazy inside measured section holders, with scoped phone/tablet geometry proof; broader account/window/accessibility, native Mac and physical FPS remain distinct. Do not repeat unchanged accepted journeys.",
     "Continue ordinary notes/headings, workflow and browsing performance, actual drag/rendering and larger workloads. Keep platform, shared/cloud/account/window, speech and physical FPS acceptance distinct.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
@@ -502,7 +502,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Current improvements cover scoped task and people reads, workflow and catalog preparation, search, Insights and counts, background shared-draft counts, review and actions and startup publication, bounded large-save field reuse, per-row planning reads and one-pass date grouping. Dated cards now load lazily inside measured section holders, preserving styling and task identity. iOS passes 33 focused Core checks; four signed phone/tablet cases verify 124-task drops/Undo/navigation, scrolled reorder retaining 82 IDs, unchanged-table scrolling, exact empty-day cold data, a 32-point landing and 3-point normal/largest pinned headers. Debug first-drag row work 249 → 39 is not optimized-release timing or physical FPS. Private durable writes, critical privacy paths, Keychain and Watch IO are not claimed nonblocking. Broader rendering, multi-project scaling, shared and cloud accounts, multiple windows and speech, native Mac and physical FPS acceptance remain open. Normal Mac31 is installed and synced; verified Mac34 stays prepared and current for unchanged Mac product source. This newer mobile source awaits a future update; phone installation remains deferred. See the scoped substeps and evidence for earlier accepted work.",
+              "detail": "Current improvements cover scoped task and people reads, workflow and catalog preparation, search, Insights and counts, background shared-draft counts, review and actions and startup publication, bounded large-save field reuse, per-row planning reads and one-pass date grouping. Dated cards now load lazily inside measured section holders, preserving styling and task identity. iOS passes 33 focused Core checks; four signed phone/tablet cases verify 124-task drops/Undo/navigation, scrolled reorder retaining 82 IDs, unchanged-table scrolling, exact empty-day cold data, a 32-point landing and 3-point normal/largest pinned headers. Debug first-drag row work 249 → 39 is not optimized-release timing or physical FPS. Private durable writes, critical privacy paths, Keychain and Watch IO are not claimed nonblocking. Broader rendering, multi-project scaling, shared and cloud accounts, multiple windows and speech, native Mac and physical FPS acceptance remain open. Normal Mac31 is installed and synced; verified Mac34 stays prepared and current for unchanged Mac product source. Clean merged mobile source is now packaged as signed optimized iPhone42, not installed; normal phone34 remains the last verified install and physical installation stays deferred. Exact archive/sign/profile checks do not add physical runtime/FPS acceptance. See the scoped substeps and evidence for earlier accepted work.",
               "steps": [
                 {
                   "state": "done",
@@ -734,7 +734,9 @@
             "mac32-daily-update/preparation.json",
             "mac32-daily-update/verification.json",
             "incremental-cache-encoding/README.md",
-            "linear-day-grouping/README.md"
+            "linear-day-grouping/README.md",
+            "ios42-daily-update/README.md",
+            "ios42-daily-update/package-verification.json"
           ],
           "focus": true
         },
@@ -1935,7 +1937,7 @@
     "genuine-structure-recovery/native.json": "2177dba043344491262626ed929b357033ff42cd1ca29f97eabadd968a8f5791",
     "genuine-structure-recovery/verification.json": "58a9b3f2afea3deab2c5963148e5355657352f9f09c35f82576463955f35a187",
     "github-delivery/README.md": "878c3a31c4aca872d3159d9137842268dcf403c7403df631988d7090a6a67b62",
-    "github-delivery/verification.json": "1ec99f53aaaea90300f79bf7027a47a10d0b896ff3f464c30e27fd46bfdbadb1",
+    "github-delivery/verification.json": "a8a603d1f506f40a9202f2d946d3fb11a1e613b068e6500a690ca3a5276d292d",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
     "incremental-cache-encoding/README.md": "8459e8ca780037d1a81e975a4894af93f34c92ca8860c17b9ad4d7e59de97b98",
@@ -1943,6 +1945,8 @@
     "indexed-child-source/verification.json": "15f58feda791fdf04961a6c69e1f2e532bd32df8f374b65fdd5112efa32cf50d",
     "inline-subtask-preview/README.md": "0045d66e6bcb9457195c54661c58bf977cd27176ec6042c1058db8be32abe36f",
     "inline-subtask-preview/verification.json": "dc4170af492a2c674331b47768f6429ee1b21783ac22e05e735ea66a6ea6c175",
+    "ios42-daily-update/README.md": "5979de18e2a5ff8dbb6a7ff92d85f7790f7d777ee09a544708c6a32160d755c9",
+    "ios42-daily-update/package-verification.json": "96e3db3618668fafaaf2d66b08bb88f2c2fd02da8cf5b4cdf9be5f7557ae976d",
     "lazy-dated-lists/README.md": "a6c8f693c76f471494390c409505091d4e7c572b9a8f92835154933909c20011",
     "lazy-dated-lists/verification.json": "c3b9be159e18a5509a62a1971e6e080878acdd0d0e838f29a6d474e142b5a73e",
     "legacy-adoption-boundaries/README.md": "ce2e5f860901bba2dbff0c5ef15f7260c6127e73d28bd92e58f017de76bdaa3b",

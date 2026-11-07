@@ -1,0 +1,13 @@
+# Coherent iPhone update prepared · 7 November 2026
+
+The signed optimized iPhone 1.4.0 (42) package is prepared from clean merged source e955315b632950126f913f26e9876bd55591f4b9. It brings the accumulated note tools, background note/shared-draft/startup preparation, bounded large-save field reuse, one-pass date grouping, reusable drag targets, stable row observation and lazy dated cards into one update. It is **not installed**: the last verified normal phone build is 34, and physical installation remains deferred.
+
+The owning iOS build and packaging tools verified the normal app and widget signatures, cached embedded profiles, exact ZIP payload readback, unchanged source fingerprint and clean source. Flags and omitted capabilities match prepared41. Incoming Share capture remains omitted under the existing free-development profile/App ID limit, as do remote and Time Sensitive notification capabilities. Cached signing expires 11 November and does not renew the development profile. This is a development update, not distribution or physical-runtime acceptance.
+
+The prior source milestone's 33 focused Core checks and four signed current-source phone/tablet native cases remain the scoped behavior evidence in [lazy dated lists](../lazy-dated-lists/README.md). They cover 124-task drag/Undo/navigation, sparse reorder with all 82 IDs, exact cold data, scrolling, landing and normal/largest-text pinned headers. This package build does not add an optimized runtime or physical FPS claim, and no unchanged acceptance matrix was repeated.
+
+The unchanged Mac product remains exactly the verified prepared Mac34 source; normal Mac31 remains installed. After the user's unlock response, computer control still reported the Mac locked, so normal startup and the authorized Mac34 installation could not be verified or performed. No real app session or task data was changed. Release/provider/reminder/older-client and other agreed deferrals remain in place.
+
+Only current42 and installed34 rollback ZIPs are retained for iPhone. Superseded41 was removed only after all three packages were rehashed and42 passed exact readback. Its numbered receipt remains. Mac31 and34 packages and private safety copies are preserved. The cleanup report records this run's selected completed build cache and free-space audit; no Simulators were booted or erased.
+
+This is delivery preparation, not a new feature checkpoint or substep. The 74 curated checkpoint and 67 scoped-substep totals remain unchanged. Wider performance and remaining Px work stay open. Each repository owns its documentation and progress renderer independently; neither gains a build dependency on the other.

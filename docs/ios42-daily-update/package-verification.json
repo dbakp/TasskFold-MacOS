@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "configuration": "Release",
+  "platform": "ios",
+  "bundle": "com.dbakp.taskfold",
+  "version": "1.4.0",
+  "build": "42",
+  "sourceFingerprint": "bb82ac503a93040cf690292778813e199c414cd06ebe90034abb8848897647b6",
+  "sourceRevision": "e955315b632950126f913f26e9876bd55591f4b9",
+  "simulatorOnly": false,
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": false,
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications",
+    "Share-sheet capture: Apple free-account weekly App ID quota"
+  ],
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "published": false,
+  "developmentOnlyWidgetVariant": true,
+  "archiveSHA256": "1a7a8c055625b4e040c2ac6a9ac0f8a32d1293f0bd946d0b808dc59386c378cc",
+  "archivePayloadVerified": true,
+  "readbackMetadataIsolated": true,
+  "sourceWasDirty": false,
+  "buildToolsSHA256": {
+    "build_daily.py": "d150c8b3c12ecd0b53ef9e64a5516d9028fadc559bc2773b6b74b59a76927bad",
+    "cached_development_signing.py": "319da92eff45402826db9d8a5e9c54cb64a754f3abafe67585719261bcfa54a9"
+  },
+  "packagingToolSHA256": "a32fa10f83913f227e36cd2676131809631b03aab21a16533c06120ed44958ed",
+  "developmentProfileExpires": "2026-11-11T22:18:18+00:00",
+  "archiveName": "Taskfold-1.4.0-42-iphone-development.zip",
+  "cachedSigning": {
+    "mode": "existing-development-profiles-only",
+    "profileCreationAllowed": false,
+    "networkProvisioningAllowed": false,
+    "embeddedProfilesVerified": true
+  },
+  "installedBaselineBuild": 34,
+  "physicalInstallationDeferred": true
+}
