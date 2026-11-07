@@ -1,0 +1,47 @@
+{
+  "macFocused": {
+    "selected": 16,
+    "skipped": 0,
+    "failed": 0
+  },
+  "macFullCore": {
+    "selected": 4104,
+    "skipped": 38,
+    "failed": 0,
+    "beforeSupplementalTestOnly": true
+  },
+  "macSupplementalOpaque": {
+    "selected": 1,
+    "skipped": 0,
+    "failed": 0,
+    "productionUnchangedSinceFullRun": true
+  },
+  "iosFullCore": {
+    "selected": 4083,
+    "skipped": 18,
+    "failed": 0
+  },
+  "iosWatch": {
+    "selected": 97,
+    "skipped": 0,
+    "failed": 0
+  },
+  "logs": {
+    "mac-focused": {
+      "sha256": "55ad64cb48426eb91ef3cb55f77b0a825288e8ed3d46c1379cb89398554d295d",
+      "terminalExit": 0
+    },
+    "mac-all-core": {
+      "sha256": "e017ec1c68781d87826754250a890f565e7fcdb0b5894b687662ee038747454b",
+      "terminalExit": 0
+    },
+    "mac-opaque": {
+      "sha256": "dc1598306a377191a72e022f1a54647a02d074b985b542c130af8736967f760e",
+      "terminalExit": 0
+    },
+    "ios-all-core": {
+      "sha256": "f91f2a24f4c9c96a5739abcb8ba137f27e9ac78bf42025d55eb15249e382d778",
+      "terminalExit": 0
+    }
+  }
+}

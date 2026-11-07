@@ -24,8 +24,8 @@
   "sourceCommit": "277a325273bf94c1d28049c7adef33e67a65f652",
   "privateSafetyCopyVerified": true,
   "prelaunchCacheFilesByteExact": 9,
-  "postlaunchReadbackComplete": false,
-  "sharedStorageReady": false,
+  "postlaunchReadbackComplete": true,
+  "sharedStorageReady": null,
   "readOnlyMacNavigationVerified": [
     "Upcoming",
     "Calendar week",
@@ -36,5 +36,13 @@
   "normalMacTaskMutationsUsedForTesting": false,
   "pendingSystemService": "kTCCServiceSystemPolicyAppData",
   "systemPromptConfirmed": true,
-  "originalReadbackSession": 79028
+  "originalReadbackSession": null,
+  "postlaunchAllTasksAndPendingPreserved": true,
+  "postlaunchByteExactCacheFiles": 7,
+  "postlaunchMetadataOnlyChanges": [
+    "dates",
+    "_conversation_views"
+  ],
+  "appDataIOUnblocked": true,
+  "sharedStorageFinalUIObservationPending": true
 }
