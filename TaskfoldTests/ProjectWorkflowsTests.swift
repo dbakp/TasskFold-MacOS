@@ -1496,3 +1496,106 @@ final class ProjectSiblingOrderingTests: XCTestCase {
         XCTAssertEqual(Array(ids[3900..<4000]), source[100..<200].map(\.id))
     }
 }
+
+extension ProjectWorkflowsTests {
+    @MainActor func testCachedProjectOrderingRequiresCurrentSourceAndEveryBoundary() throws {
+        let cache = WorkspaceProjectCatalogReadCache()
+        let source = UUID(), access = UUID(), generation = UUID(), session = UUID()
+        func scope(_ change: Int = -1) -> WorkspaceProjectCatalogReadCache.Context {
+            .init(source: change == 0 ? UUID() : source, access: change == 1 ? UUID() : access,
+                workspace: .init(account: change == 2 ? "other" : owner, generation: change == 3 ? UUID() : generation),
+                session: change == 4 ? UUID() : session, origin: change == 5 ? "https://other.invalid" : "https://order.invalid")
+        }
+        var rows = [project("root"), project("child", parent: "root"), project("other")], reads = 0
+        let original = scope()
+        func request(_ context: WorkspaceProjectCatalogReadCache.Context) -> ProjectOrderRequest {
+            cache.orderRequest(for: context) { reads += 1; return rows }
+        }
+        let first = request(original)
+        let expected = ProjectOrganization.Ordering(rows)
+        for _ in 0..<50 {
+            let current = request(original)
+            XCTAssertEqual(current.ordering.visible, expected.visible)
+            XCTAssertEqual(try current.ordering.shifting("root", by: 1), try expected.shifting("root", by: 1))
+            XCTAssertTrue(current.matches(workspace: original.workspace, session: original.session, projects: current.projects))
+        }
+        XCTAssertEqual(reads, 1)
+        for index in 0..<6 {
+            rows[0]["name"] = .string("Revision \(index)")
+            let changed = scope(index), fresh = request(changed)
+            XCTAssertEqual(fresh.projects.first(where: { $0.id == "root" })?.name, "Revision \(index)")
+            XCTAssertFalse(first.matches(workspace: changed.workspace, session: changed.session, projects: fresh.projects))
+        }
+        XCTAssertEqual(reads, 7)
+        // A catalog-only read must also retire an older ordering request.
+        rows = [project("replacement")]
+        _ = cache.catalog(for: original) { reads += 1; return rows }
+        XCTAssertEqual(request(original).ordering.visible.map(\.id), ["replacement"])
+        XCTAssertEqual(reads, 8)
+        cache.clear(); rows = []
+        XCTAssertTrue(request(original).ordering.visible.isEmpty)
+        XCTAssertEqual(reads, 9)
+    }
+    func testCatalogOrderingMatchesOrdinaryOrderThroughArchiveAndMalformedGraphs() throws {
+        let samples = [
+            [project("root"), project("child", parent: "root"), project("grandchild", parent: "child"), project("peer")],
+            [project("hidden", archived: true), project("child", parent: "hidden"), project("active")],
+            [project("orphan", parent: "unavailable"), project("cycle-a", parent: "cycle-b"), project("cycle-b", parent: "cycle-a")],
+            [project("duplicate"), project("duplicate")], [project("")], []]
+        for rows in samples {
+            let ordinary = ProjectOrganization.Ordering(rows)
+            let catalog = ProjectOrganization.Catalog(rows)
+            let cached = ProjectOrganization.Ordering(catalog: catalog)
+            XCTAssertEqual(cached.rows, ordinary.rows)
+            XCTAssertEqual(cached.visible, ordinary.visible)
+            for item in ordinary.visible {
+                XCTAssertEqual(cached.siblings(of: item.id), ordinary.siblings(of: item.id))
+                for distance in [-1, 1] { XCTAssertEqual(try cached.shifting(item.id, by: distance), try ordinary.shifting(item.id, by: distance)) }
+            }
+        }
+    }
+    @MainActor func testProjectOrderReadDiagnosticWhenRequested() throws {
+        guard let output = ProcessInfo.processInfo.environment["TASKFOLD_PROJECT_ORDER_REPORT"] else { return }
+        XCTAssertTrue(output.hasPrefix("/tmp/taskfold-") && output.hasSuffix(".json"))
+        var rows: [Record] = []
+        for index in 0..<1000 {
+            var root = project("order-root-\(index)", archived: index % 10 == 0)
+            root["order_index"] = .number(Double(index * 4)); rows.append(root)
+            for child in 1...3 {
+                var row = project("order-child-\(index)-\(child)", parent: root.id)
+                row["order_index"] = .number(Double(index * 4 + child)); rows.append(row)
+            }
+        }
+        let context = WorkspaceProjectCatalogReadCache.Context(source: UUID(), access: UUID(), workspace: .init(account: owner, generation: UUID()), session: UUID(), origin: "https://order.invalid")
+        // The previous native body already had a cached catalog, but rebuilt
+        // ProjectOrderRequest's sort/archive/outline/peer graph every evaluation.
+        let catalog = ProjectOrganization.Catalog(rows)
+        let expected = ProjectOrganization.Ordering(catalog.all)
+        let started = ProcessInfo.processInfo.systemUptime
+        var baselineCount = 0, baselineRequest: ProjectOrderRequest?
+        for _ in 0..<20 {
+            let request = ProjectOrderRequest(workspace: context.workspace, session: context.session, projects: catalog.all)
+            baselineCount += request.ordering.visible.count; baselineRequest = request
+        }
+        let baseline = ProcessInfo.processInfo.systemUptime - started
+        let cache = WorkspaceProjectCatalogReadCache()
+        let nextStarted = ProcessInfo.processInfo.systemUptime
+        var builds = 0, cachedCount = 0, cachedRequest: ProjectOrderRequest?
+        for _ in 0..<20 {
+            let request = cache.orderRequest(for: context) { builds += 1; return rows }
+            cachedCount += request.ordering.visible.count; cachedRequest = request
+        }
+        let optimized = ProcessInfo.processInfo.systemUptime - nextStarted
+        // Keep correctness checks outside both timed regions.
+        XCTAssertEqual(baselineCount, 72_000); XCTAssertEqual(cachedCount, baselineCount)
+        XCTAssertEqual(baselineRequest?.ordering.visible, expected.visible)
+        XCTAssertEqual(cachedRequest?.projects, catalog.all)
+        XCTAssertEqual(cachedRequest?.ordering.visible, expected.visible)
+        XCTAssertEqual(cachedRequest?.ordering.siblings(of: "order-child-1-1"), expected.siblings(of: "order-child-1-1"))
+        XCTAssertEqual(builds, 1)
+        let report: [String: Any] = ["projects": rows.count, "evaluations": 20, "visibleProjects": expected.visible.count,
+            "baselineSeconds": baseline, "cachedSecondsIncludingColdCatalog": optimized, "sourceReads": builds,
+            "exactSourceAndOutlinePreserved": true, "debugDiagnosticOnly": true, "physicalFPSClaim": false]
+        try JSONSerialization.data(withJSONObject: report, options: [.sortedKeys, .prettyPrinted]).write(to: URL(fileURLWithPath: output), options: .atomic)
+    }
+}

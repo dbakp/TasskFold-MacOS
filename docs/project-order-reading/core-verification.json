@@ -1,0 +1,49 @@
+{
+  "terminalExitCodes": {
+    "macCore": 0,
+    "macSiblingAndFinalTiming": 0,
+    "iosCore": 0,
+    "macFinalOracle": 0,
+    "iosFinalOracle": 0
+  },
+  "counts": {
+    "macCore": {
+      "selected": 317,
+      "skipped": 2,
+      "failed": 0
+    },
+    "macSiblingAndFinalTiming": {
+      "selected": 11,
+      "skipped": 0,
+      "failed": 0,
+      "oneTimingCasePreviouslyIncluded": true
+    },
+    "iosCore": {
+      "selected": 327,
+      "skipped": 2,
+      "failed": 0
+    },
+    "macFinalOracle": {
+      "selected": 22,
+      "skipped": 1,
+      "failed": 0
+    },
+    "iosFinalOracle": {
+      "selected": 22,
+      "skipped": 1,
+      "failed": 0
+    }
+  },
+  "logsSHA256": {
+    "macCore": "76b0ea9e4584e64683930d489a1ed44d14d6be996ed81222f02633024ff9a50d",
+    "macSiblingAndFinalTiming": "9b1c5a3f8fe62f6b09baad13a2188fb7b9bb1beb07fe5a1e1bcfe363c06e47b7",
+    "iosCore": "95ee6165bc903af01f082adff9be1d7876fc8c3617d2afdd3440b6fee6de636d",
+    "macFinalOracle": "fb8fc995686d909d2cdb47ce598fb995bf8b18808d26f70dbaffd0ad9f00cc8f",
+    "iosFinalOracle": "74e73773502dd16ad9bd4b39d06d13156ed469c4ac866b58687757671a4ca6d2"
+  },
+  "intentionalSkips": "Real on-device inference and unrelated opt-in query measurement; no real generation pass inferred.",
+  "finalOracleRows": 11,
+  "semanticRequests": 12,
+  "originalFiveExpectedIDSetsUnchanged": true,
+  "noModelRetryAfterRejectedDesigns": true
+}

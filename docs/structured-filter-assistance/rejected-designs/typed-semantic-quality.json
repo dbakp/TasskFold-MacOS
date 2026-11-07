@@ -1,0 +1,185 @@
+{
+  "schema": 1,
+  "owner": "TasskFold-MacOS",
+  "execution": "Mac-hosted owning Core",
+  "syntheticOnly": true,
+  "savedTaskOrFilterWrites": false,
+  "cloudInferenceFallback": false,
+  "realGenerationAccepted": false,
+  "sourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/FilterAssistance.swift": "15abb33716520a2e88c1c257fc4fca819c6b5d122ea66e23126e2b684f728a7d",
+    "TaskfoldTests/TaskBreakdownTests.swift": "68e89c575c67705c7ef9e4c1659511d26da7551181438f5a3f5e9cf71dfe805f",
+    "TaskfoldTests/FilterAssistanceTests.swift": "3ac668dea75ba9024462437692462ae84f1689c14f09d024e65532b845a71dbe"
+  },
+  "driverSHA256": "44343ef24bb8ff4b007d4fa1de1f35bfe045d7a8ed7362e9934044df836e6940",
+  "observations": [
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "expression": "((date:\"today\" OR deadline:\"overdue\") AND p1)",
+      "matchedIDs": [
+        "today"
+      ],
+      "seconds": 14.122406125,
+      "syntheticGoal": "Show open priority 1 tasks planned today or overdue"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"A complete filter couldn’t be suggested. Try describing the conditions again. Your saved filter is unchanged.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "deadline"
+      ],
+      "seconds": 10.288576375,
+      "syntheticGoal": "Show tasks with a deadline today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "expression": "(open AND project-tree:\"Work\")",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "seconds": 10.741105042000001,
+      "syntheticGoal": "Show unfinished tasks in project Work"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"A complete filter couldn’t be suggested. Try describing the conditions again. Your saved filter is unchanged.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "low"
+      ],
+      "seconds": 32.604818542,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "expression": "(open AND project-tree:\"Work\")",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "seconds": 23.297374291,
+      "syntheticGoal": "Find open work in project Work, including its subprojects"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"A complete filter couldn’t be suggested. Try describing the conditions again. Your saved filter is unchanged.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "future-low"
+      ],
+      "seconds": 14.433677959,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for tomorrow"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "done-low"
+      ],
+      "expression": "(p3 AND completed)",
+      "matchedIDs": [
+        "done-low"
+      ],
+      "seconds": 19.626571708,
+      "syntheticGoal": "Show completed priority 3 tasks"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "deadline",
+        "child-project-task"
+      ],
+      "expression": "((date:\"tomorrow\" OR p1 OR project-tree:\"Work\") AND project:\"Work\")",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "seconds": 24.889484541,
+      "syntheticGoal": "Find open priority 1 tasks planned tomorrow in project Work and its child projects"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "old",
+        "deadline"
+      ],
+      "expression": "((open OR p1) AND project:\"Work\")",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "done"
+      ],
+      "seconds": 17.606992625,
+      "syntheticGoal": "Show open tasks in project Work, excluding those planned today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "low"
+      ],
+      "expression": "((date:\"today\" OR p3) AND p1)",
+      "matchedIDs": [
+        "today"
+      ],
+      "seconds": 17.525679166,
+      "syntheticGoal": "Show open tasks planned today with priority 1 or priority 3"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today"
+      ],
+      "expression": "((open OR p1) AND deadline:\"tomorrow\")",
+      "matchedIDs": [
+        "today"
+      ],
+      "seconds": 11.921598375,
+      "syntheticGoal": "Find open priority 1 tasks with a deadline tomorrow"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"A complete filter couldn’t be suggested. Try describing the conditions again. Your saved filter is unchanged.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "old",
+        "old-low"
+      ],
+      "seconds": 10.284939625,
+      "syntheticGoal": "Show open tasks planned before today"
+    }
+  ],
+  "engines": [
+    "filter"
+  ],
+  "expectedObservationCounts": {
+    "steps": 0,
+    "filter": 12
+  },
+  "testExitCode": 1,
+  "logSHA256": "2094b8629cffc3732470cabd8db5484c5cea84fdb776061fc97fe658c64bdfc7",
+  "sourcesUnchanged": true,
+  "unavailableReasons": [],
+  "semanticAndShapeChecksPassed": false,
+  "taskTitleQualityReviewed": false
+}

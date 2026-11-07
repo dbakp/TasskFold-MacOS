@@ -549,14 +549,23 @@ extension TeamWorkspaceCache {
     }
     private var context: Context?
     private var value: ProjectOrganization.Catalog?
+    private var request: ProjectOrderRequest?
     func catalog(for context: Context, projects: () -> [Record]) -> ProjectOrganization.Catalog {
         if self.context == context, let value { return value }
         let next = ProjectOrganization.Catalog(projects())
         value = next
+        request = nil
         self.context = context
         return next
     }
-    func clear() { context = nil; value = nil }
+    func orderRequest(for context: Context, projects: () -> [Record]) -> ProjectOrderRequest {
+        let catalog = catalog(for: context, projects: projects)
+        if let request { return request }
+        let next = ProjectOrderRequest(workspace: context.workspace, session: context.session, catalog: catalog)
+        request = next
+        return next
+    }
+    func clear() { context = nil; value = nil; request = nil }
 }
 
 /// Indexes only the current readable presentation, never the unfiltered snapshot.

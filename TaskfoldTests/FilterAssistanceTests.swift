@@ -215,14 +215,25 @@ final class FilterAssistanceTests: XCTestCase {
             Record(["id": .string("child-project-task"), "project_id": .string("child-project"), "due_date": .string("2032-04-06"), "priority": .number(1)]),
             Record(["id": .string("old-low"), "due_date": .string("2032-04-04"), "priority": .number(3)]),
             Record(["id": .string("future-low"), "due_date": .string("2032-04-06"), "priority": .number(3)]),
-            Record(["id": .string("done-low"), "due_date": .string(today), "priority": .number(3), "completed": .bool(true)])
+            Record(["id": .string("done-low"), "due_date": .string(today), "priority": .number(3), "completed": .bool(true)]),
+            // Distinguish required open AND p1 from the plausible but wrong
+            // open OR p1 on an otherwise matching deadline.
+            Record(["id": .string("deadline-low"), "due_date": .string("2032-04-08"), "deadline_date": .string("2032-04-06"), "priority": .number(3)]),
+            Record(["id": .string("deadline-done"), "due_date": .string("2032-04-08"), "deadline_date": .string("2032-04-06"), "priority": .number(1), "completed": .bool(true)])
         ]
         let cases: [(String, [String], String, String)] = [
             ("Show open priority 1 tasks planned today or overdue", ["today", "old"], "(today OR overdue) AND p1 AND open", "today OR overdue OR p1"),
             ("Show tasks with a deadline today", ["deadline"], "deadline:today", "today"),
             ("Show unfinished tasks in project Work", ["today", "old", "deadline"], "project:\"Work\" AND open", "project-tree:\"Work\" AND open"),
             ("Find unfinished priority 3 tasks planned for today", ["low"], "today AND p3 AND open", "today AND p1 AND open"),
-            ("Find open work in project Work, including its subprojects", ["today", "old", "deadline", "child-project-task"], "project-tree:\"Work\" AND open", "project:\"Work\" AND open")
+            ("Find open work in project Work, including its subprojects", ["today", "old", "deadline", "child-project-task"], "project-tree:\"Work\" AND open", "project:\"Work\" AND open"),
+            ("Find unfinished priority 3 tasks planned for tomorrow", ["future-low"], "date:tomorrow AND p3 AND open", "date:tomorrow AND p1 AND open"),
+            ("Show completed priority 3 tasks", ["done-low"], "completed AND p3", "open AND p3"),
+            ("Find open priority 1 tasks planned tomorrow in project Work and its child projects", ["deadline", "child-project-task"], "date:tomorrow AND p1 AND project-tree:Work AND open", "date:tomorrow AND p1 AND project:Work AND open"),
+            ("Show open tasks in project Work, excluding those planned today", ["old", "deadline"], "project:Work AND open AND NOT today", "project:Work AND open AND today"),
+            ("Show open tasks planned today with priority 1 or priority 3", ["today", "low"], "today AND (p1 OR p3) AND open", "today AND p1 AND open"),
+            ("Find open priority 1 tasks with a deadline tomorrow", ["today"], "deadline:tomorrow AND p1 AND open", "date:tomorrow AND p1 AND open"),
+            ("Show open tasks planned before today", ["old", "old-low"], "date before:today AND open", "deadline before:today AND open")
         ]
         return (modelContext, today, rows, cases)
     }
@@ -267,6 +278,6 @@ final class FilterAssistanceTests: XCTestCase {
                 XCTFail("The actual model did not return a usable query: " + String(describing: error))
             }
         }
-        if allAccepted { print("FILTER_ASSISTANCE_MODEL_ACCEPTED five semantic samples; no saved-filter or task writes") }
+        if allAccepted { print("FILTER_ASSISTANCE_MODEL_ACCEPTED twelve semantic samples; no saved-filter or task writes") }
     }
 }
