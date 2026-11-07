@@ -1,0 +1,41 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 42807934976,
+  "actions": [],
+  "skipped": [],
+  "freeAfterBytes": 42807898112,
+  "actualFreeChangeBytes": 0,
+  "beforePreflightFreeBytes": 42653151232,
+  "simulatorBootsRequested": false,
+  "fullAppBuildsRequested": false,
+  "normalMac36LeftRunning": true,
+  "privateDataBackupsPreserved": true,
+  "selectedCaches": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 697311232,
+      "within768MiB": true,
+      "retainedReusableProducts": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 639365120,
+      "within768MiB": true,
+      "retainedReusableProducts": true
+    }
+  ],
+  "retiredScratch": [
+    {
+      "name": "taskfold-workload-test.swift",
+      "bytes": 2704
+    },
+    {
+      "name": "taskfold-workload-cache-correctness.txt",
+      "bytes": 4840
+    },
+    {
+      "name": "taskfold-workload-readme.md",
+      "bytes": 3289
+    }
+  ]
+}

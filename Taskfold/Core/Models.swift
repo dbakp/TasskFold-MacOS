@@ -1570,6 +1570,8 @@ final class TaskCache {
 
     private var results: [TaskQuery: [Record]] = [:]
     private var productiveResult: ProductiveTaskReading?
+    private var excludedProductiveResult: ProductiveTaskReading?
+    private(set) var productiveComputationCount = 0
     private var inboxProductiveResult: ProductiveTaskReading?
     func inboxProductiveReading() -> ProductiveTaskReading {
         if let inboxProductiveResult { return inboxProductiveResult }
@@ -1589,9 +1591,18 @@ final class TaskCache {
     }
     private var productiveExcluded = Set<String>()
     func productiveReading(excluding projects: Set<String> = []) -> ProductiveTaskReading {
-        if let productiveResult, productiveExcluded == projects { return productiveResult }
+        // Queries use all work; planner/grouping reads omit archived projects.
+        // Keep these two hot scopes independent instead of rebuilding both on
+        // every alternation. Only one nonempty exclusion mask is retained.
+        if projects.isEmpty {
+            if let productiveResult { return productiveResult }
+            let value = ProductiveTaskReading(tasks: tasks)
+            productiveResult = value; productiveComputationCount += 1
+            return value
+        }
+        if let excludedProductiveResult, productiveExcluded == projects { return excludedProductiveResult }
         let value = ProductiveTaskReading(tasks: tasks.filter { !projects.contains($0.string("project_id")) })
-        productiveResult = value; productiveExcluded = projects
+        excludedProductiveResult = value; productiveExcluded = projects; productiveComputationCount += 1
         return value
     }
     private(set) var tasks: [Record] = []
@@ -1627,7 +1638,7 @@ final class TaskCache {
     @discardableResult func update(_ rows: [Record]) -> Bool {
         guard !AuthoredValueComparison.sameRows(source, rows) else { return false }
         projectPresentation = nil; projectOutline = nil; labelPositions = nil
-        source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; inboxProductiveResult = nil; navigationResult = nil
+        source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; excludedProductiveResult = nil; inboxProductiveResult = nil; navigationResult = nil
         tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
         results.removeAll(keepingCapacity: true)
         return true
