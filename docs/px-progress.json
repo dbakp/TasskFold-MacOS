@@ -4,16 +4,16 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Clearer shared-storage waiting state",
-  "latest": "A long shared-storage wait now explains that you can keep using Taskfold and offers Dismiss without stopping the connection. Mac guidance mentions an access request only if macOS actually shows one. The current signed iPhone check passes guidance, dismissal with unchanged saved snapshot, continuing background work, private Save, sign-out redaction and cold data preservation; native Mac/iPad and speech remain separate. This source follow-up leaves normal Mac35 running and previously synced; computer control still reports the Mac locked after the latest unlock reply, and the same readonly cache comparison remains blocked in open(). Shared-storage readiness and final saved-cache/queue readback stay unverified. No repeat unlock request, system-setting change, new service or normal gate change occurred. The earlier reviewed-original cleanup remains merged and gated; broader custodian recovery, restoration/Undo and the larger migration stay open. Phone installation remains deferred. No curated checkpoint or substep totals change.",
+  "focus": "On-device filter quality: complete five-request audit",
+  "latest": "The actual on-device filter probe now records all five requests instead of stopping at the fourth parse failure. Three requests match correctly; one returns prose, and another valid query omits requested subprojects. The driver now expects five filter samples, supports selecting only the changed engine, rejects duplicate/incomplete or mismatched observations and keeps quality unaccepted. Three attempted fixes were measured and rejected; no production engine, parser or helper-view change is shipped. This is verification progress, not a completed feature checkpoint. Mac35 remains running with shared-storage/readback pending; phone installation stays deferred.",
   "next": [
+    "Measure and reduce remaining browsing pauses, starting with timed-task date projection during non-date filter predicates. Keep broader source/access/session, rendering, shared-account, native Mac and physical FPS acceptance distinct; do not repeat unchanged accepted journeys.",
     "Finish Mac35 shared-storage setup and saved-cache/queue readback after system access. Its normal window and synced state are verified; a fresh private safety copy and verified Mac31 rollback are retained. Phone43 stays prepared and installation remains deferred. Cached signing expires 10 November for Mac and 11 November for phone.",
-    "Continue measured rendering/navigation and larger multi-project workloads. Dated row cards are now lazy inside measured section holders, with scoped phone/tablet geometry proof; broader account/window/accessibility, native Mac and physical FPS remain distinct. Do not repeat unchanged accepted journeys.",
     "Continue ordinary notes/headings, workflow and browsing performance, actual drag/rendering and larger workloads. Keep platform, shared/cloud/account/window, speech and physical FPS acceptance distinct.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
     "Finish Mac/iPad Saved originals controls and wider account/accessibility behavior; then finish broader custodian cleanup, restoration/Undo and the larger older-task/history migration. Command-free discovery/export now has genuine API and Core proof. Keep wider mapped/shared-team/custodian, exact-cache and file/discussion ownership cases distinct; ordinary advanced rollout gates stay off.",
     "Finish protected Mac deletion/recovery and disposable hosted residual-file repair and issuer/verifier checks when their stated prerequisites are available. Never erase device copies without bound confirmation.",
-    "Keep agreed remote-reminder, older-client rollout, distribution, provider-registration/email, physical-location and genuine-audio deferrals paused. On-device assistance quality still requires ready local models.",
+    "Keep agreed remote-reminder, older-client rollout, distribution, provider-registration/email, physical-location and genuine-audio deferrals paused. The local model is ready; filter quality still fails prose and subproject-scope cases. Do not repeat the rejected prompt experiments unchanged.",
     "Finish Mac branch-move/removal keyboard and wider shared-account, window, background, access, speech and large-library cases. Keep each recorded acceptance scope distinct.",
     "Ship bounded independently owned app updates after checks and merges. Preserve saved drafts, frozen packages, install deferrals and storage cleanup on every run."
   ],
@@ -765,7 +765,7 @@
             {
               "state": "verify",
               "title": "Reviewed task and filter assistance",
-              "detail": "Both apps own editable task-step and filter reviews, explicit Apply/Save, exact source/session checks and the recorded seeded recovery/history journeys. The local model is now ready on this Mac. Three actual task descriptions return valid English/Spanish title arrays in 15–27 seconds, without task writes. Bounded priority comparisons, priority words and optional colons for known field prefixes now map to existing predicates; literal names and search text remain protected. Each owning Core suite passes 125 checks with two intentional model skips. Three actual filter requests match their nine-row controls; the fourth returns prose instead of a query and is refused. A wrapper candidate broadens priority 1 to all priorities; structured candidates also failed and are not adopted. Real filter quality remains unaccepted. The five-case semantic oracle has extra overdue, future and completed controls; acceptance markers now respect assertion failures. Signed full app builds and exact packages for this repair now pass as Mac35 and phone43. Genuine generated review/save/history and wider account, window, background, keyboard, speech, large-text, hardware and latency acceptance remain. No cloud fallback, new installation or normal gate change. Current prepared packages are Mac35 and phone43; installation remains separate."
+              "detail": "Both apps own editable task-step and filter reviews, explicit Apply/Save, exact source/session checks and recorded seeded recovery/history journeys. The local model is ready on this Mac; three earlier task descriptions returned valid English/Spanish title arrays without task writes. The complete current-engine five-filter audit now records every result: three requests match the nine-row future-date oracle, one returns prose and refuses, and a syntactically valid Work query omits requested subprojects. Real filter quality remains unaccepted. Same-session syntax repair, fresh-session repair and introductory-verb normalization were each tried and rejected; production sources remain unchanged. The driver now requires all five filter observations and supports engine-specific inference. Ordinary own Core results, real Mac-hosted model evidence and wider native/device/language/quality acceptance remain separate. On-device only; no cloud fallback or catalog/task data is supplied to the model. No task writes, settings, service or normal gate changes."
             }
           ],
           "sources": [
@@ -1693,7 +1693,17 @@
     "shared-storage-wait/source-preflight-refusal.json",
     "shared-storage-wait/interrupted-build-cleanup.json",
     "shared-storage-wait/storage-cleanup.json",
-    "shared-storage-wait/progress-validation.json"
+    "shared-storage-wait/progress-validation.json",
+    "filter-full-quality-probe/README.md",
+    "filter-full-quality-probe/verification.json",
+    "filter-full-quality-probe/current-model.json",
+    "filter-full-quality-probe/rejected-same-session.json",
+    "filter-full-quality-probe/rejected-fresh-session.json",
+    "filter-full-quality-probe/rejected-introduction.json",
+    "filter-full-quality-probe/storage-cleanup.json",
+    "filter-full-quality-probe/progress-validation.json",
+    "filter-full-quality-probe/failure-excerpts.json",
+    "filter-full-quality-probe/rejected-designs/source-manifest.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1904,6 +1914,16 @@
     "filter-directory-responsiveness/README.md": "4af3303cbe1a86ce259d8fc88549e8b09cfa8ba9ca9579ba0252a01c15fe518c",
     "filter-directory-responsiveness/core-verification.json": "06b5126192cf171a9a0a38ac44eb246017a05e45c692c42039406d802ed0dcbb",
     "filter-directory-responsiveness/signed-build.json": "202f088e3fba9318a9dfab171f725fc377de889758c4d3356458909bb8fa5dd1",
+    "filter-full-quality-probe/README.md": "4f9ef9eb979f5be683126fb5a8cf9cf939d2bf4b23fd0ad49ac0724817b23c09",
+    "filter-full-quality-probe/current-model.json": "9537549ff03f0958c9755a6e5ddbb2062a774def1e196071e1c7eb212bb488d4",
+    "filter-full-quality-probe/failure-excerpts.json": "1025ee4643ce4385618d02e382f676f041d19881a50cc7dfe482d642c16a9231",
+    "filter-full-quality-probe/progress-validation.json": "1e5477ff3f4ff3e64d510f24e6a2fa92b273bf1e93f32f78cde96d06eb418aa4",
+    "filter-full-quality-probe/rejected-designs/source-manifest.json": "645fe37e48c98d9ff229bc228f8c7c8330246a0c4c26355da2e273c8d8894bd3",
+    "filter-full-quality-probe/rejected-fresh-session.json": "d5413b5955c05fb9ebe1ba47c168ad0ce02b9f918a80e176fc830a1f58a194f1",
+    "filter-full-quality-probe/rejected-introduction.json": "ae5f71855644e9b53268d185f575cd22a6c7b369ba38579ea64dd69118e47fe6",
+    "filter-full-quality-probe/rejected-same-session.json": "25180d642855a493003eb91d7ce8ed8434344d871cc09438e659bca23afcf3db",
+    "filter-full-quality-probe/storage-cleanup.json": "2e60e8a4f664d998e4ddca5cc24d5057e3adedc66a6be5f5f3e570a79c7c469c",
+    "filter-full-quality-probe/verification.json": "55cbcac7a6948dba2b905689a8db6601c85619cb45d1e9dc6dd2dd961700c72c",
     "filter-keyboard-layout/README.md": "4f5a4904cb91ef1460cbbc63a6d7cd134a9f7906acb9d85a74209c3262d6a613",
     "filter-keyboard-layout/attempts.json": "372b18be9318fe10b7be2e5c45cfbb22e769299a3132fa2133c224a3442b03c6",
     "filter-keyboard-layout/before.json": "913ff9391f9a9d37baff5f3c22d1007bb9b8016cca2eba9262032d27ec113e67",
@@ -1959,7 +1979,7 @@
     "genuine-structure-recovery/native.json": "2177dba043344491262626ed929b357033ff42cd1ca29f97eabadd968a8f5791",
     "genuine-structure-recovery/verification.json": "58a9b3f2afea3deab2c5963148e5355657352f9f09c35f82576463955f35a187",
     "github-delivery/README.md": "878c3a31c4aca872d3159d9137842268dcf403c7403df631988d7090a6a67b62",
-    "github-delivery/verification.json": "7181139c1db33eb39ad53ecae7d1044f1b1ce08b9d5752ca8ffa6d52debd7a80",
+    "github-delivery/verification.json": "48bf190d61e26ed72674cab9e691de667ef6d60679c7abc91d048a32f907a7f1",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
     "incremental-cache-encoding/README.md": "8459e8ca780037d1a81e975a4894af93f34c92ca8860c17b9ad4d7e59de97b98",
@@ -2049,7 +2069,7 @@
     "native-project-recordings/startup-cleanup.json": "b57a76abb1fe0488db9b0e01e86722a9cb2ba5b30c517fd2bf462b11fcc27510",
     "native-project-recordings/storage-cleanup.json": "0a2d45059362e9ee18d85f27a41ce38f6b975ab76ddda61fa21ea6120a39687e",
     "native-protected-recordings/verification.json": "7a756520c74249d6b962e40138eb12c82deed2b998ca404aaef14ac4ef31c8c7",
-    "natural-filter-forms/README.md": "2a6c601526346f7a9025e2015753394434a20f72ecbfef41856f43ad49816fb1",
+    "natural-filter-forms/README.md": "aac74b7cbefe6f980a37a98b4dac9e19de3de382faa495c571f60359a8231a8d",
     "natural-filter-forms/verification.json": "810a881148daab83dc487ff4b580587a349771e60f512a1c3607fa2f18ffccf0",
     "navigation-counts/README.md": "7364071d0757b755a1699119d69a331ec9905027be48d1b0281b9aeadb16ddd9",
     "navigation-counts/core-verification.json": "af06a56cfd3fa931c2f88710cb5f7cf5352ec1d5a95a693683921af937c64e7c",

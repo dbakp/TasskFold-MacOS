@@ -1,0 +1,36 @@
+[
+  {
+    "attempt": "same-session",
+    "logSHA256": "36ca5f0d451e526dc95a585b7da41e5ccb34611faff1f4c319c5f1f5b9e1213b",
+    "caughtErrors": [
+      "\"FilterFailure(message: \"Unknown condition \u201cunfinished\u201d. Use the builder or the syntax examples.\", needsPeopleDirectory: false)\""
+    ],
+    "terminalFailureCounts": [
+      "Executed 1 test, with 1 failure (1 unexpected) in 71.736 (71.737) seconds"
+    ]
+  },
+  {
+    "attempt": "fresh-session",
+    "logSHA256": "aae8d8a28e50701cec5b4e250c7d786a8148c61b0487175f15d702772071aa57",
+    "caughtErrors": [],
+    "terminalFailureCounts": [
+      "Executed 1 test, with 2 failures (0 unexpected) in 76.043 (76.046) seconds"
+    ]
+  },
+  {
+    "attempt": "introduction",
+    "logSHA256": "25ec46a3979f0d76fb33e0b88ae8a2d3a50605f37cc032cf62dfb89b58510497",
+    "caughtErrors": [],
+    "terminalFailureCounts": [
+      "Executed 1 test, with 2 failures (0 unexpected) in 58.113 (58.116) seconds"
+    ]
+  },
+  {
+    "attempt": "current",
+    "logSHA256": "ac26e4d85a52583d4522a73e9c35c000dea82f87732258342fce3b5dd51a6c0c",
+    "caughtErrors": [],
+    "terminalFailureCounts": [
+      "Executed 1 test, with 2 failures (0 unexpected) in 50.638 (50.642) seconds"
+    ]
+  }
+]

@@ -1,0 +1,123 @@
+{
+  "freeBeforeBytes": 43814854656,
+  "simulatorsUsed": [],
+  "newBuildCachesCreated": false,
+  "actions": [
+    {
+      "path": "/tmp/taskfold-filter-syntax-repair-mac-model.json",
+      "bytes": 2307
+    },
+    {
+      "path": "/tmp/taskfold-filter-syntax-repair-mac-model.log",
+      "bytes": 2645
+    },
+    {
+      "path": "/tmp/taskfold-filter-fresh-repair-mac-model.json",
+      "bytes": 3102
+    },
+    {
+      "path": "/tmp/taskfold-filter-fresh-repair-mac-model.log",
+      "bytes": 27402
+    },
+    {
+      "path": "/tmp/taskfold-filter-canonical-intro-mac-model.json",
+      "bytes": 2979
+    },
+    {
+      "path": "/tmp/taskfold-filter-canonical-intro-mac-model.log",
+      "bytes": 27834
+    },
+    {
+      "path": "/tmp/taskfold-current-filter-full-probe-mac.json",
+      "bytes": 3023
+    },
+    {
+      "path": "/tmp/taskfold-current-filter-full-probe-mac.log",
+      "bytes": 27484
+    },
+    {
+      "path": "/tmp/taskfold-filter-syntax-repair-edit.py",
+      "bytes": 6071
+    },
+    {
+      "path": "/tmp/taskfold-filter-syntax-repair-tests.py",
+      "bytes": 7393
+    },
+    {
+      "path": "/tmp/taskfold-filter-fresh-repair-edit.py",
+      "bytes": 4827
+    },
+    {
+      "path": "/tmp/taskfold-filter-canonical-intro-edit.py",
+      "bytes": 2612
+    },
+    {
+      "path": "/tmp/taskfold-complete-filter-probe-edit.py",
+      "bytes": 2756
+    },
+    {
+      "path": "/tmp/taskfold-filter-syntax-repair-same-session.swift",
+      "bytes": 14935
+    },
+    {
+      "path": "/tmp/taskfold-filter-fresh-repair-FilterAssistance.swift",
+      "bytes": 15370
+    },
+    {
+      "path": "/tmp/taskfold-filter-fresh-repair-Filters.swift",
+      "bytes": 89247
+    },
+    {
+      "path": "/tmp/taskfold-filter-fresh-repair-FilterAssistanceView.swift",
+      "bytes": 17490
+    },
+    {
+      "path": "/tmp/taskfold-filter-canonical-rejected-FilterAssistance.swift",
+      "bytes": 13444
+    },
+    {
+      "path": "/tmp/taskfold-filter-canonical-rejected-FilterAssistanceTests.swift",
+      "bytes": 21901
+    },
+    {
+      "path": "/tmp/taskfold-filter-syntax-repair-ios-core.log",
+      "bytes": 61362
+    },
+    {
+      "path": "/tmp/taskfold-filter-syntax-repair-mac-core.log",
+      "bytes": 60871
+    }
+  ],
+  "finishTool": {
+    "apply": true,
+    "freeBeforeBytes": 43814928384,
+    "actions": [],
+    "skipped": [],
+    "freeAfterBytes": 43814928384,
+    "actualFreeChangeBytes": 0
+  },
+  "caches": [
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build",
+      "allocatedBytes": 795709440,
+      "within768MiB": true
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build",
+      "allocatedBytes": 776859648,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 695603200,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 638681088,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 43815190528,
+  "actualFreeChangeBytes": 335872
+}

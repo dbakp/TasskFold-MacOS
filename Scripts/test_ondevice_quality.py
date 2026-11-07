@@ -17,7 +17,8 @@ def hashes():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--run-model', action='store_true', help='Explicitly permit inference on the six built-in synthetic examples')
+    parser.add_argument('--run-model', action='store_true', help='Explicitly permit inference only on the selected built-in synthetic examples')
+    parser.add_argument('--engine', choices=['all', 'filter', 'steps'], default='all', help='Run only the changed engine instead of repeating unrelated inference')
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     if not args.run_model:
@@ -34,7 +35,12 @@ def main():
               'savedTaskOrFilterWrites': False, 'cloudInferenceFallback': False, 'realGenerationAccepted': False,
               'sourceSHA256': before, 'driverSHA256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'observations': []}
     environment = dict(os.environ, TASKFOLD_TEST_ON_DEVICE_MODEL='1')
-    selection = 'TaskBreakdownTests/testActualOnDeviceEngineWhenExplicitlyRequested|FilterAssistanceTests/testActualOnDeviceFilterEngineWhenExplicitlyRequested'
+    selections = {'steps': 'TaskBreakdownTests/testActualOnDeviceEngineWhenExplicitlyRequested',
+                  'filter': 'FilterAssistanceTests/testActualOnDeviceFilterEngineWhenExplicitlyRequested'}
+    engines = list(selections) if args.engine == 'all' else [args.engine]
+    selection = '|'.join(selections[engine] for engine in engines)
+    report['engines'] = engines
+    report['expectedObservationCounts'] = {engine: (3 if engine == 'steps' else 5) if engine in engines else 0 for engine in selections}
     with log.open('x') as stream:
         log.chmod(0o600)
         try:
@@ -60,7 +66,16 @@ def main():
         report['error'] = 'The model observation log could not be parsed.'
     report['unavailableReasons'] = sorted(set(line.partition('_MODEL_UNAVAILABLE ')[2] for line in text.splitlines() if '_MODEL_UNAVAILABLE ' in line))
     counts = {engine: sum(row.get('engine') == engine for row in report['observations']) for engine in ['steps', 'filter']}
-    report['semanticAndShapeChecksPassed'] = report.get('testExitCode') == 0 and counts == {'steps': 3, 'filter': 3} and 'TASK_BREAKDOWN_MODEL_ACCEPTED' in text and 'FILTER_ASSISTANCE_MODEL_ACCEPTED' in text
+    markers = {'steps': 'TASK_BREAKDOWN_MODEL_ACCEPTED', 'filter': 'FILTER_ASSISTANCE_MODEL_ACCEPTED'}
+    unique = {(row.get('engine'), row.get('syntheticGoal')) for row in report['observations']}
+    observations_valid = len(unique) == len(report['observations']) and all(
+        row.get('engine') in engines and isinstance(row.get('syntheticGoal'), str) and row['syntheticGoal'] and
+        (isinstance(row.get('titles'), list) and 3 <= len(row['titles']) <= 8 and all(isinstance(title, str) and title.strip() for title in row['titles'])
+         if row.get('engine') == 'steps' else
+         isinstance(row.get('matchedIDs'), list) and isinstance(row.get('expectedIDs'), list) and row['matchedIDs'] == row['expectedIDs'])
+        for row in report['observations'])
+    report['semanticAndShapeChecksPassed'] = (report.get('testExitCode') == 0 and counts == report['expectedObservationCounts']
+        and observations_valid and all(markers[engine] in text for engine in engines))
     report['realGenerationAccepted'] = bool(report['semanticAndShapeChecksPassed'] and report['sourcesUnchanged'] and not report['unavailableReasons'] and not report.get('error'))
     # Useful action-title quality and language still need inspection of the actual
     # outputs; parse/count success must not masquerade as a general quality audit.

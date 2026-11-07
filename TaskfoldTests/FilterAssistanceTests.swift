@@ -244,16 +244,28 @@ final class FilterAssistanceTests: XCTestCase {
         var allAccepted = true
         for (goal, expected, _, _) in cases {
             let start = ContinuousClock.now
-            let text = try await FilterAssistanceEngine.generate(goal)
-            let duration = start.duration(to: .now).components
-            let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
-            print("TASKFOLD_MODEL_RAW_EXPRESSION " + text)
-            let suggestion = try FilterSuggestion(expression: text, context: modelContext)
-            let matches = rows.filter { suggestion.rule.resultMatches($0, context: modelContext, today: today, timeZone: "UTC") }.map(\.id)
-            let observation: [String: Any] = ["engine": "filter", "syntheticGoal": goal, "seconds": seconds, "expression": text, "matchedIDs": matches, "expectedIDs": expected]
-            print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
-            if matches != expected { allAccepted = false }
-            XCTAssertEqual(matches, expected, "The generated query must mean what was requested: " + text)
+            var generated: String?
+            do {
+                let text = try await FilterAssistanceEngine.generate(goal)
+                generated = text
+                let duration = start.duration(to: .now).components
+                let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
+                print("TASKFOLD_MODEL_RAW_EXPRESSION " + text)
+                let suggestion = try FilterSuggestion(expression: text, context: modelContext)
+                let matches = rows.filter { suggestion.rule.resultMatches($0, context: modelContext, today: today, timeZone: "UTC") }.map(\.id)
+                let observation: [String: Any] = ["engine": "filter", "syntheticGoal": goal, "seconds": seconds, "expression": text, "matchedIDs": matches, "expectedIDs": expected]
+                print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
+                if matches != expected { allAccepted = false }
+                XCTAssertEqual(matches, expected, "The generated query must mean what was requested: " + text)
+            } catch {
+                allAccepted = false
+                let duration = start.duration(to: .now).components
+                let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
+                var observation: [String: Any] = ["engine": "filter", "syntheticGoal": goal, "seconds": seconds, "expectedIDs": expected, "error": String(describing: error)]
+                if let generated { observation["expression"] = generated }
+                print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
+                XCTFail("The actual model did not return a usable query: " + String(describing: error))
+            }
         }
         if allAccepted { print("FILTER_ASSISTANCE_MODEL_ACCEPTED five semantic samples; no saved-filter or task writes") }
     }
