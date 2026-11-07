@@ -1,0 +1,28 @@
+{
+  "cacheFiles": 9,
+  "byteExactFiles": 7,
+  "allTasksAndPendingPreserved": true,
+  "signedZeroAndDecimalAware": true,
+  "differences": [
+    {
+      "bytesEqual": false,
+      "changedTopLevelKeys": [
+        "dates"
+      ],
+      "tasksEqual": true,
+      "pendingEqual": true
+    },
+    {
+      "bytesEqual": false,
+      "changedTopLevelKeys": [
+        "tables"
+      ],
+      "tasksEqual": true,
+      "pendingEqual": true,
+      "changedTables": [
+        "_conversation_views"
+      ]
+    }
+  ],
+  "privateReportSHA256": "b0a7aeebe3a99ff0337c200a42b870273893f2de614d7de0ae025f67bfd0fdae"
+}

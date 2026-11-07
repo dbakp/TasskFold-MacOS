@@ -1,0 +1,85 @@
+{
+  "freeBeforeBytes": 42766172160,
+  "actions": [
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/SDKExplicitPrecompiledModules",
+      "allocatedBytes": 142704640,
+      "reason": "Completed Taskfold-only compiler modules; preserve products and object files"
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex/ExplicitPrecompiledModules",
+      "allocatedBytes": 13873152,
+      "reason": "Completed Taskfold-only compiler modules; preserve products and object files"
+    },
+    {
+      "path": "/private/tmp/.taskfold-install36-xdunlyay/rollback",
+      "allocatedBytes": 80969728,
+      "reason": "Duplicate extracted35 retired; moved installed35, verified frozen35 ZIP and private pre36 safety copy retained"
+    },
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-31-mac-development.zip",
+      "bytes": 20213802,
+      "reason": "Obsolete app31 package retired; current36 and verified rollback35 ZIPs retained; historical receipts/private data backups preserved"
+    },
+    {
+      "path": "/private/tmp/taskfold-install35-i0jksq4j/installed-rollback31.app",
+      "allocatedBytes": 80728064,
+      "reason": "Obsolete moved31 product retired; current36, verified35 ZIP/moved35 fallback and all private data backups retained"
+    },
+    {
+      "path": "/tmp/.taskfold-install36-xdunlyay/installed-rollback35.app",
+      "allocatedBytes": 80969728,
+      "reason": "Postlaunch task/queue and native connection checks passed; duplicate moved35 retired, verified frozen35 rollback ZIP/private safety copy retained"
+    }
+  ],
+  "existingCachesReused": true,
+  "simulatorBootsRequested": false,
+  "normalMac36LeftRunning": true,
+  "originalReadbackSessionPreserved": null,
+  "realDataKeychainDockerAndOtherProjectsUntouched": true,
+  "caches": [
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "allocatedBytes": 793427968,
+      "within768MiB": true
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build",
+      "allocatedBytes": 776859648,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "allocatedBytes": 767475712,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 696750080,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 638865408,
+      "within768MiB": true
+    }
+  ],
+  "finishTool": {
+    "apply": true,
+    "freeBeforeBytes": 42764492800,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 534175744,
+        "projectedAllocatedBytes": 534175744
+      }
+    ],
+    "freeAfterBytes": 42764492800,
+    "actualFreeChangeBytes": 0
+  },
+  "freeAfterBytes": 42936332288,
+  "actualFreeChangeBytes": 170160128,
+  "originalReadbackSessionCompleted": 38599
+}

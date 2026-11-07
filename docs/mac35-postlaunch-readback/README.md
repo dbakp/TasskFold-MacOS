@@ -4,4 +4,7 @@ The original readonly comparison completed successfully in its original exec ses
 
 The detailed report, cache filenames/account identifiers and real task contents remain in the private safety copy. Public evidence contains only aggregate checks, changed field names and the private report hash. The safety copy, frozen signed Mac35 package and verified Mac31 rollback remain intact. No new install, restart, task change or permission modification was made for this verification.
 
-The normal Mac35 process remains running. Its main window and sync were verified earlier; computer control still reports the Mac locked now, so current shared widget/draft readiness is not accepted. The readonly process has exited and must not be polled/restarted as though still waiting. Phone installation stays deferred, wider signing/distribution work remains paused and no new completion checkpoint is counted.
+After the user approved Mac35’s app-data prompt, native Upcoming showed two tasks, Synced 10.03 and no connection banner. Its shared-storage wait is closed. The subsequent verified Mac36 update has its own separately recorded permission/readback state. The readonly process has exited and must not be polled/restarted as though still waiting. Phone installation stays deferred, wider signing/distribution work remains paused and no new completion checkpoint is counted.
+
+
+Later 7 November update: after the user approved Mac35’s prompt, its native shared-storage banner cleared and sync was observed. [The subsequent performance batch](../lazy-filter-dates/README.md) records that proof and the verified Mac36 update separately.

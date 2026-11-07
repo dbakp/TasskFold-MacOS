@@ -16,3 +16,6 @@ Reproduce the exact current-engine negative result: python3 Scripts/test_ondevic
 
 
 Subsequent 7 November update: the original [Mac35 postlaunch data check](../mac35-postlaunch-readback/README.md) completed. Tasks and pending changes are preserved across all eight cache files; shared-storage readiness still requires native inspection.
+
+
+Later 7 November update: after the user approved Mac35’s prompt, its native shared-storage banner cleared and sync was observed. [The subsequent performance batch](../lazy-filter-dates/README.md) records that proof and the verified Mac36 update separately.

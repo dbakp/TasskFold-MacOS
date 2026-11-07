@@ -377,5 +377,9 @@
     "Taskfold/Core/Filters.swift": "2eef3d769764f46461cace3a32a8d497175a9306527f2beb8c672c2c19b7535d",
     "Taskfold/Core/Models.swift": "a956ded1ed686dd0bc85bc80317b017d2df2930df06e2ee51453abaf4da2d34f",
     "TaskfoldTests/FilterTests.swift": "2f43eb625da6d3c3fa92ce939711d8cf0991b6b457cc1f2c27103541e25f7038"
+  },
+  "appBuildEvidence": {
+    "mac": "mac36-build.json",
+    "ios": "ios-build.json"
   }
 }

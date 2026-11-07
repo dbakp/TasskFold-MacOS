@@ -1,0 +1,14 @@
+{
+  "version": "1.2.0",
+  "build": "35",
+  "installed": true,
+  "mainWindowVerified": true,
+  "syncStatusVerified": true,
+  "postlaunchTaskAndQueueDataVerified": true,
+  "sharedStorageReady": true,
+  "sharedStorageReadinessVerified": true,
+  "userReportedAppDataPermissionAllowed": true,
+  "nativeConnectionBannerCleared": true,
+  "nativeSyncObserved": "Synced 10.03",
+  "installationNote": "Normal Mac35 remains in its original process. After the user approved its app-data prompt, native Upcoming shows two tasks, Synced 10.03 and no shared-storage connection banner. Installed35 has no dismiss action for that banner, so its cleared state follows successful initial shared publication. Original eight-cache postlaunch task/queue preservation is verified. No task edit, app restart or system-setting change was performed for this inspection."
+}
