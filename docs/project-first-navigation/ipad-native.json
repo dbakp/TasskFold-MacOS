@@ -1,0 +1,12 @@
+{
+  "device": "Existing iPad Pro13-inch M5 Simulator",
+  "deviceID": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+  "selected": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": [],
+  "scope": "Normal text actual initial project access, project route/return, collapse/expand, Pinned notes open/close, other tools reachable",
+  "phoneCasesNotRepeated": true,
+  "physicalFPSClaim": false
+}

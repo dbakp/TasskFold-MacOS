@@ -1,0 +1,27 @@
+{
+  "device": "iPhone18Pro Simulator",
+  "selected": 3,
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": [],
+  "passedCases": [
+    "testLongProjectCatalogCanCollapseToReachTools",
+    "testProjectsReachableBeforeBrowseTools",
+    "testProjectsReachableBeforeBrowseToolsLargestText"
+  ],
+  "scopes": [
+    "initial project without scrolling, normal light/largest dark",
+    "real project route and return",
+    "collapse/expand state and tools retained",
+    "Pinned notes open/close; Templates/capture/Focus reachable",
+    "120-project list collapses to expose tools without scrolling"
+  ],
+  "hostFilesExactOwnSource": {
+    "Taskfold/Views/BrowseView.swift": "9e81f187611c7e42bf8a229a6b5f6e1fd936b73480206ccb7fa6434f07e99cb8",
+    "Taskfold/TaskfoldApp.swift": "7420a841f9454102691ea9dd3fc7ca05b549a5fce32c2c080e2605e89ef0e94b",
+    "TaskfoldUITests/TaskfoldUITests.swift": "f4a2edbcf038f792c7c88679baa4dd4a5f6aac9fbc270e40d1a494cb31dd5ce3"
+  },
+  "physicalFPSClaim": false,
+  "physicalPhoneInstallDeferred": true
+}

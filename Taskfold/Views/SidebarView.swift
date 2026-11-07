@@ -44,11 +44,6 @@ struct SidebarView: View {
                 item(.all, "All Tasks", count: navigationCounts.total, incomplete: reading.incomplete)
                 item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { TaskKind.mayComplete($0) && !$0.completed }.count)
                 item(.completed, "Completed", count: nil)
-                Button { openMentions() } label: { HStack { Label("Mentions", systemImage: "at"); Spacer(); if let count = store.mentionUnreadCount, count > 0 { Text("\(count)").foregroundStyle(.secondary) } } }.accessibilityIdentifier("openMentions")
-                Button("Insights",systemImage:"chart.xyaxis.line") { openInsights() }.accessibilityIdentifier("openInsights")
-                Button { sharedDraftsPresented = true } label: { HStack { Label("Shared drafts", systemImage: "square.and.arrow.down"); Spacer(); if store.sharedCaptureDraftCount > 0 { Text("\(store.sharedCaptureDraftCount)").monospacedDigit().foregroundStyle(.secondary) } } }.accessibilityIdentifier("openSharedDrafts")
-                Button("Templates", systemImage: "square.stack.3d.up") { templatesPresented = true }.accessibilityIdentifier("openTemplates")
-                Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCapture")
             }
             if !store.favorites.isEmpty {
                 Section("Favorites") {
@@ -61,16 +56,6 @@ struct SidebarView: View {
                         }
                     }.onMove { source, destination in var ids = store.favorites.map(\.id); ids.move(fromOffsets: source, toOffset: destination); workspace.run("Reorder Favorites") { store.reorderFavorites(ids) } }
                 }
-            }
-            Section("Filters") {
-                ForEach(store.savedViews) { view in
-                    Label(view.name, systemImage: "line.3.horizontal.decrease.circle").tag(SidebarItem.saved(view.id))
-                        .contextMenu { Button("Edit Filter…") { filterEditor = view }; Button(store.isFavorite(.saved(view.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.saved(view.id)) }; orderActions(table: "saved_views", id: view.id, ids: store.savedViews.map(\.id)) }.accessibilityIdentifier("filter-" + view.id)
-                }.onMove { source, destination in
-                    var ids = store.savedViews.map(\.id); ids.move(fromOffsets: source, toOffset: destination)
-                    workspace.run("Reorder Filters") { store.reorderOrganization("saved_views", ids: ids) }
-                }
-                Button("New Filter", systemImage: "plus") { filterEditor = store.newSavedView() }.accessibilityIdentifier("newSavedView")
             }
             Section(isExpanded: $projectsExpanded) {
                 ForEach(projectOrder.ordering.visible) { item in
@@ -101,6 +86,16 @@ struct SidebarView: View {
                     .buttonStyle(.plain).accessibilityIdentifier("newProject")
             Button("Archived Projects", systemImage: "archivebox") { archivePresented = true }.accessibilityIdentifier("openArchivedProjects")
             } header: { Text("Projects") }
+            Section("Filters") {
+                ForEach(store.savedViews) { view in
+                    Label(view.name, systemImage: "line.3.horizontal.decrease.circle").tag(SidebarItem.saved(view.id))
+                        .contextMenu { Button("Edit Filter…") { filterEditor = view }; Button(store.isFavorite(.saved(view.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.saved(view.id)) }; orderActions(table: "saved_views", id: view.id, ids: store.savedViews.map(\.id)) }.accessibilityIdentifier("filter-" + view.id)
+                }.onMove { source, destination in
+                    var ids = store.savedViews.map(\.id); ids.move(fromOffsets: source, toOffset: destination)
+                    workspace.run("Reorder Filters") { store.reorderOrganization("saved_views", ids: ids) }
+                }
+                Button("New Filter", systemImage: "plus") { filterEditor = store.newSavedView() }.accessibilityIdentifier("newSavedView")
+            }
             Section(isExpanded: $labelsExpanded) {
                 ForEach(store.labels) { label in
                     Label {
@@ -112,6 +107,13 @@ struct SidebarView: View {
                 Button { labelEditor = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(""), "color": .string("#8b5cf6")]) } label: { Label("New Label", systemImage: "plus").foregroundStyle(.secondary) }
                     .buttonStyle(.plain)
             } header: { Text("Labels") }
+            Section("Tools") {
+                Button { openMentions() } label: { HStack { Label("Mentions", systemImage: "at"); Spacer(); if let count = store.mentionUnreadCount, count > 0 { Text("\(count)").foregroundStyle(.secondary) } } }.accessibilityIdentifier("openMentions")
+                Button("Insights",systemImage:"chart.xyaxis.line") { openInsights() }.accessibilityIdentifier("openInsights")
+                Button { sharedDraftsPresented = true } label: { HStack { Label("Shared drafts", systemImage: "square.and.arrow.down"); Spacer(); if store.sharedCaptureDraftCount > 0 { Text("\(store.sharedCaptureDraftCount)").monospacedDigit().foregroundStyle(.secondary) } } }.accessibilityIdentifier("openSharedDrafts")
+                Button("Templates", systemImage: "square.stack.3d.up") { templatesPresented = true }.accessibilityIdentifier("openTemplates")
+                Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCapture")
+            }
         }
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) { VStack(spacing: 0) { AccountMenu(); SyncFooter() } }

@@ -1,0 +1,10 @@
+{
+  "owner": "TasskFold-MacOS",
+  "sourceFile": "Taskfold/Views/SidebarView.swift",
+  "sourceSHA256": "1df737feaf61eacda04673bee44e1e5414a8d37f50b5dc1b08f2045e9a4925c1",
+  "syntaxParsePassed": true,
+  "sourceScope": "Move existing project/filter/tool sections; preserve row actions, ordering, selection, counts, sheets and context menus",
+  "nativeAcceptancePending": true,
+  "existingAccessibilityIdentifiersRetained": true,
+  "newIdentifiers": []
+}
