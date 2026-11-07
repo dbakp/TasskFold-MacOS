@@ -1,0 +1,49 @@
+{
+  "platform": "mac",
+  "coreTests": 83,
+  "newRestoreTests": 14,
+  "failed": 0,
+  "skipped": 0,
+  "coreSelection": "ChildTaskRestoreTests|ChildRepairArchiveTests|ChildTaskRepairTests|ChildTaskRecoveryDiscoveryTests",
+  "coreLogSHA256": "c230dd2941091685e6683a9bf3690ccd2521961c280fc59567add50849e15a02",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "a7cce3c44fcbb4735fb4ecceb8d0613c7dc6e80c2b55b755862253754264c336",
+    "Taskfold/Core/Backend.swift": "5b640f66e20f9dbc0f9ffac33002e7f9d5203b16cb595802d2d3d6b6e65fb9dd",
+    "Taskfold/Core/Store.swift": "f3d6885bbde3f582aeebfb5533b22b0ab4ef8b2e61d1636fa507c48aee7d3dda",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "4217897824e576ba43b86635f1a0f1dee2d5c04ddc57387278dc4d6323c5c4ec",
+    "Taskfold/Views/ChildTaskRepairView.swift": "74557f2992fccf8945f652b59b96ea2612157fef240f491375194e8e8bd07073",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "d1e821b5e5a9ec4c2928f4c2528ec8bd17ede5191a309a90db97111159663e5b",
+    "TaskfoldTests/ChildTaskRestoreTests.swift": "ba1e66f949fd8ff19c2ba1d2708a280eb9a32bd7f86f93359b25267977413ce4",
+    "TaskfoldTests/ChildTaskCompletionBatchTests.swift": "13ca0805561c7a760feaa6ccd59dfef26037b03274d4ed3741140924d0a0259a",
+    "TaskfoldTests/Fixtures/child-original-restore-contract-v1.json": "83bf4a6075850d7177a59825211c6aca9becc2438dad8b0d9f7c324bdc8af0fe"
+  },
+  "coreScope": "Core package compiles Backend plus models/journals. Store and SwiftUI are excluded; captured hashes for those files are source context, not Core runtime proof.",
+  "nativeBuild": {
+    "terminalExit": 0,
+    "platform": "macOS arm64",
+    "configuration": "Debug -Onone; inline DWARF",
+    "owningSourcesUnchanged": true,
+    "signed": false,
+    "compileOnly": true,
+    "interactionAcceptance": false,
+    "normalInstall": false,
+    "logSHA256": "dc4c31b91d2674c118ae21da2b9fe4c537cf8821656c325a0d9e03dd68d0f863"
+  },
+  "normalGatesChanged": false,
+  "normalInstall": false,
+  "hostedChanges": false,
+  "fixtureScope": "Metadata and decisions derive from this owner\u2019s genuine191-check service report. Source bodies in the Core fixture are reconstructed JSON; separate lexical stress source is deliberately constructed in XCTest, not claimed as exact server wire.",
+  "additionalRecoveryFix": "A separate .restorations journal-presence family and direct recovery link keep status/Stop reachable after archive/repair flags turn off; final source compilation and existing discovery tests are tracked separately.",
+  "interimNativeBuild": {
+    "terminalExit": 0,
+    "platform": "macOS arm64",
+    "signed": false,
+    "purpose": "Full app compile before the subsequent recovery entry-point integration; not final-source proof",
+    "logSHA256": "b26d70da9a39003846cf50ef5cf543a4f0679c29151be0b830e411fe1de68af7"
+  },
+  "recoveryDiscoveryTests": 10,
+  "developmentAttempts": [
+    "Initial83-case run had9 assertion failures: the existing unreadable-family test hard-coded8 families. Updated the count to the complete CaseIterable family list, retaining traversal/reachability assertions; final83 pass.",
+    "An initial full client compile predates the recovery-entry integration and is retained only as interim build evidence."
+  ]
+}

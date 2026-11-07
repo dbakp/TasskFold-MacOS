@@ -6,6 +6,7 @@ struct SavedChildTaskAdoptionsLink: View {
     @Environment(\.scenePhase) private var phase
     @State private var repairShowing = false
     @State private var archivesShowing = false
+    @State private var restorationsShowing = false
     @State private var showing = false
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
@@ -20,6 +21,13 @@ struct SavedChildTaskAdoptionsLink: View {
                 Section {
                     Button("Saved originals", systemImage: "archivebox") { archivesShowing = true }.accessibilityIdentifier("savedChildRepairArchives")
                         .sheet(isPresented: $archivesShowing) { ChildTaskRepairArchivesView() }
+                }
+            }
+            if scope != nil, store.hasSavedChildRecovery(.restorations) || store.childTaskOriginalRestorationEnabled || store.childTaskOriginalReversalsEnabled {
+                Section {
+                    Button("Subtask restorations", systemImage: "arrow.uturn.backward.circle") { restorationsShowing = true }
+                        .accessibilityIdentifier("savedChildRestorations")
+                        .sheet(isPresented: $restorationsShowing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) { ChildTaskOriginalRestoreView(archive: nil) }
                 }
             }
             if scope != nil, store.hasSavedChildRecovery(.repairs) || store.childTaskRepairEnabled {

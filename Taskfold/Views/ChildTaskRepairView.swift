@@ -699,6 +699,8 @@ struct ChildTaskRepairArchivesView: View {
     @State private var exporting = false
     @State private var exportScope: ChildTaskFieldClientScope?
     @State private var comparison: ChildTaskRepairOriginalComparison?
+    @State private var showingRestoration = false
+    @State private var restorationArchive: ChildTaskRepairArchive?
     @State private var removingOriginal = false
     @State private var cleanupID: String?
     @State private var cleanupReview: ChildTaskRepairOriginalCleanup?
@@ -712,6 +714,8 @@ struct ChildTaskRepairArchivesView: View {
                     Section {
                         Text("Find originals saved before a repair, even on a new device. Names reflect current tasks; exports keep their original content and check your current access.")
                             .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
+                        Button("Saved restore requests") { restorationArchive = nil; showingRestoration = true }
+                            .disabled(busy).accessibilityIdentifier("childRestoreRequests")
                         Button("Refresh") { Task { await load() } }.disabled(busy).accessibilityIdentifier("childRepairArchivesRefresh")
                     }
                     if busy { ProgressView(removingOriginal ? "Removing saved original…" : "Reading saved originals…").accessibilityIdentifier("childRepairArchivesProgress") }
@@ -737,6 +741,10 @@ struct ChildTaskRepairArchivesView: View {
                                     .disabled(busy).accessibilityLabel("Export original: \(archiveTitle(entry))")
                                     .accessibilityHint("Save a copy of this original without changing your tasks.")
                                     .accessibilityIdentifier("childRepairArchiveExport-" + entry.id)
+                                if store.childTaskOriginalRestorationEnabled {
+                                    Button("Review restoration") { restorationArchive = entry; showingRestoration = true }
+                                        .disabled(busy).accessibilityIdentifier("childRestoreArchive-" + entry.id)
+                                }
                                 if store.childTaskRepairArchiveCleanupEnabled { cleanupControls(entry) }
                             } else {
                                 Text("Original content is no longer available. Its repair confirmation is kept.")
@@ -766,6 +774,9 @@ struct ChildTaskRepairArchivesView: View {
                 ChildRepairOriginalComparisonView(comparison: value, close: { comparison = nil })
             }
         }
+        .sheet(isPresented: $showingRestoration) {
+            if visible, scope != nil { ChildTaskOriginalRestoreView(archive: restorationArchive) }
+        }
         .fileExporter(isPresented: $exporting, document: scope == exportScope ? document : nil, contentType: .json, defaultFilename: "Taskfold-original-" + Dates.day(Date())) { result in
             guard let scope, exportScope == scope else { return }; document = nil; exportScope = nil
             switch result {
@@ -781,7 +792,7 @@ struct ChildTaskRepairArchivesView: View {
     private func clear() {
         ticket = UUID(); entries = []; next = nil; loaded = false; busy = false
         message = nil; document = nil; exportScope = nil; exporting = false
-        cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false; removingOriginal = false; comparison = nil
+        cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false; removingOriginal = false; comparison = nil; showingRestoration = false; restorationArchive = nil
     }
     private func load(after: String? = nil) async {
         guard visible, let captured = scope, !busy else { return }; let work = UUID(); ticket = work; busy = true; message = nil
@@ -938,5 +949,161 @@ private struct ChildRepairOriginalComparisonView: View {
         #if os(macOS)
         .frame(minWidth: 420, idealWidth: 540, minHeight: 420, idealHeight: 620)
         #endif
+    }
+}
+
+/// Reviews are ephemeral; unresolved commands and confirmed reversal identities
+/// are recovered from the encrypted account journal after closing or relaunch.
+struct ChildTaskOriginalRestoreView: View {
+    let archive: ChildTaskRepairArchive?
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @Environment(\.dismiss) private var dismiss
+    @State private var model: ChildTaskRestoreModel?
+    @State private var review: ChildTaskRestoreReview?
+    @State private var busy = false
+    @State private var message: String?
+    @State private var ticket = UUID()
+    private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
+    var body: some View {
+        NavigationStack {
+            List {
+                if let model, model.scope == scope {
+                    Section {
+                        Text("Restore only the saved subtask structure. Current task notes and priority stay current. Both versions are retained; an older structure stays read-only until Undo.")
+                            .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
+                        if let archive, archive.scope == scope, archive.contentRetained, store.childTaskOriginalRestorationEnabled {
+                            Button("Review saved structure") { Task { await prepare(identity: ChildTaskRestoreCommand.identity(archive), mode: .restore) } }
+                                .disabled(busy || model.busy).accessibilityIdentifier("childRestorePrepare")
+                        }
+                        Button("Check saved requests") { Task { await model.load() } }.disabled(busy || model.busy)
+                    }
+                    if busy || model.busy { ProgressView("Checking subtask restoration…") }
+                    if let feedback = message ?? model.message {
+                        Text(feedback).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRestoreFeedback")
+                    }
+                    if model.loaded && model.entries.isEmpty { Text("No restoration requests saved on this device.").foregroundStyle(.secondary) }
+                    ForEach(model.entries, id: \.command.id) { entry in
+                        Section {
+                            Text(store.record("tasks", id: entry.command.rootID)?.title ?? "Saved task").font(.headline).fixedSize(horizontal: false, vertical: true)
+                            Text(status(entry)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            if entry.phase == .queued || entry.phase == .attempted {
+                                Button("Check status") { Task { await run(entry.command, .check) } }.accessibilityIdentifier("childRestoreCheck-" + entry.command.id)
+                                Button("Retry this request") { Task { await run(entry.command, .send) } }.accessibilityIdentifier("childRestoreRetry-" + entry.command.id)
+                                Button("Stop this request") { Task { await run(entry.command, .close) } }.accessibilityIdentifier("childRestoreStop-" + entry.command.id)
+                            } else if entry.phase == .applied, latest(entry, in: model), store.childTaskOriginalReversalsEnabled, let result = entry.result {
+                                Button(result.raw["phase"] == .string("restored") ? "Review Undo" : "Review Redo") {
+                                    Task { await prepare(identity: entry.command.identity, mode: result.raw["phase"] == .string("restored") ? .undo : .redo, restorationID: result.raw["restoration_id"]!.text) }
+                                }.accessibilityIdentifier("childRestoreReverse-" + entry.command.id)
+                            }
+                        }.disabled(busy || model.busy)
+                    }
+                } else if scope == nil {
+                    Text("Return to your signed-in workspace to check saved restoration requests.").foregroundStyle(.secondary)
+                } else { ProgressView("Reading saved requests…") }
+            }
+            .navigationTitle("Restore subtasks")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() }.keyboardShortcut(.cancelAction) } }
+        }
+        .task(id: scope) {
+            close()
+            guard scope != nil else { return }
+            do { let value = try store.childTaskRestoreModel(); model = value; await value.load() }
+            catch { message = "Saved restoration requests couldn’t be read. They are kept on this device." }
+        }
+        .onChange(of: store.snapshotRevision) { _, _ in review = nil }
+        .onDisappear { close() }
+        .sheet(item: $review) { value in
+            if value.scope == scope, store.childTaskRestoreReviewIsCurrent(value) {
+                ChildTaskRestoreReviewView(review: value, close: { review = nil }, apply: { Task { await apply(value) } })
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 440, idealWidth: 560, minHeight: 420, idealHeight: 620)
+        #endif
+    }
+    private func close() { ticket = UUID(); model?.close(); model = nil; review = nil; busy = false; message = nil }
+    private func status(_ entry: ChildTaskRestoreState.Entry) -> String {
+        if entry.phase == .queued { return "Saved on this device; not yet confirmed." }
+        if entry.phase == .attempted { return "Confirmation needed. Check status before starting another request." }
+        if entry.phase == .closed { return "Stopped. This request made no change." }
+        return entry.result?.raw["phase"] == .string("restored") ? "Saved structure restored. Both versions are kept." : "Restoration undone. Both versions are kept."
+    }
+    private func latest(_ entry: ChildTaskRestoreState.Entry, in model: ChildTaskRestoreModel) -> Bool {
+        guard let result = entry.result else { return false }
+        return !model.entries.contains { other in other.result?.raw["restoration_id"] == result.raw["restoration_id"] && (other.result?.raw["next_revision"]?.integer ?? 0) > result.raw["next_revision"]!.integer }
+    }
+    private func prepare(identity: [String: JSON], mode: ChildTaskRestoreMode, restorationID: String? = nil) async {
+        guard !busy, let captured = scope else { return }; let work = UUID(); ticket = work; busy = true; message = nil
+        defer { if ticket == work { busy = false } }
+        do {
+            let value = try await store.readChildTaskRestoreReview(identity: identity, mode: mode, restorationID: restorationID)
+            guard ticket == work, scope == captured, !Task.isCancelled else { return }; review = value
+        } catch {
+            guard ticket == work, scope == captured, !Task.isCancelled else { return }
+            message = "This version couldn’t be reviewed. Refresh the task and check access. Newer subtask work and both saved copies are kept."
+        }
+    }
+    private func apply(_ value: ChildTaskRestoreReview) async {
+        guard let model, review?.id == value.id, store.childTaskRestoreReviewIsCurrent(value) else { return }
+        do {
+            let command = try ChildTaskRestoreCommand(review: value)
+            review = nil
+            if await model.queue(command, review: value) { await run(command, .send) }
+        } catch { message = "This review is no longer current. Review it again before applying." }
+    }
+    private func run(_ command: ChildTaskRestoreCommand, _ operation: ChildTaskRepairOperation) async {
+        guard let model, model.scope == scope else { return }
+        message = nil; review = nil
+        if await model.run(command, operation: operation), model.scope == scope,
+           model.entries.first(where: { $0.command == command })?.result?.applied == true { await store.sync() }
+    }
+}
+
+private struct ChildTaskRestoreReviewView: View {
+    let review: ChildTaskRestoreReview
+    let close: () -> Void
+    let apply: () -> Void
+    @State private var target = true
+    @State private var acknowledged = false
+    private var side: ChildTaskRepairOriginalComparison.Side { target ? review.target : review.current }
+    private var action: String { review.mode == .restore ? "Restore saved structure" : review.mode == .undo ? "Undo restoration" : "Redo restoration" }
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text("Only subtasks change. Task notes, priority and other root details stay current. Both versions are retained.").fixedSize(horizontal: false, vertical: true)
+                    if review.mode != .undo { Text("The restored older structure will be read-only. Use Undo to return to the editable version.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                    if review.fileCount > 0 { Text("\(review.fileCount) stored file(s) will remain retained for reversal.").fixedSize(horizontal: false, vertical: true) }
+                    Picker("Structure", selection: $target) { Text("After this action").tag(true); Text("Current").tag(false) }.pickerStyle(.menu)
+                }
+                Section(target ? "After this action" : "Current structure") {
+                    if let outline = side.outline, outline.rootKind == .array {
+                        if outline.items.isEmpty { Text("No subtasks").foregroundStyle(.secondary) }
+                        ForEach(outline.items) { item in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(item.title).fixedSize(horizontal: false, vertical: true)
+                                Text(item.path.map { String($0 + 1) }.joined(separator: " › ")).font(.caption).foregroundStyle(.secondary)
+                            }.accessibilityElement(children: .combine)
+                        }
+                    } else { Text("This older structure needs its source-data view below.").foregroundStyle(.secondary) }
+                    DisclosureGroup("Source data") {
+                        Text(side.excerpt).font(.system(.footnote, design: .monospaced)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                        if side.shortened { Text("Source preview shortened. The complete source stays retained.").foregroundStyle(.secondary) }
+                    }.id(target)
+                }
+                Section {
+                    if review.enabled {
+                        Toggle("I reviewed this subtask version", isOn: $acknowledged).accessibilityIdentifier("childRestoreAcknowledged")
+                        Button(action, action: apply).disabled(!acknowledged).accessibilityIdentifier("childRestoreApply")
+                    } else {
+                        Text(review.metadata["availability"] == .string("paused") ? "Restoration is temporarily paused. Both copies are kept." : "This version needs a storage review before restoration. Both copies are kept.")
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .navigationTitle("Review subtask version")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: close).keyboardShortcut(.cancelAction) } }
+        }
     }
 }
