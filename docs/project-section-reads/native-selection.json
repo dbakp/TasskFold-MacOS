@@ -1,0 +1,16 @@
+{
+  "fullAppSourceCompiled": true,
+  "secondAttemptExit": 0,
+  "secondAttemptExecutedTests": 0,
+  "secondAttemptNotAcceptance": true,
+  "cause": "Existing reserved host test target includes only WorkflowSourceSelectionUITests.swift; requested ordinary section tests were not compiled",
+  "hostOnlyRepair": {
+    "oldTargetSources": [
+      "TaskfoldUITests/WorkflowSourceSelectionUITests.swift"
+    ],
+    "newTargetSources": [
+      "TaskfoldUITests/TaskfoldUITests.swift"
+    ]
+  },
+  "sameDerivedDataAndAppSource": true
+}

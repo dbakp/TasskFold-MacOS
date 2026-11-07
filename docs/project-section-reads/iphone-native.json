@@ -1,0 +1,33 @@
+{
+  "platform": "iPhone18Pro Simulator iOS27",
+  "acceptedCases": [
+    "testFloatingAddDropCreatesInSection",
+    "testPersistentSectionsAndContextualCreation",
+    "testProjectQuickAssignmentAndBoardCompletion"
+  ],
+  "acceptedCount": 3,
+  "acceptedScope": "Actual collapse/expand, last task completion with empty header retained, contextual composer, drag-to-section creation, board completion retaining header position, and assignee capture",
+  "splitRun": true,
+  "firstRun": {
+    "passed": 2,
+    "failed": 1,
+    "remainingFailure": "Old menu locator before board interaction"
+  },
+  "remainingCaseRun": {
+    "selected": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "runtimeWarnings": [],
+  "appSignatureVerified": true,
+  "hostTouchFilesExactOwnSource": {
+    "Taskfold/TaskfoldApp.swift": "d5eaf9706535c80ab62c745a8864433a0e69e929797f9cf5ea7b08df509c6fce",
+    "Taskfold/Core/Models.swift": "54887836316ee431868a1010a1416663eef954361ea8b8cbb3cd0bd28479143e",
+    "TaskfoldUITests/TaskfoldUITests.swift": "0ef3e55ffca5e1593c9ecc006b876f62147f6a5c16c8f6dd41679c4d611c9deb"
+  },
+  "physicalDeviceClaim": false,
+  "physicalFPSClaim": false,
+  "phoneInstallationDeferred": true,
+  "macInteractionClaim": false
+}
