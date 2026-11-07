@@ -34,6 +34,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
 /// It never opens a port, reads hosted credentials or substitutes normal HTTP.
 @MainActor enum ChildMappingSQLNativePeer {
     static var enabled: Bool { ChildFieldNativeIdentity.enabled && ProcessInfo.processInfo.arguments.contains("--child-mapping-sql-native") }
+    static var archivesTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--child-archives-native") }
     private struct Configuration: Decodable { let `protocol`: Int; let nonce: UUID; let account: String; let root: String; let generation: String }
     private struct Reply: Decodable { let `protocol`: Int; let id: String; let code: String?; let data: String; let lose: Bool }
     private static func read(_ url: URL, limit: Int) throws -> Data {
@@ -69,7 +70,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
 }
 
 @MainActor enum ChildFieldNativePeer {
-    static var folder: URL { URL.applicationSupportDirectory.appendingPathComponent(ChildMappingSQLNativePeer.enabled ? "Child mapping SQL native peer" : "Child field native peer", isDirectory: true) }
+    static var folder: URL { URL.applicationSupportDirectory.appendingPathComponent(ChildMappingSQLNativePeer.enabled ? (ChildMappingSQLNativePeer.archivesTesting ? "Child archives SQL native peer" : "Child mapping SQL native peer") : "Child field native peer", isDirectory: true) }
     static var file: URL { folder.appendingPathComponent("server.json") }
     static var root: Record {
         get throws { Record(try state()["root"]!.object) }
@@ -432,6 +433,7 @@ struct ChildFieldNativeFixtureView: View {
                 Text("Synthetic child field acceptance").font(.headline)
                 if let problem { Text(problem).accessibilityIdentifier("childNativeProblem") }
                 if ready {
+                    if ChildMappingSQLNativePeer.archivesTesting { SavedChildTaskAdoptionsLink() }
                     if ChildStructureNativePeer.enabled {
                         Button("Open saved hierarchy") { opening = "structure" }.accessibilityIdentifier("childNativeStructure")
                         Button("Open hierarchy actions") { opening = "structureRecovery" }.accessibilityIdentifier("childNativeStructureRecovery")

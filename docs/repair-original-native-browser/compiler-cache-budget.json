@@ -1,0 +1,14 @@
+{
+  "cache": "/tmp/taskfold-prepared-undo-signed-ios-build",
+  "allocatedBytes": {
+    "Index.noindex": 0,
+    "CompilationCache.noindex": 28672,
+    "SDKExplicitPrecompiledModules": 229138432,
+    "ModuleCache.noindex": 83742720,
+    "SDKStatCaches.noindex": 1617920,
+    "Build/Intermediates.noindex": 442421248
+  },
+  "totalBytes": 756948992,
+  "budgetBytes": 805306368,
+  "productsPreserved": true
+}

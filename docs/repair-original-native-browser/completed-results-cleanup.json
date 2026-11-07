@@ -1,0 +1,18 @@
+{
+  "freeBeforeBytes": 43410063360,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-browser-phone-first.xcresult",
+      "allocatedBytes": 5046272
+    },
+    {
+      "path": "/tmp/taskfold-browser-phone-second.xcresult",
+      "allocatedBytes": 507904
+    },
+    {
+      "path": "/tmp/taskfold-browser-phone-third.xcresult",
+      "allocatedBytes": 3784704
+    }
+  ],
+  "freeAfterBytes": 43419394048
+}

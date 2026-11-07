@@ -1,0 +1,45 @@
+TAP version 13
+# Subtest: untrusted requests cannot select SQL or fixture identity
+ok 1 - untrusted requests cannot select SQL or fixture identity
+  ---
+  duration_ms: 2.338541
+  ...
+# Subtest: canonical database wire is carried without JSON re-encoding
+ok 2 - canonical database wire is carried without JSON re-encoding
+  ---
+  duration_ms: 6.780916
+  ...
+# Subtest: malformed envelopes and symlinks fail closed without reading target or querying
+ok 3 - malformed envelopes and symlinks fail closed without reading target or querying
+  ---
+  duration_ms: 3.968625
+  ...
+# Subtest: Simulator relocation follows only the same unique owned nonce
+ok 4 - Simulator relocation follows only the same unique owned nonce
+  ---
+  duration_ms: 13.788084
+  ...
+# Subtest: native discovery rejects foreign roots and invalid pagination before SQL
+ok 5 - native discovery rejects foreign roots and invalid pagination before SQL
+  ---
+  duration_ms: 0.681583
+  ...
+# Subtest: search channel validates query and cursor before SQL and quotes literal text
+ok 6 - search channel validates query and cursor before SQL and quotes literal text
+  ---
+  duration_ms: 0.492167
+  ...
+# Subtest: archive routes bind only bounded typed arguments before querying
+ok 7 - archive routes bind only bounded typed arguments before querying
+  ---
+  duration_ms: 0.463125
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 87.58725

@@ -979,7 +979,12 @@ final class Store {
     }
     func readChildTaskRepairArchives(after: String? = nil) async throws -> ChildTaskRepairArchivePage {
         guard let scope = childTaskFieldRecoveryScope else { throw ChildTaskRepairFailure(reason: .unavailable) }
-        let page = try await backend.childTaskRepairArchives(scope: scope, after: after)
+        #if DEBUG
+        let limit = ChildMappingSQLNativePeer.archivesTesting ? 2 : 50
+        #else
+        let limit = 50
+        #endif
+        let page = try await backend.childTaskRepairArchives(scope: scope, after: after, limit: limit)
         try Task.checkCancellation(); guard scope == childTaskFieldRecoveryScope else { throw CancellationError() }; return page
     }
     func readDiscoveredChildTaskRepairOriginal(_ archive: ChildTaskRepairArchive) async throws -> ChildTaskRepairOriginal {
