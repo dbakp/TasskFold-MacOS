@@ -1,0 +1,37 @@
+{
+  "initialCleanup": {
+    "candidateExists": true,
+    "candidate": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Release/Taskfold.app",
+    "candidateRegisteredBefore": true,
+    "candidateRegisteredAfter": false,
+    "installedExists": true,
+    "installedRegisteredBefore": true,
+    "installedRegisteredAfter": true,
+    "appLaunchRequested": false
+  },
+  "afterRepeatBuild": {
+    "candidateExists": true,
+    "candidate": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Release/Taskfold.app",
+    "candidateRegisteredBefore": true,
+    "candidateRegisteredAfter": false,
+    "installedExists": true,
+    "installedRegisteredBefore": true,
+    "installedRegisteredAfter": true,
+    "appLaunchRequested": false
+  },
+  "guardTestsPassed": 4,
+  "installedOutputRefusedBeforeBuild": true,
+  "installedMetadataUnchangedByRefusal": true,
+  "onlyOriginalInstalledProcessRemains": true,
+  "cacheSignatureStillValid": true,
+  "frozenArchiveHashUnchanged": true,
+  "frozenProductSourceFingerprintStillCurrent": true,
+  "packagedAppChanged": false,
+  "nativeColdRoutingAccepted": false,
+  "note": "SDK registers products; builder now verifies removal afterward. Registration metadata checks do not prove actual cold links. Frozen35 was packaged before the cleanup tool was added; its payload is unchanged.",
+  "macToolingSHA256": {
+    "Scripts/build_daily.py": "c6c16187406ae76f28fcbcabd90337141646b0a82c35f077db1e1604e0349ad1",
+    "Scripts/isolate_prepared_mac_app.py": "ccd318d6fc071c18233ee677b9216e9985bd18176ed8897a882306f4dd183cd7",
+    "Scripts/test_isolate_prepared_mac_app.py": "bdff666bfcd7254ee6b52bbf8dca5a7251ebf724db62de9f22ac2e988070be4d"
+  }
+}

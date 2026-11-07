@@ -11279,3 +11279,11 @@ Clean merged source is packaged as optimized signed iPhone42 with app/widgets, e
 ### 2026-11-07 — Natural filter forms and genuine local-model limits
 
 Bounded priority comparisons/words, planned-date qualifiers and optional colons on known field prefixes now preserve existing predicate documents and quoted literal targets. Both owning Core suites have 125 passes plus two intentional real-model skips across 127 cases. The ready Mac model returns three valid English/Spanish task-step arrays in 15–27 seconds. Three real filter requests match nine-row controls; the fourth returns prose and is refused. Rejected pattern, structured and wrapper candidates remain failure evidence; real filter quality is unaccepted. No checkpoint/substep inflation, new app package/install or gate activation. Full generated native review/history and broader quality/latency remain. [Evidence and limits](natural-filter-forms/README.md).
+
+
+### 2026-11-07 — Coherent signed Mac35 and phone43 updates prepared
+
+Both owning optimized app builds now pass signing, profile and exact ZIP readback checks from clean merged source. Mac includes widgets/Share and continuity-floor verification; phone includes widgets with the same incoming-Share omission and flags as42. Accumulated note/background/save/list and natural-filter changes are included. Mac31 remains installed after a fresh metadata read; native control reported locked, so no update/restart occurred. Last verified phone34 remains installed and installation deferred. Superseded34/42 ZIPs were retired after rehashing current/rollback pairs. No source feature checkpoint, model-quality acceptance or runtime/FPS claim is added. [Exact delivery scope](mac35-phone43-updates/README.md).
+
+
+The same delivery run also fixes the Mac builder’s registration side effect. Four safety checks and real standalone/repeat-build checks leave the cache candidate unregistered, installed31 registered/running and the frozen signed package unchanged. Installed/symlink output targets are refused before build. This is Mac-only tooling; native cold links remain unaccepted. [Scope and proof](mac35-phone43-updates/registration-isolation.json).

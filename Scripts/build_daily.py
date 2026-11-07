@@ -44,6 +44,16 @@ def main():
         parser.error("Choose a destination supported by this owning app")
     if args.build_number is not None and args.build_number < 1:
         parser.error("Build number must be a positive integer")
+    products = args.derived_data / "Build/Products" / (args.configuration + ("" if PLATFORM == "mac" else "-iphonesimulator" if args.simulator else "-iphoneos"))
+    if args.products_directory:
+        products = args.products_directory.resolve()
+    app = products / "Taskfold.app"
+    if PLATFORM == "mac":
+        from isolate_prepared_mac_app import validate_location
+        try:
+            validate_location(app)
+        except ValueError as error:
+            parser.error(str(error))
     # Xcode may retire earlier managed products even when a new products folder
     # is chosen. Never rebuild a cache whose app executable is still running.
     cache = str(args.derived_data.resolve()) + "/"
@@ -104,15 +114,16 @@ def main():
         command.extend(["CODE_SIGNING_ALLOWED=NO", "ONLY_ACTIVE_ARCH=YES", "ARCHS=" + platform.machine()])
     with log.open("w") as output:
         result = subprocess.run(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT)
+    if PLATFORM == "mac":
+        # Xcode registers macOS build products, even though preparation is not
+        # installation. Do not leave a cache copy competing with the installed app.
+        from isolate_prepared_mac_app import isolate
+        print(json.dumps({"preparedAppRegistration": isolate(app)}))
     if result.returncode:
         errors = [line for line in log.read_text().splitlines() if ": error:" in line or line.startswith("xcodebuild: error:")]
         raise SystemExit("Daily build failed. See " + str(log) + "\n" + "\n".join(errors[-6:]))
     if fingerprint(project.read_bytes()) != before:
         raise SystemExit("App inputs changed during the build; no candidate receipt recorded")
-    products = args.derived_data / "Build/Products" / (args.configuration + ("" if PLATFORM == "mac" else "-iphonesimulator" if args.simulator else "-iphoneos"))
-    if args.products_directory:
-        products = args.products_directory.resolve()
-    app = products / "Taskfold.app"
     contents = app / "Contents" if PLATFORM == "mac" else app
     info = plistlib.loads((contents / "Info.plist").read_bytes())
     if info.get("CFBundleIdentifier") != BUNDLE:
@@ -132,7 +143,7 @@ def main():
         from cached_development_signing import verify_cached_profile_products
         verify_cached_profile_products(app, PLATFORM, cached_signing)
         data["cachedProfileSigning"] = cached_signing
-        data["buildToolsSHA256"] = {name: hashlib.sha256((ROOT / "Scripts" / name).read_bytes()).hexdigest() for name in ["build_daily.py", "cached_development_signing.py"]}
+        data["buildToolsSHA256"] = {name: hashlib.sha256((ROOT / "Scripts" / name).read_bytes()).hexdigest() for name in ["build_daily.py", "cached_development_signing.py", "isolate_prepared_mac_app.py"]}
     receipt.write_text(json.dumps(data, indent=2) + "\n")
     print("Daily-use development candidate: " + str(app))
     print("Build receipt: " + str(receipt))

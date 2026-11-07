@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-07",
+  "name": "Taskfold-1.4.0-42-iphone-development.zip",
+  "sha256": "1a7a8c055625b4e040c2ac6a9ac0f8a32d1293f0bd946d0b808dc59386c378cc",
+  "bytes": 24255569,
+  "reason": "Verified current43; preserve installed34 rollback",
+  "retained": [
+    "Taskfold-1.4.0-34-iphone-development.zip",
+    "Taskfold-1.4.0-43-iphone-development.zip"
+  ]
+}
