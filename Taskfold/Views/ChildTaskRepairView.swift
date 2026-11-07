@@ -698,6 +698,7 @@ struct ChildTaskRepairArchivesView: View {
     @State private var document: WorkspaceDocument?
     @State private var exporting = false
     @State private var exportScope: ChildTaskFieldClientScope?
+    @State private var comparison: ChildTaskRepairOriginalComparison?
     @State private var removingOriginal = false
     @State private var cleanupID: String?
     @State private var cleanupReview: ChildTaskRepairOriginalCleanup?
@@ -728,6 +729,10 @@ struct ChildTaskRepairArchivesView: View {
                                     .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                             }
                             if entry.contentRetained {
+                                Button { Task { await compare(entry) } } label: { ChildRepairActionLabel(title: "Compare subtasks", symbol: "arrow.left.arrow.right") }
+                                    .disabled(busy).accessibilityLabel("Compare subtasks: \(archiveTitle(entry))")
+                                    .accessibilityHint("Review the saved and current structures without changing your tasks.")
+                                    .accessibilityIdentifier("childRepairArchiveCompare-" + entry.id)
                                 Button { Task { await export(entry) } } label: { ChildRepairActionLabel(title: "Export original", symbol: "square.and.arrow.up") }
                                     .disabled(busy).accessibilityLabel("Export original: \(archiveTitle(entry))")
                                     .accessibilityHint("Save a copy of this original without changing your tasks.")
@@ -755,6 +760,12 @@ struct ChildTaskRepairArchivesView: View {
         .task { await load() }
         .onChange(of: scope) { _, after in clear(); if after != nil { Task { await load() } } }
         .onDisappear { visible = false; clear() }
+        .onChange(of: store.snapshotRevision) { _, _ in comparison = nil }
+        .sheet(item: $comparison) { value in
+            if visible, scope == value.archive.scope, store.snapshotRevision == value.snapshot {
+                ChildRepairOriginalComparisonView(comparison: value, close: { comparison = nil })
+            }
+        }
         .fileExporter(isPresented: $exporting, document: scope == exportScope ? document : nil, contentType: .json, defaultFilename: "Taskfold-original-" + Dates.day(Date())) { result in
             guard let scope, exportScope == scope else { return }; document = nil; exportScope = nil
             switch result {
@@ -770,7 +781,7 @@ struct ChildTaskRepairArchivesView: View {
     private func clear() {
         ticket = UUID(); entries = []; next = nil; loaded = false; busy = false
         message = nil; document = nil; exportScope = nil; exporting = false
-        cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false; removingOriginal = false
+        cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false; removingOriginal = false; comparison = nil
     }
     private func load(after: String? = nil) async {
         guard visible, let captured = scope, !busy else { return }; let work = UUID(); ticket = work; busy = true; message = nil
@@ -785,6 +796,20 @@ struct ChildTaskRepairArchivesView: View {
         } catch {
             guard scope == captured, ticket == work, !Task.isCancelled else { return }
             message = "Saved originals couldn’t be loaded. Check your connection and account access, then refresh."
+        }
+    }
+    private func compare(_ entry: ChildTaskRepairArchive) async {
+        guard visible, let captured = scope, captured == entry.scope, !busy, entry.contentRetained else { return }
+        let work = UUID(); ticket = work; busy = true; message = nil
+        cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false
+        defer { if ticket == work { busy = false } }
+        do {
+            let value = try await store.compareChildTaskRepairOriginal(entry)
+            guard visible, scope == captured, ticket == work, value.snapshot == store.snapshotRevision, !Task.isCancelled else { return }
+            comparison = value
+        } catch {
+            guard visible, scope == captured, ticket == work, !Task.isCancelled else { return }
+            message = "The original and current subtasks couldn’t be compared. Check your connection and current task access, then retry."
         }
     }
     private func export(_ entry: ChildTaskRepairArchive) async {
@@ -855,4 +880,63 @@ struct ChildTaskRepairArchivesView: View {
         }
     }
 
+}
+
+private struct ChildRepairOriginalComparisonView: View {
+    let comparison: ChildTaskRepairOriginalComparison
+    let close: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var showingCurrent = false
+    private var side: ChildTaskRepairOriginalComparison.Side { showingCurrent ? comparison.current : comparison.saved }
+    private var sidePicker: some View {
+        Picker("Structure", selection: $showingCurrent) {
+            Text("Saved original").tag(false)
+            Text("Current").tag(true)
+        }.accessibilityIdentifier("childRepairComparisonSide")
+    }
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Label(comparison.valuesMatch ? "Subtask values match" : "Subtask data differs", systemImage: comparison.valuesMatch ? "equal.circle" : "arrow.left.arrow.right.circle")
+                        .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRepairComparisonSummary")
+                    Text("Compare the saved subtask structure with a fresh reading of the current task. Export the original for its complete task details and history.")
+                        .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    if typeSize.isAccessibilitySize { sidePicker.pickerStyle(.menu) }
+                    else { sidePicker.pickerStyle(.segmented) }
+                }
+                Section(showingCurrent ? "Current structure" : "Saved before repair") {
+                    if let outline = side.outline, outline.rootKind == .array {
+                        if outline.items.isEmpty { Text("No subtasks").foregroundStyle(.secondary) }
+                        ForEach(outline.items) { item in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(item.title).fixedSize(horizontal: false, vertical: true)
+                                Text(item.path.map { String($0 + 1) }.joined(separator: " › "))
+                                    .font(.caption).foregroundStyle(.secondary).accessibilityLabel("Position " + item.path.map { String($0 + 1) }.joined(separator: ", "))
+                            }
+                            .accessibilityElement(children: .combine)
+                        }
+                    } else {
+                        Text(side.outline?.rootKind == .null ? "No subtasks" : "This older structure needs its original-data view below.")
+                            .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                }.accessibilityIdentifier("childRepairComparisonStructure")
+                Section {
+                    DisclosureGroup("Source data") {
+                        Text(side.excerpt).font(.system(.footnote, design: .monospaced)).textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRepairComparisonSource")
+                        if side.shortened {
+                            Text("Data preview shortened. Export the original to keep the complete saved copy.")
+                                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }.id(showingCurrent)
+                }
+            }
+            .navigationTitle("Compare subtasks")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done", action: close).keyboardShortcut(.cancelAction).accessibilityIdentifier("childRepairComparisonDone") } }
+        }
+        #if os(macOS)
+        .frame(minWidth: 420, idealWidth: 540, minHeight: 420, idealHeight: 620)
+        #endif
+    }
 }

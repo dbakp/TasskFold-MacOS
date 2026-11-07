@@ -60,7 +60,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
                 let value = try JSONDecoder().decode(Reply.self, from: read(reply, limit: 14_000_000))
                 guard value.protocol == 1, value.id == id, Store.shared.userID == configuration.account else { throw CancellationError() }
                 if let code = value.code { throw ChildFieldNativeRefusal(code: code) }
-                guard let data = Data(base64Encoded: value.data), data.count <= 10_000_000 else { throw URLError(.cannotDecodeContentData) }
+                guard let data = Data(base64Encoded: value.data), data.count <= (path == "/rest/v1/rpc/taskfold_compare_child_repair_original" ? ChildTaskRepairOriginalComparison.maximumBytes : 10_000_000) else { throw URLError(.cannotDecodeContentData) }
                 return (data, value.lose)
             }
             try await Task.sleep(for: .milliseconds(100))

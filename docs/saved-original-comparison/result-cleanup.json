@@ -1,0 +1,43 @@
+{
+  "freeBeforeBytes": 37574549504,
+  "retiredCompletedDuplicateOutputs": [
+    {
+      "path": "/private/tmp/taskfold-original-comparison-native-ios.xcresult",
+      "allocatedBytes": 507904
+    },
+    {
+      "path": "/private/tmp/taskfold-original-comparison-native-ios-current.xcresult",
+      "allocatedBytes": 5206016
+    },
+    {
+      "path": "/private/tmp/taskfold-original-comparison-native-ios-final.xcresult",
+      "allocatedBytes": 16314368
+    },
+    {
+      "path": "/private/tmp/taskfold-original-comparison-attachments",
+      "allocatedBytes": 14831616
+    },
+    {
+      "path": "/private/tmp/taskfold-original-comparison-verified-attachments",
+      "allocatedBytes": 1609728
+    }
+  ],
+  "retiredAllocatedBytes": 38469632,
+  "freeAfterBytes": 37612957696,
+  "coreCaches": [
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 649396224,
+      "within768MiB": true
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 709709824,
+      "within768MiB": true
+    }
+  ],
+  "currentVerifiedNativeResultRetained": true,
+  "current46ArchiveAnd44RollbackRetained": true,
+  "allPrivateSafetyCopiesRetained": true,
+  "normalTaskDataKeychainDockerSDKAndOtherProjectsUntouched": true
+}

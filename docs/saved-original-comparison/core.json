@@ -1,0 +1,20 @@
+{
+  "passed": 97,
+  "failed": 0,
+  "skipped": 0,
+  "selection": "ChildRepairArchiveTests|ChildTaskRepairTests|ChildTaskAdoptionTests|ChildCopyMappingClientTests",
+  "newComparisonCases": 6,
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "d1d53b6c10d06b558ccdbbc98b665b0fd64094e276c65234134942297dd0d8a6",
+    "Taskfold/Core/Backend.swift": "71c697784f4271ba8bd7a6f726fe3d257f8bf78693ea7627d694154dd8bb8f7c",
+    "Taskfold/Core/Store.swift": "80aafe218040f0b86a51bb9012dabcc9846f99c6c596e82e00e62bc9f22bba22",
+    "Taskfold/Views/ChildTaskRepairView.swift": "6b0daa54195653f8cffb436c0cd8fb5c7c67c27f2d8f19078af497fc00cd54dd",
+    "Taskfold/ChildFieldNativeFixture.swift": "234e4ec8a8a0a2f458c0304c817413a278f0b74fe44db6abc50234ca0664f141",
+    "TaskfoldTests/ChildRepairArchiveTests.swift": "86bb8ef039198326b326ad3fa1aa10fb6057dd9ce3bf8a1ff05ada252ac4faaf",
+    "TaskfoldTests/Fixtures/child-repair-comparison-contract-v1.json": "d8ee95f537de7043a08675daab1e4e1124018d08816a7f9e23982ebe08655f79"
+  },
+  "logSHA256": "6ad15b3913c6fafbb36bed79675150dac94701d118d891df71c1c9fe286a4c28",
+  "warnings": "Existing compiler warnings retained in the local full log; no warning-free claim.",
+  "compiledScope": "Core target: ChildTaskRepair and related model/journal contracts. Store, Backend and SwiftUI views are excluded; their captured hashes are source context, not Core runtime proof.",
+  "subsequentPresentationChange": "Only SwiftUI Done dismissal changed after this Core run; final view provenance belongs to the signed current iPhone build/native report. No model/SQL/Backend changes."
+}

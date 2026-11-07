@@ -1,0 +1,121 @@
+{
+  "platform": "mac",
+  "serviceChecks": 115,
+  "servicePassed": true,
+  "ownedServicesCleaned": true,
+  "advisors": {
+    "ran": true,
+    "source": "Official CLI on complete owned local schema",
+    "result": [
+      {
+        "name": "extension_in_public",
+        "title": "Extension in Public",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects extensions installed in the `public` schema.",
+        "detail": "Extension `pg_net` is installed in the public schema. Move it to another schema.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+        "metadata": {
+          "name": "pg_net",
+          "type": "extension",
+          "schema": "public"
+        },
+        "cache_key": "extension_in_public_pg_net"
+      }
+    ]
+  },
+  "hostedChanges": false,
+  "normalGatesChanged": false,
+  "nativeAcceptance": "Owning iOS iPhone normal-text/dark full journey passed; Mac native interaction/full new app compilation and iPad/speech/lifecycle remain unaccepted.",
+  "restorationAndUndoComplete": false,
+  "core": {
+    "passed": 97,
+    "failed": 0,
+    "skipped": 0,
+    "selection": "ChildRepairArchiveTests|ChildTaskRepairTests|ChildTaskAdoptionTests|ChildCopyMappingClientTests",
+    "newComparisonCases": 6,
+    "sourceSHA256": {
+      "Taskfold/Core/ChildTaskRepair.swift": "d1d53b6c10d06b558ccdbbc98b665b0fd64094e276c65234134942297dd0d8a6",
+      "Taskfold/Core/Backend.swift": "71c697784f4271ba8bd7a6f726fe3d257f8bf78693ea7627d694154dd8bb8f7c",
+      "Taskfold/Core/Store.swift": "80aafe218040f0b86a51bb9012dabcc9846f99c6c596e82e00e62bc9f22bba22",
+      "Taskfold/Views/ChildTaskRepairView.swift": "6b0daa54195653f8cffb436c0cd8fb5c7c67c27f2d8f19078af497fc00cd54dd",
+      "Taskfold/ChildFieldNativeFixture.swift": "234e4ec8a8a0a2f458c0304c817413a278f0b74fe44db6abc50234ca0664f141",
+      "TaskfoldTests/ChildRepairArchiveTests.swift": "86bb8ef039198326b326ad3fa1aa10fb6057dd9ce3bf8a1ff05ada252ac4faaf",
+      "TaskfoldTests/Fixtures/child-repair-comparison-contract-v1.json": "d8ee95f537de7043a08675daab1e4e1124018d08816a7f9e23982ebe08655f79"
+    },
+    "logSHA256": "6ad15b3913c6fafbb36bed79675150dac94701d118d891df71c1c9fe286a4c28",
+    "warnings": "Existing compiler warnings retained in the local full log; no warning-free claim.",
+    "compiledScope": "Core target: ChildTaskRepair and related model/journal contracts. Store, Backend and SwiftUI views are excluded; their captured hashes are source context, not Core runtime proof.",
+    "subsequentPresentationChange": "Only SwiftUI Done dismissal changed after this Core run; final view provenance belongs to the signed current iPhone build/native report. No model/SQL/Backend changes."
+  },
+  "nativeIOSBuild": {
+    "terminalExit": 0,
+    "configuration": "Debug -Onone, inline DWARF",
+    "appSignature": "ad hoc strict/deep verification passed",
+    "runnerSignature": "ad hoc strict/deep verification passed",
+    "owningSourceFingerprintsUnchanged": true,
+    "normalOrPhysicalInstall": false,
+    "nativeInteraction": "Final original session53703 exited0;1pass/0skip/fail/runtime-warning entries. Corresponding iOS source only, not Mac native acceptance.",
+    "currentSignaturesVerified": true,
+    "sourceProof": "iphone-host-source.json"
+  },
+  "progressQA": "6 width/theme cases,74 checkpoints/67 steps, expanded overflow and disclosure/state persistence; no network or console errors",
+  "developmentAttempts": [
+    {
+      "stage": "native host preparation",
+      "result": "Stopped before build: reused host still had retention cleanup enabled. Reserved host reset to archive reads only; normal configurations untouched."
+    },
+    {
+      "stage": "first native attempt",
+      "terminalExit": 65,
+      "passed": 0,
+      "failed": 1,
+      "reason": "Before app launch, earlier synthetic export already occupied today\u2019s exact filename. Earlier file preserved byte-for-byte by fixed-identity driver; source app and test unchanged for retry."
+    },
+    {
+      "stage": "native comparison toolbar helper",
+      "terminalExit": 75,
+      "fixtureExit": 0,
+      "result": "Intentionally interrupted only the verified owned xcodebuild after discovering a content-viewport helper had been applied to toolbar Done. Original/current/raw-source checks passed; this is partial evidence, not an accepted full journey. New XCTest uses direct enabled/hittable toolbar tap. App source unchanged."
+    },
+    {
+      "stage": "nested comparison return",
+      "terminalExit": 65,
+      "fixtureExit": 0,
+      "passed": 0,
+      "failed": 1,
+      "failureLine": "Return to saved-original browser after Done",
+      "evidence": "Saved/current/raw-source checks and Done hittability passed. Failure AX hierarchy returns to fixture home, confirming the ancestor sheet was dismissed too. Explicit child presentation binding replaces environment dismissal; assertion retained. Complete synthetic stored work remains unchanged."
+    }
+  ],
+  "nativeData": {
+    "completeDatabaseUnchanged": true,
+    "beforeCanonicalSHA256": "0eb6032b495a0ab517f3f19c000b8a734f7ac0ded1f37380cba3724d0dc2c31b",
+    "afterCanonicalSHA256": "0eb6032b495a0ab517f3f19c000b8a734f7ac0ded1f37380cba3724d0dc2c31b",
+    "savedAndCurrentComparisonBeforeAndAfterColdLaunch": true,
+    "comparisonDoneReturnsToSameBrowser": true,
+    "exportCancelThenExactSavedFile": true,
+    "exportBytes": 1964,
+    "exportSHA256": "d07d1b099ca97c80456b6c4dbb36e6a52d2bf6bc965c4e61f56cfbf98b6d4dd7",
+    "mutationRequests": false,
+    "requestPaths": [
+      "/rest/v1/rpc/taskfold_child_repair_archives",
+      "/rest/v1/rpc/taskfold_child_repair_archives",
+      "/rest/v1/rpc/taskfold_compare_child_repair_original",
+      "/rest/v1/rpc/taskfold_child_repair_original",
+      "/rest/v1/rpc/taskfold_child_repair_original",
+      "/rest/v1/rpc/taskfold_child_repair_archives",
+      "/rest/v1/rpc/taskfold_compare_child_repair_original"
+    ]
+  },
+  "currentSourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "d1d53b6c10d06b558ccdbbc98b665b0fd64094e276c65234134942297dd0d8a6",
+    "Taskfold/Core/Backend.swift": "71c697784f4271ba8bd7a6f726fe3d257f8bf78693ea7627d694154dd8bb8f7c",
+    "Taskfold/Core/Store.swift": "80aafe218040f0b86a51bb9012dabcc9846f99c6c596e82e00e62bc9f22bba22",
+    "Taskfold/Views/ChildTaskRepairView.swift": "9ca33d8b7e64fbe1887c1359f627b4a299af24a8e8977d4432d91b1b51572317"
+  },
+  "scopeLimits": "Current source tree bounded to2MB; source excerpt12000Unicode scalars. Display is not a restore command. Full restore/Undo/migration and normal rollout remain unfinished. Native uses a genuine local PostgreSQL DEBUG role/session channel, not integrated native HTTP Auth. Separate115-check API evidence is genuine Auth/PostgREST."
+}

@@ -72,3 +72,11 @@ test('original cleanup channel rejects malformed identity, operation and byte bo
  for(const change of [{_operation:'restore'},{_archive:'bad'},{_request:null},{_digest:'bad'},{_bytes:0},{_bytes:8000001},{_bytes:1.5},{account:identity.account}])await assert.rejects(channel.dispatch(request(change)));
  assert.equal(calls,0);await channel.dispatch(request({}));await channel.dispatch(request({_operation:'remove'}));assert.equal(calls,2);
 });
+
+
+test('original comparison channel binds a typed archive and never a mutation body',async()=>{
+ let calls=0;const channel=createMappingSQLChannel({raw:async sql=>{calls++;assert.ok(sql.includes('public.taskfold_compare_child_repair_original('));return JSON.stringify({value:'{}',code:null});}},{session:randomUUID(),nonce:'test-run-nonce'});
+ const body={_request:randomUUID(),_archive:randomUUID()};const request=change=>({...make(),path:'/rest/v1/rpc/taskfold_compare_child_repair_original',body:Buffer.from(JSON.stringify({...body,...change})).toString('base64')});
+ for(const change of [{_request:null},{_archive:'bad'},{_operation:'restore'},{account:identity.account}])await assert.rejects(channel.dispatch(request(change)));
+ assert.equal(calls,0);await channel.dispatch(request({}));assert.equal(calls,1);
+});
