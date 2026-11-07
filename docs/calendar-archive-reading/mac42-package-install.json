@@ -1,0 +1,40 @@
+{
+  "platform": "mac",
+  "version": "1.2.0",
+  "build": "42",
+  "configuration": "Release",
+  "sourceRevision": "277a325273bf94c1d28049c7adef33e67a65f652",
+  "sourceFingerprint": "5d03adf5fcd4f2a87a9f8b1f77d7ea41c011f735e2af6d60cfa629f188668bab",
+  "signatureVerified": true,
+  "archiveSHA256": "31afa95e5134ce3c145e1650f7eb21eee0b5e4929d435215caf084a6777938f9",
+  "archivePayloadVerified": true,
+  "sourceWasDirty": false,
+  "installedBaseline": "1.2.0 (38)",
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": true,
+  "published": false,
+  "actualInstalledBuild": "42",
+  "frozenRollbackBuild": "38",
+  "designatedRequirementAndFeatureFlagsMatch38": true,
+  "candidate41SupersededAndRetired": true,
+  "sourceCommit": "277a325273bf94c1d28049c7adef33e67a65f652",
+  "privateSafetyCopyVerified": true,
+  "prelaunchCacheFilesByteExact": 9,
+  "postlaunchReadbackComplete": false,
+  "sharedStorageReady": false,
+  "readOnlyMacNavigationVerified": [
+    "Upcoming",
+    "Calendar week",
+    "Day planner",
+    "Readable agenda",
+    "Week and Upcoming restored"
+  ],
+  "normalMacTaskMutationsUsedForTesting": false,
+  "pendingSystemService": "kTCCServiceSystemPolicyAppData",
+  "systemPromptConfirmed": true,
+  "originalReadbackSession": 79028
+}
