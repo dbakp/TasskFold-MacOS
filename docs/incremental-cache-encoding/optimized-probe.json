@@ -1,0 +1,99 @@
+{
+  "fullStore": false,
+  "optimization": "-O",
+  "ordinaryTaskAndSnapshotModels": false,
+  "productionCodecAndFieldCache": true,
+  "results": [
+    {
+      "admissionIncludedInTiming": true,
+      "cachedMedianSeconds": 0.0031419992446899414,
+      "coldCachedSeconds": 0.021852970123291016,
+      "exactColdReadback": true,
+      "fieldCacheAdmitted": true,
+      "opaqueFutureNumbers": false,
+      "ordinaryMedianSeconds": 0.00821995735168457,
+      "payload": "base64-like",
+      "tasks": 200
+    },
+    {
+      "admissionIncludedInTiming": true,
+      "cachedMedianSeconds": 0.0032219886779785156,
+      "coldCachedSeconds": 0.01682901382446289,
+      "exactColdReadback": true,
+      "fieldCacheAdmitted": true,
+      "opaqueFutureNumbers": true,
+      "ordinaryMedianSeconds": 0.017199993133544922,
+      "payload": "base64-like",
+      "tasks": 200
+    },
+    {
+      "admissionIncludedInTiming": true,
+      "cachedMedianSeconds": 0.003113985061645508,
+      "coldCachedSeconds": 0.020542025566101074,
+      "exactColdReadback": true,
+      "fieldCacheAdmitted": true,
+      "opaqueFutureNumbers": false,
+      "ordinaryMedianSeconds": 0.011739015579223633,
+      "payload": "dense-slashes",
+      "tasks": 200
+    },
+    {
+      "admissionIncludedInTiming": true,
+      "cachedMedianSeconds": 0.00321197509765625,
+      "coldCachedSeconds": 0.021211981773376465,
+      "exactColdReadback": true,
+      "fieldCacheAdmitted": true,
+      "opaqueFutureNumbers": true,
+      "ordinaryMedianSeconds": 0.02120208740234375,
+      "payload": "dense-slashes",
+      "tasks": 200
+    },
+    {
+      "admissionIncludedInTiming": true,
+      "cachedMedianSeconds": 0.03255200386047363,
+      "coldCachedSeconds": 0.03220200538635254,
+      "exactColdReadback": true,
+      "fieldCacheAdmitted": false,
+      "opaqueFutureNumbers": false,
+      "ordinaryMedianSeconds": 0.03228604793548584,
+      "payload": "base64-like",
+      "tasks": 2000
+    },
+    {
+      "admissionIncludedInTiming": true,
+      "cachedMedianSeconds": 0.03407609462738037,
+      "coldCachedSeconds": 0.09835696220397949,
+      "exactColdReadback": true,
+      "fieldCacheAdmitted": true,
+      "opaqueFutureNumbers": true,
+      "ordinaryMedianSeconds": 0.07984292507171631,
+      "payload": "base64-like",
+      "tasks": 2000
+    },
+    {
+      "admissionIncludedInTiming": true,
+      "cachedMedianSeconds": 0.036282896995544434,
+      "coldCachedSeconds": 0.03695189952850342,
+      "exactColdReadback": true,
+      "fieldCacheAdmitted": false,
+      "opaqueFutureNumbers": false,
+      "ordinaryMedianSeconds": 0.036437034606933594,
+      "payload": "dense-slashes",
+      "tasks": 2000
+    },
+    {
+      "admissionIncludedInTiming": true,
+      "cachedMedianSeconds": 0.03324902057647705,
+      "coldCachedSeconds": 0.10118997097015381,
+      "exactColdReadback": true,
+      "fieldCacheAdmitted": true,
+      "opaqueFutureNumbers": true,
+      "ordinaryMedianSeconds": 0.0850210189819336,
+      "payload": "dense-slashes",
+      "tasks": 2000
+    }
+  ],
+  "samples": 9,
+  "codecSourceSHA256": "3fba4302c008c349308f5ea5a4f533a7c5636ebf2ed675c5c0b372ef46b583c8",
+  "harnessSHA256": "c85aaeb5becb6250a698d9ba910d2bf4ec6b4134be6231d258d7dfb7ced06f2d"
+}

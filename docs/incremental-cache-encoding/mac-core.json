@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-07",
+  "owner": "mac",
+  "tests": 56,
+  "failures": 0,
+  "newCases": 12,
+  "swiftOptimization": "-Onone",
+  "filter": "SnapshotFieldEncodingCacheTests|DurableSnapshotReadCacheTests|PreparedSnapshotEncodingTests|PreservingJSONTests",
+  "timings": [
+    {
+      "tasks": 200,
+      "bytes": 3934640,
+      "coldSeconds": 0.5247910022735596,
+      "ordinarySeconds": [
+        1.053044080734253,
+        1.0380090475082397,
+        1.0403919219970703
+      ],
+      "cachedSeconds": [
+        0.018015027046203613,
+        0.018623948097229004,
+        0.018286943435668945
+      ],
+      "reused": 3372,
+      "retainedBytes": 4354028
+    },
+    {
+      "tasks": 2000,
+      "bytes": 4796240,
+      "coldSeconds": 0.767624020576477,
+      "ordinarySeconds": [
+        1.5589120388031006,
+        1.5598660707473755,
+        1.5330079793930054
+      ],
+      "cachedSeconds": [
+        0.17980802059173584,
+        0.17975592613220215,
+        0.18702709674835205
+      ],
+      "reused": 33972,
+      "retainedBytes": 9054828
+    }
+  ],
+  "logSHA256": "abceb3b2d3b5f3ffd1190e5f90499a4ad8a0086ea2b71525fdd1a28d72b98da6"
+}

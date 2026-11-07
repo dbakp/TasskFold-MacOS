@@ -1,0 +1,114 @@
+{
+  "date": "2026-11-07",
+  "independentCore": {
+    "ios": {
+      "date": "2026-11-07",
+      "owner": "ios",
+      "tests": 56,
+      "failures": 0,
+      "newCases": 12,
+      "swiftOptimization": "-Onone",
+      "filter": "SnapshotFieldEncodingCacheTests|DurableSnapshotReadCacheTests|PreparedSnapshotEncodingTests|PreservingJSONTests",
+      "timings": [
+        {
+          "tasks": 200,
+          "bytes": 3934640,
+          "coldSeconds": 0.5194840431213379,
+          "ordinarySeconds": [
+            1.0358359813690186,
+            1.0129849910736084,
+            1.0179729461669922
+          ],
+          "cachedSeconds": [
+            0.01859593391418457,
+            0.01798403263092041,
+            0.017717957496643066
+          ],
+          "reused": 3372,
+          "retainedBytes": 4354028
+        },
+        {
+          "tasks": 2000,
+          "bytes": 4796240,
+          "coldSeconds": 0.7704130411148071,
+          "ordinarySeconds": [
+            1.5282061100006104,
+            1.5140399932861328,
+            1.552685022354126
+          ],
+          "cachedSeconds": [
+            0.17611098289489746,
+            0.17858493328094482,
+            0.1837010383605957
+          ],
+          "reused": 33972,
+          "retainedBytes": 9054828
+        }
+      ],
+      "logSHA256": "9480f2b745c65a0c532805479a2e2f0c7779a92fefcb694b1e6fc1bc212a5501"
+    },
+    "mac": {
+      "date": "2026-11-07",
+      "owner": "mac",
+      "tests": 56,
+      "failures": 0,
+      "newCases": 12,
+      "swiftOptimization": "-Onone",
+      "filter": "SnapshotFieldEncodingCacheTests|DurableSnapshotReadCacheTests|PreparedSnapshotEncodingTests|PreservingJSONTests",
+      "timings": [
+        {
+          "tasks": 200,
+          "bytes": 3934640,
+          "coldSeconds": 0.5247910022735596,
+          "ordinarySeconds": [
+            1.053044080734253,
+            1.0380090475082397,
+            1.0403919219970703
+          ],
+          "cachedSeconds": [
+            0.018015027046203613,
+            0.018623948097229004,
+            0.018286943435668945
+          ],
+          "reused": 3372,
+          "retainedBytes": 4354028
+        },
+        {
+          "tasks": 2000,
+          "bytes": 4796240,
+          "coldSeconds": 0.767624020576477,
+          "ordinarySeconds": [
+            1.5589120388031006,
+            1.5598660707473755,
+            1.5330079793930054
+          ],
+          "cachedSeconds": [
+            0.17980802059173584,
+            0.17975592613220215,
+            0.18702709674835205
+          ],
+          "reused": 33972,
+          "retainedBytes": 9054828
+        }
+      ],
+      "logSHA256": "abceb3b2d3b5f3ffd1190e5f90499a4ad8a0086ea2b71525fdd1a28d72b98da6"
+    }
+  },
+  "byteExactFieldReuse": true,
+  "currentMetadataAlwaysEncoded": true,
+  "realFileReadBeforeSaveUnchanged": true,
+  "atomicWriteAndSuccessOrderUnchanged": true,
+  "preparedEncodingKept": true,
+  "cacheAdmissionAndBudgets": true,
+  "largePlainWorkspaceFallback": true,
+  "maximumPlainFields": 8192,
+  "defaultMinimumBytes": 524288,
+  "defaultMaximumBytes": 16777216,
+  "maximumEntries": 50000,
+  "temporaryNameMemoMaximumBytes": 65536,
+  "temporaryNameMemoMaximumEntries": 512,
+  "optimizedProbeScope": "Production codec/cache with small probe Record/Snapshot models; not full Store",
+  "nativeScope": "Current signed debug iPhone production TaskRow + Store date Save, unchanged large attachment, Undo/Redo and exact all-table cold return; warm field memo primed in fixture",
+  "macRuntimeAccepted": false,
+  "physicalFPSAccepted": false
+}

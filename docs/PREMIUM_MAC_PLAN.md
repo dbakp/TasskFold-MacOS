@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 7 November 2026 · Large durable-save encoding
+
+Large saves now reuse byte-exact unchanged field encodings, including inline attachments on an edited task. Both independent owners pass 56 focused checks; current signed iPhone production rows and Store accept warm Save, exact preserved fields, Undo/Redo and cold return. Optimized codec/cache probes retain cold/warm and ordinary/future-number distinctions; full Store, Mac runtime and physical FPS are separate. The normal Mac31 stays installed while computer control reports locked; Signed optimized Mac33 now passes exact archive/profile checks and is prepared, not installed; superseded32 is retired with31 retained as rollback. Private atomic write/success ordering, real-file reads and ordinary gates stay intact. [Scope and evidence](incremental-cache-encoding/README.md).
+
 ## 6 November 2026 · Native recording transfer integration
 
 The transfer sheet now uses the same Store model factory as the genuine service integration. Each owner passes 59 transfer/vault Core regressions; iPhone passes 44 native data-engine checks, including actual lost-reply recovery, paused-gate original retry, live audience fencing, current Store refresh and exact media/task preservation. Mac compiles/signs, but its transfer fails at protected-vault preparation after 25 partial checks. Its isolated signed app lacks a provisioned app ID/profile; cached profiles cover normal app/extensions only. The Mac runner now refuses this setup before services. This is an open test prerequisite, not a normal-app signing change or a completed distribution gate. Do not weaken WhenUnlocked/Data Protection storage or borrow the normal app identity. Native GUI/mixed policies, wider account/lifecycle and full migration remain open. [Source, accepted scope and failure evidence](native-project-recordings/README.md).
