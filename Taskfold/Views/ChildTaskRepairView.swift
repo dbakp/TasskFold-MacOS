@@ -732,7 +732,7 @@ struct ChildTaskRepairArchivesView: View {
                                 Text("Original content is no longer available. Its repair confirmation is kept.")
                                     .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
                             }
-                        }.accessibilityIdentifier("childRepairArchive-" + entry.id)
+                        }
                     }
                     if let next {
                         Button(entries.count >= 500 ? "Continue to next page" : "Load more") { Task { await load(after: next) } }

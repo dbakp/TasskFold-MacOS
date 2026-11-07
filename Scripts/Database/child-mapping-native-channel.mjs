@@ -26,6 +26,12 @@ export function createMappingSQLChannel(pg,{session,nonce,loseFirstSave=false,be
    case '/rest/v1/rpc/taskfold_child_adoption_targets':
     if(Object.keys(body).sort().join(',')!=='_after,_id,_limit'||!Number.isInteger(body._limit)||body._limit<1||body._limit>100||body._id!==null&&body._id!==identity.root||body._after!==null&&!/^[a-f0-9-]{36}$/.test(body._after??''))throw new Error('Invalid discovery scope');
     expression=`public.taskfold_child_adoption_targets(${body._after===null?'null':lit(body._after)},${body._limit},${body._id===null?'null':lit(body._id)})`;break;
+   case '/rest/v1/rpc/taskfold_child_repair_archives':
+    if(Object.keys(body).sort().join(',')!=='_after,_limit'||!Number.isInteger(body._limit)||body._limit<1||body._limit>50||body._after!==null&&!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body._after??''))throw new Error('Invalid archive page');
+    expression=`public.taskfold_child_repair_archives(${body._after===null?'null':lit(body._after)},${body._limit})`;break;
+   case '/rest/v1/rpc/taskfold_child_repair_original':
+    if(Object.keys(body).sort().join(',')!=='_archive,_request'||!['_archive','_request'].every(k=>/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body[k]??'')))throw new Error('Invalid archive identity');
+    expression=`public.taskfold_child_repair_original(${lit(body._request)},${lit(body._archive)})`;break;
    case '/rest/v1/rpc/taskfold_review_child_adoption':
     if(Object.keys(body).sort().join(',')!=='_generation,_id'||body._id!==identity.root||body._generation!==identity.generation)throw new Error('Invalid root');
     expression=`public.taskfold_review_child_adoption(${lit(body._id)},${lit(body._generation)})`;break;
@@ -62,11 +68,11 @@ export function createMappingSQLChannel(pg,{session,nonce,loseFirstSave=false,be
 // Xcode can rename a Simulator app container at installation/first launch.
 // Follow only the same unique fixture nonce inside that same Simulator.
 export async function relocatedSimulatorChannel(directory,nonce) {
- if(!/\/CoreSimulator\/Devices\/[A-Fa-f0-9-]{36}\/data\/Containers\/Data\/Application\/[A-Fa-f0-9-]{36}\/Library\/Application Support\/Child mapping SQL native peer$/.test(directory))throw new Error('Container relocation is only for a named Simulator fixture');
+ if(!/\/CoreSimulator\/Devices\/[A-Fa-f0-9-]{36}\/data\/Containers\/Data\/Application\/[A-Fa-f0-9-]{36}\/Library\/Application Support\/Child (mapping|archives) SQL native peer$/.test(directory))throw new Error('Container relocation is only for a named Simulator fixture');
  const base=resolve(directory,'../../../..'),matches=[];
  for(const name of await readdir(base)){
   if(!/^[A-Fa-f0-9-]{36}$/.test(name))continue;
-  const candidate=join(base,name,'Library/Application Support/Child mapping SQL native peer');
+  const candidate=join(base,name,'Library/Application Support/'+directory.split('/').at(-1));
   try{
    const info=await lstat(candidate);if(!info.isDirectory()||info.isSymbolicLink())continue;
    const config=JSON.parse(await boundedFile(candidate+'/channel.json',2048));

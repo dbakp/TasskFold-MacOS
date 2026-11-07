@@ -1,0 +1,8 @@
+{
+  "Taskfold/Views/ChildTaskRepairView.swift": "444267275b843ba346169ab3eee2029b3a0bf03e74b289af60ac72f364eea5e9",
+  "Taskfold/ChildFieldNativeFixture.swift": "d477fea4f8ec5843277a050c23b3c390f575ead292158ebcdff9bbac0d45939a",
+  "Taskfold/Core/Store.swift": "17081c31f8da7f9d4f41968bf6cab2307f3c3e69966b00a0a20a8db6d283802b",
+  "Scripts/Database/child-mapping-native-channel.mjs": "9ed251f20bab8dbdb5e6870a6a8fc391013adfe239409af9ae1d4a784bc9f6e7",
+  "Scripts/Database/test-child-mapping-native-channel.mjs": "596ac9ebf15951e3d4b82d7aa9091713f0b443254f877daf8ad391bc58f575ce",
+  "Scripts/Database/run-child-archives-native.mjs": "deade4bfb403966cb1c40a57dbbef2f4fb922f11615956a6ae1981bf9ae6f3fb"
+}

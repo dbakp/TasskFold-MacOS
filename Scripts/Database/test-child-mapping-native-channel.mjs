@@ -54,3 +54,12 @@ test('search channel validates query and cursor before SQL and quotes literal te
  for(const change of [{_query:null},{_query:''},{_query:'x'.repeat(257)},{_query:'🪴'.repeat(257)},{_query:'a\0b'},{_limit:0},{_after:"bad' cursor"},{_id:identity.root}])await assert.rejects(channel.dispatch(request({...base,...change})));
  assert.equal(calls,0);await channel.dispatch(request(base));assert.equal(calls,1);
 });
+
+test('archive routes bind only bounded typed arguments before querying',async()=>{
+ let calls=0;const channel=createMappingSQLChannel({raw:async()=>{calls++;return JSON.stringify({value:'{}',code:null});}},{session:randomUUID(),nonce:'test-run-nonce'});
+ const request=(path,body)=>({...make(),path:'/rest/v1/rpc/'+path,body:Buffer.from(JSON.stringify(body)).toString('base64')});
+ for(const body of [{_after:null,_limit:0},{_after:null,_limit:51},{_after:'not-a-uuid',_limit:2},{_after:null,_limit:2,account:identity.account}])await assert.rejects(channel.dispatch(request('taskfold_child_repair_archives',body)));
+ for(const body of [{_archive:randomUUID(),_request:'bad'},{_archive:randomUUID(),_request:randomUUID(),account:identity.account}])await assert.rejects(channel.dispatch(request('taskfold_child_repair_original',body)));
+ assert.equal(calls,0);
+ await channel.dispatch(request('taskfold_child_repair_archives',{_after:null,_limit:2}));await channel.dispatch(request('taskfold_child_repair_original',{_archive:randomUUID(),_request:randomUUID()}));assert.equal(calls,2);
+});
