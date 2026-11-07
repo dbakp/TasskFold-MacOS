@@ -1,0 +1,24 @@
+{
+  "owner": "mac",
+  "tests": 32,
+  "failures": 0,
+  "newTests": 9,
+  "filter": "DragTargetReadTests|RowGestureTests|TaskDayGroupsReadTests",
+  "logSHA256": "0e4f5d8caf8d8c3b0f627a28fb97aea9e4eb8c4dec80a91c240b9fc9a376236f",
+  "timing": {
+    "rows": 121,
+    "updates": 24,
+    "legacySeconds": [
+      0.7385720014572144,
+      0.7278391122817993,
+      0.7123720645904541
+    ],
+    "reusedSeconds": [
+      0.033593058586120605,
+      0.03183293342590332,
+      0.029677987098693848
+    ],
+    "optimization": "-Onone",
+    "wholeRenderingOrFPS": false
+  }
+}

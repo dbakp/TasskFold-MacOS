@@ -1,0 +1,123 @@
+{
+  "date": "2026-11-07",
+  "freeBeforeBytes": 46625681408,
+  "retired": [
+    {
+      "path": "/tmp/taskfold-drag-current-failure-attachments",
+      "logicalBytes": 4457147
+    },
+    {
+      "path": "/tmp/taskfold-drag-current-ios-build.log",
+      "logicalBytes": 83698
+    },
+    {
+      "path": "/tmp/taskfold-drag-current-phone-native.log",
+      "logicalBytes": 8711
+    },
+    {
+      "path": "/tmp/taskfold-drag-current-phone-native.xcresult",
+      "logicalBytes": 4704592
+    },
+    {
+      "path": "/tmp/taskfold-drag-final-failure-attachments",
+      "logicalBytes": 7133604
+    },
+    {
+      "path": "/tmp/taskfold-drag-final-ios-build.log",
+      "logicalBytes": 41197
+    },
+    {
+      "path": "/tmp/taskfold-drag-final-phone-native.log",
+      "logicalBytes": 11008
+    },
+    {
+      "path": "/tmp/taskfold-drag-final-phone-native.xcresult",
+      "logicalBytes": 7434382
+    },
+    {
+      "path": "/tmp/taskfold-drag-target-ios-build.log",
+      "logicalBytes": 128472
+    },
+    {
+      "path": "/tmp/taskfold-drag-target-ios-core.log",
+      "logicalBytes": 50762
+    },
+    {
+      "path": "/tmp/taskfold-drag-target-mac-core-initial.log",
+      "logicalBytes": 87533
+    },
+    {
+      "path": "/tmp/taskfold-drag-target-mac-core.log",
+      "logicalBytes": 33215
+    },
+    {
+      "path": "/tmp/taskfold-drag-target-phone-native.log",
+      "logicalBytes": 10874
+    },
+    {
+      "path": "/tmp/taskfold-drag-target-phone-native.xcresult",
+      "logicalBytes": 642970
+    },
+    {
+      "path": "/tmp/taskfold-drag-verified-attachments",
+      "logicalBytes": 236923
+    },
+    {
+      "path": "/tmp/taskfold-drag-verified-export.log",
+      "logicalBytes": 358
+    },
+    {
+      "path": "/tmp/taskfold-drag-verified-ios-build.log",
+      "logicalBytes": 80284
+    },
+    {
+      "path": "/tmp/taskfold-drag-verified-phone-native.log",
+      "logicalBytes": 15162
+    },
+    {
+      "path": "/tmp/taskfold-drag-verified-phone-native.xcresult",
+      "logicalBytes": 760388
+    }
+  ],
+  "newDevicesCreated": false,
+  "privateDataRemoved": false,
+  "normalAppSessionsChanged": false,
+  "boundedCaches": {
+    "apply": true,
+    "freeBeforeBytes": 46652203008,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 693997568,
+        "projectedAllocatedBytes": 693997568
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 531009536,
+        "projectedAllocatedBytes": 531009536
+      }
+    ],
+    "freeAfterBytes": 46652428288,
+    "actualFreeChangeBytes": 225280
+  },
+  "coreCacheAllocatedBytes": {
+    "ios": 690581504,
+    "mac": 633163776
+  },
+  "packageRetirement": {
+    "date": "2026-11-07",
+    "retiredArchive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-33-mac-development.zip",
+    "sha256": "81249ec8daac5d7457ef459f2bad3d5e408dbd2bec88c0ec3b761aff598e9cd5",
+    "bytes": 20264149,
+    "reason": "Verified Mac34 carries both dated-list improvements; preserve installed31 rollback",
+    "retained": [
+      "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-31-mac-development.zip",
+      "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-34-mac-development.zip"
+    ]
+  },
+  "freeAfterBytes": 46651396096,
+  "actualFreeChangeBytes": 25714688
+}
