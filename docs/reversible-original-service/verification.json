@@ -1,0 +1,62 @@
+{
+  "platform": "mac",
+  "serviceChecks": 191,
+  "passed": true,
+  "ownedServicesCleaned": true,
+  "advisors": {
+    "ran": true,
+    "source": "Official CLI on complete owned local schema",
+    "result": [
+      {
+        "name": "extension_in_public",
+        "title": "Extension in Public",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects extensions installed in the `public` schema.",
+        "detail": "Extension `pg_net` is installed in the public schema. Move it to another schema.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+        "metadata": {
+          "name": "pg_net",
+          "type": "extension",
+          "schema": "public"
+        },
+        "cache_key": "extension_in_public_pg_net"
+      }
+    ]
+  },
+  "testSourceSHA256": "ee5635ead77ed553907e10397e6031367396182359918dba0396b9b72dc6c215",
+  "hostedChanges": false,
+  "normalGatesChanged": false,
+  "nativeRestorationImplemented": false,
+  "restoreFeatureComplete": false,
+  "acceptedScope": "Genuine local Auth/PostgREST and private Storage upload, denied deletion, exact bytes after shared restoration/Undo; repeated reversals, later edits, caller RLS, lost replies and transactional rollback. Wider custody/lifecycle and client UI remain open.",
+  "developmentAttempts": [
+    {
+      "checks": 0,
+      "result": "Schema replay caught an unparenthesized CASE comparison; fixed before acceptance."
+    },
+    {
+      "checks": 10,
+      "result": "Review caught an ambiguous root/history identifier; parameter renamed."
+    },
+    {
+      "checks": 51,
+      "result": "Earlier realm trigger returned an unrelated scalar-normalization error; guard now runs before normalization."
+    },
+    {
+      "checks": 130,
+      "result": "Removed fabricated empty-root repair expectation: SQL/JSON null are not repairable originals in the current producer. Object-root fixture uses explicit reference assignment."
+    },
+    {
+      "checks": 171,
+      "result": "Typed shared attachment fixture now establishes trusted binding before writing its reference."
+    },
+    {
+      "checks": 179,
+      "result": "Raw Storage metadata deletion is protected by the platform; final test uses actual Storage API deletion, then verifies retained bytes."
+    }
+  ]
+}
