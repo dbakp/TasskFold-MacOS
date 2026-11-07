@@ -1,0 +1,193 @@
+{
+  "date": "2026-11-07",
+  "runStartFreeBytes": 46466793472,
+  "freeBeforeBytes": 46050181120,
+  "retired": [
+    {
+      "path": "/tmp/taskfold-lazy-day-core.log",
+      "logicalBytes": 54131
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-current-corners-native.log",
+      "logicalBytes": 8201
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-current-corners-native.xcresult",
+      "logicalBytes": 9777925
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-current-ios-build.log",
+      "logicalBytes": 92052
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-current-phone-native.log",
+      "logicalBytes": 23037
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-current-phone-native.xcresult",
+      "logicalBytes": 1889514
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-diagnostic-corners-native.log",
+      "logicalBytes": 8186
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-diagnostic-corners-native.xcresult",
+      "logicalBytes": 9223182
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-diagnostic-ios-build.log",
+      "logicalBytes": 78574
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-failure.png",
+      "logicalBytes": 487827
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-final-core.log",
+      "logicalBytes": 34427
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-final-ios-build.log",
+      "logicalBytes": 81889
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-final-phone-native.log",
+      "logicalBytes": 6189
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-final-phone-native.xcresult",
+      "logicalBytes": 5212036
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-owned-corners-attachments",
+      "logicalBytes": 18917290
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-owned-corners-export.log",
+      "logicalBytes": 1603
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-owned-corners-native.log",
+      "logicalBytes": 12334
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-owned-corners-native.xcresult",
+      "logicalBytes": 19364242
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-owned-ios-build.log",
+      "logicalBytes": 61412
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-owned-phone-native.log",
+      "logicalBytes": 23452
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-owned-phone-native.xcresult",
+      "logicalBytes": 1938641
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-probe-attachments",
+      "logicalBytes": 16687998
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-probe-export.log",
+      "logicalBytes": 1278
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-probe-ios-build.log",
+      "logicalBytes": 52414
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-probe-phone-native.log",
+      "logicalBytes": 14839
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-probe-phone-native.xcresult",
+      "logicalBytes": 17217730
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-releasecheck-corners-native.log",
+      "logicalBytes": 42422
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-releasecheck-corners-native.xcresult",
+      "logicalBytes": 3514094
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-releasecheck-ios-build.log",
+      "logicalBytes": 61399
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-releasecheck-ipad-corners.log",
+      "logicalBytes": 37783
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-releasecheck-ipad-corners.xcresult",
+      "logicalBytes": 3180405
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-releasecheck-ipad-large.log",
+      "logicalBytes": 38942
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-releasecheck-ipad-large.xcresult",
+      "logicalBytes": 2552397
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-releasecheck-phone-native.log",
+      "logicalBytes": 23410
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-releasecheck-phone-native.xcresult",
+      "logicalBytes": 1924427
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-selected-ipad-corners",
+      "logicalBytes": 1039080
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-selected-ipad-large",
+      "logicalBytes": 984081
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-selected-phone-corners",
+      "logicalBytes": 1235513
+    },
+    {
+      "path": "/tmp/taskfold-lazy-day-selected-phone-large",
+      "logicalBytes": 1021840
+    },
+    {
+      "path": "/tmp/taskfold-media-frame-cache",
+      "logicalBytes": 82068780,
+      "kind": "Owned completed media-frame compiler scratch"
+    }
+  ],
+  "newDevicesCreated": false,
+  "privateDataRemoved": false,
+  "normalAppSessionsChanged": false,
+  "boundedCaches": {
+    "apply": true,
+    "freeBeforeBytes": 46253137920,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 695914496,
+        "projectedAllocatedBytes": 695914496
+      }
+    ],
+    "freeAfterBytes": 46253064192,
+    "actualFreeChangeBytes": -73728
+  },
+  "coreCacheAllocatedBytes": 691167232,
+  "retainedPackageHashesVerified": {
+    "31": "37c2f2b2ba93cc461ad8e8391b7b65340be2de2bc310320641720ff482751f5e",
+    "34": "b08c560c6d3d7bcda5a1c4367b425634a5ce2b0637115f13b261362ce5f01fa9"
+  },
+  "freeAfterBytes": 46252961792,
+  "actualFreeChangeBytes": 202780672
+}

@@ -624,5 +624,37 @@
     "localFocusedTests": 32,
     "githubStatuses": [],
     "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TaskFold-iOS",
+    "pullRequest": "https://github.com/dbakp/TaskFold-iOS/pull/23",
+    "mergedHead": "642d1243ddf50346b5d8818af1abd15ab538cf83",
+    "verifiedRemoteMain": "fd77e84f744b3116a4d4f4a9e4cee62ddc657cf4",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localFocusedTests": 1,
+    "localValidationScope": "124-task signed iPhone UI baseline and final, one case each; six dashboard viewport/theme checks",
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TasskFold-MacOS",
+    "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/24",
+    "mergedHead": "f398af47be5881cdd74e9ee4a039c53ff505d24e",
+    "verifiedRemoteMain": "7026d889c1071e962b135152cad09433c28b7491",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localFocusedTests": 0,
+    "localValidationScope": "Documentation and six dashboard viewport/theme checks; Mac product inputs unchanged",
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
   }
 ]
