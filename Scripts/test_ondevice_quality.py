@@ -72,7 +72,7 @@ def main():
         row.get('engine') in engines and isinstance(row.get('syntheticGoal'), str) and row['syntheticGoal'] and
         (isinstance(row.get('titles'), list) and 3 <= len(row['titles']) <= 8 and all(isinstance(title, str) and title.strip() for title in row['titles'])
          if row.get('engine') == 'steps' else
-         isinstance(row.get('matchedIDs'), list) and isinstance(row.get('expectedIDs'), list) and row['matchedIDs'] == row['expectedIDs'])
+         row.get('generationPath') == 'systemModel' and isinstance(row.get('matchedIDs'), list) and isinstance(row.get('expectedIDs'), list) and row['matchedIDs'] == row['expectedIDs'])
         for row in report['observations'])
     report['semanticAndShapeChecksPassed'] = (report.get('testExitCode') == 0 and counts == report['expectedObservationCounts']
         and observations_valid and all(markers[engine] in text for engine in engines))

@@ -1,0 +1,14 @@
+{
+  "selected": 136,
+  "passed": 133,
+  "skipped": 3,
+  "failed": 0,
+  "semanticLocalExamples": 12,
+  "modelInferenceRuns": 0,
+  "rawModelQualityAccepted": false,
+  "rawModelQuality": "Original3/5; expanded12 remains unaccepted",
+  "localSemanticTestSeconds": 0.012,
+  "timingScope": "Whole 12-example XCTest method including actual local drafts, parse and match assertions; not an interaction latency guarantee",
+  "logSHA256": "b0165e19c71ee993633d9d394bd08b79d0f949ab62bd6712de8d1a23246b1008",
+  "compilerWarnings": "Existing unrelated warnings retained; no warning-free Core claim"
+}

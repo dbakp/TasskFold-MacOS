@@ -166,7 +166,20 @@ struct FilterAssistanceRun {
 }
 
 enum FilterAssistanceEngine {
-    static func generate(_ input: String) async throws -> String {
+    enum Origin: Equatable, Sendable { case localDescription, systemModel }
+    struct Draft: Sendable { let expression: String; let origin: Origin }
+    static func generate(_ input: String) async throws -> String { try await draft(input).expression }
+    static func draft(_ input: String) async throws -> Draft {
+        try Task.checkCancellation()
+        let goal = try TaskBreakdownRequest.goal(input)
+        if let expression = LocalFilterDescription.expression(for: goal) {
+            try Task.checkCancellation()
+            return Draft(expression: expression, origin: .localDescription)
+        }
+        return Draft(expression: try await generateModel(goal), origin: .systemModel)
+    }
+    /// Kept separate so a real-model quality probe cannot count local parsing as inference.
+    static func generateModel(_ input: String) async throws -> String {
         try Task.checkCancellation()
         let goal = try TaskBreakdownRequest.goal(input)
         if let reason = OnDeviceAssistance.unavailableReason { throw FilterFailure(message: reason) }
@@ -198,3 +211,198 @@ private struct GeneratedFilterExpression {
     var expression: String
 }
 #endif
+
+/// A complete, bounded description grammar, separate from the saved-query
+/// parser. Unknown or ambiguous wording returns nil rather than dropping it.
+/// Target spelling is copied verbatim; the ordinary preview resolves access.
+enum LocalFilterDescription {
+    private static let sentenceEnds: Set<Character> = [".", "!", "?"]
+    static func expression(for input: String) -> String? {
+        guard let goal = try? TaskBreakdownRequest.goal(input), let tokens = tokenize(goal), tokens.count <= 200 else { return nil }
+        var parser = Parser(tokens: tokens)
+        guard let result = parser.description(), parser.offset == tokens.count,
+              let bounded = try? FilterSuggestion.boundedExpression(result) else { return nil }
+        return bounded
+    }
+    private struct Token {
+        let text: String
+        let quoted: Bool
+        var word: String { quoted ? "" : text.lowercased(with: Locale(identifier: "en_US_POSIX")) }
+    }
+    private static func tokenize(_ input: String) -> [Token]? {
+        let chars = Array(input); var index = 0, result: [Token] = []
+        while index < chars.count {
+            if chars[index].isWhitespace { index += 1; continue }
+            if chars[index] == "\"" {
+                index += 1; var value = "", closed = false
+                while index < chars.count {
+                    let char = chars[index]; index += 1
+                    if char == "\"" { closed = true; break }
+                    if char == "\\" {
+                        guard index < chars.count, ["\"", "\\"].contains(chars[index]) else { return nil }
+                        value.append(chars[index]); index += 1
+                    } else { value.append(char) }
+                }
+                guard closed, !value.isEmpty else { return nil }
+                result.append(Token(text: value, quoted: true))
+            } else if ["(", ")", ","].contains(chars[index]) || index == chars.count - 1 && sentenceEnds.contains(chars[index]) {
+                result.append(Token(text: String(chars[index]), quoted: false)); index += 1
+            } else {
+                let start = index
+                while index < chars.count, !chars[index].isWhitespace, !["\"", "(", ")", ","].contains(chars[index]), !(index == chars.count - 1 && sentenceEnds.contains(chars[index])) { index += 1 }
+                guard index > start else { return nil }
+                result.append(Token(text: String(chars[start..<index]), quoted: false))
+            }
+        }
+        return result
+    }
+    private struct Atom {
+        let text: String
+        let facet: String?
+        let requiresJoinAfter: Bool
+        init(text: String, facet: String?, requiresJoinAfter: Bool = false) {
+            self.text = text; self.facet = facet; self.requiresJoinAfter = requiresJoinAfter
+        }
+    }
+    private struct Parser {
+        let tokens: [Token]
+        var offset = 0
+        var depth = 0
+        var word: String { offset < tokens.count ? tokens[offset].word : "" }
+        mutating func take(_ words: String...) -> Bool { take(words) }
+        mutating func take(_ words: [String]) -> Bool {
+            guard offset + words.count <= tokens.count,
+                  zip(tokens[offset..<(offset + words.count)], words).allSatisfy({ $0.word == $1 }) else { return false }
+            offset += words.count; return true
+        }
+        mutating func description() -> String? {
+            _ = take("please")
+            if take("show") || take("find") || take("list") { _ = take("me") }
+            return clause()
+        }
+        mutating func nouns() {
+            if take("the", "tasks") || take("the", "task") || take("tasks") || take("task") { return }
+            if word == "work", offset + 1 < tokens.count, tokens[offset + 1].word == "in" { offset += 1 }
+        }
+        mutating func clause() -> String? {
+            guard depth < 12 else { return nil }; depth += 1; defer { depth -= 1 }
+            nouns()
+            var terms: [Atom] = []
+            while offset < tokens.count, word != ")" {
+                if [".", "!", "?"].contains(word), offset == tokens.count - 1 {
+                    guard let last = terms.last, !last.requiresJoinAfter else { return nil }
+                    offset += 1; break
+                }
+                var joined = terms.isEmpty
+                if !terms.isEmpty {
+                    joined = take("and")
+                    if joined { nouns() }
+                    if word == "," {
+                        guard offset + 1 < tokens.count, ["excluding", "except"].contains(tokens[offset + 1].word) else { return nil }
+                        offset += 1; joined = true
+                    }
+                    if ["excluding", "except"].contains(word) { joined = true }
+                    if word == "or" || terms.last!.requiresJoinAfter && !joined { return nil }
+                }
+                guard let term = term() else { return nil }
+                if !joined, let previous = terms.last?.facet, previous == term.facet { return nil }
+                terms.append(term)
+                if !term.requiresJoinAfter { nouns() }
+            }
+            guard !terms.isEmpty else { return nil }
+            return terms.count == 1 ? terms[0].text : "(" + terms.map(\.text).joined(separator: " AND ") + ")"
+        }
+        mutating func term() -> Atom? {
+            let excluding = take("excluding") || take("except")
+            if excluding { _ = take("those"); nouns() }
+            guard let first = atom() else { return nil }
+            var values = [first.text], requiresJoinAfter = first.requiresJoinAfter
+            while word == "or" {
+                let before = offset; offset += 1
+                guard let next = atom(inheriting: first.facet), let facet = first.facet, facet == next.facet else {
+                    offset = before; break
+                }
+                values.append(next.text); requiresJoinAfter = next.requiresJoinAfter
+            }
+            let value = values.count == 1 ? values[0] : "(" + values.joined(separator: " OR ") + ")"
+            return Atom(text: excluding ? "NOT (" + value + ")" : value, facet: first.facet, requiresJoinAfter: requiresJoinAfter)
+        }
+        mutating func atom(inheriting facet: String? = nil) -> Atom? {
+            if take("(") {
+                guard let text = clause(), take(")") else { return nil }
+                return Atom(text: text, facet: nil)
+            }
+            let start = offset
+            if take("not", "done") || take("not", "completed") { return Atom(text: "open", facet: "completion") }
+            if ["open", "unfinished", "incomplete", "pending"].contains(word) { offset += 1; return Atom(text: "open", facet: "completion") }
+            if ["completed", "finished", "done"].contains(word) { offset += 1; return Atom(text: "completed", facet: "completion") }
+            if take("with", "priority") || take("priority") {
+                guard let value = number(), (1...4).contains(value) else { return nil }
+                return Atom(text: "p\(value)", facet: "priority")
+            }
+            if facet == "priority", let value = number(), (1...4).contains(value) { return Atom(text: "p\(value)", facet: "priority") }
+            offset = start
+            let fields: [(words: [String], field: String)] = [
+                (["with", "no", "planned", "date"], "no date"), (["without", "a", "planned", "date"], "no date"),
+                (["with", "no", "deadline"], "no deadline"), (["without", "a", "deadline"], "no deadline"),
+                (["with", "no", "estimate"], "no estimate"), (["without", "an", "estimate"], "no estimate"),
+                (["with", "no", "labels"], "no labels"), (["without", "labels"], "no labels")]
+            for (words, field) in fields where take(words) { return Atom(text: field, facet: field) }
+            if take("with", "a", "deadline") || take("with", "deadline") || take("deadline") { return date(field: "deadline") }
+            if take("planned") || take("scheduled") { return date(field: "date") }
+            if let value = relativeDate() { return Atom(text: value == "overdue" ? "overdue" : "date:" + quote(value), facet: "date") }
+            offset = start
+            if take("in", "project") || take("in", "the", "project") || take("project") {
+                guard let name = name() else { return nil }
+                let suffix = offset
+                _ = take(",")
+                let tree = take("including", "its", "subprojects") || take("including", "subprojects") || take("including", "its", "child", "projects") || take("and", "its", "child", "projects") || take("and", "its", "subprojects") || take("and", "subprojects")
+                if !tree { offset = suffix }
+                return Atom(text: (tree ? "project-tree:" : "project:") + quote(name.text), facet: "project", requiresJoinAfter: !name.quoted)
+            }
+            if take("with", "label") || take("label") {
+                guard let name = name() else { return nil }; return Atom(text: "label:" + quote(name.text), facet: "label", requiresJoinAfter: !name.quoted)
+            }
+            if take("in", "section") || take("section") {
+                guard let name = name() else { return nil }; return Atom(text: "section:" + quote(name.text), facet: "section", requiresJoinAfter: !name.quoted)
+            }
+            if take("assigned", "to") {
+                guard let name = name() else { return nil }
+                let keyword = !name.quoted && ["me", "others", "unassigned"].contains(name.word)
+                return Atom(text: "assignee:" + (keyword ? name.word : quote(name.text)), facet: "assignee", requiresJoinAfter: !name.quoted && !keyword)
+            }
+            if take("containing") {
+                guard offset < tokens.count, tokens[offset].quoted else { return nil }
+                let value = tokens[offset].text; offset += 1; return Atom(text: "search:" + quote(value), facet: "search")
+            }
+            if take("in", "inbox") || take("in", "the", "inbox") || take("inbox") { return Atom(text: "inbox", facet: "project") }
+            if ["recurring", "shared", "personal", "subtask", "parent", "root"].contains(word) {
+                let value = word; offset += 1; return Atom(text: value, facet: value)
+            }
+            offset = start; return nil
+        }
+        mutating func number() -> Int? {
+            guard offset < tokens.count, !tokens[offset].quoted, let value = Int(tokens[offset].text), String(value) == tokens[offset].text else { return nil }
+            offset += 1; return value
+        }
+        mutating func name() -> Token? {
+            guard offset < tokens.count else { return nil }
+            let token = tokens[offset]
+            let reserved: Set<String> = ["and", "or", "not", "excluding", "including", "(", ")", ",", "tasks", "task"]
+            guard token.quoted || (!reserved.contains(token.word) && token.text.unicodeScalars.allSatisfy({ CharacterSet.alphanumerics.contains($0) || "-_'.".unicodeScalars.contains($0) })) else { return nil }
+            offset += 1; return token
+        }
+        mutating func date(field: String) -> Atom? {
+            _ = take("for") || take("on")
+            let comparison = take("before") ? " before" : take("after") ? " after" : ""
+            guard let value = relativeDate(), value != "overdue" || field == "date" && comparison.isEmpty else { return nil }
+            if value == "overdue" { return Atom(text: "overdue", facet: field) }
+            return Atom(text: field + comparison + ":" + quote(value), facet: field)
+        }
+        mutating func relativeDate() -> String? {
+            if ["today", "tomorrow", "yesterday", "overdue"].contains(word) { let value = word; offset += 1; return value }
+            return nil
+        }
+        func quote(_ value: String) -> String { "\"" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\"" }
+    }
+}
