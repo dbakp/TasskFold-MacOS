@@ -1,0 +1,126 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 40759885824,
+  "actions": [
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Index.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 60628992
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/CompilationCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/SDKExplicitPrecompiledModules",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 193204224
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex/XCBuildData",
+      "kind": "completedBuildMetadata",
+      "allocatedBytes": 18255872
+    }
+  ],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 719421440,
+      "projectedAllocatedBytes": 719421440,
+      "within768MiB": true
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 764108800,
+      "projectedAllocatedBytes": 764108800,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 41033494528,
+  "actualFreeChangeBytes": 273608704,
+  "retiredObsoleteOutputs": [
+    {
+      "path": "/tmp/.taskfold-install37-ab46npo3",
+      "allocatedBytes": 162652160,
+      "reason": "Uninstalled37 candidate and duplicate36 extraction superseded by installed38, verified frozen36 and moved36 fallback; no data backup in this stage"
+    },
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-35-mac-development.zip",
+      "bytes": 20278837,
+      "sha256": "d00840dc3fa18267f3d343208cf646d0d2d2a88c17b6f4be4f36289cbf62c6da",
+      "reason": "Older35/never-installed37 package retired; current38 and verified last-installed36 rollback retained, historical receipts/private backups untouched"
+    },
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-37-mac-development.zip",
+      "bytes": 20371817,
+      "sha256": "6e6e1cc1c104f439a83615a02cb99cb7d703b52dd520962299da425bbb5800fd",
+      "reason": "Older35/never-installed37 package retired; current38 and verified last-installed36 rollback retained, historical receipts/private backups untouched"
+    },
+    {
+      "path": "/tmp/taskfold-project-first-iphone.xcresult",
+      "allocatedBytes": 2347008,
+      "reason": "Concise accepted outcomes/source hashes or selected actual screenshots retained; current final phone/tablet bundles retained"
+    },
+    {
+      "path": "/tmp/taskfold-project-first-order-shots",
+      "allocatedBytes": 1458176,
+      "reason": "Concise accepted outcomes/source hashes or selected actual screenshots retained; current final phone/tablet bundles retained"
+    },
+    {
+      "path": "/tmp/taskfold-project-first-final-shots",
+      "allocatedBytes": 1728512,
+      "reason": "Concise accepted outcomes/source hashes or selected actual screenshots retained; current final phone/tablet bundles retained"
+    },
+    {
+      "path": "/tmp/taskfold-project-first-ipad-shots",
+      "allocatedBytes": 483328,
+      "reason": "Concise accepted outcomes/source hashes or selected actual screenshots retained; current final phone/tablet bundles retained"
+    },
+    {
+      "path": "/tmp/taskfold-project-section-iphone-v4.xcresult",
+      "allocatedBytes": 73216000,
+      "reason": "Concise accepted outcomes/source hashes or selected actual screenshots retained; current final phone/tablet bundles retained"
+    },
+    {
+      "path": "/tmp/taskfold-project-section-iphone-v5.xcresult",
+      "allocatedBytes": 602112,
+      "reason": "Concise accepted outcomes/source hashes or selected actual screenshots retained; current final phone/tablet bundles retained"
+    },
+    {
+      "path": "/tmp/.taskfold-install38-917hqwdy/rollback",
+      "allocatedBytes": 81305600,
+      "reason": "Duplicate extracted36 retired; moved36 exact payload/signature and frozen36 archive verified and retained while original postlaunch readback waits"
+    }
+  ],
+  "privateBackupsAndCurrentReadbackUntouched": true,
+  "normalMac38LeftRunning": true,
+  "originalReadbackPID": 99255,
+  "originalReadbackExecSession": 54253,
+  "originalReadbackStillPending": true,
+  "freeAfterRetirementBytes": 41431048192,
+  "selectedCaches": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 696922112,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 639094784,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "allocatedBytes": 764108800,
+      "within768MiB": true
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build",
+      "allocatedBytes": 719421440,
+      "within768MiB": true
+    }
+  ]
+}

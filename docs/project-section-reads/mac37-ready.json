@@ -4,12 +4,15 @@
   "rollbackBuild": "36",
   "rollbackVerified": true,
   "installed": false,
-  "installationBlockedBy": "Mac locked; CUA confirms manual unlock required before quit/fresh backup/swap",
-  "currentInstalledBuild": "36",
+  "installationBlockedBy": null,
+  "currentInstalledBuild": "38",
   "currentAppKeptRunning": true,
   "freshSafetyCopyPending": true,
   "normalUpdateAlreadyAuthorized": true,
   "phoneInstallationDeferred": true,
   "normalGateChanges": false,
-  "hostedChanges": false
+  "hostedChanges": false,
+  "supersededByInstalledBuild": "38",
+  "manualUnlockResolved": true,
+  "obsoleteCandidateAndStageRetired": true
 }
