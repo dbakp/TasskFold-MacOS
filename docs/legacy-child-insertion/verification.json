@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-07",
+  "platformOwner": "TasskFold-MacOS",
+  "baseCommit": "ccee825b5b306a31065606cdb2742907d7055183",
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "d4f35bfc1e17829e8104040dc42c87e32fc57cc49aad561f58cca0045483f983",
+    "TaskfoldTests/PreservingJSONTests.swift": "a8910e939ecb3aed9551fc477a06339dd6fe0f74afc60fc218ada0b417ab52b0"
+  },
+  "command": "Scripts/test_core.sh --filter 'PreservingJSONTests|SubtaskTreeTests|SubtaskOrganizerReadTests|SubtaskTransportIntegrationTests|TaskBreakdownTests|TaskSelection'",
+  "selected": 67,
+  "passed": 65,
+  "skipped": 2,
+  "failed": 0,
+  "newRegressions": 4,
+  "skips": [
+    "Disposable subtask transport fixture not enabled",
+    "Actual on-device inference is opt-in"
+  ],
+  "scope": "Owning Swift Core build and tests; no new full app build or native interaction acceptance.",
+  "databaseChanged": false,
+  "hostedChanged": false,
+  "normalGatesChanged": false,
+  "newPackagePrepared": false,
+  "installedAppsChanged": false,
+  "baseline": {
+    "selected": 3,
+    "assertionFailures": 11,
+    "note": "Before the production fix, the new refusal tests reproduce unsupported containers and ambiguous/unnamed parent admission. The fourth depth-scan regression was added afterward."
+  },
+  "intermediateFailure": "Six byte-equality assertions failed because ordinary object-key encoder order is unspecified. The test-only comparison writer now sorts ordinary keys; opaque lexical data remains exact. Final suite passed."
+}

@@ -205,7 +205,16 @@ enum SubtaskTree {
         guard !title.isEmpty else { throw Failure(message: "Give the subtask a name.") }
         guard baseDepth >= 0, baseDepth < maximumDepth else { throw Failure(message: "Subtasks can be nested up to 10 levels.") }
         if let parent {
-            guard let item = outline(value).first(where: { $0.id == parent }), item.depth + baseDepth + 1 < maximumDepth else {
+            // Never coerce a saved legacy child container through `.list` or
+            // insert into every branch sharing the same parent identity.
+            let items = outline(value)
+            let matches = items.filter { $0.id == parent }
+            guard !items.contains(where: { $0.depth == readableDepth && !$0.record["subtasks"].list.isEmpty }),
+                  !parent.isEmpty, matches.count == 1, let item = matches.first,
+                  inlineEditable(.object(item.record.fields)), hasListContainer(item.record["subtasks"]) else {
+                throw Failure(message: "Review the parent subtask before adding here. Its saved content is unchanged.")
+            }
+            guard item.depth + baseDepth + 1 < maximumDepth else {
                 throw Failure(message: "Subtasks can be nested up to 10 levels.")
             }
         }

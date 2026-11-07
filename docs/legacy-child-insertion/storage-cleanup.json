@@ -1,0 +1,39 @@
+{
+  "freeBeforeBytes": 44929503232,
+  "freeAfterBytes": 44929654784,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-child-insertion-baseline.log",
+      "bytes": 28673,
+      "preservedAs": "docs/legacy-child-insertion/*.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-child-insertion-mac.log",
+      "bytes": 21034,
+      "preservedAs": "docs/legacy-child-insertion/*.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-child-insertion-mac-final.log",
+      "bytes": 42976,
+      "preservedAs": "docs/legacy-child-insertion/*.log.gz"
+    },
+    {
+      "path": "/tmp/taskfold-child-insertion-ios-final.log",
+      "bytes": 43610,
+      "preservedAs": "docs/legacy-child-insertion/*.log.gz"
+    }
+  ],
+  "coreCachesReused": [
+    "core-mac",
+    "core-ios"
+  ],
+  "coreCacheAllocatedMiB": {
+    "core-mac": 604,
+    "core-ios": 659
+  },
+  "coreCachesWithin768MiB": true,
+  "simulatorsBooted": [],
+  "appsLaunchedOrClosed": [],
+  "privateDataDeleted": false,
+  "finishToolReport": "legacy-child-insertion-cleanup-20261107.json"
+}

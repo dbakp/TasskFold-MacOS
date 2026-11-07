@@ -11287,3 +11287,8 @@ Both owning optimized app builds now pass signing, profile and exact ZIP readbac
 
 
 The same delivery run also fixes the Mac builder’s registration side effect. Four safety checks and real standalone/repeat-build checks leave the cache candidate unregistered, installed31 registered/running and the frozen signed package unchanged. Installed/symlink output targets are refused before build. This is Mac-only tooling; native cold links remain unaccepted. [Scope and proof](mac35-phone43-updates/registration-isolation.json).
+
+
+### 2026-11-07 — Refuse destructive older-checklist insertion
+
+Both clients require one ordinary parent and supported child container before nested insertion. Duplicate/unnamed/opaque parents and incomplete depth scans refuse safely; valid missing/null/empty/populated arrays retain children and exact opaque metadata. Each owner passes 65 focused Core checks, four new, with two explicit service/model skips. Wider migration and native acceptance remain open. No schema, hosted gate, new package or install; prepared35/43 predate this fix, installed31/last-verified34 remain. [Evidence and limits](legacy-child-insertion/README.md).

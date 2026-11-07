@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Current Mac35 and iPhone43 updates prepared",
-  "latest": "Optimized signed Mac35 and iPhone43 packages now include the accumulated notes, background/save/list improvements and bounded natural filter forms. Clean-source fingerprints, cached profiles, app/widget signatures, exact ZIP readback and Mac continuity floor pass. Mac also includes Share; iPhone incoming Share remains omitted with the existing free-profile limit. Mac31 is still installed; the Mac control attempt was locked. Phone34 is the last verified installation and installation stays deferred. Only current/rollback ZIPs remain. Full app builds for the filter repair now pass; AI semantic quality and native/physical runtime checks remain open. No checkpoint totals or normal gates change. Mac preparation now cleans up the cache copy’s app registration; a real repeat build leaves it unregistered while the original installed31 process and registration remain. Four safety checks pass. Actual cold links remain unverified.",
+  "focus": "Preserve older subtasks during nested insertion",
+  "latest": "Both clients now refuse nested additions that would overwrite an unsupported older checklist or target an ambiguous parent. Four new regression cases pass within 65 focused Core passes per owner, with two explicit integration skips. Supported additions retain existing children and exact opaque metadata. Wider older-work migration remains unfinished. This fix is merged source for the next signed update, not installed or included in prepared Mac35/phone43. Mac31 remains installed: computer control still reports locked after the latest unlock response. Phone34 is the last verified install; installation stays deferred. No checkpoint totals, schema, hosted settings or normal gates change.",
   "next": [
     "Install verified Mac35 with a fresh private safety copy when native control is available; verify normal startup/sync and saved task/queue continuity. Mac31 and its rollback remain intact; routine updates are already authorized. Phone43 is ready but installation remains deferred. Cached signing expires 10 November for Mac and 11 November for phone.",
     "Continue measured rendering/navigation and larger multi-project workloads. Dated row cards are now lazy inside measured section holders, with scoped phone/tablet geometry proof; broader account/window/accessibility, native Mac and physical FPS remain distinct. Do not repeat unchanged accepted journeys.",
@@ -904,7 +904,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Global metadata title search now finds tasks beyond loaded pages and shortened titles; current iPhone/iPad controls pass with empty feedback first and Mac build/sign checks cover the independent view. Query/access/session fences and unchanged task/record/history fingerprints pass per owner. Matching server migration remains unapplied; frozen29/41 packages do not include this change. Independent subtask editing, conflict review and cold retry have scoped iPhone/Mac proof. Legacy-tree review preserves supported older work and refuses malformed/stale requests. Project files pass inventory, private preparation and the reviewed atomic local service move. Production-screen iPhone and iPad peer journeys now verify explicit consent, exact cold transfer retry, lost preparation/cancellation and held-copy Stop/cold Continue through real saved-request storage. Accessible file counts and a saved-transfer file summary are fixed; both apps build/sign. Mac native screens, wider iPad sizes, wider accessibility/account/window/locked-storage, combined policies, wider legacy/history/lifecycle/ownership and hosted acceptance remain. Advanced gates stay off. Known stopped project-copy producers now have service-only no-POST/terminal/verified observations and exact private ticket binding. Each owner passes 141 genuine transfer/producer checks, 69 copy regressions and 34 handler tests. A closed producer refuses late reservations; another verifier cannot settle its writer. Actual maintenance releases charges only after provider cleanup, including logout and paused gates. Indeterminate POSTs or process death without proof remain fenced; wider lifecycle, combined policies, native and hosted acceptance remain open. Combined file/recording/connection custody now passes 82 genuine local service checks per owner and saved client-contract recovery: one review, atomic rollback, exact paused replay, selected connection isolation and actual audio cleanup preserving private originals/published file copies. Combined normal-text iPhone/iPad peer walkthroughs now pass separate consent, Back with unchanged source, cold summaries and exact retry without another copy. Mac protected review awaits its own development profile/Xcode account. Integrated native APIs, hosted and wider lifecycle acceptance remain open; curated status stays unchanged. Large file preparations now honor bounded service waits and retry the exact saved operation, with Stop and account changes fencing further work. Each owner passes 58 focused client tests (5 new) and 35 handler tests (1 new). The real iPhone flow passes 76 checks with 101 distinct files across two manifest pages, mixed recording history and connection consent. An actual owned upload-handler interruption leaves an unfinished original; the transfer closes it without another upload. Every copied byte and alias survives cold recovery; originals remain private. Five real rate-limit responses are respected without resetting budgets, adding copies or weakening per-request timeouts. Mac protected-transfer runtime still needs its dedicated provisioned test identity/profile. Real transfer-screen interaction, other history/lifecycle/realms, physical protection and hosted/provider delivery remain open.",
+              "detail": "Nested insertion now refuses unsupported/ambiguous parents before replacing any saved children, with four new regressions and 65 focused Core passes per owner; broader migration remains unfinished. Global metadata title search now finds tasks beyond loaded pages and shortened titles; current iPhone/iPad controls pass with empty feedback first and Mac build/sign checks cover the independent view. Query/access/session fences and unchanged task/record/history fingerprints pass per owner. Matching server migration remains unapplied; prepared35/43 include the search client change, but not the new nested-insertion guard. Independent subtask editing, conflict review and cold retry have scoped iPhone/Mac proof. Legacy-tree review preserves supported older work and refuses malformed/stale requests. Project files pass inventory, private preparation and the reviewed atomic local service move. Production-screen iPhone and iPad peer journeys now verify explicit consent, exact cold transfer retry, lost preparation/cancellation and held-copy Stop/cold Continue through real saved-request storage. Accessible file counts and a saved-transfer file summary are fixed; both apps build/sign. Mac native screens, wider iPad sizes, wider accessibility/account/window/locked-storage, combined policies, wider legacy/history/lifecycle/ownership and hosted acceptance remain. Advanced gates stay off. Known stopped project-copy producers now have service-only no-POST/terminal/verified observations and exact private ticket binding. Each owner passes 141 genuine transfer/producer checks, 69 copy regressions and 34 handler tests. A closed producer refuses late reservations; another verifier cannot settle its writer. Actual maintenance releases charges only after provider cleanup, including logout and paused gates. Indeterminate POSTs or process death without proof remain fenced; wider lifecycle, combined policies, native and hosted acceptance remain open. Combined file/recording/connection custody now passes 82 genuine local service checks per owner and saved client-contract recovery: one review, atomic rollback, exact paused replay, selected connection isolation and actual audio cleanup preserving private originals/published file copies. Combined normal-text iPhone/iPad peer walkthroughs now pass separate consent, Back with unchanged source, cold summaries and exact retry without another copy. Mac protected review awaits its own development profile/Xcode account. Integrated native APIs, hosted and wider lifecycle acceptance remain open; curated status stays unchanged. Large file preparations now honor bounded service waits and retry the exact saved operation, with Stop and account changes fencing further work. Each owner passes 58 focused client tests (5 new) and 35 handler tests (1 new). The real iPhone flow passes 76 checks with 101 distinct files across two manifest pages, mixed recording history and connection consent. An actual owned upload-handler interruption leaves an unfinished original; the transfer closes it without another upload. Every copied byte and alias survives cold recovery; originals remain private. Five real rate-limit responses are respected without resetting budgets, adding copies or weakening per-request timeouts. Mac protected-transfer runtime still needs its dedicated provisioned test identity/profile. Real transfer-screen interaction, other history/lifecycle/realms, physical protection and hosted/provider delivery remain open.",
               "steps": [
                 {
                   "state": "done",
@@ -1341,9 +1341,11 @@
             "native-project-recordings/runtime-guard.json",
             "native-project-recordings/startup-cleanup.json",
             "native-project-recordings/ondevice-probe.json",
-            "native-project-recordings/storage-cleanup.json"
+            "native-project-recordings/storage-cleanup.json",
+            "legacy-child-insertion/README.md",
+            "legacy-child-insertion/verification.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-watch",
@@ -1676,7 +1678,9 @@
     "drag-row-observation/README.md",
     "drag-row-observation/verification.json",
     "lazy-dated-lists/README.md",
-    "lazy-dated-lists/verification.json"
+    "lazy-dated-lists/verification.json",
+    "legacy-child-insertion/README.md",
+    "legacy-child-insertion/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1942,7 +1946,7 @@
     "genuine-structure-recovery/native.json": "2177dba043344491262626ed929b357033ff42cd1ca29f97eabadd968a8f5791",
     "genuine-structure-recovery/verification.json": "58a9b3f2afea3deab2c5963148e5355657352f9f09c35f82576463955f35a187",
     "github-delivery/README.md": "878c3a31c4aca872d3159d9137842268dcf403c7403df631988d7090a6a67b62",
-    "github-delivery/verification.json": "96d65eafe80aaa50f8289da3c58e353a3496c2c7a72c99fccdaeed5d942be404",
+    "github-delivery/verification.json": "d23e8f72b8abc89d1b47576725d833aa0f5999c432c599b3d8cda400254af5cd",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
     "incremental-cache-encoding/README.md": "8459e8ca780037d1a81e975a4894af93f34c92ca8860c17b9ad4d7e59de97b98",
@@ -1957,6 +1961,8 @@
     "legacy-adoption-boundaries/README.md": "ce2e5f860901bba2dbff0c5ef15f7260c6127e73d28bd92e58f017de76bdaa3b",
     "legacy-adoption-boundaries/local-service.json": "51bbbb6a5f377995fb18de8d41ee3e4dafb28a563e536a2567023d4ac51fb271",
     "legacy-adoption-boundaries/verification.json": "08488a17b55143ee21dbf199ff7f616327cf151edc6a431ac30de4cbfe253e19",
+    "legacy-child-insertion/README.md": "7b671fac882d84c0dc68d40a224a32de2f51378de5e5b814597a96eaacc507ab",
+    "legacy-child-insertion/verification.json": "dc0146861507c891b198f642fd8364c69d8064f3ab0a1bcfbb69bf9247a91dc0",
     "legacy-child-preservation/README.md": "c759db19d0718950ce19956d9dcec05a9272f9d1e7e7f77e84f1c213dbd989e0",
     "legacy-child-preservation/verification.json": "acefbc2ad99f12bc9f8c6193354c9ef0fb341fc197226e911fc188c3d9da320f",
     "linear-day-grouping/README.md": "b985b7f8cb0b8f71d18559430caf6fec3fff4da3c81dbeb854dccd3e8ecb68c5",
