@@ -1,0 +1,23 @@
+{
+  "debugDiagnosticOnly" : true,
+  "exactSourceAndOutlinePreserved" : true,
+  "modes" : [
+    {
+      "baselineSeconds" : 0.56624695844948292,
+      "currentSourceReads" : 20,
+      "preparedGraphReused" : true,
+      "revalidatedSecondsIncludingColdCatalog" : 0.027931791730225086,
+      "sourceArrays" : "shared unchanged project array"
+    },
+    {
+      "baselineSeconds" : 0.56496900017373264,
+      "currentSourceReads" : 20,
+      "preparedGraphReused" : true,
+      "revalidatedSecondsIncludingColdCatalog" : 0.85989212500862777,
+      "sourceArrays" : "rebuilt filtered arrays"
+    }
+  ],
+  "physicalFPSClaim" : false,
+  "projects" : 4000,
+  "sourceEpochs" : 20
+}

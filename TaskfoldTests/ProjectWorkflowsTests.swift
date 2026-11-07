@@ -1599,3 +1599,192 @@ extension ProjectWorkflowsTests {
         try JSONSerialization.data(withJSONObject: report, options: [.sortedKeys, .prettyPrinted]).write(to: URL(fileURLWithPath: output), options: .atomic)
     }
 }
+
+extension ProjectWorkflowsTests {
+    private func projectCatalogSharesStorage(_ a: [Record], _ b: [Record]) -> Bool {
+        a.withUnsafeBufferPointer { x in b.withUnsafeBufferPointer { x.baseAddress == $0.baseAddress } }
+    }
+    @MainActor func testProjectCatalogReusesExactRowsAcrossTaskOnlySourceEpochs() throws {
+        let cache = WorkspaceProjectCatalogReadCache(), access = UUID(), generation = UUID(), session = UUID()
+        let rows = [project("root"), project("child", parent: "root"), project("peer")]
+        var snapshot = Snapshot(tables: ["projects": rows, "tasks": [Record(["id": .string("task"), "title": .string("Original")])]])
+        var reads = 0
+        func scope() -> WorkspaceProjectCatalogReadCache.Context {
+            .init(source: UUID(), access: access, workspace: .init(account: owner, generation: generation), session: session, origin: "https://catalog.invalid")
+        }
+        func read() -> ProjectOrderRequest {
+            cache.orderRequest(for: scope()) { reads += 1; return snapshot.tables["projects"] ?? [] }
+        }
+        let first = read()
+        for index in 0..<20 {
+            snapshot.tables["tasks"]![0]["title"] = .string("Task revision \(index)")
+            let current = read()
+            XCTAssertTrue(projectCatalogSharesStorage(first.projects, current.projects), "Task-only epochs must retain the prepared graph")
+            XCTAssertEqual(current.ordering.visible, first.ordering.visible)
+            XCTAssertEqual(try current.ordering.shifting("root", by: 1), try first.ordering.shifting("root", by: 1))
+            XCTAssertEqual(snapshot.tables["tasks"]![0].title, "Task revision \(index)")
+        }
+        XCTAssertEqual(reads, 21, "Every new source must supply its current filtered project rows")
+        // Filtered presentations may allocate a new array with identical rows.
+        let detached = rows.filter { _ in true }
+        XCTAssertFalse(projectCatalogSharesStorage(rows, detached))
+        let next = cache.orderRequest(for: scope()) { reads += 1; return detached }
+        XCTAssertTrue(projectCatalogSharesStorage(first.projects, next.projects))
+        XCTAssertTrue(AuthoredValueComparison.sameRows(snapshot.tables["projects"]!, rows))
+    }
+    @MainActor func testProjectCatalogRevalidationNeverReusesAcrossAccessOrAccountBoundaries() {
+        let cache = WorkspaceProjectCatalogReadCache(), source = UUID(), access = UUID(), generation = UUID(), session = UUID()
+        let rows = [project("root"), project("child", parent: "root")]
+        func scope(_ index: Int) -> WorkspaceProjectCatalogReadCache.Context {
+            .init(source: source, access: index == 0 ? UUID() : access,
+                workspace: .init(account: index == 1 ? "other" : owner, generation: index == 2 ? UUID() : generation),
+                session: index == 3 ? UUID() : session, origin: index == 4 ? "https://other.invalid" : "https://catalog.invalid")
+        }
+        for index in 0..<5 {
+            cache.clear()
+            let first = cache.orderRequest(for: scope(-1)) { rows }
+            let changed = cache.orderRequest(for: scope(index)) { rows }
+            XCTAssertFalse(projectCatalogSharesStorage(first.projects, changed.projects), "A matching catalog is insufficient across boundary \(index)")
+        }
+        let first = cache.orderRequest(for: scope(-1)) { rows }
+        cache.clear()
+        let fresh = cache.orderRequest(for: scope(-1)) { rows }
+        XCTAssertFalse(projectCatalogSharesStorage(first.projects, fresh.projects))
+    }
+    @MainActor func testProjectCatalogRevalidationKeepsExactUnknownAndUnicodeSource() throws {
+        let cache = WorkspaceProjectCatalogReadCache(), access = UUID(), workspace = WorkspaceBinding(account: owner, generation: UUID()), session = UUID()
+        func scope() -> WorkspaceProjectCatalogReadCache.Context {
+            .init(source: UUID(), access: access, workspace: workspace, session: session, origin: "https://catalog.invalid")
+        }
+        var rows = [project("root"), project("child", parent: "root")]
+        rows[0]["name"] = .string("Café"); rows[0]["opaque"] = .number(0)
+        let first = cache.orderRequest(for: scope()) { rows }
+        rows[0]["name"] = .string("Cafe\u{301}")
+        XCTAssertEqual(rows[0].name, first.projects.first { $0.id == "root" }?.name)
+        var previous = cache.orderRequest(for: scope()) { rows }
+        XCTAssertFalse(projectCatalogSharesStorage(first.projects, previous.projects))
+        XCTAssertTrue(previous.projects.first { $0.id == "root" }!.name.utf8.elementsEqual(rows[0].name.utf8))
+        let changes: [(inout [Record]) -> Void] = [
+            { $0[0]["opaque"] = .number(-0.0) },
+            { $0[0]["future"] = .object(["bytes": .string("Unknown field")]) },
+            { $0[1]["parent_id"] = .null },
+            { $0[0]["is_archived"] = .bool(true) },
+            { $0.swapAt(0, 1) },
+            { $0.removeLast() }]
+        for change in changes {
+            change(&rows)
+            let current = cache.orderRequest(for: scope()) { rows }
+            XCTAssertFalse(projectCatalogSharesStorage(previous.projects, current.projects))
+            XCTAssertTrue(AuthoredValueComparison.sameRows(current.projects, OrganizationOrder.sorted(rows)))
+            XCTAssertEqual(current.ordering.visible, ProjectOrganization.Ordering(rows).visible)
+            previous = current
+        }
+    }
+    @MainActor func testProjectCatalogSourceRevalidationDiagnosticWhenRequested() throws {
+        guard let output = ProcessInfo.processInfo.environment["TASKFOLD_PROJECT_REVALIDATION_REPORT"] else { return }
+        XCTAssertTrue(output.hasPrefix("/tmp/taskfold-") && output.hasSuffix(".json"))
+        var rows: [Record] = []
+        for index in 0..<1000 {
+            var root = project("refresh-root-\(index)", archived: index % 10 == 0)
+            root["order_index"] = .number(Double(index * 4)); rows.append(root)
+            for child in 1...3 {
+                var row = project("refresh-child-\(index)-\(child)", parent: root.id)
+                row["order_index"] = .number(Double(index * 4 + child)); rows.append(row)
+            }
+        }
+        let access = UUID(), workspace = WorkspaceBinding(account: owner, generation: UUID()), session = UUID()
+        let scopes = (0..<20).map { _ in WorkspaceProjectCatalogReadCache.Context(source: UUID(), access: access, workspace: workspace, session: session, origin: "https://catalog.invalid") }
+        var modes: [[String: Any]] = []
+        for mode in 0..<3 {
+            let inputs = (0..<20).map { _ in mode == 0 ? rows : mode == 1 ? rows.filter { _ in true } : rows.map { Record($0.fields) } }
+            let expected = ProjectOrganization.Ordering(rows)
+            let baseline = WorkspaceProjectCatalogReadCache(), optimized = WorkspaceProjectCatalogReadCache()
+            var oldCount = 0, newCount = 0, sourceReads = 0, first: ProjectOrderRequest?, final: ProjectOrderRequest?
+            var oldFirst: ProjectOrderRequest?, oldFinal: ProjectOrderRequest?
+            let oldStart = ProcessInfo.processInfo.systemUptime
+            for index in 0..<20 {
+                // Previous Store.snapshot didSet cleared on every task-only edit.
+                baseline.clear()
+                let request = baseline.orderRequest(for: scopes[index]) { inputs[index] }
+                oldCount += request.ordering.visible.count
+                if oldFirst == nil { oldFirst = request }; oldFinal = request
+            }
+            let oldSeconds = ProcessInfo.processInfo.systemUptime - oldStart
+            let nextStart = ProcessInfo.processInfo.systemUptime
+            for index in 0..<20 {
+                let request = optimized.orderRequest(for: scopes[index]) { sourceReads += 1; return inputs[index] }
+                newCount += request.ordering.visible.count
+                if first == nil { first = request }; final = request
+            }
+            let newSeconds = ProcessInfo.processInfo.systemUptime - nextStart
+            XCTAssertEqual(oldCount, 72_000); XCTAssertEqual(newCount, oldCount); XCTAssertEqual(sourceReads, 20)
+            XCTAssertEqual(projectCatalogSharesStorage(try XCTUnwrap(first).projects, try XCTUnwrap(final).projects), mode != 2)
+            XCTAssertEqual(oldFirst?.ordering.visible, expected.visible)
+            XCTAssertEqual(oldFinal?.ordering.visible, expected.visible)
+            XCTAssertEqual(final?.ordering.visible, expected.visible)
+            XCTAssertTrue(AuthoredValueComparison.sameRows(try XCTUnwrap(final).projects, OrganizationOrder.sorted(rows)))
+            modes.append(["sourceArrays": mode == 0 ? "shared unchanged project array" : mode == 1 ? "filtered immutable record copies" : "newly reconstructed record values", "baselineSeconds": oldSeconds,
+                "revalidatedSecondsIncludingColdCatalog": newSeconds, "currentSourceReads": sourceReads, "preparedGraphReused": mode != 2])
+        }
+        let report: [String: Any] = ["projects": 4000, "sourceEpochs": 20, "modes": modes, "exactSourceAndOutlinePreserved": true, "sameFirstAndLastSnapshotRetentionInBothPaths": true, "debugDiagnosticOnly": true, "physicalFPSClaim": false]
+        try JSONSerialization.data(withJSONObject: report, options: [.sortedKeys, .prettyPrinted]).write(to: URL(fileURLWithPath: output), options: .atomic)
+    }
+}
+
+extension ProjectWorkflowsTests {
+    func testImmutableRecordSourceSurvivesOnlyUnchangedValueCopies() {
+        let original = Record(["id": .string("record"), "name": .string("Original"), "opaque": .object(["value": .number(1)])])
+        let copy = original
+        XCTAssertTrue(original.sharesAuthoredSource(with: copy))
+        let rows = [original, project("other")]
+        XCTAssertTrue(AuthoredValueComparison.sameRecordSources(rows, rows.filter { _ in true }))
+        XCTAssertFalse(AuthoredValueComparison.sameRecordSources(rows, Array(rows.reversed())))
+        XCTAssertFalse(AuthoredValueComparison.sameRecordSources(rows, [original]))
+        XCTAssertFalse(original.sharesAuthoredSource(with: Record(original.fields)))
+        var edited = original
+        edited["name"] = .string("Changed")
+        XCTAssertFalse(original.sharesAuthoredSource(with: edited))
+        XCTAssertEqual(original.name, "Original")
+        // Even a semantically unchanged assignment conservatively retires source.
+        edited = original; edited["name"] = original["name"]
+        XCTAssertEqual(edited, original); XCTAssertFalse(edited.sharesAuthoredSource(with: original))
+    }
+    func testEveryLegalRecordFieldsWriteRetiresImmutableSource() {
+        let original = Record(["id": .string("record"), "name": .string("Original"), "opaque": .object(["value": .number(1)])])
+        func throughInout(_ fields: inout [String: JSON]) { fields["new"] = .string("Inout edit") }
+        let updates: [(inout Record) -> Void] = [
+            { $0.fields["name"] = .string("Direct fields") },
+            { $0.fields = original.fields },
+            { $0.fields.merge(["new": .string("Merged")], uniquingKeysWith: { _, right in right }) },
+            { $0.fields.removeValue(forKey: "name") },
+            { throughInout(&$0.fields) },
+            { var nested = $0["opaque"].object; nested["value"] = .number(2); $0["opaque"] = .object(nested) }]
+        for update in updates {
+            var edited = original; update(&edited)
+            XCTAssertFalse(edited.sharesAuthoredSource(with: original))
+            XCTAssertFalse(AuthoredValueComparison.sameRecordSources([original], [edited]))
+            XCTAssertEqual(original.name, "Original"); XCTAssertEqual(original["opaque"].object["value"], .number(1))
+        }
+    }
+    func testRecordDomainEqualityAndExactComparisonKeepTheirDistinctContracts() {
+        let composed = Record(["id": .string("record"), "name": .string("Café"), "zero": .number(0)])
+        let decomposed = Record(["id": .string("record"), "name": .string("Cafe\u{301}"), "zero": .number(-0.0)])
+        XCTAssertEqual(composed, decomposed, "Domain equality stays fields-only with its existing semantic behavior")
+        XCTAssertFalse(AuthoredValueComparison.sameRows([composed], [decomposed]))
+        XCTAssertFalse(AuthoredValueComparison.sameRecordSources([composed], [decomposed]))
+        XCTAssertTrue(AuthoredValueComparison.sameRecordSources([composed], [composed]))
+    }
+    func testRecordSourceIdentityNeverEntersPortableOrPreservedJSON() throws {
+        let data = Data(#"{"id":"record","name":"Opaque","extension":{"integer":9007199254740993,"text":"Cafe\u0301"}}"#.utf8)
+        let original = try TaskfoldJSONDecoder().decode(Record.self, from: data)
+        let bytes = try TaskfoldJSONEncoder().encode(original)
+        let decoded = try TaskfoldJSONDecoder().decode(Record.self, from: bytes)
+        XCTAssertEqual(decoded, original)
+        XCTAssertTrue(AuthoredValueComparison.sameRows([decoded], [original]))
+        XCTAssertFalse(decoded.sharesAuthoredSource(with: original))
+        let raw = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        XCTAssertEqual(Set(raw.keys), Set(original.fields.keys))
+        XCTAssertTrue(String(decoding: bytes, as: UTF8.self).contains("9007199254740993"))
+        XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains("sourceIdentity"))
+    }
+}

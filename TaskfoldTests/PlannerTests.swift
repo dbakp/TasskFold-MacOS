@@ -451,7 +451,9 @@ final class TaskRowPlanningReadTests: XCTestCase {
     }
     func testNewRecordClockAndZoneAreReadFreshWithoutMutatingSource() throws {
         var row = task(); row["description"] = .string("Café e\u{301} 🪴"); row["future"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("9007199254740993".utf8))
-        let before = try TaskfoldJSONEncoder().encode(row), first = TaskRowPlanningRead(task: row, calendar: calendar(), now: now)
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let beforeFields = row.fields
+        let before = try encoder.encode(row), first = TaskRowPlanningRead(task: row, calendar: calendar(), now: now)
         let tomorrow = TaskRowPlanningRead(task: row, calendar: calendar(), now: Dates.parse("2026-11-10", calendar: calendar())!)
         XCTAssertNotEqual(first.overdue, tomorrow.overdue)
         var edited = row; edited["due_time"] = .string("14:45"); edited["scheduled_at"] = .null
@@ -459,7 +461,8 @@ final class TaskRowPlanningReadTests: XCTestCase {
         XCTAssertEqual(changed.clock, "14:45"); XCTAssertNotEqual(changed.clock, first.clock)
         let travel = TaskRowPlanningRead(task: row, calendar: calendar("America/New_York"), now: now)
         XCTAssertNotEqual(travel.clock, first.clock)
-        XCTAssertEqual(try TaskfoldJSONEncoder().encode(row), before)
+        XCTAssertEqual(try encoder.encode(row), before)
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(.object(row.fields), .object(beforeFields)))
     }
     func testRepeatedRowDateWorkloadMatchesSingleReadAndRecordsTiming() {
         let c = calendar("Europe/Copenhagen"), rows = (0..<40).map { n -> Record in var row = task(); row["id"] = .string("row-\(n)"); return row }

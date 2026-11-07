@@ -1,0 +1,13 @@
+{
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "fab6a7adfe0fcf19e123bf0e3fcfd8181ecdb69858adf43c08c59776229e69c3",
+    "Taskfold/Core/TeamWorkspace.swift": "7edb32bf154592f68784b1429357f8dfd8e7cf52079000b0adc4b8086090e23d",
+    "Taskfold/Core/Store.swift": "15f8f5bfe1ad360ca1c2766035a7f0299326d53f1f327d8ab6ef9fc46cbcbf2e",
+    "Taskfold/TeamTemplateNativeFixture.swift": "9e26abe254db543d3251daa0160ad015eb7fcb3da95d538b86ab2300c5770f64",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "06ebfa757cadeaed7c102d81fd2cce0a464b108611aece9d04606c1de20631f0",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "f25112cd9dd6fed8e59e825ef91a88f509062ae3075d6e0a2323b2bd241603e2",
+    "TaskfoldTests/PlannerTests.swift": "d57424ead755ca997cc95b96d61009a0a696872a80c8f7848091c07b5d4f6ad5"
+  },
+  "dataContractAndNormalGatesUnchanged": true,
+  "candidate39Preserved": true
+}

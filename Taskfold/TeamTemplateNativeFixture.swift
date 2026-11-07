@@ -592,6 +592,7 @@ import CryptoKit
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-performance") }
     static var largeCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-catalog") }
     static var projectCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-project-catalog") }
+    static var projectCatalogRevalidation: Bool { projectCatalog && ProcessInfo.processInfo.arguments.contains("--workspace-project-revalidation") }
     static var projectParents: Bool { projectCatalog && ProcessInfo.processInfo.arguments.contains("--workspace-project-parents") }
     static var templateLibrary: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-template-library") }
     static func libraryID(_ index:Int)->String {String(format:"ec270000-0000-4000-8000-%012d",index)}
