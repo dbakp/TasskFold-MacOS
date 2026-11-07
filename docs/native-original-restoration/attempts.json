@@ -1,0 +1,134 @@
+[
+  {
+    "attempt": "initial",
+    "accepted": false,
+    "cause": "Actual first-sheet selection bug; no restore sent. Reporter finalization interrupted after case failed.",
+    "logSHA256": "3f4fef22b5a8d16e332081c8c36847bdcf0fd79b9216553fbc2d078be6507fe5",
+    "fixture": {
+      "passed": false,
+      "failure": {
+        "message": "Native journey did not request final verification",
+        "code": "ERR_ASSERTION",
+        "stack": [
+          "AssertionError [ERR_ASSERTION]: Native journey did not request final verification",
+          "    at file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/run-child-restore-native.mjs:47:3"
+        ]
+      },
+      "fixtureRemoved": true
+    },
+    "orchestration": {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bootedThisRun": true,
+      "preservedSyntheticData": [
+        {
+          "from": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/4ABE9D4C-F518-4F5E-8DD3-60F82C4B7EA9/Library/Application Support/Taskfold",
+          "to": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/4ABE9D4C-F518-4F5E-8DD3-60F82C4B7EA9/Library/Application Support/Taskfold-before-restore-native-063be051",
+          "files": 301,
+          "manifestSHA256": "d94db8b8c7a97c0f851811af27d38c6f77aa05e181cb465526fa5e86f6203c98"
+        },
+        {
+          "from": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/4ABE9D4C-F518-4F5E-8DD3-60F82C4B7EA9/Library/Application Support/Child archives SQL native peer",
+          "to": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/4ABE9D4C-F518-4F5E-8DD3-60F82C4B7EA9/Library/Application Support/Child archives SQL native peer-before-restore-native-777e4138",
+          "files": 6,
+          "manifestSHA256": "332389e6f77e746209db86b8b6ac2e942734fcd2fc4962b2dc8f736c9ca48f24"
+        }
+      ],
+      "normalAppChanged": false,
+      "nativeAuth": "reserved real PostgreSQL role/session channel, not HTTP authentication",
+      "testPID": 88007,
+      "fixturePID": 88451,
+      "channel": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/4ABE9D4C-F518-4F5E-8DD3-60F82C4B7EA9/Library/Application Support/Child archives SQL native peer",
+      "testExit": -15,
+      "fixtureExit": 1
+    },
+    "fixtureReportSHA256": "330bfb7a12c71f79c0a2d99585c2e622e99f69506f7e141984ef77798d86ab84"
+  },
+  {
+    "attempt": "-v2",
+    "accepted": false,
+    "cause": "Test tapped acknowledgement label, leaving Apply correctly disabled; no restore sent.",
+    "logSHA256": "6464f6cdeb62982abe493dc3330087c8c963b43e00458e5b5df2e310438ad79b",
+    "fixture": {
+      "passed": false,
+      "failure": {
+        "message": "Native journey did not request final verification",
+        "code": "ERR_ASSERTION",
+        "stack": [
+          "AssertionError [ERR_ASSERTION]: Native journey did not request final verification",
+          "    at file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/run-child-restore-native.mjs:47:3"
+        ]
+      },
+      "fixtureRemoved": true
+    },
+    "orchestration": {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bootedThisRun": true,
+      "preservedSyntheticData": [
+        {
+          "from": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/B56282BF-391F-4434-BFD3-C62847EC7379/Library/Application Support/Taskfold",
+          "to": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/B56282BF-391F-4434-BFD3-C62847EC7379/Library/Application Support/Taskfold-before-restore-native-e1673786",
+          "files": 2,
+          "manifestSHA256": "e828d3e77f8e82631a2341340f0ab8a0fa470da0488de4151adf2a36fdc2ae03"
+        },
+        {
+          "from": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/B56282BF-391F-4434-BFD3-C62847EC7379/Library/Application Support/Child archives SQL native peer",
+          "to": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/B56282BF-391F-4434-BFD3-C62847EC7379/Library/Application Support/Child archives SQL native peer-before-restore-native-7ee55a1c",
+          "files": 5,
+          "manifestSHA256": "9f063ff15c193b7c12399e0e415db5040c1d9046415b538019cb09916885ae0b"
+        }
+      ],
+      "normalAppChanged": false,
+      "nativeAuth": "reserved real PostgreSQL role/session channel, not HTTP authentication",
+      "testPID": 11182,
+      "fixturePID": 13070,
+      "channel": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/B56282BF-391F-4434-BFD3-C62847EC7379/Library/Application Support/Child archives SQL native peer",
+      "testExit": 65,
+      "fixtureExit": 1
+    },
+    "fixtureReportSHA256": "330bfb7a12c71f79c0a2d99585c2e622e99f69506f7e141984ef77798d86ab84"
+  },
+  {
+    "attempt": "-v3",
+    "accepted": false,
+    "cause": "Initial restore/status/cold receipt passed. Test then targeted a hidden earlier sheet switch; Undo was not sent.",
+    "logSHA256": "f55c77086dc0f0e8c8c8c7ae9d9371e7187268b74d15877360ce5c7231ef10de",
+    "fixture": {
+      "passed": false,
+      "failure": {
+        "message": "Native journey did not request final verification",
+        "code": "ERR_ASSERTION",
+        "stack": [
+          "AssertionError [ERR_ASSERTION]: Native journey did not request final verification",
+          "    at file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/run-child-restore-native.mjs:47:3"
+        ]
+      },
+      "fixtureRemoved": true
+    },
+    "orchestration": {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bootedThisRun": true,
+      "preservedSyntheticData": [
+        {
+          "from": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/DD2E585D-CBE3-4F5B-BF0F-AD16D0668ABB/Library/Application Support/Taskfold",
+          "to": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/DD2E585D-CBE3-4F5B-BF0F-AD16D0668ABB/Library/Application Support/Taskfold-before-restore-native-0b2c1004",
+          "files": 2,
+          "manifestSHA256": "6eec95066169bb5224b9ca14305a9d5c8316ad14d3af22ee900b43bb2b95aef0"
+        },
+        {
+          "from": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/DD2E585D-CBE3-4F5B-BF0F-AD16D0668ABB/Library/Application Support/Child archives SQL native peer",
+          "to": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/DD2E585D-CBE3-4F5B-BF0F-AD16D0668ABB/Library/Application Support/Child archives SQL native peer-before-restore-native-053e9148",
+          "files": 5,
+          "manifestSHA256": "c82669edbcec728b20a567a8a7712540513646386621e454cebe9a7217e4655b"
+        }
+      ],
+      "normalAppChanged": false,
+      "nativeAuth": "reserved real PostgreSQL role/session channel, not HTTP authentication",
+      "testPID": 18503,
+      "fixturePID": 18865,
+      "channel": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/DD2E585D-CBE3-4F5B-BF0F-AD16D0668ABB/Library/Application Support/Child archives SQL native peer",
+      "testExit": 65,
+      "fixtureExit": 1
+    },
+    "fixtureReportSHA256": "330bfb7a12c71f79c0a2d99585c2e622e99f69506f7e141984ef77798d86ab84"
+  }
+]

@@ -36,6 +36,12 @@ export function createMappingSQLChannel(pg,{session,nonce,loseFirstSave=false,be
    case '/rest/v1/rpc/taskfold_child_repair_original_cleanup':
     if(Object.keys(body).sort().join(',')!=='_archive,_bytes,_digest,_operation,_request'||!['review','remove'].includes(body._operation)||!Number.isInteger(body._bytes)||body._bytes<1||body._bytes>8000000||!/^[a-f0-9]{64}$/.test(body._digest??'')||!['_archive','_request'].every(k=>/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body[k]??'')))throw new Error('Invalid original cleanup');
     expression=`public.taskfold_child_repair_original_cleanup(${lit(body._operation)},${lit(body._request)},${lit(body._archive)},${lit(body._digest)},${body._bytes})`;break;
+   case '/rest/v1/rpc/taskfold_review_child_restore':
+    if(Object.keys(body).sort().join(',')!=='_archive,_mode,_repair,_restore'||!['restore','undo','redo'].includes(body._mode)||!['_archive','_repair'].every(k=>/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body[k]??''))||(body._mode==='restore')!==(body._restore===null)||body._restore!==null&&!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body._restore??''))throw new Error('Invalid restoration review');
+    expression=`public.taskfold_review_child_restore(${lit(body._mode)},${lit(body._repair)},${lit(body._archive)},${body._restore===null?'null':lit(body._restore)})`;break;
+   case '/rest/v1/rpc/taskfold_restore_child_original':
+    if(Object.keys(body).sort().join(',')!=='_body,_operation'||!['send','check','close'].includes(body._operation)||!body._body||Array.isArray(body._body)||typeof body._body!=='object'||Buffer.byteLength(JSON.stringify(body._body))>4096)throw new Error('Invalid restoration decision');
+    expression=`public.taskfold_restore_child_original(${lit(body._operation)},${json(body._body)})`;break;
    case '/rest/v1/rpc/taskfold_review_child_adoption':
     if(Object.keys(body).sort().join(',')!=='_generation,_id'||body._id!==identity.root||body._generation!==identity.generation)throw new Error('Invalid root');
     expression=`public.taskfold_review_child_adoption(${lit(body._id)},${lit(body._generation)})`;break;

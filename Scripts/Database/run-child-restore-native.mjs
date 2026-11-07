@@ -1,0 +1,57 @@
+// Complete owned schema plus the reserved DEBUG PostgreSQL channel. This does
+// not claim native HTTP authentication or touch hosted/user data.
+import assert from 'node:assert/strict';
+import {readFile,mkdir,readdir,unlink,rm,mkdtemp,lstat,writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {resolve,basename} from 'node:path';
+import {randomUUID,createHash} from 'node:crypto';
+import {setTimeout as delay} from 'node:timers/promises';
+import {createFullSchemaRuntime} from './full-schema-runtime.mjs';
+import {identity,atomicFile,createMappingSQLChannel,relocatedSimulatorChannel} from './child-mapping-native-channel.mjs';
+const smoke=process.argv.includes('--smoke'),at=process.argv.indexOf('--directory'),reportAt=process.argv.indexOf('--report');
+assert(smoke||at>=0);const reportPath=reportAt>=0?resolve(process.argv[reportAt+1]):null;
+assert(!reportPath||/^\/tmp\/taskfold-[^/]+\.json$/.test(reportPath));
+let directory=smoke?await mkdtemp(tmpdir()+'/taskfold-restore-channel-'):resolve(process.argv[at+1]);
+assert(smoke||basename(directory)==='Child archives SQL native peer');await mkdir(directory,{recursive:true,mode:0o700});
+const info=await lstat(directory);assert(info.isDirectory()&&!info.isSymbolicLink());assert.equal((await readdir(directory)).length,0,'Preserve existing fixture evidence first');
+let runtime,stopping=false;process.once('SIGTERM',()=>stopping=true);process.once('SIGINT',()=>stopping=true);
+const report={passed:false,scope:'Genuine local complete schema; reserved native SQL role/session channel, not native HTTP Auth',checks:[],hostedChanges:false,normalAppChanged:false};
+const lit=x=>"'"+String(x).replaceAll("'","''")+"'",json=x=>lit(JSON.stringify(x))+'::jsonb';
+try{
+ runtime=await createFullSchemaRuntime();report.migrations=runtime.migrations;
+ const session=randomUUID(),nonce=randomUUID();
+ await runtime.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(identity.account)},'restore-native@example.invalid',now());insert into auth.sessions(id,user_id) values(${lit(session)},${lit(identity.account)});update taskfold_private.child_task_record_config set adoption_enabled=true,repair_reviews_enabled=true,repair_writes_enabled=true,reads_enabled=true,edits_enabled=true,completions_enabled=true,structure_reads_enabled=true,structure_edits_enabled=true;insert into public.tasks(id,user_id,task_generation,title,description,priority,subtasks) values(${lit(identity.root)},${lit(identity.account)},${lit(identity.generation)},'Restoration workshop','Keep current root notes',2,'["Keep original instructions"]')`);
+ const invoke=async expression=>JSON.parse(await runtime.raw(`set local request.jwt.claim.sub=${lit(identity.account)};set local request.jwt.claims=${lit(JSON.stringify({sub:identity.account,session_id:session}))};set local role authenticated;select (${expression})::text`));
+ const read=await invoke(`public.taskfold_review_child_adoption(${lit(identity.root)},${lit(identity.generation)})`);
+ const body=Object.fromEntries(['protocol','account','task_id','task_generation','project_id','workspace_id','review_digest'].map(k=>[k,read[k]]));body.changes=[{kind:'wrap_item',path:[0],reference:randomUUID(),title:'Recovered instructions'}];
+ const preview=await invoke(`public.taskfold_preview_child_repair(${json(body)})`);
+ const receipt=await invoke(`public.taskfold_repair_children('send',${json({...body,request_id:randomUUID(),repair_digest:preview.repair_digest})})`);assert.equal(receipt.state,'applied');
+ await runtime.raw('update taskfold_private.child_task_record_config set adoption_enabled=false,repair_reviews_enabled=false,repair_writes_enabled=false,archive_restore_enabled=true,archive_restore_reversals_enabled=true');
+ const state=async()=>JSON.parse(await runtime.raw(`select jsonb_build_object('root',(select to_jsonb(t) from public.tasks t where id=${lit(identity.root)}),'records',(select jsonb_agg(to_jsonb(r) order by node_key) from taskfold_private.child_task_records r),'originals',(select jsonb_agg(jsonb_build_object('metadata',to_jsonb(o)-'original','original_text',o.original::text) order by id) from taskfold_private.child_task_repair_originals o),'root_history',(select jsonb_agg(to_jsonb(h) order by sequence) from public.task_activity h),'child_history',(select jsonb_agg(to_jsonb(h) order by sequence) from public.task_node_activity h),'restorations',(select jsonb_agg(to_jsonb(s) order by restore_id) from taskfold_private.child_repair_restorations s),'requests',(select jsonb_agg(to_jsonb(r) order by request_id) from taskfold_private.child_repair_restore_requests r),'scopes',(select count(*) from taskfold_private.child_repair_restore_scope))::text`));
+ const baseline=await state(),trace=[];const entries=(await invoke('public.taskfold_child_repair_archives(null,50)')).entries;assert.equal(entries.length,1);
+ const publish=async()=>{const current=await state();await atomicFile(directory+'/database-state.json',JSON.stringify(current));await atomicFile(directory+'/trace.json',JSON.stringify(trace));await atomicFile(directory+'/server.json',JSON.stringify({root:current.root,receipts:{},versions:{},writes:(current.requests??[]).length,requests:trace.length,lost:trace.some(x=>x.reply.lose)}));};
+ const channel=createMappingSQLChannel(runtime,{session,nonce,loseFirstSave:true,beforeReply:async(request,reply)=>{trace.push({request,reply});await publish();}});
+ await atomicFile(directory+'/baseline.json',JSON.stringify(baseline));await atomicFile(directory+'/expected.json',JSON.stringify({entries,...identity}));await publish();await atomicFile(directory+'/channel.json',JSON.stringify({protocol:1,nonce,...identity}));
+ if(smoke){
+  const call=async(path,body)=>{const request={protocol:1,nonce,id:randomUUID(),path:'/rest/v1/rpc/'+path,body:Buffer.from(JSON.stringify(body)).toString('base64')};const reply=await channel.dispatch(request);await atomicFile(directory+'/last-smoke-reply.json',JSON.stringify(reply));assert.equal(reply.code,null);return {reply,value:JSON.parse(Buffer.from(reply.data,'base64'))};};
+  let restoration=null;
+  for(const mode of ['restore','undo','redo','undo']){
+   const p=(await call('taskfold_review_child_restore',{_mode:mode,_repair:receipt.request_id,_archive:receipt.archive_id,_restore:restoration})).value;assert(p.enabled);
+   const command={...Object.fromEntries(['protocol','account','task_id','task_generation','project_id','workspace_id','repair_request_id','archive_id','archive_digest','mode','restore_id','revision','review_digest'].map(k=>[k,p[k]])),request_id:randomUUID()};
+   const applied=await call('taskfold_restore_child_original',{_operation:'send',_body:command});assert.equal(applied.value.state,'applied');if(mode==='restore')assert(applied.reply.lose);restoration=applied.value.restoration_id;
+   const checked=await call('taskfold_restore_child_original',{_operation:'check',_body:command});assert.equal(checked.value.restoration_id,restoration);assert(checked.value.replayed);report.checks.push(mode+' genuine decision and exact status');
+  }
+ }else{
+  console.log(JSON.stringify({ready:true,directory}));const deadline=Date.now()+15*60*1000;
+  while(!stopping&&Date.now()<deadline){try{if((await readdir(directory)).includes('stop'))break;await channel.drain(directory);}catch(e){if(e.code!=='ENOENT'||!process.argv.includes('--follow-simulator-container'))throw e;directory=await relocatedSimulatorChannel(directory,nonce);}await delay(100);}
+  assert((await readdir(directory)).includes('stop'),'Native journey did not request final verification');
+  const writes=trace.filter(x=>x.request.path.endsWith('/taskfold_restore_child_original')&&JSON.parse(Buffer.from(x.request.body,'base64'))._operation==='send');
+  assert.deepEqual(writes.map(x=>JSON.parse(Buffer.from(x.request.body,'base64'))._body.mode),['restore','undo','redo','undo']);
+  assert.equal(writes.filter(x=>x.reply.lose).length,1);assert(trace.some(x=>x.request.path.endsWith('/taskfold_restore_child_original')&&JSON.parse(Buffer.from(x.request.body,'base64'))._operation==='check'));
+  report.checks.push('four reviewed native writes; lost initial reply resolved through actual status');
+ }
+ const final=await state();const rootContent=({updated_at,...root})=>root;assert.deepEqual(rootContent(final.root),rootContent(baseline.root));assert.deepEqual(final.root.subtasks,baseline.root.subtasks);assert.equal(final.root.description,baseline.root.description);assert.equal(final.root.priority,baseline.root.priority);assert.deepEqual(final.originals,baseline.originals);
+ const authored=rows=>rows.map(({incarnation,revision,...row})=>row);assert.deepEqual(authored(final.records),authored(baseline.records));assert.equal(final.restorations.length,1);assert.equal(final.restorations[0].revision,4);assert.equal(final.restorations[0].phase,'undone');assert.equal(final.requests.length,4);assert.equal(final.scopes,0);
+ for(const key of ['root_history','child_history'])for(const prior of baseline[key]??[])assert.deepEqual(final[key].find(x=>x.id===prior.id),prior);
+ await publish();report.checks.push('exact editable source and authored records returned; notes/priority/originals/history preserved; four receipts and no leaked scope');report.final={revision:4,phase:'undone',requests:4};report.baselineSHA256=createHash('sha256').update(JSON.stringify(baseline)).digest('hex');report.advisors=await runtime.advisors();report.passed=true;
+}catch(e){report.failure={message:e.message,code:e.code,stack:e.stack?.split('\n').slice(0,4)};process.exitCode=1;}finally{await unlink(directory+'/channel.json').catch(()=>{});if(runtime)report.fixtureRemoved=await runtime.close();if(smoke)await rm(directory,{recursive:true,force:true});if(reportPath)await writeFile(reportPath,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:report.passed,checks:report.checks,failure:report.failure,fixtureRemoved:report.fixtureRemoved}));}
