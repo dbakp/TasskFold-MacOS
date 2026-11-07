@@ -47,10 +47,10 @@ export async function createFullSchemaRuntime({onMigration=()=>{},beforeMigratio
    child.stdout.on('data',x=>{out+=x;if(out.length>4*1024*1024)child.kill()});child.stderr.on('data',x=>{err=(err+x).slice(-12000)});child.once('error',()=>{clearTimeout(timer);reject(Error('Full-schema SQL process failed'))});child.once('exit',code=>{clearTimeout(timer);if(code===0)resolve(out.trim());else{const e=Error('Full-schema SQL failed: '+(err.match(/ERROR:.*\n/)?.[0]?.trim()??'process exit '+code));e.code=err.match(/ERROR:\s+([A-Z0-9]{5}):/)?.[1];reject(e)}});child.stdin.end(sql);
   });
  }
- async function request(kind,path,{method='GET',body,authorization=anon,headers={}}={}){
+ async function request(kind,path,{method='GET',body,authorization=anon,headers={},includeText=false}={}){
   if(!urls[kind]||!path.startsWith('/')||path.startsWith('//'))throw Error('Owned local service path required');
   const response=await fetch(urls[kind]+path,{method,redirect:'error',signal:AbortSignal.timeout(30000),headers:{apikey:anon,Authorization:'Bearer '+authorization,...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});
-  const text=await response.text();let value;try{value=JSON.parse(text)}catch{value=text};return {status:response.status,value};
+  const text=await response.text();let value;try{value=JSON.parse(text)}catch{value=text};return {status:response.status,value,...(includeText?{text}:{})};
  }
  async function ready(kind,path){
   for(let i=0;i<150;i++){try{if((await request(kind,path)).status===200)return}catch{};const info=await inspect(names[kind]);if(!info.State.Running)throw Error('Owned '+kind+' service exited before ready');await sleep(100)}

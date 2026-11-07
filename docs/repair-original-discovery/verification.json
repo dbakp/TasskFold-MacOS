@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-07",
+  "owner": "TasskFold-MacOS",
+  "sourceSHA256": {
+    "supabase/migrations/20261107051702_child_repair_archive_discovery.sql": "ebfd0f609ed7e54818a6b521af36e96678a275c40e10844f80bccda1f90241a1",
+    "Scripts/Database/test-child-repair-archive-discovery.mjs": "851b072aec4c1489711204ced2a3fff7f460949d2e464dc825c1f8f967c924cd",
+    "Scripts/Database/full-schema-runtime.mjs": "0d90d2878c348d05bc08c96047d8bb4bb62089f7369eb2728d428981e305330d",
+    "Taskfold/Core/Backend.swift": "75c1a7d98b233621b73ea9a753aa72cc8ada869212228a4f5e858ec53f177ca2",
+    "Taskfold/Core/ChildTaskRepair.swift": "383523200aa2cc9445335c081c2f04d9508c9e2b3518248f9ac7ebea206c40fb",
+    "Taskfold/Core/Store.swift": "644156ed023c62ccffc2c83accd5c76de36205b69f7aaf197156c97793c0ccee",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "74656f5217cbf2fedfc6c71573d23f9cacb0c4e112a6654093bfae94842e1a42",
+    "Taskfold/Views/ChildTaskRepairView.swift": "0d8c3e5af87b7b6b432f92705aff7b147a335c78ac88cdec3065e6838987f2ad",
+    "TaskfoldTests/ChildRepairArchiveTests.swift": "e2114bc6d0e0847399a0ea07ffc6d73050a1f7af28c70328f998c19d342f84c5",
+    "TaskfoldTests/Fixtures/child-repair-archive-contract-v1.json": "fe66c24033a4fa1811c71a0c4c43473af56915f8a444eb14401e888551da02fd"
+  },
+  "genuineAPI": {
+    "passed": 98,
+    "failed": 0,
+    "migrationsReplayed": 217,
+    "fixtureRemoved": true,
+    "advisors": [
+      "extension_in_public"
+    ]
+  },
+  "core": {
+    "selected": 87,
+    "passed": 87,
+    "failed": 0,
+    "skipped": 0,
+    "newMethods": 6,
+    "fixtureCapture": "Each owner final accepted genuine-service response; six archive cases retaken on that exact final contract. The other 81 unchanged cases retain the earlier passing focused-suite evidence.",
+    "finalContractArchiveRetake": 6
+  },
+  "fullCopiedAppCompilation": "app-compilation.json; unsigned, before final presentational copy/accessible-label refinement; final view syntax checks pass",
+  "nativeBrowserPickerAcceptance": false,
+  "hostedMigrationApplied": false,
+  "normalReadGateEnabled": false,
+  "normalAppsUpdated": false,
+  "cliLocalHistoryVerified": false,
+  "checkpointsAdded": 0,
+  "scopedChecklistUpdate": "Expanded the existing original-export substep with command-free API/Core discovery; native browser remains separately unaccepted. No scoped count added."
+}

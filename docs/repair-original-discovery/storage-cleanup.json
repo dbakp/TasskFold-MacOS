@@ -1,0 +1,260 @@
+{
+  "freeBeforeBytes": 44532629504,
+  "freeAfterBytes": 44558184448,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-archive-mac-host",
+      "kind": "completed copied source inputs",
+      "allocatedBytes": 12423168
+    },
+    {
+      "path": "/tmp/taskfold-archive-ios-host",
+      "kind": "completed copied source inputs",
+      "allocatedBytes": 11091968
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-ios-accepted.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-verified.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-ios-title.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-accepted.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-ios-verified.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-final-parity.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-title.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-custody.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-final.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-custody.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 49152
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-ios-title.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 53248
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-ios-verified.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 49152
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-ios-accepted.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 53248
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-accepted.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 53248
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-verified.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 49152
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-final.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-final-parity.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 49152
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac-title.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 49152
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery-mac.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-archive-core-ios-final.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 135168
+    },
+    {
+      "path": "/tmp/taskfold-archive-core-ios-title.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 49152
+    },
+    {
+      "path": "/tmp/taskfold-archive-core-mac-current-wire.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-core-ios-current-wire.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-core-ios.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 20480
+    },
+    {
+      "path": "/tmp/taskfold-archive-core-mac-final.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 135168
+    },
+    {
+      "path": "/tmp/taskfold-archive-mac-build-final.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 135168
+    },
+    {
+      "path": "/tmp/taskfold-archive-mac-build.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 331776
+    },
+    {
+      "path": "/tmp/taskfold-archive-ios-build-final.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 462848
+    },
+    {
+      "path": "/tmp/taskfold-archive-mac-build-inputs.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-archive-mac-fresh-inputs.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-archive-ios-fresh-inputs.json",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 45056
+    },
+    {
+      "path": "/tmp/taskfold-archive-final-copy-mac.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "/tmp/taskfold-archive-final-copy-ios.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "/tmp/taskfold-archive-migrations-local.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-db-pull-local.log",
+      "kind": "completed temporary evidence, concise outcomes retained",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-discovery.sql",
+      "kind": "completed feature preparation scratch",
+      "allocatedBytes": 8192
+    },
+    {
+      "path": "/tmp/taskfold-archive-core.txt",
+      "kind": "completed feature preparation scratch",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-backend.txt",
+      "kind": "completed feature preparation scratch",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-archive-view.txt",
+      "kind": "completed feature preparation scratch",
+      "allocatedBytes": 8192
+    },
+    {
+      "path": "/tmp/taskfold-archive-changelog.md",
+      "kind": "completed feature preparation scratch",
+      "allocatedBytes": 106496
+    },
+    {
+      "path": "/tmp/taskfold-archive-final-view-followup.patch",
+      "kind": "completed feature preparation scratch",
+      "allocatedBytes": 4096
+    }
+  ],
+  "removedAllocatedBytes": 25608192,
+  "reusedCaches": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "measuredBytes": 636678144,
+      "measurement": "entire Core cache",
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "measuredBytes": 694603776,
+      "measurement": "entire Core cache",
+      "within768MiB": true
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build",
+      "measuredBytes": 627556352,
+      "measurement": "selected regenerable compiler scratch",
+      "within768MiB": true
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build",
+      "measuredBytes": 720162816,
+      "measurement": "selected regenerable compiler scratch",
+      "within768MiB": true
+    }
+  ],
+  "simulatorsBooted": [],
+  "normalAppLaunchedOrClosed": false,
+  "normalMacBuild": 31,
+  "normalMacPID": 80191,
+  "privateUserDataDeleted": false,
+  "ownedServiceFixturesRemoved": true,
+  "finishToolReport": "repair-original-discovery-finish-20261107.json"
+}

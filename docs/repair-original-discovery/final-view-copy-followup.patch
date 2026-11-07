@@ -1,0 +1,33 @@
+--- compiled-isolated-view
++++ final-owned-view
+@@ -718,14 +718,16 @@
+                     ForEach(entries.filter { $0.scope == scope }.sorted { $0.createdAt == $1.createdAt ? $0.requestID < $1.requestID : $0.createdAt > $1.createdAt }) { entry in
+                         Section {
+                             VStack(alignment: .leading, spacing: 6) {
+-                                Text(entry.title ?? "Saved original").font(.headline).fixedSize(horizontal: false, vertical: true)
++                                Text(archiveTitle(entry)).font(.headline).fixedSize(horizontal: false, vertical: true)
+                                 Text(entry.createdAt, format: .dateTime.year().month().day().hour().minute()).foregroundStyle(.secondary)
+-                                Text("\(entry.nodeCount) subtasks · \(ByteCountFormatter.string(fromByteCount: Int64(entry.bytes), countStyle: .file))")
++                                Text(ByteCountFormatter.string(fromByteCount: Int64(entry.bytes), countStyle: .file))
+                                     .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                             }
+                             if entry.contentRetained {
+                                 Button { Task { await export(entry) } } label: { ChildRepairActionLabel(title: "Export original", symbol: "square.and.arrow.up") }
+-                                    .disabled(busy).accessibilityIdentifier("childRepairArchiveExport-" + entry.id)
++                                    .disabled(busy).accessibilityLabel("Export original: \(archiveTitle(entry))")
++                                    .accessibilityHint("Save a copy of this original without changing your tasks.")
++                                    .accessibilityIdentifier("childRepairArchiveExport-" + entry.id)
+                             } else {
+                                 Text("Original content is no longer available. Its repair confirmation is kept.")
+                                     .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
+@@ -754,6 +756,10 @@
+             case .failure(let error): message = (error as NSError).code == NSUserCancelledError ? nil : "Export couldn’t finish. The original is still kept."
+             }
+         }
++    }
++    private func archiveTitle(_ entry: ChildTaskRepairArchive) -> String {
++        guard let title = entry.title, !title.isEmpty else { return "Saved original" }
++        return title + (entry.titleTruncated ? "…" : "")
+     }
+     private func clear() {
+         ticket = UUID(); entries = []; next = nil; loaded = false; busy = false
