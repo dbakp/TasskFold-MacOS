@@ -32,6 +32,9 @@ export function createMappingSQLChannel(pg,{session,nonce,loseFirstSave=false,be
    case '/rest/v1/rpc/taskfold_child_repair_original':
     if(Object.keys(body).sort().join(',')!=='_archive,_request'||!['_archive','_request'].every(k=>/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body[k]??'')))throw new Error('Invalid archive identity');
     expression=`public.taskfold_child_repair_original(${lit(body._request)},${lit(body._archive)})`;break;
+   case '/rest/v1/rpc/taskfold_child_repair_original_cleanup':
+    if(Object.keys(body).sort().join(',')!=='_archive,_bytes,_digest,_operation,_request'||!['review','remove'].includes(body._operation)||!Number.isInteger(body._bytes)||body._bytes<1||body._bytes>8000000||!/^[a-f0-9]{64}$/.test(body._digest??'')||!['_archive','_request'].every(k=>/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body[k]??'')))throw new Error('Invalid original cleanup');
+    expression=`public.taskfold_child_repair_original_cleanup(${lit(body._operation)},${lit(body._request)},${lit(body._archive)},${lit(body._digest)},${body._bytes})`;break;
    case '/rest/v1/rpc/taskfold_review_child_adoption':
     if(Object.keys(body).sort().join(',')!=='_generation,_id'||body._id!==identity.root||body._generation!==identity.generation)throw new Error('Invalid root');
     expression=`public.taskfold_review_child_adoption(${lit(body._id)},${lit(body._generation)})`;break;

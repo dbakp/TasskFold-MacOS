@@ -1,0 +1,13 @@
+{
+  "supabase/migrations/20261107070845_child_repair_original_cleanup.sql": "33e07f3d0ce428235cc0bfaf161e8ef7d482e652db8bff148742c5d96536031d",
+  "Scripts/Database/test-child-repair-original-cleanup.mjs": "55d047470aca46f62e783135652d1e0af5d26d88782920d7f0b0bca5bdf235a5",
+  "Scripts/Database/child-mapping-native-channel.mjs": "f97768a6a7bca048349306b5569bbacb53cc585eb46073eef39d8a0d71861ce0",
+  "Scripts/Database/test-child-mapping-native-channel.mjs": "63e9b8a05f979c4fb95cebd5312ab41077767688e56188003f1908e287c1048c",
+  "Scripts/Database/run-child-archives-native.mjs": "d5b63bfb8d6191366f97069278f71f2ff68144f4c89128c98df02c9e9f45fb00",
+  "Taskfold/Core/ChildTaskRepair.swift": "1673a74b0f3ab513f8f83ec2da48977e8316e13bc18471b40498de57b992b119",
+  "Taskfold/Core/Backend.swift": "9dcc441fb8cdecdb5ce7eaae8dbbf711bcea391a08b6ad34ef8183c235ba27d0",
+  "Taskfold/Core/Store.swift": "c67e183d60dc69b9edf85b75789666fd9b5ea8721b0130b38fdff9ff97fd4071",
+  "Taskfold/Views/ChildTaskRepairView.swift": "c3c56ad9a605a5690f8ad034b13bdeb8271c9899f348ea0972aa9d4022e976c9",
+  "TaskfoldTests/ChildRepairArchiveTests.swift": "6fe892c16ddb95eaf3cdfa37b627b2982c572da0a9d8161c2dddff6d65d0fbd1",
+  "TaskfoldTests/Fixtures/child-repair-original-cleanup-contract-v1.json": "a022e80993aa4ff57f7ae55206b5afc72ce33ad7cc66ed0d9a4a1c5eaa70b54c"
+}

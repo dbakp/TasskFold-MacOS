@@ -1,0 +1,45 @@
+{
+  "entry": {
+    "receipt": {
+      "state": "applied",
+      "account": "12a0a5d5-4cce-4475-8425-c7d0a1117fcd",
+      "task_id": "a95ae189-5b34-4e78-afe0-c6d6a15be156",
+      "protocol": 1,
+      "replayed": false,
+      "archive_id": "16546a69-632b-4330-9e80-7878474f4625",
+      "node_count": 2,
+      "project_id": "1059f999-7ace-446c-8bab-956c1d0d6fbc",
+      "request_id": "476e47a6-06e2-452f-b0fa-7d111fe435a6",
+      "workspace_id": null,
+      "archive_bytes": 2363,
+      "repair_digest": "aba885b26be909d3c043e6643b194b37780e00035aaf11c17484cc1fc81a50b4",
+      "review_digest": "6757ddaec88debd1263cc793a5869c4dbb623081f818f0f4e04038f46c6432cd",
+      "archive_digest": "6928fd150657777f7f4b027ebf7d1c8166b58ffdfd7f99f218c39b8a810ef47b",
+      "task_generation": "81b15a29-b151-49b9-a69d-0e2782ee5737"
+    },
+    "created_at": "2026-11-07T07:19:55.47974+00:00",
+    "current_title": "Private repair original 0",
+    "title_truncated": false,
+    "content_retained": false
+  },
+  "review": {
+    "state": "retained",
+    "account": "12a0a5d5-4cce-4475-8425-c7d0a1117fcd",
+    "protocol": 1,
+    "archive_id": "16546a69-632b-4330-9e80-7878474f4625",
+    "request_id": "476e47a6-06e2-452f-b0fa-7d111fe435a6",
+    "archive_bytes": 2363,
+    "archive_digest": "6928fd150657777f7f4b027ebf7d1c8166b58ffdfd7f99f218c39b8a810ef47b",
+    "cleanup_enabled": true
+  },
+  "removed": {
+    "state": "unavailable",
+    "account": "12a0a5d5-4cce-4475-8425-c7d0a1117fcd",
+    "protocol": 1,
+    "archive_id": "16546a69-632b-4330-9e80-7878474f4625",
+    "request_id": "476e47a6-06e2-452f-b0fa-7d111fe435a6",
+    "archive_bytes": 2363,
+    "archive_digest": "6928fd150657777f7f4b027ebf7d1c8166b58ffdfd7f99f218c39b8a810ef47b",
+    "cleanup_enabled": false
+  }
+}

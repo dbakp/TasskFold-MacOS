@@ -978,6 +978,14 @@ final class Store {
         let original = try await backend.childTaskRepairOriginal(entry.command, result: result, session: scope.session)
         try Task.checkCancellation(); guard scope == childTaskFieldRecoveryScope, revision == snapshotRevision else { throw CancellationError() }; return original
     }
+    var childTaskRepairArchiveCleanupEnabled: Bool {
+        Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRepairArchiveCleanupEnabled") as? Bool ?? false
+    }
+    func childTaskRepairOriginalCleanup(_ archive: ChildTaskRepairArchive, operation: ChildTaskRepairOriginalCleanupOperation) async throws -> ChildTaskRepairOriginalCleanup {
+        guard childTaskRepairArchiveCleanupEnabled, let scope = childTaskFieldRecoveryScope, scope == archive.scope else { throw CancellationError() }
+        let reply = try await backend.childTaskRepairOriginalCleanup(archive, operation: operation, scope: scope)
+        try Task.checkCancellation(); guard childTaskRepairArchiveCleanupEnabled, childTaskFieldRecoveryScope == scope else { throw CancellationError() }; return reply
+    }
     func readChildTaskRepairArchives(after: String? = nil) async throws -> ChildTaskRepairArchivePage {
         guard let scope = childTaskFieldRecoveryScope else { throw ChildTaskRepairFailure(reason: .unavailable) }
         #if DEBUG

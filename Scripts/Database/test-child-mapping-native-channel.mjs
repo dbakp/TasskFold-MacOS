@@ -63,3 +63,12 @@ test('archive routes bind only bounded typed arguments before querying',async()=
  assert.equal(calls,0);
  await channel.dispatch(request('taskfold_child_repair_archives',{_after:null,_limit:2}));await channel.dispatch(request('taskfold_child_repair_original',{_archive:randomUUID(),_request:randomUUID()}));assert.equal(calls,2);
 });
+
+
+test('original cleanup channel rejects malformed identity, operation and byte bounds before SQL',async()=>{
+ let calls=0;const channel=createMappingSQLChannel({raw:async()=>{calls++;return JSON.stringify({value:'{}',code:null});}},{session:randomUUID(),nonce:'test-run-nonce'});
+ const body={_operation:'review',_request:randomUUID(),_archive:randomUUID(),_digest:'a'.repeat(64),_bytes:100};
+ const request=change=>({...make(),path:'/rest/v1/rpc/taskfold_child_repair_original_cleanup',body:Buffer.from(JSON.stringify({...body,...change})).toString('base64')});
+ for(const change of [{_operation:'restore'},{_archive:'bad'},{_request:null},{_digest:'bad'},{_bytes:0},{_bytes:8000001},{_bytes:1.5},{account:identity.account}])await assert.rejects(channel.dispatch(request(change)));
+ assert.equal(calls,0);await channel.dispatch(request({}));await channel.dispatch(request({_operation:'remove'}));assert.equal(calls,2);
+});

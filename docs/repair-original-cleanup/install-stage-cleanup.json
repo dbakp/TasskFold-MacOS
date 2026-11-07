@@ -1,0 +1,18 @@
+{
+  "removed": [
+    {
+      "kind": "verified duplicate extracted app",
+      "build": "35",
+      "allocatedBytes": 80969728
+    },
+    {
+      "kind": "verified duplicate extracted app",
+      "build": "31",
+      "allocatedBytes": 80728064
+    }
+  ],
+  "frozenCurrentAndRollbackPreserved": true,
+  "privateSafetyCopiesPreserved": true,
+  "installedBaselineTemporarilyRetained": true,
+  "freeAfterBytes": 44300713984
+}
