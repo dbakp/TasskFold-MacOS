@@ -6,4 +6,4 @@ Both owners independently implement the change. Regression checks cover distinct
 
 The same-host Debug diagnostic compares five passes over 2,000 records with the prior exact reference. Copied unchanged and tail-edit cases improve from roughly 143–157 ms to 3.8–4.7 ms. Reconstructed-equal rows retain comparable fallback cost. Answers match in every measured mode. This is comparison preparation evidence, not physical-device FPS or whole-app smoothness acceptance.
 
-The optimized iPhone Simulator Store check is running; its result is not accepted yet. No physical iPhone installation or rollout-gate change.
+The same-source, signed iPhone Simulator Store check passes: one selected test, no skips/failures/runtime warnings. App compilation uses actual Swift -O while the Debug configuration retains reserved fixtures. Ordinary and filtered task-only updates refresh current tasks; graph/order reuse, archive observation without taskRevision changes, reparent/access-return and saved snapshot preservation pass. The fixture report remains labeled diagnostic: this is not distribution or physical FPS acceptance. No physical iPhone installation or rollout-gate change.

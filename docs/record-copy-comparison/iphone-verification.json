@@ -1,0 +1,16 @@
+{
+  "terminalExit": 0,
+  "selected": 1,
+  "passed": 1,
+  "skipped": 0,
+  "failed": 0,
+  "runtimeWarnings": 0,
+  "swiftAppOptimizationVerified": "-O",
+  "configuration": "Debug with optimized Swift; reserved DEBUG fixtures retained",
+  "sameSourceAndHostVerified": true,
+  "signatureVerified": true,
+  "test": "ProjectCatalogRevalidationUITests/testTaskOnlySnapshotsReuseProjectReadsAndKeepCurrentTasks",
+  "wholeAppFPSClaim": false,
+  "physicalPhoneInstalled": false,
+  "logSHA256": "7572a691f59de2380b7c0c79dbb122fb91d5c524dafceffd5466643401e6d1a9"
+}
