@@ -1,0 +1,25 @@
+{
+  "freeBeforeBytes": 36976898048,
+  "freeAfterBytes": 37140111360,
+  "removed": [
+    {
+      "kind": "obsolete42 code only",
+      "allocatedBytes": 81612800
+    },
+    {
+      "kind": "obsolete42 code only",
+      "allocatedBytes": 81612800
+    },
+    {
+      "kind": "obsolete42 ZIP",
+      "bytes": 20505751
+    }
+  ],
+  "preserved": [
+    "current46 and ZIP",
+    "verified44 rollback and ZIP",
+    "all private data backups",
+    "historical receipts"
+  ],
+  "realAppDataDeleted": false
+}

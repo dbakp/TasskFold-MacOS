@@ -1,0 +1,17 @@
+{
+  "build": "46",
+  "installed": true,
+  "sourceRevision": "310e73e7b7db5aad656f64c46e0bd0890ec72147",
+  "privateSafetyCopyVerified": true,
+  "prelaunchCacheFiles": 9,
+  "prelaunchAllCacheBytesExact": true,
+  "installedPayloadAndSignatureVerified": true,
+  "normalStartupObserved": true,
+  "syncObserved": "Synced21.21",
+  "sharedStorageAccepted": false,
+  "postlaunchDataAuditComplete": false,
+  "originalReadbackSession": 25012,
+  "currentPromptConfirmed": true,
+  "verifiedRollback": "44",
+  "privateDataIdentifiersOrPathsIncluded": false
+}

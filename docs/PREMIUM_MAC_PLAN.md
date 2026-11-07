@@ -11415,3 +11415,8 @@ Common complete descriptions now prepare locally before consulting model availab
 Installed44 and original readonly63522 remain intact pending the existing system access check. Source is committed/packaged separately before normal merge; phone installation remains deferred. All broader Px and agreed deferrals remain active.
 
 Mac46 now passes optimized owning-app/widget/share compilation, cached development signing and exact archive verification against44, with unchanged normal flags/nonempty designated requirement. It remains prepared;44 and original readonly63522 are not restarted/replaced. Verified42 and all private backups remain. Never-installed45 ZIP is retired after46 verification. Final selected caches are within768MiB each; full Px stays active.
+
+
+### 7 November — Mac46 installed; original44 audit accepted
+
+User approval closed44’s existing system-access wait. Original63522 exited0: all tasks/pending preserved across9 caches,7 byte-exact, other differences dates/conversation views only with Decimal/signed-zero comparison. Full native AX confirms no storage banner, Upcoming2tasks/Synced21.18. Normal44 then quits through native controls; fresh private data/preferences/group copy and manifests verify.46 installs atomically with exact signed payload and9 prelaunch caches byte-exact, preserving verified44 rollback. New46 opens Upcoming2tasks/Synced21.21. Its new SystemPolicyAppData prompt is confirmed21:20:25.517; one manualAllow request is pending and original readonly25012/app remain intact. No postlaunch46/group acceptance claim yet. Old42 code/ZIP are retired only after44 verification; all backups remain. [Installation and cleanup scope](mac46-installation/README.md).

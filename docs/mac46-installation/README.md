@@ -1,0 +1,9 @@
+# Mac46 installed after verified44 recovery
+
+The original44 readonly job exited0 after the user approved its existing access prompt. All tasks and pending work are preserved across nine caches, seven byte-exact. Other differences are dates and conversation-view metadata only, compared with Decimal and signed-zero awareness. A full native observation confirmed its shared-storage banner gone and Upcoming with two tasks, Synced21.18.
+
+Verified46 was then installed under the user's standing routine-update authorization. The normal44 app quit through its native controls before a fresh private copy of app data, preferences and shared storage. Source/copy manifests match, all nine prelaunch JSON caches remain byte-exact, the installed signed payload matches the frozen archive, and44 is retained as a verified rollback. No actual task/filter was edited for testing. Native46 opens Upcoming with two tasks and Synced21.21.
+
+macOS positively confirms a new SystemPolicyAppData prompt for the updated46 binary at21:20:25.517. The current app and original readonly25012 remain intact while this manual access step is pending; do not duplicate or restart that audit. Basic startup/sync is observed, but shared-storage connection and postlaunch46 data preservation are not yet accepted. One new prompt request has been sent, without repeating update/draft approval. Phone installation remains deferred.
+
+The installed update includes the earlier saving changes and [local filter descriptions with visible review feedback](../local-filter-drafts/README.md). Broader model/Mac/iPad/speech/lifecycle and full Px remain open. After44 data/UI verification, only obsolete42 code copies/ZIP were retired. Current46, verified44 rollback and every private data backup remain. Final native/daily and Core cache budgets remain bounded; concise cleanup reports are included.
