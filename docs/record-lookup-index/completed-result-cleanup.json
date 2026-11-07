@@ -1,0 +1,15 @@
+{
+  "freeBeforeBytes": 43417632768,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-record-index-phone-projects.xcresult",
+      "allocatedBytes": 1073152
+    },
+    {
+      "path": "/tmp/taskfold-record-index-phone-access.xcresult",
+      "allocatedBytes": 761856
+    }
+  ],
+  "scope": "Completed native result bundles; JSON outcomes, source/code hashes and named screenshots retained in owning iOS evidence",
+  "freeAfterBytes": 43419463680
+}

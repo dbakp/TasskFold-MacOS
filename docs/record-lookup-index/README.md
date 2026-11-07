@@ -1,0 +1,11 @@
+# Indexed lookups of current readable records
+
+`Store.record` previously scanned its table on every lookup. Large task lists repeatedly use it for current tasks, projects and related metadata. Each owner now builds one ID index per requested nonempty readable table, reuses it within the exact source/access/workspace/session/origin context, and releases it synchronously on source, mask, workspace and readability changes. Store still reads its observable current presentation on hits. Hidden raw rows are never indexed. First-match behavior for duplicate/empty IDs, table separation, nil results and exact returned fields remain unchanged. There is no new disk cache or changed write authorization; first construction is O(table size), subsequent lookups use the dictionary.
+
+Each independently owned Core suite passes 97 `TeamWorkspaceTests`, including six new cases for a 4,000-project/240-read comparison, all identity boundaries, duplicate and missing IDs, edit/delete/reinsert, real filtered access loss and explicit all-table retirement. Debug diagnostics compare identical result arrays, including index construction, without a timing pass threshold. These are not release timings or physical frame-rate evidence.
+
+The reserved native diagnostic warms actual Store record lookups, tracks a fresh observation on a hit, changes project/task source, removes a task, restores it, denies cache readability and returns. The shared workspace diagnostic also warms records before revoking its actual synthetic access boundary. Saved work and normal app gates are unchanged. Native evidence is recorded separately below.
+
+## Mac acceptance scope
+
+The complete current owning Mac source compiles for arm64 in the regenerated isolated host, with signing disabled. Its 97 focused Core cases pass. The Mac app is not launched, installed or granted permissions; this build does not establish native task-list, speech, signing or distribution acceptance. The independently owned iOS repository records its two passing current-source native journeys. Mac/iPad runtime, larger mixed-project workloads, largest text, VoiceOver and wider account/window/lifecycle behavior remain open. Normal packages/apps and hosted gates stay unchanged.

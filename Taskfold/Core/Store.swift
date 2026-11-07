@@ -111,7 +111,7 @@ final class Store {
     var snapshot = Snapshot() {
         didSet {
             snapshotRevision = UUID()
-            presentationReadCache.clear()
+            presentationReadCache.clear(); recordReadCache.clear()
             assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
             guard !workflowPresentationDeferred else { return }
             refreshSnapshotPresentation(from: oldValue)
@@ -125,7 +125,7 @@ final class Store {
         didSet {
             presentationAccessEpoch = UUID()
             subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
-            presentationReadCache.clear()
+            presentationReadCache.clear(); recordReadCache.clear()
             assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
             if oldValue?.boundary != teamAccessMask?.boundary {workspaceReadRevision = UUID()}
             if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}
@@ -142,6 +142,7 @@ final class Store {
         return TeamAccessFenceDisk(disk:AccountRemovalDisk(directory:cacheURL.deletingLastPathComponent(),account:userID),origin:origin)
     }
     @ObservationIgnored private let presentationReadCache = WorkspacePresentationReadCache()
+    @ObservationIgnored private let recordReadCache = WorkspaceRecordReadCache()
     @ObservationIgnored private let assigneeDisplayCache = AssigneeDisplayReadCache()
     @ObservationIgnored private let projectCatalogReadCache = WorkspaceProjectCatalogReadCache()
     @ObservationIgnored private let subtaskProgressReadCache = SubtaskProgressReadCache()
@@ -1241,6 +1242,7 @@ final class Store {
     private let monitor = NWPathMonitor()
     @ObservationIgnored private let projectMemberReads = ProjectMemberReads()
     private var accountGeneration = UUID() { didSet {
+        recordReadCache.clear()
         subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
         projectMemberReads.cancelAll()
         sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0
@@ -1276,7 +1278,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {if !workspaceCacheReadable {sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0};subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {if !workspaceCacheReadable {sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0};subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear(); recordReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
@@ -2116,7 +2118,16 @@ final class Store {
         #endif
     }
     func rows(_ table: String) -> [Record] { presentedTables[table] ?? [] }
-    func record(_ table: String, id: String) -> Record? { rows(table).first { $0.id == id } }
+    func record(_ table: String, id: String) -> Record? {
+        guard workspaceCacheReadable else { recordReadCache.clear(); return nil }
+        // Observe the current presentation even on a cache hit, so SwiftUI keeps
+        // tracking source and access changes. Never index raw hidden records.
+        let visible = presentedTables
+        let context = WorkspaceRecordReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
+            workspace: .init(account: userID, generation: workspaceGeneration),
+            session: backend.reminderSessionIncarnation, origin: try? backend.accountRemovalOrigin)
+        return recordReadCache.record(table, id: id, context: context) { visible[table] ?? [] }
+    }
     func projectMembers(_ projectID: String) -> [Record] {
         guard let project = record("projects", id: projectID) else { return [] }
         let key = "project_members:" + projectID
@@ -6774,7 +6785,7 @@ extension Store {
         guard snapshot == source, matches == 300 else { throw AppFailure(message: "Read fixture changed its source") }
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
         let tablesHash = CalendarOAuthConfiguration.digest(String(decoding: try encoder.encode(source.tables), as: UTF8.self))
-        let invalidations = try verifyWorkspaceReadInvalidationFixture()
+        let invalidations = try verifyWorkspaceReadInvalidationFixture() + verifyRecordReadFixture()
         let report: [String: JSON] = ["catalog": .bool(WorkspaceReadNativeFixture.largeCatalog),
             "collaborators": .number(WorkspaceReadNativeFixture.largeCatalog ? 400 : 1),
             "tableSHA256": .string(tablesHash), "firstNameReadMilliseconds": .number(firstNameReadMilliseconds),
@@ -6790,6 +6801,45 @@ extension Store {
 
 #if DEBUG
 extension Store {
+    func verifyRecordReadFixture() throws -> Int {
+        guard WorkspaceReadNativeFixture.enabled else { throw CancellationError() }
+        let source = snapshot, readable = workspaceCacheReadable
+        defer { snapshot = source; workspaceCacheReadable = readable }
+        guard let project = rows("projects").first else { throw AppFailure(message: "Missing record-lookup fixture project") }
+        guard let task = rows("tasks").first else { throw AppFailure(message: "Missing record-lookup fixture task") }
+        let projects = rows("projects")
+        let ids = (0..<240).map { projects[($0 * 17) % projects.count].id }
+        let started = ProcessInfo.processInfo.systemUptime
+        let previous = ids.map { id in projects.first { $0.id == id } }
+        let linear = ProcessInfo.processInfo.systemUptime - started
+        recordReadCache.clear()
+        let indexedStart = ProcessInfo.processInfo.systemUptime
+        let indexed = ids.map { record("projects", id: $0) }
+        let indexedSeconds = ProcessInfo.processInfo.systemUptime - indexedStart
+        guard indexed == previous else { throw AppFailure(message: "Indexed lookup differs from the readable source") }
+        let diagnostic: [String: JSON] = ["projects": .number(Double(projects.count)), "reads": .number(240),
+            "linearSeconds": .number(linear), "indexedIncludingBuildSeconds": .number(indexedSeconds),
+            "resultsIdentical": .bool(true), "debugDiagnosticOnly": .bool(true), "fpsClaim": .bool(false)]
+        let folder = URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try TaskfoldJSONEncoder().encode(diagnostic).write(to: folder.appendingPathComponent("record-lookups.json"), options: .atomic)
+        _ = record("projects", id: project.id); _ = record("tasks", id: task.id)
+        let probe = WorkspaceReadObservationProbe()
+        withObservationTracking { _ = record("projects", id: project.id) } onChange: { probe.markChanged() }
+        snapshot.tables["projects"]![0]["name"] = .string("Updated indexed project")
+        guard probe.changed, record("projects", id: project.id)?.name == "Updated indexed project" else { throw AppFailure(message: "Indexed record lost source observation") }
+        snapshot.tables["tasks"]![0]["title"] = .string("Updated indexed task")
+        guard record("tasks", id: task.id)?.title == "Updated indexed task" else { throw AppFailure(message: "Indexed record ignored task edit") }
+        snapshot.tables["tasks"]!.removeFirst()
+        guard record("tasks", id: task.id) == nil else { throw AppFailure(message: "Indexed record retained removed task") }
+        snapshot = source
+        guard record("tasks", id: task.id) == task, record("projects", id: project.id) == project else { throw AppFailure(message: "Indexed record failed source restoration") }
+        workspaceCacheReadable = false
+        guard record("tasks", id: task.id) == nil, record("projects", id: project.id) == nil else { throw AppFailure(message: "Unreadable indexed records remained visible") }
+        workspaceCacheReadable = true
+        guard record("tasks", id: task.id) == task, record("projects", id: project.id) == project, snapshot == source else { throw AppFailure(message: "Indexed record return changed saved work") }
+        return 6
+    }
     func verifyWorkspaceReadInvalidationFixture() throws -> Int {
         guard WorkspaceReadNativeFixture.enabled, let originalMask = teamAccessMask else { throw CancellationError() }
         let original = snapshot, readable = workspaceCacheReadable
@@ -6817,11 +6867,15 @@ extension Store {
             snapshot.tables.removeValue(forKey: "project_members:" + TeamEditorNativeFixture.projectID)
             guard assigneeName(task) == "Updated Riley" else { throw AppFailure(message: "Removed member catalog retained") }; nameChecks += 1
         }
+        guard record("tasks", id: task.id) == task,
+              record("projects", id: task.string("project_id")) != nil else { throw AppFailure(message: "Missing readable indexed records") }
         var raw = originalMask.boundary.raw
         raw["projects"] = .array([])
         let lostBoundary = try TeamWorkspaceBoundary(raw, account: userID, origin: backend.accountRemovalOrigin)
         teamAccessMask = try TeamWorkspaceCache(boundary: lostBoundary, previous: originalMask, pending: snapshot.pending, tasks: snapshot.tables["tasks"]!)
-        guard rows("tasks").isEmpty, rows("projects").isEmpty, snapshot.tables["tasks"]?.count == 240 else { throw AppFailure(message: "Stale access presentation") }
+        guard rows("tasks").isEmpty, rows("projects").isEmpty,
+              record("tasks", id: task.id) == nil, record("projects", id: task.string("project_id")) == nil,
+              snapshot.tables["tasks"]?.count == 240 else { throw AppFailure(message: "Stale access presentation") }
         if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Assigned collaborator" else { throw AppFailure(message: "Revoked assignee name exposed") }; nameChecks += 1 }
         teamAccessMask = originalMask
         guard rows("tasks").count == 240, rows("tasks").first?.title == "Updated workshop title" else { throw AppFailure(message: "Restored access presentation missing") }
@@ -7026,6 +7080,7 @@ extension Store {
     }
     func measureProjectCatalogFixture() throws {
         guard WorkspaceReadNativeFixture.projectCatalog else {throw CancellationError()}
+        let recordChecks = try verifyRecordReadFixture()
         let source=snapshot,readable=workspaceCacheReadable
         defer {snapshot=source;workspaceCacheReadable=readable}
         guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240 else {throw AppFailure(message:"Incomplete project catalog fixture")}
@@ -7049,7 +7104,7 @@ extension Store {
         guard allProjects.isEmpty,projects.isEmpty,archivedProjects.isEmpty else {throw AppFailure(message:"Unreadable project catalog exposed cached content")}
         workspaceCacheReadable=true
         guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240,snapshot==source else {throw AppFailure(message:"Project catalog failed to return")}
-        let report:[String:JSON] = ["accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
+        let report:[String:JSON] = ["recordLookupChecks":.number(Double(recordChecks)),"accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
         let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
         try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-catalog.json"),options:.atomic)

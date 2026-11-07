@@ -558,3 +558,35 @@ extension TeamWorkspaceCache {
     }
     func clear() { context = nil; value = nil }
 }
+
+/// Indexes only the current readable presentation, never the unfiltered snapshot.
+/// One source/access/workspace/session context; it does not authorize mutations.
+@MainActor final class WorkspaceRecordReadCache {
+    struct Context: Equatable {
+        let source: UUID
+        let access: UUID
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let origin: String?
+    }
+    private var context: Context?
+    private var tables: [String: [String: Record]] = [:]
+
+    func record(_ table: String, id: String, context: Context, rows: () -> [Record]) -> Record? {
+        if self.context != context {
+            tables = [:]
+            self.context = context
+        }
+        if let index = tables[table] { return index[id] }
+        let source = rows()
+        // Unknown or empty tables need no retained entry. Only real rows bound memory.
+        guard !source.isEmpty else { return nil }
+        let index = Dictionary(source.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        tables[table] = index
+        return index[id]
+    }
+    func clear() {
+        context = nil
+        tables = [:]
+    }
+}

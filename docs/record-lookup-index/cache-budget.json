@@ -1,0 +1,18 @@
+{
+  "nativeCache": "/private/tmp/taskfold-workflow-native-mac-build",
+  "initialNativeCompilerScratchBytes": {
+    "Index.noindex": 0,
+    "CompilationCache.noindex": 28672,
+    "SDKExplicitPrecompiledModules": 106131456,
+    "ModuleCache.noindex": 137490432,
+    "SDKStatCaches.noindex": 15294464,
+    "Build/Intermediates.noindex": 367542272
+  },
+  "retainedNativeCompilerScratchBytes": 626487296,
+  "wholeCoreBytes": 635736064,
+  "budgetPerCacheBytes": 805306368,
+  "removed": [],
+  "freeBeforeBytes": 43393478656,
+  "freeAfterBytes": 43394117632,
+  "productsPreserved": true
+}
