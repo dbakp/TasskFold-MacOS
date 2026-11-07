@@ -1,0 +1,33 @@
+{
+  "freeBeforeBytes": 38391934976,
+  "freeAfterBytes": 38395248640,
+  "retiredCompletedResults": [
+    {
+      "result": "taskfold-drop-save-before.xcresult",
+      "allocatedBytes": 86016
+    },
+    {
+      "result": "taskfold-drop-save-before-fixed.xcresult",
+      "allocatedBytes": 2605056
+    },
+    {
+      "result": "taskfold-drop-row-encoding-after.xcresult",
+      "allocatedBytes": 73728
+    },
+    {
+      "result": "taskfold-drop-row-encoding-after-guarded.xcresult",
+      "allocatedBytes": 516096
+    },
+    {
+      "result": "taskfold-drop-row-final.xcresult",
+      "allocatedBytes": 81920
+    }
+  ],
+  "conciseFailureAndIntermediateEvidenceRetained": true,
+  "kept": [
+    "accepted original baseline result",
+    "accepted final two-test result",
+    "source/log digests and profiles"
+  ],
+  "realAppDataDeleted": false
+}

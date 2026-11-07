@@ -5,9 +5,9 @@
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
   "focus": "Reduce pauses during large local saves",
-  "latest": "Large plain workspaces now prepare unchanged task rows away from the interface thread, then reuse only exact authored sources during saves. Each owner passes 74 focused cases. Two signed Simulator journeys verify four warm/cold drops and exact saved work: the large-list fixture improves from 126–130 ms to 58–62 ms through local commit; moving the 2.88 MB payload itself takes 86–88 ms. Wider stutter/physical FPS remains unaccepted. Mac44 is installed and synced after a fresh safety copy with nine prelaunch caches byte-exact; shared storage and its original readonly postlaunch audit still wait on macOS access. The new save source is separate from installed 44.",
+  "latest": "Large plain workspaces now prepare unchanged task rows away from the interface thread, then reuse only exact authored sources during saves. Each owner passes 74 focused cases. Two signed Simulator journeys verify four warm/cold drops and exact saved work: the large-list fixture improves from 126–130 ms to 58–62 ms through local commit; moving the 2.88 MB payload itself takes 86–88 ms. Wider stutter/physical FPS remains unaccepted. Mac44 is installed and synced after a fresh safety copy with nine prelaunch caches byte-exact; shared storage and its original readonly postlaunch audit still wait on macOS access. The new save source is separate from installed 44. Mac45 with the new saving code now passes optimized build, signing and exact archive checks. It stays prepared while 44’s existing access/readback is pending; 42 remains the verified data rollback.",
   "next": [
-    "Finish the existing Mac44 system app-data access/readback without restarting its app or duplicate job. Mac44 is installed and synced; all nine prelaunch caches are byte-exact and42 remains the verified rollback. The new save optimization is queued separately. iPhone installation stays deferred.",
+    "Finish the existing Mac44 system app-data access/readback without restarting its app or duplicate job. Then install verified Mac45 with a fresh private safety copy; routine updates are already authorized. Mac44 is installed and synced, nine prelaunch caches are byte-exact, and 42 remains the verified data rollback. iPhone installation stays deferred.",
     "Profile the remaining drop and navigation costs, including widget preparation, local history and rendering. The new row writer halves the observed large-list drop/save fixture, but wider scrolling, reconstructed-refresh scaling and physical smoothness remain open.",
     "Pursue a materially different approach to real on-device filter quality: two structured schemas now have rejected actual-model evidence. Do not rerun them unchanged. The production engine still fails two of the original five; the expanded twelve-request/eleven-row current-production suite is not accepted. Keep assistance on-device only.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
@@ -794,7 +794,9 @@
             "task-order-preparation/core-cache-budget.json",
             "unchanged-row-encoding/README.md",
             "unchanged-row-encoding/core-verification.json",
-            "unchanged-row-encoding/iphone-verification.json"
+            "unchanged-row-encoding/iphone-verification.json",
+            "unchanged-row-encoding/mac45-package.json",
+            "unchanged-row-encoding/storage-cleanup.json"
           ],
           "focus": true
         },
@@ -1831,7 +1833,9 @@
     "calendar-archive-reading/mac42-postlaunch-data.json",
     "unchanged-row-encoding/README.md",
     "unchanged-row-encoding/core-verification.json",
-    "unchanged-row-encoding/iphone-verification.json"
+    "unchanged-row-encoding/iphone-verification.json",
+    "unchanged-row-encoding/mac45-package.json",
+    "unchanged-row-encoding/storage-cleanup.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2579,9 +2583,11 @@
     "template-library-summaries/iphone-after.json": "1e5598f71316dbc0ad70aa2b903c0e9be676abd4500c0cebe4952c7215e1368b",
     "transfer-redo/README.md": "566c6d5c8827e2da94797158156107ef355553eb6906a3e7a46ddf19bd76b2ac",
     "transfer-redo/verification.json": "9f0d45307cfa830c3af3934e43556f3ee217066994a6d542eca773381d45f6b0",
-    "unchanged-row-encoding/README.md": "c6d8f445c0605fe4e87ff674600f6acd45ef021a69b764af23f867492be929fe",
+    "unchanged-row-encoding/README.md": "eb9b925b1bb3e31ac27cfb6953dfa4097e443ca9cae08c7ef9889e6acc48ca00",
     "unchanged-row-encoding/core-verification.json": "1d488c9ac8213fd49c65abe3cc9b685799164c31b416f90df9ddba4573327ec8",
     "unchanged-row-encoding/iphone-verification.json": "933941a0625ed13f9409071b560d1448d3806afec1150f473d914af92628e905",
+    "unchanged-row-encoding/mac45-package.json": "e1ada3096ba6940066e958c5f572ce6af86e14e8eb6aad82af7ad5909e32847b",
+    "unchanged-row-encoding/storage-cleanup.json": "4beaa2c7374332357cf7c6a5645867fff9db64d43ea96ba2a411aaf4db00719b",
     "workflow-definition-preview/README.md": "fb3db35fe0347ea543de3a87e12e4179f6516e4224d860f713c9600b12907063",
     "workflow-definition-preview/iphone-after.json": "aadaaad40e1d9fead12db11bb6c7616ab9f2634c570a4c302a54478b9d4296d9",
     "workflow-definition-preview/verification.json": "dea1e754b6163da3f62c7fcebe2cf79029bb5f7d1eff6cb1911a553dc13896cf",
