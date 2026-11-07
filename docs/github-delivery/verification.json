@@ -760,5 +760,43 @@
     "documentationViewportChecks": 6,
     "githubStatuses": [],
     "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TaskFold-iOS",
+    "pullRequest": "https://github.com/dbakp/TaskFold-iOS/pull/27",
+    "mergedHead": "4e621e08f1750c0e57a7a3a6f2da2eec1ef8ebd0",
+    "verifiedRemoteMain": "45ad9e521753720dff8a5b67044f49e4dc8b8008",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "frozenPackageSourceAncestor": true,
+    "productInputsStillCurrent": true,
+    "archiveHashMatches": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localValidationScope": "Optimized signed Mac35 and phone43 with exact archive readback; four Mac guard tests and live/repeat-build registration isolation; native install/cold routing and AI filter quality remain open.",
+    "documentationViewportChecks": 6,
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TasskFold-MacOS",
+    "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/28",
+    "mergedHead": "b9e7b132d0b9dcea06e98d0c8770a6a9cb0bab68",
+    "verifiedRemoteMain": "ccee825b5b306a31065606cdb2742907d7055183",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "frozenPackageSourceAncestor": true,
+    "productInputsStillCurrent": true,
+    "archiveHashMatches": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localValidationScope": "Optimized signed Mac35 and phone43 with exact archive readback; four Mac guard tests and live/repeat-build registration isolation; native install/cold routing and AI filter quality remain open.",
+    "documentationViewportChecks": 6,
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
   }
 ]
