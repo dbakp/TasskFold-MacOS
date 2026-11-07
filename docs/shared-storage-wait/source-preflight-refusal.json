@@ -1,0 +1,9 @@
+{
+  "date": "2026-11-07",
+  "syntheticOnly": true,
+  "realSystemPermissionAcceptance": false,
+  "normalInstalledAppUnchanged": true,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "test": "testInitialSharedStorageWriteKeepsWindowUsableAndCannotUndoSignOut",
+  "error": "AssertionError: Taskfold/Core/Store.swift"
+}

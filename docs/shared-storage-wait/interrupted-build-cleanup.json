@@ -1,0 +1,25 @@
+{
+  "reason": "Stopped unintended extra architecture; no active compilers; retired only selected Taskfold compiler scratch",
+  "removed": [
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/SDKExplicitPrecompiledModules",
+      "allocatedBytes": 286269440
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/ModuleCache.noindex",
+      "allocatedBytes": 94232576
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldUITests.build/Objects-normal/x86_64",
+      "allocatedBytes": 20480
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldShare.build/Objects-normal/x86_64",
+      "allocatedBytes": 352256
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldWidgets.build/Objects-normal/x86_64",
+      "allocatedBytes": 8847360
+    }
+  ]
+}
