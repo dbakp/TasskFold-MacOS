@@ -1,0 +1,31 @@
+{
+  "debugDiagnosticOnly" : true,
+  "exactSourceAndOutlinePreserved" : true,
+  "modes" : [
+    {
+      "baselineSeconds" : 0.61988708330318332,
+      "currentSourceReads" : 20,
+      "preparedGraphReused" : true,
+      "revalidatedSecondsIncludingColdCatalog" : 0.030934249982237816,
+      "sourceArrays" : "shared unchanged project array"
+    },
+    {
+      "baselineSeconds" : 0.62537004170008004,
+      "currentSourceReads" : 20,
+      "preparedGraphReused" : true,
+      "revalidatedSecondsIncludingColdCatalog" : 0.060555125121027231,
+      "sourceArrays" : "filtered immutable record copies"
+    },
+    {
+      "baselineSeconds" : 0.67429516674019396,
+      "currentSourceReads" : 20,
+      "preparedGraphReused" : false,
+      "revalidatedSecondsIncludingColdCatalog" : 0.67066966649144888,
+      "sourceArrays" : "newly reconstructed record values"
+    }
+  ],
+  "physicalFPSClaim" : false,
+  "projects" : 4000,
+  "sameFirstAndLastSnapshotRetentionInBothPaths" : true,
+  "sourceEpochs" : 20
+}

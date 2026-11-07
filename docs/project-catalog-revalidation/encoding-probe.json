@@ -1,0 +1,9 @@
+{
+  "syntheticOnly": true,
+  "beforeUTF8Bytes": 241,
+  "afterUTF8Bytes": 241,
+  "sameExactScalarValuesIncludingDecimalAndUnicode": true,
+  "differenceIsJSONMemberOrdering": true,
+  "initialFailureLogSHA256": "a09d7229bb418a86c4672c26af3dbf207186af006d57d80f075e9121f14ef3fc",
+  "correction": "Use sortedKeys for byte comparison and separately check exact authored fields; production encoder remains unchanged."
+}

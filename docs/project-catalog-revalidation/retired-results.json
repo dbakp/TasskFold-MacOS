@@ -1,0 +1,16 @@
+{
+  "freeBeforeBytes": 40362115072,
+  "retired": [
+    {
+      "path": "/tmp/taskfold-project-revalidation-iphone.xcresult",
+      "allocatedBytes": 2269184,
+      "reason": "Superseded synthetic journey, concise committed evidence retained; current successful v2 preserved"
+    },
+    {
+      "path": "/tmp/taskfold-project-order-iphone.xcresult",
+      "allocatedBytes": 1695744,
+      "reason": "Superseded synthetic journey, concise committed evidence retained; current successful v2 preserved"
+    }
+  ],
+  "freeAfterBytes": 40366084096
+}

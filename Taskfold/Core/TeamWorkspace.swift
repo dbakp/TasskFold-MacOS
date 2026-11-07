@@ -537,8 +537,9 @@ extension TeamWorkspaceCache {
 }
 
 
-/// One readable graph per source/access/workspace/session. Every caller reads
-/// its current presentation before looking up this purely derived display value.
+/// One prepared graph for exact readable project rows within an access/workspace/
+/// session. A new snapshot must supply its current filtered rows before reuse;
+/// task-only changes can retain the graph, never a permission or write admission.
 @MainActor final class WorkspaceProjectCatalogReadCache {
     struct Context: Equatable {
         let source: UUID
@@ -546,13 +547,28 @@ extension TeamWorkspaceCache {
         let workspace: WorkspaceBinding
         let session: UUID
         let origin: String?
+
+        func sameScope(as other: Self) -> Bool {
+            access == other.access && workspace == other.workspace && session == other.session && origin == other.origin
+        }
     }
     private var context: Context?
+    private var sourceRows: [Record] = []
     private var value: ProjectOrganization.Catalog?
     private var request: ProjectOrderRequest?
     func catalog(for context: Context, projects: () -> [Record]) -> ProjectOrganization.Catalog {
         if self.context == context, let value { return value }
-        let next = ProjectOrganization.Catalog(projects())
+        let rows = projects()
+        // Read the current presentation after every source epoch, including
+        // queued project intents and access masking. Raw project-table identity
+        // alone cannot certify what the user is currently allowed to see.
+        if let previous = self.context, previous.sameScope(as: context), let value,
+           AuthoredValueComparison.sameRecordSources(sourceRows, rows) {
+            self.context = context
+            return value
+        }
+        let next = ProjectOrganization.Catalog(rows)
+        sourceRows = rows
         value = next
         request = nil
         self.context = context
@@ -565,7 +581,7 @@ extension TeamWorkspaceCache {
         request = next
         return next
     }
-    func clear() { context = nil; value = nil; request = nil }
+    func clear() { context = nil; sourceRows = []; value = nil; request = nil }
 }
 
 /// Indexes only the current readable presentation, never the unfiltered snapshot.

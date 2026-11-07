@@ -1192,3 +1192,46 @@ extension TeamWorkspaceTests {
         for table in ["tasks", "projects", "project_members:sample"] { XCTAssertNil(cache.record(table, id: row.id, context: context) { [] }) }
     }
 }
+
+extension TeamWorkspaceTests {
+    @MainActor func testProjectCatalogRevalidationIncludesPendingOnlyProjectChanges() throws {
+        let b = try boundary(), mask = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [])
+        var local = try snapshot()
+        let rawProjects = local.tables["projects"]!, access = UUID(), generation = UUID(), session = UUID()
+        let cache = WorkspaceProjectCatalogReadCache()
+        func read() -> ProjectOrderRequest {
+            cache.orderRequest(for: .init(source: UUID(), access: access, workspace: .init(account: b.account, generation: generation), session: session, origin: b.origin)) {
+                mask.presentation(local)["projects"] ?? []
+            }
+        }
+        let original = read(), id = "aa260000-0000-4000-8000-000000000099"
+        let create = Mutation(table: "projects", recordID: id, method: "POST", fields: ["id": .string(id), "user_id": .string(b.account), "name": .string("Queued project")])
+        local.pending = [create]
+        XCTAssertTrue(AuthoredValueComparison.sameRows(local.tables["projects"]!, rawProjects))
+        let pending = read()
+        XCTAssertEqual(pending.projects.count, original.projects.count + 1)
+        XCTAssertEqual(pending.projects.first { $0.id == id }?.name, "Queued project")
+        XCTAssertFalse(original.matches(workspace: pending.workspace, session: session, projects: pending.projects))
+        local.pending = []
+        let cancelled = read()
+        XCTAssertEqual(cancelled.projects, original.projects)
+        XCTAssertNil(cancelled.projects.first { $0.id == id })
+        XCTAssertTrue(AuthoredValueComparison.sameRows(local.tables["projects"]!, rawProjects))
+    }
+    @MainActor func testProjectCatalogRevalidationHonorsAccessLossWithoutErasingSavedProjects() throws {
+        let initial = try boundary(), source = try snapshot(), access = UUID(), generation = UUID(), session = UUID(), epoch = UUID()
+        let cache = WorkspaceProjectCatalogReadCache(), old = try TeamWorkspaceCache(boundary: initial, previous: nil, pending: [])
+        func context(_ access: UUID) -> WorkspaceProjectCatalogReadCache.Context {
+            .init(source: epoch, access: access, workspace: .init(account: initial.account, generation: generation), session: session, origin: initial.origin)
+        }
+        let before = cache.orderRequest(for: context(access)) { old.presentation(source)["projects"] ?? [] }
+        let left = try TeamWorkspaceCache(boundary: boundary("left"), previous: old, pending: [])
+        let revoked = cache.orderRequest(for: context(UUID())) { left.presentation(source)["projects"] ?? [] }
+        let team = try XCTUnwrap(try fixture()["project"]?.text)
+        XCTAssertNotNil(before.projects.first { $0.id == team }); XCTAssertNil(revoked.projects.first { $0.id == team })
+        XCTAssertNotNil(source.tables["projects"]?.first { $0.id == team })
+        let returned = cache.orderRequest(for: context(UUID())) { old.presentation(source)["projects"] ?? [] }
+        XCTAssertEqual(returned.projects, before.projects)
+        XCTAssertTrue(source.pending.isEmpty)
+    }
+}

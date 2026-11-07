@@ -9,6 +9,14 @@ enum AuthoredValueComparison {
         if identical { return true }
         return zip(lhs, rhs).allSatisfy { exactJSON(.object($0.fields), .object($1.fields)) }
     }
+    /// Cheap exact proof for unchanged record copies, including filtered arrays.
+    /// A fresh decoded/reconstructed record intentionally cannot pass this proof;
+    /// callers may rebuild their derived value instead of walking large fields.
+    static func sameRecordSources(_ lhs: [Record], _ rhs: [Record]) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        let identical = lhs.withUnsafeBufferPointer { a in rhs.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }
+        return identical || zip(lhs, rhs).allSatisfy { $0.sharesAuthoredSource(with: $1) }
+    }
     /// Iterative traversal avoids adding recursive stack depth for opaque fields
     /// in a pinned note. Object ordering is irrelevant; key/value bytes are exact.
     static func exactJSON(_ lhs: JSON, _ rhs: JSON) -> Bool {
@@ -38,6 +46,10 @@ enum AuthoredValueComparison {
         return true
     }
 }
+
+/// Immutable, nonpersistent identity of one authored record value. Value copies
+/// retain it; any fields write retires it before the next readable value escapes.
+private final class RecordSourceIdentity: Sendable {}
 
 /// Familiar values stay editable; unrepresentable future values retain exact
 /// validated bytes through Taskfold’s preserving codec.
@@ -75,7 +87,12 @@ enum JSON: Codable, Equatable, Sendable {
 }
 
 struct Record: Codable, Identifiable, Equatable, Sendable {
-    var fields: [String: JSON]
+    private var sourceIdentity = RecordSourceIdentity()
+    var fields: [String: JSON] { didSet { sourceIdentity = RecordSourceIdentity() } }
+    /// Domain equality remains fields-only; source identity is only a fast proof
+    /// that two immutable copies have exactly the same authored fields.
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.fields == rhs.fields }
+    func sharesAuthoredSource(with other: Self) -> Bool { sourceIdentity === other.sourceIdentity }
     var id: String { string("id") }
     init(_ fields: [String: JSON] = [:]) { self.fields = fields }
     init(from decoder: Decoder) throws {

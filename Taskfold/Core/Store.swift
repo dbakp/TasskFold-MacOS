@@ -112,7 +112,9 @@ final class Store {
         didSet {
             snapshotRevision = UUID()
             presentationReadCache.clear(); recordReadCache.clear()
-            assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
+            assigneeDisplayCache.clear()
+            // Project reads revalidate the current filtered rows for this new
+            // epoch; unchanged projects can keep their prepared hierarchy.
             guard !workflowPresentationDeferred else { return }
             refreshSnapshotPresentation(from: oldValue)
         }
@@ -1774,6 +1776,7 @@ final class Store {
     var userID: String {
         if localMode {
             #if DEBUG
+            if WorkspaceReadNativeFixture.projectCatalogRevalidation { return TeamEditorNativeFixture.account }
             if ConversationFixture.enabled { return ConversationFixture.owner }
             if ProcessInfo.processInfo.arguments.contains("--uitesting") { return "ui-testing" }
             if ProcessInfo.processInfo.arguments.contains("--preview") { return "preview" }
@@ -7100,8 +7103,8 @@ extension Store {
     func measureProjectCatalogFixture() throws {
         guard WorkspaceReadNativeFixture.projectCatalog else {throw CancellationError()}
         let recordChecks = try verifyRecordReadFixture()
-        let source=snapshot,readable=workspaceCacheReadable
-        defer {snapshot=source;workspaceCacheReadable=readable}
+        let source=snapshot,readable=workspaceCacheReadable,originalMask=teamAccessMask
+        defer {snapshot=source;teamAccessMask=originalMask;workspaceCacheReadable=readable}
         guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240 else {throw AppFailure(message:"Incomplete project catalog fixture")}
         projectCatalogReadCache.clear()
         let start=ProcessInfo.processInfo.systemUptime
@@ -7109,6 +7112,37 @@ extension Store {
         for _ in 0..<20 {total += allProjects.count+projects.count+archivedProjects.count+projectCatalog.archivedIDs.count}
         let elapsed=ProcessInfo.processInfo.systemUptime-start
         guard total==168000,snapshot==source else {throw AppFailure(message:"Project reads changed saved work")}
+        func checkTaskOnlySources(_ prefix: String) throws -> Double {
+            let retained = projectCatalog, retainedOrder = projectOrderRequest
+            let mutationStart = ProcessInfo.processInfo.systemUptime
+            for index in 0..<20 {
+                let title = prefix + " task-only source revision \(index)"
+                snapshot.tables["tasks"]![0]["title"] = .string(title)
+                let current = projectCatalog, order = projectOrderRequest
+                let catalogReused = retained.all.withUnsafeBufferPointer { first in current.all.withUnsafeBufferPointer { first.baseAddress == $0.baseAddress } }
+                let orderReused = retainedOrder.projects.withUnsafeBufferPointer { first in order.projects.withUnsafeBufferPointer { first.baseAddress == $0.baseAddress } }
+                guard catalogReused, orderReused, tasks.first?.title == title,
+                      AuthoredValueComparison.sameRows(snapshot.tables["projects"] ?? [], source.tables["projects"] ?? []),
+                      snapshot.pending == source.pending else {throw AppFailure(message:"Task-only changes rebuilt project reads or lost current task content: " + prefix)}
+            }
+            return ProcessInfo.processInfo.systemUptime - mutationStart
+        }
+        let mutationSeconds = try checkTaskOnlySources("Unmasked")
+        snapshot = source
+        var filteredMutationSeconds = 0.0
+        if WorkspaceReadNativeFixture.projectCatalogRevalidation {
+        // Exercise the actual Store presentation mask too: filtering creates a
+        // new array of unchanged record values after each task-only snapshot.
+        let allowed: [JSON] = (source.tables["projects"] ?? []).sorted { $0.id < $1.id }.map { row in
+            .object(["id":.string(row.id),"team_id":.null,"role":.string("owner"),"archived":.bool(row["is_archived"].flag),"can_send_tasks":.bool(true)])
+        }
+        let raw: [String: JSON] = ["workspace_boundary_protocol":.number(1),"account":.string(userID),"native_team_reads_enabled":.bool(false),"setup_paused":.bool(false),"projects":.array(allowed),"teams":.array([]),"token":.string(String(repeating:"d",count:64))]
+        let boundary = try TeamWorkspaceBoundary(raw, account:userID, origin:backend.accountRemovalOrigin)
+        teamAccessMask = try TeamWorkspaceCache(boundary:boundary,previous:nil,pending:source.pending,tasks:source.tables["tasks"] ?? [])
+        guard allProjects.count == 4000, projects.count == 3600, tasks.count == 240 else {throw AppFailure(message:"Incomplete filtered project fixture")}
+        filteredMutationSeconds = try checkTaskOnlySources("Filtered")
+        snapshot = source; teamAccessMask = originalMask
+        }
         let probe=WorkspaceReadObservationProbe()
         withObservationTracking {_ = projects.first?.name} onChange: {probe.markChanged()}
         snapshot.tables["projects"]![0]["name"] = .string("Renamed catalog project")
@@ -7123,7 +7157,7 @@ extension Store {
         guard allProjects.isEmpty,projects.isEmpty,archivedProjects.isEmpty else {throw AppFailure(message:"Unreadable project catalog exposed cached content")}
         workspaceCacheReadable=true
         guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240,snapshot==source else {throw AppFailure(message:"Project catalog failed to return")}
-        let report:[String:JSON] = ["recordLookupChecks":.number(Double(recordChecks)),"accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
+        let report:[String:JSON] = ["recordLookupChecks":.number(Double(recordChecks)),"accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"taskOnlyMutationPasses":.number(20),"filteredTaskOnlyMutationPasses":.number(WorkspaceReadNativeFixture.projectCatalogRevalidation ? 20 : 0),"taskOnlyMutationSeconds":.number(mutationSeconds),"filteredTaskOnlyMutationSeconds":.number(filteredMutationSeconds),"projectGraphAndOrderReused":.bool(true),"currentTasksRefreshed":.bool(true),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
         let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
         try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-catalog.json"),options:.atomic)

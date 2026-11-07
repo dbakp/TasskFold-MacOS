@@ -1,0 +1,78 @@
+{
+  "macFull": {
+    "terminalExitCode": 1,
+    "summaries": [
+      {
+        "suite": "TaskfoldCoreTests.xctest",
+        "passed": false,
+        "selected": 4095,
+        "skipped": 38,
+        "failed": 1
+      },
+      {
+        "suite": "All tests",
+        "passed": false,
+        "selected": 4095,
+        "skipped": 38,
+        "failed": 1
+      }
+    ],
+    "logSHA256": "52cdb72dc18388c2876a73aa0dbeabaad915b3b6423cd6f19cd6b42086ecd121"
+  },
+  "macFocusedAfterFix": {
+    "terminalExitCode": 0,
+    "summaries": [
+      {
+        "suite": "TaskfoldCoreTests.xctest",
+        "passed": true,
+        "selected": 226,
+        "skipped": 0,
+        "failed": 0
+      },
+      {
+        "suite": "Selected tests",
+        "passed": true,
+        "selected": 226,
+        "skipped": 0,
+        "failed": 0
+      }
+    ],
+    "logSHA256": "68ba7386203f8fc17e4f6032ac9058774f95bce65fd65a95fdbb2c11cabb7b9f"
+  },
+  "iosFull": {
+    "terminalExitCode": 0,
+    "summaries": [
+      {
+        "suite": "TaskfoldWatchTests.xctest",
+        "passed": true,
+        "selected": 97,
+        "skipped": 0,
+        "failed": 0
+      },
+      {
+        "suite": "All tests",
+        "passed": true,
+        "selected": 97,
+        "skipped": 0,
+        "failed": 0
+      },
+      {
+        "suite": "TaskfoldCoreTests.xctest",
+        "passed": true,
+        "selected": 4073,
+        "skipped": 18,
+        "failed": 0
+      },
+      {
+        "suite": "All tests",
+        "passed": true,
+        "selected": 4073,
+        "skipped": 18,
+        "failed": 0
+      }
+    ],
+    "logSHA256": "a8f9f569eefb200afe83537ebe7c699d154e8ca4ebd387dbce7a3c5fb212cc8b"
+  },
+  "macOriginalFailure": "Only unordered byte-serialization assertion; exact synthetic values proved equal. Canonical byte assertion plus exact authored fields now passes in226case focused rerun; original full run is not labelled green.",
+  "realModelOrServerAcceptanceClaim": false
+}
