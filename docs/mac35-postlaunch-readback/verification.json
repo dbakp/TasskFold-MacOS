@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-07",
+  "version": "1.2.0",
+  "build": "35",
+  "postlaunchReadbackComplete": true,
+  "cacheFiles": 8,
+  "byteExactFiles": 6,
+  "allTasksAndPendingChangesPreserved": true,
+  "otherDifferences": [
+    {
+      "bytesEqual": false,
+      "changedTopLevelKeys": [
+        "dates"
+      ],
+      "tasksEqual": true,
+      "pendingEqual": true
+    },
+    {
+      "bytesEqual": false,
+      "changedTopLevelKeys": [
+        "tables"
+      ],
+      "changedTables": [
+        "_conversation_views"
+      ],
+      "tasksEqual": true,
+      "pendingEqual": true
+    }
+  ],
+  "comparison": "Raw bytes first; changed JSON compared with Decimal for float fidelity",
+  "privateDetailedReportSHA256": "a7de582df624cfe08d1b17e5376a53d4add98500fc33d2b4b4de17a06220164b",
+  "privateIdentifiersAndTaskContentsPublished": false,
+  "readbackExecSession": 30022,
+  "readbackProcessExited": true,
+  "normalAppProcessPreserved": 32536,
+  "computerControl": "Still reports the Mac locked after readonly job completed",
+  "sharedStorageReadinessVerified": false,
+  "sharedStorageVerificationPending": true,
+  "newSystemPermissionPromptObserved": false,
+  "appRestartedForThisCheck": false,
+  "newInstallPerformedForThisCheck": false
+}
