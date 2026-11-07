@@ -176,23 +176,49 @@ private struct SharedDraftReview: View {
 struct SharedStorageSetupBanner: View {
     @Environment(Store.self) private var store
     @State private var visible = false
+    @State private var takingLonger = false
+    @State private var dismissed = false
     var body: some View {
         VStack(spacing: 0) {
-            if visible && !store.startupSharedStorageReady {
-                HStack(spacing: 10) {
-                    if store.startupSharingWorking { ProgressView().controlSize(.small) }
-                    Text(store.startupSharingFailed ? "Widgets and shared drafts aren’t connected." : "Connecting widgets and shared drafts…")
-                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("startupSharedStorageStatus")
+            if visible && !store.startupSharedStorageReady && (!dismissed || store.startupSharingFailed) {
+                HStack(alignment: .top, spacing: 10) {
+                    if store.startupSharingWorking && !takingLonger { ProgressView().controlSize(.small) }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(store.startupSharingFailed ? "Widgets and shared drafts aren’t connected." : takingLonger ? "Shared storage is taking longer than usual." : "Connecting widgets and shared drafts…")
+                            .accessibilityIdentifier("startupSharedStorageStatus")
+                        if takingLonger && store.startupSharingWorking {
+                            #if os(macOS)
+                            Text("You can keep using Taskfold. If macOS shows an access request for Taskfold, respond to it.")
+                                .accessibilityIdentifier("startupSharedStorageGuidance")
+                            #else
+                            Text("You can keep using Taskfold. Widgets and shared drafts will connect when shared storage becomes available.")
+                                .accessibilityIdentifier("startupSharedStorageGuidance")
+                            #endif
+                        }
+                    }.font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                     if !store.startupSharingWorking {
-                        Button("Try again") { store.retryStartupPublication() }.font(.caption)
+                        Button("Try again") { dismissed = false; store.retryStartupPublication() }.font(.caption)
+                    } else if takingLonger {
+                        Button { dismissed = true } label: {
+                            Image(systemName: "xmark")
+                                #if os(iOS)
+                                .frame(minWidth: 44, minHeight: 44)
+                                #endif
+                        }
+                            .accessibilityLabel("Dismiss storage status")
+                            .accessibilityHint("Connection continues in the background.")
+                            .accessibilityIdentifier("dismissStartupSharedStorageStatus")
                     }
                 }.padding(.horizontal, 14).padding(.vertical, 8).background(.bar)
             }
         }.task(id: store.startupSharedStorageReady) {
-            if store.startupSharedStorageReady { visible = false; return }
-            do { try await Task.sleep(for: .milliseconds(350)); visible = true } catch { }
+            visible = false; takingLonger = false; dismissed = false
+            guard !store.startupSharedStorageReady else { return }
+            do {
+                try await Task.sleep(for: .milliseconds(350)); visible = true
+                try await Task.sleep(for: .seconds(10)); takingLonger = true
+            } catch { }
         }
     }
 }

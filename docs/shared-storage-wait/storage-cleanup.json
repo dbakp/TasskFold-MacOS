@@ -1,0 +1,49 @@
+{
+  "freeBeforeBytes": 45075341312,
+  "selectedCompilersFinished": true,
+  "unrelatedActiveProjectsUntouched": true,
+  "actions": [
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build/SDKExplicitPrecompiledModules",
+      "allocatedBytes": 135229440,
+      "reason": "Completed Taskfold-only explicit compiler modules; preserve products and intermediate object files"
+    },
+    {
+      "path": "/tmp/taskfold-storage-guidance-native-final.xcresult",
+      "allocatedBytes": 999424,
+      "reason": "Passed summary, 11 observations, source/binary hashes and inspected screenshot retained in both owners; other explicit screenshot preserved in attachments"
+    }
+  ],
+  "caches": [
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build",
+      "allocatedBytes": 795709440,
+      "within768MiB": true
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build",
+      "allocatedBytes": 776859648,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 695693312,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 637628416,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 45209878528,
+  "actualFreeChangeBytes": 134537216,
+  "finishTool": {
+    "apply": true,
+    "freeBeforeBytes": 45082021888,
+    "actions": [],
+    "skipped": [],
+    "freeAfterBytes": 45081980928,
+    "actualFreeChangeBytes": -40960
+  }
+}

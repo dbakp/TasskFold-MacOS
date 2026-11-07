@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-07",
+  "scope": "Long shared-storage wait explanation and presentation-only dismissal",
+  "normalMacBuild": "1.2.0 (35)",
+  "normalMacMainWindowAndSyncPreviouslyVerified": true,
+  "normalMacSharedStorageReady": false,
+  "normalMacPostlaunchCacheReadback": "Same readonly process 33108 / exec session 30022 still blocked in open(); not restarted",
+  "computerControlAfterUnlockReply": "The Mac is locked and automatic unlock could not unlock it",
+  "systemPermissionCauseConfirmed": false,
+  "repeatManualQuestionAsked": false,
+  "normalAppsRestarted": false,
+  "phoneInstallationDeferred": true,
+  "sourceSHA256": {
+    "Taskfold/Views/SharedDraftsView.swift": "15391c23e35c2a9ff516e2156c7ee86f2c85d6be4eeefeabcd7801dc43099b57"
+  },
+  "normalGatesOrServicesChanged": false,
+  "nativeMacIPadSpeechAndLifecycleAcceptance": false,
+  "unintendedExtraArchitectureBuild": {
+    "interrupted": true,
+    "exitCode": 75,
+    "reason": "Selected cache exceeded budget while compiling unused x86_64; final command is arm64 only",
+    "cleanupEvidence": "interrupted-build-cleanup.json"
+  },
+  "iosNative": {
+    "owner": "TaskFold-iOS",
+    "currentSource": true,
+    "isolatedSimulator": "iPhone 18 Pro / iOS 27 / ordinary text / dark",
+    "observations": {
+      "accepted": true,
+      "allWorkTablesPreserved": true,
+      "coldWindowAndDataVerified": true,
+      "dismissalKeptProducerRunning": true,
+      "dismissalPreservedExactSnapshot": true,
+      "lateProducerCannotUndoRedaction": true,
+      "longWaitExplained": true,
+      "privateTaskSaveWhileHeld": true,
+      "returnRestoresSavedTask": true,
+      "signOutRedactedImmediately": true,
+      "windowUsableBeforeInitialStorageWrite": true
+    },
+    "runtimeWarningSummary": [],
+    "screenshotInspected": true,
+    "macNativeAcceptance": false
+  },
+  "iosCompile": {
+    "configuration": "Debug",
+    "arm64Only": true,
+    "finalBuildSucceeded": true,
+    "signing": "ad hoc Simulator; no distribution claim"
+  },
+  "macCompile": {
+    "owner": "TasskFold-MacOS",
+    "currentBannerSourceExact": true,
+    "buildSucceeded": true,
+    "configuration": "Debug arm64",
+    "unsignedCompileOnly": true,
+    "nativeAcceptance": false
+  },
+  "storageCleanup": "storage-cleanup.json"
+}

@@ -1,0 +1,69 @@
+{
+  "date": "2026-11-07",
+  "syntheticOnly": true,
+  "realSystemPermissionAcceptance": false,
+  "normalInstalledAppUnchanged": true,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "test": "testInitialSharedStorageWriteKeepsWindowUsableAndCannotUndoSignOut",
+  "sourceManifestSHA256": "8ac88d64b1371356406e043414e6ec40a6c813c845e5dbe524bb5b1e3f01756d",
+  "uiTestsSHA256": "f39e51bf0eaffb88d05d4652c2a21aa647854771800da4bc1815876bdc5c1b0c",
+  "binarySHA256": {
+    "Taskfold.app/Taskfold": "3d5a6bb6554f4d00fec3dcc714802825c8b12fa2140b17a6e3c8d89e8d91c5f2",
+    "Taskfold.app/Taskfold.debug.dylib": "79eb902a673cf3498687a99edbc51c6d3d3546e910457175f8494555a2176b0c",
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/TaskfoldUITests": "7c24b2f07966b0eb64caa92a0d492b24e6a31a7ff495ed93b88d38d01708f99a"
+  },
+  "initialDeviceState": "Shutdown",
+  "xcodeExitCode": 0,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1794039862.552,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1794039788.542,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "observations": {
+    "accepted": true,
+    "allWorkTablesPreserved": true,
+    "coldWindowAndDataVerified": true,
+    "dismissalKeptProducerRunning": true,
+    "dismissalPreservedExactSnapshot": true,
+    "lateProducerCannotUndoRedaction": true,
+    "longWaitExplained": true,
+    "privateTaskSaveWhileHeld": true,
+    "returnRestoresSavedTask": true,
+    "signOutRedactedImmediately": true,
+    "windowUsableBeforeInitialStorageWrite": true
+  },
+  "accepted": true,
+  "deviceRestored": true
+}
