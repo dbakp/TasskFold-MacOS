@@ -11301,3 +11301,7 @@ Saved repair originals no longer depend on a device journal for discovery or exp
 ### 7 November — Saved-original browser follow-up
 
 Removed a section identifier that replaced the nested Export control's own identifier. Each Mac SQL fixture passes six archive paging/exact-original/preservation checks, plus seven channel checks; changed Swift parses. Real iPhone browser/picker/cold acceptance is recorded by the iOS owner, not promoted to Mac runtime acceptance. Mac browser, speech, lifecycle and broader migration remain open. Normal Mac verification is still pending because computer control reports the Mac locked; the running installed app is left intact. See `docs/repair-original-native-browser/README.md`.
+
+### 7 November — Current readable record indexes
+
+Task/project lookup now reuses an index of the exact current readable presentation, retaining observable source reads and first-match semantics. Source/access/workspace/session/origin changes fence reuse; source, mask, readability and workspace changes retire indexes. No disk cache or authorization change. This owner passes 97 focused Core tests including six new index cases, and the complete arm64 Mac app builds unsigned from current source. The separate iOS owner accepts real catalog scrolling and shared-access denial/return with exact saved-work preservation. Mac runtime, larger mixed-project loading, speech and physical smoothness remain distinct. No installed/prepared normal package changes; see `docs/record-lookup-index/README.md`.

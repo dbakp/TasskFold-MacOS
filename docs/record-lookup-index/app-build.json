@@ -1,0 +1,13 @@
+{
+  "platform": "macOS",
+  "configuration": "Debug",
+  "arm64": true,
+  "unsignedBuildPassed": true,
+  "nativeOrSigningAcceptance": false,
+  "productSHA256": {
+    "Taskfold.debug.dylib": "583b3b203b13bea10fa2cf4f21d477fb9ca6b495cdf41daba657334cfffe5e43",
+    "__preview.dylib": "02d9b2a9553ebfc96b2885fb92058bce9a5668ebebd74c8a16bc17bbb7a5042d",
+    "Taskfold": "7a2231c6327b65d5e81467bf1f793379f6c5b4a6c161b5fc8fdc1167deab7f2f"
+  },
+  "log": "/tmp/taskfold-record-index-mac-build.log"
+}

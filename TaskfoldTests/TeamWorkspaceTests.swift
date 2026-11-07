@@ -1116,3 +1116,79 @@ extension TeamWorkspaceTests {
         XCTAssertNil(cache.name(for: "waiting", project: project.id, context: context) { [] })
     }
 }
+
+extension TeamWorkspaceTests {
+    @MainActor func testRecordReadCacheReusesLargeCatalogAndPreservesExactRows() {
+        let cache = WorkspaceRecordReadCache()
+        let context = WorkspaceRecordReadCache.Context(source: UUID(), access: UUID(), workspace: .init(account: "local", generation: UUID()), session: UUID(), origin: nil)
+        let rows = (0..<4000).map { Record(["id": .string("project-\($0)"), "name": .string("Project \($0)"), "opaque": .object(["untouched": .string("e\u{301}\r\n")])]) }
+        var builds = 0
+        let ids = (0..<240).map { "project-\(($0 * 17) % 4000)" }
+        let start = DispatchTime.now().uptimeNanoseconds
+        let previous = ids.map { id in rows.first { $0.id == id } }
+        let linearNanos = DispatchTime.now().uptimeNanoseconds - start
+        let indexedStart = DispatchTime.now().uptimeNanoseconds
+        var indexed = ids.map { id in cache.record("projects", id: id, context: context) { builds += 1; return rows } }
+        let indexedNanos = DispatchTime.now().uptimeNanoseconds - indexedStart
+        XCTAssertEqual(indexed, previous)
+        XCTAssertEqual(builds, 1)
+        XCTAssertNil(cache.record("projects", id: "missing", context: context) { XCTFail("Reuse indexed missing results"); return [] })
+        indexed[0]?["name"] = .string("Caller-only edit")
+        XCTAssertEqual(cache.record("projects", id: ids[0], context: context) { [] }, previous[0])
+        print("RECORD_LOOKUP_BUDGET projects=4000 visibleReads=240 indexBuilds=\(builds) linearNanos=\(linearNanos) indexedIncludingBuildNanos=\(indexedNanos)")
+    }
+    @MainActor func testRecordReadCacheInvalidatesEverySourceAndIdentityBoundary() {
+        let cache = WorkspaceRecordReadCache(), source = UUID(), access = UUID(), generation = UUID(), session = UUID()
+        let original = WorkspaceRecordReadCache.Context(source: source, access: access, workspace: .init(account: "a", generation: generation), session: session, origin: origin)
+        let contexts: [WorkspaceRecordReadCache.Context] = [
+            .init(source: UUID(), access: access, workspace: original.workspace, session: session, origin: origin),
+            .init(source: source, access: UUID(), workspace: original.workspace, session: session, origin: origin),
+            .init(source: source, access: access, workspace: .init(account: "b", generation: generation), session: session, origin: origin),
+            .init(source: source, access: access, workspace: .init(account: "a", generation: UUID()), session: session, origin: origin),
+            .init(source: source, access: access, workspace: original.workspace, session: UUID(), origin: origin),
+            .init(source: source, access: access, workspace: original.workspace, session: session, origin: "https://other.example"),
+            .init(source: source, access: access, workspace: original.workspace, session: session, origin: nil)
+        ]
+        let row = Record(["id": .string("same"), "title": .string("Previous private row")])
+        for next in contexts {
+            XCTAssertEqual(cache.record("tasks", id: row.id, context: original) { [row] }, row)
+            XCTAssertNil(cache.record("tasks", id: row.id, context: next) { [] })
+        }
+    }
+    @MainActor func testRecordReadCacheKeepsFirstDuplicateEmptyIDAndTableSemantics() {
+        let cache = WorkspaceRecordReadCache(), context = WorkspaceRecordReadCache.Context(source: UUID(), access: UUID(), workspace: .init(account: "a", generation: UUID()), session: UUID(), origin: nil)
+        let first = Record(["id": .string("same"), "title": .string("First")]), second = Record(["id": .string("same"), "title": .string("Second")]), empty = Record(["title": .string("Empty identifier")])
+        XCTAssertEqual(cache.record("tasks", id: "same", context: context) { [first, second, empty] }, first)
+        XCTAssertEqual(cache.record("tasks", id: "", context: context) { [] }, empty)
+        XCTAssertEqual(cache.record("projects", id: "same", context: context) { [second] }, second)
+        XCTAssertNil(cache.record("unknown", id: "same", context: context) { [] })
+    }
+    @MainActor func testRecordReadCacheSeesEditDeleteAndReinsertAtNewSource() {
+        let cache = WorkspaceRecordReadCache(), access = UUID(), workspace = WorkspaceBinding(account: "a", generation: UUID()), session = UUID()
+        let original = Record(["id": .string("same"), "title": .string("Original")]); var edited = original; edited["title"] = .string("Edited")
+        for rows in [[original], [edited], [], [original]] {
+            let context = WorkspaceRecordReadCache.Context(source: UUID(), access: access, workspace: workspace, session: session, origin: nil)
+            XCTAssertEqual(cache.record("tasks", id: "same", context: context) { rows }, rows.first)
+        }
+    }
+    @MainActor func testRecordReadCacheUsesCurrentFilteredPresentationAfterAccessLoss() throws {
+        let saved = try snapshot(), b = try boundary(), left = try boundary("left")
+        let allowed = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [], tasks: saved.tables["tasks"]!)
+        let lost = try TeamWorkspaceCache(boundary: left, previous: allowed, pending: [], tasks: saved.tables["tasks"]!)
+        let cache = WorkspaceRecordReadCache(), source = UUID(), workspace = WorkspaceBinding(account: b.account, generation: UUID()), session = UUID()
+        let readable = allowed.presentation(saved), hidden = lost.presentation(saved)
+        let secret = try XCTUnwrap(readable["tasks"]?.first { $0.title == "Team secret review" })
+        let before = WorkspaceRecordReadCache.Context(source: source, access: UUID(), workspace: workspace, session: session, origin: b.origin)
+        XCTAssertEqual(cache.record("tasks", id: secret.id, context: before) { readable["tasks"] ?? [] }, secret)
+        let after = WorkspaceRecordReadCache.Context(source: source, access: UUID(), workspace: workspace, session: session, origin: b.origin)
+        XCTAssertNil(cache.record("tasks", id: secret.id, context: after) { hidden["tasks"] ?? [] })
+        XCTAssertEqual(saved.tables["tasks"]?.count, 2)
+    }
+    @MainActor func testRecordReadCacheExplicitClearRetiresAllTableIndexes() {
+        let cache = WorkspaceRecordReadCache(), context = WorkspaceRecordReadCache.Context(source: UUID(), access: UUID(), workspace: .init(account: "a", generation: UUID()), session: UUID(), origin: nil)
+        let row = Record(["id": .string("same")])
+        for table in ["tasks", "projects", "project_members:sample"] { XCTAssertEqual(cache.record(table, id: row.id, context: context) { [row] }, row) }
+        cache.clear()
+        for table in ["tasks", "projects", "project_members:sample"] { XCTAssertNil(cache.record(table, id: row.id, context: context) { [] }) }
+    }
+}
