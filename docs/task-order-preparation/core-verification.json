@@ -1,0 +1,17 @@
+{
+  "eachOwnerUniqueFocusedSelected": 161,
+  "eachOwnerSkipped": 3,
+  "eachOwnerFailed": 0,
+  "baselineEachOwnerSelected": 6,
+  "baselineEachOwnerSkipped": 0,
+  "baselineEachOwnerFailed": 0,
+  "fullCoreRerun": false,
+  "logSHA256": {
+    "mac-before": "639fc3630b747f17d62d7ab5276cb7108ac4145f4a8e66ddb5a4f2037c9b9389",
+    "ios-before": "478d84dbf55b57aaf923cb79b6fafa3e3758b64682770a751aa64e2ffc45eb29",
+    "mac-after": "54390b993d6bd25f28aa8099c031d3abdaca00f1b12c03707c489d360f30a99b",
+    "ios-after": "80ba4c775e49aa27d84f3deb0d5eb2ec422d8c00e325bab687d06e147e38b25f",
+    "mac-related": "94297b656711246aab4060b805f04fcd1cf1b818b8738747443b1e7dc151cdda",
+    "ios-related": "79ea2874617f64414244421aa6779eb565c2f1e66d15c4275dcb730c9eb9f39c"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "files": {
+    "Taskfold/Core/Store.swift": "11c92cd76086f30c420b442cc5a3db51061a390e7ef5b65f8b76de9b1ee4a991",
+    "Taskfold/Views/CalendarView.swift": "5f88528f5706e912b0313fcb3f8d86ce18845f2937edeec96de6a5fe1f64544d",
+    "TaskfoldUITests/TaskfoldUITests.swift": "b5813b1b490a4ae9c8f41c3795185b0c53f3aa781c41ecb2ea9083adde09e7a4",
+    "Taskfold/Core/Models.swift": "df51456e178e3a3a76f5b8ad1a2b52d9785d04589b04da8887fefe8d12f58c61",
+    "Taskfold/Core/TeamWorkspace.swift": "7edb32bf154592f68784b1429357f8dfd8e7cf52079000b0adc4b8086090e23d",
+    "Taskfold/Core/ProjectWorkflows.swift": "478c5f81a311b9316225e4705943eb6388cf7d552789e7aab852112a35e5bcf6",
+    "Taskfold/Core/Planner.swift": "4e5917414034633826ac150e2859d57663f5981cade47f3f96e4f374402697c9",
+    "Taskfold/Views/HourlyPlanner.swift": "4791d974cfd194856b869b5a660713400663420a5768ebd4d32b2690803b435d",
+    "Taskfold/TaskfoldApp.swift": "7420a841f9454102691ea9dd3fc7ca05b549a5fce32c2c080e2605e89ef0e94b",
+    "Taskfold/TeamTemplateNativeFixture.swift": "6472872ff0e4ff2a1cf621b21c00905f5d625d63aaafb446acd396951c7ad4ec"
+  },
+  "sameReservedHost": true,
+  "newDeviceCreated": false,
+  "physicalPhoneInstallDeferred": true,
+  "configuration": "Debug",
+  "swiftOptimization": "-Onone",
+  "debugSymbols": "inline DWARF; obsolete previous isolated dSYMs removed"
+}

@@ -11388,3 +11388,12 @@ Implemented private-source reuse in authored row comparison and adoption of the 
 Optimized native follow-up: the same-source signed iPhone Simulator Store case passes (1selected,0skip/fail/runtime warnings), actual Swift -O with DEBUG fixtures. Current ordinary/filtered task edits, archive/reparent/access observation and unchanged saved snapshot are accepted in that scope. Physical FPS remains open.
 
 Mac43 Release app/widget/share builds and signs; archive/readback and continuity gates pass from clean source against42baseline. Prepared only while desktop locked; inspect current42shared/sync before fresh-backup43install. Final selected phone/daily-Mac caches are bounded below768MiB; Core caches remain within budget. Physical phone installation stays deferred.
+
+
+### 7 November: prepare task ordering once
+
+TaskCache independently retains priority/creation keys and stable source offsets; date/note/completion edits map current rows into the retained order. Changed sort keys/membership still match the established comparator. Both owners pass161unique focused cases (3skip/0fail), including6new ordering cases and related query/raw-source/kind checks. Same-test before/after diagnostics: date edits328–356ms→17ms; reconstructed dates493–495→185–188ms; sort-key edits326–356→78–79ms per10updates/2000rows. These are Debug preparation figures, not physical FPS. Real Store fixture now covers10order transitions and deterministic task creation timestamps; native check running. Installed42 and prepared43 are unchanged. Only superseded isolated Simulator symbols were pruned; normal/rollback symbols and private backups retained.
+
+Current signed native iPhone Simulator acceptance: 1selected/0skip/fail/runtime warnings, exact host/owner source. Ten actual Store order transitions and subsequent production scrolling preserve saved task/project/pending content. Debug -Onone with inline DWARF, not physical FPS.
+
+Combined Mac44 Release/sign/archive/readback passes from clean source against42; normal flags unchanged. Prepared only while desktop locked. Superseded uninstalled43 archive retired after44 verification; historical receipt/source and installed42/rollback/private backups retained. Selected native745795584B/dailyMac791105536B remain below768MiB; inline DWARF allowed the native cache to retain app objects after index-only trim. No further package churn until actual installation or a substantive combined update.

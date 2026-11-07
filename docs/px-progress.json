@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Reduce task-update comparison pauses",
-  "latest": "Unchanged copied task records now reuse their private immutable-source proof before deep comparison. Both Core suites pass; scoped 2,000-record comparisons improve about145–157ms to4ms, while reconstructed rows retain the exact fallback. The optimized native Store check now passes with no runtime warnings; broader smoothness remains open. Mac42’s postlaunch data check now confirms all tasks/pending work preserved; final shared-storage/sync observation awaits desktop access. Mac43 is signed and package-verified, awaiting desktop access for installation; phone installation remains deferred. The74 checkpoints/67substeps are unchanged.",
+  "focus": "Avoid full-list sorting after everyday edits",
+  "latest": "Task ordering now prepares sort values once and keeps the order when only dates, notes or completion change. Current task values are still published. Both apps pass 161 focused cases (3 skipped). Ten date edits across 2,000 tasks improve from about 328–356 ms to 17 ms in the focused benchmark; reconstructed lists and priority changes also improve. The real-Store Simulator check passes all ten order transitions and production-list scrolling with saved work unchanged. Mac44 contains both fixes and is signed/package-verified, awaiting desktop access for installation. Mac42 remains installed; the superseded uninstalled43 archive is retired. Wider responsiveness and agreed deferrals remain open.",
   "next": [
-    "After desktop unlock, inspect the existing Mac42 shared-storage/sync state, then install verified43 with a fresh private backup and42 rollback. Mac42’s original postlaunch check already confirms all tasks/pending work preserved; no repeat Allow request or readback restart. Phone installation stays deferred.",
-    "Deliver the independently owned copied-record comparison update after its passing Core and optimized native Store checks. Continue wider navigation/drop responsiveness, reconstructed-source preparation and physical performance as separate open work.",
+    "Install verified Mac44 after desktop access returns, following the final current-app sync check and a fresh private safety copy. Mac42’s postlaunch task/pending preservation already passed. The superseded43 package is cleaned up; iPhone installation stays deferred.",
+    "Measure the actual iPhone drop path from release through local commit and layout, separating preparation and durable-write cost. Current copied-record and task-order improvements pass focused/native checks; broader navigation, reconstructed-refresh scaling and physical smoothness remain open.",
     "Pursue a materially different approach to real on-device filter quality: two structured schemas now have rejected actual-model evidence. Do not rerun them unchanged. The production engine still fails two of the original five; the expanded twelve-request/eleven-row current-production suite is not accepted. Keep assistance on-device only.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
     "Finish Mac/iPad Saved originals controls and wider account/accessibility behavior; then finish broader custodian cleanup, restoration/Undo and the larger older-task/history migration. Command-free discovery/export now has genuine API and Core proof. Keep wider mapped/shared-team/custodian, exact-cache and file/discussion ownership cases distinct; ordinary advanced rollout gates stay off.",
@@ -502,7 +502,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Delivered scoped improvements: prepared workspace/project/member reads, background note and draft preparation, faster search/counts/Insights, date grouping, stable drag targets and project-first navigation. Representative iPhone/iPad drop, reorder, scrolling and relaunch checks pass; Mac42 is installed with the latest Calendar archive reuse. Its postlaunch tasks and pending work are preserved; final shared-storage/sync observation is pending desktop access. Current update: immutable copied-record comparisons improve about145–157ms to4ms per five passes/2000rows, with exact fallback and authored-byte preservation retained; both Core suites and the signed optimized native Store check pass. Ordinary/filtered current-task updates, archive/access observation and saved snapshots are verified with no runtime warnings. Still missing: broader navigation/rendering/drag and reconstructed-refresh scaling, native Mac interactions, shared/account/window/speech cases and measured physical-device smoothness. Private durable writes, Keychain and Watch IO are not claimed nonblocking. Phone installation remains deferred; no broader FPS acceptance.",
+              "detail": "Delivered scoped improvements cover prepared workspace/project/member reads, background note/draft preparation, search/counts/Insights, date grouping, stable drag targets and project-first navigation. Representative iPhone/iPad drop, reorder, scrolling and relaunch checks pass. Mac42 is installed; its postlaunch tasks/pending preservation is confirmed and final shared/sync UI awaits desktop access. The copied-record comparison fix has optimized native Store proof; verified combined Mac44 is prepared with the new order reuse and awaits desktop access. Superseded uninstalled43 is retired. Current additional order reuse passes 161 focused cases per owner: ten date edits across 2,000 tasks improve from 328–356 ms to 17 ms; reconstructed and sort-key edits also improve, retaining current rows and stable ties. The current signed Simulator verifies ten actual Store ordering transitions and production-list scrolling, preserving all saved work with no runtime warnings. Still missing: wider navigation/rendering/drag and fresh-refresh scaling, native Mac interactions, shared/account/window/speech cases and physical-device smoothness. Private durable writes, Keychain and Watch IO are not claimed nonblocking. Phone installation stays deferred.",
               "steps": [
                 {
                   "state": "done",
@@ -774,9 +774,26 @@
             "record-copy-comparison/iphone-summary.json",
             "record-copy-comparison/mac43-package.json",
             "record-copy-comparison/storage-cleanup.json",
-            "record-copy-comparison/progress-validation.json"
+            "record-copy-comparison/progress-validation.json",
+            "task-order-preparation/README.md",
+            "task-order-preparation/source.json",
+            "task-order-preparation/core-verification.json",
+            "task-order-preparation/mac-before.json",
+            "task-order-preparation/mac-after.json",
+            "task-order-preparation/ios-before.json",
+            "task-order-preparation/ios-after.json",
+            "task-order-preparation/symbol-cleanup.json",
+            "task-order-preparation/iphone-verification.json",
+            "task-order-preparation/iphone-store.json",
+            "task-order-preparation/iphone-ui.json",
+            "task-order-preparation/progress-validation.json",
+            "task-order-preparation/mac44-package.json",
+            "task-order-preparation/storage-cleanup.json",
+            "task-order-preparation/phone-cleanup.json",
+            "task-order-preparation/retire43.json",
+            "task-order-preparation/core-cache-budget.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-voice",
@@ -1386,7 +1403,7 @@
             "repair-original-discovery/verification.json",
             "repair-original-discovery/service-verification.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-watch",
@@ -2386,7 +2403,7 @@
     "publication-approval-recovery/controller-verification.json": "8597019e092fae584ecee84b90d33c26898b90388e981bf04f0fd736a30dd027",
     "publication-approval-recovery/phone-verification.json": "264cb0224561845d743b84d7efb2959be16966b7c58205ce60d4e8356ad39d71",
     "publication-approval-recovery/verification.json": "e27e21692fa6eb1627d0daa6559317abae08ef99aa22c786607575fda58a4f47",
-    "record-copy-comparison/README.md": "1e12d998330d82e65e307b10573908008321851e5b673391b0b6d478f86e2a58",
+    "record-copy-comparison/README.md": "a6b012a34261295e341964d20012a5af01c74f8f447568d772f3d233961e5535",
     "record-copy-comparison/core-verification.json": "f2b91940c848fe82a5d425db47bc38d4de0f7a4877241f08315493514a37ca73",
     "record-copy-comparison/ios-diagnostic.json": "5a9337040c09f961a95f36c0211cb5bafee9491d43248a0411eb6e8269ec0ae7",
     "record-copy-comparison/iphone-store.json": "258f115169bad4e242dd6571893b4ee99bdd8cc9f9b6105397e5327cc59f21be",
@@ -2519,6 +2536,23 @@
     "task-file-workspace-sync/README.md": "f972df69827d10adaf8205cf7f3098450461ccb3fcde55ef082b74383989bd5c",
     "task-file-workspace-sync/oracle-audit.json": "6809c719fc359ff0a33c2cf3f3d807ec7626f3237842f5bed6990e6a274c3178",
     "task-file-workspace-sync/verification.json": "61c9fd3a1d07534cf1fdf2ee7c7a6bcbc5218cf0a801b10620bbe323362e6eed",
+    "task-order-preparation/README.md": "3cd4909e7da3c1fb93854c62ced864293c9909ee9bdd783fb6b3a2380de4a7bf",
+    "task-order-preparation/core-cache-budget.json": "e4920fe7a7697be83d2364d041c1da2965ef9e204005e889f9cbf4a6a4c3aba8",
+    "task-order-preparation/core-verification.json": "0e982b7f7d3fec21535b2aee0143687c56aff0c27b08c29de4bbd8fdc9283563",
+    "task-order-preparation/ios-after.json": "98718e160290556d9a88c89f704143ef0ff9fbef6849ec0cd55115097f8bbc33",
+    "task-order-preparation/ios-before.json": "d5dca0b55e4229ea4f56225da4566034fcf9fcaef2d2b8f1a4148f43222b975a",
+    "task-order-preparation/iphone-store.json": "aedbdede982c8bb691173ad48096d4e1320dbdc72d368599a3c99ad801a3ccbb",
+    "task-order-preparation/iphone-ui.json": "c684ae9cd36f9fa58163d56e7158c9eff2409feadc924f702bc321a2d1d926d2",
+    "task-order-preparation/iphone-verification.json": "3981ee081595c18d4e8d67fa91ef3473038406d983cd46184f9b16dc9260396d",
+    "task-order-preparation/mac-after.json": "e86c94d2fb02119e374b466c118e22903f2e57d5e626329ff9b210ca8d83273c",
+    "task-order-preparation/mac-before.json": "b0b09aa98000d580e88b9bcdda58b6d85a41e530e25ffd1a45f683f362d80ad6",
+    "task-order-preparation/mac44-package.json": "aff16d852add4dddb17227db37e73b6c5e1a2dbb25ec80bb827a95b0d0e8178f",
+    "task-order-preparation/phone-cleanup.json": "8d7c8f12be6cc03beebed6ba442e3bbd0771c701e3b9cced5dd8592aa03062e6",
+    "task-order-preparation/progress-validation.json": "1e5477ff3f4ff3e64d510f24e6a2fa92b273bf1e93f32f78cde96d06eb418aa4",
+    "task-order-preparation/retire43.json": "5f030bf3297e9590d66665cbfadf059a58bd37a3257ee377db8d3473a529ef54",
+    "task-order-preparation/source.json": "f649fc2c75e3ea08fa41d72f1430a3d436c46a24bde6647213f1cda9076262b2",
+    "task-order-preparation/storage-cleanup.json": "357990450137cefdaf550e83ae2040c3d45a7a7403640a94d20e7a5a0984049a",
+    "task-order-preparation/symbol-cleanup.json": "9e62623000751eff00c78466cb09bcc08001e659c66424556ae0d90e4f90dd89",
     "task-row-note-reading/README.md": "40d02068d4a0a777d856bd0948a73d9080040f1fb7f22ed06d2f4f2711845270",
     "task-row-planning-read/README.md": "6b443757e4728d86b4aaefa3cd1d055d85c5c60a4130b691b3411a162df46d7a",
     "task-row-planning-read/investigation.json": "d196b8c28b75bf11007bc24e915a3d9f8566226db90f505e94ed31a3fe5e60b7",

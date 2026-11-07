@@ -1,0 +1,15 @@
+{
+  "retiredBuild": "43",
+  "neverInstalled": true,
+  "supersededBy": "44",
+  "replacementArchiveVerified": true,
+  "installed42AndRollbackPreserved": true,
+  "oldArchiveSHA256": "af35cac4429a2fb9fd68f03005113cf615c131165bb93266cc16c550237a87ac",
+  "freeBeforeBytes": 40241319936,
+  "removed": {
+    "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-43-mac-development.zip",
+    "bytes": 20505703
+  },
+  "privateDataBackupsUntouched": true,
+  "freeAfterBytes": 40241299456
+}

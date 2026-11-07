@@ -1,0 +1,22 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 40059568128,
+  "actions": [
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Index.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 62763008
+    }
+  ],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 745795584,
+      "projectedAllocatedBytes": 745795584,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 40121786368,
+  "actualFreeChangeBytes": 62218240
+}

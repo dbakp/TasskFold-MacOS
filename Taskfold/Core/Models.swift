@@ -1627,6 +1627,30 @@ final class TaskCache {
         return value
     }
     private(set) var tasks: [Record] = []
+    private struct OrderKey: Equatable {
+        let priority: Int
+        let createdAt: String
+        init(_ row: Record) { priority = row.priority; createdAt = row.string("created_at") }
+    }
+    private var orderKeys: [OrderKey] = []
+    private var orderedOffsets: [Int] = []
+    private func orderedRows(_ rows: [Record]) -> [Record] {
+        let keys = rows.enumerated().map { offset, row in
+            if offset < source.count, offset < orderKeys.count,
+               row.sharesAuthoredSource(with: source[offset]) { return orderKeys[offset] }
+            return OrderKey(row)
+        }
+        if keys != orderKeys {
+            // Sort values are read once per row. Stable source offsets preserve
+            // ties, including malformed or duplicate IDs, without retaining old rows.
+            orderedOffsets = rows.indices.sorted {
+                keys[$0].priority == keys[$1].priority ? keys[$0].createdAt > keys[$1].createdAt : keys[$0].priority < keys[$1].priority
+            }
+            orderKeys = keys
+        }
+        // Date/note/completion edits still publish every current authored value.
+        return orderedOffsets.map { rows[$0] }
+    }
     private(set) var computationCount = 0
     private struct HierarchyKey: Hashable { var projects: [FilterReference]; var userID: String }
     private var hierarchyKey: HierarchyKey?
@@ -1664,8 +1688,8 @@ final class TaskCache {
             return false
         }
         projectPresentation = nil; projectOutline = nil; labelPositions = nil
+        tasks = orderedRows(rows)
         source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; excludedProductiveResult = nil; inboxProductiveResult = nil; navigationResult = nil
-        tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
         results.removeAll(keepingCapacity: true)
         return true
     }
