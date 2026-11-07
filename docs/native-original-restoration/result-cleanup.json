@@ -1,0 +1,40 @@
+{
+  "freeBeforeBytes": 35266834432,
+  "removed": [
+    {
+      "generatedOutput": "/tmp/taskfold-restore-native-ios.xcresult",
+      "files": 1035,
+      "bytes": 213412822,
+      "manifestSHA256": "f7627f411dab7e6b9990eb07f5bc8d1a8417ebef321c89bb70320098d6435e35"
+    },
+    {
+      "generatedOutput": "/tmp/taskfold-restore-native-ios-v2.xcresult",
+      "files": 46,
+      "bytes": 9526454,
+      "manifestSHA256": "491fb8a438ff7c500addf522bb18ed403a87c377b0b16b4fc1fd9211f2de9fe9"
+    },
+    {
+      "generatedOutput": "/tmp/taskfold-restore-native-ios-v3.xcresult",
+      "files": 74,
+      "bytes": 22815092,
+      "manifestSHA256": "45fab1318edc5c6f659d7ba1b4f03f6211db0df435838f84b89d60742cc60213"
+    },
+    {
+      "generatedOutput": "/tmp/taskfold-restore-native-ios-v2-attachments",
+      "files": 13,
+      "bytes": 8019148,
+      "manifestSHA256": "01ab772b134a56b9aee8510425de78f1760b856c119f92bc90639960d7e91250"
+    },
+    {
+      "generatedOutput": "/tmp/taskfold-restore-native-ios-v3-attachments",
+      "files": 44,
+      "bytes": 19351950,
+      "manifestSHA256": "899be76e0e93da3cb8afdd47136c7ecc558be4f396515302b2a0bc64eea8e0b3"
+    }
+  ],
+  "retainedFailureEvidence": "/tmp/taskfold-original-restoration-failure-evidence",
+  "currentPassingResultRetained": "/tmp/taskfold-restore-native-ios-v4.xcresult",
+  "normalAppOrSimulatorDataRemoved": false,
+  "freeAfterBytes": 35522908160,
+  "actualFreeChangeBytes": 256073728
+}

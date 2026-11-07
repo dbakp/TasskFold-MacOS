@@ -80,3 +80,14 @@ test('original comparison channel binds a typed archive and never a mutation bod
  for(const change of [{_request:null},{_archive:'bad'},{_operation:'restore'},{account:identity.account}])await assert.rejects(channel.dispatch(request(change)));
  assert.equal(calls,0);await channel.dispatch(request({}));assert.equal(calls,1);
 });
+
+
+test('restoration channel validates phases, UUIDs and exact envelopes before SQL',async()=>{
+ let calls=0;const channel=createMappingSQLChannel({raw:async sql=>{calls++;assert.match(sql,/public.taskfold_(review_child_restore|restore_child_original)\(/);return JSON.stringify({value:'{}',code:null});}},{session:randomUUID(),nonce:'test-run-nonce'});
+ const request=(path,body)=>({...make(),path:'/rest/v1/rpc/'+path,body:Buffer.from(JSON.stringify(body)).toString('base64')});
+ const review={_mode:'restore',_repair:randomUUID(),_archive:randomUUID(),_restore:null};
+ for(const change of [{_mode:'remove'},{_archive:'bad'},{_repair:null},{_restore:randomUUID()},{_mode:'undo'},{extra:true}])await assert.rejects(channel.dispatch(request('taskfold_review_child_restore',{...review,...change})));
+ const command={account:identity.account,task_id:identity.root,task_generation:identity.generation};
+ for(const body of [{_operation:'original',_body:command},{_operation:'send',_body:[]},{_operation:'check',_body:{...command,account:randomUUID()}},{_operation:'send',_body:{...command,large:'x'.repeat(4097)}},{_operation:'send',_body:command,extra:true}])await assert.rejects(channel.dispatch(request('taskfold_restore_child_original',body)));
+ assert.equal(calls,0);await channel.dispatch(request('taskfold_review_child_restore',review));await channel.dispatch(request('taskfold_review_child_restore',{...review,_mode:'undo',_restore:randomUUID()}));await channel.dispatch(request('taskfold_restore_child_original',{_operation:'check',_body:command}));assert.equal(calls,3);
+});

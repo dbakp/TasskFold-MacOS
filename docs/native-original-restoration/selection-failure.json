@@ -1,0 +1,25 @@
+{
+  "testCases": 1,
+  "failed": 1,
+  "failure": "Selected original not visible in restoration sheet; childRestorePrepare absent",
+  "baselineSHA256": "0c48fcc87c626c6178e8c1fa73e3af6df9a30969582c54198e34f24b5a16845a",
+  "finalStateSHA256": "0c48fcc87c626c6178e8c1fa73e3af6df9a30969582c54198e34f24b5a16845a",
+  "tracePaths": [
+    "/rest/v1/rpc/taskfold_child_repair_archives"
+  ],
+  "currentChannel": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/B56282BF-391F-4434-BFD3-C62847EC7379/Library/Application Support/Child archives SQL native peer",
+  "resultFinalization": "Case and suite have failed. Xcode remains in result finalization; only this verified owned reporting process is interrupted. Raw log/partial result preserved.",
+  "logSHA256": "76391b0fa8bc1c2f6db4cf5990d2a62234924afa8963479fc257a1f2f2974f3f",
+  "capturedDatabaseStateUnchanged": true,
+  "capturedStateKeys": [
+    "root",
+    "records",
+    "originals",
+    "root_history",
+    "child_history",
+    "restorations",
+    "requests",
+    "scopes"
+  ],
+  "laterEvidenceDisposition": "The failed case log and concise failure evidence remain. The incomplete generated result bundle was retired after the current passing result and exact removal manifest were preserved; see result-cleanup.json."
+}

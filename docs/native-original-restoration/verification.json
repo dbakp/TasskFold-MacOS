@@ -1,0 +1,101 @@
+{
+  "reviewed": "2026-11-08",
+  "owningPlatform": "macOS",
+  "selectionFix": "Identifiable sheet selection carries the selected original on its first presentation; generic saved requests has a separate identity.",
+  "sourceSHA256": {
+    "Scripts/Database/child-mapping-native-channel.mjs": "186a1df835024b4f0242b39a7ad74fdab6a5b434837166a1616f712ce54052cf",
+    "Scripts/Database/test-child-mapping-native-channel.mjs": "bee4c654927b16069b7aaaf4ff5687bea4292fede1ab04eab95e069607b566b0",
+    "Scripts/Database/run-child-restore-native.mjs": "ff8e2d0bbb792b0d43e5301603d0db834f14a696cb225429719b5b93e44634a9",
+    "Taskfold/Views/ChildTaskRepairView.swift": "fb09ab0bb69800adbc0d9ca0caf785d4758e600a51102ad78ffea7b800f87505",
+    "TaskfoldUITests/AudioCommentUITests.swift": "f8a0b1aa8df327fe88f2d2a81e1be146832b6143bb636ce0442923c27f097c98"
+  },
+  "channelUnitTests": {
+    "passed": 10,
+    "failed": 0,
+    "scope": "Exact envelopes, UUIDs, modes, size and actor/root/generation admission before SQL"
+  },
+  "owningAppBuild": {
+    "exit": 0,
+    "logSHA256": "c84864dac2c31fe5acfd13c0051be1fcb76cf749c376fe69a7670c51ceb97ffb",
+    "runtimeAcceptance": false,
+    "signing": "compilation only, signing disabled"
+  },
+  "nativePhone": {
+    "owningRepository": "dbakp/TaskFold-iOS",
+    "test": "testChildOriginalRestoreNativeLostReplyColdUndoRedo",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "testExit": 0,
+    "fixtureExit": 0,
+    "runtimeWarnings": [],
+    "logSHA256": "436b6aff625e602e8a8754411178a4f40ab1d321a6763306dbb85cb8d72d8608",
+    "summarySHA256": "9885b1822d8af16f4d579cf0b4a6c977cb9c1ae1cf80f9e42a25af5b69dbed76",
+    "fixtureSHA256": "05134f4d525e93e2f3dedf25488ec2d188490762cdc6477737b9e1a1b1eead83",
+    "scope": "Actual reserved iPhone Simulator production screens with genuine local complete-schema PostgreSQL actor/session channel, not native HTTP Auth",
+    "checks": [
+      "four reviewed native writes; lost initial reply resolved through actual status",
+      "exact editable source and authored records returned; notes/priority/originals/history preserved; four receipts and no leaked scope"
+    ],
+    "final": {
+      "revision": 4,
+      "phase": "undone",
+      "requests": 4
+    },
+    "normalText": true,
+    "darkAppearance": true,
+    "fixtureRemoved": true,
+    "priorSyntheticDataPreserved": [
+      {
+        "from": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/7CB6C7B8-1AD3-4BD1-8C1E-6DD0D3388B99/Library/Application Support/Taskfold",
+        "to": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/7CB6C7B8-1AD3-4BD1-8C1E-6DD0D3388B99/Library/Application Support/Taskfold-before-restore-native-7118d4dd",
+        "files": 3,
+        "manifestSHA256": "460ecaefea0ccc47f1eeb00801524c6eca5d74511175bcf65e517172b6b14c12"
+      },
+      {
+        "from": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/7CB6C7B8-1AD3-4BD1-8C1E-6DD0D3388B99/Library/Application Support/Child archives SQL native peer",
+        "to": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/7CB6C7B8-1AD3-4BD1-8C1E-6DD0D3388B99/Library/Application Support/Child archives SQL native peer-before-restore-native-9ae85806",
+        "files": 5,
+        "manifestSHA256": "ff4a4be89430667ea4834290bd21ba6d01fb9ba4470bd7be2b234f787f2f46da"
+      }
+    ]
+  },
+  "limitations": [
+    "Mac/iPad controls and VoiceOver",
+    "Native HTTP authentication (the native path uses a genuine PostgreSQL role/session channel)",
+    "Mapped/shared custodians and account/task/file/audio lifecycle",
+    "Explicit retained-history disposal and keep-old-version adoption",
+    "Hosted deployment, normal gates and physical smoothness"
+  ],
+  "normalGatesChanged": false,
+  "hostedChanges": false,
+  "normalInstall": false,
+  "checkpoints": 74,
+  "substeps": 67,
+  "owningServiceSmoke": {
+    "passed": true,
+    "checks": [
+      "restore genuine decision and exact status",
+      "undo genuine decision and exact status",
+      "redo genuine decision and exact status",
+      "undo genuine decision and exact status",
+      "exact editable source and authored records returned; notes/priority/originals/history preserved; four receipts and no leaked scope"
+    ],
+    "fixtureRemoved": true,
+    "reportSHA256": "3811f0c914febdc6e55b85c4c87477b4ac762745370aca7dba94e9ba08b468fe"
+  },
+  "hostSourceAudit": {
+    "swiftFilesCompared": 185,
+    "onlyChanges": "Reserved Keychain/recovery/queue/app-group namespaces",
+    "namespaceOnlyFiles": [
+      "Taskfold/Core/Backups.swift",
+      "Taskfold/Core/Backend.swift",
+      "Taskfold/Core/Store.swift",
+      "Taskfold/Core/WidgetActions.swift",
+      "Taskfold/Core/SharedCapture.swift"
+    ],
+    "restoreViewByteExact": true,
+    "iOSUITestByteExact": false
+  },
+  "visualReview": "Current dark normal-text iPhone review and final saved history inspected; latest Review Redo remains available. This is not larger-text, VoiceOver or hardware smoothness acceptance."
+}

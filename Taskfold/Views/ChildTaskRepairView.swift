@@ -685,6 +685,13 @@ private struct ChildMappingHistoryPicker: View {
 
 /// A fresh device can browse originals without recreating old repair commands.
 /// Metadata is ephemeral; original bytes are fetched only for explicit export.
+private enum ChildRestorationPresentation: Identifiable {
+    case requests
+    case original(ChildTaskRepairArchive)
+    var id: String { switch self { case .requests: return "requests"; case .original(let archive): return archive.id } }
+    var archive: ChildTaskRepairArchive? { switch self { case .requests: return nil; case .original(let archive): return archive } }
+}
+
 struct ChildTaskRepairArchivesView: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
@@ -699,8 +706,7 @@ struct ChildTaskRepairArchivesView: View {
     @State private var exporting = false
     @State private var exportScope: ChildTaskFieldClientScope?
     @State private var comparison: ChildTaskRepairOriginalComparison?
-    @State private var showingRestoration = false
-    @State private var restorationArchive: ChildTaskRepairArchive?
+    @State private var restorationPresentation: ChildRestorationPresentation?
     @State private var removingOriginal = false
     @State private var cleanupID: String?
     @State private var cleanupReview: ChildTaskRepairOriginalCleanup?
@@ -714,7 +720,7 @@ struct ChildTaskRepairArchivesView: View {
                     Section {
                         Text("Find originals saved before a repair, even on a new device. Names reflect current tasks; exports keep their original content and check your current access.")
                             .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
-                        Button("Saved restore requests") { restorationArchive = nil; showingRestoration = true }
+                        Button("Saved restore requests") { restorationPresentation = .requests }
                             .disabled(busy).accessibilityIdentifier("childRestoreRequests")
                         Button("Refresh") { Task { await load() } }.disabled(busy).accessibilityIdentifier("childRepairArchivesRefresh")
                     }
@@ -742,7 +748,7 @@ struct ChildTaskRepairArchivesView: View {
                                     .accessibilityHint("Save a copy of this original without changing your tasks.")
                                     .accessibilityIdentifier("childRepairArchiveExport-" + entry.id)
                                 if store.childTaskOriginalRestorationEnabled {
-                                    Button("Review restoration") { restorationArchive = entry; showingRestoration = true }
+                                    Button("Review restoration") { restorationPresentation = .original(entry) }
                                         .disabled(busy).accessibilityIdentifier("childRestoreArchive-" + entry.id)
                                 }
                                 if store.childTaskRepairArchiveCleanupEnabled { cleanupControls(entry) }
@@ -774,8 +780,8 @@ struct ChildTaskRepairArchivesView: View {
                 ChildRepairOriginalComparisonView(comparison: value, close: { comparison = nil })
             }
         }
-        .sheet(isPresented: $showingRestoration) {
-            if visible, scope != nil { ChildTaskOriginalRestoreView(archive: restorationArchive) }
+        .sheet(item: $restorationPresentation) { selection in
+            if visible, scope != nil { ChildTaskOriginalRestoreView(archive: selection.archive) }
         }
         .fileExporter(isPresented: $exporting, document: scope == exportScope ? document : nil, contentType: .json, defaultFilename: "Taskfold-original-" + Dates.day(Date())) { result in
             guard let scope, exportScope == scope else { return }; document = nil; exportScope = nil
@@ -792,7 +798,7 @@ struct ChildTaskRepairArchivesView: View {
     private func clear() {
         ticket = UUID(); entries = []; next = nil; loaded = false; busy = false
         message = nil; document = nil; exportScope = nil; exporting = false
-        cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false; removingOriginal = false; comparison = nil; showingRestoration = false; restorationArchive = nil
+        cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false; removingOriginal = false; comparison = nil; restorationPresentation = nil
     }
     private func load(after: String? = nil) async {
         guard visible, let captured = scope, !busy else { return }; let work = UUID(); ticket = work; busy = true; message = nil
