@@ -286,6 +286,21 @@ private struct PreservingJSONSyntax {
             guard take(44) else { throw PreservedJSONFailure.syntax }
         } while true
     }
+    /// Locate a structural slot in our own encoder output. The suffix is
+    /// already well formed; this is deliberately not a raw-document validator.
+    mutating func memberInEncodedObject(named name: String) throws -> ObjectMember? {
+        space(); guard take(123) else { throw PreservedJSONFailure.syntax }
+        if take(125) { return nil }
+        var keys = Set<Data>()
+        repeat {
+            space(); let keyRange = try string(), key = try decodedString(keyRange)
+            guard keys.insert(Data(key.utf8)).inserted, take(58) else { throw PreservedJSONFailure.syntax }
+            space(); let start = offset; _ = try value(path: [], depth: 1)
+            if key == name { return ObjectMember(key: key, keyRange: keyRange, value: start..<offset) }
+            if take(125) { return nil }
+            guard take(44) else { throw PreservedJSONFailure.syntax }
+        } while true
+    }
     mutating func number() throws -> Range<Int> {
         let start = offset
         if offset < bytes.count && bytes[offset] == 45 { offset += 1 }
@@ -428,10 +443,11 @@ final class SnapshotFieldEncodingCache {
     private var entries: [Key: Entry] = [:]
     private var previousBodySize = 0
     private(set) var statistics = Statistics()
+    private(set) var metadataHeader: Data?
     init(maximumBytes: Int = 16 * 1024 * 1024, maximumEntries: Int = 50_000) {
         self.maximumBytes = max(0, maximumBytes); self.maximumEntries = max(0, maximumEntries)
     }
-    func clear() { entries = [:]; previousBodySize = 0; statistics = Statistics() }
+    func clear() { entries = [:]; previousBodySize = 0; metadataHeader = nil; statistics = Statistics() }
     /// Avoid repeatedly re-encoding the uncached tail of a workspace that cannot
     /// fit this memo. The last complete envelope conservatively charges values;
     /// add every current key and entry overhead before selecting this writer.
@@ -458,7 +474,7 @@ final class SnapshotFieldEncodingCache {
             rows.contains { row in row.fields.values.contains(where: Self.containsPreserved) }
         }
     }
-    private static func containsPreserved(_ value: JSON) -> Bool {
+    fileprivate static func containsPreserved(_ value: JSON) -> Bool {
         switch value {
         case .preserved: return true
         case .array, .object: break
@@ -477,11 +493,12 @@ final class SnapshotFieldEncodingCache {
     }
     func encode(_ snapshot: Snapshot) throws -> Data {
         var metadata = snapshot; metadata.tables = [:]
-        let encoder = TaskfoldJSONEncoder(), header = try encoder.encode(metadata)
+        let encoder = TaskfoldJSONEncoder(), metadataEncoder = TaskfoldJSONEncoder()
+        metadataEncoder.outputFormatting = .sortedKeys
+        let header = try metadataEncoder.encode(metadata)
         guard header.count <= 512 * 1024 else { throw Unavailable.header }
         var syntax = PreservingJSONSyntax(data: header, detectOpaque: false)
-        let members = try syntax.objectMembers()
-        guard let slot = members.first(where: { $0.key == "tables" }), header[slot.value] == Data("{}".utf8) else { throw Unavailable.header }
+        guard let slot = try syntax.memberInEncodedObject(named: "tables"), header[slot.value] == Data("{}".utf8) else { throw Unavailable.header }
         // Repeated schema names are identical across thousands of task fields.
         // Keep only a small per-call UTF-8-exact name memo; unknown names still
         // encode normally after this independent budget is exhausted.
@@ -537,6 +554,7 @@ final class SnapshotFieldEncodingCache {
         var result = Data(); result.reserveCapacity(count.partialValue)
         result.append(header[..<slot.value.lowerBound]); result.append(body); result.append(header[slot.value.upperBound...])
         entries = next; previousBodySize = body.count; measured.retained = next.count; statistics = measured
+        metadataHeader = header
         return result
     }
     /// Semantic String/Double/opaque-object equality is insufficient for saved
@@ -568,6 +586,117 @@ final class SnapshotFieldEncodingCache {
     private static func sameString(_ lhs: String, _ rhs: String) -> Bool {
         var a = lhs, b = rhs
         return a.withUTF8 { x in b.withUTF8 { y in x.count == y.count && (x.baseAddress == y.baseAddress || x.elementsEqual(y)) } }
+    }
+}
+#endif
+
+#if !TASKFOLD_SHARE_EXTENSION && !TASKFOLD_WIDGET_EXTENSION
+/// Whole rows prepared off the interface thread for large plain workspaces.
+/// Reuse requires the original immutable Record source, never just its ID.
+final class SnapshotRowEncodingCache {
+    struct Statistics: Equatable, Sendable {
+        var reused = 0, encoded = 0, retained = 0, retainedBytes = 0
+    }
+    fileprivate struct Entry: Sendable { let source: Record; let data: Data }
+    struct Prepared: Sendable {
+        fileprivate let tables: [Data: [Entry]]
+        fileprivate let statistics: Statistics
+    }
+    private enum Unavailable: Error { case budget, opaque, header, empty }
+    private let maximumBytes: Int
+    private var tables: [Data: [Entry]] = [:]
+    private(set) var ready = false
+    private(set) var metadataHeader: Data?
+    private(set) var statistics = Statistics()
+    init(maximumBytes: Int) { self.maximumBytes = max(0, maximumBytes) }
+    func clear() { tables = [:]; ready = false; metadataHeader = nil; statistics = Statistics() }
+    func adopt(_ prepared: Prepared) { tables = prepared.tables; statistics = prepared.statistics; metadataHeader = nil; ready = true }
+
+    static func prepare(_ snapshot: Snapshot, maximumBytes: Int) throws -> Prepared {
+        let cache = SnapshotRowEncodingCache(maximumBytes: maximumBytes)
+        let prepared = try cache.prepareRows(snapshot)
+        guard prepared.statistics.retained > 0 else { throw Unavailable.empty }
+        try Task.checkCancellation()
+        return prepared
+    }
+    private static func validatePlainRow(_ row: Record) throws {
+        var pending = row.fields.values.map { ($0, 1) }
+        while let (value, depth) = pending.popLast() {
+            guard depth <= 508 else { throw PreservedJSONFailure.depth }
+            switch value {
+            case .preserved: throw Unavailable.opaque
+            case .array(let values):
+                guard depth < 508 else { throw PreservedJSONFailure.depth }
+                pending.append(contentsOf: values.map { ($0, depth + 1) })
+            case .object(let fields):
+                guard depth < 508 else { throw PreservedJSONFailure.depth }
+                pending.append(contentsOf: fields.values.map { ($0, depth + 1) })
+            case .null, .bool, .number, .string: break
+            }
+        }
+    }
+    private func prepareRows(_ snapshot: Snapshot) throws -> Prepared {
+        var next: [Data: [Entry]] = [:], measured = Statistics()
+        let encoder = TaskfoldJSONEncoder()
+        for name in snapshot.tables.keys.sorted() {
+            try Task.checkCancellation()
+            guard name.utf8.count <= 256 else { throw Unavailable.budget }
+            let key = Data(name.utf8)
+            var entries: [Entry] = []; entries.reserveCapacity(snapshot.tables[name]!.count)
+            for row in snapshot.tables[name]! {
+                try Task.checkCancellation()
+                try Self.validatePlainRow(row)
+                // Snapshot -> tables -> named array surround each record.
+                let encoded = try encoder.encode(row)
+                let cost = encoded.count + key.count + 128
+                guard measured.retained < 50_000, cost <= maximumBytes - measured.retainedBytes else { throw Unavailable.budget }
+                entries.append(Entry(source: row, data: encoded))
+                measured.encoded += 1; measured.retained += 1; measured.retainedBytes += cost
+            }
+            next[key] = entries
+        }
+        return Prepared(tables: next, statistics: measured)
+    }
+    func encode(_ snapshot: Snapshot) throws -> Data {
+        guard ready else { throw Unavailable.empty }
+        let encoder = TaskfoldJSONEncoder()
+        var metadata = snapshot; metadata.tables = [:]
+        let metadataEncoder = TaskfoldJSONEncoder(); metadataEncoder.outputFormatting = .sortedKeys
+        let header = try metadataEncoder.encode(metadata)
+        guard header.count <= 512 * 1024 else { throw Unavailable.header }
+        var syntax = PreservingJSONSyntax(data: header, detectOpaque: false)
+        guard let slot = try syntax.memberInEncodedObject(named: "tables"), header[slot.value] == Data("{}".utf8) else { throw Unavailable.header }
+        var body = Data([123]), next: [Data: [Entry]] = [:], measured = Statistics()
+        body.reserveCapacity(statistics.retainedBytes)
+        for (tableIndex, name) in snapshot.tables.keys.sorted().enumerated() {
+            guard name.utf8.count <= 256 else { throw Unavailable.budget }
+            if tableIndex > 0 { body.append(44) }
+            body.append(try encoder.encode(name)); body.append(contentsOf: [58, 91])
+            let key = Data(name.utf8), prior = tables[key] ?? []
+            var entries: [Entry] = []; entries.reserveCapacity(snapshot.tables[name]!.count)
+            for (index, row) in snapshot.tables[name]!.enumerated() {
+                let entry: Entry
+                if index < prior.count, row.sharesAuthoredSource(with: prior[index].source) {
+                    entry = prior[index]; measured.reused += 1
+                } else {
+                    try Self.validatePlainRow(row)
+                    entry = Entry(source: row, data: try encoder.encode(row))
+                    measured.encoded += 1
+                }
+                let cost = entry.data.count + key.count + 128
+                guard measured.retained < 50_000, cost <= maximumBytes - measured.retainedBytes else { throw Unavailable.budget }
+                if index > 0 { body.append(44) }; body.append(entry.data)
+                entries.append(entry); measured.retained += 1; measured.retainedBytes += cost
+            }
+            next[key] = entries; body.append(93)
+        }
+        body.append(125)
+        let size = (header.count - slot.value.count).addingReportingOverflow(body.count)
+        guard !size.overflow else { throw Unavailable.budget }
+        var output = Data(); output.reserveCapacity(size.partialValue)
+        output.append(header[..<slot.value.lowerBound]); output.append(body); output.append(header[slot.value.upperBound...])
+        tables = next; statistics = measured; metadataHeader = header
+        return output
     }
 }
 #endif

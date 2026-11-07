@@ -2781,17 +2781,50 @@ final class DurableSnapshotReadCache {
     private let maximumBytes: Int
     private var bytes: Data?
     private var value: Snapshot?
+    private var validatedMetadataBytes: Data?
     private var knownByteCount: Int?
     private let minimumFieldEncodingBytes: Int
     private let fieldEncoding: SnapshotFieldEncodingCache
+    private let rowEncoding: SnapshotRowEncodingCache
+    private var rowPreparationAllowed = true
+    struct RowPreparationRequest: Sendable {
+        fileprivate let bytes: Data
+        fileprivate let snapshot: Snapshot
+        fileprivate let maximumBytes: Int
+    }
+    struct RowPreparation: Sendable {
+        fileprivate let bytes: Data
+        fileprivate let rows: SnapshotRowEncodingCache.Prepared
+    }
+    var rowEncodingStatistics: SnapshotRowEncodingCache.Statistics { rowEncoding.statistics }
+    func rowPreparationRequest() -> RowPreparationRequest? {
+        guard rowPreparationAllowed, !rowEncoding.ready, maximumBytes > 0,
+              let bytes, let value, bytes.count >= minimumFieldEncodingBytes, bytes.count <= maximumBytes else { return nil }
+        return RowPreparationRequest(bytes: bytes, snapshot: value, maximumBytes: maximumBytes)
+    }
+    static func prepareRows(_ request: RowPreparationRequest) throws -> RowPreparation {
+        try Task.checkCancellation()
+        return RowPreparation(bytes: request.bytes, rows: try SnapshotRowEncodingCache.prepare(request.snapshot, maximumBytes: request.maximumBytes))
+    }
+    @discardableResult func adoptRows(_ prepared: RowPreparation) -> Bool {
+        guard rowPreparationAllowed, !rowEncoding.ready, value != nil, bytes == prepared.bytes else { return false }
+        fieldEncoding.clear(); rowEncoding.adopt(prepared.rows)
+        return true
+    }
+    func declineRows(_ request: RowPreparationRequest) {
+        guard !rowEncoding.ready, bytes == request.bytes else { return }
+        rowPreparationAllowed = false
+    }
     private(set) var decodeCount = 0
+    private(set) var metadataValidationCount = 0
     var fieldEncodingStatistics: SnapshotFieldEncodingCache.Statistics { fieldEncoding.statistics }
     init(maximumBytes: Int = 16 * 1024 * 1024, minimumFieldEncodingBytes: Int = 512 * 1024) {
         self.maximumBytes = maximumBytes; self.minimumFieldEncodingBytes = max(0, minimumFieldEncodingBytes)
         fieldEncoding = SnapshotFieldEncodingCache(maximumBytes: maximumBytes)
+        rowEncoding = SnapshotRowEncodingCache(maximumBytes: maximumBytes)
     }
-    private func clearReadMemo() { bytes = nil; value = nil }
-    func clear() { clearReadMemo(); knownByteCount = nil; fieldEncoding.clear() }
+    private func clearReadMemo() { bytes = nil; value = nil; validatedMetadataBytes = nil }
+    func clear() { clearReadMemo(); knownByteCount = nil; fieldEncoding.clear(); rowEncoding.clear(); rowPreparationAllowed = true }
     func decode(_ data: Data) throws -> Snapshot {
         if bytes == data, let value { return value }
         clear(); decodeCount += 1
@@ -2801,28 +2834,48 @@ final class DurableSnapshotReadCache {
         return decoded
     }
     private func encodeCurrent(_ snapshot: Snapshot) throws -> Data {
+        if rowEncoding.ready {
+            do {
+                let data = try rowEncoding.encode(snapshot)
+                fieldEncoding.clear()
+                return data
+            } catch { rowEncoding.clear(); rowPreparationAllowed = false }
+        }
         if maximumBytes > 0,
            minimumFieldEncodingBytes == 0 || knownByteCount.map({ $0 >= minimumFieldEncodingBytes && $0 <= maximumBytes }) == true,
            fieldEncoding.admits(snapshot, knownBytes: knownByteCount ?? 0) {
+            rowPreparationAllowed = false
             do { return try fieldEncoding.encode(snapshot) }
             catch { fieldEncoding.clear() } // Unsupported optimization keeps the ordinary writer's exact behavior.
-        } else { fieldEncoding.clear() }
+        } else {
+            if fieldEncoding.statistics.retained > 0 { rowPreparationAllowed = true }
+            fieldEncoding.clear()
+        }
         return try TaskfoldJSONEncoder().encode(snapshot)
     }
     /// Encode inside this type so a caller cannot associate unrelated bytes with
     /// a snapshot. Prepared data independently proves its captured input identity.
     func encode(_ snapshot: Snapshot, prepared: PreparedSnapshotEncoding? = nil) throws -> Data {
         let preparedData = try prepared?.matching(snapshot)
-        if preparedData != nil { fieldEncoding.clear() }
+        if preparedData != nil { fieldEncoding.clear(); rowEncoding.clear(); rowPreparationAllowed = true }
         let data = try preparedData ?? encodeCurrent(snapshot)
+        let priorMetadata = validatedMetadataBytes
         clearReadMemo(); knownByteCount = data.count
         guard data.count <= maximumBytes else { return data }
-        // Preserve the decoder's private-ledger checks and optional-metadata
-        // normalization. Only task-table parsing is skipped on the next exact hit.
+        // Reuse validation only for identical encoded metadata. This stronger
+        // proof also distinguishes Unicode/number/opaque lexical changes; a
+        // changed private ledger still takes the ordinary decoder's checks.
         var metadata = snapshot; metadata.tables = [:]
-        if let encoded = try? TaskfoldJSONEncoder().encode(metadata), encoded.count <= 512 * 1024,
-           let validated = try? TaskfoldJSONDecoder().decode(Snapshot.self, from: encoded), validated == metadata {
-            bytes = data; value = snapshot
+        let metadataEncoder = TaskfoldJSONEncoder(); metadataEncoder.outputFormatting = .sortedKeys
+        if let encoded = rowEncoding.metadataHeader ?? fieldEncoding.metadataHeader ?? (try? metadataEncoder.encode(metadata)), encoded.count <= 512 * 1024 {
+            if encoded == priorMetadata {
+                bytes = data; value = snapshot; validatedMetadataBytes = encoded
+            } else {
+                metadataValidationCount += 1
+                if let validated = try? TaskfoldJSONDecoder().decode(Snapshot.self, from: encoded), validated == metadata {
+                    bytes = data; value = snapshot; validatedMetadataBytes = encoded
+                }
+            }
         }
         return data
     }

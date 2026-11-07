@@ -1,0 +1,9 @@
+{
+  "files": {
+    "Taskfold/Core/Models.swift": "51f817b12a6f1cfa5479437131daef1eb8f4e74149ffc9e9da03d8ab3b1db6da",
+    "Taskfold/Core/PreservingJSON.swift": "b1bfd3018bfcf7d5d0e24bd9b2cb0c5ef43c00a247fed39f198b6160f4605f96",
+    "Taskfold/Core/Store.swift": "d9357f39bc50d1fe11047a2b802e560d7809540d901c55319c1eb29830b4ab52",
+    "TaskfoldTests/SnapshotRowEncodingCacheTests.swift": "cb860fb074e1353cfac9685ed6076df224ff32e5d30c392690e5488ba891a8bb"
+  },
+  "independentOwner": true
+}
