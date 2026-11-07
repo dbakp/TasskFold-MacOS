@@ -5,9 +5,9 @@
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
   "focus": "Common filter descriptions without an AI wait",
-  "latest": "Common filter descriptions now draft locally, even without Apple Intelligence. The complete local grammar preserves planned dates versus deadlines, priorities, completion and explicit subproject scope; unclear wording keeps the existing model/manual path. Both owners pass 133 focused checks (3 intentional skips), including 12 semantic examples. Two signed Simulator journeys verify normal/largest text, automatically visible results, Cancel, explicit Save and exact cold data; the normal case also verifies visible refusal for an unknown project. Raw model quality remains unaccepted; local results do not count as inference. Mac44 and its existing access/readback stay intact; the new source is queued for the next verified package. Phone installation and agreed rollout/provider/audio deferrals remain.",
+  "latest": "Common filter descriptions now draft locally, even without Apple Intelligence. The complete local grammar preserves planned dates versus deadlines, priorities, completion and explicit subproject scope; unclear wording keeps the existing model/manual path. Both owners pass 133 focused checks (3 intentional skips), including 12 semantic examples. Two signed Simulator journeys verify normal/largest text, automatically visible results, Cancel, explicit Save and exact cold data; the normal case also verifies visible refusal for an unknown project. Raw model quality remains unaccepted; local results do not count as inference. Mac44 and its existing access/readback stay intact; the new source is queued for the next verified package. Phone installation and agreed rollout/provider/audio deferrals remain. Mac46 now passes optimized build, signing and exact archive checks; it remains prepared while the existing44 access/readback is pending. Superseded uninstalled45 is retired and all backups remain.",
   "next": [
-    "Complete the existing Mac44 access/readback without replacing its session, then install the latest verified package after a fresh safety copy. Routine updates are already authorized. iPhone installation stays deferred.",
+    "Complete the existing Mac44 access/readback without replacing its session, then install verified Mac46 after a fresh private safety copy. Routine updates are already authorized. iPhone installation stays deferred.",
     "Profile the remaining drop and navigation costs, including widget preparation, local history and rendering. The new row writer halves the observed large-list drop/save fixture, but wider scrolling, reconstructed-refresh scaling and physical smoothness remain open.",
     "Improve genuinely generated on-device filter quality with a materially different, grounded design. Common descriptions now have a complete local path; the raw model remains known3/5, and the expanded twelve-goal oracle is still unaccepted. Do not rerun rejected prompts/schemas unchanged or count local drafts as inference.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
@@ -891,7 +891,9 @@
             "local-filter-drafts/README.md",
             "local-filter-drafts/core-verification.json",
             "local-filter-drafts/iphone-verification.json",
-            "local-filter-drafts/model-provenance.json"
+            "local-filter-drafts/model-provenance.json",
+            "local-filter-drafts/mac46-package.json",
+            "local-filter-drafts/storage-cleanup.json"
           ],
           "focus": true
         },
@@ -1843,7 +1845,9 @@
     "local-filter-drafts/README.md",
     "local-filter-drafts/core-verification.json",
     "local-filter-drafts/iphone-verification.json",
-    "local-filter-drafts/model-provenance.json"
+    "local-filter-drafts/model-provenance.json",
+    "local-filter-drafts/mac46-package.json",
+    "local-filter-drafts/storage-cleanup.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2160,10 +2164,12 @@
     "legacy-child-preservation/README.md": "c759db19d0718950ce19956d9dcec05a9272f9d1e7e7f77e84f1c213dbd989e0",
     "legacy-child-preservation/verification.json": "acefbc2ad99f12bc9f8c6193354c9ef0fb341fc197226e911fc188c3d9da320f",
     "linear-day-grouping/README.md": "b985b7f8cb0b8f71d18559430caf6fec3fff4da3c81dbeb854dccd3e8ecb68c5",
-    "local-filter-drafts/README.md": "60e2bebe4c274f5927b83fa68930b4fa985f0e100fb38a65dcf5250fb770de1d",
+    "local-filter-drafts/README.md": "9342718173606bd53c751726b7a27b1cb400ed6f7cc5ab5e92cff5351f359ee0",
     "local-filter-drafts/core-verification.json": "7c86deec06a291a1be10ae3076ee6045d5940dfbf6ac39ff651eeea89797eecf",
     "local-filter-drafts/iphone-verification.json": "9eb8f962f4cfc3ced423adf3c5fcc4453aedeea3a7464c5b5cca52bdfb972fb1",
+    "local-filter-drafts/mac46-package.json": "24ad05d099eb8c3633a70cce98262334dbc0eab52764e31a9d54d99f7090c7f0",
     "local-filter-drafts/model-provenance.json": "af5aaad138fa1a9c20238b83cf5eab19a62ec242da8c547e8f92cfd7aa48bcf4",
+    "local-filter-drafts/storage-cleanup.json": "0e93ae57f62adbb95d4143f1e34b94599edc2990cd6101151af5581e9122a6e6",
     "mac-hierarchy-keyboard/README.md": "d9e9ca453d34f6d446b3432d872ffee279cc6e1eea7dc59bd17ca0ddd7266065",
     "mac-hierarchy-keyboard/verification.json": "0fa849940f2c95467d41fb97ecd628732ff12abdf2bcf018cefeaf594e264d3c",
     "mac-transfer-keyboard/README.md": "c616adc8ff2f748d03a915c84704869d4aa68b4f3da89ffb53c3a25e83c47906",

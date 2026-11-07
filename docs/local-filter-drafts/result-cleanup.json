@@ -1,0 +1,25 @@
+{
+  "freeBeforeBytes": 37115297792,
+  "freeAfterBytes": 37278986240,
+  "retiredCompletedIntermediateResults": [
+    {
+      "path": "taskfold-local-filter-native.xcresult",
+      "allocatedBytes": 385024
+    },
+    {
+      "path": "taskfold-local-filter-native-source-phase.xcresult",
+      "allocatedBytes": 78028800
+    },
+    {
+      "path": "taskfold-local-filter-native-final.xcresult",
+      "allocatedBytes": 4386816
+    },
+    {
+      "path": "taskfold-local-filter-feedback.xcresult",
+      "allocatedBytes": 4161536
+    }
+  ],
+  "currentFocusedResultPreserved": true,
+  "conciseAttemptsSourceAndProfilesPreserved": true,
+  "realAppDataDeleted": false
+}

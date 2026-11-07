@@ -1,0 +1,18 @@
+{
+  "freeBeforeBytes": 37210640384,
+  "freeAfterBytes": 37210611712,
+  "removed": [
+    {
+      "kind": "superseded never-installed45 ZIP",
+      "bytes": 20529905
+    }
+  ],
+  "verifiedReplacement": "46",
+  "preserved": [
+    "45 receipt/source/history",
+    "installed44 and ZIP",
+    "verified42 rollback and ZIP",
+    "all private data backups"
+  ],
+  "realAppDataDeleted": false
+}
