@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-07",
+  "retiredArchive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-32-mac-development.zip",
+  "sha256": "d3f7ae651066ceaa11fa56b0a9fb67f3997f8408f7640e1433f10f3d1c6aadad",
+  "bytes": 20248564,
+  "reason": "Mac33 verified; preserve installed Mac31 as rollback",
+  "retained": [
+    "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-31-mac-development.zip",
+    "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-33-mac-development.zip"
+  ]
+}

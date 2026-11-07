@@ -1,0 +1,136 @@
+{
+  "date": "2026-11-07",
+  "freeBeforeBytes": 47170412544,
+  "retired": [
+    {
+      "path": "/tmp/taskfold-field-current-iphone-native.xcresult",
+      "logicalBytes": 689015,
+      "kind": "completedSyntheticNativeResults"
+    },
+    {
+      "path": "/tmp/taskfold-field-iphone-native.xcresult",
+      "logicalBytes": 689246,
+      "kind": "completedSyntheticNativeResults"
+    },
+    {
+      "path": "/tmp/taskfold-field-current-iphone-attachments",
+      "logicalBytes": 172243,
+      "kind": "completedSyntheticNativeResults"
+    },
+    {
+      "path": "/tmp/taskfold-field-iphone-attachments",
+      "logicalBytes": 172357,
+      "kind": "completedSyntheticNativeResults"
+    },
+    {
+      "path": "/tmp/taskfold-field-mac-core.log",
+      "logicalBytes": 63103,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-mac-verified.log",
+      "logicalBytes": 40263,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-ios-final-core.log",
+      "logicalBytes": 41316,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-mac33-driver.log",
+      "logicalBytes": 1303,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-probe-build.log",
+      "logicalBytes": 0,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-current-iphone-native.log",
+      "logicalBytes": 8426,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-current-iphone-build.log",
+      "logicalBytes": 95658,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-ios-verified.log",
+      "logicalBytes": 60987,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-mac-final-core.log",
+      "logicalBytes": 40826,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-mac-core-final.log",
+      "logicalBytes": 40114,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-iphone-native.log",
+      "logicalBytes": 8402,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-iphone-build.log",
+      "logicalBytes": 214614,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    },
+    {
+      "path": "/tmp/taskfold-field-optimized-probe",
+      "logicalBytes": 364224,
+      "kind": "retainedEvidenceOrCompletedProbe"
+    }
+  ],
+  "privateDataRemoved": false,
+  "newDevicesCreated": false,
+  "boundedCaches": {
+    "apply": true,
+    "freeBeforeBytes": 47173361664,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 693723136,
+        "projectedAllocatedBytes": 693723136
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 657461248,
+        "projectedAllocatedBytes": 657461248
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 528502784,
+        "projectedAllocatedBytes": 528502784
+      }
+    ],
+    "freeAfterBytes": 47172198400,
+    "actualFreeChangeBytes": -1163264
+  },
+  "coreCacheAllocatedBytes": {
+    "mac": 630853632,
+    "ios": 688168960
+  },
+  "retiredPackage": {
+    "date": "2026-11-07",
+    "retiredArchive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-32-mac-development.zip",
+    "sha256": "d3f7ae651066ceaa11fa56b0a9fb67f3997f8408f7640e1433f10f3d1c6aadad",
+    "bytes": 20248564,
+    "reason": "Mac33 verified; preserve installed Mac31 as rollback",
+    "retained": [
+      "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-31-mac-development.zip",
+      "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-33-mac-development.zip"
+    ]
+  },
+  "freeAfterBytes": 47171923968
+}

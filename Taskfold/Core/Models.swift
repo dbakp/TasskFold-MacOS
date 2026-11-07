@@ -2705,21 +2705,41 @@ final class DurableSnapshotReadCache {
     private let maximumBytes: Int
     private var bytes: Data?
     private var value: Snapshot?
+    private var knownByteCount: Int?
+    private let minimumFieldEncodingBytes: Int
+    private let fieldEncoding: SnapshotFieldEncodingCache
     private(set) var decodeCount = 0
-    init(maximumBytes: Int = 16 * 1024 * 1024) { self.maximumBytes = maximumBytes }
-    func clear() { bytes = nil; value = nil }
+    var fieldEncodingStatistics: SnapshotFieldEncodingCache.Statistics { fieldEncoding.statistics }
+    init(maximumBytes: Int = 16 * 1024 * 1024, minimumFieldEncodingBytes: Int = 512 * 1024) {
+        self.maximumBytes = maximumBytes; self.minimumFieldEncodingBytes = max(0, minimumFieldEncodingBytes)
+        fieldEncoding = SnapshotFieldEncodingCache(maximumBytes: maximumBytes)
+    }
+    private func clearReadMemo() { bytes = nil; value = nil }
+    func clear() { clearReadMemo(); knownByteCount = nil; fieldEncoding.clear() }
     func decode(_ data: Data) throws -> Snapshot {
         if bytes == data, let value { return value }
         clear(); decodeCount += 1
         let decoded = try TaskfoldJSONDecoder().decode(Snapshot.self, from: data)
+        knownByteCount = data.count
         if data.count <= maximumBytes { bytes = data; value = decoded }
         return decoded
+    }
+    private func encodeCurrent(_ snapshot: Snapshot) throws -> Data {
+        if maximumBytes > 0,
+           minimumFieldEncodingBytes == 0 || knownByteCount.map({ $0 >= minimumFieldEncodingBytes && $0 <= maximumBytes }) == true,
+           fieldEncoding.admits(snapshot, knownBytes: knownByteCount ?? 0) {
+            do { return try fieldEncoding.encode(snapshot) }
+            catch { fieldEncoding.clear() } // Unsupported optimization keeps the ordinary writer's exact behavior.
+        } else { fieldEncoding.clear() }
+        return try TaskfoldJSONEncoder().encode(snapshot)
     }
     /// Encode inside this type so a caller cannot associate unrelated bytes with
     /// a snapshot. Prepared data independently proves its captured input identity.
     func encode(_ snapshot: Snapshot, prepared: PreparedSnapshotEncoding? = nil) throws -> Data {
-        let data = try prepared?.matching(snapshot) ?? TaskfoldJSONEncoder().encode(snapshot)
-        clear()
+        let preparedData = try prepared?.matching(snapshot)
+        if preparedData != nil { fieldEncoding.clear() }
+        let data = try preparedData ?? encodeCurrent(snapshot)
+        clearReadMemo(); knownByteCount = data.count
         guard data.count <= maximumBytes else { return data }
         // Preserve the decoder's private-ledger checks and optional-metadata
         // normalization. Only task-table parsing is skipped on the next exact hit.
