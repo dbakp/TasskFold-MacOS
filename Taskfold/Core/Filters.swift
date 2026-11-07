@@ -870,6 +870,12 @@ indirect enum FilterRule: Hashable, Sendable {
 }
 
 struct FilterParser {
+    private static let optionalColonPrefixes = Set(FilterDateReference.expressions.values)
+        .union(FilterTimeReference.expressions.values)
+        .union(FilterCreationReference.expressions.values)
+        .union(FilterNamePattern.expressions.values)
+        .union(["project", "project-tree", "section", "label", "assignee", "assigned-by", "search", "deadline", "due", "before", "deadline-before"])
+
     private var tokens: [String] = []
     private var cursor = 0
     private var quotedTokens = Set<Int>()
@@ -934,6 +940,19 @@ struct FilterParser {
             let next = tokens[cursor].lowercased()
             if (token.lowercased() == "assigned" && next.hasPrefix("by:")) || next.hasPrefix("to:") || next.hasPrefix("matching:") || ["before:", "after:", "on:"].contains(next) || next.hasPrefix("before:") || next.hasPrefix("after:") || next.hasPrefix("on:") { token += " " + tokens[cursor]; cursor += 1 }
         }
+        // Optional colon for known field prefixes only. Quoted values keep
+        // their original token marker, so names/search text remain literal.
+        if !quotedTokens.contains(cursor - 1) {
+            let prefixes = Self.optionalColonPrefixes
+            var prefix = token.lowercased()
+            if cursor < tokens.count, !quotedTokens.contains(cursor), prefixes.contains(prefix + " " + tokens[cursor].lowercased()) {
+                prefix += " " + tokens[cursor].lowercased(); token = prefix; cursor += 1
+            }
+            if prefixes.contains(prefix), cursor < tokens.count,
+               quotedTokens.contains(cursor) || !["and", "or", "not", "&", "|", "!", "(", ")", ","].contains(tokens[cursor].lowercased()) {
+                token = prefix + ":" + tokens[cursor]; cursor += 1
+            }
+        }
         let lower = token.lowercased(), scalars = token.unicodeScalars
         if token.hasPrefix("##") {
             let target = String(token.dropFirst(2))
@@ -957,12 +976,33 @@ struct FilterParser {
             let kind = tokens[cursor].lowercased(); cursor += 1
             return kind == "priority" ? .predicate("priority", "4") : .predicate("no_" + kind, "")
         }
+        if !quotedTokens.contains(cursor - 1), lower == "priority" {
+            guard cursor < tokens.count, !quotedTokens.contains(cursor), tokens[cursor].count == 1,
+                  let number = Int(tokens[cursor]), (1...4).contains(number) else {
+                throw FilterFailure(message: "Choose a priority from 1 to 4, such as p1.")
+            }
+            cursor += 1; return .predicate("priority", String(number))
+        }
+        if !quotedTokens.contains(cursor - 1), ["planned", "scheduled"].contains(lower),
+           cursor < tokens.count, !quotedTokens.contains(cursor), ["today", "overdue"].contains(tokens[cursor].lowercased()) {
+            let day = tokens[cursor].lowercased(); cursor += 1
+            return .predicate(day, "")
+        }
         if token.first.map({ $0.isNumber || $0 == "-" || $0 == "+" }) == true, !quotedTokens.contains(cursor - 1), cursor < tokens.count, !quotedTokens.contains(cursor), ["day", "days"].contains(tokens[cursor].lowercased()) {
             if let window = try FilterDayWindow.rule(token + " " + tokens[cursor], source: "planned") { cursor += 1; return window }
         }
         if lower == "next", cursor + 1 < tokens.count, Int(tokens[cursor]) != nil, consumeNumberDays() { return .predicate("next", tokens[cursor - 2]) }
         if lower == "completed" || lower == "open" { return .predicate("completed", lower == "completed" ? "true" : "false") }
         if lower.count == 2, lower.first == "p", let number = Int(lower.dropFirst()), (1...4).contains(number) { return .predicate("priority", String(number)) }
+        // Natural-language suggestions and typed queries sometimes spell the
+        // same priority as a field comparison. Keep its stored predicate exact.
+        if !quotedTokens.contains(cursor - 1), lower.hasPrefix("priority=") || lower.hasPrefix("priority:") {
+            let value = String(lower.dropFirst(9))
+            guard value.count == 1, let number = Int(value), (1...4).contains(number) else {
+                throw FilterFailure(message: "Choose a priority from 1 to 4, such as p1.")
+            }
+            return .predicate("priority", String(number))
+        }
         if lower.hasPrefix("duration<=") { return .predicate("duration_max", String(lower.dropFirst(10))) }
         if let colon = scalars.firstIndex(of: ":") {
             let field = String(String.UnicodeScalarView(scalars[..<colon])).lowercased()

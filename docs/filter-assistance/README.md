@@ -23,3 +23,8 @@ Phone34 was subsequently installed from the earlier frozen optimized archive; it
 ## API basis
 
 Uses the same [Apple Foundation Models APIs](https://developer.apple.com/documentation/foundationmodels/generating-content-and-performing-tasks-with-foundation-models) and installed Xcode 27 interfaces reviewed for task steps. Runtime model use is guarded for iOS/macOS 26 and availability/locale. Supabase’s [changelog](https://supabase.com/changelog) and [Data API security guidance](https://supabase.com/docs/guides/api/securing-your-api) were reviewed before reusing the existing member read: the CLI v3 change does not affect this client-only work; no CLI upgrade or HTTP/TLS override was made. Current request code keeps expected-account, account-generation, access-revision and current-project guards. This is source review, not new hosted-service acceptance.
+
+
+## 7 November — Real model available; filter quality not accepted
+
+Bounded natural query forms and owning Core checks pass. Actual inference now runs, but only three requests match their controls before a fourth returns prose and is refused. Structured and wrapper experiments failed and are not adopted. The five-case oracle includes extra overdue/future/completed controls. No overall filter-model quality, native generation or deployment is accepted. [Exact results and remaining work](../natural-filter-forms/README.md).

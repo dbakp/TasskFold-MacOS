@@ -16,6 +16,55 @@ final class FilterAssistanceTests: XCTestCase {
         XCTAssertEqual(tasks.count, 4)
         XCTAssertTrue(AuthoredValueComparison.exactJSON(p.rule.document, try p.revalidated(in: c).rule.document))
     }
+    func testPriorityComparisonsMatchCanonicalPredicatesAndRejectOtherNumbers() throws {
+        for level in 1...4 {
+            let canonical = try FilterSuggestion(expression: "p" + String(level), context: context())
+            for spelling in ["priority=" + String(level), "priority:" + String(level), "PRIORITY=" + String(level), "priority " + String(level)] {
+                let proposal = try FilterSuggestion(expression: spelling, context: context())
+                XCTAssertTrue(AuthoredValueComparison.exactJSON(proposal.rule.document, canonical.rule.document), spelling)
+            }
+        }
+        for expression in ["priority=0", "priority=5", "priority=-1", "priority=1.0", "priority=11", "priority=", "priority=1x", "priority 0", "priority 5", "priority 11", "priority", #""priority=1""#] {
+            XCTAssertThrowsError(try FilterSuggestion(expression: expression, context: context()), expression)
+        }
+        let c = context(), query = try FilterSuggestion(expression: "(today OR overdue) AND priority=1 AND open", context: c)
+        XCTAssertTrue(query.rule.resultMatches(Record(["due_date": .string("2032-04-04"), "priority": .number(1)]), context: c, today: "2032-04-05", timeZone: "UTC"))
+        XCTAssertFalse(query.rule.resultMatches(Record(["due_date": .string("2032-04-04"), "priority": .number(3)]), context: c, today: "2032-04-05", timeZone: "UTC"))
+    }
+    func testKnownFieldPrefixesCanOmitColonWithoutChangingTheirStoredMeaning() throws {
+        let cases = [("deadline today", "deadline:today"), ("project Work", "project:Work"), ("project-tree Work", "project-tree:Work"), ("date tomorrow", "date:tomorrow"), ("date before tomorrow", "date before:tomorrow"), ("time after 14:00", "time after:14:00"), ("created today", "created:today"), ("project matching W*", "project matching:W*"), ("label Focus", "label:Focus"), (#"search "priority 1""#, #"search:"priority 1""#)]
+        for (words, colon) in cases {
+            let a = try FilterSuggestion(expression: words, context: context())
+            let b = try FilterSuggestion(expression: colon, context: context())
+            XCTAssertTrue(AuthoredValueComparison.exactJSON(a.rule.document, b.rule.document), words)
+        }
+        for input in ["project AND open", "deadline OR today", "search", "date before", #""deadline today""#] {
+            XCTAssertThrowsError(try FilterSuggestion(expression: input, context: context()), input)
+        }
+    }
+    func testPlannedAndScheduledDateQualifiersRetainTheOriginalPlannedMeaning() throws {
+        for day in ["today", "overdue"] {
+            let canonical = try FilterSuggestion(expression: day, context: context())
+            for qualifier in ["planned", "scheduled"] {
+                let proposal = try FilterSuggestion(expression: qualifier + " " + day, context: context())
+                XCTAssertTrue(AuthoredValueComparison.exactJSON(proposal.rule.document, canonical.rule.document))
+            }
+        }
+        let (c, today, rows, _) = qualityFixture()
+        let proposal = try FilterSuggestion(expression: "open AND priority 1 AND (planned today OR overdue)", context: c)
+        XCTAssertEqual(rows.filter { proposal.rule.resultMatches($0, context: c, today: today, timeZone: "UTC") }.map(\.id), ["today", "old"])
+        let literal = try FilterSuggestion(expression: #"search:"planned today priority 1""#, context: c)
+        XCTAssertTrue(literal.rule.resultMatches(Record(["title": .string("planned today priority 1"), "priority": .number(4)]), context: c, today: today, timeZone: "UTC"))
+        XCTAssertThrowsError(try FilterSuggestion(expression: #""planned today""#, context: c))
+    }
+    func testPriorityComparisonInsideQuotedTargetsAndSearchStaysLiteral() throws {
+        var c = context(); c.projects.append(Record(["id": .string("literal"), "name": .string("priority=1")]))
+        let project = try FilterSuggestion(expression: #"project:"priority=1""#, context: c)
+        XCTAssertTrue(project.rule.resultMatches(Record(["project_id": .string("literal"), "priority": .number(4)]), context: c, today: "2032-04-05", timeZone: "UTC"))
+        let search = try FilterSuggestion(expression: #"search:"priority=1""#, context: c)
+        XCTAssertTrue(search.rule.resultMatches(Record(["title": .string("Check priority=1"), "priority": .number(4)]), context: c, today: "2032-04-05", timeZone: "UTC"))
+        XCTAssertFalse(search.rule.resultMatches(Record(["title": .string("Other work"), "priority": .number(1)]), context: c, today: "2032-04-05", timeZone: "UTC"))
+    }
     func testMalformedOrOversizedOutputNeverBecomesAFilter() {
         for input in ["", "today AND", "SELECT * FROM tasks", "```today```", "open\0", String(repeating: "x", count: 4001)] {
             XCTAssertThrowsError(try FilterSuggestion(expression: input, context: context()), input.prefix(30).description)
@@ -163,12 +212,17 @@ final class FilterAssistanceTests: XCTestCase {
             Record(["id": .string("deadline"), "project_id": .string("project-a"), "due_date": .string("2032-04-06"), "deadline_date": .string(today), "priority": .number(1)]),
             Record(["id": .string("low"), "due_date": .string(today), "priority": .number(3)]),
             Record(["id": .string("done"), "project_id": .string("project-a"), "due_date": .string(today), "priority": .number(1), "completed": .bool(true)]),
-            Record(["id": .string("child-project-task"), "project_id": .string("child-project"), "due_date": .string("2032-04-06"), "priority": .number(1)])
+            Record(["id": .string("child-project-task"), "project_id": .string("child-project"), "due_date": .string("2032-04-06"), "priority": .number(1)]),
+            Record(["id": .string("old-low"), "due_date": .string("2032-04-04"), "priority": .number(3)]),
+            Record(["id": .string("future-low"), "due_date": .string("2032-04-06"), "priority": .number(3)]),
+            Record(["id": .string("done-low"), "due_date": .string(today), "priority": .number(3), "completed": .bool(true)])
         ]
         let cases: [(String, [String], String, String)] = [
             ("Show open priority 1 tasks planned today or overdue", ["today", "old"], "(today OR overdue) AND p1 AND open", "today OR overdue OR p1"),
             ("Show tasks with a deadline today", ["deadline"], "deadline:today", "today"),
-            ("Show unfinished tasks in project Work", ["today", "old", "deadline"], "project:\"Work\" AND open", "project-tree:\"Work\" AND open")
+            ("Show unfinished tasks in project Work", ["today", "old", "deadline"], "project:\"Work\" AND open", "project-tree:\"Work\" AND open"),
+            ("Find unfinished priority 3 tasks planned for today", ["low"], "today AND p3 AND open", "today AND p1 AND open"),
+            ("Find open work in project Work, including its subprojects", ["today", "old", "deadline", "child-project-task"], "project-tree:\"Work\" AND open", "project:\"Work\" AND open")
         ]
         return (modelContext, today, rows, cases)
     }
@@ -187,17 +241,20 @@ final class FilterAssistanceTests: XCTestCase {
             print("FILTER_ASSISTANCE_MODEL_UNAVAILABLE " + reason); throw XCTSkip(reason)
         }
         let (modelContext, today, rows, cases) = qualityFixture()
+        var allAccepted = true
         for (goal, expected, _, _) in cases {
             let start = ContinuousClock.now
             let text = try await FilterAssistanceEngine.generate(goal)
             let duration = start.duration(to: .now).components
             let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
+            print("TASKFOLD_MODEL_RAW_EXPRESSION " + text)
             let suggestion = try FilterSuggestion(expression: text, context: modelContext)
             let matches = rows.filter { suggestion.rule.resultMatches($0, context: modelContext, today: today, timeZone: "UTC") }.map(\.id)
             let observation: [String: Any] = ["engine": "filter", "syntheticGoal": goal, "seconds": seconds, "expression": text, "matchedIDs": matches, "expectedIDs": expected]
             print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
+            if matches != expected { allAccepted = false }
             XCTAssertEqual(matches, expected, "The generated query must mean what was requested: " + text)
         }
-        print("FILTER_ASSISTANCE_MODEL_ACCEPTED three semantic samples; no saved-filter or task writes")
+        if allAccepted { print("FILTER_ASSISTANCE_MODEL_ACCEPTED five semantic samples; no saved-filter or task writes") }
     }
 }
