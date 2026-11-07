@@ -1,0 +1,23 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 40531222528,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 534908928,
+      "projectedAllocatedBytes": 534908928,
+      "within768MiB": true
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 792940544,
+      "projectedAllocatedBytes": 792940544,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 40531263488,
+  "actualFreeChangeBytes": 40960
+}

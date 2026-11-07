@@ -1,0 +1,10 @@
+{
+  "owner": "macOS",
+  "files": {
+    "Taskfold/Core/Models.swift": "86bfd1a4a9caa16601acc1519d401999419f09b5cae7ebe999a65fe89d1a7d6a",
+    "TaskfoldTests/AuthoredValueComparisonTests.swift": "848b4ba3cb10fcbef8541b07a8dc5fa5b04dd0a4908f5ef7fd77ed5dcb30e4f8"
+  },
+  "wireContractChanged": false,
+  "recordSemanticEqualityChanged": false,
+  "privateMarkerResetOnEveryFieldsWrite": true
+}

@@ -85,3 +85,118 @@ final class AuthoredValueComparisonTests: XCTestCase {
     }
 
 }
+
+extension AuthoredValueComparisonTests {
+    private func exactRowsReference(_ a: [Record], _ b: [Record]) -> Bool {
+        a.count == b.count && zip(a, b).allSatisfy { AuthoredValueComparison.exactJSON(.object($0.fields), .object($1.fields)) }
+    }
+    private func detached(_ rows: [Record]) -> [Record] {
+        var output: [Record] = []; output.reserveCapacity(rows.count)
+        for row in rows { output.append(row) }
+        return output
+    }
+    func testCopiedRecordsKeepExactReferenceParityAcrossEveryFieldsWrite() {
+        let nan = Double(bitPattern: 0x7ff8000000000042)
+        let source = Record(["id": .string("a"), "title": .string("Café"), "zero": .number(-0.0), "nan": .number(nan), "future": .object(["nested": .array([.string("Keep"), .number(1)])])])
+        let rows = [source, Record(["id": .string("b")])]
+        let copy = detached(rows)
+        XCTAssertFalse(rows.withUnsafeBufferPointer { a in copy.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } })
+        XCTAssertTrue(AuthoredValueComparison.sameRows(rows, copy))
+        let writes: [(inout Record) -> Void] = [
+            { $0["title"] = .string("Changed") },
+            { $0.fields["title"] = .string("Cafe\u{301}") },
+            { $0["zero"] = .number(0) },
+            { $0["nan"] = .number(Double(bitPattern: 0x7ff8000000000043)) },
+            { $0.fields = source.fields },
+            { $0.fields.merge(["extra": .bool(true)], uniquingKeysWith: { _, b in b }) },
+            { $0.fields.removeValue(forKey: "title") },
+            { var value = $0["future"].object; value["nested"] = .array([.string("Changed")]); $0["future"] = .object(value) },
+            { $0.fields.removeAll() }
+        ]
+        for write in writes {
+            var changed = detached(rows); write(&changed[0])
+            XCTAssertFalse(changed[0].sharesAuthoredSource(with: source))
+            XCTAssertEqual(AuthoredValueComparison.sameRows(rows, changed), exactRowsReference(rows, changed))
+            XCTAssertTrue(AuthoredValueComparison.sameRows(rows, copy))
+        }
+        for candidate in [Array(rows.reversed()), Array(rows.dropLast()), rows + [source], [], rows.map { Record($0.fields) }] {
+            XCTAssertEqual(AuthoredValueComparison.sameRows(rows, candidate), exactRowsReference(rows, candidate))
+        }
+    }
+    func testReconstructedOpaqueRecordsRemainEqualButChangedOpaqueValuesRefuseReuse() throws {
+        let data = Data(#"{"id":"opaque","future":{"é":9007199254740993,"e\u0301":1,"huge":1e1000},"zero":-0.0}"#.utf8)
+        let original = try TaskfoldJSONDecoder().decode(Record.self, from: data)
+        let reconstructed = try TaskfoldJSONDecoder().decode(Record.self, from: data)
+        XCTAssertFalse(original.sharesAuthoredSource(with: reconstructed))
+        XCTAssertTrue(AuthoredValueComparison.sameRows([original], [reconstructed]))
+        let changedData = Data(String(decoding: data, as: UTF8.self).replacingOccurrences(of: "1e1000", with: "2e1000").utf8)
+        let changed = try TaskfoldJSONDecoder().decode(Record.self, from: changedData)
+        XCTAssertFalse(AuthoredValueComparison.sameRows([original], [changed]))
+        XCTAssertTrue(AuthoredValueComparison.sameRows([original], [original]))
+    }
+    func testTaskCacheEqualRefreshKeepsQueriesThenTailAndOpaqueChangesInvalidate() {
+        let rows = (0..<64).map { Record(["id": .string("task-\($0)"), "title": .string("Task \($0)"), "completed": .bool(false), "future": .object(["zero": .number(-0.0)])]) }
+        let cache = TaskCache(), query = TaskQuery(scope: .inbox)
+        XCTAssertTrue(cache.update(rows)); XCTAssertEqual(cache.matching(query).count, 64)
+        let count = cache.computationCount
+        let refreshed = rows.map { Record($0.fields) }
+        XCTAssertFalse(cache.update(refreshed)); XCTAssertEqual(cache.matching(query).count, 64); XCTAssertEqual(cache.computationCount, count)
+        var changed = detached(refreshed); changed[63]["title"] = .string("Current tail edit")
+        XCTAssertTrue(cache.update(changed)); XCTAssertEqual(cache.matching(query).first { $0.id == "task-63" }?.title, "Current tail edit")
+        XCTAssertEqual(cache.computationCount, count + 1)
+        var opaque = detached(changed); opaque[63]["future"] = .object(["zero": .number(0)])
+        XCTAssertTrue(cache.update(opaque)); let current = cache.matching(query)
+        XCTAssertEqual(current.first { $0.id == "task-63" }?["future"].object["zero"], .number(0))
+        XCTAssertEqual(cache.computationCount, count + 2)
+        XCTAssertFalse(cache.update(opaque.map { Record($0.fields) })); XCTAssertEqual(cache.matching(query).count, 64); XCTAssertEqual(cache.computationCount, count + 2)
+        XCTAssertEqual(rows[63].title, "Task 63")
+    }
+    func testRecordCopyComparisonDiagnosticWhenRequested() throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_RECORD_COPY_REPORT"] else { return }
+        let payload: [JSON] = (0..<12).map { .object(["index": .number(Double($0)), "label": .string("Keep the exact authored reference Café"), "flags": .array([.number(-0.0), .bool(true)])]) }
+        let rows = (0..<2000).map { Record(["id": .string("task-\($0)"), "title": .string("Task \($0)"), "description": .string(String(repeating: "Keep the original notes. ", count: 8)), "future": .array(payload)]) }
+        let copies = detached(rows), rebuilt = rows.map { Record($0.fields) }
+        var tail = detached(rows); tail[1999]["title"] = .string("Edited tail")
+        var first = detached(rows); first[0]["title"] = .string("Edited first")
+        let modes: [(String, [Record], Bool)] = [("copied-unchanged", copies, true), ("tail-edit", tail, false), ("reconstructed-equal", rebuilt, true), ("first-edit", first, false)]
+        var reports: [[String: Any]] = []
+        for (name, candidate, expected) in modes {
+            XCTAssertFalse(rows.withUnsafeBufferPointer { a in candidate.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } })
+            var oldMatches = 0, newMatches = 0
+            let oldStart = ProcessInfo.processInfo.systemUptime
+            for _ in 0..<5 { if exactRowsReference(rows, candidate) { oldMatches += 1 } }
+            let oldSeconds = ProcessInfo.processInfo.systemUptime - oldStart, newStart = ProcessInfo.processInfo.systemUptime
+            for _ in 0..<5 { if AuthoredValueComparison.sameRows(rows, candidate) { newMatches += 1 } }
+            let newSeconds = ProcessInfo.processInfo.systemUptime - newStart
+            XCTAssertEqual(oldMatches, expected ? 5 : 0); XCTAssertEqual(oldMatches, newMatches)
+            reports.append(["mode": name, "referenceSeconds": oldSeconds, "currentSeconds": newSeconds, "sameAnswer": oldMatches == newMatches])
+        }
+        try JSONSerialization.data(withJSONObject: ["rows": 2000, "passes": 5, "modes": reports, "debugPreparationOnly": true, "wholeAppFPSClaim": false], options: [.sortedKeys]).write(to: URL(fileURLWithPath: path), options: .atomic)
+    }
+}
+
+extension AuthoredValueComparisonTests {
+    func testEqualOpaqueRefreshPreservesCachedAuthoredBytesUntilContentChanges() throws {
+        let a = Data(#"{"id":"task","future":{"é":9007199254740993,"e\u0301":1,"huge":1e1000}}"#.utf8)
+        let b = Data(#"{"id":"task","future":{ "huge":10e999, "e\u0301":1, "é":9007199254740993 }}"#.utf8)
+        let original = try TaskfoldJSONDecoder().decode(Record.self, from: a)
+        let refreshed = try TaskfoldJSONDecoder().decode(Record.self, from: b)
+        let encoder = TaskfoldJSONEncoder()
+        let originalBytes = try encoder.encode(original["future"]), refreshedBytes = try encoder.encode(refreshed["future"])
+        XCTAssertNotEqual(originalBytes, refreshedBytes)
+        XCTAssertTrue(AuthoredValueComparison.sameRows([original], [refreshed]), "JSONB formatting and exact decimal equivalents keep the established content contract")
+        let cache = TaskCache(), query = TaskQuery(scope: .inbox)
+        XCTAssertTrue(cache.update([original])); _ = cache.matching(query)
+        let count = cache.computationCount
+        XCTAssertFalse(cache.update([refreshed]))
+        XCTAssertEqual(try encoder.encode(try XCTUnwrap(cache.matching(query).first)["future"]), originalBytes)
+        XCTAssertEqual(cache.computationCount, count)
+        let copy = detached([refreshed])
+        XCTAssertFalse(cache.update(copy)); XCTAssertEqual(cache.computationCount, count)
+        let changed = try TaskfoldJSONDecoder().decode(Record.self, from: Data(String(decoding: b, as: UTF8.self).replacingOccurrences(of: "10e999", with: "2e1000").utf8))
+        XCTAssertTrue(cache.update([changed]))
+        XCTAssertEqual(try encoder.encode(try XCTUnwrap(cache.matching(query).first)["future"]), try encoder.encode(changed["future"]))
+        XCTAssertEqual(cache.computationCount, count + 1)
+        XCTAssertEqual(try encoder.encode(original["future"]), originalBytes)
+    }
+}

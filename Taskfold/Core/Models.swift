@@ -7,7 +7,11 @@ enum AuthoredValueComparison {
         guard lhs.count == rhs.count else { return false }
         let identical = lhs.withUnsafeBufferPointer { a in rhs.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }
         if identical { return true }
-        return zip(lhs, rhs).allSatisfy { exactJSON(.object($0.fields), .object($1.fields)) }
+        // Immutable value copies are already exact. Fresh or written records
+        // still need the full authored comparison, including opaque fields.
+        return zip(lhs, rhs).allSatisfy {
+            $0.sharesAuthoredSource(with: $1) || exactJSON(.object($0.fields), .object($1.fields))
+        }
     }
     /// Cheap exact proof for unchanged record copies, including filtered arrays.
     /// A fresh decoded/reconstructed record intentionally cannot pass this proof;
@@ -1653,7 +1657,12 @@ final class TaskCache {
         return roots
     }
     @discardableResult func update(_ rows: [Record]) -> Bool {
-        guard !AuthoredValueComparison.sameRows(source, rows) else { return false }
+        if AuthoredValueComparison.sameRows(source, rows) {
+            // Adopt the latest equal input so subsequent local edits can prove
+            // unchanged copies cheaply, even after an equal decoded refresh.
+            source = rows
+            return false
+        }
         projectPresentation = nil; projectOutline = nil; labelPositions = nil
         source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; excludedProductiveResult = nil; inboxProductiveResult = nil; navigationResult = nil
         tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
