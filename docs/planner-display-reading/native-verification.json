@@ -1,0 +1,20 @@
+{
+  "selected": 2,
+  "passed": 2,
+  "skipped": 0,
+  "failed": 0,
+  "runtimeWarnings": 0,
+  "terminalExit": 0,
+  "hostInputsStillExact": true,
+  "signatureVerified": true,
+  "actualNativeDragResizeUndo": true,
+  "darkLargestSchedulingUndoRelaunch": true,
+  "screenshotsInspected": [
+    "Readable planner portrait dark largest",
+    "Resized planner block undo"
+  ],
+  "deviceInitiallyAndFinallyShutdown": true,
+  "testLogSHA256": "4d0ad89e1b8dbab226fa2c63ab7c3791f74adc7ef5d5c9b531aa995657110e26",
+  "wholeAppFPSClaim": false,
+  "nativeMacInteractionClaim": false
+}

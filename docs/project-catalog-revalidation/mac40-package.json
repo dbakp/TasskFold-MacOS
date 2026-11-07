@@ -23,5 +23,7 @@
   "designatedRequirementAndFeatureFlagsMatch38": true,
   "candidate39SupersededAndRetired": true,
   "sourceCommit": "40e6d60bc2668984264e847a1b044b19faa86d69",
-  "currentSourceNativeMacInteractionAccepted": false
+  "currentSourceNativeMacInteractionAccepted": false,
+  "candidateSupersededBy": "41",
+  "candidateArchiveAndStageRetired": true
 }

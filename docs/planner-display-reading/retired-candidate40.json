@@ -1,0 +1,9 @@
+{
+  "freeBeforeBytes": 40469118976,
+  "retired": [
+    "/tmp/.taskfold-install40-34tll8rr",
+    "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-40-mac-development.zip"
+  ],
+  "reason": "Uninstalled40 superseded by verified41; installed38 exact rollback and frozen36 retained; all private task backups preserved",
+  "freeAfterBytes": 40632045568
+}
