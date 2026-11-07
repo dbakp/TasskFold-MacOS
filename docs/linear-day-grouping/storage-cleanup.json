@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-07",
+  "freeBeforeBytes": 47200604160,
+  "retired": [
+    {
+      "path": "/tmp/taskfold-daygroup-phone-native.xcresult",
+      "logicalBytes": 643763
+    },
+    {
+      "path": "/tmp/taskfold-daygroup-phone-attachments",
+      "logicalBytes": 236679
+    },
+    {
+      "path": "/tmp/taskfold-daygroup-mac-build-config-missing.log",
+      "logicalBytes": 7388
+    },
+    {
+      "path": "/tmp/taskfold-daygroup-ios-build.log",
+      "logicalBytes": 103192
+    },
+    {
+      "path": "/tmp/taskfold-daygroup-mac-core.log",
+      "logicalBytes": 55303
+    },
+    {
+      "path": "/tmp/taskfold-daygroup-phone-native.log",
+      "logicalBytes": 10865
+    },
+    {
+      "path": "/tmp/taskfold-daygroup-mac-build.log",
+      "logicalBytes": 114126
+    },
+    {
+      "path": "/tmp/taskfold-daygroup-ios-core.log",
+      "logicalBytes": 53201
+    },
+    {
+      "path": "/tmp/taskfold-daygroup-mac-build-initial.log",
+      "logicalBytes": 9058
+    }
+  ],
+  "newDevicesCreated": false,
+  "privateDataRemoved": false,
+  "normalInstallersChanged": false,
+  "boundedCaches": {
+    "apply": true,
+    "freeBeforeBytes": 47201964032,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 693780480,
+        "projectedAllocatedBytes": 693780480
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 659107840,
+        "projectedAllocatedBytes": 659107840
+      }
+    ],
+    "freeAfterBytes": 47201898496,
+    "actualFreeChangeBytes": -65536
+  },
+  "coreCacheAllocatedBytes": {
+    "ios": 689762304,
+    "mac": 632385536
+  },
+  "freeAfterBytes": 47201046528
+}
