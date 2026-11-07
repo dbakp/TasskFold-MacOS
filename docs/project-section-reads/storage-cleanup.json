@@ -1,0 +1,50 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 41609658368,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 765272064,
+      "projectedAllocatedBytes": 765272064,
+      "within768MiB": true
+    },
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 711176192,
+      "projectedAllocatedBytes": 711176192,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 41609637888,
+  "actualFreeChangeBytes": -20480,
+  "normalMac36LeftRunning": true,
+  "mac37InstallPendingManualUnlock": true,
+  "privateBackupsPreserved": true,
+  "simulatorInitiallyAndFinallyShutdown": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "otherProjectDevicesUntouched": true,
+  "selectedCacheMeasurements": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 696922112,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 639791104,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "allocatedBytes": 765272064,
+      "within768MiB": true
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build",
+      "allocatedBytes": 711176192,
+      "within768MiB": true
+    }
+  ]
+}
