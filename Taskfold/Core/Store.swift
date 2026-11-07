@@ -1045,6 +1045,16 @@ final class Store {
         let page = try await backend.childTaskRepairArchives(scope: scope, after: after, limit: limit)
         try Task.checkCancellation(); guard scope == childTaskFieldRecoveryScope else { throw CancellationError() }; return page
     }
+    func compareChildTaskRepairOriginal(_ archive: ChildTaskRepairArchive) async throws -> ChildTaskRepairOriginalComparison {
+        guard online, let scope = childTaskFieldRecoveryScope, scope == archive.scope,
+              !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == archive.rootID }) else { throw ChildTaskRepairFailure(reason: .unavailable) }
+        let revision = snapshotRevision
+        let result = try await backend.childTaskRepairOriginalComparison(archive, scope: scope, snapshot: revision)
+        try Task.checkCancellation()
+        guard childTaskFieldRecoveryScope == scope, snapshotRevision == revision,
+              !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == archive.rootID }) else { throw CancellationError() }
+        return result
+    }
     func readDiscoveredChildTaskRepairOriginal(_ archive: ChildTaskRepairArchive) async throws -> ChildTaskRepairOriginal {
         guard let scope = childTaskFieldRecoveryScope, archive.scope == scope else { throw ChildTaskRepairFailure(reason: .unavailable) }
         let revision = snapshotRevision

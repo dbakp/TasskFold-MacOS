@@ -29,9 +29,10 @@ export function createMappingSQLChannel(pg,{session,nonce,loseFirstSave=false,be
    case '/rest/v1/rpc/taskfold_child_repair_archives':
     if(Object.keys(body).sort().join(',')!=='_after,_limit'||!Number.isInteger(body._limit)||body._limit<1||body._limit>50||body._after!==null&&!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body._after??''))throw new Error('Invalid archive page');
     expression=`public.taskfold_child_repair_archives(${body._after===null?'null':lit(body._after)},${body._limit})`;break;
+   case '/rest/v1/rpc/taskfold_compare_child_repair_original':
    case '/rest/v1/rpc/taskfold_child_repair_original':
     if(Object.keys(body).sort().join(',')!=='_archive,_request'||!['_archive','_request'].every(k=>/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body[k]??'')))throw new Error('Invalid archive identity');
-    expression=`public.taskfold_child_repair_original(${lit(body._request)},${lit(body._archive)})`;break;
+    expression=`public.${request.path.split('/').at(-1)}(${lit(body._request)},${lit(body._archive)})`;break;
    case '/rest/v1/rpc/taskfold_child_repair_original_cleanup':
     if(Object.keys(body).sort().join(',')!=='_archive,_bytes,_digest,_operation,_request'||!['review','remove'].includes(body._operation)||!Number.isInteger(body._bytes)||body._bytes<1||body._bytes>8000000||!/^[a-f0-9]{64}$/.test(body._digest??'')||!['_archive','_request'].every(k=>/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body[k]??'')))throw new Error('Invalid original cleanup');
     expression=`public.taskfold_child_repair_original_cleanup(${lit(body._operation)},${lit(body._request)},${lit(body._archive)},${lit(body._digest)},${body._bytes})`;break;

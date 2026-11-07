@@ -143,3 +143,82 @@ extension ChildRepairArchiveTests {
         let gone=entry.withoutOriginal();XCTAssertFalse(gone.contentRetained);XCTAssertEqual(gone.receipt,entry.receipt);XCTAssertEqual(gone.title,entry.title);XCTAssertEqual(gone.createdAt,entry.createdAt);XCTAssertEqual(gone.scope,entry.scope)
     }
 }
+
+extension ChildRepairArchiveTests {
+    private func comparisonFixture() throws -> (ChildTaskRepairArchive, Data) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-repair-comparison-contract-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let f = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let raw = f["page"]!.object, s = scope(raw["account"]!.text)
+        return (try page(raw, s).entries[0], Data(f["wire"]!.text.utf8))
+    }
+    private func comparisonWire(_ wire: Data, account: String, current: (inout [String: JSON]) -> Void = { _ in }, source: Data? = nil) throws -> Data {
+        let p = try ChildTaskRecordRead.separatingJSONFields(["original", "current"], data: wire, maximum: ChildTaskRepairOriginalComparison.maximumBytes, integerPaths: [], nullableIntegerPaths: [])
+        let c = try ChildTaskRecordRead.separatingJSONField("source_tree", data: XCTUnwrap(p.values["current"]), maximum: ChildTaskAdoptionReview.maximumBytes, integerPaths: [], nullableIntegerPaths: [])
+        var fields = try TaskfoldJSONDecoder().decode([String: JSON].self, from: c.metadata); current(&fields); fields.removeValue(forKey: "source_tree")
+        var bytes = try TaskfoldJSONEncoder().encode(fields); bytes.removeLast(); bytes.append(Data(",\"source_tree\":".utf8)); bytes.append(source ?? c.value); bytes.append(125)
+        return Data("{\"protocol\":1,\"account\":\"\(account)\",\"original\":".utf8) + p.values["original"]! + Data(",\"current\":".utf8) + bytes + Data("}".utf8)
+    }
+    func testGenuineComparisonPreservesBothRawStructuresAndReceipt() throws {
+        let (entry, wire) = try comparisonFixture(), snapshot = UUID()
+        let result = try ChildTaskRepairOriginalComparison(data: wire, archive: entry, snapshot: snapshot)
+        XCTAssertEqual(result.archive.receipt, entry.receipt); XCTAssertEqual(result.snapshot, snapshot); XCTAssertFalse(result.valuesMatch)
+        XCTAssertEqual(result.saved.outline?.items.count, 2); XCTAssertEqual(result.current.outline?.items.count, 2)
+        XCTAssertTrue(result.saved.excerpt.contains("Legacy text")); XCTAssertTrue(result.current.excerpt.contains("Recovered child"))
+        XCTAssertFalse(result.saved.shortened); XCTAssertFalse(result.current.shortened)
+        XCTAssertFalse(String(reflecting: result).contains(entry.id)); XCTAssertFalse(String(describing: result).contains(entry.scope.account))
+        let again = try ChildTaskRepairOriginalComparison(data: wire, archive: entry, snapshot: snapshot)
+        XCTAssertEqual(again.saved.source, result.saved.source); XCTAssertEqual(again.current.source, result.current.source)
+        XCTAssertNotEqual(again.id, result.id)
+    }
+    func testComparisonRejectsForeignRootGenerationProjectRealmAndEnvelope() throws {
+        let (entry, wire) = try comparisonFixture()
+        for key in ["account", "task_id", "task_generation", "project_id", "workspace_id"] {
+            let changed = try comparisonWire(wire, account: entry.scope.account, current: { $0[key] = .string(UUID().uuidString.lowercased()) })
+            XCTAssertThrowsError(try ChildTaskRepairOriginalComparison(data: changed, archive: entry, snapshot: UUID()), key)
+        }
+        let foreign = try comparisonWire(wire, account: UUID().uuidString.lowercased())
+        XCTAssertThrowsError(try ChildTaskRepairOriginalComparison(data: foreign, archive: entry, snapshot: UUID()))
+        XCTAssertThrowsError(try ChildTaskRepairOriginalComparison(data: wire, archive: entry.withoutOriginal(), snapshot: UUID()))
+        let original = String(decoding: wire, as: UTF8.self)
+        XCTAssertThrowsError(try ChildTaskRepairOriginalComparison(data: Data(("{\"protocol\":1," + original.dropFirst()).utf8), archive: entry, snapshot: UUID()))
+        XCTAssertThrowsError(try ChildTaskRepairOriginalComparison(data: Data(repeating: 32, count: ChildTaskRepairOriginalComparison.maximumBytes + 1), archive: entry, snapshot: UUID()))
+    }
+    func testComparisonRequiresIncludedCurrentSourceAndStrictCounters() throws {
+        let (entry, wire) = try comparisonFixture()
+        let absent = try comparisonWire(wire, account: entry.scope.account, current: {
+            $0["state"] = .string("review"); $0["issue"] = .string("source_size"); $0["source_bytes"] = .number(2_000_001)
+            $0["source_included"] = .bool(false); $0["can_adopt"] = .bool(false); $0["node_count"] = .null; $0["max_depth"] = .null
+        }, source: Data("null".utf8))
+        XCTAssertThrowsError(try ChildTaskRepairOriginalComparison(data: absent, archive: entry, snapshot: UUID()))
+        let text = String(decoding: wire, as: UTF8.self)
+        XCTAssertThrowsError(try ChildTaskRepairOriginalComparison(data: Data(text.replacingOccurrences(of: "\"protocol\": 1", with: "\"protocol\": 1.0").utf8), archive: entry, snapshot: UUID()))
+    }
+    func testComparisonShowsMalformedOriginalWithoutRoundingOrNormalizingIt() throws {
+        let literal = Data(#"[{"title":"Café 🪴","future":9007199254740993,"negative":-0,"huge":1e1000,"keys":{"é":1,"e\u0301":2},"subtasks":"old malformed children"}]"#.utf8)
+        let side = try ChildTaskRepairOriginalComparison.Side(literal)
+        XCTAssertEqual(side.source, literal); XCTAssertEqual(Data(side.excerpt.utf8), literal)
+        XCTAssertEqual(side.outline?.items.first?.title, "Café 🪴"); XCTAssertEqual(side.outline?.items.first?.malformedChildren, true)
+        XCTAssertFalse(ChildTaskRepairPreview.sameJSONValue(literal, Data(String(decoding: literal, as: UTF8.self).replacingOccurrences(of: "9007199254740993", with: "9007199254740992").utf8)))
+        XCTAssertTrue(ChildTaskRepairPreview.sameJSONValue(Data("[ 1, 2 ]".utf8), Data("[1,2]".utf8)))
+        XCTAssertFalse(ChildTaskRepairPreview.sameJSONValue(Data("[-0]".utf8), Data("[0]".utf8)))
+        let scalar = try ChildTaskRepairOriginalComparison.Side(Data("\"old instruction\"".utf8))
+        XCTAssertEqual(scalar.outline?.rootKind, .string); XCTAssertEqual(scalar.excerpt, "\"old instruction\"")
+    }
+    func testComparisonExcerptHasAnExplicitUnicodeSafeBoundAndNeverDropsSource() throws {
+        let literal = Data(("[\"" + String(repeating: "🪴", count: 13_000) + "\"]").utf8)
+        let side = try ChildTaskRepairOriginalComparison.Side(literal)
+        XCTAssertEqual(side.source, literal); XCTAssertTrue(side.shortened); XCTAssertEqual(side.excerpt.unicodeScalars.count, 12_000)
+        XCTAssertFalse(side.excerpt.contains("�"))
+        let empty = try ChildTaskRepairOriginalComparison.Side(Data("null".utf8))
+        XCTAssertEqual(empty.outline?.rootKind, .null); XCTAssertEqual(empty.excerpt, "null")
+    }
+    func testCancelledComparisonNeverPublishesAReading() async throws {
+        let (entry, wire) = try comparisonFixture()
+        let task = Task { () throws -> ChildTaskRepairOriginalComparison in
+            while !Task.isCancelled { await Task.yield() }
+            return try ChildTaskRepairOriginalComparison(data: wire, archive: entry, snapshot: UUID())
+        }
+        task.cancel()
+        do { _ = try await task.value; XCTFail("Cancelled comparison published") } catch is CancellationError {} catch { XCTFail("Wrong cancellation: \(error)") }
+    }
+}

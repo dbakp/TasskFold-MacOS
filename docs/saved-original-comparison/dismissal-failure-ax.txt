@@ -1,0 +1,223 @@
+Application, 0x111833340, pid: 25274, label: 'Taskfold Team Editor Test' <App element pid: 25274>
+  Window (Main), 0x111833480, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4390339584.4>
+    Other, 0x111832a80, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4391124992.5>
+      Other, 0x111833200, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4447066368.6>
+        Other, 0x1118335c0, {{-402.0, -874.0}, {1206.0, 2622.0}} <AX element pid: 25274, elementOrHash.elementID: 4476999936.110>
+        Other, 0x111833700, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4390338560.7>
+          Other, 0x1117861c0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4475461600.8>
+            Other, 0x1117870c0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4391129600.9>
+              NavigationBar, 0x111784000, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Subtask acceptance' <AX element pid: 25274, elementOrHash.elementID: 4446936576.10>
+                StaticText, 0x11172d400, {{16.0, 119.7}, {323.7, 40.7}}, label: 'Subtask acceptance' <AX element pid: 25274, elementOrHash.elementID: 4391243264.13>
+              Other, 0x11172d540, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4391244160.11>
+                Other, 0x11172d680, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4391250880.14>
+                  Other, 0x11172d7c0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4391256960.16>
+                    Other, 0x11172d900, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4475462080.17>
+                      CollectionView, 0x11172d2c0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4446240768.18>
+                        Other, 0x11172da40, {{-16.0, -1580.0}, {434.0, 1817.7}} <AX element pid: 25274, elementOrHash.elementID: 4447227392.19>
+                        Other, 0x11174a1c0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4391247296.20>
+                          Other, 0x1117497c0, {{0.0, 0.0}, {402.0, 102.0}} <AX element pid: 25274, elementOrHash.elementID: 4391250432.42>
+                        Other, 0x111749040, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4391246848.21>
+                        Cell, 0x111749b80, {{16.0, 168.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4390540288.22>
+                          Other, 0x111749cc0, {{16.0, 168.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4447225344.43>
+                            Other, 0x11174a300, {{16.0, 168.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4391253568.64>
+                          Other, 0x11174a440, {{16.0, 168.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4391253120.44>
+                            Other, 0x11174a580, {{16.0, 168.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4389966336.65>
+                              Other, 0x111748c80, {{16.0, 168.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475462240.84>
+                                StaticText, 0x111748dc0, {{16.0, 168.0}, {370.0, 52.0}}, label: 'Synthetic child field acceptance' <AX element pid: 25274, elementOrHash.elementID: 4475462400.94>
+                        Other, 0x111748f00, {{-16.0, 237.7}, {434.0, 87.0}} <AX element pid: 25274, elementOrHash.elementID: 4391138304.23>
+                        Cell, 0x1119c8000, {{16.0, 255.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4390544128.24>
+                          Other, 0x1119c8140, {{16.0, 255.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4447229952.45>
+                            Other, 0x1119c8280, {{16.0, 255.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4391240576.66>
+                          Other, 0x1119c83c0, {{16.0, 255.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4391252224.46>
+                            Other, 0x1119c8500, {{16.0, 255.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4389970944.67>
+                              Other, 0x1119c8640, {{16.0, 255.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475463040.85>
+                                Button, 0x1119c8780, {{16.0, 255.0}, {370.0, 52.0}}, identifier: 'savedChildRepairArchives', label: 'Saved originals' <AX element pid: 25274, elementOrHash.elementID: 4475462880.95>
+                                  StaticText, 0x1119c88c0, {{33.3, 270.8}, {153.7, 20.3}}, label: 'Saved originals' <AX element pid: 25274, elementOrHash.elementID: 4475462560.104>
+                                  Image, 0x1119c8a00, {{33.3, 271.3}, {21.3, 19.7}}, identifier: 'archivebox', label: 'Archive' <AX element pid: 25274, elementOrHash.elementID: 4475462720.105>
+                        Other, 0x1119c8b40, {{-16.0, 324.7}, {434.0, 2464.0}} <AX element pid: 25274, elementOrHash.elementID: 4391138816.25>
+                        Cell, 0x1119c8c80, {{16.0, 342.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4390542848.26>
+                          Other, 0x1119c8dc0, {{16.0, 342.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4447233024.47>
+                            Other, 0x1119c8f00, {{16.0, 342.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4391255360.68>
+                          Other, 0x1119c9040, {{16.0, 342.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4391254912.48>
+                            Other, 0x1119c9180, {{16.0, 342.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4389969408.69>
+                              Other, 0x1119c92c0, {{16.0, 342.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475463200.86>
+                                Button, 0x1119c9400, {{16.0, 342.0}, {370.0, 52.0}}, identifier: 'childNativeEditor', label: 'Open subtask editor' <AX element pid: 25274, elementOrHash.elementID: 4475463360.96>
+                        Cell, 0x1119c9540, {{16.0, 394.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4390545408.27>
+                          Other, 0x1119c9680, {{16.0, 394.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4447234048.49>
+                            Other, 0x1119c97c0, {{16.0, 394.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475994560.70>
+                          Other, 0x1119c9900, {{16.0, 394.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475994112.50>
+                            Other, 0x1119c9a40, {{16.0, 394.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4389972480.71>
+                              Other, 0x1119c9b80, {{16.0, 394.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475463520.87>
+                                Button, 0x1119c9cc0, {{16.0, 394.0}, {370.0, 52.0}}, identifier: 'childNativeCompletionRecovery', label: 'Open saved actions' <AX element pid: 25274, elementOrHash.elementID: 4475463680.97>
+                        Other, 0x1119c9e00, {{32.0, 393.0}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4391140864.28>
+                        Cell, 0x1119c9f40, {{16.0, 446.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4390546688.29>
+                          Other, 0x1119ca080, {{16.0, 446.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4447235072.51>
+                            Other, 0x1119ca1c0, {{16.0, 446.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475995456.72>
+                          Other, 0x1119ca300, {{16.0, 446.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475995008.52>
+                            Other, 0x1119ca440, {{16.0, 446.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4389974016.73>
+                              Other, 0x1119ca580, {{16.0, 446.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475463840.88>
+                                Button, 0x1119ca6c0, {{16.0, 446.0}, {370.0, 52.0}}, identifier: 'childNativeQueueCompletion', label: 'Save an offline test completion' <AX element pid: 25274, elementOrHash.elementID: 4475464000.98>
+                        Other, 0x1119ca800, {{32.0, 445.0}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447174656.30>
+                        Cell, 0x1119ca940, {{16.0, 498.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4390547968.31>
+                          Other, 0x1119caa80, {{16.0, 498.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4447236096.53>
+                            Other, 0x1119cabc0, {{16.0, 498.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475996352.74>
+                          Other, 0x1119cad00, {{16.0, 498.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475995904.54>
+                            Other, 0x1119cae40, {{16.0, 498.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4389975552.75>
+                              Other, 0x1119caf80, {{16.0, 498.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475464160.89>
+                                Button, 0x1119cb0c0, {{16.0, 498.0}, {370.0, 52.0}}, identifier: 'childNativeExerciseHistory', label: 'Exercise completion history' <AX element pid: 25274, elementOrHash.elementID: 4475464320.99>
+                        Other, 0x1119cb200, {{32.0, 497.0}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447175168.32>
+                        Cell, 0x1119cb340, {{16.0, 550.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4390549248.33>
+                          Other, 0x1119cb480, {{16.0, 550.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4447237120.55>
+                            Other, 0x1119cb5c0, {{16.0, 550.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475997248.76>
+                          Other, 0x1119cb700, {{16.0, 550.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475996800.56>
+                            Other, 0x1119cb840, {{16.0, 550.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4476272640.77>
+                              Other, 0x1119cb980, {{16.0, 550.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475464480.90>
+                                Button, 0x1119cbac0, {{16.0, 550.0}, {370.0, 52.0}}, identifier: 'childNativeRecovery', label: 'Open saved changes' <AX element pid: 25274, elementOrHash.elementID: 4475464640.100>
+                        Other, 0x1119cbc00, {{32.0, 549.0}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447175680.34>
+                        Cell, 0x1119cbd40, {{16.0, 602.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4476354560.35>
+                          Other, 0x1119cbe80, {{16.0, 602.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4447238144.57>
+                            Other, 0x1119d0000, {{16.0, 602.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475998144.78>
+                          Other, 0x1119d0140, {{16.0, 602.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475997696.58>
+                            Other, 0x1119d0280, {{16.0, 602.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4476274176.79>
+                              Other, 0x1119d03c0, {{16.0, 602.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475464800.91>
+                                Button, 0x1119d0500, {{16.0, 602.0}, {370.0, 52.0}}, identifier: 'childNativeForeignEdit', label: 'Change test title on server' <AX element pid: 25274, elementOrHash.elementID: 4475464960.101>
+                        Other, 0x1119d0640, {{32.0, 601.0}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447176192.36>
+                        Cell, 0x1119d0780, {{16.0, 654.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4476355840.37>
+                          Other, 0x1119d08c0, {{16.0, 654.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4447239168.59>
+                            Other, 0x1119d0a00, {{16.0, 654.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475999040.80>
+                          Other, 0x1119d0b40, {{16.0, 654.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475998592.60>
+                            Other, 0x1119d0c80, {{16.0, 654.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4476275712.81>
+                              Other, 0x1119d0dc0, {{16.0, 654.0}, {370.0, 52.0}} <AX element pid: 25274, elementOrHash.elementID: 4475465120.92>
+                                Button, 0x1119d0f00, {{16.0, 654.0}, {370.0, 52.0}}, identifier: 'childNativeConnection', label: 'Go offline' <AX element pid: 25274, elementOrHash.elementID: 4475465280.102>
+                        Other, 0x1119d1040, {{32.0, 653.0}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447176704.38>
+                        Cell, 0x1119d1180, {{16.0, 706.0}, {370.0, 314.3}} <AX element pid: 25274, elementOrHash.elementID: 4476357120.39>
+                          Other, 0x1119d12c0, {{16.0, 706.0}, {370.0, 314.3}} <AX element pid: 25274, elementOrHash.elementID: 4391135744.61>
+                            Other, 0x1119d1400, {{16.0, 706.0}, {370.0, 314.3}} <AX element pid: 25274, elementOrHash.elementID: 4475999936.82>
+                          Other, 0x1119d1540, {{16.0, 706.0}, {370.0, 314.3}} <AX element pid: 25274, elementOrHash.elementID: 4475999488.62>
+                            Other, 0x1119d1680, {{16.0, 706.0}, {370.0, 314.3}} <AX element pid: 25274, elementOrHash.elementID: 4476277248.83>
+                              Other, 0x1119d17c0, {{16.0, 706.0}, {370.0, 314.3}} <AX element pid: 25274, elementOrHash.elementID: 4475465440.93>
+                                StaticText, 0x1119d1900, {{16.0, 706.0}, {370.0, 314.3}}, identifier: 'childNativeProbe', label: 'queued=0 attempted=0 confirmed=0 writes=0 requests=0 current=Recovered instructions 1 account=A private=0 minutes=0 schedules=0 enabled=0 before10=0 reminderDraft=0 kind=task closed=0 closes=0 labels= pendingLabel= assigned= completionQueued=0 completionAttempted=0 completionConfirmed=0 completionClosed=0 completionWrites=0 completionRequests=0 done=false notes= completionCloses=0 childReads=0 history=0 stamp=none' <AX element pid: 25274, elementOrHash.elementID: 4475465600.103>
+                        Other, 0x1119d1a40, {{32.0, 705.0}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447177216.40>
+                        Other, 0x1119d1b80, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 % <AX element pid: 25274, elementOrHash.elementID: 4391139328.41>
+                          Other, 0x1119d1cc0, {{396.0, 119.0}, {3.0, 561.3}} <AX element pid: 25274, elementOrHash.elementID: 4391252672.63>
+                        Other, 0x1119d1e00, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 % <AX element pid: 25274, elementOrHash.elementID: 4391139328.41>
+                          Other, 0x1119d1f40, {{396.0, 119.0}, {3.0, 561.3}} <AX element pid: 25274, elementOrHash.elementID: 4391252672.63>
+              Toolbar, 0x1119d2080, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'Toolbar', label: 'Toolbar' <AX element pid: 25274, elementOrHash.elementID: 4391130112.12>
+                Other, 0x1119d21c0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4391130624.15>
+    Other, 0x1119d2300, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 25274, elementOrHash.elementID: 4447185920.107>
+      Other, 0x1119d2440, {{-402.0, -874.0}, {1206.0, 2622.0}} <AX element pid: 25274, elementOrHash.elementID: 4476996096.108>
+      Other, 0x1119d2580, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4477000576.109>
+        Other, 0x1119d26c0, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4476003520.111>
+          Other, 0x1119d2800, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4390345728.112>
+            Other, 0x1119d2940, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4501948288.113>
+              Other, 0x1119d2a80, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4447190016.114>
+                NavigationBar, 0x1119d2bc0, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Saved originals' <AX element pid: 25274, elementOrHash.elementID: 4458251008.115>
+                  Other, 0x1119d2d00, {{20.0, 82.0}, {64.3, 36.0}} <AX element pid: 25274, elementOrHash.elementID: 4476362240.118>
+                    Other, 0x1119d2e40, {{20.0, 82.0}, {64.3, 36.0}} <AX element pid: 25274, elementOrHash.elementID: 4501956288.122>
+                      Button, 0x1119d2f80, {{20.0, 82.0}, {64.3, 36.0}}, label: 'Done' <AX element pid: 25274, elementOrHash.elementID: 4501956128.124>
+                  StaticText, 0x1119d30c0, {{140.7, 89.7}, {120.7, 20.7}}, label: 'Saved originals' <AX element pid: 25274, elementOrHash.elementID: 4500637888.208>
+                Other, 0x1119d3200, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4476006656.116>
+                  Other, 0x1119d3340, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4500638784.120>
+                    Other, 0x1119d3480, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4391257856.123>
+                      Other, 0x1119d35c0, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4501952928.125>
+                        CollectionView, 0x1119d3700, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4446247936.126>
+                          Other, 0x1119d3840, {{-16.0, -6.3}, {434.0, 281.3}} <AX element pid: 25274, elementOrHash.elementID: 4447139840.133>
+                          Cell, 0x1119d3980, {{16.0, 11.0}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4476367360.134>
+                            Other, 0x1119d3ac0, {{16.0, 11.0}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4447078400.151>
+                              Other, 0x1119d3c00, {{16.0, 11.0}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4500647296.168>
+                            Other, 0x1119d3d40, {{16.0, 11.0}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4500640128.152>
+                              Other, 0x1119d3e80, {{16.0, 11.0}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4476286464.169>
+                                Other, 0x1119dc000, {{16.0, 11.0}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4501957888.182>
+                                  StaticText, 0x1119dc140, {{32.0, 26.0}, {157.3, 20.3}}, label: 'Archive workshop 3' <AX element pid: 25274, elementOrHash.elementID: 4501957568.190>
+                                  StaticText, 0x1119dc280, {{32.0, 52.3}, {155.7, 20.3}}, label: '7 Nov 2026 at 22.02' <AX element pid: 25274, elementOrHash.elementID: 4501957408.191>
+                                  StaticText, 0x1119dc3c0, {{32.0, 78.7}, {28.3, 15.7}}, label: '2 KB' <AX element pid: 25274, elementOrHash.elementID: 4501957728.192>
+                          Other, 0x1119dc500, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4500635648.128>
+                            Other, 0x1119dc640, {{0.0, 62.0}, {402.0, 110.0}} <AX element pid: 25274, elementOrHash.elementID: 4500646848.146>
+                          Other, 0x1119dc780, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4476009792.129>
+                            Other, 0x1119dc8c0, {{0.0, 62.0}, {402.0, 110.0}} <AX element pid: 25274, elementOrHash.elementID: 4500868864.211>
+                          Cell, 0x1119dca00, {{16.0, 109.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4476368640.135>
+                            Other, 0x1119dcb40, {{16.0, 109.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4447079424.153>
+                              Other, 0x1119dcc80, {{16.0, 109.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4500648640.170>
+                            Other, 0x1119dcdc0, {{16.0, 109.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4500648192.154>
+                              Other, 0x1119dcf00, {{16.0, 109.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503240704.171>
+                                Other, 0x1119dd040, {{16.0, 109.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4501958528.183>
+                                  Button, 0x1119dd180, {{16.0, 109.3}, {370.0, 74.0}}, identifier: 'childRepairArchiveCompare-84937efa-b868-4d33-b0a5-b053620d2308', label: 'Compare subtasks: Archive workshop 3' <AX element pid: 25274, elementOrHash.elementID: 4501958368.193>
+                                    StaticText, 0x1119dd2c0, {{32.0, 124.3}, {338.0, 44.0}}, label: 'Compare subtasks' <AX element pid: 25274, elementOrHash.elementID: 4501958048.200>
+                                    Image, 0x1119dd400, {{34.0, 136.7}, {16.3, 19.7}}, identifier: 'arrow.left.arrow.right', label: 'Left And Right Arrows' <AX element pid: 25274, elementOrHash.elementID: 4501958208.201>
+                          Other, 0x1119dd540, {{32.0, 108.3}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447086592.136>
+                          Cell, 0x1119dd680, {{16.0, 183.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503355392.137>
+                            Other, 0x1119dd7c0, {{16.0, 183.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4447080960.155>
+                              Other, 0x1119dd900, {{16.0, 183.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4500649984.172>
+                            Other, 0x1119dda40, {{16.0, 183.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4500649536.156>
+                              Other, 0x1119ddb80, {{16.0, 183.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503242240.173>
+                                Other, 0x1119ddcc0, {{16.0, 183.3}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4501959168.184>
+                                  Button, 0x1119dde00, {{16.0, 183.3}, {370.0, 74.0}}, identifier: 'childRepairArchiveExport-84937efa-b868-4d33-b0a5-b053620d2308', label: 'Export original: Archive workshop 3' <AX element pid: 25274, elementOrHash.elementID: 4501959008.194>
+                                    StaticText, 0x1119ddf40, {{32.0, 198.3}, {338.0, 44.0}}, label: 'Export original' <AX element pid: 25274, elementOrHash.elementID: 4501958688.202>
+                                    Image, 0x1119de080, {{34.0, 210.3}, {15.0, 20.0}}, identifier: 'square.and.arrow.up', label: 'Share' <AX element pid: 25274, elementOrHash.elementID: 4501958848.203>
+                          Other, 0x1119de1c0, {{64.3, 182.3}, {305.7, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447087104.138>
+                          Other, 0x1119de300, {{-16.0, 275.0}, {434.0, 281.3}} <AX element pid: 25274, elementOrHash.elementID: 4447087616.139>
+                          Cell, 0x1119de440, {{16.0, 292.3}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4503356672.140>
+                            Other, 0x1119de580, {{16.0, 292.3}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4447082496.157>
+                              Other, 0x1119de6c0, {{16.0, 292.3}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4500651328.174>
+                            Other, 0x1119de800, {{16.0, 292.3}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4500650880.158>
+                              Other, 0x1119de940, {{16.0, 292.3}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4503243776.175>
+                                Other, 0x1119dea80, {{16.0, 292.3}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4501959808.185>
+                                  StaticText, 0x1119debc0, {{32.0, 307.3}, {156.7, 20.3}}, label: 'Archive workshop 2' <AX element pid: 25274, elementOrHash.elementID: 4501959488.195>
+                                  StaticText, 0x1119ded00, {{32.0, 333.7}, {155.7, 20.3}}, label: '7 Nov 2026 at 22.02' <AX element pid: 25274, elementOrHash.elementID: 4501959328.196>
+                                  StaticText, 0x1119dee40, {{32.0, 360.0}, {28.3, 15.7}}, label: '2 KB' <AX element pid: 25274, elementOrHash.elementID: 4501959648.197>
+                          Cell, 0x1119def80, {{16.0, 390.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503357952.141>
+                            Other, 0x1119df0c0, {{16.0, 390.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4447084032.159>
+                              Other, 0x1119df200, {{16.0, 390.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503667136.176>
+                            Other, 0x1119df340, {{16.0, 390.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503666688.160>
+                              Other, 0x1119df480, {{16.0, 390.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503245312.177>
+                                Other, 0x1119df5c0, {{16.0, 390.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4501960448.186>
+                                  Button, 0x1119df700, {{16.0, 390.7}, {370.0, 74.0}}, identifier: 'childRepairArchiveCompare-2f20cffa-50f8-43f9-89c1-02dbdb289c5c', label: 'Compare subtasks: Archive workshop 2' <AX element pid: 25274, elementOrHash.elementID: 4501960288.198>
+                                    StaticText, 0x1119df840, {{32.0, 405.7}, {338.0, 44.0}}, label: 'Compare subtasks' <AX element pid: 25274, elementOrHash.elementID: 4501959968.204>
+                                    Image, 0x1119df980, {{34.0, 418.0}, {16.3, 19.7}}, identifier: 'arrow.left.arrow.right', label: 'Left And Right Arrows' <AX element pid: 25274, elementOrHash.elementID: 4501960128.205>
+                          Other, 0x1119dfac0, {{32.0, 389.7}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447088128.142>
+                          Cell, 0x1119dfc00, {{16.0, 464.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503359232.143>
+                            Other, 0x1119dfd40, {{16.0, 464.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4447085568.161>
+                              Other, 0x1119dfe80, {{16.0, 464.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503668032.178>
+                            Other, 0x1119ec000, {{16.0, 464.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503667584.162>
+                              Other, 0x1119ec140, {{16.0, 464.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503246848.179>
+                                Other, 0x1119ec280, {{16.0, 464.7}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4501961088.187>
+                                  Button, 0x1119ec3c0, {{16.0, 464.7}, {370.0, 74.0}}, identifier: 'childRepairArchiveExport-2f20cffa-50f8-43f9-89c1-02dbdb289c5c', label: 'Export original: Archive workshop 2' <AX element pid: 25274, elementOrHash.elementID: 4501960928.199>
+                                    StaticText, 0x1119ec500, {{32.0, 479.7}, {338.0, 44.0}}, label: 'Export original' <AX element pid: 25274, elementOrHash.elementID: 4501960608.206>
+                                    Image, 0x1119ec640, {{34.0, 491.7}, {15.0, 20.0}}, identifier: 'square.and.arrow.up', label: 'Share' <AX element pid: 25274, elementOrHash.elementID: 4501960768.207>
+                          Other, 0x1119ec780, {{64.3, 463.7}, {305.7, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447088640.144>
+                          Other, 0x1119ec8c0, {{-16.0, 556.3}, {434.0, 1908.0}} <AX element pid: 25274, elementOrHash.elementID: 4447077376.218>
+                          Cell, 0x1119eca00, {{16.0, 573.7}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4503363072.219>
+                            Other, 0x1119ecb40, {{16.0, 573.7}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4446948864.222>
+                              Other, 0x1119ecc80, {{16.0, 573.7}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4503669376.226>
+                            Other, 0x1119ecdc0, {{16.0, 573.7}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4503668480.223>
+                              Other, 0x1119ecf00, {{16.0, 573.7}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4503248384.227>
+                                Other, 0x1119ed040, {{16.0, 573.7}, {370.0, 98.3}} <AX element pid: 25274, elementOrHash.elementID: 4787290432.230>
+                                  StaticText, 0x1119ed180, {{32.0, 588.7}, {154.3, 20.3}}, label: 'Archive workshop 1' <AX element pid: 25274, elementOrHash.elementID: 4787297792.232>
+                                  StaticText, 0x1119ed2c0, {{32.0, 615.0}, {155.7, 20.3}}, label: '7 Nov 2026 at 22.02' <AX element pid: 25274, elementOrHash.elementID: 4787292192.233>
+                                  StaticText, 0x1119ed400, {{32.0, 641.3}, {28.3, 15.7}}, label: '2 KB' <AX element pid: 25274, elementOrHash.elementID: 4787297632.234>
+                          Cell, 0x1119ed540, {{16.0, 672.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503361792.220>
+                            Other, 0x1119ed680, {{16.0, 672.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4446950400.224>
+                              Other, 0x1119ed7c0, {{16.0, 672.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503670272.228>
+                            Other, 0x1119ed900, {{16.0, 672.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503670720.225>
+                              Other, 0x1119eda40, {{16.0, 672.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503251456.229>
+                                Other, 0x1119edb80, {{16.0, 672.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4787292992.231>
+                                  Button, 0x1119edcc0, {{16.0, 672.0}, {370.0, 74.0}}, identifier: 'childRepairArchiveCompare-5389523b-9044-4691-8e69-f96c14278806', label: 'Compare subtasks: Archive workshop 1' <AX element pid: 25274, elementOrHash.elementID: 4787290112.235>
+                                    StaticText, 0x1119ede00, {{32.0, 687.0}, {338.0, 44.0}}, label: 'Compare subtasks' <AX element pid: 25274, elementOrHash.elementID: 4787291392.236>
+                                    Image, 0x1119edf40, {{34.0, 699.3}, {16.3, 19.7}}, identifier: 'arrow.left.arrow.right', label: 'Left And Right Arrows' <AX element pid: 25274, elementOrHash.elementID: 4787291232.237>
+                          Other, 0x1119ee080, {{32.0, 671.0}, {338.0, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4446951424.221>
+                          Cell, 0x1119ee1c0, {{16.0, 746.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503364352.238>
+                            Other, 0x1119ee300, {{16.0, 746.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4446953984.239>
+                              Other, 0x1119ee440, {{16.0, 746.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503672512.241>
+                            Other, 0x1119ee580, {{16.0, 746.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503671616.240>
+                              Other, 0x1119ee6c0, {{16.0, 746.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4503254528.242>
+                                Other, 0x1119ee800, {{16.0, 746.0}, {370.0, 74.0}} <AX element pid: 25274, elementOrHash.elementID: 4787298592.243>
+                                  Button, 0x1119ee940, {{16.0, 746.0}, {370.0, 74.0}}, identifier: 'childRepairArchiveExport-5389523b-9044-4691-8e69-f96c14278806', label: 'Export original: Archive workshop 1' <AX element pid: 25274, elementOrHash.elementID: 4787298432.244>
+                                    StaticText, 0x1119eea80, {{32.0, 761.0}, {338.0, 44.0}}, label: 'Export original' <AX element pid: 25274, elementOrHash.elementID: 4787290272.245>
+                                    Image, 0x1119eebc0, {{34.0, 773.0}, {15.0, 20.0}}, identifier: 'square.and.arrow.up', label: 'Share' <AX element pid: 25274, elementOrHash.elementID: 4787298272.246>
+                          Other, 0x1119eed00, {{64.3, 745.0}, {305.7, 1.0}} <AX element pid: 25274, elementOrHash.elementID: 4447139328.132>
+                          Other, 0x1119eee40, {{369.0, 132.0}, {30.0, 680.0}}, label: 'Vertical scroll bar, 2 pages', value: 100 % <AX element pid: 25274, elementOrHash.elementID: 4447131648.145>
+                            Other, 0x1119eef80, {{396.0, 327.3}, {3.0, 481.7}} <AX element pid: 25274, elementOrHash.elementID: 4500640576.163>
+                          Other, 0x1119ef0c0, {{369.0, 132.0}, {30.0, 680.0}}, label: 'Vertical scroll bar, 2 pages', value: 100 % <AX element pid: 25274, elementOrHash.elementID: 4447131648.145>
+                            Other, 0x1119ef200, {{396.0, 327.3}, {3.0, 481.7}} <AX element pid: 25274, elementOrHash.elementID: 4500640576.163>
+                Toolbar, 0x1119ef340, {{0.0, 62.0}, {402.0, 812.0}}, identifier: 'Toolbar', label: 'Toolbar' <AX element pid: 25274, elementOrHash.elementID: 4447190528.117>
+                  Other, 0x1119ef480, {{0.0, 62.0}, {402.0, 812.0}} <AX element pid: 25274, elementOrHash.elementID: 4447232000.121>

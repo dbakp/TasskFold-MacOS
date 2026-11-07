@@ -1054,3 +1054,66 @@ struct ChildTaskRepairOriginalCleanup: Sendable, CustomStringConvertible, Custom
         self.archive = archive; retained = raw["state"] == .string("retained"); self.enabled = enabled
     }
 }
+
+/// Read-only, scope-bound comparison. Neither source is an editable task and no
+/// restore command can be derived from this value. Original export stays exact.
+struct ChildTaskRepairOriginalComparison: Identifiable, Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    struct Side: Sendable {
+        let source: Data
+        let outline: ChildTaskRepairOutline?
+        let excerpt: String
+        let shortened: Bool
+        init(_ source: Data) throws {
+            try Task.checkCancellation()
+            self.source = source
+            outline = try? ChildTaskRepairOutline(data: source)
+            try Task.checkCancellation()
+            let text = String(decoding: source, as: UTF8.self)
+            let prefix = text.unicodeScalars.prefix(12_000)
+            excerpt = String(String.UnicodeScalarView(prefix))
+            shortened = prefix.endIndex != text.unicodeScalars.endIndex
+        }
+    }
+    let id = UUID()
+    let archive: ChildTaskRepairArchive
+    let snapshot: UUID
+    let saved: Side
+    let current: Side
+    let valuesMatch: Bool
+    var description: String { "Private saved subtask comparison" }
+    var debugDescription: String { description }
+    static let maximumBytes = 10_300_000
+    init(data: Data, archive: ChildTaskRepairArchive, snapshot: UUID) throws {
+        try Task.checkCancellation()
+        let parts = try ChildTaskRecordRead.separatingJSONFields(["original", "current"], data: data, maximum: Self.maximumBytes, integerPaths: [["protocol"]], nullableIntegerPaths: [])
+        let header = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
+        guard Set(header.keys) == ["protocol", "account", "original", "current"], header["protocol"] == .number(1), header["account"] == .string(archive.scope.account),
+              let originalData = parts.values["original"], let currentData = parts.values["current"] else { throw ChildTaskRepairCommand.invalid }
+        let original = try ChildTaskRepairOriginal(data: originalData, archive: archive)
+        let context = try ChildTaskRecordContext(account: archive.scope.account, origin: archive.scope.origin, workspace: archive.scope.workspace, session: archive.scope.session,
+            access: archive.scope.access, snapshot: snapshot, root: Record(["id": .string(archive.rootID), "task_generation": archive.receipt["task_generation"]!, "project_id": archive.receipt["project_id"]!]))
+        let current = try ChildTaskAdoptionReview(data: currentData, context: context, workspaceID: TeamProjectValue.optionalID(archive.receipt["workspace_id"]))
+        try self.init(original: original, archive: archive, current: current)
+    }
+    init(original: ChildTaskRepairOriginal, archive: ChildTaskRepairArchive, current: ChildTaskAdoptionReview) throws {
+        try Task.checkCancellation()
+        let receipt = archive.receipt
+        guard archive.contentRetained, original.data.count == archive.bytes,
+              SHA256.hash(data: original.data).map({ String(format: "%02x", $0) }).joined() == receipt["archive_digest"]?.text,
+              archive.scope == ChildTaskFieldClientScope(current.context),
+              current.context.root.id == archive.rootID,
+              ["task_generation", "project_id", "workspace_id"].allSatisfy({ ChildTaskStructureCommand.exact(current.metadata[$0], receipt[$0]) }),
+              let currentSource = current.originalSource else { throw ChildTaskRepairCommand.invalid }
+        let root = try ChildTaskRecordRead.separatingJSONField("root", data: original.data, maximum: 8_000_000, integerPaths: [], nullableIntegerPaths: []).value
+        let parts = try ChildTaskRecordRead.separatingJSONFields(["id", "task_generation", "project_id", "subtasks"], data: root, maximum: 8_000_000, integerPaths: [], nullableIntegerPaths: [])
+        for (key, expected) in [("id", receipt["task_id"]!), ("task_generation", receipt["task_generation"]!), ("project_id", receipt["project_id"]!)] {
+            guard let value = parts.values[key], ChildTaskStructureCommand.exact(try TaskfoldJSONDecoder().decode(JSON.self, from: value), expected) else { throw ChildTaskRepairCommand.invalid }
+        }
+        guard let savedSource = parts.values["subtasks"] else { throw ChildTaskRepairCommand.invalid }
+        self.archive = archive; snapshot = current.context.snapshot
+        saved = try Side(savedSource); self.current = try Side(currentSource)
+        // Conservative lexical comparison retains numeric spelling, Unicode and
+        // unknown fields; it never claims equivalence after lossy decoding.
+        valuesMatch = ChildTaskRepairPreview.sameJSONValue(savedSource, currentSource)
+    }
+}
