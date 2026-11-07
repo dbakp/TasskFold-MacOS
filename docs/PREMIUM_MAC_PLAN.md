@@ -1,5 +1,10 @@
 # Taskfold macOS polish plan
 
+## 7 November 2026 · One-pass dated sections
+
+Today/Upcoming now resolve each supplied task date once before grouping, retaining existing visibility/order and authoring behavior. Both owners pass 32 focused Core checks; the signed iPhone accepts real drag, saved date, Undo and navigation. Debug derived grouping for 120 timed rows/14 dates is about 0.59 s → 0.031 s. Mac isolated Debug builds/signs; native Mac, broader pointer/layout/account/window and physical FPS remain open. Installed31/prepared Release33 remain intact; this later source change awaits the next normal Release build. [Scope and evidence](linear-day-grouping/README.md).
+
+
 ## 7 November 2026 · Large durable-save encoding
 
 Large saves now reuse byte-exact unchanged field encodings, including inline attachments on an edited task. Both independent owners pass 56 focused checks; current signed iPhone production rows and Store accept warm Save, exact preserved fields, Undo/Redo and cold return. Optimized codec/cache probes retain cold/warm and ordinary/future-number distinctions; full Store, Mac runtime and physical FPS are separate. The normal Mac31 stays installed while computer control reports locked; Signed optimized Mac33 now passes exact archive/profile checks and is prepared, not installed; superseded32 is retired with31 retained as rollback. Private atomic write/success ordering, real-file reads and ordinary gates stay intact. [Scope and evidence](incremental-cache-encoding/README.md).

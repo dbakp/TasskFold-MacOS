@@ -92,13 +92,12 @@ struct TaskListView: View {
         return Workspace.Placement.scope(scope)
     }
     private var dayGroups: [(String, [Record])] {
-        let today = Dates.day(Date())
-        let overdue = overdueTasks
-        if scope == .today { return [("Overdue", overdue), (today, ordered(filtered.filter { TaskPlanner.plannedDay($0) == today }, day: today))] }
-        let future = filtered.filter { TaskPlanner.plannedDay($0) >= today }
-        var days = Set(future.map { TaskPlanner.plannedDay($0) })
-        for offset in 0..<14 { if let date = Calendar.current.date(byAdding: .day, value: offset, to: Date()) { days.insert(Dates.day(date)) } }
-        return [("Overdue", overdue)] + days.sorted().map { day in (day, ordered(future.filter { TaskPlanner.plannedDay($0) == day }, day: day)) }
+        let now = Date(), calendar = Calendar.current, today = Dates.day(now)
+        let read = TaskDayGroupsRead(tasks: filtered, today: today, calendar: calendar)
+        let overdue = ordered(read.overdue, day: overdueKey)
+        if scope == .today { return [("Overdue", overdue), (today, ordered(read.rowsByDay[today] ?? [], day: today))] }
+        let horizon = (0..<14).compactMap { calendar.date(byAdding: .day, value: $0, to: now).map(Dates.day) }
+        return [("Overdue", overdue)] + read.upcomingDays(adding: horizon).map { day in (day, ordered(read.rowsByDay[day] ?? [], day: day)) }
     }
     private struct Group { var title: String; var key: String; var tasks: [Record] }
     private var groups: [Group] {

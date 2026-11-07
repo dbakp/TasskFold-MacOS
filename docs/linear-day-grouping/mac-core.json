@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-07",
+  "owner": "mac",
+  "tests": 32,
+  "failures": 0,
+  "newGroupingTests": 9,
+  "filter": "TaskDayGroupsReadTests|TaskRowPlanningReadTests|PlannerTests",
+  "timing": {
+    "rows": 120,
+    "days": 14,
+    "legacySeconds": [
+      0.5898759365081787,
+      0.5827111005783081,
+      0.5953609943389893
+    ],
+    "singlePassSeconds": [
+      0.03119206428527832,
+      0.030758976936340332,
+      0.03223991394042969
+    ],
+    "optimization": "-Onone",
+    "totalRenderingOrFPS": false
+  },
+  "logSHA256": "55e55883df330adf3d7e09746747cb52c7717b2d2afd64119968ae758d6ab22b"
+}

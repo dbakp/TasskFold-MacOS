@@ -533,3 +533,27 @@ struct TaskRowPlanningRead: Equatable, Sendable {
         deadlineOverdue = !task.completed && deadline.map { $0 < today } == true
     }
 }
+
+/// One current read of each task's displayed day. Grouping a fourteen-day list
+/// must not parse every fixed-time task again for every section. This is a value
+/// projection of the supplied rows, with no persisted or cross-workspace memo.
+struct TaskDayGroupsRead {
+    let today: String
+    let overdue: [Record]
+    let rowsByDay: [String: [Record]]
+    init(tasks: [Record], today: String, calendar: Calendar = .current) {
+        self.today = today
+        var overdue: [Record] = [], groups: [String: [Record]] = [:]
+        for task in tasks {
+            let day = TaskPlanner.plannedDay(task, calendar: calendar)
+            groups[day, default: []].append(task)
+            if !task.completed, !day.isEmpty, day < today { overdue.append(task) }
+        }
+        self.overdue = overdue; rowsByDay = groups
+    }
+    /// Keep caller-provided empty dates visible and include work beyond the
+    /// minimum horizon. Per-day rows preserve the supplied order and identities.
+    func upcomingDays(adding horizon: [String]) -> [String] {
+        Set(rowsByDay.keys.filter { $0 >= today }).union(horizon).sorted()
+    }
+}
