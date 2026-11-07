@@ -20,3 +20,8 @@ Reproduce ordinary ownership checks: `bash Scripts/test_core.sh --filter 'Filter
 ## Subsequent delivery update · 7 November
 
 Signed full app builds and exact development packages now pass as Mac35 and phone43; the earlier build/package gap is closed. They remain uninstalled, and actual filter quality and genuine native generation remain unaccepted. [Current package evidence](../mac35-phone43-updates/README.md).
+
+
+## Complete five-request follow-up · 7 November
+
+The unchanged production engine now has a complete five-request observation rather than stopping at the fourth parse error. The fifth query is valid syntax but omits requested subprojects, matching three of four expected tasks. Same-session repair, fresh-session repair and introductory-verb normalization were rejected. No production candidate is adopted. The driver now expects five filter observations and supports engine-specific probes. See [the current negative result and source identities](../filter-full-quality-probe/README.md); quality remains unaccepted.

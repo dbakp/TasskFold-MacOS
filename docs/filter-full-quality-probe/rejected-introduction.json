@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "owner": "TasskFold-MacOS",
+  "execution": "Mac-hosted owning Core",
+  "syntheticOnly": true,
+  "savedTaskOrFilterWrites": false,
+  "cloudInferenceFallback": false,
+  "realGenerationAccepted": false,
+  "sourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/FilterAssistance.swift": "e2281a245f3ac08a96fccb484b57d1bf758d4ada3d3264b82ee56180599795ff",
+    "TaskfoldTests/TaskBreakdownTests.swift": "68e89c575c67705c7ef9e4c1659511d26da7551181438f5a3f5e9cf71dfe805f",
+    "TaskfoldTests/FilterAssistanceTests.swift": "436392ba0d6f8f3bc651f4adee24e3f53fd61fdcc913f1eb4d2d0643a109adda"
+  },
+  "driverSHA256": "1a8b5f7d7a2bd669150357208ab474807d8bc0bc23e88fbe82ad43cca06eb76e",
+  "observations": [
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "expression": "open AND priority 1 AND (planned today OR overdue)",
+      "matchedIDs": [
+        "today",
+        "old"
+      ],
+      "seconds": 12.462349041,
+      "syntheticGoal": "Show open priority 1 tasks planned today or overdue"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "deadline"
+      ],
+      "expression": "deadline today",
+      "matchedIDs": [
+        "deadline"
+      ],
+      "seconds": 10.397143875,
+      "syntheticGoal": "Show tasks with a deadline today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "expression": "project:Work AND open",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "seconds": 13.263725708,
+      "syntheticGoal": "Show unfinished tasks in project Work"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"Unknown condition “unfinished”. Use the builder or the syntax examples.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "low"
+      ],
+      "seconds": 10.162311917,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for today"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"Unknown condition “subtask:Work”. Use the builder or the syntax examples.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "seconds": 10.369712542,
+      "syntheticGoal": "Find open work in project Work, including its subprojects"
+    }
+  ],
+  "engines": [
+    "filter"
+  ],
+  "expectedObservationCounts": {
+    "steps": 0,
+    "filter": 5
+  },
+  "testExitCode": 1,
+  "logSHA256": "25ec46a3979f0d76fb33e0b88ae8a2d3a50605f37cc032cf62dfb89b58510497",
+  "sourcesUnchanged": true,
+  "unavailableReasons": [],
+  "semanticAndShapeChecksPassed": false,
+  "taskTitleQualityReviewed": false
+}
