@@ -1,0 +1,10 @@
+{
+  "owner": "TaskFold-iOS",
+  "configuration": "Debug",
+  "architecture": "arm64 Simulator",
+  "currentOwningCoreSourcesExact": true,
+  "buildSucceeded": true,
+  "adHocSignatureVerified": true,
+  "nativeInteractionClaim": false,
+  "physicalPhoneInstall": false
+}

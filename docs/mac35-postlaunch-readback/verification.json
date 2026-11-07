@@ -38,5 +38,12 @@
   "sharedStorageVerificationPending": true,
   "newSystemPermissionPromptObserved": false,
   "appRestartedForThisCheck": false,
-  "newInstallPerformedForThisCheck": false
+  "newInstallPerformedForThisCheck": false,
+  "subsequentMac35Connection": {
+    "verified": true,
+    "syncObserved": "Synced 10.03",
+    "connectionBannerCleared": true,
+    "userAppDataPromptApproval": true,
+    "evidence": "../lazy-filter-dates/mac35-connected.json"
+  }
 }

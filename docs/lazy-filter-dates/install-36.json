@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-07",
+  "platform": "mac",
+  "version": "1.2.0",
+  "build": "36",
+  "previousInstalledBuild": "35",
+  "installed": true,
+  "privateSafetyCopyVerified": true,
+  "prelaunchAllCacheBytesUnchanged": true,
+  "cacheFilesVerified": 9,
+  "installedPayloadVerified": true,
+  "signatureAndProfilesVerified": true,
+  "mainWindowVerified": true,
+  "mainWindowTasks": 2,
+  "syncStatusVerified": true,
+  "nativeSyncObserved": "Synced 10.58",
+  "normalGateChanges": false,
+  "hostedChanges": false,
+  "phoneInstallationDeferred": true,
+  "archiveSHA256": "8df0e30588b38ad4055dbe322aa244bf61e186465012dd4a480e1a2df6e04276",
+  "postlaunchReadbackPending": false,
+  "postlaunchReadbackSession": 38599,
+  "sharedStorageReady": true,
+  "sharedStorageReadinessVerified": true,
+  "appDataPromptConfirmedBySystemLog": true,
+  "sameDesignatedRequirementAsRollback": true,
+  "installationNote": "Mac36 installed and native main window/sync verified after fresh private safety copy and verified35 rollback. User approved its current app-data prompt; the connection banner cleared. Original readonly job38599 exited successfully without restart: all tasks/pending preserved across nine caches, seven byte-exact; remaining changes are dates and _conversation_views. No task edit or app restart for postapproval checks.",
+  "postlaunchReadbackComplete": true,
+  "postlaunchTaskAndQueueDataVerified": true,
+  "postlaunchReadbackJobExited": true,
+  "postlaunchCacheFilesVerified": 9,
+  "postlaunchByteExactCacheFiles": 7,
+  "postlaunchOtherCacheDifferences": [
+    {
+      "bytesEqual": false,
+      "changedTopLevelKeys": [
+        "dates"
+      ],
+      "tasksEqual": true,
+      "pendingEqual": true
+    },
+    {
+      "bytesEqual": false,
+      "changedTopLevelKeys": [
+        "tables"
+      ],
+      "tasksEqual": true,
+      "pendingEqual": true,
+      "changedTables": [
+        "_conversation_views"
+      ]
+    }
+  ],
+  "privatePostlaunchReportSHA256": "b0a7aeebe3a99ff0337c200a42b870273893f2de614d7de0ae025f67bfd0fdae",
+  "signedZeroAndDecimalAwareComparison": true,
+  "nativeConnectionBannerCleared": true,
+  "userReportedAppDataPermissionAllowed": true,
+  "designatedRequirementsNonemptyAndEqual": true,
+  "postapprovalNativeSyncObserved": "Synced 10.58"
+}

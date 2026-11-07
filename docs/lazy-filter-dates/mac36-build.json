@@ -1,0 +1,24 @@
+{
+  "configuration": "Release",
+  "version": "1.2.0",
+  "build": "36",
+  "sourceFingerprint": "d7371de161a5abbec6dd1ebe54a1a84fd7814059cc524d418c4e2e5ffd0b5d05",
+  "sourceRevision": "d0f5335df7b87bf3316541eac7745202090a16a8",
+  "signatureVerified": true,
+  "archivePayloadVerified": true,
+  "archiveSHA256": "8df0e30588b38ad4055dbe322aa244bf61e186465012dd4a480e1a2df6e04276",
+  "sourceWasDirty": false,
+  "developmentProfileExpires": "2026-11-10T18:32:04+00:00",
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "owner": "TasskFold-MacOS",
+  "optimizedRelease": true,
+  "noDistributionAcceptanceClaim": true,
+  "sameFeatureFlagsAs35": true,
+  "mainAppOptimizationFlagVerified": "-O"
+}
