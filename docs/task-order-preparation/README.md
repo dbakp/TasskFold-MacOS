@@ -1,0 +1,11 @@
+# Prepared task ordering
+
+TaskCache now reads priority/creation sort values once per changed row and retains the sorted source offsets while those values are equal. It maps every current task into that order, so date/note/completion and opaque edits are never replaced by old rows. Priority/creation, row-count and source-position changes preserve the established stable reference order. Ties use source positions, independently of missing or duplicate IDs. Equal refresh behavior, authored bytes and query/hierarchy/productive invalidation remain unchanged.
+
+Both owners independently implement the change. Before/after diagnostics use the same six new tests over 2,000 rows and ten updates. Copied date edits improve roughly328–356ms to17ms; reconstructed date edits493–495ms to185–188ms; priority/creation edits326–356ms to78–79ms. Every measured result matches the previous comparator order. These are same-host Debug update costs, not physical FPS or broad smoothness acceptance.
+
+Each owner passes161 unique focused selected cases with3skips/0failures, split between focused and related query/raw-source/kind/order suites. Full unrelated account/service suites were not rerun for this cache-only change. New cases cover current date/note/completion/opaque values, query invalidation, priority/creation and membership changes, canonical-Unicode ties, missing/duplicate IDs, malformed values and80mixed mutations.
+
+The reserved Store fixture now verifies ten actual snapshot-publication ordering transitions and uses a deterministic creation time. Its edited-row assertion binds by ID rather than assuming it sorts first. Current native verification is running. Swift stable-sort contract: https://developer.apple.com/documentation/swift/array/sorted(by:)
+
+Only obsolete symbols from the completed isolated Simulator run were removed, with concise accepted evidence retained. Normal installed/rollback symbols and all private data backups remain untouched. The next isolated build uses inline DWARF to keep regenerable duplicate symbol files out of the small reusable cache.

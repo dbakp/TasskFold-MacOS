@@ -7096,7 +7096,7 @@ extension Store {
             }
         }
         let tasks=(0..<240).map {index->Record in
-            var task=Record.task(user:userID,project:TeamEditorNativeFixture.projectID)
+            var task=Record.task(user:userID,project:TeamEditorNativeFixture.projectID,createdAt:"2026-11-01T10:00:00Z")
             task["id"] = .string(String(format:"ec250000-0000-4000-8000-%012d",index+1))
             task["title"] = .string(String(format:"Workshop task %03d",index+1));return task
         }
@@ -7134,7 +7134,7 @@ extension Store {
                 let current = projectCatalog, order = projectOrderRequest
                 let catalogReused = retained.all.withUnsafeBufferPointer { first in current.all.withUnsafeBufferPointer { first.baseAddress == $0.baseAddress } }
                 let orderReused = retainedOrder.projects.withUnsafeBufferPointer { first in order.projects.withUnsafeBufferPointer { first.baseAddress == $0.baseAddress } }
-                guard catalogReused, orderReused, tasks.first?.title == title,
+                guard catalogReused, orderReused, tasks.first(where: { $0.id == source.tables["tasks"]![0].id })?.title == title,
                       AuthoredValueComparison.sameRows(snapshot.tables["projects"] ?? [], source.tables["projects"] ?? []),
                       snapshot.pending == source.pending else {throw AppFailure(message:"Task-only changes rebuilt project reads or lost current task content: " + prefix)}
             }
@@ -7178,7 +7178,38 @@ extension Store {
         guard allProjects.isEmpty,projects.isEmpty,archivedProjects.isEmpty,archivedProjectIDs.isEmpty else {throw AppFailure(message:"Unreadable project catalog exposed cached content")}
         workspaceCacheReadable=true
         guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240,snapshot==source else {throw AppFailure(message:"Project catalog failed to return")}
-        let report:[String:JSON] = ["recordLookupChecks":.number(Double(recordChecks)),"accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"taskOnlyMutationPasses":.number(20),"filteredTaskOnlyMutationPasses":.number(WorkspaceReadNativeFixture.projectCatalogRevalidation ? 20 : 0),"taskOnlyMutationSeconds":.number(mutationSeconds),"filteredTaskOnlyMutationSeconds":.number(filteredMutationSeconds),"projectGraphAndOrderReused":.bool(true),"currentTasksRefreshed":.bool(true),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"calendarArchiveObservationRefresh":.bool(archiveProbe.changed && restoreProbe.changed),"calendarArchiveReadPasses":.number(20),"calendarArchiveWithoutTaskRevisionChange":.bool(archiveWithoutTaskChange),"reconstructedArchiveSeconds":.number(archiveBaselineSeconds),"preparedArchiveSeconds":.number(archiveCurrentSeconds),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
+        // Verify ordering through the actual Store publication path, independently
+        // of the cache's implementation. All edits stay in the reserved snapshot.
+        var taskOrderChecks = 0
+        func checkOrder(_ rows: [Record]) throws {
+            snapshot.tables["tasks"] = rows
+            let expected = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
+            guard AuthoredValueComparison.sameRows(tasks, expected), snapshot.pending == source.pending else { throw AppFailure(message: "Current Store task order or authored values changed") }
+            taskOrderChecks += 1
+        }
+        var orderRows = source.tables["tasks"] ?? []
+        for index in orderRows.indices {
+            orderRows[index]["priority"] = .number(Double(index % 4 + 1))
+            orderRows[index]["created_at"] = .string(String(format: "%04d", index % 19))
+        }
+        try checkOrder(orderRows)
+        orderRows[239]["due_date"] = .string("2026-11-08")
+        orderRows[238]["description"] = .string("Current ordering proof")
+        orderRows[237]["completed"] = .bool(true)
+        try checkOrder(orderRows)
+        orderRows = orderRows.map { Record($0.fields) }
+        orderRows[236]["title"] = .string("Fresh source edit")
+        try checkOrder(orderRows)
+        orderRows[239]["priority"] = .number(1); try checkOrder(orderRows)
+        orderRows[238]["created_at"] = .string("Newest"); try checkOrder(orderRows)
+        for index in orderRows.indices { orderRows[index]["priority"] = .number(2); orderRows[index]["created_at"] = .string("Tie") }
+        try checkOrder(orderRows)
+        orderRows.reverse(); try checkOrder(orderRows)
+        try checkOrder(Array(orderRows.dropFirst()))
+        try checkOrder([])
+        try checkOrder(source.tables["tasks"] ?? [])
+        snapshot = source
+        let report:[String:JSON] = ["taskOrderChecks":.number(Double(taskOrderChecks)),"recordLookupChecks":.number(Double(recordChecks)),"accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"taskOnlyMutationPasses":.number(20),"filteredTaskOnlyMutationPasses":.number(WorkspaceReadNativeFixture.projectCatalogRevalidation ? 20 : 0),"taskOnlyMutationSeconds":.number(mutationSeconds),"filteredTaskOnlyMutationSeconds":.number(filteredMutationSeconds),"projectGraphAndOrderReused":.bool(true),"currentTasksRefreshed":.bool(true),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"calendarArchiveObservationRefresh":.bool(archiveProbe.changed && restoreProbe.changed),"calendarArchiveReadPasses":.number(20),"calendarArchiveWithoutTaskRevisionChange":.bool(archiveWithoutTaskChange),"reconstructedArchiveSeconds":.number(archiveBaselineSeconds),"preparedArchiveSeconds":.number(archiveCurrentSeconds),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
         let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
         try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-catalog.json"),options:.atomic)

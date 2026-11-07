@@ -1,0 +1,11 @@
+{
+  "owner": "macOS",
+  "baselineRevision": "0e97b58ee600284e52bf0f7904159ea5c06ea323",
+  "currentFiles": {
+    "Taskfold/Core/Models.swift": "df51456e178e3a3a76f5b8ad1a2b52d9785d04589b04da8887fefe8d12f58c61",
+    "Taskfold/Core/Store.swift": "a29dbb166447cbdabcf1721ad7fc2539ea80e62767d143c55dbca3ee6bff85f3",
+    "TaskfoldTests/TaskOrderPreparationTests.swift": "4e34a4f9d669066d0b51ea772247f612d28c04e6db4735f38486367de86ecfd1"
+  },
+  "baselineModelsSHA256": "86bfd1a4a9caa16601acc1519d401999419f09b5cae7ebe999a65fe89d1a7d6a",
+  "wireAndDomainEqualityChanged": false
+}
