@@ -15,3 +15,8 @@ No cloud provider or fallback was added. The model still receives only the enter
 Normal Mac31 and phone34 installations are unchanged. Prepared Mac34 and phone42 predate this batch and are preserved with their rollbacks. No new app package, installation, native screen check, permission change, hosted activation or rollout gate is claimed. Real generated review/save/history, broader model quality/latency, iPhone/iPad inference, full app builds for this repair and the remaining Px stay open. Phone installation and all user-agreed deferrals remain paused. No curated checkpoint or scoped substep is added for test totals or exploratory attempts.
 
 Reproduce ordinary ownership checks: `bash Scripts/test_core.sh --filter 'FilterTests|SharingFilterTests|FilterTargetCatalogTests|FilterAssistanceTests|TaskBreakdownTests'` in each owning repo. Real inference is explicit opt-in with `TASKFOLD_TEST_ON_DEVICE_MODEL=1` and the two named actual-model tests; it uses only synthetic goals. Do not repeat unchanged inference without a concrete hypothesis. Source hashes, real outputs, rejected experiments, final owning results and per-run storage cleanup are retained here.
+
+
+## Subsequent delivery update · 7 November
+
+Signed full app builds and exact development packages now pass as Mac35 and phone43; the earlier build/package gap is closed. They remain uninstalled, and actual filter quality and genuine native generation remain unaccepted. [Current package evidence](../mac35-phone43-updates/README.md).

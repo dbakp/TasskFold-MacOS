@@ -722,5 +722,43 @@
     "localValidationScope": "Optimized signed iPhone42 build and exact package/profile verification; documentation only in both PRs; no installation or physical FPS acceptance",
     "githubStatuses": [],
     "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TaskFold-iOS",
+    "pullRequest": "https://github.com/dbakp/TaskFold-iOS/pull/26",
+    "mergedHead": "fc483b3599398bf65c07e03c9e00ac26bbdb9941",
+    "verifiedRemoteMain": "a1cc472aa4e2e2ebf1b7c88b9390ab2017d87244",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "sourceManifestMatches": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localFocusedTests": 125,
+    "intentionalModelSkips": 2,
+    "realModelScope": "Physical Mac Core only: three task-step samples; three accepted filter samples followed by a refusal. Overall filter inference remains unaccepted.",
+    "documentationViewportChecks": 6,
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
+  },
+  {
+    "repository": "dbakp/TasskFold-MacOS",
+    "pullRequest": "https://github.com/dbakp/TasskFold-MacOS/pull/27",
+    "mergedHead": "c30978b2af7538a04c69387f6ebcacac965363fd",
+    "verifiedRemoteMain": "c4893c7759513fbddd1064d4ee65ac2478902d63",
+    "headIsAncestor": true,
+    "treePreserved": true,
+    "sourceManifestMatches": true,
+    "workingTreeClean": true,
+    "currentBranch": "main",
+    "adminBypassUsed": false,
+    "date": "2026-11-07",
+    "localFocusedTests": 125,
+    "intentionalModelSkips": 2,
+    "realModelScope": "Physical Mac Core only: three task-step samples; three accepted filter samples followed by a refusal. Overall filter inference remains unaccepted.",
+    "documentationViewportChecks": 6,
+    "githubStatuses": [],
+    "githubWorkflowRuns": []
   }
 ]

@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-07",
+  "name": "Taskfold-1.2.0-34-mac-development.zip",
+  "sha256": "b08c560c6d3d7bcda5a1c4367b425634a5ce2b0637115f13b261362ce5f01fa9",
+  "bytes": 20279317,
+  "reason": "Verified current35; preserve installed31 rollback",
+  "retained": [
+    "Taskfold-1.2.0-31-mac-development.zip",
+    "Taskfold-1.2.0-35-mac-development.zip"
+  ]
+}
