@@ -1,0 +1,27 @@
+{
+  "platform": "mac",
+  "version": "1.2.0",
+  "build": "40",
+  "configuration": "Release",
+  "sourceRevision": "40e6d60bc2668984264e847a1b044b19faa86d69",
+  "sourceFingerprint": "e8f6743f8584ae784e99e8dbb47c72421c9d81a5e7360b5e1ee118c9ac6a6a8e",
+  "signatureVerified": true,
+  "archiveSHA256": "a4162852c05c5c7dc96ebf1b86041d5da911c4dc60c0ed28c301ec4f7c448a92",
+  "archivePayloadVerified": true,
+  "sourceWasDirty": false,
+  "installedBaseline": "1.2.0 (38)",
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "published": false,
+  "actualInstalledBuild": "38",
+  "frozenRollbackBuild": "38",
+  "olderRollback36Preserved": true,
+  "designatedRequirementAndFeatureFlagsMatch38": true,
+  "candidate39SupersededAndRetired": true,
+  "sourceCommit": "40e6d60bc2668984264e847a1b044b19faa86d69",
+  "currentSourceNativeMacInteractionAccepted": false
+}
