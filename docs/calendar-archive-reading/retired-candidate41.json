@@ -1,0 +1,11 @@
+{
+  "freeBeforeBytes": 39181635584,
+  "retired": [
+    "/tmp/.taskfold-install41-sdogii1r",
+    "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-41-mac-development.zip",
+    "/tmp/taskfold-planner-reading-iphone.xcresult"
+  ],
+  "reason": "Never-installed41 superseded by signed exact42 installation; fresh42 private safety copy, frozen/current38 rollback and all private backups retained. Postlaunch readback remains live; no real data removed.",
+  "priorNativeEvidenceSHA256": "50970c09733b80cacadfbbe3ba4c0f9c958c4005eb5ce8aecd214a6473c8ed92",
+  "freeAfterBytes": 39348936704
+}
