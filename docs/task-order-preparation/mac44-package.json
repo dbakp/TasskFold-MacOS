@@ -1,0 +1,26 @@
+{
+  "version": "1.2.0",
+  "build": "44",
+  "configuration": "Release",
+  "sourceRevision": "a7444ae495ad0bc056273cbeae4bc8dec24a295a",
+  "sourceFingerprint": "2fc5e2560316b2be80f4534922b43660fae6ca61ee78fb14b982c94c967fa1e4",
+  "signatureVerified": true,
+  "sourceWasDirty": false,
+  "archivePayloadVerified": true,
+  "archiveSHA256": "89817d5bcde5b8e545e945de389e6649bc01eb1f48314b90e096ba1dd27c78c8",
+  "installedBaseline": "1.2.0 (42)",
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "published": false,
+  "buildTerminalExit": 0,
+  "packageTerminalExit": 0,
+  "normalFeatureFlagsUnchanged": true,
+  "installedBuild": "42",
+  "preparedOnly": true,
+  "awaiting": "Existing42 shared/sync UI observation and desktop unlock before fresh-backup installation",
+  "buildLogSHA256": "16cae4117875b9f89ab22aabde0f775363e2462c81659712f4740b62dc0f3b13"
+}
