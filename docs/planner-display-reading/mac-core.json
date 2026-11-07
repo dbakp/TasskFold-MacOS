@@ -1,0 +1,8 @@
+{
+  "selected": 44,
+  "failed": 0,
+  "skipped": 0,
+  "terminalExit": 0,
+  "logSHA256": "98e4250e5e65895f38b7c676de105700d07d9ee64dd64c7296dccc5d8b594940",
+  "initialBuildFailure": "Test-only400-row expression exceeded type-check budget before any tests ran; split into typed locals and recompiled. No production workaround."
+}

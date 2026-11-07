@@ -488,3 +488,111 @@ final class TaskRowPlanningReadTests: XCTestCase {
         print("ROW_PLANNING_READ_TIMING rows=40 repeated=\(oldTimes.sorted()[2]) single=\(newTimes.sorted()[2])")
     }
 }
+
+final class PlannerDayReadingTests: XCTestCase {
+    private func calendar(_ zone: String = "Europe/Copenhagen") -> Calendar {
+        var value = Calendar(identifier: .gregorian); value.timeZone = TimeZone(identifier: zone)!; return value
+    }
+    private func task(_ id: String, day: String, time: String = "", minutes: Int? = 25) -> Record {
+        var fields: [String: JSON] = ["id": .string(id), "title": .string(id), "due_date": .string(day), "due_time": .string(time), "opaque": .object(["future": .string("e\u{301}")])]
+        if let minutes { fields["duration_minutes"] = .number(Double(minutes)) }
+        return Record(fields)
+    }
+    private func assertBlocks(_ lhs: [PlannerBlock], _ rhs: [PlannerBlock], file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(AuthoredValueComparison.sameRows(lhs.map(\.task), rhs.map(\.task)), file: file, line: line)
+        XCTAssertEqual(lhs.map { [$0.start.timeIntervalSince1970, $0.end?.timeIntervalSince1970 ?? -1, $0.minute, $0.length, Double($0.lane), Double($0.laneCount)] }, rhs.map { [$0.start.timeIntervalSince1970, $0.end?.timeIntervalSince1970 ?? -1, $0.minute, $0.length, Double($0.lane), Double($0.laneCount)] }, file: file, line: line)
+    }
+    func testDisplayKeepsCapacityLanesCarryOverAndDSTParity() {
+        for zone in ["Europe/Copenhagen", "America/New_York", "Asia/Tokyo"] {
+            let c = calendar(zone)
+            for date in ["2026-03-29", "2026-10-25", "2026-10-05"] {
+                let day = Dates.parse(date, calendar: c)!, prior = c.date(byAdding: .day, value: -1, to: day)!
+                var done = task("done", day: date, time: "09:00"); done["completed"] = .bool(true)
+                let rows = [task("loose", day: date), task("unknown", day: date, time: "10:00", minutes: nil), task("a", day: date, time: "09:00", minutes: 90), task("b", day: date, time: "09:30", minutes: 60), task("carry", day: TaskPlanner.dayKey(prior, calendar: c), time: "23:30", minutes: 90), done]
+                let work = ProductiveTaskReading(tasks: rows), bounds = c.dateInterval(of: .day, for: day)!
+                let events = [PlannerEvent(id: "meeting", calendarID: "c", start: day.addingTimeInterval(9*3600), end: day.addingTimeInterval(10*3600)), PlannerEvent(id: "holiday", calendarID: "c", start: bounds.start, end: bounds.end, allDay: true)]
+                let result = PlannerDayReading(work: work, events: events, on: day, hours: WorkingHours(weekdays: Set(1...7)), calendar: c)
+                assertBlocks(result.blocks, TaskPlanner.blocks(work.presentation, on: day, calendar: c))
+                XCTAssertEqual(result.allDay.map(\.id), ["loose"])
+                XCTAssertEqual(result.capacity, TaskPlanner.capacity(work.presentation, events: events, on: day, hours: WorkingHours(weekdays: Set(1...7)), calendar: c, reading: work))
+                XCTAssertEqual(result.timeline.map(\.id), PlannerTimelineItem.layout(blocks: result.blocks, events: events, on: day, calendar: c).map(\.id))
+                XCTAssertEqual(result.allDayEvents.map(\.id), ["holiday"]); XCTAssertEqual(result.timedEvents.map(\.id), ["meeting"])
+                XCTAssertEqual(result.ticks.count, Int(bounds.duration / 3600)); XCTAssertEqual(result.laneCount, result.timeline.map(\.laneCount).max() ?? 1)
+                XCTAssertEqual(rows.last, done)
+            }
+        }
+    }
+    func testAgendaKeepsSameTasksCapacityAndInitialPositionWithoutGraphicalLayout() {
+        let c = calendar(), day = Dates.parse("2026-10-05", calendar: c)!
+        let work = ProductiveTaskReading(tasks: [task("early", day: "2026-10-05", time: "07:00"), task("loose", day: "2026-10-05")])
+        let graph = PlannerDayReading(work: work, events: [], on: day, hours: WorkingHours(), calendar: c)
+        let agenda = PlannerDayReading(work: work, events: [], on: day, hours: WorkingHours(), calendar: c, includeTimeline: false)
+        assertBlocks(graph.blocks, agenda.blocks); XCTAssertEqual(graph.capacity, agenda.capacity)
+        XCTAssertEqual(graph.allDay, agenda.allDay); XCTAssertEqual(agenda.initialHourIndex, 6)
+        XCTAssertEqual(graph.initialHourIndex, agenda.initialHourIndex); XCTAssertTrue(agenda.timeline.isEmpty)
+    }
+    func testNewRenderReadsMovedCompletedTasksEventsDayZoneAndHoursImmediately() {
+        let c = calendar(), day = Dates.parse("2026-10-05", calendar: c)!
+        var row = task("move", day: "2026-10-05", time: "09:00", minutes: 60)
+        let old = PlannerDayReading(work: ProductiveTaskReading(tasks: [row]), events: [], on: day, hours: WorkingHours(), calendar: c)
+        row["due_time"] = .string("11:00"); row["duration_minutes"] = .number(90)
+        let event = PlannerEvent(id: "fresh", calendarID: "c", start: day.addingTimeInterval(11*3600), end: day.addingTimeInterval(12*3600))
+        let next = PlannerDayReading(work: ProductiveTaskReading(tasks: [row]), events: [event], on: day, hours: WorkingHours(start: 600, end: 900), calendar: c)
+        XCTAssertNotEqual(old.blocks.first?.start, next.blocks.first?.start); XCTAssertEqual(next.capacity.estimatedMinutes, 90)
+        XCTAssertEqual(next.capacity.workingMinutes, 300); XCTAssertEqual(next.timedEvents.map(\.id), ["fresh"])
+        XCTAssertEqual(old.capacity.estimatedMinutes, 60); XCTAssertEqual(old.blocks.first?.task.string("due_time"), "09:00")
+        row["completed"] = .bool(true)
+        let completed = PlannerDayReading(work: ProductiveTaskReading(tasks: [row]), events: [], on: day, hours: nil, calendar: c)
+        XCTAssertTrue(completed.blocks.isEmpty); XCTAssertEqual(completed.capacity.estimatedMinutes, 0); XCTAssertEqual(completed.capacity.workingMinutes, 0)
+        let tomorrow = PlannerDayReading(work: ProductiveTaskReading(tasks: [row]), events: [], on: c.date(byAdding: .day, value: 1, to: day)!, hours: WorkingHours(), calendar: calendar("America/New_York"))
+        XCTAssertTrue(tomorrow.blocks.isEmpty); XCTAssertTrue(tomorrow.allDay.isEmpty)
+    }
+    func testHeadingAndUnaddressableWorkKeepSeparateDisplayAndCapacitySemantics() {
+        let c = calendar(), day = Dates.parse("2026-10-05", calendar: c)!
+        var heading = task("heading", day: "2026-10-05", time: "09:00", minutes: 120)
+        heading["is_heading"] = .bool(true)
+        XCTAssertEqual(TaskKind(heading), .heading)
+        heading["subtasks"] = .array([.object(["title": .string("No identity"), "due_date": .string("2026-10-05"), "duration_minutes": .number(25)]), .string("Legacy")])
+        let rows = [heading, task("ordinary", day: "2026-10-05", minutes: 25)]
+        let original = rows, work = ProductiveTaskReading(tasks: rows)
+        let result = PlannerDayReading(work: work, events: [], on: day, hours: WorkingHours(), calendar: c)
+        XCTAssertEqual(result.capacity, TaskPlanner.capacity(work.presentation, events: [], on: day, hours: WorkingHours(), calendar: c, reading: work))
+        XCTAssertTrue(AuthoredValueComparison.sameRows(rows, original))
+        XCTAssertTrue(work.incomplete); XCTAssertEqual(work.unavailable, 2)
+        XCTAssertTrue(result.capacity.incomplete); XCTAssertEqual(result.capacity.estimatedMinutes, 50)
+        XCTAssertEqual(result.blocks.map(\.id), TaskPlanner.blocks(work.presentation, on: day, calendar: c).map(\.id))
+    }
+    func testScopedRepeatedPlannerRenderDiagnostic() throws {
+        let c = calendar(), day = Dates.parse("2026-10-05", calendar: c)!
+        var rows: [Record] = []
+        for i in 0..<400 {
+            let time: String = i % 4 == 0 ? "" : String(format: "%02d:%02d", 8 + (i % 10), (i % 4)*15)
+            let minutes: Int? = i % 9 == 0 ? nil : 25
+            rows.append(task("t\(i)", day: "2026-10-05", time: time, minutes: minutes))
+        }
+        let work = ProductiveTaskReading(tasks: rows), repetitions = 5
+        var baselineTotal = 0, preparedTotal = 0
+        let baselineStart = ProcessInfo.processInfo.systemUptime
+        for _ in 0..<repetitions {
+            // Conservative repeated reads from the previous summary/timeline:
+            // each capacity, block scan, all-day scan and lane layout read twice.
+            for _ in 0..<2 {
+                let blocks = TaskPlanner.blocks(work.presentation, on: day, calendar: c)
+                baselineTotal += blocks.count + TaskPlanner.allDay(work.presentation, on: day, calendar: c).count
+                baselineTotal += TaskPlanner.capacity(work.presentation, events: [], on: day, hours: WorkingHours(), calendar: c, reading: work).estimatedMinutes
+                baselineTotal += PlannerTimelineItem.layout(blocks: blocks, events: [], on: day, calendar: c).count
+            }
+        }
+        let baselineSeconds = ProcessInfo.processInfo.systemUptime - baselineStart, preparedStart = ProcessInfo.processInfo.systemUptime
+        for _ in 0..<repetitions {
+            let reading = PlannerDayReading(work: work, events: [], on: day, hours: WorkingHours(), calendar: c)
+            for _ in 0..<2 { preparedTotal += reading.blocks.count + reading.allDay.count + reading.capacity.estimatedMinutes + reading.timeline.count }
+        }
+        let preparedSeconds = ProcessInfo.processInfo.systemUptime - preparedStart
+        XCTAssertEqual(baselineTotal, preparedTotal)
+        if let path = ProcessInfo.processInfo.environment["TASKFOLD_PLANNER_READING_REPORT"] {
+            let report: [String: Any] = ["tasks": rows.count, "renderPasses": repetitions, "previousRepeatedReadsSeconds": baselineSeconds, "oneReadingSeconds": preparedSeconds, "sameObservedOutput": baselineTotal == preparedTotal, "debugPreparationOnly": true, "fpsClaim": false]
+            try JSONSerialization.data(withJSONObject: report, options: [.sortedKeys]).write(to: URL(fileURLWithPath: path), options: .atomic)
+        }
+    }
+}

@@ -11365,3 +11365,7 @@ Store no longer discards the prepared project graph solely for a new task-only s
 Prepared40 now replaces never-installed39. An exact frozen Git-object input/build-tool/archive verifier and retained signed payload keep the reviewed update independent of subsequent source edits or cache products. No40 backup, quit, swap or launch has occurred; installed38 remains verified. Phone installation and all prior deferrals remain unchanged.
 
 Build40 package receipt and cleanup records are in project-catalog-revalidation. Routine update authorization persists; no40 fresh safety copy or app swap has occurred. The full goal remains active.
+
+### 7 November — one current reading per day-planner render
+
+The native planner now shares an ephemeral PlannerDayReading across capacity wording, overlap hint, initial scroll, all-day rows and timeline/accessible agenda. It retains the distinct display and productive-capacity inputs, no cross-workspace cache or edit authority. Both independently owned Core suites pass44 focused checks with zero skips/failures, including DST/three zones, fresh task/calendar/hours changes, headings and legacy partial-capacity. Conservative400-task Debug preparation falls from about141ms to70ms over five renders; no physical FPS or whole-app latency claim. Current iPhone native drag/resize/Undo and largest-text scheduling/relaunch are running; owning Mac compilation is pending. Installed38 and frozen40 wait the existing unlock; phone installation/all prior deferrals stay unchanged. [Source and limits](planner-display-reading/README.md).
