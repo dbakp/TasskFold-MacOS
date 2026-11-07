@@ -1,0 +1,11 @@
+# Read planned dates only when a query needs them
+
+Each filter predicate previously projected every timed task into the viewer's calendar even for priority, completion, text, project, label or assignment conditions. TaskCache then projected again for every scope, including All, saved filters, Inbox and projects. These pure timezone/calendar calculations ran on a cold query's synchronous read path.
+
+A predicate now computes its planned day on first use, at most once within that predicate. Today and Upcoming scopes still project the viewer's date; other scopes no longer compute an unused day. Date/deadline semantics, clock/date-preference admission, tri-state evaluation, target availability, hierarchy masks, cache keys/order/invalidation and saved data are unchanged. No long-lived date cache or new source/context admission is introduced.
+
+Both owners independently measure the same 1,000 timed-task cold saved query on this Mac in Debug, with productive reading prepared outside the timed interval and a fresh query cache each repetition. The iOS owner improves from a three-run median 366.57 ms to 8.85 ms; Mac from 364.99 ms to 9.13 ms. Baseline/final ordered IDs match exactly, as do repeated cached reads; input rows remain unchanged. This is scoped query work, not optimized-app latency, physical iPhone FPS, rendering, drag or general navigation acceptance.
+
+Each owner passes 210 focused checks with one intentional real-model skip (211 selected); the benchmark is explicit opt-in and has no timing threshold. New scope coverage preserves New York-to-Copenhagen rollover, Today/Upcoming versus non-date scopes, completion visibility, date/deadline combinations, target/text conditions and unchanged input. Existing filter, hierarchy, assignment, natural-date and planner cases remain in the final run.
+
+Reproduce: TASKFOLD_TIMED_FILTER_BENCHMARK=1 bash Scripts/test_core.sh --filter 'FilterTests|SharingFilterTests|FilterTargetCatalogTests|FilterAssistanceTests|TaskKindTests|TaskAssignmentProvenanceTests|NaturalDateTests|PlannerTests'. The two named timed-projection cases also run against the prior source for the baseline. App builds and normal Mac delivery are recorded separately after compilation. The full Px goal, broader performance/native scope and existing deferrals remain open.

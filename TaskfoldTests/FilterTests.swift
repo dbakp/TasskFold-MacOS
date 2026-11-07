@@ -3,6 +3,57 @@ import XCTest
 @testable import WidgetModel
 
 final class FilterTests: XCTestCase {
+    private func timedProjectionRows(_ count: Int) -> [Record] {
+        (0..<count).map { i in Record(["id": .string("timed-projection-\(i)"), "title": .string("Review \(i)"),
+            "project_id": .string("project-a"), "due_date": .string("2032-04-05"), "due_time": .string("20:15"),
+            "time_zone": .string("America/New_York"), "scheduled_at": .string("2032-04-06T00:15:00Z"),
+            "priority": .number(Double(i % 4 + 1)), "completed": .bool(i % 7 == 0), "is_recurring": .bool(i % 3 == 0),
+            "opaque": .object(["keep": .string("Café 🪴")])]) }
+    }
+    func testTimedProjectionPreservesViewerDaysAndNonDateScopes() throws {
+        var work = timedProjectionRows(1)[0]; work["id"] = .string("work"); work["completed"] = .bool(false)
+        var inbox = work; inbox["id"] = .string("inbox"); inbox["project_id"] = .string("")
+        var legacy = work; legacy["id"] = .string("legacy"); legacy["time_zone"] = .string(""); legacy["scheduled_at"] = .null
+        var future = work; future["id"] = .string("future"); future["due_date"] = .string("2032-04-07"); future["due_time"] = .string(""); future["time_zone"] = .string(""); future["scheduled_at"] = .null; future["completed"] = .bool(true)
+        work["labels"] = .array([.string("label-a")]); legacy["labels"] = work["labels"]
+        let rows = [work,inbox,legacy,future], original = rows, cache = TaskCache(); cache.update(rows)
+        let cases: [(TaskScope, Set<String>)] = [(.all,["work","inbox","legacy","future"]),(.inbox,["inbox"]),(.project("project-a"),["work","legacy","future"]),(.label("label-a"),["work","legacy"]),(.completed,["future"]),(.today,["work","inbox","legacy"]),(.upcoming,["work","inbox"])]
+        for (scope, expected) in cases {
+            var query = TaskQuery(scope: scope, includeCompleted: true, sort: "manual", today: "2032-04-06", selectedDay: "2032-04-06")
+            query.timeZone = "Europe/Copenhagen"
+            XCTAssertEqual(Set(cache.matching(query).map(\.id)), expected, "Scope \(scope)")
+        }
+        let context = FilterContext(projects:[Record(["id":.string("project-a"),"name":.string("Work")])])
+        for expression in ["p1 AND open", "project:Work AND search:Review", "deadline:today OR today", "today AND p1", "date:tomorrow OR no date"] {
+            var parser = try FilterParser(expression, context: context); let rule = try parser.parse()
+            var query = TaskQuery(scope: .all, includeCompleted: true, sort: "manual", today: "2032-04-06", filter: rule)
+            query.timeZone = "Europe/Copenhagen"; query.filterProjects = context.projectReferences
+            let expected = rows.filter { rule.resultMatches($0, context: context, today: query.today, timeZone: query.timeZone, includeCompleted: true) }.map(\.id)
+            XCTAssertEqual(Set(cache.matching(query).map(\.id)), Set(expected), expression)
+        }
+        XCTAssertEqual(rows, original)
+    }
+    func testTimedNonDateFilterColdQueryMeasurementWhenRequested() throws {
+        guard ProcessInfo.processInfo.environment["TASKFOLD_TIMED_FILTER_BENCHMARK"] == "1" else { throw XCTSkip("Opt-in same-host query measurement; not physical FPS") }
+        let rows = timedProjectionRows(1000), original = rows
+        let rule = FilterRule.and([.predicate("priority","1"),.not(.predicate("recurring","")),.predicate("completed","false")])
+        let expected = Set((0..<1000).filter { $0 % 4 == 0 && $0 % 3 != 0 && $0 % 7 != 0 }.map { "timed-projection-\($0)" })
+        var elapsed: [Double] = [], order: [String] = []
+        for _ in 0..<3 {
+            let cache = TaskCache(); cache.update(rows); _ = cache.productiveReading()
+            var query = TaskQuery(scope: .saved("benchmark"), sort: "manual", today: "2032-04-06", filter: rule)
+            query.timeZone = "Europe/Copenhagen"
+            let start = ContinuousClock.now, found = cache.matching(query)
+            let duration = start.duration(to: .now).components
+            elapsed.append(Double(duration.seconds) * 1000 + Double(duration.attoseconds) / 1e15)
+            XCTAssertEqual(Set(found.map(\.id)), expected)
+            if order.isEmpty { order = found.map(\.id) } else { XCTAssertEqual(found.map(\.id), order) }
+            XCTAssertEqual(cache.matching(query).map(\.id), order)
+        }
+        XCTAssertEqual(rows, original)
+        let observation: [String: Any] = ["taskCount":rows.count,"coldQueryMilliseconds":elapsed,"medianMilliseconds":elapsed.sorted()[1],"orderedIDs":order,"sameHostDebugOnly":true,"physicalFPSClaim":false]
+        print("TASKFOLD_TIMED_FILTER_MEASUREMENT " + String(data:try JSONSerialization.data(withJSONObject:observation,options:[.sortedKeys]),encoding:.utf8)!)
+    }
     func testDayWindowsParseRoundTripAndKeepExactOffsetsSeparate() throws {
         for (input, expected) in [("3 days", "planned_next_days"), ("-3 days", "planned_past_days"), ("date:3 days", "planned_next_days"), ("date:-3 days", "planned_past_days"), ("effective-due:3 days", "effective_due_next_days"), ("effective-due:-3 days", "effective_due_past_days"), ("deadline:3 days", "deadline_next_days"), (#"deadline on:"-3 days""#, "deadline_past_days")] {
             let rule = try parse(input)

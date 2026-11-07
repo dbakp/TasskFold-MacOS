@@ -646,13 +646,21 @@ indirect enum FilterRule: Hashable, Sendable {
             return unknown ? nil : false
         case .not(let rule): return rule.evaluate(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people, hierarchyScope: hierarchyScope, assignments: assignments).map { !$0 }
         case .predicate(let field, let value):
-            let day = Self.plannedDay(task, timeZone: timeZone), deadline = task.string("deadline_date")
+            // Most conditions never read a planned date. Keep timezone/calendar
+            // projection local to this predicate and compute it at most once.
+            var projectedDay: String?
+            func day() -> String {
+                if let projectedDay { return projectedDay }
+                let value = Self.plannedDay(task, timeZone: timeZone)
+                projectedDay = value; return value
+            }
+            let deadline = task.string("deadline_date")
             func next(_ date: String) -> Bool {
                 guard !date.isEmpty, let start = Dates.parse(today), let end = Calendar(identifier: .gregorian).date(byAdding: .day, value: Int(value) ?? 1, to: start) else { return false }
                 return date >= today && date < Dates.day(end)
             }
             if FilterDayWindow.expressions[field] != nil {
-                let candidate = field.hasPrefix("planned_") ? day : field.hasPrefix("effective_due_") ? (day.isEmpty ? deadline : day) : deadline
+                let candidate = field.hasPrefix("planned_") ? day() : field.hasPrefix("effective_due_") ? (day().isEmpty ? deadline : day()) : deadline
                 return FilterDayWindow.matches(candidate, field: field, value: value, today: today, timeZone: timeZone)
             }
             if FilterTimeReference.expressions[field] != nil {
@@ -682,7 +690,7 @@ indirect enum FilterRule: Hashable, Sendable {
                     return candidate >= boundary && candidate < boundary.addingTimeInterval(60)
                 }
                 guard let boundary = FilterDateReference.day(value, today: today, timeZone: timeZone, datePreferences: datePreferences) else { return false }
-                let candidate = field.hasPrefix("planned_") ? day : field.hasPrefix("effective_due_") ? (day.isEmpty ? deadline : day) : deadline
+                let candidate = field.hasPrefix("planned_") ? day() : field.hasPrefix("effective_due_") ? (day().isEmpty ? deadline : day()) : deadline
                 guard !candidate.isEmpty else { return false }
                 if field.contains("_before") { return candidate < boundary }
                 if field.hasSuffix("_after") { return candidate > boundary }
@@ -691,10 +699,10 @@ indirect enum FilterRule: Hashable, Sendable {
             switch field {
             case "all": return true
             case "inbox": return task.string("project_id").isEmpty
-            case "today": return day == today
-            case "overdue": return !day.isEmpty && day < today
-            case "next": return next(day)
-            case "no_date": return day.isEmpty
+            case "today": return day() == today
+            case "overdue": return !day().isEmpty && day() < today
+            case "next": return next(day())
+            case "no_date": return day().isEmpty
             case "priority": return task.priority == Int(value)
             case "project_name", "section_name", "label_name", "assignee_name":
                 guard let binding = bindings.first(where: { $0.field == field && $0.value == value }) else { return false }
@@ -730,8 +738,8 @@ indirect enum FilterRule: Hashable, Sendable {
                 let assignee = task.string("assigned_to")
                 if value == "others" { return !assignee.isEmpty && assignee != userID }
                 return assignee == (value == "me" ? userID : value == "unassigned" ? "" : value)
-            case "due": return day == value
-            case "before": return !day.isEmpty && day < value
+            case "due": return day() == value
+            case "before": return !day().isEmpty && day() < value
             case "deadline_today": return deadline == today
             case "deadline_overdue": return !deadline.isEmpty && deadline < today
             case "deadline_next": return next(deadline)

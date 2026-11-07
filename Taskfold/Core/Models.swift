@@ -1665,11 +1665,14 @@ final class TaskCache {
                     guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, productiveWork: productiveReading().contains(task.id), assignments: query.filterAssignments) }) else { return false }
                 } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, productiveWork: productiveReading().contains(task.id), assignments: query.filterAssignments) { return false }
             }
-            let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
             switch query.scope {
             case .inbox: return task.string("project_id").isEmpty
-            case .today: return !day.isEmpty && day <= query.today
-            case .upcoming: return query.selectedDay.map { day == $0 } ?? !day.isEmpty
+            case .today:
+                let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
+                return !day.isEmpty && day <= query.today
+            case .upcoming:
+                let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
+                return query.selectedDay.map { day == $0 } ?? !day.isEmpty
             case .project(let id): return task.string("project_id") == id
             case .label(let id): return task["labels"].list.contains(.string(id)) || task["labels"].list.contains(.string(query.labelName))
             default: return true
