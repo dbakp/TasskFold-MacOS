@@ -208,7 +208,7 @@ struct ChildTaskRepairView: View {
         .confirmationDialog("Discard this saved review?", isPresented: $discarding, titleVisibility: .visible) { Button("Discard review", role: .destructive) { Task { await resetReview() } }; Button("Keep reviewing", role: .cancel) {} } message: { Text("Only the saved choices are removed. Your task and any queued repair stay intact.") }
         .fileExporter(isPresented: $exporting, document: document, contentType: .json, defaultFilename: "Taskfold-original-" + Dates.day(Date())) { result in
             guard usable, exportScope == scope, exportRoot == selected else { return }; document = nil
-            switch result { case .success: exportMessage = "Original exported."; case .failure(let error): exportMessage = (error as NSError).code == NSUserCancelledError ? nil : "Export couldn’t finish. The original is still kept." }
+            switch result { case .success: exportMessage = "Original exported."; case .failure(let error): exportMessage = (error as NSError).code == NSUserCancelledError ? nil : "Export couldn’t finish. Please try again." }
         }
     }
     @ViewBuilder private func outlineSection(_ outline: ChildTaskRepairOutline) -> some View {
@@ -472,7 +472,7 @@ private struct ChildRepairSavedSection: View {
             Text(status).font(.headline).accessibilityIdentifier("childRepairStatus")
             Text(titleScope == store.childTaskFieldRecoveryScope ? liveTitle ?? store.childTaskRepairTitle(entry.command) : store.childTaskRepairTitle(entry.command)).fixedSize(horizontal: false, vertical: true)
             if entry.phase == .applied {
-                Label("Original copy kept", systemImage: "doc.badge.clock").foregroundStyle(.secondary)
+                Label("Original saved with this repair", systemImage: "doc.badge.clock").foregroundStyle(.secondary)
                 Button(action: exportOriginal) { ChildRepairActionLabel(title: "Export saved original", symbol: "square.and.arrow.up") }.disabled(exporting || !store.online).accessibilityIdentifier("childRepairExportSaved")
             } else if entry.phase == .queued || entry.phase == .attempted {
                 Button("Check status", systemImage: "arrow.clockwise") { Task { if await model.run(entry.command, operation: .check) { await store.sync() } } }.disabled(model.busy || !store.online).accessibilityIdentifier("childRepairCheck")
@@ -698,6 +698,10 @@ struct ChildTaskRepairArchivesView: View {
     @State private var document: WorkspaceDocument?
     @State private var exporting = false
     @State private var exportScope: ChildTaskFieldClientScope?
+    @State private var removingOriginal = false
+    @State private var cleanupID: String?
+    @State private var cleanupReview: ChildTaskRepairOriginalCleanup?
+    @State private var cleanupAcknowledged = false
     @State private var visible = true
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
@@ -709,7 +713,7 @@ struct ChildTaskRepairArchivesView: View {
                             .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
                         Button("Refresh") { Task { await load() } }.disabled(busy).accessibilityIdentifier("childRepairArchivesRefresh")
                     }
-                    if busy { ProgressView("Reading saved originals…").accessibilityIdentifier("childRepairArchivesProgress") }
+                    if busy { ProgressView(removingOriginal ? "Removing saved original…" : "Reading saved originals…").accessibilityIdentifier("childRepairArchivesProgress") }
                     if let message { Text(message).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRepairArchivesFeedback") }
                     if loaded && entries.isEmpty && !busy {
                         ContentUnavailableView("No saved originals", systemImage: "archivebox", description: Text("Original copies appear after a subtask repair is saved to this account."))
@@ -728,9 +732,11 @@ struct ChildTaskRepairArchivesView: View {
                                     .disabled(busy).accessibilityLabel("Export original: \(archiveTitle(entry))")
                                     .accessibilityHint("Save a copy of this original without changing your tasks.")
                                     .accessibilityIdentifier("childRepairArchiveExport-" + entry.id)
+                                if store.childTaskRepairArchiveCleanupEnabled { cleanupControls(entry) }
                             } else {
                                 Text("Original content is no longer available. Its repair confirmation is kept.")
                                     .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
+                                    .accessibilityIdentifier("childRepairArchiveUnavailable-" + entry.id)
                             }
                         }
                     }
@@ -753,7 +759,7 @@ struct ChildTaskRepairArchivesView: View {
             guard let scope, exportScope == scope else { return }; document = nil; exportScope = nil
             switch result {
             case .success: message = "Original exported."
-            case .failure(let error): message = (error as NSError).code == NSUserCancelledError ? nil : "Export couldn’t finish. The original is still kept."
+            case .failure(let error): message = (error as NSError).code == NSUserCancelledError ? nil : "Export couldn’t finish. Please try again."
             }
         }
     }
@@ -764,9 +770,11 @@ struct ChildTaskRepairArchivesView: View {
     private func clear() {
         ticket = UUID(); entries = []; next = nil; loaded = false; busy = false
         message = nil; document = nil; exportScope = nil; exporting = false
+        cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false; removingOriginal = false
     }
     private func load(after: String? = nil) async {
         guard visible, let captured = scope, !busy else { return }; let work = UUID(); ticket = work; busy = true; message = nil
+        cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false
         defer { if ticket == work { busy = false } }
         do {
             let page = try await store.readChildTaskRepairArchives(after: after)
@@ -791,4 +799,60 @@ struct ChildTaskRepairArchivesView: View {
             message = "This original couldn’t be opened with your current access. Its repair confirmation is kept."
         }
     }
+    @ViewBuilder private func cleanupControls(_ entry: ChildTaskRepairArchive) -> some View {
+        if cleanupID == entry.id {
+            Text("Remove this saved original?").font(.headline)
+            Text("Only the retained copy saved before this repair will be removed. Your current task and repair confirmation stay. Export the original first if you may need it. Removal is permanent and cannot be undone.")
+                .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRepairCleanupWarning")
+            if let review = cleanupReview, review.archive.id == entry.id, review.archive.scope == scope {
+                if review.allowsRemoval {
+                    Toggle("I understand this cannot be undone", isOn: $cleanupAcknowledged).accessibilityIdentifier("childRepairCleanupAcknowledged")
+                    Button("Remove original", role: .destructive) { Task { await removeOriginal(entry) } }
+                        .disabled(busy || !cleanupAcknowledged).accessibilityLabel("Permanently remove original: \(archiveTitle(entry))")
+                        .accessibilityIdentifier("childRepairCleanupRemove")
+                } else {
+                    Text("Original cleanup is temporarily paused. This copy is still kept.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Button("Cancel removal") { cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false }
+                .disabled(busy).accessibilityIdentifier("childRepairCleanupCancel")
+        } else {
+            Button { Task { await reviewCleanup(entry) } } label: { ChildRepairActionLabel(title: "Review removal", symbol: "trash") }
+                .disabled(busy).accessibilityLabel("Review removal of original: \(archiveTitle(entry))")
+                .accessibilityIdentifier("childRepairCleanupReview-" + entry.id)
+        }
+    }
+    private func reviewCleanup(_ entry: ChildTaskRepairArchive) async {
+        guard visible, let captured = scope, captured == entry.scope, !busy, entry.contentRetained else { return }
+        let work = UUID(); ticket = work; busy = true; message = nil
+        cleanupID = entry.id; cleanupReview = nil; cleanupAcknowledged = false
+        defer { if ticket == work { busy = false } }
+        do {
+            let review = try await store.childTaskRepairOriginalCleanup(entry, operation: .review)
+            guard scope == captured, ticket == work, !Task.isCancelled else { return }
+            if review.retained { cleanupReview = review }
+            else { entries = entries.map { $0.id == entry.id ? $0.withoutOriginal() : $0 }; cleanupID = nil; message = "This original is no longer retained. Its repair confirmation is kept." }
+        } catch {
+            guard scope == captured, ticket == work, !Task.isCancelled else { return }
+            cleanupID = nil; message = "Removal couldn’t be reviewed. Check your connection and permission to manage this copy, then refresh."
+        }
+    }
+    private func removeOriginal(_ entry: ChildTaskRepairArchive) async {
+        guard visible, let captured = scope, captured == entry.scope, !busy, cleanupAcknowledged,
+              cleanupID == entry.id, cleanupReview?.archive.id == entry.id, cleanupReview?.archive.scope == captured,
+              cleanupReview?.allowsRemoval == true else { return }
+        let work = UUID(); ticket = work; busy = true; message = nil; removingOriginal = true
+        defer { if ticket == work { busy = false; removingOriginal = false } }
+        do {
+            _ = try await store.childTaskRepairOriginalCleanup(entry, operation: .remove)
+            guard scope == captured, ticket == work, !Task.isCancelled else { return }
+            entries = entries.map { $0.id == entry.id ? $0.withoutOriginal() : $0 }
+            cleanupID = nil; cleanupReview = nil; cleanupAcknowledged = false
+            message = "Original removed. Your current task and repair confirmation are unchanged."
+        } catch {
+            guard scope == captured, ticket == work, !Task.isCancelled else { return }
+            message = "Removal wasn’t confirmed. Refresh to check what is retained, or retry this same original."
+        }
+    }
+
 }

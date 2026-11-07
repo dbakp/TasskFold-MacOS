@@ -95,3 +95,51 @@ final class ChildRepairArchiveTests: XCTestCase {
         XCTAssertEqual(original.data.count, entry.bytes)
     }
 }
+
+extension ChildRepairArchiveTests {
+    private func cleanupFixture() throws -> ([String: JSON], ChildTaskRepairArchive) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-repair-original-cleanup-contract-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let f = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)), account = f["review"]!.object["account"]!
+        let raw: [String: JSON] = ["protocol": .number(1), "account": account, "entries": .array([f["entry"]!]), "next": .null]
+        return (f, try page(raw, scope(account.text), limit: 1).entries[0])
+    }
+    func testActualOriginalCleanupReviewAndRepeatedRemovalBindOneReceipt() throws {
+        let (f, entry) = try cleanupFixture()
+        let review = try ChildTaskRepairOriginalCleanup(data: TaskfoldJSONEncoder().encode(f["review"]!), archive: entry, operation: .review)
+        XCTAssertTrue(review.allowsRemoval)
+        let removed = try ChildTaskRepairOriginalCleanup(data: TaskfoldJSONEncoder().encode(f["removed"]!), archive: entry, operation: .remove)
+        XCTAssertFalse(removed.retained); XCTAssertFalse(removed.enabled); XCTAssertFalse(removed.allowsRemoval)
+        XCTAssertEqual(removed.archive.receipt, entry.receipt)
+        let body = ChildTaskRepairOriginalCleanup.body(archive: entry, operation: .remove)
+        XCTAssertEqual(Set(body.keys), ["_operation", "_request", "_archive", "_digest", "_bytes"])
+        XCTAssertEqual(body["_operation"], .string("remove")); XCTAssertEqual(body["_archive"], .string(entry.id))
+        XCTAssertEqual(body["_bytes"], entry.receipt["archive_bytes"])
+        XCTAssertFalse(String(reflecting: review).contains(entry.id)); XCTAssertFalse(String(reflecting: removed).contains(entry.scope.account))
+    }
+    func testOriginalCleanupRefusesForeignIdentityAndContradictoryRemoval() throws {
+        let (f, entry) = try cleanupFixture(), original = f["review"]!.object
+        for (key,value): (String,JSON) in [("account",.string(UUID().uuidString.lowercased())),("request_id",.string(UUID().uuidString.lowercased())),("archive_id",.string(UUID().uuidString.lowercased())),("archive_digest",.string(String(repeating:"0",count:64))),("archive_bytes",.number(Double(entry.bytes+1))),("protocol",.number(2)),("state",.string("restored")),("cleanup_enabled",.string("true")),("unknown",.null)] {
+            var bad = original; bad[key] = value
+            XCTAssertThrowsError(try ChildTaskRepairOriginalCleanup(data: TaskfoldJSONEncoder().encode(bad), archive: entry, operation: .review),key)
+        }
+        XCTAssertThrowsError(try ChildTaskRepairOriginalCleanup(data: TaskfoldJSONEncoder().encode(original), archive: entry, operation: .remove))
+    }
+    func testOriginalCleanupRejectsAmbiguousNumericAndDuplicateJSON() throws {
+        let (f, entry) = try cleanupFixture(), writer = TaskfoldJSONEncoder(); writer.outputFormatting = .sortedKeys
+        let source = String(decoding: try writer.encode(f["review"]!), as: UTF8.self)
+        for token in ["1.0","1e0"] {
+            XCTAssertThrowsError(try ChildTaskRepairOriginalCleanup(data: Data(source.replacingOccurrences(of:"\"protocol\":1",with:"\"protocol\":"+token).utf8),archive:entry,operation:.review))
+        }
+        let bytes = "\"archive_bytes\":\(entry.bytes)"
+        XCTAssertThrowsError(try ChildTaskRepairOriginalCleanup(data: Data(source.replacingOccurrences(of:bytes,with:bytes+".0").utf8),archive:entry,operation:.review))
+        XCTAssertThrowsError(try ChildTaskRepairOriginalCleanup(data: Data(("{\"protocol\":1,"+source.dropFirst()).utf8),archive:entry,operation:.review))
+        XCTAssertThrowsError(try ChildTaskRepairOriginalCleanup(data: Data(repeating:32,count:4097),archive:entry,operation:.review))
+    }
+    func testOriginalCleanupPauseAndUnavailableNeverEnableRemoval() throws {
+        let (f, entry) = try cleanupFixture(); var raw=f["review"]!.object;raw["cleanup_enabled"] = .bool(false)
+        XCTAssertFalse(try ChildTaskRepairOriginalCleanup(data:TaskfoldJSONEncoder().encode(raw),archive:entry,operation:.review).allowsRemoval)
+        raw["cleanup_enabled"] = .bool(true);raw["state"] = .string("unavailable")
+        XCTAssertFalse(try ChildTaskRepairOriginalCleanup(data:TaskfoldJSONEncoder().encode(raw),archive:entry,operation:.review).allowsRemoval)
+        let gone=entry.withoutOriginal();XCTAssertFalse(gone.contentRetained);XCTAssertEqual(gone.receipt,entry.receipt);XCTAssertEqual(gone.title,entry.title);XCTAssertEqual(gone.createdAt,entry.createdAt);XCTAssertEqual(gone.scope,entry.scope)
+    }
+}

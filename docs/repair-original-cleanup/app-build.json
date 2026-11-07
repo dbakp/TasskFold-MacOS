@@ -1,0 +1,11 @@
+{
+  "platform": "mac",
+  "configuration": "Debug",
+  "arm64": true,
+  "compiledCurrentSource": true,
+  "signing": "disabled; compile only",
+  "distributionAcceptance": false,
+  "log": "/tmp/taskfold-cleanup-mac-final-copy-build.log",
+  "finalRetentionWordingCompiled": true,
+  "nativeControlLogicUnchangedAfterNativePass": true
+}

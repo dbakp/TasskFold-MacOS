@@ -8,8 +8,9 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
 import {identity,atomicFile,boundedFile,createMappingSQLChannel,relocatedSimulatorChannel} from './child-mapping-native-channel.mjs';
-const migrations=["20261030093035_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104147_personal_child_record_task_moves.sql", "20261030114138_cross_root_child_task_transfers.sql", "20261030134132_reviewed_child_record_adoption.sql", "20261030170753_child_adoption_metadata_discovery.sql", "20261030183133_child_task_repair_previews.sql", "20261030184402_child_task_repair_commits.sql", "20261030192638_child_repair_original_history_access.sql", "20261030204000_child_repair_bounded_originals.sql", "20261107051702_child_repair_archive_discovery.sql"];
-const smoke=process.argv.includes('--smoke'),position=process.argv.indexOf('--directory');
+const migrations=["20261030093035_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104147_personal_child_record_task_moves.sql", "20261030114138_cross_root_child_task_transfers.sql", "20261030134132_reviewed_child_record_adoption.sql", "20261030170753_child_adoption_metadata_discovery.sql", "20261030183133_child_task_repair_previews.sql", "20261030184402_child_task_repair_commits.sql", "20261030192638_child_repair_original_history_access.sql", "20261030204000_child_repair_bounded_originals.sql", "20261107051702_child_repair_archive_discovery.sql", "20261107070845_child_repair_original_cleanup.sql"];
+const smoke=process.argv.includes('--smoke'),position=process.argv.indexOf('--directory'),cleanupMode=process.argv.includes('--allow-cleanup');
+if(smoke&&cleanupMode)throw Error('Use the separate native cleanup journey');
 if(!smoke&&(position<0||!process.argv[position+1]))throw Error('Use --smoke or --directory PATH');
 let directory=smoke?await mkdtemp(tmpdir()+'/taskfold-archive-channel-'):resolve(process.argv[position+1]);
 if(!smoke&&basename(directory)!=='Child archives SQL native peer')throw Error('Reserved archive subfolder required');
@@ -35,6 +36,7 @@ try{
   const receipt=await invoke(`public.taskfold_repair_children('send',${json(command)})`);assert.equal(receipt.state,'applied');saved.push(receipt);
  }
  await pg.raw('update taskfold_private.child_task_record_config set adoption_enabled=false,repair_reviews_enabled=false,repair_writes_enabled=false,reads_enabled=false,edits_enabled=false,completions_enabled=false,structure_reads_enabled=false,structure_edits_enabled=false');
+ if(cleanupMode)await pg.raw('update taskfold_private.child_task_record_config set archive_cleanup_enabled=true');
  const state=()=>pg.scalar(`select jsonb_build_object('roots',(select jsonb_agg(to_jsonb(t) order by id) from public.tasks t),'records',(select jsonb_agg(to_jsonb(r) order by task_id,node_key) from taskfold_private.child_task_records r),'projections',(select jsonb_agg(to_jsonb(p) order by task_id) from taskfold_private.child_task_projections p),'history',(select jsonb_agg(to_jsonb(h) order by sequence) from public.task_node_activity h),'root_history',(select jsonb_agg(to_jsonb(h) order by sequence) from public.task_activity h),'repairs',(select jsonb_agg(to_jsonb(r) order by request_id) from taskfold_private.child_task_repairs r),'originals',(select jsonb_agg(jsonb_build_object('metadata',to_jsonb(o)-'original','original_text',o.original::text) order by request_id) from taskfold_private.child_task_repair_originals o),'authority',(select jsonb_agg(to_jsonb(a) order by task_id) from taskfold_private.child_task_record_authority a))`);
  const baseline=await state(),trace=[];await atomicFile(directory+'/baseline.json',JSON.stringify(baseline));
  const entries=(await invoke('public.taskfold_child_repair_archives(null,50)')).entries;
@@ -43,7 +45,12 @@ try{
   const current=await state();await atomicFile(directory+'/database-state.json',JSON.stringify(current));await atomicFile(directory+'/trace.json',JSON.stringify(trace));
   await atomicFile(directory+'/server.json',JSON.stringify({root:current.roots.find(r=>r.id===identity.root),receipts:{},versions:{},writes:0,requests:0,lost:false}));
  };
- const channel=createMappingSQLChannel(pg,{session,nonce,beforeReply:async(request,reply)=>{trace.push({request,reply});await publish();}});
+ let lostCleanup=false;
+ const channel=createMappingSQLChannel(pg,{session,nonce,beforeReply:async(request,reply)=>{
+  const body=JSON.parse(Buffer.from(request.body,'base64'));
+  if(cleanupMode&&request.path==='/rest/v1/rpc/taskfold_child_repair_original_cleanup'&&body._operation==='remove'&&!reply.code&&!lostCleanup){reply.lose=true;lostCleanup=true;}
+  trace.push({request,reply});await publish();
+ }});
  await publish();await atomicFile(directory+'/channel.json',JSON.stringify({protocol:1,nonce,...identity}));
  if(smoke){
   const call=async(path,body)=>{const response=await channel.dispatch({protocol:1,nonce,id:randomUUID(),path:'/rest/v1/rpc/'+path,body:Buffer.from(JSON.stringify(body)).toString('base64')});assert.equal(response.code,null);return {raw:Buffer.from(response.data,'base64'),value:JSON.parse(Buffer.from(response.data,'base64'))};};
@@ -54,6 +61,15 @@ try{
  }else{
   console.log(JSON.stringify({ready:true,directory,entries:entries.length}));const deadline=Date.now()+15*60*1000;
   while(!stopping&&Date.now()<deadline){try{if((await readdir(directory)).includes('stop'))break;await channel.drain(directory);}catch(e){if(e.code!=='ENOENT'||!process.argv.includes('--follow-simulator-container'))throw e;directory=await relocatedSimulatorChannel(directory,nonce);}await delay(100);}
-  await publish();assert.deepEqual(await state(),baseline);report.checks.push('native reads leave complete database unchanged');report.passed=true;
+  await publish();
+  if(cleanupMode){
+   const removes=trace.filter(x=>x.request.path==='/rest/v1/rpc/taskfold_child_repair_original_cleanup'&&JSON.parse(Buffer.from(x.request.body,'base64'))._operation==='remove');
+   assert.equal(removes.length,2);assert.deepEqual(JSON.parse(Buffer.from(removes[0].request.body,'base64')),JSON.parse(Buffer.from(removes[1].request.body,'base64')));assert.equal(removes.filter(x=>x.reply.lose).length,1);
+   const selected=JSON.parse(Buffer.from(removes[0].request.body,'base64'))._archive;
+   assert(baseline.originals.some(o=>o.metadata.id===selected));
+   assert.deepEqual(await state(),{...baseline,originals:baseline.originals.filter(o=>o.metadata.id!==selected)});
+   report.checks.push('only reviewed original removed; exact lost-reply retry preserves all current work and receipts');report.removedArchive=selected;
+  }else {assert.deepEqual(await state(),baseline);report.checks.push('native reads leave complete database unchanged');}
+  report.passed=true;
  }
 }catch(e){report.failure={message:e.message,code:e.code};process.exitCode=1;}finally{await unlink(directory+'/channel.json').catch(()=>{});if(pg)report.fixtureRemoved=await pg.close();if(smoke)await rm(directory,{recursive:true,force:true});console.log(JSON.stringify(report));}

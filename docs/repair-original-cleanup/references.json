@@ -1,0 +1,11 @@
+{
+  "reviewed": "2026-11-07",
+  "cliVersion": "2.109.0",
+  "officialReferences": [
+    "https://supabase.com/changelog.md",
+    "https://supabase.com/changelog/supabase-cli-v3",
+    "https://supabase.com/changelog/cbc-tls-ciphers-deprecated",
+    "https://supabase.com/docs/guides/database/functions"
+  ],
+  "notes": "CLI v3 defaults are not applicable to the installed v2 CLI; modern native TLS is unchanged. Public wrapper is invoker, private retention helper has pinned search_path and explicit actor/custody checks. No apply_migration or hosted writes."
+}

@@ -1,0 +1,9 @@
+{
+  "preservedEvidenceVerified": true,
+  "removed": [
+    {
+      "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/FECF0EC3-EFFF-4B74-BB8F-5A5DF6E2B74D/Library/Application Support/Child archives SQL native peer",
+      "allocatedBytes": 73728
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-07",
+  "platform": "mac",
+  "version": "1.2.0",
+  "build": "35",
+  "previousInstalledBuild": "31",
+  "installed": true,
+  "privateSafetyCopyVerified": true,
+  "prelaunchAllCacheBytesUnchanged": true,
+  "cacheFilesVerified": 8,
+  "installedPayloadVerified": true,
+  "signatureAndProfilesVerified": true,
+  "mainWindowVerified": true,
+  "syncStatusVerified": true,
+  "normalGateChanges": false,
+  "hostedChanges": false,
+  "phoneInstallationDeferred": true,
+  "archiveSHA256": "d00840dc3fa18267f3d343208cf646d0d2d2a88c17b6f4be4f36289cbf62c6da",
+  "installationNote": "Installed; normal main window and Synced status verified. Shared-storage startup and final cache readback await system file access.",
+  "mainWindowTasks": 2,
+  "postlaunchReadbackPending": true,
+  "sharedStorageReady": false
+}

@@ -1,0 +1,14 @@
+{
+  "freeBeforeBytes": 43365117952,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-cleanup-phone-native-first.xcresult",
+      "allocatedBytes": 9326592
+    },
+    {
+      "path": "/tmp/taskfold-cleanup-phone-native-second.xcresult",
+      "allocatedBytes": 1761280
+    }
+  ],
+  "freeAfterBytes": 43376205824
+}

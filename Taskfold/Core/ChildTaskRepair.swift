@@ -391,12 +391,13 @@ struct ChildTaskRepairArchive: Identifiable, Sendable, CustomStringConvertible, 
     let scope: ChildTaskFieldClientScope
     let receipt: [String: JSON]
     let createdAt: Date
-    let contentRetained: Bool
+    private(set) var contentRetained: Bool
     let title: String?
     let titleTruncated: Bool
     var id: String { receipt["archive_id"]!.text }
     var requestID: String { receipt["request_id"]!.text }
     var rootID: String { receipt["task_id"]!.text }
+    func withoutOriginal() -> Self { var copy = self; copy.contentRetained = false; return copy }
     var nodeCount: Int { receipt["node_count"]!.integer }
     var bytes: Int { receipt["archive_bytes"]!.integer }
     var description: String { "Private saved repair archive" }
@@ -1026,5 +1027,30 @@ struct ChildTaskCopyReview: Sendable, CustomStringConvertible, CustomDebugString
                   ChildTaskStructureCommand.exact(try TaskfoldJSONDecoder().decode(JSON.self, from: copies[0].tree), try TaskfoldJSONDecoder().decode(JSON.self, from: copies[2].tree)) else { throw Self.invalid }
         }
         context = review.context; metadata = raw; self.copies = copies; exportBundle = bundle; self.omitted = omitted
+    }
+}
+
+/// Retention-only operation: immutable receipt identity, never a task mutation.
+enum ChildTaskRepairOriginalCleanupOperation: String, Sendable { case review, remove }
+struct ChildTaskRepairOriginalCleanup: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    let archive: ChildTaskRepairArchive
+    let retained: Bool
+    let enabled: Bool
+    var allowsRemoval: Bool { retained && enabled }
+    var description: String { "Private original retention review" }
+    var debugDescription: String { description }
+    static func body(archive: ChildTaskRepairArchive, operation: ChildTaskRepairOriginalCleanupOperation) -> [String: JSON] {
+        ["_operation": .string(operation.rawValue), "_request": .string(archive.requestID), "_archive": .string(archive.id),
+         "_digest": archive.receipt["archive_digest"]!, "_bytes": archive.receipt["archive_bytes"]!]
+    }
+    init(data: Data, archive: ChildTaskRepairArchive, operation: ChildTaskRepairOriginalCleanupOperation) throws {
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: 4096, integerPaths: [["protocol"], ["archive_bytes"]])
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        guard Set(raw.keys) == ["protocol", "account", "request_id", "archive_id", "archive_digest", "archive_bytes", "state", "cleanup_enabled"],
+              raw["protocol"] == .number(1), raw["account"] == .string(archive.scope.account), raw["request_id"] == .string(archive.requestID),
+              raw["archive_id"] == .string(archive.id), raw["archive_digest"] == archive.receipt["archive_digest"], raw["archive_bytes"] == archive.receipt["archive_bytes"],
+              raw["state"] == .string("retained") || raw["state"] == .string("unavailable"),
+              operation != .remove || raw["state"] == .string("unavailable"), case .bool(let enabled)? = raw["cleanup_enabled"] else { throw ChildTaskRepairCommand.invalid }
+        self.archive = archive; retained = raw["state"] == .string("retained"); self.enabled = enabled
     }
 }
