@@ -120,7 +120,7 @@ struct CalendarView: View {
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .onChange(of: store.taskRevision, initial: true) { _, _ in rebuildIndex() }
-        .onChange(of: ProjectOrganization.archivedIDs(in: store.allProjects)) { _, _ in rebuildIndex() }
+        .onChange(of: store.archivedProjectIDs) { _, _ in rebuildIndex() }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name.NSSystemTimeZoneDidChange)) { _ in rebuildIndex() }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in rebuildIndex() }
         .onChange(of: periodTitle) { _, value in if workspace.section == .calendar { workspace.navigationSubtitle = value } }

@@ -2022,6 +2022,8 @@ final class Store {
         PersonalConnectionDestination.resolve(project: project, projects: allProjects, cache: nativeConversationTeamCache, account: userID, origin: try? backend.accountRemovalOrigin)
     }
     var archivedProjects: [ProjectOrganization.Item] { projectCatalog.archived }
+    /// Current readable archive inheritance, shared with task/calendar reads.
+    var archivedProjectIDs: Set<String> { projectCatalog.archivedIDs }
     var inboxProductiveReading: ProductiveTaskReading {
         _ = taskRevision
         return taskCache.inboxProductiveReading()
@@ -7112,6 +7114,17 @@ extension Store {
         for _ in 0..<20 {total += allProjects.count+projects.count+archivedProjects.count+projectCatalog.archivedIDs.count}
         let elapsed=ProcessInfo.processInfo.systemUptime-start
         guard total==168000,snapshot==source else {throw AppFailure(message:"Project reads changed saved work")}
+        let archiveBaselineStart = ProcessInfo.processInfo.systemUptime
+        var oldArchiveTotal = 0
+        for _ in 0..<20 { oldArchiveTotal += ProjectOrganization.archivedIDs(in: allProjects).count }
+        let archiveBaselineSeconds = ProcessInfo.processInfo.systemUptime - archiveBaselineStart
+        let archiveCurrentStart = ProcessInfo.processInfo.systemUptime
+        var currentArchiveTotal = 0
+        for _ in 0..<20 { currentArchiveTotal += archivedProjectIDs.count }
+        let archiveCurrentSeconds = ProcessInfo.processInfo.systemUptime - archiveCurrentStart
+        guard oldArchiveTotal == 8000, currentArchiveTotal == oldArchiveTotal,
+              archivedProjectIDs == ProjectOrganization.archivedIDs(in: allProjects) else { throw AppFailure(message: "Calendar archive reading changed inheritance") }
+
         func checkTaskOnlySources(_ prefix: String) throws -> Double {
             let retained = projectCatalog, retainedOrder = projectOrderRequest
             let mutationStart = ProcessInfo.processInfo.systemUptime
@@ -7148,16 +7161,24 @@ extension Store {
         snapshot.tables["projects"]![0]["name"] = .string("Renamed catalog project")
         guard probe.changed,projects.first?.name=="Renamed catalog project" else {throw AppFailure(message:"Project observation did not refresh")}
         snapshot.tables["projects"]![1]["parent_id"] = .string(source.tables["projects"]![36].id)
-        guard projects.count==3599,archivedProjects.count==401 else {throw AppFailure(message:"Reparented archive inheritance stayed stale")}
+        guard projects.count==3599,archivedProjects.count==401,archivedProjectIDs.count==401,archivedProjectIDs.contains(source.tables["projects"]![1].id) else {throw AppFailure(message:"Reparented archive inheritance stayed stale")}
         snapshot=source
+        let archiveTaskRevision = taskRevision
+        let archiveProbe = WorkspaceReadObservationProbe()
+        withObservationTracking { _ = archivedProjectIDs } onChange: { archiveProbe.markChanged() }
         snapshot.tables["projects"]![0]["is_archived"] = .bool(true)
-        guard projects.count==3596,archivedProjects.count==404,activeTasks.isEmpty else {throw AppFailure(message:"Archived work stayed visible")}
+        guard archiveProbe.changed,taskRevision==archiveTaskRevision,archivedProjectIDs.count==404,projects.count==3596,archivedProjects.count==404,activeTasks.isEmpty else {throw AppFailure(message:"Archived work stayed visible")}
+        let restoreProbe = WorkspaceReadObservationProbe()
+        withObservationTracking { _ = archivedProjectIDs } onChange: { restoreProbe.markChanged() }
         snapshot=source
+        guard restoreProbe.changed,taskRevision==archiveTaskRevision,archivedProjectIDs.count==400,activeTasks.count==240 else {throw AppFailure(message:"Calendar archive restore did not refresh")}
+        let archiveWithoutTaskChange = taskRevision == archiveTaskRevision
+
         workspaceCacheReadable=false
-        guard allProjects.isEmpty,projects.isEmpty,archivedProjects.isEmpty else {throw AppFailure(message:"Unreadable project catalog exposed cached content")}
+        guard allProjects.isEmpty,projects.isEmpty,archivedProjects.isEmpty,archivedProjectIDs.isEmpty else {throw AppFailure(message:"Unreadable project catalog exposed cached content")}
         workspaceCacheReadable=true
         guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240,snapshot==source else {throw AppFailure(message:"Project catalog failed to return")}
-        let report:[String:JSON] = ["recordLookupChecks":.number(Double(recordChecks)),"accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"taskOnlyMutationPasses":.number(20),"filteredTaskOnlyMutationPasses":.number(WorkspaceReadNativeFixture.projectCatalogRevalidation ? 20 : 0),"taskOnlyMutationSeconds":.number(mutationSeconds),"filteredTaskOnlyMutationSeconds":.number(filteredMutationSeconds),"projectGraphAndOrderReused":.bool(true),"currentTasksRefreshed":.bool(true),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
+        let report:[String:JSON] = ["recordLookupChecks":.number(Double(recordChecks)),"accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"taskOnlyMutationPasses":.number(20),"filteredTaskOnlyMutationPasses":.number(WorkspaceReadNativeFixture.projectCatalogRevalidation ? 20 : 0),"taskOnlyMutationSeconds":.number(mutationSeconds),"filteredTaskOnlyMutationSeconds":.number(filteredMutationSeconds),"projectGraphAndOrderReused":.bool(true),"currentTasksRefreshed":.bool(true),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"calendarArchiveObservationRefresh":.bool(archiveProbe.changed && restoreProbe.changed),"calendarArchiveReadPasses":.number(20),"calendarArchiveWithoutTaskRevisionChange":.bool(archiveWithoutTaskChange),"reconstructedArchiveSeconds":.number(archiveBaselineSeconds),"preparedArchiveSeconds":.number(archiveCurrentSeconds),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
         let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
         try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-catalog.json"),options:.atomic)
