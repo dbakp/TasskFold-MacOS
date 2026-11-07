@@ -93,14 +93,23 @@ final class TaskfoldJSONEncoder: @unchecked Sendable {
     var keyEncodingStrategy: Foundation.JSONEncoder.KeyEncodingStrategy { get { lock.withLock { options.keyEncodingStrategy } } set { lock.withLock { options.keyEncodingStrategy = newValue } } }
     var userInfo: [CodingUserInfoKey: Any] { get { lock.withLock { options.userInfo } } set { lock.withLock { options.userInfo = newValue } } }
 
-    func encode<T: Encodable>(_ value: T) throws -> Data {
+    func encode<T: Encodable>(_ value: T) throws -> Data { try encode(value, validatingDepth: nil) }
+    fileprivate func encodeValidated<T: Encodable>(_ value: T, maximumDepth: Int) throws -> Data {
+        try encode(value, validatingDepth: maximumDepth)
+    }
+    private func encode<T: Encodable>(_ value: T, validatingDepth: Int?) throws -> Data {
         let options = lock.withLock { self.options }
         let encoder = Foundation.JSONEncoder(), context = PreservedJSONEncodingContext()
         encoder.outputFormatting = options.outputFormatting; encoder.dateEncodingStrategy = options.dateEncodingStrategy
         encoder.dataEncodingStrategy = options.dataEncodingStrategy; encoder.nonConformingFloatEncodingStrategy = options.nonConformingFloatEncodingStrategy
         encoder.keyEncodingStrategy = options.keyEncodingStrategy; encoder.userInfo = options.userInfo; encoder.userInfo[PreservedJSONEncodingContext.key] = context
         let encoded = try encoder.encode(value)
-        guard !context.parts.isEmpty else { return encoded }
+        guard !context.parts.isEmpty else {
+            if let validatingDepth {
+                var syntax = PreservingJSONSyntax(data: encoded, detectOpaque: false); syntax.maximumDepth = validatingDepth; _ = try syntax.scan()
+            }
+            return encoded
+        }
         var syntax = PreservingJSONSyntax(data: encoded, markers: Set(context.parts.keys))
         _ = try syntax.scan()
         guard context.parts.allSatisfy({ syntax.matches[$0.key]?.count == 1 }) else { throw PreservedJSONFailure.placeholder }
@@ -112,7 +121,7 @@ final class TaskfoldJSONEncoder: @unchecked Sendable {
         result.append(encoded[end..<encoded.count])
         // A deeply nested opaque leaf can push an otherwise ordinary envelope
         // over the total depth limit. Validate the completed document as well.
-        var completed = PreservingJSONSyntax(data: result, detectOpaque: false); _ = try completed.scan()
+        var completed = PreservingJSONSyntax(data: result, detectOpaque: false); completed.maximumDepth = validatingDepth ?? 512; _ = try completed.scan()
         return result
     }
 }
@@ -404,5 +413,161 @@ extension JSON {
         return try TaskfoldJSONDecoder().decode(JSON.self, from: data)
     }
     private static func asciiField(_ value: String) -> Bool { !value.isEmpty && value.utf8.count <= 200 && value.utf8.allSatisfy { $0 < 128 } }
+}
+#endif
+
+#if !TASKFOLD_SHARE_EXTENSION && !TASKFOLD_WIDGET_EXTENSION
+/// Reuses only byte-exact unchanged field values. File shape, current metadata,
+/// row order and every current field remain owned by the ordinary Snapshot.
+final class SnapshotFieldEncodingCache {
+    struct Statistics: Equatable { var reused = 0; var encoded = 0; var retained = 0; var retainedBytes = 0 }
+    private struct Key: Hashable { let table: Data, row: Data, field: Data }
+    private struct Entry { let value: JSON; let data: Data }
+    private enum Unavailable: Error { case header }
+    private let maximumBytes: Int, maximumEntries: Int
+    private var entries: [Key: Entry] = [:]
+    private var previousBodySize = 0
+    private(set) var statistics = Statistics()
+    init(maximumBytes: Int = 16 * 1024 * 1024, maximumEntries: Int = 50_000) {
+        self.maximumBytes = max(0, maximumBytes); self.maximumEntries = max(0, maximumEntries)
+    }
+    func clear() { entries = [:]; previousBodySize = 0; statistics = Statistics() }
+    /// Avoid repeatedly re-encoding the uncached tail of a workspace that cannot
+    /// fit this memo. The last complete envelope conservatively charges values;
+    /// add every current key and entry overhead before selecting this writer.
+    func admits(_ snapshot: Snapshot, knownBytes: Int) -> Bool {
+        guard knownBytes >= 0, knownBytes <= maximumBytes else { return false }
+        var cost = knownBytes, count = 0
+        for (table, rows) in snapshot.tables {
+            guard table.utf8.count <= 256 else { return false }
+            for row in rows {
+                let rowBytes = row.id.utf8.count
+                guard rowBytes > 0, rowBytes <= 256 else { return false }
+                for field in row.fields.keys {
+                    guard field.utf8.count <= 512, count < maximumEntries else { return false }
+                    let extra = table.utf8.count + rowBytes + field.utf8.count + 128
+                    guard extra <= maximumBytes - cost else { return false }
+                    cost += extra; count += 1
+                }
+            }
+        }
+        // Optimized measurements show little warm gain and a cold penalty for
+        // large plain workspaces. Keep their ordinary encoder; opaque values
+        // make whole-envelope syntax scans expensive and justify field reuse.
+        return count <= 8192 || snapshot.tables.values.contains { rows in
+            rows.contains { row in row.fields.values.contains(where: Self.containsPreserved) }
+        }
+    }
+    private static func containsPreserved(_ value: JSON) -> Bool {
+        switch value {
+        case .preserved: return true
+        case .array, .object: break
+        default: return false
+        }
+        var pending = [value]
+        while let item = pending.popLast() {
+            switch item {
+            case .preserved: return true
+            case .array(let values): pending.append(contentsOf: values)
+            case .object(let values): pending.append(contentsOf: values.values)
+            default: break
+            }
+        }
+        return false
+    }
+    func encode(_ snapshot: Snapshot) throws -> Data {
+        var metadata = snapshot; metadata.tables = [:]
+        let encoder = TaskfoldJSONEncoder(), header = try encoder.encode(metadata)
+        guard header.count <= 512 * 1024 else { throw Unavailable.header }
+        var syntax = PreservingJSONSyntax(data: header, detectOpaque: false)
+        let members = try syntax.objectMembers()
+        guard let slot = members.first(where: { $0.key == "tables" }), header[slot.value] == Data("{}".utf8) else { throw Unavailable.header }
+        // Repeated schema names are identical across thousands of task fields.
+        // Keep only a small per-call UTF-8-exact name memo; unknown names still
+        // encode normally after this independent budget is exhausted.
+        var encodedNames: [Data: Data] = [:], nameBytesRetained = 0
+        func nameBytes(_ name: String) throws -> Data {
+            let raw = Data(name.utf8)
+            if let hit = encodedNames[raw] { return hit }
+            let data = try encoder.encode(name)
+            let cost = raw.count + data.count + 128
+            if encodedNames.count < 512, cost <= 64 * 1024 - nameBytesRetained {
+                encodedNames[raw] = data; nameBytesRetained += cost
+            }
+            return data
+        }
+        var body = Data([123]); body.reserveCapacity(min(maximumBytes, previousBodySize))
+        var next: [Key: Entry] = [:], measured = Statistics()
+        next.reserveCapacity(min(maximumEntries, entries.count))
+        for (tableIndex, name) in snapshot.tables.keys.sorted().enumerated() {
+            if tableIndex > 0 { body.append(44) }
+            body.append(try nameBytes(name)); body.append(contentsOf: [58, 91])
+            let tableKey = name.utf8.count <= 256 ? Data(name.utf8) : nil
+            for (rowIndex, row) in snapshot.tables[name]!.enumerated() {
+                if rowIndex > 0 { body.append(44) }; body.append(123)
+                let rowKey = !row.id.isEmpty && row.id.utf8.count <= 256 ? Data(row.id.utf8) : nil
+                for (fieldIndex, field) in row.fields.keys.sorted().enumerated() {
+                    if fieldIndex > 0 { body.append(44) }
+                    body.append(try nameBytes(field)); body.append(58)
+                    let value = row.fields[field]!
+                    let key: Key? = if let tableKey, let rowKey, field.utf8.count <= 512 {
+                        Key(table: tableKey, row: rowKey, field: Data(field.utf8))
+                    } else { nil }
+                    let entry: Entry
+                    if let key, let cached = next[key] ?? entries[key], Self.exact(cached.value, value) {
+                        entry = cached; measured.reused += 1
+                    } else {
+                        // tables → named array → record → field: four levels
+                        // surround this independently validated JSON value.
+                        entry = Entry(value: value, data: try encoder.encodeValidated(value, maximumDepth: 508)); measured.encoded += 1
+                    }
+                    body.append(entry.data)
+                    if let key, next[key] == nil, next.count < maximumEntries {
+                        let cost = key.table.count + key.row.count + key.field.count + entry.data.count + 128
+                        if cost <= maximumBytes - measured.retainedBytes { next[key] = entry; measured.retainedBytes += cost }
+                    }
+                }
+                body.append(125)
+            }
+            body.append(93)
+        }
+        body.append(125)
+        let count = (header.count - slot.value.count).addingReportingOverflow(body.count)
+        guard !count.overflow else { throw Unavailable.header }
+        var result = Data(); result.reserveCapacity(count.partialValue)
+        result.append(header[..<slot.value.lowerBound]); result.append(body); result.append(header[slot.value.upperBound...])
+        entries = next; previousBodySize = body.count; measured.retained = next.count; statistics = measured
+        return result
+    }
+    /// Semantic String/Double/opaque-object equality is insufficient for saved
+    /// bytes. Equal COW arrays/strings may avoid walking a large untouched value.
+    private static func exact(_ lhs: JSON, _ rhs: JSON) -> Bool {
+        var pending = [(lhs, rhs)]
+        while let (a, b) = pending.popLast() {
+            switch (a, b) {
+            case (.null, .null): break
+            case (.bool(let x), .bool(let y)): if x != y { return false }
+            case (.number(let x), .number(let y)): if x.bitPattern != y.bitPattern { return false }
+            case (.string(let x), .string(let y)): if !sameString(x, y) { return false }
+            case (.preserved(let x), .preserved(let y)): if x.kind != y.kind || x.data != y.data { return false }
+            case (.array(let x), .array(let y)):
+                guard x.count == y.count else { return false }
+                let shared = x.withUnsafeBufferPointer { a in y.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }
+                if !shared { pending.append(contentsOf: zip(x, y)) }
+            case (.object(let x), .object(let y)):
+                guard x.count == y.count else { return false }
+                for (key, value) in x {
+                    guard let index = y.index(forKey: key), sameString(key, y[index].key) else { return false }
+                    pending.append((value, y[index].value))
+                }
+            default: return false
+            }
+        }
+        return true
+    }
+    private static func sameString(_ lhs: String, _ rhs: String) -> Bool {
+        var a = lhs, b = rhs
+        return a.withUTF8 { x in b.withUTF8 { y in x.count == y.count && (x.baseAddress == y.baseAddress || x.elementsEqual(y)) } }
+    }
 }
 #endif
