@@ -1,0 +1,16 @@
+{
+  "thirdAttemptExecuted": 3,
+  "thirdAttemptFailed": 3,
+  "failedAt": "Project entry before any affected section interaction",
+  "cause": "Browse tool expansion places project below the initial lazily rendered viewport; old tests tapped without scrolling",
+  "repair": "Owning tests now scroll to the actual Studio project before exercising unchanged assertions",
+  "productSourceChangedForRepair": false,
+  "viewportRepairVerifiedByTwoActualPassedCases": true,
+  "fourthAttempt": {
+    "executed": 3,
+    "passed": 2,
+    "failed": 1
+  },
+  "remainingFailure": "Third case reached project; iOS menu exposes visible View options label without the expected viewOptions identifier",
+  "remainingTestRepair": "Tap the observed View options menu label; leave all behavior assertions unchanged"
+}

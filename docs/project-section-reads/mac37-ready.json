@@ -1,0 +1,15 @@
+{
+  "build": "37",
+  "signedAndArchiveVerified": true,
+  "rollbackBuild": "36",
+  "rollbackVerified": true,
+  "installed": false,
+  "installationBlockedBy": "Mac locked; CUA confirms manual unlock required before quit/fresh backup/swap",
+  "currentInstalledBuild": "36",
+  "currentAppKeptRunning": true,
+  "freshSafetyCopyPending": true,
+  "normalUpdateAlreadyAuthorized": true,
+  "phoneInstallationDeferred": true,
+  "normalGateChanges": false,
+  "hostedChanges": false
+}

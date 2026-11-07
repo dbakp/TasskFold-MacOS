@@ -1,0 +1,9 @@
+{
+  "testExecutionFinished": true,
+  "acceptedTestCasePasses": 2,
+  "failedTestCases": 1,
+  "optionalSimulatorDiagnosticsPID": 35807,
+  "verifiedParentXcodePID": 33151,
+  "diagnosticTermination": "SIGTERM to only this run\u2019s simctl diagnose collector after sample confirmed collection wait; preserve completed test results and prevent unnecessary storage growth",
+  "xcodeProcessNotKilled": true
+}

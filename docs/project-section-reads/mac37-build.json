@@ -1,0 +1,23 @@
+{
+  "configuration": "Release",
+  "version": "1.2.0",
+  "build": "37",
+  "sourceFingerprint": "68ae8b6b57408a4527929aa784fc9582a0efe02703141255a957b6022e2c38b5",
+  "sourceRevision": "c7282501191e9eb79caa00b84f2ad53b06c76791",
+  "signatureVerified": true,
+  "archivePayloadVerified": true,
+  "archiveSHA256": "6e6e1cc1c104f439a83615a02cb99cb7d703b52dd520962299da425bbb5800fd",
+  "sourceWasDirty": false,
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "mainAppOptimizationFlagVerified": "-O",
+  "sameNonemptyDesignatedRequirementAs36": true,
+  "phoneInstallationDeferred": true,
+  "normalGateChanges": false,
+  "hostedChanges": false
+}
