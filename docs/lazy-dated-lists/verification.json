@@ -1,0 +1,154 @@
+{
+  "date": "2026-11-07",
+  "iosCore": {
+    "tests": 33,
+    "newVisibleWindowTests": 10,
+    "failures": 0,
+    "logSHA256": "00ecca6e5603412d66c918f813316eb71c47530d5da70bf9a609de1a94405642"
+  },
+  "nativeCases": {
+    "phone-large": {
+      "accepted": true,
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "deviceFamily": "iphone",
+      "journey": {
+        "accepted": true,
+        "actualScrollPreservesTasks": true,
+        "actualUndoRestoresTasks": true,
+        "currentGestureTargetReuse": {
+          "destinationReads": 1,
+          "pointerUpdates": 15,
+          "rowBodyEvaluations": 39,
+          "slotChanges": 1,
+          "sourceReads": 1,
+          "targetReads": 16
+        },
+        "dropSecondsIncludingGestureAndXCTest": 3.01289701461792,
+        "freshReadAfterNavigation": {
+          "destinationReads": 1,
+          "pointerUpdates": 14,
+          "rowBodyEvaluations": 40,
+          "slotChanges": 1,
+          "sourceReads": 1,
+          "targetReads": 15
+        },
+        "largeDayLandingVisible": true,
+        "navigationRoundTrip": true,
+        "realDragGestureSaved": true,
+        "tabSecondsIncludingXCTest": [
+          4.211158990859985,
+          3.8304309844970703,
+          3.5266740322113037,
+          3.527922034263611
+        ],
+        "visibleWindowReorderAndExactUndo": true,
+        "workloadRows": 124
+      }
+    },
+    "phone-corners": {
+      "accepted": true,
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "deviceFamily": "iphone",
+      "journey": {
+        "accepted": true,
+        "emptyDayDropAndColdSavedOrder": true,
+        "pinnedHeaders": [
+          {
+            "largest": false,
+            "nextY": 128,
+            "pinnedY": 128
+          },
+          {
+            "largest": true,
+            "nextY": 128,
+            "pinnedY": 128
+          }
+        ],
+        "tomorrowDropPreservesViewport": true
+      }
+    },
+    "ipad-large": {
+      "accepted": true,
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "deviceFamily": "ipad",
+      "journey": {
+        "accepted": true,
+        "actualScrollPreservesTasks": true,
+        "actualUndoRestoresTasks": true,
+        "currentGestureTargetReuse": {
+          "destinationReads": 1,
+          "pointerUpdates": 16,
+          "rowBodyEvaluations": 96,
+          "slotChanges": 1,
+          "sourceReads": 1,
+          "targetReads": 17
+        },
+        "dropSecondsIncludingGestureAndXCTest": 3.4295419454574585,
+        "freshReadAfterNavigation": {
+          "destinationReads": 1,
+          "pointerUpdates": 16,
+          "rowBodyEvaluations": 97,
+          "slotChanges": 1,
+          "sourceReads": 1,
+          "targetReads": 17
+        },
+        "largeDayLandingVisible": true,
+        "navigationRoundTrip": true,
+        "realDragGestureSaved": true,
+        "tabSecondsIncludingXCTest": [
+          4.254675030708313,
+          3.277803897857666,
+          3.476747989654541,
+          3.2609970569610596
+        ],
+        "visibleWindowReorderAndExactUndo": true,
+        "workloadRows": 124
+      }
+    },
+    "ipad-corners": {
+      "accepted": true,
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "deviceFamily": "ipad",
+      "journey": {
+        "accepted": true,
+        "emptyDayDropAndColdSavedOrder": true,
+        "pinnedHeaders": [
+          {
+            "largest": false,
+            "nextY": 98,
+            "pinnedY": 98
+          },
+          {
+            "largest": true,
+            "nextY": 98,
+            "pinnedY": 98
+          }
+        ],
+        "tomorrowDropPreservesViewport": true
+      }
+    }
+  },
+  "previousEagerPhoneRowEvaluations": 249,
+  "currentLazyPhoneRowEvaluations": 39,
+  "measurementScope": "DEBUG row-wrapper body evaluations between lift and durable commit; not whole-render/optimized-release/physical-FPS evidence",
+  "geometryRegistrationKeepsTaskIdentity": true,
+  "sourceAndWorkspaceWriterGuardsUnchanged": true,
+  "macProductSourceChanged": false,
+  "mac34FrozenSource": "a16956344b220d5bcb3dcc96a61f688ba76e5e94",
+  "preparedMac": "1.2.0 (34)",
+  "installedMac": "1.2.0 (31)",
+  "phoneInstallationDeferred": true,
+  "initialCorrections": [
+    "Initial lazy re-entry lost geometry when a row reappeared at identical coordinates. Republish a retained reading and bind cleanup to its owner.",
+    "A Tomorrow landing moved 72 points: destination geometry was missing. Publish the expected day before save; key only an invisible geometry registration by task/date, retaining row identity.",
+    "An interim top-origin assertion asked Today to remain stationary after its preceding overdue section vanished. Replace it with visible landing bounds; the scrolled Tomorrow tolerance remains 32 points.",
+    "An empty-day gesture saved the following day. Reserve the full insertion gap on empty dates, matching populated dates.",
+    "The new native variant verifies its own proof flags and pinned coordinates; device results are bound to the fixed phone/tablet IDs."
+  ],
+  "remaining": [
+    "Eager date holders remain intentional; broader large-library/rendering/account/window and speech acceptance stays open",
+    "Physical FPS/device acceptance",
+    "Mac34 authorized installation/startup when native control becomes available",
+    "Other unfinished Px and agreed release/provider deferrals"
+  ]
+}
