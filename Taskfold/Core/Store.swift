@@ -1985,6 +1985,12 @@ final class Store {
         _ = taskRevision
         return taskCache.navigationCounts(labels: rows("labels"), excluding: projectCatalog.archivedIDs)
     }
+    func dayDragTargetContext(manual: Bool, calendar: Calendar) -> DayDragTargetRead.Context {
+        .init(workspace: .init(account: userID, generation: workspaceGeneration),
+              snapshot: snapshotRevision, access: workspaceReadRevision, presentation: presentationAccessEpoch,
+              session: backend.reminderSessionIncarnation, timeZone: calendar.timeZone.identifier,
+              manual: manual, readable: signedIn && workspaceCacheReadable && !signingOut && !removalRecoveryRunning && !removalPendingAccounts.contains(userID))
+    }
     var productiveReading: ProductiveTaskReading {
         _ = taskRevision
         return taskCache.productiveReading(excluding: projectCatalog.archivedIDs)

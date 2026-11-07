@@ -934,13 +934,14 @@ final class Workspace {
 /// Tracks a live macOS drag session so rows can draw the insertion indicator and drops resolve to a slot.
 @MainActor @Observable
 final class DragCoordinator {
-    var ids: [String] = []
+    var ids: [String] = [] { didSet { bandReads = [:] } }
     var target: DragSlot?
     /// Shown beside the indicator when the pointer is over another priority band and the drop snapped back.
     var bandHint: String?
     @ObservationIgnored var rowHeights: [String: CGFloat] = [:]
-    @ObservationIgnored var order: [(day: String, ids: [String])] = []
-    @ObservationIgnored var priorities: [String: Int] = [:]
+    @ObservationIgnored var order: [(day: String, ids: [String])] = [] { didSet { bandReads = [:] } }
+    @ObservationIgnored var priorities: [String: Int] = [:] { didSet { bandReads = [:] } }
+    @ObservationIgnored private var bandReads: [String: TaskPriorityBandRead] = [:]
     var active: Bool { !ids.isEmpty }
     /// The band the dragged task belongs to (the first task's, for a mixed multi-drag).
     var priority: Int { ids.first.flatMap { priorities[$0] } ?? 4 }
@@ -968,8 +969,10 @@ final class DragCoordinator {
     /// Snaps a raw slot into the dragged task's band and remembers whether it moved, so the indicator shows
     /// where the task will really land and the hint explains why.
     func constrain(_ slot: DragSlot) -> (slot: DragSlot, hint: String?) {
-        let list = members(of: slot.day).filter { !ids.contains($0.id) }
-        let before = DayPlacement.constrained(before: slot.before, priority: priority, in: list)
+        let band: TaskPriorityBandRead
+        if let existing = bandReads[slot.day] { band = existing }
+        else { band = TaskPriorityBandRead(members(of: slot.day), excluding: Set(ids)); bandReads[slot.day] = band }
+        let before = band.constrained(before: slot.before, priority: priority)
         let moved = before != slot.before
         return (DragSlot(day: slot.day, before: before), moved ? "Stays with P\(priority)" : nil)
     }

@@ -100,3 +100,79 @@ struct RowGestureMotion {
     }
     mutating func cancel() { stage = .idle; offset = 0; x = 0; y = 0; initial = 0 }
 }
+
+/// Exact anchors for the existing priority-band rule, including unsorted input.
+/// Build once for a destination; pointer updates need only a dictionary lookup.
+struct TaskPriorityBandRead {
+    private let priorities: [String: Int]
+    private let atOrAbove: [String?], above: [String?]
+    private let first: String?
+    init(_ rows: [Record], excluding: Set<String> = []) {
+        var priorities: [String: Int] = [:]
+        var atOrAbove = [String?](repeating: nil, count: 5), above = atOrAbove
+        var first: String?
+        for row in rows where !excluding.contains(row.id) {
+            let priority = row.priority
+            if first == nil { first = row.id }
+            if priorities[row.id] == nil { priorities[row.id] = priority }
+            for p in 1...4 {
+                if priority >= p, atOrAbove[p] == nil { atOrAbove[p] = row.id }
+                if priority > p, above[p] == nil { above[p] = row.id }
+            }
+        }
+        self.priorities = priorities; self.atOrAbove = atOrAbove; self.above = above; self.first = first
+    }
+    func constrained(before: String?, priority: Int) -> String? {
+        guard priority >= 1 else { return first }
+        guard priority <= 4 else { return nil }
+        if let before, let target = priorities[before] {
+            if target == priority { return before }
+            if target < priority { return atOrAbove[priority] }
+        }
+        return above[priority]
+    }
+}
+
+/// Owned by one live gesture, never by a workspace or a persistent store.
+/// Only current readable presentation rows may populate it. Commit authority
+/// remains with the caller's original row intent and ordinary drop writer.
+final class DayDragTargetRead {
+    struct Context: Equatable {
+        let workspace: WorkspaceBinding
+        let snapshot: UUID, access: UUID, presentation: UUID, session: UUID
+        let timeZone: String
+        let manual: Bool, readable: Bool
+    }
+    private let draggedID: String
+    private var context: Context?
+    private var groups: [String: [Record]] = [:]
+    private var bands: [String: TaskPriorityBandRead] = [:]
+    private var priority: Int?
+    private(set) var sourceReads = 0
+    private(set) var destinationReads = 0
+    private(set) var targetReads = 0
+    init(draggedID: String) { self.draggedID = draggedID }
+    func clear() { context = nil; groups = [:]; bands = [:]; priority = nil }
+    func constrained(before: String?, day: String, context next: Context,
+                     calendar: Calendar, rows: () -> [Record], order: ([Record], String) -> [Record]) -> String? {
+        targetReads += 1
+        guard next.readable, next.timeZone == calendar.timeZone.identifier else { clear(); return before }
+        if context != next {
+            clear(); context = next; sourceReads += 1
+            let source = rows()
+            priority = source.first { $0.id == draggedID }?.priority
+            // Date parsing runs once per source/context, not once per pointer.
+            for row in source where !row.completed {
+                groups[TaskPlanner.plannedDay(row, calendar: calendar), default: []].append(row)
+            }
+        }
+        guard let priority else { return before }
+        let band: TaskPriorityBandRead
+        if let existing = bands[day] { band = existing }
+        else {
+            band = TaskPriorityBandRead(order(groups[day] ?? [], day), excluding: [draggedID])
+            bands[day] = band; destinationReads += 1
+        }
+        return band.constrained(before: before, priority: priority)
+    }
+}
