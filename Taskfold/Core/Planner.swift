@@ -77,6 +77,41 @@ struct CalendarWorkReading {
     }
 }
 
+/// One ephemeral reading for a planner render. Display rows and productive
+/// capacity deliberately keep their distinct inputs; no edit authority is kept.
+struct PlannerDayReading {
+    let blocks: [PlannerBlock]
+    let allDay: [Record]
+    let capacity: PlannerCapacity
+    let timeline: [PlannerTimelineItem]
+    let allDayEvents: [PlannerEvent]
+    let timedEvents: [PlannerEvent]
+    let ticks: [Date]
+    let initialHourIndex: Int
+    let laneCount: Int
+
+    init(work: ProductiveTaskReading, events: [PlannerEvent], on day: Date,
+         hours: WorkingHours?, calendar: Calendar = .current, includeTimeline: Bool = true) {
+        let blocks = TaskPlanner.blocks(work.presentation, on: day, calendar: calendar)
+        self.blocks = blocks
+        allDay = TaskPlanner.allDay(work.presentation, on: day, calendar: calendar)
+        capacity = TaskPlanner.capacity(work.presentation, events: events, on: day, hours: hours, calendar: calendar, reading: work)
+        let items = includeTimeline ? PlannerTimelineItem.layout(blocks: blocks, events: events, on: day, calendar: calendar) : []
+        timeline = items; laneCount = items.map(\.laneCount).max() ?? 1
+        if let bounds = calendar.dateInterval(of: .day, for: day) {
+            allDayEvents = events.filter { $0.allDay && $0.start < bounds.end && $0.end > bounds.start }
+                .sorted { $0.start == $1.start ? $0.id < $1.id : $0.start < $1.start }
+            timedEvents = events.filter { !$0.allDay && $0.start < bounds.end && $0.end > bounds.start }
+                .sorted { $0.start < $1.start }
+        } else { allDayEvents = []; timedEvents = [] }
+        let ticks = TaskPlanner.slots(on: day, every: 60, calendar: calendar)
+        self.ticks = ticks
+        let first = blocks.first.map { calendar.component(.hour, from: $0.clippedStart) } ?? 9
+        let initialHour = max(0, min(9, first) - 1)
+        initialHourIndex = ticks.firstIndex { calendar.component(.hour, from: $0) == initialHour } ?? 0
+    }
+}
+
 enum TaskPlanner {
     static func dayKey(_ date: Date, calendar: Calendar = .current) -> String {
         var iso = Calendar(identifier: .gregorian); iso.timeZone = calendar.timeZone

@@ -1,0 +1,13 @@
+{
+  "freeBeforeBytes": 40925396992,
+  "retired": [
+    {
+      "path": "/tmp/taskfold-project-revalidation-iphone-v2.xcresult",
+      "allocatedBytes": 1093632,
+      "reason": "Previous completed synthetic journey with committed concise source/result evidence; current planner result retained"
+    }
+  ],
+  "preservedEvidenceSHA256": "c642586c45f6c60eb6a827b798628dd4c0a337b6e8b73a3bed042063dfb4818a",
+  "currentPlannerResultRetained": true,
+  "freeAfterBytes": 40926482432
+}

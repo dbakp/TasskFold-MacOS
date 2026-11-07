@@ -26,7 +26,6 @@ struct HourlyPlannerView: View {
     @State private var preferList = false
     @State private var selectedEvent:PlannerCalendarRequest?
     private var usesAgenda: Bool { preferList || (textSize.isAccessibilitySize && !largeTextTimeline) }
-    private var allDayEvents:[PlannerEvent] {events.filter{$0.allDay && $0.start<bounds.end && $0.end>bounds.start}.sorted{$0.start == $1.start ? $0.id<$1.id:$0.start<$1.start}}
     private func changeLayout() {if usesAgenda {preferList=false;largeTextTimeline=textSize.isAccessibilitySize} else {preferList=true;largeTextTimeline=false}}
     private var events: [PlannerEvent] { busy.events }
     private var hours: WorkingHours? { store.workingHours }
@@ -46,9 +45,6 @@ struct HourlyPlannerView: View {
     @ScaledMetric(relativeTo: .caption) private var clockGutter: CGFloat = 70
     private var gutter: CGFloat { min(140, clockGutter) }
     private var bounds: DateInterval { calendar.dateInterval(of: .day, for: day)! }
-    private var blocks: [PlannerBlock] { TaskPlanner.blocks(tasks, on: day) }
-    private var allDay: [Record] { TaskPlanner.allDay(tasks, on: day) }
-    private var capacity: PlannerCapacity { TaskPlanner.capacity(tasks, events: events, on: day, hours: hours, reading: work) }
     private func clock(_ date: Date) -> String { date.formatted(.dateTime.hour().minute()) }
     private func showCalendar(_ event:PlannerEvent) {
         selectedEvent=PlannerCalendarRequest(eventID:event.id,workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))
@@ -57,31 +53,32 @@ struct HourlyPlannerView: View {
         request = PlannerScheduleRequest(task: task, start: start ?? task.flatMap { TaskPlanning.start($0) } ?? calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day, workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, roots: store.activeTasks)
     }
     var body: some View {
+        let reading = PlannerDayReading(work: work, events: events, on: day, hours: hours, calendar: calendar, includeTimeline: !usesAgenda)
         VStack(spacing: 0) {
             if !summaryScrolls {
                 if let calendarHeader { calendarHeader }
-                summary
+                summary(reading)
             }
             ScrollViewReader { reader in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
                         if summaryScrolls {
                             if let calendarHeader { calendarHeader }
-                            summary.id("summary")
+                            summary(reading).id("summary")
                         }
-                        allDayLane.id("all-day")
-                        if usesAgenda { readableAgenda } else { timeline }
+                        allDayLane(reading).id("all-day")
+                        if usesAgenda { readableAgenda(reading) } else { timeline(reading) }
                     }.padding(.horizontal, 12).padding(.bottom, 40)
                 }
                 .accessibilityIdentifier("plannerScroll")
                 .task(id: TaskPlanner.dayKey(day)) {
                     try? await Task.sleep(for: .milliseconds(100))
                     guard !Task.isCancelled else { return }
-                    reader.scrollTo(summaryScrolls ? "summary" : "hour-\(initialHourIndex)", anchor: .top)
+                    reader.scrollTo(summaryScrolls ? "summary" : "hour-\(reading.initialHourIndex)", anchor: .top)
                 }
-                .onChange(of: TaskPlanner.dayKey(day)) { _, _ in reader.scrollTo(summaryScrolls ? "summary" : "hour-\(initialHourIndex)", anchor: .top) }
+                .onChange(of: TaskPlanner.dayKey(day)) { _, _ in reader.scrollTo(summaryScrolls ? "summary" : "hour-\(reading.initialHourIndex)", anchor: .top) }
                 .onChange(of:usesAgenda) { _,_ in
-                    reader.scrollTo(summaryScrolls ? "summary":usesAgenda ? "all-day":"hour-\(initialHourIndex)",anchor:.top)
+                    reader.scrollTo(summaryScrolls ? "summary":usesAgenda ? "all-day":"hour-\(reading.initialHourIndex)",anchor:.top)
                 }
                 .onChange(of: allDayRequest) { _, _ in
                     reader.scrollTo("all-day", anchor: .top)
@@ -120,19 +117,14 @@ struct HourlyPlannerView: View {
         }
         .alert("Could not schedule", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) { Button("OK") { error = nil } } message: { Text(error ?? "") }
     }
-    private var initialHour: Int {
-        let first = blocks.first.map { calendar.component(.hour, from: $0.clippedStart) } ?? 9
-        return max(0, min(9, first) - 1)
-    }
-    private var initialHourIndex: Int { TaskPlanner.slots(on: day, every: 60).firstIndex { calendar.component(.hour, from: $0) == initialHour } ?? 0 }
-    private var summary: some View {
+    private func summary(_ reading: PlannerDayReading) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if textSize.isAccessibilitySize {
                 Text(day.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())).font(.headline).fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 12) { scheduleButton; Spacer(minLength: 8); settingsButton }
-                estimateSummary
+                estimateSummary(reading.capacity)
                 VStack(alignment: .leading, spacing: 4) {
-                    allDayButton
+                    allDayButton(reading)
                     Button(usesAgenda ? "Show timeline" : "Show readable list") { changeLayout() }.font(.caption).frame(minHeight: 44).accessibilityIdentifier("plannerLargeTextLayout")
                 }
             } else {
@@ -141,18 +133,18 @@ struct HourlyPlannerView: View {
                     Spacer(minLength: 8)
                     scheduleButton; settingsButton
                 }
-                HStack { estimateSummary; Spacer(minLength: 4); allDayButton
+                HStack { estimateSummary(reading.capacity); Spacer(minLength: 4); allDayButton(reading)
                     Button {changeLayout()} label: {Image(systemName:usesAgenda ? "calendar.day.timeline.left":"list.bullet").frame(width:44,height:44)}
                         .accessibilityLabel(usesAgenda ? "Show timeline":"Show readable list").accessibilityIdentifier("plannerLayoutToggle")
                 }
             }
-            Text(workingSummary).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerWorkingCapacity")
+            Text(workingSummary(reading.capacity)).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerWorkingCapacity")
             if work.incomplete {
                 Label("Some grouped tasks need review. Capacity includes readable estimates only.", systemImage: "exclamationmark.circle")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerGroupedWorkReview")
             }
             Text(busy.status).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            if !usesAgenda,(PlannerTimelineItem.layout(blocks:blocks,events:events,on:day,calendar:calendar).map(\.laneCount).max() ?? 1)>1 {
+            if !usesAgenda,reading.laneCount>1 {
                 Label("Overlapping plans sit side by side. Scroll sideways if needed.",systemImage:"arrow.left.and.right")
                     .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("plannerOverlapHint")
             }
@@ -160,11 +152,11 @@ struct HourlyPlannerView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial)
     }
-    private var estimateSummary: some View {
+    private func estimateSummary(_ capacity: PlannerCapacity) -> some View {
         Text("\(capacity.estimatedMinutes) min estimated · \(capacity.unknownTasks) without estimates")
             .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerCapacity")
     }
-    private var workingSummary: String {
+    private func workingSummary(_ capacity: PlannerCapacity) -> String {
         if capacity.incomplete { return "Review grouped tasks before relying on remaining capacity." }
         guard hours != nil else { return "Capacity unavailable. Update Taskfold to read these working hours." }
         if busy.ready {
@@ -181,21 +173,21 @@ struct HourlyPlannerView: View {
     private var settingsButton: some View {
         Button { settings = true } label: { Image(systemName: "slider.horizontal.3").font(.system(size: 20)).frame(width: 44, height: 44) }.accessibilityLabel("Planner settings").accessibilityIdentifier("plannerSettings")
     }
-    private var allDayButton: some View {
-        Button { allDayRequest += 1 } label: { Text("All day (\(allDay.count+allDayEvents.count))").font(.caption).frame(minHeight: 44) }.accessibilityIdentifier("plannerShowAllDay")
+    private func allDayButton(_ reading: PlannerDayReading) -> some View {
+        Button { allDayRequest += 1 } label: { Text("All day (\(reading.allDay.count+reading.allDayEvents.count))").font(.caption).frame(minHeight: 44) }.accessibilityIdentifier("plannerShowAllDay")
     }
-    private var allDayLane: some View {
+    private func allDayLane(_ reading: PlannerDayReading) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("ALL DAY").font(.caption2.weight(.semibold)).foregroundStyle(.secondary).tracking(0.8)
-            if allDay.isEmpty && allDayEvents.isEmpty { Text("Tasks with a date and no time appear here.").font(.caption).foregroundStyle(.secondary) }
-            ForEach(allDayEvents) {event in
+            if reading.allDay.isEmpty && reading.allDayEvents.isEmpty { Text("Tasks with a date and no time appear here.").font(.caption).foregroundStyle(.secondary) }
+            ForEach(reading.allDayEvents) {event in
                 Button {showCalendar(event)} label: {
                     VStack(alignment:.leading,spacing:6) {Label(event.title,systemImage:"calendar").font(.callout);Text("Calendar · All day · "+event.source).font(.caption).foregroundStyle(.secondary)}
                         .fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,minHeight:44,alignment:.leading).padding(10)
                         .background(Color.secondary.opacity(0.09),in:RoundedRectangle(cornerRadius:12))
                 }.buttonStyle(.plain).foregroundStyle(.primary).accessibilityIdentifier("plannerCalendarAllDay-"+event.id)
             }
-            ForEach(allDay) { task in
+            ForEach(reading.allDay) { task in
                 Group {
                     if textSize.isAccessibilitySize {
                         VStack(alignment: .leading, spacing: 12) {
@@ -232,11 +224,11 @@ struct HourlyPlannerView: View {
     }
     /// Fixed-height blocks cannot contain full accessibility-size text. Keep the same plans and
     /// mutations in a readable agenda, with the graphical timeline available as a view choice.
-    private var readableAgenda: some View {
+    private func readableAgenda(_ reading: PlannerDayReading) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Timed tasks").font(.headline)
-            if blocks.isEmpty { Text("Use Schedule to give a task a time.").foregroundStyle(.secondary) }
-            ForEach(blocks) { block in
+            if reading.blocks.isEmpty { Text("Use Schedule to give a task a time.").foregroundStyle(.secondary) }
+            ForEach(reading.blocks) { block in
                 VStack(alignment: .leading, spacing: 12) {
                     Button { open(block.task) } label: {
                         Text(block.task.title).font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -265,7 +257,7 @@ struct HourlyPlannerView: View {
                     .background(Color.taskfold.opacity(0.09), in: RoundedRectangle(cornerRadius: 12))
                     .accessibilityElement(children: .contain).accessibilityIdentifier("plannerBlock-" + block.id).id("agenda-" + block.id)
             }
-            let visibleEvents = events.filter { !$0.allDay && $0.start < bounds.end && $0.end > bounds.start }.sorted { $0.start < $1.start }
+            let visibleEvents = reading.timedEvents
             if !visibleEvents.isEmpty {
                 Text("Calendar busy time").font(.headline)
                 ForEach(visibleEvents) { event in
@@ -281,10 +273,10 @@ struct HourlyPlannerView: View {
             }
         }
     }
-    private var timeline:some View {
-        let ticks=TaskPlanner.slots(on:day,every:60),minutes=bounds.duration/60
-        let items=PlannerTimelineItem.layout(blocks:blocks,events:events,on:day,calendar:calendar)
-        let lanes=items.map(\.laneCount).max() ?? 1,height=CGFloat(minutes)*scale+44
+    private func timeline(_ reading: PlannerDayReading) -> some View {
+        let ticks=reading.ticks,minutes=bounds.duration/60
+        let items=reading.timeline
+        let lanes=reading.laneCount,height=CGFloat(minutes)*scale+44
         return GeometryReader { geometry in
             let viewport=max(1,geometry.size.width-gutter),contentWidth=max(viewport,CGFloat(lanes)*140)
             VStack(alignment:.leading,spacing:0) {

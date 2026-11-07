@@ -1,0 +1,9 @@
+{
+  "files": {
+    "Taskfold/Core/Planner.swift": "4e5917414034633826ac150e2859d57663f5981cade47f3f96e4f374402697c9",
+    "Taskfold/Views/HourlyPlanner.swift": "ecda34d91e0693d04d534e903fa2545742ba1efff4b28b7201dd164c75d60b9e",
+    "TaskfoldTests/PlannerTests.swift": "8ade2276b0ad77d74fe6fa4f58c186ad7c21cf2ed34a73ad43f64e0a6f833b96"
+  },
+  "independentOwner": "TasskFold-MacOS",
+  "normalGatesAndDataContractUnchanged": true
+}

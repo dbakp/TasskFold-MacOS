@@ -1,0 +1,15 @@
+{
+  "ownerFiles": {
+    "Taskfold/Core/Models.swift": "fab6a7adfe0fcf19e123bf0e3fcfd8181ecdb69858adf43c08c59776229e69c3",
+    "Taskfold/Core/TeamWorkspace.swift": "7edb32bf154592f68784b1429357f8dfd8e7cf52079000b0adc4b8086090e23d",
+    "Taskfold/Core/Store.swift": "9bb3ebe41b63af266348325539b407ee84edac7c3627554ec7c00251c4677e33",
+    "Taskfold/TaskfoldApp.swift": "7420a841f9454102691ea9dd3fc7ca05b549a5fce32c2c080e2605e89ef0e94b",
+    "TaskfoldUITests/TaskfoldUITests.swift": "10dd837f0139c2999d57420d41d2a020e653f49e410990798d6cf70b4287452d",
+    "Taskfold/Core/Planner.swift": "4e5917414034633826ac150e2859d57663f5981cade47f3f96e4f374402697c9",
+    "Taskfold/Views/HourlyPlanner.swift": "4791d974cfd194856b869b5a660713400663420a5768ebd4d32b2690803b435d"
+  },
+  "existingIsolatedHost": true,
+  "existingPhone": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "newDeviceCreated": false,
+  "phoneInstallDeferred": true
+}
