@@ -1,0 +1,19 @@
+{
+  "changes": [
+    {
+      "owner": "TasskFold-MacOS",
+      "file": "Taskfold/Views/FilterAssistanceView.swift",
+      "testedSHA256": "f95c243dab7d2658ac184097c572c0725e95d148fd8ade5dd671c94b69c28ca1",
+      "deliveredSHA256": "21ffce90c538871c6d8f98258b8d290e03bf299d9bb0d5bd088a46c562688432",
+      "onlyChange": "Whitespace on an otherwise empty line; no code, string, line-number or behavior change"
+    },
+    {
+      "owner": "TaskFold-iOS",
+      "file": "Taskfold/Views/FilterAssistanceView.swift",
+      "testedSHA256": "f95c243dab7d2658ac184097c572c0725e95d148fd8ade5dd671c94b69c28ca1",
+      "deliveredSHA256": "21ffce90c538871c6d8f98258b8d290e03bf299d9bb0d5bd088a46c562688432",
+      "onlyChange": "Whitespace on an otherwise empty line; no code, string, line-number or behavior change"
+    }
+  ],
+  "repeatNativeTestsRequired": false
+}

@@ -1,0 +1,30 @@
+{
+  "initialNative": {
+    "session": 85955,
+    "terminalExit": 0,
+    "executed": 0,
+    "accepted": false,
+    "reason": "Older reserved host had the WorkflowSourceSelection file/build reference but did not list it in its UI-test sources phase. Added that existing build reference to its test target; no app identity or normal project change."
+  },
+  "initialCore": {
+    "selected": 28,
+    "skipped": 1,
+    "failures": 2,
+    "reason": "Missing comma-exclusion handling; a completion-visibility assertion omitted the existing includeCompleted switch. Corrected, and both current suites135selected/3skip/0fail pass."
+  },
+  "sourcePhaseRun": {
+    "session": 22780,
+    "terminalExit": 65,
+    "executed": 2,
+    "failures": 2,
+    "accepted": false,
+    "reason": "Largest-text empty-feedback label was below the viewport; corrected the test to reveal it. Normal journey passed data/Save/cold checks, then expected unparenthesized display rather than the existing canonical (completed). Corrected to the actual formatter. Added normal sentence punctuation/politeness with Core coverage before final source freeze.",
+    "logSHA256": "9a8bd337df70d991c6e4235be3569c3d8f48d749231480624f483a7f4ddb526d"
+  },
+  "feedbackRunStoppedForFocusGuard": {
+    "session": 30225,
+    "pid": 69034,
+    "intentionalStop": true,
+    "reason": "Code review found automatic error scrolling could interrupt a user who was actively editing. Stop this owned run to add a focused-field guard before final acceptance; not an observation-timeout restart."
+  }
+}

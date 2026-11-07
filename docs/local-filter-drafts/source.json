@@ -1,0 +1,10 @@
+{
+  "files": {
+    "Taskfold/Core/FilterAssistance.swift": "6dde6cffe28a6a18956d67b5d6cea80c954f86c75db10bfd2ce61611823202b0",
+    "Taskfold/Views/FilterAssistanceView.swift": "21ffce90c538871c6d8f98258b8d290e03bf299d9bb0d5bd088a46c562688432",
+    "TaskfoldTests/FilterAssistanceTests.swift": "29d7eafa31bad3c78b193d979558bb1335bdc3d631a18bcfca736c3b30800360",
+    "TaskfoldTests/LocalFilterDescriptionTests.swift": "0a70ade824475b703476667f490deac3d4553f18a1222890c4bc0ee96657388b",
+    "Scripts/test_ondevice_quality.py": "3d2184e8be807d8835cb184a96659ad99c1872565303d34fd765410ba9f33f81"
+  },
+  "independentOwner": true
+}

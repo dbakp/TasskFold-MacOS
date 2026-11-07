@@ -246,6 +246,16 @@ final class FilterAssistanceTests: XCTestCase {
             XCTAssertNotEqual(rows.filter { wrong.rule.resultMatches($0, context: modelContext, today: today, timeZone: "UTC") }.map(\.id), expected, "A plausible wrong expression must fail the oracle: " + goal)
         }
     }
+    func testLocalDescriptionsMatchFullSemanticOracleWithoutInference() async throws {
+        let (context, today, rows, cases) = qualityFixture()
+        for (goal, expected, _, _) in cases {
+            _ = try XCTUnwrap(LocalFilterDescription.expression(for: goal), goal)
+            let draft = try await FilterAssistanceEngine.draft(goal)
+            XCTAssertEqual(draft.origin, .localDescription)
+            let suggestion = try FilterSuggestion(expression: draft.expression, context: context)
+            XCTAssertEqual(rows.filter { suggestion.rule.resultMatches($0, context: context, today: today, timeZone: "UTC") }.map(\.id), expected, goal)
+        }
+    }
     func testActualOnDeviceFilterEngineWhenExplicitlyRequested() async throws {
         guard ProcessInfo.processInfo.environment["TASKFOLD_TEST_ON_DEVICE_MODEL"] == "1" else { throw XCTSkip("Actual model probe is opt-in.") }
         if let reason = OnDeviceAssistance.unavailableReason {
@@ -257,14 +267,14 @@ final class FilterAssistanceTests: XCTestCase {
             let start = ContinuousClock.now
             var generated: String?
             do {
-                let text = try await FilterAssistanceEngine.generate(goal)
+                let text = try await FilterAssistanceEngine.generateModel(goal)
                 generated = text
                 let duration = start.duration(to: .now).components
                 let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
                 print("TASKFOLD_MODEL_RAW_EXPRESSION " + text)
                 let suggestion = try FilterSuggestion(expression: text, context: modelContext)
                 let matches = rows.filter { suggestion.rule.resultMatches($0, context: modelContext, today: today, timeZone: "UTC") }.map(\.id)
-                let observation: [String: Any] = ["engine": "filter", "syntheticGoal": goal, "seconds": seconds, "expression": text, "matchedIDs": matches, "expectedIDs": expected]
+                let observation: [String: Any] = ["engine": "filter", "generationPath": "systemModel", "syntheticGoal": goal, "seconds": seconds, "expression": text, "matchedIDs": matches, "expectedIDs": expected]
                 print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
                 if matches != expected { allAccepted = false }
                 XCTAssertEqual(matches, expected, "The generated query must mean what was requested: " + text)
@@ -272,7 +282,7 @@ final class FilterAssistanceTests: XCTestCase {
                 allAccepted = false
                 let duration = start.duration(to: .now).components
                 let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
-                var observation: [String: Any] = ["engine": "filter", "syntheticGoal": goal, "seconds": seconds, "expectedIDs": expected, "error": String(describing: error)]
+                var observation: [String: Any] = ["engine": "filter", "generationPath": "systemModel", "syntheticGoal": goal, "seconds": seconds, "expectedIDs": expected, "error": String(describing: error)]
                 if let generated { observation["expression"] = generated }
                 print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
                 XCTFail("The actual model did not return a usable query: " + String(describing: error))

@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Reduce pauses during large local saves",
-  "latest": "Large plain workspaces now prepare unchanged task rows away from the interface thread, then reuse only exact authored sources during saves. Each owner passes 74 focused cases. Two signed Simulator journeys verify four warm/cold drops and exact saved work: the large-list fixture improves from 126–130 ms to 58–62 ms through local commit; moving the 2.88 MB payload itself takes 86–88 ms. Wider stutter/physical FPS remains unaccepted. Mac44 is installed and synced after a fresh safety copy with nine prelaunch caches byte-exact; shared storage and its original readonly postlaunch audit still wait on macOS access. The new save source is separate from installed 44. Mac45 with the new saving code now passes optimized build, signing and exact archive checks. It stays prepared while 44’s existing access/readback is pending; 42 remains the verified data rollback.",
+  "focus": "Common filter descriptions without an AI wait",
+  "latest": "Common filter descriptions now draft locally, even without Apple Intelligence. The complete local grammar preserves planned dates versus deadlines, priorities, completion and explicit subproject scope; unclear wording keeps the existing model/manual path. Both owners pass 133 focused checks (3 intentional skips), including 12 semantic examples. Two signed Simulator journeys verify normal/largest text, automatically visible results, Cancel, explicit Save and exact cold data; the normal case also verifies visible refusal for an unknown project. Raw model quality remains unaccepted; local results do not count as inference. Mac44 and its existing access/readback stay intact; the new source is queued for the next verified package. Phone installation and agreed rollout/provider/audio deferrals remain.",
   "next": [
-    "Finish the existing Mac44 system app-data access/readback without restarting its app or duplicate job. Then install verified Mac45 with a fresh private safety copy; routine updates are already authorized. Mac44 is installed and synced, nine prelaunch caches are byte-exact, and 42 remains the verified data rollback. iPhone installation stays deferred.",
+    "Complete the existing Mac44 access/readback without replacing its session, then install the latest verified package after a fresh safety copy. Routine updates are already authorized. iPhone installation stays deferred.",
     "Profile the remaining drop and navigation costs, including widget preparation, local history and rendering. The new row writer halves the observed large-list drop/save fixture, but wider scrolling, reconstructed-refresh scaling and physical smoothness remain open.",
-    "Pursue a materially different approach to real on-device filter quality: two structured schemas now have rejected actual-model evidence. Do not rerun them unchanged. The production engine still fails two of the original five; the expanded twelve-request/eleven-row current-production suite is not accepted. Keep assistance on-device only.",
+    "Improve genuinely generated on-device filter quality with a materially different, grounded design. Common descriptions now have a complete local path; the raw model remains known3/5, and the expanded twelve-goal oracle is still unaccepted. Do not rerun rejected prompts/schemas unchanged or count local drafts as inference.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
     "Finish Mac/iPad Saved originals controls and wider account/accessibility behavior; then finish broader custodian cleanup, restoration/Undo and the larger older-task/history migration. Command-free discovery/export now has genuine API and Core proof. Keep wider mapped/shared-team/custodian, exact-cache and file/discussion ownership cases distinct; ordinary advanced rollout gates stay off.",
     "Finish protected Mac deletion/recovery and disposable hosted residual-file repair and issuer/verifier checks when their stated prerequisites are available. Never erase device copies without bound confirmation.",
@@ -798,7 +798,7 @@
             "unchanged-row-encoding/mac45-package.json",
             "unchanged-row-encoding/storage-cleanup.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-voice",
@@ -822,7 +822,7 @@
             {
               "state": "verify",
               "title": "Reviewed task and filter assistance",
-              "detail": "Both apps own editable task-step and filter reviews, explicit Apply/Save, source/session checks and recorded seeded recovery/history journeys. The ready Mac model previously returned valid English/Spanish task-title arrays. Its production filter engine remains known to fail two of five requests (prose and omitted subprojects). Two materially different structured-generation schemas were implemented and actually exercised on twelve goals: generic condition/value matched0/12, typed semantic fields matched3/12 but regressed original controls and had an accidental match with wrong Boolean structure. Both are rejected and production engine/parser/helper sources are restored unchanged. The retained stronger twelve-goal oracle adds two deadline counterexample rows while preserving the original five expected ID sets; current production acceptance on the expanded eleven-row fixture remains unverified. Do not repeat rejected prompts or schemas unchanged. Wider native/device/language/quality remains open. On-device only; no task/catalog inputs, cloud fallback, task/filter writes, model settings, services or normal gates changed."
+              "detail": "Both apps own editable task-step and filter reviews, explicit Apply/Save, source/session checks and recorded seeded recovery/history journeys. The ready Mac model previously returned valid English/Spanish task-title arrays. Its production filter engine remains known to fail two of five requests (prose and omitted subprojects). Two materially different structured-generation schemas were implemented and actually exercised on twelve goals: generic condition/value matched0/12, typed semantic fields matched3/12 but regressed original controls and had an accidental match with wrong Boolean structure. Both are rejected and production engine/parser/helper sources are restored unchanged. The retained stronger twelve-goal oracle adds two deadline counterexample rows while preserving the original five expected ID sets; current production acceptance on the expanded eleven-row fixture remains unverified. Do not repeat rejected prompts or schemas unchanged. Wider native/device/language/quality remains open. On-device only; no task/catalog inputs, cloud fallback, task/filter writes, model settings, services or normal gates changed. Common complete English descriptions now have a separate local draft path before model availability/inference. Both owners pass 133 ordinary checks with 3 intentional skips; all 12 counterexample-backed semantic examples draft locally. Normal/largest signed iPhone journeys pass project/exact-tree scope, completed preview, automatic result visibility, local attribution, read-only Use/Cancel, explicit filter-only Save and cold data. Normal text additionally passes automatically visible unknown-project refusal. No model inference is claimed: the raw probe explicitly bypasses the local path and its previous 3/5 quality/expanded 12 acceptance remains open. Mac/iPad interaction, speech, wider language/model and lifecycle cases remain."
             }
           ],
           "sources": [
@@ -887,9 +887,13 @@
             "natural-filter-forms/verification.json",
             "structured-filter-assistance/README.md",
             "structured-filter-assistance/rejected-designs/generic-condition-quality.json",
-            "structured-filter-assistance/rejected-designs/typed-semantic-quality.json"
+            "structured-filter-assistance/rejected-designs/typed-semantic-quality.json",
+            "local-filter-drafts/README.md",
+            "local-filter-drafts/core-verification.json",
+            "local-filter-drafts/iphone-verification.json",
+            "local-filter-drafts/model-provenance.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-reminders",
@@ -1835,7 +1839,11 @@
     "unchanged-row-encoding/core-verification.json",
     "unchanged-row-encoding/iphone-verification.json",
     "unchanged-row-encoding/mac45-package.json",
-    "unchanged-row-encoding/storage-cleanup.json"
+    "unchanged-row-encoding/storage-cleanup.json",
+    "local-filter-drafts/README.md",
+    "local-filter-drafts/core-verification.json",
+    "local-filter-drafts/iphone-verification.json",
+    "local-filter-drafts/model-provenance.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2152,6 +2160,10 @@
     "legacy-child-preservation/README.md": "c759db19d0718950ce19956d9dcec05a9272f9d1e7e7f77e84f1c213dbd989e0",
     "legacy-child-preservation/verification.json": "acefbc2ad99f12bc9f8c6193354c9ef0fb341fc197226e911fc188c3d9da320f",
     "linear-day-grouping/README.md": "b985b7f8cb0b8f71d18559430caf6fec3fff4da3c81dbeb854dccd3e8ecb68c5",
+    "local-filter-drafts/README.md": "60e2bebe4c274f5927b83fa68930b4fa985f0e100fb38a65dcf5250fb770de1d",
+    "local-filter-drafts/core-verification.json": "7c86deec06a291a1be10ae3076ee6045d5940dfbf6ac39ff651eeea89797eecf",
+    "local-filter-drafts/iphone-verification.json": "9eb8f962f4cfc3ced423adf3c5fcc4453aedeea3a7464c5b5cca52bdfb972fb1",
+    "local-filter-drafts/model-provenance.json": "af5aaad138fa1a9c20238b83cf5eab19a62ec242da8c547e8f92cfd7aa48bcf4",
     "mac-hierarchy-keyboard/README.md": "d9e9ca453d34f6d446b3432d872ffee279cc6e1eea7dc59bd17ca0ddd7266065",
     "mac-hierarchy-keyboard/verification.json": "0fa849940f2c95467d41fb97ecd628732ff12abdf2bcf018cefeaf594e264d3c",
     "mac-transfer-keyboard/README.md": "c616adc8ff2f748d03a915c84704869d4aa68b4f3da89ffb53c3a25e83c47906",

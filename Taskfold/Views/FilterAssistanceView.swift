@@ -7,6 +7,7 @@ struct FilterAssistanceView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var description = ""
     @State private var expression: String
     @State private var run: FilterAssistanceRun
@@ -14,6 +15,8 @@ struct FilterAssistanceView: View {
     @State private var busy: String?
     @State private var activeQuery: String?
     @State private var generatedDescription: String?
+    @State private var localDescriptionAvailable = false
+    @State private var suggestionOrigin: FilterAssistanceEngine.Origin?
     @State private var proposal: FilterSuggestion?
     private struct PreviewStamp: Equatable {
         let tasks: Int
@@ -55,82 +58,101 @@ struct FilterAssistanceView: View {
     }
     var body: some View {
         NavigationStack {
-            Form {
-                if isCurrent {
-                    Section("Describe what to show") {
-                        TextField("For example, overdue high-priority tasks in Inbox", text: $description, axis: .vertical)
-                            .lineLimit(2...6).focused($focusedField, equals: .description).disabled(busy != nil).accessibilityIdentifier("filterAssistanceDescription")
-                        Text("Apple Intelligence uses only the description above, on this device. Your tasks, saved query and project directory aren’t sent to the model.")
-                            .font(.callout).foregroundStyle(.secondary)
-                        if let descriptionIssue { Text(descriptionIssue).foregroundStyle(.red) }
-                        if let unavailable {
-                            Text(unavailable).foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceUnavailable")
-                            Button("Check availability") { self.unavailable = OnDeviceAssistance.unavailableReason }
-                        } else {
+            ScrollViewReader { proxy in
+                Form {
+                    if isCurrent {
+                        Section("Describe what to show") {
+                            TextField("For example, unfinished priority 1 tasks planned today", text: $description, axis: .vertical)
+                                .lineLimit(2...6).focused($focusedField, equals: .description).disabled(busy != nil).accessibilityIdentifier("filterAssistanceDescription")
+                            Text("Common descriptions are prepared on this device. Apple Intelligence can help with other wording. Your tasks, saved query and project directory aren’t sent to the model.")
+                                .font(.callout).foregroundStyle(.secondary)
+                            if let descriptionIssue { Text(descriptionIssue).foregroundStyle(.red) }
+                            if let unavailable {
+                                Text("Apple Intelligence: " + unavailable + " Common descriptions can still be prepared here.").foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceUnavailable")
+                                Button("Check availability") { self.unavailable = OnDeviceAssistance.unavailableReason }
+                            }
                             Button("Suggest expression", systemImage: "wand.and.stars", action: generate)
-                                .disabled(busy != nil || run.closed || descriptionIssue != nil || description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                                .disabled(busy != nil || run.closed || descriptionIssue != nil || description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (unavailable != nil && !localDescriptionAvailable))
                                 .accessibilityIdentifier("filterAssistanceGenerate")
                         }
-                    }
-                    Section("Review expression") {
-                        HStack(alignment: .top) {
-                            TextField("today AND p1", text: $expression, axis: .vertical)
-                                .lineLimit(2...8).focused($focusedField, equals: .expression).autocorrectionDisabled().disabled(busy != nil)
-                                .accessibilityIdentifier("filterAssistanceExpression")
-                                #if os(iOS)
-                                .textInputAutocapitalization(.never)
-                                #endif
-                            if !expression.isEmpty {
-                                Button { expression = ""; focusedField = .expression } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
-                                    .buttonStyle(.borderless).disabled(busy != nil)
-                                    .accessibilityLabel("Clear expression").accessibilityIdentifier("filterAssistanceClear")
-                            }
-                        }
-                        Button("Check preview") { check() }
-                            .disabled(busy != nil || run.closed || (try? FilterSuggestion.boundedExpression(expression)) == nil)
-                            .accessibilityIdentifier("filterAssistancePreview")
-                        if let previewCount, let previewCaption {
-                            Text(previewCount == 1 ? "1 matching task" : "\(previewCount) matching tasks").font(.headline).accessibilityIdentifier("filterAssistanceCount")
-                            Text(previewCaption).foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceMeaning")
-                            if previewCount == 0 {
-                                Text("No tasks match yet. You can still use this expression for future tasks.")
-                                    .foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceEmpty")
-                            } else {
-                                Text(previewCount > previewTasks.count ? "A few matches" : "Matching tasks")
-                                    .font(.subheadline).foregroundStyle(.secondary)
-                                ForEach(Array(previewTasks.enumerated()), id: \.offset) { index, task in
-                                    HStack(alignment: .top, spacing: 10) {
-                                        Image(systemName: task.completed ? "checkmark.circle.fill" : "circle")
-                                            .foregroundStyle(.secondary).accessibilityHidden(true)
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(task.title.isEmpty ? "Untitled task" : task.title)
-                                                .lineLimit(3)
-                                            Text(task.string("project_id").isEmpty ? "Inbox" : store.record("projects", id: task.string("project_id"))?.name ?? "Project unavailable")
-                                                .font(.caption).foregroundStyle(.secondary)
-                                            if task.completed { Text("Completed").font(.caption).foregroundStyle(.secondary) }
-                                        }
-                                    }.accessibilityElement(children: .combine)
-                                        .accessibilityIdentifier("filterAssistanceMatch-" + String(index))
-                                }
-                                if previewCount > previewTasks.count {
-                                    Text("Showing \(previewTasks.count) of \(previewCount) matching tasks.")
-                                        .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceSampleLimit")
+                        Section("Review expression") {
+                            HStack(alignment: .top) {
+                                TextField("today AND p1", text: $expression, axis: .vertical)
+                                    .lineLimit(2...8).focused($focusedField, equals: .expression).autocorrectionDisabled().disabled(busy != nil)
+                                    .accessibilityIdentifier("filterAssistanceExpression")
+                                    #if os(iOS)
+                                    .textInputAutocapitalization(.never)
+                                    #endif
+                                if !expression.isEmpty {
+                                    Button { expression = ""; focusedField = .expression } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
+                                        .buttonStyle(.borderless).disabled(busy != nil)
+                                        .accessibilityLabel("Clear expression").accessibilityIdentifier("filterAssistanceClear")
                                 }
                             }
-                            Text("Read-only preview. Checking or using an expression never changes these tasks.")
-                                .font(.caption).foregroundStyle(.secondary)
+                            Button("Check preview") { check() }
+                                .disabled(busy != nil || run.closed || (try? FilterSuggestion.boundedExpression(expression)) == nil)
+                                .accessibilityIdentifier("filterAssistancePreview")
+                            if let previewCount, let previewCaption {
+                                Text(previewCount == 1 ? "1 matching task" : "\(previewCount) matching tasks").font(.headline).accessibilityIdentifier("filterAssistanceCount").id("filterAssistanceCountAnchor")
+                                if let suggestionOrigin {
+                                    Label(suggestionOrigin == .localDescription ? "From your description" : "Apple Intelligence suggestion",
+                                          systemImage: suggestionOrigin == .localDescription ? "text.magnifyingglass" : "wand.and.stars")
+                                        .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceSource")
+                                }
+
+                                Text(previewCaption).foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceMeaning")
+                                if previewCount == 0 {
+                                    Text("No tasks match yet. You can still use this expression for future tasks.")
+                                        .foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceEmpty")
+                                } else {
+                                    Text(previewCount > previewTasks.count ? "A few matches" : "Matching tasks")
+                                        .font(.subheadline).foregroundStyle(.secondary)
+                                    ForEach(Array(previewTasks.enumerated()), id: \.offset) { index, task in
+                                        HStack(alignment: .top, spacing: 10) {
+                                            Image(systemName: task.completed ? "checkmark.circle.fill" : "circle")
+                                                .foregroundStyle(.secondary).accessibilityHidden(true)
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(task.title.isEmpty ? "Untitled task" : task.title)
+                                                    .lineLimit(3)
+                                                Text(task.string("project_id").isEmpty ? "Inbox" : store.record("projects", id: task.string("project_id"))?.name ?? "Project unavailable")
+                                                    .font(.caption).foregroundStyle(.secondary)
+                                                if task.completed { Text("Completed").font(.caption).foregroundStyle(.secondary) }
+                                            }
+                                        }.accessibilityElement(children: .combine)
+                                            .accessibilityIdentifier("filterAssistanceMatch-" + String(index))
+                                    }
+                                    if previewCount > previewTasks.count {
+                                        Text("Showing \(previewTasks.count) of \(previewCount) matching tasks.")
+                                            .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceSampleLimit")
+                                    }
+                                }
+                                Text("Read-only preview. Checking or using an expression never changes these tasks.")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                            Text("Use expression updates this draft. Save in the filter editor to keep it.")
+                                .font(.callout).foregroundStyle(.secondary)
                         }
-                        Text("Use expression updates this draft. Save in the filter editor to keep it.")
-                            .font(.callout).foregroundStyle(.secondary)
-                    }
-                    if let busy {
-                        Section {
-                            ProgressView(busy).accessibilityIdentifier("filterAssistanceProgress")
-                            Button("Stop", action: stop).accessibilityIdentifier("filterAssistanceStop")
+                        if let busy {
+                            Section {
+                                ProgressView(busy).accessibilityIdentifier("filterAssistanceProgress")
+                                Button("Stop", action: stop).accessibilityIdentifier("filterAssistanceStop")
+                            }
                         }
+                        if let error { Section { Text(error).foregroundStyle(.red).accessibilityIdentifier("filterAssistanceError").id("filterAssistanceErrorAnchor") } }
+                    } else { Text("This filter is no longer available.") }
+                }
+                .onChange(of: previewCount) { _, count in
+                    guard count != nil, isCurrent, focusedField == nil, checkedStamp == previewStamp else { return }
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                        proxy.scrollTo("filterAssistanceCountAnchor", anchor: .top)
                     }
-                    if let error { Section { Text(error).foregroundStyle(.red).accessibilityIdentifier("filterAssistanceError") } }
-                } else { Text("This filter is no longer available.") }
+                }
+                .onChange(of: error) { _, message in
+                    guard message != nil, isCurrent, focusedField == nil else { return }
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                        proxy.scrollTo("filterAssistanceErrorAnchor", anchor: .top)
+                    }
+                }
             }
             .formStyle(.grouped)
             .navigationTitle("Suggest a filter")
@@ -160,6 +182,7 @@ struct FilterAssistanceView: View {
             if let activeQuery, !activeQuery.utf8.elementsEqual(value.utf8) { stop(); clearPreview(); error = nil }
         }
         .onChange(of: description) { _, value in
+            localDescriptionAvailable = LocalFilterDescription.expression(for: value) != nil
             if let generatedDescription, !generatedDescription.utf8.elementsEqual(value.utf8) {
                 stop(); clearPreview(); expression = ""; self.generatedDescription = nil; activeQuery = nil; error = nil
             }
@@ -182,7 +205,7 @@ struct FilterAssistanceView: View {
             .disabled(busy != nil || proposal == nil || checkedStamp != previewStamp || applied || run.closed || !isCurrent)
             .accessibilityLabel("Use expression").accessibilityIdentifier("filterAssistanceApply")
     }
-    private func clearPreview() { proposal = nil; previewCount = nil; previewCaption = nil; previewTasks = []; checkedStamp = nil }
+    private func clearPreview() { suggestionOrigin = nil; proposal = nil; previewCount = nil; previewCaption = nil; previewTasks = []; checkedStamp = nil }
     private func stop() { work?.cancel(); work = nil; run.stop(); busy = nil }
     private func close() { stop(); run.close() }
     private func failed(_ failure: Error, token: UUID, checking: Bool) {
@@ -197,8 +220,10 @@ struct FilterAssistanceView: View {
         work = Task {
             var checking = false
             do {
-                let text = try await FilterAssistanceEngine.generate(input)
+                let draft = try await FilterAssistanceEngine.draft(input)
+                let text = draft.expression
                 guard !Task.isCancelled, run.accepts(token), isCurrent, input.utf8.elementsEqual(description.utf8) else { return }
+                suggestionOrigin = draft.origin
                 activeQuery = text; expression = text; checking = true; busy = "Checking expression…"
                 try await prepare(text, token: token, reviewed: nil, applying: false)
             } catch { failed(error, token: token, checking: checking) }

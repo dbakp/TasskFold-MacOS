@@ -1,0 +1,9 @@
+{
+  "rawModelMethodBodyUnchanged": true,
+  "rawModelBodySHA256": "cb3be54d32463eec7c061f977fe5f6f2537983bbc3c6c2592c00d30aafccdfaf",
+  "ordinaryTestsDoNotRunInference": true,
+  "explicitProbeCallsRawModel": true,
+  "probeRequiresSystemModelMarker": true,
+  "cloudFallbackAdded": false,
+  "privateCatalogAddedToModelInput": false
+}

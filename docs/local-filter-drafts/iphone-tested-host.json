@@ -1,0 +1,21 @@
+{
+  "files": {
+    "Taskfold/Core/FilterAssistance.swift": "6dde6cffe28a6a18956d67b5d6cea80c954f86c75db10bfd2ce61611823202b0",
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/Filters.swift": "2eef3d769764f46461cace3a32a8d497175a9306527f2beb8c672c2c19b7535d",
+    "Taskfold/Core/Models.swift": "51f817b12a6f1cfa5479437131daef1eb8f4e74149ffc9e9da03d8ab3b1db6da",
+    "Taskfold/Core/PreservingJSON.swift": "b1bfd3018bfcf7d5d0e24bd9b2cb0c5ef43c00a247fed39f198b6160f4605f96",
+    "Taskfold/Core/Store.swift": "1bff039b63e01cf3bdd43964c569509518c392af7ee01977b07c03ae6ad53129",
+    "Taskfold/Views/FilterAssistanceView.swift": "f95c243dab7d2658ac184097c572c0725e95d148fd8ade5dd671c94b69c28ca1",
+    "Taskfold/Views/SavedViews.swift": "43fa03e92611fb7b2af0c2c43faee7b561e1081d4ac5135d916d1825db7087be",
+    "Taskfold/TeamTemplateNativeFixture.swift": "6472872ff0e4ff2a1cf621b21c00905f5d625d63aaafb446acd396951c7ad4ec",
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "2023ce0fd3b26baff399db204c6c38d53d29ca224c037588324a4577f5f20a27"
+  },
+  "scope": "Changed feature, production UI/engine and direct filter/store dependencies; existing reserved host",
+  "sameReservedHost": true,
+  "newDeviceCreated": false,
+  "modelInferenceExpected": false,
+  "testSourcePhaseCorrected": true,
+  "hostProjectSHA256": "daf9433ca12165bbcb001d409f12abb3179d751a88658e2e213059f075b669c7"
+}

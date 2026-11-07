@@ -1,0 +1,14 @@
+{
+  "terminalExit": 0,
+  "selected": 2,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": [],
+  "testedSourceMatchesHostAndOwnerBeforeWhitespaceTidy": true,
+  "signatureVerified": true,
+  "normalAndLargestText": true,
+  "unknownReferenceErrorAcceptance": "Normal text only",
+  "modelGenerationClaim": false,
+  "logSHA256": "7c9da17f30e1de78f86570e4ee60f20c496468247022cc02041ae6b139ee5254"
+}
