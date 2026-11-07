@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-07",
+  "retiredArchive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-41-iphone-development.zip",
+  "sha256": "e462e60a859b4d20206430a9cf3a0a69089edd6314eb0c84f4aaf8df7b5705a7",
+  "bytes": 24130074,
+  "reason": "Verified current42; preserve installed34 rollback",
+  "retained": [
+    "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-34-iphone-development.zip",
+    "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-42-iphone-development.zip"
+  ]
+}

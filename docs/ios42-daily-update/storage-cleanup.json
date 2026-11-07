@@ -1,0 +1,50 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 45929160704,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 576036864,
+      "projectedAllocatedBytes": 576036864
+    }
+  ],
+  "freeAfterBytes": 45929160704,
+  "actualFreeChangeBytes": 0,
+  "runStartFreeBytes": 46153687040,
+  "retiredPackage": {
+    "date": "2026-11-07",
+    "retiredArchive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-41-iphone-development.zip",
+    "sha256": "e462e60a859b4d20206430a9cf3a0a69089edd6314eb0c84f4aaf8df7b5705a7",
+    "bytes": 24130074,
+    "reason": "Verified current42; preserve installed34 rollback",
+    "retained": [
+      "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-34-iphone-development.zip",
+      "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-ios/Taskfold-1.4.0-42-iphone-development.zip"
+    ]
+  },
+  "simulatorsBooted": [],
+  "retainedPackages": [
+    {
+      "name": "Taskfold-1.4.0-34-iphone-development.zip",
+      "sha256": "b01bc8c67cbbf82ee14bb8e0542801250cc66d6156807bcabb13e79f3de227e7",
+      "bytes": 23480205
+    },
+    {
+      "name": "Taskfold-1.4.0-42-iphone-development.zip",
+      "sha256": "1a7a8c055625b4e040c2ac6a9ac0f8a32d1293f0bd946d0b808dc59386c378cc",
+      "bytes": 24255569
+    },
+    {
+      "name": "Taskfold-1.2.0-31-mac-development.zip",
+      "sha256": "37c2f2b2ba93cc461ad8e8391b7b65340be2de2bc310320641720ff482751f5e",
+      "bytes": 20213802
+    },
+    {
+      "name": "Taskfold-1.2.0-34-mac-development.zip",
+      "sha256": "b08c560c6d3d7bcda5a1c4367b425634a5ce2b0637115f13b261362ce5f01fa9",
+      "bytes": 20279317
+    }
+  ]
+}
