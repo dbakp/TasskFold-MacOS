@@ -1,0 +1,15 @@
+{
+  "terminalExit": 0,
+  "passed": 1,
+  "selected": 1,
+  "skipped": 0,
+  "failed": 0,
+  "runtimeWarnings": 0,
+  "taskOrderTransitions": 10,
+  "signatureVerified": true,
+  "hostAndOwningSourceMatch": true,
+  "configuration": "Debug -Onone with inline DWARF",
+  "savedWorkUnchanged": true,
+  "physicalDeviceFPSClaim": false,
+  "logSHA256": "0a375bad2bee6c415e3bf147b74b2ecd4551be905a2414c39ea1c7d2f8182345"
+}
