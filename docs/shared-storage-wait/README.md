@@ -15,3 +15,6 @@ The signed current-source iPhone 18 Pro/iOS 27 ordinary-text dark journey passes
 The source-isolation preflight first refused before boot/launch because its checker assumed a former host's Store namespace rewrite. Inspection confirmed this existing reserved host instead rewrites only the two shared-disk constants plus the established Backend/Backups namespaces. The corrected checker accepts only those exact reviewed substitutions and byte-matches every other Swift source, the test source and final binaries. The app's storage behavior was not changed to accommodate the test. The first unintended extra-architecture build was deliberately interrupted for its cache footprint; its scratch cleanup is recorded separately. The final arm64 compile and native journey pass.
 
 Native case: `WorkflowSourceSelectionUITests.testInitialSharedStorageWriteKeepsWindowUsableAndCannotUndoSignOut`, using the existing reserved `workflowteststeameditbridge` host and fixed phone pool. All app code remains independently owned; the Mac compilation result is recorded separately from the iOS owner's native evidence.
+
+
+Subsequent 7 November update: the original [Mac35 postlaunch data check](../mac35-postlaunch-readback/README.md) completed. Tasks and pending changes are preserved across all eight cache files; shared-storage readiness still requires native inspection.

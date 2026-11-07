@@ -16,8 +16,34 @@
   "hostedChanges": false,
   "phoneInstallationDeferred": true,
   "archiveSHA256": "d00840dc3fa18267f3d343208cf646d0d2d2a88c17b6f4be4f36289cbf62c6da",
-  "installationNote": "Installed; normal main window and Synced status verified. Shared-storage startup and final cache readback await system file access.",
+  "installationNote": "Mac35 installed and previously main-window/sync verified. Original readonly postlaunch job completed: all tasks/pending changes preserved across eight cache files; six exact bytes, differences in dates and _conversation_views only. Shared-storage readiness still needs native inspection; computer control currently reports locked. No app restart or permission change.",
   "mainWindowTasks": 2,
-  "postlaunchReadbackPending": true,
-  "sharedStorageReady": false
+  "postlaunchReadbackPending": false,
+  "sharedStorageReady": false,
+  "postlaunchTaskAndQueueDataVerified": true,
+  "postlaunchCacheFilesVerified": 8,
+  "postlaunchByteExactCacheFiles": 6,
+  "postlaunchOtherCacheDifferences": [
+    {
+      "bytesEqual": false,
+      "changedTopLevelKeys": [
+        "dates"
+      ],
+      "tasksEqual": true,
+      "pendingEqual": true
+    },
+    {
+      "bytesEqual": false,
+      "changedTopLevelKeys": [
+        "tables"
+      ],
+      "changedTables": [
+        "_conversation_views"
+      ],
+      "tasksEqual": true,
+      "pendingEqual": true
+    }
+  ],
+  "sharedStorageReadinessVerified": false,
+  "sharedStorageVerificationPending": true
 }
