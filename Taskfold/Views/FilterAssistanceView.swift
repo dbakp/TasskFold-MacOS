@@ -289,7 +289,7 @@ struct FilterAssistanceView: View {
             let matches = store.previewFilterMatches(value.rule, includeCompleted: request.includeCompleted)
             let count = matches.count
             previewCount = count; previewTasks = Array(matches.prefix(5)); checkedStamp = previewStamp
-            previewCaption = value.rule.sectionTitle(in: context)
+            previewCaption = value.rule.reviewSummary(in: context, includeCompleted: request.includeCompleted)
             run.stop(); busy = nil; work = nil
             AccessibilityNotification.Announcement("Preview ready. \(count) matching tasks.").post()
         }
