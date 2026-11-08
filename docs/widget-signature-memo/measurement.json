@@ -1,0 +1,53 @@
+{
+  "configuration": "SwiftPM Debug on this Mac, separately owned Core code",
+  "rows": 2004,
+  "passes": [
+    {
+      "computed": 1,
+      "exactOutput": true,
+      "memoSeconds": 0.032201791647821665,
+      "referenceSeconds": 0.05747041665017605,
+      "reused": 2003
+    },
+    {
+      "computed": 1,
+      "exactOutput": true,
+      "memoSeconds": 0.03332525002770126,
+      "referenceSeconds": 0.05447741667740047,
+      "reused": 2003
+    },
+    {
+      "computed": 1,
+      "exactOutput": true,
+      "memoSeconds": 0.047125125071033835,
+      "referenceSeconds": 0.057365833315998316,
+      "reused": 2003
+    },
+    {
+      "computed": 1,
+      "exactOutput": true,
+      "memoSeconds": 0.029953666729852557,
+      "referenceSeconds": 0.05207808339037001,
+      "reused": 2003
+    },
+    {
+      "computed": 1,
+      "exactOutput": true,
+      "memoSeconds": 0.03173724981024861,
+      "referenceSeconds": 0.053834666730836034,
+      "reused": 2003
+    },
+    {
+      "computed": 1,
+      "exactOutput": true,
+      "memoSeconds": 0.02943562506698072,
+      "referenceSeconds": 0.05272383335977793,
+      "reused": 2003
+    }
+  ],
+  "medianPairedFractionSaved": 0.4176498942254643,
+  "scope": "Primed refresh merge/widget preparation/encoding; excludes transport, decode, disk, UI and hardware FPS",
+  "retainedOutlierMilliseconds": 47.125125071033835,
+  "outlierCauseProven": false,
+  "referenceAndMemoOutputsIdentical": true
+}

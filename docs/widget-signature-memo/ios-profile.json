@@ -1,0 +1,29 @@
+{
+  "configuration": "SwiftPM Debug",
+  "passes": [
+    {
+      "computed": 1,
+      "exactOutput": true,
+      "memoSeconds": 0.032201791647821665,
+      "referenceSeconds": 0.05747041665017605,
+      "reused": 2003
+    },
+    {
+      "computed": 1,
+      "exactOutput": true,
+      "memoSeconds": 0.03332525002770126,
+      "referenceSeconds": 0.05447741667740047,
+      "reused": 2003
+    },
+    {
+      "computed": 1,
+      "exactOutput": true,
+      "memoSeconds": 0.047125125071033835,
+      "referenceSeconds": 0.057365833315998316,
+      "reused": 2003
+    }
+  ],
+  "physicalFPSClaim": false,
+  "rows": 2004,
+  "scope": "Primed refresh merge/widget metadata/encoding; transport/decode/disk/UI excluded"
+}

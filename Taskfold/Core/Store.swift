@@ -199,6 +199,7 @@ final class Store {
     }
     var presentationSnapshot:Snapshot {var visible=snapshot;visible.tables=presentedTables;return visible}
     @ObservationIgnored private let durableSnapshotReadCache = DurableSnapshotReadCache()
+    @ObservationIgnored private let widgetCompletionSignatures = WidgetCompletion.SignatureCache()
     private struct RowEncodingWork {
         let id: UUID
         let request: DurableSnapshotReadCache.RowPreparationRequest
@@ -1433,7 +1434,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {if !workspaceCacheReadable {sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0};subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {if !workspaceCacheReadable {widgetCompletionSignatures.clear(); sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0};subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
@@ -2492,7 +2493,10 @@ final class Store {
         if widgetFixtureFailSave, !snapshot.widgetCompletion.receipts.isEmpty { throw WidgetActionFailure("Isolated widget save-failure fixture") }
         #endif
         if try preparedEncoding?.hasPreparedWidgetCompletion(matching: snapshot) != true {
-            WidgetCompletion.prepare(&snapshot)
+            WidgetCompletion.prepare(&snapshot, signatures: widgetCompletionSignatures,
+                scope: workspaceCacheReadable && !signingOut && !accountRemovalBlocked
+                    ? .init(workspace: .init(account: userID, generation: workspaceGeneration),
+                            session: backend.reminderSessionIncarnation, access: presentationAccessEpoch) : nil)
         }
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         let previous = FileManager.default.fileExists(atPath: cacheURL.path) ? try durableSnapshotReadCache.decode(Data(contentsOf: cacheURL)) : Snapshot()

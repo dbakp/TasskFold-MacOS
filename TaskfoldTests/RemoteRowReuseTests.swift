@@ -94,8 +94,7 @@ final class RemoteRowReuseTests: XCTestCase {
         XCTAssertTrue(AuthoredValueComparison.sameRows(decoded.tables["tasks"]!, incoming))
         XCTAssertEqual(cache.rowEncodingStatistics.retained, 0)
     }
-    func testRefreshSaveDiagnosticWhenRequested() throws {
-        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_REFRESH_ROW_REPORT"] else { throw XCTSkip("Explicit save diagnostic") }
+    static func refreshFixture() -> Snapshot {
         var source = Snapshot(tables: ["tasks": (0..<2004).map { i in
             var row = Record.task(user: "local", createdAt: "2026-11-01T10:00:00Z")
             row["id"] = .string("task-\(i)")
@@ -109,6 +108,11 @@ final class RemoteRowReuseTests: XCTestCase {
         for key in source.widgetCompletion.states.keys {
             source.widgetCompletion.states[key]!.token = String(format: "10000000-0000-0000-0000-%012d", Int(key.dropFirst(5))! + 1)
         }
+        return source
+    }
+    func testRefreshSaveDiagnosticWhenRequested() throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_REFRESH_ROW_REPORT"] else { throw XCTSkip("Explicit save diagnostic") }
+        let source = Self.refreshFixture()
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
         let wire = try encoder.encode(source)
         var reports: [[String: Any]] = []

@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-08",
+  "kind": "Bounded Store-owned root widget signature memo",
+  "perOwnerCore": {
+    "passed": 76,
+    "failures": 0,
+    "newFunctionalChecks": 14,
+    "newExplicitDiagnostic": 1
+  },
+  "sdkBuilds": {
+    "ios": 0,
+    "mac": 0
+  },
+  "cacheDefaultEntries": 4096,
+  "maximumRetainedIDBytes": 256,
+  "noRecordFieldsOrWidgetTokensRetained": true,
+  "perStoreWorkspaceSessionAccessScope": true,
+  "childrenStillCheckedEveryCall": true,
+  "newNativeUIOrHardwareAcceptance": false,
+  "fullResponsivenessAccepted": false,
+  "normalMacInstalled": "48",
+  "verifiedCandidate": "52 older source; excludes newer row and signature reuse",
+  "newNormalPackageBuilt": false,
+  "schemaHostedOrNormalGateChanges": false,
+  "phoneInstallation": "deferred"
+}
