@@ -239,7 +239,7 @@ struct NoteFormattingView: View {
                                 tool("Quote", "text.quote", .quote)
                                 tool("Code", "chevron.left.forwardslash.chevron.right", .code)
                                 Button { guard let span = selectedRange else { focused = false; message = "Choose one text selection before adding a link."; return }; linkSelection = span; url = "https://"; message = nil; link = true } label: { Label("Link", systemImage: "link") }.accessibilityIdentifier("noteFormat-link")
-                            }.buttonStyle(.bordered).padding(.horizontal).padding(.bottom, 10)
+                            }.buttonStyle(.bordered).disabled(link).padding(.horizontal).padding(.bottom, 10)
                         }
                         }
                         TextEditor(text: $text, selection: $selection)
@@ -273,9 +273,10 @@ struct NoteFormattingView: View {
                 }
             }.navigationTitle(request.title)
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: cancel) }
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: cancel).keyboardShortcut(.cancelAction).disabled(link) }
                     ToolbarItem(placement: .confirmationAction) {
                         Button(request.confirmation) { guard available else { return }; if let error = apply(text) { focused = false; message = error } else { editorFinished=true;_=recoverySession?.finish();dismiss() } }
+                            .keyboardShortcut(.return, modifiers: .command)
                             .disabled(!available || link).accessibilityIdentifier("applyNoteFormatting")
                     }
                 }
@@ -296,7 +297,7 @@ struct NoteFormattingView: View {
                             if let message { Text(message).foregroundStyle(.red) }
                         }.navigationTitle("Add a link")
                             .toolbar {
-                                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { link = false; message = nil } }
+                                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { link = false; message = nil }.keyboardShortcut(.cancelAction) }
                                 ToolbarItem(placement: .confirmationAction) { Button("Add link") { format(.link, span: linkSelection); if message == nil { link = false } }.accessibilityIdentifier("confirmNoteLink") }
                             }
                     }
@@ -344,7 +345,7 @@ struct NoteFormattingView: View {
     }
     private func formatParagraph(_ style: NoteFormatting.ParagraphStyle) {
         do {
-            guard available else { return }
+            guard available, !link else { return }
             guard let span = selectedRange else { throw AppFailure(message: "Choose one text selection before formatting it.") }
             let edit = try NoteFormatting.paragraph(style, to: text, selection: span)
             text = edit.text
@@ -355,10 +356,19 @@ struct NoteFormattingView: View {
     private func tool(_ title: String, _ symbol: String, _ style: NoteFormatting.Style) -> some View {
         Button { format(style) } label: { Label(title, systemImage: symbol) }
             .accessibilityIdentifier("noteFormat-" + style.rawValue)
+            .keyboardShortcut(shortcut(for: style))
+    }
+    private func shortcut(for style: NoteFormatting.Style) -> KeyboardShortcut? {
+        switch style {
+        case .bold: KeyboardShortcut("b", modifiers: .command)
+        case .italic: KeyboardShortcut("i", modifiers: .command)
+        case .strikethrough: KeyboardShortcut("x", modifiers: [.command, .shift])
+        default: nil
+        }
     }
     private func format(_ style: NoteFormatting.Style, span: NSRange? = nil) {
         do {
-            guard available else { return }
+            guard available, !link || style == .link else { return }
             guard let span = span ?? selectedRange else { throw AppFailure(message: "Choose one text selection before formatting it.") }
             let edit = try NoteFormatting.apply(style, to: text, selection: span, url: url)
             text = edit.text

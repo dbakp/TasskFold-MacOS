@@ -2987,7 +2987,7 @@ extension TaskfoldMacUITests {
 }
 #endif
 
-extension TaskfoldUITests {
+extension TaskfoldMacUITests {
     @MainActor func testRestoredAdoptionFormatHistoryColdSaveAndCheck() throws {
         #if os(macOS)
         throw XCTSkip("Mac native acceptance is a separate walkthrough")

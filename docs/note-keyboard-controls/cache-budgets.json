@@ -1,0 +1,22 @@
+[
+  {
+    "path": "/tmp/taskfold-workflow-native-mac-build",
+    "allocatedBytes": 165277696,
+    "within768MiB": true
+  },
+  {
+    "path": "/tmp/taskfold-prepared-undo-signed-ios-build",
+    "allocatedBytes": 342142976,
+    "within768MiB": true
+  },
+  {
+    "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+    "allocatedBytes": 677761024,
+    "within768MiB": true
+  },
+  {
+    "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+    "allocatedBytes": 746446848,
+    "within768MiB": true
+  }
+]

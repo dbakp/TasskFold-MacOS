@@ -1,0 +1,13 @@
+{
+  "projectConfigurations": 2,
+  "registrationEnabled": true,
+  "independentGeneratedTargets": [
+    "TaskfoldWidgets",
+    "Taskfold",
+    "TaskfoldShare",
+    "TaskfoldUITests"
+  ],
+  "normalProjectUnchanged": true,
+  "scope": "Fresh generated project retains provisioning setting; no account/profile/runtime acceptance",
+  "temporaryWorkspaceRemoved": true
+}

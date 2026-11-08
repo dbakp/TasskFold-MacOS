@@ -6089,3 +6089,66 @@ extension TaskfoldMacUITests {
         try assignmentAttach(cache, name: "Explicit assignment cold return")
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testMacNoteFormattingKeyboardStylesApplyUndoAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app)
+        let before = try noteProofTables(), editor = noteProofFormat(app)
+        editor.click(); editor.typeKey("a", modifierFlags: .command)
+        for (key, flags, expected) in [("b", XCUIElement.KeyModifierFlags.command, "**Keep the original notes.**"),
+                                       ("i", .command, "_Keep the original notes._"),
+                                       ("x", [.command, .shift], "~~Keep the original notes.~~")] {
+            editor.typeKey(key, modifierFlags: flags); XCTAssertEqual(editor.value as? String, expected)
+            editor.typeKey(key, modifierFlags: flags); XCTAssertEqual(editor.value as? String, "Keep the original notes.")
+        }
+        for (key, expected) in [("1", "# Keep the original notes."), ("3", "### Keep the original notes."), ("0", "Keep the original notes.")] {
+            editor.typeKey(key, modifierFlags: [.command, .option]); XCTAssertEqual(editor.value as? String, expected)
+        }
+        editor.typeKey("1", modifierFlags: [.command, .option])
+        editor.typeKey(.rightArrow, modifierFlags: []); editor.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(editor.exists, "Return inserts a line rather than applying the note")
+        editor.typeText("Keyboard note")
+        let expected = "# Keep the original notes.\nKeyboard note"
+        XCTAssertEqual(editor.value as? String, expected); XCTAssertEqual(try noteProofTables(), before)
+        noteProofShot(app, "Mac note keyboard styles and new line")
+        editor.typeKey(.return, modifierFlags: .command)
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+        noteProofWait { try self.noteProofTask()["description"] as? String == expected }
+        try noteProofAssertOnlyDescription(expected, before: before)
+        app.staticTexts["Today"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        noteProofWait { try self.noteProofTables() == before }
+        app.typeKey("z", modifierFlags: [.command, .shift])
+        noteProofWait { try self.noteProofTask()["description"] as? String == expected }
+        let saved = try noteProofTables()
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
+        try launchHeadingWorkspace(app); noteProofOpen(app)
+        XCTAssertEqual(app.textViews["taskDescription"].value as? String, expected)
+        XCTAssertEqual(try noteProofTables(), saved)
+    }
+    @MainActor func testMacNoteFormattingKeyboardLinkScopeAndEscapeDiscard() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app)
+        let before = try noteProofTables(), cache = try noteProofCache(), editor = noteProofFormat(app)
+        editor.click(); editor.typeKey("a", modifierFlags: .command)
+        let linkButton = app.buttons["noteFormat-link"]
+        let tools = app.scrollViews.containing(.button, identifier: "noteFormat-bold").firstMatch
+        for _ in 0..<5 where !linkButton.isHittable { tools.scroll(byDeltaX: 250, deltaY: 0) }
+        XCTAssertTrue(linkButton.isHittable); linkButton.click()
+        let address = app.textFields["noteLinkURL"]; XCTAssertTrue(address.waitForExistence(timeout: 5)); address.click()
+        address.typeKey("b", modifierFlags: .command)
+        address.typeKey("1", modifierFlags: [.command, .option])
+        address.typeKey(.return, modifierFlags: .command)
+        XCTAssertTrue(address.exists); XCTAssertTrue(editor.exists)
+        XCTAssertEqual(editor.value as? String, "Keep the original notes.")
+        XCTAssertEqual(try noteProofCache(), cache)
+        address.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(address.waitForNonExistence(timeout: 5)); XCTAssertTrue(editor.exists)
+        editor.click(); editor.typeKey("a", modifierFlags: .command); editor.typeKey("b", modifierFlags: .command)
+        XCTAssertEqual(editor.value as? String, "**Keep the original notes.**")
+        editor.typeKey(.escape, modifierFlags: [])
+        let discard = app.windows.buttons["Discard changes"].firstMatch
+        XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.click()
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(try noteProofTables(), before); XCTAssertEqual(try noteProofCache(), cache)
+    }
+}

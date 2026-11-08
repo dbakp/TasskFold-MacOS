@@ -11627,3 +11627,7 @@ The existing 64-entry query cache now evicts one least recently used result inst
 ### 8 November · direct filter-token generation remains unaccepted
 
 The regex-guided candidate compiles but all twelve real requests fail before producing expressions. Plain generation returns text but not the requested p3; minimal p[1-4] guidance also fails. Root cause and candidate semantics remain unproven. The candidate is retained only as evidence and production is restored exactly. Both owners pass 119 ordinary Core cases with four opt-in skips. See `filter-token-guidance/README.md`; no new product completion or installed update is claimed.
+
+### 8 November · note keyboard controls, native checks pending
+
+Both owning note editors now declare inline style keys, Command-Return Apply and Escape Cancel, with parent/link-sheet isolation. Mac app and test bundle build/sign; iOS Simulator app/widget/share builds. All 185 Mac/178 iOS app sources and actual debug images are audited. Two Mac keyboard/Undo/cold-return cases compile but are not executed while the desktop is locked; one unlock question remains pending. The Mac test-class/modifier-name build errors are corrected, excluded stale extension outputs retired and strict signature rechecked. Project generation now preserves the earlier group-registration setting; Xcode account/profile runtime work stays pending. Mac 53 remains installed. See `note-keyboard-controls/README.md`.
