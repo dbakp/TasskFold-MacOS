@@ -1,0 +1,13 @@
+{
+  "mac": {
+    "focusedCases": 108,
+    "failures": 0,
+    "newCases": 5
+  },
+  "ios": {
+    "focusedCases": 108,
+    "failures": 0,
+    "newCases": 5
+  },
+  "iosFixturePrepared": true
+}

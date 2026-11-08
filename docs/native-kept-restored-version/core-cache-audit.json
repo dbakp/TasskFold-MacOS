@@ -1,0 +1,19 @@
+{
+  "scope": "Separate read-only audit of owned, unmarked Core caches; no fake marker or removal",
+  "caches": [
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 665477120,
+      "within768MiB": true,
+      "markedBuildCache": false,
+      "pruned": false
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 724635648,
+      "within768MiB": true,
+      "markedBuildCache": false,
+      "pruned": false
+    }
+  ]
+}

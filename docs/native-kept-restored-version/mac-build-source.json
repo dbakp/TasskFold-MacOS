@@ -1,0 +1,31 @@
+{
+  "sources": {
+    "Taskfold/Core/ChildTaskRepair.swift": {
+      "owner": "011412008a41d0ecd3a774f9bfd330ef9b470dbf89058809576595e0639f6183",
+      "host": "011412008a41d0ecd3a774f9bfd330ef9b470dbf89058809576595e0639f6183"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "owner": "fdd986fc2c2b3d879775245e1890bdd935581abca135b16f480cac3892f60ef9",
+      "host": "746e45017d67313a73e2f5e2b044081186733371b8767e7c68b126e79a7f9f02"
+    },
+    "Taskfold/Core/Store.swift": {
+      "owner": "cf090330f283ca08b8cde927e73b3898df44da027a071dbe6d45925f7dfecfd5",
+      "host": "8bd7676b1975de605dffd83e21fe8031f4b09e32fe104dda629a558bc6841cd6"
+    },
+    "Taskfold/Views/ChildTaskRepairView.swift": {
+      "owner": "edaad833d66a72c74340d6d2719803e544cdd945cecf08ca27eeb9de3c1cfdf5",
+      "host": "edaad833d66a72c74340d6d2719803e544cdd945cecf08ca27eeb9de3c1cfdf5"
+    },
+    "Taskfold/ChildFieldNativeFixture.swift": {
+      "owner": "639524ffecfccefc0ef28d362c80e84cbabfc1f9d8dcec3d33be7e2ca27ffc30",
+      "host": "639524ffecfccefc0ef28d362c80e84cbabfc1f9d8dcec3d33be7e2ca27ffc30"
+    },
+    "TaskfoldUITests/AudioCommentUITests.swift": {
+      "owner": "b7b8851ab4117c3b11e855965bb13caca80b46ae26348195c5d1399c196376ef",
+      "host": "b7b8851ab4117c3b11e855965bb13caca80b46ae26348195c5d1399c196376ef"
+    }
+  },
+  "host": "/tmp/taskfold-owner-review-mac-host",
+  "normalAppChanged": false,
+  "scopeNote": "Mac app Swift source matches the current owner. The shared UI-test harness was corrected after this app build; Mac UI tests are not part of this app-only SDK build and remain unaccepted."
+}

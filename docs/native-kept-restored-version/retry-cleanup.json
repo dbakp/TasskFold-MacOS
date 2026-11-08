@@ -1,0 +1,15 @@
+{
+  "freeBeforeBytes": 36023816192,
+  "actions": [
+    {
+      "path": "/tmp/taskfold-native-adoption-v1-attachments",
+      "allocatedBytes": 107909120
+    },
+    {
+      "path": "/tmp/taskfold-restored-adoption-native-ios-v2.xcresult",
+      "allocatedBytes": 151552
+    }
+  ],
+  "scope": "Only duplicate exported attachments and the deliberately aborted synthetic v2 result. First failure result and concise evidence retained.",
+  "freeAfterBytes": 36131897344
+}

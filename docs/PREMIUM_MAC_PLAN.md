@@ -11535,3 +11535,7 @@ Implemented the restoration-bound atomic decision, independent inverse archive/f
 ### 8 November — normal Mac48 update
 
 Build 48 is signed, frozen-source/archive verified and installed from merged source d958211f. The main window is synced. A fresh verified private safety copy and build-46 rollback precede replacement; all nine cache files were byte-exact before launch. The macOS app-data prompt is confirmed pending; one manual Allow request is open and the existing postlaunch readback process is preserved. Shared-storage readiness and postlaunch work preservation are not yet accepted. The older prepared47 candidate/archive is retired after verifying current48 and rollback46. Daily compiler batches are smaller; no measured memory reduction is claimed. Native keep-older controls/status/newer-inverse recovery remain open; normal advanced flags and hosted schema are unchanged. See `mac48-update/verification.json`.
+
+### 8 November — native bound keep-older review
+
+The Mac owns the durable restoration context and full native format/history/consent/save path. The current app builds;108 focused Core cases pass, including five new context/cold/strict-validation cases. iPhone bound-root native acceptance also passes against the iOS-owned full schema, with one lost-reply save recovered by exact cold Check. Mac native entry/layout/speech and live adopted-state/newer-inverse recovery remain unaccepted. Advanced gates stay off, hosted schema and installed Mac 48 remain unchanged in this run. See `native-kept-restored-version/verification.json`.

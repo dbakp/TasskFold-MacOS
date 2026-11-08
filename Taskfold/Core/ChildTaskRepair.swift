@@ -615,37 +615,44 @@ struct ChildTaskRepairDraft: Codable, Equatable, Sendable, CustomStringConvertib
     let identity: [String: JSON]
     let changes: [ChildTaskRepairChange], labels: [String]
     let mappingReview: ChildCopyMappingDraft?
+    let restoration: ChildTaskRestorationBinding?
     let token: UUID
     var rootID: String { identity["task_id"]!.text }
     var description: String { "Private saved repair review" }
     var debugDescription: String { description }
     static let identityKeys: Set<String> = ["task_id", "task_generation", "project_id", "workspace_id", "review_digest"]
-    init(account: String, origin: String, identity: [String: JSON], changes: [ChildTaskRepairChange], labels: [String], token: UUID = UUID(), mappingReview: ChildCopyMappingDraft? = nil) throws {
+    init(account: String, origin: String, identity: [String: JSON], changes: [ChildTaskRepairChange], labels: [String], token: UUID = UUID(), mappingReview: ChildCopyMappingDraft? = nil, restoration: ChildTaskRestorationBinding? = nil) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard Set(identity.keys) == Self.identityKeys, ChildTaskAdoptionCommand.digest(identity["review_digest"]),
               labels.count == changes.count, labels.allSatisfy({ !$0.isEmpty && $0.utf8.count <= 2048 }) else { throw ChildTaskRepairCommand.invalid }
         _ = try TeamOrganizationValue.id(identity["task_id"])
         for key in ["task_generation", "project_id", "workspace_id"] { _ = try TeamProjectValue.optionalID(identity[key]) }
-        if mappingReview != nil { guard changes.isEmpty && labels.isEmpty else { throw ChildTaskRepairCommand.invalid } } else { try ChildTaskRepairChange.validate(changes) }
-        self.mappingReview = mappingReview
+        let chosen = try changes.first?.raw["restoration"].map { try ChildTaskRestorationBinding(raw: $0.object) }
+        let bound = restoration ?? mappingReview?.restoration ?? chosen
+        if let bound {
+            if let mappingReview { guard mappingReview.restoration == bound else { throw ChildTaskRepairCommand.invalid } }
+            if changes.contains(where: { $0.kind == .chooseCopy }) { guard chosen == bound else { throw ChildTaskRepairCommand.invalid } }
+        }
+        if mappingReview != nil { guard changes.isEmpty && labels.isEmpty else { throw ChildTaskRepairCommand.invalid } } else if !changes.isEmpty || bound == nil { try ChildTaskRepairChange.validate(changes) }
+        self.mappingReview = mappingReview; self.restoration = bound
         self.account = account; self.origin = origin; self.identity = identity; self.changes = changes; self.labels = labels; self.token = token
     }
-    init(review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange], labels: [String], mappingReview: ChildCopyMappingDraft? = nil) throws {
-        try self.init(account: review.context.account, origin: review.context.origin, identity: review.metadata.filter { Self.identityKeys.contains($0.key) }, changes: changes, labels: labels, mappingReview: mappingReview)
+    init(review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange], labels: [String], mappingReview: ChildCopyMappingDraft? = nil, restoration: ChildTaskRestorationBinding? = nil) throws {
+        try self.init(account: review.context.account, origin: review.context.origin, identity: review.metadata.filter { Self.identityKeys.contains($0.key) }, changes: changes, labels: labels, mappingReview: mappingReview, restoration: restoration)
     }
     func matches(_ review: ChildTaskAdoptionReview) -> Bool {
         account == review.context.account && origin == review.context.origin && Self.identityKeys.allSatisfy { ChildTaskStructureCommand.exact(identity[$0], review.metadata[$0]) }
     }
-    private enum CodingKeys: String, CodingKey { case account, origin, identity, changes, labels, token, mappingReview }
+    private enum CodingKeys: String, CodingKey { case account, origin, identity, changes, labels, token, mappingReview, restoration }
     init(from decoder: Decoder) throws {
         let keys: Set<String> = ["account", "origin", "identity", "changes", "labels", "token"]
         let fields = try decoder.container(keyedBy: CodingKeys.self)
-        try structureKeys(decoder, keys.union(fields.contains(.mappingReview) ? ["mappingReview"] : []))
+        try structureKeys(decoder, keys.union(fields.contains(.mappingReview) ? ["mappingReview"] : []).union(fields.contains(.restoration) ? ["restoration"] : []))
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), identity: c.decode([String: JSON].self, forKey: .identity), changes: c.decode([ChildTaskRepairChange].self, forKey: .changes), labels: c.decode([String].self, forKey: .labels), token: c.decode(UUID.self, forKey: .token), mappingReview: c.decodeIfPresent(ChildCopyMappingDraft.self, forKey: .mappingReview))
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), identity: c.decode([String: JSON].self, forKey: .identity), changes: c.decode([ChildTaskRepairChange].self, forKey: .changes), labels: c.decode([String].self, forKey: .labels), token: c.decode(UUID.self, forKey: .token), mappingReview: c.decodeIfPresent(ChildCopyMappingDraft.self, forKey: .mappingReview), restoration: c.decodeIfPresent(ChildTaskRestorationBinding.self, forKey: .restoration))
     }
     static func == (a: Self, b: Self) -> Bool {
-        a.account == b.account && a.origin == b.origin && a.token == b.token && a.mappingReview == b.mappingReview && a.changes == b.changes && a.labels == b.labels && ChildTaskStructureCommand.exact(.object(a.identity), .object(b.identity))
+        a.account == b.account && a.origin == b.origin && a.token == b.token && a.mappingReview == b.mappingReview && a.restoration == b.restoration && a.changes == b.changes && a.labels == b.labels && ChildTaskStructureCommand.exact(.object(a.identity), .object(b.identity))
     }
 }
 
@@ -691,7 +698,7 @@ struct ChildTaskRepairState: ReviewedTeamFileCommand {
         self.account = account; self.origin = origin; self.entries = entries; self.drafts = drafts
     }
     init(data: Data) throws {
-        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["drafts", "[]", "mappingReview", "restoration", "revision"], ["drafts", "[]", "mappingReview", "mapping", "version"], ["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["entries", "[]", "command", "body"] + $0 } + ChildTaskRepairChange.counterPaths.map { ["drafts", "[]"] + $0 } + [["keep_path", "[]"], ["path", "[]"], ["parent", "[]"], ["index"]].map { ["drafts", "[]", "mappingReview", "formatChanges", "[]"] + $0 })), nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]])
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["drafts", "[]", "restoration", "revision"], ["drafts", "[]", "mappingReview", "restoration", "revision"], ["drafts", "[]", "mappingReview", "mapping", "version"], ["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["entries", "[]", "command", "body"] + $0 } + ChildTaskRepairChange.counterPaths.map { ["drafts", "[]"] + $0 } + [["keep_path", "[]"], ["path", "[]"], ["parent", "[]"], ["index"]].map { ["drafts", "[]", "mappingReview", "formatChanges", "[]"] + $0 })), nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]])
         self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries, drafts }

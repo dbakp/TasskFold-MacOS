@@ -1,0 +1,13 @@
+{
+  "freeBeforeBytes": 36709089280,
+  "freeAfterBytes": 36831326208,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-restored-adoption-native-ios-v1.xcresult",
+      "allocatedBytes": 122150912
+    }
+  ],
+  "retained": "Current passed v3 result; first-failure log/report and exact consent screenshot/hierarchy/summary",
+  "currentPassedTests": 1,
+  "normalDataUntouched": true
+}
