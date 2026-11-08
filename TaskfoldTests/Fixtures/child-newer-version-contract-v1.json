@@ -1,0 +1,675 @@
+{
+  "olderReviewWire": "{\"mode\": \"restore\", \"account\": \"6a436045-85ea-45a9-8955-577daa08fd73\", \"enabled\": true, \"task_id\": \"4317f1e2-f136-4b48-a345-e9114d06ff98\", \"protocol\": 1, \"revision\": 0, \"archive_id\": \"552810dd-bd9e-401e-9347-ad6b049955c3\", \"file_count\": 0, \"project_id\": null, \"restore_id\": null, \"availability\": \"ready\", \"workspace_id\": null, \"review_digest\": \"9dabcaf0d88d3ca7c2d8c2f0d85c5a0265faf3698fcb4a38ce957448814597e1\", \"target_source\": [{\"id\": \"parent\", \"title\": \"Older parent\", \"future\": {\"é\": 1, \"é\": 2, \"huge\": 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, \"exact\": 9007199254740993}, \"subtasks\": [\"Original instruction\"]}], \"archive_digest\": \"a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5\", \"current_source\": [{\"id\": \"parent\", \"title\": \"Older parent\", \"future\": {\"é\": 1, \"é\": 2, \"huge\": 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, \"exact\": 9007199254740993}, \"subtasks\": [{\"id\": \"269d84ad-2d82-4060-bfe2-34ceaaa2ec4e\", \"title\": \"Kept older instruction\", \"completed\": true, \"description\": \"Independent edits work after adoption\", \"completed_at\": \"2026-11-08T09:36:21.809475+00:00\", \"legacy_original\": \"Original instruction\", \"completion_version\": 0, \"taskfold_completion_v1\": {\"epoch\": \"0d71245c-c7d4-b546-9b87-22472f663666\", \"version\": 0}}], \"completion_version\": 0, \"taskfold_completion_v1\": {\"epoch\": \"aed0d6cc-16af-16f2-393d-4322994c577c\", \"version\": 0}}], \"retention_bytes\": 5533, \"target_sql_null\": false, \"task_generation\": \"60fc4c06-5316-42cb-8637-d8a30e861373\", \"current_sql_null\": false, \"has_newer_version\": true, \"repair_request_id\": \"f3c34955-03ec-4620-b04a-1c39991a1fac\"}",
+  "newerReviewWire": "{\"mode\": \"restore_newer\", \"account\": \"6a436045-85ea-45a9-8955-577daa08fd73\", \"enabled\": true, \"task_id\": \"4317f1e2-f136-4b48-a345-e9114d06ff98\", \"protocol\": 1, \"revision\": 0, \"archive_id\": \"552810dd-bd9e-401e-9347-ad6b049955c3\", \"file_count\": 0, \"project_id\": null, \"restore_id\": null, \"availability\": \"ready\", \"workspace_id\": null, \"review_digest\": \"9dabcaf0d88d3ca7c2d8c2f0d85c5a0265faf3698fcb4a38ce957448814597e1\", \"target_source\": [{\"id\": \"parent\", \"title\": \"Older parent\", \"future\": {\"é\": 1, \"é\": 2, \"huge\": 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, \"exact\": 9007199254740993}, \"subtasks\": [{\"id\": \"269d84ad-2d82-4060-bfe2-34ceaaa2ec4e\", \"title\": \"Newer formatted instruction\", \"completed\": true, \"completed_at\": \"2026-11-08T09:36:21.809475+00:00\", \"legacy_original\": \"Original instruction\", \"taskfold_completion_v1\": {\"epoch\": \"9390e209-8cbb-4160-a2f6-be34223c7260\", \"version\": 1}}]}], \"archive_digest\": \"a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5\", \"current_source\": [{\"id\": \"parent\", \"title\": \"Older parent\", \"future\": {\"é\": 1, \"é\": 2, \"huge\": 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, \"exact\": 9007199254740993}, \"subtasks\": [{\"id\": \"269d84ad-2d82-4060-bfe2-34ceaaa2ec4e\", \"title\": \"Kept older instruction\", \"completed\": true, \"description\": \"Independent edits work after adoption\", \"completed_at\": \"2026-11-08T09:36:21.809475+00:00\", \"legacy_original\": \"Original instruction\", \"completion_version\": 0, \"taskfold_completion_v1\": {\"epoch\": \"0d71245c-c7d4-b546-9b87-22472f663666\", \"version\": 0}}], \"completion_version\": 0, \"taskfold_completion_v1\": {\"epoch\": \"aed0d6cc-16af-16f2-393d-4322994c577c\", \"version\": 0}}], \"retention_bytes\": 5802, \"target_sql_null\": false, \"task_generation\": \"60fc4c06-5316-42cb-8637-d8a30e861373\", \"current_sql_null\": false, \"has_newer_version\": true, \"repair_request_id\": \"f3c34955-03ec-4620-b04a-1c39991a1fac\"}",
+  "olderReview": {
+    "mode": "restore",
+    "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+    "enabled": true,
+    "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+    "protocol": 1,
+    "revision": 0,
+    "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+    "file_count": 0,
+    "project_id": null,
+    "restore_id": null,
+    "availability": "ready",
+    "workspace_id": null,
+    "review_digest": "9dabcaf0d88d3ca7c2d8c2f0d85c5a0265faf3698fcb4a38ce957448814597e1",
+    "target_source": [
+      {
+        "id": "parent",
+        "title": "Older parent",
+        "future": {
+          "é": 1,
+          "é": 2,
+          "huge": null,
+          "exact": 9007199254740992
+        },
+        "subtasks": [
+          "Original instruction"
+        ]
+      }
+    ],
+    "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+    "current_source": [
+      {
+        "id": "parent",
+        "title": "Older parent",
+        "future": {
+          "é": 1,
+          "é": 2,
+          "huge": null,
+          "exact": 9007199254740992
+        },
+        "subtasks": [
+          {
+            "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+            "title": "Kept older instruction",
+            "completed": true,
+            "description": "Independent edits work after adoption",
+            "completed_at": "2026-11-08T09:36:21.809475+00:00",
+            "legacy_original": "Original instruction",
+            "completion_version": 0,
+            "taskfold_completion_v1": {
+              "epoch": "0d71245c-c7d4-b546-9b87-22472f663666",
+              "version": 0
+            }
+          }
+        ],
+        "completion_version": 0,
+        "taskfold_completion_v1": {
+          "epoch": "aed0d6cc-16af-16f2-393d-4322994c577c",
+          "version": 0
+        }
+      }
+    ],
+    "retention_bytes": 5533,
+    "target_sql_null": false,
+    "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+    "current_sql_null": false,
+    "has_newer_version": true,
+    "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+  },
+  "newerReview": {
+    "mode": "restore_newer",
+    "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+    "enabled": true,
+    "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+    "protocol": 1,
+    "revision": 0,
+    "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+    "file_count": 0,
+    "project_id": null,
+    "restore_id": null,
+    "availability": "ready",
+    "workspace_id": null,
+    "review_digest": "9dabcaf0d88d3ca7c2d8c2f0d85c5a0265faf3698fcb4a38ce957448814597e1",
+    "target_source": [
+      {
+        "id": "parent",
+        "title": "Older parent",
+        "future": {
+          "é": 1,
+          "é": 2,
+          "huge": null,
+          "exact": 9007199254740992
+        },
+        "subtasks": [
+          {
+            "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+            "title": "Newer formatted instruction",
+            "completed": true,
+            "completed_at": "2026-11-08T09:36:21.809475+00:00",
+            "legacy_original": "Original instruction",
+            "taskfold_completion_v1": {
+              "epoch": "9390e209-8cbb-4160-a2f6-be34223c7260",
+              "version": 1
+            }
+          }
+        ]
+      }
+    ],
+    "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+    "current_source": [
+      {
+        "id": "parent",
+        "title": "Older parent",
+        "future": {
+          "é": 1,
+          "é": 2,
+          "huge": null,
+          "exact": 9007199254740992
+        },
+        "subtasks": [
+          {
+            "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+            "title": "Kept older instruction",
+            "completed": true,
+            "description": "Independent edits work after adoption",
+            "completed_at": "2026-11-08T09:36:21.809475+00:00",
+            "legacy_original": "Original instruction",
+            "completion_version": 0,
+            "taskfold_completion_v1": {
+              "epoch": "0d71245c-c7d4-b546-9b87-22472f663666",
+              "version": 0
+            }
+          }
+        ],
+        "completion_version": 0,
+        "taskfold_completion_v1": {
+          "epoch": "aed0d6cc-16af-16f2-393d-4322994c577c",
+          "version": 0
+        }
+      }
+    ],
+    "retention_bytes": 5802,
+    "target_sql_null": false,
+    "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+    "current_sql_null": false,
+    "has_newer_version": true,
+    "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+  },
+  "command": {
+    "protocol": 1,
+    "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+    "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+    "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+    "project_id": null,
+    "workspace_id": null,
+    "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac",
+    "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+    "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+    "mode": "restore_newer",
+    "restore_id": null,
+    "revision": 0,
+    "review_digest": "9dabcaf0d88d3ca7c2d8c2f0d85c5a0265faf3698fcb4a38ce957448814597e1",
+    "request_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa"
+  },
+  "reply": {
+    "mode": "restore_newer",
+    "phase": "restored",
+    "state": "applied",
+    "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+    "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+    "protocol": 1,
+    "replayed": false,
+    "revision": 0,
+    "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+    "project_id": null,
+    "request_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+    "restore_id": null,
+    "after_digest": "9d98c91e534cc5d891977b030f56053897567026773b6f6a7714e2ee05132125",
+    "workspace_id": null,
+    "next_revision": 1,
+    "review_digest": "9dabcaf0d88d3ca7c2d8c2f0d85c5a0265faf3698fcb4a38ce957448814597e1",
+    "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+    "restoration_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+    "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+    "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+  },
+  "cycle": [
+    {
+      "review": {
+        "mode": "undo",
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "enabled": true,
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "protocol": 1,
+        "revision": 1,
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "file_count": 0,
+        "project_id": null,
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "availability": "ready",
+        "workspace_id": null,
+        "review_digest": "697d6a0fca8ad3739055ebf28ba471b7b3df2f5113d048b8bed5b4841c70df96",
+        "target_source": [
+          {
+            "id": "parent",
+            "title": "Older parent",
+            "future": {
+              "é": 1,
+              "é": 2,
+              "huge": null,
+              "exact": 9007199254740992
+            },
+            "subtasks": [
+              {
+                "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+                "title": "Kept older instruction",
+                "completed": true,
+                "description": "Independent edits work after adoption",
+                "completed_at": "2026-11-08T09:36:21.809475+00:00",
+                "legacy_original": "Original instruction",
+                "completion_version": 0,
+                "taskfold_completion_v1": {
+                  "epoch": "0d71245c-c7d4-b546-9b87-22472f663666",
+                  "version": 0
+                }
+              }
+            ],
+            "completion_version": 0,
+            "taskfold_completion_v1": {
+              "epoch": "aed0d6cc-16af-16f2-393d-4322994c577c",
+              "version": 0
+            }
+          }
+        ],
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "current_source": [
+          {
+            "id": "parent",
+            "title": "Older parent",
+            "future": {
+              "é": 1,
+              "é": 2,
+              "huge": null,
+              "exact": 9007199254740992
+            },
+            "subtasks": [
+              {
+                "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+                "title": "Newer formatted instruction",
+                "completed": true,
+                "completed_at": "2026-11-08T09:36:21.809475+00:00",
+                "legacy_original": "Original instruction",
+                "taskfold_completion_v1": {
+                  "epoch": "9390e209-8cbb-4160-a2f6-be34223c7260",
+                  "version": 1
+                }
+              }
+            ]
+          }
+        ],
+        "retention_bytes": 5802,
+        "target_sql_null": false,
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "current_sql_null": false,
+        "has_newer_version": false,
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+      },
+      "command": {
+        "protocol": 1,
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "project_id": null,
+        "workspace_id": null,
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac",
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "mode": "undo",
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "revision": 1,
+        "review_digest": "697d6a0fca8ad3739055ebf28ba471b7b3df2f5113d048b8bed5b4841c70df96",
+        "request_id": "8535ed7e-4cca-4bba-ad40-04c3d8df5b3d"
+      },
+      "reply": {
+        "mode": "undo",
+        "phase": "undone",
+        "state": "applied",
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "protocol": 1,
+        "replayed": false,
+        "revision": 1,
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "project_id": null,
+        "request_id": "8535ed7e-4cca-4bba-ad40-04c3d8df5b3d",
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "after_digest": "fe3ee5c48e945adea09e9cd63888f61eca3654f7f0ca8667cc5b6feec5ff5e40",
+        "workspace_id": null,
+        "next_revision": 2,
+        "review_digest": "697d6a0fca8ad3739055ebf28ba471b7b3df2f5113d048b8bed5b4841c70df96",
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "restoration_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+      }
+    },
+    {
+      "review": {
+        "mode": "redo",
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "enabled": true,
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "protocol": 1,
+        "revision": 2,
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "file_count": 0,
+        "project_id": null,
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "availability": "ready",
+        "workspace_id": null,
+        "review_digest": "60fd69f471fa5395d518f76136ed3f7ff3efde3aa226231c630863d6412eaa6d",
+        "target_source": [
+          {
+            "id": "parent",
+            "title": "Older parent",
+            "future": {
+              "é": 1,
+              "é": 2,
+              "huge": null,
+              "exact": 9007199254740992
+            },
+            "subtasks": [
+              {
+                "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+                "title": "Newer formatted instruction",
+                "completed": true,
+                "completed_at": "2026-11-08T09:36:21.809475+00:00",
+                "legacy_original": "Original instruction",
+                "taskfold_completion_v1": {
+                  "epoch": "9390e209-8cbb-4160-a2f6-be34223c7260",
+                  "version": 1
+                }
+              }
+            ]
+          }
+        ],
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "current_source": [
+          {
+            "id": "parent",
+            "title": "Older parent",
+            "future": {
+              "é": 1,
+              "é": 2,
+              "huge": null,
+              "exact": 9007199254740992
+            },
+            "subtasks": [
+              {
+                "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+                "title": "Kept older instruction",
+                "completed": true,
+                "description": "Independent edits work after adoption",
+                "completed_at": "2026-11-08T09:36:21.809475+00:00",
+                "legacy_original": "Original instruction",
+                "completion_version": 0,
+                "taskfold_completion_v1": {
+                  "epoch": "0d71245c-c7d4-b546-9b87-22472f663666",
+                  "version": 0
+                }
+              }
+            ],
+            "completion_version": 0,
+            "taskfold_completion_v1": {
+              "epoch": "aed0d6cc-16af-16f2-393d-4322994c577c",
+              "version": 0
+            }
+          }
+        ],
+        "retention_bytes": 5802,
+        "target_sql_null": false,
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "current_sql_null": false,
+        "has_newer_version": false,
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+      },
+      "command": {
+        "protocol": 1,
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "project_id": null,
+        "workspace_id": null,
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac",
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "mode": "redo",
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "revision": 2,
+        "review_digest": "60fd69f471fa5395d518f76136ed3f7ff3efde3aa226231c630863d6412eaa6d",
+        "request_id": "f785441c-4bef-4e48-ba7b-1b8542e26e85"
+      },
+      "reply": {
+        "mode": "redo",
+        "phase": "restored",
+        "state": "applied",
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "protocol": 1,
+        "replayed": false,
+        "revision": 2,
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "project_id": null,
+        "request_id": "f785441c-4bef-4e48-ba7b-1b8542e26e85",
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "after_digest": "c061b44f74cb7fcc971833cb336181bb7613a45ff2e8b56577839d4574383e12",
+        "workspace_id": null,
+        "next_revision": 3,
+        "review_digest": "60fd69f471fa5395d518f76136ed3f7ff3efde3aa226231c630863d6412eaa6d",
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "restoration_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+      }
+    },
+    {
+      "review": {
+        "mode": "undo",
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "enabled": true,
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "protocol": 1,
+        "revision": 3,
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "file_count": 0,
+        "project_id": null,
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "availability": "ready",
+        "workspace_id": null,
+        "review_digest": "852e8b62625c01c27cfeef97ec7e7ed4fa6f6660dd2077e0399f95a30bbb2c38",
+        "target_source": [
+          {
+            "id": "parent",
+            "title": "Older parent",
+            "future": {
+              "é": 1,
+              "é": 2,
+              "huge": null,
+              "exact": 9007199254740992
+            },
+            "subtasks": [
+              {
+                "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+                "title": "Kept older instruction",
+                "completed": true,
+                "description": "Independent edits work after adoption",
+                "completed_at": "2026-11-08T09:36:21.809475+00:00",
+                "legacy_original": "Original instruction",
+                "completion_version": 0,
+                "taskfold_completion_v1": {
+                  "epoch": "0d71245c-c7d4-b546-9b87-22472f663666",
+                  "version": 0
+                }
+              }
+            ],
+            "completion_version": 0,
+            "taskfold_completion_v1": {
+              "epoch": "aed0d6cc-16af-16f2-393d-4322994c577c",
+              "version": 0
+            }
+          }
+        ],
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "current_source": [
+          {
+            "id": "parent",
+            "title": "Older parent",
+            "future": {
+              "é": 1,
+              "é": 2,
+              "huge": null,
+              "exact": 9007199254740992
+            },
+            "subtasks": [
+              {
+                "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+                "title": "Newer formatted instruction",
+                "completed": true,
+                "completed_at": "2026-11-08T09:36:21.809475+00:00",
+                "legacy_original": "Original instruction",
+                "taskfold_completion_v1": {
+                  "epoch": "9390e209-8cbb-4160-a2f6-be34223c7260",
+                  "version": 1
+                }
+              }
+            ]
+          }
+        ],
+        "retention_bytes": 5802,
+        "target_sql_null": false,
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "current_sql_null": false,
+        "has_newer_version": false,
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+      },
+      "command": {
+        "protocol": 1,
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "project_id": null,
+        "workspace_id": null,
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac",
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "mode": "undo",
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "revision": 3,
+        "review_digest": "852e8b62625c01c27cfeef97ec7e7ed4fa6f6660dd2077e0399f95a30bbb2c38",
+        "request_id": "de878579-fad8-482f-9481-57a434fb9a5f"
+      },
+      "reply": {
+        "mode": "undo",
+        "phase": "undone",
+        "state": "applied",
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "protocol": 1,
+        "replayed": false,
+        "revision": 3,
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "project_id": null,
+        "request_id": "de878579-fad8-482f-9481-57a434fb9a5f",
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "after_digest": "06b956b0d8be44361c4fb9a42d33637c6e46b546a013385840a678e11ccd1273",
+        "workspace_id": null,
+        "next_revision": 4,
+        "review_digest": "852e8b62625c01c27cfeef97ec7e7ed4fa6f6660dd2077e0399f95a30bbb2c38",
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "restoration_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+      }
+    },
+    {
+      "review": {
+        "mode": "finish",
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "enabled": true,
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "protocol": 1,
+        "revision": 4,
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "file_count": 0,
+        "project_id": null,
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "availability": "ready",
+        "workspace_id": null,
+        "review_digest": "8afabdb000c12fdbb84dcdd453fd19996da953d3ff244becece58106b5b66305",
+        "target_source": [
+          {
+            "id": "parent",
+            "title": "Older parent",
+            "future": {
+              "é": 1,
+              "é": 2,
+              "huge": null,
+              "exact": 9007199254740992
+            },
+            "subtasks": [
+              {
+                "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+                "title": "Kept older instruction",
+                "completed": true,
+                "description": "Independent edits work after adoption",
+                "completed_at": "2026-11-08T09:36:21.809475+00:00",
+                "legacy_original": "Original instruction",
+                "completion_version": 0,
+                "taskfold_completion_v1": {
+                  "epoch": "0d71245c-c7d4-b546-9b87-22472f663666",
+                  "version": 0
+                }
+              }
+            ],
+            "completion_version": 0,
+            "taskfold_completion_v1": {
+              "epoch": "aed0d6cc-16af-16f2-393d-4322994c577c",
+              "version": 0
+            }
+          }
+        ],
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "current_source": [
+          {
+            "id": "parent",
+            "title": "Older parent",
+            "future": {
+              "é": 1,
+              "é": 2,
+              "huge": null,
+              "exact": 9007199254740992
+            },
+            "subtasks": [
+              {
+                "id": "269d84ad-2d82-4060-bfe2-34ceaaa2ec4e",
+                "title": "Kept older instruction",
+                "completed": true,
+                "description": "Independent edits work after adoption",
+                "completed_at": "2026-11-08T09:36:21.809475+00:00",
+                "legacy_original": "Original instruction",
+                "completion_version": 0,
+                "taskfold_completion_v1": {
+                  "epoch": "0d71245c-c7d4-b546-9b87-22472f663666",
+                  "version": 0
+                }
+              }
+            ],
+            "completion_version": 0,
+            "taskfold_completion_v1": {
+              "epoch": "aed0d6cc-16af-16f2-393d-4322994c577c",
+              "version": 0
+            }
+          }
+        ],
+        "retention_bytes": 5802,
+        "target_sql_null": false,
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "current_sql_null": false,
+        "has_newer_version": false,
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+      },
+      "command": {
+        "protocol": 1,
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "project_id": null,
+        "workspace_id": null,
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac",
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "mode": "finish",
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "revision": 4,
+        "review_digest": "8afabdb000c12fdbb84dcdd453fd19996da953d3ff244becece58106b5b66305",
+        "request_id": "e125fff2-81aa-4501-a5ad-d698480cf3f8"
+      },
+      "reply": {
+        "mode": "finish",
+        "phase": "finished",
+        "state": "applied",
+        "account": "6a436045-85ea-45a9-8955-577daa08fd73",
+        "task_id": "4317f1e2-f136-4b48-a345-e9114d06ff98",
+        "protocol": 1,
+        "replayed": false,
+        "revision": 4,
+        "archive_id": "552810dd-bd9e-401e-9347-ad6b049955c3",
+        "project_id": null,
+        "request_id": "e125fff2-81aa-4501-a5ad-d698480cf3f8",
+        "restore_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "after_digest": "06b956b0d8be44361c4fb9a42d33637c6e46b546a013385840a678e11ccd1273",
+        "workspace_id": null,
+        "next_revision": 5,
+        "review_digest": "8afabdb000c12fdbb84dcdd453fd19996da953d3ff244becece58106b5b66305",
+        "archive_digest": "a7ae7a3f08a965b2f8bfd5bdf3d8fc72617e5a04fb8e44ee9809e9459eec66f5",
+        "restoration_id": "2467f72f-dfcb-4301-9feb-d689a0b10eaa",
+        "task_generation": "60fc4c06-5316-42cb-8637-d8a30e861373",
+        "repair_request_id": "f3c34955-03ec-4620-b04a-1c39991a1fac"
+      }
+    }
+  ]
+}

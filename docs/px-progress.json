@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Older subtasks · current recovery status",
-  "latest": "Recovery screens now check current state separately from past action receipts. An ended cycle no longer offers the old Undo/Redo actions, including after refresh and relaunch. The iPhone Simulator saved-original Restore screen passes the lost-reply and externally adopted-state flow. Both schemas pass 167 API checks, each client passes 83 focused cases (six new), and both app builds pass. Next: choosing and recovering the retained newer version, plus the remaining platform/accessibility/lifecycle checks. Normal advanced features stay off; Mac 48 remains installed; postlaunch tasks, pending work and user tables are preserved. Final shared-storage UI readiness remains unverified.",
+  "focus": "Older subtasks · recover a saved version",
+  "latest": "Saved-original recovery now offers a named Previous editable version, alongside the copy saved before repair. Choosing it clears consent and requests a fresh review. Each schema passes 211 genuine API checks, each client passes 45 focused cases (five new), and both builds pass. The real iPhone Simulator picker, lost-response Check, cold Undo/Redo and preserved originals/history pass. Editable recovery also passes service checks. Wider native migration cases remain open; advanced normal features stay off. Mac 48 remains installed with saved-work preservation verified; final shared-storage UI readiness remains unverified.",
   "next": [
-    "Implement explicit selection/recovery of the retained newer inverse. Fresh current restoration status now has genuine API/Core and native phone refresh/cold proof. Accept the keep-older entry button and pending-repair link, then wider Mac/iPad/large-text/speech/native HTTP and account/task/shared-custodian/file/audio/history/larger-work lifecycle cases. Do not repeat unchanged accepted phone flows.",
+    "Prioritize the remaining first-use navigation/drop pauses in a large iPad workspace. Retained-version selection now has genuine API/Core and native phone picker/consent/Check/cold Undo/Redo proof. Before activating new storage, finish native keep-restored entry, pending-repair link and complete keep-editable interaction, then wider Mac/iPad/large-text/speech/native HTTP/account/task/custodian/file/audio/history/cross-device/larger-work cases. Do not repeat unchanged accepted phone flows.",
     "Finish Mac 48 shared-storage UI readiness when computer control can reach the desktop. Postlaunch private readback now confirms preserved tasks, pending work and user tables; the installed signed update was synced and its safety copy/rollback are verified. Computer control still reports locked after the user reported unlocking. Do not repeat permission or update approvals. Phone installation stays deferred.",
     "Finish wider account/task/shared-custodian, cross-device discovery and file/audio/history lifecycle before original-restoration activation. Current Finish, Restore/status/cold Undo/Redo and current-card scopes are recorded; native Mac/iPad/speech/HTTP Auth and other realms remain separate.",
     "Improve genuinely generated on-device filter quality with a materially different, grounded design. Common descriptions now have a complete local path; the raw model remains known3/5, and the expanded twelve-goal oracle is still unaccepted. Do not rerun rejected prompts/schemas unchanged or count local drafts as inference.",
@@ -1005,7 +1005,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Separate records, guarded edits, mixed completion, saved-original discovery/export/retention, copy/history mapping and scoped restoration/Undo/Redo/Finish have recorded service/client/native proof. Atomic keep-older save retains the newer inverse, prior history, unknown data and file protections; native format/history/cold/consent/save recovery is accepted in the bound-root scope. Live recovery state is now separate from immutable receipts: 167 genuine API checks per owner, 83 focused Core cases per client (six new), both builds and an iPhone saved-original Restore/lost-reply/external-adoption/refresh/cold flow pass. Ended cycles offer no old Undo/Redo/Finish/keep-older action. Selecting/recovering the newer inverse, keep-older entry and pending-repair-link acceptance remain next. Wider account/task/custodian/file/audio/discussion ownership, cross-device discovery, exact-cache/larger-library and Mac/iPad/large-text/speech/native HTTP/branch-keyboard acceptance remain open. Advanced flags and hosted services stay unchanged; normal Mac 48 remains installed; postlaunch work preservation is verified, with final shared-storage UI readiness unverified.",
+              "detail": "Separate records, guarded edits, mixed completion, saved-original discovery/export/retention, copy/history mapping and scoped Restore/Undo/Redo/Finish have recorded service/client/native proof. Keep-restored saves retain the inverse, unknown data and prior history; current status cannot revive an ended cycle. A named Previous editable version now selects the retained inverse with fresh review and consent reset. Each schema passes 211 API checks, each client 45 focused cases (five new), and both builds pass. The real iPhone picker/lost-response Check/cold Undo/Redo preserves originals and prior histories; service recovery also makes the selected version editable and accepts ordinary edits without duplicating completion credit. Native keep-restored entry, pending-repair link and complete newer keep-editable interaction remain open. Wider account/task/custodian/file/audio/discussion ownership, cross-device discovery, exact-cache/larger-library and Mac/iPad/large-text/speech/native HTTP/branch-keyboard acceptance remain. Advanced flags and hosted services stay unchanged; normal Mac 48 is installed with saved-work preservation verified and final shared-storage UI readiness unverified.",
               "steps": [
                 {
                   "state": "done",
@@ -1998,7 +1998,13 @@
     "live-restoration-status/api-ios.json",
     "live-restoration-status/api-mac.json",
     "live-restoration-status/native-phone.json",
-    "live-restoration-status/storage-cleanup.json"
+    "live-restoration-status/storage-cleanup.json",
+    "retained-version-recovery/README.md",
+    "retained-version-recovery/verification.json",
+    "retained-version-recovery/api-ios.json",
+    "retained-version-recovery/api-mac.json",
+    "retained-version-recovery/native-phone.json",
+    "retained-version-recovery/storage-cleanup.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2665,6 +2671,12 @@
     "responsive-widget-refresh/verification.json": "2b62ea4d09f21f62b52e2837e29b22cb3169135aa20ab687801c7913672f09e6",
     "restored-copy-review/README.md": "f38c8091ee3a247f0d923144a8c276312792527abc5f4a1b366b615d2c8d8c45",
     "restored-copy-review/verification.json": "ab9aea53dabc9a893330d7f478ee52f01eee37c9d514e578079a4e72a45ccf49",
+    "retained-version-recovery/README.md": "c982a1bf14ffb441fa134039771e0ee7cc0d0db92f4501e759bf90c393d463a2",
+    "retained-version-recovery/api-ios.json": "6da639b7b73e71c0300d585943e21297a8fc5349e6ae81c293a953b67c4eb355",
+    "retained-version-recovery/api-mac.json": "d6ec49ba434dbab25706d3c3ef8d5a1d026dcd12017ebfec0477b498f079baa6",
+    "retained-version-recovery/native-phone.json": "2404fe76f49639f668c01678bb6448e8dabe6299582ac6edf636e1fef661dc1a",
+    "retained-version-recovery/storage-cleanup.json": "7923e3ba0bc82b504f01630c509a7780fabf76aed4ff0c7cd986257d7e9cc8e9",
+    "retained-version-recovery/verification.json": "1af94d349801632b491a2e287aa0ac1225445095f4a8eb5a5ad9f3adc42c3bb0",
     "reviewed-audio-custody/README.md": "b6dda9d6d208b94ff1d948cfe5876437ca16d53084a380c2303db6a14554e2a6",
     "reviewed-audio-custody/verification.json": "c11f1dc1ceae90b6581295116c4a86139576460e6c5c1ec097294328b2de6707",
     "reviewed-child-adoption-client/verification.json": "5c69918aaf693d69ca9509616024cf4fb9ea79f43c56ada94e9254430e9e8f64",

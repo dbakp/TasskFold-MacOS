@@ -258,7 +258,7 @@ extension ChildTaskRepairChange {
         case .makeChildrenList: return "Repair a subtask list"
         case .separateDuplicate: return "Separate duplicate tasks"
         case .moveItem: return "Move an item in the structure"
-        case .chooseCopy: return raw["restoration"] == nil ? "Use a saved copy" : "Keep older version editable"
+        case .chooseCopy: return raw["restoration"] == nil ? "Use a saved copy" : "Keep restored version editable"
         }
     }
 }
@@ -1236,7 +1236,10 @@ struct ChildTaskRepairOriginalComparison: Identifiable, Sendable, CustomStringCo
 
 // MARK: - Reviewed original restoration
 
-enum ChildTaskRestoreMode: String, Codable, Sendable { case restore, undo, redo, finish }
+enum ChildTaskRestoreMode: String, Codable, Sendable {
+    case restore, restoreNewer = "restore_newer", undo, redo, finish
+    var startsCycle: Bool { self == .restore || self == .restoreNewer }
+}
 
 /// Source bytes are ephemeral. Only the small, exact request is journalled.
 struct ChildTaskRestoreReview: Identifiable, Sendable {
@@ -1250,13 +1253,17 @@ struct ChildTaskRestoreReview: Identifiable, Sendable {
     var enabled: Bool { metadata["enabled"] == .bool(true) }
     var mode: ChildTaskRestoreMode { ChildTaskRestoreMode(rawValue: metadata["mode"]!.text)! }
     var fileCount: Int { metadata["file_count"]!.integer }
+    var hasNewerVersion: Bool { metadata["has_newer_version"] == .bool(true) }
     init(data: Data, scope: ChildTaskFieldClientScope, snapshot: UUID, identity: [String: JSON], mode: ChildTaskRestoreMode, restorationID: String? = nil) throws {
         try ChildTaskRestoreCommand.validateIdentity(identity, account: scope.account)
         let parts = try ChildTaskRecordRead.separatingJSONFields(["current_source", "target_source"], data: data, maximum: Self.maximumBytes,
             integerPaths: [["protocol"], ["revision"], ["retention_bytes"], ["file_count"]], nullableIntegerPaths: [])
         let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
         let keys = ChildTaskRestoreCommand.keys.subtracting(["request_id"]).union(["enabled", "availability", "retention_bytes", "file_count", "current_source", "current_sql_null", "target_source", "target_sql_null"])
-        guard Set(raw.keys) == keys, identity.allSatisfy({ ChildTaskStructureCommand.exact(raw[$0.key], $0.value) }),
+        guard Set(raw.keys) == keys.union(raw["has_newer_version"] == nil ? [] : ["has_newer_version"]),
+              raw["has_newer_version"] == nil || { if case .bool? = raw["has_newer_version"] { return true }; return false }(),
+              mode != .restoreNewer || raw["has_newer_version"] == .bool(true),
+              identity.allSatisfy({ ChildTaskStructureCommand.exact(raw[$0.key], $0.value) }),
               raw["mode"] == .string(mode.rawValue), raw["restore_id"] == (restorationID.map(JSON.string) ?? .null),
               case .bool(let enabled)? = raw["enabled"], ["ready", "paused", "retention_limit", "quota"].contains(raw["availability"]?.text ?? ""),
               enabled == (raw["availability"] == .string("ready")),
@@ -1314,7 +1321,7 @@ struct ChildTaskRestoreCommand: ReviewedTeamCommand, CustomStringConvertible, Cu
         _ = try TeamOrganizationValue.id(body["request_id"])
         let restoration = try TeamProjectValue.optionalID(body["restore_id"])
         let revision = try ChildTaskAdoptionReview.count(body["revision"], maximum: 9_007_199_254_740_990)
-        guard (mode == .restore) == (restoration == nil), (mode == .restore) == (revision == 0) else { throw Self.invalid }
+        guard mode.startsCycle == (restoration == nil), mode.startsCycle == (revision == 0) else { throw Self.invalid }
         self.account = account; self.origin = origin; self.body = body
     }
     func review(_ review: ChildTaskRestoreReview) throws {
@@ -1349,7 +1356,7 @@ struct ChildTaskRestoreResult: Codable, Equatable, Sendable {
               command.body.allSatisfy({ ChildTaskStructureCommand.exact(raw[$0.key], $0.value) }), case .bool? = raw["replayed"],
               ["applied", "closed", "unknown"].contains(raw["state"]?.text ?? "") else { throw ChildTaskRestoreCommand.invalid }
         if raw["state"] == .string("applied") {
-            guard raw["restoration_id"] == (command.mode == .restore ? .string(command.id) : command.body["restore_id"]),
+            guard raw["restoration_id"] == (command.mode.startsCycle ? .string(command.id) : command.body["restore_id"]),
                   try ChildTaskAdoptionReview.count(raw["next_revision"], maximum: 9_007_199_254_740_991) == command.body["revision"]!.integer + 1,
                   raw["phase"] == .string(command.mode == .finish ? "finished" : command.mode == .undo ? "undone" : "restored"), ChildTaskAdoptionCommand.digest(raw["after_digest"]) else { throw ChildTaskRestoreCommand.invalid }
         } else { guard ["restoration_id", "next_revision", "phase", "after_digest"].allSatisfy({ raw[$0] == .null }) else { throw ChildTaskRestoreCommand.invalid } }
@@ -1422,7 +1429,7 @@ struct ChildTaskRestoreState: ReviewedTeamFileCommand {
     mutating func makeRoom(for command: ChildTaskRestoreCommand) throws {
         let limit = command.mode == .finish ? 65 : 64
         guard entries.count >= limit else { return }
-        func family(_ c: ChildTaskRestoreCommand) -> String { c.mode == .restore ? c.id : c.body["restore_id"]!.text }
+        func family(_ c: ChildTaskRestoreCommand) -> String { c.mode.startsCycle ? c.id : c.body["restore_id"]!.text }
         for finished in entries where finished.command.mode == .finish && finished.phase == .applied {
             let key = family(finished.command)
             guard key != family(command) else { continue }
@@ -1618,10 +1625,10 @@ struct ChildTaskRestoreStatus: Sendable, CustomStringConvertible, CustomDebugStr
     var canReviewAdoption: Bool { phase == .restored }
     var message: String {
         switch phase {
-        case .restored: return structureCurrent ? "Older structure restored. Review Undo to return to the editable version." : "Older structure restored. Reversal needs a fresh storage review; your saved versions are kept."
+        case .restored: return structureCurrent ? "Saved structure restored. Review Undo to return to the editable version." : "Saved structure restored. Reversal needs a fresh storage review; your saved versions are kept."
         case .undone: return structureCurrent ? "Restoration undone. The editable version is current." : "Restoration undone. Redo is no longer current; your editable work is kept."
         case .finished: return "Recovery finished. Current subtasks kept; Redo is no longer available."
-        case .adopted: return "Older version kept editable. This restoration’s Undo/Redo cycle has ended." + (newerRetained ? " The newer version is retained in Saved originals." : "")
+        case .adopted: return "Restored version kept editable. This restoration’s Undo/Redo cycle has ended." + (newerRetained ? " The version held before restoration is retained in Saved originals." : "")
         case .purged: return "This restoration is no longer available. Check the current task before continuing."
         }
     }

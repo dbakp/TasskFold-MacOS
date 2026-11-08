@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-08",
+  "apiChecksEachOwnedSchema": 211,
+  "focusedCoreCasesEachClient": 45,
+  "newCoreCasesEachClient": 5,
+  "coreClasses": [
+    "ChildTaskNewerVersionTests",
+    "ChildTaskRestoreTests",
+    "ChildTaskRestoreStatusTests",
+    "ChildRestoredAdoptionTests"
+  ],
+  "bothCurrentSDKBuildsPassed": true,
+  "nativePhone": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Real saved-original entry, source picker, existing consent reset, lost-response Check, cold Undo/Redo; genuine PostgreSQL actor/session via reserved DEBUG channel, not native HTTP Auth",
+    "final": {
+      "phase": "undone",
+      "revision": 4,
+      "source": "restore_newer",
+      "requests": 4
+    },
+    "sourceNote": "Native run preceded only three explanatory string-literal clarifications. Both SDKs were rebuilt afterward; controls, request logic and test source are unchanged. The selector screenshot is from the accepted native run."
+  },
+  "sourceMode": "restore_newer selects retained_restoration.payload.before.tree; its source label is Previous editable version, without a chronology assumption",
+  "serviceEditableRecoveryVerified": true,
+  "normalBuildUnchanged": "Mac 48",
+  "normalAdvancedGatesOff": true,
+  "hostedSchemaUnchanged": true,
+  "phoneInstallationDeferred": true,
+  "remaining": [
+    "Native keep-restored entry, pending-repair link and complete newer keep-editable history interaction",
+    "Mac/iPad, large text, speech and native HTTP Auth acceptance",
+    "Wider account/access/task/shared-custodian/file/audio/discussion/history/cross-device/larger-library lifecycle and older-client rollout verification"
+  ]
+}

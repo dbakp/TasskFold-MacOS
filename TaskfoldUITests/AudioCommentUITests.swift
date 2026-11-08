@@ -3072,7 +3072,7 @@ extension TaskfoldUITests {
         XCTAssertEqual((try state()["repairs"] as? [Any])?.count, 1)
         press("childRepairSave")
         XCTAssertTrue(consentSheet.waitForExistence(timeout: 10), app.debugDescription)
-        childPress(consentSheet.buttons["Keep older version editable"].firstMatch)
+        childPress(consentSheet.buttons["Keep restored version editable"].firstMatch)
         let status = app.staticTexts["childRepairStatus"].firstMatch; childReveal(status, app)
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Awaiting confirmation"), object: status)], timeout: 20), .completed, app.debugDescription)
         app.terminate(); app.launch(); app.activate(); childHomePress("childNativeRepairRecovery", app)

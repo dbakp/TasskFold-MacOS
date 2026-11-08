@@ -139,9 +139,9 @@ struct ChildTaskRepairView: View {
                                             .accessibilityIdentifier("childRepairHistory-\(retained.ordinal)")
                                     }
                                     if current.metadata["custody_blocker"] == .string("restoration_custody") {
-                                        Text(adoptingOlder ? "Review the task histories to keep this older structure editable. Nothing changes until you confirm the complete proposal." : "Undo the restoration to return to editable subtasks. Your older copy stays saved.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                        Text(adoptingOlder ? "Review the task histories to keep this restored structure editable. Nothing changes until you confirm the complete proposal." : "Undo the restoration to return to editable subtasks. Your older copy stays saved.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                                     } else if current.metadata["custody_blocker"] != .null { Text("This task needs a separate history or storage review. Neither saved copy will be overwritten.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
-                                    Button { confirming = true } label: { ChildRepairActionLabel(title: adoptingOlder ? "Keep older version editable" : "Save reviewed repair", symbol: "checkmark.circle.fill") }
+                                    Button { confirming = true } label: { ChildRepairActionLabel(title: adoptingOlder ? "Keep restored version editable" : "Save reviewed repair", symbol: "checkmark.circle.fill") }
                                         .disabled(!current.eligible || !store.childTaskRepairWritesAvailable || !saveAvailable || working).accessibilityIdentifier("childRepairSave")
                                     if !store.childTaskRepairWritesAvailable { Text("This device’s workspace needs recovery before saving. You can still inspect or export the original; pending edits are kept.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                                 }
@@ -177,7 +177,7 @@ struct ChildTaskRepairView: View {
                 } else { ContentUnavailableView("Repair review unavailable", systemImage: "doc.badge.clock", description: Text("Return to your signed-in workspace to continue.")) }
             }
             .buttonStyle(.borderless)
-            .navigationTitle(adoptingOlder ? "Keep older version" : "Repair older subtasks")
+            .navigationTitle(adoptingOlder ? "Keep restored version" : "Repair older subtasks")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -227,10 +227,10 @@ struct ChildTaskRepairView: View {
             else if !loading { review = nil; proposal = nil; outline = nil }
         }
         .onDisappear { hideSensitive() }
-        .confirmationDialog(adoptingOlder ? "Keep this older version editable?" : "Save these reviewed changes?", isPresented: $confirming, titleVisibility: .visible) {
-            Button(adoptingOlder ? "Keep older version editable" : "Save repair") { Task { await save() } }
+        .confirmationDialog(adoptingOlder ? "Keep this restored version editable?" : "Save these reviewed changes?", isPresented: $confirming, titleVisibility: .visible) {
+            Button(adoptingOlder ? "Keep restored version editable" : "Save repair") { Task { await save() } }
             Button("Keep reviewing", role: .cancel) {}
-        } message: { Text(adoptingOlder ? "The complete newer version and earlier histories are saved before editing is enabled. This ends the old restoration’s Undo/Redo cycle. If either version changed, saving stops for another review." : "The complete original is saved first. If this task changed since review, saving will stop so you can review it again.") }
+        } message: { Text(adoptingOlder ? "The complete version held before restoration and earlier histories are saved before editing is enabled. This ends the old restoration’s Undo/Redo cycle. If either version changed, saving stops for another review." : "The complete original is saved first. If this task changed since review, saving will stop so you can review it again.") }
         .alert("Edit format repairs?", isPresented: $editingFormat) {
             Button("Edit repairs and choose histories again") { Task { await returnToFormat() } }
             Button("Keep reviewing", role: .cancel) {}
@@ -444,7 +444,7 @@ struct ChildTaskRepairView: View {
         do {
             try catalog.validate(partial, complete: true)
             let complete = try ChildCopyMapping(raw: partial.mapping.raw)
-            apply(try .choosing(partial.source, digest: partial.digest, mapping: complete, formatChanges: partial.formatChanges, restoration: partial.restoration), label: adoptingOlder ? "Keep older version editable" : "Use reviewed task histories", read: read)
+            apply(try .choosing(partial.source, digest: partial.digest, mapping: complete, formatChanges: partial.formatChanges, restoration: partial.restoration), label: adoptingOlder ? "Keep restored version editable" : "Use reviewed task histories", read: read)
         } catch { failure = "Choose every task’s history and review each task retiring from this list." }
     }
     private func add(_ kind: ChildTaskRepairChange.Kind, path: [Int], title: String? = nil, label: String) {
@@ -622,7 +622,7 @@ private struct ChildCopyComparison: View {
                                     .disabled(!canChoose).accessibilityLabel("Use \(copy.title.lowercased())")
                                     .accessibilityIdentifier("childCopyChoose-" + copy.id)
                             }
-                            Button { reviewHistory(copy) } label: { ChildRepairActionLabel(title: boundRestoration ? "Review older version histories" : "Review task histories", symbol: "clock.arrow.circlepath") }
+                            Button { reviewHistory(copy) } label: { ChildRepairActionLabel(title: boundRestoration ? "Review restored version histories" : "Review task histories", symbol: "clock.arrow.circlepath") }
                                 .disabled(!canChoose || !copies.omitted.isEmpty).accessibilityIdentifier("childCopyMap-" + copy.id)
                         }
                     }
@@ -1065,7 +1065,7 @@ struct ChildTaskOriginalRestoreView: View {
             List {
                 if let model, model.scope == scope {
                     Section {
-                        Text("Restore only the saved subtask structure. Current task notes and priority stay current. Both versions are retained. An older structure stays read-only until Undo or a reviewed keep-older save. After Undo, finish recovery when you no longer need Redo.")
+                        Text("Restore only the saved subtask structure. Current task notes and priority stay current. Both versions are retained. Restored subtasks start read-only. Review their histories to keep them editable, or use Undo to return to your current version. After Undo, finish recovery when you no longer need Redo.")
                             .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
                         if let archive, archive.scope == scope, archive.contentRetained, store.childTaskOriginalRestorationEnabled {
                             Button("Review saved structure") { Task { await prepare(identity: ChildTaskRestoreCommand.identity(archive), mode: .restore) } }
@@ -1117,7 +1117,7 @@ struct ChildTaskOriginalRestoreView: View {
         .onDisappear { close() }
         .sheet(item: $review) { value in
             if value.scope == scope, store.childTaskRestoreReviewIsCurrent(value) {
-                ChildTaskRestoreReviewView(review: value, close: { review = nil }, apply: { Task { await apply(value) } })
+                ChildTaskRestoreReviewView(review: value, choosing: busy, selectionMessage: message, selectVersion: { mode in Task { await prepare(identity: value.metadata.filter { ChildTaskRestoreCommand.identityKeys.contains($0.key) }, mode: mode) } }, close: { review = nil }, apply: { Task { await apply(value) } })
             }
         }
         #if os(macOS)
@@ -1148,7 +1148,7 @@ struct ChildTaskOriginalRestoreView: View {
             adoption = .init(rootID: entry.command.rootID, binding: held.restoration, scope: captured)
         } catch {
             guard ticket == work, scope == captured, !Task.isCancelled else { return }
-            message = "This older version couldn’t be reviewed with current access. It may already have changed. Check saved requests; every retained version stays safe."
+            message = "This restored version couldn’t be reviewed with current access. It may already have changed. Check saved requests; every retained version stays safe."
         }
     }
     private func prepare(identity: [String: JSON], mode: ChildTaskRestoreMode, restorationID: String? = nil) async {
@@ -1163,7 +1163,7 @@ struct ChildTaskOriginalRestoreView: View {
         }
     }
     private func apply(_ value: ChildTaskRestoreReview) async {
-        guard let model, review?.id == value.id, store.childTaskRestoreReviewIsCurrent(value) else { return }
+        guard !busy, let model, review?.id == value.id, store.childTaskRestoreReviewIsCurrent(value) else { return }
         do {
             let command = try ChildTaskRestoreCommand(review: value)
             review = nil
@@ -1181,12 +1181,15 @@ struct ChildTaskOriginalRestoreView: View {
 
 private struct ChildTaskRestoreReviewView: View {
     let review: ChildTaskRestoreReview
+    let choosing: Bool
+    let selectionMessage: String?
+    let selectVersion: (ChildTaskRestoreMode) -> Void
     let close: () -> Void
     let apply: () -> Void
     @State private var target = true
     @State private var acknowledged = false
     private var side: ChildTaskRepairOriginalComparison.Side { target ? review.target : review.current }
-    private var action: String { review.mode == .finish ? "Finish recovery" : review.mode == .restore ? "Restore saved structure" : review.mode == .undo ? "Undo restoration" : "Redo restoration" }
+    private var action: String { review.mode == .finish ? "Finish recovery" : review.mode == .restoreNewer ? "Restore previous editable version" : review.mode == .restore ? "Restore saved structure" : review.mode == .undo ? "Undo restoration" : "Redo restoration" }
     var body: some View {
         NavigationStack {
             List {
@@ -1194,9 +1197,21 @@ private struct ChildTaskRestoreReviewView: View {
                     if review.mode == .finish {
                         Text("Keep your current subtasks and finish recovery. The extra copy held for Redo will be removed. Saved originals and task history are unchanged.").fixedSize(horizontal: false, vertical: true)
                     } else {
-                        Text("Only subtasks change. Task notes, priority and other root details stay current. Both versions are retained.").fixedSize(horizontal: false, vertical: true)
+                        Text("Only subtasks change. Task notes, priority and other task details stay current. Both versions are retained.").fixedSize(horizontal: false, vertical: true)
                     }
-                    if review.mode == .restore || review.mode == .redo { Text("The restored older structure will be read-only. Use Undo to return to the editable version.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                    if review.mode.startsCycle || review.mode == .redo { Text("Restored subtasks start read-only. Review their histories to keep them editable, or use Undo to return to your current version.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                    if review.mode.startsCycle {
+                        if review.hasNewerVersion {
+                            Picker("Saved version", selection: Binding(get: { review.mode }, set: { mode in acknowledged = false; selectVersion(mode) })) {
+                                Text("Saved before repair").tag(ChildTaskRestoreMode.restore)
+                                Text("Previous editable version").tag(ChildTaskRestoreMode.restoreNewer)
+                            }.pickerStyle(.menu).disabled(choosing).accessibilityIdentifier("childRestoreVersion")
+                            Text(review.mode == .restoreNewer ? "The editable version held before the restoration that created this archive." : "The structure saved immediately before this repair. This archive also retains the preceding editable version.")
+                                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        } else { Text("Version: Saved before repair").foregroundStyle(.secondary) }
+                        if choosing { ProgressView("Reviewing saved version…") }
+                        if let selectionMessage { Text(selectionMessage).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRestoreVersionFeedback") }
+                    }
                     if review.fileCount > 0 {
                         Text(review.mode == .finish ? "\(review.fileCount) file(s) will no longer be held for Redo. The files themselves stay in place." : "\(review.fileCount) stored file(s) will remain retained for reversal.").fixedSize(horizontal: false, vertical: true)
                     }
@@ -1220,13 +1235,14 @@ private struct ChildTaskRestoreReviewView: View {
                 Section {
                     if review.enabled {
                         Toggle(review.mode == .finish ? "I understand Redo will no longer be available" : "I reviewed this subtask version", isOn: $acknowledged).accessibilityIdentifier("childRestoreAcknowledged")
-                        Button(action, role: review.mode == .finish ? .destructive : nil, action: apply).disabled(!acknowledged).accessibilityIdentifier("childRestoreApply")
+                        Button(action, role: review.mode == .finish ? .destructive : nil, action: apply).disabled(!acknowledged || choosing).accessibilityIdentifier("childRestoreApply")
                     } else {
                         Text(review.mode == .finish ? "Finishing recovery is temporarily unavailable. Your current subtasks and saved copies are kept." : review.metadata["availability"] == .string("paused") ? "Restoration is temporarily paused. Both copies are kept." : "This version needs a storage review before restoration. Both copies are kept.")
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
+            .onChange(of: review.id) { _, _ in acknowledged = false; target = true }
             .navigationTitle(review.mode == .finish ? "Finish recovery" : "Review subtask version")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: close).keyboardShortcut(.cancelAction) } }
         }
@@ -1273,7 +1289,7 @@ private struct ChildRestoreCurrentCard: View {
                 Button("Check saved subtask repair", action: checkRepair).accessibilityIdentifier("childRestorePendingRepair-" + entry.command.id)
             } else if actionsEnabled, let live, let restoration = entry.result?.raw["restoration_id"]?.text {
                 if live.canReviewAdoption, store.childTaskOriginalAdoptionEnabled {
-                    Button("Review keeping older version editable", action: adopt).accessibilityIdentifier("childRestoreAdopt-" + entry.command.id)
+                    Button("Review keeping this version editable", action: adopt).accessibilityIdentifier("childRestoreAdopt-" + entry.command.id)
                 }
                 if let mode = live.reversalMode, store.childTaskOriginalReversalsEnabled {
                     Button(mode == .undo ? "Review Undo" : "Review Redo") { prepare(mode, restoration) }.accessibilityIdentifier("childRestoreReverse-" + entry.command.id)

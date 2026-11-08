@@ -1,0 +1,22 @@
+{
+  "TasskFold-MacOS": {
+    "appSwiftFiles": 185,
+    "allNormalizedMatch": true,
+    "normalizations": {
+      "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+      "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+      "com.taskfold.session-persistence": "com.taskfold.workflowteststeameditbridge.session-persistence"
+    },
+    "uiTestMatches": true
+  },
+  "TaskFold-iOS": {
+    "appSwiftFiles": 178,
+    "allNormalizedMatch": true,
+    "normalizations": {
+      "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+      "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+      "com.taskfold.ios.session": "com.taskfold.workflowteststeameditbridge.session"
+    },
+    "uiTestMatches": true
+  }
+}

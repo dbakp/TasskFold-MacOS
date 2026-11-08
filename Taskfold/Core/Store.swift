@@ -1044,7 +1044,7 @@ final class Store {
     var childTaskOriginalFinishEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalFinishEnabled") as? Bool == true }
     private func childTaskRestoreModeEnabled(_ mode: ChildTaskRestoreMode) -> Bool {
         switch mode {
-        case .restore: return childTaskOriginalRestorationEnabled && childTaskOriginalReversalsEnabled
+        case .restore, .restoreNewer: return childTaskOriginalRestorationEnabled && childTaskOriginalReversalsEnabled
         case .undo, .redo: return childTaskOriginalReversalsEnabled
         case .finish: return childTaskOriginalFinishEnabled
         }
