@@ -1,0 +1,24 @@
+{
+  "freeBeforeBytes": 39481888768,
+  "retired": [
+    {
+      "name": "taskfold-staged-native-ios-v1.xcresult",
+      "allocatedBytes": 55758848,
+      "summary": "/tmp/taskfold-staged-native-v1-preserved-summary.json",
+      "beforeMutationProof": "/tmp/taskfold-staged-native-v1-stopped-proof.json"
+    },
+    {
+      "name": "taskfold-staged-native-ios-v2.xcresult",
+      "allocatedBytes": 12214272,
+      "summary": "/tmp/taskfold-staged-native-v2-preserved-summary.json",
+      "beforeMutationProof": "/tmp/taskfold-staged-native-v2-stopped-proof.json"
+    },
+    {
+      "name": "taskfold-staged-native-ios-v3.xcresult",
+      "allocatedBytes": 39321600,
+      "summary": "/tmp/taskfold-staged-native-v3-preserved-summary.json",
+      "beforeMutationProof": "/tmp/taskfold-staged-native-v3-stopped-proof.json"
+    }
+  ],
+  "freeAfterBytes": 39588368384
+}

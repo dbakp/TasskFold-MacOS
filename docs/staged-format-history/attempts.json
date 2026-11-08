@@ -1,0 +1,34 @@
+{
+  "stoppedBeforeAnyMutation": [
+    {
+      "attempt": 1,
+      "proof": {
+        "testFeatureFlagsWereOff": true,
+        "requests": 0,
+        "databaseExactlyBaseline": true,
+        "normalFlagsChanged": false
+      }
+    },
+    {
+      "attempt": 2,
+      "proof": {
+        "previewReached": true,
+        "preparedHistoryEditorReached": true,
+        "noMutationRequests": true,
+        "databaseExactlyBaseline": true,
+        "harnessCorrection": "Reveal virtualized format-edit row before checking existence"
+      }
+    },
+    {
+      "attempt": 3,
+      "proof": {
+        "coldPartialHistoryRetained": true,
+        "databaseExactlyBaseline": true,
+        "noMutationRequests": true,
+        "productRefinement": "Use explicit two-action alert; native confirmation popover omitted the cancel action"
+      }
+    }
+  ],
+  "current": 4,
+  "currentPassed": true
+}

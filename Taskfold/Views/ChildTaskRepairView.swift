@@ -31,6 +31,7 @@ struct ChildTaskRepairView: View {
     @State private var failure: String?
     @State private var confirming = false
     @State private var discarding = false
+    @State private var editingFormat = false
     @State private var document: WorkspaceDocument?
     @State private var exporting = false
     @State private var exportScope: ChildTaskFieldClientScope?
@@ -81,6 +82,15 @@ struct ChildTaskRepairView: View {
                                 }
                             }
                             if let partial = draft?.mappingReview, let catalog = mappingCatalog, currentCopies?.digest == partial.digest, catalog.digest == partial.digest {
+                                if !partial.formatChanges.isEmpty {
+                                    Section("Format repairs") {
+                                        ForEach(Array(partial.formatChanges.enumerated()), id: \.offset) { row in
+                                            Label(row.element.formatSummary, systemImage: "checkmark.circle").fixedSize(horizontal: false, vertical: true)
+                                        }
+                                        Text("These repairs stay with your history choices. The original content remains unchanged until you confirm the full proposal.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                        Button("Edit format repairs") { editingFormat = true }.disabled(working).accessibilityIdentifier("childMappingEditFormat")
+                                    }
+                                }
                                 ChildMappingEditor(catalog: catalog, draft: partial, enabled: !working, assignee: { id in
                                     if id == store.userID { return "You" }
                                     return store.assigneeName(Record(["assigned_to": id.map(JSON.string) ?? .null, "project_id": review.metadata["project_id"] ?? .null]))
@@ -101,6 +111,10 @@ struct ChildTaskRepairView: View {
                             }
                             if let current {
                                 Section("After repair") {
+                                    if current.valid, !choosingCopy, !changes.isEmpty, current.metadata["custody_blocker"] != .null {
+                                        Button("Review histories after repairs", systemImage: "clock.arrow.circlepath") { beginFormattedMapping(current, read: review) }
+                                            .disabled(working).accessibilityIdentifier("childMappingPrepareFormat")
+                                    }
                                     if current.metadata["custody_blocker"] == .string("history_custody"), changes.count == 1, changes[0].kind == .chooseCopy, changes[0].raw["mapping"] == nil {
                                         Button("Review task histories", systemImage: "clock.arrow.circlepath") { editMapping() }.disabled(working || currentCopies == nil).accessibilityIdentifier("childMappingResolve")
                                     }
@@ -207,6 +221,10 @@ struct ChildTaskRepairView: View {
         }
         .onDisappear { hideSensitive() }
         .confirmationDialog("Save these reviewed changes?", isPresented: $confirming, titleVisibility: .visible) { Button("Save repair") { Task { await save() } } } message: { Text("The complete original is saved first. If this task changed since review, saving will stop so you can review it again.") }
+        .alert("Edit format repairs?", isPresented: $editingFormat) {
+            Button("Edit repairs and choose histories again") { Task { await returnToFormat() } }
+            Button("Keep reviewing", role: .cancel) {}
+        } message: { Text("Your format repairs stay saved. History choices will be cleared so you can match them again after changing the structure.") }
         .confirmationDialog("Discard this saved review?", isPresented: $discarding, titleVisibility: .visible) { Button("Discard review", role: .destructive) { Task { await resetReview() } }; Button("Keep reviewing", role: .cancel) {} } message: { Text("Only the saved choices are removed. Your task and any queued repair stay intact.") }
         .fileExporter(isPresented: $exporting, document: document, contentType: .json, defaultFilename: "Taskfold-original-" + Dates.day(Date())) { result in
             guard usable, exportScope == scope, exportRoot == selected else { return }; document = nil
@@ -252,7 +270,7 @@ struct ChildTaskRepairView: View {
         draft = model?.drafts.first { $0.rootID == selected }; changes = draft?.changes ?? []; labels = draft?.labels ?? []; baseDigest = draft?.identity["review_digest"]?.text; if draft?.mappingReview != nil || changes.first?.raw["mapping"] != nil { copiesRequested = true }
     }
     private func select(_ root: String?) { mappingHistorySelection = nil; mappingHistoryQuery = ""; mappingCatalog = nil; copiesRequested = false; expandedCopyIDs = []; activeID = nil; selected = root; review = nil; proposal = nil; savedCopies = nil; outline = nil; restoreDraft(); failure = nil; exportMessage = nil; if root != nil { Task { await refresh() } } }
-    private func hideSensitive() { mappingHistorySelection = nil; mappingHistoryQuery = ""; mappingCatalog = nil; copiesRequested = false; expandedCopyIDs = []; ticket = UUID(); model?.close(); model = nil; modelScope = nil; draft = nil; changes = []; labels = []; baseDigest = nil; review = nil; proposal = nil; savedCopies = nil; comparingCopies = false; outline = nil; targets = []; document = nil; exporting = false; exportScope = nil; exportRoot = nil; loading = false; fetchingOriginal = false }
+    private func hideSensitive() { editingFormat = false; mappingHistorySelection = nil; mappingHistoryQuery = ""; mappingCatalog = nil; copiesRequested = false; expandedCopyIDs = []; ticket = UUID(); model?.close(); model = nil; modelScope = nil; draft = nil; changes = []; labels = []; baseDigest = nil; review = nil; proposal = nil; savedCopies = nil; comparingCopies = false; outline = nil; targets = []; document = nil; exporting = false; exportScope = nil; exportRoot = nil; loading = false; fetchingOriginal = false }
     private func open() async {
         hideSensitive(); guard phase == .active, let captured = scope else { return }
         do { let m = try store.childTaskRepairModel(); model = m; modelScope = captured; await m.load(); guard usable, captured == scope, model === m, !Task.isCancelled else { return }; restoreDraft(); if selected == nil { await discover() } else if active == nil { await refresh() } }
@@ -278,7 +296,7 @@ struct ChildTaskRepairView: View {
                 guard usable, captured == scope, ticket == request, selected == root, store.childTaskCopiesAreCurrent(copies), !Task.isCancelled else { return }
                 savedCopies = copies
                 if let partial = draft?.mappingReview {
-                    let catalog = try await decodeMapping(copies, source: partial.source)
+                    let catalog = try await rebuildMapping(partial, copies: copies, read: value)
                     guard usable, captured == scope, ticket == request else { return }
                     try catalog.validate(partial, complete: false); mappingCatalog = catalog
                 }
@@ -299,7 +317,42 @@ struct ChildTaskRepairView: View {
         do { apply(try .choosing(copy.id, digest: copies.digest), label: "Use \(copy.title.lowercased())", read: read) }
         catch { failure = "These saved copies need another comparison. All originals are kept." }
     }
-    nonisolated private func decodeMapping(_ copies: ChildTaskCopyReview, source: String) async throws -> ChildCopyMappingCatalog { try Task.checkCancellation(); return try .init(copies: copies, source: source) }
+    nonisolated private func decodeMapping(_ copies: ChildTaskCopyReview, source: String, preparation: ChildTaskRepairPreview? = nil) async throws -> ChildCopyMappingCatalog { try Task.checkCancellation(); return try .init(copies: copies, source: source, preparation: preparation) }
+    private func rebuildMapping(_ partial: ChildCopyMappingDraft, copies: ChildTaskCopyReview, read: ChildTaskAdoptionReview) async throws -> ChildCopyMappingCatalog {
+        let prepared = partial.formatChanges.isEmpty ? nil : try await store.readChildTaskRepair(read, changes: partial.formatChanges)
+        try Task.checkCancellation()
+        guard usable, store.childTaskCopiesAreCurrent(copies), store.childTaskAdoptionReviewIsCurrent(read) else { throw CancellationError() }
+        return try await decodeMapping(copies, source: partial.source, preparation: prepared)
+    }
+    private func beginFormattedMapping(_ prepared: ChildTaskRepairPreview, read: ChildTaskAdoptionReview) {
+        guard usable, !working, prepared.valid, prepared.changes == changes, !choosingCopy,
+              store.childTaskRepairReviewIsCurrent(prepared) else { return }
+        let request = UUID(); ticket = request; loading = true; copiesRequested = true; failure = nil
+        Task {
+            defer { if ticket == request { loading = false } }
+            do {
+                let copies = try await store.readChildTaskCopies(read)
+                guard usable, ticket == request, store.childTaskCopiesAreCurrent(copies) else { return }
+                savedCopies = copies
+                let catalog = try await decodeMapping(copies, source: "task", preparation: prepared)
+                let partial = try ChildCopyMappingDraft(source: "task", digest: copies.digest,
+                    mapping: ["version": .number(1), "nodes": .array([]), "retire": .array([])], formatChanges: prepared.changes)
+                guard usable, ticket == request else { return }
+                if await persistMapping(partial, read: read) { mappingCatalog = catalog }
+            } catch {
+                guard usable, ticket == request else { return }
+                failure = "These saved histories need another access review. Your format choices and all originals are kept."
+            }
+        }
+    }
+    private func returnToFormat() async {
+        guard usable, !working, let partial = draft?.mappingReview, !partial.formatChanges.isEmpty else { return }
+        let request = UUID(); ticket = request; loading = true
+        defer { if ticket == request { loading = false } }
+        if await persistChoices(partial.formatChanges, labels: partial.formatChanges.map(\.formatSummary), read: review), usable, ticket == request {
+            mappingCatalog = nil; loading = false; await refresh()
+        }
+    }
     private func beginMapping(_ copy: ChildTaskCopyReview.Copy, copies: ChildTaskCopyReview, read: ChildTaskAdoptionReview) {
         guard usable, !working, changes.isEmpty, draft?.mappingReview == nil, currentCopies?.digest == copies.digest else { return }
         let request = UUID(); ticket = request; loading = true
@@ -314,7 +367,12 @@ struct ChildTaskRepairView: View {
         }
     }
     private func persistMapping(_ partial: ChildCopyMappingDraft, read: ChildTaskAdoptionReview) async -> Bool {
-        guard usable, let model, let root = selected, changes.isEmpty || changes.count == 1 && changes[0].kind == .chooseCopy && changes[0].raw["source"] == .string(partial.source) && changes[0].raw["copy_digest"] == .string(partial.digest), store.childTaskAdoptionReviewIsCurrent(read), currentCopies?.digest == partial.digest else { return false }
+        guard usable, let model, let root = selected, store.childTaskAdoptionReviewIsCurrent(read), currentCopies?.digest == partial.digest else { return false }
+        let samePartial = changes.isEmpty && (draft?.mappingReview == nil || draft?.mappingReview?.formatChanges == partial.formatChanges)
+        let sameFormat = partial.source == "task" && !changes.isEmpty && changes == partial.formatChanges
+        let sameChoice = changes.count == 1 && changes[0].kind == .chooseCopy && changes[0].raw["source"] == .string(partial.source) && changes[0].raw["copy_digest"] == .string(partial.digest)
+            && ChildTaskStructureCommand.exact(.array(changes[0].raw["format_changes"]?.list ?? []), .array(partial.formatChanges.map { .object($0.raw) }))
+        guard samePartial || sameFormat || sameChoice else { return false }
         do {
             let saved = try ChildTaskRepairDraft(review: read, changes: [], labels: [], mappingReview: partial)
             guard await model.saveDraft(saved, rootID: root, expected: draft?.token), usable, self.model === model, selected == root else { return false }
@@ -342,8 +400,7 @@ struct ChildTaskRepairView: View {
             nodes.append(["source_key": .string(item.id), "history_key": .string(stored.id), "incarnation": .string(stored.incarnation), "lifecycle": .null])
             retired.removeAll { $0["node_key"] == .string(stored.id) }
         } else if !target.isEmpty { return }
-        guard let value = try? ChildCopyMappingDraft(source: partial.source, digest: partial.digest,
-            mapping: ["version": .number(1), "nodes": .array(nodes.map(JSON.object)), "retire": .array(retired.map(JSON.object))]) else { return }
+        guard let value = try? partial.replacingMapping(["version": .number(1), "nodes": .array(nodes.map(JSON.object)), "retire": .array(retired.map(JSON.object))]) else { return }
         saveMapping(value)
     }
     private func saveMapping(_ partial: ChildCopyMappingDraft) {
@@ -358,8 +415,8 @@ struct ChildTaskRepairView: View {
         Task {
             defer { if ticket == request { loading = false } }
             do {
-                let partial = try ChildCopyMappingDraft(source: choice.raw["source"]!.text, digest: choice.raw["copy_digest"]!.text, mapping: choice.raw["mapping"]?.object ?? ["version": .number(1), "nodes": .array([]), "retire": .array([])])
-                let catalog = try await decodeMapping(copies, source: partial.source); try catalog.validate(partial, complete: false)
+                let partial = try ChildCopyMappingDraft(source: choice.raw["source"]!.text, digest: choice.raw["copy_digest"]!.text, mapping: choice.raw["mapping"]?.object ?? ["version": .number(1), "nodes": .array([]), "retire": .array([])], formatChanges: try (choice.raw["format_changes"]?.list ?? []).map { try ChildTaskRepairChange(raw: $0.object) })
+                let catalog = try await rebuildMapping(partial, copies: copies, read: read); try catalog.validate(partial, complete: false)
                 guard usable, ticket == request else { return }; if await persistMapping(partial, read: read) { mappingCatalog = catalog }
             } catch { guard usable, ticket == request else { return }; failure = "These choices need a fresh comparison. Your saved review and originals are kept." }
         }
@@ -369,7 +426,7 @@ struct ChildTaskRepairView: View {
         do {
             try catalog.validate(partial, complete: true)
             let complete = try ChildCopyMapping(raw: partial.mapping.raw)
-            apply(try .choosing(partial.source, digest: partial.digest, mapping: complete), label: "Use reviewed task histories", read: read)
+            apply(try .choosing(partial.source, digest: partial.digest, mapping: complete, formatChanges: partial.formatChanges), label: "Use reviewed task histories", read: read)
         } catch { failure = "Choose every task’s history and review each task retiring from this list." }
     }
     private func add(_ kind: ChildTaskRepairChange.Kind, path: [Int], title: String? = nil, label: String) {
@@ -435,7 +492,7 @@ struct ChildTaskRepairView: View {
             guard usable, ticket == request, selected == read.context.root.id, store.childTaskCopiesAreCurrent(value), !Task.isCancelled else { return }
             savedCopies = value
             if let partial = draft?.mappingReview {
-                let catalog = try await decodeMapping(value, source: partial.source)
+                let catalog = try await rebuildMapping(partial, copies: value, read: read)
                 guard usable, ticket == request else { return }; try catalog.validate(partial, complete: false); mappingCatalog = catalog
             }
             if choosingCopy {
@@ -571,7 +628,7 @@ private struct ChildMappingEditor: View {
     private func choice(_ id: String) -> [String: JSON]? { draft.mapping.nodes.first { $0["source_key"] == .string(id) } }
     private var complete: Bool { (try? catalog.validate(draft, complete: true)) != nil }
     private func submit(nodes: [[String: JSON]], retired: [[String: JSON]]) {
-        guard let value = try? ChildCopyMappingDraft(source: draft.source, digest: draft.digest, mapping: ["version": .number(1), "nodes": .array(nodes.map(JSON.object)), "retire": .array(retired.map(JSON.object))]) else { return }
+        guard let value = try? draft.replacingMapping(["version": .number(1), "nodes": .array(nodes.map(JSON.object)), "retire": .array(retired.map(JSON.object))]) else { return }
         update(value)
     }
     private func lifecycle(_ value: String, for item: ChildCopyMappingCatalog.Item) {
