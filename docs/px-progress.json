@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Mac47 · verified daily-use update",
-  "latest": "Optimized Mac47 is signed and archive-verified from the merged source, with46 independently verified as rollback. It includes worker context preparation, the faster eight-day forecast, background clock refresh and cancellation of obsolete renders. Normal feature flags match46 exactly. Prepared and fully archive-verified, not installed. Computer control reports the Mac locked; one unlock request is already pending. Current Mac46 remains running. Installation still requires a fresh safety copy after a native quit; no postlaunch47 acceptance is claimed. Phone installation stays deferred; broader navigation/drop, physical smoothness and remaining Px lifecycle work remain open.",
+  "focus": "Dated navigation · reuse current sections",
+  "latest": "Today and Upcoming now reuse current date sections. The 504-task Simulator check fell from five/seven section rebuilds to one per warm/cold drop, with correct dates, unchanged other tasks and successful cold reopening. Measured dated-read work fell from 1.47/2.16 s to 0.24/0.26 s; saving still takes about 0.32 s. Freshness checks cover edits, archiving and workspace availability. Both apps build. This latest source is newer than prepared Mac47 and is not installed; phone installation stays deferred. Wider smoothness and remaining Px lifecycle work stay open.",
   "next": [
     "Install the already verified Mac47 package when the Mac is unlocked: inspect current sync, quit natively, take a fresh verified private copy, atomically install, then check startup/shared storage/sync and corrected data readback. One unlock request is pending; do not rebuild or duplicate it.",
-    "Profile the remaining actual navigation/drop and final rendering costs. Routine clock rendering now runs on the worker and superseded work cooperates with cancellation. Individual long queries/encodes, broader native Mac/iPad behavior and physical smoothness remain open; avoid repeating accepted benchmarks unchanged.",
+    "Continue from actual larger-list timings: dated sections now reuse current reads and real warm/cold drops pass, but roughly0.32s through commit, individual long queries/encodes and final layout/navigation still need work. Keep broader Mac/iPad/physical acceptance separate; avoid repeating accepted benchmarks unchanged.",
     "Finish retained-history disposal/keep-old-version adoption and wider account/task/custodian lifecycle before original-restoration activation. The basic iPhone restore → lost reply/status → cold Undo/Redo path passes; Mac/iPad, speech, native HTTP Auth and wider ownership remain distinct. Do not substitute repeated accepted matrices for that implementation.",
     "Improve genuinely generated on-device filter quality with a materially different, grounded design. Common descriptions now have a complete local path; the raw model remains known3/5, and the expanded twelve-goal oracle is still unaccepted. Do not rerun rejected prompts/schemas unchanged or count local drafts as inference.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
@@ -503,7 +503,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Delivered scoped work covers prepared workspace/project/member reads, note/draft preparation, dates/grouping, stable drag targets, project-first navigation and exact task-order reuse. The current bounded row writer passes 74 focused cases per owner and two actual signed Simulator journeys (four warm/cold drops). The2,004-task/2.88 MB reference fixture improves from 126–130 ms to 58–62 ms through commit; moving the large payload itself takes 86–88 ms. Saved dates, payload, all 2,003 unrelated tasks and pending work survive cold return. Mac46 is installed/synced and includes this saving change; its app-data approval cleared the warning, protected-data readback passed and shared publication/sync recovered. Wider native rendering/navigation, reconstructed-refresh scaling, account/accessibility behavior and physical smoothness remain open. Background widget member/token/assignment preparation now runs in the existing worker; indexed collaborator grouping replaces repeated per-project scans. Each owner passes174 focused Core checks (6 new context cases), and the current signed iPhone actual-Store check confirms immediate redaction, stale/access rejection, current recovery and unchanged saved work. Each owner records its large-directory Debug Core sample; both apps compile. Full render/navigation/drop and physical smoothness remain open; no new normal installation. The eight-day widget capacity forecast now resolves task timing once and omits unused display-lane layout. Each owner passes54 focused Core cases (6 new semantic cases plus1 diagnostic); the current iPhone1,000-task component matches exact eight-day totals from the prior planner, and actual-Store privacy/recovery still passes. Both apps compile. Each owner records before/after full-payload preparation on the same mixed workload. Final encoding/rendering, navigation/drop, obsolete work and physical smoothness remain open; no new normal install. Routine clock rendering is now off the interface thread, with cooperative cancellation between stages/items for obsolete workers. Each owner passes 71 focused Core cases (six new cancellation cases); two current signed iPhone journeys verify mid-render stop/recovery and seven actual-Store clock/privacy/data assertions. Broader navigation/drop/rendering and physical smoothness remain open; this source is not yet installed normally.",
+              "detail": "Delivered scoped work covers prepared workspace/project/member reads, note/draft preparation, dates/grouping, stable drag targets, project-first navigation and exact task-order reuse. The current bounded row writer passes 74 focused cases per owner and two actual signed Simulator journeys (four warm/cold drops). The2,004-task/2.88 MB reference fixture improves from 126–130 ms to 58–62 ms through commit; moving the large payload itself takes 86–88 ms. Saved dates, payload, all 2,003 unrelated tasks and pending work survive cold return. Mac46 is installed/synced and includes this saving change; its app-data approval cleared the warning, protected-data readback passed and shared publication/sync recovered. Wider native rendering/navigation, reconstructed-refresh scaling, account/accessibility behavior and physical smoothness remain open. Background widget member/token/assignment preparation now runs in the existing worker; indexed collaborator grouping replaces repeated per-project scans. Each owner passes174 focused Core checks (6 new context cases), and the current signed iPhone actual-Store check confirms immediate redaction, stale/access rejection, current recovery and unchanged saved work. Each owner records its large-directory Debug Core sample; both apps compile. Full render/navigation/drop and physical smoothness remain open; no new normal installation. The eight-day widget capacity forecast now resolves task timing once and omits unused display-lane layout. Each owner passes54 focused Core cases (6 new semantic cases plus1 diagnostic); the current iPhone1,000-task component matches exact eight-day totals from the prior planner, and actual-Store privacy/recovery still passes. Both apps compile. Each owner records before/after full-payload preparation on the same mixed workload. Final encoding/rendering, navigation/drop, obsolete work and physical smoothness remain open; no new normal install. Routine clock rendering is now off the interface thread, with cooperative cancellation between stages/items for obsolete workers. Each owner passes 71 focused Core cases (six new cancellation cases); two current signed iPhone journeys verify mid-render stop/recovery and seven actual-Store clock/privacy/data assertions. Broader navigation/drop/rendering and physical smoothness remain open; this source is not yet installed normally. Current dated-section reuse removes repeated planning-day construction in Today/Upcoming. In the504-dated-row native journey, each warm/cold drop constructs once rather than five/seven times; exact data/cold landing and seven actual-Store freshness assertions pass. The iOS focused union passes157 cases and Mac166, with one unrelated optional diagnostic skipped each. Both apps compile. Roughly0.32s through commit and broader layout/navigation/physical behavior remain open; this source is newer than prepared47 and is not installed.",
               "steps": [
                 {
                   "state": "done",
@@ -813,7 +813,14 @@
             "responsive-widget-refresh/native-phone.json",
             "responsive-widget-refresh/storage-cleanup.json",
             "responsive-widget-refresh/core-cache-audit.json",
-            "responsive-widget-refresh/retired-results.json"
+            "responsive-widget-refresh/retired-results.json",
+            "dated-navigation-reads/README.md",
+            "dated-navigation-reads/verification.json",
+            "dated-navigation-reads/native-before.json",
+            "dated-navigation-reads/native-after.json",
+            "dated-navigation-reads/native-source-fences.json",
+            "dated-navigation-reads/storage-cleanup.json",
+            "dated-navigation-reads/core-cache-audit.json"
           ],
           "focus": true
         },
@@ -1921,7 +1928,15 @@
     "mac47-update/storage-cleanup.json",
     "mac47-update/build-cleanup.json",
     "mac47-update/code-cleanup.json",
-    "mac47-update/progress-validation.json"
+    "mac47-update/progress-validation.json",
+    "dated-navigation-reads/README.md",
+    "dated-navigation-reads/verification.json",
+    "dated-navigation-reads/native-before.json",
+    "dated-navigation-reads/native-after.json",
+    "dated-navigation-reads/native-source-fences.json",
+    "dated-navigation-reads/storage-cleanup.json",
+    "dated-navigation-reads/core-cache-audit.json",
+    "dated-navigation-reads/progress-validation.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2125,6 +2140,14 @@
     "daily-use-build/workflow-starters-native.json": "af7b584156a2d6673a6efbda1f1a00ca42f8d485eefdeb0b48ea91827a69fde3",
     "daily-use-build/workflow-starters-storage-cleanup.json": "85ee9ccb52485597c435261a34d83c4d55fdb99b249ac0194c08775c1ed1f63a",
     "daily-use-build/workflow-ux-packages.json": "b6d190ed9f48bc314a4d3e0e35232024005de0e25966add1594fcbd608128b9c",
+    "dated-navigation-reads/README.md": "7a2677df840b9013ad122ebed3915320346d26148bb11ba219e204e56ae7a492",
+    "dated-navigation-reads/core-cache-audit.json": "ef1bbf431bfef72da78155af4afec41bac96371d04f5b60507724f4388bc8ad3",
+    "dated-navigation-reads/native-after.json": "2a3842c99bbc3be5434e1c9d2ef1158d8e0cfbdeda15050a588ef29cd859a177",
+    "dated-navigation-reads/native-before.json": "bf1fb09907eca381d7cd473c78fd20ad4344969472efae08861a07ca2fd284f8",
+    "dated-navigation-reads/native-source-fences.json": "d6c7663f6aac9ad41103c029b056bc17e1907b61d55b7a7560753d3486e637ff",
+    "dated-navigation-reads/progress-validation.json": "3ea19f3485bf5a1b90cd1f6b6a6e26145f7c51a03042b2507c8a88498fd395db",
+    "dated-navigation-reads/storage-cleanup.json": "12dae9ac68da04a439772ef784cf543c66848daac2ddcf852d90f2f82c85a1c0",
+    "dated-navigation-reads/verification.json": "bf9f4e940455747b24fb255a8fd5ac2c37115e6ceb63e1a2421db21919a8a466",
     "drag-row-observation/README.md": "e7493753d5b515defdaa54b70081d9611248b0422a7467029126f031fed203db",
     "drag-row-observation/verification.json": "40a1298706dc9e5fdb8e0249f7a19849d0198a90786b085faeaf53c9a81e1334",
     "drag-target-reads/README.md": "3a4fe11a293accb9275db02f7004cb4f8be74893587b0d6d3f5251cec3519ac6",

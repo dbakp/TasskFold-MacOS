@@ -649,3 +649,40 @@ struct TaskDayGroupsRead {
         Set(rowsByDay.keys.filter { $0 >= today }).union(horizon).sorted()
     }
 }
+
+/// Bounded presentation reuse for dated lists. The owner supplies the current
+/// observed source/access context and revalidates every action independently.
+/// This cache retains records only within one context and grants no authority.
+final class TaskDayGroupsReadCache {
+    struct Context: Equatable {
+        let source: UUID, access: UUID, session: UUID
+        let workspace: WorkspaceBinding
+        let origin: String?
+        let readable: Bool
+    }
+    private struct Key: Equatable {
+        let query: TaskQuery, clock: TaskCalendarContext
+        let today: String, calendar: Calendar
+        let calendarID: Calendar.Identifier, timeZone: String
+    }
+    private struct Entry { let key: Key; let value: TaskDayGroupsRead }
+    private var context: Context?
+    private var entries: [Entry] = []
+    private(set) var computationCount = 0
+    var retainedEntryCount: Int { entries.count }
+    func clear() { context = nil; entries.removeAll(keepingCapacity: true) }
+    func read(query: TaskQuery, clock: TaskCalendarContext, today: String, calendar: Calendar,
+              context next: Context, tasks: () -> [Record]) -> TaskDayGroupsRead {
+        guard next.readable else { clear(); return TaskDayGroupsRead(tasks: [], today: today, calendar: calendar) }
+        if context != next { clear(); context = next }
+        let key = Key(query: query, clock: clock, today: today, calendar: calendar, calendarID: calendar.identifier, timeZone: calendar.timeZone.identifier)
+        if let index = entries.firstIndex(where: { $0.key == key }) {
+            let hit = entries.remove(at: index); entries.append(hit); return hit.value
+        }
+        let value = TaskDayGroupsRead(tasks: tasks(), today: today, calendar: calendar)
+        computationCount += 1
+        if entries.count == 4 { entries.removeFirst() }
+        entries.append(Entry(key: key, value: value))
+        return value
+    }
+}

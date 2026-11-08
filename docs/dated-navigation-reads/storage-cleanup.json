@@ -1,0 +1,49 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 41475706880,
+  "actions": [
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Index.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 55382016
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/Index.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 66654208
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/CompilationCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 180756480
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/XCBuildData",
+      "kind": "completedBuildMetadata",
+      "allocatedBytes": 7155712
+    }
+  ],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 772562944,
+      "projectedAllocatedBytes": 772562944,
+      "within768MiB": true
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 720117760,
+      "projectedAllocatedBytes": 720117760,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 41791078400,
+  "actualFreeChangeBytes": 315371520
+}
