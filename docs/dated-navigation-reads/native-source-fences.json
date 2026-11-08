@@ -1,0 +1,9 @@
+{
+  "snapshotObservedOnHit": true,
+  "unreadableRedacted": true,
+  "hotReuse": true,
+  "clockRefresh": true,
+  "archiveRefreshWithoutTaskChange": true,
+  "durableOriginalPreserved": true,
+  "dateTitleRefresh": true
+}

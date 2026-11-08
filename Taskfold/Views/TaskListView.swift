@@ -83,7 +83,10 @@ struct TaskListView: View {
                 (workspace.search.isEmpty || ($0.title + " " + $0.string("description")).localizedStandardContains(workspace.search))
             }
         }
-        return store.matching(TaskQuery(scope: scope, text: workspace.search, includeCompleted: showCompleted, priority: priorityFilter, sort: manualOrder ? "manual" : sortBy, labelName: title))
+        return store.matching(taskQuery)
+    }
+    private var taskQuery: TaskQuery {
+        TaskQuery(scope: scope, text: workspace.search, includeCompleted: showCompleted, priority: priorityFilter, sort: manualOrder ? "manual" : sortBy, labelName: title)
     }
     private func ordered(_ tasks: [Record], day: String) -> [Record] { manualOrder ? workspace.arranged(tasks, key: day) : tasks }
     /// Non-dated lists rank inside device-local groups: one per project section, one per scope.
@@ -93,7 +96,7 @@ struct TaskListView: View {
     }
     private var dayGroups: [(String, [Record])] {
         let now = Date(), calendar = Calendar.current, today = Dates.day(now)
-        let read = TaskDayGroupsRead(tasks: filtered, today: today, calendar: calendar)
+        let read = workspace.section == .assigned ? TaskDayGroupsRead(tasks: filtered, today: today, calendar: calendar) : store.taskDayGroups(taskQuery, today: today, calendar: calendar)
         let overdue = ordered(read.overdue, day: overdueKey)
         if scope == .today { return [("Overdue", overdue), (today, ordered(read.rowsByDay[today] ?? [], day: today))] }
         let horizon = (0..<14).compactMap { calendar.date(byAdding: .day, value: $0, to: now).map(Dates.day) }

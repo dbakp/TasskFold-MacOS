@@ -1,0 +1,174 @@
+{
+  "accepted": true,
+  "physicalFPSClaim": false,
+  "samples": [
+    {
+      "kind": "warm",
+      "savedDateVerified": true,
+      "settledViewport": {
+        "calibrationY": 0,
+        "cancelled": false,
+        "dayGrouping": {
+          "calls": 5,
+          "computations": 1,
+          "maximumRows": 504,
+          "maximumSeconds": 0.243398749968037,
+          "seconds": 0.2437490418087691
+        },
+        "decelerating": false,
+        "desiredOffset": -168,
+        "dragging": false,
+        "firstFrameAfterMs": 24.708032608032227,
+        "frameEvents": [
+          "report 2026-11-07 expected 2026-11-07 owner 2257B0A4",
+          "report 2026-11-07 expected 2026-11-08 owner 2257B0A4",
+          "report 2026-11-08 expected 2026-11-08 owner A058A2FC",
+          "report 2026-11-08 expected 2026-11-08 owner A058A2FC",
+          "report 2026-11-08 expected 2026-11-08 owner A058A2FC",
+          "report 2026-11-08 expected 2026-11-08 owner A058A2FC",
+          "disappear 2026-11-07 owner 2257B0A4",
+          "report 2026-11-08 expected 2026-11-08 owner A058A2FC",
+          "report 2026-11-08 expected 2026-11-08 owner A058A2FC",
+          "report 2026-11-08 expected 2026-11-08 owner A058A2FC"
+        ],
+        "frameY": 50.33333333333333,
+        "minimumOffset": -168,
+        "offsetBefore": -168,
+        "phase": "Optional(Taskfold.DayDragController.Phase.settling)",
+        "rowDay": "2026-11-08",
+        "rowFrameY": 50.33333333333333,
+        "targetScreenY": 372.66666666666663,
+        "taskID": "drag-fixture-0",
+        "tracking": false
+      },
+      "timing": {
+        "beforeCommitSeconds": 0.2644945834763348,
+        "commitTiming": {
+          "admission": 0.0015155833680182695,
+          "applyAndLocalHistory": 0.012161749880760908,
+          "historyRegistration": 0.002506708260625601,
+          "normalization": 0.0018774583004415035,
+          "persist": 0.03877791669219732,
+          "total": 0.057259124936535954,
+          "undoAndGrouping": 0.00038370839320123196
+        },
+        "dayGrouping": {
+          "calls": 1,
+          "computations": 0,
+          "maximumRows": 504,
+          "maximumSeconds": 0.000108000123873353,
+          "seconds": 0.000108000123873353
+        },
+        "destinationReads": 1,
+        "persistTiming": {
+          "atomicWrite": 0.0018515833653509617,
+          "directoryPreparation": 0.00016204174607992172,
+          "encoding": 0.008654791628941894,
+          "metadataValidations": 0,
+          "publishDurableSnapshot": 3.3333199098706245e-05,
+          "readDurable": 0.001491208327934146,
+          "retirementAndReceiptStaging": 0.0020997084211558104,
+          "rowMemoRetainedBytes": 4022918,
+          "rowsEncoded": 4,
+          "rowsReused": 2003,
+          "total": 0.03875191672705114,
+          "widgetCompletionPreparation": 0.023293208330869675,
+          "widgetPublication": 0.0011254583951085806
+        },
+        "pointerUpdates": 2,
+        "rowBodyEvaluations": 98,
+        "slotChanges": 1,
+        "sourceReads": 1,
+        "targetReads": 3,
+        "throughCommitSeconds": 0.3224159167148173
+      },
+      "unrelatedTasksExact": true
+    },
+    {
+      "kind": "cold",
+      "savedDateVerified": true,
+      "settledViewport": {
+        "calibrationY": 0,
+        "cancelled": false,
+        "dayGrouping": {
+          "calls": 5,
+          "computations": 1,
+          "maximumRows": 504,
+          "maximumSeconds": 0.2581602497957647,
+          "seconds": 0.258488041581586
+        },
+        "decelerating": false,
+        "desiredOffset": -168,
+        "dragging": false,
+        "firstFrameAfterMs": 27.269959449768066,
+        "frameEvents": [
+          "report 2026-11-08 expected 2026-11-08 owner 687B281C",
+          "report 2026-11-08 expected 2026-11-08 owner 687B281C",
+          "report 2026-11-08 expected 2026-11-08 owner 687B281C",
+          "report 2026-11-08 expected 2026-11-09 owner 687B281C",
+          "report 2026-11-09 expected 2026-11-09 owner 412F5375",
+          "report 2026-11-08 expected 2026-11-09 owner 687B281C",
+          "report 2026-11-09 expected 2026-11-09 owner 412F5375",
+          "report 2026-11-09 expected 2026-11-09 owner 412F5375",
+          "disappear 2026-11-08 owner 687B281C",
+          "report 2026-11-09 expected 2026-11-09 owner 412F5375",
+          "report 2026-11-09 expected 2026-11-09 owner 412F5375",
+          "report 2026-11-09 expected 2026-11-09 owner 412F5375",
+          "report 2026-11-09 expected 2026-11-09 owner 412F5375"
+        ],
+        "frameY": 262.5,
+        "minimumOffset": -168,
+        "offsetBefore": -168,
+        "phase": "Optional(Taskfold.DayDragController.Phase.settling)",
+        "rowDay": "2026-11-09",
+        "rowFrameY": 262.5,
+        "targetScreenY": 530,
+        "taskID": "drag-fixture-0",
+        "tracking": false
+      },
+      "timing": {
+        "beforeCommitSeconds": 0.2735663333442062,
+        "commitTiming": {
+          "admission": 7.937499321997166e-05,
+          "applyAndLocalHistory": 0.00971974991261959,
+          "historyRegistration": 0.00011141668073832989,
+          "normalization": 0.0010001666378229856,
+          "persist": 0.042033583391457796,
+          "total": 0.05312433326616883,
+          "undoAndGrouping": 0.00014237500727176666
+        },
+        "dayGrouping": {
+          "calls": 1,
+          "computations": 0,
+          "maximumRows": 504,
+          "maximumSeconds": 0.00010016676969826221,
+          "seconds": 0.00010016676969826221
+        },
+        "destinationReads": 2,
+        "persistTiming": {
+          "atomicWrite": 0.0022351667284965515,
+          "directoryPreparation": 0.00016979151405394077,
+          "encoding": 0.010641791624948382,
+          "metadataValidations": 0,
+          "publishDurableSnapshot": 3.875000402331352e-05,
+          "readDurable": 0.001985708484426141,
+          "retirementAndReceiptStaging": 0.0024427915923297405,
+          "rowMemoRetainedBytes": 4024683,
+          "rowsEncoded": 3,
+          "rowsReused": 2008,
+          "total": 0.04200970847159624,
+          "widgetCompletionPreparation": 0.023222291842103004,
+          "widgetPublication": 0.001228374894708395
+        },
+        "pointerUpdates": 25,
+        "rowBodyEvaluations": 164,
+        "slotChanges": 3,
+        "sourceReads": 1,
+        "targetReads": 27,
+        "throughCommitSeconds": 0.3268490834161639
+      },
+      "unrelatedTasksExact": true
+    }
+  ],
+  "taskCount": 2004
+}

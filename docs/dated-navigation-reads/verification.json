@@ -1,0 +1,154 @@
+{
+  "reviewed": "2026-11-08",
+  "owner": "macOS",
+  "baselineCommit": "4a510149e2668f48056aca4c1ce34f94d7ac57a4",
+  "sourceSHA256": {
+    "Taskfold/Core/Planner.swift": "e646bfd352abcc7fb6af766b637ba4bb8f9dd0171760cfb109bf9b2dfb61e24f",
+    "Taskfold/Core/Store.swift": "4b184c61abd7e21c660f7459ecabadf3efb34c02cae9e5a667fc0dd97f6b5626",
+    "Taskfold/TeamTemplateNativeFixture.swift": "ff21504547425f13cff7e16025a54dd311c0b363d6ff0f2806c95b8fcdf4b9e5",
+    "TaskfoldTests/TaskDayGroupsCacheTests.swift": "46c33cb971857328f6804256a7d3c6e098c052cf047d9277ccaaa1fdb35db84e",
+    "Taskfold/Views/TaskListView.swift": "94750356614946ed47679bdffcb3c73e0c4c8bb7fec996b9edad04613d02559b"
+  },
+  "focusedCore": {
+    "selected": 167,
+    "passed": 166,
+    "skipped": [
+      "TaskWorkloadCacheTests testArchivedProjectNavigationMeasurementWhenRequested"
+    ],
+    "failed": 0,
+    "newCacheCases": 7,
+    "newSemanticCases": 6,
+    "logSHA256": {
+      "taskfold-dated-mac-core.log": "fac9f42607a9f0ecaeaac43a17eb054c012c9cd559b9b881d7ee78d5c9fe965b"
+    },
+    "scope": "Four-entry LRU, current-source/account/generation/access/session/origin/readability invalidation, view/query/clock/calendar changes, duplicate IDs, exact opaque values, heading/completion edits and unchanged prior values. Existing workload/navigation/role/gesture/day readers retained. Optional unrelated archive-navigation diagnostic remains skipped."
+  },
+  "legacyDayReaderUnchanged": true,
+  "hostSourceAudit": {
+    "swiftFilesCompared": 185,
+    "namespaceOnlyDifferences": [
+      "Taskfold/Core/Backups.swift",
+      "Taskfold/Core/Backend.swift",
+      "Taskfold/Core/Store.swift",
+      "Taskfold/Core/WidgetActions.swift",
+      "Taskfold/Core/SharedCapture.swift"
+    ]
+  },
+  "nativeIOS": {
+    "beforeSummary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1794103027.949,
+      "passedTests": 1,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1794102930.355,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "afterSummary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1794103941.944,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1794103848.789,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    },
+    "sourceAccessObservation": {
+      "snapshotObservedOnHit": true,
+      "unreadableRedacted": true,
+      "hotReuse": true,
+      "clockRefresh": true,
+      "archiveRefreshWithoutTaskChange": true,
+      "durableOriginalPreserved": true,
+      "dateTitleRefresh": true
+    },
+    "beforeSource": {
+      "hostSHA256": {
+        "Taskfold/TaskfoldApp.swift": "431135175c61db22ae454000e49b36660390e98e118ffc1479d4365623183249",
+        "Taskfold/Views/DayDrag.swift": "6dd8ea98243f0a4cadc3de5dca28b458a9caf5a7e6417b9c431bbd67cdd6b5b4",
+        "Taskfold/Core/Store.swift": "1c435187b8f08ce883081b7ffc6884d81e2f630a52de5aef7f9d88b26c174d35",
+        "Taskfold/Core/Planner.swift": "4ce2f022cb2440164a3c37db6ff3ec6094d5cbf57f2abb5943af17e8cf9a39f4",
+        "TaskfoldUITests/TaskfoldUITests.swift": "342966ae113f05b87da3bd2b1806a3d7f17fa8b3746e4d551d14dca5275c4e6c"
+      },
+      "beforeDeviceState": "Shutdown",
+      "sourceOwnerBase": "968db50d8fb983b4787d223715f0eaf9e9ba4ab9",
+      "baselineGrouping": "Existing uncached TaskDayGroupsRead each view evaluation; profiling only, no production cache change"
+    },
+    "beforeLogSHA256": "f03f63bea41f36cf777ea1d3dce2a6745a12cbc2c6158b0c6d534a3896416ee5",
+    "afterLogSHA256": "d3f2cf85b39441071056cda93a37bde5843a8aff0758a9838a3df460ed69323d",
+    "scope": "One baseline case and two current signed Simulator cases. Real warm/cold list drops on 504 dated rows within 2,004 tasks / 2.88 MB reference fixture, exact unrelated rows/queue and moved dates/landing day; seven separate actual-Store observation/archive/readability/clock/recovery assertions. Synthetic only; no physical FPS claim."
+  },
+  "build": {
+    "terminalExit": 0,
+    "logSHA256": "4cf5ec2ee5ae1dc83e3e8bb5d103ae4b61f7aafd1cb87b2de0adf30220331000",
+    "signing": "disabled, compile only",
+    "macRuntimeAccepted": false
+  },
+  "normalInstall": false,
+  "normal47PackageUnchanged": true,
+  "normalGatesChanged": false,
+  "hostedChanges": false,
+  "remaining": [
+    "About0.32s through commit in this larger fixture remains; query/mutation/encoding and later layout/navigation costs still need work.",
+    "Wider Mac/iPad/accessibility/account and physical smoothness acceptance",
+    "Full retained-history/keep-old-version/custody lifecycle"
+  ],
+  "checkpoints": 74,
+  "substeps": 67
+}

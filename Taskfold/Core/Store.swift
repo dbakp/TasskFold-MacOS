@@ -111,7 +111,7 @@ final class Store {
     var snapshot = Snapshot() {
         didSet {
             snapshotRevision = UUID()
-            presentationReadCache.clear(); recordReadCache.clear()
+            presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear()
             assigneeDisplayCache.clear()
             // Project reads revalidate the current filtered rows for this new
             // epoch; unchanged projects can keep their prepared hierarchy.
@@ -127,7 +127,7 @@ final class Store {
         didSet {
             presentationAccessEpoch = UUID()
             subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
-            presentationReadCache.clear(); recordReadCache.clear()
+            presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear()
             assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
             if oldValue?.boundary != teamAccessMask?.boundary {workspaceReadRevision = UUID()}
             if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}
@@ -241,6 +241,7 @@ final class Store {
         }
     }
     @ObservationIgnored private let taskCache = TaskCache()
+    @ObservationIgnored private let dayGroupsReadCache = TaskDayGroupsReadCache()
     private(set) var taskRevision = 0
     private(set) var calendarContext = TaskCalendarContext()
     /// Read synchronously on scene activation and clock notifications, before network work.
@@ -1395,7 +1396,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {if !workspaceCacheReadable {sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0};subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear(); recordReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {if !workspaceCacheReadable {sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0};subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
@@ -2026,6 +2027,61 @@ final class Store {
         let archived = projectCatalog.archivedIDs
         return matches.filter { !archived.contains($0.string("project_id")) }
     }
+    /// A synchronous presentation read. Observing the live snapshot even on
+    /// hits keeps date/completion/archive/access edits visible to SwiftUI. All
+    /// actions still capture and validate their current source independently.
+    func taskDayGroups(_ query: TaskQuery, today: String, calendar: Calendar = .current) -> TaskDayGroupsRead {
+        _ = snapshot; _ = taskRevision; _ = workspaceReadRevision
+        let context = TaskDayGroupsReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
+            session: backend.reminderSessionIncarnation, workspace: .init(account: userID, generation: workspaceGeneration),
+            origin: try? backend.accountRemovalOrigin, readable: workspaceCacheReadable)
+        return dayGroupsReadCache.read(query: query, clock: calendarContext, today: today, calendar: calendar, context: context) { matching(query) }
+    }
+    #if DEBUG
+    var taskDayGroupingComputations: Int { dayGroupsReadCache.computationCount }
+    func verifyWorkflowDayGroupingCache() throws -> [String: JSON] {
+        guard WorkflowUndoNativePeer.enabled else { throw CancellationError() }
+        let original = snapshot, readable = workspaceCacheReadable, originalClock = calendarContext
+        defer { workspaceCacheReadable = readable; calendarContext = originalClock; snapshot = original; try? persist() }
+        func require(_ condition: Bool, _ message: String) throws { if !condition { throw AppFailure(message: message) } }
+        let today = calendarContext.today, tomorrow = Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!)
+        let project = "dated-cache-proof", other = "dated-cache-other"
+        var first = Record.task(user: userID, project: project); first["id"] = .string("dated-cache-a"); first["title"] = .string("Original dated proof"); first["due_date"] = .string(today)
+        var second = Record.task(user: userID, project: other); second["id"] = .string("dated-cache-b"); second["due_date"] = .string(today)
+        let seed = Snapshot(tables: ["tasks": [first, second], "projects": [Record(["id": .string(project), "name": .string("Dated proof"), "user_id": .string(userID)]), Record(["id": .string(other), "name": .string("Other"), "user_id": .string(userID)])]])
+        snapshot = seed
+        let query = TaskQuery(scope: .upcoming), calendar = Calendar.current
+        func read() -> TaskDayGroupsRead { taskDayGroups(query, today: calendarContext.today, calendar: calendar) }
+        let before = dayGroupsReadCache.computationCount
+        let old = read(); _ = read()
+        try require(dayGroupsReadCache.computationCount == before + 1, "Repeated grouping did not reuse its current read")
+        let observed = WorkspaceReadObservationProbe()
+        withObservationTracking { _ = read() } onChange: { observed.markChanged() }
+        snapshot.tables["tasks"]![0]["title"] = .string("Edited dated proof")
+        snapshot.tables["tasks"]![0]["due_date"] = .string(tomorrow)
+        let changed = read()
+        try require(observed.changed && changed.rowsByDay[tomorrow]?.first?.title == "Edited dated proof", "Cached grouping hid a current task edit")
+        try require(old.rowsByDay[today]?.first(where: { $0.id == first.id })?.title == first.title, "A later grouping changed the prior value")
+        let archiveObserved = WorkspaceReadObservationProbe(), tasksBeforeArchive = taskRevision
+        withObservationTracking { _ = read() } onChange: { archiveObserved.markChanged() }
+        snapshot.tables["projects"]![0]["is_archived"] = .bool(true)
+        let archived = read()
+        try require(archiveObserved.changed && taskRevision == tasksBeforeArchive && !archived.rowsByDay.values.flatMap({ $0 }).contains(where: { $0.id == first.id }), "Project-only archive left cached dated work visible")
+        workspaceCacheReadable = false
+        try require(read().rowsByDay.isEmpty && dayGroupsReadCache.retainedEntryCount == 0, "Unreadable grouping retained old content")
+        workspaceCacheReadable = readable; snapshot = seed
+        _ = read(); let clockBefore = dayGroupsReadCache.computationCount
+        calendarContext = TaskCalendarContext(now: Date().addingTimeInterval(86400), timeZone: .current)
+        let movedClock = read()
+        try require(dayGroupsReadCache.computationCount == clockBefore + 1 && movedClock.overdue.count == 2, "A new clock reused stale overdue groups")
+        calendarContext = originalClock; snapshot = original; try persist()
+        let returned = read(), expected = TaskDayGroupsRead(tasks: matching(query), today: calendarContext.today, calendar: calendar)
+        try require(AuthoredValueComparison.sameRows(returned.overdue, expected.overdue) && returned.rowsByDay == expected.rowsByDay, "Returning source did not recover its current groups")
+        let durable = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+        try require(snapshot == original && durable == original, "Grouping check changed saved work")
+        return ["hotReuse": .bool(true), "snapshotObservedOnHit": .bool(true), "dateTitleRefresh": .bool(true), "archiveRefreshWithoutTaskChange": .bool(true), "unreadableRedacted": .bool(true), "clockRefresh": .bool(true), "durableOriginalPreserved": .bool(true)]
+    }
+    #endif
     func filterGroups(_ scope: TaskScope, tasks: [Record], includeCompleted: Bool = false) -> [TaskGrouping.Group] {
         let view: Record? = { if case .saved(let id) = scope { return record("saved_views", id: id) }; return nil }()
         let rule = view.flatMap { try? FilterRule(document: $0["query_ast"]) }

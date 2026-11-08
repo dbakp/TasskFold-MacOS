@@ -448,6 +448,18 @@ enum WidgetCapacityNativeCheck {
                             }
                         }
                     }.accessibilityIdentifier("checkBackgroundWidgets")
+                    Button("Check dated grouping") {
+                        guard let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
+                              let proof = UUID(uuidString: String(argument.dropFirst("--workflow-commit-proof=".count))) else { return }
+                        let directory = TeamTemplateNativeFixture.root.appendingPathComponent("DatedGroupingChecks/\(proof.uuidString.lowercased())", isDirectory: true)
+                        do {
+                            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                            let result = try store.verifyWorkflowDayGroupingCache()
+                            try TaskfoldJSONEncoder().encode(result).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                        } catch {
+                            try? TaskfoldJSONEncoder().encode(["error": error.localizedDescription]).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                        }
+                    }.accessibilityIdentifier("checkDatedGrouping")
                     Button("Check capacity forecast") {
                         Task {
                             guard let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
