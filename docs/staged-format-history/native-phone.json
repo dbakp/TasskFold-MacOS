@@ -1,0 +1,85 @@
+{
+  "test": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1794115676.776,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1794115191.511,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "fixtureChecks": [
+    "real prepared format/copy contract is read-only",
+    "one exact formatted mapping save, original and prior history retained"
+  ],
+  "final": {
+    "repairs": 1,
+    "originals": 1,
+    "scopeCount": 0
+  },
+  "fixtureRemoved": true,
+  "traceRequests": 28,
+  "traceSHA256": "556a8137af1335cfc066068f715236843e3561e5dc954e3e81a898929f5b3d30",
+  "authScope": "Synthetic real PostgreSQL actor/session native channel; native HTTP authentication is separate",
+  "actualExits": {
+    "test": 0,
+    "fixture": 0
+  },
+  "preservedSyntheticData": {
+    "manifestVerifiedRenames": 2
+  },
+  "accepted": "Normal-text dark iPhone task-copy format review, partial matching, edit Cancel/confirm, cold preview, save/lost-reply/cold status recovery; not active-restoration adoption",
+  "localAdvisors": {
+    "ran": true,
+    "source": "Official CLI on complete owned local schema",
+    "result": [
+      {
+        "name": "extension_in_public",
+        "title": "Extension in Public",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects extensions installed in the `public` schema.",
+        "detail": "Extension `pg_net` is installed in the public schema. Move it to another schema.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+        "metadata": {
+          "name": "pg_net",
+          "type": "extension",
+          "schema": "public"
+        },
+        "cache_key": "extension_in_public_pg_net"
+      }
+    ]
+  },
+  "schemaManifestSHA256": "ae502d01c688f3ecf0d9efdc03e6dafa1036e5caaf5002f240bb1949ee4d4eb8"
+}

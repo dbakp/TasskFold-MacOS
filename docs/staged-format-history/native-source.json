@@ -1,0 +1,9 @@
+{
+  "sources": {
+    "Taskfold/Core/ChildTaskRepair.swift": "3597e99b8b53c83b5d06e95cdf9050ab16f7b6a8cbade6b98d230ee4c3d0e045",
+    "Taskfold/Views/ChildTaskRepairView.swift": "842e85ee74e7f5f441f53980084ca6a7a525fcb023caf74f1a83311665251536",
+    "TaskfoldUITests/AudioCommentUITests.swift": "8d7b4ad0285482c7498d957fc468d228ca5b682b6ae03938bcb6151cd002333c"
+  },
+  "host": "/tmp/taskfold-archive-ios-host",
+  "normalAppChanged": false
+}

@@ -189,4 +189,75 @@ final class ChildCopyMappingClientTests: XCTestCase {
         XCTAssertThrowsError(try ChildTaskRepairPreview(data: previewBytes(base, f), review: f.review, changes: f.preview.changes))
     }
 
+    struct PreparedContract {
+        let read: ChildTaskAdoptionReview, copies: ChildTaskCopyReview, prepared: ChildTaskRepairPreview
+        let raw: [String: Data]
+    }
+    func preparedContract() throws -> PreparedContract {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-staged-format-contract-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let raw = try ChildTaskRecordRead.separatingJSONFields(["root", "review", "copies", "preparation"], data: Data(contentsOf: url), maximum: 1_000_000, integerPaths: [], nullableIntegerPaths: []).values
+        let root = try TaskfoldJSONDecoder().decode(Record.self, from: XCTUnwrap(raw["root"]))
+        let body = try TaskfoldJSONDecoder().decode([String: JSON].self, from: XCTUnwrap(raw["preparation"]))
+        let context = try ChildTaskRecordContext(account: body["account"]!.text, origin: "https://repair.test", workspace: UUID(), session: UUID(), access: UUID(), snapshot: UUID(), root: root)
+        let read = try ChildTaskAdoptionReview(data: XCTUnwrap(raw["review"]), context: context, workspaceID: nil)
+        let changes = try body["changes"]!.list.map { try ChildTaskRepairChange(raw: $0.object) }
+        return try .init(read: read, copies: ChildTaskCopyReview(data: XCTUnwrap(raw["copies"]), review: read), prepared: ChildTaskRepairPreview(data: XCTUnwrap(raw["preparation"]), review: read, changes: changes), raw: raw)
+    }
+    func testPreparedMalformedSourceCreatesOnlyExplicitHistoryChoices() throws {
+        let f = try preparedContract()
+        XCTAssertTrue(f.prepared.valid); XCTAssertFalse(f.prepared.eligible)
+        XCTAssertThrowsError(try ChildCopyMappingCatalog(copies: f.copies, source: "task"))
+        let c = try ChildCopyMappingCatalog(copies: f.copies, source: "task", preparation: f.prepared)
+        XCTAssertEqual(c.selected.map(\.id), ["concept", "recovered-original", "review"])
+        let partial = try ChildCopyMappingDraft(source: "task", digest: f.copies.digest, mapping: ["version": .number(1), "nodes": .array([]), "retire": .array([])], formatChanges: f.prepared.changes)
+        try c.validate(partial, complete: false)
+        XCTAssertThrowsError(try c.validate(partial, complete: true))
+        XCTAssertTrue(partial.mapping.nodes.isEmpty)
+        let node: [String: JSON] = ["source_key": .string("recovered-original"), "history_key": .string("nested"), "incarnation": .string(try XCTUnwrap(c.stored.first { $0.id == "nested" }).incarnation), "lifecycle": .string("recorded")]
+        let edited = try partial.replacingMapping(["version": .number(1), "nodes": .array([.object(node)]), "retire": .array([])])
+        XCTAssertEqual(edited.formatChanges, f.prepared.changes); try c.validate(edited, complete: false)
+    }
+    func testStagedFormatAndPartialHistorySurviveColdDraftWithoutSourceTree() throws {
+        let f = try preparedContract()
+        let partial = try ChildCopyMappingDraft(source: "task", digest: f.copies.digest, mapping: ["version": .number(1), "nodes": .array([]), "retire": .array([])], formatChanges: f.prepared.changes)
+        let draft = try ChildTaskRepairDraft(review: f.read, changes: [], labels: [], mappingReview: partial)
+        let state = try ChildTaskRepairState(account: draft.account, origin: draft.origin, drafts: [draft])
+        let data = try TaskfoldJSONEncoder().encode(state), cold = try ChildTaskRepairState(data: data)
+        XCTAssertEqual(cold.drafts, [draft]); XCTAssertLessThan(data.count, 2500)
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("legacy_original"))
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("subtasks"))
+        let catalog = try ChildCopyMappingCatalog(copies: f.copies, source: "task", preparation: f.prepared)
+        try catalog.validate(try XCTUnwrap(cold.drafts[0].mappingReview), complete: false)
+    }
+    func testCatalogRejectsMissingChangedOrForeignPreparedFormat() throws {
+        let f = try preparedContract(), catalog = try ChildCopyMappingCatalog(copies: f.copies, source: "task", preparation: f.prepared)
+        let empty: [String: JSON] = ["version": .number(1), "nodes": .array([]), "retire": .array([])]
+        XCTAssertThrowsError(try catalog.validate(ChildCopyMappingDraft(source: "task", digest: f.copies.digest, mapping: empty), complete: false))
+        let other = [try ChildTaskRepairChange(.assignReference, path: [0], reference: "changed")]
+        XCTAssertThrowsError(try catalog.validate(ChildCopyMappingDraft(source: "task", digest: f.copies.digest, mapping: empty, formatChanges: other), complete: false))
+        XCTAssertThrowsError(try ChildCopyMappingCatalog(copies: f.copies, source: "projection", preparation: f.prepared))
+        let c = f.read.context
+        let foreign = try ChildTaskRecordContext(account: c.account, origin: c.origin, workspace: c.workspace, session: c.session, access: c.access, snapshot: UUID(), root: c.root)
+        let read = try ChildTaskAdoptionReview(data: XCTUnwrap(f.raw["review"]), context: foreign, workspaceID: nil)
+        let copies = try ChildTaskCopyReview(data: XCTUnwrap(f.raw["copies"]), review: read)
+        XCTAssertThrowsError(try ChildCopyMappingCatalog(copies: copies, source: "task", preparation: f.prepared))
+    }
+    func testStagedDraftStrictCountersAndLegacyMappingCompatibility() throws {
+        let f = try contract(), old = try partial(f)
+        let oldBytes = try TaskfoldJSONEncoder().encode(old)
+        XCTAssertFalse(String(decoding: oldBytes, as: UTF8.self).contains("formatChanges"))
+        XCTAssertEqual(try TaskfoldJSONDecoder().decode(ChildCopyMappingDraft.self, from: oldBytes), old)
+        let format = [try ChildTaskRepairChange(.wrapItem, path: [731], reference: "recovered", title: "Recovered item")]
+        let partial = try ChildCopyMappingDraft(source: "task", digest: f.copies.digest, mapping: old.mapping.raw, formatChanges: format)
+        let draft = try ChildTaskRepairDraft(review: f.review, changes: [], labels: [], mappingReview: partial)
+        let state = try ChildTaskRepairState(account: draft.account, origin: draft.origin, drafts: [draft])
+        let wire = String(decoding: try TaskfoldJSONEncoder().encode(state), as: UTF8.self)
+        for n in ["731.0", "7.31e2", "-0"] { XCTAssertThrowsError(try ChildTaskRepairState(data: Data(wire.replacingOccurrences(of: "731", with: n).utf8))) }
+        XCTAssertThrowsError(try ChildCopyMappingDraft(source: "task", digest: f.copies.digest, mapping: old.mapping.raw, formatChanges: f.preview.changes))
+        var invalid: [String: JSON] = ["source": .string("task"), "digest": .string(f.copies.digest), "mapping": .object(old.mapping.raw), "formatChanges": .null]
+        XCTAssertThrowsError(try TaskfoldJSONDecoder().decode(ChildCopyMappingDraft.self, from: TaskfoldJSONEncoder().encode(invalid)))
+        invalid["formatChanges"] = .array(Array(repeating: .object(format[0].raw), count: 65))
+        XCTAssertThrowsError(try TaskfoldJSONDecoder().decode(ChildCopyMappingDraft.self, from: TaskfoldJSONEncoder().encode(invalid)))
+    }
+
 }
