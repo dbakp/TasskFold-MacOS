@@ -1,0 +1,6 @@
+{
+  "scope": "Only the synthetic pattern probe process; no full system log",
+  "os": "macOS 26.6.2 (25G83)",
+  "message": "Passing along InferenceError::inferenceFailed::A generation guide with an unsupported pattern was used in response to ExecuteRequest",
+  "filterQualityAccepted": false
+}

@@ -11,3 +11,15 @@ Both restored owners execute 123 selected Core cases: 119 pass, four opt-in mode
 All requests use only fixed synthetic descriptions. No private tasks/catalog, cloud fallback, saved filter/task writes, model setting change, permission change, hosted change, normal update or Simulator boot occurs. Mac 53 stays installed and usable. Both reused Core caches remain below 768 MiB. Cleanup checks are adjacent; tasks, backups, packages, rollback, Keychain, Docker, shared SDKs and other projects stay intact.
 
 Reproduce the controls only when intentionally investigating the model runtime: TASKFOLD_TEST_ON_DEVICE_MODEL=1 bash Scripts/test_core.sh --filter FilterGuidanceControlTests. This is a diagnostic, not product-quality acceptance. The separate twelve-goal driver remains strict and unchanged.
+
+
+## Runtime diagnosis, 8 November
+
+Two additional standalone native controls used the same ready Mac model on macOS 26.6.2 (25G83), one synthetic request each. The minimal `p[1-4]` pattern failed again; the diagnostic now retains its concrete NSError and schema. The probe’s own process log explicitly reports “A generation guide with an unsupported pattern was used”. This identifies this request’s failure; the numeric underlying error alone is not a general diagnosis, and no claim is made about all OS/model versions.
+
+Replacing only the pattern guide with the documented finite-choice `anyOf(["p1", "p2", "p3", "p4"])` succeeded and returned `p3`. Sources, literal results and a concise process-log extraction are retained under `runtime-diagnosis/`. No full system log or private app data is included. Neither control is a filter-quality score. The next candidate should use supported typed choices while preserving Boolean grouping, then pass the existing semantic and held-out checks before production adoption. No replacement has shipped; production code and the ready native Mac note-regression products remain unchanged.
+
+
+## Typed token-sequence candidate: rejected
+
+A materially different finite-choice token sequence compiles and runs the unchanged twelve semantic cases and three held-out paraphrases on the actual Mac model. All fifteen requests reach generation but violate the candidate's token contract: bare conditions/operators carry nonempty values. The compiler refuses every response. This is zero usable expressions, not a zero semantic score; no unsupported-pattern error occurs. Literal observations, candidate and complete compressed test logs are retained in `rejected-typed-sequence/`. Production is restored to its exact prior SHA256. Do not relax the contract by silently dropping values or retry the same schema unchanged. A future design needs a structural distinction between bare tokens and valued predicates, followed by the same strict semantic checks. No feature is accepted, installed or enabled from this experiment.

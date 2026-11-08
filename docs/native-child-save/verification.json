@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-08",
+  "accepted": true,
+  "scope": "Reserved actual iPhone Simulator Store saves and cold data/widget readback",
+  "roots": 100,
+  "children": 2000,
+  "counterbalancedSaveCalls": 10,
+  "coldProcesses": 2,
+  "allOwningAppSources": 178,
+  "normalAppChanged": false,
+  "oldVersusNewReleaseComparison": false,
+  "coldHashSaveMedianMs": 377.22,
+  "warmHashSaveMedianMs": 46.06,
+  "visualOrPhysicalFPSAccepted": false,
+  "previousFixtureRestored": true,
+  "onlyOwnBootedDeviceShutdown": true,
+  "keychainOrHostedChanges": false,
+  "firstAttemptAccepted": false,
+  "firstAttempt": "Save phase passed; exact cold digest failed. Inspection found ordinary startup preferences added; seed now migrates preferences before timing and unchanged strict cold guard passes."
+}
