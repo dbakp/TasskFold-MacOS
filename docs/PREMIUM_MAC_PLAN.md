@@ -11635,3 +11635,7 @@ Both owning note editors now declare inline style keys, Command-Return Apply and
 ### 8 November · keep-editable native HTTP recovery
 
 The independently owned iOS acceptance driver now verifies the actual keep-editable controller/API path across eight protected cold processes and 35 checks, including a lost committed reply and Check with new writes paused. Originals, inverse/binding, exact unknown data and history survive. Mac records this bounded evidence only; no Mac runtime or visual acceptance is added. Mac53 remains installed and untouched; computer control still reports locked after the unlock reply. Ready note keyboard tests and development-account/profile followup remain pending. See `kept-version-http/README.md`.
+
+### 8 November · local effort and assignment filters
+
+Clear estimate upper bounds (minutes/hours, strict or inclusive) and recorded assigned-by descriptions now use local preparation with existing preview/Save and current-reference checks. Both independently compiled owners pass55 selected Core cases with two optional model probes skipped; no inference required. Native controls/full SDK and installed-update acceptance remain separate. Mac53 remains unchanged pending the existing provisioning followup. See `local-effort-filters/README.md`.

@@ -351,6 +351,9 @@ enum LocalFilterDescription {
                 (["with", "no", "estimate"], "no estimate"), (["without", "an", "estimate"], "no estimate"),
                 (["with", "no", "labels"], "no labels"), (["without", "labels"], "no labels")]
             for (words, field) in fields where take(words) { return Atom(text: field, facet: field) }
+            if take("with", "an", "estimate", "of") || take("estimated") || take("taking") {
+                return effort()
+            }
             if take("with", "a", "deadline") || take("with", "deadline") || take("deadline") { return date(field: "deadline") }
             if take("planned") || take("scheduled") { return date(field: "date") }
             if let value = relativeDate() { return Atom(text: value == "overdue" ? "overdue" : "date:" + quote(value), facet: "date") }
@@ -369,6 +372,16 @@ enum LocalFilterDescription {
             if take("in", "section") || take("section") {
                 guard let name = name() else { return nil }; return Atom(text: "section:" + quote(name.text), facet: "section", requiresJoinAfter: !name.quoted)
             }
+            // Shorthand OR alternatives inherit only explicit assignment
+            // keywords; arbitrary following words never become person names.
+            if facet == "assigned_by", ["me", "others", "unknown"].contains(word) {
+                let value = word; offset += 1; return Atom(text: "assigned-by:" + value, facet: facet)
+            }
+            if take("assigned", "by") {
+                guard let name = name(), name.quoted || name.word != "unassigned" else { return nil }
+                let keyword = !name.quoted && ["me", "others", "unknown"].contains(name.word)
+                return Atom(text: "assigned-by:" + (keyword ? name.word : quote(name.text)), facet: "assigned_by", requiresJoinAfter: !name.quoted && !keyword)
+            }
             if take("assigned", "to") {
                 guard let name = name() else { return nil }
                 let keyword = !name.quoted && ["me", "others", "unassigned"].contains(name.word)
@@ -383,6 +396,26 @@ enum LocalFilterDescription {
                 let value = word; offset += 1; return Atom(text: value, facet: value)
             }
             offset = start; return nil
+        }
+        /// Estimates are stored as whole minutes. Require an explicit upper
+        /// bound so “estimated at 30 minutes” never silently means “up to 30”.
+        mutating func effort() -> Atom? {
+            let inclusive = take("at", "most") || take("no", "more", "than") || take("up", "to")
+            let exclusive = !inclusive && (take("under") || take("less", "than"))
+            if !inclusive && !exclusive { _ = take("at") }
+            guard let amount = number(), amount > 0 else { return nil }
+            let multiplier: Int
+            if take("minutes") || take("minute") { multiplier = 1 }
+            else if take("hours") || take("hour") { multiplier = 60 }
+            else { return nil }
+            guard amount <= 10_080 / multiplier else { return nil }
+            let minutes = amount * multiplier
+            if !inclusive && !exclusive {
+                guard take("or", "less") || take("or", "fewer") else { return nil }
+            }
+            let maximum = minutes - (exclusive ? 1 : 0)
+            guard maximum > 0 else { return nil }
+            return Atom(text: "duration<=\(maximum)", facet: "estimate")
         }
         mutating func number() -> Int? {
             guard offset < tokens.count, !tokens[offset].quoted else { return nil }

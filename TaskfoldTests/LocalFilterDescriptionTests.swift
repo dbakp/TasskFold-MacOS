@@ -11,6 +11,60 @@ final class LocalFilterDescriptionTests: XCTestCase {
         let proposal = try FilterSuggestion(expression: expression, context: context)
         return rows.filter { proposal.rule.resultMatches($0, context: context, today: "2032-04-05", timeZone: "UTC", includeCompleted: includeCompleted) }.map(\.id)
     }
+    func testEffortBoundsMatchActualMinutesAndExcludeMissingEstimates() throws {
+        let rows = [15, 29, 30, 31, 59, 60, 61].map { Record(["id": .string("m\($0)"), "duration_minutes": .number(Double($0))]) } + [Record(["id": .string("unknown")])]
+        let thirty = ["m15", "m29", "m30"]
+        for description in ["Show open tasks estimated at 30 minutes or less", "Open tasks with an estimate of at most 30 minutes", "Tasks taking no more than 30 minutes", "Tasks taking up to 30 minutes", "Tasks estimated at most 30 minutes"] {
+            XCTAssertEqual(try matches(description, rows: rows), thirty, description)
+        }
+        XCTAssertEqual(try matches("Tasks estimated under 1 hour", rows: rows), ["m15", "m29", "m30", "m31", "m59"])
+        XCTAssertEqual(try matches("Tasks with an estimate of less than 30 minutes", rows: rows), ["m15", "m29"])
+        XCTAssertEqual(try matches("Tasks estimated at 1 hour or less", rows: rows), ["m15", "m29", "m30", "m31", "m59", "m60"])
+        XCTAssertEqual(try matches("Tasks taking at most one minute", rows: rows), [])
+        XCTAssertNotNil(LocalFilterDescription.expression(for: "Tasks estimated at most 168 hours"))
+        XCTAssertNotNil(LocalFilterDescription.expression(for: "Tasks estimated at most 10080 minutes"))
+    }
+    func testEffortRemainsConjoinedWithDatesPriorityCompletionAndProject() throws {
+        let base: [String: JSON] = ["duration_minutes": .number(30), "priority": .number(1), "due_date": .string("2032-04-05"), "project_id": .string("project")]
+        var rows = [Record(base.merging(["id": .string("match")], uniquingKeysWith: { _, new in new }))]
+        for (id, field, value) in [("long", "duration_minutes", JSON.number(31)), ("missing", "duration_minutes", .null), ("done", "completed", .bool(true)), ("priority", "priority", .number(2)), ("later", "due_date", .string("2032-04-06")), ("other", "project_id", .string("other"))] {
+            rows.append(Record(base.merging(["id": .string(id), field: value], uniquingKeysWith: { _, new in new })))
+        }
+        XCTAssertEqual(try matches("Open priority 1 tasks planned today and estimated at most 30 minutes and in project Work", rows: rows), ["match"])
+    }
+    func testAmbiguousOrUnsupportedEffortCannotSilentlyBecomeAnUpperBound() {
+        for description in ["Tasks estimated at 30 minutes", "Tasks estimated 30 minutes", "Tasks taking 30 minutes", "Tasks estimated over 30 minutes", "Tasks taking at least 30 minutes", "Tasks estimated at most 0 minutes", "Tasks estimated under 1 minute", "Tasks estimated at most -5 minutes", "Tasks estimated at most 1.5 hours", "Tasks estimated at most 1 hour 30 minutes", "Tasks estimated at most 169 hours", "Tasks estimated at most 10081 minutes", "Tasks estimated at most 999999999999999999999999 hours", "Tasks estimated at most 30 days", "Tasks estimated at most 30", "Tasks estimated at most 30 minutes or tomorrow", "Tasks estimated at most 30 minutes approximately", "Tasks taking up to 30 minutes but not meetings", "Tasks in 30 minutes"] {
+            XCTAssertNil(LocalFilterDescription.expression(for: description), description)
+        }
+    }
+    func testAssignedByUsesRecordedActorRatherThanAuthorOrRecipient() throws {
+        let me = "f01dcafe-8200-4000-8000-000000000001", other = "f01dcafe-8200-4000-8000-000000000002"
+        let generation = "f01dcafe-8200-4000-8000-000000000020"
+        let ids = (10...13).map { "f01dcafe-8200-4000-8000-0000000000\($0)" }
+        let rows = ids.enumerated().map { index, id in Record(["id": .string(id), "user_id": .string(other), "assigned_to": index == 3 ? .null : .string(index == 0 ? other : me), "task_generation": .string(generation), "duration_minutes": .number(15)]) }
+        let history = (0...1).map { index in Record(["id": .string(UUID().uuidString), "task_id": .string(ids[index]), "task_generation": .string(generation), "node_key": .string(""), "node_path": .array([]), "assignee_id": .string(index == 0 ? other : me), "actor_id": .string(index == 0 ? me : other), "event_id": .string(UUID().uuidString), "assigned_at": .string("2032-04-04T12:00:00Z"), "origin": .string("recorded"), "active": .bool(true)]) }
+        let context = FilterContext(userID: me, people: [Record(["id": .string(other), "display_name": .string("Morgan Lee")])], assignments: .init(history))
+        XCTAssertEqual(try matches("Open tasks assigned by me and estimated at most 30 minutes", rows: rows, context: context), [ids[0]])
+        XCTAssertEqual(try matches("Open tasks assigned by others", rows: rows, context: context), [ids[1]])
+        XCTAssertEqual(try matches("Open tasks assigned by \"Morgan Lee\"", rows: rows, context: context), [ids[1]])
+        XCTAssertEqual(try matches("Open tasks assigned by unknown", rows: rows, context: context), [ids[2]])
+        XCTAssertEqual(try matches("Open tasks assigned to me", rows: rows, context: context), [ids[1], ids[2]])
+        XCTAssertEqual(try matches("Open tasks assigned by me or others", rows: rows, context: context), [ids[0], ids[1]])
+        let unavailable = FilterContext(userID: me, assignments: .init(nil))
+        XCTAssertThrowsError(try matches("Open tasks assigned by me", rows: rows, context: unavailable))
+        XCTAssertNil(LocalFilterDescription.expression(for: "Open tasks assigned by unassigned"))
+        XCTAssertNil(LocalFilterDescription.expression(for: "Open tasks assigned by Morgan Lee"))
+        XCTAssertNil(LocalFilterDescription.expression(for: "Open tasks assigned by me to others"))
+        XCTAssertNil(LocalFilterDescription.expression(for: "Open tasks assigned by me or tomorrow"))
+        XCTAssertNil(LocalFilterDescription.expression(for: "Open tasks assigned by me or Morgan"))
+    }
+    func testEffortAndAssignmentDraftsUseLocalEngine() async throws {
+        for goal in ["Open tasks estimated at most 30 minutes", "Open tasks assigned by me", "Tasks assigned by others and taking up to 1 hour"] {
+            let draft = try await FilterAssistanceEngine.draft(goal)
+            XCTAssertEqual(draft.origin, .localDescription, goal)
+            XCTAssertNotNil(LocalFilterDescription.expression(for: goal))
+        }
+    }
     func testSpokenPriorityWordsAndExtremesDoNotBroadenMatches() throws {
         let rows = (1...4).map { Record(["id": .string("p\($0)"), "priority": .number(Double($0))]) }
         XCTAssertEqual(try matches("Only the highest priority open tasks", rows: rows), ["p1"])

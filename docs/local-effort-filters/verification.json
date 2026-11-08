@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-08",
+  "scope": "Owning Core parser, engine and actual filter-result checks",
+  "selected": 57,
+  "passed": 55,
+  "optionalSkipped": 2,
+  "failures": 0,
+  "newBehaviorCases": 5,
+  "platform": "mac",
+  "sdkBuildOrNativeUIAccepted": false,
+  "modelInferenceUsed": false,
+  "normalAppUpdated": false,
+  "installedMacBuild": 53,
+  "hostedOrSchemaChanges": false,
+  "normalGateChanges": false,
+  "sourceSHA256": {
+    "Taskfold/Core/FilterAssistance.swift": "764c0ae6dae548c647b574e0a01b1b2203690d82077537af42e619d528ff6892",
+    "TaskfoldTests/LocalFilterDescriptionTests.swift": "40478c4fc2640e968660728de42f136995551c4f2851e66914933cdb5310494d"
+  },
+  "firstRun": "iOS initially failed the new OR-keyword case; added bounded me/others/unknown inheritance and negative cases before both accepted runs."
+}
