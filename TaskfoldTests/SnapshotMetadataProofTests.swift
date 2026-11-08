@@ -101,4 +101,54 @@ final class SnapshotMetadataProofTests: XCTestCase {
         let cache = DurableSnapshotReadCache(), data = try cache.encode(prepared.snapshot, prepared: prepared)
         XCTAssertEqual(try cache.decode(data), prepared.snapshot); XCTAssertEqual(cache.decodeCount, 1)
     }
+    func testNonemptyWatchLedgerRetainsPreparedSaveAfterValidatedStaging() throws {
+        var value = seed()
+        let receipt = WearableMutationReceipt(phone: UUID(), watch: UUID(), command: UUID(), epoch: UUID(), account: account,
+            digest: String(repeating: "a", count: 64), task: UUID(), generation: UUID(), action: "complete")
+        value.wearableReceipts = [receipt.key: receipt]; value.wearableReceiptGeneration = 4
+        let prepared = try PreparedSnapshotEncoding(preparingWidgetCompletion: value)
+        let staged = try WearableReceiptLedger.applying(previous: prepared.snapshot, proposed: prepared.snapshot)
+        XCTAssertTrue(staged.sharesMetadataSource(with: prepared.snapshot))
+        XCTAssertNotNil(try prepared.matching(staged))
+        let cache = DurableSnapshotReadCache(), bytes = try cache.encode(staged, prepared: prepared)
+        XCTAssertEqual(cache.metadataValidationCount, 0)
+        XCTAssertEqual(try cache.decode(bytes), staged)
+        XCTAssertEqual(try TaskfoldJSONDecoder().decode(Snapshot.self, from: bytes), staged)
+    }
+    func testWatchStagingKeepsProposedUnicodeBytesAndStillRestoresMissingReceipts() throws {
+        var receipt = WearableMutationReceipt(phone: UUID(), watch: UUID(), command: UUID(), epoch: UUID(), account: "Café",
+            digest: String(repeating: "a", count: 64), task: UUID(), generation: UUID(), action: "complete")
+        var previous = seed(); previous.wearableReceipts = [receipt.key: receipt]
+        receipt.account = "Cafe\u{301}"
+        var proposed = previous; proposed.wearableReceipts = [receipt.key: receipt]
+        let staged = try WearableReceiptLedger.applying(previous: previous, proposed: proposed)
+        XCTAssertTrue(staged.sharesMetadataSource(with: proposed))
+        XCTAssertEqual(Array(staged.wearableReceipts![receipt.key]!.account.utf8), Array(receipt.account.utf8))
+        var missing = proposed; missing.wearableReceipts = nil
+        let restored = try WearableReceiptLedger.applying(previous: previous, proposed: missing)
+        XCTAssertFalse(restored.sharesMetadataSource(with: missing))
+        XCTAssertEqual(restored.wearableReceipts, previous.wearableReceipts)
+    }
+    func testWatchExplicitAcceptanceCannotReuseUnchangedPreparedBytes() throws {
+        let original = seed(), prepared = try PreparedSnapshotEncoding(preparingWidgetCompletion: original)
+        let receipt = WearableMutationReceipt(phone: UUID(), watch: UUID(), command: UUID(), epoch: UUID(), account: account,
+            digest: String(repeating: "a", count: 64), task: UUID(), generation: UUID(), action: "complete")
+        let changed = try WearableReceiptLedger.applying(previous: prepared.snapshot, proposed: prepared.snapshot, accepting: receipt)
+        XCTAssertFalse(changed.sharesMetadataSource(with: prepared.snapshot))
+        XCTAssertNil(try prepared.matching(changed))
+        XCTAssertEqual(changed.wearableReceipts?[receipt.key], receipt)
+    }
+    func testWatchEmptyNormalizationAndGenerationRepairStillInvalidateProof() throws {
+        var empty = seed(); empty.wearableReceipts = [:]
+        let normalized = try WearableReceiptLedger.applying(previous: empty, proposed: empty)
+        XCTAssertNil(normalized.wearableReceipts)
+        XCTAssertFalse(normalized.sharesMetadataSource(with: empty))
+        var previous = seed(); previous.wearableReceiptGeneration = 3
+        let proposed = seed()
+        let repaired = try WearableReceiptLedger.applying(previous: previous, proposed: proposed)
+        XCTAssertEqual(repaired.wearableReceiptGeneration, 3)
+        XCTAssertFalse(repaired.sharesMetadataSource(with: proposed))
+        XCTAssertThrowsError(try WearableReceiptLedger.applying(previous: seed(), proposed: previous))
+    }
+
 }
