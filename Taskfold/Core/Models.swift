@@ -702,23 +702,58 @@ struct SyncConflict: Identifiable {
     }
 }
 
+/// An ephemeral read proof, never encoded or used as account authority. It has
+/// no effect on Snapshot's domain equality; admission compares identity explicitly.
+fileprivate struct SnapshotMetadataSource: Equatable, Sendable {
+    private let identity = RecordSourceIdentity()
+    static func == (_ lhs: Self, _ rhs: Self) -> Bool { true }
+    func matches(_ other: Self) -> Bool { identity === other.identity }
+}
+
 struct Snapshot: Codable, Equatable, Sendable {
+    private var metadataSource = SnapshotMetadataSource()
     var tables: [String: [Record]] = [:]
-    var pending: [Mutation] = []
-    var teamWorkspace: TeamWorkspaceCache? = nil
-    var workflowUndoService: WorkflowUndoService? = nil
-    var widgetCompletion = WidgetCompletionCache()
-    var sharedCaptureReceipts: [String: String]? = nil
+    var pending: [Mutation] = [] { didSet { metadataSource = SnapshotMetadataSource() } }
+    var teamWorkspace: TeamWorkspaceCache? = nil { didSet { if oldValue != nil || teamWorkspace != nil { metadataSource = SnapshotMetadataSource() } } }
+    var workflowUndoService: WorkflowUndoService? = nil { didSet { if oldValue != nil || workflowUndoService != nil { metadataSource = SnapshotMetadataSource() } } }
+    var widgetCompletion = WidgetCompletionCache() { didSet { metadataSource = SnapshotMetadataSource() } }
+    var sharedCaptureReceipts: [String: String]? = nil { didSet { if oldValue != nil || sharedCaptureReceipts != nil { metadataSource = SnapshotMetadataSource() } } }
     /// Device-private, monotonic wearable mutation proofs; excluded from exports and sync.
-    var wearableReceipts: [String: WearableMutationReceipt]? = nil
-    var wearableReceiptGeneration: UInt64? = nil
+    var wearableReceipts: [String: WearableMutationReceipt]? = nil { didSet { if oldValue != nil || wearableReceipts != nil { metadataSource = SnapshotMetadataSource() } } }
+    var wearableReceiptGeneration: UInt64? = nil { didSet { if oldValue != nil || wearableReceiptGeneration != nil { metadataSource = SnapshotMetadataSource() } } }
     /// Local cancellation outbox; never included in a portable workspace export.
-    var locationRetirements: [String: LocationReminderTicket]? = nil
-    var locationActions: [String: LocationNotificationAction]? = nil
+    var locationRetirements: [String: LocationReminderTicket]? = nil { didSet { if oldValue != nil || locationRetirements != nil { metadataSource = SnapshotMetadataSource() } } }
+    var locationActions: [String: LocationNotificationAction]? = nil { didSet { if oldValue != nil || locationActions != nil { metadataSource = SnapshotMetadataSource() } } }
     /// Device-bound time snooze recovery; excluded from portable workspace exports.
-    var timeSnoozes: [String: TimeSnoozeIntent]? = nil
+    var timeSnoozes: [String: TimeSnoozeIntent]? = nil { didSet { if oldValue != nil || timeSnoozes != nil { metadataSource = SnapshotMetadataSource() } } }
     /// Monotonic import receipts; excluded from shared rows and portable backups.
-    var locationImports: [String: LocationHandoffImportReceipt]? = nil
+    var locationImports: [String: LocationHandoffImportReceipt]? = nil { didSet { if oldValue != nil || locationImports != nil { metadataSource = SnapshotMetadataSource() } } }
+    init(tables: [String: [Record]] = [:],
+         pending: [Mutation] = [],
+         teamWorkspace: TeamWorkspaceCache? = nil,
+         workflowUndoService: WorkflowUndoService? = nil,
+         widgetCompletion: WidgetCompletionCache = WidgetCompletionCache(),
+         sharedCaptureReceipts: [String: String]? = nil,
+         wearableReceipts: [String: WearableMutationReceipt]? = nil,
+         wearableReceiptGeneration: UInt64? = nil,
+         locationRetirements: [String: LocationReminderTicket]? = nil,
+         locationActions: [String: LocationNotificationAction]? = nil,
+         timeSnoozes: [String: TimeSnoozeIntent]? = nil,
+         locationImports: [String: LocationHandoffImportReceipt]? = nil) {
+        self.tables = tables
+        self.pending = pending
+        self.teamWorkspace = teamWorkspace
+        self.workflowUndoService = workflowUndoService
+        self.widgetCompletion = widgetCompletion
+        self.sharedCaptureReceipts = sharedCaptureReceipts
+        self.wearableReceipts = wearableReceipts
+        self.wearableReceiptGeneration = wearableReceiptGeneration
+        self.locationRetirements = locationRetirements
+        self.locationActions = locationActions
+        self.timeSnoozes = timeSnoozes
+        self.locationImports = locationImports
+    }
+    func sharesMetadataSource(with other: Snapshot) -> Bool { metadataSource.matches(other.metadataSource) }
     mutating func apply(_ change: Mutation) {
         if WorkflowUndo.matches(change) { WorkflowUndo.apply(change, snapshot: &self); return }
         guard change.table != TaskAssignmentProvenance.table else { return }
@@ -933,6 +968,8 @@ struct PreparedSnapshotEncoding: Sendable {
     private let data: Data
     private let metadata: Data
     private let widgetCompletionPrepared: Bool
+    private let metadataValidated: Bool
+    fileprivate struct Admission { let data: Data; let metadata: Data; let metadataValidated: Bool }
     init(_ snapshot: Snapshot) throws {
         try self.init(snapshot, widgetCompletionPrepared: false)
     }
@@ -945,20 +982,24 @@ struct PreparedSnapshotEncoding: Sendable {
         let signatures = signatureScope.map { _ in WidgetCompletion.SignatureCache(seed: signatureSeed) }
         WidgetCompletion.prepare(&prepared, signatures: signatures, scope: signatureScope)
         try checkCancellation()
-        try self.init(prepared, widgetCompletionPrepared: true)
+        try self.init(prepared, widgetCompletionPrepared: true, validateMetadata: true)
         try checkCancellation()
     }
-    private init(_ snapshot: Snapshot, widgetCompletionPrepared: Bool) throws {
+    private init(_ snapshot: Snapshot, widgetCompletionPrepared: Bool, validateMetadata: Bool = false) throws {
         self.widgetCompletionPrepared = widgetCompletionPrepared
         self.snapshot = snapshot
         data = try TaskfoldJSONEncoder().encode(snapshot)
         metadata = try Self.encodeMetadata(snapshot)
+        var expectedMetadata = snapshot; expectedMetadata.tables = [:]
+        metadataValidated = validateMetadata && metadata.count <= 512 * 1024 &&
+            (try? TaskfoldJSONDecoder().decode(Snapshot.self, from: metadata)) == expectedMetadata
     }
     func hasPreparedWidgetCompletion(matching current: Snapshot) throws -> Bool {
         guard widgetCompletionPrepared else { return false }
         return try matching(current) != nil
     }
-    func matching(_ current: Snapshot) throws -> Data? {
+    func matching(_ current: Snapshot) throws -> Data? { try admission(matching: current)?.data }
+    fileprivate func admission(matching current: Snapshot) throws -> Admission? {
         guard snapshot.tables.count == current.tables.count else { return nil }
         for (key, original) in snapshot.tables {
             guard let index = current.tables.index(forKey: key),
@@ -970,8 +1011,10 @@ struct PreparedSnapshotEncoding: Sendable {
             }
             guard identical else { return nil }
         }
-        guard try metadata == Self.encodeMetadata(current) else { return nil }
-        return data
+        // Copies retain this proof; every metadata write invalidates it. Keep
+        // the exact-byte fallback for independently recreated/equal metadata.
+        guard try snapshot.sharesMetadataSource(with: current) || metadata == Self.encodeMetadata(current) else { return nil }
+        return Admission(data: data, metadata: metadata, metadataValidated: metadataValidated)
     }
     private static func encodeMetadata(_ value: Snapshot) throws -> Data {
         var metadata = value; metadata.tables = [:]
@@ -3013,7 +3056,8 @@ final class DurableSnapshotReadCache {
     /// Encode inside this type so a caller cannot associate unrelated bytes with
     /// a snapshot. Prepared data independently proves its captured input identity.
     func encode(_ snapshot: Snapshot, prepared: PreparedSnapshotEncoding? = nil) throws -> Data {
-        let preparedData = try prepared?.matching(snapshot)
+        let admission = try prepared?.admission(matching: snapshot)
+        let preparedData = admission?.data
         if preparedData != nil { fieldEncoding.clear(); rowEncoding.clear(); rowPreparationAllowed = true }
         let data = try preparedData ?? encodeCurrent(snapshot)
         let priorMetadata = validatedMetadataBytes
@@ -3024,8 +3068,8 @@ final class DurableSnapshotReadCache {
         // changed private ledger still takes the ordinary decoder's checks.
         var metadata = snapshot; metadata.tables = [:]
         let metadataEncoder = TaskfoldJSONEncoder(); metadataEncoder.outputFormatting = .sortedKeys
-        if let encoded = rowEncoding.metadataHeader ?? fieldEncoding.metadataHeader ?? (try? metadataEncoder.encode(metadata)), encoded.count <= 512 * 1024 {
-            if encoded == priorMetadata {
+        if let encoded = admission?.metadata ?? rowEncoding.metadataHeader ?? fieldEncoding.metadataHeader ?? (try? metadataEncoder.encode(metadata)), encoded.count <= 512 * 1024 {
+            if encoded == priorMetadata || admission?.metadataValidated == true {
                 bytes = data; value = snapshot; validatedMetadataBytes = encoded
             } else {
                 metadataValidationCount += 1

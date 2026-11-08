@@ -1,0 +1,6 @@
+{
+  "Taskfold/Core/Models.swift": "488ec7bd0cc36bdbadfc67b01ba732c85017573bf3ae3ea4eb984cd12adcf43a",
+  "Taskfold/Core/Store.swift": "aeff0a5fc09b466cf322a2c21d8aad11119a2953d11f33980f4423bd63efdddd",
+  "TaskfoldTests/SnapshotMetadataProofTests.swift": "9cbe114fc325c12211ac69cb61b2ffbac9e87d325cc6f5c21ec2710216a0bda6",
+  "TaskfoldTests/PreparedSnapshotEncodingTests.swift": "aa7c53e11b705b4d928ae423b51b88dfdab096b192d9e28cbe1eaad95fe89886"
+}

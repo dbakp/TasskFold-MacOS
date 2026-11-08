@@ -1,0 +1,30 @@
+{
+  "scope": "Existing unchanged deterministic5000-root admission test, SwiftPM Debug on this Mac; before/after runs, not paired; full saving/disk/UI/FPS excluded",
+  "physicalFPSClaim": false,
+  "passes": {
+    "ios": {
+      "beforeSeconds": [
+        0.010272708,
+        0.009817334,
+        0.009487083
+      ],
+      "afterSeconds": [
+        3.6084e-05,
+        1.6333e-05,
+        1.7708e-05
+      ]
+    },
+    "mac": {
+      "beforeSeconds": [
+        0.010224667,
+        0.01011525,
+        0.009732208
+      ],
+      "afterSeconds": [
+        3.6291e-05,
+        2.1292e-05,
+        1.5167e-05
+      ]
+    }
+  }
+}
