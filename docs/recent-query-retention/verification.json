@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-08",
+  "cases": 103,
+  "passed": 101,
+  "skippedOptionalBenchmarks": 2,
+  "failures": 0,
+  "newCases": 5,
+  "scope": "Pure owning Core via SwiftPM on this Mac; no native SDK, physical FPS or UI latency acceptance",
+  "capacity": 64,
+  "eviction": "least recently used query; task-source changes still clear all results",
+  "diagnostic": {
+    "rows": 2004,
+    "hotProjects": 36,
+    "distinctSearches": 128,
+    "samples": {
+      "beforeMac": {
+        "computations": 308,
+        "seconds": 0.49297499656677246
+      },
+      "mac": {
+        "computations": 164,
+        "seconds": 0.49098896980285645
+      },
+      "ios": {
+        "computations": 164,
+        "seconds": 0.49587905406951904
+      }
+    },
+    "comparison": "One before and one final sample per owner, not paired/repeated timing; timing roughly unchanged. Cache recomputation count is the accepted result, not a speed claim."
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "c9a5a2708a11fb549075a0920e683c8aad92ea9f9c4e1756991474e2763779eb",
+    "TaskfoldTests/RecentTaskQueryTests.swift": "a3de0e4fc74ad16a1cb87b2a5a7fcbc86ee78d25af847e66b2e18d81f4db14d9"
+  },
+  "baselineMacSourceRevision": "512cb09316bb5c6e53e497b3842bd1db37f29be0",
+  "logSHA256": "18ff0efc3ef1f5febd3f67881ab8830268ad134138a2fdbbb5beff1f3e1c652b",
+  "baselineLogSHA256": "855fab3bff2ee1351417c39825d56a4e740ee0d1d8a3082a3b3c4dde9e8e7e87",
+  "normalMacBuild": 53,
+  "newNormalPackage": false
+}
