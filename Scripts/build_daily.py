@@ -99,7 +99,7 @@ def main():
             reference.set("ReferencedContainer", "container:" + str(daily_project.resolve()))
         tree.write(scheme, encoding="utf-8", xml_declaration=True)
     log = args.derived_data / ("taskfold-daily-" + channel + ".log")
-    command = ["xcodebuild", "-project", str(daily_project.resolve()), "-scheme", "Taskfold", "-configuration", args.configuration, "-destination", destination, "-derivedDataPath", str(args.derived_data.resolve()), "-jobs", "1", "COMPILER_INDEX_STORE_ENABLE=NO", "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 2 -j 1", "build"]
+    command = ["xcodebuild", "-project", str(daily_project.resolve()), "-scheme", "Taskfold", "-configuration", args.configuration, "-destination", destination, "-derivedDataPath", str(args.derived_data.resolve()), "-jobs", "1", "COMPILER_INDEX_STORE_ENABLE=NO", "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 8 -j 1", "build"]
     if PLATFORM == "mac":
         command.extend(["ONLY_ACTIVE_ARCH=YES", "ARCHS=" + platform.machine()])
     if args.products_directory:
