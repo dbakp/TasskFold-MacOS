@@ -1,0 +1,53 @@
+{
+  "accepted": true,
+  "nativeTestRerun": false,
+  "originalRunnerAccepted": false,
+  "reason": "Xcode migrated the isolated data container; immutable first runner failure retained. Fresh native proofs and before-fixture folders moved intact to the new reserved container.",
+  "proofs": {
+    "long-task-filter-ui.json": {
+      "accepted": true,
+      "cancelPreservesTables": true,
+      "coldSavedExpression": true,
+      "explicitSaveChangesOnlyFilterQuery": true,
+      "inclusiveAndStrictMatches": true,
+      "largestText": false,
+      "localOriginVerified": true,
+      "missingCompletedArchivedExcluded": true,
+      "modelGenerationClaim": false,
+      "pendingPreserved": true,
+      "previewAndUseReadOnly": true,
+      "productionAssistance": true
+    },
+    "long-task-filter-large-ui.json": {
+      "accepted": true,
+      "cancelPreservesTables": true,
+      "coldSavedExpression": true,
+      "explicitSaveChangesOnlyFilterQuery": true,
+      "inclusiveAndStrictMatches": true,
+      "largestText": true,
+      "localOriginVerified": true,
+      "missingCompletedArchivedExcluded": true,
+      "modelGenerationClaim": false,
+      "pendingPreserved": true,
+      "previewAndUseReadOnly": true,
+      "productionAssistance": true
+    }
+  },
+  "sourceAndImageUnchanged": true,
+  "restoredFolders": {
+    "WorkspaceReadPerformance": {
+      "fileCount": 46,
+      "fileDigestsPreserved": true,
+      "manifestSHA256": "3114b915f6ad7435f582ed9687861db5d7b6dfeaeeb56f8f8076a757aab82955"
+    },
+    "Taskfold": {
+      "fileCount": 35,
+      "fileDigestsPreserved": true,
+      "manifestSHA256": "58bfadfaf1d9ddc5d07a19bbde686f4097cb7db9fc562bae5ed42d8d556f5521"
+    }
+  },
+  "priorFixtureRestored": true,
+  "nativeCasesPassed": 2,
+  "modelInferenceClaimed": false,
+  "ownedSimulatorShutdown": true
+}
