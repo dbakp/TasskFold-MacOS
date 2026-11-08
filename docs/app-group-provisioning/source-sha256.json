@@ -1,0 +1,8 @@
+{
+  "Scripts/app_group_authorization.py": "1ffe33cc74ee4ffa54326b3c9173a8bb22856c0e3f6feaf497b33e82750b9bba",
+  "Scripts/test_app_group_authorization.py": "39044d7ccaac61e27f9802494c1ae1fa8202d304878dbb2b4dff2da3655b3dcc",
+  "Scripts/cached_development_signing.py": "0dca762b4ce5b134d021fbb967b873dbef09aeb3cd79fb6a44ffd25fd294f889",
+  "Scripts/build_daily.py": "448ba5f6da40f3cda56a4ac4d1c6e08fbc18f2b123f481218881cf750865f044",
+  "Scripts/release_artifact.py": "00abefadeda14e2f50c6b9c9d6683d599325563121a69b407e3adc07ac61f294",
+  "Taskfold.xcodeproj/project.pbxproj": "f174568206e85328f626607484fac982d89d0a401590977f62cecf415f546f51"
+}

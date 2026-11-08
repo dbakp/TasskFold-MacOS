@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-08",
+  "readOnly": true,
+  "rows": [
+    {
+      "bundle": "com.dbakp.taskfold.mac",
+      "build": "53",
+      "signedGroups": [
+        "group.com.dbakp.taskfold"
+      ],
+      "profileGroups": null,
+      "team": "3UZ4C73FM2",
+      "allGroupClaimsAuthorized": false
+    },
+    {
+      "bundle": "com.dbakp.taskfold.mac.share",
+      "build": "53",
+      "signedGroups": [
+        "group.com.dbakp.taskfold"
+      ],
+      "profileGroups": null,
+      "team": "3UZ4C73FM2",
+      "allGroupClaimsAuthorized": false
+    },
+    {
+      "bundle": "com.dbakp.taskfold.mac.widgets",
+      "build": "53",
+      "signedGroups": [
+        "group.com.dbakp.taskfold"
+      ],
+      "profileGroups": null,
+      "team": "3UZ4C73FM2",
+      "allGroupClaimsAuthorized": false
+    }
+  ],
+  "installedAppChanged": false
+}

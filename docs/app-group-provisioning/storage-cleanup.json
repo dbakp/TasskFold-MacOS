@@ -1,0 +1,14 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 29271584768,
+  "actions": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Intermediates.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 4235264
+    }
+  ],
+  "skipped": [],
+  "freeAfterBytes": 29275803648,
+  "actualFreeChangeBytes": 4218880
+}

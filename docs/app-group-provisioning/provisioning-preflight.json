@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-08",
+  "build": "54",
+  "configuration": "Release",
+  "allowProvisioningUpdates": true,
+  "existingTeamOnly": true,
+  "existingGroupAndBundleIdentifiersOnly": true,
+  "failed": true,
+  "categories": [
+    "No Accounts: Add a new account in Accounts settings",
+    "All three profiles lack the App Groups capability, group identifier and entitlement"
+  ],
+  "compilationOrPackageAccepted": false,
+  "installed53Untouched": true,
+  "rawLocalBuildLogSHA256": "014fdc1e39adff9cf7ee188d25ddb0c1e2e7548e991dde096f069ca67c1358c7"
+}
