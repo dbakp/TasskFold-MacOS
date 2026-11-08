@@ -2394,15 +2394,18 @@ final class Store {
         let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
         var input = WidgetPublicationInput(tasks: activeTasks, projects: projects, account: account)
         input.labels = labels; input.sections = rows("sections"); input.savedViews = savedViews
-        input.completionTokens = (activeTeamMask ?? snapshot.teamWorkspace)?.widgetTokens(presentationSnapshot) ?? WidgetCompletion.tokens(snapshot)
+        if !account.isEmpty {
+            input.context = WidgetPublicationContext(snapshot: presentationSnapshot, account: account,
+                localAccount: localMode ? userID : nil, tokenMask: activeTeamMask ?? snapshot.teamWorkspace)
+        }
         input.pendingSync = pendingCount; input.workingHours = workingHours
         input.calendarWindow = current; input.calendarFallback = fallback
         input.notePins = rows("view_orders"); input.focusRecord = focusRecord
         input.focusConflict = focusSyncConflict != nil; input.focusReadable = workspaceCacheReadable
         input.pulseActivity = rows(TaskActivity.table); input.pulseEpoch = rows(TaskActivity.epochTable)
         input.pulseChildren = childActivityHistory; input.datePreferences = datePhrasePreferences
-        input.people = filterContext.people; input.viewPreferences = rows("view_preferences")
-        input.viewOrders = rows("view_orders"); input.collaborators = filterCollaborators; input.assignments = assignmentCatalog
+        input.viewPreferences = rows("view_preferences")
+        input.viewOrders = rows("view_orders"); input.collaborators = filterCollaborators
         if let feedback = snapshot.widgetCompletion.feedback, widgetFeedbackIsCurrent(feedback) { input.feedback = feedback }
         if deferredStartup {
             enqueueStartupPublication(input)

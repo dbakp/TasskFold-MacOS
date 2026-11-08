@@ -11451,3 +11451,12 @@ The independently owned iPhone app now passes actual first review, acknowledgeme
 The first attempt found a real SwiftUI first-sheet selection race. Both apps now carry the selected original in an identifiable presentation instead of separate Boolean/optional state. Test-only follow-up fixes scope taps to the visible switch/frontmost form. Prior failures remain honestly recorded. See [native restoration](native-original-restoration/README.md).
 
 Mac/iPad controls, VoiceOver, native HTTP Auth, explicit retained-history disposal, keep-old-version adoption and wider account/task/file/audio/custodian lifecycle remain open. No normal gates or hosted deployment. Preserve normal46 and original readonly25012: the Allow response is acknowledged, but the Mac remains locked and the safe readback is still pending. No app restart or new installation. Counts stay74/67.
+
+
+### 8 November — background widget context preparation
+
+Widget publication now captures readable values and resolves completion tokens, project-scoped member names and assignment provenance inside its existing background worker. A grouped collaborator index replaces repeated per-project scans. Loaded-empty/fresh member directories, profile/owner fallback, local versus unavailable assignment history, team token masks and exact output remain covered. Immediate privacy barriers and widget receipts keep their synchronous semantics.
+
+Both owners pass174 focused Core checks including6 new context cases. Each records a 1,000-project/3,000-member Debug Core sample; these are Mac-hosted component diagnostics, not native phone latency or FPS. The signed current iPhone actual-Store check passes all5 publication/privacy/recovery assertions. Mac independently compiles, with native runtime still separate. See [widget preparation](widget-context-preparation/README.md).
+
+Full render/drop/navigation performance and physical smoothness remain open. Original-restoration lifecycle work stays in the backlog; ordinary rollout gates remain off. No new app install or package churn: normal46 and original readonly25012 stay intact. The original readback PID89939 is confirmed live in its original file-open call; no successful readback report exists yet. Counts remain74/67.
