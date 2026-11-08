@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-08",
+  "platform": "macOS",
+  "version": "1.2.0",
+  "build": "48",
+  "configuration": "Release",
+  "sourceRevision": "d958211f4a8240fd97ab8a9585d4bb79906e0c66",
+  "sourceFingerprint": "576fe5ea875cd9fd687656d58c22204dc9b3ac7d1c2013455fc32d3df27f8624",
+  "archiveSHA256": "9a9738aeaf83d90376a2d9237224c4d4377b7a5bbb3dfa77461741ee04fe17d1",
+  "archivePayloadVerified": true,
+  "signatureVerified": true,
+  "freshPrivateSafetyCopyVerified": true,
+  "rollback46Verified": true,
+  "installedPayloadVerified": true,
+  "prelaunchByteExactCacheFiles": 9,
+  "mainWindowAndSyncVerified": true,
+  "normalAdvancedGatesRemainOff": true,
+  "hostedSchemaUnchanged": true,
+  "phoneInstallationDeferred": true,
+  "postlaunchReadback": null,
+  "sharedStorageReadinessVerified": false,
+  "pending": [
+    "macOS app-data access prompt confirmed in TCC log; manual Allow requested once",
+    "postlaunch private workspace readback is waiting; existing process preserved"
+  ],
+  "scope": "Normal daily-use update. Atomic keep-older service/client source is packaged, but advanced normal flags and hosted schema remain unchanged. Native adoption/status/newer-inverse controls remain unfinished."
+}

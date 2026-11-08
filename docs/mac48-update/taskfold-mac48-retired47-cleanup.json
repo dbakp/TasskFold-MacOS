@@ -1,0 +1,16 @@
+{
+  "freeBeforeBytes": 38043959296,
+  "freeAfterBytes": 38208258048,
+  "removed": [
+    {
+      "path": "/tmp/.taskfold-install47-62optgi2",
+      "allocatedBytes": 164446208
+    },
+    {
+      "path": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-47-mac-development.zip",
+      "allocatedBytes": 20750336
+    }
+  ],
+  "current48AndRollback46Verified": true,
+  "privateSafetyCopiesUntouched": true
+}
