@@ -245,7 +245,9 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
     }
     func merging(_ remote:[String:[Record]],into snapshot:Snapshot)->Snapshot {
         var result=snapshot
-        result.tables.merge(filtering(remote)){_,new in new}
+        for (name, rows) in filtering(remote) {
+            result.tables[name] = AuthoredValueComparison.reusingExactRows(rows, from: snapshot.tables[name] ?? [], identityField: name == "profiles" ? "user_id" : "id")
+        }
         TaskNodeActivity.discardUnavailable(in: &result.tables, remote: remote)
         let blocked=blocked(snapshot)
         let localProjects=Set(snapshot.pending.filter{$0.table=="projects" && $0.method=="POST" && !blocked.contains($0.id) && knownTeams[$0.recordID]==nil}.map(\.recordID))

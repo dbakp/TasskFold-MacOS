@@ -214,6 +214,27 @@ final class TeamWorkspaceTests:XCTestCase {
         catch is CancellationError { XCTFail("This is an invalid history page") }
         catch { }
     }
+    func testExactRefreshCannotReviveRevokedProjectContent() throws {
+        let local = try snapshot()
+        let remote = try TaskfoldJSONDecoder().decode(Snapshot.self, from: TaskfoldJSONEncoder().encode(local)).tables
+        let cache = try TeamWorkspaceCache(boundary: boundary("left"), previous: nil, pending: [], tasks: local.tables["tasks"]!)
+        let result = cache.merging(remote, into: local)
+        let personal = local.tables["tasks"]![1]
+        XCTAssertEqual(result.tables["tasks"]?.map(\.id), [personal.id])
+        XCTAssertTrue(result.tables["tasks"]![0].sharesAuthoredSource(with: personal))
+        XCTAssertFalse(result.tables["projects"]!.contains { $0.id == local.tables["tasks"]![0].string("project_id") })
+    }
+    func testExactTeamRefreshStillReappliesQueuedIntent() throws {
+        let b = try boundary(); var local = try snapshot()
+        let original = local, task = local.tables["tasks"]![0], change = try edit(task, boundary: b)
+        local.apply(change); local.pending = [change]
+        let remote = try TaskfoldJSONDecoder().decode(Snapshot.self, from: TaskfoldJSONEncoder().encode(original)).tables
+        let cache = try TeamWorkspaceCache(boundary: b, previous: nil, pending: local.pending, tasks: local.tables["tasks"]!)
+        let result = cache.merging(remote, into: local)
+        XCTAssertEqual(result.pending, [change])
+        XCTAssertEqual(result.tables["tasks"]?.first?.title, "Unsent team notes")
+        XCTAssertTrue(result.tables["tasks"]![1].sharesAuthoredSource(with: original.tables["tasks"]![1]))
+    }
     func testNewDependentWorkNeedsAnotherRecoveryButUnchangedQuarantineDoesNot() throws {
         let b=try boundary();var local=try snapshot();let task=local.tables["tasks"]![0],first=try edit(task,boundary:b)
         local.apply(first);local.pending=[first]

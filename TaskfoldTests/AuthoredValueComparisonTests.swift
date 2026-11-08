@@ -2,6 +2,26 @@ import XCTest
 @testable import TaskfoldCore
 
 final class AuthoredValueComparisonTests: XCTestCase {
+    func testExactUTF8ComparisonHandlesContiguousAndBridgedStrings() {
+        let values = ["", "a\0b", "café 🪴", "prefix suffix"]
+        for value in values {
+            let bridged = NSString(format: "%@", value) as String
+            XCTAssertTrue(AuthoredValueComparison.exactJSON(.string(value), .string(bridged)))
+            XCTAssertTrue(AuthoredValueComparison.exactJSON(.string(value), .string(String(("xx" + value).dropFirst(2)))))
+        }
+        let a = "\u{1E0A}\u{0323}", b = "\u{1E0C}\u{0307}"
+        XCTAssertEqual(a, b); XCTAssertEqual(a.utf8.count, b.utf8.count)
+        XCTAssertFalse(AuthoredValueComparison.exactJSON(.string(a), .string(b)))
+        XCTAssertFalse(AuthoredValueComparison.exactJSON(.string("a\0b"), .string("a\0c")))
+        XCTAssertFalse(AuthoredValueComparison.exactJSON(.object([a: .bool(true)]), .object([b: .bool(true)])))
+    }
+    func testLargeIndependentUTF8CopiesKeepExactFinalByte() {
+        let a = String(repeating: "Keep exact workshop text. ", count: 100_000)
+        let b = String(decoding: Array(a.utf8), as: UTF8.self)
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(.string(a), .string(b)))
+        var changed = b; changed.removeLast(); changed.append("X")
+        XCTAssertFalse(AuthoredValueComparison.exactJSON(.string(a), .string(changed)))
+    }
     func testCopyOnWriteNestedMutationCannotReuseTheOriginalResult() {
         let original: [JSON] = [.object(["name": .string("Guide"), "rows": .array([.string("Keep"), .number(-0.0)])])]
         let same = JSON.array(original)

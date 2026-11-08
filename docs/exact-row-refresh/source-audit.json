@@ -1,0 +1,32 @@
+{
+  "ios": {
+    "matchingAppSwiftSources": 178,
+    "binarySHA256": "8d40a1bc14d69cc2086b40402eaa87a4b401a1dd1454446ebbee565c21996c17",
+    "compiledAfterPreparedSources": true,
+    "sdkBuildExit": 0,
+    "normalConfigurationUnchanged": true,
+    "newNativeUIOrHardwareAcceptance": false,
+    "applicationCodeImage": {
+      "name": "Taskfold.debug.dylib",
+      "sha256": "65bee4d95eb3243b45d7484e640469ede50bd2ab7093da9b89c71ee15c70b642",
+      "compiledAfterAllPreparedSources": true,
+      "rowReuseAndExactStringSymbolsPresent": true
+    },
+    "binarySHA256Description": "Launcher executable; Debug app logic is in separately audited applicationCodeImage"
+  },
+  "mac": {
+    "matchingAppSwiftSources": 185,
+    "binarySHA256": "7a2231c6327b65d5e81467bf1f793379f6c5b4a6c161b5fc8fdc1167deab7f2f",
+    "compiledAfterPreparedSources": true,
+    "sdkBuildExit": 0,
+    "normalConfigurationUnchanged": true,
+    "newNativeUIOrHardwareAcceptance": false,
+    "applicationCodeImage": {
+      "name": "Taskfold.debug.dylib",
+      "sha256": "5be6966e9f1083e02e12455482cb1bc6019804daf5c713dc4bae8087eac84121",
+      "compiledAfterAllPreparedSources": true,
+      "rowReuseAndExactStringSymbolsPresent": true
+    },
+    "binarySHA256Description": "Launcher executable; Debug app logic is in separately audited applicationCodeImage"
+  }
+}

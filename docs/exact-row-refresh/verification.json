@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-08",
+  "sourceChange": "Exact refreshed-row reuse and byte-exact contiguous string comparison",
+  "perOwnerCore": {
+    "selected": 163,
+    "passed": 163,
+    "failures": 0,
+    "newFunctionalChecks": 12,
+    "explicitDiagnostic": 1
+  },
+  "sdkBuilds": {
+    "ios": 0,
+    "mac": 0
+  },
+  "sourceAudit": "source-audit.json",
+  "measuredStageImproved": true,
+  "measurement": "measurement.json",
+  "normalMacInstalled": "48",
+  "normalMacPrepared": "52 (older source; excludes current row reuse)",
+  "newPackageBuilt": false,
+  "normalUpdateAuthorization": "persists; desktop control still reports locked",
+  "phoneInstallation": "deferred",
+  "newNativeUIOrHardwareAcceptance": false,
+  "fullResponsivenessAccepted": false,
+  "schemaHostedOrNormalGateChanges": false
+}

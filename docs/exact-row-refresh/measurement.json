@@ -1,0 +1,25 @@
+{
+  "fixtureBytes": 3567597,
+  "fixtureSHA256": "aab26e97318163e9e55d4ee8948dc40a552c0d13cea7ff9e18f4de9503bff51b",
+  "rows": 2004,
+  "configuration": "SwiftPM Debug on this Mac; separately owned Core sources",
+  "baselineMilliseconds": [
+    86.76445833407342,
+    84.07070836983621,
+    84.51904146932065
+  ],
+  "finalMilliseconds": [
+    52.60524991899729,
+    50.23766658268869,
+    50.67745829001069,
+    51.89212504774332,
+    51.01354164071381,
+    51.51633336208761
+  ],
+  "medianReduction": 0.39345103055848973,
+  "netStageImproved": true,
+  "scope": "Merge refreshed tables, prepare widget metadata and encode; transport/decode/disk/UI excluded",
+  "fullSaveOrPhysicalFPSClaim": false,
+  "rejectedVersions": 2,
+  "cacheState": "Existing row cache primed before each measured pass"
+}
