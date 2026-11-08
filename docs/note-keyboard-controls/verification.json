@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-08",
+  "change": "Note formatter: CmdB bold, CmdI italic, CmdShiftX strikethrough, CmdReturn Apply, Escape Cancel; parent tools and dismissal disabled under Add Link",
+  "scope": "Owning complete app SDK build and actual code-image/source proof; keyboard runtime not accepted",
+  "appSources": 185,
+  "newShortcutSymbolInActualDebugImage": true,
+  "twoMacUICasesCompiled": true,
+  "uiCasesExecuted": 0,
+  "desktop": "CUA reports locked; one unlock question pending; no repeated request",
+  "simulatorBooted": false,
+  "normalMacBuild": 53,
+  "normalAppUpdated": false,
+  "phoneInstallation": "deferred",
+  "normalRolloutGatesChanged": false,
+  "sourceSHA256": {
+    "Taskfold/Views/NoteFormattingView.swift": "dcfa8f09b4bf1049b8328c1f44ee93d19e38a4e541f68032be0c27d71ced332a",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "f8b84efdc74b3e61d48d2dd45516315bc61e7e16a5c09028eb32a4d10ca42ae7",
+    "TaskfoldUITests/AudioCommentUITests.swift": "6313f545f5f8796e07d0b07275feee4d6d9b978f7611350248ca6443b2571ded",
+    "Scripts/generate_project.py": "95b43155fdcab3b266b8a6cf2f7ef3265ac6f5b945d1370632fa93a4d4e698f5"
+  },
+  "remaining": "Run actual Mac keyboard/link/cancel/apply/Undo/Redo/cold checks after unlock; iOS hardware/native cases remain separate. No installed-update or profile authorization acceptance."
+}

@@ -1,0 +1,39 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 28353961984,
+  "actions": [
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/Index.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 11341824
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/CompilationCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/SDKExplicitPrecompiledModules",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 106131456
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 19001344
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/SDKStatCaches.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 15294464
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 379338752
+    }
+  ],
+  "skipped": [],
+  "freeAfterBytes": 28885327872,
+  "actualFreeChangeBytes": 531365888
+}

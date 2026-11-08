@@ -4,14 +4,14 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "On-device assistance · generation constraint diagnosis",
-  "latest": "A materially different direct token-guidance design compiles but returns no expressions in twelve real Mac requests. A plain generation control produces text but the wrong requested value; even a minimal regex control fails. The candidate is unaccepted and the production engine is restored exactly. Both owners pass 119 ordinary Core checks with four opt-in checks skipped. No new assistance capability or semantic-quality pass is claimed; Mac 53 remains installed.",
+  "focus": "Daily-use notes · keyboard formatting and safe Apply",
+  "latest": "Note formatting now declares Bold, Italic, Strikethrough, Apply and Cancel shortcuts, with parent shortcuts disabled while adding a link. Both full SDK builds pass, and actual code images match 185 Mac/178 iOS app sources. Two Mac keyboard/Undo/cold-return cases compile but remain unexecuted because the desktop is locked; one unlock request is pending. Mac 53 remains installed; this is implementation/build progress, not native keyboard acceptance.",
   "next": [
     "Finish the existing-group signing fix when Xcode’s development account is available. The real54 attempt stopped before compilation with No Accounts and missing App Groups capability/entitlement. The user has been asked to sign into Xcode → Settings → Accounts; do not request credentials in chat or repeat the unchanged build. Preserve group.com.dbakp.taskfold and all existing shared data. Require actual app/widget/share profile authorization, then verify startup/lookup/prompt behavior before calling the recurring prompt fixed. Mac53 remains installed/usable; no routine update approval is needed. Phone installation remains deferred.",
     "Continue final ledger/file-save costs, nonempty/changed-metadata fallbacks, cold/child-heavy preparation and sustained navigation/rendering across projects/platforms/accounts/accessibility. Unchanged metadata has a bounded proof and worker-validation reuse with real app-sync recovery evidence. The 5,000-root admission diagnostic is not full-save or physical smoothness acceptance. Mac 53 is already installed; include the newer metadata source in the next coherent update after the higher-priority shared-storage signing followup.",
     "Continue wider older-work migration: native keep-editable HTTP and source/format variants, account/task/shared-custodian and cross-device/file/audio/history lifecycle. The actual iPhone production-controller Restore/lost-reply Check/Undo/Redo/Finish sequence now passes real Auth/REST with protected cold recovery; this adds no visual, Mac, TLS or hardware acceptance. Advanced normal gates remain off.",
     "Continue on-device filter quality from the new bounded controls: the direct token-guided candidate produced twelve generation errors, while a plain structure returned priority three instead of p3 and even minimal p[1-4] guidance failed. The exact cause is not identified; do not call this a semantic zero-of-twelve or rerun it unchanged. First account for the minimal pattern failure, or use a materially different supported design. Production engine is restored byte-for-byte, prior raw baseline remains unaccepted, complete local descriptions still work. No cloud fallback or private library/catalog input is authorized.",
-    "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
+    "Run the two newly compiled Mac note-keyboard cases after the pending unlock: styles/headings, ordinary Return, CmdReturn Apply, exact save, Undo/Redo/cold return, nested Link isolation and Escape/discard. Use the preserved .xctestrun and signed isolated app; do not rebuild or repeat the unlock request without a changed source/failure. iOS hardware keyboard, wider speech/large-text/account/native scope remains separate.",
     "Finish Mac/iPad Saved originals controls and wider account/accessibility behavior; then finish broader custodian cleanup, restoration/Undo and the larger older-task/history migration. Command-free discovery/export now has genuine API and Core proof. Keep wider mapped/shared-team/custodian, exact-cache and file/discussion ownership cases distinct; ordinary advanced rollout gates stay off.",
     "Finish protected Mac deletion/recovery and disposable hosted residual-file repair and issuer/verifier checks when their stated prerequisites are available. Never erase device copies without bound confirmation.",
     "Keep agreed remote-reminder, older-client rollout, distribution, provider-registration/email, physical-location and genuine-audio deferrals paused. The local model is ready; filter quality still fails prose and subproject-scope cases. Do not repeat the rejected prompt experiments unchanged.",
@@ -498,7 +498,7 @@
             {
               "state": "verify",
               "title": "Remaining native/speech/large-text acceptance",
-              "detail": "Recorded Mac system warnings still need assessment; clean behavior is not established for every screen."
+              "detail": "Recorded Mac system warnings still need assessment; clean behavior is not established for every screen. Both note editors now declare inline style, Apply and Cancel hardware shortcuts and protect parent actions under Add Link. Both SDK builds and actual source/code-image proofs pass; two Mac native cases compile but have not run while locked. No spoken, physical-device or native-keyboard acceptance is claimed."
             },
             {
               "state": "verify",
@@ -882,7 +882,9 @@
             "retained-watch-save-proof/verification.json",
             "retained-watch-save-proof/README.md",
             "recent-query-retention/verification.json",
-            "recent-query-retention/README.md"
+            "recent-query-retention/README.md",
+            "note-keyboard-controls/verification.json",
+            "note-keyboard-controls/README.md"
           ],
           "focus": true
         },
@@ -2625,6 +2627,8 @@
     "note-inline-authoring/mac-build.json": "76c5f5a181896968b8f983fcb4bcfc857b0667d90479f95ef31d53a5c66bd301",
     "note-inline-authoring/storage-cleanup.json": "bb0c2ea6c77573010150882c9b5b9f1013ff96de6eae8668902e670754c7560f",
     "note-inline-authoring/verification.json": "142e011f2142808555da66cd2ddb4d15d3e3e60666203ffc2716aa2c5fe4f845",
+    "note-keyboard-controls/README.md": "a47b61b7984e7a22bb056dc6d4c998a0b1108e0d61f3a693f602a270a6d6f5f7",
+    "note-keyboard-controls/verification.json": "457c609abcea5fb1152da09a15c80a8551f59b0cbc15cb3bff93cdf285eac70d",
     "note-list-styles/README.md": "deaf8fe93bb6d8294b86cda7767fe682adf92521371398b693b5f7b161d35ef0",
     "note-list-styles/before.json": "167a2d33fe478ca794133dc5d085bdab1e77d76beb8471af597f2252976d0053",
     "note-list-styles/build.json": "2a6d79eab68d7de37c3bd79d30b65e2ae4162bd597aec454fa0e5ca26a9dfd00",

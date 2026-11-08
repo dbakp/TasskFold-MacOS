@@ -1,0 +1,31 @@
+{
+  "retired": [
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex",
+      "kind": "staleEmbeddedExtensionExcludedByIsolatedProject",
+      "fileSHA256": {
+        "Contents/Info.plist": "07bd484cf2f5c907b10e8349b37b3e2015b296cdedbee43cfda5a671aa67e386",
+        "Contents/MacOS/TaskfoldWidgets": "ebcde180025896bedd60b9f526c3437a69e92c4b82005cfdf86a5a3b8088fec4",
+        "Contents/MacOS/__preview.dylib": "2343ece4b848423c5aaf6132efc9c2e5ca6c9ac75e5b8f744d55eb1f4926db3a",
+        "Contents/MacOS/TaskfoldWidgets.debug.dylib": "96a33b3d234cb9e423a07ee2c4b8a55863c15f13738c6d66d236fcddf9b0d8a1",
+        "Contents/Resources/Metadata.appintents/version.json": "dd4247d69cd8c750931505420148b52da7955333be2932b866fef83e3c713ac4",
+        "Contents/Resources/Metadata.appintents/extract.actionsdata": "5434892683bb166378ee525aa21e27a6361509dbb7adbd9cdbbb6872ad6aa922"
+      }
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldShare.appex",
+      "kind": "staleEmbeddedExtensionExcludedByIsolatedProject",
+      "fileSHA256": {
+        "Contents/Info.plist": "68f62c43c9626db04dd542e0225fcd35d84f737164f64d3b9cc49fb8b36c2484",
+        "Contents/MacOS/TaskfoldShare": "0295077861ac7268602a118ca3210a689d898a7c8dbc90d4be2036bc572260ce",
+        "Contents/MacOS/__preview.dylib": "e267e47f62adefe0cc28f2900b5d78564130ef0fd41d1df6620f5e390dee349c",
+        "Contents/MacOS/TaskfoldShare.debug.dylib": "46f9274aff9d01aa69c152269f5af72fd4f66923e75ec4c4b6566ee5c088fd84"
+      }
+    }
+  ],
+  "isolatedBundle": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "signatureVerifiedAfterCleanup": true,
+  "normalAppTouched": false,
+  "sourceOrProgramInstructionsChanged": false,
+  "signatureMetadataResealed": true
+}
