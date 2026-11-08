@@ -2510,9 +2510,8 @@ final class Store {
         durable.locationImports = try LocationHandoffImportLedger.staging(previous: previous, proposed: durable)
         durable.timeSnoozes = try stagedTimeSnoozes(previous: previous, proposed: durable, newIntent: timeSnooze)
         durable = try WearableReceiptLedger.applying(previous: previous, proposed: durable)
-        let preparedData = try preparedEncoding?.matching(durable)
         #if DEBUG
-        if preparedEncoding != nil { workflowPreparedEncodingUsed = preparedData != nil }
+        if let preparedEncoding { workflowPreparedEncodingUsed = try preparedEncoding.matching(durable) != nil }
         #endif
         let data = try durableSnapshotReadCache.encode(durable, prepared: preparedEncoding)
         if UUID(uuidString: userID) != nil {

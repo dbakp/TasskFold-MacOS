@@ -1,0 +1,16 @@
+{
+  "ios": {
+    "ownerSourcesMatch": 178,
+    "actualCodeImage": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib",
+    "codeImageSHA256": "9cf960da7a558cc6352b1c7edf7c827a669b4753ba837da2d65780003f75e92f",
+    "newProductionSymbolsPresent": true,
+    "imageNewerThanAllPreparedSources": true
+  },
+  "mac": {
+    "ownerSourcesMatch": 185,
+    "actualCodeImage": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib",
+    "codeImageSHA256": "b1226f662c3d0b92f8064f07febe0f146edf8e6f543f1be8f63dec07ab4548d8",
+    "newProductionSymbolsPresent": true,
+    "imageNewerThanAllPreparedSources": true
+  }
+}

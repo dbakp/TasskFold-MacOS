@@ -1,0 +1,16 @@
+{
+  "ios": {
+    "selected": 60,
+    "skippedOptionalBenchmark": 1,
+    "failures": 0,
+    "newFunctionalCases": 8,
+    "acceptedLogSHA256": "6c9d734cd9a29938ce41a81c52a0ea5705a63d2c045800cbef668de5141cd299"
+  },
+  "mac": {
+    "selected": 60,
+    "skippedOptionalBenchmark": 1,
+    "failures": 0,
+    "newFunctionalCases": 8,
+    "acceptedLogSHA256": "2206476e8abe3ee1d1adca246212fcaa79fd3aa08be253e13fdf11a569778725"
+  }
+}

@@ -1,0 +1,2384 @@
+{
+  "accepted": true,
+  "actualAppBackendStore": true,
+  "genuineLocalAuthREST": true,
+  "protectedSessionAndJournal": true,
+  "visualControlsAccepted": false,
+  "genuineTLSOrPhysicalProtectionAccepted": false,
+  "hostedChanges": false,
+  "normalGatesChanged": false,
+  "checks": {
+    "actual protected native phase restore-queue": true,
+    "native sign-in uses actual HTTP Auth": true,
+    "queued review sends no restoration": true,
+    "real Auth created a separate app session": true,
+    "production Store commits worker-prepared refresh": true,
+    "actual protected native phase restore-loss": true,
+    "one real committed reply deliberately lost": true,
+    "server restored exact original bytes": true,
+    "one original restoration despite lost response": true,
+    "actual protected native phase restore-check": true,
+    "cold Check uses HTTP once without another send": true,
+    "actual protected native phase restore-verify": true,
+    "actual protected native phase restore-undo": true,
+    "one genuine decision response restore-undo": true,
+    "exact source and one fresh request restore-undo": true,
+    "actual protected native phase restore-redo": true,
+    "one genuine decision response restore-redo": true,
+    "exact source and one fresh request restore-redo": true,
+    "actual protected native phase restore-undo-again": true,
+    "one genuine decision response restore-undo-again": true,
+    "exact source and one fresh request restore-undo-again": true,
+    "actual protected native phase restore-finish": true,
+    "one genuine decision response restore-finish": true,
+    "exact source and one fresh request restore-finish": true,
+    "actual protected native phase restore-final": true,
+    "Finish ends only reversal payload": true,
+    "saved original and repair remain intact": true,
+    "concurrent root notes and priority survive": true,
+    "all earlier root history preserved": true,
+    "all earlier child history preserved": true,
+    "same protected session across nine processes": true,
+    "all five original action histories retained": true,
+    "restoration journal is encrypted on disk": true
+  },
+  "phases": {
+    "restore-queue": {
+      "droppedReplies": 0,
+      "pending": 0,
+      "authHTTPResponses": 1,
+      "accepted": true,
+      "history": [
+        {
+          "result": null,
+          "command": {
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "body": {
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "workspace_id": null,
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "restore",
+              "restore_id": null,
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "revision": 0,
+              "protocol": 1,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180"
+            },
+            "origin": "https://taskfold-full-schema.invalid"
+          },
+          "phase": "queued"
+        }
+      ],
+      "phase": "restore-queue",
+      "originalFingerprint": "9e91e5c13a1dc18582d25c5c717e4232ff085dc534af31a9324b3185ba7bf476",
+      "originalRequestID": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+      "sessionFingerprint": "25768c9a334450764fd54aafd9167e61e43e5337aae60609e599380c1dc2eda6",
+      "protectedSessionWithoutFile": true,
+      "nonce": "7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "preparedWorkspaceRefreshes": 1,
+      "restorationHTTPResponses": 0,
+      "exactExpectedSource": true,
+      "diskMatchesStore": true
+    },
+    "restore-loss": {
+      "diskMatchesStore": true,
+      "preparedWorkspaceRefreshes": 0,
+      "droppedReplies": 1,
+      "nonce": "7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "restorationHTTPResponses": 1,
+      "originalRequestID": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+      "accepted": true,
+      "pending": 0,
+      "authHTTPResponses": 0,
+      "protectedSessionWithoutFile": true,
+      "phase": "restore-loss",
+      "history": [
+        {
+          "command": {
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "origin": "https://taskfold-full-schema.invalid",
+            "body": {
+              "restore_id": null,
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "workspace_id": null,
+              "mode": "restore",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "protocol": 1,
+              "revision": 0,
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180"
+            }
+          },
+          "result": null,
+          "phase": "attempted"
+        }
+      ],
+      "sessionFingerprint": "25768c9a334450764fd54aafd9167e61e43e5337aae60609e599380c1dc2eda6",
+      "exactExpectedSource": true,
+      "originalFingerprint": "9e91e5c13a1dc18582d25c5c717e4232ff085dc534af31a9324b3185ba7bf476"
+    },
+    "restore-check": {
+      "originalRequestID": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+      "originalFingerprint": "9e91e5c13a1dc18582d25c5c717e4232ff085dc534af31a9324b3185ba7bf476",
+      "exactExpectedSource": true,
+      "authHTTPResponses": 0,
+      "preparedWorkspaceRefreshes": 1,
+      "sessionFingerprint": "25768c9a334450764fd54aafd9167e61e43e5337aae60609e599380c1dc2eda6",
+      "nonce": "7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "accepted": true,
+      "droppedReplies": 0,
+      "protectedSessionWithoutFile": true,
+      "diskMatchesStore": true,
+      "restorationHTTPResponses": 1,
+      "phase": "restore-check",
+      "pending": 0,
+      "history": [
+        {
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "body": {
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "revision": 0,
+              "mode": "restore",
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "restore_id": null
+            },
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          },
+          "result": {
+            "raw": {
+              "next_revision": 1,
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "state": "applied",
+              "replayed": true,
+              "after_digest": "15d4424f1e91e47083a6928304e71f9c9154091be4383b2680d10734b1b9c858",
+              "mode": "restore",
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "revision": 0,
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "phase": "restored",
+              "restore_id": null,
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91"
+            }
+          },
+          "phase": "applied"
+        }
+      ]
+    },
+    "restore-verify": {
+      "exactExpectedSource": true,
+      "accepted": true,
+      "history": [
+        {
+          "result": {
+            "raw": {
+              "after_digest": "15d4424f1e91e47083a6928304e71f9c9154091be4383b2680d10734b1b9c858",
+              "revision": 0,
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "protocol": 1,
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "phase": "restored",
+              "next_revision": 1,
+              "replayed": true,
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "mode": "restore",
+              "restore_id": null,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "workspace_id": null,
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "state": "applied"
+            }
+          },
+          "phase": "applied",
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "body": {
+              "revision": 0,
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "protocol": 1,
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "mode": "restore",
+              "restore_id": null,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "workspace_id": null,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa"
+            }
+          }
+        }
+      ],
+      "preparedWorkspaceRefreshes": 0,
+      "nonce": "7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "originalFingerprint": "9e91e5c13a1dc18582d25c5c717e4232ff085dc534af31a9324b3185ba7bf476",
+      "restorationHTTPResponses": 0,
+      "phase": "restore-verify",
+      "authHTTPResponses": 0,
+      "diskMatchesStore": true,
+      "sessionFingerprint": "25768c9a334450764fd54aafd9167e61e43e5337aae60609e599380c1dc2eda6",
+      "droppedReplies": 0,
+      "pending": 0,
+      "originalRequestID": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+      "protectedSessionWithoutFile": true
+    },
+    "restore-undo": {
+      "originalFingerprint": "9e91e5c13a1dc18582d25c5c717e4232ff085dc534af31a9324b3185ba7bf476",
+      "droppedReplies": 0,
+      "exactExpectedSource": true,
+      "protectedSessionWithoutFile": true,
+      "nonce": "7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "preparedWorkspaceRefreshes": 2,
+      "authHTTPResponses": 0,
+      "originalRequestID": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+      "accepted": true,
+      "diskMatchesStore": true,
+      "pending": 0,
+      "phase": "restore-undo",
+      "restorationHTTPResponses": 1,
+      "history": [
+        {
+          "result": {
+            "raw": {
+              "after_digest": "15d4424f1e91e47083a6928304e71f9c9154091be4383b2680d10734b1b9c858",
+              "phase": "restored",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "replayed": true,
+              "state": "applied",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "restore_id": null,
+              "protocol": 1,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "mode": "restore",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "revision": 0,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "next_revision": 1,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283"
+            }
+          },
+          "phase": "applied",
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "body": {
+              "workspace_id": null,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "restore_id": null,
+              "protocol": 1,
+              "mode": "restore",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "revision": 0,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283"
+            }
+          }
+        },
+        {
+          "result": {
+            "raw": {
+              "after_digest": "fac1199f5e045862ca5e52adead8df20bc0ce606d140ce006a6c973abb61013e",
+              "phase": "undone",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "replayed": false,
+              "state": "applied",
+              "workspace_id": null,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "mode": "undo",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "revision": 1,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "next_revision": 2,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283"
+            }
+          },
+          "phase": "applied",
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "body": {
+              "workspace_id": null,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "mode": "undo",
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "revision": 1,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283"
+            }
+          }
+        }
+      ],
+      "sessionFingerprint": "25768c9a334450764fd54aafd9167e61e43e5337aae60609e599380c1dc2eda6"
+    },
+    "restore-redo": {
+      "nonce": "7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "diskMatchesStore": true,
+      "phase": "restore-redo",
+      "accepted": true,
+      "exactExpectedSource": true,
+      "preparedWorkspaceRefreshes": 2,
+      "sessionFingerprint": "25768c9a334450764fd54aafd9167e61e43e5337aae60609e599380c1dc2eda6",
+      "originalFingerprint": "9e91e5c13a1dc18582d25c5c717e4232ff085dc534af31a9324b3185ba7bf476",
+      "history": [
+        {
+          "command": {
+            "body": {
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "mode": "restore",
+              "restore_id": null,
+              "revision": 0,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "workspace_id": null,
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec"
+            },
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          },
+          "result": {
+            "raw": {
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "mode": "restore",
+              "replayed": true,
+              "phase": "restored",
+              "after_digest": "15d4424f1e91e47083a6928304e71f9c9154091be4383b2680d10734b1b9c858",
+              "restore_id": null,
+              "revision": 0,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "state": "applied",
+              "next_revision": 1,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "protocol": 1,
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "workspace_id": null,
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec"
+            }
+          },
+          "phase": "applied"
+        },
+        {
+          "command": {
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "origin": "https://taskfold-full-schema.invalid",
+            "body": {
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "workspace_id": null,
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "mode": "undo",
+              "revision": 1,
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec"
+            }
+          },
+          "result": {
+            "raw": {
+              "replayed": false,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "workspace_id": null,
+              "state": "applied",
+              "next_revision": 2,
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "mode": "undo",
+              "revision": 1,
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "after_digest": "fac1199f5e045862ca5e52adead8df20bc0ce606d140ce006a6c973abb61013e",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "phase": "undone"
+            }
+          },
+          "phase": "applied"
+        },
+        {
+          "command": {
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "body": {
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "workspace_id": null,
+              "review_digest": "e9625f823c87d328812a6868a664e492b90e0d74f6f69bf26fcec69696fe6baf",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "mode": "redo",
+              "revision": 2,
+              "request_id": "4131ec52-6e4b-49fa-98bf-724d7190776e",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec"
+            },
+            "origin": "https://taskfold-full-schema.invalid"
+          },
+          "result": {
+            "raw": {
+              "replayed": false,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "workspace_id": null,
+              "state": "applied",
+              "next_revision": 3,
+              "review_digest": "e9625f823c87d328812a6868a664e492b90e0d74f6f69bf26fcec69696fe6baf",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "mode": "redo",
+              "revision": 2,
+              "request_id": "4131ec52-6e4b-49fa-98bf-724d7190776e",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "after_digest": "ba67220ca6c99924de142dffe3d6c7978c6ef23bfe170311bab5aa13d44867c9",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "phase": "restored"
+            }
+          },
+          "phase": "applied"
+        }
+      ],
+      "restorationHTTPResponses": 1,
+      "droppedReplies": 0,
+      "pending": 0,
+      "protectedSessionWithoutFile": true,
+      "authHTTPResponses": 0,
+      "originalRequestID": "ab7ca78c-cef5-44c8-8121-e004382b6a91"
+    },
+    "restore-undo-again": {
+      "originalFingerprint": "9e91e5c13a1dc18582d25c5c717e4232ff085dc534af31a9324b3185ba7bf476",
+      "exactExpectedSource": true,
+      "restorationHTTPResponses": 1,
+      "pending": 0,
+      "diskMatchesStore": true,
+      "accepted": true,
+      "authHTTPResponses": 0,
+      "originalRequestID": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+      "phase": "restore-undo-again",
+      "sessionFingerprint": "25768c9a334450764fd54aafd9167e61e43e5337aae60609e599380c1dc2eda6",
+      "history": [
+        {
+          "result": {
+            "raw": {
+              "mode": "restore",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "restore_id": null,
+              "phase": "restored",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "next_revision": 1,
+              "after_digest": "15d4424f1e91e47083a6928304e71f9c9154091be4383b2680d10734b1b9c858",
+              "revision": 0,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "state": "applied",
+              "replayed": true,
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f"
+            }
+          },
+          "phase": "applied",
+          "command": {
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "origin": "https://taskfold-full-schema.invalid",
+            "body": {
+              "mode": "restore",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "restore_id": null,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "revision": 0,
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f"
+            }
+          }
+        },
+        {
+          "result": {
+            "raw": {
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "protocol": 1,
+              "state": "applied",
+              "after_digest": "fac1199f5e045862ca5e52adead8df20bc0ce606d140ce006a6c973abb61013e",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "workspace_id": null,
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "revision": 1,
+              "phase": "undone",
+              "replayed": false,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "undo",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "next_revision": 2,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05"
+            }
+          },
+          "phase": "applied",
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "body": {
+              "mode": "undo",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05",
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "revision": 1,
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c"
+            }
+          }
+        },
+        {
+          "result": {
+            "raw": {
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "protocol": 1,
+              "state": "applied",
+              "after_digest": "ba67220ca6c99924de142dffe3d6c7978c6ef23bfe170311bab5aa13d44867c9",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "workspace_id": null,
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "phase": "restored",
+              "replayed": false,
+              "revision": 2,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "review_digest": "e9625f823c87d328812a6868a664e492b90e0d74f6f69bf26fcec69696fe6baf",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "mode": "redo",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "next_revision": 3,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "request_id": "4131ec52-6e4b-49fa-98bf-724d7190776e"
+            }
+          },
+          "phase": "applied",
+          "command": {
+            "body": {
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "protocol": 1,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "workspace_id": null,
+              "revision": 2,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "review_digest": "e9625f823c87d328812a6868a664e492b90e0d74f6f69bf26fcec69696fe6baf",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "mode": "redo",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "request_id": "4131ec52-6e4b-49fa-98bf-724d7190776e"
+            },
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          }
+        },
+        {
+          "result": {
+            "raw": {
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "protocol": 1,
+              "state": "applied",
+              "after_digest": "5693a8171fc7a9c77b6bc31f2094cd4d00c45450504b5bd2b13f1f9b563c57ab",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "workspace_id": null,
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "phase": "undone",
+              "replayed": false,
+              "revision": 3,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "review_digest": "2bc3ecf8afe969df1a0d3bf21e96bc91ca611016916d8046f13a1e81df937b98",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "next_revision": 4,
+              "mode": "undo",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "request_id": "433ba662-02d9-4225-9e12-4828e7a012bc"
+            }
+          },
+          "phase": "applied",
+          "command": {
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "body": {
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "protocol": 1,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "workspace_id": null,
+              "revision": 3,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "review_digest": "2bc3ecf8afe969df1a0d3bf21e96bc91ca611016916d8046f13a1e81df937b98",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "undo",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "request_id": "433ba662-02d9-4225-9e12-4828e7a012bc"
+            },
+            "origin": "https://taskfold-full-schema.invalid"
+          }
+        }
+      ],
+      "preparedWorkspaceRefreshes": 2,
+      "droppedReplies": 0,
+      "protectedSessionWithoutFile": true,
+      "nonce": "7aef7334-a6f2-44ae-89fe-3ff11e826469"
+    },
+    "restore-finish": {
+      "accepted": true,
+      "droppedReplies": 0,
+      "phase": "restore-finish",
+      "sessionFingerprint": "25768c9a334450764fd54aafd9167e61e43e5337aae60609e599380c1dc2eda6",
+      "restorationHTTPResponses": 1,
+      "protectedSessionWithoutFile": true,
+      "nonce": "7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "authHTTPResponses": 0,
+      "pending": 0,
+      "exactExpectedSource": true,
+      "history": [
+        {
+          "phase": "applied",
+          "result": {
+            "raw": {
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "state": "applied",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "phase": "restored",
+              "replayed": true,
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "restore",
+              "after_digest": "15d4424f1e91e47083a6928304e71f9c9154091be4383b2680d10734b1b9c858",
+              "next_revision": 1,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "revision": 0,
+              "restore_id": null,
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa"
+            }
+          },
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "body": {
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "restore",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "revision": 0,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "restore_id": null,
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa"
+            },
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          }
+        },
+        {
+          "phase": "applied",
+          "result": {
+            "raw": {
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c",
+              "state": "applied",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "phase": "undone",
+              "replayed": false,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05",
+              "mode": "undo",
+              "after_digest": "fac1199f5e045862ca5e52adead8df20bc0ce606d140ce006a6c973abb61013e",
+              "next_revision": 2,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "workspace_id": null,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "revision": 1,
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa"
+            }
+          },
+          "command": {
+            "body": {
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05",
+              "mode": "undo",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "revision": 1,
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa"
+            },
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          }
+        },
+        {
+          "phase": "applied",
+          "result": {
+            "raw": {
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "phase": "restored",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "review_digest": "e9625f823c87d328812a6868a664e492b90e0d74f6f69bf26fcec69696fe6baf",
+              "state": "applied",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "next_revision": 3,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "revision": 2,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "replayed": false,
+              "request_id": "4131ec52-6e4b-49fa-98bf-724d7190776e",
+              "workspace_id": null,
+              "after_digest": "ba67220ca6c99924de142dffe3d6c7978c6ef23bfe170311bab5aa13d44867c9",
+              "mode": "redo"
+            }
+          },
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "body": {
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "review_digest": "e9625f823c87d328812a6868a664e492b90e0d74f6f69bf26fcec69696fe6baf",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "request_id": "4131ec52-6e4b-49fa-98bf-724d7190776e",
+              "mode": "redo",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "workspace_id": null,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "revision": 2,
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "protocol": 1,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+            }
+          }
+        },
+        {
+          "phase": "applied",
+          "result": {
+            "raw": {
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "phase": "undone",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "next_revision": 4,
+              "protocol": 1,
+              "review_digest": "2bc3ecf8afe969df1a0d3bf21e96bc91ca611016916d8046f13a1e81df937b98",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "state": "applied",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "revision": 3,
+              "replayed": false,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "request_id": "433ba662-02d9-4225-9e12-4828e7a012bc",
+              "workspace_id": null,
+              "after_digest": "5693a8171fc7a9c77b6bc31f2094cd4d00c45450504b5bd2b13f1f9b563c57ab",
+              "mode": "undo"
+            }
+          },
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "body": {
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "protocol": 1,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "review_digest": "2bc3ecf8afe969df1a0d3bf21e96bc91ca611016916d8046f13a1e81df937b98",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "revision": 3,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "request_id": "433ba662-02d9-4225-9e12-4828e7a012bc",
+              "workspace_id": null,
+              "mode": "undo"
+            }
+          }
+        },
+        {
+          "phase": "applied",
+          "result": {
+            "raw": {
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "phase": "finished",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "next_revision": 5,
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "state": "applied",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "protocol": 1,
+              "review_digest": "c7b936d4595e6d814c3f13badd21e7516185cb0335eeec9e9d9790b22dd3f5e1",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "revision": 4,
+              "replayed": false,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "request_id": "6b2ac72f-7ef7-4237-9d39-94b176e48f8b",
+              "workspace_id": null,
+              "after_digest": "5693a8171fc7a9c77b6bc31f2094cd4d00c45450504b5bd2b13f1f9b563c57ab",
+              "mode": "finish"
+            }
+          },
+          "command": {
+            "body": {
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "protocol": 1,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "review_digest": "c7b936d4595e6d814c3f13badd21e7516185cb0335eeec9e9d9790b22dd3f5e1",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "revision": 4,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "request_id": "6b2ac72f-7ef7-4237-9d39-94b176e48f8b",
+              "workspace_id": null,
+              "mode": "finish"
+            },
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+            "origin": "https://taskfold-full-schema.invalid"
+          }
+        }
+      ],
+      "preparedWorkspaceRefreshes": 2,
+      "originalRequestID": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+      "originalFingerprint": "9e91e5c13a1dc18582d25c5c717e4232ff085dc534af31a9324b3185ba7bf476",
+      "diskMatchesStore": true
+    },
+    "restore-final": {
+      "droppedReplies": 0,
+      "phase": "restore-final",
+      "authHTTPResponses": 0,
+      "pending": 0,
+      "protectedSessionWithoutFile": true,
+      "preparedWorkspaceRefreshes": 0,
+      "sessionFingerprint": "25768c9a334450764fd54aafd9167e61e43e5337aae60609e599380c1dc2eda6",
+      "originalRequestID": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+      "accepted": true,
+      "originalFingerprint": "9e91e5c13a1dc18582d25c5c717e4232ff085dc534af31a9324b3185ba7bf476",
+      "history": [
+        {
+          "command": {
+            "body": {
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "mode": "restore",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "protocol": 1,
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "restore_id": null,
+              "workspace_id": null,
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "revision": 0
+            },
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          },
+          "phase": "applied",
+          "result": {
+            "raw": {
+              "replayed": true,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "review_digest": "1e455f70335e47bffa001b663c4231f4953219a36bd1d345150d36808c4b304f",
+              "phase": "restored",
+              "mode": "restore",
+              "after_digest": "15d4424f1e91e47083a6928304e71f9c9154091be4383b2680d10734b1b9c858",
+              "protocol": 1,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "state": "applied",
+              "restore_id": null,
+              "request_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "workspace_id": null,
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "revision": 0,
+              "next_revision": 1
+            }
+          }
+        },
+        {
+          "command": {
+            "body": {
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "protocol": 1,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "undo",
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "workspace_id": null,
+              "revision": 1,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+            },
+            "origin": "https://taskfold-full-schema.invalid",
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          },
+          "phase": "applied",
+          "result": {
+            "raw": {
+              "replayed": false,
+              "review_digest": "e62cd9e97b6056cd0658a264482104eddc75afe2d31a4cd7b65803b7fadcf46c",
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b",
+              "phase": "undone",
+              "mode": "undo",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "protocol": 1,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "workspace_id": null,
+              "request_id": "15c1722b-e254-49f4-9f30-00fcf5ec3a05",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "state": "applied",
+              "next_revision": 2,
+              "revision": 1,
+              "after_digest": "fac1199f5e045862ca5e52adead8df20bc0ce606d140ce006a6c973abb61013e"
+            }
+          }
+        },
+        {
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "body": {
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "protocol": 1,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "review_digest": "e9625f823c87d328812a6868a664e492b90e0d74f6f69bf26fcec69696fe6baf",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "redo",
+              "request_id": "4131ec52-6e4b-49fa-98bf-724d7190776e",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "workspace_id": null,
+              "revision": 2,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+            },
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          },
+          "phase": "applied",
+          "result": {
+            "raw": {
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "phase": "restored",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "next_revision": 3,
+              "protocol": 1,
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "review_digest": "e9625f823c87d328812a6868a664e492b90e0d74f6f69bf26fcec69696fe6baf",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "after_digest": "ba67220ca6c99924de142dffe3d6c7978c6ef23bfe170311bab5aa13d44867c9",
+              "mode": "redo",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "replayed": false,
+              "request_id": "4131ec52-6e4b-49fa-98bf-724d7190776e",
+              "state": "applied",
+              "workspace_id": null,
+              "revision": 2,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+            }
+          }
+        },
+        {
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "body": {
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "protocol": 1,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "review_digest": "2bc3ecf8afe969df1a0d3bf21e96bc91ca611016916d8046f13a1e81df937b98",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "undo",
+              "request_id": "433ba662-02d9-4225-9e12-4828e7a012bc",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "workspace_id": null,
+              "revision": 3,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+            },
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          },
+          "phase": "applied",
+          "result": {
+            "raw": {
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "phase": "undone",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "next_revision": 4,
+              "protocol": 1,
+              "review_digest": "2bc3ecf8afe969df1a0d3bf21e96bc91ca611016916d8046f13a1e81df937b98",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "request_id": "433ba662-02d9-4225-9e12-4828e7a012bc",
+              "mode": "undo",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "replayed": false,
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "state": "applied",
+              "after_digest": "5693a8171fc7a9c77b6bc31f2094cd4d00c45450504b5bd2b13f1f9b563c57ab",
+              "workspace_id": null,
+              "revision": 3,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+            }
+          }
+        },
+        {
+          "command": {
+            "origin": "https://taskfold-full-schema.invalid",
+            "body": {
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "protocol": 1,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "review_digest": "c7b936d4595e6d814c3f13badd21e7516185cb0335eeec9e9d9790b22dd3f5e1",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "finish",
+              "request_id": "6b2ac72f-7ef7-4237-9d39-94b176e48f8b",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "workspace_id": null,
+              "revision": 4,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+            },
+            "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+          },
+          "result": {
+            "raw": {
+              "restoration_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "phase": "finished",
+              "task_id": "7b631392-4c38-4e30-8d3d-3a54c47630ec",
+              "next_revision": 5,
+              "protocol": 1,
+              "repair_request_id": "4af74687-c7a9-4f9a-b71d-4ff7893ec283",
+              "review_digest": "c7b936d4595e6d814c3f13badd21e7516185cb0335eeec9e9d9790b22dd3f5e1",
+              "task_generation": "bc964227-a4e6-4f33-9083-de2e4a3fde41",
+              "project_id": "28395851-a292-4dbe-8a82-04db120df23b",
+              "archive_digest": "daa6b06dbe5d9e56d7c9098c67080b57febf845307aa0f4258cd49eba5e55180",
+              "restore_id": "ab7ca78c-cef5-44c8-8121-e004382b6a91",
+              "mode": "finish",
+              "after_digest": "5693a8171fc7a9c77b6bc31f2094cd4d00c45450504b5bd2b13f1f9b563c57ab",
+              "request_id": "6b2ac72f-7ef7-4237-9d39-94b176e48f8b",
+              "replayed": false,
+              "state": "applied",
+              "archive_id": "ff028185-e027-49d8-bc6f-5edc42caecfa",
+              "workspace_id": null,
+              "revision": 4,
+              "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+            }
+          },
+          "phase": "applied"
+        }
+      ],
+      "nonce": "7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "exactExpectedSource": true,
+      "restorationHTTPResponses": 0,
+      "diskMatchesStore": true
+    }
+  },
+  "sourceSHA256": {
+    "Taskfold/AccountRemovalNativeFixture.swift": "4108f64182c841ae33744baa28ef5c77e2cf249b32420d5f343c354529b5a058",
+    "Taskfold/AudioCommentCapture.swift": "5a90bab1d673e667b98b0b5dadcea459361e1ef8918a05b097a65bad82f6d2d4",
+    "Taskfold/AudioCommentMedia.swift": "01320969ca1b12387c9cbf797670eaf9cfac54f4fa9bf1cff367a4f67a554604",
+    "Taskfold/AudioCommentNativeFixture.swift": "add4a32739e68bf4f5f3f7170a6c30a95ad2d343b115e8a9927e94e9f6470529",
+    "Taskfold/AudioSessionLease.swift": "7f715825854059ab846148d05aaba7de0bf0349af6658b26a58f0143f80d869c",
+    "Taskfold/CalendarAuthorization.swift": "35ee5f107973d982bc8aabbe5fb74d8bc8de557da9afc1fb5623f0a3533151a9",
+    "Taskfold/ChildAdoptionNativeFixture.swift": "b882152ebd30e5ae91d77cd1c480a696bbff46e11e1d234826b7a1994f3a5943",
+    "Taskfold/ChildFieldNativeFixture.swift": "4e820926038deface096c5eb3576c03ef5a46f7d83d94c9244ad392f9cf6a1fb",
+    "Taskfold/ChildRepairNativeFixture.swift": "4036b61f8f410d0805ff65193a76e89d8d6fcdf513ca1cce761690a57ffe03d1",
+    "Taskfold/ChildStructureNativeFixture.swift": "116a356582b4dd3f965d20e0a1f35c55c052ac69acd1ff4f26e2e9193e56f58a",
+    "Taskfold/ChildTransferNativeFixture.swift": "80ad3d12fb1adf89364be99531261a6c322174653bd36c433f1c99aa56c71de2",
+    "Taskfold/ConversationStore.swift": "378868f3ad801a299fb962f6ee9c5e2d58b07e73cb961d0bcff874b175622168",
+    "Taskfold/Core/AccountRemoval.swift": "101c711cdf404509e4d91c75b8d26b7d5e8048393e236aa50ac214e50aa676ca",
+    "Taskfold/Core/AudioCommentDecoding.swift": "d21dbbfa6223b185b8683c4ccdfdaf685eeed894b6e83e6fc3284cf2f384213f",
+    "Taskfold/Core/AudioCommentPending.swift": "68f0a7e4c91476c32312211d6b4321162d67dd8b83734bc05e2d695f233e17a8",
+    "Taskfold/Core/AudioCommentPublishing.swift": "a53e6e108668847b1050ad9fd5c4cad7fa140e09839ebea547e42b64e0acd99d",
+    "Taskfold/Core/AudioCommentVault.swift": "aa9925268ad9ecccc89816c77423e5077acc9062e548c6247a253c8e32ef8809",
+    "Taskfold/Core/AudioComments.swift": "ec787cda66dc924d08a4a25ec5c23b6495378364fc00c81096349bd934619757",
+    "Taskfold/Core/AutomationAccess.swift": "7b315aab31dcb9e04d40eccf1f8879872ea8b03769d8e79eb91e9cd76848cbde",
+    "Taskfold/Core/Backend.swift": "8da03460ae0141045c71aefcf17388ae8ebfa8ff239e68be745cfe59d6283862",
+    "Taskfold/Core/Backups.swift": "64e09996db97e3ab88755fc48d7548372d31250504412099755729635853f11a",
+    "Taskfold/Core/CalendarCredentials.swift": "3361cc9581f0fc98ad7aae14dcb44e5e6e57840a16387d8b8b528d520fc65295",
+    "Taskfold/Core/CalendarEvents.swift": "e45b03e7ad8711c8379b2016171b4355650533b04a40fde6d5208b8d256dbbf7",
+    "Taskfold/Core/CalendarLinksFixture.swift": "08560187ac5078bf499b1815f461174f756f0fde4e6fbb67ed80b5d692ace0c5",
+    "Taskfold/Core/ChildTaskAdoption.swift": "d1a182eea4d8167248503757ddb824e07d2905c8e3e486cb4eb8f1bbae763448",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "4217897824e576ba43b86635f1a0f1dee2d5c04ddc57387278dc4d6323c5c4ec",
+    "Taskfold/Core/ChildTaskCompletionDraft.swift": "73b163af0c1b42acc3452033e5ade794c6310359d754ffebeaf7d854f5ecaa3f",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "2a6fa14a95523b39aefffb3cae78d832d56d9930d6e36a13ae28e4164993a58d",
+    "Taskfold/Core/ChildTaskRepair.swift": "4935f4984ecaa692999afd561e5b7cfa9e02beec89f583363cdb7d4fc418c189",
+    "Taskfold/Core/ChildTaskStructureCommands.swift": "14711c80cdd786377a2619d55eac48b3296a070c4523ba3d609c924bd99c9860",
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "4bfc72ee86ef0f374f9b9611ec09c71764f3f8b53671ac2fdbd8571bbfaa8817",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "b63958bcf31d6515cc1cdadff59f8646bd1e0c501671c4db4917df840714096c",
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": "59a0eda5bc334e21529f4bdeecd8993a2cb0236b49850e197fe8fefd8f742ebc",
+    "Taskfold/Core/ChildTaskTransfers.swift": "7e60a0d7a45b1cff30cda3496b2ed149bee05f43b9dd830771e0dd0f1152c5e6",
+    "Taskfold/Core/CloudCalendars.swift": "4e44488db83868ec06a6e343d5c29c82559a8aaa4aac74f8f42246ea4e639a06",
+    "Taskfold/Core/EmailCapture.swift": "59b90270fc4942fce74fd14fdf4d6d244f034895d8d398104731f6a36558af4e",
+    "Taskfold/Core/FilterAssistance.swift": "e002a9959a3079876618a612f181fff97e579a5c43f3897a9d3abf6b1fe507f9",
+    "Taskfold/Core/Filters.swift": "0cec39f85b5c28e46c57869c5fefe57c0892664e493bd60a82d6fc640d135b59",
+    "Taskfold/Core/FocusSession.swift": "a279252c9a2824f7a98aa0b03607bac46b85dfae0a37939aa72d179695d484cd",
+    "Taskfold/Core/FocusWidget.swift": "f89f11f4594a1669402e79dfb525ae79e206664ccf69477662be800a24862101",
+    "Taskfold/Core/HolidayCalendar.swift": "ba4e30c3c32ab29641b806bb760ed9613486cf5fb0efc1e88f90694a4cc77c01",
+    "Taskfold/Core/InboxReview.swift": "1147d98499f067183d11d8ce13bcc9aadaaab6fe8b2b3b649a02349c51730bd7",
+    "Taskfold/Core/Intents.swift": "42043dbe81c0d53b3e50938dfc5102e24f9ab76e4af3a36f289f00386c423240",
+    "Taskfold/Core/LiveActivity.swift": "1b3f55fac03c027c7de6d1704fd696c6dfdc1e2e7b52278a92ecb2accbcaec7e",
+    "Taskfold/Core/LiveActivityManager.swift": "a6e121021c72207509deac447daf479cde3807675e1a5ba8e2047462107d665d",
+    "Taskfold/Core/LocationPlaceStore.swift": "8a3adb43890241cfb28434ce55daa71d648e967e1756b3acf47161ca6d8e734a",
+    "Taskfold/Core/LocationReminders.swift": "d2f68afc52c2ac6443113f4479cdb233cd073ffe400ac2795cf7f37dff865a9e",
+    "Taskfold/Core/Models.swift": "488ec7bd0cc36bdbadfc67b01ba732c85017573bf3ae3ea4eb984cd12adcf43a",
+    "Taskfold/Core/NoteFormatting.swift": "eb86a6cc243a088ce2d10a34d544762679434bee65dba4dfe243e0b541ec92eb",
+    "Taskfold/Core/NoteMarkup.swift": "3ba8b911d064f40ff2a04b9263ea5b089ae27fda1b1f0c4ece5b07c981c4a2cb",
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/PinnedNotes.swift": "757afd4a434de4d60691ef9f7a661a1eff8ffb993ff483294304f4a6172cac3a",
+    "Taskfold/Core/Planner.swift": "da70c47f1872ec867e1537cf5f7366ddbd39b0ffb1fdb0cf228c476246a898ef",
+    "Taskfold/Core/PreservingJSON.swift": "514498ae8a35ae33a063f8659b790b4fcffc82075dd15a154f857cc9f8644c00",
+    "Taskfold/Core/PrintDocument.swift": "c5fe463c324ca57289dddef069ae530f2375c4d61113fa2f0ef9c39662fc6473",
+    "Taskfold/Core/ProjectFilePreparation.swift": "8b179d1f7934da1861331354c23760841a21b2cec8191cfe5d845ee2c7cc7e33",
+    "Taskfold/Core/ProjectMemberReads.swift": "42646cb9c8da6eda2106358a65d083e76e5bd099eb91a9d769a6e8873259fc3e",
+    "Taskfold/Core/ProjectPulseWidget.swift": "248e9c1fa1205d450375f9a2184960d8d1fd2ded008bbb0e2e129cbe837aa154",
+    "Taskfold/Core/ProjectWorkflows.swift": "478c5f81a311b9316225e4705943eb6388cf7d552789e7aab852112a35e5bcf6",
+    "Taskfold/Core/QuickPlanningCompletion.swift": "0227510a4c5b0b4c9d01d349e5f7317c1dad48df21f7b3dc5241c843cd59f0b0",
+    "Taskfold/Core/QuickReferenceCompletion.swift": "ad5746e08c8a560514cdc3184387866c4be08a2c353d5ccd9be6b23fae291fdf",
+    "Taskfold/Core/Recurrence.swift": "a582832f6eed683a403c184690ddd51d54bbc1dea826ad094c649eb0eb59b094",
+    "Taskfold/Core/ReminderDevices.swift": "c27d85e6a47552893e15e6ee196cd31a6f6177061289a221e5b6874da46a1062",
+    "Taskfold/Core/ReminderIntervalSchedule.swift": "ade2b41a0c0b6a77ee1b7d04da0dd49cb7eb0a904ae80ae1ce02b5ce79c2b863",
+    "Taskfold/Core/Reminders.swift": "0846b23ff184369cdd232c64345b07a680598959278181e3d2628948f726d239",
+    "Taskfold/Core/ReviewedTaskOutput.swift": "fa3f3b2482cc6aa8236e4662e31f6ca33cc8fb45811377ddcb15bec9ef2ad196",
+    "Taskfold/Core/ReviewedTaskSteps.swift": "0525b06f564f4a43dfa561dbd74bff5ca9eb7574db12d454d2c7e03a7fde3013",
+    "Taskfold/Core/RowGesture.swift": "078becf13fda7f4fdf72790ac11b01b759b2af76e2dc3d4674c97d1258b32421",
+    "Taskfold/Core/SharedCapture.swift": "6c66a14d9141b55e3b0a6e4ae19d624de9c3600d46e109ea347f5cbd69b8970a",
+    "Taskfold/Core/SharedCapturePlan.swift": "d9574b3e782eb1f8bfdaca72b25b0f6e9ec5f75fb3289ea9af02d8176a4795f5",
+    "Taskfold/Core/SharedComments.swift": "5bc902676531275b85d22dd2925e7c42fcdb8efc25b8a235b9cbec62b97bca7d",
+    "Taskfold/Core/Store.swift": "0ccd2783beb1967caaedcd87afe27955399f70a7d1638d25736f6bed25ab2e26",
+    "Taskfold/Core/SubtaskTree.swift": "d4f35bfc1e17829e8104040dc42c87e32fc57cc49aad561f58cca0045483f983",
+    "Taskfold/Core/SystemLocationReminders.swift": "b291c5cafd7bf561fc08ec5886d0c3a8d5ace248c220ac196ebaf5d67e1defbe",
+    "Taskfold/Core/TaskActivity.swift": "7216b69136c1dcd4297bc3de54d27cefeea59d86cd197a9909f618b3d6246068",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/TaskFileUpload.swift": "a860858d2a8dc2b18cd35b8f14386a1a3645e310d9f41297f44b9da05615819e",
+    "Taskfold/Core/TaskPrintRenderer.swift": "80e56c6930100de8df179d43862f844d8a4bc9ef088b23e68ec78642f9fb99eb",
+    "Taskfold/Core/TeamChecklist.swift": "49f7d998c4ac0416f708232319d2133e4ece8df6d5e8eeeb5e422e09252e6729",
+    "Taskfold/Core/TeamCompletion.swift": "abece9369b25fd4fcbab02a56f193e2a2204d53279650b9c08089f07ff99e6cb",
+    "Taskfold/Core/TeamCompletionDraft.swift": "db18e7c207da5c78b85598e283a8ffbfd0f3a76bc3109d739ccdf350d008b88f",
+    "Taskfold/Core/TeamOrganization.swift": "4967d92d9bf71020ae9d1ed1568d6500cd73a66b6bde86f23aa14040c3c1334d",
+    "Taskfold/Core/TeamOrganizationCommand.swift": "242b0a2f026dafb9d98770e1fe0a91b6b978af795eb6865530f912d119bf034e",
+    "Taskfold/Core/TeamProjectAccess.swift": "4a64f09f3743d1da20494ec0e8a6421981be08eef5d3bb99c22a33d2ff49262e",
+    "Taskfold/Core/TeamProjectAdoption.swift": "1effa533fbced7a347588f4a5c41140b8bb294a318e836fd1884581501986e82",
+    "Taskfold/Core/TeamProjectManagement.swift": "537735d081442b50f509bf5d2ce0dc2ce45ecba515c30130c3bc426dfd0e6485",
+    "Taskfold/Core/TeamTaskBatch.swift": "52f28a92644e36d207d5585128036b332476cba7610ae4b1c1fcc0d2a220f3d6",
+    "Taskfold/Core/TeamTaskLabels.swift": "9addbcf15fadd8922e0c88007ed9d6c71705b689ab34abf5ab2cbf93da905599",
+    "Taskfold/Core/TeamTaskMove.swift": "29a1ed08a745b84eb46602d257d2a657c616f3ad1881d1c6c9284d92c709c7af",
+    "Taskfold/Core/TeamTaskRecipients.swift": "4409d937870448a9bf2a5140ae35ae4a744a92a2b6f820a13b01f5ecca1ad63e",
+    "Taskfold/Core/TeamTaskRecurrence.swift": "9b40288eaa74f624a0799705cbfde6964fa47032066c855a37458bd4d51bbd9a",
+    "Taskfold/Core/TeamTaskReminders.swift": "931eda139f7f65ce54ab313785fb8052dc65b842e5736ab59f46f2fda0fa5184",
+    "Taskfold/Core/TeamTemplateCommands.swift": "0e275c2eda9f55d9e08efb8df0b1f681095b08315d8ce030e058aab1a6183539",
+    "Taskfold/Core/TeamTemplateLibrary.swift": "dd5c333e6daf5e8058e7aaefe26a977ffc2576bdea01babf9ef1649e0a0ce7f9",
+    "Taskfold/Core/TeamWorkflowRunCommands.swift": "4ae06bc04487c0b7562caae2c2a7d992e45582c471b25f5cfbd8539559ecde07",
+    "Taskfold/Core/TeamWorkspace.swift": "5cc8cd6d25ed896ae5429d0cad272917ff2888cace6aadb9c7eb3fbf87c11f9f",
+    "Taskfold/Core/TodoistImport.swift": "a14ef64ff5629a1ab6d1e952cab874f0d4096a8cb35a19f4dec8263255c8d476",
+    "Taskfold/Core/VoiceDraft.swift": "ad70d4b2593da6734f0bc6cee6634bdcf94a67cc32fae24ce6a962e943895f18",
+    "Taskfold/Core/WatchContract.swift": "17c62f4b99bf2d1ed612813b788cb026386a8818bc0df044049d0b5340b4207e",
+    "Taskfold/Core/WatchPhoneConnection.swift": "ee093ca2d4d496b3b8bf6c3eedd046d7edf12fadab6e3f0b246f25d1a7b9bb6a",
+    "Taskfold/Core/WatchPhonePlan.swift": "8d00269e3894564d10844835beac2ac4d409c00a4a93e1a6f9250394b083ed17",
+    "Taskfold/Core/WearableReceipts.swift": "d06365b025a65dbe9be7e81ec38e5fff5766a9133649a3da71bb256d5a9e973c",
+    "Taskfold/Core/WebhookAccess.swift": "f4f4c4dc4aedfaf02d36df9eec1e55ce9c166aa011142520d8d56d231869d9c1",
+    "Taskfold/Core/WidgetActionTestPanel.swift": "8331ad85178b7dcfa27941324fe20e92553556dc6d97d9784085df906ca3ab1b",
+    "Taskfold/Core/WidgetActions.swift": "b403c468d483d0878e61f51d058388631dda7cbe421dcee88622244039558021",
+    "Taskfold/Core/WidgetCompletion.swift": "b4cdfc2ac6ac60c7e7da9390543b34fcfa8ca142d495deddaefa3bba018870da",
+    "Taskfold/ProjectAdoptionNativeFixture.swift": "0434f412bf41258dba19e55c4f98a64da1fa98ae11de8e7b8df20e72b400c1d9",
+    "Taskfold/SharedCaptureStore.swift": "882532bb0d7a5603cb72f8cb3c81be2b24ca180bf152015cc9f8c3b1617c7fd9",
+    "Taskfold/TaskfoldApp.swift": "63af3463c642042750db51a3c7d882b10c1e4fe6fb689798999a2fbed6a089c8",
+    "Taskfold/TeamTemplateNativeFixture.swift": "514a78db0b6e9d3b83ac83ea63700b14ecfcf0fe863031c1212dbb3d854045be",
+    "Taskfold/Views/AudioCommentConversationView.swift": "2a8a67f23af154f2b3ca7ecce5cbc240521e98577e550c960b386ebad734c125",
+    "Taskfold/Views/AudioCommentDraftView.swift": "ccf09a888363122207d9545cefa7eefa65fba7389c20c760eaec3c2c9fbe0879",
+    "Taskfold/Views/AudioCommentPublicationView.swift": "c04fadb478fc07a2a37e17622582d31103585fc3fd780bddcfd2ac8d8eafd307",
+    "Taskfold/Views/AudioPendingPublicationView.swift": "4891b07f73a4a44503a841ef968351683354e845ca4e0a02b329f0910abd74e7",
+    "Taskfold/Views/AutomationAccessView.swift": "0f4f97c5256b1fdf7e720830d5e382edeca20a8401ede4a842d06bec1b7c689c",
+    "Taskfold/Views/BackupTools.swift": "3d0f6adee157186757d69d3da23b3d32bebe9a5a4f64f7b70df33e470872b9e9",
+    "Taskfold/Views/BrowseView.swift": "a3e502f13c1674d63790b3b436403de291bb1b0964dca980566ae0009bc59c52",
+    "Taskfold/Views/BulkPlanningEditor.swift": "d28c027262fa19c60625fd62ce0a813e26c29b2980a8e67c4b4c9d6288c55c5b",
+    "Taskfold/Views/CalendarView.swift": "5f88528f5706e912b0313fcb3f8d86ce18845f2937edeec96de6a5fe1f64544d",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "564d371d04a6ffa8e138558a68acaaa605b5e497eca64732db1a453c0691d244",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "acce0e133065757e1df95b39beed1526db4da6362ea591983f00c8a2aff8f41f",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "011c6ec48a74e60e75ceb6b631cd6dec5229975af6722e56443f46f6094a1a3b",
+    "Taskfold/Views/ChildTaskRepairView.swift": "b71d2e52f0a492a0ba700e8476f70ebea7b98072d13f17c4b77b630af364af63",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "3836a8a7759e125032ca4cf597866b03c5a76ba2f939b2156daef4eb50c1e001",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "460da55411ceccc7d5e4622cef3683eb359c2914f2651bc8f59db38acba4cbfb",
+    "Taskfold/Views/CollaborationViews.swift": "08490139190cc8dc7a55ac4f38653d7f40d659185fccf226f76624b05cf821be",
+    "Taskfold/Views/ConflictReview.swift": "ef7f5a85ad87bb70673ae4d8c60db977eae541cbc9a14b2beb24286ba8712b48",
+    "Taskfold/Views/ConnectionSignInView.swift": "9800d5850e9de3031f1808745ec1eabbf67b9e81e1f08a6ec7112261c83b3b8f",
+    "Taskfold/Views/DayDrag.swift": "bb6ba549665ffa6a108f9c17ff5e9b6733e038d09afd86b52b2a6d69c27df371",
+    "Taskfold/Views/EmailCaptureKeychainFixture.swift": "63d13002ec27cf420dd7b720ca1d79ceedfcb329eeeda37ed4c76f13f3fec166",
+    "Taskfold/Views/EmailCaptureView.swift": "6177d5d2a48267222d3707ae64c7ffaced4044c56dc8dd380f5365c8ee862725",
+    "Taskfold/Views/FilterAssistanceView.swift": "21ffce90c538871c6d8f98258b8d290e03bf299d9bb0d5bd088a46c562688432",
+    "Taskfold/Views/FocusSessionView.swift": "cfed41ac1093513ef34f8b949a75ffe1c0540fcab8cb2e0206460f87535e8062",
+    "Taskfold/Views/HolidayCalendarReview.swift": "6c7f36710ed15ebec45bc8397f415027c757169b1ee2493c3a1ceba116d7f666",
+    "Taskfold/Views/HourlyPlanner.swift": "4791d974cfd194856b869b5a660713400663420a5768ebd4d32b2690803b435d",
+    "Taskfold/Views/InboxReviewView.swift": "761b985b6799071e7b05770969ec3f774cac08c617ae65803471261985445a17",
+    "Taskfold/Views/Links.swift": "8398f90f917322b3d9fd6cedb9b9055fcc3dace6a3685ec926a1890ce2eb726c",
+    "Taskfold/Views/LocationPlaces.swift": "51fb928d22a2bae147fa0a63b56a1214bc85644d0251de3f630adf7bfa113e4d",
+    "Taskfold/Views/Motion.swift": "aca8102d0c1b09f7293514ec74aaffc071fe69060e3a459b144a76a9a3098c9a",
+    "Taskfold/Views/NoteFormattingView.swift": "62fc09931d2616b74be0e16a5d79b62cb03fe23eb36ddd3ccf92086591302a69",
+    "Taskfold/Views/PinnedNotesView.swift": "6107c9b73e1e4ebe628e5c84fcd8cde18bcfe8daa5d87b5f95ede2a4b1dc7c78",
+    "Taskfold/Views/PlanDayView.swift": "5fe9e1417d8da121d42060810aa7e08fdd108d036849a232d319ccb61cd2b1c4",
+    "Taskfold/Views/PlannerSettings.swift": "eaa6da7f7cda6503112b9e8c757ad6ed7d888a7df41fea6675e0b12ef4d9a65f",
+    "Taskfold/Views/PrintReviewView.swift": "154b0261f39f259c6e1a247a011dbb6db018b1fd9aba9fb79be72983937658a7",
+    "Taskfold/Views/ProjectPulseView.swift": "97e94eda28af729e594a1b493c168936a587fcbd30519a8b903c3d5cd5ac885b",
+    "Taskfold/Views/QuickAdd.swift": "5c732c9f7f70ed377d31d9af9f11fadb9f5dab2a1d80d641e4a4b0bab16a02e7",
+    "Taskfold/Views/ReminderEditor.swift": "5de1354ae2ee00019875a6e762329628ea66d7da7ee509364ff7b89915619e0e",
+    "Taskfold/Views/ReviewedTaskStepsView.swift": "4c4ab19c65f481dcb79b00e8b9256988bf4fdcfd89a0ac2a0b2844dde7605f67",
+    "Taskfold/Views/RowSwipe.swift": "064c068d634614f10481e34ebcc8c00ac203526806ed6b4bb808816820e83777",
+    "Taskfold/Views/SavedViews.swift": "43fa03e92611fb7b2af0c2c43faee7b561e1081d4ac5135d916d1825db7087be",
+    "Taskfold/Views/SharedConversationView.swift": "f2254beeef4c1bba6747b628b038cf3c1032a67f3e30322cab1fbb7b89b9d241",
+    "Taskfold/Views/SharedDraftsView.swift": "15391c23e35c2a9ff516e2156c7ee86f2c85d6be4eeefeabcd7801dc43099b57",
+    "Taskfold/Views/SubtaskOrganizer.swift": "81df3d983296289f19f60e87b6647946375a15eb0e1893e04850d398edaac468",
+    "Taskfold/Views/TaskBreakdownView.swift": "fff7d0afb0904629d22d41dacfc80a88fa3224fd12090d2bfb74ce9730182cf3",
+    "Taskfold/Views/TaskEditor.swift": "3d10da2118fe96ad2409584376f274613367a88779b47d89e0f25f126df8f0b6",
+    "Taskfold/Views/TaskFileUploadView.swift": "ff948074df8997c59db468582c811909b685eccf5d6744077e5152e0a7115521",
+    "Taskfold/Views/TeamMembershipFixture.swift": "0c3997b52090f5d1c518684dc64a9002c41e878479b843245d0a9b63de4a6e8b",
+    "Taskfold/Views/TeamOrganizationView.swift": "722aafd2c0390e98331db0ed3b5b548873a2f725ec5333e9b200a8109aa51837",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "1485e548c221429a492d37c0bd2125762aedc5e658215992d40c32a4619f9219",
+    "Taskfold/Views/TeamProjectManagementView.swift": "c5a5a5fadb84b97ba29ee54e0e569a831173502c0b50ea273976a1034ac443aa",
+    "Taskfold/Views/TeamTaskAssigneePicker.swift": "b4e27787581c96f7702ef24062694ce989445401603973cdcd63d7fa5b4fb88e",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "9589a78034abd4ef8f668d47f307fba2a16bdbd8f0528f5f0e2f75a45a8991a7",
+    "Taskfold/Views/TeamTaskLabelsEditor.swift": "f7b45eef4d5686d4daa0f20c4042bf91e8add0d4c039f947822211a5b4bde526",
+    "Taskfold/Views/TeamTaskMoveView.swift": "07749d18e433278024851c7229aa8babda181f53a70e9e0f61d6853f81670d2d",
+    "Taskfold/Views/TeamTaskRecurrenceEditor.swift": "a52ea2591424c8df4a37ad6dd313c54c287ef0ee633792f0834c1eecc9282362",
+    "Taskfold/Views/TeamTaskRemindersEditor.swift": "767548b1391fbd0ef64d31845622e8130822e5a697eae1abf910207152179d68",
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "7d9988eecb587e54670860ed5a533702ceb342053e7a04a93d5339ef55e26c9d",
+    "Taskfold/Views/TeamWorkflowRunView.swift": "3fea6a4ca06c404b58210a9bd9d6ea56724dc739649feb03c6b0a4ff99cd3818",
+    "Taskfold/Views/TodoistHeadingConversionReview.swift": "997b7baaa15f5b5759853f28235e1d6cab47db87cfb562b3f5daee375628ddb9",
+    "Taskfold/Views/VoiceDraftView.swift": "a6375b567d09ac887b2ceeb7a36d239134d221863dd7b89f8617e8e6c7943a2b",
+    "Taskfold/Views/WebhookAccessView.swift": "e42dd5221bbbe71b5c948e79f5a331d8bd79003421d923e0a36a905c903d9aba",
+    "Taskfold/Views/WorkflowViews.swift": "51e72d04419938c7783f4385315f265abc781d9deda5c2d9bcac6ad5f4ea259a",
+    "Taskfold/VoiceCapture.swift": "d6659ee19c4cd2b633a0a935d16d5dd26984b6bdad49831d8f9c8dba9522e9d1",
+    "Taskfold/WatchConnectionFixture.swift": "507c0138e018d239c7ea456efeba2aa536ffc2aa83f9866c96e3878ccbd4496d",
+    "Taskfold/WatchPhoneBridge.swift": "1524965f2f532882745a16abb56c618f33bd3e9cd52d4abe68ae34f9ea351ee9",
+    "Taskfold/WatchPhoneDriver.swift": "c953112b401bb8bceed362426a66e0d4db81fae99ddc447111c089934473c967",
+    "Taskfold/WatchPhoneFixture.swift": "b19de0b969e990dd309b35f1048dd95937acf16e74a8bbe3e1098a476e7f204e",
+    "Taskfold/WatchPhoneStore.swift": "53b8fcd4ca9a57735a506097c50492d293c500abf0dc6af64d6558d62c7afbc8"
+  },
+  "binarySHA256": "2aaeaea10be0bc042c87df46fd048fad3c54cd3cd3941328fbc760fcbcb33a57",
+  "codeImageSHA256": "9cf960da7a558cc6352b1c7edf7c827a669b4753ba837da2d65780003f75e92f",
+  "priorFixtureFolderPreserved": true,
+  "migrations": [
+    {
+      "file": "20251118212653_67743dd3-a019-467d-a926-84ca4a11b94a.sql",
+      "sha256": "a86f09cd48f2cec33b42e5a799b6607a0c616b9c0e3d1a130a4d383e4f4b7955"
+    },
+    {
+      "file": "20251118212713_dea496e4-7982-44a1-92ab-678947c6070c.sql",
+      "sha256": "770e37a55b339e0d11c4fdfe586a755186644c09d5f4ebdb7282aede1ab0265e"
+    },
+    {
+      "file": "20251118213316_e9b17409-b96a-4dd2-bfed-bfd82f396f3d.sql",
+      "sha256": "ce4179b650998b2d8c4a8660252f7cbd431a3dd0fd19e183e3751ec40b681bd8"
+    },
+    {
+      "file": "20251118213326_b76e20ab-c4ef-4af8-846d-2b90a04c3b74.sql",
+      "sha256": "09c902d08abfe6a54edc4d974cfaf9ef7a390fbe2df74a87a9ed61067fa5dc79"
+    },
+    {
+      "file": "20251118213436_bc4a66bb-3389-440b-9972-828e2470201c.sql",
+      "sha256": "ac2460b0471482bb2cfd35501c277d3edd3ac95e6e01bbc64ab915799046569f"
+    },
+    {
+      "file": "20251118223636_800d6c0a-e880-44bf-939f-d7be6a433216.sql",
+      "sha256": "275d52c776d59391bb831b2f551b51908912a82ccda471d5d69daf3c318b1c2d"
+    },
+    {
+      "file": "20251124212256_5431e487-ed6e-417b-a3d2-d166c4847a29.sql",
+      "sha256": "a539ba65391d1a7495343ac1393d39659cbba2093f7603dc4d693cf373cb5911"
+    },
+    {
+      "file": "20251124221857_6152345e-9b2a-40d9-ae5b-94fd8a09299f.sql",
+      "sha256": "82d130ae79f3b675d9a8522da365912e910bf4a3395461c9d1021776daa1f6ea"
+    },
+    {
+      "file": "20251124223214_6c43e42f-8d53-4396-ba71-f72d9f8e2a0c.sql",
+      "sha256": "ee0eea02bef540b61a38af65106d7749646a06c2c22d94f4edd61f9ffd3ae997"
+    },
+    {
+      "file": "20251127192132_19bf2192-c1cd-456e-a6dd-87cf6d754921.sql",
+      "sha256": "2b1ab7a9df0c7939ca7a5788642e416e5d3319b159ab8c6f0c6c18007526718f"
+    },
+    {
+      "file": "20251128191201_1a45dba1-d8de-40f3-b759-341e5ef71326.sql",
+      "sha256": "7ada45a8d0f47729661fe36e3991d2f2068f2101cb5dad66a22ac5457b252367"
+    },
+    {
+      "file": "20251128193512_d0fcb106-811b-444f-8a47-74e79d13d61f.sql",
+      "sha256": "1c40432360aafe9f217d434b47d43d76ba00260ab50a32460aef45b719d3659c"
+    },
+    {
+      "file": "20251128195757_568dc67f-9a9b-48d7-8c4c-696459837bff.sql",
+      "sha256": "f09d06a941e8ae032f75e6b5ff640c7d85158c331c5886e83513e4d134a46e0d"
+    },
+    {
+      "file": "20251128200733_0c384174-efe4-4b99-a2b1-5805ff652b94.sql",
+      "sha256": "3d69eef2a1d117fb43352680ba7cf1f69b5fcf7c07caaf408f6269ba6986475d"
+    },
+    {
+      "file": "20251128200954_7650c7fb-5df8-4a29-959d-c0aba4f3a479.sql",
+      "sha256": "e99622f886dd4f9f5c1887d6d1657093fcdc008a84d20c519b582ba0203aa4ee"
+    },
+    {
+      "file": "20251128201256_7d3d1709-5ce7-431b-88d1-118f617b2de7.sql",
+      "sha256": "4f7d4a1eac51a4c208ef435a19dbc635a9813fdcdceb0a86bf9b99fef219f10b"
+    },
+    {
+      "file": "20251128202147_6b4972ea-ed2a-4782-ae35-642f21547bde.sql",
+      "sha256": "3b1e307b4594107f2f44084428d372c31412e65900f7feb501e29a90441e0f82"
+    },
+    {
+      "file": "20251128202521_805c82ba-ea96-4232-b385-2341259f66c4.sql",
+      "sha256": "9af87718af740c85924934518a44dd0125db6897e58cb0f1c8c3e33f00c1ba34"
+    },
+    {
+      "file": "20251130222030_0a6ea91e-9762-4e6b-bd1e-5b800217b8ac.sql",
+      "sha256": "3fd1b890fd328e473e08a266928ee070bb17706678708019f48ae83e483afe55"
+    },
+    {
+      "file": "20251201185822_ee7ac5c9-984d-4faf-b2fb-f87b1a4cfbeb.sql",
+      "sha256": "3695a714a42740fd6e434185043422ad835171fd6986727c693a64e04de7e301"
+    },
+    {
+      "file": "20251201190440_681401f2-c7fa-4a68-82ac-87472aa08836.sql",
+      "sha256": "c27b1965c617681dda1794027a29255149a93976267d76901a4572bd0872dce4"
+    },
+    {
+      "file": "20251201201605_80c82006-c8ad-4ec9-8eb3-c12a2f958699.sql",
+      "sha256": "8f38055dc7b7f9b3fe0bc54a69bbb124aea19b3a55f3b8385ea5f92f59a73981"
+    },
+    {
+      "file": "20251201202321_e18ce16b-e8e8-41c6-b9b2-f5bf6285ee6b.sql",
+      "sha256": "244735c219e153316737344cb3b6844269fbd3637271791e9a7d85bf9ec0bd07"
+    },
+    {
+      "file": "20251201210213_d58ad0d1-3695-4306-b5dd-f47a30a7f8ea.sql",
+      "sha256": "eda1ba0a88d3c1911362d663a0ed36e2df0b8e937da42419b3b6d04b1cf5e08b"
+    },
+    {
+      "file": "20251202204721_6a7dda46-b134-48c8-b735-5ba5cdc22024.sql",
+      "sha256": "20a5db40520108a95f39702e7f2b45d4d8ea68cdde02f2565c91938cbaf9468c"
+    },
+    {
+      "file": "20251202205026_775782e8-0444-4400-aae7-444a10030c18.sql",
+      "sha256": "2896b9d8ea77f6f14ec9285fd6830fad5a8336294af192c963a79cc97953e0e2"
+    },
+    {
+      "file": "20251202205047_45691107-4f1c-4dac-9b03-7eb4a49cb126.sql",
+      "sha256": "edda178b6d7922f02947ffb9a446409303aef34ef2a9869bd060003e6cc02432"
+    },
+    {
+      "file": "20251203213111_60af1675-17d7-4bcf-b057-6b69fa23e9c1.sql",
+      "sha256": "68b82f776d37c93041bf043b6c118798c9151dda4fb5462b159f69a7c7335a92"
+    },
+    {
+      "file": "20260911123547_collaboration_foundation.sql",
+      "sha256": "3f37737fd34de859cb6f7f54f08aac9b6900dd3ed49ac010ca83c12f29b6af23"
+    },
+    {
+      "file": "20260911124351_clear_departed_assignments.sql",
+      "sha256": "19a4469e6e6d6f5a95aa0113e49f8f283cb4336103330a22c876cd78d98e7ad6"
+    },
+    {
+      "file": "20260911124524_assignment_project_moves.sql",
+      "sha256": "9e986fce802df36c0154dc72149ef07aa2e19c35c90f18dec9d5bf1b3427f8c9"
+    },
+    {
+      "file": "20260914091713_project_member_profiles.sql",
+      "sha256": "abc31267bf91f0e823d3962024007a0eeae97058801f8f2ee3c6b19ab4ae3bb5"
+    },
+    {
+      "file": "20261005183520_p0_planning_foundation.sql",
+      "sha256": "03a4e59914434abd247e37ec55b95f8f3915974e6e72bd6d43609e923c0f5f6c"
+    },
+    {
+      "file": "20261005184007_fixed_planning_instants.sql",
+      "sha256": "8138fde93f43f50fee561b0c00ed26508a43431e1f5ed370d0daf69e549a3a63"
+    },
+    {
+      "file": "20261005184954_restrict_legacy_email_lookup.sql",
+      "sha256": "43e085c1e484e93e09a6d3a54fab93c36c04d2e5dc7519a8883d126ad379dee1"
+    },
+    {
+      "file": "20261005190632_saved_views_and_preferences.sql",
+      "sha256": "f9d8a112136011fc262bf2e3cc68f2b132d076375ca95b55cd4e10817e6bb84c"
+    },
+    {
+      "file": "20261005190838_synced_list_order.sql",
+      "sha256": "915f7ba6e5249f95410d6f6a98e5acab9ebb0bc000e93eb62bc2f03f7f50387e"
+    },
+    {
+      "file": "20261005191736_require_saved_filter_document.sql",
+      "sha256": "6b369e56091fde3c885d2709ff090d90266f5998a44e80ce01baf7bf5cf3c115"
+    },
+    {
+      "file": "20261005192545_project_creation_visibility.sql",
+      "sha256": "77567262bd9fec2eab5f53d8eb8dd74f03c55b81430fbbe8543a8b399f3c6d0b"
+    },
+    {
+      "file": "20261005201542_planner_working_hours.sql",
+      "sha256": "17d5172ac8b9c8dce81ea0fc03ab0f4da43ba13642975dea7d964ea90235f03d"
+    },
+    {
+      "file": "20261005201544_semantic_planning_timestamp_edits.sql",
+      "sha256": "3921699cc77540683b9db82747638e592a4e89ca7ef2ac4520de885594c261a4"
+    },
+    {
+      "file": "20261005201746_semantic_planning_clock_edits.sql",
+      "sha256": "d57477e449a19ab4e69e81abac2b7c17cfeb675eefa562bacd80cef82262227b"
+    },
+    {
+      "file": "20261006022339_guard_task_deletion.sql",
+      "sha256": "82aff473d87e164b95940c4a10cd09c1442114ef51dbcd210d3a71406a423738"
+    },
+    {
+      "file": "20261006031648_completion_revision.sql",
+      "sha256": "87de44e29abe0ea5a6a8502f2a96ced7f4ce4ef3636530b92678bf502b0f6c8e"
+    },
+    {
+      "file": "20261006073641_durable_focus_session.sql",
+      "sha256": "c0ff0c6df769b7eeac5a2c753a0f1f14cec52396793a650ce64871f4922ab338"
+    },
+    {
+      "file": "20261006075121_focus_session_resume_access.sql",
+      "sha256": "655f26e54aefce2b56e11ed73ddaae9f57460425c12244e6e4e60050f69d68a0"
+    },
+    {
+      "file": "20261006100647_task_activity_history.sql",
+      "sha256": "556ca29bfd1d3d4bb8049143926c99d45c0ff771a7ae98fe6854a24096354f17"
+    },
+    {
+      "file": "20261006100920_task_activity_cascade_authorization.sql",
+      "sha256": "7e9befea4143b57d56f75e2c77219e7ce3dd75be835fc10064a5537b3e06aa50"
+    },
+    {
+      "file": "20261006112647_reminder_device_bindings.sql",
+      "sha256": "2b4e8120b09d7468a984a66f058ef42540212f48811d26ec7bf7ffba674728c4"
+    },
+    {
+      "file": "20261006112835_reminder_device_direct_access_policy.sql",
+      "sha256": "5f80eae25c65d387d6df75620087a72431ac4cefa7b95abb7d423fb085dc049d"
+    },
+    {
+      "file": "20261006120049_remote_reminder_jobs.sql",
+      "sha256": "e48b79ff0208f92832e1a1663bf9a1b343cffe76b6f5299b93eb4df784222d9b"
+    },
+    {
+      "file": "20261006120520_reminder_queue_session_privacy.sql",
+      "sha256": "dc0bb2ff0313750a62eee41fbcf10fb6a860cc85ce339386d54cdfbb0d95e8d5"
+    },
+    {
+      "file": "20261006124947_task_generations_and_reminder_eligibility.sql",
+      "sha256": "60a04a2abeeca6b0feb05f8446b63a39cf98d8567e66b78429bcecceb9849748"
+    },
+    {
+      "file": "20261006134519_reminder_provider_retry_delay.sql",
+      "sha256": "b7cf993edfb455b72ef414c1c05e1a71e197f2381eb84d2eb953e256da143bdb"
+    },
+    {
+      "file": "20261006134836_reminder_provider_payload_bounds.sql",
+      "sha256": "ae9fd33031362988858d8835bff7c871eff80aa5eeb558761ee222edd0453e60"
+    },
+    {
+      "file": "20261006143713_reminder_worker_cursor.sql",
+      "sha256": "a8c9490ad27f5a2bba2008fc26c1a988c43b1fdd9e058690e0d503654680c26a"
+    },
+    {
+      "file": "20261006143800_reminder_sweep_direct_access_policy.sql",
+      "sha256": "8d05d57bacf60a7b73f5828202c2d6240ba6add6124f7ac9e6f2966d638cee80"
+    },
+    {
+      "file": "20261006225340_calendar_reminder_occurrences.sql",
+      "sha256": "a508e2a21e0f13f4c7d357d08e70337159ced77dc5b05b06f138185a71264a05"
+    },
+    {
+      "file": "20261006225450_calendar_reminder_projection_aliases.sql",
+      "sha256": "c600434f840494e489f54e482946d5969861095eae7fd840541ef51c1798bc38"
+    },
+    {
+      "file": "20261006225915_calendar_reminder_projection_performance.sql",
+      "sha256": "2b15efbb4c0aa8a8eb9753cdda1acfbb7d2add00d29625d8ff042c31c51dad40"
+    },
+    {
+      "file": "20261006230025_calendar_reminder_history_counts.sql",
+      "sha256": "410f00fd9514f14e159ed022f0c95c46710efb30462b416b9268a9ff891111ed"
+    },
+    {
+      "file": "20261006230525_calendar_reminder_validation_budget.sql",
+      "sha256": "f09343aafd82417b58ed675aa41fcace3ba2ac4a0ad281853abbaebf468a7423"
+    },
+    {
+      "file": "20261006233453_calendar_reminder_null_bounds.sql",
+      "sha256": "ef36ed948345a727b70273432389160164f4ff4c04bc641a33d59a27f22c5b48"
+    },
+    {
+      "file": "20261007055145_reminder_calendar_cohort_budget.sql",
+      "sha256": "d612b6426ee386c67e177a40fa2eb6032eb32bf13832bcde121070918e0b2b23"
+    },
+    {
+      "file": "20261007065249_reminder_snooze_preferences.sql",
+      "sha256": "687ae845f6be8c50abda466d17ce94f318b6b6944a315ba31fdf099a116f1a20"
+    },
+    {
+      "file": "20261007101832_automatic_reminder_preferences.sql",
+      "sha256": "f68c469120e046dae8778f04306e7440085adfa939196ca09b013c9ea04a3f0c"
+    },
+    {
+      "file": "20261007130553_reminder_delivery_authority.sql",
+      "sha256": "36f5bc4468c3fa096c54c15c02de51c0dd10d67b9593777c236fac34490024d6"
+    },
+    {
+      "file": "20261007131151_private_reminder_availability.sql",
+      "sha256": "1226eacce5029edcacb69b51c6538b2d4f6c61afd5ad6329a91c8589402f3e6b"
+    },
+    {
+      "file": "20261008053217_date_phrase_preferences.sql",
+      "sha256": "dd6deb3d08789c2b725af4bd90f808deb6466b9240306c192a08fd3e2ceb7042"
+    },
+    {
+      "file": "20261011100214_atomic_organization_order.sql",
+      "sha256": "9d403db51e8980ffadcc63e59a1ac415d5ff736ab3eec1f4962eba04727f98e0"
+    },
+    {
+      "file": "20261020174132_project_workflow_foundation.sql",
+      "sha256": "4a5318d040a080d0fe7860b46c13f5a757180bc2411cc5dbcd115f898dbb3588"
+    },
+    {
+      "file": "20261020194217_subtask_structure_review.sql",
+      "sha256": "97ec0cebfa7acf8d2cd6e2d05910efbded309fd11924f699833bf05c39cddafb"
+    },
+    {
+      "file": "20261020204903_template_edit_review.sql",
+      "sha256": "833b8e1cecc4e1e568ae34612bd31bd951fba7c33d3978cdef48ded43b28bf2c"
+    },
+    {
+      "file": "20261020205307_template_review_error_response.sql",
+      "sha256": "289c4e2a11e626bad7c0907d2ed9ecd030e160af3116bba8d3c53d2f7881a4b9"
+    },
+    {
+      "file": "20261020221933_productivity_goals_review.sql",
+      "sha256": "3a4d01d71e002caf7dd4e1f4853cbddb1d7777b87eea2b6597f61d5e37d154d1"
+    },
+    {
+      "file": "20261020231600_monthly_date_sets.sql",
+      "sha256": "989202c78e552c741ccfeef48ea8c8742690fb925093854489bc599dd8d5ea69"
+    },
+    {
+      "file": "20261021020423_shared_comments_and_mentions.sql",
+      "sha256": "fbd1adba72223942f938f83d2b2281e3774c1494c2d934184124aacf38110f5d"
+    },
+    {
+      "file": "20261021023452_conversation_inbox_summary.sql",
+      "sha256": "9a01936889feee4c7006d14d38f6a0a3f9c94e0e8f1c3c8b4c830da7e79ad8b7"
+    },
+    {
+      "file": "20261021122959_assignment_provenance.sql",
+      "sha256": "aa456e8a973ce03c04c48ddbaa76fe8ac09b1878d23a672b03912d5e33ed3c1f"
+    },
+    {
+      "file": "20261022145128_private_location_handoffs.sql",
+      "sha256": "a987e8a30d0c8c647fcde039141bb0983ed3e6a72d6ac1c6f52298c3c3803e07"
+    },
+    {
+      "file": "20261022193804_account_removal_service.sql",
+      "sha256": "93dd54c808919926a6546ba59d696086234b91b80cc728136e8fcd4d6fc5474c"
+    },
+    {
+      "file": "20261022203333_account_removal_status_proofs.sql",
+      "sha256": "e96fa9f54e7ab8969a8e5c77b82dcad49791a1fd8ec99b875a4476c468113a39"
+    },
+    {
+      "file": "20261022212224_automation_access.sql",
+      "sha256": "fa99b465eb59908864591ba05613d4b660cd0302df1a60565a400ea880b50f23"
+    },
+    {
+      "file": "20261022215836_automation_recurrence_plan.sql",
+      "sha256": "519093c056e7267cfb3d33dce69fd3b4e6dc969b4783b7dc6dd19ef324bd45bb"
+    },
+    {
+      "file": "20261022220821_automation_task_access.sql",
+      "sha256": "876db26d2fa60d6b8b651879fab7d72faedcfb66d7ff272e1e9cfb177122d602"
+    },
+    {
+      "file": "20261022222726_automation_task_writes.sql",
+      "sha256": "b121e8aa1a4525fdbfaa7f7903abbc44a2f7cc6d5a593f7f185d71424af9dd59"
+    },
+    {
+      "file": "20261022225439_automation_task_mutations.sql",
+      "sha256": "639d3d16283892c205f4cb3af8e2ed53db2847d0ffdab986675e9e2e6a54227e"
+    },
+    {
+      "file": "20261023002825_automation_enrollment_cancellation.sql",
+      "sha256": "4ee55a85d54a627900239e5e1a6a656cc75633da84dce9b754682482124b7cf1"
+    },
+    {
+      "file": "20261023010559_automation_destinations.sql",
+      "sha256": "141aa63e4e0cb593cbf56c96c6975f7eb4a53cbcc38d2f3449e7c2c73888ec7b"
+    },
+    {
+      "file": "20261023011251_automation_portable_reminders.sql",
+      "sha256": "648e2e32944d91bbea245e86ae0bddcf9f7646dec3181a20a542a0fbcad46ce6"
+    },
+    {
+      "file": "20261023012417_automation_ingress_limits.sql",
+      "sha256": "d13ec1c00c09d509c9a23283480c6cf0a88dc67a3cba5e0321fed11396f22469"
+    },
+    {
+      "file": "20261023031416_automation_management_deadlines.sql",
+      "sha256": "9810ed952870ede4bcc33b613e29263c3f8f921b085ca18b162f1cecf9bb4178"
+    },
+    {
+      "file": "20261023050732_webhook_subscriptions.sql",
+      "sha256": "7e0011738fbcaa92fbb5e21473a1c96bde92450f300af81c1a5c60f7c1f4a3d1"
+    },
+    {
+      "file": "20261023054251_webhook_outbox.sql",
+      "sha256": "252fac8c4b53b13491c7097cdcc4064c7af0fffd0e57081376b70cb01251264c"
+    },
+    {
+      "file": "20261023074744_webhook_scheduler.sql",
+      "sha256": "3c6fb5c9adbe1795a4fcf7e11e3257d097ac6c7f4e3cd8c3d2648164af962bb3"
+    },
+    {
+      "file": "20261023150729_email_intake_journal.sql",
+      "sha256": "5cb06c4aed1708168d03a5339fdd07c1feb068c8b3974f3a1393c8cfe3ef27c3"
+    },
+    {
+      "file": "20261023162006_email_domain_binding.sql",
+      "sha256": "b2413f116b40243323f4873c8fd6e72a17271f9332b2d748ad12c17e7d0535f0"
+    },
+    {
+      "file": "20261023182542_email_inactive_maintenance.sql",
+      "sha256": "340281d7368f06efc207e2c7cee484c3c380381bd12970473bd298e17182d354"
+    },
+    {
+      "file": "20261024021629_team_organization.sql",
+      "sha256": "13f053c9686ca68def2ca71cd796f1afaf915040e0b066c9c1ff71f77616c667"
+    },
+    {
+      "file": "20261024022352_team_content_custody.sql",
+      "sha256": "7800055c92c039a35db941291061550b5fac5b794705609d4c1c5d80c3ce0ac8"
+    },
+    {
+      "file": "20261024025423_team_project_access.sql",
+      "sha256": "4553312642ff14205ddc1933b31bed6947cef1aa6b9ca5370bc9f5c1d7cef0e3"
+    },
+    {
+      "file": "20261024040403_team_task_edits.sql",
+      "sha256": "61cc2cc98e265e1110c6125a3ed3e0ba94a4922570e24be6d80c43b94d278b0a"
+    },
+    {
+      "file": "20261024041605_team_task_lifecycle.sql",
+      "sha256": "bf96bb4cda0dafcae052a9cec0111771cb142a8b7b8e7f3782faf7eb4e89ab07"
+    },
+    {
+      "file": "20261024043412_team_conversation_recovery.sql",
+      "sha256": "02baf514bd24859d6520c6dcf00914fccb00f8e82395f6e6b58bf03845aba079"
+    },
+    {
+      "file": "20261024045918_team_task_batches.sql",
+      "sha256": "24e6f7893e80536aa001c6c0aa22fee1ab53737bdbd22921324d000566d6b7af"
+    },
+    {
+      "file": "20261024054229_team_task_planning_edits.sql",
+      "sha256": "ede5ac910a422aa139488308a8ce5dc4ff084a1207b8ca7ee847dfdd57c41b99"
+    },
+    {
+      "file": "20261024055617_team_checklist_edits.sql",
+      "sha256": "7e5e97e8b28ae4ae02c95a2506e84977c9d56fd244107b361b2e370a3ee6cb83"
+    },
+    {
+      "file": "20261024063514_team_recurring_completion.sql",
+      "sha256": "e7584b94e6e0638b9bafdb7a118f86d452225291b12b04342e7dc1a9361c6ed5"
+    },
+    {
+      "file": "20261024071232_team_completion_review.sql",
+      "sha256": "06ec6579335ffc74e70947305679c0913adaef6145b9e99a2e541e8958903729"
+    },
+    {
+      "file": "20261024072504_team_completion_cancellation.sql",
+      "sha256": "7148ee558cbdf952b9b44ecd1627a97293eb8748a2ef90495cbe74a051b4c058"
+    },
+    {
+      "file": "20261024074022_team_completion_rebase_capabilities.sql",
+      "sha256": "a713ce29af6b3cc946f5ca7471638254e62ea837567b9ee4d7cf2d2de122276a"
+    },
+    {
+      "file": "20261024080409_team_provisional_generation_retirement.sql",
+      "sha256": "924917186b1bf3e787a6aee721bc02e1492422db4f302e40d47f231d9c90dc73"
+    },
+    {
+      "file": "20261024090623_team_saved_draft_copy.sql",
+      "sha256": "a8627f8df64348c82f337378ce4e6d7b4ec744dd72f588c2d45f3e9ca8090502"
+    },
+    {
+      "file": "20261024094010_team_workspace_boundary.sql",
+      "sha256": "d8bb58f8aa8bb532fc6ea97648195cac8e131289daaf4b39c916305a164f29b6"
+    },
+    {
+      "file": "20261024161155_team_directory_identity.sql",
+      "sha256": "30ffaaa50c427158ebca5b46040ad12737de0247221625e0f136c922f93864bd"
+    },
+    {
+      "file": "20261024163752_team_project_presentation.sql",
+      "sha256": "47c696d2212c3cb67a45ea61a7b16426354fba4d019d72e2efb25d839c294177"
+    },
+    {
+      "file": "20261024172109_team_project_archiving.sql",
+      "sha256": "823b09e482e3048c70388777b97e06983ee3d6b08cb7f041792478fa9c72f3cf"
+    },
+    {
+      "file": "20261024182336_team_project_hierarchy.sql",
+      "sha256": "1184a40635d5a0ce96ef0dd71488d4670e49fb0f5c1b11bbf13507b326b52694"
+    },
+    {
+      "file": "20261024204332_team_task_recipients.sql",
+      "sha256": "c72fa01559ed405a4d21b59e407c46393882e371b5f1e693576b4acf6a5abc7a"
+    },
+    {
+      "file": "20261024222451_team_task_repeat_edits.sql",
+      "sha256": "edaec9140839e0fb87e0ab77c536bfc9f1831ad273ca3d061b8a4e0f3b81a7d6"
+    },
+    {
+      "file": "20261025000653_team_task_moves.sql",
+      "sha256": "a1e0d69b2152eb3a45a3dfdcc20525eab40d1c4e4faa1037f82597a442a774eb"
+    },
+    {
+      "file": "20261025011154_team_project_ownership_fences.sql",
+      "sha256": "7c26a424623a3919c048499a913e4987a6c7603e7361a19e06110748776f21b3"
+    },
+    {
+      "file": "20261025014039_team_project_adoption_review.sql",
+      "sha256": "6f84f1b145f95d3a7f3e5258ef7068a7fae625a6887bf92343ea94625e5b1aad"
+    },
+    {
+      "file": "20261025031915_team_project_adoption_connection_fences.sql",
+      "sha256": "bba7084ce1062aa4cd65fc40b5d71a63c5d682c726e17af6b8f9a9115f036fcd"
+    },
+    {
+      "file": "20261025033902_team_project_adoption_connection_policy.sql",
+      "sha256": "b6c922cab8f2c340ea02f2c40b5dc56ef85d2dee48a879a8ef6b04aab8a5bb46"
+    },
+    {
+      "file": "20261025044350_team_task_planning_batches.sql",
+      "sha256": "a5170773f5390b856bc2304f5f4e91050cec0e461ad0e23e4bb4a4d21d565f60"
+    },
+    {
+      "file": "20261025060437_team_task_assignment_batches.sql",
+      "sha256": "cb2572cff5a1c1e61aae86e76f728d60e15c5a53602010e9f540d908f2ecfb98"
+    },
+    {
+      "file": "20261025064635_team_workflow_template_library.sql",
+      "sha256": "cf81b1e12fdc35005a1abc5ecffc9879898b5214df1b3244449a44f951ddfef2"
+    },
+    {
+      "file": "20261025092534_team_workflow_runs.sql",
+      "sha256": "c6e8380d755e57ea5fc85c481ece877cdcf8c10e1aaea671d26ca7a59b4bfff1"
+    },
+    {
+      "file": "20261025111218_team_task_label_batches.sql",
+      "sha256": "eead42f9f94e22635269c14b9470e28d534453dd9f800a4921f9171afeb3a9a2"
+    },
+    {
+      "file": "20261025123326_team_completion_batches.sql",
+      "sha256": "cae8bbfb7568e931c87c6295dbf422fb188972b7758496a9db0d7a4fbb55c22b"
+    },
+    {
+      "file": "20261025140004_team_completion_batch_recovery.sql",
+      "sha256": "a65c0c58f169e8f181ece433b1c19686ea6867bb3179bee1368be59fd8b5018b"
+    },
+    {
+      "file": "20261026032336_task_headings_contract.sql",
+      "sha256": "b92bf9ea977f104e1f9b915c38019748d350f9328aa6486ab3650748719457fb"
+    },
+    {
+      "file": "20261026053028_todoist_heading_import.sql",
+      "sha256": "64f9abfac0570fcb3ebb917935a2a744972b4b71b5ec55ad887c91c3b3783058"
+    },
+    {
+      "file": "20261026095807_task_node_activity_history.sql",
+      "sha256": "6e9a067a793714db686cdd524707a140eee7f1ea05ccd1c635980f783d1c1687"
+    },
+    {
+      "file": "20261026104450_task_activity_root_context.sql",
+      "sha256": "9ed35d72212eff58ebe25cd9ec2da9ddf909bcc70dcf8f34bf1924a2ebb78831"
+    },
+    {
+      "file": "20261026113556_task_node_activity_custody.sql",
+      "sha256": "ea35e156c70703d28007197760dfaeeeb44c87a35ace81b50b81f6afbef833df"
+    },
+    {
+      "file": "20261026121006_task_node_project_adoption_review.sql",
+      "sha256": "d2e437af083dafb9024c9276549ba612efae5e3358cb7affc52e1a9844722d7b"
+    },
+    {
+      "file": "20261026122215_reviewed_history_custody.sql",
+      "sha256": "f7294640c81bcde00897076d7e634565c0fe185ec2ff96485db6f568b5a71b15"
+    },
+    {
+      "file": "20261026155711_team_task_heading_commands.sql",
+      "sha256": "bf8c7ab22709bda362a9df909bd8e8888ba0c61201740540aaf1e85bae7dab32"
+    },
+    {
+      "file": "20261026161001_team_task_heading_lifecycle.sql",
+      "sha256": "e7a5a8c4e4174bc08a324d2fa1c8caaa2f6893df78719960e195c75851a38829"
+    },
+    {
+      "file": "20261026165807_shared_workflow_task_headings.sql",
+      "sha256": "809c8f968aa69d8788326c6138ef4d5aee8bdbc50418478dc4e94ed3b4e53b7e"
+    },
+    {
+      "file": "20261026185356_personal_heading_capability.sql",
+      "sha256": "e9b8b3de8b1136b577445e8b192bb544242f89bf2e1676f87a4809d9c4d02ddb"
+    },
+    {
+      "file": "20261026194617_guarded_workflow_undo.sql",
+      "sha256": "c4e6e97900293747a091fb6908040367c1c542dbebcedd7afb6cbb45fda7e8af"
+    },
+    {
+      "file": "20261026202554_workflow_undo_bulk.sql",
+      "sha256": "18034c5dcf289208d9a6ee311dd28a4f81be81bd6e8195d7940b5f6f4104f538"
+    },
+    {
+      "file": "20261028134424_audio_comment_publication_ledger.sql",
+      "sha256": "3e6522149e52bdf52918ae66b2e7b68205fd7f290bd3276c8c09d464517efaa3"
+    },
+    {
+      "file": "20261028145414_audio_comment_gateway_boundary.sql",
+      "sha256": "ac9a9005a8198994e2b0cec8adf4113e9d7bb8b80303b8d078a6d39cc169cb24"
+    },
+    {
+      "file": "20261028151901_audio_comment_cleanup_fencing.sql",
+      "sha256": "7260264fa5c4419695f3a37e90d5a2a86ca822f74c7728b8a2d5b1b33ab36718"
+    },
+    {
+      "file": "20261028153218_audio_comment_upload_recovery.sql",
+      "sha256": "fde3d58c4cd031b8e648e86660bcdf812645624791d700ce07d2792b1d70386f"
+    },
+    {
+      "file": "20261028153219_audio_comment_maintenance_scheduler.sql",
+      "sha256": "f37a22b92bc353ebaab0e1101689be3fa18511287047f427e831cc34dcd1fc80"
+    },
+    {
+      "file": "20261028185429_audio_comment_keyset_pages.sql",
+      "sha256": "28e601c74c3c04cbec73c9761b2c73dd0d48e5f14068f58e53427069a7913e03"
+    },
+    {
+      "file": "20261028191118_audio_comment_shared_reads.sql",
+      "sha256": "592857c6a4c54014531bbf0f17273c8ee672d0969e34b59bde3f0bb34db3591b"
+    },
+    {
+      "file": "20261028212632_audio_owner_publication_status.sql",
+      "sha256": "0f50b4990debfc1cb7d4484f5ecfeae66d9fe509c0a7a0267a1236da186d1a11"
+    },
+    {
+      "file": "20261028235057_independent_child_record_projection.sql",
+      "sha256": "ec8220b6ce0b8d47623a23eee2db0670e83b3d7898448ba91afadaf1762cbc93"
+    },
+    {
+      "file": "20261029001127_child_task_record_reads.sql",
+      "sha256": "9347c066832ea5b3e5881f5fc0884e1b7fd4697b52f8e1e0ee767095c7af2ed3"
+    },
+    {
+      "file": "20261029005723_child_task_field_edits.sql",
+      "sha256": "41716915a49b14020bc9399cffc34b5eee7898a90d3f43e46977f00715855032"
+    },
+    {
+      "file": "20261029194600_child_task_field_resolution.sql",
+      "sha256": "dddfd037d9411d21fb8a5910b89cf4558432c5551c6860189a0d38d7c6ab2539"
+    },
+    {
+      "file": "20261029211038_child_task_completion_commands.sql",
+      "sha256": "2f52b22df713261440a2e2b401334a91058847b7b8d479093d415a6a054ac2e3"
+    },
+    {
+      "file": "20261029215232_child_task_completion_resolution.sql",
+      "sha256": "2d27894ff2fa45a610b7357734fef5531f508de8b72cde4e4a6a40f89afec748"
+    },
+    {
+      "file": "20261030002245_child_structure_revision_and_assignment_bridge.sql",
+      "sha256": "949dd0ea6e5d9300a55cfeb81c4b3239aef112e5e2b6cc3f5923b6381ab0e682"
+    },
+    {
+      "file": "20261030004453_independent_child_structure_commands.sql",
+      "sha256": "5a3d0bb095dade20a78427bb5a9615718c7acff21e6e36bd54d8878f14b35686"
+    },
+    {
+      "file": "20261030012905_native_team_child_field_adapter.sql",
+      "sha256": "9cb9e5badc970b5bd9a5b031a17a776becd6e924cf178d7cc31ac3ac5603f9f2"
+    },
+    {
+      "file": "20261030090935_child_task_record_authority.sql",
+      "sha256": "b2ff634e9b7e82daf35081643ba23c1effe09d77b4c3fbbbef8be91a9c067a99"
+    },
+    {
+      "file": "20261030093036_child_record_reviewed_team_transfers.sql",
+      "sha256": "6715c30856cec9634676c2337ac81c1ad67a7eefcc1be57948be7d865b621f1b"
+    },
+    {
+      "file": "20261030102036_child_record_project_adoption_custody.sql",
+      "sha256": "a93e6f5487b0cfbdbf2aff93abd5f92243c9bbd3454b2dccaba5058288510dc4"
+    },
+    {
+      "file": "20261030104148_personal_child_record_task_moves.sql",
+      "sha256": "98da78036c4f9f2a08cf8c61e6bfbbfbedc38a92deebdb7a9fdb559eb74c989a"
+    },
+    {
+      "file": "20261030114139_cross_root_child_task_transfers.sql",
+      "sha256": "e3006f881dbd13ed52f5f7db5d5e125b9f5b7c424ad288ad2bb18782db9cb6cc"
+    },
+    {
+      "file": "20261030134131_reviewed_child_record_adoption.sql",
+      "sha256": "71ada450f12087c5b8e34b643b9e01315a54389495e4a707b008e86122fea7c2"
+    },
+    {
+      "file": "20261030170754_child_adoption_metadata_discovery.sql",
+      "sha256": "34785f153d112ee2ef518eb960d982b404cb36f53a3c5ec3954f30d13357038d"
+    },
+    {
+      "file": "20261030183133_child_task_repair_previews.sql",
+      "sha256": "6243775ed7bc1bbcfb038762a903c9064d536f82f323f1819af576d5895c2ab6"
+    },
+    {
+      "file": "20261030184403_child_task_repair_commits.sql",
+      "sha256": "dd725f87e55165a7e4d2af4418dcfb1a79f54d2ace747ed5a6c96ed5e08a571f"
+    },
+    {
+      "file": "20261030192638_child_repair_original_history_access.sql",
+      "sha256": "b0503d3aaf01059087ff8763d92d7e409caa134923c22eaa9451e057d52eb771"
+    },
+    {
+      "file": "20261030204005_child_repair_bounded_originals.sql",
+      "sha256": "78b28364b5b6aa3345cab34c51110ad3258cbdb5a1f76bb857f3dca049464848"
+    },
+    {
+      "file": "20261031001141_child_task_completion_batches.sql",
+      "sha256": "972400d1864983e2cb10f92766094547c31bb406853236fcb44eb4fbbfbf8793"
+    },
+    {
+      "file": "20261031031909_completion_selection_root_observations.sql",
+      "sha256": "b376784c194687470687eb1783b9e3e14687350704d0a8cf2e1762df423a4d37"
+    },
+    {
+      "file": "20261031040011_mixed_task_completion_transactions.sql",
+      "sha256": "86da93374be5c3a6d32dc92eba90978967033f3cee4f48eca010a5833245e1dd"
+    },
+    {
+      "file": "20261031050018_mixed_task_completion_undo.sql",
+      "sha256": "234162c9a7635e48b7eb7dbbf4bca180f785779c90718f26f0b8e6c6841a9581"
+    },
+    {
+      "file": "20261031180359_child_field_history_removals.sql",
+      "sha256": "0831a3ce0d673984a5fb8b37fa487e70780750a54b43e25d7be8816f846e7fbc"
+    },
+    {
+      "file": "20261031204437_child_field_activity_details.sql",
+      "sha256": "ef059fb6f7a8ea2ed32945b3424071f761ee43e8b92b6d10eb28d33166563b2c"
+    },
+    {
+      "file": "20261101041509_child_order_activity.sql",
+      "sha256": "521f9b92ece30c56f9ace24d49bbc756104cae2fe26a65dbfe0dd1d923bf827e"
+    },
+    {
+      "file": "20261101062555_activity_operation_groups.sql",
+      "sha256": "b098318aee63ac5c85ba5bb505b5a4bd15cc812a39955632d7d1d5155baf25df"
+    },
+    {
+      "file": "20261101071304_reviewed_duplicate_history_preservation.sql",
+      "sha256": "363e44c7ae5962e808889083c4c327236ad4cd0165a9c94d9ab04c394222a11c"
+    },
+    {
+      "file": "20261101091417_reviewed_child_copy_comparison.sql",
+      "sha256": "f1b6613820e01405caedc21b5af8bd81483606c59d6cda530547a5a4efe26ae9"
+    },
+    {
+      "file": "20261101101059_reviewed_saved_copy_reconciliation.sql",
+      "sha256": "7a25e9dcd57c46b81713521daa26443f4a766da9dae7f92a50dad8706fde1247"
+    },
+    {
+      "file": "20261101123154_reviewed_child_history_reconciliation.sql",
+      "sha256": "ddf413624e19aab8b74634903f962f07e30e08d4803bf3ef940c68f5f01160cf"
+    },
+    {
+      "file": "20261101124928_atomic_child_copy_mapping.sql",
+      "sha256": "cc84badc25526576ded6013b758b329010ed894312b5173df5cfd36e8f3dd430"
+    },
+    {
+      "file": "20261101201039_scoped_task_assignment_guard.sql",
+      "sha256": "3e6a6f8653c55851f7ad9a0d33db83f832b7c06444b8e30c87a2933f944f19f9"
+    },
+    {
+      "file": "20261101212845_task_bound_file_custody.sql",
+      "sha256": "c713005f967a4ba9a290d00942543c79f583fb2e8aaa83b37c6f31a828f8fca1"
+    },
+    {
+      "file": "20261101220634_task_file_upload_admission.sql",
+      "sha256": "b2bbfd638392b497e61f973844832e8d69dade539bba86877887b2277cb4c705"
+    },
+    {
+      "file": "20261101225004_task_file_sender_stop.sql",
+      "sha256": "30e9316ed6137df9b4702cbfa31ee8bfa8c94d3fdb35d528422f7724bdbac17d"
+    },
+    {
+      "file": "20261101232208_task_file_upload_cleanup.sql",
+      "sha256": "16dbc20d3d95c48bf43e24d175a51eef237001fd78d18aefafa5e13099c71496"
+    },
+    {
+      "file": "20261102143104_team_audio_write_authority.sql",
+      "sha256": "4286eb0e84b25a52fed63403a0c977bdb54c66aa539d126c42847c8cfe3cfeea"
+    },
+    {
+      "file": "20261102150524_reviewed_audio_project_custody.sql",
+      "sha256": "e1d3fa7a489556b7693a98792314a88caeced8923d0e0b9e05ba3168f0be3eda"
+    },
+    {
+      "file": "20261102175200_reviewed_audio_generation_restore.sql",
+      "sha256": "a4cde59f4f9f477227b2ef5ae343191a1932a6a55dbc4719df770fea08553fa8"
+    },
+    {
+      "file": "20261102181442_audio_lifecycle_native_review.sql",
+      "sha256": "d4a0e7792a9e409606e459c34aa45c5da2ecfe8edb9dea8de73a676b8cd1679e"
+    },
+    {
+      "file": "20261102194929_recording_restore_recovery_fence.sql",
+      "sha256": "e340d7bb6c59125674bd71f4fbc6361aaee7c54451b925919496684c2e58ddbf"
+    },
+    {
+      "file": "20261102212850_recording_selection_recovery_fence.sql",
+      "sha256": "865365d2363926b4ec80440a5722587db8d46bcb15ded59615a8506f9a002fb6"
+    },
+    {
+      "file": "20261103010516_reviewed_project_recording_inventory.sql",
+      "sha256": "e6f2b3323b0772901c50536710c69e125e2976fb2d73cd7c3d84fd0683ca3524"
+    },
+    {
+      "file": "20261103013213_reviewed_project_recording_transfer.sql",
+      "sha256": "38a48b36e7bda3c456a1bd0919ac2b56fefcbf71b9d730e0ff3c5e910bb18663"
+    },
+    {
+      "file": "20261103021255_reviewed_audio_publication_audience.sql",
+      "sha256": "2ef1353d3f0e177ebe820066fcb983b0700b1242e55ec49d574f0fe8077aeef1"
+    },
+    {
+      "file": "20261103050050_reviewed_project_unfinished_recordings.sql",
+      "sha256": "a7e4640a730f5e8d703abb8f97609c36d22b991b9ea09c281b06509578e85fb3"
+    },
+    {
+      "file": "20261103072323_reviewed_project_private_recording_history.sql",
+      "sha256": "f1959eae23f184715d23477f6f8e3d25afa2e501c7ae136e52d646bf55d8b591"
+    },
+    {
+      "file": "20261103105727_account_removal_residual_repair.sql",
+      "sha256": "999c04e2da68c19f7042a93a22adec1ea31edd7318c52750270cdb2b40d7afe9"
+    },
+    {
+      "file": "20261103161738_legacy_policy_auth_initplans.sql",
+      "sha256": "90b90780b656c6dafb94aa0bddca8fce80136173aec5b45b078abb56468af8d4"
+    },
+    {
+      "file": "20261103201254_taskfold_daily_scoped_assignment_guard.sql",
+      "sha256": "3e6a6f8653c55851f7ad9a0d33db83f832b7c06444b8e30c87a2933f944f19f9"
+    },
+    {
+      "file": "20261103212921_taskfold_personal_workflow_undo_service.sql",
+      "sha256": "ce0c652590dfca10adc67aad27f2dc20abe340348eb7c7ca30638847b4eb29ed"
+    },
+    {
+      "file": "20261104190311_taskfold_capture_workflow_undo.sql",
+      "sha256": "edf4a9e90c8158b1aade72234e6b11324a1306efb1728c32c9b415795427d8bc"
+    },
+    {
+      "file": "20261105190458_reviewed_project_file_inventory.sql",
+      "sha256": "da18d4ecdc75f92cf3435724cec3e50446f2dfda1647549afb4417462adfa44f"
+    },
+    {
+      "file": "20261105203116_project_file_copy_preparation.sql",
+      "sha256": "bb21031aca263ee3bfd6fb81213f22d7b8b75f0b71dc87f739efdaed4c38aba0"
+    },
+    {
+      "file": "20261105205804_reviewed_project_file_transfer.sql",
+      "sha256": "a90fcd5226635f6ba927e36125e0ebc5b43da94d5d8a6216ebaac9e07e57e136"
+    },
+    {
+      "file": "20261105212643_native_project_file_preparation_recovery.sql",
+      "sha256": "25f3f983ce58f70db319aa2394d1ae8e9276f0644f8c6b9188a423c2589257b4"
+    },
+    {
+      "file": "20261105221234_canonical_project_file_copy_receipts.sql",
+      "sha256": "423a288198d0570bc53ddd998e5f38691bd23c956442b7f29fbb0c574c51e84b"
+    },
+    {
+      "file": "20261105235518_reviewed_child_step_batches.sql",
+      "sha256": "02fb87f132290d403566c3b05177103cf2b2b806acd79b37e997bf38dd002ae4"
+    },
+    {
+      "file": "20261106003008_reviewed_child_steps_availability.sql",
+      "sha256": "b250fc606005c94184afbd8badba4a18c2c8d5570565674fbadd3262dd78e395"
+    },
+    {
+      "file": "20261106014046_reviewed_step_history_reversal.sql",
+      "sha256": "0f4339ad549a16995fedb8226c226d82ab4fd344d5cd49de0cb6a616ec1841d8"
+    },
+    {
+      "file": "20261106072929_project_file_producer_terminal_recovery.sql",
+      "sha256": "4975f6729bfb6bea727333779806996a0761924e2967228854372b1de5511f49"
+    },
+    {
+      "file": "20261106173429_child_adoption_global_search.sql",
+      "sha256": "c9e9deff06e84f1646c09e55d2668f2c512687a2c7de0a3bf6aaeebdb5fed31a"
+    },
+    {
+      "file": "20261107051702_child_repair_archive_discovery.sql",
+      "sha256": "ebfd0f609ed7e54818a6b521af36e96678a275c40e10844f80bccda1f90241a1"
+    },
+    {
+      "file": "20261107070845_child_repair_original_cleanup.sql",
+      "sha256": "33e07f3d0ce428235cc0bfaf161e8ef7d482e652db8bff148742c5d96536031d"
+    },
+    {
+      "file": "20261107203948_child_repair_original_comparison.sql",
+      "sha256": "99cd554612506c12ed4c5b095792868377336a5df5c49805f663cf9e7032a861"
+    },
+    {
+      "file": "20261107213026_child_repair_restore_cycles.sql",
+      "sha256": "9c5f29fb7ed23612fd343f15cc1dc4ad6538d6ed4fff8a3dfd8ffbd5955f2ad8"
+    },
+    {
+      "file": "20261108030100_child_restore_finish.sql",
+      "sha256": "87aa481b50637dfb0af735b5b08df94fe0ab1703f31489d378cd7307afb48003"
+    },
+    {
+      "file": "20261108042340_reviewed_child_copy_format.sql",
+      "sha256": "a618ce9b5ecb0b5041d3141e6a5217781886291ac972f0bb93f3c42089e1e16f"
+    },
+    {
+      "file": "20261108055001_review_restored_child_copies.sql",
+      "sha256": "58880052e05971160c8ba677b11722a8bd476d0591d5a012d9e654734c9b7b7d"
+    },
+    {
+      "file": "20261108063448_keep_restored_child_version.sql",
+      "sha256": "290ef2d70b5b4efd6f8a5073dd506a9e4b013b9232495c8ab88279beb67ccf11"
+    },
+    {
+      "file": "20261108084014_live_child_restoration_status.sql",
+      "sha256": "c76849ceed542b6cfc359516105a3d2c494ed06f063175076295c3104a88318f"
+    },
+    {
+      "file": "20261108093033_recover_retained_newer_child_version.sql",
+      "sha256": "5fda902394f0d540fabf0ed788678e873e8e727eea1568bc33b765cc8828b92d"
+    }
+  ],
+  "images": {
+    "db": "supabase/postgres@sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
+    "auth": "supabase/gotrue@sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b",
+    "rest": "postgrest/postgrest@sha256:c7cd7e265a85b05248abf53f4473fcec7e327c282d0bd0cf60f1551996d09fcf",
+    "storage": "supabase/storage-api@sha256:0194c53a03977e8ca0194636a27172158b39e3ae7a5e12da1dca5717086dd849",
+    "gateway": "node@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43"
+  },
+  "retainedTestKeychainItems": [
+    {
+      "service": "com.taskfold.full-schema.session.7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "account": "supabase"
+    },
+    {
+      "service": "com.taskfold.full-schema.backup.7aef7334-a6f2-44ae-89fe-3ff11e826469",
+      "account": "be0b58a5-bcb6-42b9-baff-46bf0244ec2b"
+    }
+  ],
+  "advisors": {
+    "ran": true,
+    "source": "Official CLI on complete owned local schema",
+    "result": [
+      {
+        "name": "extension_in_public",
+        "title": "Extension in Public",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects extensions installed in the `public` schema.",
+        "detail": "Extension `pg_net` is installed in the public schema. Move it to another schema.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+        "metadata": {
+          "name": "pg_net",
+          "type": "extension",
+          "schema": "public"
+        },
+        "cache_key": "extension_in_public_pg_net"
+      }
+    ]
+  },
+  "checkCount": 33,
+  "privateConfigurationRemoved": true,
+  "fixtureRemoved": true,
+  "ownedSimulatorShutdown": true,
+  "bootedThisRun": true,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
+}
