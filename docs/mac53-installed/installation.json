@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-08",
+  "build": "53",
+  "version": "1.2.0",
+  "installed": true,
+  "signatureAndPayloadVerified": true,
+  "freshSafetyCopyVerified": true,
+  "rollbackBuild48Verified": true,
+  "prelaunchCacheFilesByteExact": 9,
+  "postlaunchDataPreserved": true,
+  "postlaunch": {
+    "cacheFiles": 9,
+    "workspaceCacheFiles": 5,
+    "byteExactFiles": 7,
+    "allTasksAndPendingPreserved": true,
+    "allUserTablesPreserved": true,
+    "ignoredViewCacheTables": [
+      "_conversation_views"
+    ],
+    "signedZeroAndDecimalAware": true,
+    "backupIndexScope": "Shape/classification only; changes are reported, not claimed byte-identical or treated as workspace work",
+    "differences": [
+      {
+        "bytesEqual": false,
+        "semanticEqual": false,
+        "workspace": false
+      },
+      {
+        "bytesEqual": false,
+        "semanticEqual": false,
+        "workspace": true,
+        "tasksEqual": true,
+        "pendingEqual": true,
+        "changedTables": [
+          "_conversation_views"
+        ],
+        "userTablesEqual": true,
+        "changedTopLevelKeys": [
+          "tables"
+        ]
+      }
+    ],
+    "privateReportSHA256": "773c7581ddd6ebfe85b0aaabe3eba4738f393250cfe4fb2428908a630c36cd38"
+  },
+  "startup": {
+    "inspected": true,
+    "synced": true,
+    "sharedStorageBannerCleared": true,
+    "sharedGroupLookupSucceeded": true,
+    "desktopWidgetInteractionsRetested": false
+  },
+  "normalFeatureFlagsUnchanged": true,
+  "installedSource": "2f5c2d597ec38366f60f1855030b12ca272df60c",
+  "newerMetadataProofIncluded": false,
+  "normalAppInstancesObserved": 1,
+  "profileExpires": "2026-11-10T18:32:04+00:00",
+  "sharedStorageSigningFollowup": {
+    "observed": "System initially rejected unprefixed group identifier for this signature; later SystemPolicyAppData access and group lookup succeeded. Banner cleared.",
+    "declaredGroup": "group.com.dbakp.taskfold",
+    "team": "3UZ4C73FM2",
+    "fixedByThisUpdate": false,
+    "next": "Research correct macOS group/signing configuration and a safe existing-data compatibility path before changing identifiers; do not assume another permission prompt is the permanent fix."
+  }
+}

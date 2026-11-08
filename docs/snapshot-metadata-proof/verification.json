@@ -33,8 +33,10 @@
   "finalLedgerAccountAtomicWriteGuardsUnchanged": true,
   "schemaHostedOrNormalGateChanges": false,
   "newNormalPackageBuilt": false,
-  "installedMac": "48 intact/closed;53 prior-source package ready; fresh safety copy waiting",
+  "installedMac": "53 open/synced; saved work readback and shared-storage connection verified",
   "mac53ContainsThisMetadataChange": false,
   "phoneInstallation": "deferred",
-  "fullSaveOrUIFPSAccepted": false
+  "fullSaveOrUIFPSAccepted": false,
+  "currentInstallationEvidence": "../mac53-installed/installation.json",
+  "normalMac53ContainsNewerMetadataProof": false
 }

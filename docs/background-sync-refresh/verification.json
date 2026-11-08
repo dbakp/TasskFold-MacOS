@@ -43,10 +43,12 @@
   "nativeUIOrHardwareFPSClaim": false,
   "fullSmoothnessAccepted": false,
   "schemaHostedOrNormalGateChanges": false,
-  "installedMac": "48 closed after verified sync",
+  "installedMac": "53 open/synced; saved work readback and shared-storage connection verified",
   "olderCandidate": "52 superseded as candidate; archive retained until installation handoff",
   "phoneInstallation": "deferred",
   "candidate": "53 optimized, signed, archive/frozen-source verified",
   "normalUpdateBlocker": "Fresh private safety copy is waiting in a protected directory open; CUA reports the Mac locked again. No swap or startup acceptance.",
-  "optimizedDailyPerformanceClaim": false
+  "optimizedDailyPerformanceClaim": false,
+  "currentInstallationEvidence": "../mac53-installed/installation.json",
+  "normalMac53ContainsNewerMetadataProof": false
 }

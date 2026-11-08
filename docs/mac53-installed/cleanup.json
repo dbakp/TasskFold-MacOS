@@ -1,0 +1,15 @@
+{
+  "actions": [
+    {
+      "kind": "duplicateMovedOldAppStage",
+      "bytes": 82968576
+    },
+    {
+      "kind": "supersededUninstalledCandidate52",
+      "bytes": 20890057,
+      "sha256": "00772a47b375c37a2fb04c7d527f2d70e1c37b711fcfc5b12a0a625a3c1ff780"
+    }
+  ],
+  "privateSafetyCopyAndRollback48Preserved": true,
+  "freeAfterBytes": 28640206848
+}

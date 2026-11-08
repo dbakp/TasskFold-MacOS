@@ -1,0 +1,28 @@
+{
+  "platform": "mac",
+  "configuration": "Release",
+  "version": "1.2.0",
+  "build": "53",
+  "sourceRevision": "2f5c2d597ec38366f60f1855030b12ca272df60c",
+  "sourceFingerprint": "64be5be5f2e9f24569d95daf2ec04a3216f38328fe1dcc6535fa4fdbd4f02c94",
+  "signatureVerified": true,
+  "archivePayloadVerified": true,
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "developmentProfileExpires": "2026-11-10T18:32:04+00:00",
+  "sourceWasDirty": false,
+  "published": false,
+  "date": "2026-11-08",
+  "frozenSourceAndToolsExact": true,
+  "archiveDigestExact": true,
+  "normalFlagsMatchInstalled48": true,
+  "installed48UnchangedBeforeSwap": true,
+  "exactRowReuseSignatureMemoAndBackgroundRefreshIncluded": true
+}
