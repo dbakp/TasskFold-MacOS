@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 /// Exact authored-source comparison for caches and reviewed output. Domain-level
 /// Record/JSON equality keeps its existing semantic behavior.
@@ -13,6 +14,38 @@ enum AuthoredValueComparison {
             $0.sharesAuthoredSource(with: $1) || exactJSON(.object($0.fields), .object($1.fields))
         }
     }
+    /// A fresh authenticated read may keep an immutable record only after
+    /// every authored field matches exactly. IDs select candidates, never prove
+    /// equality. Ambiguous/missing IDs stay fresh; incoming order is unchanged.
+    static func reusingExactRows(_ incoming: [Record], from previous: [Record], identityField: String = "id") -> [Record] {
+        guard !incoming.isEmpty, !previous.isEmpty else { return incoming }
+        if sameRecordSources(incoming, previous) { return previous }
+        func identity(_ row: Record) -> Data? {
+            guard case .string(let id) = row[identityField], !id.isEmpty else { return nil }
+            return Data(id.utf8)
+        }
+        var candidates: [Data: Record] = [:], ambiguous = Set<Data>()
+        for row in previous {
+            guard let id = identity(row) else { continue }
+            if candidates.updateValue(row, forKey: id) != nil { ambiguous.insert(id) }
+        }
+        for id in ambiguous { candidates.removeValue(forKey: id) }
+        guard !candidates.isEmpty else { return incoming }
+        var seen = Set<Data>(), repeated = Set<Data>()
+        for row in incoming {
+            if let id = identity(row), !seen.insert(id).inserted { repeated.insert(id) }
+        }
+        var result = incoming, sameOrder = incoming.count == previous.count
+        for (index, row) in incoming.enumerated() {
+            guard let id = identity(row), !repeated.contains(id), let prior = candidates[id],
+                  row.sharesAuthoredSource(with: prior) || exactJSON(.object(row.fields), .object(prior.fields)) else {
+                sameOrder = false; continue
+            }
+            result[index] = prior
+            if sameOrder, !prior.sharesAuthoredSource(with: previous[index]) { sameOrder = false }
+        }
+        return sameOrder ? previous : result
+    }
     /// Cheap exact proof for unchanged record copies, including filtered arrays.
     /// A fresh decoded/reconstructed record intentionally cannot pass this proof;
     /// callers may rebuild their derived value instead of walking large fields.
@@ -20,6 +53,16 @@ enum AuthoredValueComparison {
         guard lhs.count == rhs.count else { return false }
         let identical = lhs.withUnsafeBufferPointer { a in rhs.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }
         return identical || zip(lhs, rhs).allSatisfy { $0.sharesAuthoredSource(with: $1) }
+    }
+    /// Compare contiguous UTF-8 bytes without Unicode normalization. Local
+    /// value copies permit bridged strings to materialize a UTF-8 view safely.
+    private static func sameString(_ lhs: String, _ rhs: String) -> Bool {
+        var a = lhs, b = rhs
+        return a.withUTF8 { x in b.withUTF8 { y in
+            guard x.count == y.count else { return false }
+            if x.isEmpty || x.baseAddress == y.baseAddress { return true }
+            return Darwin.memcmp(x.baseAddress!, y.baseAddress!, x.count) == 0
+        } }
     }
     /// Iterative traversal avoids adding recursive stack depth for opaque fields
     /// in a pinned note. Object ordering is irrelevant; key/value bytes are exact.
@@ -31,7 +74,7 @@ enum AuthoredValueComparison {
             case (.preserved(let x), .preserved(let y)): if !x.sameContent(as: y) { return false }
             case (.bool(let x), .bool(let y)): if x != y { return false }
             case (.number(let x), .number(let y)): if x.bitPattern != y.bitPattern { return false }
-            case (.string(let x), .string(let y)): if !x.utf8.elementsEqual(y.utf8) { return false }
+            case (.string(let x), .string(let y)): if !sameString(x, y) { return false }
             case (.array(let x), .array(let y)):
                 guard x.count == y.count else { return false }
                 // Immutable value copies can keep the same backing buffer. A changed
@@ -41,7 +84,7 @@ enum AuthoredValueComparison {
             case (.object(let x), .object(let y)):
                 guard x.count == y.count else { return false }
                 for (key, value) in x {
-                    guard let index = y.index(forKey: key), key.utf8.elementsEqual(y[index].key.utf8) else { return false }
+                    guard let index = y.index(forKey: key), sameString(key, y[index].key) else { return false }
                     pending.append((value, y[index].value))
                 }
             default: return false
@@ -774,7 +817,9 @@ struct Snapshot: Codable, Equatable, Sendable {
         // A fresh task snapshot without matching history cannot certify the old
         // actor, including an unobserved remote A→B→A assignment cycle.
         if remote["tasks"] != nil && remote[TaskAssignmentProvenance.table] == nil { tables.removeValue(forKey:TaskAssignmentProvenance.table) }
-        tables.merge(remote) { _, new in new }
+        for (name, rows) in remote {
+            tables[name] = AuthoredValueComparison.reusingExactRows(rows, from: tables[name] ?? [], identityField: name == "profiles" ? "user_id" : "id")
+        }
         TaskNodeActivity.discardUnavailable(in: &tables, remote: remote)
         for change in pending { apply(change) }
         ConversationCache.prune(&self)

@@ -1,0 +1,7 @@
+{
+  "Taskfold/Core/Models.swift": "b33a83e092abe0910ea90807b30e7f63f369c07035299e2deec5a269f2468d34",
+  "Taskfold/Core/TeamWorkspace.swift": "44e9f651fcc22e5b40a43081dcd82a860ce48499a5cc28cc234c77e2f476d359",
+  "TaskfoldTests/AuthoredValueComparisonTests.swift": "f26c0a4517abd96b74c56827da64935e25803d6ef8059b3c368f8123d7be3881",
+  "TaskfoldTests/TeamWorkspaceTests.swift": "a775b660c21165fd580d4669174b0139313886735c4c6e3a6726e4e4cabdd69d",
+  "TaskfoldTests/RemoteRowReuseTests.swift": "167d6b5cdc803d7827bb64dcbb14b78fab754b99ea499cabb66cf1843f3a7843"
+}

@@ -1,0 +1,27 @@
+{
+  "fixtureBytes": 3567597,
+  "fixtureSHA256": "aab26e97318163e9e55d4ee8948dc40a552c0d13cea7ff9e18f4de9503bff51b",
+  "passes": [
+    {
+      "exactSavedValues": true,
+      "rowsEncoded": 2004,
+      "rowsReused": 0,
+      "seconds": 0.08676445833407342
+    },
+    {
+      "exactSavedValues": true,
+      "rowsEncoded": 2004,
+      "rowsReused": 0,
+      "seconds": 0.08407070836983621
+    },
+    {
+      "exactSavedValues": true,
+      "rowsEncoded": 2004,
+      "rowsReused": 0,
+      "seconds": 0.08451904146932065
+    }
+  ],
+  "physicalFPSClaim": false,
+  "rows": 2004,
+  "scope": "Merge refreshed tables, prepare widget metadata and encode; transport/decode/disk/UI excluded"
+}
