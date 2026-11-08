@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Older work · cold restoration recovery",
-  "latest": "The actual iPhone app now preserves a real sign-in and encrypted restoration journal across nine launches: lost Restore reply, cold Check without resend, Undo/Redo, then Undo and Finish. Saved originals, exact child values, earlier history and concurrent notes survive. Both app builds pass. Mac 51 includes the new local filter wording and is package-verified; 48 remains installed because desktop control still reports locked. Wider migration and Mac runtime remain open.",
+  "focus": "Responsiveness · background sync",
+  "latest": "Downloaded task, project and history pages now decode away from the interface thread in both apps. Cancellation, exact values, complete pagination and history order are protected by focused checks; each owner passes 208 cases and both app builds pass. Mac 52 is signed and package-verified with this fix. Build 48 remains installed while desktop control reports locked; phone installation stays deferred. Wider browsing, layout and saving pauses remain open.",
   "next": [
-    "Install verified Mac 51 once desktop access is available, preserving a fresh private safety copy and installed-48 rollback, then inspect startup/shared storage and saved work. Routine updates are already authorized. Earlier uninstalled candidate 50 is retired; phone installation remains deferred.",
-    "Continue wider sustained initial navigation/rendering, multiple-project scaling and account/accessibility/physical smoothness. Current metadata-only/equal-decoded grouping, actual iPad planning Cancel and warm/cold drops are accepted in recorded scope; decoding cost remains distinct. Do not repeat unchanged passing scenarios for higher totals.",
+    "Install verified Mac 52 once desktop access is available, preserving a fresh private safety copy and installed-48 rollback, then inspect startup/shared storage and saved work. Routine updates are already authorized. Earlier uninstalled candidate 51 is retired; phone installation remains deferred.",
+    "Continue sustained initial navigation/rendering, multiple-project scaling and account/accessibility/physical smoothness. Workspace/history page decoding now leaves the interface actor in both apps, with cancellation and account/session checks. This does not reduce total decoding cost or solve full snapshot persistence/layout work. Previously accepted planning, refresh and warm/cold drops remain recorded; do not repeat unchanged passing scenarios for higher totals.",
     "Continue wider older-work migration: native keep-editable HTTP and source/format variants, account/task/shared-custodian and cross-device/file/audio/history lifecycle. The actual iPhone production-controller Restore/lost-reply Check/Undo/Redo/Finish sequence now passes real Auth/REST with protected cold recovery; this adds no visual, Mac, TLS or hardware acceptance. Advanced normal gates remain off.",
     "Improve genuinely generated on-device filter quality with a materially different design. The complete local path now handles the original twelve and three new semantic examples; these are not inference. The English-meaning-plus-query candidate passed twelve actual requests but failed two of three held-out production-fallback requests and is rejected. Retain the stronger raw paraphrase oracle and the baseline known3/5; do not repeat rejected prompts/schemas/designs unchanged or count local drafts as inference. Wider native/device/language quality remains open.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
@@ -508,7 +508,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Prepared workspace/project/member reads, note and draft work, project-first navigation, exact task-order reuse, durable row reuse, background widget preparation, stable drag targets and lazy dated cards have recorded scoped proof. Distinct schedules now share operation-owned ISO parser configurations; Today/Upcoming query misses, grouping, drop targets and overdue/planning reads use the same current-day resolver. Ordinary minute ticks reuse dated sections, while day/zone/source/access/session/workspace changes and clock-sensitive or saved filters remain fresh. On the fixed 2,004-task iPad workload with 500 distinct timed schedules, preparation improves from 260–327 ms to 77–87 ms and through-save time from 322–402 ms to 139–156 ms. Measured initial dated reads improve from 313–363 ms to 86–92 ms; final geometry readiness is 26–30 ms. The earlier 1,127 ms warm observation is retained and not assigned a proven cause. Both builds pass; iOS153/Mac143 focused cases pass, two existing opt-in diagnostics skip each, with eight new cases per owner. Three actual iPad cases preserve exact unrelated tasks/queue/cold dates, cancel the exact planning queue and pass eight Store freshness assertions. Wider sustained rendering/navigation, reconstructed refresh and multi-project scaling, Mac/phone/accessibility/account and physical smoothness remain open. Mac 48 is installed; these latest ordinary changes await the next update, and phone installation stays deferred. Ordinary dated groups now keep a task/project/access presentation revision across unrelated preference updates and authored-equal decoded refreshes. Saved and explicit filters retain full snapshot fences, and deferred edits stay conservative. In the same large iPad workspace, twelve grouping rebuilds become zero and grouping work drops from 985 ms to 0.75 ms; complete encoding/decoding remains about 531 ms per decoded sample. Final refresh/cold-value, real warm/cold drop and twelve freshness assertions pass; each owner passes 145 Core cases (two existing opt-in skips) and both SDK builds pass. Baseline whole-test failures and key-order equivalence are retained. Wider sustained navigation/rendering, multi-project, Mac/phone/account/accessibility/physical acceptance remains; latest changes are not installed. Normal Mac 50 is now a signed Release/archive/frozen-source verified candidate containing this fix; 48 remains installed while desktop access is unavailable. This package is not new runtime or distribution acceptance.",
+              "detail": "Prepared workspace/project/member reads, note and draft work, project-first navigation, exact task-order reuse, durable row reuse, background widget preparation, stable drag targets and lazy dated cards have recorded scoped proof. Distinct schedules now share operation-owned ISO parser configurations; Today/Upcoming query misses, grouping, drop targets and overdue/planning reads use the same current-day resolver. Ordinary minute ticks reuse dated sections, while day/zone/source/access/session/workspace changes and clock-sensitive or saved filters remain fresh. On the fixed 2,004-task iPad workload with 500 distinct timed schedules, preparation improves from 260–327 ms to 77–87 ms and through-save time from 322–402 ms to 139–156 ms. Measured initial dated reads improve from 313–363 ms to 86–92 ms; final geometry readiness is 26–30 ms. The earlier 1,127 ms warm observation is retained and not assigned a proven cause. Both builds pass; iOS153/Mac143 focused cases pass, two existing opt-in diagnostics skip each, with eight new cases per owner. Three actual iPad cases preserve exact unrelated tasks/queue/cold dates, cancel the exact planning queue and pass eight Store freshness assertions. Wider sustained rendering/navigation, reconstructed refresh and multi-project scaling, Mac/phone/accessibility/account and physical smoothness remain open. Mac 48 is installed; these latest ordinary changes await the next update, and phone installation stays deferred. Ordinary dated groups now keep a task/project/access presentation revision across unrelated preference updates and authored-equal decoded refreshes. Saved and explicit filters retain full snapshot fences, and deferred edits stay conservative. In the same large iPad workspace, twelve grouping rebuilds become zero and grouping work drops from 985 ms to 0.75 ms; complete encoding/decoding remains about 531 ms per decoded sample. Final refresh/cold-value, real warm/cold drop and twelve freshness assertions pass; each owner passes 145 Core cases (two existing opt-in skips) and both SDK builds pass. Baseline whole-test failures and key-order equivalence are retained. Wider sustained navigation/rendering, multi-project, Mac/phone/account/accessibility/physical acceptance remains; latest changes are not installed. Normal Mac 50 is now a signed Release/archive/frozen-source verified candidate containing this fix; 48 remains installed while desktop access is unavailable. This package is not new runtime or distribution acceptance. Downloaded workspace/history pages now use one awaited background decoder per page. The same preserving decoder, row/duplicate/cursor limits and post-await account/session fences remain; cancellation cannot publish a finished page. Six new tests cover executor placement, held-decode cancellation, malformed data, exact unknown values, ordered 502-row pagination and invalid history order. Each owner passes 208 focused checks, both app builds pass, and Mac 52 is signed/archive/frozen-source verified. No new native-screen, speech or physical smoothness acceptance is claimed. Total decoding cost, full snapshot persistence, sustained rendering/navigation and multiple-project scaling remain open. Mac 48 remains installed pending desktop access; uninstalled 51 is retired after verified 52.",
               "steps": [
                 {
                   "state": "done",
@@ -846,9 +846,13 @@
             "dated-metadata-refresh/comparison.json",
             "ipad-notes-and-mac50/README.md",
             "ipad-notes-and-mac50/verification.json",
-            "ipad-notes-and-mac50/mac-package.json"
+            "ipad-notes-and-mac50/mac-package.json",
+            "background-sync-decoding/verification.json",
+            "background-sync-decoding/core-tests.json",
+            "background-sync-decoding/source-audit.json",
+            "background-sync-decoding/mac52-package.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-voice",
@@ -957,7 +961,7 @@
             "filter-description-paraphrases/verification.json",
             "filter-description-paraphrases/rejected-model/held-out-failure.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-reminders",
@@ -2140,6 +2144,10 @@
     "background-note-rows/ipad.json": "679b12cd34549b8f92287990ff00eebc3391ca7eea7ab9accd0f3209637eea90",
     "background-note-rows/iphone.json": "d3becaed66b33e45a9a18f1c2373c396a6982c51830716c22b824c95c644f794",
     "background-note-rows/verification.json": "f4e2337770a97f8b35711d9149d76629608b219e8a57ec82b2ae9691172d5cbf",
+    "background-sync-decoding/core-tests.json": "e91c1a7197eaae2de9997fa49b16e1b3e5ea4c6aa914dcd80f05681198dca385",
+    "background-sync-decoding/mac52-package.json": "090f740a91cbe29161e6c2ae880bc0844ceb27ae5646d4b08a8fc061e1f28882",
+    "background-sync-decoding/source-audit.json": "202cdc4378bef3228a041c844359421bc8523b373ad1ac196e61b97bed087b41",
+    "background-sync-decoding/verification.json": "8fe312085ea8d1b93c76223723bd3d0b0c5034c9bc20517fc611ac9ab7311e72",
     "calendar-archive-reading/README.md": "0fb3ae304da0eb3877e1fdfe54e20fabdd5b084049a42dcb2f393d3b1ddc92cf",
     "calendar-archive-reading/core-model.json": "0f4e86d537d6c5da4e2754d0c3d9360f7bfc5ddd89fe50e41eefedb95e9af0bf",
     "calendar-archive-reading/final-cleanup.json": "49c95e8efc6e216a00f3a8c2aabf2ea8679e81b3d47a24b02d07b639da710193",
