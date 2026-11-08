@@ -1,0 +1,131 @@
+{
+  "reviewed": "2026-11-08",
+  "appChange": "Chronology-neutral restored-version explanation; no Core or product SQL change",
+  "nativePhone": {
+    "owner": "TaskFold-iOS",
+    "scope": "Isolated dark normal-text iPhone Simulator; actual saved-original/restoration components, not prebound repair editor. Genuine full owned PostgreSQL actor/session channel, not native HTTP Auth.",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "controllerExit": 0,
+    "testExit": 0,
+    "fixtureExit": 0,
+    "fixtureRemoved": true,
+    "final": {
+      "phase": "adopted",
+      "revision": 2,
+      "source": "restore_newer",
+      "restoreRequests": 1,
+      "newRepairs": 1,
+      "priorOriginalsPreserved": true,
+      "priorHistoryPreserved": true
+    },
+    "checks": [
+      "one reviewed Restore confirmed before explicit editable recovery",
+      "selected previous editable version and recorded history survive one save; prior versions remain retained and the restoration cycle ends",
+      "cold pending-repair link checks the exact lost response; cold ended-cycle card stays closed"
+    ]
+  },
+  "sdkBuilds": {
+    "ios": "signed isolated Simulator build-for-testing passed",
+    "mac": "unsigned isolated Debug app build passed; native new Mac journey unaccepted"
+  },
+  "ordinaryCoreSuite": "Not rerun for a view-string and test-fixture/UI-harness change; prior Core scope remains separate.",
+  "normalMacInstalledBuild": "48",
+  "normalMacPreparedBuild": "49",
+  "normalAdvancedGatesChanged": false,
+  "hostedChanges": false,
+  "phoneInstallationDeferred": true,
+  "remaining": [
+    "Other format/source entry variants and wider migration",
+    "Mac/iPad/large text/speech/native HTTP Auth",
+    "Account/task/shared-custodian/files/audio/discussion/history/cross-device/larger-library acceptance",
+    "Deferred older-client and distribution rollout gates"
+  ],
+  "sourceAudit": {
+    "TasskFold-MacOS": {
+      "appSwiftFiles": 185,
+      "allNormalizedMatch": true,
+      "normalizations": {
+        "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+        "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+        "com.taskfold.session-persistence": "com.taskfold.workflowteststeameditbridge.session-persistence"
+      },
+      "uiTestMatches": true,
+      "changedSourceSHA256": {
+        "Taskfold/Views/ChildTaskRepairView.swift": "b71d2e52f0a492a0ba700e8476f70ebea7b98072d13f17c4b77b630af364af63",
+        "Scripts/Database/run-child-restore-native.mjs": "617f968d45969578fab37b362d50f5568f6b36f97541e4ee4ab3deb289222ad4"
+      }
+    },
+    "TaskFold-iOS": {
+      "appSwiftFiles": 178,
+      "allNormalizedMatch": true,
+      "normalizations": {
+        "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+        "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+        "com.taskfold.ios.session": "com.taskfold.workflowteststeameditbridge.session"
+      },
+      "uiTestMatches": true,
+      "changedSourceSHA256": {
+        "Taskfold/Views/ChildTaskRepairView.swift": "b71d2e52f0a492a0ba700e8476f70ebea7b98072d13f17c4b77b630af364af63",
+        "Scripts/Database/run-child-restore-native.mjs": "617f968d45969578fab37b362d50f5568f6b36f97541e4ee4ab3deb289222ad4"
+      }
+    }
+  },
+  "storageCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 32283176960,
+    "actions": [
+      {
+        "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Index.noindex",
+        "kind": "completedCompilerCache",
+        "allocatedBytes": 22925312
+      },
+      {
+        "path": "/private/tmp/taskfold-workflow-native-mac-build/Index.noindex",
+        "kind": "completedCompilerCache",
+        "allocatedBytes": 68079616
+      }
+    ],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 800415744,
+        "projectedAllocatedBytes": 800415744,
+        "within768MiB": true
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 764936192,
+        "projectedAllocatedBytes": 764936192,
+        "within768MiB": true
+      }
+    ],
+    "freeAfterBytes": 32365035520,
+    "actualFreeChangeBytes": 81858560
+  },
+  "owner": "TasskFold-MacOS",
+  "ownCompleteSchemaFixture": {
+    "passed": true,
+    "fixtureRemoved": true,
+    "final": {
+      "phase": "adopted",
+      "revision": 2,
+      "source": "restore_newer",
+      "restoreRequests": 1,
+      "newRepairs": 1,
+      "priorOriginalsPreserved": true,
+      "priorHistoryPreserved": true
+    },
+    "checks": [
+      "restore_newer genuine decision and exact status",
+      "selected previous editable version and recorded history survive one save; prior versions remain retained and the restoration cycle ends",
+      "real complete-schema preview/save/check, no native UI claim"
+    ],
+    "scope": "Actual own complete schema review/preview/save/status. HTTP Auth and native controls separate. Preflight minimum runtime/report-only wording was refined after these smoke runs; production behavior and decision assertions are unchanged.",
+    "migrations": 226
+  }
+}

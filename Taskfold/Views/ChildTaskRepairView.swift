@@ -71,7 +71,7 @@ struct ChildTaskRepairView: View {
                         else if let review {
                             Section("Before you repair") {
                                 Label("Your original stays safe", systemImage: "doc.badge.clock").font(.headline)
-                                Text(adoptingOlder ? "Keep this older structure editable after reviewing its format and task histories. Saving retains the complete newer version first, then ends this restoration’s Undo/Redo cycle." : "Review each change below. Saving keeps a complete original copy before changing the task.").fixedSize(horizontal: false, vertical: true)
+                                Text(adoptingOlder ? "Keep this restored structure editable after reviewing its format and task histories. Saving retains the complete version held before restoration first, then ends this restoration’s Undo/Redo cycle." : "Review each change below. Saving keeps a complete original copy before changing the task.").fixedSize(horizontal: false, vertical: true)
                                 Button { if store.childTaskAdoptionReviewIsCurrent(review), let source = review.originalSource { export(source) } } label: { ChildRepairActionLabel(title: "Export original content", symbol: "square.and.arrow.up") }.disabled(review.originalSource == nil || working).accessibilityIdentifier("childRepairExportBefore")
                             }
                             if adoptingOlder || review.metadata["projection_revision"] != .null || ["projection_mismatch", "authority_mismatch"].contains(review.metadata["issue"]?.text ?? "") {

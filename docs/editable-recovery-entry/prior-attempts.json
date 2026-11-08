@@ -1,0 +1,45 @@
+{
+  "native": [
+    {
+      "nativeTestExit": 65,
+      "fixtureExit": 1,
+      "fixtureRemoved": true,
+      "reason": "Test queried lazy offscreen mapping rows without revealing them after actual entry and comparison. No product failure accepted.",
+      "traceRequests": 12,
+      "repairSends": 0,
+      "cyclePhases": [
+        "adopted",
+        "restored"
+      ]
+    },
+    {
+      "nativeTestExit": 65,
+      "fixtureExit": 1,
+      "fixtureRemoved": true,
+      "reason": "After successful Check the current task review shows childRepairFeedback: Repair saved. Your original is kept. The test incorrectly required a pending-row status element that has departed.",
+      "traceRequests": 24,
+      "repairSends": 1,
+      "lostRepairReply": true,
+      "cyclePhases": [
+        "adopted",
+        "adopted"
+      ]
+    }
+  ],
+  "environment": [
+    {
+      "runtime": "Node20.19.0",
+      "exit": 13,
+      "terminalReportWritten": false,
+      "ownedContainersCleaned": true
+    },
+    {
+      "runtime": "Node20.19.0 plus temporary hold",
+      "exit": 137,
+      "intentionallyStopped": true,
+      "ownedContainersCleaned": true,
+      "successClaimed": false
+    }
+  ],
+  "acceptedRuntime": "Node24.22.1; existing installation, no new runtime installed"
+}
