@@ -45,6 +45,9 @@ export function createMappingSQLChannel(pg,{session,nonce,loseFirstSave=false,be
    case '/rest/v1/rpc/taskfold_review_child_adoption':
     if(Object.keys(body).sort().join(',')!=='_generation,_id'||body._id!==identity.root||body._generation!==identity.generation)throw new Error('Invalid root');
     expression=`public.taskfold_review_child_adoption(${lit(body._id)},${lit(body._generation)})`;break;
+   case '/rest/v1/rpc/taskfold_child_restore_status':
+    if(Object.keys(body).sort().join(',')!=='_actor,_body,_restore'||body._actor!==identity.account||!/^[a-f0-9-]{36}$/.test(body._restore??''))throw new Error('Invalid live restoration reference');
+    expression=`public.taskfold_child_restore_status(${json(body._body)},${lit(body._actor)},${lit(body._restore)})`;break;
    case '/rest/v1/rpc/taskfold_review_restored_child_copies':
     if(Object.keys(body).sort().join(',')!=='_actor,_body,_restore'||body._actor!==identity.account||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(body._restore??''))throw new Error('Invalid restored comparison');
     expression=`public.taskfold_review_restored_child_copies(${json(body._body)},${lit(body._actor)},${lit(body._restore)})`;break;

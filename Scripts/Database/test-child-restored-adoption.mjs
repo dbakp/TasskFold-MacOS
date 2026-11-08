@@ -33,8 +33,9 @@ try{
   ok('earn completion '+label,await api('/rpc/taskfold_complete_child_task',{_body:{protocol:1,account,request_id:randomUUID(),task_id:id,task_generation:root.task_generation,project_id:project,node_key:note,incarnation:row.incarnation,revision:row.revision,action:'complete',baseline}}));
   await beforeRestore({id,root,first});
   const rv=ok('review restore '+label,await api('/rpc/taskfold_review_child_restore',{_mode:'restore',_repair:first.request_id,_archive:first.archive_id,_restore:null}));
-  const restored=ok('restore '+label,await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:{...Object.fromEntries(restoreKeys.map(k=>[k,rv[k]])),request_id:randomUUID()}}));
-  return {id,note,root,first,restored};
+  const restoreCommand={...Object.fromEntries(restoreKeys.map(k=>[k,rv[k]])),request_id:randomUUID()};
+  const restored=ok('restore '+label,await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:restoreCommand}));
+  return {id,note,root,first,restored,restoreCommand};
  }
  async function prepare(f,token=authorization,actor=account){
   const readWire=await api('/rpc/taskfold_review_child_adoption',{_id:f.id,_generation:f.root.task_generation},token),read=ok('review restored source',readWire);
@@ -44,9 +45,25 @@ try{
   const body={...identity(read),changes:[{kind:'choose_copy',path:[],source:'task',copy_digest:held.copies.copy_digest,mapping,format_changes:[{kind:'wrap_item',path:[0,0],reference:'kept-note',title:'Kept older instruction'}],restoration:held.restoration}]};
   return {readWire,heldWire,body};
  }
+ const statusIdentity=f=>Object.fromEntries(['protocol','account','task_id','task_generation','project_id','workspace_id','repair_request_id','archive_id','archive_digest'].map(k=>[k,f.restoreCommand[k]]));
+ const live=(f,token=authorization,caller=account,actor=account,extra={})=>api('/rpc/taskfold_child_restore_status',{_body:{...statusIdentity(f),account:caller,...extra},_actor:actor,_restore:f.restored.restoration_id},token);
  const preview=(b,token=authorization)=>api('/rpc/taskfold_preview_child_repair',{_body:b},token);
  const send=(b,op='send',token=authorization)=>api('/rpc/taskfold_repair_children',{_operation:op,_body:b},token);
  const f=await fixture('Keep older editable version'),p=await prepare(f),before=await state();
+ const activeStatusWire=await live(f),activeStatus=ok('live restored status with adoption paused',activeStatusWire);
+ check('active status is contentless and current',activeStatus.phase==='restored'&&activeStatus.revision===1&&activeStatus.structure_current===true&&activeStatus.newer_retained===false&&Buffer.byteLength(activeStatusWire.text)<2048&&Object.keys(activeStatus).length===15);
+ check('status does not mutate any saved work',await state()===before);
+ ok('unrelated account cannot read known restoration',await live(f,other.access_token,other.user.id),403);
+ ok('wrong restoration actor cannot be substituted',await live(f,authorization,account,other.user.id),403);
+ ok('extra status input refused',await live(f,authorization,account,account,{unexpected:true}),400);
+ ok('wrong task generation refused by live status',await live(f,authorization,account,account,{task_generation:randomUUID()}),403);
+ for(const [table,operation] of [['tasks','select'],['task_node_activity','select']]){
+  await runtime.raw(`create policy live_status_deny on public.${table} as restrictive for ${operation} to authenticated using(false)`);
+  ok('live status respects caller '+table+' RLS',await live(f),403);
+  await runtime.raw(`drop policy live_status_deny on public.${table}`);
+ }
+ check('status refusals preserve every source and receipt',await state()===before);
+ report.liveStatusContract={command:f.restoreCommand,receipt:f.restored,active:activeStatus};
  const paused=ok('bound mapping preview while adoption paused',await preview(p.body));check('paused adoption not offered',!paused.mutation_available&&paused.custody_blocker===null);
  ok('paused new adoption refused',await send({...p.body,request_id:randomUUID(),repair_digest:paused.repair_digest}),503);check('paused refusal exact',await state()===before);
  await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_adoption_enabled=true');
@@ -97,6 +114,11 @@ try{
  const resultWire=await send(cmd),result=ok('atomic older-version adoption',resultWire);check('one applied decision',result.state==='applied'&&result.request_id===cmd.request_id&&!result.replayed);
  check('quota credits exactly the moved inverse',await runtime.raw(`select coalesce((select sum(bytes) from taskfold_private.child_task_repair_originals where actor_id=${lit(account)}),0)+coalesce((select sum(bytes) from taskfold_private.child_repair_restore_payloads where actor_id=${lit(account)}),0)=63999992`)==='t');await clearBudget();
  check('old restoration ended as adopted',await runtime.raw(`select phase='adopted' and revision=2 and adopted_actor_id=${lit(account)} and adopted_request_id=${lit(cmd.request_id)} and adopted_archive_id=${lit(result.archive_id)} from taskfold_private.child_repair_restorations where restore_id=${lit(f.restored.restoration_id)}`)==='t');
+ const adoptedStatus=ok('live status reports adoption after old receipt',await live(f));
+ check('live adopted state revokes old reversal',adoptedStatus.phase==='adopted'&&adoptedStatus.revision===2&&!adoptedStatus.structure_current&&adoptedStatus.newer_retained);
+ const oldReceipt=ok('old restoration receipt remains immutable',await api('/rpc/taskfold_restore_child_original',{_operation:'check',_body:f.restoreCommand}));
+ check('receipt is a past event not current state',oldReceipt.phase==='restored'&&oldReceipt.next_revision===1);
+ report.liveStatusContract.adopted=adoptedStatus;
  check('old inverse removed only after transfer',await runtime.raw(`select not exists(select 1 from taskfold_private.child_repair_restore_payloads where restore_id=${lit(f.restored.restoration_id)})`)==='t');
  check('new immutable archive retains entire inverse',await runtime.raw(`select (original->'retained_restoration'->'payload')::text=${lit(oldPayload)} and (original->'root')::text=${lit(originalRoot)} and (original->'retained_restoration'->'payload'->'before'->'tree'->0->'future'->'exact')::text='9007199254740993' from taskfold_private.child_task_repair_originals where id=${lit(result.archive_id)}`)==='t');
  check('prior history kept byte exact',await runtime.raw(`select not exists(select 1 from jsonb_array_elements(${lit(history)}::jsonb) e where not exists(select 1 from public.task_node_activity h where h.id=(e->>'id')::uuid and to_jsonb(h)::text=e::text))`)==='t');
@@ -127,6 +149,11 @@ try{
  const demoted=await state();ok('demoted admin cannot adopt prepared version',await send(sc),403);check('demotion refusal retains all files and work',await state()===demoted);
  await runtime.raw(`update taskfold_private.team_members set role='admin' where team_id=${lit(team)} and user_id=${lit(account)}`);
  const sr=ok('shared current admin adopts',await send(sc));
+ const crossStatus=ok('current second custodian reads live status',await live(sf,other.access_token,other.user.id));check('second custodian sees adopted phase without contents',crossStatus.phase==='adopted'&&crossStatus.newer_retained);
+ await runtime.raw(`update taskfold_private.team_members set role='member' where team_id=${lit(team)} and user_id=${lit(other.user.id)}`);ok('workspace owner remains authorized despite membership role label',await live(sf,other.access_token,other.user.id));
+ const reader=ok('current status administrator signup',await signup());await runtime.raw(`insert into taskfold_private.team_members(team_id,user_id,role) values(${lit(team)},${lit(reader.user.id)},'admin');insert into taskfold_private.team_project_grants(project_id,team_id,user_id,role) values(${lit(project)},${lit(team)},${lit(reader.user.id)},'editor')`);
+ ok('another current administrator reads retained status',await live(sf,reader.access_token,reader.user.id));await runtime.raw(`update taskfold_private.team_members set role='member' where team_id=${lit(team)} and user_id=${lit(reader.user.id)}`);ok('demoted administrator cannot read another actor status',await live(sf,reader.access_token,reader.user.id),403);
+ await runtime.raw(`update taskfold_private.team_members set role='admin' where team_id=${lit(team)} and user_id=${lit(other.user.id)}`);
  check('file protection transferred to independent archive',await runtime.raw(`select exists(select 1 from taskfold_private.child_adoption_archive_files where archive_id=${lit(sr.archive_id)} and object_id=${lit(object)}) and not exists(select 1 from taskfold_private.child_repair_restore_files where restore_id=${lit(sf.restored.restoration_id)})`)==='t');
  for(const [name,sql] of [['file binding delete',`delete from taskfold_private.team_content_files where object_id=${lit(object)}`],['file identity change',`update storage.objects set name='changed' where id=${lit(object)}`]]){
   const protectedState=await state();let rejected=false;try{await runtime.raw(sql)}catch(e){rejected=e.code==='PT409'||e.code==='23503'}check(name+' protected after adoption',rejected);check(name+' leaves retained work exact',await state()===protectedState);
@@ -150,6 +177,7 @@ try{
  const removed=ok('explicitly remove only adopted original',await api('/rpc/taskfold_child_repair_original_cleanup',{_operation:'remove',...cleanupBody}));
  check('retention removal releases archive file pins',removed.state==='unavailable'&&await runtime.raw(`select not exists(select 1 from taskfold_private.child_adoption_archive_files where archive_id=${lit(sr.archive_id)})`)==='t');
  check('retention removal keeps live task exact',await runtime.raw(`select to_jsonb(t)::text from public.tasks t where id=${lit(sf.id)}`)===liveRoot);
+ check('live status does not claim a removed newer archive remains',!ok('status after archive retention removal',await live(sf)).newer_retained);
  const retainedDownload=await storage('/object/authenticated/task-attachments/'+fileName);check('retention removal keeps actual current file bytes',retainedDownload.status===200&&Buffer.from(await retainedDownload.arrayBuffer()).equals(fileBytes));
  const cross=await fixture('Other administrator adoption',project,other.user.id),cp=await prepare(cross,other.access_token),cv=ok('other custodian maps prior restoration',await preview(cp.body,other.access_token));
  const cr=ok('other custodian adopts prior actors version',await send({...cp.body,request_id:randomUUID(),repair_digest:cv.repair_digest},'send',other.access_token));
@@ -167,5 +195,24 @@ try{
  const ordinaryPreview=ok('ordinary mapping unaffected by adoption pause',await preview(ordinaryBody));check('ordinary mapping still offered',ordinaryPreview.mutation_available);
  const ordinarySaved=ok('ordinary mapping saves without restoration binding',await send({...ordinaryBody,request_id:randomUUID(),repair_digest:ordinaryPreview.repair_digest}));
  check('ordinary original retains its existing schema',await runtime.raw(`select not(original ? 'retained_restoration') and jsonb_typeof(original->'authority')='object' from taskfold_private.child_task_repair_originals where id=${lit(ordinarySaved.archive_id)}`)==='t');
+ // Live phase is independent from immutable events, rollout flags and root notes.
+ await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_finish_enabled=true');
+ const cycle=await fixture('Live recovery lifecycle');report.liveStatusContract.lifecycle=[];report.liveStatusContract.lifecycleCommand=cycle.restoreCommand;report.liveStatusContract.lifecycleReceipt=cycle.restored;
+ for(const mode of ['undo','redo','undo']){
+  const reviewed=ok('live cycle review '+mode,await api('/rpc/taskfold_review_child_restore',{_mode:mode,_repair:cycle.first.request_id,_archive:cycle.first.archive_id,_restore:cycle.restored.restoration_id}));
+  const command={...Object.fromEntries(restoreKeys.map(k=>[k,reviewed[k]])),request_id:randomUUID()};
+  ok('live cycle apply '+mode,await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:command}));
+  const status=ok('fresh cycle state '+mode,await live(cycle));check('cycle state matches '+mode+' revision '+status.revision,status.phase===(mode==='undo'?'undone':'restored')&&status.structure_current&&!status.newer_retained);report.liveStatusContract.lifecycle.push(status);
+ }
+ ok('root note update after Undo',await runtime.request('rest','/tasks?id=eq.'+cycle.id,{method:'PATCH',authorization,body:{description:'Current root notes after Undo'}}),204);
+ check('root notes do not falsely revoke structural reversal',ok('status after root notes',await live(cycle)).structure_current);
+ const editable=JSON.parse(await runtime.raw(`select to_jsonb(r)::text from taskfold_private.child_task_records r where task_id=${lit(cycle.id)} and node_key=${lit(cycle.note)}`));
+ ok('normal field edit after Undo',await api('/rpc/taskfold_edit_child_task',{_body:{protocol:1,account,request_id:randomUUID(),task_id:cycle.id,task_generation:cycle.root.task_generation,project_id:null,node_key:cycle.note,incarnation:editable.incarnation,revision:editable.revision,changes:{description:'New work after Undo'}}}));
+ const changedStatus=ok('status notices changed editable work',await live(cycle));check('changed work keeps undone phase but revokes stale Redo',changedStatus.phase==='undone'&&!changedStatus.structure_current);report.liveStatusContract.lifecycle.push(changedStatus);
+ const finish=ok('review Finish after new work',await api('/rpc/taskfold_review_child_restore',{_mode:'finish',_repair:cycle.first.request_id,_archive:cycle.first.archive_id,_restore:cycle.restored.restoration_id}));
+ ok('Finish keeps current editable work',await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:{...Object.fromEntries(restoreKeys.map(k=>[k,finish[k]])),request_id:randomUUID()}}));
+ await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_enabled=false,archive_restore_reversals_enabled=false,archive_restore_finish_enabled=false,archive_restore_adoption_enabled=false');
+ const finished=ok('live status remains readable with mutation gates off',await live(cycle));check('live finished state has no reversal or retained newer adoption archive',finished.phase==='finished'&&finished.revision===5&&!finished.structure_current&&!finished.newer_retained);report.liveStatusContract.lifecycle.push(finished);
+
  report.advisors=await runtime.advisors();report.passed=true;
 }catch(e){report.failure={message:e.message,migration:e.migration,startupCleanup:e.cleanedUp,stack:e.stack?.split('\n').slice(0,4)};process.exitCode=1;}finally{if(runtime)report.cleanup=await runtime.close();await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:report.passed??false,checks:Object.keys(report.checks).length,lastFailure:report.lastFailure,failure:report.failure,cleanup:report.cleanup}));}

@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "nativeUIObserved": true,
+  "scope": "Genuine local complete schema; reserved native SQL role/session channel, not native HTTP Auth",
+  "checks": [
+    "one lost Restore confirmed before a separate external adoption",
+    "live card refresh and cold return show external adoption while the original event remains restored",
+    "ended cycle offers no Undo, Redo, Finish or keep-older action",
+    "one external adoption retains newer original and current root notes/priority"
+  ],
+  "final": {
+    "phase": "adopted",
+    "revision": 2,
+    "immutableEvent": "restored",
+    "liveReads": 3
+  },
+  "fixtureRemoved": true
+}

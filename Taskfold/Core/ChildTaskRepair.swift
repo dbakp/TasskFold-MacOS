@@ -1599,3 +1599,52 @@ extension Backend: ChildTaskRestoreService {}
         _ = await work { try await journal.discard(command, lease: lease); try check(); try await update(); message = "Stopped request removed. Your tasks are unchanged." }
     }
 }
+
+/// A fresh contentless read, separate from immutable Restore/Undo receipts.
+/// This value is never persisted as a receipt or used to authorize a mutation.
+struct ChildTaskRestoreStatus: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    enum Phase: String, Sendable { case restored, undone, finished, adopted, purged }
+    static let maximumBytes = 4096
+    let scope: ChildTaskFieldClientScope
+    let snapshot: UUID
+    let phase: Phase
+    let revision: Int
+    let structureCurrent: Bool
+    let newerRetained: Bool
+    var description: String { "Private current restoration state" }
+    var debugDescription: String { description }
+    var reversalMode: ChildTaskRestoreMode? { structureCurrent ? (phase == .restored ? .undo : phase == .undone ? .redo : nil) : nil }
+    var canReviewFinish: Bool { phase == .undone }
+    var canReviewAdoption: Bool { phase == .restored }
+    var message: String {
+        switch phase {
+        case .restored: return structureCurrent ? "Older structure restored. Review Undo to return to the editable version." : "Older structure restored. Reversal needs a fresh storage review; your saved versions are kept."
+        case .undone: return structureCurrent ? "Restoration undone. The editable version is current." : "Restoration undone. Redo is no longer current; your editable work is kept."
+        case .finished: return "Recovery finished. Current subtasks kept; Redo is no longer available."
+        case .adopted: return "Older version kept editable. This restoration’s Undo/Redo cycle has ended." + (newerRetained ? " The newer version is retained in Saved originals." : "")
+        case .purged: return "This restoration is no longer available. Check the current task before continuing."
+        }
+    }
+    func isCurrent(scope: ChildTaskFieldClientScope?, snapshot: UUID) -> Bool { self.scope == scope && self.snapshot == snapshot }
+    static func body(_ entry: ChildTaskRestoreState.Entry, scope: ChildTaskFieldClientScope) throws -> [String: JSON] {
+        guard entry.command.account == scope.account, entry.command.origin == scope.origin,
+              entry.phase == .applied, let result = entry.result, result.applied,
+              let restoration = result.raw["restoration_id"]?.text,
+              UUID(uuidString: restoration)?.uuidString.lowercased() == restoration else { throw ChildTaskRestoreCommand.invalid }
+        _ = try entry.command.result(result.raw)
+        return ["_body": .object(entry.command.identity), "_actor": .string(entry.command.account), "_restore": .string(restoration)]
+    }
+    init(data: Data, entry: ChildTaskRestoreState.Entry, scope: ChildTaskFieldClientScope, snapshot: UUID) throws {
+        let request = try Self.body(entry, scope: scope)
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes, integerPaths: [["protocol"], ["revision"]], nullableIntegerPaths: [])
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        guard Set(raw.keys) == ChildTaskRestoreCommand.identityKeys.union(["actor_id", "restore_id", "phase", "revision", "structure_current", "newer_retained"]),
+              ChildTaskRestoreCommand.identityKeys.allSatisfy({ ChildTaskStructureCommand.exact(raw[$0], entry.command.identity[$0]) }),
+              raw["actor_id"] == request["_actor"], raw["restore_id"] == request["_restore"],
+              let name = raw["phase"]?.text, let phase = Phase(rawValue: name),
+              case .bool(let current)? = raw["structure_current"], case .bool(let newer)? = raw["newer_retained"] else { throw ChildTaskRestoreCommand.invalid }
+        let revision = try ChildTaskAdoptionReview.count(raw["revision"], maximum: 9_007_199_254_740_991)
+        guard revision > 0, !current || phase == .restored || phase == .undone, !newer || phase == .adopted else { throw ChildTaskRestoreCommand.invalid }
+        self.scope = scope; self.snapshot = snapshot; self.phase = phase; self.revision = revision; structureCurrent = current; newerRetained = newer
+    }
+}

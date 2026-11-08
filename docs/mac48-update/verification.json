@@ -17,11 +17,43 @@
   "normalAdvancedGatesRemainOff": true,
   "hostedSchemaUnchanged": true,
   "phoneInstallationDeferred": true,
-  "postlaunchReadback": null,
+  "postlaunchReadback": {
+    "cacheFiles": 9,
+    "workspaceCacheFiles": 5,
+    "byteExactFiles": 7,
+    "allTasksAndPendingPreserved": true,
+    "allUserTablesPreserved": true,
+    "ignoredViewCacheTables": [
+      "_conversation_views"
+    ],
+    "signedZeroAndDecimalAware": true,
+    "backupIndexScope": "Shape/classification only; changes are reported, not claimed byte-identical or treated as workspace work",
+    "differences": [
+      {
+        "bytesEqual": false,
+        "semanticEqual": false,
+        "workspace": false
+      },
+      {
+        "bytesEqual": false,
+        "semanticEqual": false,
+        "workspace": true,
+        "tasksEqual": true,
+        "pendingEqual": true,
+        "changedTables": [
+          "_conversation_views"
+        ],
+        "userTablesEqual": true,
+        "changedTopLevelKeys": [
+          "tables"
+        ]
+      }
+    ],
+    "privateReportSHA256": "773c7581ddd6ebfe85b0aaabe3eba4738f393250cfe4fb2428908a630c36cd38"
+  },
   "sharedStorageReadinessVerified": false,
   "pending": [
-    "macOS app-data access prompt confirmed in TCC log; manual Allow requested once",
-    "postlaunch private workspace readback is waiting; existing process preserved"
+    "Shared-storage final UI readiness could not be inspected: computer control still reports the Mac locked after the user reported unlocking. No duplicate permission request made."
   ],
   "scope": "Normal daily-use update. Atomic keep-older service/client source is packaged, but advanced normal flags and hosted schema remain unchanged. Native adoption/status/newer-inverse controls remain unfinished."
 }
