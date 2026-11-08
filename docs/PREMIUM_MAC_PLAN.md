@@ -11653,3 +11653,6 @@ On-device filter follow-up (8 November): the synthetic pattern probe’s own pro
 
 
 Offline long-task filters (8 November): explicit lower estimate bounds now use the existing saved-query vocabulary and ordinary reviewed preview. Missing/invalid estimates are excluded from lower bounds, one-minute/seven-day endpoints and Boolean alternatives/exclusions have actual-match checks. No new predicate, schema, model, gate or installed update is introduced. The separate structural model enum fails all15 parser/target/date checks and is rejected; native note keyboard acceptance still awaits desktop access. See `local-long-task-filters/` and `filter-token-guidance/rejected-structural-sequence/`.
+
+
+Native iPhone long-task filter acceptance (8 November): normal/largest signed Simulator reviews verify inclusive/strict one-hour matches, local attribution, read-only preview/Use/Cancel and exact filter-only Save/cold return. The initial outer reporter fails after Xcode moves the container; retained independent readback proves fresh test records and exact restoration of81 prior fixture files. No native test rerun, Mac acceptance or normal update. Source/signing/screens/cleanup: `native-long-task-filter-review/`. The preserved Mac heading-key plan remains pending actual desktop access.
