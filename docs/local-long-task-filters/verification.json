@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-08",
+  "owner": "TasskFold-MacOS",
+  "scope": "Owning SwiftPM Core checks on the Mac; no new SDK app build, native interaction, installed update or raw-model acceptance",
+  "command": "bash Scripts/test_core.sh --filter 'LocalFilterDescriptionTests|FilterAssistanceTests|FilterTests'",
+  "executed": 133,
+  "passed": 130,
+  "skipped": 3,
+  "failed": 0,
+  "newFunctionalCases": 6,
+  "logSHA256": "d1978f2c65af8fca4d51bb80e36798468dba9839ebeacfd3f895884f58cd5133",
+  "sourceSHA256": {
+    "Taskfold/Core/FilterAssistance.swift": "84acefdfb4beff5daa39c975fa6700429de3f9e2e2503e45e8ef5f7fa2a11ea6",
+    "TaskfoldTests/LocalFilterDescriptionTests.swift": "b0d44cb16c945f0b560f3eda542a3b5e6b31d4affc2e3840b504c45e75aec421"
+  },
+  "savedQueryVocabularyChanged": false,
+  "modelInferenceChanged": false,
+  "nativeInteractionAccepted": false,
+  "normalUpdateInstalled": false
+}
