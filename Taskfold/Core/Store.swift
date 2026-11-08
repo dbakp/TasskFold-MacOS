@@ -998,6 +998,13 @@ final class Store {
               value.context.snapshot == snapshotRevision else { throw CancellationError() }
         return value
     }
+    func readRestoredChildTaskCopies(_ review: ChildTaskAdoptionReview, actorID: String, restorationID: String) async throws -> ChildTaskRestoredCopyReview {
+        guard childTaskRepairEnabled, online, childTaskAdoptionReviewIsCurrent(review) else { throw ChildTaskCopyReview.invalid }
+        let value = try await backend.restoredChildTaskCopyReview(review, actorID: actorID, restorationID: restorationID)
+        try Task.checkCancellation()
+        guard childTaskAdoptionReviewIsCurrent(review), childTaskCopiesAreCurrent(value.copies) else { throw CancellationError() }
+        return value
+    }
     func readChildTaskRepair(_ review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange]) async throws -> ChildTaskRepairPreview {
         guard childTaskRepairEnabled, childTaskAdoptionReviewIsCurrent(review) else { throw ChildTaskRepairFailure(reason: .unavailable) }
         let preview = try await backend.childTaskRepairPreview(review, changes: changes)

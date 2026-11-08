@@ -1,0 +1,19 @@
+{
+  "caches": [
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 722960384,
+      "within768MiB": true,
+      "unmarkedCacheNotPassedToXcodePruner": true,
+      "removedBytes": 0
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 663478272,
+      "within768MiB": true,
+      "unmarkedCacheNotPassedToXcodePruner": true,
+      "removedBytes": 0
+    }
+  ],
+  "freeBytes": 38565126144
+}
