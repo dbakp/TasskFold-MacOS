@@ -1,0 +1,9 @@
+{
+  "removed": "Two redundant signed44 app copies in obsolete46 installation staging; empty candidate folder",
+  "allocatedBytes": 163233792,
+  "freeBeforeBytes": 42395557888,
+  "freeAfterBytes": 42558767104,
+  "rollback44ArchiveDigestVerifiedAndPreserved": true,
+  "normal46AndPrepared47Preserved": true,
+  "privateBackupsAndAppDataUntouched": true
+}
