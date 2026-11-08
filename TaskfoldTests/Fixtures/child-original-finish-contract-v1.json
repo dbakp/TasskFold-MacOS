@@ -1,0 +1,111 @@
+{
+  "review": {
+    "mode": "finish",
+    "account": "10a49438-2fc1-4a6c-ac1b-8e775692cd2c",
+    "enabled": true,
+    "task_id": "6715733d-090a-4a6b-9797-90675ff35e2c",
+    "protocol": 1,
+    "revision": 6,
+    "archive_id": "0494b38b-3225-49a6-807c-92d2a1c956af",
+    "file_count": 0,
+    "project_id": "462ece51-a80d-4894-9f9b-07b52641f948",
+    "restore_id": "aed03648-ab2f-4b3f-bf5c-d5a5a2fe09ba",
+    "availability": "ready",
+    "workspace_id": null,
+    "review_digest": "b9cd9251e4b282a1e48d3d213cc6baa72e59bb1ef01edc831b778500d89a24d7",
+    "target_source": [
+      {
+        "id": "01804e4a-e80e-461a-a13c-d0edff2e29e0",
+        "title": "Keep parent",
+        "future": {
+          "\u00e9": 1,
+          "e\u0301": 2,
+          "huge": null,
+          "exact": 9007199254740992
+        },
+        "subtasks": [
+          {
+            "id": "fd313f0b-90b9-49da-9378-27b7f7a4da2e",
+            "title": "Repaired instruction",
+            "legacy_original": "Original instruction"
+          }
+        ],
+        "completed": false,
+        "completed_at": null,
+        "taskfold_completion_v1": {
+          "epoch": "f8827bb7-5ce5-4a68-b58b-2cc3b1ca859c",
+          "version": 2
+        }
+      }
+    ],
+    "archive_digest": "2dfcd83cec8011e2f2ec01571018b603a0bc5737b3e57876be94e192f1abc6f5",
+    "current_source": [
+      {
+        "id": "01804e4a-e80e-461a-a13c-d0edff2e29e0",
+        "title": "Keep parent",
+        "future": {
+          "\u00e9": 1,
+          "e\u0301": 2,
+          "huge": null,
+          "exact": 9007199254740992
+        },
+        "subtasks": [
+          {
+            "id": "fd313f0b-90b9-49da-9378-27b7f7a4da2e",
+            "title": "Repaired instruction",
+            "legacy_original": "Original instruction"
+          }
+        ],
+        "completed": false,
+        "completed_at": null,
+        "taskfold_completion_v1": {
+          "epoch": "f8827bb7-5ce5-4a68-b58b-2cc3b1ca859c",
+          "version": 2
+        }
+      }
+    ],
+    "retention_bytes": 5082,
+    "target_sql_null": false,
+    "task_generation": "ec2aa60d-5fcc-46ff-9b19-d4d6660a8ac2",
+    "current_sql_null": false,
+    "repair_request_id": "47f4efa7-6cd4-4175-9cc2-790102f6da36"
+  },
+  "command": {
+    "protocol": 1,
+    "account": "10a49438-2fc1-4a6c-ac1b-8e775692cd2c",
+    "task_id": "6715733d-090a-4a6b-9797-90675ff35e2c",
+    "task_generation": "ec2aa60d-5fcc-46ff-9b19-d4d6660a8ac2",
+    "project_id": "462ece51-a80d-4894-9f9b-07b52641f948",
+    "workspace_id": null,
+    "repair_request_id": "47f4efa7-6cd4-4175-9cc2-790102f6da36",
+    "archive_id": "0494b38b-3225-49a6-807c-92d2a1c956af",
+    "archive_digest": "2dfcd83cec8011e2f2ec01571018b603a0bc5737b3e57876be94e192f1abc6f5",
+    "mode": "finish",
+    "restore_id": "aed03648-ab2f-4b3f-bf5c-d5a5a2fe09ba",
+    "revision": 6,
+    "review_digest": "b9cd9251e4b282a1e48d3d213cc6baa72e59bb1ef01edc831b778500d89a24d7",
+    "request_id": "08c876b0-7043-4918-81a5-80c2d6acdb22"
+  },
+  "reply": {
+    "mode": "finish",
+    "phase": "finished",
+    "state": "applied",
+    "account": "10a49438-2fc1-4a6c-ac1b-8e775692cd2c",
+    "task_id": "6715733d-090a-4a6b-9797-90675ff35e2c",
+    "protocol": 1,
+    "replayed": false,
+    "revision": 6,
+    "archive_id": "0494b38b-3225-49a6-807c-92d2a1c956af",
+    "project_id": "462ece51-a80d-4894-9f9b-07b52641f948",
+    "request_id": "08c876b0-7043-4918-81a5-80c2d6acdb22",
+    "restore_id": "aed03648-ab2f-4b3f-bf5c-d5a5a2fe09ba",
+    "after_digest": "8979284972c74c32e3becb9576d5c0329f15fbd5d158447c294e40288de4f93e",
+    "workspace_id": null,
+    "next_revision": 7,
+    "review_digest": "b9cd9251e4b282a1e48d3d213cc6baa72e59bb1ef01edc831b778500d89a24d7",
+    "archive_digest": "2dfcd83cec8011e2f2ec01571018b603a0bc5737b3e57876be94e192f1abc6f5",
+    "restoration_id": "aed03648-ab2f-4b3f-bf5c-d5a5a2fe09ba",
+    "task_generation": "ec2aa60d-5fcc-46ff-9b19-d4d6660a8ac2",
+    "repair_request_id": "47f4efa7-6cd4-4175-9cc2-790102f6da36"
+  }
+}

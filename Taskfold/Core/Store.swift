@@ -1032,9 +1032,17 @@ final class Store {
     }
     var childTaskOriginalRestorationEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalRestorationEnabled") as? Bool == true }
     var childTaskOriginalReversalsEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalReversalsEnabled") as? Bool == true }
+    var childTaskOriginalFinishEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalFinishEnabled") as? Bool == true }
+    private func childTaskRestoreModeEnabled(_ mode: ChildTaskRestoreMode) -> Bool {
+        switch mode {
+        case .restore: return childTaskOriginalRestorationEnabled && childTaskOriginalReversalsEnabled
+        case .undo, .redo: return childTaskOriginalReversalsEnabled
+        case .finish: return childTaskOriginalFinishEnabled
+        }
+    }
     private func permitsChildTaskRestore(_ command: ChildTaskRestoreCommand, sending: Bool) -> Bool {
         permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body,
-            enabled: command.mode == .restore ? childTaskOriginalRestorationEnabled && childTaskOriginalReversalsEnabled : childTaskOriginalReversalsEnabled, sending: sending)
+            enabled: childTaskRestoreModeEnabled(command.mode), sending: sending)
     }
     func childTaskRestoreReviewIsCurrent(_ review: ChildTaskRestoreReview) -> Bool {
         online && review.scope == childTaskFieldRecoveryScope && review.snapshot == snapshotRevision
@@ -1042,7 +1050,7 @@ final class Store {
     }
     func readChildTaskRestoreReview(identity: [String: JSON], mode: ChildTaskRestoreMode, restorationID: String? = nil) async throws -> ChildTaskRestoreReview {
         guard let scope = childTaskFieldRecoveryScope, online,
-              mode == .restore ? childTaskOriginalRestorationEnabled && childTaskOriginalReversalsEnabled : childTaskOriginalReversalsEnabled,
+              childTaskRestoreModeEnabled(mode),
               !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == identity["task_id"]?.text }) else { throw ChildTaskRestoreCommand.invalid }
         let revision = snapshotRevision
         let value = try await backend.childTaskRestoreReview(identity: identity, mode: mode, restorationID: restorationID, scope: scope, snapshot: revision)

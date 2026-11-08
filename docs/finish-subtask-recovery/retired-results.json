@@ -1,0 +1,38 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 39573843968,
+  "currentV4Retained": true,
+  "actions": [
+    {
+      "path": "/tmp/taskfold-finish-native-ios-v1.xcresult",
+      "kind": "supersededOwnedNativeResult",
+      "allocatedBytes": 132866048,
+      "preservedSummary": "/tmp/taskfold-finish-native-v1-preserved-summary.json",
+      "summarySHA256": "961ae2010e8c65b020cb4aee70d4c533d4a123d2f361bcbf0eb13fc04eb2faef",
+      "finalNativeV4Supersedes": true
+    },
+    {
+      "path": "/tmp/taskfold-finish-native-ios-v2.xcresult",
+      "kind": "supersededOwnedNativeResult",
+      "allocatedBytes": 9101312,
+      "preservedSummary": "/tmp/taskfold-finish-native-v2-preserved-summary.json",
+      "summarySHA256": "112e3f81a1a82eaf4a59d663bbb99cdee184596fa4bfdfe533897ee7c01be457",
+      "finalNativeV4Supersedes": true
+    },
+    {
+      "path": "/tmp/taskfold-finish-native-ios-v3.xcresult",
+      "kind": "supersededOwnedNativeResult",
+      "allocatedBytes": 13852672,
+      "preservedSummary": "/tmp/taskfold-finish-native-v3-preserved-summary.json",
+      "summarySHA256": "f8572c963d201dc2438b496e8699b479f899c2b0c752f78a056eebd2d770262b",
+      "finalNativeV4Supersedes": true
+    },
+    {
+      "path": "/tmp/taskfold-finish-native-v3-failed-attachments",
+      "kind": "supersededFailedCaptureExport",
+      "allocatedBytes": 12095488,
+      "conciseFailureEvidencePreserved": true
+    }
+  ],
+  "freeAfterBytes": 39740809216
+}

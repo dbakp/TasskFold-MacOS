@@ -246,4 +246,143 @@ final class ChildTaskRestoreTests: XCTestCase {
         do { _ = try await api.childTaskRestore(c, operation: .send, session: api.reminderSessionIncarnation); XCTFail("Unknown cannot certify send") } catch { XCTAssertTrue(error is ChildTaskRepairFailure) }
         let checked = try await api.childTaskRestore(c, operation: .check, session: api.reminderSessionIncarnation); XCTAssertTrue(checked.unknown)
     }
+    private func finishCommand() throws -> ChildTaskRestoreCommand {
+        let original = try command(); var body = original.body
+        body["mode"] = .string("finish"); body["restore_id"] = .string(original.id)
+        body["revision"] = .number(2); body["request_id"] = .string(UUID().uuidString.lowercased())
+        return try command(body)
+    }
+    private func applied(_ command: ChildTaskRestoreCommand) throws -> ChildTaskRestoreResult {
+        var raw = command.body
+        raw["state"] = .string("applied"); raw["replayed"] = .bool(false)
+        raw["restoration_id"] = command.mode == .restore ? .string(command.id) : command.body["restore_id"]
+        raw["next_revision"] = .number(Double(command.body["revision"]!.integer + 1))
+        raw["phase"] = .string(command.mode == .finish ? "finished" : command.mode == .undo ? "undone" : "restored")
+        raw["after_digest"] = .string(String(repeating: "a", count: 64))
+        return try command.result(raw)
+    }
+    private func finishReview(_ command: ChildTaskRestoreCommand, scope: ChildTaskFieldClientScope, enabled: Bool = true) throws -> ChildTaskRestoreReview {
+        var raw = try fixture()["review"]!.object
+        for (key, value) in command.body where key != "request_id" { raw[key] = value }
+        raw["enabled"] = .bool(enabled); raw["availability"] = .string(enabled ? "ready" : "paused")
+        raw["target_source"] = raw["current_source"]; raw["target_sql_null"] = raw["current_sql_null"]
+        return try .init(data: wire(raw), scope: scope, snapshot: UUID(), identity: command.identity, mode: .finish, restorationID: command.body["restore_id"]!.text)
+    }
+    private func finishedFamilyAndActiveEntries(_ total: Int = 64) throws -> [ChildTaskRestoreState.Entry] {
+        let base = try command(), finish = try finishCommand()
+        var entries = [ChildTaskRestoreState.Entry(command: base, phase: .applied, result: try applied(base)), .init(command: finish, phase: .applied, result: try applied(finish))]
+        while entries.count < total {
+            var body = base.body; body["request_id"] = .string(UUID().uuidString.lowercased())
+            let next = try command(body); entries.append(.init(command: next, phase: .applied, result: try applied(next)))
+        }
+        return entries
+    }
+    func testActualFinishServiceContractAndTerminalReceipt() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-original-finish-contract-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let f = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let body = f["command"]!.object, c = try ChildTaskRestoreCommand(account: body["account"]!.text, origin: origin, body: body)
+        let scope = scope(c), p = try ChildTaskRestoreReview(data: wire(f["review"]!.object), scope: scope, snapshot: UUID(), identity: c.identity, mode: .finish, restorationID: body["restore_id"]!.text)
+        XCTAssertEqual(c.mode, .finish); XCTAssertEqual(try ChildTaskRestoreCommand(review: p, requestID: XCTUnwrap(UUID(uuidString: c.id))), c)
+        XCTAssertEqual(try c.result(f["reply"]!.object).raw["phase"], .string("finished"))
+    }
+    func testFinishReviewKeepsCurrentSourceAndRequiresSeparateEnabledReview() throws {
+        let c = try finishCommand(), scope = scope(c), p = try finishReview(c, scope: scope)
+        XCTAssertTrue(ChildTaskRepairPreview.sameJSONValue(p.current.source, p.target.source))
+        XCTAssertEqual(try ChildTaskRestoreCommand(review: p, requestID: XCTUnwrap(UUID(uuidString: c.id))), c)
+        XCTAssertThrowsError(try ChildTaskRestoreCommand(review: finishReview(c, scope: scope, enabled: false)))
+        var wrong = try applied(c).raw; wrong["phase"] = .string("restored"); XCTAssertThrowsError(try c.result(wrong))
+        var raw = p.metadata; raw["current_source"] = .array([]); raw["target_source"] = .array([.string("Different older work")]); raw["current_sql_null"] = .bool(false); raw["target_sql_null"] = .bool(false)
+        XCTAssertThrowsError(try ChildTaskRestoreReview(data: wire(raw), scope: scope, snapshot: UUID(), identity: c.identity, mode: .finish, restorationID: c.body["restore_id"]!.text))
+    }
+    func testFinishedFamiliesAloneCanMakeRoomForNewWork() throws {
+        let c = try command(), original = try finishedFamilyAndActiveEntries()
+        var state = try ChildTaskRestoreState(account: c.account, origin: origin, entries: original)
+        var body = c.body; body["request_id"] = .string(UUID().uuidString.lowercased()); let next = try command(body)
+        try state.makeRoom(for: next)
+        XCTAssertEqual(state.entries.count, 62); XCTAssertEqual(state.entries, Array(original.dropFirst(2)))
+        state.entries.append(.init(command: next)); _ = try ChildTaskRestoreState(data: TaskfoldJSONEncoder().encode(state))
+    }
+    func testActiveAndAmbiguousFamiliesCannotBePruned() throws {
+        let base = try command(); var entries = try finishedFamilyAndActiveEntries()
+        let finishing = entries[1].command; entries[1] = .init(command: finishing, phase: .attempted)
+        var state = try ChildTaskRestoreState(account: base.account, origin: origin, entries: entries)
+        var body = base.body; body["request_id"] = .string(UUID().uuidString.lowercased()); let next = try command(body)
+        XCTAssertThrowsError(try state.makeRoom(for: next)); XCTAssertEqual(state.entries, entries)
+        entries = try finishedFamilyAndActiveEntries(); entries.removeFirst(2)
+        entries.append(.init(command: base, phase: .applied, result: try applied(base)))
+        var reverse = finishing.body; reverse["mode"] = .string("undo"); reverse["revision"] = .number(3); reverse["request_id"] = .string(UUID().uuidString.lowercased())
+        let undo = try command(reverse); entries.append(.init(command: undo, phase: .applied, result: try applied(undo)))
+        state = try .init(account: base.account, origin: origin, entries: entries)
+        XCTAssertThrowsError(try state.makeRoom(for: next)); XCTAssertEqual(state.entries, entries)
+    }
+    func testOneReservedFinishSlotAllowsFullLegacyJournalToCloseRecovery() throws {
+        let base = try command(), finish = try finishCommand()
+        var entries: [ChildTaskRestoreState.Entry] = []
+        for _ in 0..<64 { var b = base.body; b["request_id"] = .string(UUID().uuidString.lowercased()); let c = try command(b); entries.append(.init(command: c, phase: .applied, result: try applied(c))) }
+        var state = try ChildTaskRestoreState(account: base.account, origin: origin, entries: entries)
+        try state.makeRoom(for: finish); state.entries.append(.init(command: finish))
+        XCTAssertEqual(try ChildTaskRestoreState(data: TaskfoldJSONEncoder().encode(state)).entries.count, 65)
+        XCTAssertThrowsError(try state.makeRoom(for: base))
+        entries.append(.init(command: base, phase: .applied, result: try applied(base)))
+        XCTAssertThrowsError(try ChildTaskRestoreState(account: base.account, origin: origin, entries: entries))
+    }
+    func testLaterReceiptOrMixedIdentityPreventsFinishedFamilyEviction() throws {
+        let base = try command(), finish = try finishCommand(); var entries = try finishedFamilyAndActiveEntries(63)
+        var b = finish.body; b["request_id"] = .string(UUID().uuidString.lowercased()); b["mode"] = .string("undo"); b["revision"] = .number(3)
+        let later = try command(b); entries.append(.init(command: later, phase: .applied, result: try applied(later)))
+        var state = try ChildTaskRestoreState(account: base.account, origin: origin, entries: entries)
+        var next = base.body; next["request_id"] = .string(UUID().uuidString.lowercased())
+        XCTAssertThrowsError(try state.makeRoom(for: command(next))); XCTAssertEqual(state.entries, entries)
+        entries = try finishedFamilyAndActiveEntries(63); b = finish.body; b["task_id"] = .string(UUID().uuidString.lowercased()); b["request_id"] = .string(UUID().uuidString.lowercased())
+        let foreign = try command(b); entries.append(.init(command: foreign, phase: .closed, result: try foreign.result(foreign.body.merging(["state": .string("closed"), "replayed": .bool(false), "restoration_id": .null, "next_revision": .null, "phase": .null, "after_digest": .null]) { _, value in value })))
+        state = try .init(account: base.account, origin: origin, entries: entries)
+        XCTAssertThrowsError(try state.makeRoom(for: command(next))); XCTAssertEqual(state.entries, entries)
+    }
+    @MainActor func testFinishLostReplyColdStatusUsesSameRequestAndClearTerminalMessage() async throws {
+        let c = try finishCommand(), scope = scope(c), io = RestoreMemoryIO(), directory = try directory(), j = try journal(c, io: io, directory: directory)
+        let service = RestoreServiceDouble(try applied(c).raw), p = try finishReview(c, scope: scope)
+        let first = model(scope, j, service, current: { scope })
+        let queued = await first.queue(c, review: p); XCTAssertTrue(queued); service.loseReply = true
+        let sent = await first.run(c, operation: .send); XCTAssertFalse(sent); first.close(); service.loseReply = false
+        let cold = model(scope, try journal(c, io: io, directory: directory), service, current: { scope }, canSend: { _ in false })
+        await cold.load(); let checked = await cold.run(c, operation: .check); XCTAssertTrue(checked)
+        XCTAssertEqual(cold.entries.first?.command, c); XCTAssertEqual(cold.entries.first?.result?.raw["phase"], .string("finished"))
+        XCTAssertEqual(service.operations, [.send, .check]); XCTAssertTrue(cold.message?.contains("Redo is no longer available") == true)
+    }
+    func testJournalPersistsOnlyConfirmedFinishAndReservesCapacity() async throws {
+        let c = try finishCommand(), io = RestoreMemoryIO(), directory = try directory(), j = try journal(c, io: io, directory: directory), lease = CalendarReadLease()
+        try await j.enqueue(c, lease: lease); _ = try await j.attempt(c, lease: lease)
+        let cold = try journal(c, io: io, directory: directory); let unresolved = try await cold.load(); XCTAssertEqual(unresolved.entries.first?.phase, .attempted)
+        try await cold.settle(c, result: applied(c), lease: lease)
+        let loaded = try await j.load(); XCTAssertEqual(loaded.entries.first?.result?.raw["phase"], .string("finished"))
+        do { try await j.discard(c, lease: lease); XCTFail("Confirmed finish proof must remain until safe family pruning") } catch {}
+    }
+
+    func testRecoveryCardsShowOnlyLatestConfirmedStateWithoutRemovingReceipts() throws {
+        let base = try command(); var entries = [ChildTaskRestoreState.Entry(command: base, phase: .applied, result: try applied(base))]
+        for (revision, mode) in [(1, "undo"), (2, "redo"), (3, "undo"), (4, "finish")] {
+            var body = base.body; body["request_id"] = .string(UUID().uuidString.lowercased()); body["mode"] = .string(mode)
+            body["restore_id"] = .string(base.id); body["revision"] = .number(Double(revision))
+            let c = try command(body); entries.append(.init(command: c, phase: .applied, result: try applied(c)))
+        }
+        var other = base.body; other["request_id"] = .string(UUID().uuidString.lowercased()); other["task_id"] = .string(UUID().uuidString.lowercased())
+        let second = try command(other); entries.append(.init(command: second, phase: .applied, result: try applied(second)))
+        let original = entries, visible = ChildTaskRestoreState.visibleEntries(entries)
+        XCTAssertEqual(visible.map(\.command.id), [entries[4].command.id, second.id])
+        XCTAssertEqual(visible.first?.result?.raw["phase"], .string("finished")); XCTAssertEqual(entries, original)
+        XCTAssertEqual(try ChildTaskRestoreState(account: base.account, origin: origin, entries: entries).entries.count, 6)
+    }
+    func testUnconfirmedAndStoppedRecoveryCardsStayVisibleAndBlockNewActions() throws {
+        let finish = try finishCommand(); var undoBody = finish.body; undoBody["mode"] = .string("undo"); undoBody["revision"] = .number(1); undoBody["request_id"] = .string(UUID().uuidString.lowercased())
+        let undo = try command(undoBody); var stopBody = finish.body; stopBody["request_id"] = .string(UUID().uuidString.lowercased())
+        let stopped = try command(stopBody), close = stopped.body.merging(["state": .string("closed"), "replayed": .bool(false), "restoration_id": .null, "next_revision": .null, "phase": .null, "after_digest": .null]) { _, value in value }
+        var entries = [ChildTaskRestoreState.Entry(command: undo, phase: .applied, result: try applied(undo)), .init(command: finish, phase: .attempted), .init(command: stopped, phase: .closed, result: try stopped.result(close))]
+        XCTAssertEqual(ChildTaskRestoreState.visibleEntries(entries), entries)
+        XCTAssertEqual(ChildTaskRestoreState.unconfirmedRoots(entries), [finish.rootID])
+        entries[1] = .init(command: finish, phase: .applied, result: try applied(finish))
+        XCTAssertEqual(ChildTaskRestoreState.visibleEntries(entries).map(\.command.id), [finish.id, stopped.id])
+        XCTAssertTrue(ChildTaskRestoreState.unconfirmedRoots(entries).isEmpty)
+        XCTAssertEqual(entries.count, 3, "Presentation must keep every stored request intact")
+    }
+
 }

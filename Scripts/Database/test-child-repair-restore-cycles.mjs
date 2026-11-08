@@ -137,6 +137,54 @@ try{
  check('no direct retained-state access',await runtime.raw("select not has_table_privilege('authenticated','taskfold_private.child_repair_restore_payloads','SELECT,INSERT,UPDATE,DELETE')")==='t');
  check('public restoration endpoints invoker',await runtime.raw("select bool_and(not prosecdef) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in('taskfold_review_child_restore','taskfold_restore_child_original')")==='t');
  check('anonymous restoration refused',await runtime.raw("select not has_function_privilege('anon','public.taskfold_restore_child_original(text,jsonb)','EXECUTE') and not has_function_privilege('anon','public.taskfold_review_child_restore(text,uuid,uuid,uuid)','EXECUTE')")==='t');
+
+ // Finish after Undo: an explicit, separately paused disposal of only the
+ // inverse payload. Later current edits remain current, not a stale Redo.
+ check('finish gate defaults off',await runtime.raw('select not archive_restore_finish_enabled from taskfold_private.child_task_record_config')==='t');
+ const finishBefore=await state(),finishPaused=ok('finish paused review after later child work',await review(f,'finish',restoreID));
+ check('finish read binds current version without restoring',!finishPaused.enabled&&finishPaused.mode==='finish'&&JSON.stringify(finishPaused.current_source)===JSON.stringify(finishPaused.target_source));
+ check('finish review no writes',await state()===finishBefore);ok('paused finish send refuses',await send(command(finishPaused)),503);check('paused finish atomic',await state()===finishBefore);
+ await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_finish_enabled=true');
+ ok('fresh restore for wrong-phase finish',await send(faultBody));const activeFinish=await state();ok('finish cannot discard active older version',await review(fault,'finish',faultBody.request_id),409);check('active older copy remains exact',await state()===activeFinish);
+ const stoppedFinish=command(ok('review stoppable finish',await review(f,'finish',restoreID)));
+ ok('check unknown finish',await send(stoppedFinish,'check'));const stopProof=ok('stop unsent finish',await send(stoppedFinish,'close'));check('stop finish records no disposal',stopProof.state==='closed');
+ const afterStopFinish=await state();check('stopped finish cannot revive',ok('send stopped finish',await send(stoppedFinish)).state==='closed');check('stopped finish no writes',await state()===afterStopFinish);
+ const staleFinish=command(ok('prepare stale finish',await review(f,'finish',restoreID)));
+ const later=JSON.parse(await runtime.raw(`select to_jsonb(r)::text from taskfold_private.child_task_records r where task_id=${lit(f.task.id)} and node_key=${lit(row.node_key)}`));
+ const reopenBaseline=JSON.parse(await runtime.raw(`select taskfold_private.child_task_completion_state(fields)::text from taskfold_private.child_task_records where task_id=${lit(f.task.id)} and node_key=${lit(row.node_key)}`));
+ ok('later ordinary child work before finish',await api('/rpc/taskfold_complete_child_task',{_body:{...completion,request_id:randomUUID(),incarnation:later.incarnation,revision:later.revision,action:'reopen',baseline:reopenBaseline}}));
+ const afterLater=await state();ok('stale finish preserves changed editable source',await send(staleFinish),409);check('stale finish cannot drop inverse payload',await state()===afterLater);
+ const finishReview=ok('review latest finish',await review(f,'finish',restoreID)),finishBody=command(finishReview);
+ ok('foreign actor cannot finish',await send(finishBody,'send',other.access_token),403);ok('finish rejects changed request body',await send({...finishBody,review_digest:'a'.repeat(64),request_id:randomUUID()}),409);
+ await runtime.raw(`create function public.finish_fixture_fault() returns trigger language plpgsql as $$begin if new.restore_id=${lit(restoreID)}::uuid and new.phase='finished' then raise exception using errcode='PT409',message='Synthetic late finish failure';end if;return new;end$$;create trigger zz_finish_fixture_fault before update on taskfold_private.child_repair_restorations for each row execute function public.finish_fixture_fault()`);
+ const beforeFinishFault=await state();ok('late finish failure rolls back',await send(finishBody),409);check('late finish keeps payload pins and decisions',await state()===beforeFinishFault);
+ await runtime.raw('drop trigger zz_finish_fixture_fault on taskfold_private.child_repair_restorations;drop function public.finish_fixture_fault()');
+ for(const table of ['tasks','task_activity','task_node_activity']){
+  const policy='finish_fixture_'+table;await runtime.raw(`create policy ${policy} on public.${table} as restrictive for select to authenticated using(false)`);const saved=await state();
+  ok('finish caller '+table+' RLS refuses review',await review(f,'finish',restoreID),403);ok('finish caller '+table+' RLS rolls back send',await send(finishBody),403);check('finish '+table+' RLS preserves all rows',await state()===saved);await runtime.raw(`drop policy ${policy} on public.${table}`);
+ }
+ const protectedWork=async()=>runtime.raw(`select (${lit(await state())}::jsonb - array['restorations','payloads','requests','file_fences'])::text`);
+ const protectedBeforeFinish=await protectedWork();
+ await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_enabled=false,archive_restore_reversals_enabled=false');
+ const finished=ok('finish with other restoration gates paused',await send(finishBody));
+ check('finish receipt terminal and bound',finished.phase==='finished'&&finished.restoration_id===restoreID&&finished.next_revision===finishBody.revision+1&&finished.request_id===finishBody.request_id);
+ check('finish keeps every current authored value history file and original exact',await protectedWork()===protectedBeforeFinish);
+ check('finish removes only selected inverse payload',await runtime.raw(`select not exists(select 1 from taskfold_private.child_repair_restore_payloads where actor_id=${lit(account)} and restore_id=${lit(restoreID)}) and exists(select 1 from taskfold_private.child_task_repair_originals where id=${lit(f.receipt.archive_id)})`)==='t');
+ const afterFinished=await state();await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_finish_enabled=false');
+ check('lost finish reply recovers while paused',ok('check finished request',await send(finishBody,'check')).replayed===true);
+ check('exact finish retry cannot dispose again',ok('retry finished request',await send(finishBody)).phase==='finished');
+ ok('finished recovery cannot redo',await review(f,'redo',restoreID),409);ok('finished recovery cannot finish twice with new nonce',await send({...finishBody,request_id:randomUUID()}),409);check('finish replay refusal leaves all work exact',await state()===afterFinished);
+ await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_finish_enabled=true');
+ const sharedFinish=command(ok('shared retained file finish review',await review(tf,'finish',tres.restoration_id)));
+ await runtime.raw(`update taskfold_private.team_members set role='member' where team_id=${lit(team)} and user_id=${lit(account)}`);
+ const nonadminFinish=await state();ok('shared editor cannot retire workspace retained recovery',await review(tf,'finish',tres.restoration_id),403);ok('admin demotion fences prepared finish',await send(sharedFinish),403);check('demotion preserves copy and file pins',await state()===nonadminFinish);
+ await runtime.raw(`update taskfold_private.team_members set role='admin' where team_id=${lit(team)} and user_id=${lit(account)}`);
+ const sharedProtected=await protectedWork();ok('shared admin finishes reviewed recovery',await send(sharedFinish));
+ check('shared finish preserves current work and live file binding',await protectedWork()===sharedProtected);
+ check('shared finish releases inverse file retention pins',await runtime.raw(`select not exists(select 1 from taskfold_private.child_repair_restore_files where actor_id=${lit(account)} and restore_id=${lit(tres.restoration_id)}) and not exists(select 1 from taskfold_private.child_repair_restore_payloads where actor_id=${lit(account)} and restore_id=${lit(tres.restoration_id)})`)==='t');
+ const afterFinishDownload=await storage('/object/authenticated/task-attachments/'+objectName);check('finish leaves actual private Storage bytes intact',afterFinishDownload.status===200&&Buffer.from(await afterFinishDownload.arrayBuffer()).equals(fileBytes));
+ check('finish creates no transaction scope',await runtime.raw('select not exists(select 1 from taskfold_private.child_repair_restore_scope)')==='t');
+ report.finishContract={review:finishReview,command:finishBody,reply:finished};
  const beforeExpiry=await state();await runtime.raw(`delete from auth.sessions where user_id=${lit(account)}`);const expired=await send(body,'check');check('expired session cannot recover decisions',expired.status>=400&&expired.value?.code==='28000');check('expired session leaves data unchanged',await state()===beforeExpiry);
  report.contract={review:prepared,command:body,reply:applied,cycles};report.advisors=await runtime.advisors();report.passed=true;
 }catch(e){report.failure={message:e.message,migration:e.migration,startupCleanup:e.cleanedUp,stack:e.stack?.split('\n').slice(0,4)};process.exitCode=1;}finally{if(runtime)report.cleanup=await runtime.close();await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:report.passed??false,checks:Object.keys(report.checks).length,failure:report.failure,lastFailure:report.lastFailure,cleanup:report.cleanup}));}
