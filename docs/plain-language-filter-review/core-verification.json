@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-09",
+  "owner": "TasskFold-MacOS",
+  "executed": 144,
+  "passed": 141,
+  "skipped": 3,
+  "failed": 0,
+  "newFunctionalCases": 11,
+  "sourceSHA256": {
+    "Taskfold/Core/Filters.swift": "55778f0f0d020645fc4197328e54bac7b412fdc164ebf1b24ef6a379df640c50",
+    "Taskfold/Views/FilterAssistanceView.swift": "3982e288430887217aef03f9324e92b02abcd8493f70478f97e912db35ba9a54",
+    "TaskfoldTests/FilterReviewSummaryTests.swift": "fd014121bb5905d84b79379655affe16d51388c656f2315bb12454c2fcc1d282"
+  },
+  "modelInferenceChanged": false,
+  "storedQueryChanged": false,
+  "scope": "Core semantics/presentation only; native acceptance recorded separately after actual run"
+}

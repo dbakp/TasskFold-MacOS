@@ -11659,3 +11659,6 @@ Native iPhone long-task filter acceptance (8 November): normal/largest signed Si
 
 
 Bounded build cleanup (8 November): between20–30GiB free, completed-cache cleanup now stops at the768MiB budget after retiring cheap scratch, preserving reusable app objects. Below20GiB aggressive regeneration-only cleanup remains. Each owner passes20 checks; actual iOS/Mac product and plan hashes are unchanged. No SDK build-time gain or app-feature completion is claimed. Scope and audit: `bounded-build-cleanup/`.
+
+
+Plain-language filter review (9 November): duplicate syntax echo now describes the complete grouped condition, preserving per-list completion defaults and guarded estimate bounds. Both owners pass141 Core checks with3 explicit model skips; actual signed iPhone normal/largest cases accept exact meaning, preview/Use/Cancel, explicit Save and cold return. Mac/iPad/speech/physical and installed-update acceptance remain separate. Cheap cleanup retains213 compiled objects and the tested image within budget. Scope, cancelled build/fixture guard and native evidence: `plain-language-filter-review/`.

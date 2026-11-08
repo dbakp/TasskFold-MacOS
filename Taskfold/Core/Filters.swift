@@ -1200,3 +1200,72 @@ struct FilterTargetCatalog: Sendable {
         return row
     }
 }
+
+extension FilterRule {
+    /// Presentation only: preserve Boolean grouping and each query's completion
+    /// visibility. The editable expression and stored rule remain authoritative.
+    func reviewSummary(in context: FilterContext, includeCompleted: Bool) -> String {
+        if case .sections(let rules) = self {
+            return rules.enumerated().map { "List \($0.offset + 1): (" + $0.element.reviewSummary(in: context, includeCompleted: includeCompleted) + ")" }.joined(separator: "; ")
+        }
+        let meaning = reviewCondition(in: context)
+        if !includeCompleted && !includesCompletion {
+            if case .predicate("all", _) = self { return "Unfinished tasks" }
+            return "Unfinished tasks only. " + meaning
+        }
+        return meaning
+    }
+    private func reviewCondition(in context: FilterContext) -> String {
+        switch self {
+        case .and(let rules):
+            // This exact pair is a lower estimate bound. Neither negation alone
+            // excludes missing estimates; never simplify a larger/different tree.
+            if rules.count == 2,
+               rules.contains(where: { if case .not(.predicate("no_estimate", "")) = $0 { return true }; return false }),
+               let maximum = rules.compactMap({ rule -> Int? in
+                   if case .not(.predicate("duration_max", let value)) = rule { return Int(value) }; return nil
+               }).first, (1..<10080).contains(maximum) {
+                return "Estimate at least " + Self.reviewMinutes(maximum + 1)
+            }
+            return "All of: " + rules.map { "(" + $0.reviewCondition(in: context) + ")" }.joined(separator: "; ")
+        case .or(let rules): return "Any of: " + rules.map { "(" + $0.reviewCondition(in: context) + ")" }.joined(separator: "; ")
+        case .not(.predicate("no_estimate", "")): return "Has an estimate"
+        case .not(let child): return "Not: (" + child.reviewCondition(in: context) + ")"
+        case .sections: return reviewSummary(in: context, includeCompleted: true)
+        case .predicate(let field, let value):
+            func quoted(_ text: String) -> String { "“" + text + "”" }
+            let flags = ["all": "All tasks", "inbox": "In Inbox", "today": "Planned today", "overdue": "Planned before today", "no_date": "No planned date", "no_deadline": "No deadline", "no_estimate": "No estimate", "recurring": "Repeating tasks", "no_time": "No planned time", "no_labels": "No labels", "root": "Main tasks", "subtask": "Subtasks", "parent": "Tasks with subtasks", "shared": "Shared projects", "personal": "Personal work", "assigned": "Assigned tasks", "deadline_today": "Deadline today", "deadline_overdue": "Deadline before today"]
+            if let label = flags[field] { return label }
+            if field == "completed" { return value == "true" ? "Completed tasks" : "Unfinished tasks" }
+            if field == "priority" { return "Priority " + value }
+            if field == "duration_max", let minutes = Int(value), (1...10080).contains(minutes) { return "Estimate at most " + Self.reviewMinutes(minutes) }
+            if field == "project_tree" { return "In project " + quoted(context.name("project", value)) + " and its subprojects" }
+            if ["project", "section", "label"].contains(field) { return "\(field == "label" ? "Has label" : "In " + field) " + quoted(context.name(field, value)) }
+            if ["assignee", "assigned_by"].contains(field) {
+                let isSelf = value == context.userID || (field == "assigned_by" && value.caseInsensitiveCompare(context.userID) == .orderedSame)
+                if !context.userID.isEmpty, isSelf {
+                    return field == "assignee" ? "Assigned to me" : "Assigned by me"
+                }
+                return sectionTitle(in: context)
+            }
+            if field == "search" { return "Every word appears in the title or notes: " + quoted(value) }
+            let names = ["project_name": "Project name matches", "section_name": "Section name matches", "label_name": "Label name matches", "assignee_name": "Assigned name matches"]
+            if let label = names[field] { return label + " " + quoted(value) }
+            if ["next", "deadline_next"].contains(field) {
+                return (field == "next" ? "Planned" : "Deadline") + " in a \(value)-day window including today"
+            }
+            if FilterDayWindow.expressions[field] != nil {
+                let label = field.hasPrefix("planned_") ? "Planned date" : field.hasPrefix("effective_due_") ? "Effective due date" : "Deadline"
+                return label + (field.hasSuffix("_past_days") ? " in the previous \(value) days, excluding today" : " in a \(value)-day window including today")
+            }
+            let dates = ["due": "Planned on", "before": "Planned before", "deadline": "Deadline on", "deadline_before": "Deadline before", "planned_on": "Planned on", "planned_before": "Planned before", "planned_after": "Planned after", "effective_due_on": "Effective due date on", "effective_due_before": "Effective due date before", "effective_due_after": "Effective due date after", "deadline_on": "Deadline on", "deadline_before_day": "Deadline before", "deadline_after": "Deadline after", "planned_time_on": "Planned time at", "planned_time_before": "Planned time before", "planned_time_after": "Planned time after", "created_on": "Created on", "created_before": "Created before", "created_after": "Created after"]
+            if let label = dates[field] { return label + " " + quoted(value) }
+            // Never drop an unrecognized field's value or guess its meaning.
+            return "Condition " + quoted(field) + ": " + quoted(value)
+        }
+    }
+    private static func reviewMinutes(_ value: Int) -> String {
+        if value.isMultiple(of: 60) { return "\(value / 60) " + (value == 60 ? "hour" : "hours") }
+        return "\(value) " + (value == 1 ? "minute" : "minutes")
+    }
+}
