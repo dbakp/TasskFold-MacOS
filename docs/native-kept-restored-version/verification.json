@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-08",
+  "scope": "Bound native keep-older review and durable format/history choices; current/adopted state and newer-inverse recovery remain separate",
+  "coreCasesEachOwner": 108,
+  "newCoreCasesEachOwner": 5,
+  "sdkBuilds": {
+    "mac": "passed",
+    "ios": "passed"
+  },
+  "nativePhone": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "device": "iPhone 18 Pro Simulator",
+    "category": "L",
+    "appearance": "dark",
+    "entry": "DEBUG-only bound-root fixture, not saved-restoration entry-button acceptance",
+    "transport": "Genuine current complete-schema PostgreSQL actor/session through reserved native channel; HTTP Auth is separate",
+    "checks": [
+      "native format/history/cold review and consent produce one bound save",
+      "lost reply recovers through cold exact status",
+      "adopted state, transferred inverse, original root notes/priority and earlier history preserved"
+    ],
+    "final": {
+      "repairs": 2,
+      "originals": 2,
+      "restoration": "adopted"
+    }
+  },
+  "bothOwnedFixturePreparationSmokesPassed": true,
+  "appSourceAudit": "Normalized exact match for all 185 Mac and 178 iOS app Swift files; iOS current UI-test source also matches",
+  "stateUpdateWarnings": 0,
+  "simulatorDiagnostics": "Existing duplicate accessibility-loader and Xcode debugger notices also occur in the prior accepted staged-format run",
+  "normalAppBuild": "48",
+  "normalAdvancedGatesOff": true,
+  "hostedSchemaUnchanged": true,
+  "phoneInstallationDeferred": true,
+  "remaining": [
+    "Fresh active/adopted current status rather than immutable event receipts",
+    "Explicit selection/recovery of the retained newer inverse",
+    "Native saved-restoration button entry, Mac/iPad/large-text/speech/HTTP Auth acceptance",
+    "Wider account/task/shared-custodian/file/audio/discussion/history and larger-work lifecycle acceptance"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "nativeTestPassed": false,
+  "failure": "Harness expected a cancel-role button omitted by adaptive iOS popover; accessible PopoverDismissRegion present",
+  "source": "9AB3AA36-046B-49EB-9EB9-14D157C6D711.txt",
+  "fixtureRemoved": true,
+  "observedBeforeFailure": [
+    "Format repairs",
+    "Partial history and cold return",
+    "Edit-format Cancel and confirmed clear/rematch",
+    "Complete mapping, edit mapping and cold return",
+    "Save consent shown; no save sent"
+  ],
+  "reportSHA256": "662337944c18d1fd916e42b477ff9e8ce09432b19a46c37669bf9db085bab9b9"
+}

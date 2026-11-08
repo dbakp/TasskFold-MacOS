@@ -37,7 +37,14 @@ struct ChildTaskRepairView: View {
     @State private var exportScope: ChildTaskFieldClientScope?
     @State private var exportRoot: String?
     @State private var exportMessage: String?
-    init(rootID: String? = nil) { _selected = State(initialValue: rootID) }
+    private let initialRoot: String?
+    private let initialRestoration: ChildTaskRestorationBinding?
+    init(rootID: String? = nil, restoration: ChildTaskRestorationBinding? = nil) {
+        initialRoot = rootID; initialRestoration = restoration; _selected = State(initialValue: rootID)
+    }
+    private var restoration: ChildTaskRestorationBinding? { draft?.restoration ?? (selected == initialRoot ? initialRestoration : nil) }
+    private var adoptingOlder: Bool { restoration != nil }
+    private var saveAvailable: Bool { !adoptingOlder || store.childTaskOriginalAdoptionEnabled && changes.count == 1 && changes[0].raw["restoration"] == .object(restoration!.raw) }
     private var scope: ChildTaskFieldClientScope? { store.childTaskFieldRecoveryScope }
     private var usable: Bool { phase == .active && modelScope == scope && scope != nil }
     private var active: ChildTaskRepairState.Entry? { guard usable else { return nil }; return model?.entries.first { $0.command.id == activeID || ($0.command.rootID == selected && ($0.phase == .queued || $0.phase == .attempted)) } }
@@ -64,17 +71,17 @@ struct ChildTaskRepairView: View {
                         else if let review {
                             Section("Before you repair") {
                                 Label("Your original stays safe", systemImage: "doc.badge.clock").font(.headline)
-                                Text("Review each change below. Saving keeps a complete original copy before changing the task.").fixedSize(horizontal: false, vertical: true)
+                                Text(adoptingOlder ? "Keep this older structure editable after reviewing its format and task histories. Saving retains the complete newer version first, then ends this restoration’s Undo/Redo cycle." : "Review each change below. Saving keeps a complete original copy before changing the task.").fixedSize(horizontal: false, vertical: true)
                                 Button { if store.childTaskAdoptionReviewIsCurrent(review), let source = review.originalSource { export(source) } } label: { ChildRepairActionLabel(title: "Export original content", symbol: "square.and.arrow.up") }.disabled(review.originalSource == nil || working).accessibilityIdentifier("childRepairExportBefore")
                             }
-                            if review.metadata["projection_revision"] != .null || ["projection_mismatch", "authority_mismatch"].contains(review.metadata["issue"]?.text ?? "") {
+                            if adoptingOlder || review.metadata["projection_revision"] != .null || ["projection_mismatch", "authority_mismatch"].contains(review.metadata["issue"]?.text ?? "") {
                                 Section("Saved copies") {
                                     Text("Compare the saved task lists before choosing a repair. Reviewing them keeps every copy unchanged.").fixedSize(horizontal: false, vertical: true)
                                     Button { Task { await compareCopies(review) } } label: { ChildRepairActionLabel(title: "Compare saved copies", symbol: "doc.on.doc") }
                                         .disabled(working).accessibilityIdentifier("childCopyReviewLoad")
                                     if comparingCopies { ProgressView("Reading saved copies…") }
                                     if let copies = currentCopies {
-                                        ChildCopyComparison(copies: copies, expanded: $expandedCopyIDs, selectedSource: choosingCopy && changes.first?.raw["copy_digest"] == .string(copies.digest) ? changes.first?.raw["source"]?.text : nil, canChoose: changes.isEmpty && draft?.mappingReview == nil && !working, choose: { copy in chooseCopy(copy, from: copies, review: review) }, reviewHistory: { copy in beginMapping(copy, copies: copies, read: review) })
+                                        ChildCopyComparison(copies: copies, boundRestoration: adoptingOlder, expanded: $expandedCopyIDs, selectedSource: choosingCopy && changes.first?.raw["copy_digest"] == .string(copies.digest) ? changes.first?.raw["source"]?.text : nil, canChoose: changes.isEmpty && draft?.mappingReview == nil && !working, choose: { copy in chooseCopy(copy, from: copies, review: review) }, reviewHistory: { copy in beginMapping(copy, copies: copies, read: review) })
                                         Button { Task { await compareCopies(review, exportCurrent: true) } } label: { ChildRepairActionLabel(title: "Export readable copies", symbol: "square.and.arrow.up") }
                                             .disabled(working).accessibilityIdentifier("childCopyReviewExport")
                                         Text("The export keeps exact saved content, including fields that are shortened in this review. Copies needing an access review stay private and unchanged.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -111,7 +118,7 @@ struct ChildTaskRepairView: View {
                             }
                             if let current {
                                 Section("After repair") {
-                                    if current.valid, !choosingCopy, !changes.isEmpty, current.metadata["custody_blocker"] != .null {
+                                    if current.valid, !choosingCopy, (!changes.isEmpty || adoptingOlder), current.metadata["custody_blocker"] != .null {
                                         Button("Review histories after repairs", systemImage: "clock.arrow.circlepath") { beginFormattedMapping(current, read: review) }
                                             .disabled(working).accessibilityIdentifier("childMappingPrepareFormat")
                                     }
@@ -132,10 +139,10 @@ struct ChildTaskRepairView: View {
                                             .accessibilityIdentifier("childRepairHistory-\(retained.ordinal)")
                                     }
                                     if current.metadata["custody_blocker"] == .string("restoration_custody") {
-                                        Text("Undo the restoration to return to editable subtasks. Your older copy stays saved.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                        Text(adoptingOlder ? "Review the task histories to keep this older structure editable. Nothing changes until you confirm the complete proposal." : "Undo the restoration to return to editable subtasks. Your older copy stays saved.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                                     } else if current.metadata["custody_blocker"] != .null { Text("This task needs a separate history or storage review. Neither saved copy will be overwritten.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
-                                    Button { confirming = true } label: { ChildRepairActionLabel(title: "Save reviewed repair", symbol: "checkmark.circle.fill") }
-                                        .disabled(!current.eligible || !store.childTaskRepairWritesAvailable || working).accessibilityIdentifier("childRepairSave")
+                                    Button { confirming = true } label: { ChildRepairActionLabel(title: adoptingOlder ? "Keep older version editable" : "Save reviewed repair", symbol: "checkmark.circle.fill") }
+                                        .disabled(!current.eligible || !store.childTaskRepairWritesAvailable || !saveAvailable || working).accessibilityIdentifier("childRepairSave")
                                     if !store.childTaskRepairWritesAvailable { Text("This device’s workspace needs recovery before saving. You can still inspect or export the original; pending edits are kept.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                                 }
                             }
@@ -170,7 +177,7 @@ struct ChildTaskRepairView: View {
                 } else { ContentUnavailableView("Repair review unavailable", systemImage: "doc.badge.clock", description: Text("Return to your signed-in workspace to continue.")) }
             }
             .buttonStyle(.borderless)
-            .navigationTitle("Repair older subtasks")
+            .navigationTitle(adoptingOlder ? "Keep older version" : "Repair older subtasks")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -189,7 +196,7 @@ struct ChildTaskRepairView: View {
                 if let current, active == nil {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Save…") { confirming = true }
-                            .disabled(!current.eligible || !store.childTaskRepairWritesAvailable || working)
+                            .disabled(!current.eligible || !store.childTaskRepairWritesAvailable || !saveAvailable || working)
                             .keyboardShortcut(.return, modifiers: .command).accessibilityIdentifier("childRepairSaveShortcut")
                     }
                 }
@@ -220,7 +227,10 @@ struct ChildTaskRepairView: View {
             else if !loading { review = nil; proposal = nil; outline = nil }
         }
         .onDisappear { hideSensitive() }
-        .confirmationDialog("Save these reviewed changes?", isPresented: $confirming, titleVisibility: .visible) { Button("Save repair") { Task { await save() } } } message: { Text("The complete original is saved first. If this task changed since review, saving will stop so you can review it again.") }
+        .confirmationDialog(adoptingOlder ? "Keep this older version editable?" : "Save these reviewed changes?", isPresented: $confirming, titleVisibility: .visible) {
+            Button(adoptingOlder ? "Keep older version editable" : "Save repair") { Task { await save() } }
+            Button("Keep reviewing", role: .cancel) {}
+        } message: { Text(adoptingOlder ? "The complete newer version and earlier histories are saved before editing is enabled. This ends the old restoration’s Undo/Redo cycle. If either version changed, saving stops for another review." : "The complete original is saved first. If this task changed since review, saving will stop so you can review it again.") }
         .alert("Edit format repairs?", isPresented: $editingFormat) {
             Button("Edit repairs and choose histories again") { Task { await returnToFormat() } }
             Button("Keep reviewing", role: .cancel) {}
@@ -267,7 +277,7 @@ struct ChildTaskRepairView: View {
         }
     }
     private func restoreDraft() {
-        draft = model?.drafts.first { $0.rootID == selected }; changes = draft?.changes ?? []; labels = draft?.labels ?? []; baseDigest = draft?.identity["review_digest"]?.text; if draft?.mappingReview != nil || changes.first?.raw["mapping"] != nil { copiesRequested = true }
+        draft = model?.drafts.first { $0.rootID == selected }; changes = draft?.changes ?? []; labels = draft?.labels ?? []; baseDigest = draft?.identity["review_digest"]?.text; if restoration != nil || draft?.mappingReview != nil || changes.first?.raw["mapping"] != nil { copiesRequested = true }
     }
     private func select(_ root: String?) { mappingHistorySelection = nil; mappingHistoryQuery = ""; mappingCatalog = nil; copiesRequested = false; expandedCopyIDs = []; activeID = nil; selected = root; review = nil; proposal = nil; savedCopies = nil; outline = nil; restoreDraft(); failure = nil; exportMessage = nil; if root != nil { Task { await refresh() } } }
     private func hideSensitive() { editingFormat = false; mappingHistorySelection = nil; mappingHistoryQuery = ""; mappingCatalog = nil; copiesRequested = false; expandedCopyIDs = []; ticket = UUID(); model?.close(); model = nil; modelScope = nil; draft = nil; changes = []; labels = []; baseDigest = nil; review = nil; proposal = nil; savedCopies = nil; comparingCopies = false; outline = nil; targets = []; document = nil; exporting = false; exportScope = nil; exportRoot = nil; loading = false; fetchingOriginal = false }
@@ -292,7 +302,7 @@ struct ChildTaskRepairView: View {
             // Snapshot refreshes revoke the old read immediately. Restore only
             // a newly authorized comparison, retaining the user's open groups.
             if copiesRequested {
-                let copies = try await store.readChildTaskCopies(value)
+                let copies = try await loadCopies(value)
                 guard usable, captured == scope, ticket == request, selected == root, store.childTaskCopiesAreCurrent(copies), !Task.isCancelled else { return }
                 savedCopies = copies
                 if let partial = draft?.mappingReview {
@@ -304,6 +314,13 @@ struct ChildTaskRepairView: View {
             if !changes.isEmpty { try await updateProposal(value, request: request) }
         } catch { guard captured == scope, ticket == request else { return }; failure = (error as? AppFailure)?.localizedDescription ?? "This review couldn’t be loaded. Your original is kept." }
     }
+    private func loadCopies(_ read: ChildTaskAdoptionReview) async throws -> ChildTaskCopyReview {
+        guard let binding = restoration else { return try await store.readChildTaskCopies(read) }
+        guard store.childTaskOriginalAdoptionEnabled else { throw ChildTaskCopyReview.invalid }
+        let held = try await store.readRestoredChildTaskCopies(read, actorID: binding.actorID, restorationID: binding.restorationID)
+        guard restoration == binding, held.restoration == binding else { throw ChildTaskCopyReview.invalid }
+        return held.copies
+    }
     nonisolated private func decodeOutline(_ data: Data) async throws -> ChildTaskRepairOutline { try Task.checkCancellation(); return try .init(data: data) }
     private func updateProposal(_ read: ChildTaskAdoptionReview, request: UUID) async throws {
         let value = try await store.readChildTaskRepair(read, changes: changes)
@@ -314,6 +331,7 @@ struct ChildTaskRepairView: View {
         guard usable, !working, changes.isEmpty, draft?.mappingReview == nil, copy.state == "ready", !copies.omitted.contains(copy.id),
               store.childTaskCopiesAreCurrent(copies), currentCopies?.digest == copies.digest,
               store.childTaskAdoptionReviewIsCurrent(read) else { return }
+        if adoptingOlder { beginMapping(copy, copies: copies, read: read); return }
         do { apply(try .choosing(copy.id, digest: copies.digest), label: "Use \(copy.title.lowercased())", read: read) }
         catch { failure = "These saved copies need another comparison. All originals are kept." }
     }
@@ -331,12 +349,12 @@ struct ChildTaskRepairView: View {
         Task {
             defer { if ticket == request { loading = false } }
             do {
-                let copies = try await store.readChildTaskCopies(read)
+                let copies = try await loadCopies(read)
                 guard usable, ticket == request, store.childTaskCopiesAreCurrent(copies) else { return }
                 savedCopies = copies
                 let catalog = try await decodeMapping(copies, source: "task", preparation: prepared)
                 let partial = try ChildCopyMappingDraft(source: "task", digest: copies.digest,
-                    mapping: ["version": .number(1), "nodes": .array([]), "retire": .array([])], formatChanges: prepared.changes)
+                    mapping: ["version": .number(1), "nodes": .array([]), "retire": .array([])], formatChanges: prepared.changes, restoration: restoration)
                 guard usable, ticket == request else { return }
                 if await persistMapping(partial, read: read) { mappingCatalog = catalog }
             } catch {
@@ -354,14 +372,14 @@ struct ChildTaskRepairView: View {
         }
     }
     private func beginMapping(_ copy: ChildTaskCopyReview.Copy, copies: ChildTaskCopyReview, read: ChildTaskAdoptionReview) {
-        guard usable, !working, changes.isEmpty, draft?.mappingReview == nil, currentCopies?.digest == copies.digest else { return }
+        guard usable, !working, changes.isEmpty, draft?.mappingReview == nil, currentCopies?.digest == copies.digest, !adoptingOlder || copy.id == "task" else { return }
         let request = UUID(); ticket = request; loading = true
         Task {
             defer { if ticket == request { loading = false } }
             do {
                 let catalog = try await decodeMapping(copies, source: copy.id)
                 guard usable, ticket == request, store.childTaskAdoptionReviewIsCurrent(read), currentCopies?.digest == copies.digest else { return }
-                let partial = try ChildCopyMappingDraft(source: copy.id, digest: copies.digest, mapping: ["version": .number(1), "nodes": .array([]), "retire": .array([])])
+                let partial = try ChildCopyMappingDraft(source: copy.id, digest: copies.digest, mapping: ["version": .number(1), "nodes": .array([]), "retire": .array([])], restoration: restoration)
                 if await persistMapping(partial, read: read) { mappingCatalog = catalog }
             } catch { guard usable, ticket == request else { return }; failure = "History choices need a fresh comparison. All originals are kept." }
         }
@@ -374,7 +392,7 @@ struct ChildTaskRepairView: View {
             && ChildTaskStructureCommand.exact(.array(changes[0].raw["format_changes"]?.list ?? []), .array(partial.formatChanges.map { .object($0.raw) }))
         guard samePartial || sameFormat || sameChoice else { return false }
         do {
-            let saved = try ChildTaskRepairDraft(review: read, changes: [], labels: [], mappingReview: partial)
+            let saved = try ChildTaskRepairDraft(review: read, changes: [], labels: [], mappingReview: partial, restoration: restoration)
             guard await model.saveDraft(saved, rootID: root, expected: draft?.token), usable, self.model === model, selected == root else { return false }
             draft = saved; changes = []; labels = []; baseDigest = saved.identity["review_digest"]?.text; proposal = nil; return true
         } catch { failure = "Your last saved history choices are kept. This change couldn’t be saved."; return false }
@@ -415,7 +433,7 @@ struct ChildTaskRepairView: View {
         Task {
             defer { if ticket == request { loading = false } }
             do {
-                let partial = try ChildCopyMappingDraft(source: choice.raw["source"]!.text, digest: choice.raw["copy_digest"]!.text, mapping: choice.raw["mapping"]?.object ?? ["version": .number(1), "nodes": .array([]), "retire": .array([])], formatChanges: try (choice.raw["format_changes"]?.list ?? []).map { try ChildTaskRepairChange(raw: $0.object) })
+                let partial = try ChildCopyMappingDraft(source: choice.raw["source"]!.text, digest: choice.raw["copy_digest"]!.text, mapping: choice.raw["mapping"]?.object ?? ["version": .number(1), "nodes": .array([]), "retire": .array([])], formatChanges: try (choice.raw["format_changes"]?.list ?? []).map { try ChildTaskRepairChange(raw: $0.object) }, restoration: restoration)
                 let catalog = try await rebuildMapping(partial, copies: copies, read: read); try catalog.validate(partial, complete: false)
                 guard usable, ticket == request else { return }; if await persistMapping(partial, read: read) { mappingCatalog = catalog }
             } catch { guard usable, ticket == request else { return }; failure = "These choices need a fresh comparison. Your saved review and originals are kept." }
@@ -426,7 +444,7 @@ struct ChildTaskRepairView: View {
         do {
             try catalog.validate(partial, complete: true)
             let complete = try ChildCopyMapping(raw: partial.mapping.raw)
-            apply(try .choosing(partial.source, digest: partial.digest, mapping: complete, formatChanges: partial.formatChanges), label: "Use reviewed task histories", read: read)
+            apply(try .choosing(partial.source, digest: partial.digest, mapping: complete, formatChanges: partial.formatChanges, restoration: partial.restoration), label: adoptingOlder ? "Keep older version editable" : "Use reviewed task histories", read: read)
         } catch { failure = "Choose every task’s history and review each task retiring from this list." }
     }
     private func add(_ kind: ChildTaskRepairChange.Kind, path: [Int], title: String? = nil, label: String) {
@@ -444,12 +462,12 @@ struct ChildTaskRepairView: View {
     private func move(_ item: ChildTaskRepairOutline.Item, parent: [Int], index: Int) {
         guard usable, !working, let read = review, store.childTaskAdoptionReviewIsCurrent(read) else { return }; do { apply(try .init(.moveItem, path: item.path, parent: parent, index: index), label: "Move “\(item.title)”", read: read) } catch { failure = "This move needs another review." }
     }
-    private func persistChoices(_ next: [ChildTaskRepairChange], labels nextLabels: [String], read: ChildTaskAdoptionReview?) async -> Bool {
+    private func persistChoices(_ next: [ChildTaskRepairChange], labels nextLabels: [String], read: ChildTaskAdoptionReview?, preserveRestoration: Bool = true) async -> Bool {
         guard usable, let model, let root = selected else { return false }
         let saved: ChildTaskRepairDraft?
         do {
-            if next.isEmpty { saved = nil }
-            else { guard let read, store.childTaskAdoptionReviewIsCurrent(read), draft == nil || draft!.matches(read) else { return false }; saved = try .init(review: read, changes: next, labels: nextLabels) }
+            if next.isEmpty && (!preserveRestoration || restoration == nil) { saved = nil }
+            else { guard let read, store.childTaskAdoptionReviewIsCurrent(read), draft == nil || draft!.matches(read) else { return false }; saved = try .init(review: read, changes: next, labels: nextLabels, restoration: restoration) }
         } catch { failure = "This review couldn’t be saved. Your previous choices are kept."; return false }
         guard await model.saveDraft(saved, rootID: root, expected: draft?.token), usable, self.model === model, selected == root else { return false }
         draft = saved; changes = next; labels = nextLabels; baseDigest = saved?.identity["review_digest"]?.text; proposal = nil
@@ -474,11 +492,11 @@ struct ChildTaskRepairView: View {
     private func resetReview() async {
         guard !working else { return }; let request = UUID(); ticket = request; loading = true
         defer { if ticket == request { loading = false } }
-        let accepted = await persistChoices([], labels: [], read: nil)
+        let accepted = await persistChoices([], labels: [], read: nil, preserveRestoration: false)
         guard usable, ticket == request else { return }; loading = false; if accepted { review = nil; outline = nil; await refresh() }
     }
     private func save() async {
-        guard let model, let proposal = current, proposal.eligible, store.childTaskRepairWritesAvailable else { return }
+        guard saveAvailable, let model, let proposal = current, proposal.eligible, store.childTaskRepairWritesAvailable else { return }
         do { let command = try ChildTaskRepairCommand(preview: proposal); guard await model.queue(command, review: proposal, draftToken: draft?.token), usable, self.model === model else { return }; activeID = command.id; draft = nil; changes = []; labels = []; baseDigest = nil; if await model.run(command, operation: .send) { await store.sync() } }
         catch { failure = "The repair couldn’t be saved. The original is kept." }
     }
@@ -488,7 +506,7 @@ struct ChildTaskRepairView: View {
         if choosingCopy { proposal = nil }
         defer { if ticket == request { comparingCopies = false } }
         do {
-            let value = try await store.readChildTaskCopies(read)
+            let value = try await loadCopies(read)
             guard usable, ticket == request, selected == read.context.root.id, store.childTaskCopiesAreCurrent(value), !Task.isCancelled else { return }
             savedCopies = value
             if let partial = draft?.mappingReview {
@@ -564,6 +582,7 @@ private struct ChildRepairActionLabel: View {
 
 private struct ChildCopyComparison: View {
     let copies: ChildTaskCopyReview
+    var boundRestoration = false
     @Binding var expanded: Set<String>
     let selectedSource: String?
     let canChoose: Bool
@@ -594,14 +613,16 @@ private struct ChildCopyComparison: View {
                             }.padding(.leading, CGFloat(min(item.depth - 1, 6) * 12)).padding(.vertical, 4)
                         }
                     }
-                    if copy.state == "ready", !copies.omitted.contains(copy.id) {
+                    if copy.state == "ready", !copies.omitted.contains(copy.id), !boundRestoration || copy.id == "task" {
                         if selectedSource == copy.id {
                             Label("Chosen for review", systemImage: "checkmark.circle").fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childCopyChosen-" + copy.id)
                         } else {
-                            Button { choose(copy) } label: { ChildRepairActionLabel(title: "Use this copy", symbol: "checkmark.circle") }
-                                .disabled(!canChoose).accessibilityLabel("Use \(copy.title.lowercased())")
-                                .accessibilityIdentifier("childCopyChoose-" + copy.id)
-                            Button { reviewHistory(copy) } label: { ChildRepairActionLabel(title: "Review task histories", symbol: "clock.arrow.circlepath") }
+                            if !boundRestoration {
+                                Button { choose(copy) } label: { ChildRepairActionLabel(title: "Use this copy", symbol: "checkmark.circle") }
+                                    .disabled(!canChoose).accessibilityLabel("Use \(copy.title.lowercased())")
+                                    .accessibilityIdentifier("childCopyChoose-" + copy.id)
+                            }
+                            Button { reviewHistory(copy) } label: { ChildRepairActionLabel(title: boundRestoration ? "Review older version histories" : "Review task histories", symbol: "clock.arrow.circlepath") }
                                 .disabled(!canChoose || !copies.omitted.isEmpty).accessibilityIdentifier("childCopyMap-" + copy.id)
                         }
                     }
@@ -1019,6 +1040,13 @@ private struct ChildRepairOriginalComparisonView: View {
 
 /// Reviews are ephemeral; unresolved commands and confirmed reversal identities
 /// are recovered from the encrypted account journal after closing or relaunch.
+private struct ChildRestoredAdoptionSelection: Identifiable {
+    let id = UUID()
+    let rootID: String
+    let binding: ChildTaskRestorationBinding
+    let scope: ChildTaskFieldClientScope
+}
+
 struct ChildTaskOriginalRestoreView: View {
     let archive: ChildTaskRepairArchive?
     @Environment(Store.self) private var store
@@ -1026,6 +1054,7 @@ struct ChildTaskOriginalRestoreView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var model: ChildTaskRestoreModel?
     @State private var review: ChildTaskRestoreReview?
+    @State private var adoption: ChildRestoredAdoptionSelection?
     @State private var busy = false
     @State private var message: String?
     @State private var ticket = UUID()
@@ -1035,7 +1064,7 @@ struct ChildTaskOriginalRestoreView: View {
             List {
                 if let model, model.scope == scope {
                     Section {
-                        Text("Restore only the saved subtask structure. Current task notes and priority stay current. Both versions are retained; an older structure stays read-only until Undo. After Undo, finish recovery when you no longer need Redo.")
+                        Text("Restore only the saved subtask structure. Current task notes and priority stay current. Both versions are retained. An older structure stays read-only until Undo or a reviewed keep-older save. After Undo, finish recovery when you no longer need Redo.")
                             .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
                         if let archive, archive.scope == scope, archive.contentRetained, store.childTaskOriginalRestorationEnabled {
                             Button("Review saved structure") { Task { await prepare(identity: ChildTaskRestoreCommand.identity(archive), mode: .restore) } }
@@ -1060,6 +1089,10 @@ struct ChildTaskOriginalRestoreView: View {
                             } else if entry.phase == .closed {
                                 Button("Remove stopped request") { Task { await model.discard(entry.command) } }
                             } else if entry.phase == .applied, !unconfirmed.contains(entry.command.rootID), let result = entry.result, result.raw["phase"] != .string("finished") {
+                                if result.raw["phase"] == .string("restored"), store.childTaskOriginalAdoptionEnabled {
+                                    Button("Review keeping older version editable") { Task { await prepareAdoption(entry) } }
+                                        .accessibilityIdentifier("childRestoreAdopt-" + entry.command.id)
+                                }
                                 if store.childTaskOriginalReversalsEnabled {
                                     Button(result.raw["phase"] == .string("restored") ? "Review Undo" : "Review Redo") {
                                         Task { await prepare(identity: entry.command.identity, mode: result.raw["phase"] == .string("restored") ? .undo : .redo, restorationID: result.raw["restoration_id"]!.text) }
@@ -1087,6 +1120,9 @@ struct ChildTaskOriginalRestoreView: View {
             catch { message = "Saved restoration requests couldn’t be read. They are kept on this device." }
         }
         .onChange(of: store.snapshotRevision) { _, _ in review = nil }
+        .sheet(item: $adoption) { value in
+            if value.scope == scope { ChildTaskRepairView(rootID: value.rootID, restoration: value.binding) }
+        }
         .onDisappear { close() }
         .sheet(item: $review) { value in
             if value.scope == scope, store.childTaskRestoreReviewIsCurrent(value) {
@@ -1097,14 +1133,32 @@ struct ChildTaskOriginalRestoreView: View {
         .frame(minWidth: 440, idealWidth: 560, minHeight: 420, idealHeight: 620)
         #endif
     }
-    private func close() { ticket = UUID(); model?.close(); model = nil; review = nil; busy = false; message = nil }
+    private func close() { ticket = UUID(); model?.close(); model = nil; review = nil; adoption = nil; busy = false; message = nil }
     private func status(_ entry: ChildTaskRestoreState.Entry, unconfirmed: Bool) -> String {
         if entry.phase == .queued { return "Saved on this device; not yet confirmed." }
         if entry.phase == .attempted { return "Confirmation needed. Check status before starting another request." }
         if entry.phase == .closed { return "Stopped. This request made no change." }
         if entry.result?.raw["phase"] == .string("finished") { return "Recovery finished. Current subtasks kept; Redo is no longer available." }
         let decision = entry.result?.raw["phase"] == .string("restored") ? "Saved structure restored." : "Restoration undone."
-        return unconfirmed ? "Last confirmed decision: " + decision : decision
+        return "Last confirmed decision: " + decision + (unconfirmed ? " Confirmation is needed for another request." : " Review an action to check current availability.")
+    }
+    private func prepareAdoption(_ entry: ChildTaskRestoreState.Entry) async {
+        guard !busy, let captured = scope, let model, model.scope == captured,
+              store.childTaskOriginalAdoptionEnabled, entry.phase == .applied,
+              entry.result?.raw["phase"] == .string("restored"),
+              !ChildTaskRestoreState.unconfirmedRoots(model.entries).contains(entry.command.rootID),
+              let restorationID = entry.result?.raw["restoration_id"]?.text else { return }
+        let work = UUID(); ticket = work; busy = true; message = nil
+        defer { if ticket == work { busy = false } }
+        do {
+            let read = try await store.readChildTaskAdoption(entry.command.rootID)
+            let held = try await store.readRestoredChildTaskCopies(read, actorID: entry.command.account, restorationID: restorationID)
+            guard ticket == work, scope == captured, store.childTaskCopiesAreCurrent(held.copies), !Task.isCancelled else { return }
+            adoption = .init(rootID: entry.command.rootID, binding: held.restoration, scope: captured)
+        } catch {
+            guard ticket == work, scope == captured, !Task.isCancelled else { return }
+            message = "This older version couldn’t be reviewed with current access. It may already have changed. Check saved requests; every retained version stays safe."
+        }
     }
     private func prepare(identity: [String: JSON], mode: ChildTaskRestoreMode, restorationID: String? = nil) async {
         guard !busy, let captured = scope else { return }; let work = UUID(); ticket = work; busy = true; message = nil

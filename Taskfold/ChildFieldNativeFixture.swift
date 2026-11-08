@@ -499,7 +499,12 @@ struct ChildFieldNativeFixtureView: View {
             } catch is CancellationError { } catch { problem = error.localizedDescription }
         }
         .sheet(isPresented: Binding(get: { opening != nil }, set: { if !$0 { opening = nil } })) {
-            if opening == "repair" { ChildTaskRepairView(rootID: ChildFieldNativeIdentity.rootID) }
+            if opening == "repair", ChildMappingSQLNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--child-restored-adoption-native") {
+                if let state = try? ChildFieldNativePeer.state(), let raw = state["restoration"], let binding = try? ChildTaskRestorationBinding(raw: raw.object) {
+                    ChildTaskRepairView(rootID: ChildFieldNativeIdentity.rootID, restoration: binding)
+                } else { Text("Synthetic restoration identity unavailable") }
+            }
+            else if opening == "repair" { ChildTaskRepairView(rootID: ChildFieldNativeIdentity.rootID) }
             else if opening == "repairRecovery" { ChildTaskRepairView() }
             else { WorkflowShell(title: opening == "adoption" || opening == "adoptionRecovery" ? "Subtask storage" : opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : opening == "structure" ? "Organize subtasks" : opening == "structureRecovery" ? "Saved hierarchy actions" : opening == "transfers" ? "Saved subtask moves" : "Saved subtask changes") {
                 if opening == "adoption" { ChildTaskAdoptionView(rootID: ChildFieldNativeIdentity.rootID) }

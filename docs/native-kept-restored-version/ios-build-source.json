@@ -1,0 +1,30 @@
+{
+  "sources": {
+    "Taskfold/Core/ChildTaskRepair.swift": {
+      "owner": "011412008a41d0ecd3a774f9bfd330ef9b470dbf89058809576595e0639f6183",
+      "host": "011412008a41d0ecd3a774f9bfd330ef9b470dbf89058809576595e0639f6183"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "owner": "309b19f0627fbf8dcbdce0ccc648a9ad4c5c577bdee18e30e89664ae7b430af9",
+      "host": "44cc9ffd7f266ba60c72ca7f2122085ca61050351a7914bee22b75ef239f572e"
+    },
+    "Taskfold/Core/Store.swift": {
+      "owner": "f9a6b15c8fcb670c18d03b68f96b8743062df9cf8f0fa4d210e758b7256f4e17",
+      "host": "13a4dc9bb6cf5edafa4b99d909a00692695476801c6d07a942d612b3989ebfc7"
+    },
+    "Taskfold/Views/ChildTaskRepairView.swift": {
+      "owner": "edaad833d66a72c74340d6d2719803e544cdd945cecf08ca27eeb9de3c1cfdf5",
+      "host": "edaad833d66a72c74340d6d2719803e544cdd945cecf08ca27eeb9de3c1cfdf5"
+    },
+    "Taskfold/ChildFieldNativeFixture.swift": {
+      "owner": "4e820926038deface096c5eb3576c03ef5a46f7d83d94c9244ad392f9cf6a1fb",
+      "host": "4e820926038deface096c5eb3576c03ef5a46f7d83d94c9244ad392f9cf6a1fb"
+    },
+    "TaskfoldUITests/AudioCommentUITests.swift": {
+      "owner": "bcf4a0ba3e5b20454d5e479d54ee650952b373acb6dacb3a3b9419cfa7d57b0d",
+      "host": "bcf4a0ba3e5b20454d5e479d54ee650952b373acb6dacb3a3b9419cfa7d57b0d"
+    }
+  },
+  "host": "/tmp/taskfold-archive-ios-host",
+  "normalAppChanged": false
+}

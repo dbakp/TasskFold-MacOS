@@ -2986,3 +2986,104 @@ extension TaskfoldMacUITests {
     }
 }
 #endif
+
+extension TaskfoldUITests {
+    @MainActor func testRestoredAdoptionFormatHistoryColdSaveAndCheck() throws {
+        #if os(macOS)
+        throw XCTSkip("Mac native acceptance is a separate walkthrough")
+        #else
+        try childGuard()
+        let home = try audioTaskHome(), support = home.appendingPathComponent("Library/Application Support", isDirectory: true)
+        let channel = support.appendingPathComponent("Child mapping SQL native peer", isDirectory: true)
+        try FileManager.default.createDirectory(at: channel, withIntermediateDirectories: true)
+        XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: channel.path).isEmpty)
+        try Data("Attach current full-schema format fixture".utf8).write(to: support.appendingPathComponent("child-mapping-native-ready.request"), options: .atomic)
+        let configured = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in FileManager.default.fileExists(atPath: channel.appendingPathComponent("channel.json").path) }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [configured], timeout: 150), .completed)
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-adoption-saved-copies", "--child-mapping-sql-native", "--child-restored-adoption-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        func launchReview() {
+            app.launch(); app.activate()
+            XCTAssertTrue(app.buttons["childNativeRepair"].waitForExistence(timeout: 25), app.debugDescription)
+            childHomePress("childNativeRepair", app)
+        }
+        func button(_ id: String) -> XCUIElement { app.buttons[id].firstMatch }
+        func press(_ id: String, top: Bool = false) {
+            let b = button(id); childReveal(b, app, towardTop: top); completionReadyPress(b, app)
+        }
+        func match(_ source: String, history: String) {
+            press("childMappingIdentity-" + source, top: source == "concept")
+            XCTAssertTrue(app.navigationBars["Choose history"].waitForExistence(timeout: 12), app.debugDescription)
+            press("childMappingHistory-" + history)
+            press("childMappingLifecycle-" + source)
+            childPress(app.buttons["Keep recorded details"].firstMatch)
+        }
+        func state() throws -> [String: Any] {
+            try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: try audioTaskHome().appendingPathComponent("Library/Application Support/Child mapping SQL native peer/database-state.json"))) as? [String: Any])
+        }
+        launchReview()
+        press("childRepairWrap-0.0")
+        let ready = app.staticTexts["childRepairReady"].firstMatch
+        childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 20), app.debugDescription)
+        XCTAssertEqual((try state()["repairs"] as? [Any])?.count, 1)
+        press("childMappingPrepareFormat")
+        let editor = button("childMappingIdentity-concept"); childReveal(editor, app); XCTAssertTrue(editor.waitForExistence(timeout: 20), app.debugDescription)
+        let formatControl = button("childMappingEditFormat"); childReveal(formatControl, app, towardTop: true); XCTAssertTrue(formatControl.exists)
+        structureSnapshot(app, "Staged format repairs remain visible before matching histories")
+        match("concept", history: "concept")
+        app.terminate(); launchReview()
+        childReveal(editor, app); XCTAssertEqual(editor.value as? String, "Prepare the review", app.debugDescription)
+        press("childMappingEditFormat", top: true)
+        let keep = app.buttons["Keep reviewing"].firstMatch; XCTAssertTrue(keep.waitForExistence(timeout: 10), app.debugDescription)
+        structureSnapshot(app, "Explicit keep-reviewing action before clearing history choices")
+        childPress(keep)
+        childReveal(editor, app); XCTAssertEqual(editor.value as? String, "Prepare the review")
+        press("childMappingEditFormat", top: true)
+        childPress(app.buttons["Edit repairs and choose histories again"].firstMatch)
+        childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 15), app.debugDescription)
+        press("childMappingPrepareFormat")
+        childReveal(editor, app); XCTAssertEqual(editor.value as? String, "Choose history…")
+        let candidates = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "childMappingIdentity-")).allElementsBoundByAccessibilityElement
+        let recovered = try XCTUnwrap(candidates.first { !["childMappingIdentity-concept", "childMappingIdentity-review"].contains($0.identifier) }).identifier.replacingOccurrences(of: "childMappingIdentity-", with: "")
+        match("concept", history: "concept"); match(recovered, history: "nested"); match("review", history: "review")
+        structureSnapshot(app, "Format repairs and explicit history choices stay together")
+        press("childMappingPreview")
+        childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 15), app.debugDescription)
+        press("childMappingEdit")
+        childReveal(formatControl, app, towardTop: true); XCTAssertTrue(formatControl.exists)
+        press("childMappingPreview")
+        app.terminate(); launchReview()
+        childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 20), app.debugDescription)
+        XCTAssertEqual((try state()["repairs"] as? [Any])?.count, 1)
+        press("childRepairSave")
+        let consentSheet = app.sheets["Keep this older version editable?"].firstMatch
+        XCTAssertTrue(consentSheet.waitForExistence(timeout: 10), app.debugDescription)
+        structureSnapshot(app, "Explicit consent retains newer version and ends the previous Undo cycle")
+        let cancel = consentSheet.buttons["Keep reviewing"].firstMatch
+        if cancel.exists { childPress(cancel) }
+        else {
+            // Adaptive iOS popovers omit cancel-role buttons and expose this
+            // accessible outside region instead. Exercise the actual control.
+            let outside = app.otherElements["PopoverDismissRegion"].firstMatch
+            XCTAssertTrue(outside.waitForExistence(timeout: 10), app.debugDescription)
+            outside.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.5)).tap()
+        }
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: consentSheet)], timeout: 10), .completed)
+        XCTAssertEqual((try state()["repairs"] as? [Any])?.count, 1)
+        press("childRepairSave")
+        XCTAssertTrue(consentSheet.waitForExistence(timeout: 10), app.debugDescription)
+        childPress(consentSheet.buttons["Keep older version editable"].firstMatch)
+        let status = app.staticTexts["childRepairStatus"].firstMatch; childReveal(status, app)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Awaiting confirmation"), object: status)], timeout: 20), .completed, app.debugDescription)
+        app.terminate(); app.launch(); app.activate(); childHomePress("childNativeRepairRecovery", app)
+        press("childRepairCheck"); childReveal(status, app)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Repair saved"), object: status)], timeout: 20), .completed, app.debugDescription)
+        let final = try state(); XCTAssertEqual((final["repairs"] as? [Any])?.count, 2); XCTAssertEqual((final["originals"] as? [Any])?.count, 2)
+        XCTAssertEqual((final["restorations"] as? [[String: Any]])?.first?["phase"] as? String, "adopted")
+        structureSnapshot(app, "Cold status recovery confirms one formatted-history save")
+        let current = try audioTaskHome().appendingPathComponent("Library/Application Support/Child mapping SQL native peer")
+        try Data("Native restored adoption: staged format, Cancel, edit, cold return, consent and recovery passed".utf8).write(to: current.appendingPathComponent("native-adoption-result.txt"), options: .atomic)
+        app.terminate(); try Data("stop".utf8).write(to: current.appendingPathComponent("stop"), options: .atomic)
+        #endif
+    }
+}

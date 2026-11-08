@@ -99,4 +99,60 @@ final class ChildRestoredAdoptionTests: XCTestCase {
             XCTAssertThrowsError(try ChildTaskRepairOriginal(data: response, command: f.command, result: result), mode)
         }
     }
+
+    func testFormatStageKeepsBoundRestorationAcrossColdStateAndHistoryReview() throws {
+        let f = try fixture(), raw = f.preview.changes[0].raw
+        let format = try raw["format_changes"]!.list.map { try ChildTaskRepairChange(raw: $0.object) }
+        let draft = try ChildTaskRepairDraft(review: f.review, changes: format, labels: format.map(\.formatSummary), restoration: f.held.restoration)
+        let state = try ChildTaskRepairState(account: draft.account, origin: draft.origin, drafts: [draft])
+        let data = try TaskfoldJSONEncoder().encode(state), cold = try ChildTaskRepairState(data: data)
+        XCTAssertEqual(cold.drafts, [draft]); XCTAssertTrue(cold.drafts[0].matches(f.review))
+        XCTAssertEqual(cold.drafts[0].restoration, f.held.restoration)
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("Newer formatted instruction"))
+        let partial = try ChildCopyMappingDraft(source: "task", digest: f.held.copies.digest, mapping: raw["mapping"]!.object, formatChanges: format, restoration: draft.restoration)
+        let mappingDraft = try ChildTaskRepairDraft(review: f.review, changes: [], labels: [], mappingReview: partial, restoration: draft.restoration)
+        let returned = try ChildTaskRepairDraft(review: f.review, changes: partial.formatChanges, labels: format.map(\.formatSummary), restoration: mappingDraft.restoration)
+        XCTAssertEqual(returned.restoration, draft.restoration); XCTAssertEqual(returned.changes, draft.changes)
+    }
+    func testBoundReviewNeverFallsBackToAnUnboundOrDifferentMapping() throws {
+        let f = try fixture(), raw = f.preview.changes[0].raw
+        var otherRaw = f.held.restoration.raw; otherRaw["digest"] = .string(String(repeating: "a", count: 64))
+        let other = try ChildTaskRestorationBinding(raw: otherRaw)
+        let partial = try ChildCopyMappingDraft(source: "task", digest: f.held.copies.digest, mapping: raw["mapping"]!.object, restoration: f.held.restoration)
+        XCTAssertThrowsError(try ChildTaskRepairDraft(review: f.review, changes: [], labels: [], mappingReview: partial, restoration: other))
+        let unbound = try ChildCopyMappingDraft(source: "task", digest: f.held.copies.digest, mapping: raw["mapping"]!.object)
+        XCTAssertThrowsError(try ChildTaskRepairDraft(review: f.review, changes: [], labels: [], mappingReview: unbound, restoration: f.held.restoration))
+        XCTAssertThrowsError(try ChildTaskRepairDraft(review: f.review, changes: f.preview.changes, labels: ["Keep older"], restoration: other))
+        let ordinary = try ChildTaskRepairChange.choosing("task", digest: f.held.copies.digest)
+        XCTAssertThrowsError(try ChildTaskRepairDraft(review: f.review, changes: [ordinary], labels: ["Use copy"], restoration: f.held.restoration))
+    }
+    func testPriorBoundMappedDraftInfersContextWithoutChangingTheCommand() throws {
+        let f = try fixture()
+        let draft = try ChildTaskRepairDraft(review: f.review, changes: f.preview.changes, labels: ["Keep older"])
+        XCTAssertEqual(draft.restoration, f.held.restoration)
+        let data = try TaskfoldJSONEncoder().encode(draft)
+        var raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data); raw.removeValue(forKey: "restoration")
+        let recovered = try TaskfoldJSONDecoder().decode(ChildTaskRepairDraft.self, from: TaskfoldJSONEncoder().encode(raw))
+        XCTAssertEqual(recovered, draft); XCTAssertEqual(recovered.changes, f.command.body["changes"]!.list.map { try! ChildTaskRepairChange(raw: $0.object) })
+    }
+    func testUndoingLastFormatChoiceKeepsOnlyTheVersionIdentity() throws {
+        let f = try fixture()
+        XCTAssertThrowsError(try ChildTaskRepairDraft(review: f.review, changes: [], labels: []))
+        let identityOnly = try ChildTaskRepairDraft(review: f.review, changes: [], labels: [], restoration: f.held.restoration)
+        let state = try ChildTaskRepairState(account: identityOnly.account, origin: identityOnly.origin, drafts: [identityOnly])
+        let data = try TaskfoldJSONEncoder().encode(state), recovered = try ChildTaskRepairState(data: data)
+        XCTAssertEqual(recovered.drafts, [identityOnly]); XCTAssertNil(recovered.drafts[0].mappingReview)
+        XCTAssertTrue(recovered.drafts[0].changes.isEmpty)
+        XCTAssertLessThan(data.count, 2000)
+    }
+    func testFormatStageBindingRevisionIsStrictBeforeDecoding() throws {
+        let f = try fixture(), draft = try ChildTaskRepairDraft(review: f.review, changes: [], labels: [], restoration: f.held.restoration)
+        let state = try ChildTaskRepairState(account: draft.account, origin: draft.origin, drafts: [draft])
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let text = String(decoding: try encoder.encode(state), as: UTF8.self)
+        for revision in ["1e0", "1.0", "9007199254740993", "1,\"revision\":1"] {
+            let invalid = Data(text.replacingOccurrences(of: "\"revision\":1", with: "\"revision\":" + revision).utf8)
+            XCTAssertNotEqual(invalid, Data(text.utf8)); XCTAssertThrowsError(try ChildTaskRepairState(data: invalid), revision)
+        }
+    }
 }

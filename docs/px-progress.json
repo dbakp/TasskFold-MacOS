@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Older subtasks · atomic keep-older save",
-  "latest": "The bound keep-older save now works in the service and client contract: it archives the complete newer inverse, preserves earned history and exact unknown data, transfers file protections, then makes the older structure editable. Each owner passes 119 genuine local API/Storage checks and 103 Core cases (five new); both SDK builds pass. Actual field editing, current/second custodians, exact retry/Stop, caller access denial, post-update/commit rollback, near-quota replacement and real file protection/removal pass. Existing format and restore suites also pass 76 and 276 checks in the iOS-owned schema. Native controls, fresh adopted-status presentation and selecting/recovering the newer inverse remain unfinished, alongside wider lifecycle/platform acceptance. Both new switches stay off and hosted services are unchanged. Normal Mac48 is installed and synced from the merged source; macOS app-data approval and postlaunch readback remain pending.",
+  "focus": "Older subtasks · native keep-older review",
+  "latest": "Older-version reviews now keep your choices through closing and reopening, ask clearly before making the older structure editable, and safely check a saved result after an interrupted connection. The iPhone Simulator flow passed while retaining both versions, task notes/priority and earlier history. Still to finish: live recovery status, selecting/recovering the newer retained version, the saved-restoration entry button, and wider Mac/iPad/accessibility/larger-work acceptance. Normal advanced features remain off and hosted services are unchanged. Mac 48 remains installed with its separate app-data approval pending.",
   "next": [
-    "Connect the premium keep-older workflow to the completed atomic save: persist a format-stage restoration reference, load the bound comparison for all format/history paths, obtain fresh active/adopted status, and require clear consent before ending the old Undo/Redo cycle. Accept cold review, Save, exact Check/Stop and exports; add a clear way to select/recover the retained newer inverse. Larger work, wider custodians/lifecycle and Mac/iPad/speech/native HTTP acceptance remain open; normal switches stay off.",
+    "Add fresh active/adopted restoration status, then provide explicit selection/recovery of the retained newer inverse. Accept the native saved-restoration entry button and wider Mac/iPad/large-text/speech/HTTP Auth flows, alongside account/task/shared-custodian/file/audio/history and larger-work lifecycle cases. The phone bound-root format/history/cold/consent/save/lost-reply Check path is now accepted; do not repeat it unchanged.",
     "Finish Mac48 shared-storage readiness and postlaunch private-work readback after its confirmed macOS app-data prompt. The signed update is installed and synced; fresh private safety copy and rollback46 are verified, and superseded candidate47 is retired. One concrete Allow request is pending; leave the app/readback process intact. Phone installation stays deferred.",
     "Finish wider account/task/shared-custodian, cross-device discovery and file/audio/history lifecycle before original-restoration activation. Current Finish, Restore/status/cold Undo/Redo and current-card scopes are recorded; native Mac/iPad/speech/HTTP Auth and other realms remain separate.",
     "Improve genuinely generated on-device filter quality with a materially different, grounded design. Common descriptions now have a complete local path; the raw model remains known3/5, and the expanded twelve-goal oracle is still unaccepted. Do not rerun rejected prompts/schemas unchanged or count local drafts as inference.",
@@ -1005,7 +1005,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Separate subtask records, guarded field/structure edits, mixed completion and Undo/Redo have recorded scoped service/client/native proof. Saved-original discovery/export/removal, copy/history mapping, staged format review and original restore/status/cold Undo/Redo/Finish also have scoped acceptance; global older-task search is accepted on phone/iPad and built on Mac. The new keep-older save and client contract pass 119 genuine local API/Storage checks and 103 Core cases per owner, and both SDK builds pass. The complete newer inverse, exact unknown data, prior history and file protections survive; a subsequent normal field edit works. Caller access, current/second custodians, exact retry/Stop, commit rollback and near-quota replacement are verified. The retained newer inverse is exportable. Next: native comparison/format/history controls with cold drafts, fresh adopted-state presentation, explicit consent to end the old Undo/Redo cycle, and selecting/recovering the newer inverse. Wider account/task/custodian/file/audio/discussion ownership, cross-device discovery, exact-cache/large-library cases and Mac/iPad/large-text/speech/native HTTP acceptance remain unfinished. Broader Mac branch-move/removal keyboard checks remain. Normal switches, installed apps and hosted services are unchanged. Historical evidence and detailed acceptance scopes remain in the linked documents.",
+              "detail": "Separate records, guarded edits, mixed completion and scoped Undo/Redo, saved-original discovery/export/retention, copy/history mapping and restore/Undo/Redo/Finish have recorded service/client/native proof. The atomic keep-older save retains the complete newer inverse, earlier history, exact unknown data and file protections; it has 119 genuine API/Storage checks per owner. The new native review preserves version identity through format/history edits and cold return. Both clients pass 108 Core cases and SDK builds; the iPhone bound-root flow now passes one consented save and cold lost-reply Check against genuine PostgreSQL role/session responses. Fresh current/adopted presentation, saved-restoration entry-button acceptance and selecting/recovering the newer inverse remain open. Wider account/task/custodian/file/audio/discussion ownership, cross-device discovery, exact-cache/large-library, Mac/iPad/large-text/speech/HTTP Auth and branch keyboard cases remain. Advanced flags and hosted services stay unchanged; normal Mac 48 is installed with shared-storage approval pending. Detailed acceptance scopes remain in linked documents.",
               "steps": [
                 {
                   "state": "done",
@@ -1987,7 +1987,12 @@
     "restored-copy-review/README.md",
     "restored-copy-review/verification.json",
     "kept-restored-version/README.md",
-    "kept-restored-version/verification.json"
+    "kept-restored-version/verification.json",
+    "native-kept-restored-version/README.md",
+    "native-kept-restored-version/verification.json",
+    "native-kept-restored-version/native-phone.json",
+    "native-kept-restored-version/storage-cleanup.json",
+    "mac48-update/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2372,6 +2377,7 @@
     "mac47-update/progress-validation.json": "3ea19f3485bf5a1b90cd1f6b6a6e26145f7c51a03042b2507c8a88498fd395db",
     "mac47-update/storage-cleanup.json": "661bb219a3478bdaf504510f6719a52c9492f90f93a8e8194adae3783b418535",
     "mac47-update/verification.json": "009a8a57dbaf6d26d642ea3fad337e2bc4e35878bee9adc64ec1921914e5ff07",
+    "mac48-update/verification.json": "fb7b5a4ec5a6dd4d1784a4b8d7d715c67ad4d2369edcd034f415fe1219d02a79",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",
     "mixed-task-completion-native/verification.json": "e94f3ce96eba46de16f86d30d567751faa8079c57118dd1a6665101f1ea5de8f",
     "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",
@@ -2393,6 +2399,10 @@
     "native-connected-project-transfers/mac-build.json": "ada2a34f592871736bd8fb5690453af23f175ad5a0c59dfbbf7f09d9c4116792",
     "native-connected-project-transfers/rejected-attempts.json": "c0e3e366e6b4106da6bf0ebca279e1953c49560524eec1739a5280d6acd0c292",
     "native-connected-project-transfers/storage-cleanup.json": "6754a9985a5a1eb41bf4655d63c2e0168a213d9029d24e4ba5859f7f074c7e31",
+    "native-kept-restored-version/README.md": "95476693d81bb7a69fc33c36bcc963367948a09346dbd6559375a9984656d275",
+    "native-kept-restored-version/native-phone.json": "9ba9f724697cfb8d541164d0d1a3346766382c460a00f4b0992d5c86d566a4e2",
+    "native-kept-restored-version/storage-cleanup.json": "0f357bc1b52d16a67703d7fdf122ffcb32d7aa01142b4217e56166c6f995162b",
+    "native-kept-restored-version/verification.json": "868aef47e14671036504d97139346a91fed604c18dadac5c49b91c55e5cb41d8",
     "native-mixed-recording-transfers/README.md": "d83503b85d853cbe3847b1f66152927d27e2fb07b3f38e65abcc1cf2d1c047c9",
     "native-mixed-recording-transfers/ios-build.json": "609641ff3477e7e29fda68bf0ee7d99d40091a392f6dab600ca0e807a1cbd423",
     "native-mixed-recording-transfers/ios.json": "8c98334e03696f98cf51c0a21470bbdc9fd558cf5e9deeb2f5880318f03f824e",
