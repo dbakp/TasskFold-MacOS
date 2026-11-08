@@ -639,12 +639,20 @@ struct TaskPlannedDayRead {
     }
     private let calendar: Calendar
     private var days: [Schedule: String] = [:]
+    private var instants = TaskPlanning.InstantRead()
+    var instantFormatterCount: Int { instants.formatterCount }
     private(set) var resolutionCount = 0
     init(calendar: Calendar = .current) { self.calendar = calendar }
+    init(timeZone: String) {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: timeZone) ?? .current
+        self.calendar = calendar
+    }
     mutating func day(_ task: Record) -> String {
         let schedule = Schedule(task)
         if let day = days[schedule] { return day }
-        let day = TaskPlanner.plannedDay(task, calendar: calendar)
+        let day = FilterRule.plannedDay(task, timeZone: calendar.timeZone.identifier, resolveStart: { value in
+            TaskPlanning.start(value, parseInstant: { instants.instant($0) })
+        })
         days[schedule] = day; resolutionCount += 1
         return day
     }
@@ -686,7 +694,9 @@ final class TaskDayGroupsReadCache {
         let readable: Bool
     }
     private struct Key: Equatable {
-        let query: TaskQuery, clock: TaskCalendarContext
+        let query: TaskQuery
+        let clockDay: String, clockZone: String
+        let minute: Date?
         let today: String, calendar: Calendar
         let calendarID: Calendar.Identifier, timeZone: String
     }
@@ -700,7 +710,12 @@ final class TaskDayGroupsReadCache {
               context next: Context, tasks: () -> [Record]) -> TaskDayGroupsRead {
         guard next.readable else { clear(); return TaskDayGroupsRead(tasks: [], today: today, calendar: calendar) }
         if context != next { clear(); context = next }
-        let key = Key(query: query, clock: clock, today: today, calendar: calendar, calendarID: calendar.identifier, timeZone: calendar.timeZone.identifier)
+        // Day-only lists do not change every minute. A saved filter's actual
+        // rule is resolved by Store, so conservatively retain its minute fence.
+        let minute: Date?
+        if case .saved = query.scope { minute = clock.minute }
+        else { minute = query.filter?.usesClockWindow == true ? clock.minute : nil }
+        let key = Key(query: query, clockDay: clock.today, clockZone: clock.timeZone, minute: minute, today: today, calendar: calendar, calendarID: calendar.identifier, timeZone: calendar.timeZone.identifier)
         if let index = entries.firstIndex(where: { $0.key == key }) {
             let hit = entries.remove(at: index); entries.append(hit); return hit.value
         }

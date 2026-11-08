@@ -3056,7 +3056,7 @@ extension TaskfoldUITests {
         childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 20), app.debugDescription)
         XCTAssertEqual((try state()["repairs"] as? [Any])?.count, 1)
         press("childRepairSave")
-        let consentSheet = app.sheets["Keep this older version editable?"].firstMatch
+        let consentSheet = app.sheets["Keep this restored version editable?"].firstMatch
         XCTAssertTrue(consentSheet.waitForExistence(timeout: 10), app.debugDescription)
         structureSnapshot(app, "Explicit consent retains newer version and ends the previous Undo cycle")
         let cancel = consentSheet.buttons["Keep reviewing"].firstMatch

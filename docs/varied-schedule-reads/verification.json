@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-08",
+  "bothCurrentSDKBuildsPassed": true,
+  "core": {
+    "ios": {
+      "selected": 155,
+      "passed": 153,
+      "skipped": 2,
+      "failed": 0,
+      "newCases": 8,
+      "skips": "Two existing opt-in same-host diagnostics, not product failures",
+      "variedScheduleDiagnostic": "TASKFOLD_VARIED_SCHEDULE baseline=0.10344875 seconds current=0.031792292 seconds rows=500 resolutions=500 formatters=2",
+      "logSHA256": "f8126785f1aa96bed63731a87d5a14d747e6bc0158960c53d73cd615132ff3a2"
+    },
+    "mac": {
+      "selected": 145,
+      "passed": 143,
+      "skipped": 2,
+      "failed": 0,
+      "newCases": 8,
+      "skips": "Two existing opt-in same-host diagnostics, not product failures",
+      "variedScheduleDiagnostic": "TASKFOLD_VARIED_SCHEDULE baseline=0.104269709 seconds current=0.031867916 seconds rows=500 resolutions=500 formatters=2",
+      "logSHA256": "28c0155aab1fa27f36db9e0448591426d71b87dd3275ee93967177eb1dbd9099"
+    }
+  },
+  "nativeBefore": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "nativeFinal": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Fixed iPad Pro 13-inch (M5), real warm/cold unique-schedule drops, actual planning queue Cancel and eight actual Store freshness assertions"
+  },
+  "workload": {
+    "tasks": 2004,
+    "datedRows": 504,
+    "distinctTimedSchedules": 500,
+    "retainedReferenceApproxBytes": 2880000,
+    "unrelatedTasksExact": 2003,
+    "pendingQueueUnchanged": true
+  },
+  "comparison": {
+    "scope": "Measured Debug iPad stages only; two matching warm/cold fixture journeys, no physical FPS or full-navigation guarantee",
+    "samples": [
+      {
+        "kind": "warm",
+        "preparationBeforeMs": 260.3231251705438,
+        "preparationAfterMs": 86.93145820870996,
+        "throughCommitBeforeMs": 322.3438751883805,
+        "throughCommitAfterMs": 156.1821666546166,
+        "initialDatedReadBeforeMs": 312.9267916083336,
+        "initialDatedReadAfterMs": 92.18924981541932,
+        "firstGeometryBeforeMs": 39.41190242767334,
+        "firstGeometryAfterMs": 29.762983322143555,
+        "instantFormatterCount": 2,
+        "resolutionCount": 504
+      },
+      {
+        "kind": "cold",
+        "preparationBeforeMs": 327.4574582464993,
+        "preparationAfterMs": 77.30879168957472,
+        "throughCommitBeforeMs": 402.22262497991323,
+        "throughCommitAfterMs": 138.6947501450777,
+        "initialDatedReadBeforeMs": 363.3393330965191,
+        "initialDatedReadAfterMs": 86.23404148966074,
+        "firstGeometryBeforeMs": 34.536004066467285,
+        "firstGeometryAfterMs": 25.71392059326172,
+        "instantFormatterCount": 2,
+        "resolutionCount": 503
+      }
+    ]
+  },
+  "intermediateObservation": {
+    "warmFirstGeometryMs": 1126.8720626831055,
+    "retained": "intermediate-after.json",
+    "causality": "Not conclusively attributed. Unnecessary ordinary-minute invalidation was independently reproduced and corrected; final samples and current Store minute-reuse proof are separate evidence."
+  },
+  "guardsUnchanged": [
+    "day/zone/calendar/query/selected-date",
+    "snapshot/access/session/workspace/origin/readability",
+    "saved-filter and explicit relative-clock minute refresh",
+    "current action admission and synchronous durable saving"
+  ],
+  "normalMacBuildUnchanged": "48",
+  "latestOrdinaryOptimizationsInstalled": false,
+  "phoneInstallationDeferred": true,
+  "hostedChanges": false,
+  "advancedGatesChanged": false,
+  "remaining": [
+    "Wider sustained first-use/scrolling/rendering and reconstructed-refresh/multiple-project scaling",
+    "Native Mac/phone/large-text/accessibility/account and physical smoothness",
+    "Install the next verified ordinary Mac update; keep phone installation deferred",
+    "Remaining Px migration/history/ownership, provider and distribution scope stays intact"
+  ]
+}

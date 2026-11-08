@@ -55,6 +55,32 @@ final class TaskDayGroupsCacheTests: XCTestCase {
         }
         XCTAssertEqual(count, variants.count + 3)
     }
+    func testOrdinaryDatedReadsIgnoreMinuteTicksButRefreshDayAndZone() {
+        let cache = TaskDayGroupsReadCache(); var produced = 0
+        for minute in 0..<59 {
+            let tick = clock(date: String(format: "2026-11-08T10:%02d:00Z", minute))
+            for scope in [TaskScope.today, .upcoming] {
+                let read = cache.read(query: .init(scope: scope), clock: tick, today: day, calendar: calendar(), context: context()) { produced += 1; return [row("current")] }
+                XCTAssertEqual(read.rowsByDay[day]?.first?.id, "current")
+            }
+        }
+        XCTAssertEqual(produced, 2)
+        for tick in [clock(date: "2026-11-09T10:00:00Z"), clock("America/New_York", date: "2026-11-09T10:00:00Z")] {
+            _ = cache.read(query: .init(scope: .today), clock: tick, today: tick.today, calendar: calendar(), context: context()) { produced += 1; return [row("fresh")] }
+        }
+        XCTAssertEqual(produced, 4)
+    }
+    func testClockWindowAndOpaqueSavedFiltersStillRefreshOnMinuteTicks() {
+        for query in [TaskQuery(scope: .upcoming, filter: .predicate("planned_before", "+5 minutes")), TaskQuery(scope: .saved("existing-view"))] {
+            let cache = TaskDayGroupsReadCache(); var produced = 0
+            for minute in 0..<3 {
+                let tick = clock(date: String(format: "2026-11-08T10:%02d:00Z", minute))
+                let read = cache.read(query: query, clock: tick, today: day, calendar: calendar(), context: context()) { produced += 1; return [row("minute-\(minute)")] }
+                XCTAssertEqual(read.rowsByDay[day]?.first?.id, "minute-\(minute)")
+            }
+            XCTAssertEqual(produced, 3)
+        }
+    }
     func testCalendarTravelDSTDuplicateAndOpaqueValuesMatchUncachedReader() throws {
         var timed = row("fixed"); timed["due_time"] = .string("23:30"); timed["time_zone"] = .string("UTC"); timed["scheduled_at"] = .string("2026-11-08T23:30:00Z")
         timed["future"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("9007199254740993".utf8))

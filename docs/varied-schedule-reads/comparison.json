@@ -1,0 +1,31 @@
+{
+  "scope": "Measured Debug iPad stages only; two matching warm/cold fixture journeys, no physical FPS or full-navigation guarantee",
+  "samples": [
+    {
+      "kind": "warm",
+      "preparationBeforeMs": 260.3231251705438,
+      "preparationAfterMs": 86.93145820870996,
+      "throughCommitBeforeMs": 322.3438751883805,
+      "throughCommitAfterMs": 156.1821666546166,
+      "initialDatedReadBeforeMs": 312.9267916083336,
+      "initialDatedReadAfterMs": 92.18924981541932,
+      "firstGeometryBeforeMs": 39.41190242767334,
+      "firstGeometryAfterMs": 29.762983322143555,
+      "instantFormatterCount": 2,
+      "resolutionCount": 504
+    },
+    {
+      "kind": "cold",
+      "preparationBeforeMs": 327.4574582464993,
+      "preparationAfterMs": 77.30879168957472,
+      "throughCommitBeforeMs": 402.22262497991323,
+      "throughCommitAfterMs": 138.6947501450777,
+      "initialDatedReadBeforeMs": 363.3393330965191,
+      "initialDatedReadAfterMs": 86.23404148966074,
+      "firstGeometryBeforeMs": 34.536004066467285,
+      "firstGeometryAfterMs": 25.71392059326172,
+      "instantFormatterCount": 2,
+      "resolutionCount": 503
+    }
+  ]
+}
