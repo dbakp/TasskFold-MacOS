@@ -162,8 +162,9 @@ final class DayDragTargetRead {
             let source = rows()
             priority = source.first { $0.id == draggedID }?.priority
             // Date parsing runs once per source/context, not once per pointer.
+            var planning = TaskPlannedDayRead(calendar: calendar)
             for row in source where !row.completed {
-                groups[TaskPlanner.plannedDay(row, calendar: calendar), default: []].append(row)
+                groups[planning.day(row), default: []].append(row)
             }
         }
         guard let priority else { return before }

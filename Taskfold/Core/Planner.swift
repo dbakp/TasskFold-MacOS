@@ -626,6 +626,30 @@ struct TaskRowPlanningRead: Equatable, Sendable {
     }
 }
 
+/// An operation-local projection of schedule values, never task identity or
+/// editing authority. Repeated wall minutes share resolution while every caller
+/// keeps the original row, order and duplicates. Nothing survives the operation.
+struct TaskPlannedDayRead {
+    private struct Schedule: Hashable {
+        let date: String, time: String, zone: String, instant: String
+        init(_ task: Record) {
+            date = task.string("due_date"); time = task.string("due_time")
+            zone = task.string("time_zone"); instant = task.string("scheduled_at")
+        }
+    }
+    private let calendar: Calendar
+    private var days: [Schedule: String] = [:]
+    private(set) var resolutionCount = 0
+    init(calendar: Calendar = .current) { self.calendar = calendar }
+    mutating func day(_ task: Record) -> String {
+        let schedule = Schedule(task)
+        if let day = days[schedule] { return day }
+        let day = TaskPlanner.plannedDay(task, calendar: calendar)
+        days[schedule] = day; resolutionCount += 1
+        return day
+    }
+}
+
 /// One current read of each task's displayed day. Grouping a fourteen-day list
 /// must not parse every fixed-time task again for every section. This is a value
 /// projection of the supplied rows, with no persisted or cross-workspace memo.
@@ -636,8 +660,9 @@ struct TaskDayGroupsRead {
     init(tasks: [Record], today: String, calendar: Calendar = .current) {
         self.today = today
         var overdue: [Record] = [], groups: [String: [Record]] = [:]
+        var planning = TaskPlannedDayRead(calendar: calendar)
         for task in tasks {
-            let day = TaskPlanner.plannedDay(task, calendar: calendar)
+            let day = planning.day(task)
             groups[day, default: []].append(task)
             if !task.completed, !day.isEmpty, day < today { overdue.append(task) }
         }
