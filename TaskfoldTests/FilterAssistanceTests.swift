@@ -256,6 +256,47 @@ final class FilterAssistanceTests: XCTestCase {
             XCTAssertEqual(rows.filter { suggestion.rule.resultMatches($0, context: context, today: today, timeZone: "UTC") }.map(\.id), expected, goal)
         }
     }
+    func testCompleteParaphrasesStayLocalAndPreserveEveryCondition() async throws {
+        let (context, today, rows, _) = qualityFixture()
+        for (goal, expected) in [("Only the highest priority unfinished tasks scheduled for the current day or earlier", ["today", "old"]), ("Anything unfinished under Work, also looking in nested projects", ["today", "old", "deadline", "child-project-task"]), ("Finished items marked priority three", ["done-low"])] {
+            let draft = try await FilterAssistanceEngine.draft(goal)
+            XCTAssertEqual(draft.origin, .localDescription)
+            let suggestion = try FilterSuggestion(expression: draft.expression, context: context)
+            XCTAssertEqual(rows.filter { suggestion.rule.resultMatches($0, context: context, today: today, timeZone: "UTC") }.map(\.id), expected)
+        }
+    }
+    func testActualParaphraseModelWhenExplicitlyRequested() async throws {
+        guard ProcessInfo.processInfo.environment["TASKFOLD_TEST_ON_DEVICE_MODEL"] == "1" else { throw XCTSkip("Actual raw paraphrase probe is opt-in.") }
+        if let reason = OnDeviceAssistance.unavailableReason {
+            print("FILTER_ASSISTANCE_MODEL_UNAVAILABLE " + reason); throw XCTSkip(reason)
+        }
+        let (modelContext, today, rows, _) = qualityFixture()
+        let cases: [(String, [String])] = [
+            ("Only the highest priority unfinished tasks scheduled for the current day or earlier", ["today", "old"]),
+            ("Anything unfinished under Work, also looking in nested projects", ["today", "old", "deadline", "child-project-task"]),
+            ("Finished items marked priority three", ["done-low"])
+        ]
+        var accepted = true
+        for (goal, expected) in cases {
+            let start = ContinuousClock.now
+            do {
+                let expression = try await FilterAssistanceEngine.generateModel(goal)
+                let suggestion = try FilterSuggestion(expression: expression, context: modelContext)
+                let matches = rows.filter { suggestion.rule.resultMatches($0, context: modelContext, today: today, timeZone: "UTC") }.map(\.id)
+                let duration = start.duration(to: .now).components
+                let observation: [String: Any] = ["engine": "paraphrases", "generationPath": "systemModel", "syntheticGoal": goal, "seconds": Double(duration.seconds) + Double(duration.attoseconds) / 1e18, "expression": expression, "matchedIDs": matches, "expectedIDs": expected]
+                print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
+                if matches != expected { accepted = false }
+                XCTAssertEqual(matches, expected)
+            } catch {
+                accepted = false
+                let observation: [String: Any] = ["engine": "paraphrases", "generationPath": "systemModel", "syntheticGoal": goal, "expectedIDs": expected, "error": String(describing: error)]
+                print("TASKFOLD_MODEL_OBSERVATION " + String(data: try JSONSerialization.data(withJSONObject: observation, options: [.sortedKeys]), encoding: .utf8)!)
+                XCTFail("Actual fallback failed: " + String(describing: error))
+            }
+        }
+        if accepted { print("FILTER_ASSISTANCE_PARAPHRASE_MODEL_ACCEPTED three raw paraphrases; local path deliberately bypassed; no writes") }
+    }
     func testActualOnDeviceFilterEngineWhenExplicitlyRequested() async throws {
         guard ProcessInfo.processInfo.environment["TASKFOLD_TEST_ON_DEVICE_MODEL"] == "1" else { throw XCTSkip("Actual model probe is opt-in.") }
         if let reason = OnDeviceAssistance.unavailableReason {

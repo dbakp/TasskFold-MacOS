@@ -18,7 +18,7 @@ def hashes():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run-model', action='store_true', help='Explicitly permit inference only on the selected built-in synthetic examples')
-    parser.add_argument('--engine', choices=['all', 'filter', 'steps'], default='all', help='Run only the changed engine instead of repeating unrelated inference')
+    parser.add_argument('--engine', choices=['all', 'filter', 'paraphrases', 'steps'], default='all', help='Run only the changed engine instead of repeating unrelated inference')
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     if not args.run_model:
@@ -27,7 +27,8 @@ def main():
     if output.parent != Path('/tmp').resolve() or not output.name.startswith('taskfold-') or output.suffix != '.json':
         parser.error('Choose a new /tmp/taskfold-*.json report')
     log = output.with_suffix('.log')
-    if output.exists() or log.exists():
+    diagnostics = output.with_suffix('.diagnostics.log')
+    if output.exists() or log.exists() or diagnostics.exists():
         parser.error('Preserve earlier evidence; choose a new report name')
     subprocess.run([sys.executable, str(ROOT/'Scripts/check_test_storage.py'), '--path', '/tmp'], check=True)
     before = hashes()
@@ -36,16 +37,21 @@ def main():
               'sourceSHA256': before, 'driverSHA256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'observations': []}
     environment = dict(os.environ, TASKFOLD_TEST_ON_DEVICE_MODEL='1')
     selections = {'steps': 'TaskBreakdownTests/testActualOnDeviceEngineWhenExplicitlyRequested',
-                  'filter': 'FilterAssistanceTests/testActualOnDeviceFilterEngineWhenExplicitlyRequested'}
+                  'filter': 'FilterAssistanceTests/testActualOnDeviceFilterEngineWhenExplicitlyRequested',
+                  'paraphrases': 'FilterAssistanceTests/testActualParaphraseModelWhenExplicitlyRequested'}
     engines = list(selections) if args.engine == 'all' else [args.engine]
     selection = '|'.join(selections[engine] for engine in engines)
     report['engines'] = engines
-    report['expectedObservationCounts'] = {engine: (3 if engine == 'steps' else 12) if engine in engines else 0 for engine in selections}
-    with log.open('x') as stream:
+    report['expectedObservationCounts'] = {engine: (12 if engine == 'filter' else 3) if engine in engines else 0 for engine in selections}
+    # Keep XCTest/compiler stderr separate: an observed runner summary split
+    # a generated stdout JSON record even though every model assertion passed.
+    # Parsing stays strict; malformed or incomplete observations still refuse.
+    with log.open('x') as stream, diagnostics.open('x') as errors:
         log.chmod(0o600)
+        diagnostics.chmod(0o600)
         try:
             worker = subprocess.Popen(['bash', 'Scripts/test_core.sh', '--filter', selection], cwd=ROOT, env=environment,
-                                      stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
+                                      stdout=stream, stderr=errors, start_new_session=True)
             report['testExitCode'] = worker.wait(timeout=600)
         except subprocess.TimeoutExpired:
             # The new session contains only this probe and its compiler/test children.
@@ -59,14 +65,15 @@ def main():
             report['error'] = 'The synthetic probe exceeded its ten-minute process limit.'
     text = log.read_text()
     report['logSHA256'] = hashlib.sha256(log.read_bytes()).hexdigest()
+    report['diagnosticsSHA256'] = hashlib.sha256(diagnostics.read_bytes()).hexdigest()
     report['sourcesUnchanged'] = hashes() == before
     try:
         report['observations'] = [json.loads(line.removeprefix('TASKFOLD_MODEL_OBSERVATION ')) for line in text.splitlines() if line.startswith('TASKFOLD_MODEL_OBSERVATION ')]
     except ValueError:
         report['error'] = 'The model observation log could not be parsed.'
     report['unavailableReasons'] = sorted(set(line.partition('_MODEL_UNAVAILABLE ')[2] for line in text.splitlines() if '_MODEL_UNAVAILABLE ' in line))
-    counts = {engine: sum(row.get('engine') == engine for row in report['observations']) for engine in ['steps', 'filter']}
-    markers = {'steps': 'TASK_BREAKDOWN_MODEL_ACCEPTED', 'filter': 'FILTER_ASSISTANCE_MODEL_ACCEPTED'}
+    counts = {engine: sum(row.get('engine') == engine for row in report['observations']) for engine in selections}
+    markers = {'steps': 'TASK_BREAKDOWN_MODEL_ACCEPTED', 'filter': 'FILTER_ASSISTANCE_MODEL_ACCEPTED', 'paraphrases': 'FILTER_ASSISTANCE_PARAPHRASE_MODEL_ACCEPTED'}
     unique = {(row.get('engine'), row.get('syntheticGoal')) for row in report['observations']}
     observations_valid = len(unique) == len(report['observations']) and all(
         row.get('engine') in engines and isinstance(row.get('syntheticGoal'), str) and row['syntheticGoal'] and

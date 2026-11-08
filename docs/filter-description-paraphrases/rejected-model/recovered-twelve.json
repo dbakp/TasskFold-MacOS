@@ -1,0 +1,200 @@
+{
+  "sourceLogSHA256": "fdec090acb090d3eb35b2fc2daf5748c424afaa032d301cd390f8b5fb96c3215",
+  "originalDriverAccepted": false,
+  "testExitCode": 0,
+  "xctestPassed": 1,
+  "xctestFailed": 0,
+  "acceptedMarkerPresent": true,
+  "reportingFailure": "XCTest summary interleaved into stdout JSON; original log/report unchanged",
+  "recovery": "Remove only exact captured XCTest reporter insertion from one JSON record; offsets and removed bytes retained here. No model text is edited or inferred.",
+  "removedStartUTF8Byte": 53053,
+  "removedEndUTF8Byte": 53496,
+  "removedReporterText": "Test Suite 'FilterAssistanceTests' passed at 2026-11-08 14:22:27.947.\n\t Executed 1 test, with 0 failures (0 unexpected) in 161.973 (161.974) seconds\nTest Suite 'TaskfoldCoreTests.xctest' passed at 2026-11-08 14:22:27.947.\n\t Executed 1 test, with 0 failures (0 unexpected) in 161.973 (161.974) seconds\nTest Suite 'Selected tests' passed at 2026-11-08 14:22:27.947.\n\t Executed 1 test, with 0 failures (0 unexpected) in 161.973 (161.976) seconds\n",
+  "observations": [
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "expression": "(open AND p1 AND (date:\"today\" OR overdue))",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today",
+        "old"
+      ],
+      "seconds": 9.897238542,
+      "syntheticGoal": "Show open priority 1 tasks planned today or overdue"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "deadline"
+      ],
+      "expression": "deadline:\"today\"",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "deadline"
+      ],
+      "seconds": 13.659927959000001,
+      "syntheticGoal": "Show tasks with a deadline today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "expression": "(open AND project:\"Work\")",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "seconds": 13.708639208,
+      "syntheticGoal": "Show unfinished tasks in project Work"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "low"
+      ],
+      "expression": "(open AND p3 AND date:\"today\")",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "low"
+      ],
+      "seconds": 7.68234875,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "expression": "(open AND project-tree:\"Work\")",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "seconds": 14.489892042,
+      "syntheticGoal": "Find open work in project Work, including its subprojects"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "future-low"
+      ],
+      "expression": "(open AND p3 AND date:\"tomorrow\")",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "future-low"
+      ],
+      "seconds": 14.463739417,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for tomorrow"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "done-low"
+      ],
+      "expression": "(completed AND p3)",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "done-low"
+      ],
+      "seconds": 8.179853458,
+      "syntheticGoal": "Show completed priority 3 tasks"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "deadline",
+        "child-project-task"
+      ],
+      "expression": "(open AND p1 AND date:\"tomorrow\" AND project-tree:\"Work\")",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "deadline",
+        "child-project-task"
+      ],
+      "seconds": 20.563432917,
+      "syntheticGoal": "Find open priority 1 tasks planned tomorrow in project Work and its child projects"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "old",
+        "deadline"
+      ],
+      "expression": "(open AND project:\"Work\" AND NOT (date:\"today\"))",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "old",
+        "deadline"
+      ],
+      "seconds": 11.002992625,
+      "syntheticGoal": "Show open tasks in project Work, excluding those planned today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "low"
+      ],
+      "expression": "(open AND date:\"today\" AND (p1 OR p3))",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today",
+        "low"
+      ],
+      "seconds": 17.347576709,
+      "syntheticGoal": "Show open tasks planned today with priority 1 or priority 3"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today"
+      ],
+      "expression": "(open AND p1 AND deadline:\"tomorrow\")",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today"
+      ],
+      "seconds": 10.756519791,
+      "syntheticGoal": "Find open priority 1 tasks with a deadline tomorrow"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "old",
+        "old-low"
+      ],
+      "expression": "(open AND date before:\"today\")",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "old",
+        "old-low"
+      ],
+      "seconds": 20.138925125,
+      "syntheticGoal": "Show open tasks planned before today"
+    }
+  ],
+  "semanticMatches": 12,
+  "appSourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/FilterAssistance.swift": "0050db38bfc0b44e157e4b7241a210abed2cf4f171d9bfa2ab6ed12281c21fac",
+    "TaskfoldTests/TaskBreakdownTests.swift": "68e89c575c67705c7ef9e4c1659511d26da7551181438f5a3f5e9cf71dfe805f",
+    "TaskfoldTests/FilterAssistanceTests.swift": "29d7eafa31bad3c78b193d979558bb1335bdc3d631a18bcfca736c3b30800360"
+  },
+  "scope": "Fixed twelve English synthetic Mac-hosted goals; model actually called. Compiling model interpretation is separate from direct local parsing; no private catalog/task data or writes. Not broader quality/device/native acceptance."
+}

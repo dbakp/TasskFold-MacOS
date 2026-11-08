@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "owner": "TasskFold-MacOS",
+  "execution": "Mac-hosted owning Core",
+  "syntheticOnly": true,
+  "savedTaskOrFilterWrites": false,
+  "cloudInferenceFallback": false,
+  "realGenerationAccepted": false,
+  "sourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/FilterAssistance.swift": "0050db38bfc0b44e157e4b7241a210abed2cf4f171d9bfa2ab6ed12281c21fac",
+    "TaskfoldTests/TaskBreakdownTests.swift": "68e89c575c67705c7ef9e4c1659511d26da7551181438f5a3f5e9cf71dfe805f",
+    "TaskfoldTests/FilterAssistanceTests.swift": "3af30709781e381db29173d5adb82854b7930dae1f6f4e592646b4d997c9640f"
+  },
+  "driverSHA256": "dc83b575ca7419e3167b2e619591e15c080a7bc6db65df06d9849c8f73518586",
+  "observations": [
+    {
+      "engine": "fallback",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "expression": "(p1 OR p2 OR p3 OR p4) AND (today OR overdue) AND open",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today",
+        "old",
+        "low",
+        "old-low"
+      ],
+      "seconds": 6.428285542,
+      "syntheticGoal": "Only the highest priority unfinished tasks scheduled for the current day or earlier"
+    },
+    {
+      "engine": "fallback",
+      "error": "decodingFailure(FoundationModels.LanguageModelSession.GenerationError.Context(debugDescription: \"Failed to convert text into into GeneratedContent\\nText: {\\\"description\\\": \\\"Anything unfinished under Work, also looking in nested projects\\\", \\\"expression\\\": \\\"(Work OR (Work-tree OR (Work-tree-tree OR (Work-tree-tree-tree OR (Work-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree-tree OR (Work-tree-tree-tree-tree-\", underlyingErrors: [DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 \"Unexpected end of file\" UserInfo={NSDebugDescription=Unexpected end of file}], errorDescriptionOverride: nil))",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "generationPath": "systemModel",
+      "syntheticGoal": "Anything unfinished under Work, also looking in nested projects"
+    },
+    {
+      "engine": "fallback",
+      "expectedIDs": [
+        "done-low"
+      ],
+      "expression": "(completed AND priority 3)",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "done-low"
+      ],
+      "seconds": 10.553534666000001,
+      "syntheticGoal": "Finished items marked priority three"
+    }
+  ],
+  "engines": [
+    "fallback"
+  ],
+  "expectedObservationCounts": {
+    "steps": 0,
+    "filter": 0,
+    "fallback": 3
+  },
+  "testExitCode": 1,
+  "logSHA256": "dc8025b4e71ad3fb51f16ff17887c2c3bfb50263ddce28ada6875d50268f3331",
+  "diagnosticsSHA256": "c0577162256111e32fa6bd84bb6c3cb140ea7be4c2806fa44c05e0f8e10d0811",
+  "sourcesUnchanged": true,
+  "unavailableReasons": [],
+  "semanticAndShapeChecksPassed": false,
+  "taskTitleQualityReviewed": false
+}

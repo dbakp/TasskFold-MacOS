@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-08",
+  "productionScope": "Complete bounded local description grammar only",
+  "modelGenerationEngineAndReviewBindingsRestoredExact": true,
+  "localSemanticGoals": 15,
+  "newLocalGoals": [
+    "Only the highest priority unfinished tasks scheduled for the current day or earlier",
+    "Anything unfinished under Work, also looking in nested projects",
+    "Finished items marked priority three"
+  ],
+  "perOwnerCore": {
+    "selected": 140,
+    "passed": 136,
+    "skipped": 4,
+    "failed": 0
+  },
+  "skipScope": "Three explicit inference probes and one same-host timing diagnostic",
+  "macSDKPassed": true,
+  "iosSDKPassed": true,
+  "finalPipeline": [
+    {
+      "step": "mac-core",
+      "exit": 0,
+      "log": "/tmp/taskfold-filter-paraphrases-mac-core.log"
+    },
+    {
+      "step": "ios-core",
+      "exit": 0,
+      "log": "/tmp/taskfold-filter-paraphrases-ios-core.log"
+    },
+    {
+      "step": "mac-build",
+      "exit": 0,
+      "log": "/tmp/taskfold-filter-paraphrases-mac-build.log"
+    },
+    {
+      "step": "ios-build",
+      "exit": 0,
+      "log": "/tmp/taskfold-filter-paraphrases-ios-build.log"
+    }
+  ],
+  "actualNewNativeUIAccepted": false,
+  "newPhysicalOrLanguageAccepted": false,
+  "ordinaryPreviewReferenceSessionConsentChanged": false,
+  "savedFormatBackendOrGateChanged": false,
+  "privateInputToModel": false,
+  "normalInstallChanged": false,
+  "preparedMac50ContainsThisFeature": false,
+  "phoneInstall": "deferred",
+  "rejectedModel": {
+    "originalTwelveXCTestPassed": true,
+    "originalTwelveMatches": 12,
+    "originalDriverReportAccepted": false,
+    "traceableRecovery": "Exact reporter-byte span removed from copied observation text; raw log/report unchanged",
+    "heldOutPassed": 1,
+    "heldOutTotal": 3,
+    "failures": [
+      "Highest priority broadened to all priorities",
+      "Nested project output malformed/recursive"
+    ],
+    "adopted": false,
+    "rawModelStillUnaccepted": true
+  },
+  "driverReporting": "Future stdout observations and stderr diagnostics use separate files. Three raw paraphrases can be selected explicitly; direct local path is bypassed. No relaxed parser or repeated candidate inference. Held-out original probe verifies this channel separation captured three intact records and failed closed.",
+  "fullPxStillOpen": true,
+  "sourceSHA256": {
+    "TasskFold-MacOS": {
+      "Taskfold/Core/FilterAssistance.swift": "e002a9959a3079876618a612f181fff97e579a5c43f3897a9d3abf6b1fe507f9",
+      "TaskfoldTests/FilterAssistanceTests.swift": "10d002eca2f0dc31385d1d7bc10d612bde8f1799375d104a6b1a302b798eea91",
+      "TaskfoldTests/LocalFilterDescriptionTests.swift": "248e90fda42124f157145f12989cb29d4eada90da6885cb0e8822abacf0eaadf",
+      "Scripts/test_ondevice_quality.py": "48648a59609bbb1ac71adf07f4875545f50c6f62f8a2c25f1eb67170d3035536"
+    },
+    "TaskFold-iOS": {
+      "Taskfold/Core/FilterAssistance.swift": "e002a9959a3079876618a612f181fff97e579a5c43f3897a9d3abf6b1fe507f9",
+      "TaskfoldTests/FilterAssistanceTests.swift": "10d002eca2f0dc31385d1d7bc10d612bde8f1799375d104a6b1a302b798eea91",
+      "TaskfoldTests/LocalFilterDescriptionTests.swift": "248e90fda42124f157145f12989cb29d4eada90da6885cb0e8822abacf0eaadf",
+      "Scripts/test_ondevice_quality.py": "48648a59609bbb1ac71adf07f4875545f50c6f62f8a2c25f1eb67170d3035536"
+    }
+  }
+}

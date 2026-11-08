@@ -11570,3 +11570,8 @@ Dated row reads now retain a private authored-task/project/access revision acros
 ### 8 November — next ordinary package and tablet note acceptance
 
 Mac 50 is a signed optimized Release/archive/frozen-source verified candidate from merged responsiveness source. 48 remains installed; desktop control still reports locked, so fresh safety copy/install/startup/shared-storage/data readback are pending. Routine update authorization persists. Tablet note paragraph Save/Undo/Redo/cold, normal reader/preview section jumps and largest-text reader original/cold scopes now pass. The first largest-text switch tap failed; a diagnostic-only single-case follow-up passes without app changes or relaxed assertions. Keep that instability and wider Mac/shared/speech/hardware acceptance separate. No broader checkpoint promotion. Evidence: `ipad-notes-and-mac50/`.
+
+
+### 8 November — complete local filter paraphrases
+
+Clear priority extremes/number words, current-day-or-earlier planned dates and explicit nested-project wording now use the complete local path. Fifteen semantic descriptions plus priority/refusal cases pass; each owner passes136 Core cases with4 opt-in skips, and both final SDK builds pass. Preview/current target/session/explicit Save contracts are unchanged. No new native-input or installed-app acceptance is claimed. An English-plus-query model candidate passed twelve requests but failed two of three new production-fallback paraphrases and is rejected; model/review source is restored exactly. Retain the original reporting error, traceable recovery and counterexamples; raw model quality remains open. Evidence: `filter-description-paraphrases/`.

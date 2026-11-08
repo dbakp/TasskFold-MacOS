@@ -11,6 +11,20 @@ final class LocalFilterDescriptionTests: XCTestCase {
         let proposal = try FilterSuggestion(expression: expression, context: context)
         return rows.filter { proposal.rule.resultMatches($0, context: context, today: "2032-04-05", timeZone: "UTC", includeCompleted: includeCompleted) }.map(\.id)
     }
+    func testSpokenPriorityWordsAndExtremesDoNotBroadenMatches() throws {
+        let rows = (1...4).map { Record(["id": .string("p\($0)"), "priority": .number(Double($0))]) }
+        XCTAssertEqual(try matches("Only the highest priority open tasks", rows: rows), ["p1"])
+        XCTAssertEqual(try matches("Only lowest priority open tasks", rows: rows), ["p4"])
+        for (index, word) in ["one", "two", "three", "four"].enumerated() {
+            XCTAssertEqual(try matches("Open items marked priority \(word)", rows: rows), ["p\(index + 1)"])
+        }
+        XCTAssertEqual(try matches("Open items with priority three or four", rows: rows), ["p3", "p4"])
+    }
+    func testParaphraseModifiersCannotSilentlyDiscardUnsupportedConditions() {
+        for input in ["Only", "Anything", "Only highest tasks", "open tasks marked priority five", "open tasks marked priority highest", "unfinished under Work, also looking in archived projects", "unfinished under Work later", "open tasks with a deadline the current day or earlier", "open tasks scheduled for the current day or earlier with snooze", "open tasks scheduled for the current day or sometime"] {
+            XCTAssertNil(LocalFilterDescription.expression(for: input), input)
+        }
+    }
     func testCompletionSynonymsAndDateAlternativesRemainConjoined() throws {
         let rows = [Record(["id": .string("today"), "due_date": .string("2032-04-05"), "priority": .number(1)]),
                     Record(["id": .string("old"), "due_date": .string("2032-04-04"), "priority": .number(1)]),
