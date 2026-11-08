@@ -397,12 +397,15 @@ enum LocalFilterDescription {
             }
             offset = start; return nil
         }
-        /// Estimates are stored as whole minutes. Require an explicit upper
-        /// bound so “estimated at 30 minutes” never silently means “up to 30”.
+        /// Bounds use whole minutes and retain the existing stored predicate
+        /// vocabulary. Negated upper bounds explicitly exclude unknown estimates.
         mutating func effort() -> Atom? {
-            let inclusive = take("at", "most") || take("no", "more", "than") || take("up", "to")
-            let exclusive = !inclusive && (take("under") || take("less", "than"))
-            if !inclusive && !exclusive { _ = take("at") }
+            let upperInclusive = take("at", "most") || take("no", "more", "than") || take("up", "to")
+            let upperExclusive = !upperInclusive && (take("under") || take("less", "than"))
+            let lowerInclusive = !upperInclusive && !upperExclusive && (take("at", "least") || take("no", "less", "than"))
+            let lowerExclusive = !upperInclusive && !upperExclusive && !lowerInclusive && (take("over") || take("more", "than"))
+            let prefixed = upperInclusive || upperExclusive || lowerInclusive || lowerExclusive
+            if !prefixed { _ = take("at") }
             guard let amount = number(), amount > 0 else { return nil }
             let multiplier: Int
             if take("minutes") || take("minute") { multiplier = 1 }
@@ -410,10 +413,18 @@ enum LocalFilterDescription {
             else { return nil }
             guard amount <= 10_080 / multiplier else { return nil }
             let minutes = amount * multiplier
-            if !inclusive && !exclusive {
-                guard take("or", "less") || take("or", "fewer") else { return nil }
+            var lower = lowerInclusive || lowerExclusive
+            if !prefixed {
+                if take("or", "more") || take("or", "longer") { lower = true }
+                else if !take("or", "less") && !take("or", "fewer") { return nil }
             }
-            let maximum = minutes - (exclusive ? 1 : 0)
+            if lower {
+                let minimum = minutes + (lowerExclusive ? 1 : 0)
+                if minimum > 10_080 { return Atom(text: "NOT all", facet: "estimate") }
+                let expression = minimum == 1 ? "NOT no estimate" : "(NOT no estimate AND NOT duration<=\(minimum - 1))"
+                return Atom(text: expression, facet: "estimate")
+            }
+            let maximum = minutes - (upperExclusive ? 1 : 0)
             guard maximum > 0 else { return nil }
             return Atom(text: "duration<=\(maximum)", facet: "estimate")
         }

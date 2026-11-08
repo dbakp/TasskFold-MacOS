@@ -24,6 +24,51 @@ final class LocalFilterDescriptionTests: XCTestCase {
         XCTAssertNotNil(LocalFilterDescription.expression(for: "Tasks estimated at most 168 hours"))
         XCTAssertNotNil(LocalFilterDescription.expression(for: "Tasks estimated at most 10080 minutes"))
     }
+    func testLowerEffortBoundsIncludeTheBoundaryAndExcludeUnknownEstimates() throws {
+        let rows = [29, 30, 31, 59, 60, 61].map { Record(["id": .string("m\($0)"), "duration_minutes": .number(Double($0))]) }
+            + [Record(["id": .string("missing")]), Record(["id": .string("null"), "duration_minutes": .null]), Record(["id": .string("zero"), "duration_minutes": .number(0)]), Record(["id": .string("oversized"), "duration_minutes": .number(10081)])]
+        for goal in ["Open tasks taking at least 30 minutes", "Tasks with an estimate of no less than 30 minutes", "Tasks estimated at 30 minutes or more", "Tasks taking 30 minutes or longer"] {
+            XCTAssertEqual(try matches(goal, rows: rows), ["m30", "m31", "m59", "m60", "m61"], goal)
+        }
+        for goal in ["Tasks taking more than 30 minutes", "Tasks estimated over 30 minutes"] {
+            XCTAssertEqual(try matches(goal, rows: rows), ["m31", "m59", "m60", "m61"], goal)
+        }
+        XCTAssertEqual(try matches("Tasks taking at least one hour", rows: rows), ["m60", "m61"])
+        XCTAssertEqual(try matches("Tasks estimated over one hour", rows: rows), ["m61"])
+    }
+    func testLowerEffortBoundExtremesHaveExactMeaning() throws {
+        let rows = [1, 2, 10079, 10080].map { Record(["id": .string("m\($0)"), "duration_minutes": .number(Double($0))]) } + [Record(["id": .string("missing")])]
+        XCTAssertEqual(try matches("Tasks taking at least one minute", rows: rows), ["m1", "m2", "m10079", "m10080"])
+        XCTAssertEqual(try matches("Tasks taking over one minute", rows: rows), ["m2", "m10079", "m10080"])
+        XCTAssertEqual(try matches("Tasks estimated at least 168 hours", rows: rows), ["m10080"])
+        XCTAssertEqual(try matches("Tasks estimated more than 10080 minutes", rows: rows), [])
+    }
+    func testLowerEffortBoundStillConjoinsDatesPriorityCompletionAndProject() throws {
+        let base: [String: JSON] = ["duration_minutes": .number(60), "priority": .number(1), "due_date": .string("2032-04-05"), "project_id": .string("project")]
+        var rows = [Record(base.merging(["id": .string("match")], uniquingKeysWith: { _, new in new }))]
+        for (id, field, value) in [("short", "duration_minutes", JSON.number(59)), ("missing", "duration_minutes", .null), ("done", "completed", .bool(true)), ("priority", "priority", .number(2)), ("later", "due_date", .string("2032-04-06")), ("other", "project_id", .string("other"))] {
+            rows.append(Record(base.merging(["id": .string(id), field: value], uniquingKeysWith: { _, new in new })))
+        }
+        XCTAssertEqual(try matches("Open priority 1 tasks planned today and taking at least one hour and in project Work", rows: rows), ["match"])
+        XCTAssertEqual(try matches("Tasks taking at least one hour and taking at most one hour", rows: rows), ["match", "priority", "later", "other"])
+    }
+    func testLowerBoundsPreserveAlternativeAndExclusionGrouping() throws {
+        let rows = [29, 30, 60, 61].map { Record(["id": .string("m\($0)"), "duration_minutes": .number(Double($0))]) } + [Record(["id": .string("missing")])]
+        XCTAssertEqual(try matches("Open tasks taking at least one hour or taking under 30 minutes", rows: rows), ["m29", "m60", "m61"])
+        XCTAssertEqual(try matches("Open tasks excluding those taking at least one hour", rows: rows), ["m29", "m30", "missing"])
+    }
+    func testLowerBoundPhrasesNeverDiscardAnIncompleteOrContradictorySuffix() {
+        for goal in ["Tasks taking at least", "Tasks taking over one", "Tasks taking at least 0 minutes", "Tasks taking at least 169 hours", "Tasks taking at least 1.5 hours", "Tasks taking at least 30 minutes or less", "Tasks taking under 30 minutes or more", "Tasks taking at least 30 minutes approximately", "Tasks taking at least 30 minutes or tomorrow", "Tasks taking at least 30 days", "Tasks taking at least -1 minute"] {
+            XCTAssertNil(LocalFilterDescription.expression(for: goal), goal)
+        }
+    }
+    func testLongTaskDraftsUseLocalAssistanceWithoutInference() async throws {
+        for goal in ["Open tasks taking at least one hour", "Tasks estimated over 30 minutes", "Tasks taking 60 minutes or longer"] {
+            let draft = try await FilterAssistanceEngine.draft(goal)
+            XCTAssertEqual(draft.origin, .localDescription)
+            _ = try FilterSuggestion(expression: draft.expression, context: context())
+        }
+    }
     func testEffortRemainsConjoinedWithDatesPriorityCompletionAndProject() throws {
         let base: [String: JSON] = ["duration_minutes": .number(30), "priority": .number(1), "due_date": .string("2032-04-05"), "project_id": .string("project")]
         var rows = [Record(base.merging(["id": .string("match")], uniquingKeysWith: { _, new in new }))]
@@ -33,7 +78,7 @@ final class LocalFilterDescriptionTests: XCTestCase {
         XCTAssertEqual(try matches("Open priority 1 tasks planned today and estimated at most 30 minutes and in project Work", rows: rows), ["match"])
     }
     func testAmbiguousOrUnsupportedEffortCannotSilentlyBecomeAnUpperBound() {
-        for description in ["Tasks estimated at 30 minutes", "Tasks estimated 30 minutes", "Tasks taking 30 minutes", "Tasks estimated over 30 minutes", "Tasks taking at least 30 minutes", "Tasks estimated at most 0 minutes", "Tasks estimated under 1 minute", "Tasks estimated at most -5 minutes", "Tasks estimated at most 1.5 hours", "Tasks estimated at most 1 hour 30 minutes", "Tasks estimated at most 169 hours", "Tasks estimated at most 10081 minutes", "Tasks estimated at most 999999999999999999999999 hours", "Tasks estimated at most 30 days", "Tasks estimated at most 30", "Tasks estimated at most 30 minutes or tomorrow", "Tasks estimated at most 30 minutes approximately", "Tasks taking up to 30 minutes but not meetings", "Tasks in 30 minutes"] {
+        for description in ["Tasks estimated at 30 minutes", "Tasks estimated 30 minutes", "Tasks taking 30 minutes", "Tasks estimated at most 0 minutes", "Tasks estimated under 1 minute", "Tasks estimated at most -5 minutes", "Tasks estimated at most 1.5 hours", "Tasks estimated at most 1 hour 30 minutes", "Tasks estimated at most 169 hours", "Tasks estimated at most 10081 minutes", "Tasks estimated at most 999999999999999999999999 hours", "Tasks estimated at most 30 days", "Tasks estimated at most 30", "Tasks estimated at most 30 minutes or tomorrow", "Tasks estimated at most 30 minutes approximately", "Tasks taking up to 30 minutes but not meetings", "Tasks in 30 minutes"] {
             XCTAssertNil(LocalFilterDescription.expression(for: description), description)
         }
     }

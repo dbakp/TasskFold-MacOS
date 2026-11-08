@@ -1,0 +1,9 @@
+# Offline filters for longer tasks
+
+Descriptions such as “Open tasks taking at least one hour,” “Tasks estimated more than 30 minutes,” and “Tasks taking 60 minutes or longer” now draft locally through the normal read-only preview. At least/no less than/or more/or longer are inclusive; over/more than are strict. Whole minutes and hours retain the existing one-minute to seven-day estimate domain. Exact-but-unspecified comparisons, incomplete wording, unsupported units and trailing conditions are refused.
+
+Lower bounds compile to the existing negated upper-bound and no-estimate predicates. Missing, null and out-of-domain estimates do not become long tasks merely because an upper bound is negated. At least one minute matches all known valid estimates; over seven days matches no task. No new saved predicate or schema is needed. Explicit completion/date/priority/project conditions, OR grouping and exclusion complements retain their ordinary meaning. Use and Save remain separate reviewed actions.
+
+Each independently owned repository passes 130 of 133 selected Core cases, with three explicit model probes skipped. Six new functional cases exercise actual matching rows, strict/inclusive boundaries, missing values, unit conversion, combined conditions, grouping, refusal and the real local draft entry. Tests run on the Mac through SwiftPM; no new SDK app build, native screen, hardware keyboard, speech, normal update or physical-device acceptance is claimed. This local feature does not constitute model inference success. The structural model candidate is separately rejected under `filter-token-guidance/rejected-structural-sequence/`; production inference is unchanged.
+
+Cleanup retires completed Core module scratch, keeps both selected caches below 768MiB and preserves app products, prepared note tests, user data, backups, Keychain and other projects. Installed Mac53 and the deferred phone installation are unchanged.

@@ -11650,3 +11650,6 @@ The iOS owner now verifies actual Store saves/cold return with100roots/2000child
 
 
 On-device filter follow-up (8 November): the synthetic pattern probe’s own process log identifies an unsupported pattern guide on this runtime. A finite-choice control returns p3. Evidence is in `filter-token-guidance/runtime-diagnosis`; no production filter change or quality acceptance. The built note shortcut regression remains pending a desktop accessible to computer control.
+
+
+Offline long-task filters (8 November): explicit lower estimate bounds now use the existing saved-query vocabulary and ordinary reviewed preview. Missing/invalid estimates are excluded from lower bounds, one-minute/seven-day endpoints and Boolean alternatives/exclusions have actual-match checks. No new predicate, schema, model, gate or installed update is introduced. The separate structural model enum fails all15 parser/target/date checks and is rejected; native note keyboard acceptance still awaits desktop access. See `local-long-task-filters/` and `filter-token-guidance/rejected-structural-sequence/`.

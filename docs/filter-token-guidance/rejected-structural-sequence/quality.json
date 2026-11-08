@@ -1,0 +1,188 @@
+{
+  "scope": "Synthetic discriminated token-enum model candidate; unchanged twelve semantic and three held-out tests; no local grammar inference substitution or writes",
+  "productionBeforeSHA256": "764c0ae6dae548c647b574e0a01b1b2203690d82077537af42e619d528ff6892",
+  "exitCode": 1,
+  "elapsedSeconds": 234.5969078540802,
+  "productionAfterSHA256": "764c0ae6dae548c647b574e0a01b1b2203690d82077537af42e619d528ff6892",
+  "restoredExactly": true,
+  "observations": [
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"The project \u201copen date:today deadline on:overdue\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "expression": "project:\"open\" date:\"today\" deadline on:\"overdue\"",
+      "generationPath": "systemModel",
+      "seconds": 10.263818375,
+      "syntheticGoal": "Show open priority 1 tasks planned today or overdue"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"Enter a valid date phrase. Use at 14:00 to add a time.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "deadline"
+      ],
+      "expression": "date:\"today\" deadline on:\"today\"",
+      "generationPath": "systemModel",
+      "seconds": 1.844475417,
+      "syntheticGoal": "Show tasks with a deadline today"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"The project \u201cWork project-tree:root project-tree:subtask project-tree:parent project-tree:shared project-tree:personal project-tree:assigned project-tree:open\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "expression": "project:\"Work\" project-tree:\"root\" project-tree:\"subtask\" project-tree:\"parent\" project-tree:\"shared\" project-tree:\"personal\" project-tree:\"assigned\" project-tree:\"open\"",
+      "generationPath": "systemModel",
+      "seconds": 10.00683925,
+      "syntheticGoal": "Show unfinished tasks in project Work"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"The project \u201cunfinished project-tree:includes date:today project:priority 3\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "low"
+      ],
+      "expression": "project:\"unfinished\" project-tree:\"includes\" date:\"today\" project:\"priority 3\"",
+      "generationPath": "systemModel",
+      "seconds": 8.742502666,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for today"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"The project \u201cWork project-tree:open\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "expression": "project:\"Work\" project-tree:\"open\"",
+      "generationPath": "systemModel",
+      "seconds": 4.721390916,
+      "syntheticGoal": "Find open work in project Work, including its subprojects"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"The project \u201cunfinished project-tree:includes date:tomorrow project:priority 3\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "future-low"
+      ],
+      "expression": "project:\"unfinished\" project-tree:\"includes\" date:\"tomorrow\" project:\"priority 3\"",
+      "generationPath": "systemModel",
+      "seconds": 8.598535208,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for tomorrow"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"The project \u201cpriority 3 project-tree:exact\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "done-low"
+      ],
+      "expression": "project:\"priority 3\" project-tree:\"exact\"",
+      "generationPath": "systemModel",
+      "seconds": 4.755536125,
+      "syntheticGoal": "Show completed priority 3 tasks"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"The project \u201cWork project-tree:Work date:tomorrow project:open\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "deadline",
+        "child-project-task"
+      ],
+      "expression": "project:\"Work\" project-tree:\"Work\" date:\"tomorrow\" project:\"open\"",
+      "generationPath": "systemModel",
+      "seconds": 8.625329541,
+      "syntheticGoal": "Find open priority 1 tasks planned tomorrow in project Work and its child projects"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"The project \u201cWork date:today\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "old",
+        "deadline"
+      ],
+      "expression": "project:\"Work\" date:\"today\"",
+      "generationPath": "systemModel",
+      "seconds": 4.72251825,
+      "syntheticGoal": "Show open tasks in project Work, excluding those planned today"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"Enter a valid date phrase. Use at 14:00 to add a time.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "today",
+        "low"
+      ],
+      "expression": "date:\"today\" project:\"open\" project:\"p1\" project:\"p3\"",
+      "generationPath": "systemModel",
+      "seconds": 8.454343166,
+      "syntheticGoal": "Show open tasks planned today with priority 1 or priority 3"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"The project \u201cpriority 1 deadline on:tomorrow\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "today"
+      ],
+      "expression": "project:\"priority 1\" deadline on:\"tomorrow\"",
+      "generationPath": "systemModel",
+      "seconds": 4.741061708,
+      "syntheticGoal": "Find open priority 1 tasks with a deadline tomorrow"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"Enter a valid date phrase. Use at 14:00 to add a time.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "old",
+        "old-low"
+      ],
+      "expression": "date:\"before\" date:\"today\"",
+      "generationPath": "systemModel",
+      "seconds": 7.753986875,
+      "syntheticGoal": "Show open tasks planned before today"
+    },
+    {
+      "engine": "paraphrases",
+      "error": "FilterFailure(message: \"Invalid estimate.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "generationPath": "systemModel",
+      "syntheticGoal": "Only the highest priority unfinished tasks scheduled for the current day or earlier"
+    },
+    {
+      "engine": "paraphrases",
+      "error": "FilterFailure(message: \"The project \u201cWork project-tree:open\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "generationPath": "systemModel",
+      "syntheticGoal": "Anything unfinished under Work, also looking in nested projects"
+    },
+    {
+      "engine": "paraphrases",
+      "error": "FilterFailure(message: \"The project \u201cfinished project:priority_three\u201d is unavailable. Choose another target.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "done-low"
+      ],
+      "generationPath": "systemModel",
+      "syntheticGoal": "Finished items marked priority three"
+    }
+  ],
+  "accepted": false,
+  "usableExpressions": 0,
+  "semanticScore": null,
+  "rejection": "The structural token enum compiles and generates, but all fifteen queries fail ordinary target/date/parser validation. No usable query; do not claim a semantic score or relax validation.",
+  "candidateSHA256": "08d4b763fd8babec1979514c2945b5e55edd8c0b16a2c7468c55c698494c1f56"
+}
