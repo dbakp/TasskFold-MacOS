@@ -1,0 +1,125 @@
+{
+  "reviewed": "2026-11-08",
+  "owner": "macOS",
+  "baselineCommit": "869437bf74e0d3cf65f9fe707d517d8f8a1c0f0c",
+  "baselineProductionSHA256": {
+    "Taskfold/Core/Models.swift": "09590b8cbb6f359e00c68e59fb9df5bcb2b15a592b00f91fde87a7ac5d3f4ea6",
+    "Taskfold/Core/Planner.swift": "4e5917414034633826ac150e2859d57663f5981cade47f3f96e4f374402697c9"
+  },
+  "before": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "logSHA256": "72a9c88fc09ee49c05a442ebeb3f5e046e2082108d7f49bd18c0981b4b538172",
+    "diagnostic": {
+      "capacitySeconds": 2.6114212500000002,
+      "fullPayloadSeconds": 3.451642333,
+      "tasks": 1000
+    }
+  },
+  "after": {
+    "passed": 54,
+    "failed": 0,
+    "skipped": 0,
+    "logSHA256": "afd453d3c5d1420142efcb0e171de5623c2e7341741e041edf0be596ac5d601a",
+    "diagnostic": {
+      "capacitySeconds": 0.177038875,
+      "fullPayloadSeconds": 0.974845667,
+      "tasks": 1000
+    }
+  },
+  "newCases": 7,
+  "newSemanticCases": 6,
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "f0f9a50f1e821c2babb80df507c967fa7c5d81bb61ed39f29dcdea33b90933ad",
+    "Taskfold/Core/Planner.swift": "4ce2f022cb2440164a3c37db6ff3ec6094d5cbf57f2abb5943af17e8cf9a39f4",
+    "Taskfold/TeamTemplateNativeFixture.swift": "b6b3ef7fce9a786ed43dd901e89ae84d68cf25cb6c692c9aeef33dfcb62d8b56",
+    "TaskfoldTests/WidgetCapacityReadingTests.swift": "9d3b2c5b40d8af135950280d9514d58437e5cdc73ce4d49c2c319edf0111ed9d"
+  },
+  "diagnosticScope": "Single Debug Mac-hosted Core samples on the same deterministic 1,000 mixed-task input. Full payload means data preparation before final JSON encoding or SwiftUI rendering; no physical FPS/whole-app latency claim. Optional golden export runs after measured stages.",
+  "nativePhone": {
+    "owner": "dbakp/TaskFold-iOS",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1794098876.402,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1794098809.964,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    },
+    "component": {
+      "fullPayloadSeconds": 2.03994275,
+      "tasks": 1000,
+      "capacitySeconds": 0.398088959,
+      "sourceUnchanged": true,
+      "days": 8,
+      "accepted": true,
+      "inputSHA256": "2710cf2b9d439b5c80c254899560479660ef264fba94926d115a72b26edfa345"
+    },
+    "storePrivacyRecovery": {
+      "latestRecovered": true,
+      "savedDataUnchanged": true,
+      "signOutRedactedImmediately": true,
+      "accessFenceRejected": true,
+      "staleResultRejected": true
+    },
+    "logSHA256": "74bac5c07fe89b87f32609b0583243aaddf84dd2e93003a4c21e4d6b5ec06291",
+    "scope": "Current signed iPhone Simulator component matches eight-day totals from the independent prior planner loop. Existing actual-Store pipeline separately passes its five privacy/recovery assertions. Component corpus is synthetic and never inserted into the Store. No pre-change native timing baseline."
+  },
+  "owningAppBuild": {
+    "terminalExit": 0,
+    "logSHA256": "1f4340bd6d75775726e669646dcc98a319f072226cf8f9af0d95ca072706f9d8",
+    "signing": "disabled, compile only",
+    "nativeMacAccepted": false
+  },
+  "hostSourceAudit": {
+    "swiftFilesCompared": 185,
+    "namespaceOnlyDifferences": [
+      "Taskfold/Core/Backups.swift",
+      "Taskfold/Core/Backend.swift",
+      "Taskfold/Core/Store.swift",
+      "Taskfold/Core/WidgetActions.swift",
+      "Taskfold/Core/SharedCapture.swift"
+    ]
+  },
+  "normalInstall": false,
+  "normalGatesChanged": false,
+  "hostedChanges": false,
+  "remaining": [
+    "Broader navigation/drop, final encoding/rendering and physical smoothness",
+    "Obsolete background render work and remaining full-payload CPU",
+    "Mac/iPad runtime and wider accessibility/account cases",
+    "Original-restoration retained-history disposal, keep-old-version and wider lifecycle"
+  ],
+  "checkpoints": 74,
+  "substeps": 67
+}

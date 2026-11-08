@@ -2359,14 +2359,13 @@ enum WidgetProjection {
         }
         let state = usable?.state ?? fallback
         let reading = ProductiveTaskReading(tasks: tasks)
-        let tasks = reading.work
+        let prepared = PlannerCapacityWindowReading(work: reading, calendar: calendar)
         var days: [String: JSON] = [:]
         for offset in 0..<8 {
             guard let day = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
-            let capacity = TaskPlanner.capacity(tasks, events: usable?.events ?? [], on: day, hours: hours, calendar: calendar, reading: reading)
+            let summary = prepared.summary(on: day, hours: hours, events: usable?.events ?? [])
+            let capacity = summary.capacity, overdue = summary.overdue
             let key = TaskPlanner.dayKey(day, calendar: calendar)
-            let plannedIDs = Set(TaskPlanner.blocks(tasks, on: day, calendar: calendar).map(\.id) + TaskPlanner.allDay(tasks, on: day, calendar: calendar).map(\.id))
-            let overdue = tasks.filter { TaskKind.mayComplete($0) && !plannedIDs.contains($0.id) && !$0.completed && !$0.string("due_date").isEmpty && Dates.parse(TaskPlanner.plannedDay($0, calendar: calendar)) != nil && TaskPlanner.plannedDay($0, calendar: calendar) < key }.count
             var fields: [String: JSON] = ["working": .number(Double(capacity.workingMinutes)), "busy": .number(Double(capacity.busyMinutes)), "estimated": .number(Double(capacity.estimatedMinutes)), "unknown": .number(Double(capacity.unknownTasks)), "overdue": .number(Double(overdue))]
             if reading.incomplete { fields["workIncomplete"] = .bool(true) }
             days[key] = .object(fields)

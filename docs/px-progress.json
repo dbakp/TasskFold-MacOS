@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Background widget preparation · less interface work",
-  "latest": "Background widget updates now collect existing tokens and prepare member directories and assignment history in the existing worker. One collaborator index replaces repeated scans per project. The owning Debug Core diagnostic (1,000 projects / 3,000 members) measures 739 ms → 14 ms, with immutable capture at 0.008 ms. Both owners pass174 focused checks, including6 new context cases; the signed iPhone actual-Store privacy/recovery check passes all5 assertions. Both apps compile. These are scoped diagnostic and preservation results, not whole-app or physical smoothness. No normal app installation; counts remain74/67.",
+  "focus": "Eight-day capacity forecast · repeated work removed",
+  "latest": "The capacity forecast now resolves each task's timing once for all eight days and omits unused lane layout. In the owning1,000-task Debug Core sample, capacity data preparation falls 2.61s → 0.18s; full widget payload preparation falls 3.45s → 0.97s. Both owners pass54 focused cases, including6 new semantic cases. The current signed iPhone forecast matches all eight-day old-planner golden totals; its separate Store privacy/recovery check also passes. Both apps compile. Encoding, SwiftUI/navigation, physical smoothness and wider recovery lifecycle remain open. No new normal installation; counts stay74/67.",
   "next": [
-    "Mac46 original readonly25012 ended with a verifier assumption failure: the captured backup index is a JSON array, not a workspace object. This is not evidence of task loss. New read-only type diagnostic24448/PID41898 is live; preserve it and normal46 while access is pending. No accepted postlaunch readback yet. The Mac remains locked; phone installation stays deferred.",
-    "Continue reducing actual drop/navigation and background rendering costs. Background widget member/token/provenance preparation now runs in the existing worker, with indexed directory preparation and actual iPhone Store privacy/recovery proof. Full render latency, obsolete work, reconstructed-refresh scaling and physical smoothness remain distinct.",
+    "Mac46 is running and synced after app-data approval. Corrected postlaunch readback preserves tasks, pending work and protected user tables across all five workspace caches. Prepare the next verified Mac update with a fresh safety copy and rollback; phone installation remains deferred.",
+    "Profile and reduce the remaining full-payload CPU, obsolete worker work, actual navigation/drop and final rendering costs. The repeated eight-day forecast work is removed and current iPhone totals agree with the prior planner; broader physical smoothness is still unverified. Avoid repeating this accepted diagnostic unchanged.",
     "Finish retained-history disposal/keep-old-version adoption and wider account/task/custodian lifecycle before original-restoration activation. The basic iPhone restore → lost reply/status → cold Undo/Redo path passes; Mac/iPad, speech, native HTTP Auth and wider ownership remain distinct. Do not substitute repeated accepted matrices for that implementation.",
     "Improve genuinely generated on-device filter quality with a materially different, grounded design. Common descriptions now have a complete local path; the raw model remains known3/5, and the expanded twelve-goal oracle is still unaccepted. Do not rerun rejected prompts/schemas unchanged or count local drafts as inference.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
@@ -503,7 +503,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Delivered scoped work covers prepared workspace/project/member reads, note/draft preparation, dates/grouping, stable drag targets, project-first navigation and exact task-order reuse. The current bounded row writer passes 74 focused cases per owner and two actual signed Simulator journeys (four warm/cold drops). The2,004-task/2.88 MB reference fixture improves from 126–130 ms to 58–62 ms through commit; moving the large payload itself takes 86–88 ms. Saved dates, payload, all 2,003 unrelated tasks and pending work survive cold return. Mac46 is installed/synced and includes this saving change; its shared-storage access/readback still waits on the one confirmed system prompt. Wider native rendering/navigation, reconstructed-refresh scaling, account/accessibility behavior and physical smoothness remain open. Background widget member/token/assignment preparation now runs in the existing worker; indexed collaborator grouping replaces repeated per-project scans. Each owner passes174 focused Core checks (6 new context cases), and the current signed iPhone actual-Store check confirms immediate redaction, stale/access rejection, current recovery and unchanged saved work. Each owner records its large-directory Debug Core sample; both apps compile. Full render/navigation/drop and physical smoothness remain open; no new normal installation.",
+              "detail": "Delivered scoped work covers prepared workspace/project/member reads, note/draft preparation, dates/grouping, stable drag targets, project-first navigation and exact task-order reuse. The current bounded row writer passes 74 focused cases per owner and two actual signed Simulator journeys (four warm/cold drops). The2,004-task/2.88 MB reference fixture improves from 126–130 ms to 58–62 ms through commit; moving the large payload itself takes 86–88 ms. Saved dates, payload, all 2,003 unrelated tasks and pending work survive cold return. Mac46 is installed/synced and includes this saving change; its shared-storage access/readback still waits on the one confirmed system prompt. Wider native rendering/navigation, reconstructed-refresh scaling, account/accessibility behavior and physical smoothness remain open. Background widget member/token/assignment preparation now runs in the existing worker; indexed collaborator grouping replaces repeated per-project scans. Each owner passes174 focused Core checks (6 new context cases), and the current signed iPhone actual-Store check confirms immediate redaction, stale/access rejection, current recovery and unchanged saved work. Each owner records its large-directory Debug Core sample; both apps compile. Full render/navigation/drop and physical smoothness remain open; no new normal installation. The eight-day widget capacity forecast now resolves task timing once and omits unused display-lane layout. Each owner passes54 focused Core cases (6 new semantic cases plus1 diagnostic); the current iPhone1,000-task component matches exact eight-day totals from the prior planner, and actual-Store privacy/recovery still passes. Both apps compile. Each owner records before/after full-payload preparation on the same mixed workload. Final encoding/rendering, navigation/drop, obsolete work and physical smoothness remain open; no new normal install.",
               "steps": [
                 {
                   "state": "done",
@@ -802,7 +802,12 @@
             "widget-context-preparation/verification.json",
             "widget-context-preparation/native-phone.json",
             "widget-context-preparation/storage-cleanup.json",
-            "widget-context-preparation/result-cleanup.json"
+            "widget-context-preparation/result-cleanup.json",
+            "widget-capacity-rendering/README.md",
+            "widget-capacity-rendering/verification.json",
+            "widget-capacity-rendering/native-phone.json",
+            "widget-capacity-rendering/storage-cleanup.json",
+            "widget-capacity-rendering/mac46-readback.json"
           ],
           "focus": false
         },
@@ -1890,7 +1895,14 @@
     "widget-context-preparation/native-phone.json",
     "widget-context-preparation/storage-cleanup.json",
     "widget-context-preparation/result-cleanup.json",
-    "widget-context-preparation/progress-validation.json"
+    "widget-context-preparation/progress-validation.json",
+    "widget-capacity-rendering/README.md",
+    "widget-capacity-rendering/verification.json",
+    "widget-capacity-rendering/native-phone.json",
+    "widget-capacity-rendering/storage-cleanup.json",
+    "widget-capacity-rendering/mac46-readback.json",
+    "widget-capacity-rendering/mac46-shared-publication.json",
+    "widget-capacity-rendering/progress-validation.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2239,9 +2251,9 @@
     "mac35-postlaunch-readback/progress-validation.json": "1e5477ff3f4ff3e64d510f24e6a2fa92b273bf1e93f32f78cde96d06eb418aa4",
     "mac35-postlaunch-readback/storage-cleanup.json": "cd03a961755013c8a069ac7310bb7f9664f19194c973158b8d0b3575a44d2d44",
     "mac35-postlaunch-readback/verification.json": "64e8d0642de7ccd7016f1ee395c11c4a7052f6274ab5a6c9a5a2eca9e4bf6bc0",
-    "mac46-installation/README.md": "830c4fedead0b8e18e926ff8c1a26a061502bbd6dd245562234038c355c895f3",
+    "mac46-installation/README.md": "771a25f1ea63a39396097e5e02a5b99f5bed3787eca43cff1ed16b17558139d2",
     "mac46-installation/mac44-readback.json": "234a38002406dc6d2db2534c6168241371038cbdd3fe63aad6324ff54f40553c",
-    "mac46-installation/verification.json": "8e733a99bd69a12a5c3e3eba90ff7593a523637f8aefb4d7540684df93cae39c",
+    "mac46-installation/verification.json": "36d2f613228506e3569f922803ababa794741c0e1f44db13463a89572d3ddf39",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",
     "mixed-task-completion-native/verification.json": "e94f3ce96eba46de16f86d30d567751faa8079c57118dd1a6665101f1ea5de8f",
     "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",
@@ -2669,6 +2681,13 @@
     "unchanged-row-encoding/iphone-verification.json": "933941a0625ed13f9409071b560d1448d3806afec1150f473d914af92628e905",
     "unchanged-row-encoding/mac45-package.json": "e1ada3096ba6940066e958c5f572ce6af86e14e8eb6aad82af7ad5909e32847b",
     "unchanged-row-encoding/storage-cleanup.json": "4beaa2c7374332357cf7c6a5645867fff9db64d43ea96ba2a411aaf4db00719b",
+    "widget-capacity-rendering/README.md": "00b6c152ec9420f7dc516deaf81f2fd249d89f0345890aac179a335722ffbb66",
+    "widget-capacity-rendering/mac46-readback.json": "af500969cdbe1dd886925af7b82c56ef937bb329b6da62799c092a6274a40541",
+    "widget-capacity-rendering/mac46-shared-publication.json": "cf4c30da94a7285719ffc158db366d5f5a9060fd2447c71736df6637bbd5f5da",
+    "widget-capacity-rendering/native-phone.json": "d995d9379ab05078f531d20c3a5a3e9894240793d7056bce41abb509c909aacb",
+    "widget-capacity-rendering/progress-validation.json": "3ea19f3485bf5a1b90cd1f6b6a6e26145f7c51a03042b2507c8a88498fd395db",
+    "widget-capacity-rendering/storage-cleanup.json": "68d2b9ea0ec59c07958fb39702ebfc5b485da144e75f072a3baa99057f111069",
+    "widget-capacity-rendering/verification.json": "d89dc53bff1c39bf770f4d31d142c618386fa67cd27bf18408c901e471caa79f",
     "widget-context-preparation/README.md": "1ba133e3ac9c980d999ee150cb899f27a4a750b2cdb45af0affe196664ef081f",
     "widget-context-preparation/native-phone.json": "5ae73b3441b517321f945fc68595c5728596f5ae2ef87e582f5b0949e4459b16",
     "widget-context-preparation/progress-validation.json": "3ea19f3485bf5a1b90cd1f6b6a6e26145f7c51a03042b2507c8a88498fd395db",

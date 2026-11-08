@@ -11465,3 +11465,10 @@ Full render/drop/navigation performance and physical smoothness remain open. Ori
 ### 8 November — Mac46 readback classification correction
 
 After the performance batch merged, original readonly25012 became terminal with exit1. Its verifier assumed every captured JSON file was a workspace dictionary; the safety copy also contains the backup index, whose correct shape is an array. This is a verifier failure, not proof of task loss. The normal Mac46 process remains intact. A separate read-only type diagnostic24448/PID41898 is confirmed live and must not be duplicated while waiting. Current computer control still reports the Mac locked, and no accepted postlaunch readback exists. The earlier PID89939 observation above is historical; that process has ended.
+
+
+### 8 November — prepared widget capacity forecast
+
+One ephemeral reading resolves task timing once for the eight-day forecast and counts clipped/unknown/all-day work without assigning unused display lanes. It preserves the ordinary planner's sorted floating-point summation, duplicate-identity exclusions, calendar union/freshness, DST and incomplete-work semantics. Both owners pass54 focused Core cases, including6 new semantic cases and1 diagnostic. Each records a same-workload1,000-task before/after sample; see [capacity preparation](widget-capacity-rendering/README.md).
+
+The signed iPhone component matches all eight-day totals from the independent prior planner golden and leaves its synthetic source unchanged. The separate actual-Store privacy/recovery check passes. Mac compiles independently with signing disabled; runtime, whole-app navigation/encoding/rendering, physical smoothness and wider lifecycle remain open. No normal installation, gate or hosted change; normal46 remains running, with the setup warning cleared, corrected data readback accepted and sync recovered. No live readback remains. Counts stay74/67.

@@ -77,6 +77,63 @@ struct CalendarWorkReading {
     }
 }
 
+/// Timing resolved once for a bounded forecast render. This reading retains no
+/// titles, edit authority, or workspace-wide cache. Display lane layout remains
+/// in the planner; capacity needs only clipped totals and planned identities.
+struct PlannerCapacityWindowReading {
+    struct Summary { let capacity: PlannerCapacity; let overdue: Int }
+    private struct Entry {
+        let id: String, start: Date?, minutes: Int?, day: String
+        let allDay: Bool, overdueEligible: Bool
+    }
+    private struct Segment {
+        let id: String, minute: Double, length: Double, known: Bool
+        var renderEnd: Double { minute + max(30, length) }
+    }
+    private let calendar: Calendar
+    private let entries: [Entry]
+    private let incomplete: Bool
+    init(work: ProductiveTaskReading, calendar: Calendar) {
+        self.calendar = calendar; incomplete = work.incomplete
+        entries = work.work.filter { !$0.completed }.map { task in
+            let allDay = task.string("due_time").isEmpty
+            let day = TaskPlanner.plannedDay(task, calendar: calendar)
+            return Entry(id: task.id, start: allDay ? nil : TaskPlanning.start(task, calendar: calendar), minutes: task.durationMinutes, day: day,
+                allDay: allDay, overdueEligible: TaskKind.mayComplete(task) && !task.string("due_date").isEmpty && Dates.parse(day) != nil)
+        }
+    }
+    func summary(on day: Date, hours: WorkingHours?, events: [PlannerEvent]) -> Summary {
+        let key = TaskPlanner.dayKey(day, calendar: calendar), bounds = calendar.dateInterval(of: .day, for: day)
+        var segments: [Segment] = [], planned = Set<String>(), looseMinutes = 0, looseUnknown = 0
+        for entry in entries {
+            if entry.allDay && entry.day == key {
+                planned.insert(entry.id)
+                if let minutes = entry.minutes { looseMinutes += minutes } else { looseUnknown += 1 }
+            }
+            guard let bounds, let start = entry.start else { continue }
+            let end = entry.minutes.map { start.addingTimeInterval(Double($0) * 60) }
+            if let end { guard start < bounds.end && end > bounds.start else { continue } }
+            else { guard start >= bounds.start && start < bounds.end else { continue } }
+            let clippedStart = max(start, bounds.start), clippedEnd = min(end ?? start, bounds.end)
+            segments.append(Segment(id: entry.id, minute: clippedStart.timeIntervalSince(bounds.start) / 60,
+                length: max(0, clippedEnd.timeIntervalSince(clippedStart) / 60), known: end != nil))
+            planned.insert(entry.id)
+        }
+        // Match the planner's summation order even for fractional instants near
+        // a rounding boundary. Lane assignment never affects these totals.
+        segments.sort { $0.minute == $1.minute ? ($0.renderEnd == $1.renderEnd ? $0.id < $1.id : $0.renderEnd > $1.renderEnd) : $0.minute < $1.minute }
+        let window = hours?.interval(on: day, calendar: calendar)
+        let capacity = PlannerCapacity(workingMinutes: Int((window?.duration ?? 0) / 60),
+            busyMinutes: window.map { TaskPlanner.unionMinutes(events.map(\.interval), clippedTo: $0) } ?? 0,
+            estimatedMinutes: Int(segments.filter(\.known).reduce(0) { $0 + $1.length }.rounded()) + looseMinutes,
+            unknownTasks: segments.filter { !$0.known }.count + looseUnknown, incomplete: incomplete)
+        // Duplicate identities intentionally share the same planned exclusion,
+        // while their distinct productive rows keep the planner's counts.
+        let overdue = entries.filter { $0.overdueEligible && !planned.contains($0.id) && $0.day < key }.count
+        return Summary(capacity: capacity, overdue: overdue)
+    }
+}
+
 /// One ephemeral reading for a planner render. Display rows and productive
 /// capacity deliberately keep their distinct inputs; no edit authority is kept.
 struct PlannerDayReading {
