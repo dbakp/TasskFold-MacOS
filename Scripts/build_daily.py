@@ -90,7 +90,7 @@ def main():
     cached_signing = None
     if args.cached_profiles:
         from cached_development_signing import configure_cached_profiles
-        cached_signing = configure_cached_profiles(daily_project / "project.pbxproj", platform=PLATFORM, team=team, app_bundle=BUNDLE, include_share=True, device=args.device)
+        cached_signing = configure_cached_profiles(daily_project / "project.pbxproj", platform=PLATFORM, team=team, app_bundle=BUNDLE, include_share=True, device=args.device, source_root=ROOT)
     # The relocated project uses the checkout as SOURCE_ROOT. Bind its scheme
     # references explicitly so Xcode cannot resolve them to the ordinary project.
     for scheme in (daily_project / "xcshareddata/xcschemes").glob("*.xcscheme"):
@@ -138,12 +138,18 @@ def main():
         entitlements = plistlib.loads(subprocess.check_output(["codesign", "-d", "--entitlements", ":-", str(app)], stderr=subprocess.DEVNULL))
         if any(key in entitlements for key in ("aps-environment", "com.apple.developer.aps-environment", "com.apple.developer.usernotifications.time-sensitive")):
             raise SystemExit("Daily candidate unexpectedly requests deferred notification capabilities")
+    if not args.simulator:
+        from app_group_authorization import verify_app_group_products
+        app_group_authorization = verify_app_group_products(app, PLATFORM)
+    else:
+        app_group_authorization = {"verified": False, "reason": "Simulator does not establish profile authorization"}
     data = {"schema": 1, "configuration": args.configuration, "platform": PLATFORM, "bundle": BUNDLE, "version": info["CFBundleShortVersionString"], "build": info["CFBundleVersion"], "app": str(app.resolve()), "sourceFingerprint": before, "sourceRevision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), "simulatorOnly": args.simulator, "signatureVerified": not args.simulator, "widgetsIncluded": True, "shareIncluded": True, "omittedCapabilities": ["Remote push notifications", "Time Sensitive notifications"], "featureFlags": {key: value for key, value in info.items() if key.startswith("Taskfold") and key.endswith("Enabled")}, "installed": False, "published": False}
     if cached_signing is not None:
         from cached_development_signing import verify_cached_profile_products
         verify_cached_profile_products(app, PLATFORM, cached_signing)
         data["cachedProfileSigning"] = cached_signing
-        data["buildToolsSHA256"] = {name: hashlib.sha256((ROOT / "Scripts" / name).read_bytes()).hexdigest() for name in ["build_daily.py", "cached_development_signing.py", "isolate_prepared_mac_app.py"]}
+        data["buildToolsSHA256"] = {name: hashlib.sha256((ROOT / "Scripts" / name).read_bytes()).hexdigest() for name in ["build_daily.py", "cached_development_signing.py", "isolate_prepared_mac_app.py", "app_group_authorization.py"]}
+    data["appGroupAuthorization"] = app_group_authorization
     receipt.write_text(json.dumps(data, indent=2) + "\n")
     print("Daily-use development candidate: " + str(app))
     print("Build receipt: " + str(receipt))

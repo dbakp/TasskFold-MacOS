@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-08",
+  "kind": "Shared-container provisioning and package authorization",
+  "unitCasesPerOwner": 19,
+  "failures": 0,
+  "testScope": "Pure policy, synthetic signed-bundle/profile inspection, all-six-configuration staging and failed-preflight preservation; synthetic profiles are not Apple-issued runtime acceptance",
+  "installed53Audit": "All three signed bundle claims lack corresponding profile group authorization",
+  "macBuildSetting": "REGISTER_APP_GROUPS=YES inherited by app/widget/share",
+  "existingGroupIdentifierPreserved": "group.com.dbakp.taskfold",
+  "groupMigrationOrUserDataWrites": false,
+  "package54Ready": false,
+  "newMac54Build": "Failed at provisioning before compilation: No Accounts and missing App Groups entitlement/capability",
+  "runtimeNoPromptFixAccepted": false,
+  "mac53InstalledAndUsable": true,
+  "installed53ChangedByThisRun": false,
+  "phoneInstallation": "deferred",
+  "hostedSchemaOrNormalGatesChanged": false,
+  "newSimulatorBooted": false,
+  "sourceTestLogSHA256": "857674878b2a38ff6aeccba452feef9f5abf485044bff5d2110fc27a7a067953"
+}
