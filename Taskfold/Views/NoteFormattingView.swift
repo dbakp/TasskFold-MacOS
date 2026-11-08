@@ -1,4 +1,20 @@
 import SwiftUI
+
+#if os(macOS)
+/// The active note owns these command keys, including while a nested sheet
+/// pauses formatting. Other task commands must not receive them in that state.
+struct NoteParagraphCommandContext {
+    let enabled: Bool
+    let apply: (NoteFormatting.ParagraphStyle) -> Void
+}
+private struct NoteParagraphCommandKey: FocusedValueKey { typealias Value = NoteParagraphCommandContext }
+extension FocusedValues {
+    var taskfoldNoteParagraphCommands: NoteParagraphCommandContext? {
+        get { self[NoteParagraphCommandKey.self] }
+        set { self[NoteParagraphCommandKey.self] = newValue }
+    }
+}
+#endif
 #if os(iOS)
 import UIKit
 #else
@@ -245,6 +261,20 @@ struct NoteFormattingView: View {
                         TextEditor(text: $text, selection: $selection)
                             .font(.body).padding(.horizontal, 16).focused($focused)
                             .accessibilityLabel("Note text").accessibilityIdentifier("noteFormatText")
+                            #if os(iOS)
+                            .onKeyPress(phases: .down) { press in
+                                guard available, !link, press.modifiers.intersection([.command, .option, .control, .shift]) == [.command, .option] else { return .ignored }
+                                let style: NoteFormatting.ParagraphStyle
+                                switch press.key {
+                                case "0": style = .body
+                                case "1": style = .heading1
+                                case "2": style = .heading2
+                                case "3": style = .heading3
+                                default: return .ignored
+                                }
+                                formatParagraph(style); return .handled
+                            }
+                            #endif
                         if !focused && message == nil {
                             Text("Select words or lines, then choose a style. Preview before applying; the original text stays available.")
                                 .font(.caption).foregroundStyle(.secondary).padding()
@@ -318,6 +348,7 @@ struct NoteFormattingView: View {
         .onChange(of:available) {_,value in if !value {checkpoint();accessStopped=true;link=false;focused=false}}
         .onDisappear {checkpoint()}
         #if os(macOS)
+        .focusedSceneValue(\.taskfoldNoteParagraphCommands, NoteParagraphCommandContext(enabled: available && !link && !preview, apply: formatParagraph))
         .frame(minWidth: 520, idealWidth: 640, minHeight: 520, idealHeight: 650)
         #endif
     }
@@ -337,7 +368,9 @@ struct NoteFormattingView: View {
             ForEach(NoteFormatting.ParagraphStyle.allCases, id: \.self) { style in
                 Button(style.title) { formatParagraph(style) }
                     .accessibilityIdentifier("noteParagraph-" + style.rawValue)
+                    #if os(iOS)
                     .keyboardShortcut(KeyEquivalent(Character(String(style.level ?? 0))), modifiers: [.command, .option])
+                    #endif
             }
         } label: { Label("Text style", systemImage: "textformat.size") }
             .accessibilityIdentifier("noteFormat-heading")

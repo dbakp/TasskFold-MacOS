@@ -11643,3 +11643,7 @@ Clear estimate upper bounds (minutes/hours, strict or inclusive) and recorded as
 ### 8 November · child-heavy widget preparation
 
 Exact original-root identity now also admits child signature reuse inside the same bounded4096-entry memo. Hierarchy/visibility/state and current-action checks stay live. The100-root/2000-child Debug preparation median falls51.86ms→21.31–21.64ms, with exact reference widget states/tokens. Both owners pass focused Core and action-plan checks. This does not prove whole-save/native/FPS behavior or update installedMac53. See `child-widget-signature-memo/README.md`.
+
+### 8 November · actual saves and note command collision
+
+The iOS owner now verifies actual Store saves/cold return with100roots/2000children, exact opaque/task data and widget tokens; same-build cold/warm hash-cache saves measure377/46ms, not old/new release or FPS. Mac CUA reproduces a fresh heading shortcut changing synthetic priority4→1 before opening Text style. A scene-focused note command scope now replaces task Priority keys, and iOS has direct text-editor hardware handling. Both SDK builds and current185Mac/178iOS source/image proofs pass; three Mac keyboard cases compile but runtime awaits one new post-build unlock. No rebuild is needed. NormalMac53 is unchanged; no runtime fix, update or broad completion is claimed. See `native-child-save/` and `note-heading-command-scope/`.

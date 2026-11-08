@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-08",
+  "observedDefect": "Fresh CmdOption1 reached underlying task Priority; heading equivalent registered only after opening Text style",
+  "syntheticPriorityBefore": 4,
+  "syntheticPriorityAfter": 1,
+  "normalAppChanged": false,
+  "bothSDKBuildsPass": true,
+  "macAppAndRunnerRealTeamSignatures": true,
+  "macSources": 185,
+  "iosSources": 178,
+  "compiledMacUICases": 3,
+  "fixedMacUICasesExecuted": 0,
+  "fixedMacRuntimeAccepted": false,
+  "iosHardwareKeysAccepted": false,
+  "pending": "One new unlock request issued after completed build; no rebuild needed before runtime",
+  "sourceSHA256": {
+    "Taskfold/Views/NoteFormattingView.swift": "3ce7a4941d94dc438d8f20cb354af524e01ba2315012fdc17ec3e37d580f96f3"
+  }
+}
