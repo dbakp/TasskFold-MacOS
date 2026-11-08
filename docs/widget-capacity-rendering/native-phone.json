@@ -1,0 +1,59 @@
+{
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 2,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1794098876.402,
+    "passedTests": 2,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1794098809.964,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 2
+  },
+  "component": {
+    "fullPayloadSeconds": 2.03994275,
+    "tasks": 1000,
+    "capacitySeconds": 0.398088959,
+    "sourceUnchanged": true,
+    "days": 8,
+    "accepted": true,
+    "inputSHA256": "2710cf2b9d439b5c80c254899560479660ef264fba94926d115a72b26edfa345"
+  },
+  "privacyRecovery": {
+    "latestRecovered": true,
+    "savedDataUnchanged": true,
+    "signOutRedactedImmediately": true,
+    "accessFenceRejected": true,
+    "staleResultRejected": true
+  },
+  "goldenInputBytes": 274737,
+  "goldenInputSHA256": "2710cf2b9d439b5c80c254899560479660ef264fba94926d115a72b26edfa345",
+  "goldenGenerationLogSHA256": "698a952d51f4ead339b577c54da5d144fef40079d1af730fc8ea2a4ff8241a33",
+  "goldenReference": "WidgetCapacityReadingTests.reference copies the prior capacity loop and calls unchanged TaskPlanner helpers. It does not call the new prepared capacity path."
+}

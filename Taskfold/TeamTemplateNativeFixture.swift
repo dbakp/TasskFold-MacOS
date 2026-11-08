@@ -370,6 +370,35 @@ import CryptoKit
     static func require<T>(_ value: T?) throws -> T { guard let value else { throw URLError(.badServerResponse) }; return value }
 }
 
+/// Runs only from the isolated workflow acceptance panel. Input is a bounded
+/// synthetic corpus with totals produced by the independent old planner oracle.
+enum WidgetCapacityNativeCheck {
+    @MainActor static func run(_ data: Data) async throws -> [String: JSON] {
+        guard WorkflowUndoNativePeer.enabled, data.count <= 2_000_000 else { throw URLError(.badServerResponse) }
+        return try await Task.detached(priority: .utility) {
+            let input = try TaskfoldJSONDecoder().decode(JSON.self, from: data).object
+            guard input["protocol"] == .number(1), input["account"] == .string("ea180000-0000-4000-8000-000000000001"),
+                  let zone = TimeZone(identifier: input["timeZone"]?.text ?? ""), input["tasks"]?.list.count == 1000,
+                  input["expectedCapacity"]?.object["days"]?.object.count == 8, input["projects"]?.list.count == 1,
+                  case .number(let referenceDate)? = input["now"], referenceDate.isFinite else { throw URLError(.cannotParseResponse) }
+            let rows = input["tasks"]!.list.map { Record($0.object) }, projects = input["projects"]!.list.map { Record($0.object) }
+            guard rows.allSatisfy({ $0.string("user_id") == input["account"]!.text }) else { throw URLError(.cannotParseResponse) }
+            var calendar = Calendar(identifier: .gregorian); calendar.timeZone = zone
+            let now = Date(timeIntervalSinceReferenceDate: referenceDate), hours = try WorkingHours(document: input["hours"]!)
+            let original = rows, clock = ContinuousClock(), start = clock.now
+            let capacity = WidgetProjection.capacityPayload(tasks: rows, account: input["account"]!.text, hours: hours, window: nil, fallback: "off", now: now, calendar: calendar)
+            let capacityTime = start.duration(to: clock.now), fullStart = clock.now
+            let payload = WidgetProjection.payload(tasks: rows, projects: projects, account: input["account"]!.text, now: now, calendar: calendar, workingHours: hours)
+            let fullTime = fullStart.duration(to: clock.now)
+            guard capacity == input["expectedCapacity"], payload["capacity"] == capacity, AuthoredValueComparison.sameRows(rows, original) else { throw URLError(.cannotParseResponse) }
+            func seconds(_ d: Duration) -> Double { Double(d.components.seconds) + Double(d.components.attoseconds) / 1e18 }
+            return ["accepted": .bool(true), "tasks": .number(Double(rows.count)), "days": .number(8), "sourceUnchanged": .bool(true),
+                "inputSHA256": .string(SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()),
+                "capacitySeconds": .number(seconds(capacityTime)), "fullPayloadSeconds": .number(seconds(fullTime))]
+        }.value
+    }
+}
+
 @MainActor struct WorkflowUndoNativeFixtureView: View {
     @Environment(Store.self) private var store
     @State private var scaleOriginal: Snapshot?
@@ -402,6 +431,23 @@ import CryptoKit
                             }
                         }
                     }.accessibilityIdentifier("checkBackgroundWidgets")
+                    Button("Check capacity forecast") {
+                        Task {
+                            guard let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
+                                  let proof = UUID(uuidString: String(argument.dropFirst("--workflow-commit-proof=".count))) else { return }
+                            let directory = TeamTemplateNativeFixture.root.appendingPathComponent("WidgetCapacityChecks/\(proof.uuidString.lowercased())", isDirectory: true)
+                            do {
+                                let input = directory.appendingPathComponent("input.json")
+                                let info = try input.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+                                guard info.isRegularFile == true, info.isSymbolicLink != true, (info.fileSize ?? Int.max) <= 2_000_000 else { throw URLError(.cannotParseResponse) }
+                                let result = try await WidgetCapacityNativeCheck.run(Data(contentsOf: input))
+                                try TaskfoldJSONEncoder().encode(result).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                            } catch {
+                                let failure: [String: JSON] = ["accepted": .bool(false), "error": .string(error.localizedDescription)]
+                                try? TaskfoldJSONEncoder().encode(failure).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                            }
+                        }
+                    }.accessibilityIdentifier("checkCapacityForecast")
                     Button("Restore scale fixture", action: restoreScale).disabled(scaleOriginal == nil).accessibilityIdentifier("restoreScaleFixture")
                     if ProcessInfo.processInfo.arguments.contains("--workflow-rich-children") {
                         Button("Open saved local workflow") { store.startLocal() }.accessibilityIdentifier("openSavedRichWorkflow")

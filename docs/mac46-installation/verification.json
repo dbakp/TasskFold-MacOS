@@ -7,11 +7,16 @@
   "prelaunchAllCacheBytesExact": true,
   "installedPayloadAndSignatureVerified": true,
   "normalStartupObserved": true,
-  "syncObserved": "Synced21.21",
-  "sharedStorageAccepted": false,
-  "postlaunchDataAuditComplete": false,
+  "syncObserved": "Synced 1.59",
+  "sharedStorageAccepted": true,
+  "postlaunchDataAuditComplete": true,
   "originalReadbackSession": 25012,
-  "currentPromptConfirmed": true,
+  "currentPromptConfirmed": false,
   "verifiedRollback": "44",
-  "privateDataIdentifiersOrPathsIncluded": false
+  "privateDataIdentifiersOrPathsIncluded": false,
+  "originalReadbackTerminalExit": 1,
+  "classificationDiagnosticTerminalExit": 0,
+  "correctedReadbackTerminalExit": 0,
+  "correctedAudit": "../widget-capacity-rendering/mac46-readback.json",
+  "sharedPublicationAudit": "../widget-capacity-rendering/mac46-shared-publication.json"
 }
