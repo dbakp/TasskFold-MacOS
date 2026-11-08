@@ -1,0 +1,14 @@
+{
+  "snapshotObservedOnHit": true,
+  "ordinaryMinuteReuse": true,
+  "metadataReuse": true,
+  "clockRefresh": true,
+  "hotReuse": true,
+  "archiveRefreshWithoutTaskChange": true,
+  "unreadableRedacted": true,
+  "savedFilterRefresh": true,
+  "dateTitleRefresh": true,
+  "metadataObservedOnHit": true,
+  "reconstructedReuse": true,
+  "durableOriginalPreserved": true
+}

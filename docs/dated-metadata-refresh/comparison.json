@@ -1,0 +1,40 @@
+{
+  "before": {
+    "groupComputations": 12,
+    "groupSeconds": 0.9850989580154419,
+    "refreshSeconds": 3.2241719169542193,
+    "kinds": {
+      "unrelatedPreference": {
+        "count": 6,
+        "groupMeanMilliseconds": 82.10331942730893,
+        "refreshMeanMilliseconds": 0.17318754301716885
+      },
+      "identicalDecodedRefresh": {
+        "count": 6,
+        "groupMeanMilliseconds": 82.07984024193138,
+        "refreshMeanMilliseconds": 537.1887986160194
+      }
+    }
+  },
+  "after": {
+    "groupComputations": 0,
+    "groupSeconds": 0.000753041822463274,
+    "refreshSeconds": 3.1886289585381746,
+    "kinds": {
+      "unrelatedPreference": {
+        "count": 6,
+        "groupMeanMilliseconds": 0.019145819048086803,
+        "refreshMeanMilliseconds": 0.12313194262484708
+      },
+      "identicalDecodedRefresh": {
+        "count": 6,
+        "groupMeanMilliseconds": 0.10636115136245887,
+        "refreshMeanMilliseconds": 531.3150278137376
+      }
+    }
+  },
+  "rows": 2004,
+  "distinctTimedSchedules": 500,
+  "sampleCountEach": 12,
+  "scope": "Debug Simulator Store stages, not total navigation/FPS; whole baseline test65 is separately documented due serialization-key ordering; final three native cases pass."
+}

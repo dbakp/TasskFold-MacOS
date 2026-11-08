@@ -127,4 +127,44 @@ final class TaskDayGroupsCacheTests: XCTestCase {
         XCTAssertEqual(cache.computationCount, 1)
         print("DATED_GROUP_CACHE_DIAGNOSTIC " + String(decoding: try JSONSerialization.data(withJSONObject: ["rows": 500, "reads": 12, "uncachedSeconds": seconds(old), "cachedWithEqualityChecksSeconds": seconds(current), "computations": cache.computationCount], options: .sortedKeys), as: UTF8.self))
     }
+    func testOrdinaryReadsReuseRowsAcrossUnrelatedSnapshotRevisions() {
+        let cache = TaskDayGroupsReadCache(); var produced = 0
+        for _ in 0..<12 {
+            let read = cache.read(query: .init(scope: .upcoming), clock: clock(), today: day, calendar: calendar(), filteredSource: UUID(), context: context()) { produced += 1; return [row("current")] }
+            XCTAssertEqual(read.rowsByDay[day]?.first?.id, "current")
+        }
+        XCTAssertEqual(produced, 1); XCTAssertEqual(cache.retainedEntryCount, 1)
+    }
+    func testSavedAndExplicitFiltersRefreshWithoutDiscardingHotOrdinaryRead() {
+        let cache = TaskDayGroupsReadCache(); var produced = 0
+        func read(_ query: TaskQuery, revision: UUID, id: String) -> TaskDayGroupsRead {
+            cache.read(query: query, clock: clock(), today: day, calendar: calendar(), filteredSource: revision, context: context()) { produced += 1; return [row(id)] }
+        }
+        for index in 0..<8 {
+            let revision = UUID()
+            for query in [TaskQuery(scope: .saved("current-rule")), TaskQuery(scope: .upcoming, filter: .predicate("search", "review"))] {
+                let value = read(query, revision: revision, id: "fresh-\(index)")
+                XCTAssertEqual(value.rowsByDay[day]?.first?.id, "fresh-\(index)")
+                _ = read(query, revision: revision, id: "must-not-rebuild")
+            }
+            XCTAssertEqual(read(.init(scope: .upcoming), revision: revision, id: "ordinary").rowsByDay[day]?.first?.id, "ordinary")
+            XCTAssertLessThanOrEqual(cache.retainedEntryCount, 4)
+        }
+        XCTAssertEqual(produced, 17, "Each changed filter refreshes; the current ordinary read stays hot")
+    }
+    func testFilteredRowsStillRespectSourceAndPrivacyFences() {
+        let cache = TaskDayGroupsReadCache(), query = TaskQuery(scope: .saved("current-rule")), revision = UUID()
+        var produced = 0
+        func read(_ scope: TaskDayGroupsReadCache.Context) -> TaskDayGroupsRead {
+            cache.read(query: query, clock: clock(), today: day, calendar: calendar(), filteredSource: revision, context: scope) { produced += 1; return [row("current-\(produced)")] }
+        }
+        for current in [context(), context(source: UUID()), context(account: "other"), context(access: UUID()), context(session: UUID()), context(generation: UUID()), context(origin: "https://other.invalid")] {
+            XCTAssertEqual(read(current).rowsByDay[day]?.first?.id, "current-\(produced)")
+            XCTAssertEqual(cache.retainedEntryCount, 1)
+        }
+        let before = produced
+        XCTAssertTrue(read(context(readable: false)).rowsByDay.isEmpty); XCTAssertEqual(produced, before); XCTAssertEqual(cache.retainedEntryCount, 0)
+        XCTAssertEqual(read(context()).rowsByDay[day]?.first?.id, "current-\(before+1)")
+    }
+
 }

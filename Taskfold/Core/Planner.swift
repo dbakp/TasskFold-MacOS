@@ -697,6 +697,7 @@ final class TaskDayGroupsReadCache {
         let query: TaskQuery
         let clockDay: String, clockZone: String
         let minute: Date?
+        let filteredSource: UUID?
         let today: String, calendar: Calendar
         let calendarID: Calendar.Identifier, timeZone: String
     }
@@ -707,7 +708,7 @@ final class TaskDayGroupsReadCache {
     var retainedEntryCount: Int { entries.count }
     func clear() { context = nil; entries.removeAll(keepingCapacity: true) }
     func read(query: TaskQuery, clock: TaskCalendarContext, today: String, calendar: Calendar,
-              context next: Context, tasks: () -> [Record]) -> TaskDayGroupsRead {
+              filteredSource: UUID? = nil, context next: Context, tasks: () -> [Record]) -> TaskDayGroupsRead {
         guard next.readable else { clear(); return TaskDayGroupsRead(tasks: [], today: today, calendar: calendar) }
         if context != next { clear(); context = next }
         // Day-only lists do not change every minute. A saved filter's actual
@@ -715,7 +716,12 @@ final class TaskDayGroupsReadCache {
         let minute: Date?
         if case .saved = query.scope { minute = clock.minute }
         else { minute = query.filter?.usesClockWindow == true ? clock.minute : nil }
-        let key = Key(query: query, clockDay: clock.today, clockZone: clock.timeZone, minute: minute, today: today, calendar: calendar, calendarID: calendar.identifier, timeZone: calendar.timeZone.identifier)
+        // Saved rules are resolved inside Store; both saved and explicit
+        // filters keep its full snapshot fence for metadata-dependent matches.
+        let filterSource: UUID?
+        if case .saved = query.scope { filterSource = filteredSource }
+        else { filterSource = query.filter == nil ? nil : filteredSource }
+        let key = Key(query: query, clockDay: clock.today, clockZone: clock.timeZone, minute: minute, filteredSource: filterSource, today: today, calendar: calendar, calendarID: calendar.identifier, timeZone: calendar.timeZone.identifier)
         if let index = entries.firstIndex(where: { $0.key == key }) {
             let hit = entries.remove(at: index); entries.append(hit); return hit.value
         }

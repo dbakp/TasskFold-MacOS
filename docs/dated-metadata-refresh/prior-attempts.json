@@ -1,0 +1,59 @@
+{
+  "wholeBaselineUIAccepted": false,
+  "measurementStageAccepted": true,
+  "baselineComputations": 12,
+  "baselineGroupSeconds": 0.9850989580154419,
+  "attempts": [
+    {
+      "result": "ipad-before",
+      "exit": 65,
+      "cause": "Phone-only TabBar lookup on iPad; stopped before measuring. Replaced with existing adaptive selector."
+    },
+    {
+      "result": "ipad-before-v2",
+      "exit": 65,
+      "cause": "Measurement and no-write assertions pass; cold file gains152 bytes. Current legacy-preference migration and the two resulting rows explain the expected handoff; benchmark now begins with current-format Today/Upcoming rows. Full cold equivalence was not captured for this attempt."
+    },
+    {
+      "result": "ipad-before-v3",
+      "exit": 65,
+      "cause": "Stage measured and no-write assertions pass. Cold raw bytes differ only in object-key order: full captured JSON values and array order match. The final test compares canonical cold values while retaining strict bytes during read-only work."
+    }
+  ],
+  "coldDiff": {
+    "beforeBytes": 4052520,
+    "afterBytes": 4052520,
+    "beforeSHA256": "d0a7e766b04b9e50d2641eaf2a66db680fecc746bea459adfcdb1d3bb52f4179",
+    "afterSHA256": "0b4d496a81e30862f088441df79a3d2088e781e0a3733b867a05602fd6c7d93d",
+    "semanticChanges": {},
+    "tableChanges": {},
+    "taskRowsSame": true,
+    "pendingSame": true,
+    "beforePreferences": [
+      {
+        "id": "today",
+        "user_id": "ui-testing",
+        "overdue_collapsed": false
+      },
+      {
+        "id": "upcoming",
+        "overdue_collapsed": false,
+        "user_id": "ui-testing"
+      }
+    ],
+    "afterPreferences": [
+      {
+        "overdue_collapsed": false,
+        "user_id": "ui-testing",
+        "id": "today"
+      },
+      {
+        "overdue_collapsed": false,
+        "user_id": "ui-testing",
+        "id": "upcoming"
+      }
+    ]
+  },
+  "finalNativeAccepted": true,
+  "finalOracle": "Pure diagnostic: whole durable file byte-exact. Cold launch: all JSON values and array order exact; object key order ignored. Fixture contains the known representable metadata numbers and large opaque text; separate Core authored-value/precision cases also pass."
+}
