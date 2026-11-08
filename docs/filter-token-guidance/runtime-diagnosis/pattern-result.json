@@ -1,0 +1,11 @@
+{
+  "availability" : "FoundationModels.SystemLanguageModel.Availability.available",
+  "errorReflection" : "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+  "errorStructure" : "- Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)} #0\n  - super: NSObject\n",
+  "errorType" : "NSError",
+  "generationSucceeded" : false,
+  "os" : "Version 26.6.2 (Build 25G83)",
+  "requests" : 1,
+  "schema" : "{\n  \"additionalProperties\" : false,\n  \"properties\" : {\n    \"expression\" : {\n      \"pattern\" : \"p[1-4]\",\n      \"type\" : \"string\"\n    }\n  },\n  \"required\" : [\n    \"expression\"\n  ],\n  \"title\" : \"PatternFilterControl\",\n  \"type\" : \"object\",\n  \"x-order\" : [\n    \"expression\"\n  ]\n}",
+  "scope" : "One synthetic on-device pattern control with concrete error reflection; no filter-quality acceptance"
+}

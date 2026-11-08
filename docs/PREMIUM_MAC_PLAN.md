@@ -11647,3 +11647,6 @@ Exact original-root identity now also admits child signature reuse inside the sa
 ### 8 November · actual saves and note command collision
 
 The iOS owner now verifies actual Store saves/cold return with100roots/2000children, exact opaque/task data and widget tokens; same-build cold/warm hash-cache saves measure377/46ms, not old/new release or FPS. Mac CUA reproduces a fresh heading shortcut changing synthetic priority4→1 before opening Text style. A scene-focused note command scope now replaces task Priority keys, and iOS has direct text-editor hardware handling. Both SDK builds and current185Mac/178iOS source/image proofs pass; three Mac keyboard cases compile but runtime awaits one new post-build unlock. No rebuild is needed. NormalMac53 is unchanged; no runtime fix, update or broad completion is claimed. See `native-child-save/` and `note-heading-command-scope/`.
+
+
+On-device filter follow-up (8 November): the synthetic pattern probe’s own process log identifies an unsupported pattern guide on this runtime. A finite-choice control returns p3. Evidence is in `filter-token-guidance/runtime-diagnosis`; no production filter change or quality acceptance. The built note shortcut regression remains pending a desktop accessible to computer control.
