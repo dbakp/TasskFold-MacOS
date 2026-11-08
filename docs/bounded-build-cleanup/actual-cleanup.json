@@ -1,0 +1,35 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 26718330880,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 328830976,
+      "projectedAllocatedBytes": 328830976,
+      "within768MiB": true,
+      "storagePressure": "constrained",
+      "budgetBytes": 805306368
+    },
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 165273600,
+      "projectedAllocatedBytes": 165273600,
+      "within768MiB": true,
+      "storagePressure": "constrained",
+      "budgetBytes": 805306368
+    }
+  ],
+  "freeAfterBytes": 26718322688,
+  "actualFreeChangeBytes": -8192,
+  "protectedProductsAndPlansPreserved": true,
+  "productAndPlanSHA256": {
+    "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib": "279468e91aa4c699d643cffd0f1e183ff6b0f523ea7f0181241524cee854a25a",
+    "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun": "6e7ba2c4b955037278dd9613bc2e951b77b03611cf05766714194719fb2a756c",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "737200da526f91a603b7e4b977a362e2b7f8210a0ad33c7072b4101209401e4f",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun": "2db73aeaa20fd55b634c6a3399aa28104784eec680bacfb3e3cde6c2374a9da7"
+  },
+  "testTemporaryFixturesRemoved": true
+}

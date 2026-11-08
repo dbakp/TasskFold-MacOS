@@ -13,7 +13,7 @@ class CleanupTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.home=Path(self.tmp.name);self.cache=self.home/'Library/Caches/TaskfoldBuild/daily-ios';(self.cache/'DailyProject/Taskfold.xcodeproj').mkdir(parents=True);self.scratch=self.cache/'Build/Intermediates.noindex';self.scratch.mkdir(parents=True);(self.scratch/'object.o').write_text('generated');self.product=self.cache/'Build/Products/Taskfold.app/Taskfold';self.product.parent.mkdir(parents=True);self.product.write_text('keep product');self.result=self.cache/'Logs/Test/proof.xcresult/evidence';self.result.parent.mkdir(parents=True);self.result.write_text('keep evidence')
         self.homepatch=patch.object(module.Path,'home',return_value=self.home);self.homepatch.start();self.addCleanup(self.homepatch.stop)
-        self.diskpatch=patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=25*1024**3));self.diskpatch.start();self.addCleanup(self.diskpatch.stop)
+        self.diskpatch=patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=19*1024**3));self.diskpatch.start();self.addCleanup(self.diskpatch.stop)
     def test_apply_only_completed_compiler_scratch(self):
         with patch.object(module.subprocess,'check_output',return_value=''):
             r=module.finish(build_caches=[self.cache],apply=True)
@@ -97,6 +97,57 @@ class CleanupTests(unittest.TestCase):
         with patch.object(module.subprocess,'check_output',return_value='/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -derivedDataPath '+str(self.cache)+'\n'):
             r=module.finish(build_caches=[self.cache],apply=True)
         self.assertTrue(self.scratch.exists());self.assertTrue(r['skipped'])
+    def test_constrained_cache_drops_transients_but_keeps_objects_within_budget(self):
+        for name in ['Index.noindex','CompilationCache.noindex']:
+            path=self.cache/name;path.mkdir();(path/'scratch').write_text('regenerable')
+        metadata=self.scratch/'XCBuildData';metadata.mkdir();(metadata/'build.db').write_text('stale cache reference')
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=25*1024**3)):
+            report=module.finish(build_caches=[self.cache],apply=True)
+        self.assertEqual([Path(x['path']).name for x in report['actions']],['Index.noindex','CompilationCache.noindex','XCBuildData'])
+        self.assertTrue((self.scratch/'object.o').exists());self.assertTrue(self.product.exists());self.assertTrue(self.result.exists())
+        self.assertTrue(report['skipped'][-1]['within768MiB']);self.assertEqual(report['skipped'][-1]['storagePressure'],'constrained')
+    def test_constrained_trim_stops_after_sdk_removal_reaches_the_budget(self):
+        sdk=self.cache/'SDKExplicitPrecompiledModules';sdk.mkdir();(sdk/'module.pcm').write_text('generated')
+        modules=self.cache/'ModuleCache.noindex';modules.mkdir();(modules/'module.pcm').write_text('keep reusable module')
+        metadata=self.scratch/'XCBuildData';metadata.mkdir();(metadata/'build.db').write_text('stale scan')
+        actual=module.allocated
+        def measured(path):
+            if path.resolve()==sdk.resolve():return 200*1024**2
+            if path.resolve()==self.cache.resolve():return 900*1024**2
+            return actual(path)
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=25*1024**3)),patch.object(module,'allocated',side_effect=measured):
+            report=module.finish(build_caches=[self.cache],apply=True)
+        self.assertFalse(sdk.exists());self.assertFalse(metadata.exists());self.assertTrue(modules.exists());self.assertTrue((self.scratch/'object.o').exists())
+        self.assertEqual([x['kind'] for x in report['actions']],['completedCompilerCache','completedBuildMetadata'])
+        self.assertTrue(report['skipped'][-1]['within768MiB']);self.assertLessEqual(report['skipped'][-1]['projectedAllocatedBytes'],768*1024**2)
+    def test_hard_floor_preserves_bounded_objects_at_twenty_and_prunes_below(self):
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=20*1024**3)):
+            report=module.finish(build_caches=[self.cache],apply=True)
+        self.assertTrue(self.scratch.exists());self.assertEqual(report['actions'],[])
+        with patch.object(module.subprocess,'check_output',return_value=''):
+            report=module.finish(build_caches=[self.cache],apply=True)
+        self.assertFalse(self.scratch.exists());self.assertTrue(self.product.exists());self.assertEqual(report['skipped'][-1]['storagePressure'],'critical')
+    def test_constrained_dry_run_projects_trim_without_touching_any_files(self):
+        index=self.cache/'Index.noindex';index.mkdir();(index/'data').write_text('generated')
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=25*1024**3)):
+            report=module.finish(build_caches=[self.cache],apply=False)
+        self.assertTrue(index.exists());self.assertTrue(self.scratch.exists());self.assertEqual(len(report['actions']),1)
+    def test_constrained_active_own_compiler_keeps_even_transients(self):
+        index=self.cache/'Index.noindex';index.mkdir();(index/'data').write_text('in use')
+        with patch.object(module.subprocess,'check_output',return_value='xcodebuild -derivedDataPath '+str(self.cache)),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=25*1024**3)):
+            report=module.finish(build_caches=[self.cache],apply=True)
+        self.assertTrue(index.exists());self.assertTrue(self.scratch.exists());self.assertEqual(report['actions'],[])
+    def test_constrained_protected_excess_is_reported_without_removing_products(self):
+        actual=module.allocated
+        def measured(path):return 900*1024**2 if path.resolve()==self.cache.resolve() else actual(path)
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=25*1024**3)),patch.object(module,'allocated',side_effect=measured):
+            report=module.finish(build_caches=[self.cache],apply=True)
+        self.assertTrue(self.product.exists());self.assertTrue(self.result.exists());self.assertFalse(report['skipped'][-1]['within768MiB'])
+        self.assertIn('Protected products/evidence',report['skipped'][-1]['reason'])
+    def test_critical_dry_run_never_claims_files_were_retired(self):
+        with patch.object(module.subprocess,'check_output',return_value=''):
+            report=module.finish(build_caches=[self.cache],apply=False)
+        self.assertTrue(self.scratch.exists());self.assertEqual(report['skipped'][-1]['reason'],'Dry-run cache trim; no files removed')
     def test_healthy_small_cache_is_retained(self):
         with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=60*1024**3)):
             r=module.finish(build_caches=[self.cache],apply=True)
