@@ -94,11 +94,14 @@ final class Store {
     @ObservationIgnored private var workflowFixtureFailureConsumed = false
     @ObservationIgnored private var sharedCaptureFixtureFailureConsumed = false
     #endif
-    private(set) var workspaceReadRevision = UUID() { didSet { subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear(); invalidateStartupPublication(privacy: !initializingStore && !startupSharedStorageReady) } }
+    private(set) var workspaceReadRevision = UUID() { didSet { datedReadRevision = UUID(); subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear(); invalidateStartupPublication(privacy: !initializingStore && !startupSharedStorageReady) } }
     var workspaceAccessToken: String? { (activeTeamMask ?? snapshot.teamWorkspace)?.boundary.raw["token"]?.text }
     var nativeConversationTeamCache: TeamWorkspaceCache? { activeTeamMask ?? snapshot.teamWorkspace }
     @ObservationIgnored private var workflowPresentationDeferred = false
     @ObservationIgnored private(set) var snapshotRevision = UUID()
+    // Dated rows depend on authored tasks and project/access presentation.
+    // Unrelated preferences and byte-equal decoded refreshes keep this source.
+    @ObservationIgnored private var datedReadRevision = UUID()
     #if DEBUG
     @ObservationIgnored private(set) var workflowPreparedLocalHistoryUsed = false
     @ObservationIgnored private(set) var workflowPreparedNormalizationUsed = false
@@ -111,7 +114,10 @@ final class Store {
     var snapshot = Snapshot() {
         didSet {
             snapshotRevision = UUID()
-            presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear()
+            presentationReadCache.clear(); recordReadCache.clear()
+            // Deferred edits retain their conservative invalidation until the
+            // whole operation publishes its current task presentation.
+            if workflowPresentationDeferred { dayGroupsReadCache.clear(); datedReadRevision = UUID() }
             assigneeDisplayCache.clear()
             // Project reads revalidate the current filtered rows for this new
             // epoch; unchanged projects can keep their prepared hierarchy.
@@ -242,7 +248,7 @@ final class Store {
     }
     @ObservationIgnored private let taskCache = TaskCache()
     @ObservationIgnored private let dayGroupsReadCache = TaskDayGroupsReadCache()
-    private(set) var taskRevision = 0
+    private(set) var taskRevision = 0 { didSet { datedReadRevision = UUID() } }
     private(set) var calendarContext = TaskCalendarContext()
     /// Read synchronously on scene activation and clock notifications, before network work.
     @discardableResult func refreshCalendarContext() -> Bool {
@@ -2063,13 +2069,51 @@ final class Store {
     /// actions still capture and validate their current source independently.
     func taskDayGroups(_ query: TaskQuery, today: String, calendar: Calendar = .current) -> TaskDayGroupsRead {
         _ = snapshot; _ = taskRevision; _ = workspaceReadRevision
-        let context = TaskDayGroupsReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
+        let context = TaskDayGroupsReadCache.Context(source: datedReadRevision, access: presentationAccessEpoch,
             session: backend.reminderSessionIncarnation, workspace: .init(account: userID, generation: workspaceGeneration),
             origin: try? backend.accountRemovalOrigin, readable: workspaceCacheReadable)
-        return dayGroupsReadCache.read(query: query, clock: calendarContext, today: today, calendar: calendar, context: context) { matching(query) }
+        return dayGroupsReadCache.read(query: query, clock: calendarContext, today: today, calendar: calendar,
+            filteredSource: snapshotRevision, context: context) { matching(query) }
     }
     #if DEBUG
     var taskDayGroupingComputations: Int { dayGroupsReadCache.computationCount }
+    /// Isolated read-only stage profile: only temporary in-memory metadata
+    /// changes. The real workspace file must remain byte-for-byte untouched.
+    func profileWorkflowDatedMetadataRefresh() throws -> [String: JSON] {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--dated-refresh-profile"),
+              ProcessInfo.processInfo.arguments.contains("--day-drag-save-profile") else { throw CancellationError() }
+        let original = snapshot, durable = try Data(contentsOf: cacheURL)
+        defer { snapshot = original }
+        let query = TaskQuery(scope: .upcoming), calendar = Calendar.current
+        let initial = taskDayGroups(query, today: calendarContext.today, calendar: calendar)
+        let count = dayGroupsReadCache.computationCount
+        var samples: [JSON] = []
+        for index in 0..<12 {
+            let refreshStart = ProcessInfo.processInfo.systemUptime
+            let kind: String
+            if index % 2 == 0 {
+                kind = "identicalDecodedRefresh"
+                snapshot = try TaskfoldJSONDecoder().decode(Snapshot.self, from: TaskfoldJSONEncoder().encode(snapshot))
+            } else {
+                kind = "unrelatedPreference"
+                var row = Record(["id": .string("dated-metadata-profile"), "user_id": .string(userID)])
+                row["collapsed"] = .bool(index % 4 == 1)
+                snapshot.tables["view_preferences"] = (original.tables["view_preferences"] ?? []) + [row]
+            }
+            let refreshed = ProcessInfo.processInfo.systemUptime
+            let next = taskDayGroups(query, today: calendarContext.today, calendar: calendar)
+            let finished = ProcessInfo.processInfo.systemUptime
+            guard AuthoredValueComparison.sameRows(next.overdue, initial.overdue), next.rowsByDay == initial.rowsByDay else {
+                throw AppFailure(message: "A metadata-only refresh changed dated work")
+            }
+            samples.append(.object(["kind": .string(kind), "refreshSeconds": .number(refreshed-refreshStart), "groupSeconds": .number(finished-refreshed)]))
+        }
+        snapshot = original
+        guard snapshot == original, AuthoredValueComparison.sameRows(snapshot.tables["tasks"] ?? [], original.tables["tasks"] ?? []),
+              try Data(contentsOf: cacheURL) == durable else { throw AppFailure(message: "The read profile changed saved work") }
+        return ["samples": .array(samples), "groupComputations": .number(Double(dayGroupsReadCache.computationCount-count)),
+                "taskRows": .number(Double(original.tables["tasks"]?.count ?? 0)), "restoredSnapshot": .bool(true), "durableByteExact": .bool(true)]
+    }
     func verifyWorkflowDayGroupingCache() throws -> [String: JSON] {
         guard WorkflowUndoNativePeer.enabled else { throw CancellationError() }
         let original = snapshot, readable = workspaceCacheReadable, originalClock = calendarContext
@@ -2091,6 +2135,21 @@ final class Store {
         _ = read()
         try require(dayGroupsReadCache.computationCount == before + 1, "A minute tick rebuilt ordinary dated work")
         calendarContext = originalClock
+
+        let metadataObserved = WorkspaceReadObservationProbe(), metadataBefore = dayGroupsReadCache.computationCount
+        withObservationTracking { _ = read() } onChange: { metadataObserved.markChanged() }
+        snapshot.tables["view_preferences"] = [Record(["id": .string("unrelated-dated-proof"), "collapsed": .bool(true)])]
+        _ = read()
+        try require(metadataObserved.changed && dayGroupsReadCache.computationCount == metadataBefore, "Unrelated metadata rebuilt dated rows or stopped observation")
+        snapshot = try TaskfoldJSONDecoder().decode(Snapshot.self, from: TaskfoldJSONEncoder().encode(snapshot))
+        _ = read()
+        try require(dayGroupsReadCache.computationCount == metadataBefore, "An identical decoded refresh rebuilt dated rows")
+        let filterID = "dated-saved-proof", savedQuery = TaskQuery(scope: .saved(filterID))
+        snapshot.tables["saved_views"] = [Record(["id": .string(filterID), "user_id": .string(userID), "name": .string("Dated saved proof"), "query_ast": FilterRule.predicate("search", "Original dated proof").document])]
+        let savedBefore = taskDayGroups(savedQuery, today: today, calendar: calendar)
+        snapshot.tables["saved_views"]![0]["query_ast"] = FilterRule.predicate("search", "Never present dated proof").document
+        let savedAfter = taskDayGroups(savedQuery, today: today, calendar: calendar)
+        try require(savedBefore.rowsByDay.values.flatMap({ $0 }).contains(where: { $0.id == first.id }) && savedAfter.rowsByDay.isEmpty && savedAfter.overdue.isEmpty, "A changed saved filter reused stale dated matches")
 
         let observed = WorkspaceReadObservationProbe()
         withObservationTracking { _ = read() } onChange: { observed.markChanged() }
@@ -2116,7 +2175,7 @@ final class Store {
         try require(AuthoredValueComparison.sameRows(returned.overdue, expected.overdue) && returned.rowsByDay == expected.rowsByDay, "Returning source did not recover its current groups")
         let durable = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
         try require(snapshot == original && durable == original, "Grouping check changed saved work")
-        return ["hotReuse": .bool(true), "ordinaryMinuteReuse": .bool(true), "snapshotObservedOnHit": .bool(true), "dateTitleRefresh": .bool(true), "archiveRefreshWithoutTaskChange": .bool(true), "unreadableRedacted": .bool(true), "clockRefresh": .bool(true), "durableOriginalPreserved": .bool(true)]
+        return ["hotReuse": .bool(true), "ordinaryMinuteReuse": .bool(true), "metadataObservedOnHit": .bool(true), "metadataReuse": .bool(true), "reconstructedReuse": .bool(true), "savedFilterRefresh": .bool(true), "snapshotObservedOnHit": .bool(true), "dateTitleRefresh": .bool(true), "archiveRefreshWithoutTaskChange": .bool(true), "unreadableRedacted": .bool(true), "clockRefresh": .bool(true), "durableOriginalPreserved": .bool(true)]
     }
     #endif
     func filterGroups(_ scope: TaskScope, tasks: [Record], includeCompleted: Bool = false) -> [TaskGrouping.Group] {

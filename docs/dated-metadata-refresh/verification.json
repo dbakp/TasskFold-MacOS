@@ -1,0 +1,161 @@
+{
+  "reviewed": "2026-11-08",
+  "production": "Dated presentation source changes on authored-task or project/access changes; full snapshot observation stays live. Saved/explicit filters retain a full snapshot key; clock/day/zone, readability, actor/session/workspace/origin and deferred-edit fences remain. Four-entry budget unchanged; rows carry no action authority.",
+  "comparison": {
+    "before": {
+      "groupComputations": 12,
+      "groupSeconds": 0.9850989580154419,
+      "refreshSeconds": 3.2241719169542193,
+      "kinds": {
+        "unrelatedPreference": {
+          "count": 6,
+          "groupMeanMilliseconds": 82.10331942730893,
+          "refreshMeanMilliseconds": 0.17318754301716885
+        },
+        "identicalDecodedRefresh": {
+          "count": 6,
+          "groupMeanMilliseconds": 82.07984024193138,
+          "refreshMeanMilliseconds": 537.1887986160194
+        }
+      }
+    },
+    "after": {
+      "groupComputations": 0,
+      "groupSeconds": 0.000753041822463274,
+      "refreshSeconds": 3.1886289585381746,
+      "kinds": {
+        "unrelatedPreference": {
+          "count": 6,
+          "groupMeanMilliseconds": 0.019145819048086803,
+          "refreshMeanMilliseconds": 0.12313194262484708
+        },
+        "identicalDecodedRefresh": {
+          "count": 6,
+          "groupMeanMilliseconds": 0.10636115136245887,
+          "refreshMeanMilliseconds": 531.3150278137376
+        }
+      }
+    },
+    "rows": 2004,
+    "distinctTimedSchedules": 500,
+    "sampleCountEach": 12,
+    "scope": "Debug Simulator Store stages, not total navigation/FPS; whole baseline test65 is separately documented due serialization-key ordering; final three native cases pass."
+  },
+  "nativeAfter": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "scope": "Actual isolated iPad Upcoming diagnostic, real warm/cold unique-schedule drops and twelve current Store freshness assertions; Debug Simulator stages only, not whole navigation time or physical FPS."
+  },
+  "coreEachOwner": {
+    "selected": 147,
+    "passed": 145,
+    "skipped": 2,
+    "failed": 0,
+    "newCases": 3,
+    "skips": "Existing opt-in same-host filter/workload measurements"
+  },
+  "sdkBuilds": {
+    "ios": "signed Simulator build-for-testing passed; final harness rebuilt",
+    "mac": "unsigned isolated Debug app passed; new Mac runtime separate"
+  },
+  "harnessAfterNative": "Historical baseline-only selector removed after native acceptance so the optimized full suite does not expect the old bug. Selected final case bodies and app sources unchanged; current harness rebuilt successfully.",
+  "appSourcesUnchangedAfterNative": true,
+  "sourceAudit": {
+    "TasskFold-MacOS": {
+      "appSwiftFiles": 185,
+      "allNormalizedMatch": true,
+      "normalizations": {
+        "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+        "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+        "com.taskfold.session-persistence": "com.taskfold.workflowteststeameditbridge.session-persistence"
+      },
+      "uiTestMatches": true,
+      "changedSourceSHA256": {
+        "Taskfold/Core/Store.swift": "3a8695c04be5f17ba48525294e1ff1d5b279257f35391022133d43ee4e7df450",
+        "Taskfold/Core/Planner.swift": "da70c47f1872ec867e1537cf5f7366ddbd39b0ffb1fdb0cf228c476246a898ef",
+        "TaskfoldTests/TaskDayGroupsCacheTests.swift": "ae2cfbf9a8fa2210b844e864f4366e3f06e936a98fd4648fae0b02944c21576b"
+      }
+    },
+    "TaskFold-iOS": {
+      "appSwiftFiles": 178,
+      "allNormalizedMatch": true,
+      "normalizations": {
+        "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+        "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+        "com.taskfold.ios.session": "com.taskfold.workflowteststeameditbridge.session"
+      },
+      "uiTestMatches": true,
+      "changedSourceSHA256": {
+        "Taskfold/Core/Store.swift": "312a8eb1ea7ffe6cb0758ac75f06c70f23764fbd63dd357148c7e83f7264b01f",
+        "Taskfold/Core/Planner.swift": "da70c47f1872ec867e1537cf5f7366ddbd39b0ffb1fdb0cf228c476246a898ef",
+        "TaskfoldTests/TaskDayGroupsCacheTests.swift": "ae2cfbf9a8fa2210b844e864f4366e3f06e936a98fd4648fae0b02944c21576b",
+        "Taskfold/TaskfoldApp.swift": "63af3463c642042750db51a3c7d882b10c1e4fe6fb689798999a2fbed6a089c8"
+      }
+    }
+  },
+  "normalMacInstalledBuild": "48",
+  "normalMacPreparedBuild": "49 (older source; latest metadata fix awaits a subsequent normal build)",
+  "phoneInstallationDeferred": true,
+  "hostedChanges": false,
+  "normalAdvancedGatesChanged": false,
+  "storageCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 31974965248,
+    "actions": [
+      {
+        "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Index.noindex",
+        "kind": "completedCompilerCache",
+        "allocatedBytes": 58269696
+      },
+      {
+        "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/CompilationCache.noindex",
+        "kind": "completedCompilerCache",
+        "allocatedBytes": 28672
+      },
+      {
+        "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/SDKExplicitPrecompiledModules",
+        "kind": "completedCompilerCache",
+        "allocatedBytes": 142704640
+      },
+      {
+        "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/ModuleCache.noindex",
+        "kind": "completedCompilerCache",
+        "allocatedBytes": 48934912
+      },
+      {
+        "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/SDKStatCaches.noindex",
+        "kind": "completedCompilerCache",
+        "allocatedBytes": 1617920
+      },
+      {
+        "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex",
+        "kind": "completedCompilerCache",
+        "allocatedBytes": 420081664
+      },
+      {
+        "path": "/private/tmp/taskfold-workflow-native-mac-build/Index.noindex",
+        "kind": "completedCompilerCache",
+        "allocatedBytes": 54927360
+      }
+    ],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 764551168,
+        "projectedAllocatedBytes": 764551168,
+        "within768MiB": true
+      }
+    ],
+    "freeAfterBytes": 32705228800,
+    "actualFreeChangeBytes": 730263552
+  },
+  "remaining": [
+    "Broader sustained initial rendering/navigation and multiple-project scaling",
+    "New Mac/phone/account/accessibility/physical smoothness scope",
+    "Older-work migration/media/custodian/history scope and prior explicit rollout/provider deferrals"
+  ],
+  "owner": "TasskFold-MacOS"
+}
