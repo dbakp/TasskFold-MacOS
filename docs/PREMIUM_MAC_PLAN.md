@@ -11565,3 +11565,8 @@ The actual saved-original/restoration-card route now has passing normal-text dar
 ### 8 November — metadata-only dated refreshes
 
 Dated row reads now retain a private authored-task/project/access revision across unrelated metadata and equal decoded snapshots. Full snapshot observation and saved/explicit-filter fences remain; deferred edits, clock and privacy boundaries remain conservative. Final iPad refresh/cold-value, real warm/cold drops and twelve Store checks pass. Both Core suites pass145 cases with two existing opt-in skips each, and both SDK builds pass. Grouping work over twelve refreshes falls from985ms to0.75ms; the separate full encoding/decoding cost is not solved. Baseline whole-test failures and unchanged cold values/object-key-order proof remain explicit. Mac48 is installed; latest changes need a later normal build. Wider native Mac/rendering/multi-project/accessibility/account/physical and full Px scope remain open. See `dated-metadata-refresh/verification.json`.
+
+
+### 8 November — next ordinary package and tablet note acceptance
+
+Mac 50 is a signed optimized Release/archive/frozen-source verified candidate from merged responsiveness source. 48 remains installed; desktop control still reports locked, so fresh safety copy/install/startup/shared-storage/data readback are pending. Routine update authorization persists. Tablet note paragraph Save/Undo/Redo/cold, normal reader/preview section jumps and largest-text reader original/cold scopes now pass. The first largest-text switch tap failed; a diagnostic-only single-case follow-up passes without app changes or relaxed assertions. Keep that instability and wider Mac/shared/speech/hardware acceptance separate. No broader checkpoint promotion. Evidence: `ipad-notes-and-mac50/`.

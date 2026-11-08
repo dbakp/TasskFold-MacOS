@@ -1,0 +1,12 @@
+[
+  {
+    "cache": "/tmp/taskfold-prepared-undo-signed-ios-build",
+    "allocatedBytes": 181764096,
+    "within768MiB": true
+  },
+  {
+    "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+    "allocatedBytes": 237387776,
+    "within768MiB": true
+  }
+]
