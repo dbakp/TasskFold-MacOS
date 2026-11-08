@@ -11631,3 +11631,7 @@ The regex-guided candidate compiles but all twelve real requests fail before pro
 ### 8 November · note keyboard controls, native checks pending
 
 Both owning note editors now declare inline style keys, Command-Return Apply and Escape Cancel, with parent/link-sheet isolation. Mac app and test bundle build/sign; iOS Simulator app/widget/share builds. All 185 Mac/178 iOS app sources and actual debug images are audited. Two Mac keyboard/Undo/cold-return cases compile but are not executed while the desktop is locked; one unlock question remains pending. The Mac test-class/modifier-name build errors are corrected, excluded stale extension outputs retired and strict signature rechecked. Project generation now preserves the earlier group-registration setting; Xcode account/profile runtime work stays pending. Mac 53 remains installed. See `note-keyboard-controls/README.md`.
+
+### 8 November · keep-editable native HTTP recovery
+
+The independently owned iOS acceptance driver now verifies the actual keep-editable controller/API path across eight protected cold processes and 35 checks, including a lost committed reply and Check with new writes paused. Originals, inverse/binding, exact unknown data and history survive. Mac records this bounded evidence only; no Mac runtime or visual acceptance is added. Mac53 remains installed and untouched; computer control still reports locked after the unlock reply. Ready note keyboard tests and development-account/profile followup remain pending. See `kept-version-http/README.md`.

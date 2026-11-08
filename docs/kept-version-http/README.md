@@ -1,0 +1,11 @@
+# Keep the restored version editable: native HTTP recovery
+
+The reserved real-team-signed iPhone Simulator app passes 35 checks across eight cold processes against the complete owned local Auth/REST schema. Actual Store, Backend, review/catalog and encrypted journal APIs queue a bound history-mapping review, commit it once with its real reply deliberately lost, and recover with Check after new writes are paused. A final cold read keeps the ended restoration non-actionable.
+
+The exact reviewed editable tree survives. The independently checked source preserves huge numbers, distinct Unicode keys and unknown parent fields, with the documented fresh zero completion fences checked separately. Prior saved originals, the retained inverse/binding, recorded node identities, earlier history, concurrent root notes, priority and task generation survive. One protected session and one exact repair request persist across launches. Both request journals are encrypted on disk.
+
+Three earlier failures remain documented: ad-hoc Simulator signing rejected before boot; the audit omitted an existing namespace substitution; the whole-tree oracle initially omitted intentional completion fences. The existing signature/admission/service protections remain intact. Only DEBUG acceptance code and the iOS driver change; no schema or normal product behavior changes.
+
+This is controller/API acceptance, not visual, VoiceOver, Mac/iPad runtime, hardware, validated TLS, all-format or shared-account/custodian acceptance. Those wider cases and normal advanced rollout gates remain open. Mac 53 remains installed from its earlier verified source; this batch does not update it. The Mac still reports locked through computer control. The iOS driver is independently owned; the Mac repository retains only this scoped evidence and progress record.
+
+Official advisors ran only against the owned local schema and retained the existing pg_net-in-public warning. No hosted remediation or CLI upgrade occurred. All owned services/private configuration were removed; the app terminated and only the Simulator this run booted was shut down. Applied cleanup removed 513 MiB of generated compiler scratch while preserving app products, user data, backups, Keychain, shared SDKs, Docker volumes and other projects.
