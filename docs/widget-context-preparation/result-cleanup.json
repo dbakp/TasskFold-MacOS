@@ -1,0 +1,32 @@
+{
+  "freeBeforeBytes": 35821236224,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-widget-context-native-ios.xcresult",
+      "files": 40,
+      "bytes": 3710498,
+      "manifestSHA256": "b7334c53d52f528f831e926ad563a617d4abed13407ce1fc0f06adf1e70c59e3"
+    },
+    {
+      "path": "/tmp/taskfold-widget-context-native-ios-attachments",
+      "files": 12,
+      "bytes": 3404267,
+      "manifestSHA256": "812b577cb6dadab7e3d560e9bf526af0bda1bc4ec0e122f4a7015cc23e5d179f"
+    },
+    {
+      "path": "/tmp/taskfold-restore-native-uitest.swift",
+      "reason": "Superseded draft; canonical native restoration test is already committed in iOS main",
+      "bytes": 6163,
+      "sha256": "1a3e0380356adfb4f339655632815f86baab0ac3b4f9241f39b8e160f4d15ab7"
+    }
+  ],
+  "preserved": [
+    "/tmp/taskfold-widget-context-native-ios-summary.json",
+    "/tmp/taskfold-widget-context-native-ios.log",
+    "/tmp/taskfold-widget-context-native-ios-v2.xcresult",
+    "/tmp/taskfold-widget-context-native-ios-v2-attachments/8852D767-61CD-4C9D-8D6C-D5165B7CB6C5.json"
+  ],
+  "appOrDeviceDataRemoved": false,
+  "freeAfterBytes": 35828523008,
+  "actualFreeChangeBytes": 7286784
+}

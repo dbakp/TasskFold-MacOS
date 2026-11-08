@@ -1,0 +1,88 @@
+{
+  "reviewed": "2026-11-08",
+  "owningPlatform": "macOS",
+  "coreRuns": [
+    {
+      "passed": 174,
+      "failed": 0,
+      "seconds": 7.947,
+      "logSHA256": "735e1cae9298b3bafd8a8b1145b2219a321689abead83b7db5cfad6cb113cd02",
+      "diagnostic": {
+        "captureSeconds": 7.959e-06,
+        "indexedWorkerPreparationSeconds": 0.013720584,
+        "members": 3000,
+        "previousPreparationSeconds": 0.73942175,
+        "projects": 1000
+      }
+    }
+  ],
+  "focusedCorePassed": 174,
+  "newContextCases": 6,
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "09590b8cbb6f359e00c68e59fb9df5bcb2b15a592b00f91fde87a7ac5d3f4ea6",
+    "Taskfold/Core/Store.swift": "3f4f6017b9203a26f047e4efbb3b0dc3e9b22f47cf5cd6a79ef52620af1250b5",
+    "TaskfoldTests/WidgetPublicationContextTests.swift": "e303f721c1250dc1f56deb7e31432b97c60ea60f0339c02bd56fc34aaa3c0175",
+    "Taskfold/Core/WidgetActions.swift": "b403c468d483d0878e61f51d058388631dda7cbe421dcee88622244039558021",
+    "Taskfold/Core/TeamWorkspace.swift": "7edb32bf154592f68784b1429357f8dfd8e7cf52079000b0adc4b8086090e23d"
+  },
+  "diagnosticScope": "Single Debug sample, Mac-hosted owning Core suite; 1,000 projects and 3,000 accepted members. The reference keeps project lookups indexed and reproduces the previous repeated collaborator filtering. Not native end-to-end timing or hardware FPS.",
+  "diagnostic": {
+    "captureSeconds": 7.959e-06,
+    "indexedWorkerPreparationSeconds": 0.013720584,
+    "members": 3000,
+    "previousPreparationSeconds": 0.73942175,
+    "projects": 1000
+  },
+  "nativePhone": {
+    "owner": "dbakp/TaskFold-iOS",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "terminalExit": 0,
+    "checks": {
+      "accessFenceRejected": true,
+      "savedDataUnchanged": true,
+      "latestRecovered": true,
+      "signOutRedactedImmediately": true,
+      "staleResultRejected": true
+    },
+    "runtimeWarnings": [],
+    "scope": "Actual Store publication through the existing isolated DEBUG workflow panel. Not installed desktop-widget interaction or full app navigation profiling.",
+    "logSHA256": "3bd42f8566c1e1e0b9244ab2117379d4cc497dba7c0e36551471b9b9beaab9d5",
+    "summarySHA256": "c8fe14dc9c0e58b93b5236f4b2a2ce65687993ce4bb383bf0460f336f7e490e6",
+    "testSourceSHA256": "cffd6831064a222f4e9b6b07ac6dfda93149ef609e3b610847d14b059815ab40",
+    "fixtureSourceSHA256": "6472872ff0e4ff2a1cf621b21c00905f5d625d63aaafb446acd396951c7ad4ec",
+    "appExecutableSHA256": "b81c912a2020403fe5322c2a57ef9c925882baf63d168a9125077b5a6f0bb9ca",
+    "compiledUITestSourceMatchesOwner": true
+  },
+  "owningAppBuild": {
+    "terminalExit": 0,
+    "logSHA256": "cfccc9480eaafa9d104b2d8480ebc9cf64ca4b5982f037e7306aaa38169e664e",
+    "signing": "disabled, compile only",
+    "macRuntimeAccepted": false
+  },
+  "hostSourceAudit": {
+    "comparedSwiftFiles": 185,
+    "onlyDifferences": "Reserved Keychain/recovery/queue/app-group namespaces",
+    "namespaceOnlyFiles": [
+      "Taskfold/Core/Backups.swift",
+      "Taskfold/Core/Backend.swift",
+      "Taskfold/Core/Store.swift",
+      "Taskfold/Core/WidgetActions.swift",
+      "Taskfold/Core/SharedCapture.swift"
+    ]
+  },
+  "normalFlagsChanged": false,
+  "normalInstall": false,
+  "hostedChanges": false,
+  "checkpointCountsUnchanged": {
+    "checkpoints": 74,
+    "substeps": 67
+  },
+  "remaining": [
+    "Broader navigation/drag/render timing and physical smoothness",
+    "Full widget render latency and obsolete-work CPU costs",
+    "New native Mac/iPad and wider accessibility/account cases",
+    "Original-restoration retained-history disposal/keep-old-version and wider lifecycle"
+  ]
+}

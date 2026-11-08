@@ -1,0 +1,107 @@
+{
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1794096349.084,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1794096275.702,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "checks": {
+    "accessFenceRejected": true,
+    "savedDataUnchanged": true,
+    "latestRecovered": true,
+    "signOutRedactedImmediately": true,
+    "staleResultRejected": true
+  },
+  "reservedHostSetting": {
+    "reservedHostOnly": true,
+    "setting": "TaskfoldHeadingsEnabled",
+    "before": null,
+    "after": true,
+    "oldSHA256": "114058005cc78677596e7451af7554baefda34f8b976ef565d5849c94e3386d2",
+    "newSHA256": "8a0cca30cc9985995e9ff0d3d5a5b06c51f7d5712da471c360ea12236fd0c56e",
+    "normalFlagsChanged": false
+  },
+  "firstAttempt": {
+    "accepted": false,
+    "exit": 65,
+    "reason": "Stopped at the required heading-authoring prerequisite before the publication check. Reused reserved host had heading support off. Corrected only its Info setting; no app-source patch or normal gate change.",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 0,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "finishTime": 1794096202.885,
+      "passedTests": 0,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1794096116.67,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Prepare this reserved host with --headings before running heading workflow acceptance",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery",
+          "testName": "testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "logSHA256": "7109b69ed6acd2d6b2930890ae4ec72a7caa50ca6cbbf05a2704de2ced0dc6e2"
+  }
+}

@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Original restoration · phone cold Undo/Redo verified",
-  "latest": "The actual iPhone restore journey now passes first review, a deliberately lost committed reply, exact status recovery, cold relaunch and reviewed Undo/Redo/Undo against the complete local schema. It caught and fixed a real first-sheet selection bug in both apps. Four sends create four decisions; exact root/source/authored records, retained originals and prior activity survive. Both apps compile and each owner passes10 channel checks; Mac native interaction remains separate. Retained-history disposal/keep-old-version and wider lifecycle remain before activation. Normal gates stay off; checkpoints remain74/67.",
+  "focus": "Background widget preparation · less interface work",
+  "latest": "Background widget updates now collect existing tokens and prepare member directories and assignment history in the existing worker. One collaborator index replaces repeated scans per project. The owning Debug Core diagnostic (1,000 projects / 3,000 members) measures 739 ms → 14 ms, with immutable capture at 0.008 ms. Both owners pass174 focused checks, including6 new context cases; the signed iPhone actual-Store privacy/recovery check passes all5 assertions. Both apps compile. These are scoped diagnostic and preservation results, not whole-app or physical smoothness. No normal app installation; counts remain74/67.",
   "next": [
     "Verify the existing installed Mac46 connection and original readonly25012 after the user’s Allow response. Computer control still reports the Mac locked; preserve the app/audit rather than restart or duplicate them. iPhone installation stays deferred.",
-    "Finish retained-history disposal/keep-old-version adoption and wider account/task/custodian lifecycle before original-restoration activation. The basic iPhone native restore → lost reply/status → cold Undo/Redo path now passes; Mac/iPad, speech, native HTTP Auth and wider ownership remain distinct. Avoid repeating unchanged accepted matrices.",
-    "Profile the remaining drop and navigation costs, including widget preparation, local history and rendering. The new row writer halves the observed large-list drop/save fixture, but wider scrolling, reconstructed-refresh scaling and physical smoothness remain open.",
+    "Continue reducing actual drop/navigation and background rendering costs. Background widget member/token/provenance preparation now runs in the existing worker, with indexed directory preparation and actual iPhone Store privacy/recovery proof. Full render latency, obsolete work, reconstructed-refresh scaling and physical smoothness remain distinct.",
+    "Finish retained-history disposal/keep-old-version adoption and wider account/task/custodian lifecycle before original-restoration activation. The basic iPhone restore → lost reply/status → cold Undo/Redo path passes; Mac/iPad, speech, native HTTP Auth and wider ownership remain distinct. Do not substitute repeated accepted matrices for that implementation.",
     "Improve genuinely generated on-device filter quality with a materially different, grounded design. Common descriptions now have a complete local path; the raw model remains known3/5, and the expanded twelve-goal oracle is still unaccepted. Do not rerun rejected prompts/schemas unchanged or count local drafts as inference.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
     "Finish Mac/iPad Saved originals controls and wider account/accessibility behavior; then finish broader custodian cleanup, restoration/Undo and the larger older-task/history migration. Command-free discovery/export now has genuine API and Core proof. Keep wider mapped/shared-team/custodian, exact-cache and file/discussion ownership cases distinct; ordinary advanced rollout gates stay off.",
@@ -503,7 +503,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Delivered scoped work covers prepared workspace/project/member reads, note/draft preparation, dates/grouping, stable drag targets, project-first navigation and exact task-order reuse. The current bounded row writer passes 74 focused cases per owner and two actual signed Simulator journeys (four warm/cold drops). The2,004-task/2.88 MB reference fixture improves from 126–130 ms to 58–62 ms through commit; moving the large payload itself takes 86–88 ms. Saved dates, payload, all 2,003 unrelated tasks and pending work survive cold return. Mac46 is installed/synced and includes this saving change; its shared-storage access/readback still waits on the one confirmed system prompt. Wider native rendering/navigation, reconstructed-refresh scaling, account/accessibility behavior and physical smoothness remain open.",
+              "detail": "Delivered scoped work covers prepared workspace/project/member reads, note/draft preparation, dates/grouping, stable drag targets, project-first navigation and exact task-order reuse. The current bounded row writer passes 74 focused cases per owner and two actual signed Simulator journeys (four warm/cold drops). The2,004-task/2.88 MB reference fixture improves from 126–130 ms to 58–62 ms through commit; moving the large payload itself takes 86–88 ms. Saved dates, payload, all 2,003 unrelated tasks and pending work survive cold return. Mac46 is installed/synced and includes this saving change; its shared-storage access/readback still waits on the one confirmed system prompt. Wider native rendering/navigation, reconstructed-refresh scaling, account/accessibility behavior and physical smoothness remain open. Background widget member/token/assignment preparation now runs in the existing worker; indexed collaborator grouping replaces repeated per-project scans. Each owner passes174 focused Core checks (6 new context cases), and the current signed iPhone actual-Store check confirms immediate redaction, stale/access rejection, current recovery and unchanged saved work. Each owner records its large-directory Debug Core sample; both apps compile. Full render/navigation/drop and physical smoothness remain open; no new normal installation.",
               "steps": [
                 {
                   "state": "done",
@@ -797,7 +797,12 @@
             "unchanged-row-encoding/core-verification.json",
             "unchanged-row-encoding/iphone-verification.json",
             "unchanged-row-encoding/mac45-package.json",
-            "unchanged-row-encoding/storage-cleanup.json"
+            "unchanged-row-encoding/storage-cleanup.json",
+            "widget-context-preparation/README.md",
+            "widget-context-preparation/verification.json",
+            "widget-context-preparation/native-phone.json",
+            "widget-context-preparation/storage-cleanup.json",
+            "widget-context-preparation/result-cleanup.json"
           ],
           "focus": false
         },
@@ -1879,7 +1884,13 @@
     "native-original-restoration/service-channel.json",
     "native-original-restoration/storage-cleanup.json",
     "native-original-restoration/result-cleanup.json",
-    "native-original-restoration/progress-validation.json"
+    "native-original-restoration/progress-validation.json",
+    "widget-context-preparation/README.md",
+    "widget-context-preparation/verification.json",
+    "widget-context-preparation/native-phone.json",
+    "widget-context-preparation/storage-cleanup.json",
+    "widget-context-preparation/result-cleanup.json",
+    "widget-context-preparation/progress-validation.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2658,6 +2669,12 @@
     "unchanged-row-encoding/iphone-verification.json": "933941a0625ed13f9409071b560d1448d3806afec1150f473d914af92628e905",
     "unchanged-row-encoding/mac45-package.json": "e1ada3096ba6940066e958c5f572ce6af86e14e8eb6aad82af7ad5909e32847b",
     "unchanged-row-encoding/storage-cleanup.json": "4beaa2c7374332357cf7c6a5645867fff9db64d43ea96ba2a411aaf4db00719b",
+    "widget-context-preparation/README.md": "32a2c06c942e8d281699619e6281551376dc82037e815950280e1fcd703a290f",
+    "widget-context-preparation/native-phone.json": "5ae73b3441b517321f945fc68595c5728596f5ae2ef87e582f5b0949e4459b16",
+    "widget-context-preparation/progress-validation.json": "3ea19f3485bf5a1b90cd1f6b6a6e26145f7c51a03042b2507c8a88498fd395db",
+    "widget-context-preparation/result-cleanup.json": "5c31681487718711e68493ba6e6d89822b6269ae850f3b8cb05c1de7d50f7bcd",
+    "widget-context-preparation/storage-cleanup.json": "44eb8ad99f0d59d475663a18e09c7c6e8b0c305f59db6a26cf1fc2ba380ea759",
+    "widget-context-preparation/verification.json": "2e26a0190de22790a042e194382739f140274752512a80ac5709b05dfc483d2b",
     "workflow-definition-preview/README.md": "fb3db35fe0347ea543de3a87e12e4179f6516e4224d860f713c9600b12907063",
     "workflow-definition-preview/iphone-after.json": "aadaaad40e1d9fead12db11bb6c7616ab9f2634c570a4c302a54478b9d4296d9",
     "workflow-definition-preview/verification.json": "dea1e754b6163da3f62c7fcebe2cf79029bb5f7d1eff6cb1911a553dc13896cf",

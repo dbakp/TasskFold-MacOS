@@ -2238,6 +2238,37 @@ enum TaskCompletion {
 /// Capture value types on the app actor; construct and encode the full projection
 /// on a worker. The final disk replacement stays on the app actor, after its
 /// workspace/session/access checks, so sign-out cannot race a late file write.
+/// Captures readable values without resolving every project's member directory
+/// on the interface executor. The publication worker owns this preparation.
+struct WidgetPublicationContext: Sendable {
+    let snapshot: Snapshot
+    let account: String
+    let localAccount: String?
+    let tokenMask: TeamWorkspaceCache?
+
+    func prepare(_ input: WidgetPublicationInput) throws -> WidgetPublicationInput {
+        guard input.account == account else { throw CancellationError() }
+        var result = input
+        result.completionTokens = tokenMask?.widgetTokens(snapshot) ?? WidgetCompletion.tokens(snapshot)
+        let projects = Dictionary((snapshot.tables["projects"] ?? []).map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let collaborators = Dictionary(grouping: snapshot.tables["project_collaborators"] ?? [], by: { $0.string("project_id") })
+        let profile = snapshot.tables["profiles"]?.first { $0.string("user_id") == account } ?? Record()
+        result.people = input.projects.flatMap { displayed -> [Record] in
+            guard let project = projects[displayed.id] else { return [] }
+            // A loaded empty directory is authoritative; do not replace it with
+            // older collaborator rows. Keep project scope on duplicate people.
+            let members = snapshot.tables["project_members:" + displayed.id] ?? collaborators[displayed.id] ?? []
+            return TaskAssignment.members(project: project, collaborators: members, currentUser: account, profile: profile).map { person in
+                var scoped = person; scoped["project_id"] = .string(displayed.id); return scoped
+            }
+        }
+        let rows = snapshot.tables[TaskAssignmentProvenance.table] ?? (localAccount == nil ? nil : [])
+        result.assignments = TaskAssignmentProvenance.Catalog(rows, localAccount: localAccount)
+        result.context = nil
+        return result
+    }
+}
+
 struct WidgetPublicationInput: Sendable {
     var tasks: [Record], projects: [Record], account: String
     var now = Date()
@@ -2257,8 +2288,10 @@ struct WidgetPublicationInput: Sendable {
     var collaborators: [Record]?
     var assignments = TaskAssignmentProvenance.Catalog(nil)
     var feedback: WidgetCompletionFeedback?
+    var context: WidgetPublicationContext?
 
     func encoded() throws -> Data {
+        if !account.isEmpty, let context { return try context.prepare(self).encoded() }
         var payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, now: now, labels: labels, sections: sections, savedViews: savedViews, calendar: calendar, completionTokens: completionTokens, pendingSync: pendingSync, workingHours: workingHours, calendarWindow: calendarWindow, calendarFallback: calendarFallback, notePins: notePins, focusRecord: focusRecord, focusConflict: focusConflict, focusReadable: focusReadable, pulseActivity: pulseActivity, pulseEpoch: pulseEpoch, pulseChildren: pulseChildren, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
         if let feedback, !account.isEmpty, feedback.account == account, now < feedback.expiresAt {
             payload["completionFeedback"] = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(feedback))
