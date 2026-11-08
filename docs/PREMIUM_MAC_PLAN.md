@@ -11460,3 +11460,8 @@ Widget publication now captures readable values and resolves completion tokens, 
 Both owners pass174 focused Core checks including6 new context cases. Each records a 1,000-project/3,000-member Debug Core sample; these are Mac-hosted component diagnostics, not native phone latency or FPS. The signed current iPhone actual-Store check passes all5 publication/privacy/recovery assertions. Mac independently compiles, with native runtime still separate. See [widget preparation](widget-context-preparation/README.md).
 
 Full render/drop/navigation performance and physical smoothness remain open. Original-restoration lifecycle work stays in the backlog; ordinary rollout gates remain off. No new app install or package churn: normal46 and original readonly25012 stay intact. The original readback PID89939 is confirmed live in its original file-open call; no successful readback report exists yet. Counts remain74/67.
+
+
+### 8 November — Mac46 readback classification correction
+
+After the performance batch merged, original readonly25012 became terminal with exit1. Its verifier assumed every captured JSON file was a workspace dictionary; the safety copy also contains the backup index, whose correct shape is an array. This is a verifier failure, not proof of task loss. The normal Mac46 process remains intact. A separate read-only type diagnostic24448/PID41898 is confirmed live and must not be duplicated while waiting. Current computer control still reports the Mac locked, and no accepted postlaunch readback exists. The earlier PID89939 observation above is historical; that process has ended.
