@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-08",
+  "scope": "Final sync-refresh merge, widget completion preparation and complete snapshot encoding on one awaited background worker",
+  "core": {
+    "ios": {
+      "selected": 143,
+      "skippedOptionalBenchmarks": 2,
+      "failures": 0,
+      "newFunctionalCases": 6,
+      "logSHA256": "810a403d5e847a4cc2b59d94813d1905aa8bd01b8a0f3b81617aa045cfd7b6cc"
+    },
+    "mac": {
+      "selected": 143,
+      "skippedOptionalBenchmarks": 2,
+      "failures": 0,
+      "newFunctionalCases": 6,
+      "logSHA256": "e38936df9734435c46a526255453c540bb568c80eb7af6cbb75cde6411e5fca3"
+    }
+  },
+  "sdkBuilds": {
+    "ios": 0,
+    "mac": 0
+  },
+  "actualLocalAuthREST": {
+    "accepted": true,
+    "checks": 33,
+    "productionWorkerPreparedCommit": true,
+    "nineColdProcesses": true
+  },
+  "guards": [
+    "Workspace/account generation",
+    "Actual authentication session incarnation",
+    "Every editable snapshot revision, including edit then Undo",
+    "Presentation/access revisions",
+    "Conflict-review presence",
+    "Cancellation before and after preparation",
+    "Fresh retry after stale result; no stale read replay",
+    "Immediate privacy mask, durable fence and encrypted recovery copy before access culling",
+    "Final durable-ledger staging, exact encoding proof/fallback and guarded atomic write"
+  ],
+  "mutableSignatureCacheCrossesActors": false,
+  "immutableSignatureSeedBounded": true,
+  "nativeUIOrHardwareFPSClaim": false,
+  "fullSmoothnessAccepted": false,
+  "schemaHostedOrNormalGateChanges": false,
+  "installedMac": "48 closed after verified sync",
+  "olderCandidate": "52 superseded as candidate; archive retained until installation handoff",
+  "phoneInstallation": "deferred",
+  "candidate": "53 optimized, signed, archive/frozen-source verified",
+  "normalUpdateBlocker": "Fresh private safety copy is waiting in a protected directory open; CUA reports the Mac locked again. No swap or startup acceptance.",
+  "optimizedDailyPerformanceClaim": false
+}

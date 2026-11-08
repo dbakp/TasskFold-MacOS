@@ -1,0 +1,7 @@
+{
+  "Taskfold/Core/Models.swift": "e70bc4df719378b6faf8bee6fafbb9f9f636e03e412a92218f98e5d99a49bba3",
+  "Taskfold/Core/TeamWorkspace.swift": "5cc8cd6d25ed896ae5429d0cad272917ff2888cace6aadb9c7eb3fbf87c11f9f",
+  "Taskfold/Core/Store.swift": "756fae3c74f876f75a5b21fbb92726e38ab11079635d88762c0873bc4702af86",
+  "Taskfold/Core/WidgetCompletion.swift": "b4cdfc2ac6ac60c7e7da9390543b34fcfa8ca142d495deddaefa3bba018870da",
+  "TaskfoldTests/WorkspaceRefreshPreparationTests.swift": "951fb092afb9ae51550c0cec6fe253102fb474f50d12b4b87861a5a054f32735"
+}
