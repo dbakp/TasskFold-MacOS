@@ -278,10 +278,11 @@ enum LocalFilterDescription {
         mutating func description() -> String? {
             _ = take("please")
             if take("show") || take("find") || take("list") { _ = take("me") }
+            _ = take("only") || take("anything")
             return clause()
         }
         mutating func nouns() {
-            if take("the", "tasks") || take("the", "task") || take("tasks") || take("task") { return }
+            if take("the", "tasks") || take("the", "task") || take("tasks") || take("task") || take("items") || take("item") { return }
             if word == "work", offset + 1 < tokens.count, tokens[offset + 1].word == "in" { offset += 1 }
         }
         mutating func clause() -> String? {
@@ -336,7 +337,9 @@ enum LocalFilterDescription {
             if take("not", "done") || take("not", "completed") { return Atom(text: "open", facet: "completion") }
             if ["open", "unfinished", "incomplete", "pending"].contains(word) { offset += 1; return Atom(text: "open", facet: "completion") }
             if ["completed", "finished", "done"].contains(word) { offset += 1; return Atom(text: "completed", facet: "completion") }
-            if take("with", "priority") || take("priority") {
+            if take("the", "highest", "priority") || take("highest", "priority") { return Atom(text: "p1", facet: "priority") }
+            if take("the", "lowest", "priority") || take("lowest", "priority") { return Atom(text: "p4", facet: "priority") }
+            if take("with", "priority") || take("marked", "priority") || take("priority") {
                 guard let value = number(), (1...4).contains(value) else { return nil }
                 return Atom(text: "p\(value)", facet: "priority")
             }
@@ -352,11 +355,11 @@ enum LocalFilterDescription {
             if take("planned") || take("scheduled") { return date(field: "date") }
             if let value = relativeDate() { return Atom(text: value == "overdue" ? "overdue" : "date:" + quote(value), facet: "date") }
             offset = start
-            if take("in", "project") || take("in", "the", "project") || take("project") {
+            if take("in", "project") || take("in", "the", "project") || take("under", "project") || take("under") || take("project") {
                 guard let name = name() else { return nil }
                 let suffix = offset
                 _ = take(",")
-                let tree = take("including", "its", "subprojects") || take("including", "subprojects") || take("including", "its", "child", "projects") || take("and", "its", "child", "projects") || take("and", "its", "subprojects") || take("and", "subprojects")
+                let tree = take("including", "its", "subprojects") || take("including", "subprojects") || take("including", "its", "child", "projects") || take("and", "its", "child", "projects") || take("and", "its", "subprojects") || take("and", "subprojects") || take("also", "looking", "in", "nested", "projects")
                 if !tree { offset = suffix }
                 return Atom(text: (tree ? "project-tree:" : "project:") + quote(name.text), facet: "project", requiresJoinAfter: !name.quoted)
             }
@@ -382,7 +385,9 @@ enum LocalFilterDescription {
             offset = start; return nil
         }
         mutating func number() -> Int? {
-            guard offset < tokens.count, !tokens[offset].quoted, let value = Int(tokens[offset].text), String(value) == tokens[offset].text else { return nil }
+            guard offset < tokens.count, !tokens[offset].quoted else { return nil }
+            if let value = ["one": 1, "two": 2, "three": 3, "four": 4][word] { offset += 1; return value }
+            guard let value = Int(tokens[offset].text), String(value) == tokens[offset].text else { return nil }
             offset += 1; return value
         }
         mutating func name() -> Token? {
@@ -397,9 +402,13 @@ enum LocalFilterDescription {
             let comparison = take("before") ? " before" : take("after") ? " after" : ""
             guard let value = relativeDate(), value != "overdue" || field == "date" && comparison.isEmpty else { return nil }
             if value == "overdue" { return Atom(text: "overdue", facet: field) }
+            if field == "date", value == "today", comparison.isEmpty, take("or", "earlier") {
+                return Atom(text: "(date:\"today\" OR overdue)", facet: field)
+            }
             return Atom(text: field + comparison + ":" + quote(value), facet: field)
         }
         mutating func relativeDate() -> String? {
+            if take("the", "current", "day") || take("current", "day") { return "today" }
             if ["today", "tomorrow", "yesterday", "overdue"].contains(word) { let value = word; offset += 1; return value }
             return nil
         }

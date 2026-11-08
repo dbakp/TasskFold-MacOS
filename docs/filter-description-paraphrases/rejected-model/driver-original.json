@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "owner": "TasskFold-MacOS",
+  "execution": "Mac-hosted owning Core",
+  "syntheticOnly": true,
+  "savedTaskOrFilterWrites": false,
+  "cloudInferenceFallback": false,
+  "realGenerationAccepted": false,
+  "sourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/FilterAssistance.swift": "0050db38bfc0b44e157e4b7241a210abed2cf4f171d9bfa2ab6ed12281c21fac",
+    "TaskfoldTests/TaskBreakdownTests.swift": "68e89c575c67705c7ef9e4c1659511d26da7551181438f5a3f5e9cf71dfe805f",
+    "TaskfoldTests/FilterAssistanceTests.swift": "29d7eafa31bad3c78b193d979558bb1335bdc3d631a18bcfca736c3b30800360"
+  },
+  "driverSHA256": "3d2184e8be807d8835cb184a96659ad99c1872565303d34fd765410ba9f33f81",
+  "observations": [],
+  "engines": [
+    "filter"
+  ],
+  "expectedObservationCounts": {
+    "steps": 0,
+    "filter": 12
+  },
+  "testExitCode": 0,
+  "logSHA256": "fdec090acb090d3eb35b2fc2daf5748c424afaa032d301cd390f8b5fb96c3215",
+  "sourcesUnchanged": true,
+  "error": "The model observation log could not be parsed.",
+  "unavailableReasons": [],
+  "semanticAndShapeChecksPassed": false,
+  "taskTitleQualityReviewed": false
+}

@@ -4,13 +4,13 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Notes · tablet acceptance",
-  "latest": "The actual iPad reader/editor now accepts paragraph styles, current preview, explicit note-only Save, Store Undo/Redo and cold data preservation. Normal long-note reader/preview and largest-text reader section jumps/original text also pass in their recorded scopes. The first largest-text tap failed once; a diagnostic-only follow-up passes with every original assertion, and that instability remains recorded. No app fix is claimed. Mac 50 is signed, archive/frozen-source verified and ready with the latest responsiveness source, but remains uninstalled because desktop access is unavailable. Build 48 remains installed; phone installation stays deferred.",
+  "focus": "Assistance · clear local descriptions",
+  "latest": "Clear wording such as highest-priority unfinished tasks today or earlier, unfinished work including nested projects, and completed priority-three items now resolves through the complete local grammar in both apps. It keeps every condition and the current preview/Save safeguards. Fifteen semantic goals plus priority and refusal checks pass; both final app builds pass. A model candidate passed twelve requests but failed two of three new paraphrases, so it was rejected and its positive/negative evidence retained. Raw model quality remains open. New wording is source-only; Mac 50 is an earlier verified candidate and phone installation stays deferred.",
   "next": [
-    "Install verified normal Mac 50 once desktop access is available, with a fresh private safety copy and verified installed-48 rollback first; then check visible startup/shared storage and saved work. Routine updates are already authorized. Package 50 contains the merged metadata responsiveness and newer recovery wording; superseded 49/44 candidates are retired. Phone installation remains deferred.",
+    "Prepare the next normal Mac update from the newly merged local-description source, preserving current verified packages and installed-48 rollback. Mac 50 remains a verified earlier candidate and is not installed; it lacks these new phrases. Install the latest verified package once desktop access is available, with fresh private safety copy, startup/shared storage and saved-work checks. Routine updates are already authorized. Phone installation remains deferred.",
     "Continue wider sustained initial navigation/rendering, multiple-project scaling and account/accessibility/physical smoothness. Current metadata-only/equal-decoded grouping, actual iPad planning Cancel and warm/cold drops are accepted in recorded scope; decoding cost remains distinct. Do not repeat unchanged passing scenarios for higher totals.",
     "Continue wider older-work migration, other format/source entry variants, account/task/shared-custodian and cross-device/file/audio/history lifecycle before original-restoration activation. The normal-text iPhone Previous editable version entry, complete keep-editable save and cold pending/ended-cycle route now pass; new Mac/iPad/large-text/speech/HTTP Auth scopes remain separate.",
-    "Improve genuinely generated on-device filter quality with a materially different, grounded design. Common descriptions now have a complete local path; the raw model remains known3/5, and the expanded twelve-goal oracle is still unaccepted. Do not rerun rejected prompts/schemas unchanged or count local drafts as inference.",
+    "Improve genuinely generated on-device filter quality with a materially different design. The complete local path now handles the original twelve and three new semantic examples; these are not inference. The English-meaning-plus-query candidate passed twelve actual requests but failed two of three held-out production-fallback requests and is rejected. Retain the stronger raw paraphrase oracle and the baseline known3/5; do not repeat rejected prompts/schemas/designs unchanged or count local drafts as inference. Wider native/device/language quality remains open.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
     "Finish Mac/iPad Saved originals controls and wider account/accessibility behavior; then finish broader custodian cleanup, restoration/Undo and the larger older-task/history migration. Command-free discovery/export now has genuine API and Core proof. Keep wider mapped/shared-team/custodian, exact-cache and file/discussion ownership cases distinct; ordinary advanced rollout gates stay off.",
     "Finish protected Mac deletion/recovery and disposable hosted residual-file repair and issuer/verifier checks when their stated prerequisites are available. Never erase device copies without bound confirmation.",
@@ -848,7 +848,7 @@
             "ipad-notes-and-mac50/verification.json",
             "ipad-notes-and-mac50/mac-package.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-voice",
@@ -872,7 +872,13 @@
             {
               "state": "verify",
               "title": "Reviewed task and filter assistance",
-              "detail": "Both apps own editable task-step and filter reviews, explicit Apply/Save, source/session checks and recorded seeded recovery/history journeys. The ready Mac model previously returned valid English/Spanish task-title arrays. Its production filter engine remains known to fail two of five requests (prose and omitted subprojects). Two materially different structured-generation schemas were implemented and actually exercised on twelve goals: generic condition/value matched0/12, typed semantic fields matched3/12 but regressed original controls and had an accidental match with wrong Boolean structure. Both are rejected and production engine/parser/helper sources are restored unchanged. The retained stronger twelve-goal oracle adds two deadline counterexample rows while preserving the original five expected ID sets; current production acceptance on the expanded eleven-row fixture remains unverified. Do not repeat rejected prompts or schemas unchanged. Wider native/device/language/quality remains open. On-device only; no task/catalog inputs, cloud fallback, task/filter writes, model settings, services or normal gates changed. Common complete English descriptions now have a separate local draft path before model availability/inference. Both owners pass 133 ordinary checks with 3 intentional skips; all 12 counterexample-backed semantic examples draft locally. Normal/largest signed iPhone journeys pass project/exact-tree scope, completed preview, automatic result visibility, local attribution, read-only Use/Cancel, explicit filter-only Save and cold data. Normal text additionally passes automatically visible unknown-project refusal. No model inference is claimed: the raw probe explicitly bypasses the local path and its previous 3/5 quality/expanded 12 acceptance remains open. Mac/iPad interaction, speech, wider language/model and lifecycle cases remain. Mac46 with this feature is now installed and synced after a fresh verified safety copy and9 exact prelaunch caches. Its app-data connection and corrected postlaunch audit are accepted; broader Mac interaction is separate."
+              "detail": "Both apps own editable task-step and filter reviews, explicit Apply/Save, source/session checks and recorded seeded recovery/history journeys. The ready Mac model previously returned valid English/Spanish task-title arrays. Its production filter engine remains known to fail two of five requests (prose and omitted subprojects). Two materially different structured-generation schemas were implemented and actually exercised on twelve goals: generic condition/value matched0/12, typed semantic fields matched3/12 but regressed original controls and had an accidental match with wrong Boolean structure. Both are rejected and production engine/parser/helper sources are restored unchanged. The retained stronger twelve-goal oracle adds two deadline counterexample rows while preserving the original five expected ID sets; current production acceptance on the expanded eleven-row fixture remains unverified. Do not repeat rejected prompts or schemas unchanged. Wider native/device/language/quality remains open. On-device only; no task/catalog inputs, cloud fallback, task/filter writes, model settings, services or normal gates changed. Common complete English descriptions now have a separate local draft path before model availability/inference. Both owners pass 133 ordinary checks with 3 intentional skips; all 12 counterexample-backed semantic examples draft locally. Normal/largest signed iPhone journeys pass project/exact-tree scope, completed preview, automatic result visibility, local attribution, read-only Use/Cancel, explicit filter-only Save and cold data. Normal text additionally passes automatically visible unknown-project refusal. No model inference is claimed: the raw probe explicitly bypasses the local path and its previous 3/5 quality/expanded 12 acceptance remains open. Mac/iPad interaction, speech, wider language/model and lifecycle cases remain. Mac46 with this feature is now installed and synced after a fresh verified safety copy and9 exact prelaunch caches. Its app-data connection and corrected postlaunch audit are accepted; broader Mac interaction is separate. Complete local descriptions now additionally accept priority extremes/spelled one–four, marked-priority items, current-day-or-earlier planned dates and explicit under/nested-project wording. Fifteen semantic goals take the local draft path with exact expected matches; incomplete/unsupported conditions refuse. Each owner passes136 Core cases with4 opt-in skips and both final SDK builds pass. These new phrases have no new native-screen acceptance yet. A separate genuine model candidate passed twelve requests, then matched only one of three held-out production-fallback descriptions; highest priority broadened and nested-project output was malformed. It is rejected and the model/review prefix is restored byte-for-byte. Original torn-log reporting, traceable twelve-case recovery and all negative evidence remain. Raw model quality and broader language/native scope stay open.",
+              "steps": [
+                {
+                  "state": "done",
+                  "title": "Compile clear priority/date/nested-project paraphrases locally; verify fifteen semantic goals, refusal and both builds (new native inputs separate)"
+                }
+              ]
             }
           ],
           "sources": [
@@ -946,9 +952,12 @@
             "local-filter-drafts/storage-cleanup.json",
             "mac46-installation/README.md",
             "mac46-installation/verification.json",
-            "mac46-installation/mac44-readback.json"
+            "mac46-installation/mac44-readback.json",
+            "filter-description-paraphrases/README.md",
+            "filter-description-paraphrases/verification.json",
+            "filter-description-paraphrases/rejected-model/held-out-failure.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-reminders",
@@ -2047,7 +2056,16 @@
     "ipad-notes-and-mac50/cache-budgets.json",
     "ipad-notes-and-mac50/long-note-contents-ui.json",
     "ipad-notes-and-mac50/long-note-contents-large-ui.json",
-    "ipad-notes-and-mac50/pinned-note-edit-ui.json"
+    "ipad-notes-and-mac50/pinned-note-edit-ui.json",
+    "filter-description-paraphrases/README.md",
+    "filter-description-paraphrases/verification.json",
+    "filter-description-paraphrases/source-audit.json",
+    "filter-description-paraphrases/storage-cleanup.json",
+    "filter-description-paraphrases/cache-budgets.json",
+    "filter-description-paraphrases/rejected-model/driver-original.json",
+    "filter-description-paraphrases/rejected-model/recovered-twelve.json",
+    "filter-description-paraphrases/rejected-model/held-out-failure.json",
+    "filter-description-paraphrases/rejected-model/source.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2291,6 +2309,15 @@
     "field-history/README.md": "5b06f10129fc2515d2ff19280fceb406ac4bd50186f334d0501d2c7483547d87",
     "field-history/verification.json": "4b5168fb9ec05cee2e9ddc59127ca320232d9e6d2e4f5463e9939783092ed1e9",
     "filter-assistance/README.md": "daf9f1d013f099015914726adacce1e334ed663768a2a3b1212098529d2c9170",
+    "filter-description-paraphrases/README.md": "15a7dc882f03f9311a8c7fc9257ed8724bb4677d778bc8ec86dfb1def2cbe1c2",
+    "filter-description-paraphrases/cache-budgets.json": "18c8006a5f00a2d79bddab9b2b4c940ffee0ad3e1f4d42b7dc1ff4ce293fc044",
+    "filter-description-paraphrases/rejected-model/driver-original.json": "baa7d9cb8dc4986515eef7656f8f9565559521521712c775c9defa493849b916",
+    "filter-description-paraphrases/rejected-model/held-out-failure.json": "29f624d56e1f306c614d98aa394529813931c92e0a775c6f00e0c39029c020a1",
+    "filter-description-paraphrases/rejected-model/recovered-twelve.json": "9d5e93dea0d7b70e02558e5e2f6f6dbdbc7d6a2a3d790fc55bbf149ec5ccecd4",
+    "filter-description-paraphrases/rejected-model/source.json": "58a3b61d8e73f492c709163ca2485e4c757115cfc543e5967d486e3dd065154c",
+    "filter-description-paraphrases/source-audit.json": "e37ec457e65a8fabe2eb04fdf79270040390523c284a5a66e1b2fc0f6880c81e",
+    "filter-description-paraphrases/storage-cleanup.json": "bb7a16337e890ac0b46e87ae564355b500dbc31c52fccc474bd48276faf7ff14",
+    "filter-description-paraphrases/verification.json": "16527b8be14cbf598634204ba3dda3e6bcdd3aabf4bcf4c0147b9aa9e66d03b3",
     "filter-directory-responsiveness/README.md": "4af3303cbe1a86ce259d8fc88549e8b09cfa8ba9ca9579ba0252a01c15fe518c",
     "filter-directory-responsiveness/core-verification.json": "06b5126192cf171a9a0a38ac44eb246017a05e45c692c42039406d802ed0dcbb",
     "filter-directory-responsiveness/signed-build.json": "202f088e3fba9318a9dfab171f725fc377de889758c4d3356458909bb8fa5dd1",
