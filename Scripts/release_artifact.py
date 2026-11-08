@@ -62,6 +62,8 @@ def inspect_app(app, mode, require_notarization=True):
                 raise ValueError(f'{bundle.name}: production hardened runtime required')
         if len(set(teams)) != 1:
             raise ValueError('App/extensions signing teams differ')
+        from app_group_authorization import verify_app_group_products
+        verify_app_group_products(app, 'mac')
         if mode == 'developer-id' and require_notarization:
             run('xcrun', 'stapler', 'validate', str(app))
             run('spctl', '--assess', '--type', 'execute', str(app))

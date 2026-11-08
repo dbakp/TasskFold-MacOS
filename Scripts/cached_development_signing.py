@@ -10,8 +10,10 @@ import plistlib
 import re
 import subprocess
 
+from app_group_authorization import group_authorized
 
-def select_profiles(profiles, *, platform, team, bundles, identities, device=None, now=None):
+
+def select_profiles(profiles, *, platform, team, bundles, identities, device=None, now=None, required_groups=None):
     now = now or datetime.now(timezone.utc)
     choices = {}
     for bundle in bundles:
@@ -31,6 +33,9 @@ def select_profiles(profiles, *, platform, team, bundles, identities, device=Non
                 continue
             if not isinstance(profile.get('UUID'), str) or not re.fullmatch(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', profile['UUID']):
                 continue
+            if any(not group_authorized(group, platform=platform, team=team, entitlements=entitlements)
+                   for group in (required_groups or {}).get(bundle, [])):
+                continue
             certificates = {hashlib.sha1(value).hexdigest().upper() for value in profile.get('DeveloperCertificates', []) if isinstance(value, bytes)}
             certificates &= identities
             if certificates:
@@ -46,7 +51,7 @@ def select_profiles(profiles, *, platform, team, bundles, identities, device=Non
     raise ValueError('Cached development profiles do not authorize a common available signing identity')
 
 
-def configure_cached_profiles(project, *, platform, team, app_bundle, include_share=True, device=None):
+def configure_cached_profiles(project, *, platform, team, app_bundle, include_share=True, device=None, source_root=None):
     if not re.fullmatch(r'[A-Z0-9]{10}', team or ''):
         raise ValueError('Choose an existing development team for cached-profile signing')
     roots = [Path.home()/'Library/Developer/Xcode/UserData/Provisioning Profiles', Path.home()/'Library/MobileDevice/Provisioning Profiles']
@@ -68,7 +73,23 @@ def configure_cached_profiles(project, *, platform, team, app_bundle, include_sh
             raise ValueError('The current Mac provisioning identifier is unavailable')
     bundles = [app_bundle, app_bundle+'.widgets']
     if include_share: bundles.append(app_bundle+'.share')
-    identity, selected = select_profiles(profiles, platform=platform, team=team, bundles=bundles, identities=identities, device=device)
+    project_data = json.loads(subprocess.check_output(['plutil', '-convert', 'json', '-o', '-', str(project)], text=True))
+    source_root = Path(source_root) if source_root else Path(project_data['objects'][project_data['rootObject']].get('projectDirPath') or project.parent.parent)
+    required_groups = {}
+    for target in project_data['objects'].values():
+        if target.get('isa') != 'PBXNativeTarget': continue
+        for key in project_data['objects'][target['buildConfigurationList']]['buildConfigurations']:
+            settings = project_data['objects'][key]['buildSettings']; bundle = settings.get('PRODUCT_BUNDLE_IDENTIFIER')
+            if bundle not in bundles: continue
+            path = source_root / settings.get('CODE_SIGN_ENTITLEMENTS', '')
+            if not path.is_file(): raise ValueError('Missing target entitlements for '+bundle)
+            groups = plistlib.loads(path.read_bytes()).get('com.apple.security.application-groups', [])
+            if not isinstance(groups, list) or not groups or any(not isinstance(g, str) for g in groups):
+                raise ValueError('Missing shared-container declaration for '+bundle)
+            if bundle in required_groups and set(required_groups[bundle]) != set(groups):
+                raise ValueError('Debug and Release shared-container declarations differ for '+bundle)
+            required_groups[bundle] = groups
+    identity, selected = select_profiles(profiles, platform=platform, team=team, bundles=bundles, identities=identities, device=device, required_groups=required_groups)
     data = json.loads(subprocess.check_output(['plutil', '-convert', 'json', '-o', '-', str(project)], text=True))
     objects, configured = data['objects'], set()
     for target in objects.values():
@@ -89,7 +110,7 @@ def configure_cached_profiles(project, *, platform, team, app_bundle, include_sh
     project.write_bytes(plistlib.dumps(data))
     return {'mode':'existing-development-profiles-only', 'identitySHA1':identity,
             'profiles':{bundle:{'uuid':profile['UUID'], 'expires':profile['ExpirationDate'].replace(tzinfo=timezone.utc).isoformat(), 'xcodeManaged':profile.get('IsXcodeManaged') is True} for bundle,profile in selected.items()},
-            'profileCreationAllowed':False, 'networkProvisioningAllowed':False}
+            'profileCreationAllowed':False, 'networkProvisioningAllowed':False, 'appGroupDeclarationsAuthorized':True}
 
 
 def verify_cached_profile_products(app, platform, signing):
@@ -107,3 +128,5 @@ def verify_cached_profile_products(app, platform, signing):
     if set(actual) != set(signing['profiles']):
         raise ValueError('Signed bundle family differs from the validated cached profiles')
     signing['embeddedProfilesVerified'] = True
+    from app_group_authorization import verify_app_group_products
+    signing['appGroupAuthorization'] = verify_app_group_products(app, platform)
