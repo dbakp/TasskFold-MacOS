@@ -44,28 +44,30 @@ struct ChildCopyMapping: Codable, Equatable, Sendable {
 
 struct ChildCopyMappingDraft: Codable, Equatable, Sendable {
     let source: String, digest: String, mapping: ChildCopyMapping
+    let restoration: ChildTaskRestorationBinding?
     let formatChanges: [ChildTaskRepairChange]
-    init(source: String, digest: String, mapping: [String: JSON], formatChanges: [ChildTaskRepairChange] = []) throws {
+    init(source: String, digest: String, mapping: [String: JSON], formatChanges: [ChildTaskRepairChange] = [], restoration: ChildTaskRestorationBinding? = nil) throws {
         guard ["task", "projection", "records"].contains(source), ChildTaskAdoptionCommand.digest(.string(digest)) else { throw ChildTaskRepairCommand.invalid }
         if !formatChanges.isEmpty {
             guard !formatChanges.contains(where: { $0.kind == .chooseCopy }) else { throw ChildTaskRepairCommand.invalid }
             try ChildTaskRepairChange.validate(formatChanges)
         }
+        if restoration != nil { guard source == "task" else { throw ChildTaskRepairCommand.invalid } }; self.restoration = restoration
         self.source = source; self.digest = digest; self.mapping = try .init(raw: mapping, incomplete: true); self.formatChanges = formatChanges
     }
     func replacingMapping(_ mapping: [String: JSON]) throws -> Self {
-        try .init(source: source, digest: digest, mapping: mapping, formatChanges: formatChanges)
+        try .init(source: source, digest: digest, mapping: mapping, formatChanges: formatChanges, restoration: restoration)
     }
-    enum CodingKeys: String, CodingKey { case source, digest, mapping, formatChanges }
+    enum CodingKeys: String, CodingKey { case source, digest, mapping, formatChanges, restoration }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        try structureKeys(decoder, Set(["source", "digest", "mapping"]).union(c.contains(.formatChanges) ? ["formatChanges"] : []))
-        try self.init(source: c.decode(String.self, forKey: .source), digest: c.decode(String.self, forKey: .digest), mapping: c.decode([String: JSON].self, forKey: .mapping), formatChanges: c.contains(.formatChanges) ? c.decode([ChildTaskRepairChange].self, forKey: .formatChanges) : [])
+        try structureKeys(decoder, Set(["source", "digest", "mapping"]).union(c.contains(.formatChanges) ? ["formatChanges"] : []).union(c.contains(.restoration) ? ["restoration"] : []))
+        try self.init(source: c.decode(String.self, forKey: .source), digest: c.decode(String.self, forKey: .digest), mapping: c.decode([String: JSON].self, forKey: .mapping), formatChanges: c.contains(.formatChanges) ? c.decode([ChildTaskRepairChange].self, forKey: .formatChanges) : [], restoration: c.contains(.restoration) ? c.decode(ChildTaskRestorationBinding.self, forKey: .restoration) : nil)
     }
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(source, forKey: .source); try c.encode(digest, forKey: .digest); try c.encode(mapping, forKey: .mapping)
-        if !formatChanges.isEmpty { try c.encode(formatChanges, forKey: .formatChanges) }
+        if !formatChanges.isEmpty { try c.encode(formatChanges, forKey: .formatChanges) }; if let restoration { try c.encode(restoration, forKey: .restoration) }
     }
 }
 
@@ -188,11 +190,15 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
     init(raw: [String: JSON]) throws {
         guard let kind = Kind(rawValue: raw["kind"]?.text ?? "") else { throw ChildTaskRepairCommand.invalid }
         let extra: Set<String>
-        switch kind { case .chooseCopy: extra = Set(["source", "copy_digest"]).union(raw["mapping"] == nil ? [] : ["mapping"]).union(raw["format_changes"] == nil ? [] : ["format_changes"]); case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .separateDuplicate: extra = ["reference", "keep_path"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
+        switch kind { case .chooseCopy: extra = Set(["source", "copy_digest"]).union(raw["mapping"] == nil ? [] : ["mapping"]).union(raw["format_changes"] == nil ? [] : ["format_changes"]).union(raw["restoration"] == nil ? [] : ["restoration"]); case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .separateDuplicate: extra = ["reference", "keep_path"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
         guard Set(raw.keys) == extra.union(["kind", "path"]) else { throw ChildTaskRepairCommand.invalid }
         let path = try Self.positions(raw["path"], empty: kind == .makeRootList || kind == .chooseCopy)
         guard (kind != .makeRootList && kind != .chooseCopy) || path.isEmpty else { throw ChildTaskRepairCommand.invalid }
         if let mapping = raw["mapping"] { guard case .object(let value) = mapping else { throw ChildTaskRepairCommand.invalid }; _ = try ChildCopyMapping(raw: value) }
+        if let value = raw["restoration"] {
+            guard kind == .chooseCopy, raw["source"] == .string("task"), raw["mapping"] != nil, case .object(let binding) = value else { throw ChildTaskRepairCommand.invalid }
+            _ = try ChildTaskRestorationBinding(raw: binding)
+        }
         if let value = raw["format_changes"] {
             guard kind == .chooseCopy, raw["mapping"] != nil, case .array(let values) = value,
                   (1...64).contains(values.count), values.allSatisfy({ $0.object["kind"] != .string("choose_copy") }),
@@ -228,9 +234,9 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
         if let parent { raw["parent"] = .array(parent.map { .number(Double($0)) }) }; if let index { raw["index"] = .number(Double(index)) }
         try self.init(raw: raw)
     }
-    static func choosing(_ source: String, digest: String, mapping: ChildCopyMapping? = nil, formatChanges: [Self] = []) throws -> Self {
+    static func choosing(_ source: String, digest: String, mapping: ChildCopyMapping? = nil, formatChanges: [Self] = [], restoration: ChildTaskRestorationBinding? = nil) throws -> Self {
         var raw: [String: JSON] = ["kind": .string(Kind.chooseCopy.rawValue), "path": .array([]), "source": .string(source), "copy_digest": .string(digest)]
-        if let mapping { raw["mapping"] = .object(mapping.raw) }
+        if let mapping { raw["mapping"] = .object(mapping.raw) }; if let restoration { raw["restoration"] = .object(restoration.raw) }
         if !formatChanges.isEmpty { raw["format_changes"] = .array(formatChanges.map { .object($0.raw) }) }
         return try .init(raw: raw)
     }
@@ -240,7 +246,7 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
     static func validate(_ changes: [Self]) throws {
         guard (1...64).contains(changes.count), !changes.contains(where: { $0.kind == .chooseCopy }) || changes.count == 1, try TaskfoldJSONEncoder().encode(changes).count <= (changes.count == 1 && changes[0].raw["mapping"] != nil ? 550_000 : 65_536) else { throw ChildTaskRepairCommand.invalid }
     }
-    static let counterPaths: Set<[String]> = Set<[String]>([["changes", "[]", "mapping", "version"], ["changes", "[]", "keep_path", "[]"], ["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]).union(Set([["keep_path", "[]"], ["path", "[]"], ["parent", "[]"], ["index"]].map { ["changes", "[]", "format_changes", "[]"] + $0 }))
+    static let counterPaths: Set<[String]> = Set<[String]>([["changes", "[]", "restoration", "revision"], ["changes", "[]", "mapping", "version"], ["changes", "[]", "keep_path", "[]"], ["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]).union(Set([["keep_path", "[]"], ["path", "[]"], ["parent", "[]"], ["index"]].map { ["changes", "[]", "format_changes", "[]"] + $0 }))
 }
 
 extension ChildTaskRepairChange {
@@ -252,7 +258,7 @@ extension ChildTaskRepairChange {
         case .makeChildrenList: return "Repair a subtask list"
         case .separateDuplicate: return "Separate duplicate tasks"
         case .moveItem: return "Move an item in the structure"
-        case .chooseCopy: return "Use a saved copy"
+        case .chooseCopy: return raw["restoration"] == nil ? "Use a saved copy" : "Keep older version editable"
         }
     }
 }
@@ -506,24 +512,41 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
             id = try c.decode(String.self, forKey: .id); task_generation = try c.decodeIfPresent(String.self, forKey: .task_generation); project_id = try c.decodeIfPresent(String.self, forKey: .project_id)
         }
     }
+    private struct RetainedRestoration: Decodable {
+        let binding: ChildTaskRestorationBinding
+        enum CodingKeys: String, CodingKey { case binding, restoration, payload, files }
+        init(from decoder: Decoder) throws {
+            try structureKeys(decoder, ["binding", "restoration", "payload", "files"])
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            binding = try c.decode(ChildTaskRestorationBinding.self, forKey: .binding)
+            _ = try c.decode(ObjectMarker.self, forKey: .restoration)
+            _ = try c.decode(ObjectMarker.self, forKey: .payload)
+            _ = try c.decode(ArrayMarker.self, forKey: .files)
+        }
+    }
     private struct Header: Decodable {
         let protocolVersion: Int, root: RootIdentity, subtasksSQLNull: Bool, reviewDigest: String, repairDigest: String
         let copyChoice: ChildTaskRepairChange?
         let mappingContext: TaskNodeActivity.Reconciliation?
-        enum CodingKeys: String, CodingKey { case protocolVersion = "protocol", root, subtasksSQLNull = "subtasks_sql_null", projection, records, authority, rootHistory = "root_history", copyChoice = "copy_choice", mappingContext = "mapping_context", childHistory = "child_history", reviewDigest = "review_digest", repairDigest = "repair_digest" }
+        enum CodingKeys: String, CodingKey { case protocolVersion = "protocol", root, subtasksSQLNull = "subtasks_sql_null", projection, records, authority, rootHistory = "root_history", copyChoice = "copy_choice", retainedRestoration = "retained_restoration", mappingContext = "mapping_context", childHistory = "child_history", reviewDigest = "review_digest", repairDigest = "repair_digest" }
         init(from d: Decoder) throws {
             let c = try d.container(keyedBy: CodingKeys.self)
             let hasChoice = c.contains(.copyChoice)
             let mapped = try hasChoice && c.decode(ChildTaskRepairChange.self, forKey: .copyChoice).raw["mapping"] != nil
+            let adopting = try hasChoice && c.decode(ChildTaskRepairChange.self, forKey: .copyChoice).raw["restoration"] != nil
             if mapped { guard let context = TaskNodeActivity.Reconciliation(try c.decode(JSON.self, forKey: .mappingContext)) else { throw ChildTaskRepairCommand.invalid }; mappingContext = context }
             else { mappingContext = nil }
-            try structureKeys(d, Set(["protocol", "root", "subtasks_sql_null", "projection", "records", "authority", "child_history", "review_digest", "repair_digest"]).union(hasChoice ? ["root_history", "copy_choice"] : []).union(mapped ? ["mapping_context"] : []))
+            try structureKeys(d, Set(["protocol", "root", "subtasks_sql_null", "projection", "records", "authority", "child_history", "review_digest", "repair_digest"]).union(hasChoice ? ["root_history", "copy_choice"] : []).union(mapped ? ["mapping_context"] : []).union(adopting ? ["retained_restoration"] : []))
             protocolVersion = try c.decode(Int.self, forKey: .protocolVersion); root = try c.decode(RootIdentity.self, forKey: .root)
             subtasksSQLNull = try c.decode(Bool.self, forKey: .subtasksSQLNull); reviewDigest = try c.decode(String.self, forKey: .reviewDigest); repairDigest = try c.decode(String.self, forKey: .repairDigest)
             if hasChoice {
                 let choice = try c.decode(ChildTaskRepairChange.self, forKey: .copyChoice)
                 guard choice.kind == .chooseCopy else { throw ChildTaskRepairCommand.invalid }; copyChoice = choice
-                _ = try c.decode(ObjectMarker.self, forKey: .projection); _ = try c.decode(ObjectMarker.self, forKey: .authority)
+                _ = try c.decode(ObjectMarker.self, forKey: .projection)
+                if adopting {
+                    guard try c.decodeNil(forKey: .authority),
+                          try c.decode(RetainedRestoration.self, forKey: .retainedRestoration).binding == ChildTaskRestorationBinding(raw: choice.raw["restoration"]!.object) else { throw ChildTaskRepairCommand.invalid }
+                } else { _ = try c.decode(ObjectMarker.self, forKey: .authority) }
                 _ = try c.decode(ArrayMarker.self, forKey: .records); _ = try c.decode(ArrayMarker.self, forKey: .rootHistory)
             } else {
                 copyChoice = nil
@@ -535,7 +558,7 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
     }
     init(data: Data, command: ChildTaskRepairCommand, result: ChildTaskRepairResult) throws {
         _ = try command.result(result.raw); guard result.applied else { throw ChildTaskRepairCommand.invalid }
-        let parts = try ChildTaskRecordRead.separatingJSONField("original", data: data, maximum: Self.maximumBytes, integerPaths: [["protocol"], ["original", "protocol"]], nullableIntegerPaths: [])
+        let parts = try ChildTaskRecordRead.separatingJSONField("original", data: data, maximum: Self.maximumBytes, integerPaths: [["protocol"], ["original", "protocol"], ["original", "copy_choice", "restoration", "revision"], ["original", "retained_restoration", "binding", "revision"]], nullableIntegerPaths: [])
         let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
         guard Set(raw.keys) == ["protocol", "account", "request_id", "archive_id", "archive_digest", "original"], raw["protocol"] == .number(1),
               raw["account"] == .string(command.account), raw["request_id"] == .string(command.id), raw["archive_id"] == result.raw["archive_id"],
@@ -555,7 +578,7 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
     /// command cannot be reconstructed or queued for a mutation from this path.
     init(data: Data, archive: ChildTaskRepairArchive) throws {
         guard archive.contentRetained else { throw ChildTaskRepairCommand.invalid }
-        let parts = try ChildTaskRecordRead.separatingJSONField("original", data: data, maximum: Self.maximumBytes, integerPaths: [["protocol"], ["original", "protocol"]], nullableIntegerPaths: [])
+        let parts = try ChildTaskRecordRead.separatingJSONField("original", data: data, maximum: Self.maximumBytes, integerPaths: [["protocol"], ["original", "protocol"], ["original", "copy_choice", "restoration", "revision"], ["original", "retained_restoration", "binding", "revision"]], nullableIntegerPaths: [])
         let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata), r = archive.receipt
         guard Set(raw.keys) == ["protocol", "account", "request_id", "archive_id", "archive_digest", "original"], raw["protocol"] == .number(1),
               raw["account"] == .string(archive.scope.account), raw["request_id"] == .string(archive.requestID), raw["archive_id"] == .string(archive.id),
@@ -668,7 +691,7 @@ struct ChildTaskRepairState: ReviewedTeamFileCommand {
         self.account = account; self.origin = origin; self.entries = entries; self.drafts = drafts
     }
     init(data: Data) throws {
-        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["drafts", "[]", "mappingReview", "mapping", "version"], ["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["entries", "[]", "command", "body"] + $0 } + ChildTaskRepairChange.counterPaths.map { ["drafts", "[]"] + $0 } + [["keep_path", "[]"], ["path", "[]"], ["parent", "[]"], ["index"]].map { ["drafts", "[]", "mappingReview", "formatChanges", "[]"] + $0 })), nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]])
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["drafts", "[]", "mappingReview", "restoration", "revision"], ["drafts", "[]", "mappingReview", "mapping", "version"], ["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["entries", "[]", "command", "body"] + $0 } + ChildTaskRepairChange.counterPaths.map { ["drafts", "[]"] + $0 } + [["keep_path", "[]"], ["path", "[]"], ["parent", "[]"], ["index"]].map { ["drafts", "[]", "mappingReview", "formatChanges", "[]"] + $0 })), nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]])
         self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries, drafts }
@@ -1079,9 +1102,12 @@ struct ChildTaskCopyReview: Sendable, CustomStringConvertible, CustomDebugString
 
 /// Explicit custody review of the newer records held behind an active restore.
 /// The binding is a freshness token, not permission to mutate or end restoration.
-struct ChildTaskRestorationBinding: Sendable, Equatable {
+struct ChildTaskRestorationBinding: Codable, Sendable, Equatable {
     let actorID: String, restorationID: String, digest: String
     let revision: Int
+    var raw: [String: JSON] { ["actor_id": .string(actorID), "restore_id": .string(restorationID), "revision": .number(Double(revision)), "digest": .string(digest)] }
+    init(from decoder: Decoder) throws { try self.init(raw: [String: JSON](from: decoder)) }
+    func encode(to encoder: Encoder) throws { try raw.encode(to: encoder) }
     init(raw: [String: JSON]) throws {
         guard Set(raw.keys) == ["actor_id", "restore_id", "revision", "digest"],
               let actor = raw["actor_id"]?.text, UUID(uuidString: actor)?.uuidString.lowercased() == actor,

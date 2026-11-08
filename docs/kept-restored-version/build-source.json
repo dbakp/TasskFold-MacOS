@@ -1,0 +1,18 @@
+{
+  "sources": {
+    "Taskfold/Core/ChildTaskRepair.swift": {
+      "owner": "572e0cad13c8f726d0dd3130b238b71aad7185895f2fb4f3325b718cdab3efd0",
+      "host": "572e0cad13c8f726d0dd3130b238b71aad7185895f2fb4f3325b718cdab3efd0"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "owner": "fdd986fc2c2b3d879775245e1890bdd935581abca135b16f480cac3892f60ef9",
+      "host": "746e45017d67313a73e2f5e2b044081186733371b8767e7c68b126e79a7f9f02"
+    },
+    "Taskfold/Core/Store.swift": {
+      "owner": "cf090330f283ca08b8cde927e73b3898df44da027a071dbe6d45925f7dfecfd5",
+      "host": "8bd7676b1975de605dffd83e21fe8031f4b09e32fe104dda629a558bc6841cd6"
+    }
+  },
+  "host": "/tmp/taskfold-owner-review-mac-host",
+  "normalAppChanged": false
+}
