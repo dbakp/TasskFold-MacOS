@@ -1,0 +1,114 @@
+{
+  "reviewed": "2026-11-08",
+  "owner": "mac",
+  "baselineCommit": "fc3d8e9cd7aa26ab7aeb8bd38791a851b427a3be",
+  "sourceSHA256": {
+    "Taskfold/Core/Planner.swift": "39dcdedfda0ccb1b4dc8cb48e373f4a8c1ffc33d932213d72ffd97877bba4be2",
+    "Taskfold/Core/RowGesture.swift": "fb58f2ad81788e559cfe8b193cde9edac0d1c6c163bead5cccdfcd072be1177c",
+    "TaskfoldTests/TaskPlannedDayReadTests.swift": "9a0bd6c6538da7db5004754715e22dc62a13397a756414d9630d7bad81d3288e"
+  },
+  "core": {
+    "selected": 45,
+    "passed": 45,
+    "skipped": 0,
+    "failed": 0,
+    "logSHA256": {
+      "taskfold-schedule-mac-core.log": "122e05405b5d49ef807bf483e4209fdf38ed65e786aa3e7a3e8492eb9345f9e0"
+    }
+  },
+  "newCases": 5,
+  "nativeIOS": {
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1794106130.508,
+      "passedTests": 1,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1794106038.178,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "samples": [
+      {
+        "kind": "warm",
+        "beforePreparationSeconds": 0.2644945834763348,
+        "afterPreparationSeconds": 0.012901583453640342,
+        "beforeThroughCommitSeconds": 0.3224159167148173,
+        "afterThroughCommitSeconds": 0.09633975010365248,
+        "beforeDatedReadSeconds": 0.2437490418087691,
+        "afterDatedReadSeconds": 0.009513624710962176,
+        "planning": {
+          "resolutions": 18,
+          "sourceRows": 2004
+        }
+      },
+      {
+        "kind": "cold",
+        "beforePreparationSeconds": 0.2735663333442062,
+        "afterPreparationSeconds": 0.011789291631430387,
+        "beforeThroughCommitSeconds": 0.3268490834161639,
+        "afterThroughCommitSeconds": 0.07752320845611393,
+        "beforeDatedReadSeconds": 0.258488041581586,
+        "afterDatedReadSeconds": 0.008610124699771404,
+        "planning": {
+          "resolutions": 17,
+          "sourceRows": 2004
+        }
+      }
+    ],
+    "scope": "Single Debug Simulator warm/cold pair with repeated schedules; exact unrelated rows/queue and saved date/cold landing verified; not physical FPS"
+  },
+  "macNativeAccepted": false,
+  "normalInstall": false,
+  "normalGatesChanged": false,
+  "hostedChanges": false,
+  "checkpoints": 74,
+  "substeps": 67,
+  "build": {
+    "iosTerminalExit": 0,
+    "iosStrictAdHocSignatureVerified": true,
+    "macTerminalExit": 0,
+    "macUnsignedCompileOnly": true,
+    "logSHA256": {
+      "taskfold-schedule-ios-build.log": "47c1456a149643c323c464fa4e094b9f2b40a473d8991cb8aae8695562605d87",
+      "taskfold-schedule-mac-build.log": "3d37301514951dd75fe6e3f3031290b2d21ff9154094f5acdaa9996cbc441bd2",
+      "taskfold-schedule-native-ios.log": "a646b6f9d4b082500305e9681c2d089b384092a65d033c378faa3c4384404b78"
+    }
+  },
+  "cleanup": {
+    "report": "storage-cleanup.json",
+    "coreCaches": "core-cache-audit.json",
+    "freeBeforeBytes": 41317384192,
+    "freeAfterBytes": 41635188736,
+    "removedAllocatedBytes": 306610176,
+    "deviceShutdown": true,
+    "realDataRemoved": false
+  }
+}

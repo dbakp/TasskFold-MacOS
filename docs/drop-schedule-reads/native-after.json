@@ -1,0 +1,192 @@
+{
+  "accepted": true,
+  "physicalFPSClaim": false,
+  "samples": [
+    {
+      "kind": "warm",
+      "savedDateVerified": true,
+      "settledViewport": {
+        "calibrationY": 0,
+        "cancelled": false,
+        "dayGrouping": {
+          "calls": 5,
+          "computations": 1,
+          "maximumRows": 504,
+          "maximumSeconds": 0.009165291674435139,
+          "seconds": 0.009513624710962176
+        },
+        "decelerating": false,
+        "desiredOffset": -168,
+        "dragging": false,
+        "firstFrameAfterMs": 26.291966438293457,
+        "frameEvents": [
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-07 owner 91DA61EC",
+          "report 2026-11-07 expected 2026-11-08 owner 91DA61EC",
+          "report 2026-11-08 expected 2026-11-08 owner D8CD0393",
+          "report 2026-11-08 expected 2026-11-08 owner D8CD0393",
+          "report 2026-11-08 expected 2026-11-08 owner D8CD0393",
+          "report 2026-11-08 expected 2026-11-08 owner D8CD0393",
+          "disappear 2026-11-07 owner 91DA61EC",
+          "report 2026-11-08 expected 2026-11-08 owner D8CD0393",
+          "report 2026-11-08 expected 2026-11-08 owner D8CD0393",
+          "report 2026-11-08 expected 2026-11-08 owner D8CD0393"
+        ],
+        "frameY": 50.33333333333333,
+        "minimumOffset": -168,
+        "offsetBefore": -168,
+        "phase": "Optional(Taskfold.DayDragController.Phase.settling)",
+        "rowDay": "2026-11-08",
+        "rowFrameY": 50.33333333333333,
+        "targetScreenY": 372.66666666666663,
+        "taskID": "drag-fixture-0",
+        "tracking": false
+      },
+      "timing": {
+        "beforeCommitSeconds": 0.012901583453640342,
+        "commitTiming": {
+          "admission": 0.0015550416428595781,
+          "applyAndLocalHistory": 0.019217166816815734,
+          "historyRegistration": 0.0007765416521579027,
+          "normalization": 0.002302666660398245,
+          "persist": 0.05756908329203725,
+          "total": 0.08259966666810215,
+          "undoAndGrouping": 0.0011063748970627785
+        },
+        "dayGrouping": {
+          "calls": 1,
+          "computations": 0,
+          "maximumRows": 504,
+          "maximumSeconds": 9.799981489777565e-05,
+          "seconds": 9.799981489777565e-05
+        },
+        "destinationReads": 1,
+        "dropPlanning": {
+          "resolutions": 18,
+          "sourceRows": 2004
+        },
+        "persistTiming": {
+          "atomicWrite": 0.00942774978466332,
+          "directoryPreparation": 0.00022158329375088215,
+          "encoding": 0.00998050021007657,
+          "metadataValidations": 0,
+          "publishDurableSnapshot": 4.929187707602978e-05,
+          "readDurable": 0.00871370849199593,
+          "retirementAndReceiptStaging": 0.002547958167269826,
+          "rowMemoRetainedBytes": 4022918,
+          "rowsEncoded": 4,
+          "rowsReused": 2003,
+          "total": 0.057532166596502066,
+          "widgetCompletionPreparation": 0.025355416582897305,
+          "widgetPublication": 0.001195958349853754
+        },
+        "pointerUpdates": 12,
+        "rowBodyEvaluations": 98,
+        "slotChanges": 1,
+        "sourceReads": 1,
+        "targetReads": 13,
+        "throughCommitSeconds": 0.09633975010365248
+      },
+      "unrelatedTasksExact": true
+    },
+    {
+      "kind": "cold",
+      "savedDateVerified": true,
+      "settledViewport": {
+        "calibrationY": 0,
+        "cancelled": false,
+        "dayGrouping": {
+          "calls": 5,
+          "computations": 1,
+          "maximumRows": 504,
+          "maximumSeconds": 0.00821112492121756,
+          "seconds": 0.008610124699771404
+        },
+        "decelerating": false,
+        "desiredOffset": -168,
+        "dragging": false,
+        "firstFrameAfterMs": 30.506014823913574,
+        "frameEvents": [
+          "report 2026-11-08 expected 2026-11-08 owner 4155FED4",
+          "report 2026-11-08 expected 2026-11-08 owner 4155FED4",
+          "report 2026-11-08 expected 2026-11-08 owner 4155FED4",
+          "report 2026-11-08 expected 2026-11-09 owner 4155FED4",
+          "report 2026-11-09 expected 2026-11-09 owner 711FD42E",
+          "report 2026-11-08 expected 2026-11-09 owner 4155FED4",
+          "report 2026-11-09 expected 2026-11-09 owner 711FD42E",
+          "report 2026-11-09 expected 2026-11-09 owner 711FD42E",
+          "disappear 2026-11-08 owner 4155FED4",
+          "report 2026-11-09 expected 2026-11-09 owner 711FD42E",
+          "report 2026-11-09 expected 2026-11-09 owner 711FD42E",
+          "report 2026-11-09 expected 2026-11-09 owner 711FD42E",
+          "report 2026-11-09 expected 2026-11-09 owner 711FD42E"
+        ],
+        "frameY": 262.5,
+        "minimumOffset": -168,
+        "offsetBefore": -168,
+        "phase": "Optional(Taskfold.DayDragController.Phase.settling)",
+        "rowDay": "2026-11-09",
+        "rowFrameY": 262.5,
+        "targetScreenY": 530,
+        "taskID": "drag-fixture-0",
+        "tracking": false
+      },
+      "timing": {
+        "beforeCommitSeconds": 0.011789291631430387,
+        "commitTiming": {
+          "admission": 8.358340710401535e-05,
+          "applyAndLocalHistory": 0.01318804151378572,
+          "historyRegistration": 0.00010137492790818214,
+          "normalization": 0.0016508332919329405,
+          "persist": 0.050343666691333055,
+          "total": 0.0656142916996032,
+          "undoAndGrouping": 0.000194125110283494
+        },
+        "dayGrouping": {
+          "calls": 1,
+          "computations": 0,
+          "maximumRows": 504,
+          "maximumSeconds": 0.00015624985098838806,
+          "seconds": 0.00015624985098838806
+        },
+        "destinationReads": 2,
+        "dropPlanning": {
+          "resolutions": 17,
+          "sourceRows": 2004
+        },
+        "persistTiming": {
+          "atomicWrite": 0.006971333175897598,
+          "directoryPreparation": 0.00021508336067199707,
+          "encoding": 0.009330000029876828,
+          "metadataValidations": 0,
+          "publishDurableSnapshot": 4.61251474916935e-05,
+          "readDurable": 0.002245541661977768,
+          "retirementAndReceiptStaging": 0.002588750096037984,
+          "rowMemoRetainedBytes": 4024683,
+          "rowsEncoded": 3,
+          "rowsReused": 2008,
+          "total": 0.048766291700303555,
+          "widgetCompletionPreparation": 0.026171166682615876,
+          "widgetPublication": 0.0011648749932646751
+        },
+        "pointerUpdates": 27,
+        "rowBodyEvaluations": 164,
+        "slotChanges": 3,
+        "sourceReads": 1,
+        "targetReads": 29,
+        "throughCommitSeconds": 0.07752320845611393
+      },
+      "unrelatedTasksExact": true
+    }
+  ],
+  "taskCount": 2004
+}

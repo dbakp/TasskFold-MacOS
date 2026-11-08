@@ -1,0 +1,24 @@
+{
+  "TaskFold-iOS": {
+    "swiftFilesCompared": 178,
+    "namespaceOnlyDifferences": [
+      "Taskfold/Core/Backups.swift",
+      "Taskfold/Core/Backend.swift",
+      "Taskfold/Core/Store.swift",
+      "Taskfold/Core/WidgetActions.swift",
+      "Taskfold/Core/SharedCapture.swift"
+    ],
+    "fullNormalizedMatch": true
+  },
+  "TasskFold-MacOS": {
+    "swiftFilesCompared": 185,
+    "namespaceOnlyDifferences": [
+      "Taskfold/Core/Backups.swift",
+      "Taskfold/Core/Backend.swift",
+      "Taskfold/Core/Store.swift",
+      "Taskfold/Core/WidgetActions.swift",
+      "Taskfold/Core/SharedCapture.swift"
+    ],
+    "fullNormalizedMatch": true
+  }
+}
