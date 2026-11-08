@@ -1,0 +1,38 @@
+{
+  "jobs": [
+    {
+      "name": "mac-api",
+      "exit": 0,
+      "log": "/tmp/taskfold-held-matrix-mac-api.log",
+      "seconds": 68.66
+    },
+    {
+      "name": "mac-build",
+      "exit": 0,
+      "log": "/tmp/taskfold-held-matrix-mac-build.log",
+      "seconds": 352.1
+    },
+    {
+      "name": "ios-build",
+      "exit": 0,
+      "log": "/tmp/taskfold-held-matrix-ios-build.log",
+      "seconds": 274.29
+    },
+    {
+      "name": "ios-core",
+      "exit": 0,
+      "log": "/tmp/taskfold-held-matrix-ios-core.log",
+      "seconds": 7.89
+    },
+    {
+      "name": "mac-core",
+      "exit": 0,
+      "log": "/tmp/taskfold-held-matrix-mac-core.log",
+      "seconds": 6.72
+    }
+  ],
+  "serialized": true,
+  "simulatorsCreated": false,
+  "installedAppChanged": false,
+  "passed": true
+}

@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-08",
+  "owner": "TasskFold-MacOS",
+  "scope": "Read-only active-restoration comparison service and client; final editable adoption and native controls remain open",
+  "apiChecks": 276,
+  "focusedCoreTests": 98,
+  "newCoreTests": 5,
+  "build": {
+    "passed": true,
+    "platform": "mac",
+    "signed": false,
+    "nativeInteractionTested": false
+  },
+  "genuineLocalAuthRESTStorage": true,
+  "fullOwnedSchema": true,
+  "officialAdvisors": "Existing pg_net extension_in_public warning only; no new findings",
+  "rawContract": {
+    "path": "../../TaskfoldTests/Fixtures/child-restored-copy-contract-v1.json",
+    "sha256": "72090f9719ee621ff6d3ee56ba0abd95da1ca631b272843299bf1c21dc0a06ec",
+    "source": "Genuine current local Auth/REST response text; no JSON-number re-encoding"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "fdd986fc2c2b3d879775245e1890bdd935581abca135b16f480cac3892f60ef9",
+    "Taskfold/Core/ChildTaskRepair.swift": "7767f402a383ff373710bf27915a2a91b386afa066a88ebf46fed2b677be520f",
+    "Taskfold/Core/Store.swift": "1c349bbbf3cdac8fe083df12c8e6b437871a2021069b77638fbd35df3e0dd1a5",
+    "TaskfoldTests/ChildRestoredCopyReviewTests.swift": "e488ff038a5cad155de2233cc335231dc3ef1c10990f382420f40250b83d7e35",
+    "TaskfoldTests/Fixtures/child-restored-copy-contract-v1.json": "72090f9719ee621ff6d3ee56ba0abd95da1ca631b272843299bf1c21dc0a06ec",
+    "Scripts/Database/test-child-repair-restore-cycles.mjs": "ad0fa965ad02d3ca3da6238e4a5cc3d41e428d15594ceb6e53d66e1afed9010d",
+    "supabase/migrations/20261108055002_review_restored_child_copies.sql": "58880052e05971160c8ba677b11722a8bd476d0591d5a012d9e654734c9b7b7d"
+  },
+  "ordinaryReadsStayLimited": true,
+  "editingAuthorityGranted": false,
+  "normalFlagsChanged": false,
+  "installedAppChanged": false,
+  "hostedChanges": false,
+  "allDisposableServicesRemoved": true,
+  "largerWorkAndLifecycleAccepted": false,
+  "capturedExporterFailure": "Strict client rejected an early report exporter that rounded source values; corrected capture retains raw HTTP text; validators unchanged.",
+  "storageCleanup": {
+    "report": "storage-cleanup.json",
+    "removedAllocatedBytes": 313188352,
+    "freeAfterBytes": 38564798464,
+    "noSimulatorCreated": true
+  }
+}

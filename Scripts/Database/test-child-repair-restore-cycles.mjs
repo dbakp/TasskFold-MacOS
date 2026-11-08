@@ -60,6 +60,40 @@ try{
  const newInc=await incarnations(f.task.id);check('all stale child identities invalidated',Object.keys(oldInc).length>0&&Object.entries(oldInc).every(([k,v])=>newInc[k]!==v));
  check('authority paused rather than records erased',await runtime.raw(`select not exists(select 1 from taskfold_private.child_task_record_authority where task_id=${lit(f.task.id)}) and exists(select 1 from taskfold_private.child_task_projections where task_id=${lit(f.task.id)} and state='review')`)==='t');
  check('root notes and priority preserved',await runtime.raw(`select description='New root notes survive restoration' and priority=1 from public.tasks where id=${lit(f.task.id)}`)==='t');preserveHistory('earlier history exact after restore',oldHistory,await histories());
+ // A separate, read-only owner/custodian review can inspect the held newer
+ // records. Ordinary comparison remains limited; no global scope is opened.
+ const identity=async(task,token=authorization)=>{const wire=await api('/rpc/taskfold_review_child_adoption',{_id:task.id,_generation:task.task_generation},token);const r=ok('fresh restored source',wire);return {review:r,wire:wire.text,body:Object.fromEntries(['protocol','account','task_id','task_generation','project_id','workspace_id','review_digest'].map(k=>[k,r[k]]))}};
+ const heldCopies=(identity,restore,actor=account,token=authorization)=>api('/rpc/taskfold_review_restored_child_copies',{_body:identity,_actor:actor,_restore:restore},token);
+ const heldIdentity=await identity(f.task),heldBefore=await state();
+ const ordinary=ok('ordinary restored comparison stays limited',await api('/rpc/taskfold_review_child_copies',{_body:heldIdentity.body}));
+ check('ordinary read does not expose retained records',ordinary.export_bundle.records.length===0&&ordinary.export_bundle.omitted.includes('records'));
+ const heldWire=await heldCopies(heldIdentity.body,restoreID),held=ok('owner reviews active retained copies',heldWire);
+ check('held review binds active identity and revision',held.protocol===1&&held.restoration.actor_id===account&&held.restoration.restore_id===restoreID&&held.restoration.revision===1&&/^[a-f0-9]{64}$/.test(held.restoration.digest));
+ check('held review exposes retained current records without claiming authority',held.copies.export_bundle.records.length>0&&held.copies.export_bundle.authority===null&&held.copies.export_bundle.omitted.length===0&&held.copies.authoritative_source==='task');
+ check('source capture preserves exact numeric source bytes',heldIdentity.wire.includes('9007199254740993'));
+ check('held comparison no private history counts',!('__history_counts' in held));
+ check('held review writes no root records history ledger payload or pins',await state()===heldBefore);
+ check('held repeated review stable',JSON.stringify(ok('repeat held review',await heldCopies(heldIdentity.body,restoreID)))===JSON.stringify(held));
+ ok('held review foreign account refused',await heldCopies({...heldIdentity.body,account:other.user.id},restoreID,account,other.access_token),403);
+ ok('held wrong restoration refused',await heldCopies(heldIdentity.body,randomUUID()),409);
+ ok('held wrong restoration actor refused',await heldCopies(heldIdentity.body,restoreID,other.user.id),409);
+ ok('held unknown fields refused',await heldCopies({...heldIdentity.body,extra:true},restoreID),400);
+ ok('held anonymous refused',await heldCopies(heldIdentity.body,restoreID,account,runtime.anon),401);
+ check('all held refusals preserve every copy',await state()===heldBefore);
+ if(process.argv[3]){
+  const rootWire=await runtime.raw(`select to_jsonb(t)::text from public.tasks t where id=${lit(f.task.id)}`);
+  await writeFile(process.argv[3],'{"root":'+rootWire+',"review":'+heldIdentity.wire+',"held":'+heldWire.text+'}\n');
+ }
+ await runtime.raw('create policy taskfold_test_deny_held_history on public.task_node_activity as restrictive for select to authenticated using(false)');
+ ok('caller history RLS still authoritative',await heldCopies(heldIdentity.body,restoreID),403);
+ await runtime.raw('drop policy taskfold_test_deny_held_history on public.task_node_activity');
+ await runtime.raw('create policy taskfold_test_deny_held_root on public.tasks as restrictive for select to authenticated using(false)');
+ ok('caller root RLS still authoritative',await heldCopies(heldIdentity.body,restoreID),403);
+ await runtime.raw('drop policy taskfold_test_deny_held_root on public.tasks');
+ check('RLS refusals preserve work',await state()===heldBefore);
+ ok('root note edit remains available during custody review',await patch(f.task.id,{description:'Latest root notes remain current'}),204);
+ const noteHeld=ok('retained comparison refreshes root metadata',await heldCopies(heldIdentity.body,restoreID));
+ check('custody binding includes latest root notes',noteHeld.restoration.digest!==held.restoration.digest&&noteHeld.copies.copy_digest!==held.copies.copy_digest);
  const active=await state();ok('ordinary child replacement fenced',await patch(f.task.id,{subtasks:[]}),409);check('ordinary refusal retained every copy',await state()===active);ok('realm move fenced while old source is active',await patch(f.task.id,{project_id:project2}),409);check('realm refusal retained every copy',await state()===active);
  const replay=ok('lost reply retry original',await send(body));check('retry confirms only original decision',replay.replayed&&replay.restoration_id===restoreID&&replay.next_revision===1);check('replay does not reset source or history',await state()===active);
  const unknown=ok('unknown check',await send({...body,request_id:randomUUID()},'check'));check('check does not create work',unknown.state==='unknown'&&await state()===active);
@@ -74,6 +108,7 @@ try{
   check('unrelated root edits stay '+index,await runtime.raw(`select description='More recent root notes stay' and priority=3 from public.tasks where id=${lit(f.task.id)}`)==='t');
   preserveHistory('history never rewritten '+index,oldHistory,await histories());cycles.push({command:b,reply:r});
  }
+ const afterUndoIdentity=await identity(f.task);ok('inactive restored comparison refused',await heldCopies(afterUndoIdentity.body,restoreID),409);
  check('Undo restores independent authoring authority',await runtime.raw(`select exists(select 1 from taskfold_private.child_task_record_authority where task_id=${lit(f.task.id)}) and exists(select 1 from taskfold_private.child_task_projections where task_id=${lit(f.task.id)} and state='ready')`)==='t');
  const afterCycles=await state();for(const c of [body,...cycles.map(x=>x.command)])ok('immutable prior receipt '+c.request_id,await send(c,'check'));check('older checks do not revert latest cycle',await state()===afterCycles);
  const stale=cycles[0].command;ok('nonce cannot change mode or data',await send({...stale,review_digest:'b'.repeat(64)}),409);check('nonce conflict preserves work',await state()===afterCycles);
@@ -123,6 +158,17 @@ try{
  await runtime.raw(`update storage.objects set owner=${lit(account)},owner_id=${lit(account)} where id=${lit(object)};insert into taskfold_private.team_content_files(object_id,project_id,task_id,task_generation) values(${lit(object)},${lit(tp)},${lit(tid)},${lit(gen)});update public.tasks set attachments=${json([{id:randomUUID(),storage_object_id:object,name:'Retained proof',url:'https://example.invalid/proof'}])} where id=${lit(tid)}`);
  const tf={receipt:treceipt},tpv=ok('shared file restoration review',await review(tf));check('review includes retained file',tpv.file_count===1&&tpv.enabled);
  const tres=ok('shared file restoration applies',await send(command(tpv)));
+ const sharedHeld=await identity({id:tid,task_generation:gen});const sharedHeldBefore=await state();
+ const adminHeld=ok('current shared admin reviews held records',await heldCopies(sharedHeld.body,tres.restoration_id));
+ check('shared review binds current admin account',adminHeld.copies.account===account&&adminHeld.restoration.actor_id===account);
+ check('shared review no writes',await state()===sharedHeldBefore);
+ const storageOwnerIdentity=await identity({id:tid,task_generation:gen},other.access_token);
+ ok('second current custodian reviews prior actors restoration',await heldCopies(storageOwnerIdentity.body,tres.restoration_id,account,other.access_token));
+ await runtime.raw(`update taskfold_private.team_members set role='member' where team_id=${lit(team)} and user_id=${lit(account)}`);
+ ok('project editor without current admin cannot inspect held records',await heldCopies(sharedHeld.body,tres.restoration_id),403);
+ await runtime.raw(`update taskfold_private.team_members set role='admin' where team_id=${lit(team)} and user_id=${lit(account)}`);
+ ok('current custodian recovery rechecks role',await heldCopies(sharedHeld.body,tres.restoration_id));
+ check('custodian role cycle preserves all work',await state()===sharedHeldBefore);
  check('shared file fence retained',await runtime.raw(`select exists(select 1 from taskfold_private.child_repair_restore_files where restore_id=${lit(tres.restoration_id)} and object_id=${lit(object)})`)==='t');
  const pinned=await state();
  for(const [name,sql] of [['binding removal',`delete from taskfold_private.team_content_files where object_id=${lit(object)}`],['object mutation',`update storage.objects set name='changed' where id=${lit(object)}`]]){

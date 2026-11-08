@@ -1077,6 +1077,42 @@ struct ChildTaskCopyReview: Sendable, CustomStringConvertible, CustomDebugString
     }
 }
 
+/// Explicit custody review of the newer records held behind an active restore.
+/// The binding is a freshness token, not permission to mutate or end restoration.
+struct ChildTaskRestorationBinding: Sendable, Equatable {
+    let actorID: String, restorationID: String, digest: String
+    let revision: Int
+    init(raw: [String: JSON]) throws {
+        guard Set(raw.keys) == ["actor_id", "restore_id", "revision", "digest"],
+              let actor = raw["actor_id"]?.text, UUID(uuidString: actor)?.uuidString.lowercased() == actor,
+              let restoration = raw["restore_id"]?.text, UUID(uuidString: restoration)?.uuidString.lowercased() == restoration,
+              ChildTaskAdoptionCommand.digest(raw["digest"]) else { throw ChildTaskCopyReview.invalid }
+        let revision = try ChildTaskAdoptionReview.count(raw["revision"], maximum: 9_007_199_254_740_991)
+        guard revision > 0 else { throw ChildTaskCopyReview.invalid }
+        actorID = actor; restorationID = restoration; self.revision = revision; digest = raw["digest"]!.text
+    }
+}
+struct ChildTaskRestoredCopyReview: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    static let maximumBytes = ChildTaskCopyReview.maximumBytes + 4096
+    let restoration: ChildTaskRestorationBinding
+    let copies: ChildTaskCopyReview
+    var description: String { "Private retained-version comparison" }
+    var debugDescription: String { description }
+    init(data: Data, review: ChildTaskAdoptionReview, actorID: String, restorationID: String) throws {
+        let parts = try ChildTaskRecordRead.separatingJSONField("copies", data: data, maximum: Self.maximumBytes,
+            integerPaths: [["protocol"], ["restoration", "revision"]], nullableIntegerPaths: [])
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
+        guard Set(raw.keys) == ["protocol", "restoration", "copies"], raw["protocol"] == .number(1),
+              case .object(let value)? = raw["restoration"] else { throw ChildTaskCopyReview.invalid }
+        let binding = try ChildTaskRestorationBinding(raw: value)
+        guard binding.actorID == actorID, binding.restorationID == restorationID else { throw ChildTaskCopyReview.invalid }
+        let copies = try ChildTaskCopyReview(data: parts.value, review: review)
+        guard copies.omitted.isEmpty, copies.metadata["authoritative_source"] == .string("task"),
+              copies.copies[1].visible, copies.copies[2].visible else { throw ChildTaskCopyReview.invalid }
+        restoration = binding; self.copies = copies
+    }
+}
+
 /// Retention-only operation: immutable receipt identity, never a task mutation.
 enum ChildTaskRepairOriginalCleanupOperation: String, Sendable { case review, remove }
 struct ChildTaskRepairOriginalCleanup: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
