@@ -761,7 +761,10 @@ indirect enum FilterRule: Hashable, Sendable {
         }
     }
     static func plannedDay(_ task: Record, timeZone: String) -> String {
-        guard !task.string("time_zone").isEmpty, let instant = TaskPlanning.start(task) else { return String(task.string("due_date").prefix(10)) }
+        plannedDay(task, timeZone: timeZone, resolveStart: { TaskPlanning.start($0) })
+    }
+    static func plannedDay(_ task: Record, timeZone: String, resolveStart: (Record) -> Date?) -> String {
+        guard !task.string("time_zone").isEmpty, let instant = resolveStart(task) else { return String(task.string("due_date").prefix(10)) }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: timeZone) ?? .current
         let parts = calendar.dateComponents([.year, .month, .day], from: instant)
         return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)

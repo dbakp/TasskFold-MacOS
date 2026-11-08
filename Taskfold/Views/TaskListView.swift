@@ -59,7 +59,12 @@ struct TaskListView: View {
     private var overdueKey: String { "overdue:" + preferenceKey }
     private var overdueTasks: [Record] {
         if case .saved = scope { return [] }
-        return ordered(filtered.filter { !$0.completed && !TaskPlanner.plannedDay($0).isEmpty && TaskPlanner.plannedDay($0) < Dates.day(Date()) }, day: overdueKey)
+        let today = Dates.day(Date()); var planningRead = TaskPlannedDayRead()
+        return ordered(filtered.filter { task in
+            guard !task.completed else { return false }
+            let day = planningRead.day(task)
+            return !day.isEmpty && day < today
+        }, day: overdueKey)
     }
     private var regularTasks: [Record] {
         let overdueIDs = Set(overdueTasks.map(\.id))

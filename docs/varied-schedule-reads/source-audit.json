@@ -1,0 +1,37 @@
+{
+  "TasskFold-MacOS": {
+    "appSwiftFiles": 185,
+    "allNormalizedMatch": true,
+    "normalizations": {
+      "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+      "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+      "com.taskfold.session-persistence": "com.taskfold.workflowteststeameditbridge.session-persistence"
+    },
+    "uiTestMatches": true,
+    "changedSourceSHA256": {
+      "Taskfold/Core/Models.swift": "42f2635cede8c9b840482330d381b2e46325c658c373487bedfd9839fdec61df",
+      "Taskfold/Core/Planner.swift": "c571253c2d709e98887022237017a60c17ab005d2d36efba14ce2b2d71f466d6",
+      "Taskfold/Core/Filters.swift": "0cec39f85b5c28e46c57869c5fefe57c0892664e493bd60a82d6fc640d135b59",
+      "Taskfold/Core/Store.swift": "14a978ddc656c966c5b00fa365f12b31b99f1e2d45ed28353b9879663e93c523",
+      "Taskfold/Views/TaskListView.swift": "60f18e4b2423e87348e8ffcd9143df95e72ff6f220ef5711e9c5031f40b7a703"
+    }
+  },
+  "TaskFold-iOS": {
+    "appSwiftFiles": 178,
+    "allNormalizedMatch": true,
+    "normalizations": {
+      "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+      "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+      "com.taskfold.ios.session": "com.taskfold.workflowteststeameditbridge.session"
+    },
+    "uiTestMatches": true,
+    "changedSourceSHA256": {
+      "Taskfold/Core/Models.swift": "42f2635cede8c9b840482330d381b2e46325c658c373487bedfd9839fdec61df",
+      "Taskfold/Core/Planner.swift": "c571253c2d709e98887022237017a60c17ab005d2d36efba14ce2b2d71f466d6",
+      "Taskfold/Core/Filters.swift": "0cec39f85b5c28e46c57869c5fefe57c0892664e493bd60a82d6fc640d135b59",
+      "Taskfold/Core/Store.swift": "eec0dd49e59d62fd988f5eef9d80cfe4f76072acd6e742a4edb5416aa991ebe2",
+      "Taskfold/TaskfoldApp.swift": "cd6b49d7aedd8e515d54df61f5b0d1d98698adf828b1cbaa0a66aaf1ff00cb8c",
+      "Taskfold/Views/DayDrag.swift": "bb6ba549665ffa6a108f9c17ff5e9b6733e038d09afd86b52b2a6d69c27df371"
+    }
+  }
+}

@@ -2086,6 +2086,12 @@ final class Store {
         let before = dayGroupsReadCache.computationCount
         let old = read(); _ = read()
         try require(dayGroupsReadCache.computationCount == before + 1, "Repeated grouping did not reuse its current read")
+        let forward = TaskCalendarContext(now: originalClock.minute.addingTimeInterval(60), timeZone: calendarTimeZone)
+        calendarContext = forward.today == originalClock.today ? forward : TaskCalendarContext(now: originalClock.minute.addingTimeInterval(-60), timeZone: calendarTimeZone)
+        _ = read()
+        try require(dayGroupsReadCache.computationCount == before + 1, "A minute tick rebuilt ordinary dated work")
+        calendarContext = originalClock
+
         let observed = WorkspaceReadObservationProbe()
         withObservationTracking { _ = read() } onChange: { observed.markChanged() }
         snapshot.tables["tasks"]![0]["title"] = .string("Edited dated proof")
@@ -2110,7 +2116,7 @@ final class Store {
         try require(AuthoredValueComparison.sameRows(returned.overdue, expected.overdue) && returned.rowsByDay == expected.rowsByDay, "Returning source did not recover its current groups")
         let durable = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
         try require(snapshot == original && durable == original, "Grouping check changed saved work")
-        return ["hotReuse": .bool(true), "snapshotObservedOnHit": .bool(true), "dateTitleRefresh": .bool(true), "archiveRefreshWithoutTaskChange": .bool(true), "unreadableRedacted": .bool(true), "clockRefresh": .bool(true), "durableOriginalPreserved": .bool(true)]
+        return ["hotReuse": .bool(true), "ordinaryMinuteReuse": .bool(true), "snapshotObservedOnHit": .bool(true), "dateTitleRefresh": .bool(true), "archiveRefreshWithoutTaskChange": .bool(true), "unreadableRedacted": .bool(true), "clockRefresh": .bool(true), "durableOriginalPreserved": .bool(true)]
     }
     #endif
     func filterGroups(_ scope: TaskScope, tasks: [Record], includeCompleted: Bool = false) -> [TaskGrouping.Group] {

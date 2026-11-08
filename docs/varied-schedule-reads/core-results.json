@@ -1,0 +1,22 @@
+{
+  "ios": {
+    "selected": 155,
+    "passed": 153,
+    "skipped": 2,
+    "failed": 0,
+    "newCases": 8,
+    "skips": "Two existing opt-in same-host diagnostics, not product failures",
+    "variedScheduleDiagnostic": "TASKFOLD_VARIED_SCHEDULE baseline=0.10344875 seconds current=0.031792292 seconds rows=500 resolutions=500 formatters=2",
+    "logSHA256": "f8126785f1aa96bed63731a87d5a14d747e6bc0158960c53d73cd615132ff3a2"
+  },
+  "mac": {
+    "selected": 145,
+    "passed": 143,
+    "skipped": 2,
+    "failed": 0,
+    "newCases": 8,
+    "skips": "Two existing opt-in same-host diagnostics, not product failures",
+    "variedScheduleDiagnostic": "TASKFOLD_VARIED_SCHEDULE baseline=0.104269709 seconds current=0.031867916 seconds rows=500 resolutions=500 formatters=2",
+    "logSHA256": "28c0155aab1fa27f36db9e0448591426d71b87dd3275ee93967177eb1dbd9099"
+  }
+}

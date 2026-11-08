@@ -1,0 +1,19 @@
+{
+  "freeBeforeBytes": 31021670400,
+  "freeAfterBytes": 32276131840,
+  "actualFreeChangeBytes": 1254461440,
+  "removedByKind": {
+    "wallpaperScratch": 365862912,
+    "completedCompilerCache": 882364416
+  },
+  "selectedCaches": [
+    {
+      "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 803729408,
+      "projectedAllocatedBytes": 803729408,
+      "within768MiB": true
+    }
+  ],
+  "detailReportSHA256": "8f313cf853cd1c9b7cdfcf56628e67181294c5a9e971c5e772b813eed250a009"
+}

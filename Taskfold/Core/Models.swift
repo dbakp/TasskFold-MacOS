@@ -1716,6 +1716,7 @@ final class TaskCache {
             else if incoming.sort == "manual", case .project = incoming.scope { candidates = reading.outline }
             else { candidates = reading.presentation }
         }
+        var plannedDays = TaskPlannedDayRead(timeZone: query.timeZone)
         let matched = candidates.filter { task in
             if query.scope == .completed { if !task.completed { return false } }
             else if !query.includeCompleted && task.completed && !(query.filter?.hasQuerySections == true && query.filter?.includesCompletion == true) { return false }
@@ -1729,10 +1730,10 @@ final class TaskCache {
             switch query.scope {
             case .inbox: return task.string("project_id").isEmpty
             case .today:
-                let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
+                let day = plannedDays.day(task)
                 return !day.isEmpty && day <= query.today
             case .upcoming:
-                let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
+                let day = plannedDays.day(task)
                 return query.selectedDay.map { day == $0 } ?? !day.isEmpty
             case .project(let id): return task.string("project_id") == id
             case .label(let id): return task["labels"].list.contains(.string(id)) || task["labels"].list.contains(.string(query.labelName))
@@ -2088,6 +2089,24 @@ enum TaskPlanning {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.date(from: value) ?? ISO8601DateFormatter().date(from: value)
     }
+    /// One serial operation owns its parsers. No mutable formatter is global or
+    /// shared between accounts, workers or subsequent reads.
+    struct InstantRead {
+        private var fractional: ISO8601DateFormatter?
+        private var whole: ISO8601DateFormatter?
+        private(set) var formatterCount = 0
+        mutating func instant(_ value: String) -> Date? {
+            guard !value.isEmpty else { return nil }
+            if fractional == nil {
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                fractional = formatter; formatterCount += 1
+            }
+            if let date = fractional!.date(from: value) { return date }
+            if whole == nil { whole = ISO8601DateFormatter(); formatterCount += 1 }
+            return whole!.date(from: value)
+        }
+    }
     /// Resolve a Gregorian wall minute using actual zone offsets: the first fold, or the
     /// next valid minute on the same day. Foundation's hour-setting API can skip a whole
     /// day for a half-hour DST gap (for example Australia/Lord_Howe at 02:15).
@@ -2112,6 +2131,9 @@ enum TaskPlanning {
         return nil
     }
     static func start(_ task: Record, calendar: Calendar = .current) -> Date? {
+        start(task, calendar: calendar, parseInstant: instant)
+    }
+    static func start(_ task: Record, calendar: Calendar = .current, parseInstant: (String) -> Date?) -> Date? {
         var sourceCalendar = calendar
         let zone = task.string("time_zone")
         if !zone.isEmpty {
@@ -2121,7 +2143,7 @@ enum TaskPlanning {
         guard let day = Dates.parse(task.string("due_date"), calendar: sourceCalendar) else { return nil }
         let pieces = task.string("due_time").split(separator: ":").compactMap { Int($0) }
         guard pieces.count >= 2, (0...23).contains(pieces[0]), (0...59).contains(pieces[1]) else { return nil }
-        if !zone.isEmpty, let saved = instant(task.string("scheduled_at")) {
+        if !zone.isEmpty, let saved = parseInstant(task.string("scheduled_at")) {
             let a = sourceCalendar.dateComponents([.year, .month, .day], from: saved)
             let b = sourceCalendar.dateComponents([.year, .month, .day], from: day)
             let time = sourceCalendar.dateComponents([.hour, .minute], from: saved)
