@@ -20,18 +20,34 @@ enum WidgetCompletion {
     /// Caller-confined, bounded memo of computed hashes, never saved widget
     /// tokens or task text. A fresh Store/scope always computes its own values.
     final class SignatureCache {
-        struct Scope: Equatable {
+        struct Scope: Equatable, Sendable {
             let workspace: WorkspaceBinding
             let session: UUID
             let access: UUID
         }
         struct Statistics: Equatable { var reused = 0, computed = 0, retained = 0 }
-        private struct Entry { let source: Record.SourceToken; let signature: String }
+        fileprivate struct Entry: Sendable { let source: Record.SourceToken; let signature: String }
+        struct Seed: Sendable {
+            fileprivate let scope: Scope
+            fileprivate let entries: [String: Entry]
+        }
         private let maximumEntries: Int
         private var scope: Scope?
         private var entries: [String: Entry] = [:], next: [String: Entry] = [:]
         private(set) var statistics = Statistics()
-        init(maximumEntries: Int = 4096) { self.maximumEntries = max(0, maximumEntries) }
+        init(maximumEntries: Int = 4096, seed: Seed? = nil) {
+            self.maximumEntries = max(0, maximumEntries)
+            if let seed {
+                scope = seed.scope
+                entries = Dictionary(uniqueKeysWithValues: seed.entries.prefix(self.maximumEntries).map { ($0.key, $0.value) })
+            }
+        }
+        /// Only immutable, bounded hash proofs cross into a worker. The mutable
+        /// cache stays confined to its caller and carries no completion authority.
+        func seed(matching current: Scope?) -> Seed? {
+            guard let current, current == scope else { return nil }
+            return Seed(scope: current, entries: entries)
+        }
         func clear() { scope = nil; entries = [:]; next = [:]; statistics = Statistics() }
         fileprivate func begin(_ current: Scope?) {
             if current == nil || current != scope { entries = [:] }

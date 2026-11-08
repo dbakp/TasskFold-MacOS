@@ -1330,6 +1330,11 @@ final class Store {
     /// A confirmed Auth refusal is scoped to this workspace, never inferred from text.
     private(set) var syncSignInWorkspace: WorkspaceBinding?
     private var syncAfterSignInRequested: WorkspaceBinding?
+    @ObservationIgnored private var syncRefreshRetry: Task<Void, Never>?
+    @ObservationIgnored private var syncRefreshRetryID = UUID()
+    #if DEBUG
+    @ObservationIgnored private var nativePreparedWorkspaceRefreshes = 0
+    #endif
     var canSignInForSync: Bool {
         syncSignInWorkspace?.matches(account:userID,generation:workspaceGeneration) == true &&
         signedIn && !localMode && !signingOut && !accountRemovalBlocked
@@ -1405,7 +1410,8 @@ final class Store {
         snapshotRevision = UUID()
         widgetPublicationQueue.invalidate()
         invalidateStartupPublication(privacy: !initializingStore)
-        syncSignInWorkspace = nil; syncAfterSignInRequested = nil; conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
+        syncSignInWorkspace = nil; syncAfterSignInRequested = nil
+        syncRefreshRetry?.cancel(); syncRefreshRetry = nil; syncRefreshRetryID = UUID(); conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
     @ObservationIgnored private var consumingWidgetActions = false
     #if DEBUG
     var sharedCaptureCountNativeStatus = "Ready for count read"
@@ -3690,6 +3696,82 @@ final class Store {
             return true
         } catch { return false }
     }
+    private func workspaceRefreshScope() -> WorkspaceRefreshPreparation.Scope {
+        .init(workspace: .init(account: userID, generation: accountGeneration),
+              session: backend.reminderSessionIncarnation, source: snapshotRevision,
+              presentation: presentationAccessEpoch, access: workspaceReadRevision,
+              reviewing: syncConflict != nil || focusSyncConflict != nil)
+    }
+    private func scheduleWorkspaceRefreshRetry(generation: UUID) {
+        guard generation == accountGeneration, !signingOut, !accountRemovalBlocked else { return }
+        syncRefreshRetry?.cancel()
+        let id = UUID(); syncRefreshRetryID = id
+        syncRefreshRetry = Task { [weak self] in
+            do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+            guard let self, self.syncRefreshRetryID == id else { return }
+            self.syncRefreshRetry = nil
+            guard self.accountGeneration == generation else { return }
+            await self.sync() // Every retry obtains a fresh service/access read.
+        }
+    }
+    private func applyWorkspaceRefresh(_ read: TeamWorkspaceRead, generation: UUID, account: String,
+                                       hadConflict: Bool, session: UUID) async throws -> Bool {
+        guard generation == accountGeneration, account == userID, session == backend.reminderSessionIncarnation,
+              !signingOut, !accountRemovalBlocked else { return false }
+        let before = snapshot, source = snapshotRevision
+        let cache = try read.boundary.map {
+            try TeamWorkspaceCache(boundary: $0, previous: before.teamWorkspace, pending: before.pending,
+                tasks: (before.tables["tasks"] ?? []) + (read.tables["tasks"] ?? []))
+        }
+        let protect = cache?.requiresRecovery(before) == true
+        if protect, let cache, let boundary = read.boundary {
+            // Mask immediately; save the access fence and recovery copy before
+            // preparing any result that removes content from the workspace.
+            teamAccessMask = cache
+            let protectedScope = workspaceRefreshScope()
+            if let fence = teamAccessFenceDisk {
+                try await Task.detached(priority: .utility) { try fence.save(boundary) }.value
+            }
+            guard protectedScope == workspaceRefreshScope(), generation == accountGeneration, account == userID, session == backend.reminderSessionIncarnation,
+                  source == snapshotRevision, !signingOut, !accountRemovalBlocked else { return false }
+            _ = try await makeRecoveryBackup(kind: "Before team access refresh")
+            guard protectedScope == workspaceRefreshScope() else { return false }
+        }
+        guard generation == accountGeneration, account == userID, session == backend.reminderSessionIncarnation,
+              source == snapshotRevision, !signingOut, !accountRemovalBlocked else { return false }
+        let scope = workspaceRefreshScope()
+        // A newly opened review must not be replaced by this older read.
+        guard scope.reviewing == hadConflict else { return false }
+        let signatureScope: WidgetCompletion.SignatureCache.Scope? = workspaceCacheReadable
+            ? .init(workspace: scope.workspace, session: scope.session, access: scope.presentation) : nil
+        let seed = widgetCompletionSignatures.seed(matching: signatureScope)
+        let worker = Task.detached(priority: .utility) {
+            try WorkspaceRefreshPreparation.prepare(snapshot: before, tables: read.tables, cache: cache,
+                preserveDrafts: hadConflict && !protect, scope: scope, signatureSeed: seed, signatureScope: signatureScope)
+        }
+        let prepared = try await withTaskCancellationHandler(operation: { try await worker.value }, onCancel: { worker.cancel() })
+        try Task.checkCancellation()
+        guard !signingOut, !accountRemovalBlocked, workspaceCacheDecoded,
+              let encoding = prepared.admitted(in: workspaceRefreshScope()) else { return false }
+        snapshot = encoding.snapshot
+        do { try persist(backgroundWidgets: true, preparedEncoding: encoding) }
+        catch { snapshot = before; throw error }
+        #if DEBUG
+        if FullSchemaNativeFixture.enabled { nativePreparedWorkspaceRefreshes += 1 }
+        #endif
+        if let boundary = read.boundary {
+            if let fence = teamAccessFenceDisk { try fence.clear(after: boundary) }
+            let wasUnreadable = !workspaceCacheReadable
+            workspaceCacheReadable = true
+            if teamAccessMask != nil { teamAccessMask = nil }
+            else if wasUnreadable { publishWidgetSnapshot(scheduleCapacityRefresh: false) }
+            if protect {
+                undoStack = []; redoStack = []; syncConflict = nil; markAccessRecovery()
+                notice = "Project access changed. Your queued work is kept, and a Recovery copy is saved."
+            }
+        }
+        return true
+    }
     func sync() async {
         #if DEBUG
         if ChildFieldNativeIdentity.enabled { try? childFieldNativeRefresh(); return }
@@ -3701,6 +3783,7 @@ final class Store {
         guard !signingOut, !accountRemovalBlocked, signedIn, !localMode, online, !syncing else { return }
         let hadConflict=syncConflict != nil || focusSyncConflict != nil
         syncing = true; let generation = accountGeneration, account = userID
+        let refreshSession = backend.reminderSessionIncarnation
         var sending: Mutation?
         defer {
             syncing = false
@@ -3782,34 +3865,10 @@ final class Store {
             #endif
             let read=try await backend.workspaceRead(account:account,initial:boundary,allowLegacy:allowLegacy)
             guard generation==accountGeneration else {return}
-            if let boundary=read.boundary {
-                let cache=try TeamWorkspaceCache(boundary:boundary,previous:snapshot.teamWorkspace,pending:snapshot.pending,tasks:(snapshot.tables["tasks"] ?? [])+(read.tables["tasks"] ?? []))
-                let before=snapshot,protect=cache.requiresRecovery(before)
-                if protect {
-                    teamAccessMask=cache
-                    if let fence=teamAccessFenceDisk {
-                        try await Task.detached(priority:.utility){try fence.save(boundary)}.value
-                        guard generation==accountGeneration,!signingOut,!accountRemovalBlocked,snapshot==before else {throw TeamWorkspaceChanged()}
-                    }
-                    _=try await makeRecoveryBackup(kind:"Before team access refresh")
-                    guard generation==accountGeneration,!signingOut,!accountRemovalBlocked,snapshot==before else {throw TeamWorkspaceChanged()}
-                }
-                if hadConflict && !protect {
-                    // Keep a current review's optimistic drafts untouched until
-                    // its explicit resolution; only cull inaccessible content.
-                    snapshot.tables=cache.filtering(snapshot.tables);snapshot.teamWorkspace=cache
-                } else {snapshot=cache.merging(read.tables,into:snapshot)}
-                do {try persist(backgroundWidgets: true)} catch {snapshot=before;throw error}
-                if let fence=teamAccessFenceDisk {try fence.clear(after:boundary)}
-                let wasUnreadable = !workspaceCacheReadable
-                workspaceCacheReadable=true
-                if teamAccessMask != nil {teamAccessMask=nil}
-                else if wasUnreadable {publishWidgetSnapshot(scheduleCapacityRefresh:false)}
-                if protect {
-                    undoStack=[];redoStack=[];syncConflict=nil;markAccessRecovery()
-                    notice="Project access changed. Your queued work is kept, and a Recovery copy is saved."
-                }
-            } else {snapshot.mergeRemote(read.tables);try persist(backgroundWidgets: true)}
+            guard try await applyWorkspaceRefresh(read, generation: generation, account: account, hadConflict: hadConflict, session: refreshSession) else {
+                scheduleWorkspaceRefreshRetry(generation: generation)
+                return
+            }
             lastSync=Date();migrateOrganization()
             #if DEBUG
             traceTeamAudioNativeSync("Conversation read")
@@ -8314,7 +8373,7 @@ extension Store {
             "sessionFingerprint": .string(SHA256.hash(data: Data(session.access_token.utf8)).map { String(format: "%02x", $0) }.joined()),
             "history": history, "pending": .number(Double(snapshot.pending.count)), "diskMatchesStore": .bool(true),
             "exactExpectedSource": .bool(true), "protectedSessionWithoutFile": .bool(true), "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)),
-            "authHTTPResponses": .number(Double(FullSchemaNativeNetwork.restorationAuthResponses)), "restorationHTTPResponses": .number(Double(FullSchemaNativeNetwork.restorationDecisionResponses))]
+            "preparedWorkspaceRefreshes": .number(Double(nativePreparedWorkspaceRefreshes)), "authHTTPResponses": .number(Double(FullSchemaNativeNetwork.restorationAuthResponses)), "restorationHTTPResponses": .number(Double(FullSchemaNativeNetwork.restorationDecisionResponses))]
         try FullSchemaNativeFixture.writeReport(report, phase: phase)
     }
     func runFullSchemaNativePhase() async throws {

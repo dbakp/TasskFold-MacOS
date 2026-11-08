@@ -938,11 +938,15 @@ struct PreparedSnapshotEncoding: Sendable {
     }
     /// Only this initializer attests that widget signatures were prepared. The
     /// final Store still proves the entire immutable capture before reusing it.
-    init(preparingWidgetCompletion snapshot: Snapshot, checkCancellation: () throws -> Void = {}) throws {
+    init(preparingWidgetCompletion snapshot: Snapshot, signatureSeed: WidgetCompletion.SignatureCache.Seed? = nil,
+         signatureScope: WidgetCompletion.SignatureCache.Scope? = nil, checkCancellation: () throws -> Void = {}) throws {
+        try checkCancellation()
         var prepared = snapshot
-        WidgetCompletion.prepare(&prepared)
+        let signatures = signatureScope.map { _ in WidgetCompletion.SignatureCache(seed: signatureSeed) }
+        WidgetCompletion.prepare(&prepared, signatures: signatures, scope: signatureScope)
         try checkCancellation()
         try self.init(prepared, widgetCompletionPrepared: true)
+        try checkCancellation()
     }
     private init(_ snapshot: Snapshot, widgetCompletionPrepared: Bool) throws {
         self.widgetCompletionPrepared = widgetCompletionPrepared

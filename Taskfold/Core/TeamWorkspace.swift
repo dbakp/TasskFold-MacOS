@@ -304,6 +304,39 @@ struct TeamAccessFenceDisk:Sendable {
 
 struct TeamWorkspaceRead: Sendable {let tables:[String:[Record]];let boundary:TeamWorkspaceBoundary?}
 
+/// A result is usable only for the exact editable source and access context that
+/// produced it. Even a change followed by Undo produces a new source revision.
+struct WorkspaceRefreshPreparation: Sendable {
+    struct Scope: Equatable, Sendable {
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let source: UUID
+        let presentation: UUID
+        let access: UUID
+        let reviewing: Bool
+    }
+    let scope: Scope
+    let encoding: PreparedSnapshotEncoding
+    func admitted(in current: Scope) -> PreparedSnapshotEncoding? { scope == current ? encoding : nil }
+    static func prepare(snapshot: Snapshot, tables: [String: [Record]], cache: TeamWorkspaceCache?,
+                        preserveDrafts: Bool, scope: Scope,
+                        signatureSeed: WidgetCompletion.SignatureCache.Seed? = nil,
+                        signatureScope: WidgetCompletion.SignatureCache.Scope? = nil,
+                        checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws -> Self {
+        try checkCancellation()
+        var merged = snapshot
+        if let cache {
+            if preserveDrafts { merged.tables = cache.filtering(merged.tables); merged.teamWorkspace = cache }
+            else { merged = cache.merging(tables, into: merged) }
+        } else { merged.mergeRemote(tables) }
+        try checkCancellation()
+        let encoding = try PreparedSnapshotEncoding(preparingWidgetCompletion: merged,
+            signatureSeed: signatureSeed, signatureScope: signatureScope, checkCancellation: checkCancellation)
+        return Self(scope: scope, encoding: encoding)
+    }
+}
+
+
 @MainActor extension Backend {
     static let workspaceTables=["projects","sections","labels","tasks","profiles","project_collaborators","saved_views","favorites","view_preferences","view_orders",WorkflowTemplate.table,ReminderSnooze.table,FocusSessionChange.table,TaskActivity.epochTable,TaskActivity.table]
     func workspaceBoundary(account:String) async throws -> TeamWorkspaceBoundary {
