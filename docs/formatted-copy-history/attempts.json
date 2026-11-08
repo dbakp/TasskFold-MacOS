@@ -1,0 +1,87 @@
+{
+  "attempts": [
+    {
+      "report": "taskfold-copy-format-ios-service.json",
+      "passed": false,
+      "checksBeforeTerminal": 10,
+      "fixtureRemoved": true,
+      "failure": "repaired wrapped original retained\n\nfalse !== true\n",
+      "lastDiagnostic": null
+    },
+    {
+      "report": "taskfold-copy-format-ios-service-v2.json",
+      "passed": false,
+      "checksBeforeTerminal": 18,
+      "fixtureRemoved": true,
+      "failure": "reject incomplete repair\n\nfalse !== true\n",
+      "lastDiagnostic": {
+        "name": "reject incomplete repair",
+        "status": 400,
+        "value": {
+          "code": "22023",
+          "details": null,
+          "hint": null,
+          "message": "Choose a changed position"
+        }
+      }
+    },
+    {
+      "report": "taskfold-copy-format-ios-service-v3.json",
+      "passed": false,
+      "checksBeforeTerminal": 54,
+      "fixtureRemoved": true,
+      "failure": "restored format mapping inspection\n\nfalse !== true\n",
+      "lastDiagnostic": {
+        "name": "restored format mapping inspection",
+        "status": 409,
+        "value": {
+          "code": "PT409",
+          "details": null,
+          "hint": null,
+          "message": "Review access to every original and history before mapping"
+        }
+      }
+    },
+    {
+      "report": "taskfold-copy-format-ios-service-v4.json",
+      "passed": true,
+      "checksBeforeTerminal": 72,
+      "fixtureRemoved": true,
+      "failure": null,
+      "lastDiagnostic": null
+    },
+    {
+      "report": "taskfold-copy-format-ios-final-service.json",
+      "passed": false,
+      "checksBeforeTerminal": 29,
+      "fixtureRemoved": true,
+      "failure": "combined limit fixture parts individually bounded\n\nfalse !== true\n",
+      "lastDiagnostic": null
+    },
+    {
+      "report": "taskfold-copy-format-mac-service.json",
+      "passed": true,
+      "checksBeforeTerminal": 72,
+      "fixtureRemoved": true,
+      "failure": null,
+      "lastDiagnostic": null
+    },
+    {
+      "report": "taskfold-copy-format-ios-current-service.json",
+      "passed": true,
+      "checksBeforeTerminal": 76,
+      "fixtureRemoved": true,
+      "failure": null,
+      "lastDiagnostic": null
+    },
+    {
+      "report": "taskfold-copy-format-mac-current-service.json",
+      "passed": true,
+      "checksBeforeTerminal": 76,
+      "fixtureRemoved": true,
+      "failure": null,
+      "lastDiagnostic": null
+    }
+  ],
+  "currentAccepted": "Current per-owner 76-check service and 81-test Core runs; earlier successful 72-check run predates combined envelope cap"
+}

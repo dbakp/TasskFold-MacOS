@@ -7,8 +7,8 @@ final class ChildCopyMappingClientTests: XCTestCase {
         let review: ChildTaskAdoptionReview, copies: ChildTaskCopyReview, preview: ChildTaskRepairPreview
         let command: ChildTaskRepairCommand, receipt: ChildTaskRepairResult, original: Data, previewData: Data
     }
-    func contract(origin: String = "https://repair.test") throws -> Contract {
-        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-copy-mapping-contract-v1", withExtension: "json", subdirectory: "Fixtures"))
+    func contract(origin: String = "https://repair.test", resource: String = "child-copy-mapping-contract-v1") throws -> Contract {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: resource, withExtension: "json", subdirectory: "Fixtures"))
         let envelope = try ChildTaskRecordRead.separatingJSONField("value", data: Data(contentsOf: url), maximum: 1_000_000, integerPaths: [], nullableIntegerPaths: [])
         let values = try ChildTaskRecordRead.separatingJSONFields(["root", "review", "copies", "preview", "choice", "receipt", "original"], data: envelope.value, maximum: 1_000_000, integerPaths: [], nullableIntegerPaths: []).values
         let choice = try TaskfoldJSONDecoder().decode([String: JSON].self, from: XCTUnwrap(values["choice"]))
@@ -129,4 +129,64 @@ final class ChildCopyMappingClientTests: XCTestCase {
         let ordinary = try (0..<64).map { try ChildTaskRepairChange(.wrapItem, path: [$0], reference: UUID().uuidString.lowercased(), title: String(repeating: "é", count: 500)) }
         XCTAssertThrowsError(try ChildTaskRepairChange.validate(ordinary), "Ordinary metadata allowance stays unchanged")
     }
+    func testRealFormattedAPIContractRetainsOpaqueSourcesAndArchivedChoice() throws {
+        let f = try contract(resource: "child-copy-format-contract-v1")
+        XCTAssertEqual(f.preview.changes[0].raw["format_changes"]?.list.count, 1)
+        XCTAssertTrue(f.preview.eligible); XCTAssertEqual(f.preview.items.count, 2)
+        XCTAssertEqual(try ChildTaskRepairCommand(data: TaskfoldJSONEncoder().encode(f.command)), f.command)
+        let original = try ChildTaskRepairOriginal(data: f.original, command: f.command, result: f.receipt)
+        let source = String(decoding: original.data, as: UTF8.self)
+        XCTAssertTrue(source.contains("9007199254740993")); XCTAssertTrue(source.contains("format_changes"))
+        XCTAssertTrue(source.contains("Original instruction"))
+    }
+    func testFormattedChoiceKeepsExactRepairChoicesAcrossColdCommandAndDraft() throws {
+        let f = try contract(), mapping = try ChildCopyMapping(raw: f.preview.changes[0].raw["mapping"]!.object)
+        let repairs = [try ChildTaskRepairChange(.wrapItem, path: [0, 0], reference: "recovered", title: "Recovered instruction")]
+        let change = try ChildTaskRepairChange.choosing("projection", digest: f.copies.digest, mapping: mapping, formatChanges: repairs)
+        var body = f.command.body; body["changes"] = .array([.object(change.raw)])
+        let command = try ChildTaskRepairCommand(account: f.command.account, origin: f.command.origin, body: body, nodeCount: f.command.nodeCount)
+        XCTAssertEqual(try ChildTaskRepairCommand(data: TaskfoldJSONEncoder().encode(command)), command)
+        let draft = try ChildTaskRepairDraft(review: f.review, changes: [change], labels: ["Repair format and review histories"])
+        let state = try ChildTaskRepairState(account: draft.account, origin: draft.origin, drafts: [draft])
+        let cold = try ChildTaskRepairState(data: TaskfoldJSONEncoder().encode(state))
+        XCTAssertEqual(cold.drafts, [draft])
+        XCTAssertEqual(change.raw["format_changes"], .array(repairs.map { .object($0.raw) }))
+        XCTAssertNotEqual(command, f.command)
+        XCTAssertFalse(String(decoding: try TaskfoldJSONEncoder().encode(command), as: UTF8.self).contains("Chosen older instructions"))
+    }
+    func testFormatChoicesRequireMappingAndRejectNestedCopySelections() throws {
+        let f = try contract(), mapping = try ChildCopyMapping(raw: f.preview.changes[0].raw["mapping"]!.object)
+        let repair = try ChildTaskRepairChange(.makeRootList, path: [])
+        XCTAssertThrowsError(try ChildTaskRepairChange.choosing("task", digest: f.copies.digest, formatChanges: [repair]))
+        let ordinary = try ChildTaskRepairChange.choosing("task", digest: f.copies.digest, mapping: mapping)
+        XCTAssertThrowsError(try ChildTaskRepairChange.choosing("task", digest: f.copies.digest, mapping: mapping, formatChanges: [ordinary]))
+        for value in [JSON.array([]), .string("bad"), .array(Array(repeating: .object(repair.raw), count: 65))] {
+            var raw = ordinary.raw; raw["format_changes"] = value
+            XCTAssertThrowsError(try ChildTaskRepairChange(raw: raw))
+        }
+        var raw = ordinary.raw; raw["format_changes"] = .array([.object(["kind": .string("make_root_list"), "path": .array([]), "source_tree": .string("Never accept caller content")])])
+        XCTAssertThrowsError(try ChildTaskRepairChange(raw: raw))
+    }
+    func testNestedFormatCountersRejectFloatingPointSpellingOnColdRead() throws {
+        let f = try contract(), mapping = try ChildCopyMapping(raw: f.preview.changes[0].raw["mapping"]!.object)
+        let repair = try ChildTaskRepairChange(.wrapItem, path: [731], reference: "recovered", title: "Recovered instruction")
+        let change = try ChildTaskRepairChange.choosing("task", digest: f.copies.digest, mapping: mapping, formatChanges: [repair])
+        var body = f.command.body; body["changes"] = .array([.object(change.raw)])
+        let command = try ChildTaskRepairCommand(account: f.command.account, origin: f.command.origin, body: body, nodeCount: f.command.nodeCount)
+        let wire = String(decoding: try TaskfoldJSONEncoder().encode(command), as: UTF8.self)
+        XCTAssertTrue(wire.contains("731"))
+        for spelling in ["731.0", "7.31e2", "-0", "731.1"] {
+            XCTAssertThrowsError(try ChildTaskRepairCommand(data: Data(wire.replacingOccurrences(of: "731", with: spelling).utf8)), spelling)
+        }
+    }
+    func testActiveRestorationBlockerIsReadableAndCannotBeQueued() throws {
+        let f = try contract(); var base = f.preview.metadata
+        base["custody_blocker"] = .string("restoration_custody"); base["mutation_available"] = .bool(false)
+        let p = try ChildTaskRepairPreview(data: previewBytes(base, f), review: f.review, changes: f.preview.changes)
+        XCTAssertTrue(p.valid); XCTAssertFalse(p.eligible)
+        XCTAssertThrowsError(try ChildTaskRepairCommand(preview: p))
+        base["mutation_available"] = .bool(true)
+        XCTAssertThrowsError(try ChildTaskRepairPreview(data: previewBytes(base, f), review: f.review, changes: f.preview.changes))
+    }
+
 }

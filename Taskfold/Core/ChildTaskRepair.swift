@@ -164,11 +164,18 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
     init(raw: [String: JSON]) throws {
         guard let kind = Kind(rawValue: raw["kind"]?.text ?? "") else { throw ChildTaskRepairCommand.invalid }
         let extra: Set<String>
-        switch kind { case .chooseCopy: extra = raw["mapping"] == nil ? ["source", "copy_digest"] : ["source", "copy_digest", "mapping"]; case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .separateDuplicate: extra = ["reference", "keep_path"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
+        switch kind { case .chooseCopy: extra = Set(["source", "copy_digest"]).union(raw["mapping"] == nil ? [] : ["mapping"]).union(raw["format_changes"] == nil ? [] : ["format_changes"]); case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .separateDuplicate: extra = ["reference", "keep_path"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
         guard Set(raw.keys) == extra.union(["kind", "path"]) else { throw ChildTaskRepairCommand.invalid }
         let path = try Self.positions(raw["path"], empty: kind == .makeRootList || kind == .chooseCopy)
         guard (kind != .makeRootList && kind != .chooseCopy) || path.isEmpty else { throw ChildTaskRepairCommand.invalid }
         if let mapping = raw["mapping"] { guard case .object(let value) = mapping else { throw ChildTaskRepairCommand.invalid }; _ = try ChildCopyMapping(raw: value) }
+        if let value = raw["format_changes"] {
+            guard kind == .chooseCopy, raw["mapping"] != nil, case .array(let values) = value,
+                  (1...64).contains(values.count), values.allSatisfy({ $0.object["kind"] != .string("choose_copy") }),
+                  try TaskfoldJSONEncoder().encode(values).count <= 65_536 else { throw ChildTaskRepairCommand.invalid }
+            let repairs = try values.map { try Self(raw: $0.object) }
+            try Self.validate(repairs)
+        }
         if kind == .chooseCopy {
             guard case .string(let source)? = raw["source"], ["task", "projection", "records"].contains(source),
                   ChildTaskAdoptionCommand.digest(raw["copy_digest"]) else { throw ChildTaskRepairCommand.invalid }
@@ -197,9 +204,11 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
         if let parent { raw["parent"] = .array(parent.map { .number(Double($0)) }) }; if let index { raw["index"] = .number(Double(index)) }
         try self.init(raw: raw)
     }
-    static func choosing(_ source: String, digest: String, mapping: ChildCopyMapping? = nil) throws -> Self {
+    static func choosing(_ source: String, digest: String, mapping: ChildCopyMapping? = nil, formatChanges: [Self] = []) throws -> Self {
         var raw: [String: JSON] = ["kind": .string(Kind.chooseCopy.rawValue), "path": .array([]), "source": .string(source), "copy_digest": .string(digest)]
-        if let mapping { raw["mapping"] = .object(mapping.raw) }; return try .init(raw: raw)
+        if let mapping { raw["mapping"] = .object(mapping.raw) }
+        if !formatChanges.isEmpty { raw["format_changes"] = .array(formatChanges.map { .object($0.raw) }) }
+        return try .init(raw: raw)
     }
     init(from decoder: Decoder) throws { try self.init(raw: [String: JSON](from: decoder)) }
     func encode(to encoder: Encoder) throws { try raw.encode(to: encoder) }
@@ -207,7 +216,7 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
     static func validate(_ changes: [Self]) throws {
         guard (1...64).contains(changes.count), !changes.contains(where: { $0.kind == .chooseCopy }) || changes.count == 1, try TaskfoldJSONEncoder().encode(changes).count <= (changes.count == 1 && changes[0].raw["mapping"] != nil ? 550_000 : 65_536) else { throw ChildTaskRepairCommand.invalid }
     }
-    static let counterPaths: Set<[String]> = [["changes", "[]", "mapping", "version"], ["changes", "[]", "keep_path", "[]"], ["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]
+    static let counterPaths: Set<[String]> = Set<[String]>([["changes", "[]", "mapping", "version"], ["changes", "[]", "keep_path", "[]"], ["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]).union(Set([["keep_path", "[]"], ["path", "[]"], ["parent", "[]"], ["index"]].map { ["changes", "[]", "format_changes", "[]"] + $0 }))
 }
 
 struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
@@ -255,7 +264,7 @@ struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStr
               ChildTaskAdoptionCommand.digest(raw["repair_digest"]), case .bool(let valid)? = raw["proposal_valid"], case .bool(let mayWrite)? = raw["mutation_available"],
               case .bool(let sqlNull)? = raw["original_sql_null"], case .array(let steps)? = raw["steps"], steps.count == changes.count,
               let original = parts.values["original_tree"], let proposed = parts.values["proposed_tree"], original.count <= 2_000_000, proposed.count <= 2_000_000,
-              !sqlNull || original == Data("null".utf8), raw["custody_blocker"] == .null || ["indexed_custody", "history_custody"].contains(raw["custody_blocker"]?.text ?? ""),
+              !sqlNull || original == Data("null".utf8), raw["custody_blocker"] == .null || ["indexed_custody", "history_custody", "restoration_custody"].contains(raw["custody_blocker"]?.text ?? ""),
               !mayWrite || valid && raw["custody_blocker"] == .null else { throw ChildTaskRepairCommand.invalid }
         if let mapping = changes.first?.raw["mapping"] {
             guard changes.count == 1, let value = raw["mapping_plan"] else { throw ChildTaskRepairCommand.invalid }

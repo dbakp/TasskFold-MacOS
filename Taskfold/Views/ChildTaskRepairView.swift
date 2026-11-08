@@ -117,7 +117,9 @@ struct ChildTaskRepairView: View {
                                             .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                                             .accessibilityIdentifier("childRepairHistory-\(retained.ordinal)")
                                     }
-                                    if current.metadata["custody_blocker"] != .null { Text("This task needs a separate history or storage review. Neither saved copy will be overwritten.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                                    if current.metadata["custody_blocker"] == .string("restoration_custody") {
+                                        Text("Undo the restoration to return to editable subtasks. Your older copy stays saved.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                    } else if current.metadata["custody_blocker"] != .null { Text("This task needs a separate history or storage review. Neither saved copy will be overwritten.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                                     Button { confirming = true } label: { ChildRepairActionLabel(title: "Save reviewed repair", symbol: "checkmark.circle.fill") }
                                         .disabled(!current.eligible || !store.childTaskRepairWritesAvailable || working).accessibilityIdentifier("childRepairSave")
                                     if !store.childTaskRepairWritesAvailable { Text("This device’s workspace needs recovery before saving. You can still inspect or export the original; pending edits are kept.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }

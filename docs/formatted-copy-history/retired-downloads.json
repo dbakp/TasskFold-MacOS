@@ -1,0 +1,35 @@
+{
+  "freeBeforeBytes": 39857692672,
+  "removed": [
+    {
+      "name": "taskfold-copy-format-cli-v3.html",
+      "bytes": 118224,
+      "sha256": "241adcb78080e569fc75288dc8c6779f15c051083fcb204fb939e65800d1e012"
+    },
+    {
+      "name": "taskfold-copy-format-postgres-changes.html",
+      "bytes": 266423,
+      "sha256": "91add74244a51342e36444d0783408f875ff79f325b4b9eed982db9babb710c3"
+    },
+    {
+      "name": "taskfold-copy-format-ciphers.html",
+      "bytes": 107172,
+      "sha256": "9b7825d9b668e96f56de811007dc888e3b40715bae9c98060dff8a33a099fbe8"
+    }
+  ],
+  "coreCaches": [
+    {
+      "name": "core-ios",
+      "allocatedBytes": 719933440,
+      "within768MiB": true,
+      "action": "Preserved within budget; not marked as native build cache"
+    },
+    {
+      "name": "core-mac",
+      "allocatedBytes": 661499904,
+      "within768MiB": true,
+      "action": "Preserved within budget; not marked as native build cache"
+    }
+  ],
+  "freeAfterBytes": 39858159616
+}
