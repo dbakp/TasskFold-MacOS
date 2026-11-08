@@ -922,6 +922,10 @@
                 },
                 {
                   "state": "verify",
+                  "title": "Task breakdown: broader model, language and native/device acceptance"
+                },
+                {
+                  "state": "verify",
                   "title": "Mac/iPad, spoken feedback and wider account/lifecycle review"
                 },
                 {
