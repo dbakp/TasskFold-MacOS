@@ -1,0 +1,66 @@
+{
+  "TasskFold-MacOS": {
+    "appSwiftFiles": 185,
+    "allNormalizedMatch": true,
+    "normalizations": {
+      "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+      "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+      "com.taskfold.session-persistence": "com.taskfold.workflowteststeameditbridge.session-persistence"
+    },
+    "changedSources": [
+      {
+        "path": "Taskfold/Core/Backend.swift",
+        "ownerSHA256": "f46bfcc71dbf3f2df20558bcf0209110cfce35bdda67cd265c08b4353e3c9606",
+        "hostSHA256": "bb88fb3074ba65bf957ab48ec26c6c4e03b945e5a20e973c6304528b23e0ca56"
+      },
+      {
+        "path": "Taskfold/Core/ChildTaskRepair.swift",
+        "ownerSHA256": "8cea33f32ef37bb99ec0537ae618fbae1bf02af1b064569ff58a21b9ccbed49d",
+        "hostSHA256": "8cea33f32ef37bb99ec0537ae618fbae1bf02af1b064569ff58a21b9ccbed49d"
+      },
+      {
+        "path": "Taskfold/Core/Store.swift",
+        "ownerSHA256": "0f635e5c34705872798e877663200e85c522fc792027211bb34bfe3e26284df9",
+        "hostSHA256": "65c15bbad6fa3832d81a25488ae69130ad7398f66aabda35a6aa54df9b9f10f0"
+      },
+      {
+        "path": "Taskfold/Views/ChildTaskRepairView.swift",
+        "ownerSHA256": "c61d928316cfbc1ba73b999fb106ed2861d6a579911148e4c64d47b0beb13ea3",
+        "hostSHA256": "c61d928316cfbc1ba73b999fb106ed2861d6a579911148e4c64d47b0beb13ea3"
+      }
+    ],
+    "uiTestMatches": true
+  },
+  "TaskFold-iOS": {
+    "appSwiftFiles": 178,
+    "allNormalizedMatch": true,
+    "normalizations": {
+      "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.workflowteststeameditbridge",
+      "com.taskfold.recovery.v1": "com.taskfold.workflowteststeameditbridge.recovery",
+      "com.taskfold.ios.session": "com.taskfold.workflowteststeameditbridge.session"
+    },
+    "changedSources": [
+      {
+        "path": "Taskfold/Core/Backend.swift",
+        "ownerSHA256": "bf6464d14db7600e7021d3d873a2d28a36244f54b2b837c58e29a240a4d01034",
+        "hostSHA256": "a121a19e353911e37609853d7dfec97a201311115eced0db7d3ebde0b7937072"
+      },
+      {
+        "path": "Taskfold/Core/ChildTaskRepair.swift",
+        "ownerSHA256": "8cea33f32ef37bb99ec0537ae618fbae1bf02af1b064569ff58a21b9ccbed49d",
+        "hostSHA256": "8cea33f32ef37bb99ec0537ae618fbae1bf02af1b064569ff58a21b9ccbed49d"
+      },
+      {
+        "path": "Taskfold/Core/Store.swift",
+        "ownerSHA256": "d767250a7d076fa3c83a798bd1c5a4631ef6cd156042b294ba49d48fd043ff38",
+        "hostSHA256": "cf04190121a97e32952ce8e69e15f0a9f10ee035448e65d23fb36ce41e3d77f9"
+      },
+      {
+        "path": "Taskfold/Views/ChildTaskRepairView.swift",
+        "ownerSHA256": "c61d928316cfbc1ba73b999fb106ed2861d6a579911148e4c64d47b0beb13ea3",
+        "hostSHA256": "c61d928316cfbc1ba73b999fb106ed2861d6a579911148e4c64d47b0beb13ea3"
+      }
+    ],
+    "uiTestMatches": true
+  }
+}

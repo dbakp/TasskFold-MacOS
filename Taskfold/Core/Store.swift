@@ -1057,6 +1057,20 @@ final class Store {
         online && review.scope == childTaskFieldRecoveryScope && review.snapshot == snapshotRevision
         && !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == review.metadata["task_id"]!.text })
     }
+    func readChildTaskRestoreStatus(_ entry: ChildTaskRestoreState.Entry) async throws -> ChildTaskRestoreStatus {
+        guard online, let captured = childTaskFieldRecoveryScope else { throw CancellationError() }
+        let revision = snapshotRevision
+        let value = try await backend.childTaskRestoreStatus(entry, scope: captured, snapshot: revision)
+        try Task.checkCancellation()
+        guard online, value.isCurrent(scope: childTaskFieldRecoveryScope, snapshot: snapshotRevision) else { throw CancellationError() }
+        return value
+    }
+    func childTaskRestorePendingRepairs() async throws -> Set<String> {
+        guard let captured = childTaskFieldRecoveryScope else { throw CancellationError() }
+        let state = try await childTaskRepairJournal(account: captured.account, origin: captured.origin).load()
+        try Task.checkCancellation(); guard captured == childTaskFieldRecoveryScope else { throw CancellationError() }
+        return Set(state.entries.filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.rootID })
+    }
     func readChildTaskRestoreReview(identity: [String: JSON], mode: ChildTaskRestoreMode, restorationID: String? = nil) async throws -> ChildTaskRestoreReview {
         guard let scope = childTaskFieldRecoveryScope, online,
               childTaskRestoreModeEnabled(mode),

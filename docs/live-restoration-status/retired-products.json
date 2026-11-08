@@ -1,0 +1,21 @@
+{
+  "freeBeforeBytes": 33135722496,
+  "actions": [
+    {
+      "path": "/tmp/taskfold-source-native-ios-products",
+      "kind": "superseded isolated test products",
+      "allocatedBytes": 563433472,
+      "oldBinarySHA256": "24bf5b4b97258120527780fb411c43708f9a470bed4bf999a131254c04f72b66",
+      "currentBinarySHA256": "f4b1afb827d88ee559f1dd64ba3aaea9b6cab36c517542e9d23078cec409d3f7"
+    },
+    {
+      "path": "/tmp/taskfold-restored-adoption-native-ios-v3.xcresult",
+      "kind": "older accepted raw result; concise evidence/screenshots retained in both owners",
+      "allocatedBytes": 18817024
+    }
+  ],
+  "currentSignedProductVerified": true,
+  "currentTestRunDoesNotReferenceRetiredProducts": true,
+  "privateDataAndBackupsUntouched": true,
+  "freeAfterBytes": 33717784576
+}

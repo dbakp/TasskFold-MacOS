@@ -1043,7 +1043,7 @@ private struct ChildRepairOriginalComparisonView: View {
 private struct ChildRestoredAdoptionSelection: Identifiable {
     let id = UUID()
     let rootID: String
-    let binding: ChildTaskRestorationBinding
+    let binding: ChildTaskRestorationBinding?
     let scope: ChildTaskFieldClientScope
 }
 
@@ -1058,6 +1058,7 @@ struct ChildTaskOriginalRestoreView: View {
     @State private var busy = false
     @State private var message: String?
     @State private var ticket = UUID()
+    @State private var statusRefresh = UUID()
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         NavigationStack {
@@ -1070,7 +1071,7 @@ struct ChildTaskOriginalRestoreView: View {
                             Button("Review saved structure") { Task { await prepare(identity: ChildTaskRestoreCommand.identity(archive), mode: .restore) } }
                                 .disabled(busy || model.busy).accessibilityIdentifier("childRestorePrepare")
                         }
-                        Button("Check saved requests") { Task { await model.load() } }.disabled(busy || model.busy)
+                        Button("Check saved requests") { Task { await model.load(); statusRefresh = UUID() } }.disabled(busy || model.busy)
                     }
                     if busy || model.busy { ProgressView("Checking subtask restoration…") }
                     if let feedback = message ?? model.message {
@@ -1081,28 +1082,18 @@ struct ChildTaskOriginalRestoreView: View {
                     ForEach(ChildTaskRestoreState.visibleEntries(model.entries), id: \.command.id) { entry in
                         Section {
                             Text(store.record("tasks", id: entry.command.rootID)?.title ?? "Saved task").font(.headline).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRestoreTaskTitle-" + entry.command.id)
-                            Text(status(entry, unconfirmed: unconfirmed.contains(entry.command.rootID))).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            if entry.phase != .applied { Text(status(entry, unconfirmed: unconfirmed.contains(entry.command.rootID))).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                             if entry.phase == .queued || entry.phase == .attempted {
                                 Button("Check status") { Task { await run(entry.command, .check) } }.accessibilityIdentifier("childRestoreCheck-" + entry.command.id)
                                 Button("Retry this request") { Task { await run(entry.command, .send) } }.accessibilityIdentifier("childRestoreRetry-" + entry.command.id)
                                 Button("Stop this request") { Task { await run(entry.command, .close) } }.accessibilityIdentifier("childRestoreStop-" + entry.command.id)
                             } else if entry.phase == .closed {
                                 Button("Remove stopped request") { Task { await model.discard(entry.command) } }
-                            } else if entry.phase == .applied, !unconfirmed.contains(entry.command.rootID), let result = entry.result, result.raw["phase"] != .string("finished") {
-                                if result.raw["phase"] == .string("restored"), store.childTaskOriginalAdoptionEnabled {
-                                    Button("Review keeping older version editable") { Task { await prepareAdoption(entry) } }
-                                        .accessibilityIdentifier("childRestoreAdopt-" + entry.command.id)
-                                }
-                                if store.childTaskOriginalReversalsEnabled {
-                                    Button(result.raw["phase"] == .string("restored") ? "Review Undo" : "Review Redo") {
-                                        Task { await prepare(identity: entry.command.identity, mode: result.raw["phase"] == .string("restored") ? .undo : .redo, restorationID: result.raw["restoration_id"]!.text) }
-                                    }.accessibilityIdentifier("childRestoreReverse-" + entry.command.id)
-                                }
-                                if result.raw["phase"] == .string("undone"), store.childTaskOriginalFinishEnabled {
-                                    Button("Review finish recovery") {
-                                        Task { await prepare(identity: entry.command.identity, mode: .finish, restorationID: result.raw["restoration_id"]!.text) }
-                                    }.accessibilityIdentifier("childRestoreFinish-" + entry.command.id)
-                                }
+                            } else if entry.phase == .applied {
+                                ChildRestoreCurrentCard(entry: entry, actionsEnabled: !unconfirmed.contains(entry.command.rootID), refresh: statusRefresh,
+                                    prepare: { mode, restoration in Task { await prepare(identity: entry.command.identity, mode: mode, restorationID: restoration) } },
+                                    adopt: { Task { await prepareAdoption(entry) } },
+                                    checkRepair: { if let scope { adoption = .init(rootID: entry.command.rootID, binding: nil, scope: scope) } })
                             }
                         }.disabled(busy || model.busy)
                     }
@@ -1120,7 +1111,7 @@ struct ChildTaskOriginalRestoreView: View {
             catch { message = "Saved restoration requests couldn’t be read. They are kept on this device." }
         }
         .onChange(of: store.snapshotRevision) { _, _ in review = nil }
-        .sheet(item: $adoption) { value in
+        .sheet(item: $adoption, onDismiss: { statusRefresh = UUID() }) { value in
             if value.scope == scope { ChildTaskRepairView(rootID: value.rootID, restoration: value.binding) }
         }
         .onDisappear { close() }
@@ -1182,6 +1173,7 @@ struct ChildTaskOriginalRestoreView: View {
     private func run(_ command: ChildTaskRestoreCommand, _ operation: ChildTaskRepairOperation) async {
         guard let model, model.scope == scope else { return }
         message = nil; review = nil
+        defer { statusRefresh = UUID() }
         if await model.run(command, operation: operation), model.scope == scope,
            command.mode != .finish, model.entries.first(where: { $0.command == command })?.result?.applied == true { await store.sync() }
     }
@@ -1237,6 +1229,72 @@ private struct ChildTaskRestoreReviewView: View {
             }
             .navigationTitle(review.mode == .finish ? "Finish recovery" : "Review subtask version")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: close).keyboardShortcut(.cancelAction) } }
+        }
+    }
+}
+
+/// Live state is scoped to the visible card and cancelled with its lifetime.
+/// A receipt stays a historical event even when another device ends recovery.
+private struct ChildRestoreCurrentCard: View {
+    let entry: ChildTaskRestoreState.Entry
+    let actionsEnabled: Bool
+    let refresh: UUID
+    let prepare: (ChildTaskRestoreMode, String) -> Void
+    let adopt: () -> Void
+    let checkRepair: () -> Void
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @State private var current: ChildTaskRestoreStatus?
+    @State private var blocked = false
+    @State private var failed = false
+    @State private var retry = UUID()
+    private struct Key: Hashable {
+        let scope: ChildTaskFieldClientScope?
+        let snapshot: UUID
+        let refresh: UUID
+        let retry: UUID
+        let online: Bool
+    }
+    private var key: Key { .init(scope: phase == .active ? store.childTaskFieldRecoveryScope : nil, snapshot: store.snapshotRevision, refresh: refresh, retry: retry, online: store.online) }
+    private var live: ChildTaskRestoreStatus? {
+        guard phase == .active, store.online, let current, current.isCurrent(scope: key.scope, snapshot: key.snapshot) else { return nil }; return current
+    }
+    var body: some View {
+        Group {
+            if let live {
+                Text(live.message).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRestoreCurrent-" + entry.command.id)
+            } else {
+                Text(failed || !store.online ? "Current recovery status is unavailable. Your saved request is kept." : "Checking current recovery status…").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text("Last confirmed decision: " + (entry.result?.raw["phase"] == .string("finished") ? "Recovery finished." : entry.result?.raw["phase"] == .string("restored") ? "Saved structure restored." : "Restoration undone."))
+                    .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            if blocked {
+                Text("A subtask repair still needs confirmation. Check it before starting another recovery action.").fixedSize(horizontal: false, vertical: true)
+                Button("Check saved subtask repair", action: checkRepair).accessibilityIdentifier("childRestorePendingRepair-" + entry.command.id)
+            } else if actionsEnabled, let live, let restoration = entry.result?.raw["restoration_id"]?.text {
+                if live.canReviewAdoption, store.childTaskOriginalAdoptionEnabled {
+                    Button("Review keeping older version editable", action: adopt).accessibilityIdentifier("childRestoreAdopt-" + entry.command.id)
+                }
+                if let mode = live.reversalMode, store.childTaskOriginalReversalsEnabled {
+                    Button(mode == .undo ? "Review Undo" : "Review Redo") { prepare(mode, restoration) }.accessibilityIdentifier("childRestoreReverse-" + entry.command.id)
+                }
+                if live.canReviewFinish, store.childTaskOriginalFinishEnabled {
+                    Button("Review finish recovery") { prepare(.finish, restoration) }.accessibilityIdentifier("childRestoreFinish-" + entry.command.id)
+                }
+            }
+            Button("Refresh current status") { retry = UUID() }.disabled(!store.online).accessibilityIdentifier("childRestoreRefresh-" + entry.command.id)
+        }
+        .task(id: key) {
+            let captured = key; current = nil; blocked = false; failed = false
+            guard captured.scope != nil, captured.online else { return }
+            do {
+                let pending = try await store.childTaskRestorePendingRepairs()
+                guard key == captured, !Task.isCancelled else { return }; blocked = pending.contains(entry.command.rootID)
+                let value = try await store.readChildTaskRestoreStatus(entry)
+                guard key == captured, !Task.isCancelled else { return }; current = value
+            } catch {
+                guard key == captured, !Task.isCancelled else { return }; failed = true
+            }
         }
     }
 }

@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-08",
+  "apiChecksEachOwnedSchema": 167,
+  "focusedCoreCasesEachClient": 83,
+  "newCoreCasesEachClient": 6,
+  "bothSDKBuildsPassed": true,
+  "nativePhone": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "entry": "Real saved-original Restore controls, not a direct bound-root entry",
+    "scope": "Synthetic real PostgreSQL actor/session via reserved debug channel; native HTTP Auth remains separate",
+    "checks": [
+      "one lost Restore confirmed before a separate external adoption",
+      "live card refresh and cold return show external adoption while the original event remains restored",
+      "ended cycle offers no Undo, Redo, Finish or keep-older action",
+      "one external adoption retains newer original and current root notes/priority"
+    ],
+    "final": {
+      "phase": "adopted",
+      "revision": 2,
+      "immutableEvent": "restored",
+      "liveReads": 3
+    }
+  },
+  "currentStateSeparateFromImmutableReceipts": true,
+  "pendingRepairConfirmationGuardBuilt": true,
+  "normalMacBuild": "48",
+  "normalAdvancedGatesOff": true,
+  "hostedSchemaUnchanged": true,
+  "phoneInstallationDeferred": true,
+  "remaining": [
+    "Explicit selection/recovery of the retained newer inverse",
+    "Native keep-older entry-button and pending-repair-link acceptance",
+    "Mac/iPad/large-text/speech/native HTTP and wider access/session/account/task/shared-custodian/file/audio/discussion/history/larger-library lifecycle acceptance"
+  ]
+}

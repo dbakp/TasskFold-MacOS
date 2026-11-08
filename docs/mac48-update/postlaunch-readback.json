@@ -1,0 +1,34 @@
+{
+  "cacheFiles": 9,
+  "workspaceCacheFiles": 5,
+  "byteExactFiles": 7,
+  "allTasksAndPendingPreserved": true,
+  "allUserTablesPreserved": true,
+  "ignoredViewCacheTables": [
+    "_conversation_views"
+  ],
+  "signedZeroAndDecimalAware": true,
+  "backupIndexScope": "Shape/classification only; changes are reported, not claimed byte-identical or treated as workspace work",
+  "differences": [
+    {
+      "bytesEqual": false,
+      "semanticEqual": false,
+      "workspace": false
+    },
+    {
+      "bytesEqual": false,
+      "semanticEqual": false,
+      "workspace": true,
+      "tasksEqual": true,
+      "pendingEqual": true,
+      "changedTables": [
+        "_conversation_views"
+      ],
+      "userTablesEqual": true,
+      "changedTopLevelKeys": [
+        "tables"
+      ]
+    }
+  ],
+  "privateReportSHA256": "773c7581ddd6ebfe85b0aaabe3eba4738f393250cfe4fb2428908a630c36cd38"
+}
