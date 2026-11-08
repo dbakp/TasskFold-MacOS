@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-08",
+  "owner": "TasskFold-MacOS",
+  "scope": "Atomic bound keep-older save and client contract; native controls/recovery selection remain unfinished",
+  "genuineLocalAuthRESTStorageChecks": 119,
+  "focusedCoreTests": 103,
+  "newCoreTests": 5,
+  "legacyRegressionScope": {
+    "format": {
+      "checks": 76,
+      "owner": "TaskFold-iOS",
+      "passed": true
+    },
+    "restore": {
+      "checks": 276,
+      "owner": "TaskFold-iOS",
+      "passed": true
+    }
+  },
+  "build": {
+    "passed": true,
+    "platform": "mac",
+    "signed": false,
+    "nativeInteractionTested": false
+  },
+  "deferredCommitGuard": true,
+  "privateStagingRefusal": "PT409",
+  "retainedFileDeletionStatus": 500,
+  "quotaBoundaryFinalBytes": 63999992,
+  "independentEditAfterAdoption": true,
+  "newerInverseRetainedAndExportable": true,
+  "newerInverseRecoveryControlsAccepted": false,
+  "rawContractSHA256": "212da683efe5be78b0e94ac07eff955bc8946ebdd0f27378b2449cbd2882178e",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "572e0cad13c8f726d0dd3130b238b71aad7185895f2fb4f3325b718cdab3efd0",
+    "Taskfold/Core/Store.swift": "cf090330f283ca08b8cde927e73b3898df44da027a071dbe6d45925f7dfecfd5",
+    "TaskfoldTests/ChildRestoredAdoptionTests.swift": "d518055925017513746aabb8e01133bf283c2857ec690a954a3e9b044a24e885",
+    "TaskfoldTests/Fixtures/child-restored-adoption-contract-v1.json": "212da683efe5be78b0e94ac07eff955bc8946ebdd0f27378b2449cbd2882178e",
+    "Scripts/Database/test-child-restored-adoption.mjs": "36e1740ba30e028c2c901618f63644d0ae21f9475d6c3c44a25df62e7425b2ff",
+    "supabase/migrations/20261108063450_keep_restored_child_version.sql": "290ef2d70b5b4efd6f8a5073dd506a9e4b013b9232495c8ab88279beb67ccf11"
+  },
+  "defaultOffFlags": [
+    "archive_restore_adoption_enabled",
+    "TaskfoldChildOriginalAdoptionEnabled"
+  ],
+  "normalOrHostedChanges": false,
+  "allOwnedFixturesRemoved": true,
+  "officialAdvisors": "Existing pg_net extension_in_public warning only",
+  "cleanupRemovedAllocatedBytes": 313196544,
+  "freeAfterCleanupBytes": 37077368832,
+  "largerWorkAndLifecycleAccepted": false,
+  "initialHarnessCorrections": [
+    "Direct SQL probe needed a plain session-claims GUC string",
+    "Storage deletion proof must use actual Storage API; direct SQL deletion is blocked separately"
+  ]
+}

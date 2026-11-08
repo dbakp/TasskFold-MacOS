@@ -974,6 +974,7 @@ final class Store {
                          coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
     }
     func permitsChildTaskRepair(_ command: ChildTaskRepairCommand, sending: Bool) -> Bool {
+        if sending, command.body["changes"]?.list.first?.object["restoration"] != nil, !childTaskOriginalAdoptionEnabled { return false }
         guard childTaskRepairWritesAvailable, let identity = try? repairAdoptionIdentity(command) else { return false }
         return permitsChildTaskAdoption(identity, sending: sending)
     }
@@ -1039,6 +1040,7 @@ final class Store {
     }
     var childTaskOriginalRestorationEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalRestorationEnabled") as? Bool == true }
     var childTaskOriginalReversalsEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalReversalsEnabled") as? Bool == true }
+    var childTaskOriginalAdoptionEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalAdoptionEnabled") as? Bool == true }
     var childTaskOriginalFinishEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalFinishEnabled") as? Bool == true }
     private func childTaskRestoreModeEnabled(_ mode: ChildTaskRestoreMode) -> Bool {
         switch mode {

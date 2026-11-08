@@ -1,0 +1,50 @@
+{
+  "jobs": [
+    {
+      "name": "mac-api",
+      "exit": 0,
+      "log": "/tmp/taskfold-keep-matrix-mac-api.log",
+      "seconds": 34.19
+    },
+    {
+      "name": "legacy-format",
+      "exit": 0,
+      "log": "/tmp/taskfold-keep-matrix-legacy-format.log",
+      "seconds": 54.81
+    },
+    {
+      "name": "legacy-restore",
+      "exit": 0,
+      "log": "/tmp/taskfold-keep-matrix-legacy-restore.log",
+      "seconds": 64.63
+    },
+    {
+      "name": "mac-core",
+      "exit": 0,
+      "log": "/tmp/taskfold-keep-matrix-mac-core.log",
+      "seconds": 126.39
+    },
+    {
+      "name": "ios-core",
+      "exit": 0,
+      "log": "/tmp/taskfold-keep-matrix-ios-core.log",
+      "seconds": 8.4
+    },
+    {
+      "name": "mac-build",
+      "exit": 0,
+      "log": "/tmp/taskfold-keep-matrix-mac-build.log",
+      "seconds": 334.49
+    },
+    {
+      "name": "ios-build",
+      "exit": 0,
+      "log": "/tmp/taskfold-keep-matrix-ios-build.log",
+      "seconds": 260.23
+    }
+  ],
+  "serialized": true,
+  "noSimulatorCreated": true,
+  "installedAppChanged": false,
+  "passed": true
+}
