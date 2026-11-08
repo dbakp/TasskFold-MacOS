@@ -1,0 +1,16 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 42394996736,
+  "actions": [],
+  "skipped": [
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 794099712,
+      "projectedAllocatedBytes": 794099712,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 42394996736,
+  "actualFreeChangeBytes": 0
+}
