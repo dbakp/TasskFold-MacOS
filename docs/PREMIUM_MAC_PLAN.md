@@ -11639,3 +11639,7 @@ The independently owned iOS acceptance driver now verifies the actual keep-edita
 ### 8 November · local effort and assignment filters
 
 Clear estimate upper bounds (minutes/hours, strict or inclusive) and recorded assigned-by descriptions now use local preparation with existing preview/Save and current-reference checks. Both independently compiled owners pass55 selected Core cases with two optional model probes skipped; no inference required. Native controls/full SDK and installed-update acceptance remain separate. Mac53 remains unchanged pending the existing provisioning followup. See `local-effort-filters/README.md`.
+
+### 8 November · child-heavy widget preparation
+
+Exact original-root identity now also admits child signature reuse inside the same bounded4096-entry memo. Hierarchy/visibility/state and current-action checks stay live. The100-root/2000-child Debug preparation median falls51.86ms→21.31–21.64ms, with exact reference widget states/tokens. Both owners pass focused Core and action-plan checks. This does not prove whole-save/native/FPS behavior or update installedMac53. See `child-widget-signature-memo/README.md`.
