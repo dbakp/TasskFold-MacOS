@@ -1,0 +1,28 @@
+{
+  "scope": "Completed owned Core compiler-module scratch only",
+  "freeBeforeBytes": 28266217472,
+  "removed": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios/out/ModuleCache.noindex",
+      "allocatedBytes": 28991488
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac/out/ModuleCache.noindex",
+      "allocatedBytes": 21524480
+    }
+  ],
+  "cacheBudgets": [
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 718168064,
+      "within768MiB": true
+    },
+    {
+      "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 656650240,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 28316942336,
+  "actualFreeChangeBytes": 50724864
+}

@@ -55,14 +55,27 @@ enum WidgetCompletion {
         }
         fileprivate func signature(for row: Record, compute: () -> String) -> String {
             let id = row.id.lowercased()
-            guard id.utf8.count <= 256 else { statistics.computed += 1; return compute() }
-            let source = row.authoredSourceToken
+            return signature(key: "root:" + id, source: row.authoredSourceToken,
+                cacheable: id.utf8.count <= 256, compute: compute) ?? ""
+        }
+        fileprivate func signature(for child: TaskHierarchyIndex.Item, compute: () -> String?) -> String? {
+            // The original root owns all raw descendants and routing context.
+            // Any root write invalidates this proof; projections are rebuilt
+            // every pass and cannot supply a stable authored identity themselves.
+            signature(key: "child:" + child.id, source: child.root.authoredSourceToken,
+                cacheable: child.id.utf8.count <= 256, compute: compute)
+        }
+        private func signature(key: String, source: Record.SourceToken, cacheable: Bool, compute: () -> String?) -> String? {
+            guard cacheable else { statistics.computed += 1; return compute() }
             let value: String
-            if scope != nil, let saved = entries[id], saved.source == source {
+            if scope != nil, let saved = entries[key], saved.source == source {
                 value = saved.signature; statistics.reused += 1
-            } else { value = compute(); statistics.computed += 1 }
-            if scope != nil, next.count < maximumEntries || next[id] != nil {
-                next[id] = Entry(source: source, signature: value)
+            } else {
+                statistics.computed += 1
+                guard let computed = compute() else { return nil }; value = computed
+            }
+            if scope != nil, next.count < maximumEntries || next[key] != nil {
+                next[key] = Entry(source: source, signature: value)
             }
             return value
         }
@@ -91,7 +104,8 @@ enum WidgetCompletion {
             }
         }
         for child in children {
-            if let signature = childSignature(child), snapshot.widgetCompletion.states[child.id]?.signature != signature {
+            let signature = signatures.map { $0.signature(for: child) { childSignature(child) } } ?? childSignature(child)
+            if let signature, snapshot.widgetCompletion.states[child.id]?.signature != signature {
                 snapshot.widgetCompletion.states[child.id] = .init(token: UUID().uuidString.lowercased(), signature: signature)
             }
         }

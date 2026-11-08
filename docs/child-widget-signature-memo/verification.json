@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-08",
+  "scope": "Core widget preparation and actual action plans; SwiftPM Debug stage timing only",
+  "selectedChecks": {
+    "ios": {
+      "executed": 59,
+      "passed": 57,
+      "optionalSkipped": 2,
+      "failures": 0
+    },
+    "mac": {
+      "executed": 59,
+      "passed": 58,
+      "optionalSkipped": 1,
+      "failures": 0
+    }
+  },
+  "diagnostic": "Explicit 100-root/2000-child, five-sample before/after; iOS diagnostic also ran separately from final ordinary checks",
+  "newFunctionalCases": 5,
+  "cacheEntryLimit": 4096,
+  "identifierByteLimit": 256,
+  "rootAndChildEntriesShareBudget": true,
+  "baselineCountersTrackChildren": false,
+  "newCountersTrackChildren": true,
+  "sdkOrNativeUIAccepted": false,
+  "physicalFPSAccepted": false,
+  "normalMacBuild": 53,
+  "normalAppUpdated": false,
+  "schemaOrHostedChanges": false,
+  "sourceSHA256": {
+    "Taskfold/Core/WidgetCompletion.swift": "b87134a94d665f824f61f642dfb93b61c230e7f34597d035b926107618be163e",
+    "TaskfoldTests/WidgetSignatureCacheTests.swift": "945c1e2f093617b93c24973305a19857a412d6951a8b38557ca70f310a589e43"
+  },
+  "failedTestDevelopment": [
+    "Get-only JSON object edit in a new test corrected before execution",
+    "New visibility fixture initially used archived rather than is_archived; oversized reference fixture initially exceeded individual identity limit; corrected to valid observed contracts before passing runs"
+  ]
+}
