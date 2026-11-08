@@ -1120,7 +1120,7 @@ struct ChildTaskRepairOriginalComparison: Identifiable, Sendable, CustomStringCo
 
 // MARK: - Reviewed original restoration
 
-enum ChildTaskRestoreMode: String, Codable, Sendable { case restore, undo, redo }
+enum ChildTaskRestoreMode: String, Codable, Sendable { case restore, undo, redo, finish }
 
 /// Source bytes are ephemeral. Only the small, exact request is journalled.
 struct ChildTaskRestoreReview: Identifiable, Sendable {
@@ -1150,6 +1150,9 @@ struct ChildTaskRestoreReview: Identifiable, Sendable {
         _ = try ChildTaskAdoptionReview.count(raw["file_count"], maximum: 256)
         guard !currentNull || ChildTaskRepairPreview.sameJSONValue(current, Data("null".utf8)),
               !targetNull || ChildTaskRepairPreview.sameJSONValue(target, Data("null".utf8)) else { throw ChildTaskRestoreCommand.invalid }
+        if mode == .finish {
+            guard currentNull == targetNull, ChildTaskRepairPreview.sameJSONValue(current, target) else { throw ChildTaskRestoreCommand.invalid }
+        }
         // Validate phase, counters and identity using the same request validator.
         var command = raw.filter { ChildTaskRestoreCommand.keys.contains($0.key) }
         command["request_id"] = .string(UUID().uuidString.lowercased())
@@ -1162,7 +1165,7 @@ struct ChildTaskRestoreReview: Identifiable, Sendable {
 struct ChildTaskRestoreCommand: ReviewedTeamCommand, CustomStringConvertible, CustomDebugStringConvertible {
     static let storagePrefix = "child-original-restore-command-v1."
     static let maximumStoredBytes = 8192
-    static var invalid: AppFailure { .init(message: "Review the latest subtask version before restoring it. Both saved copies are kept.") }
+    static var invalid: AppFailure { .init(message: "Review the latest recovery decision before continuing. Your current subtasks are unchanged.") }
     static let identityKeys: Set<String> = ["protocol", "account", "task_id", "task_generation", "project_id", "workspace_id", "repair_request_id", "archive_id", "archive_digest"]
     static let keys = identityKeys.union(["request_id", "mode", "restore_id", "revision", "review_digest"])
     let account: String, origin: String, body: [String: JSON]
@@ -1232,7 +1235,7 @@ struct ChildTaskRestoreResult: Codable, Equatable, Sendable {
         if raw["state"] == .string("applied") {
             guard raw["restoration_id"] == (command.mode == .restore ? .string(command.id) : command.body["restore_id"]),
                   try ChildTaskAdoptionReview.count(raw["next_revision"], maximum: 9_007_199_254_740_991) == command.body["revision"]!.integer + 1,
-                  raw["phase"] == .string(command.mode == .undo ? "undone" : "restored"), ChildTaskAdoptionCommand.digest(raw["after_digest"]) else { throw ChildTaskRestoreCommand.invalid }
+                  raw["phase"] == .string(command.mode == .finish ? "finished" : command.mode == .undo ? "undone" : "restored"), ChildTaskAdoptionCommand.digest(raw["after_digest"]) else { throw ChildTaskRestoreCommand.invalid }
         } else { guard ["restoration_id", "next_revision", "phase", "after_digest"].allSatisfy({ raw[$0] == .null }) else { throw ChildTaskRestoreCommand.invalid } }
         self.raw = raw
     }
@@ -1265,7 +1268,7 @@ struct ChildTaskRestoreState: ReviewedTeamFileCommand {
     var entries: [Entry]
     init(account: String, origin: String, entries: [Entry] = []) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
-        guard entries.count <= 64 else { throw ChildTaskRepairFailure(reason: .limit) }
+        guard entries.count <= 65, entries.count <= 64 || entries.contains(where: { $0.command.mode == .finish }) else { throw ChildTaskRepairFailure(reason: .limit) }
         var ids = Set<String>(), pendingRoots = Set<String>()
         for entry in entries {
             guard entry.command.account == account, entry.command.origin == origin, ids.insert(entry.command.id).inserted else { throw Self.invalid }
@@ -1276,6 +1279,43 @@ struct ChildTaskRestoreState: ReviewedTeamFileCommand {
             } else { guard entry.phase == .queued || entry.phase == .attempted else { throw Self.invalid } }
         }
         self.account = account; self.origin = origin; self.entries = entries
+    }
+    /// Show current decisions, while preserving every durable receipt for
+    /// exact status/retry and safe later retirement. Ties stay visible.
+    static func visibleEntries(_ entries: [Entry]) -> [Entry] {
+        struct Family: Hashable { let restoration: String, root: String, archive: String }
+        func family(_ entry: Entry) -> Family? {
+            guard entry.phase == .applied, let result = entry.result else { return nil }
+            return .init(restoration: result.raw["restoration_id"]!.text, root: entry.command.rootID, archive: entry.command.body["archive_id"]!.text)
+        }
+        var latest: [Family: Int] = [:]
+        for entry in entries {
+            if let key = family(entry) { latest[key] = max(latest[key] ?? 0, entry.result!.raw["next_revision"]!.integer) }
+        }
+        return entries.filter { entry in
+            guard let key = family(entry) else { return true }
+            return entry.result!.raw["next_revision"]!.integer == latest[key]
+        }
+    }
+    static func unconfirmedRoots(_ entries: [Entry]) -> Set<String> {
+        Set(entries.filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.rootID })
+    }
+    /// Only a server-confirmed finish retires a complete, resolved family.
+    /// Keep a slot for Finish even when an older journal already has 64 entries.
+    /// Never evict an active reversal identity or an ambiguous saved request.
+    mutating func makeRoom(for command: ChildTaskRestoreCommand) throws {
+        let limit = command.mode == .finish ? 65 : 64
+        guard entries.count >= limit else { return }
+        func family(_ c: ChildTaskRestoreCommand) -> String { c.mode == .restore ? c.id : c.body["restore_id"]!.text }
+        for finished in entries where finished.command.mode == .finish && finished.phase == .applied {
+            let key = family(finished.command)
+            guard key != family(command) else { continue }
+            let rows = entries.filter { family($0.command) == key }
+            guard rows.allSatisfy({ ($0.phase == .applied || $0.phase == .closed) && ChildTaskStructureCommand.exact(.object($0.command.identity), .object(finished.command.identity)) && ($0.phase != .applied || ($0.result?.raw["next_revision"]?.integer ?? 0) <= finished.result!.raw["next_revision"]!.integer) }) else { continue }
+            entries.removeAll { family($0.command) == key }
+            if entries.count < limit { return }
+        }
+        throw ChildTaskRepairFailure(reason: .limit)
     }
     init(data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes,
@@ -1328,6 +1368,7 @@ actor ChildTaskRestoreJournal {
             var state = try read()
             if let old = state.entries.first(where: { $0.command.id == command.id }) { guard old.command == command, old.phase != .closed else { throw ChildTaskRestoreCommand.invalid }; return }
             guard !state.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && $0.command.rootID == command.rootID }) else { throw ChildTaskRepairFailure(reason: .busy) }
+            try state.makeRoom(for: command)
             state.entries.append(.init(command: command)); try write(state, lease: lease)
         }
     }
@@ -1410,7 +1451,7 @@ extension Backend: ChildTaskRestoreService {}
             try command.review(review)
             try await admit(command); try check()
             guard reviewCurrent(review) else { throw CancellationError() }
-            try await journal.enqueue(command, lease: lease); try check(); try await update(); message = "Restore request saved on this device."
+            try await journal.enqueue(command, lease: lease); try check(); try await update(); message = "Recovery request saved on this device."
         }
     }
     func run(_ command: ChildTaskRestoreCommand, operation: ChildTaskRepairOperation) async -> Bool {
@@ -1428,12 +1469,12 @@ extension Backend: ChildTaskRestoreService {}
                 if !result.unknown { try await journal.settle(command, result: result, lease: lease); try check() }
             }
             try await update()
-            message = result.applied ? "Subtask version saved. Both copies are kept." : result.closed ? "Restoration stopped. This request made no change." : "No confirmation yet. Retry this exact request, or stop it before starting another."
+            message = result.applied ? (command.mode == .finish ? "Recovery finished. Your current subtasks are kept; Redo is no longer available." : "Subtask version saved. Both copies are kept.") : result.closed ? "Restoration stopped. This request made no change." : "No confirmation yet. Retry this exact request, or stop it before starting another."
         }
         // A file write can finish before reporting an I/O error. Trust only the
         // reloaded, fully validated proof; never retry with a different identity.
         if !completed, (try? check()) != nil, let result = entries.first(where: { $0.command == command })?.result {
-            message = result.applied ? "Subtask version saved. Both copies are kept." : "Restoration stopped. This request made no change."
+            message = result.applied ? (command.mode == .finish ? "Recovery finished. Your current subtasks are kept; Redo is no longer available." : "Subtask version saved. Both copies are kept.") : "Restoration stopped. This request made no change."
             return true
         }
         return completed

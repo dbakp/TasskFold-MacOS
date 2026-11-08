@@ -23,7 +23,7 @@ struct SavedChildTaskAdoptionsLink: View {
                         .sheet(isPresented: $archivesShowing) { ChildTaskRepairArchivesView() }
                 }
             }
-            if scope != nil, store.hasSavedChildRecovery(.restorations) || store.childTaskOriginalRestorationEnabled || store.childTaskOriginalReversalsEnabled {
+            if scope != nil, store.hasSavedChildRecovery(.restorations) || store.childTaskOriginalRestorationEnabled || store.childTaskOriginalReversalsEnabled || store.childTaskOriginalFinishEnabled {
                 Section {
                     Button("Subtask restorations", systemImage: "arrow.uturn.backward.circle") { restorationsShowing = true }
                         .accessibilityIdentifier("savedChildRestorations")

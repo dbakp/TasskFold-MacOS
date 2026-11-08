@@ -1,0 +1,10 @@
+{
+  "hostSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "4de2ba50dfb566a5641df4dba9c4fee7f84634eebda4c447795ab267221a8b00",
+    "Taskfold/Core/Store.swift": "d581603d470fbf88fa99feb499503ffd8dc723785e1bef881b6ccc491ce9169f",
+    "Taskfold/Views/ChildTaskRepairView.swift": "5d4a9681f0758063a85b7649f4d12b4f5c130a01b8fa97a43117f04d6fee2776",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "564d371d04a6ffa8e138558a68acaaa605b5e497eca64732db1a453c0691d244",
+    "TaskfoldUITests/AudioCommentUITests.swift": "8c46c752185b80732f3c5a0c08b427959e2e86fd9ee738d5daf8181da4bbd714"
+  },
+  "infoSHA256": "b26935bed79d9825e6731a90cd7b95ba87af41ce181e7686834dc656e42a13f9"
+}

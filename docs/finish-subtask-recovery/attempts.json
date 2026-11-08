@@ -1,0 +1,20 @@
+{
+  "serviceSetupCorrection": "Initial fixture used project role editor as workspace role; changed to member. Final245checks each pass; failed fixture removed.",
+  "clientCompileCorrection": "Initial capacity edit targeted the adjacent repair journal; scoped it to the restore journal and verified all43 existing repair cases.",
+  "nativeV1": {
+    "failedNativeV1": "Toolbar Cancel incorrectly passed to a list-only scrolling helper; corrected to direct toolbar tap",
+    "finishNeverSent": true,
+    "currentSourceAndAuthoredWorkPreserved": true,
+    "originalsPreserved": true,
+    "phase": "undone",
+    "revision": 4,
+    "databaseFixtureRemoved": true
+  },
+  "nativeV3": {
+    "noRestorationSent": true,
+    "allDatabaseStateExact": true,
+    "fixtureRemoved": true,
+    "failure": "Indexed collection query retargeted a hidden consent sheet; use concrete accessibility identity and physical switch instead."
+  },
+  "currentNativeV4": "One pass; no failures/skips/runtime warnings; current source and all five decisions checked."
+}

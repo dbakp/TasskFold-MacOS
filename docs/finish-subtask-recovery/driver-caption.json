@@ -1,0 +1,12 @@
+{
+  "TaskFold-iOS": {
+    "executedSHA256": "eabd27040ca1f859c8b8a8b5c91cca1baa57fc5f53d7a6f704906bc5f2da0f58",
+    "finalSHA256": "9de2e738107c78d77f20974e08910f1788608480a064e66d930129905cc8090c",
+    "onlyChange": "Diagnostic caption four receipts \u2192 decision receipts; predicates/requests unchanged"
+  },
+  "TasskFold-MacOS": {
+    "executedSHA256": "eabd27040ca1f859c8b8a8b5c91cca1baa57fc5f53d7a6f704906bc5f2da0f58",
+    "finalSHA256": "9de2e738107c78d77f20974e08910f1788608480a064e66d930129905cc8090c",
+    "onlyChange": "Diagnostic caption four receipts \u2192 decision receipts; predicates/requests unchanged"
+  }
+}
