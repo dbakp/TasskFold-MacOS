@@ -391,8 +391,25 @@ enum WidgetCapacityNativeCheck {
             let payload = WidgetProjection.payload(tasks: rows, projects: projects, account: input["account"]!.text, now: now, calendar: calendar, workingHours: hours)
             let fullTime = fullStart.duration(to: clock.now)
             guard capacity == input["expectedCapacity"], payload["capacity"] == capacity, AuthoredValueComparison.sameRows(rows, original) else { throw URLError(.cannotParseResponse) }
+            var publication = WidgetPublicationInput(tasks: rows, projects: projects, account: input["account"]!.text)
+            publication.now = now; publication.calendar = calendar; publication.workingHours = hours
+            let captured = publication
+            let cancelledAtPulse = await Task.detached(priority: .utility) { () -> Bool in
+                var visited: [WidgetRenderCheckpoint] = []
+                do {
+                    _ = try captured.encoded(checking: { stage in
+                        visited.append(stage)
+                        if stage == .pulseDay { withUnsafeCurrentTask { $0?.cancel() } }
+                        try Task.checkCancellation()
+                    })
+                    return false
+                } catch is CancellationError { return visited.last == .pulseDay && !visited.contains(.tasks) && !visited.contains(.encoding) }
+                catch { return false }
+            }.value
+            let recovered = try TaskfoldJSONDecoder().decode([String: JSON].self, from: captured.encodedForWorker())
+            guard cancelledAtPulse, recovered == payload, AuthoredValueComparison.sameRows(rows, original) else { throw URLError(.cannotParseResponse) }
             func seconds(_ d: Duration) -> Double { Double(d.components.seconds) + Double(d.components.attoseconds) / 1e18 }
-            return ["accepted": .bool(true), "tasks": .number(Double(rows.count)), "days": .number(8), "sourceUnchanged": .bool(true),
+            return ["accepted": .bool(true), "tasks": .number(Double(rows.count)), "days": .number(8), "sourceUnchanged": .bool(true), "cancelledBeforeLaterStages": .bool(true), "freshWorkerRecoveredExactPayload": .bool(true),
                 "inputSHA256": .string(SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()),
                 "capacitySeconds": .number(seconds(capacityTime)), "fullPayloadSeconds": .number(seconds(fullTime))]
         }.value

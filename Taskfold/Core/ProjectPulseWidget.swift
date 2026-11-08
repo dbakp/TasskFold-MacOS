@@ -101,6 +101,10 @@ public struct ProjectPulseLink: Equatable, Sendable {
 extension WidgetProjection {
     /// Bound titles and summaries, never the full task ledger, leave the app.
     static func pulsePayload(tasks: [Record], projects: [Record], activity: [Record], epoch: [Record], account: String, readable: Bool, now: Date, calendar input: Calendar, children: ChildWorkHistory? = nil) -> JSON {
+        pulsePayload(tasks: tasks, projects: projects, activity: activity, epoch: epoch, account: account, readable: readable, now: now, calendar: input, children: children, checking: { _ in })
+    }
+
+    static func pulsePayload(tasks: [Record], projects: [Record], activity: [Record], epoch: [Record], account: String, readable: Bool, now: Date, calendar input: Calendar, children: ChildWorkHistory? = nil, checking: (WidgetRenderCheckpoint) throws -> Void) rethrows -> JSON {
         guard readable, PulseProject.validID(account) else { return .null }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         let child = children.map { ChildWorkReading($0, now: now) }
@@ -120,12 +124,14 @@ extension WidgetProjection {
         let all = projects.filter { PulseProject.validID($0.id) && seen.insert($0.id.lowercased()).inserted }.sorted { $0.id < $1.id }
         let rootRecorded = epoch.first { $0.id == "current" }.flatMap { TaskPlanning.instant($0.string("recorded_from")) }.flatMap { $0 <= now ? $0.timeIntervalSince1970 : nil }
         let recorded = [rootRecorded, child?.recordedFrom?.timeIntervalSince1970].compactMap { $0 }.min()
-        let cards = all.prefix(2048).map { project -> PulseProject in
+        let cards = try all.prefix(2048).map { project -> PulseProject in
+            try checking(.pulse)
             let id = project.id.lowercased(), rows = groups[id] ?? []
             let history = ProjectPulseReading.History(project: id, parsed: events[id] ?? [])
             var days: [String: PulseDay] = [:]
             var partial = children != nil && rootRecorded == nil
             for offset in 0..<8 {
+                try checking(.pulseDay)
                 let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now))!
                 let key = ProjectPulseSnapshot.day(date, calendar: calendar)
                 let reading = ProjectPulseReading(project: id, tasks: rows, activity: [], now: offset == 0 ? now : date, calendar: calendar, work: work, childReading: child, history: history)

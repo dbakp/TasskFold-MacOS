@@ -1,0 +1,12 @@
+{
+  "core-ios": {
+    "allocatedBytes": 717889536,
+    "within768MiB": true,
+    "unmarkedCoreCachePreserved": true
+  },
+  "core-mac": {
+    "allocatedBytes": 659320832,
+    "within768MiB": true,
+    "unmarkedCoreCachePreserved": true
+  }
+}

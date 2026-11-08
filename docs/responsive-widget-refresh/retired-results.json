@@ -1,0 +1,13 @@
+{
+  "retired": [
+    {
+      "path": "/tmp/taskfold-widget-capacity-native-ios.xcresult",
+      "allocatedBytes": 475136
+    },
+    {
+      "path": "/tmp/taskfold-widget-context-native-ios-v2.xcresult",
+      "allocatedBytes": 430080
+    }
+  ],
+  "scope": "Only superseded accepted Taskfold native result bundles; extracted concise evidence and current result retained."
+}

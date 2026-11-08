@@ -1,0 +1,112 @@
+{
+  "reviewed": "2026-11-08",
+  "owner": "macOS",
+  "baselineCommit": "20a1dff9910754aac83d1f09c704cf8152bfa4bd",
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "6707fa22fddb13d43e0d17a206dcb4bd86e764b108891e517e6f6287a3526d93",
+    "Taskfold/Core/ProjectPulseWidget.swift": "248e9c1fa1205d450375f9a2184960d8d1fd2ded008bbb0e2e129cbe837aa154",
+    "Taskfold/Core/Store.swift": "bb07090c5715f34e6a236eaf1ebc3784f0b1d924d2f0b8b024b7b47022cacab1",
+    "Taskfold/TeamTemplateNativeFixture.swift": "840d3f51a36f719cba43f1f41b8069a9ac23b6caa7755514802c9d526483231a",
+    "TaskfoldTests/WidgetRenderCancellationTests.swift": "c4e1eba622dbb0b1baed7bd66bf9f5d0af1813b5d11d00d304555801f2a65173"
+  },
+  "focusedCore": {
+    "passed": 71,
+    "failed": 0,
+    "skipped": 0,
+    "newCancellationCases": 6,
+    "logSHA256": "5b83903d4a256e1181a1d0cdec25c886fd610e38cedabf3c720206a413c9f577",
+    "scope": "Actual task cancellation, a semaphore-held real projection superseded by newest queue work, all 12 stage types, inner list/filter/pulse/task/capacity loops, exact decoded full projection/feedback and unchanged source. Existing history golden, lists, forecast, startup/account fences also pass."
+  },
+  "nativePhone": {
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1794101002.649,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1794100926.014,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    },
+    "component": {
+      "capacitySeconds": 0.457355458,
+      "days": 8,
+      "sourceUnchanged": true,
+      "inputSHA256": "2710cf2b9d439b5c80c254899560479660ef264fba94926d115a72b26edfa345",
+      "cancelledBeforeLaterStages": true,
+      "tasks": 1000,
+      "fullPayloadSeconds": 2.631676292,
+      "accepted": true,
+      "freshWorkerRecoveredExactPayload": true
+    },
+    "actualStore": {
+      "clockRefreshQueued": true,
+      "savedDataUnchanged": true,
+      "latestRecovered": true,
+      "clockContextImmediate": true,
+      "accessFenceRejected": true,
+      "staleResultRejected": true,
+      "signOutRedactedImmediately": true
+    },
+    "logSHA256": "ca1fe368174aab7c0bb963fa48a090535bf184a54573e9455f5f1272758627f5",
+    "scope": "Signed isolated iPhone Simulator; synthetic 1,000-task component stops at pulse day before task/capacity/encoding stages, then fresh worker matches complete decoded payload and eight-day prior-planner golden. Separate actual Store clock refresh updates current clock context immediately and is held in background while interface executor continues. Seven Store privacy/recovery/clock assertions preserve memory and disk data."
+  },
+  "owningBuild": {
+    "terminalExit": 0,
+    "logSHA256": "0ab73d948d3253165f5feb100e6b56a7a9a96dee860293fc327822c86b8c98de",
+    "signing": "disabled; compile only",
+    "macRuntimeAccepted": false
+  },
+  "hostSourceAudit": {
+    "swiftFilesCompared": 185,
+    "namespaceOnlyDifferences": [
+      "Taskfold/Core/Backups.swift",
+      "Taskfold/Core/Backend.swift",
+      "Taskfold/Core/Store.swift",
+      "Taskfold/Core/WidgetActions.swift",
+      "Taskfold/Core/SharedCapture.swift"
+    ]
+  },
+  "normalInstall": false,
+  "normalGatesChanged": false,
+  "hostedChanges": false,
+  "limits": [
+    "Cancellation is cooperative between stages/items, not preemption within one date parse, query, hierarchy build or final JSON encoding.",
+    "Main-actor input capture and cross-process publication remain separate; clock refresh moves rendering only.",
+    "No physical FPS or whole-app navigation/drop smoothness acceptance.",
+    "Mac/iPad runtime, wider accessibility/account and retained-history/keep-old-version lifecycle remain open."
+  ],
+  "iterationNotes": [
+    "An early compile exposed default rethrows callback compatibility; unchanged nonthrowing reader APIs are retained with explicit cancellable overloads.",
+    "Initial tests incorrectly compared separately encoded JSON bytes; final tests compare decoded full values while still checking exact unchanged task rows. An intermediate throwing Boolean-expression compile error was corrected. Earlier attempts are not accepted evidence."
+  ],
+  "checkpoints": 74,
+  "substeps": 67
+}
