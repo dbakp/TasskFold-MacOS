@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Responsiveness · varied schedules",
-  "latest": "The large iPad check now includes 500 distinct schedules. Move preparation falls from 260–327 ms to 77–87 ms; through-save time from 322–402 ms to 139–156 ms. Initial measured dated reads fall from 313–363 ms to 86–92 ms. Real drops, cold data, planning Cancel and eight Store freshness checks pass; both builds pass. An earlier slow first-settlement sample is retained, so broader smoothness remains open. Cleanup reclaimed about 1.25 GB. Mac 48 remains installed; the latest ordinary optimizations await its next update, and phone installation stays deferred. Normal Mac49 is now compiled in Release, signed and exact archive/frozen-source verified from merged source; it is not installed because computer control still reports the desktop locked. Mac48 remains running. Phone installation stays deferred.",
+  "focus": "Saved-version recovery · full entry",
+  "latest": "The isolated iPhone now completes Previous editable version recovery through the actual saved-original/restoration entry, reviewed history, explicit save, lost-reply cold Check link and cold ended-cycle card. One repair is saved; prior originals/history and current notes/priority stay intact. Both own schema fixtures and SDK builds pass. Recovery wording is chronology-neutral. This closes one bounded native gap; wider format, Mac/iPad, speech, account/media and migration work remains. Normal Mac48 is still installed; verified49 awaits desktop access. Phone installation remains deferred.",
   "next": [
     "Install the prepared, verified normal Mac49 update once desktop access works. Preserve a fresh private safety copy and build48 rollback first, then verify actual startup, shared storage and saved work. No rebuild or repeated update/draft approval is needed. Mac48 is still running; phone installation stays deferred.",
     "Continue wider sustained first-use, navigation/drop/rendering, reconstructed-refresh and multiple-project scaling, account/accessibility and physical smoothness checks. Varied-schedule iPad warm/cold drops, actual planning Cancel and eight current Store freshness assertions are accepted; do not rerun unchanged passing scenarios for higher totals.",
-    "Finish wider account/task/shared-custodian, cross-device discovery and file/audio/history lifecycle before original-restoration activation. Current Finish, Restore/status/cold Undo/Redo and current-card scopes are recorded; native Mac/iPad/speech/HTTP Auth and other realms remain separate.",
+    "Continue wider older-work migration, other format/source entry variants, account/task/shared-custodian and cross-device/file/audio/history lifecycle before original-restoration activation. The normal-text iPhone Previous editable version entry, complete keep-editable save and cold pending/ended-cycle route now pass; new Mac/iPad/large-text/speech/HTTP Auth scopes remain separate.",
     "Improve genuinely generated on-device filter quality with a materially different, grounded design. Common descriptions now have a complete local path; the raw model remains known3/5, and the expanded twelve-goal oracle is still unaccepted. Do not rerun rejected prompts/schemas unchanged or count local drafts as inference.",
     "Complete broader native acceptance for templates, capture, notes/output and Watch where available. Do not repeat unchanged accepted cases or the unchanged Files-picker failure.",
     "Finish Mac/iPad Saved originals controls and wider account/accessibility behavior; then finish broader custodian cleanup, restoration/Undo and the larger older-task/history migration. Command-free discovery/export now has genuine API and Core proof. Keep wider mapped/shared-team/custodian, exact-cache and file/discussion ownership cases distinct; ordinary advanced rollout gates stay off.",
@@ -834,7 +834,7 @@
             "drop-schedule-reads/storage-cleanup.json",
             "drop-schedule-reads/core-cache-audit.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-voice",
@@ -1009,7 +1009,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Separate records, guarded edits, mixed completion, saved-original discovery/export/retention, copy/history mapping and scoped Restore/Undo/Redo/Finish have recorded service/client/native proof. Keep-restored saves retain the inverse, unknown data and prior history; current status cannot revive an ended cycle. A named Previous editable version now selects the retained inverse with fresh review and consent reset. Each schema passes 211 API checks, each client 45 focused cases (five new), and both builds pass. The real iPhone picker/lost-response Check/cold Undo/Redo preserves originals and prior histories; service recovery also makes the selected version editable and accepts ordinary edits without duplicating completion credit. Native keep-restored entry, pending-repair link and complete newer keep-editable interaction remain open. Wider account/task/custodian/file/audio/discussion ownership, cross-device discovery, exact-cache/larger-library and Mac/iPad/large-text/speech/native HTTP/branch-keyboard acceptance remain. Advanced flags and hosted services stay unchanged; normal Mac 48 is installed with saved-work preservation verified and final shared-storage UI readiness unverified.",
+              "detail": "Separate records, guarded edits, mixed completion, saved-original discovery/export/retention, copy/history mapping and scoped Restore/Undo/Redo/Finish have recorded service/client/native proof. Keep-restored saves retain the inverse, unknown data and prior history; current status cannot revive an ended cycle. A named Previous editable version now selects the retained inverse with fresh review and consent reset. Each schema passes 211 API checks, each client 45 focused cases (five new), and both builds pass. The real iPhone picker/lost-response Check/cold Undo/Redo preserves originals and prior histories; service recovery also makes the selected version editable and accepts ordinary edits without duplicating completion credit. The isolated normal-text iPhone now accepts Previous editable version through the actual restoration-card entry, complete history review, explicit save, cold pending-repair Check and cold ended-cycle actions. Exactly one repair is saved, with earlier originals and history preserved. Other format/source entry variants remain separate. Wider account/task/custodian/file/audio/discussion ownership, cross-device discovery, exact-cache/larger-library and Mac/iPad/large-text/speech/native HTTP/branch-keyboard acceptance remain. Advanced flags and hosted services stay unchanged; normal Mac 48 is installed with saved-work preservation verified and final shared-storage UI readiness unverified.",
               "steps": [
                 {
                   "state": "done",
@@ -1069,7 +1069,7 @@
                 },
                 {
                   "state": "done",
-                  "title": "Choose a saved copy with durable review/recovery; verify Mac and iPhone cold use"
+                  "title": "Choose saved copies with durable Mac/iPhone cold recovery; keep a previous version editable through the actual iPhone entry, history review and cold Check"
                 },
                 {
                   "state": "done",
@@ -1485,9 +1485,11 @@
             "restored-copy-review/README.md",
             "restored-copy-review/verification.json",
             "kept-restored-version/README.md",
-            "kept-restored-version/verification.json"
+            "kept-restored-version/verification.json",
+            "editable-recovery-entry/README.md",
+            "editable-recovery-entry/verification.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-watch",
@@ -2013,7 +2015,10 @@
     "varied-schedule-reads/verification.json",
     "varied-schedule-reads/comparison.json",
     "varied-schedule-reads/native-store-freshness.json",
-    "varied-schedule-reads/storage-cleanup.json"
+    "varied-schedule-reads/storage-cleanup.json",
+    "editable-recovery-entry/README.md",
+    "editable-recovery-entry/verification.json",
+    "editable-recovery-entry/prior-attempts.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2240,6 +2245,9 @@
     "duplicate-history-repair-native/verification.json": "95c758f713b374d01ffa31b95744dba3e20ef7231aa71add535b0f543723ee66",
     "duplicate-history-repair/README.md": "bbdac8ce08eb7bbf9173b5ebfb74516d385ec32bb355cfb8643d828c71f90ba9",
     "duplicate-history-repair/verification.json": "c61d5927c2b4c778fe82b8b79c6a853713c4fdc64da95c6cbd6cd033f893d899",
+    "editable-recovery-entry/README.md": "e59eca3fb7c37e4f21e3e169fec68e0e00023801d72d43a9b27e2fbdf93ce5c5",
+    "editable-recovery-entry/prior-attempts.json": "18e39fe2946f7bc85bd4f394950ca60de3080185d221c7926764054ffcd95b46",
+    "editable-recovery-entry/verification.json": "2e689a4a81c45dde34c84aab6164452a676abf14f837de7d2290989eecb96ed1",
     "exact-child-field-storage/README.md": "a3fc98bb8f1b35bcf778f85c1c3950a5b0f97aab5dad89a7fc0a0eb580fb6b2d",
     "exact-child-field-storage/verification.json": "68481e288b979f7becc06339786ad4af3d3957104be153058f3e44fd324a5cf4",
     "field-activity/README.md": "dbae120927eda8cc30301a51ba174c26f3f74790c76aa4a52cf6ce86d5af42b9",

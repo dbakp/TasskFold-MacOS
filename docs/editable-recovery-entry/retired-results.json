@@ -1,0 +1,20 @@
+{
+  "freeBeforeBytes": 32228450304,
+  "freeAfterBytes": 32415412224,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-editable-entry-native-ios-v1.xcresult",
+      "allocatedBytes": 32423936,
+      "summarySHA256": "45e280087bf7f2c7164bff0cae3e2f2539d59dd738d7ddd9f580cbd399f428f3",
+      "conciseFailurePreserved": "/tmp/taskfold-editable-entry-native-v1-failure.json"
+    },
+    {
+      "path": "/tmp/taskfold-editable-entry-native-ios-v2.xcresult",
+      "allocatedBytes": 155717632,
+      "summarySHA256": "c386a4ff10dd6a730813a2693b4602c2cd53b021c2e5ef9be90e0c9fa9ec2dfe",
+      "conciseFailurePreserved": "/tmp/taskfold-editable-entry-native-v2-failure.json"
+    }
+  ],
+  "currentPassingResultRetained": "/tmp/taskfold-editable-entry-native-ios-v3.xcresult",
+  "savedAppAndDeviceDataUntouched": true
+}
