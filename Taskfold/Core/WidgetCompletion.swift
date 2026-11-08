@@ -17,7 +17,45 @@ struct WidgetCompletionCache: Codable, Equatable, Sendable {
 
 enum WidgetCompletion {
     enum Plan { case complete([Mutation]), saved, stale }
-    static func prepare(_ snapshot: inout Snapshot) {
+    /// Caller-confined, bounded memo of computed hashes, never saved widget
+    /// tokens or task text. A fresh Store/scope always computes its own values.
+    final class SignatureCache {
+        struct Scope: Equatable {
+            let workspace: WorkspaceBinding
+            let session: UUID
+            let access: UUID
+        }
+        struct Statistics: Equatable { var reused = 0, computed = 0, retained = 0 }
+        private struct Entry { let source: Record.SourceToken; let signature: String }
+        private let maximumEntries: Int
+        private var scope: Scope?
+        private var entries: [String: Entry] = [:], next: [String: Entry] = [:]
+        private(set) var statistics = Statistics()
+        init(maximumEntries: Int = 4096) { self.maximumEntries = max(0, maximumEntries) }
+        func clear() { scope = nil; entries = [:]; next = [:]; statistics = Statistics() }
+        fileprivate func begin(_ current: Scope?) {
+            if current == nil || current != scope { entries = [:] }
+            scope = current; next = [:]; statistics = Statistics()
+        }
+        fileprivate func signature(for row: Record, compute: () -> String) -> String {
+            let id = row.id.lowercased()
+            guard id.utf8.count <= 256 else { statistics.computed += 1; return compute() }
+            let source = row.authoredSourceToken
+            let value: String
+            if scope != nil, let saved = entries[id], saved.source == source {
+                value = saved.signature; statistics.reused += 1
+            } else { value = compute(); statistics.computed += 1 }
+            if scope != nil, next.count < maximumEntries || next[id] != nil {
+                next[id] = Entry(source: source, signature: value)
+            }
+            return value
+        }
+        fileprivate func finish() { entries = next; next = [:]; statistics.retained = entries.count }
+    }
+    static func prepare(_ snapshot: inout Snapshot, signatures: SignatureCache? = nil, scope: SignatureCache.Scope? = nil) {
+        signatures?.begin(scope)
+        defer { signatures?.finish() }
+
         let tasks = snapshot.tables["tasks"] ?? []
         let instants = InstantNormalizer()
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
@@ -26,9 +64,12 @@ enum WidgetCompletion {
         snapshot.widgetCompletion.states = snapshot.widgetCompletion.states.filter { ids.contains($0.key) }
         for task in tasks where !task.id.isEmpty {
             let id = task.id.lowercased()
-            var values: [JSON] = [.bool(task.completed), .string(instants.canonical(task.string("created_at"))), .string(instants.canonical(task.string("completed_at"))), task["completion_version"], task["is_heading"]]
-            if !task.string("task_generation").isEmpty { values.append(task["task_generation"]) }
-            let signature = (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) } ?? ""
+            func compute() -> String {
+                var values: [JSON] = [.bool(task.completed), .string(instants.canonical(task.string("created_at"))), .string(instants.canonical(task.string("completed_at"))), task["completion_version"], task["is_heading"]]
+                if !task.string("task_generation").isEmpty { values.append(task["task_generation"]) }
+                return (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) } ?? ""
+            }
+            let signature = signatures.map { $0.signature(for: task, compute: compute) } ?? compute()
             if snapshot.widgetCompletion.states[id]?.signature != signature {
                 snapshot.widgetCompletion.states[id] = .init(token: UUID().uuidString.lowercased(), signature: signature)
             }

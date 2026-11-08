@@ -96,7 +96,7 @@ enum AuthoredValueComparison {
 
 /// Immutable, nonpersistent identity of one authored record value. Value copies
 /// retain it; any fields write retires it before the next readable value escapes.
-private final class RecordSourceIdentity: Sendable {}
+fileprivate final class RecordSourceIdentity: Sendable {}
 
 /// Familiar values stay editable; unrepresentable future values retain exact
 /// validated bytes through Taskfold’s preserving codec.
@@ -140,6 +140,14 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     /// that two immutable copies have exactly the same authored fields.
     static func == (lhs: Self, rhs: Self) -> Bool { lhs.fields == rhs.fields }
     func sharesAuthoredSource(with other: Self) -> Bool { sourceIdentity === other.sourceIdentity }
+    /// Opaque, nonpersistent value identity. It retains no record fields and
+    /// supplies no account/access authority; caches must bind their own scope.
+    struct SourceToken: Equatable, Sendable {
+        fileprivate let identity: RecordSourceIdentity
+        static func == (lhs: Self, rhs: Self) -> Bool { lhs.identity === rhs.identity }
+    }
+    var authoredSourceToken: SourceToken { SourceToken(identity: sourceIdentity) }
+
     var id: String { string("id") }
     init(_ fields: [String: JSON] = [:]) { self.fields = fields }
     init(from decoder: Decoder) throws {

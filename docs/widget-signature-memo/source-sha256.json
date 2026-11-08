@@ -1,0 +1,7 @@
+{
+  "Taskfold/Core/Models.swift": "71ae71729e76035f791f4bd4e01db3f0d362728331c26e78fd2e94064dc42ffa",
+  "Taskfold/Core/WidgetCompletion.swift": "89fb6499ae740816a8b50ec09befd09f4e15a69e988d97e9c26c3757e1c56c17",
+  "Taskfold/Core/Store.swift": "64fa3b3a0a0324ebc258cec7cd4c44ee05ad1ce303eb9ceef4d42f03c24a3baf",
+  "TaskfoldTests/WidgetSignatureCacheTests.swift": "a009c95b73f3bd7d4dcac763aa4866fa45542c4cc4ad522cb3d135667af1ac7d",
+  "TaskfoldTests/RemoteRowReuseTests.swift": "16745c9f0a512b4a0db19a65b63b41641820e6316317d40d25a04d466a126255"
+}

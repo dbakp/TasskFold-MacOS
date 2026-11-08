@@ -1,0 +1,22 @@
+{
+  "ios": {
+    "matchingAppSwiftSources": 178,
+    "applicationCodeImage": "Taskfold.debug.dylib",
+    "applicationCodeSHA256": "4f573395776250e4c851298a7f4fabcf4d61284b2f0ce228190967c521b5e145",
+    "memoAndSourceTokenSymbolsPresent": true,
+    "compiledAfterAllPreparedSources": true,
+    "sdkBuildExit": 0,
+    "normalConfigurationUnchanged": true,
+    "newNativeUIOrHardwareAcceptance": false
+  },
+  "mac": {
+    "matchingAppSwiftSources": 185,
+    "applicationCodeImage": "Taskfold.debug.dylib",
+    "applicationCodeSHA256": "918306590ede099405d8242c836b37b6cf3eab77f564778b8eea65aa2c5a42e8",
+    "memoAndSourceTokenSymbolsPresent": true,
+    "compiledAfterAllPreparedSources": true,
+    "sdkBuildExit": 0,
+    "normalConfigurationUnchanged": true,
+    "newNativeUIOrHardwareAcceptance": false
+  }
+}
