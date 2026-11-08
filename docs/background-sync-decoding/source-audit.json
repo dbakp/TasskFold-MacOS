@@ -1,0 +1,18 @@
+{
+  "ios": {
+    "matchingAppSwiftSources": 178,
+    "binarySHA256": "f06f73f060fe357273f07983a1c812a3a3782a834ec8c337b45db80efa6f5c62",
+    "compiledAfterPreparedSources": true,
+    "sdkBuildExit": 0,
+    "normalConfigurationUnchanged": true,
+    "newNativeRuntimeAcceptance": false
+  },
+  "mac": {
+    "matchingAppSwiftSources": 185,
+    "binarySHA256": "7a2231c6327b65d5e81467bf1f793379f6c5b4a6c161b5fc8fdc1167deab7f2f",
+    "compiledAfterPreparedSources": true,
+    "sdkBuildExit": 0,
+    "normalConfigurationUnchanged": true,
+    "newNativeRuntimeAcceptance": false
+  }
+}

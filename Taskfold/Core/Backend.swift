@@ -1429,10 +1429,12 @@ final class Backend: NSObject {
             let owner = expected, generation = sessionGeneration
             var result: [Record] = []; var cursor: Int64 = 0; var seen = Set<String>(); let nodeParser = TaskNodeActivity.Parser()
             while true {
+                try Task.checkCancellation()
                 guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
                 let data = try await request(table == TaskNodeActivity.table ? TaskNodeActivity.query(after: cursor) : TaskActivityPage.query(after: cursor), expectedAccount: owner)
                 guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
-                let page = try TaskfoldJSONDecoder().decode([Record].self, from: data)
+                let page = try await TaskfoldJSONDecoder.decodeResponse([Record].self, from: data)
+                guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
                 if table == TaskNodeActivity.table {
                     guard page.count <= 500, result.count + page.count <= (maximumRows ?? 100_000),
                           page.allSatisfy({ nodeParser.event($0) != nil && seen.insert($0.id.lowercased()).inserted }) else { throw TeamProjectValue.invalid }
@@ -1446,9 +1448,10 @@ final class Backend: NSObject {
         var result: [Record] = []; var offset = 0; var seen=Set<String>()
         let order=table=="profiles" ? "user_id":"id"
         while true {
+            try Task.checkCancellation()
             guard epoch==sessionGeneration,expected==session?.user.id else {throw CancellationError()}
             let data = try await request("/rest/v1/\(table)?select=*&order=\(order)&offset=\(offset)&limit=500",expectedAccount:expected)
-            let page = try TaskfoldJSONDecoder().decode([Record].self, from: data)
+            let page = try await TaskfoldJSONDecoder.decodeResponse([Record].self, from: data)
             guard epoch==sessionGeneration,expected==session?.user.id else {throw CancellationError()}
             result += page
             if let maximumRows {guard result.count<=maximumRows,page.count<=500,page.allSatisfy({row in let id=table=="profiles" ? row.string("user_id"):row.id;return !id.isEmpty && seen.insert(id).inserted}) else {throw TeamProjectValue.invalid}}

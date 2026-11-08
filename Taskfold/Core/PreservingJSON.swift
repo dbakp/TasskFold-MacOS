@@ -153,6 +153,23 @@ final class TaskfoldJSONDecoder: @unchecked Sendable {
         if !spans.isEmpty { decoder.userInfo[PreservedJSONDecodingContext.key] = PreservedJSONDecodingContext(data: data, spans: spans) }
         return try decoder.decode(type, from: data)
     }
+    /// Network pages are immutable values. Decode them away from the caller's
+    /// actor so refreshes cannot monopolize interface work. Callers must still
+    /// recheck their account/session boundary after awaiting the result.
+    static func decodeResponse<T: Decodable & Sendable>(_ type: T.Type, from data: Data) async throws -> T {
+        try Task.checkCancellation()
+        let worker = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
+            let value = try TaskfoldJSONDecoder().decode(type, from: data)
+            try Task.checkCancellation()
+            return value
+        }
+        let value = try await withTaskCancellationHandler {
+            try await worker.value
+        } onCancel: { worker.cancel() }
+        try Task.checkCancellation()
+        return value
+    }
     private static func utf8(_ data: Data) throws -> Data {
         let prefix = Array(data.prefix(4)); let encoding: String.Encoding, skip: Int
         if prefix.starts(with: [0xEF,0xBB,0xBF]) { return data.dropFirst(3) }

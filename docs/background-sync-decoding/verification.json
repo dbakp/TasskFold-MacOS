@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-08",
+  "productionChange": "Decode workspace and activity response pages away from the interface actor",
+  "perOwnerCore": {
+    "passed": 208,
+    "failed": 0,
+    "newCases": 6
+  },
+  "sdkBuilds": {
+    "ios": 0,
+    "mac": 0
+  },
+  "sourceAudit": "source-audit.json",
+  "mac52": "Signed optimized Release, frozen clean feature commit, exact verified archive; not installed",
+  "normalMacInstalled": "48",
+  "newNativeScreenOrDeviceAcceptance": false,
+  "broaderSmoothnessAccepted": false,
+  "hostedOrSchemaChanges": false,
+  "normalConfigurationChanged": false,
+  "phoneInstallation": "deferred",
+  "goalRemainsActive": true
+}

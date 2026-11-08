@@ -187,6 +187,33 @@ final class TeamWorkspaceTests:XCTestCase {
         WorkspaceHTTP.handler={request,peer in XCTAssertTrue(request.url!.query!.contains("order=user_id"));peer.finish(.array([.object(["user_id":.string(b.account),"display_name":.string("Current person")])]))}
         let people=try await api.rows("profiles",expectedAccount:b.account,maximumRows:100000);XCTAssertEqual(people.count,1)
     }
+    @MainActor func testBackgroundPageReadKeepsEveryRowAndOffsetAcrossPages() async throws {
+        let b = try boundary(), api = try backend(b.account)
+        var offsets: [Int] = []
+        WorkspaceHTTP.handler = { request, peer in
+            let offset = Int(URLComponents(url: request.url!, resolvingAgainstBaseURL: false)!.queryItems!.first { $0.name == "offset" }!.value!)!
+            offsets.append(offset)
+            peer.finish(.array((offset..<min(offset + 500, 502)).map {
+                .object(["id": .string("row-" + String($0)), "title": .string("Task " + String($0))])
+            }))
+        }
+        defer { WorkspaceHTTP.handler = nil }
+        let rows = try await api.rows("tasks", expectedAccount: b.account, maximumRows: 1000)
+        XCTAssertEqual(offsets, [0, 500])
+        XCTAssertEqual(rows.map(\.id), (0..<502).map { "row-" + String($0) })
+        XCTAssertEqual(rows.last?.title, "Task 501")
+    }
+    @MainActor func testBackgroundHistoryReadStillRejectsOutOfOrderCursor() async throws {
+        let b = try boundary(), api = try backend(b.account)
+        WorkspaceHTTP.handler = { _, peer in
+            peer.finish(.array([.object(["id": .string("a"), "sequence": .number(2)]),
+                                .object(["id": .string("b"), "sequence": .number(1)])]))
+        }
+        defer { WorkspaceHTTP.handler = nil }
+        do { _ = try await api.rows(TaskActivity.table, expectedAccount: b.account); XCTFail("History cannot reorder itself silently") }
+        catch is CancellationError { XCTFail("This is an invalid history page") }
+        catch { }
+    }
     func testNewDependentWorkNeedsAnotherRecoveryButUnchangedQuarantineDoesNot() throws {
         let b=try boundary();var local=try snapshot();let task=local.tables["tasks"]![0],first=try edit(task,boundary:b)
         local.apply(first);local.pending=[first]

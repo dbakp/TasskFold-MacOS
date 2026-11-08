@@ -1,0 +1,36 @@
+{
+  "platform": "mac",
+  "configuration": "Release",
+  "version": "1.2.0",
+  "build": "52",
+  "sourceRevision": "a159528d194973ca0498313b9e202540f5a40f06",
+  "sourceFingerprint": "128cf8efcbd308998746d587146e34ad38d8e98af52a3215d2130f92fedbbcb5",
+  "signatureVerified": true,
+  "archivePayloadVerified": true,
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "developmentProfileExpires": "2026-11-10T18:32:04+00:00",
+  "sourceWasDirty": false,
+  "installed": false,
+  "published": false,
+  "date": "2026-11-08",
+  "frozenSourceAndToolsExact": true,
+  "archiveDigestExact": true,
+  "normalFlagsMatchInstalled48": true,
+  "installed48Unchanged": true,
+  "backgroundSyncDecodingIncluded": true,
+  "retired": {
+    "build": "51",
+    "archiveSHA256": "b9422a0e4a2b8a40cd82712e8cc7f9aa612fe2c56e87d6d1b500b0f9987aac0c",
+    "bytes": 20879106,
+    "reason": "Superseded uninstalled candidate; verified52 and installed48/older46 rollback packages preserved"
+  },
+  "desktopAccess": "Computer control still reports locked; no fresh safety copy/install/startup claim."
+}
