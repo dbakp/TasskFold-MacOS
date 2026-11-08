@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-08",
+  "focusedCases": 31,
+  "newFunctionalCases": 4,
+  "failures": 0,
+  "scope": "Owning Core via SwiftPM on this Mac; not iOS SDK/device, actual Store UI, full-save timing or FPS acceptance",
+  "change": "Preserve metadata source after all receipt checks when the validated merge is exactly the proposed representation; avoid identical optional-integer fence write",
+  "unchanged": "Validation, accepted receipt insertion, generation fence, stale/missing restoration, empty normalization, wire format and atomic cache writer",
+  "installedMacBuild": 53,
+  "newNormalPackage": false,
+  "signingBlock": "Xcode development account unavailable; no unchanged provisioning retry",
+  "logSHA256": "c4129946d347fc063a34152a7d5c5b460573e92fe6f55d003061b4727e0795e5",
+  "sourceSHA256": {
+    "Taskfold/Core/WearableReceipts.swift": "9c2bcc4371d12a446a0ab4d01fe8fd8518b632fa1bcf7703f0973f601f92e77d",
+    "TaskfoldTests/SnapshotMetadataProofTests.swift": "c546dadc37d4898341b30ab1f046f6a57f1e24a46307f4d20f2b7d539279c611"
+  }
+}

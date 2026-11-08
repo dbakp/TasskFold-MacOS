@@ -61,8 +61,18 @@ enum WearableReceiptLedger {
             result[accepting.key] = accepting
         }
         guard valid(result) else { throw failure() }
-        durable.wearableReceiptGeneration = previous.wearableReceiptGeneration
-        durable.wearableReceipts = result.isEmpty ? nil : result
+        if durable.wearableReceiptGeneration != previous.wearableReceiptGeneration {
+            durable.wearableReceiptGeneration = previous.wearableReceiptGeneration
+        }
+        // Every entry in next was assigned above after validation. With no
+        // accepted receipt and no extra preserved entries, result therefore
+        // contains exactly the proposed representations, not merely equal
+        // strings. Keep the captured metadata proof instead of rewriting it.
+        // Empty dictionaries still normalize to nil; stale generations and
+        // recovered missing receipts still take the ordinary write path.
+        if accepting != nil || proposedGeneration != generation || next.count != result.count || result.isEmpty {
+            durable.wearableReceipts = result.isEmpty ? nil : result
+        }
         return durable
     }
     static func failure() -> CocoaError { CocoaError(.fileReadCorruptFile) }

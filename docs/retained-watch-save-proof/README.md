@@ -1,0 +1,9 @@
+# Retain prepared saves with Watch history
+
+The final Watch receipt staging used to assign the same nonempty receipt map and optional integer generation on every save. Those writes invalidate the private snapshot metadata source, forcing the exact-byte fallback even when the worker prepared the right complete snapshot.
+
+The ledger still validates the old and proposed histories, checks the generation, enforces explicit acceptance and validates the merged result. Each proposed receipt is assigned into the temporary merge. With no explicit acceptance, the same generation and equal nonzero map sizes, that merge therefore has exactly the proposed representations. It can retain the original proposed map without a property write. This does not use general Swift string equality as a byte-identity shortcut. An unchanged optional integer generation likewise requires no write. Missing receipts, stale generations, explicit acceptance and empty-to-nil normalization retain their ordinary paths.
+
+Each owner passes 31 focused Core cases, including four new cases for nonempty worker preparation/read-memo validation, canonically equal but byte-different Unicode accounts, missing-history restoration, explicit new acceptance, normalization and generation repair. Existing corruption, oversize, full restart and replay tests pass. This is a pure Core save-path result; no total-save speed, physical smoothness, native SDK or UI acceptance is claimed. No user data, format, permissions or rollout gates change.
+
+Mac 53 remains installed and usable; this source has no new normal package. The separate shared-group provisioning fix awaits the existing development account in Xcode. No unchanged provisioning attempt or Simulator boot is made. Both reused Core caches remain below 768 MiB; cleanup removed no protected products or data.
