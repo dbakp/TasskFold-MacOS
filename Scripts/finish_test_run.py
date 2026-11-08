@@ -46,8 +46,9 @@ def finish(simulators=(), build_caches=(), apply=False):
                         and any(alias in line for alias in aliases) for line in running)
         if compiling or any(line.strip().startswith(str(cache) + '/') and '.app/' in line for line in running):
             report['skipped'].append({'cache': str(cache), 'reason': 'Compiler or cache app still running'}); continue
-        # Preserve costly app objects when healthy storage only needs a budget
-        # trim. SDK modules regenerate more cheaply than the entire app.
+        # Prune cheap generated caches before expensive app objects. Between
+        # the soft and hard floors, stop once the complete cache fits its budget;
+        # crossing the soft floor alone must not force a full app rebuild.
         candidates = [cache / name for name in ['Index.noindex', 'CompilationCache.noindex', 'SDKExplicitPrecompiledModules', 'ModuleCache.noindex', 'SDKStatCaches.noindex', 'Build/Intermediates.noindex']]
         metadata = cache / 'Build/Intermediates.noindex/XCBuildData'
         for path in candidates + [metadata]:
@@ -56,11 +57,14 @@ def finish(simulators=(), build_caches=(), apply=False):
         sizes = {path: allocated(path) for path in candidates}
         initial_total = allocated(cache)
         total = initial_total
-        healthy = shutil.disk_usage(cache).free >= 30 * 1024**3
+        free = shutil.disk_usage(cache).free
+        healthy = free >= 30 * 1024**3
+        critical = free < 20 * 1024**3
         budget = 768 * 1024**2
+        transient = {'Index.noindex', 'CompilationCache.noindex'}
         retired = []
         for path in candidates:
-            if healthy and total <= budget: break
+            if not critical and total <= budget and (healthy or path.name not in transient): break
             if path.exists():
                 report['actions'].append({'path': str(path), 'kind': 'completedCompilerCache', 'allocatedBytes': sizes[path]})
                 if apply: shutil.rmtree(path)
@@ -74,9 +78,13 @@ def finish(simulators=(), build_caches=(), apply=False):
             report['actions'].append({'path': str(metadata), 'kind': 'completedBuildMetadata', 'allocatedBytes': size})
             if apply: shutil.rmtree(metadata)
             total -= size
-        if healthy:
-            reason = ('Reusable compiler cache within 768 MiB budget' if total <= budget else 'Protected products/evidence exceed budget; reviewed cleanup needed') if apply or initial_total <= budget else 'Dry-run budget trim; no files removed'
-            report['skipped'].append({'cache': str(cache), 'reason': reason, 'allocatedBytes': total if apply else initial_total, 'projectedAllocatedBytes': total, 'within768MiB': total <= budget})
+        reason = ('Reusable compiler cache within 768 MiB budget' if total <= budget else 'Protected products/evidence exceed budget; reviewed cleanup needed') if apply or initial_total <= budget else 'Dry-run budget trim; no files removed'
+        if not apply and retired:
+            reason = 'Dry-run cache trim; no files removed'
+        elif critical and total <= budget:
+            reason = 'Regenerable caches retired below the 20 GiB floor; protected products retained'
+        report['skipped'].append({'cache': str(cache), 'reason': reason, 'allocatedBytes': total if apply else initial_total, 'projectedAllocatedBytes': total, 'within768MiB': total <= budget,
+                                  'storagePressure': 'critical' if critical else 'normal' if healthy else 'constrained', 'budgetBytes': budget})
     report['freeAfterBytes'] = shutil.disk_usage('/tmp').free
     report['actualFreeChangeBytes'] = report['freeAfterBytes'] - report['freeBeforeBytes']
     return report

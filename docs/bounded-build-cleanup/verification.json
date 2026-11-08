@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-08",
+  "owner": "TasskFold-MacOS",
+  "tests": 20,
+  "passed": 20,
+  "failed": 0,
+  "newCases": 7,
+  "sourceSHA256": {
+    "Scripts/finish_test_run.py": "e4a6511d640947b282554c7d9ef33abaa2967eaacbc5a8f40308ce85c187ec4c",
+    "Scripts/test_finish_test_run.py": "ad3a19f1aab8955379d2e476f6812381acf0eacaa09d50240294923a363376cc"
+  },
+  "testLogSHA256": "b1da13b9f0aa3ba0281ebb23b53a10dece8d0b99e03a334e7e5b85e0156b279e",
+  "scope": "Real temporary-file cleanup and mocked storage pressure/oversized allocations; actual current cache and binary/plan preservation audit",
+  "actualBuildTimingMeasured": false,
+  "appSourceChanged": false,
+  "pxCheckpointPromoted": false
+}

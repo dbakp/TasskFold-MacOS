@@ -11656,3 +11656,6 @@ Offline long-task filters (8 November): explicit lower estimate bounds now use t
 
 
 Native iPhone long-task filter acceptance (8 November): normal/largest signed Simulator reviews verify inclusive/strict one-hour matches, local attribution, read-only preview/Use/Cancel and exact filter-only Save/cold return. The initial outer reporter fails after Xcode moves the container; retained independent readback proves fresh test records and exact restoration of81 prior fixture files. No native test rerun, Mac acceptance or normal update. Source/signing/screens/cleanup: `native-long-task-filter-review/`. The preserved Mac heading-key plan remains pending actual desktop access.
+
+
+Bounded build cleanup (8 November): between20–30GiB free, completed-cache cleanup now stops at the768MiB budget after retiring cheap scratch, preserving reusable app objects. Below20GiB aggressive regeneration-only cleanup remains. Each owner passes20 checks; actual iOS/Mac product and plan hashes are unchanged. No SDK build-time gain or app-feature completion is claimed. Scope and audit: `bounded-build-cleanup/`.

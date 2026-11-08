@@ -5,7 +5,7 @@
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
   "focus": "Native filter review and note keyboard checks",
-  "latest": "Long-task filter review now passes on the iPhone Simulator in normal and largest text: exact inclusive/strict matches, read-only preview/Use/Cancel, explicit filter-only Save and cold return. The reporting script’s stale container path is retained as a failure; verified readback restores the earlier fixture exactly. The prepared Mac note keyboard check still awaits desktop access. Installed Mac53 is unchanged.",
+  "latest": "The iPhone long-task filter flow passes normal/largest text, read-only review, Save and cold return. Cleanup now retains reusable build objects once a constrained cache fits768MiB, while keeping aggressive cleanup below20GiB. Each owner passes20 cleanup checks; actual app images/test plans stay intact. The Mac keyboard check still awaits desktop access. Installed Mac53 is unchanged.",
   "next": [
     "Finish the existing-group signing fix when Xcode’s development account is available. The real54 attempt stopped before compilation with No Accounts and missing App Groups capability/entitlement. The user has been asked to sign into Xcode → Settings → Accounts; do not request credentials in chat or repeat the unchanged build. Preserve group.com.dbakp.taskfold and all existing shared data. Require actual app/widget/share profile authorization, then verify startup/lookup/prompt behavior before calling the recurring prompt fixed. Mac53 remains installed/usable; no routine update approval is needed. Phone installation remains deferred.",
     "Continue final ledger/file-save costs, nonempty/changed-metadata fallbacks, cold/child-heavy preparation and sustained navigation/rendering across projects/platforms/accounts/accessibility. Unchanged metadata has a bounded proof and worker-validation reuse with real app-sync recovery evidence. The 5,000-root admission diagnostic is not full-save or physical smoothness acceptance. Mac 53 is already installed; include the newer metadata source in the next coherent update after the higher-priority shared-storage signing followup.",
@@ -2140,7 +2140,9 @@
     "note-heading-command-scope/observed-collision.json",
     "note-heading-command-scope/mac-source-audit.json",
     "note-heading-command-scope/mac-signatures.json",
-    "note-heading-command-scope/mac-storage-cleanup.json"
+    "note-heading-command-scope/mac-storage-cleanup.json",
+    "bounded-build-cleanup/README.md",
+    "bounded-build-cleanup/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2224,6 +2226,8 @@
     "background-sync-refresh/native-auth-rest.json": "4253238b1df1c10eb422404c609c3e211b219461478934221ec6b2fe0fa40d81",
     "background-sync-refresh/source-audit.json": "e64875a07c444235b61b995331b14e55cc5ff75ef722351f910b0ff64cb26873",
     "background-sync-refresh/verification.json": "76326d63208be568f427f21e5262d08c6bbf2ecc9a3be4d55c3aefe921378e8f",
+    "bounded-build-cleanup/README.md": "6b59344446a89676905621f11daf26dd5dc1b9f346dda7b77bc94dcaa4a61e67",
+    "bounded-build-cleanup/verification.json": "42c1d8759d433c7f068f116ba81642579f010b3f35c8c5aaf0182d12b3d61410",
     "calendar-archive-reading/README.md": "0fb3ae304da0eb3877e1fdfe54e20fabdd5b084049a42dcb2f393d3b1ddc92cf",
     "calendar-archive-reading/core-model.json": "0f4e86d537d6c5da4e2754d0c3d9360f7bfc5ddd89fe50e41eefedb95e9af0bf",
     "calendar-archive-reading/final-cleanup.json": "49c95e8efc6e216a00f3a8c2aabf2ea8679e81b3d47a24b02d07b639da710193",
