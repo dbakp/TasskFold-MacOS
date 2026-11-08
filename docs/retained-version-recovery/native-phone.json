@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "scope": "Genuine local complete schema; reserved native SQL role/session channel, not native HTTP Auth",
+  "checks": [
+    "four reviewed native writes; lost initial reply resolved through actual status",
+    "named newer version selected through fresh review; consent reset; lost reply checked; cold Undo Redo return to preceding editable work; originals and prior history preserved"
+  ],
+  "final": {
+    "phase": "undone",
+    "revision": 4,
+    "source": "restore_newer",
+    "requests": 4
+  },
+  "nativeUIObserved": true,
+  "fixtureRemoved": true
+}

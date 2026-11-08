@@ -1,0 +1,14 @@
+[
+  {
+    "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+    "allocatedBytes": 726036480,
+    "within768MiB": true,
+    "unmarkedReadOnlyAudit": true
+  },
+  {
+    "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+    "allocatedBytes": 667439104,
+    "within768MiB": true,
+    "unmarkedReadOnlyAudit": true
+  }
+]

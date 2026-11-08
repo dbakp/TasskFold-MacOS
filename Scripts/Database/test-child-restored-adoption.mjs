@@ -214,5 +214,66 @@ try{
  await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_enabled=false,archive_restore_reversals_enabled=false,archive_restore_finish_enabled=false,archive_restore_adoption_enabled=false');
  const finished=ok('live status remains readable with mutation gates off',await live(cycle));check('live finished state has no reversal or retained newer adoption archive',finished.phase==='finished'&&finished.revision===5&&!finished.structure_current&&!finished.newer_retained);report.liveStatusContract.lifecycle.push(finished);
 
+ // Recover the independently retained newer inverse, never the archive root by accident.
+ await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_enabled=true,archive_restore_reversals_enabled=true,archive_restore_finish_enabled=true');
+ const choiceReview=(mode,repair=result.request_id,archive=result.archive_id)=>api('/rpc/taskfold_review_child_restore',{_mode:mode,_repair:repair,_archive:archive,_restore:null});
+ const choiceBefore=await state();
+ ok('ordinary archive has no retained newer choice',await choiceReview('restore_newer',ordinarySaved.request_id,ordinarySaved.archive_id),409);
+ const olderChoiceWire=await choiceReview('restore'),olderChoice=ok('review named older version',olderChoiceWire);
+ const newerChoiceWire=await choiceReview('restore_newer'),newerChoice=ok('review named retained newer version',newerChoiceWire);
+ check('both named choices are available',olderChoice.has_newer_version&&newerChoice.has_newer_version&&newerChoice.mode==='restore_newer'&&newerChoice.revision===0&&newerChoice.restore_id===null);
+ check('newer target is exact retained inverse not older root',await runtime.raw(`select (${lit(newerChoiceWire.text)}::jsonb->'target_source')=original->'retained_restoration'->'payload'->'before'->'tree' and (${lit(olderChoiceWire.text)}::jsonb->'target_source')=original->'root'->'subtasks' and original->'root'->'subtasks' is distinct from original->'retained_restoration'->'payload'->'before'->'tree' from taskfold_private.child_task_repair_originals where id=${lit(result.archive_id)}`)==='t');
+ check('named review is read only',await state()===choiceBefore);
+ const newerCommand={...Object.fromEntries(restoreKeys.map(k=>[k,newerChoice[k]])),request_id:randomUUID()};
+ for(const table of ['tasks','task_node_activity']){
+  await runtime.raw(`create policy newer_deny on public.${table} as restrictive for select to authenticated using(false)`);
+  ok('newer review honors caller '+table+' RLS',await choiceReview('restore_newer'),403);
+  await runtime.raw(`drop policy newer_deny on public.${table}`);
+ }
+ ok('another account cannot review newer archive',await api('/rpc/taskfold_review_child_restore',{_mode:'restore_newer',_repair:result.request_id,_archive:result.archive_id,_restore:null},other.access_token),403);
+ check('choice access refusals preserve source and receipts',await state()===choiceBefore);
+ const unknown=ok('unknown newer request check',await api('/rpc/taskfold_restore_child_original',{_operation:'check',_body:newerCommand}));check('checking newer choice does not apply it',unknown.state==='unknown'&&await state()===choiceBefore);
+ await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_enabled=false');
+ ok('newer choice obeys paused mutation gate',await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:newerCommand}),503);
+ check('paused newer save preserves all work',await state()===choiceBefore);
+ await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_enabled=true');
+ const stoppedChoice={...newerCommand,request_id:randomUUID()};
+ const closedChoice=ok('stop named newer request',await api('/rpc/taskfold_restore_child_original',{_operation:'close',_body:stoppedChoice}));
+ check('stopped newer request remains closed on late send',closedChoice.state==='closed'&&ok('late send of stopped newer choice',await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:stoppedChoice})).state==='closed');
+ const newerRoot=await runtime.raw(`select (to_jsonb(t)-'subtasks')::text from public.tasks t where id=${lit(f.id)}`),newerHistory=await runtime.raw(`select jsonb_agg(to_jsonb(h) order by sequence)::text from public.task_node_activity h where task_id=${lit(f.id)}`),currentTree=await runtime.raw(`select subtasks::text from public.tasks where id=${lit(f.id)}`);
+ const newerResultWire=await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:newerCommand}),newerResult=ok('apply retained newer choice',newerResultWire);
+ check('newer cycle has independent identity',newerResult.state==='applied'&&newerResult.restoration_id===newerCommand.request_id&&newerResult.phase==='restored'&&newerResult.next_revision===1);
+ check('newer tree and unsafe numeric precision preserved exactly',await runtime.raw(`select subtasks::text=(o.original->'retained_restoration'->'payload'->'before'->'tree')::text and (subtasks->0->'future'->'exact')::text='9007199254740993' from public.tasks t join taskfold_private.child_task_repair_originals o on o.id=${lit(result.archive_id)} where t.id=${lit(f.id)}`)==='t');
+ const rootAfterNewer=await runtime.raw(`select (to_jsonb(t)-'subtasks')::text from public.tasks t where id=${lit(f.id)}`),beforeRootObject=JSON.parse(newerRoot),afterRootObject=JSON.parse(rootAfterNewer);
+ report.newerRestoreRootChangedKeys=Object.keys(beforeRootObject).filter(k=>JSON.stringify(beforeRootObject[k])!==JSON.stringify(afterRootObject[k]));
+ check('newer restore keeps every authored root field',report.newerRestoreRootChangedKeys.every(k=>k==='updated_at'));
+ check('newer restore retains prior authored history exactly',await runtime.raw(`select not exists(select 1 from jsonb_array_elements(${lit(newerHistory)}::jsonb) e where not exists(select 1 from public.task_node_activity h where h.id=(e->>'id')::uuid and to_jsonb(h)::text=e::text))`)==='t');
+ const newApplied=await state();ok('same request cannot substitute older mode',await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:{...newerCommand,mode:'restore'}}),409);
+ const newerReplay=ok('replay exact newer request',await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:newerCommand}));check('newer replay creates no duplicate versions',newerReplay.replayed&&await state()===newApplied);
+ const newerReplies=[];
+ for(const mode of ['undo','redo','undo','finish']){
+  const v=ok('review newer cycle '+mode,await api('/rpc/taskfold_review_child_restore',{_mode:mode,_repair:result.request_id,_archive:result.archive_id,_restore:newerResult.restoration_id}));
+  const c={...Object.fromEntries(restoreKeys.map(k=>[k,v[k]])),request_id:randomUUID()};const r=ok('apply newer cycle '+mode,await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:c}));newerReplies.push({review:v,command:c,reply:r});
+  check('newer cycle exact target '+mode,await runtime.raw(`select subtasks::text from public.tasks where id=${lit(f.id)}`)===(mode==='redo'?await runtime.raw(`select (original->'retained_restoration'->'payload'->'before'->'tree')::text from taskfold_private.child_task_repair_originals where id=${lit(result.archive_id)}`):currentTree));
+ }
+ report.newerVersionContract={olderReviewWire:olderChoiceWire.text,newerReviewWire:newerChoiceWire.text,olderReview:olderChoice,newerReview:newerChoice,command:newerCommand,reply:newerResult,cycle:newerReplies};
+
+ // The restored newer tree uses the normal explicit history review to become editable.
+ await runtime.raw('update taskfold_private.child_task_record_config set archive_restore_adoption_enabled=true');
+ const editableReview=ok('review retained newer again for editing',await choiceReview('restore_newer'));
+ const editableCommand={...Object.fromEntries(restoreKeys.map(k=>[k,editableReview[k]])),request_id:randomUUID()};
+ const editableRestore=ok('restore newer for reviewed editable recovery',await api('/rpc/taskfold_restore_child_original',{_operation:'send',_body:editableCommand}));
+ const editableRead=ok('review newer root before history mapping',await api('/rpc/taskfold_review_child_adoption',{_id:f.id,_generation:f.root.task_generation}));
+ const editableHeld=ok('review current history for newer recovery',await api('/rpc/taskfold_review_restored_child_copies',{_body:identity(editableRead),_actor:account,_restore:editableRestore.restoration_id}));
+ const editableRows=JSON.parse(await runtime.raw(`select jsonb_agg(to_jsonb(r) order by node_key)::text from taskfold_private.child_task_records r where task_id=${lit(f.id)}`));
+ const editableBody={...identity(editableRead),changes:[{kind:'choose_copy',path:[],source:'task',copy_digest:editableHeld.copies.copy_digest,mapping:{version:1,nodes:editableRows.map(r=>({source_key:r.node_key==='parent'?'parent':f.note,history_key:r.node_key,incarnation:r.incarnation,lifecycle:'recorded'})),retire:[]},restoration:editableHeld.restoration}]};
+ const editablePreview=ok('review exact newer editable proposal',await preview(editableBody));
+ const editableSaved=ok('keep restored newer version editable',await send({...editableBody,request_id:randomUUID(),repair_digest:editablePreview.repair_digest}));
+ check('newer recovery ends its own cycle and retains preceding editable version',await runtime.raw(`select phase='adopted' and adopted_archive_id=${lit(editableSaved.archive_id)} from taskfold_private.child_repair_restorations where restore_id=${lit(editableRestore.restoration_id)}`)==='t');
+ check('newer recovery preserves original completion history once',await runtime.raw(`select count(*)=1 from public.task_node_activity where task_id=${lit(f.id)} and 'completed'=any(kinds)`)==='t');
+ const nextNode=JSON.parse(await runtime.raw(`select to_jsonb(r)::text from taskfold_private.child_task_records r where task_id=${lit(f.id)} and fields->>'id'=${lit(f.note)}`));
+ ok('restored newer version supports normal editing',await api('/rpc/taskfold_edit_child_task',{_body:{protocol:1,account,request_id:randomUUID(),task_id:f.id,task_generation:f.root.task_generation,project_id:null,node_key:nextNode.node_key,incarnation:nextNode.incarnation,revision:nextNode.revision,changes:{description:'New work on the recovered newer version'}}}));
+ check('newer editable work reaches root and preserves root notes',await runtime.raw(`select description='Current root notes' and subtasks->0->'subtasks'->0->>'description'='New work on the recovered newer version' from public.tasks where id=${lit(f.id)}`)==='t');
+
  report.advisors=await runtime.advisors();report.passed=true;
 }catch(e){report.failure={message:e.message,migration:e.migration,startupCleanup:e.cleanedUp,stack:e.stack?.split('\n').slice(0,4)};process.exitCode=1;}finally{if(runtime)report.cleanup=await runtime.close();await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:report.passed??false,checks:Object.keys(report.checks).length,lastFailure:report.lastFailure,failure:report.failure,cleanup:report.cleanup}));}
