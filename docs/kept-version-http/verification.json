@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-08",
+  "scope": "Actual iPhone Simulator production-controller keep-editable recovery over owned Auth/REST",
+  "accepted": true,
+  "checks": 35,
+  "coldProcesses": 8,
+  "iosSDKBuildExit": 0,
+  "appSources": 178,
+  "macRuntimeAccepted": false,
+  "visualOrSpeechAccepted": false,
+  "tlsOrPhysicalAccepted": false,
+  "hostedChanges": false,
+  "normalGatesChanged": false,
+  "productionBehaviorChanged": false,
+  "installedMacBuild": 53,
+  "normalAppChanged": false,
+  "phoneInstallation": "deferred",
+  "fullMigrationAccepted": false,
+  "failedAttempts": [
+    {
+      "stage": "signature preflight",
+      "reason": "Xcode left an ad-hoc Simulator signature; existing scoped real-team signer applied",
+      "booted": false
+    },
+    {
+      "stage": "source preflight",
+      "reason": "Expected source transform omitted the existing backupcanceltests namespace replacement; matched the preparer exactly",
+      "booted": false
+    },
+    {
+      "stage": "whole-tree oracle",
+      "reason": "Expected literal source omitted intentional fresh completion fences; now explicitly validates their zero values/UUIDs and compares all other values in SQL",
+      "fixtureRemoved": true,
+      "ownSimulatorShutdown": true
+    }
+  ]
+}
