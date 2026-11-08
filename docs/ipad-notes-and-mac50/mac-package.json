@@ -1,0 +1,45 @@
+{
+  "platform": "mac",
+  "configuration": "Release",
+  "version": "1.2.0",
+  "build": "50",
+  "sourceRevision": "2f9f472a87f94c41109ea6e0bda794d0b2a7ace9",
+  "sourceFingerprint": "adbb0744be23be9d846781a3f8c4476ea2887e61c1fd6974279b5c12ec8b2428",
+  "signatureVerified": true,
+  "archivePayloadVerified": true,
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "developmentProfileExpires": "2026-11-10T18:32:04+00:00",
+  "sourceWasDirty": false,
+  "installed": false,
+  "published": false,
+  "date": "2026-11-08",
+  "frozenSourceAndBuildToolsExact": true,
+  "archiveDigestExact": true,
+  "sourceAncestorOfMain": true,
+  "normalFlagsMatchInstalledBaseline": true,
+  "installedBuildStill48": true,
+  "desktopAccess": "Computer control still reports locked; fresh safety copy/install/startup/readback not performed",
+  "currentRollback48ArchiveVerified": true,
+  "retiredSupersededPackages": [
+    {
+      "build": "44",
+      "bytes": 20506983,
+      "archiveSHA256": "89817d5bcde5b8e545e945de389e6649bc01eb1f48314b90e096ba1dd27c78c8",
+      "why": "Superseded candidate; verified50 retained, installed48 and prior rollback46 preserved"
+    },
+    {
+      "build": "49",
+      "bytes": 20880944,
+      "archiveSHA256": "e0c464602e8c82b2e56be823dfa30830e745c11fc0c6b4272b388b7eea7d0243",
+      "why": "Superseded candidate; verified50 retained, installed48 and prior rollback46 preserved"
+    }
+  ]
+}

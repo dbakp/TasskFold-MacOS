@@ -1,0 +1,39 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 31395008512,
+  "actions": [
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Index.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 61923328
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/CompilationCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/SDKExplicitPrecompiledModules",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 142704640
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/ModuleCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 25604096
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/SDKStatCaches.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 1617920
+    },
+    {
+      "path": "/private/tmp/taskfold-prepared-undo-signed-ios-build/Build/Intermediates.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 386334720
+    }
+  ],
+  "skipped": [],
+  "freeAfterBytes": 32014241792,
+  "actualFreeChangeBytes": 619233280
+}
