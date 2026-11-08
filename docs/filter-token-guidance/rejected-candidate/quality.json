@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "owner": "TasskFold-MacOS",
+  "execution": "Mac-hosted owning Core",
+  "syntheticOnly": true,
+  "savedTaskOrFilterWrites": false,
+  "cloudInferenceFallback": false,
+  "realGenerationAccepted": false,
+  "sourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "920d6aab9adf3633024a7ee3cc79605361dc1a5e190ca07e807e40f3a0138933",
+    "Taskfold/Core/FilterAssistance.swift": "3ae175bee0e783d6198da2cd181965929dce1bd99ddfab1269f64fbf267a379b",
+    "TaskfoldTests/TaskBreakdownTests.swift": "68e89c575c67705c7ef9e4c1659511d26da7551181438f5a3f5e9cf71dfe805f",
+    "TaskfoldTests/FilterAssistanceTests.swift": "10d002eca2f0dc31385d1d7bc10d612bde8f1799375d104a6b1a302b798eea91"
+  },
+  "driverSHA256": "48648a59609bbb1ac71adf07f4875545f50c6f62f8a2c25f1eb67170d3035536",
+  "observations": [
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 1.8075625419999999,
+      "syntheticGoal": "Show open priority 1 tasks planned today or overdue"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "deadline"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.228240208,
+      "syntheticGoal": "Show tasks with a deadline today"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.214627667,
+      "syntheticGoal": "Show unfinished tasks in project Work"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "low"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.217508458,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for today"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.213769625,
+      "syntheticGoal": "Find open work in project Work, including its subprojects"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "future-low"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.214327833,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for tomorrow"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "done-low"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.208096417,
+      "syntheticGoal": "Show completed priority 3 tasks"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "deadline",
+        "child-project-task"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.230145625,
+      "syntheticGoal": "Find open priority 1 tasks planned tomorrow in project Work and its child projects"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "old",
+        "deadline"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.252656625,
+      "syntheticGoal": "Show open tasks in project Work, excluding those planned today"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "today",
+        "low"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.210743875,
+      "syntheticGoal": "Show open tasks planned today with priority 1 or priority 3"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "today"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.202895042,
+      "syntheticGoal": "Find open priority 1 tasks with a deadline tomorrow"
+    },
+    {
+      "engine": "filter",
+      "error": "Error Domain=FoundationModels.LanguageModelSession.GenerationError Code=-1 \"(null)\" UserInfo={NSMultipleUnderlyingErrorsKey=(\n    \"Error Domain=com.apple.GenerativeFunctionsFoundation.GenerativeError Code=1020000 \\\"(null)\\\" UserInfo={NSMultipleUnderlyingErrorsKey=(\\n)}\"\n)}",
+      "expectedIDs": [
+        "old",
+        "old-low"
+      ],
+      "generationPath": "systemModel",
+      "seconds": 0.193592666,
+      "syntheticGoal": "Show open tasks planned before today"
+    }
+  ],
+  "engines": [
+    "filter"
+  ],
+  "expectedObservationCounts": {
+    "steps": 0,
+    "filter": 12,
+    "paraphrases": 0
+  },
+  "testExitCode": 1,
+  "logSHA256": "ea6fc13ab72d5996a67c61e8939191aca3a8df57cbc1b710eeac78a1e188607d",
+  "diagnosticsSHA256": "ed22d7e0928b08c341c4054e9417e0ea36eeda8e46b9642ed85fa56ebdbf7560",
+  "sourcesUnchanged": true,
+  "unavailableReasons": [],
+  "semanticAndShapeChecksPassed": false,
+  "taskTitleQualityReviewed": false
+}

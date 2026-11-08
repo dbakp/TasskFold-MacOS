@@ -1,0 +1,21 @@
+{
+  "execution": "Mac owning Core, actual on-device requests",
+  "requests": 2,
+  "observations": [
+    {
+      "expression": "priority three",
+      "pattern": false
+    },
+    {
+      "debug": "",
+      "errorCode": -1,
+      "errorDomain": "FoundationModels.LanguageModelSession.GenerationError",
+      "message": "The operation couldn\u2019t be completed. (FoundationModels.LanguageModelSession.GenerationError error -1.)",
+      "pattern": true
+    }
+  ],
+  "terminalExitCode": 1,
+  "failures": 2,
+  "fullFilterQualityAccepted": false,
+  "scope": "Plain structured generation returned text but not p3; minimal pattern guide failed. This does not identify the exact runtime cause or establish the complex candidate semantic quality."
+}

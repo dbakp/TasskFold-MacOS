@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-08",
+  "classification": "Unaccepted generation design and bounded runtime controls; no new product capability accepted",
+  "candidate": "Direct filter-token regular-expression generation guide; production prompt unchanged",
+  "actualCandidateOwner": "TasskFold-MacOS",
+  "actualCandidateRequests": 12,
+  "expressionsReturned": 0,
+  "candidateQualityAccepted": false,
+  "candidateSemanticQualityDetermined": false,
+  "generationControls": "Plain structure returned priority three instead of requested p3; minimal p[1-4] regex guide failed with generation error",
+  "rootCauseIdentified": false,
+  "productionEngineRestoredExactly": true,
+  "ordinaryCoreCasesPerOwner": 123,
+  "ordinaryPassedPerOwner": 119,
+  "ordinaryOptInSkippedPerOwner": 4,
+  "ordinaryFailures": 0,
+  "ordinaryLogSHA256": "c6b03c5e41371a3c3024385210c0023c5d1ba74269d4297823ba32c450e6b82f",
+  "sourceSHA256": {
+    "Taskfold/Core/FilterAssistance.swift": "e002a9959a3079876618a612f181fff97e579a5c43f3897a9d3abf6b1fe507f9",
+    "TaskfoldTests/FilterGuidanceControlTests.swift": "5181be6bd63ea9f43797ac533692ae92c4ddbc9ef7a634aff87edab803678fac"
+  },
+  "mac53InstalledAndUnchanged": true,
+  "newNormalPackage": false,
+  "modelSettingsChanged": false,
+  "privateTaskOrCatalogModelInput": false,
+  "cloudInference": false,
+  "savedTaskOrFilterWrites": false,
+  "nativeOrIOSModelAcceptance": false
+}
