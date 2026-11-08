@@ -1,0 +1,9 @@
+# Actual native child-heavy saves and cold return
+
+The real-team-signed reserved iPhone Simulator app runs ten production Store saves on 100 synthetic tasks with 2,000 subtasks. Five cold-hash and five warm-hash passes alternate order in the same Debug executable. Root notes, every child, unknown huge numbers and distinct Unicode keys, unchanged sibling rows, exact durable snapshots, and checkbox tokens are checked. A separate cold process reads the same table digest and the same saved widget states/tokens. All 178 owning app sources and the executed code image are audited.
+
+The cold-hash medians are 377.22 ms through Save, 360.39 ms in persistence and 340.35 ms in widget preparation. Warm-hash medians are 46.06 ms, 41.77 ms and 21.68 ms respectively. This compares cache states in one build, not old/new releases. It is a synthetic workload containing large unknown fields; it does not prove ordinary UI latency, scrolling or physical FPS. Cold/initial work and remaining UI costs are still open.
+
+The first run accepts its save phase but refuses cold return. Inspection finds two existing fixture view preferences added by the ordinary startup migration. The seed now runs that same migration before timing; the exact cold digest guard remains. The current run passes complete saved-data/cold-widget checks, stops its app, restores the earlier private fixture directory and shuts down only the Simulator it booted. Both attempts are retained. No normal app, hosted service, real task, Keychain item or Docker volume is changed. The source and driver belong to iOS; the Mac owner records bounded evidence only.
+
+Completed iOS compiler scratch was removed, with the accepted product/code-image hash verified afterward. Mac 53 remains installed and phone installation stays deferred. The full Px objective remains active.

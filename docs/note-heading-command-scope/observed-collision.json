@@ -1,0 +1,11 @@
+{
+  "freshHeadingShortcutBeforeOpeningMenuApplied": false,
+  "headingShortcutAfterOpeningMenuApplied": true,
+  "priorityBefore": 4,
+  "priorityAfter": 1,
+  "inlineBoldItalicStrikeObserved": true,
+  "ordinaryReturnKeptEditorOpen": true,
+  "commandReturnAppliedNote": true,
+  "normalAppChanged": false,
+  "source": "Frozen note keyboard app described in /tmp/taskfold-note-keyboard-mac-source-audit.json"
+}

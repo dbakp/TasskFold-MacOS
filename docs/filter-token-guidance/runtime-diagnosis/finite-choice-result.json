@@ -1,0 +1,9 @@
+{
+  "availability" : "FoundationModels.SystemLanguageModel.Availability.available",
+  "expression" : "p3",
+  "generationSucceeded" : true,
+  "os" : "Version 26.6.2 (Build 25G83)",
+  "requests" : 1,
+  "schema" : "{\n  \"additionalProperties\" : false,\n  \"properties\" : {\n    \"expression\" : {\n      \"enum\" : [\n        \"p1\",\n        \"p2\",\n        \"p3\",\n        \"p4\"\n      ],\n      \"type\" : \"string\"\n    }\n  },\n  \"required\" : [\n    \"expression\"\n  ],\n  \"title\" : \"PatternFilterControl\",\n  \"type\" : \"object\",\n  \"x-order\" : [\n    \"expression\"\n  ]\n}",
+  "scope" : "One synthetic finite-choice guide control; no regex, settings change or filter-quality acceptance"
+}
