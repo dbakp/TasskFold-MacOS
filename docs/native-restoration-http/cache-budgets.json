@@ -1,0 +1,32 @@
+[
+  {
+    "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+    "allocatedBytes": 237252608,
+    "within768MiB": true,
+    "coreReadOnlyAudit": false
+  },
+  {
+    "cache": "/tmp/taskfold-prepared-undo-signed-ios-build",
+    "allocatedBytes": 190844928,
+    "within768MiB": true,
+    "coreReadOnlyAudit": false
+  },
+  {
+    "cache": "/tmp/taskfold-workflow-native-mac-build",
+    "allocatedBytes": 770912256,
+    "within768MiB": true,
+    "coreReadOnlyAudit": false
+  },
+  {
+    "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+    "allocatedBytes": 669347840,
+    "within768MiB": true,
+    "coreReadOnlyAudit": true
+  },
+  {
+    "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+    "allocatedBytes": 728993792,
+    "within768MiB": true,
+    "coreReadOnlyAudit": true
+  }
+]

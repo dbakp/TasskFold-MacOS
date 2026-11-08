@@ -1,0 +1,14 @@
+{
+  "ios": {
+    "appSwiftSourcesMatch": 178,
+    "normalConfigurationUnchanged": true,
+    "sdkBuildExit": 0,
+    "nativeRuntimeAccepted": true
+  },
+  "mac": {
+    "appSwiftSourcesMatch": 185,
+    "normalConfigurationUnchanged": true,
+    "sdkBuildExit": 0,
+    "nativeRuntimeAccepted": false
+  }
+}

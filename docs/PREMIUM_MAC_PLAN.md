@@ -11575,3 +11575,8 @@ Mac 50 is a signed optimized Release/archive/frozen-source verified candidate fr
 ### 8 November — complete local filter paraphrases
 
 Clear priority extremes/number words, current-day-or-earlier planned dates and explicit nested-project wording now use the complete local path. Fifteen semantic descriptions plus priority/refusal cases pass; each owner passes136 Core cases with4 opt-in skips, and both final SDK builds pass. Preview/current target/session/explicit Save contracts are unchanged. No new native-input or installed-app acceptance is claimed. An English-plus-query model candidate passed twelve requests but failed two of three new production-fallback paraphrases and is rejected; model/review source is restored exactly. Retain the original reporting error, traceable recovery and counterexamples; raw model quality remains open. Evidence: `filter-description-paraphrases/`.
+
+
+### 8 November — real HTTP restoration recovery and Mac51
+
+The actual iPhone production controller now passes nine launches with real Auth/REST, protected session, encrypted journal, deliberately lost committed Restore reply, cold Check without resend, Undo/Redo/Undo/Finish and exact values/originals/history preservation. Both owning SDK builds pass; new Mac runtime/visual/TLS/hardware and wider migration remain separate. First Finish refusal exposed only a harness sequence mistake; the existing Undo-before-Finish guard is preserved. Mac51 is signed/archive/frozen-source verified from merged local-filter source; 48 remains installed because desktop control still reports locked. Fresh safety copy/install/startup remain pending, routine authorization persists, phone installation is deferred. Evidence: `native-restoration-http/`.

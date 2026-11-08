@@ -1,0 +1,36 @@
+{
+  "platform": "mac",
+  "configuration": "Release",
+  "version": "1.2.0",
+  "build": "51",
+  "sourceRevision": "4ac3eb5e6f135a7fd120089015c95acd6abcf458",
+  "sourceFingerprint": "0ca425d3035057c4a0076bcf9d888f232067f3fc4c39b108ff7d359ad2837173",
+  "signatureVerified": true,
+  "archivePayloadVerified": true,
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "developmentProfileExpires": "2026-11-10T18:32:04+00:00",
+  "sourceWasDirty": false,
+  "installed": false,
+  "published": false,
+  "date": "2026-11-08",
+  "frozenSourceAndToolsExact": true,
+  "archiveDigestExact": true,
+  "normalFlagsMatchInstalled48": true,
+  "installed48Unchanged": true,
+  "newFilterParaphrasesIncluded": true,
+  "retired": {
+    "build": "50",
+    "archiveSHA256": "f71e080b7c370c8aa8b1bc2cabca1acde7579d336b096eb55eb009c7fbd091bc",
+    "bytes": 20880250,
+    "reason": "Superseded uninstalled candidate; verified51, installed48 and older rollback46 preserved"
+  },
+  "desktopAccess": "Fresh computer control still reports locked; no fresh safety copy/install/startup claim. New restoration acceptance code is DEBUG-only and postdates this Release snapshot."
+}

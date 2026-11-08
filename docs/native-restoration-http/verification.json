@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-08",
+  "kind": "bounded actual-app restoration HTTP acceptance",
+  "iphoneAccepted": true,
+  "checks": 32,
+  "coldProcesses": 9,
+  "appliedActions": 5,
+  "sdk": {
+    "ios": 0,
+    "mac": 0
+  },
+  "macRuntimeAccepted": false,
+  "newVisualAcceptance": false,
+  "tlsOrPhysicalAcceptance": false,
+  "productionCodeChanged": false,
+  "hostedChanges": false,
+  "normalFlagsChanged": false,
+  "fullMigrationAccepted": false,
+  "mac51Installed": false,
+  "installedMacBuild": "48",
+  "firstAttempt": {
+    "accepted": false,
+    "checksPassed": 18,
+    "cause": "Harness tried Finish after Redo; existing service requires Undo first",
+    "guardPreserved": true
+  }
+}

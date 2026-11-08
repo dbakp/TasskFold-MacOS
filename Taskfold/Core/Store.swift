@@ -8227,7 +8227,94 @@ extension Store {
         try FullSchemaNativeFixture.writeReport(report, phase: phase)
     }
 
+    /// Reserved actual-app acceptance. Uses the production Auth client, secure
+    /// session, encrypted journal and restoration model; no file SQL peer.
+    private func runFullSchemaRestorePhase() async throws {
+        let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
+        guard FullSchemaNativeFixture.enabled, FullSchemaNativeFixture.protectedStorageRequested,
+              let originalText = c.restoreOriginal, let currentText = c.restoreCurrent,
+              originalText.utf8.count <= 16_000, currentText.utf8.count <= 16_000 else { throw CancellationError() }
+        let original = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(originalText.utf8))
+        let previous = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(currentText.utf8))
+        dailyBackupsEnabled = false
+        if phase == "restore-queue" {
+            guard try await backend.signIn(email: c.email, password: c.password, signup: false) else { throw AppFailure(message: "Restoration test sign-in failed") }
+            await authenticated(); online = true; try await fullSchemaSyncSettled()
+        } else {
+            guard backend.session?.user.id == c.account, signedIn, !localMode else { throw AppFailure(message: "Protected restoration session was not reopened") }
+            online = false
+        }
+        let journal = try childTaskRestoreJournal(account: c.account, origin: backend.accountRemovalOrigin)
+        let model = try childTaskRestoreModel(); defer { model.close() }
+        if phase == "restore-queue" {
+            guard try await journal.load().entries.isEmpty else { throw AppFailure(message: "Fresh restoration journal is not empty") }
+            let page = try await readChildTaskRepairArchives()
+            guard page.entries.count == 1, let archive = page.entries.first, archive.rootID == c.task else { throw AppFailure(message: "Command-free restoration discovery differs") }
+            let comparison = try await compareChildTaskRepairOriginal(archive)
+            guard !comparison.valuesMatch else { throw AppFailure(message: "The retained version must differ before restoration") }
+            let review = try await readChildTaskRestoreReview(identity: ChildTaskRestoreCommand.identity(archive), mode: .restore)
+            let target = try TaskfoldJSONDecoder().decode(JSON.self, from: review.target.source)
+            guard AuthoredValueComparison.exactJSON(target, original) else { throw AppFailure(message: "HTTP restoration review lost exact original values") }
+            let command = try ChildTaskRestoreCommand(review: review)
+            guard await model.queue(command, review: review) else { throw AppFailure(message: model.message ?? "Restoration was not queued") }
+            FullSchemaNativeNetwork.offline = true; online = false
+        }
+        await model.load()
+        let before = try await journal.load()
+        guard let first = before.entries.first(where: { $0.command.mode == .restore }) else { throw AppFailure(message: "Original restoration request is missing") }
+        let fingerprint = try fullSchemaReviewFingerprint(first.command)
+        if phase != "restore-queue" {
+            guard fingerprint == c.queuedFingerprint else { throw AppFailure(message: "Cold restoration request changed") }
+        }
+        if phase == "restore-loss" || phase == "restore-check" {
+            guard first.phase == (phase == "restore-loss" ? .queued : .attempted), first.result == nil else { throw AppFailure(message: "Unexpected original restoration recovery state") }
+            if phase == "restore-loss" { FullSchemaNativeNetwork.armDrop() }
+            FullSchemaNativeNetwork.offline = false; online = true
+            let sent = await model.run(first.command, operation: phase == "restore-loss" ? .send : .check)
+            if phase == "restore-loss" {
+                FullSchemaNativeNetwork.offline = true; online = false
+                guard !sent, FullSchemaNativeNetwork.dropped == 1 else { throw AppFailure(message: "Restoration response was not lost after a real commit") }
+            } else {
+                guard sent else { throw AppFailure(message: model.message ?? "Exact restoration Check failed") }
+                try await fullSchemaSyncSettled()
+            }
+        }
+        if ["restore-undo", "restore-undo-again", "restore-redo", "restore-finish"].contains(phase) {
+            guard let id = first.result?.raw["restoration_id"]?.text, !id.isEmpty else { throw AppFailure(message: "Confirmed restoration identity is missing") }
+            FullSchemaNativeNetwork.offline = false; online = true; try await fullSchemaSyncSettled()
+            let mode: ChildTaskRestoreMode = (phase == "restore-undo" || phase == "restore-undo-again") ? .undo : phase == "restore-redo" ? .redo : .finish
+            let review = try await readChildTaskRestoreReview(identity: first.command.identity, mode: mode, restorationID: id)
+            let command = try ChildTaskRestoreCommand(review: review)
+            guard await model.queue(command, review: review), await model.run(command, operation: .send) else { throw AppFailure(message: model.message ?? "Reviewed restoration action failed") }
+            try await fullSchemaSyncSettled()
+        }
+        let settled = try await journal.load()
+        guard let saved = settled.entries.first(where: { $0.command.id == first.command.id }),
+              saved.command == first.command, snapshot.pending.isEmpty,
+              let task = record("tasks", id: c.task) else { throw AppFailure(message: "Restoration lost its original request or ordinary cache") }
+        let expectsOriginal = ["restore-check", "restore-verify", "restore-redo"].contains(phase)
+        guard AuthoredValueComparison.exactJSON(task["subtasks"], expectsOriginal ? original : previous),
+              try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) == snapshot else { throw AppFailure(message: "Cold restoration cache differs from its exact expected version") }
+        if phase != "restore-queue", phase != "restore-loss" {
+            guard task.string("description") == "Concurrent notes stay current", task.priority == 1 else { throw AppFailure(message: "Restoration replaced concurrent root fields") }
+            guard saved.phase == .applied, saved.result?.applied == true else { throw AppFailure(message: "Restoration confirmation was not retained") }
+        }
+        if phase == "restore-loss" {
+            guard saved.phase == .attempted, saved.result == nil else { throw AppFailure(message: "Lost restoration did not retain its attempted identity") }
+        }
+        guard let session = backend.session, session.user.id == c.account,
+              !FileManager.default.fileExists(atPath: FullSchemaNativeFixture.root.appendingPathComponent("session.json").path) else { throw AppFailure(message: "Protected restoration used an unexpected session file") }
+        let history = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(settled.entries))
+        let report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase),
+            "originalFingerprint": .string(fingerprint), "originalRequestID": .string(first.command.id),
+            "sessionFingerprint": .string(SHA256.hash(data: Data(session.access_token.utf8)).map { String(format: "%02x", $0) }.joined()),
+            "history": history, "pending": .number(Double(snapshot.pending.count)), "diskMatchesStore": .bool(true),
+            "exactExpectedSource": .bool(true), "protectedSessionWithoutFile": .bool(true), "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)),
+            "authHTTPResponses": .number(Double(FullSchemaNativeNetwork.restorationAuthResponses)), "restorationHTTPResponses": .number(Double(FullSchemaNativeNetwork.restorationDecisionResponses))]
+        try FullSchemaNativeFixture.writeReport(report, phase: phase)
+    }
     func runFullSchemaNativePhase() async throws {
+        if FullSchemaNativeFixture.phase.hasPrefix("restore-") { try await runFullSchemaRestorePhase(); return }
         if FullSchemaNativeFixture.phase.hasPrefix("step-") { try await runFullSchemaStepPhase(); return }
         if FullSchemaNativeFixture.phase.hasPrefix("audio-project-") { try await runFullSchemaProjectRecordingPhase(); return }
         if FullSchemaNativeFixture.phase.hasPrefix("audio-") { try await runFullSchemaAudioPhase(); return }
