@@ -11623,3 +11623,7 @@ Validated unchanged Watch receipt staging now preserves the proposed metadata id
 ### 8 November · retain frequently visited task queries
 
 The existing 64-entry query cache now evicts one least recently used result instead of flushing all views on overflow. Five new behavior/journey cases plus existing filter/workload/navigation coverage execute 103 cases per owner: 101 pass and two optional benchmarks skip. A 2,004-task journey rebuilds 164 results versus 308 with the actual old source; stage timings stay roughly unchanged, so this is cache-retention acceptance, not native smoothness. See `recent-query-retention/README.md`. Mac 53 remains installed; no signing retry or normal package is generated.
+
+### 8 November · direct filter-token generation remains unaccepted
+
+The regex-guided candidate compiles but all twelve real requests fail before producing expressions. Plain generation returns text but not the requested p3; minimal p[1-4] guidance also fails. Root cause and candidate semantics remain unproven. The candidate is retained only as evidence and production is restored exactly. Both owners pass 119 ordinary Core cases with four opt-in skips. See `filter-token-guidance/README.md`; no new product completion or installed update is claimed.
