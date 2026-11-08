@@ -11619,3 +11619,7 @@ Read-only audit confirms all three Mac53 profiles omit the signed group's author
 ### 8 November · retain prepared saves with Watch history
 
 Validated unchanged Watch receipt staging now preserves the proposed metadata identity instead of rewriting identical history/fence values. Four new functional cases and 31 selected Core cases per owner pass. Missing receipts, explicit acceptance, stale generations, Unicode bytes, empty normalization and replay protections remain covered. This is not total-save timing or native/UI/FPS acceptance. See `retained-watch-save-proof/README.md`. Installed Mac 53 remains unchanged; provisioning account access is still pending.
+
+### 8 November · retain frequently visited task queries
+
+The existing 64-entry query cache now evicts one least recently used result instead of flushing all views on overflow. Five new behavior/journey cases plus existing filter/workload/navigation coverage execute 103 cases per owner: 101 pass and two optional benchmarks skip. A 2,004-task journey rebuilds 164 results versus 308 with the actual old source; stage timings stay roughly unchanged, so this is cache-retention acceptance, not native smoothness. See `recent-query-retention/README.md`. Mac 53 remains installed; no signing retry or normal package is generated.

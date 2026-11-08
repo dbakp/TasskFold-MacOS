@@ -1689,7 +1689,12 @@ final class TaskCache {
         }
     }
 
-    private var results: [TaskQuery: [Record]] = [:]
+    private struct QueryResult {
+        let rows: [Record]
+        var lastRead: UInt64
+    }
+    private var results: [TaskQuery: QueryResult] = [:]
+    private var queryRead: UInt64 = 0
     private var productiveResult: ProductiveTaskReading?
     private var excludedProductiveResult: ProductiveTaskReading?
     private(set) var productiveComputationCount = 0
@@ -1790,7 +1795,7 @@ final class TaskCache {
         projectPresentation = nil; projectOutline = nil; labelPositions = nil
         tasks = orderedRows(rows)
         source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; excludedProductiveResult = nil; inboxProductiveResult = nil; navigationResult = nil
-        results.removeAll(keepingCapacity: true)
+        results.removeAll(keepingCapacity: true); queryRead = 0
         return true
     }
     func matching(_ incoming: TaskQuery) -> [Record] {
@@ -1798,7 +1803,14 @@ final class TaskCache {
         query.now = query.filter?.usesClockWindow == true ? query.now.flatMap { $0.timeIntervalSinceReferenceDate.isFinite ? FilterClockWindow.minute($0) : nil } : nil
         if query.filter?.usesDatePreferences != true { query.datePreferences = DatePhrasePreferences() }
         if query.filter?.usesAssignmentHistory != true { query.filterAssignments = .init(nil) }
-        if let cached = results[query] { return cached }
+        // Keep frequently visited views warm while bounding retained results.
+        // A new search evicts one cold query, never the entire navigation cache.
+        if queryRead == UInt64.max { results.removeAll(keepingCapacity: true); queryRead = 0 }
+        queryRead += 1
+        if let index = results.index(forKey: query) {
+            results.values[index].lastRead = queryRead
+            return results.values[index].rows
+        }
         computationCount += 1
         let nameBindings = query.filter?.nameBindings(projects: query.filterProjects, sections: query.filterSections, labels: query.filterLabels, people: query.filterPeople)
         let candidates: [Record]
@@ -1849,8 +1861,10 @@ final class TaskCache {
         else if query.sort == "deadline" { sorted = matched.sorted { ($0.string("deadline_date").isEmpty ? "9999" : $0.string("deadline_date")) < ($1.string("deadline_date").isEmpty ? "9999" : $1.string("deadline_date")) } }
         else if query.sort == "duration" { sorted = matched.sorted { ($0.durationMinutes ?? Int.max) < ($1.durationMinutes ?? Int.max) } }
         else { sorted = matched }
-        if results.count >= 64 { results.removeAll(keepingCapacity: true) }
-        results[query] = sorted
+        if results.count >= 64, let oldest = results.min(by: { $0.value.lastRead < $1.value.lastRead }) {
+            results.removeValue(forKey: oldest.key)
+        }
+        results[query] = QueryResult(rows: sorted, lastRead: queryRead)
         return sorted
     }
 }

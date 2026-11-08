@@ -1,0 +1,19 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 28884586496,
+  "actions": [
+    {
+      "path": "/tmp/taskfold-recent-query-models.swift",
+      "kind": "completedTemporarySourceCopy",
+      "allocatedBytes": 217088
+    },
+    {
+      "path": "/tmp/taskfold-query-cache-tests.swift",
+      "kind": "completedTemporarySourceCopy",
+      "allocatedBytes": 4096
+    }
+  ],
+  "skipped": [],
+  "freeAfterBytes": 28883677184,
+  "actualFreeChangeBytes": -909312
+}
