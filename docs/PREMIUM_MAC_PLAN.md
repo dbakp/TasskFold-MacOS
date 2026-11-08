@@ -11405,7 +11405,7 @@ Both owners prepare large plain unchanged rows off the interface thread, with on
 
 Mac44 was installed after a fresh verified safety copy and nine exact prelaunch caches, with verified42 rollback. Upcoming — 2 tasks and Synced 19.38 are observed. A full AX check confirms the shared-storage warning remains; an earlier partial diff was misread and corrected. Its original readonly job63522/PID61337 remains blocked in file open, with one actual system-access request pending. Do not restart/replace44 or duplicate that audit. The new row optimization is separate source, not installed 44. Only obsolete38 code copies and36/38 ZIPs were retired after42 verification; all private data copies remain.
 
-Mac45 now passes optimized owning-app/widget/share compilation, cached development signing and exact archive readback against44. Normal flags and the nonempty installed designated requirement match. It stays prepared while the existing44 permission/readback remains pending; do not replace that session. Final selected native/daily and Core caches are within768MiB each, with about38GB free. Full Px remains active.
+Mac45 now passes optimized owning-app/widget/share compilation, cached development signing and exact archive readback against44. Normal flags and the nonempty installed designated requirement match. It stays prepared while the existing44 permission/readback remains pending; do not replace that session. Final selected native/daily and Core caches are within 768 MiB each, with about38GB free. Full Px remains active.
 
 
 ### 7 November — complete local filter descriptions and visible feedback
@@ -11414,7 +11414,7 @@ Common complete descriptions now prepare locally before consulting model availab
 
 Installed44 and original readonly63522 remain intact pending the existing system access check. Source is committed/packaged separately before normal merge; phone installation remains deferred. All broader Px and agreed deferrals remain active.
 
-Mac46 now passes optimized owning-app/widget/share compilation, cached development signing and exact archive verification against44, with unchanged normal flags/nonempty designated requirement. It remains prepared;44 and original readonly63522 are not restarted/replaced. Verified42 and all private backups remain. Never-installed45 ZIP is retired after46 verification. Final selected caches are within768MiB each; full Px stays active.
+Mac46 now passes optimized owning-app/widget/share compilation, cached development signing and exact archive verification against44, with unchanged normal flags/nonempty designated requirement. It remains prepared;44 and original readonly63522 are not restarted/replaced. Verified42 and all private backups remain. Never-installed45 ZIP is retired after46 verification. Final selected caches are within 768 MiB each; full Px stays active.
 
 
 ### 7 November — Mac46 installed; original44 audit accepted
@@ -11553,3 +11553,7 @@ Saved-original review now explicitly chooses the copy saved before repair or Pre
 ### 8 November — varied schedules and ordinary minute ticks
 
 Operations own at most two lazy ISO parsers; fresh-parser fallback/fold semantics and current source/action boundaries remain. Today/Upcoming query misses and the Mac overdue pass use the same operation-local day read. Ordinary dated sections avoid unused minute invalidation; day/zone/context and relative/saved-filter minute refresh stay guarded. On the fixed iPad 2,004-task/500-distinct-schedule fixture, move preparation is 77–87 ms versus 260–327 ms, through-save 139–156 ms versus 322–402 ms, and measured initial dated work 86–92 ms versus 313–363 ms. Both app builds, eight new Core cases per owner and three actual iPad journeys pass. An earlier 1,127 ms warm geometry outlier remains in evidence without a claimed cause; final samples are 26–30 ms. Wider native Mac/physical/sustained rendering and other Px work remain open. No normal install or hosted/gate change is claimed. See `varied-schedule-reads/verification.json`.
+
+### 8 November — prepared normal Mac49
+
+Release build 49 is signed and exact archive/frozen-source verified from merged source 2d9e70a4. It includes current bounded responsiveness fixes. It is not installed: computer control still reports the desktop locked after the unlock reply; one desktop-visible request is pending. Mac48 remains running. The next install must take a fresh private safety copy and verify its build 48 rollback, then accept actual startup/shared-storage/work readback. Normal advanced flags and hosted services are unchanged; phone installation remains deferred. The final applied cleanup found all three selected caches within 768 MiB, with 34.05 GB free; earlier in this run 1.25 GB of regenerable scratch was removed. See `mac49-update/verification.json`.

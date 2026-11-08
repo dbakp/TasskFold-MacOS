@@ -1,0 +1,66 @@
+{
+  "platform": "mac",
+  "version": "1.2.0",
+  "build": "49",
+  "configuration": "Release",
+  "sourceRevision": "2d9e70a41bb86e4103871d4f67268789d3abaa35",
+  "sourceFingerprint": "8bcb78c6f5ceaee9354b60a8ccf79ee782b686478d907594dda210e08adf3615",
+  "archiveSHA256": "e0c464602e8c82b2e56be823dfa30830e745c11fc0c6b4272b388b7eea7d0243",
+  "archivePayloadVerified": true,
+  "signatureVerified": true,
+  "sourceWasDirty": false,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "developmentProfileExpires": "2026-11-10T18:32:04+00:00",
+  "reviewed": "2026-11-08",
+  "buildExit": 0,
+  "packageExit": 0,
+  "frozenSourceAndToolsVerified": true,
+  "ancestorOfMergedMain": true,
+  "installed": false,
+  "installedMacBuild": "48",
+  "rollbackBaselineArchiveVerified": "48",
+  "fresh49SafetyCopyTaken": false,
+  "installationWaitingOnDesktopAccess": true,
+  "computerControlObservation": "getApp and inventory report locked after user unlock reply; one fresh desktop-visible request pending",
+  "normalAdvancedGatesChanged": false,
+  "hostedChanges": false,
+  "phoneInstallation": "deferred",
+  "checkpoints": 74,
+  "substeps": 68,
+  "cleanup": {
+    "apply": true,
+    "freeBeforeBytes": 34050088960,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 803729408,
+        "projectedAllocatedBytes": 803729408,
+        "within768MiB": true
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 165994496,
+        "projectedAllocatedBytes": 165994496,
+        "within768MiB": true
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 801071104,
+        "projectedAllocatedBytes": 801071104,
+        "within768MiB": true
+      }
+    ],
+    "freeAfterBytes": 34048196608,
+    "actualFreeChangeBytes": -1892352
+  }
+}
