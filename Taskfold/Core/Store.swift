@@ -250,7 +250,7 @@ final class Store {
         let dayOrZoneChanged = next.today != calendarContext.today || next.timeZone != calendarContext.timeZone
         calendarContext = next
         let clockViews = savedViews.contains { (try? FilterRule(document: $0["query_ast"]))?.usesClockWindow == true }
-        if dayOrZoneChanged || clockViews { publishWidgetSnapshot(scheduleCapacityRefresh: false) }
+        if dayOrZoneChanged || clockViews { publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true) }
         return true
     }
     var calendarRefreshDelay: TimeInterval { TaskCalendarContext.refreshDelay(after: calendarNow, timeZone: calendarTimeZone) }
@@ -2420,7 +2420,7 @@ final class Store {
                 #if DEBUG
                 await gate?.hold()
                 #endif
-                return try captured.encoded()
+                return try captured.encodedForWorker()
             }) { [weak self] result in
                 guard let self, self.accountGeneration == generation, self.workspaceReadRevision == revision,
                       self.backend.reminderSessionIncarnation == session, self.sharedCaptureAvailable,
@@ -2475,7 +2475,7 @@ final class Store {
         #endif
         startupSharingWorking = true; startupSharingFailed = false
         startupPublicationQueue.enqueue(write: { ticket in
-            let data = Result { try input.encoded() }
+            let data = Result { try input.encodedForWorker() }
             #if DEBUG
             await gate?.hold()
             #endif
@@ -2516,9 +2516,11 @@ final class Store {
     func verifyWorkflowWidgetPublication() async throws -> [String: JSON] {
         guard WorkflowUndoNativePeer.enabled else { throw CancellationError() }
         let original = snapshot, disk = try widgetActionDisk()
-        let oldGate = WidgetPublicationNativeGate(), accessGate = WidgetPublicationNativeGate()
+        let oldGate = WidgetPublicationNativeGate(), accessGate = WidgetPublicationNativeGate(), clockGate = WidgetPublicationNativeGate()
+        let originalCalendarContext = calendarContext
         defer {
-            Task { await oldGate.resume(); await accessGate.resume() }
+            Task { await oldGate.resume(); await accessGate.resume(); await clockGate.resume() }
+            calendarContext = originalCalendarContext
             workflowWidgetGate = nil; snapshot = original; try? persist()
         }
         func mark(_ phase: String) {
@@ -2569,10 +2571,18 @@ final class Store {
         publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
         try await waitForIdle()
         try require(try workflowWidgetNativeProjection()["account"] == .string(userID), "Latest workspace did not recover")
+        mark("clock refresh"); workflowWidgetGate = clockGate
+        calendarContext = TaskCalendarContext(now: calendarNow.addingTimeInterval(-172800), timeZone: calendarTimeZone)
+        try require(refreshCalendarContext(), "Clock context did not refresh")
+        try require(calendarContext == TaskCalendarContext(now: calendarNow, timeZone: calendarTimeZone), "Clock context was deferred with rendering")
+        try await waitForStart(clockGate, phase: "Clock refresh renderer")
+        try require(!widgetPublicationQueue.isIdle, "Clock refresh bypassed worker")
+        await clockGate.resume(); try await waitForIdle()
+        workflowWidgetGate = nil
         try require(snapshot == original, "Projection check modified saved work")
         let durable = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
         try require(durable == original, "Projection check modified durable work")
-        return ["signOutRedactedImmediately": .bool(true), "staleResultRejected": .bool(true), "accessFenceRejected": .bool(true), "latestRecovered": .bool(true), "savedDataUnchanged": .bool(true)]
+        return ["signOutRedactedImmediately": .bool(true), "staleResultRejected": .bool(true), "accessFenceRejected": .bool(true), "latestRecovered": .bool(true), "savedDataUnchanged": .bool(true), "clockRefreshQueued": .bool(true), "clockContextImmediate": .bool(true)]
     }
     #endif
 

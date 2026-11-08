@@ -2234,6 +2234,14 @@ enum TaskCompletion {
     }
 }
 
+/// Cooperative stops between independently expensive projection stages. Pure
+/// readers default to no checks; publication workers check their task's actual
+/// cancellation. No partial payload is returned or written.
+enum WidgetRenderCheckpoint: String, Sendable {
+    case context, lists, list, filterDay, pulse, pulseDay, tasks, task
+    case capacity, capacityDay, feedback, encoding
+}
+
 /// Versioned widget payload. The extension receives bounded planning/Focus data, never authentication sessions or executable mutations.
 /// Capture value types on the app actor; construct and encode the full projection
 /// on a worker. The final disk replacement stays on the app actor, after its
@@ -2246,14 +2254,16 @@ struct WidgetPublicationContext: Sendable {
     let localAccount: String?
     let tokenMask: TeamWorkspaceCache?
 
-    func prepare(_ input: WidgetPublicationInput) throws -> WidgetPublicationInput {
+    func prepare(_ input: WidgetPublicationInput, checking: (WidgetRenderCheckpoint) throws -> Void = { _ in }) throws -> WidgetPublicationInput {
+        try checking(.context)
         guard input.account == account else { throw CancellationError() }
         var result = input
         result.completionTokens = tokenMask?.widgetTokens(snapshot) ?? WidgetCompletion.tokens(snapshot)
         let projects = Dictionary((snapshot.tables["projects"] ?? []).map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let collaborators = Dictionary(grouping: snapshot.tables["project_collaborators"] ?? [], by: { $0.string("project_id") })
         let profile = snapshot.tables["profiles"]?.first { $0.string("user_id") == account } ?? Record()
-        result.people = input.projects.flatMap { displayed -> [Record] in
+        result.people = try input.projects.flatMap { displayed -> [Record] in
+            try checking(.context)
             guard let project = projects[displayed.id] else { return [] }
             // A loaded empty directory is authoritative; do not replace it with
             // older collaborator rows. Keep project scope on duplicate people.
@@ -2262,6 +2272,7 @@ struct WidgetPublicationContext: Sendable {
                 var scoped = person; scoped["project_id"] = .string(displayed.id); return scoped
             }
         }
+        try checking(.context)
         let rows = snapshot.tables[TaskAssignmentProvenance.table] ?? (localAccount == nil ? nil : [])
         result.assignments = TaskAssignmentProvenance.Catalog(rows, localAccount: localAccount)
         result.context = nil
@@ -2290,20 +2301,36 @@ struct WidgetPublicationInput: Sendable {
     var feedback: WidgetCompletionFeedback?
     var context: WidgetPublicationContext?
 
-    func encoded() throws -> Data {
-        if !account.isEmpty, let context { return try context.prepare(self).encoded() }
-        var payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, now: now, labels: labels, sections: sections, savedViews: savedViews, calendar: calendar, completionTokens: completionTokens, pendingSync: pendingSync, workingHours: workingHours, calendarWindow: calendarWindow, calendarFallback: calendarFallback, notePins: notePins, focusRecord: focusRecord, focusConflict: focusConflict, focusReadable: focusReadable, pulseActivity: pulseActivity, pulseEpoch: pulseEpoch, pulseChildren: pulseChildren, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
+    /// Only replaceable workers opt into cancellation. Synchronous privacy
+    /// barriers and durable-action acknowledgements retain their full encoding.
+    func encodedForWorker() throws -> Data {
+        try encoded(checking: { _ in try Task.checkCancellation() })
+    }
+
+    func encoded(checking: (WidgetRenderCheckpoint) throws -> Void = { _ in }) throws -> Data {
+        try checking(.context)
+        if !account.isEmpty, let context { return try context.prepare(self, checking: checking).encoded(checking: checking) }
+        var payload = try WidgetProjection.payload(tasks: tasks, projects: projects, account: account, now: now, labels: labels, sections: sections, savedViews: savedViews, calendar: calendar, completionTokens: completionTokens, pendingSync: pendingSync, workingHours: workingHours, calendarWindow: calendarWindow, calendarFallback: calendarFallback, notePins: notePins, focusRecord: focusRecord, focusConflict: focusConflict, focusReadable: focusReadable, pulseActivity: pulseActivity, pulseEpoch: pulseEpoch, pulseChildren: pulseChildren, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments, checking: checking)
+        try checking(.feedback)
         if let feedback, !account.isEmpty, feedback.account == account, now < feedback.expiresAt {
             payload["completionFeedback"] = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(feedback))
         }
+        try checking(.encoding)
         return try TaskfoldJSONEncoder().encode(payload)
     }
 }
 enum WidgetProjection {
     static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], pulseChildren: ChildWorkHistory? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> [String: JSON] {
+        payload(tasks: tasks, projects: projects, account: account, now: now, labels: labels, sections: sections, savedViews: savedViews, calendar: calendar, completionTokens: completionTokens, pendingSync: pendingSync, workingHours: workingHours, calendarWindow: calendarWindow, calendarFallback: calendarFallback, notePins: notePins, focusRecord: focusRecord, focusConflict: focusConflict, focusReadable: focusReadable, pulseActivity: pulseActivity, pulseEpoch: pulseEpoch, pulseChildren: pulseChildren, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments, checking: { _ in })
+    }
+
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], pulseChildren: ChildWorkHistory? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil), checking: (WidgetRenderCheckpoint) throws -> Void) rethrows -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
-        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
-        let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar, children: pulseChildren)
+        try checking(.lists)
+        let lists = try listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments, checking: checking)
+        try checking(.pulse)
+        let pulse = try pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar, children: pulseChildren, checking: checking)
+        try checking(.tasks)
         let nested = WidgetCompletion.childItems(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account).filter { TaskKind.mayComplete($0.record) && !$0.record.completed }
         let reading = ProductiveTaskReading(tasks: tasks)
         let nestedByID = Dictionary(nested.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -2320,7 +2347,8 @@ enum WidgetProjection {
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
         var incomplete = reading.incomplete
-        let rows = reading.presentation.filter { TaskKind.mayComplete($0) && !$0.completed }.compactMap { task -> JSON? in
+        let rows = try reading.presentation.filter { TaskKind.mayComplete($0) && !$0.completed }.compactMap { task -> JSON? in
+            try checking(.task)
             if SubtaskTree.referencePath(task.id) != nil {
                 guard let item = nestedByID[task.id] else { incomplete = true; return nil }
                 return projected(task, parent: item.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext(item))
@@ -2328,8 +2356,13 @@ enum WidgetProjection {
             return projected(task)
         }
         let filterChildren = WidgetCompletion.hasChildFilter(Snapshot(tables: ["saved_views": savedViews])) ? nested : []
-        let nestedRows = filterChildren.map { projected($0.record, parent: $0.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext($0)) }
-        var payload: [String: JSON] = ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "nestedTasks": .array(nestedRows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
+        let nestedRows = try filterChildren.map { item in
+            try checking(.task)
+            return projected(item.record, parent: item.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext(item))
+        }
+        try checking(.capacity)
+        let capacity = try capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar, checking: checking)
+        var payload: [String: JSON] = ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "nestedTasks": .array(nestedRows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacity]
         if incomplete { payload["workIncomplete"] = .bool(true) }
         return payload
     }
@@ -2350,6 +2383,10 @@ enum WidgetProjection {
 
     /// Materialize the planner's exact day semantics in a bounded, title-free projection.
     static func capacityPayload(tasks: [Record], account: String, hours: WorkingHours?, window: CalendarCapacityWindow?, fallback: String, now: Date, calendar input: Calendar) -> JSON {
+        capacityPayload(tasks: tasks, account: account, hours: hours, window: window, fallback: fallback, now: now, calendar: input, checking: { _ in })
+    }
+
+    static func capacityPayload(tasks: [Record], account: String, hours: WorkingHours?, window: CalendarCapacityWindow?, fallback: String, now: Date, calendar input: Calendar, checking: (WidgetRenderCheckpoint) throws -> Void) rethrows -> JSON {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         guard let hours else {
             return .object(["version": .number(1), "timeZone": .string(calendar.timeZone.identifier), "calendarState": .string("settings"), "calendarUpdated": .null, "hours": .string(""), "days": .object([:])])
@@ -2362,6 +2399,7 @@ enum WidgetProjection {
         let prepared = PlannerCapacityWindowReading(work: reading, calendar: calendar)
         var days: [String: JSON] = [:]
         for offset in 0..<8 {
+            try checking(.capacityDay)
             guard let day = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
             let summary = prepared.summary(on: day, hours: hours, events: usable?.events ?? [])
             let capacity = summary.capacity, overdue = summary.overdue
@@ -2377,6 +2415,10 @@ enum WidgetProjection {
 
     /// Publish open task IDs and display names, never filter expressions or ordering records.
     static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> [JSON] {
+        listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: input, datePreferences: preferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments, checking: { _ in })
+    }
+
+    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil), checking: (WidgetRenderCheckpoint) throws -> Void) rethrows -> [JSON] {
         guard !account.isEmpty else { return [] }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, people: people, datePreferences: preferences, collaborators: collaborators, assignments: assignments)
@@ -2415,7 +2457,8 @@ enum WidgetProjection {
             }
             return .object(fields)
         }
-        var result = projects.filter { !$0.id.isEmpty }.map { project in
+        var result = try projects.filter { !$0.id.isEmpty }.map { project in
+            try checking(.list)
             let scope=TaskScope.project(project.id), ordering=sort(scope)
             guard supportedSort(ordering), !incompleteProjects.contains(project.id.lowercased()) else { return row(project,kind:"project",days:[:],error:true) }
             let rows=cache.matching(TaskQuery(scope:scope,sort:ordering))
@@ -2427,7 +2470,8 @@ enum WidgetProjection {
             let value=projection(groups)
             return row(project,kind:"project",days:["*":value.ids],groups:["*":value.groups])
         }
-        result += labels.filter { !$0.id.isEmpty }.map { label in
+        result += try labels.filter { !$0.id.isEmpty }.map { label in
+            try checking(.list)
             let scope=TaskScope.label(label.id), ordering=sort(scope)
             guard supportedSort(ordering), !cache.productiveReading().incomplete else { return row(label,kind:"label",days:[:],error:true) }
             let rows=cache.matching(TaskQuery(scope:scope,sort:ordering,labelName:label.name))
@@ -2435,6 +2479,7 @@ enum WidgetProjection {
             return row(label,kind:"label",days:["*":value.ids],groups:["*":value.groups])
         }
         for view in savedViews where !view.id.isEmpty {
+            try checking(.list)
             guard let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: context)) != nil else {
                 result.append(row(view, kind: "filter", days: [:], error: true)); continue
             }
@@ -2444,6 +2489,7 @@ enum WidgetProjection {
             guard supportedSort(ordering),["none","project","priority","date","deadline"].contains(grouping) else { result.append(row(view,kind:"filter",days:[:],error:true));continue }
             var days: [String: [String]] = [:], dayGroups:[String:[JSON]]=[:]
             for offset in 0..<(rule.usesClockWindow ? 1 : 8) {
+                try checking(.filterDay)
                 guard let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
                 let day = TaskPlanner.dayKey(date, calendar: calendar)
                 let query = TaskQuery(scope: .all, sort: ordering, today: day, filter: rule, now: rule.usesClockWindow ? now : nil, datePreferences: preferences,
