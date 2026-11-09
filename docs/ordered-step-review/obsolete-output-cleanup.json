@@ -1,0 +1,56 @@
+{
+  "freeBeforeBytes": 25201332224,
+  "retired": [
+    {
+      "path": "/tmp/taskfold-step-order-ios-native.xcresult",
+      "allocatedBytes": 52453376,
+      "files": 92,
+      "fileManifestSHA256": "6d5a231382d9cedca4e39b0aa377086ffcddfc7e1d2764399d44af7ee0bda437",
+      "summaryRetained": true,
+      "completeLogRetainedAsGzip": true
+    },
+    {
+      "path": "/tmp/taskfold-step-order-ios-native-v2.xcresult",
+      "allocatedBytes": 36302848,
+      "files": 70,
+      "fileManifestSHA256": "3b11a0a97d50dcf11377f94bdbc34f485d771374a1d098c44c07345af1451911",
+      "summaryRetained": true,
+      "completeLogRetainedAsGzip": true
+    },
+    {
+      "path": "/tmp/taskfold-step-order-ios-native-v3.xcresult",
+      "allocatedBytes": 141873152,
+      "files": 86,
+      "fileManifestSHA256": "beb8a04e0f748bb5d08d7f11d8d3b022cc45d0cb22346427616e8e803f593c72",
+      "summaryRetained": true,
+      "completeLogRetainedAsGzip": true
+    },
+    {
+      "path": "/tmp/taskfold-step-order-ios-native-v4.xcresult",
+      "allocatedBytes": 124272640,
+      "files": 86,
+      "fileManifestSHA256": "8cf960726d735a2dd313564e253f879b4946bf7a61226d8dc36d29ce9bf045ac",
+      "summaryRetained": true,
+      "completeLogRetainedAsGzip": true
+    },
+    {
+      "path": "/tmp/taskfold-step-order-ios-native-v5.xcresult",
+      "allocatedBytes": 51200000,
+      "files": 80,
+      "fileManifestSHA256": "002fa679307a1959f30933fbbfa598859ad44e8bcd09acb84b7a9bf74414f333",
+      "summaryRetained": true,
+      "completeLogRetainedAsGzip": true
+    },
+    {
+      "path": "/tmp/taskfold-step-order-ios-native-attachments",
+      "allocatedBytes": 48066560,
+      "kind": "duplicate exported failed-run attachments; full log and diagnosis retained"
+    },
+    {
+      "path": "/tmp/taskfold-step-order-ios-native-v3-attachments",
+      "allocatedBytes": 137875456,
+      "kind": "duplicate exported failed-run attachments; full log and diagnosis retained"
+    }
+  ],
+  "freeAfterBytes": 25793646592
+}

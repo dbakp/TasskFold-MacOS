@@ -1,0 +1,6 @@
+{
+  "v3": "Full-viewport test scrolling overshoots at large text; switch-row center tap did not change inclusion.",
+  "v4": "Frame diagnostics show the large Suggest button alternates from y843 to y36 after full swipes; normal right-thumb tap works. All selected/old task fields and order save correctly; full-table assertion incorrectly omitted legitimate append-only activity.",
+  "v5": "Precise short scrolls fix the large case. Normal Save, Undo and Redo plus exact immutable activity prefixes and typed coverage-gap entries pass. Cold read differs only by two ordinary migrated view preferences, absent from the synthetic seed.",
+  "followup": "Seed the same ordinary organization migration before initial baseline, retain strict cold equality. No production migration/ledger behavior suppressed or changed."
+}

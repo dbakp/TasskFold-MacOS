@@ -68,6 +68,24 @@ struct TaskBreakdownRequest: Identifiable {
     }
 }
 
+/// Transient review order only; identities stay with edits and inclusion choices.
+/// Moving an old control after a new generation/removal cannot affect another row.
+enum TaskBreakdownReview {
+    struct Step: Identifiable {
+        let id = UUID()
+        var title: String
+        var included = true
+    }
+    @discardableResult static func move(_ id: UUID, by offset: Int, in steps: inout [Step]) -> Int? {
+        guard offset == -1 || offset == 1,
+              let source = steps.firstIndex(where: { $0.id == id }),
+              steps.indices.contains(source + offset) else { return nil }
+        let target = source + offset
+        steps.swapAt(source, target)
+        return target
+    }
+}
+
 /// A cancelled or superseded generation can never repopulate a review.
 struct TaskBreakdownSession {
     let request: TaskBreakdownRequest

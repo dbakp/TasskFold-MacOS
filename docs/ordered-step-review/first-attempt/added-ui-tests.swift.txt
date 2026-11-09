@@ -1,0 +1,70 @@
+
+extension WorkflowSourceSelectionUITests {
+    @MainActor private func runOrderedStepReview(largest: Bool) throws {
+        guard Bundle.main.bundleIdentifier == "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner" else { throw XCTSkip("Reserved host required") }
+        continueAfterFailure = false
+        let app = XCUIApplication(); defer { app.terminate() }
+        let args = ["--team-editor-testing", "--workspace-read-performance", "--workspace-inline-subtasks", "--breakdown-order-testing", "-appearance", "light", "-UIPreferredContentSizeCategoryName", largest ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
+        app.launchArguments = args + ["--team-editor-reset"]; app.launch()
+        let ready = app.staticTexts["workspaceReadStatus"]; XCTAssertTrue(ready.waitForExistence(timeout: 30)); wait { ready.label == "Ready" }
+        let initial = try XCTUnwrap(try snapshot()["tables"] as? [String: [[String: Any]]])
+        func reveal(_ element: XCUIElement) {
+            for _ in 0..<18 where !element.exists || !element.isHittable { app.swipeUp() }
+            XCTAssertTrue(element.waitForExistence(timeout: 8)); XCTAssertTrue(element.isHittable)
+        }
+        func review() {
+            app.buttons["openInlineParentEditor"].tap(); XCTAssertTrue(app.buttons["saveTask"].waitForExistence(timeout: 10))
+            let suggest = app.buttons["suggestTaskSteps"]; reveal(suggest); suggest.tap()
+            XCTAssertTrue(app.buttons["breakdownCancel"].waitForExistence(timeout: 8))
+        }
+        func field(_ title: String) -> XCUIElement { app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@ AND value == %@", "breakdownStep-", title)).firstMatch }
+        func id(_ title: String) -> String {
+            let input = field(title); reveal(input); return String(input.identifier.dropFirst("breakdownStep-".count))
+        }
+        func move(_ id: String, direction: String, position: Int) {
+            let options = app.buttons["breakdownOptions-" + id]; reveal(options); options.tap()
+            let button = app.buttons["breakdownMove" + direction + "-" + id]; XCTAssertTrue(button.waitForExistence(timeout: 5)); XCTAssertTrue(button.isEnabled); button.tap()
+            wait { options.value as? String == "Step \(position) of 3" }
+        }
+        review()
+        let firstPublish = id("Publish the checklist")
+        move(firstPublish, direction: "Up", position: 2)
+        XCTAssertEqual(try snapshot()["tables"] as? NSDictionary, initial as NSDictionary, "Reordering the review must not write the task")
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = largest ? "Largest ordered step review" : "Ordered step review before Apply"; shot.lifetime = .keepAlways; add(shot)
+        app.buttons["breakdownCancel"].tap(); XCTAssertTrue(app.buttons["saveTask"].waitForExistence(timeout: 8))
+        app.buttons["Cancel"].tap(); XCTAssertTrue(app.buttons["openInlineParentEditor"].waitForExistence(timeout: 8))
+        XCTAssertEqual(try snapshot()["tables"] as? NSDictionary, initial as NSDictionary)
+        if !largest {
+            review()
+            let publish = id("Publish the checklist"); XCTAssertNotEqual(publish, firstPublish, "Reopened suggestions receive fresh row identities")
+            move(publish, direction: "Up", position: 2); move(publish, direction: "Up", position: 1)
+            let publishField = field("Publish the checklist"); reveal(publishField); publishField.tap(); publishField.typeText(" #work tomorrow p1")
+            XCTAssertEqual(publishField.value as? String, "Publish the checklist #work tomorrow p1")
+            let done = app.buttons["breakdownKeyboardDone"]; XCTAssertTrue(done.waitForExistence(timeout: 5)); done.tap(); XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 8))
+            let reviewID = id("Review the layout"), toggle = app.switches["breakdownIncluded-" + reviewID]; reveal(toggle); toggle.tap()
+            let apply = app.buttons["breakdownApply"]; XCTAssertTrue(apply.isEnabled); XCTAssertEqual(apply.value as? String, "2 steps"); apply.tap()
+            XCTAssertTrue(app.buttons["saveTask"].waitForExistence(timeout: 8)); XCTAssertEqual(try snapshot()["tables"] as? NSDictionary, initial as NSDictionary, "Add selected changes only the parent draft")
+            app.buttons["saveTask"].tap(); XCTAssertTrue(app.buttons["openInlineParentEditor"].waitForExistence(timeout: 10))
+            let saved = try XCTUnwrap(try snapshot()["tables"] as? [String: [[String: Any]]])
+            let rootID = "ed070000-0000-4000-8000-000000000001"
+            let old = try XCTUnwrap(initial["tasks"]?.first { $0["id"] as? String == rootID }), changed = try XCTUnwrap(saved["tasks"]?.first { $0["id"] as? String == rootID })
+            let oldChildren = try XCTUnwrap(old["subtasks"] as? [Any]), newChildren = try XCTUnwrap(changed["subtasks"] as? [[String: Any]])
+            XCTAssertEqual(newChildren.count, oldChildren.count + 2)
+            XCTAssertEqual(Array(newChildren.prefix(oldChildren.count)) as NSArray, oldChildren as NSArray)
+            XCTAssertEqual(newChildren.suffix(2).compactMap { $0["title"] as? String }, ["Publish the checklist #work tomorrow p1", "Inspect the brief"])
+            for row in newChildren.suffix(2) { XCTAssertEqual(Set(row.keys), ["id", "title", "completed"]); XCTAssertEqual(row["completed"] as? Bool, false) }
+            var expected = initial, tasks = try XCTUnwrap(expected["tasks"]), index = try XCTUnwrap(tasks.firstIndex { $0["id"] as? String == rootID }); tasks[index]["subtasks"] = newChildren; expected["tasks"] = tasks
+            XCTAssertEqual(saved as NSDictionary, expected as NSDictionary, "Only the reviewed appended children may change")
+            app.buttons["undoInlineParentEdit"].tap(); wait { (try? self.snapshot()["tables"] as? NSDictionary) == initial as NSDictionary }
+            app.buttons["redoInlineParentEdit"].tap(); wait { (try? self.snapshot()["tables"] as? NSDictionary) == saved as NSDictionary }
+            app.terminate(); app.launchArguments = args + ["--inline-subtasks-cold"]; app.launch()
+            XCTAssertTrue(ready.waitForExistence(timeout: 30)); wait { ready.label == "Ready" }
+            XCTAssertEqual(try snapshot()["tables"] as? NSDictionary, saved as NSDictionary)
+        }
+        let folder = try home().appendingPathComponent("Library/Application Support/WorkspaceReadPerformance"); try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let proof: [String: Any] = ["accepted": true, "largestText": largest, "modelInferenceClaimed": false, "productionStepReview": true, "reviewReorderingReadOnly": true, "cancelPreservesTables": true, "orderedLiteralSaveUndoRedoCold": !largest]
+        try JSONSerialization.data(withJSONObject: proof, options: [.sortedKeys]).write(to: folder.appendingPathComponent(largest ? "ordered-step-large-ui.json" : "ordered-step-ui.json"), options: .atomic)
+    }
+    @MainActor func testOrderedStepReviewCancelSaveUndoRedoAndColdReturn() throws { try runOrderedStepReview(largest: false) }
+    @MainActor func testLargestTextOrderedStepReviewAndCancel() throws { try runOrderedStepReview(largest: true) }
+}

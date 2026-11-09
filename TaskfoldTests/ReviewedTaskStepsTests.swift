@@ -40,6 +40,17 @@ final class ReviewedTaskStepsTests: XCTestCase {
         var body = c.body; body["source_title"] = .string("Changed")
         XCTAssertThrowsError(try ReviewedTaskStepsCommand(account: c.account, origin: c.origin, body: body).review(read))
     }
+    func testReviewedCommandKeepsChosenOrderAfterEditsAndExclusions() throws {
+        var steps = ["Inspect", "Review", "Publish"].map { TaskBreakdownReview.Step(title: $0) }
+        steps[1].included = false; let last = steps[2].id
+        TaskBreakdownReview.move(last, by: -1, in: &steps); TaskBreakdownReview.move(last, by: -1, in: &steps)
+        steps[0].title = "Publish #work tomorrow p1"
+        let current = try read(), c = try ReviewedTaskStepsCommand(titles: steps.filter(\.included).map(\.title), parent: nil, read: current)
+        XCTAssertEqual(c.body["steps"]!.list.map { $0.object["title"]!.text }, ["Publish #work tomorrow p1", "Inspect"])
+        try c.review(current)
+        let decoded = try ReviewedTaskStepsCommand(account: c.account, origin: c.origin, body: c.body)
+        XCTAssertEqual(decoded, c)
+    }
     func testMalformedRequestsAndMetadataCannotEnterBatch() throws {
         let c = try command()
         for key in ["action", "account", "task_id", "request_id", "parent_key", "parent_revision", "source_title", "structure_revision", "index", "steps"] {

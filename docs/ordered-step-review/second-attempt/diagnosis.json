@@ -1,0 +1,9 @@
+{
+  "nativeAccepted": false,
+  "largestTextAccepted": true,
+  "normalFailure": "The native tap placed the caret at the beginning. The test incorrectly required appended text instead of verifying the exact edit at that caret.",
+  "correction": "Read the stable-ID field after typing, require one literal marker and preservation of every original character, then require exact normalized entered title in the chosen saved order. All table, child metadata, Undo/Redo/cold guards retained.",
+  "productFollowup": "Code review restored the original busy swipe-delete guard and made deletion use the displayed row identities, with current-scope guards on menu removal. Both final app SDK and native flows rerun.",
+  "fixtureRestoredExactly": true,
+  "ownedSimulatorShutdown": true
+}
