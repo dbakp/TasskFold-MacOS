@@ -11710,3 +11710,8 @@ Both owners add caller-confined whole-record projection reuse after current iden
 ### 9 November — preserved-row save encoding
 
 Both owners admit exact opaque JSON rows through the preserving codec's completed-row depth validation, retaining immutable-source/ordinal reuse and ordinary fallback. Each passes 134 selected data cases plus signed full-source SDK audits. One identical iPhone Simulator app measures actual warm Save 28.6 → 26.3 ms and encoding 14.4 → 10.4 ms, with exact durable/cold work and checkbox tokens. The corrected DEBUG fixture lets the existing guarded worker finish outside timing in both modes; no bypass of production account/source/access checks. All original fixture files restored; owned outputs cleaned and normal app unchanged. Wider UI/physical/Mac-runtime scope and signing prerequisite remain open. See `preserved-row-preparation/README.md`.
+
+
+### 9 November — paused iPad recovery checkpoint
+
+User paused further work and requested a checkpoint. Two iPad cold-hierarchy UI cases failed before organizer actions; the iOS test helper now uses the centered form viewport and passes syntax parsing only. Full build interrupted, corrected rerun pending. Both owners record the incomplete scope and exact original21-file restoration; no production Mac change or new Mac runtime acceptance. Goal stays paused. See `ipad-cold-hierarchy-checkpoint/README.md`.
