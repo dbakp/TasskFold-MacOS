@@ -1,0 +1,193 @@
+{
+  "scope": "Both owning Core implementations and signed SDKs; actual synthetic iPhone Simulator Store saves/cold reopen. Visual/frame-rate, physical, hosted/auth and Mac runtime acceptance remain separate.",
+  "core": {
+    "ios": {
+      "executed": 401,
+      "passed": 397,
+      "optionalSkipped": 4,
+      "failures": 0
+    },
+    "mac": {
+      "executed": 402,
+      "passed": 397,
+      "optionalSkipped": 5,
+      "failures": 0
+    },
+    "newFunctionalCases": 8,
+    "newOptionalDiagnostic": 1
+  },
+  "implementation": "Reuse per-root hierarchy projections only for identical complete unencoded authored record identity, after current root/project/archive checks. Global item/reference/preserved-byte limits remain; aggregate-hit overflow uses original traversal/refusal. Failed indices clear partial cache. Actual action planning uses an uncached fresh index.",
+  "retention": "At most4096 retained items and8MiB conservative charged-source estimate per generation, not a heap guarantee. Optional inspection limited to4096 nodes/depth128 per root; large/deep/root-only data bypasses retention. Caller confined; account/generation/session/access/nil scope clears. Both Stores clear immediately on account/access changes. Worker seed carries hashes/empty identities, no projections or task text.",
+  "nativeBeforeSHA256": "9c42d7f395d4dd64f8ab6b395a98da75b703cb4f6440f9c1a4da6b5a736b47e3",
+  "nativeAfterSHA256": "df8c9ec3c746a515eeef77c12532384ec9143a08e4ef3a66883cf4ab6c4a09f8",
+  "normalAppChanged": false,
+  "physicalOrFPSClaimed": false,
+  "sources": {
+    "TaskFold-iOS": {
+      "Taskfold/Core/SubtaskTree.swift": "40c4fcbb9419bf636e0ae861322235b198c13dc7cf31add6d2fd11a877a00ca6",
+      "Taskfold/Core/WidgetCompletion.swift": "1deaec09b26e98db026c0a87a3e05d6eb002369be91ed54d51104cb391a4025c",
+      "Taskfold/Core/Store.swift": "085e6996de89d91ab21d8849faa687548cb662a3e8e026e94f4b3cc5df37c745",
+      "TaskfoldTests/HierarchyProjectionCacheTests.swift": "559cddc98eaee5d863ac5157be95cc2587d7d071d58172bc3de5129b986f4d94"
+    },
+    "TasskFold-MacOS": {
+      "Taskfold/Core/SubtaskTree.swift": "40c4fcbb9419bf636e0ae861322235b198c13dc7cf31add6d2fd11a877a00ca6",
+      "Taskfold/Core/WidgetCompletion.swift": "1deaec09b26e98db026c0a87a3e05d6eb002369be91ed54d51104cb391a4025c",
+      "Taskfold/Core/Store.swift": "94eafef3fca8b8de31d99e60e19d2a24dc5584bfa85bf80b09fbd9ece4d57bb5",
+      "TaskfoldTests/HierarchyProjectionCacheTests.swift": "559cddc98eaee5d863ac5157be95cc2587d7d071d58172bc3de5129b986f4d94"
+    }
+  },
+  "pairedCore": {
+    "ios": {
+      "controlMedianSeconds": 0.021540083223953843,
+      "candidateMedianSeconds": 0.007854083320125937,
+      "samples": [
+        {
+          "chargedBytes": 4091526,
+          "pass": 0,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.007710000034421682,
+            "controlSeconds": 0.02211633324623108
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 1,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.0074356666300445795,
+            "controlSeconds": 0.021535291569307446
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 2,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.00906933331862092,
+            "controlSeconds": 0.02078895829617977
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 3,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.007854083320125937,
+            "controlSeconds": 0.021540083223953843
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 4,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.008119333535432816,
+            "controlSeconds": 0.023429708322510123
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 5,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.00851716659963131,
+            "controlSeconds": 0.021785541670396924
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 6,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.007735791616141796,
+            "controlSeconds": 0.021218333393335342
+          }
+        }
+      ]
+    },
+    "mac": {
+      "controlMedianSeconds": 0.023414666764438152,
+      "candidateMedianSeconds": 0.01016841665841639,
+      "samples": [
+        {
+          "chargedBytes": 4091526,
+          "pass": 0,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.010687625035643578,
+            "controlSeconds": 0.023092666873708367
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 1,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.009590666741132736,
+            "controlSeconds": 0.02326099993661046
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 2,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.010338125051930547,
+            "controlSeconds": 0.02395308343693614
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 3,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.009819166734814644,
+            "controlSeconds": 0.022513499949127436
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 4,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.011270083487033844,
+            "controlSeconds": 0.025318958330899477
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 5,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.009548458270728588,
+            "controlSeconds": 0.02449925011023879
+          }
+        },
+        {
+          "chargedBytes": 4091526,
+          "pass": 6,
+          "rootsComputed": 1,
+          "rootsReused": 99,
+          "times": {
+            "candidateSeconds": 0.01016841665841639,
+            "controlSeconds": 0.023414666764438152
+          }
+        }
+      ]
+    }
+  }
+}

@@ -11700,3 +11700,8 @@ The independently owned iOS regression suite now accepts the merged confirmed-in
 ### 9 November — less retirement scanning during ordinary saves
 
 The durable save stage now delays its task-ID grouping until the first raw location-reminder row. All later rows keep the original binding, duplicate-ID and cancellation checks; old jobs/ledgers/acknowledgements remain guarded. Both owners pass 169 selected checks and signed all-source SDK builds. At 2,000 roots, no-location Debug stage medians drop 2.79–2.81 ms → 0.76–0.81 ms; unchanged/sparse/dense samples are retained. An earlier dense-regressing filter is rejected. Full-save/render/navigation and physical smoothness remain open. Normal update signing and phone-install deferral stay as recorded. See `retirement-save-scan/README.md`.
+
+
+### 9 November — exact hierarchy reuse in save preparation
+
+Both owners add caller-confined whole-record projection reuse after current identity/project/archive checks, preserving global quotas and current action admission. Scoped retained task data has a 4,096-item/8 MiB charged-source bound; account/access observers clear immediately, and worker seeds remain text-free. Each owner passes 397 Core cases plus recorded optional skips and signed all-source SDK builds. Counterbalanced Core widget preparation improves about 22 ms → 8 ms. Two frozen actual iPhone Store phases improve warm Save 38.1 ms → 29.5 ms/widget preparation 18.1 ms → 9.0 ms, with 99 roots reused/1 rebuilt, exact durable opaque work and cold widget tokens. All 85 original fixture files are restored and owned outputs cleaned. Mac runtime, wider UI/physical/account/window and normal-update signing scope remain open. See `hierarchy-projection-reuse/README.md`.

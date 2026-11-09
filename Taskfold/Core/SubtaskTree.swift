@@ -325,6 +325,71 @@ enum SubtaskTree {
 /// Read-only identities for independently queried checklist items. These projections
 /// never become backend task rows; every edit is translated into its current root.
 struct TaskHierarchyIndex {
+    /// Caller-confined display preparation. Exact, unencoded record identity is
+    /// the only reuse proof; action admission continues to build a fresh index.
+    final class ProjectionCache {
+        struct Statistics: Equatable { var reused = 0, computed = 0, retainedItems = 0, chargedBytes = 0 }
+        fileprivate struct Entry {
+            let root: Record
+            let items: [Item]
+            let referenceBytes: Int
+            let preservedBytes: Int
+            let cost: Int
+        }
+        let maximumItems: Int
+        let maximumBytes: Int
+        var enabled: Bool { maximumItems > 0 && maximumBytes > 0 }
+        private var workspace: WorkspaceBinding?
+        private var entries: [String: Entry] = [:], next: [String: Entry] = [:]
+        private(set) var statistics = Statistics()
+        init(maximumItems: Int = 4096, maximumBytes: Int = 8 * 1024 * 1024) {
+            self.maximumItems = max(0, maximumItems); self.maximumBytes = max(0, maximumBytes)
+        }
+        func clear() { workspace = nil; entries = [:]; next = [:]; statistics = Statistics() }
+        fileprivate func begin(_ current: WorkspaceBinding) {
+            if workspace != current { clear() }
+            workspace = current; next = [:]; statistics = Statistics()
+        }
+        fileprivate func matching(_ root: Record) -> Entry? {
+            guard enabled, let value = entries[root.id], value.root.sharesAuthoredSource(with: root) else { statistics.computed += 1; return nil }
+            return value
+        }
+        fileprivate func reuse(_ value: Entry) { statistics.reused += 1; retain(value) }
+        private func retain(_ value: Entry) {
+            guard value.items.count <= maximumItems - statistics.retainedItems,
+                  value.cost <= maximumBytes - statistics.chargedBytes else { return }
+            next[value.root.id] = value
+            statistics.retainedItems += value.items.count; statistics.chargedBytes += value.cost
+        }
+        fileprivate func remember(root: Record, items: [Item], references: Int, preserved: Int) {
+            guard enabled, items.count > 1, root.id.utf8.count <= 256,
+                  items.count <= maximumItems - statistics.retainedItems else { return }
+            // Conservative retained-source charge, not a heap measurement. Bound
+            // this optional inspection too; oversized/deep metadata stays uncached.
+            var remaining = maximumBytes - statistics.chargedBytes, nodes = 4096
+            let available = remaining
+            func charge(_ count: Int) -> Bool { guard count <= remaining else { return false }; remaining -= count; return true }
+            func text(_ value: String) -> Bool { charge(64) && charge(value.utf8.count) }
+            func visit(_ value: JSON, depth: Int) -> Bool {
+                guard depth <= 128, nodes > 0, charge(64) else { return false }; nodes -= 1
+                switch value {
+                case .string(let value): return charge(value.utf8.count)
+                case .preserved(let value): return charge(value.data.count)
+                case .array(let values): return values.count <= nodes && values.allSatisfy { visit($0, depth: depth + 1) }
+                case .object(let values): return values.count <= nodes && values.allSatisfy { text($0.key) && visit($0.value, depth: depth + 1) }
+                case .number, .bool, .null: return true
+                }
+            }
+            guard charge(preserved), visit(.object(root.fields), depth: 0) else { return }
+            for item in items {
+                guard charge(512), text(item.id), item.path.allSatisfy(text), item.parentTitles.allSatisfy(text) else { return }
+            }
+            retain(Entry(root: root, items: items, referenceBytes: references, preservedBytes: preserved, cost: available - remaining))
+        }
+        fileprivate func finish(success: Bool) {
+            if success { entries = next; next = [:] } else { clear() }
+        }
+    }
     enum Scope { case all, roots, subtasks, parents }
     struct Item: Equatable, Sendable {
         let source: Record
@@ -394,7 +459,10 @@ struct TaskHierarchyIndex {
         ChecklistRecovery.validIdentity(id)
     }
 
-    init(roots: [Record], projects: [Record], workspace: WorkspaceBinding) throws {
+    init(roots: [Record], projects: [Record], workspace: WorkspaceBinding, projections: ProjectionCache? = nil) throws {
+        projections?.begin(workspace)
+        var succeeded = false
+        defer { projections?.finish(success: succeeded) }
         guard !workspace.account.isEmpty else { throw Self.failure("Open a workspace before filtering subtasks.") }
         guard roots.count <= Self.maximumItems else { throw Self.failure("This task hierarchy is too large to filter here.") }
         self.workspace = workspace
@@ -409,6 +477,17 @@ struct TaskHierarchyIndex {
             guard project.isEmpty || (projectGroups[project]?.count == 1 && !hidden.contains(project)) else {
                 excludedRootIDs.insert(root.id); continue
             }
+            if let cached = projections?.matching(root),
+               cached.items.count <= Self.maximumItems - items.count,
+               cached.referenceBytes <= Self.maximumReferenceBytes - referenceBytes,
+               cached.preservedBytes <= Self.maximumPreservedProjectionBytes - preservedProjectionBytes {
+                for item in cached.items { positions[item.id] = items.count; items.append(item) }
+                referenceBytes += cached.referenceBytes; preservedProjectionBytes += cached.preservedBytes
+                projections?.reuse(cached); continue
+            }
+            // If a cached root would exceed a combined limit, run the original
+            // traversal so its refusal and diagnostic remain unchanged.
+            let start = items.count, initialReferences = referenceBytes, initialPreserved = preservedProjectionBytes
             var childIDs = Set<String>()
             func visit(_ source: Record, raw: JSON, independent: Bool, path: [String], parents: [String], reference: String) throws {
                 guard path.count <= SubtaskTree.readableDepth, items.count < Self.maximumItems, reference.utf8.count <= Self.maximumReferenceBytes - referenceBytes else {
@@ -444,7 +523,9 @@ struct TaskHierarchyIndex {
                 }
             }
             try visit(root, raw: .object(root.fields), independent: false, path: [], parents: [], reference: root.id)
+            projections?.remember(root: root, items: Array(items[start...]), references: referenceBytes - initialReferences, preserved: preservedProjectionBytes - initialPreserved)
         }
+        succeeded = true
     }
     func item(_ id: String) -> Item? { positions[id].map { items[$0] } }
     func selection(_ id: String) -> Selection? { item(id).map { Selection(item: $0, workspace: workspace) } }
