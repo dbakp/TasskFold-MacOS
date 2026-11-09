@@ -1,0 +1,201 @@
+{
+  "platform": "iPadOS Simulator",
+  "existingPhoneCasesOnTablet": true,
+  "accepted": false,
+  "modelInferenceClaimed": false,
+  "normalAppChanged": false,
+  "realServiceClaimed": false,
+  "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+  "initialDeviceState": "Shutdown",
+  "xcodeExitCode": 65,
+  "elapsedSeconds": 191.07866978645325,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+          "deviceName": "iPad Pro 13-inch (M5)",
+          "modelName": "iPad Pro 13-inch (M5)",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 2,
+        "passedTests": 0,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 2,
+    "finishTime": 1794204091.358,
+    "passedTests": 0,
+    "result": "Failed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1794203905.994,
+    "statistics": [],
+    "testFailures": [
+      {
+        "failureText": "Failed to get matching snapshot: No matches found for Elements matching predicate '\"organizeIndependentChildren\" IN identifiers' from input {(\n    Button, identifier: 'ToggleSideBar', label: 'Toggle sidebar',\n    Button, identifier: 'sun.max', label: 'Today',\n    Button, identifier: 'tray', label: 'Inbox', Selected,\n    Button, identifier: 'calendar.day.timeline.left', label: 'Upcoming',\n    Button, identifier: 'calendar', label: 'Calendar',\n    Button, identifier: 'square.grid.2x2', label: 'Browse',\n    Button, identifier: 'sun.max', label: 'Today',\n    Button, identifier: 'tray', label: 'Inbox', Selected,\n    Button, identifier: 'calendar.day.timeline.left', label: 'Upcoming',\n    Button, identifier: 'calendar', label: 'Calendar',\n    Button, identifier: 'square.grid.2x2', label: 'Browse',\n    Button, label: 'Cancel',\n    Button, identifier: 'saveTask', label: 'Save',\n    Button, identifier: 'openSettings', label: 'Settings and account',\n    Button, label: 'Task options',\n    Button, identifier: 'openTaskSearch', label: 'Search',\n    Button,\n    Button, identifier: 'floatingAdd', label: 'Add task',\n    Button, identifier: 'openNoteFormatting', label: 'Format notes',\n    Button, identifier: 'flag.fill', label: 'Priority',\n    Button, identifier: 'revokeTeamEditorFixture', label: 'Revoke test editing',\n    Button, identifier: 'sectionHeader-inbox:group:0:unsectioned', label: 'Tasks, 1', value: Expanded,\n    Button, label: 'Complete Native child workspace',\n    Button, identifier: 'taskDetails-ec990000-0000-4000-8000-000000000002', label: 'Native child workspace, 0 of 3 subtasks completed'\n)}\nPossibly caused by runtime issues:\nAutomation type mismatch: computed Button from legacy attributes vs Cell from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 75;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeTraits\" = 146297323520;\n}\nAutomation type mismatch: computed Button from legacy attributes vs Other from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 0;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeTraits\" = 8858370048;\n}\nAutomation type mismatch: computed Button from legacy attributes vs Cell from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 75;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeTraits\" = 146297323528;\n}\nAutomation type mismatch: computed Button from legacy attributes vs Other from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 0;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeTraits\" = 8858370056;\n}\nAutomation type mismatch: computed Button from legacy attributes vs PopUpButton from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 14;\n    \"XC_kAXXCAttributeElementBaseType\" = NSObject;\n    \"XC_kAXXCAttributeElementType\" = \"SwiftUI.AccessibilityNode\";\n    \"XC_kAXXCAttributeTraits\" = 1108101562369;\n}\nSee test report attachments for more detail.",
+        "targetName": "TaskfoldUITests",
+        "testIdentifier": 1,
+        "testIdentifierString": "WorkflowSourceSelectionUITests/testColdHierarchyUndoJoinsNormalHistoryAndColdReturn()",
+        "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/WorkflowSourceSelectionUITests/testColdHierarchyUndoJoinsNormalHistoryAndColdReturn",
+        "testName": "testColdHierarchyUndoJoinsNormalHistoryAndColdReturn()"
+      },
+      {
+        "failureText": "Failed to get matching snapshot: No matches found for Elements matching predicate '\"organizeIndependentChildren\" IN identifiers' from input {(\n    Button, identifier: 'ToggleSideBar', label: 'Toggle sidebar',\n    Button, identifier: 'sun.max', label: 'Today',\n    Button, identifier: 'tray', label: 'Inbox', Selected,\n    Button, identifier: 'calendar.day.timeline.left', label: 'Upcoming',\n    Button, identifier: 'calendar', label: 'Calendar',\n    Button, identifier: 'square.grid.2x2', label: 'Browse',\n    Button, identifier: 'sun.max', label: 'Today',\n    Button, identifier: 'tray', label: 'Inbox', Selected,\n    Button, identifier: 'calendar.day.timeline.left', label: 'Upcoming',\n    Button, identifier: 'calendar', label: 'Calendar',\n    Button, identifier: 'square.grid.2x2', label: 'Browse',\n    Button, label: 'Cancel',\n    Button, identifier: 'saveTask', label: 'Save',\n    Button, identifier: 'openSettings', label: 'Settings and account',\n    Button, label: 'Task options',\n    Button, identifier: 'openTaskSearch', label: 'Search',\n    Button,\n    Button, identifier: 'floatingAdd', label: 'Add task',\n    Button, identifier: 'openNoteFormatting', label: 'Format notes',\n    Button, identifier: 'revokeTeamEditorFixture', label: 'Revoke test editing',\n    Button, identifier: 'sectionHeader-inbox:group:0:unsectioned', label: 'Tasks, 1', value: Expanded,\n    Button, label: 'Complete Native child workspace',\n    Button, identifier: 'taskDetails-ec990000-0000-4000-8000-000000000002', label: 'Native child workspace, 0 of 3 subtasks completed'\n)}\nPossibly caused by runtime issues:\nAutomation type mismatch: computed Button from legacy attributes vs Cell from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 75;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeTraits\" = 146297323520;\n}\nAutomation type mismatch: computed Button from legacy attributes vs Other from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 0;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeTraits\" = 8858370048;\n}\nAutomation type mismatch: computed Button from legacy attributes vs Cell from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 75;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemCell\";\n    \"XC_kAXXCAttributeTraits\" = 146297323528;\n}\nAutomation type mismatch: computed Button from legacy attributes vs Other from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 0;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingTabBarItemView\";\n    \"XC_kAXXCAttributeTraits\" = 8858370056;\n}\nAutomation type mismatch: computed Button from legacy attributes vs PopUpButton from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 14;\n    \"XC_kAXXCAttributeElementBaseType\" = NSObject;\n    \"XC_kAXXCAttributeElementType\" = \"SwiftUI.AccessibilityNode\";\n    \"XC_kAXXCAttributeTraits\" = 1108101562369;\n}\nSee test report attachments for more detail.",
+        "targetName": "TaskfoldUITests",
+        "testIdentifier": 2,
+        "testIdentifierString": "WorkflowSourceSelectionUITests/testLargestColdHierarchyUndoJoinsNormalHistoryAndColdReturn()",
+        "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/WorkflowSourceSelectionUITests/testLargestColdHierarchyUndoJoinsNormalHistoryAndColdReturn",
+        "testName": "testLargestColdHierarchyUndoJoinsNormalHistoryAndColdReturn()"
+      }
+    ],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 2
+  },
+  "error": "",
+  "restoredFolders": {
+    "Taskfold": {
+      "originallyExisted": true,
+      "files": 3,
+      "exactDigestsPreserved": true
+    },
+    "WorkspaceReadPerformance": {
+      "originallyExisted": true,
+      "files": 14,
+      "exactDigestsPreserved": true
+    },
+    "Child field native peer": {
+      "originallyExisted": true,
+      "files": 4,
+      "exactDigestsPreserved": true
+    }
+  },
+  "generatedDataHashes": {
+    "Taskfold": {
+      "ec990000-0000-4000-8000-000000000001.json": "eb17dab8bb766da7cf475e49fc2c494b27ed454b5fa2166cab55050757dec062",
+      "ec990000-0000-4000-8000-000000000001.removal.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "Child field native peer": {
+      "server.json": "ba37c2f4fac0603a8d527d32debd1bd52b9072595a3e163d9e88a132412b7fd8"
+    }
+  },
+  "finalSnapshot": {
+    "pending": [],
+    "tables": {
+      "tasks": [
+        {
+          "id": "ec990000-0000-4000-8000-000000000002",
+          "project_id": null,
+          "user_id": "ec990000-0000-4000-8000-000000000001",
+          "title": "Native child workspace",
+          "subtasks": [
+            {
+              "future": {
+                "keep": true
+              },
+              "priority": 4,
+              "id": "concept",
+              "description": "Original saved notes",
+              "subtasks": [
+                {
+                  "description": "Keep these nested instructions",
+                  "id": "nested",
+                  "title": "Collect supporting notes",
+                  "future": {
+                    "keep": true
+                  }
+                }
+              ],
+              "title": "Prepare the review",
+              "completed": false
+            },
+            {
+              "completed": false,
+              "priority": 4,
+              "description": "Original saved notes",
+              "id": "review",
+              "title": "Publish the summary",
+              "future": {
+                "keep": true
+              }
+            }
+          ],
+          "task_generation": "ec990000-0000-4000-8000-000000000003"
+        }
+      ]
+    },
+    "widgetCompletion": {
+      "receiptOrder": [],
+      "receipts": {},
+      "states": {
+        "ec990000-0000-4000-8000-000000000002": {
+          "token": "40967442-9376-4209-b103-1745dc44f2c1",
+          "signature": "58f6d42608427a79b7a0cb8bcba1fd84f9475a59debbcbd7628f7af78026b42b"
+        }
+      }
+    }
+  },
+  "finalPeer": {
+    "root": {
+      "subtasks": [
+        {
+          "future": {
+            "keep": true
+          },
+          "priority": 4,
+          "id": "concept",
+          "title": "Prepare the review",
+          "completed": false,
+          "subtasks": [
+            {
+              "id": "nested",
+              "description": "Keep these nested instructions",
+              "title": "Collect supporting notes",
+              "future": {
+                "keep": true
+              }
+            }
+          ],
+          "description": "Original saved notes"
+        },
+        {
+          "title": "Publish the summary",
+          "description": "Original saved notes",
+          "priority": 4,
+          "future": {
+            "keep": true
+          },
+          "completed": false,
+          "id": "review"
+        }
+      ],
+      "task_generation": "ec990000-0000-4000-8000-000000000003",
+      "user_id": "ec990000-0000-4000-8000-000000000001",
+      "project_id": null,
+      "id": "ec990000-0000-4000-8000-000000000002",
+      "title": "Native child workspace"
+    },
+    "receipts": {},
+    "versions": {
+      "concept": 1,
+      "review": 1
+    },
+    "lost": false,
+    "requests": 0,
+    "writes": 0
+  },
+  "priorFixtureRestored": true,
+  "ownedSimulatorShutdown": true,
+  "bootedThisRun": true
+}

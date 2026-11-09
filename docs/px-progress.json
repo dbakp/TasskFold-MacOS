@@ -4,9 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Save-time responsiveness",
-  "latest": "Exact preserved fields now support background row preparation in both owners. In one identical Simulator build, actual synthetic warm Save improves 28.6 ms to 26.3 ms, encoding 14.4 ms to 10.4 ms. Each owner passes 134 data checks and signed SDK/source audits; exact cold work and widget tokens survive. Wider UI, hardware and account scope remains open.",
+  "focus": "Paused checkpoint",
+  "latest": "Goal paused at the user’s request. The iPad cold subtask-history attempt failed before organizer actions; a tablet-aware test scrolling helper is syntax-checked, but its full build was interrupted and rerun is pending. The preceding save-performance fix is already merged in both repos. No installed-app or rollout change.",
   "next": [
+    "On explicit resume: complete the interrupted iPad UI-test build with a fresh report, then rerun normal/largest-text cold hierarchy recovery. This checkpoint does not count as native acceptance.",
     "Finish the existing-group signing fix when Xcode’s development account is available. The real54 attempt stopped before compilation with No Accounts and missing App Groups capability/entitlement. The user has been asked to sign into Xcode → Settings → Accounts; do not request credentials in chat or repeat the unchanged build. Preserve group.com.dbakp.taskfold and all existing shared data. Require actual app/widget/share profile authorization, then verify startup/lookup/prompt behavior before calling the recurring prompt fixed. Mac53 remains installed/usable; no routine update approval is needed. Phone installation remains deferred.",
     "Continue user-visible task organization and review improvements in bounded batches. New ordinary step ordering is accepted on Mac/iPhone in recorded scope; saved-service menu, iPad/speech/shared-account and genuine model quality remain separate. Avoid repeating successful checks without changed code or unresolved evidence.",
     "Continue remaining save/render/navigation costs and wider library/platform/account/accessibility cases. Exact opaque-row reuse is verified through same-build synthetic Store saves and cold reopen; avoid repeating accepted unchanged encoding/hierarchy checks. Normal update signing and phone-install prerequisites remain.",
@@ -2266,7 +2267,12 @@
     "preserved-row-preparation/storage-cleanup.json",
     "preserved-row-preparation/preservation.json",
     "preserved-row-preparation/initial-candidate-unavailable.json",
-    "preserved-row-preparation/initial-ios-sdk.json"
+    "preserved-row-preparation/initial-ios-sdk.json",
+    "ipad-cold-hierarchy-checkpoint/README.md",
+    "ipad-cold-hierarchy-checkpoint/status.json",
+    "ipad-cold-hierarchy-checkpoint/failed-native.json",
+    "ipad-cold-hierarchy-checkpoint/interrupted-sdk.json",
+    "ipad-cold-hierarchy-checkpoint/storage-cleanup.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2675,6 +2681,11 @@
     "inline-subtask-preview/verification.json": "dc4170af492a2c674331b47768f6429ee1b21783ac22e05e735ea66a6ea6c175",
     "ios42-daily-update/README.md": "5979de18e2a5ff8dbb6a7ff92d85f7790f7d777ee09a544708c6a32160d755c9",
     "ios42-daily-update/package-verification.json": "96e3db3618668fafaaf2d66b08bb88f2c2fd02da8cf5b4cdf9be5f7557ae976d",
+    "ipad-cold-hierarchy-checkpoint/README.md": "282ac230e4758dda068230ba6c182721f4d0b08aff2391c324e74f1bd3c4f21e",
+    "ipad-cold-hierarchy-checkpoint/failed-native.json": "09d38b259f68b49bb6bc1d76d4fe99b4e7be999b4a9d58552dc01687d5ddae21",
+    "ipad-cold-hierarchy-checkpoint/interrupted-sdk.json": "e4fa5a2ec8e45c996b29cdb2610d03218bed5fcbd681741bdbf375173030aea6",
+    "ipad-cold-hierarchy-checkpoint/status.json": "5b73f8bf72c7d238ccdeff2b344bccd1521239330356fc74fd9558cb6d245df4",
+    "ipad-cold-hierarchy-checkpoint/storage-cleanup.json": "1fcd4e24af29c4dd23a38633122c87c6e3c4def778cbd5610cc35c622624b8a8",
     "ipad-notes-and-mac50/README.md": "cbe5b23cbd159a80dc634ec9fab748da7bd704184386c0f11172978dac945cac",
     "ipad-notes-and-mac50/cache-budgets.json": "55eea5432ab9090357657e0d94d58864d291ac8e1eac53c6532bc46e4fabc596",
     "ipad-notes-and-mac50/long-note-contents-large-ui.json": "f0d2110040eb4a559c43ba47af1c2f47fd2ce9a2df93bc35012d52830f09d14b",
