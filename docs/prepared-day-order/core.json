@@ -1,0 +1,18 @@
+{
+  "core": {
+    "mac": {
+      "executed": 95,
+      "skipped": 3,
+      "failures": 0
+    },
+    "ios": {
+      "executed": 94,
+      "skipped": 1,
+      "failures": 0
+    }
+  },
+  "macFinalTestOnlyCorrection": "Heading fixture uses is_heading; all4 new tests rerun successfully after correcting flag; production source unchanged.",
+  "newFunctionalCases": 3,
+  "optInDiagnosticCases": 1,
+  "testFilter": "DayOrderPreparationTests|NativeBehaviorTests|ProjectSectionTaskReadTests|HeadingProjectProgressTests|DragTargetReadTests|TaskDayGroupsReadTests"
+}

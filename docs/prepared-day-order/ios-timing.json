@@ -1,0 +1,48 @@
+{
+  "cases" : [
+    {
+      "exactParity" : true,
+      "legacyMedianMS" : 31.255208188667893,
+      "mode" : "no-manual-order",
+      "preparedMedianMS" : 9.1294583398848772,
+      "rows" : 2000
+    },
+    {
+      "exactParity" : true,
+      "legacyMedianMS" : 38.935833377763629,
+      "mode" : "sparse",
+      "preparedMedianMS" : 10.06095833145082,
+      "rows" : 2000
+    },
+    {
+      "exactParity" : true,
+      "legacyMedianMS" : 32.984958263114095,
+      "mode" : "full-reverse",
+      "preparedMedianMS" : 14.240958262234926,
+      "rows" : 2000
+    },
+    {
+      "exactParity" : true,
+      "legacyMedianMS" : 131.89937500283122,
+      "mode" : "no-manual-order",
+      "preparedMedianMS" : 36.905041662976146,
+      "rows" : 10000
+    },
+    {
+      "exactParity" : true,
+      "legacyMedianMS" : 175.59179151430726,
+      "mode" : "sparse",
+      "preparedMedianMS" : 39.622999960556626,
+      "rows" : 10000
+    },
+    {
+      "exactParity" : true,
+      "legacyMedianMS" : 136.49883330799639,
+      "mode" : "full-reverse",
+      "preparedMedianMS" : 52.229749970138073,
+      "rows" : 10000
+    }
+  ],
+  "debugPreparationOnly" : true,
+  "wholeAppSmoothnessClaim" : false
+}

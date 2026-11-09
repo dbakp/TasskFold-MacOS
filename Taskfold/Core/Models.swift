@@ -1938,9 +1938,16 @@ enum DayPlacement {
     }
     /// The app's default order: priority bands (P1 first), and inside each band the user's manual order.
     static func arranged(_ tasks: [Record], ids: [String]) -> [Record] {
-        ordered(tasks, ids: ids).enumerated().sorted { a, b in
-            a.element.priority == b.element.priority ? a.offset < b.offset : a.element.priority < b.element.priority
-        }.map(\.element)
+        // Read each row's keys once, then sort once. Source position breaks
+        // duplicate-ID ties exactly as the stable manual-order pass did.
+        let ranks = Dictionary(ids.enumerated().map { ($1, $0) }, uniquingKeysWith: { a, _ in a })
+        return tasks.enumerated().map { position, task in
+            (row: task, priority: task.priority, rank: ranks[task.id] ?? (ids.count + position), position: position)
+        }.sorted { a, b in
+            if a.priority != b.priority { return a.priority < b.priority }
+            if a.rank != b.rank { return a.rank < b.rank }
+            return a.position < b.position
+        }.map(\.row)
     }
     static func hierarchyChanges(task: Record, day: String, orderedIDs: [String], before: String?, roots: [Record], projects: [Record], workspace: WorkspaceBinding, calendar: Calendar = .current) throws -> [Mutation] {
         guard SubtaskTree.referencePath(task.id) != nil, !task.completed, Dates.parse(day, calendar: calendar) != nil, before != task.id else { return [] }

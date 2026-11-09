@@ -1,0 +1,28 @@
+{
+  "freeBeforeBytes": 24320266240,
+  "actions": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac/out/ModuleCache.noindex",
+      "allocatedBytes": 14532608,
+      "kind": "completedCoreModuleScratch"
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios/out/ModuleCache.noindex",
+      "allocatedBytes": 14532608,
+      "kind": "completedCoreModuleScratch"
+    }
+  ],
+  "caches": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac",
+      "allocatedBytes": 661921792,
+      "within768MiB": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios",
+      "allocatedBytes": 726151168,
+      "within768MiB": true
+    }
+  ],
+  "freeAfterBytes": 24349253632
+}

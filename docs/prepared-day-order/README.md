@@ -1,0 +1,9 @@
+# Prepare day ordering once
+
+Ordinary day/manual placement used two stable sorts: manual rank, then priority bands. Each comparison reread record fields. The new implementation reads each row’s effective priority, first saved manual rank and source position once, then performs one lexicographic sort. Source-position ties preserve duplicate/missing IDs. Priority interpretation, outline-anchor expansion, task fields, saved order mutations, drag constraints and authorization remain unchanged. Both app repositories own their implementation.
+
+The frozen pre-change algorithm is compared against exact authored rows across duplicate/empty/canonically equivalent IDs, stale/repeated saved anchors, malformed/clamped priorities, reversals, edits and membership changes. Separate explicit expected ordering and sparse-heading checks supplement parity. A nine-pass alternating legacy/current Debug diagnostic covers 2,000 and 10,000 rows with no, sparse and full-reverse saved order. This measures preparation only: no full-app frame-rate, native visual or physical-device claim.
+
+Both full SDK builds pass with real signatures and namespace-only source audits (185 Mac sources and178 iOS sources). Code images remain unchanged after cleanup. No new native UI or device acceptance is claimed; no UI source/callsite or persistent state changed. Normal Mac53 remains installed pending the existing-group signing prerequisite; phone installation remains deferred.
+
+Mac selected checks execute95 cases with3 intentional skips; iOS executes94 with1 skip, zero failures. After correcting only the synthetic heading flag, all4 new Mac cases pass again. Both independent Debug diagnostics retain exact parity: at2,000 rows legacy medians31–39ms become9–14ms; at10,000 rows130–176ms become37–53ms. The comparator alternates execution order; it does not establish release timing or end-to-end responsiveness.
