@@ -1277,7 +1277,7 @@ final class Store {
         })
     }
     func childStructureHistoryStep(_ entry: ChildTaskStructureJournalState.Entry, scope: ChildTaskFieldClientScope, name: String? = nil, report: @escaping (ChildTaskHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
-        let actionName = name ?? ChildTaskStructureReview.title(entry.command)
+        let actionName = name ?? ChildTaskStructureReview.historyTitle(entry.command)
         return .init(name: actionName, key: entry.command.id,
                      retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope },
                      available: { [weak self] in

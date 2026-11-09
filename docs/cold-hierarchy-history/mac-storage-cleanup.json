@@ -1,0 +1,29 @@
+{
+  "apply": true,
+  "freeBeforeBytes": 23608905728,
+  "actions": [
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/CompilationCache.noindex",
+      "kind": "completedCompilerCache",
+      "allocatedBytes": 28672
+    },
+    {
+      "path": "/private/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/XCBuildData",
+      "kind": "completedBuildMetadata",
+      "allocatedBytes": 13373440
+    }
+  ],
+  "skipped": [
+    {
+      "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+      "reason": "Reusable compiler cache within 768 MiB budget",
+      "allocatedBytes": 672477184,
+      "projectedAllocatedBytes": 672477184,
+      "within768MiB": true,
+      "storagePressure": "constrained",
+      "budgetBytes": 805306368
+    }
+  ],
+  "freeAfterBytes": 23622500352,
+  "actualFreeChangeBytes": 13594624
+}

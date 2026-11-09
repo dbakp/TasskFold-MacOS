@@ -398,6 +398,9 @@ final class Workspace {
         guard let history = completionHistory, !history.contains(key: entry.command.id) else { return }
         let step = store.childStructureHistoryStep(entry, scope: scope) { [weak self] notice in self?.confirm(notice.message, undoable: false) }
         if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, history.acceptConfirmedInverse(of: parent, next: step) { return }
+        if entry.phase == .confirmed, entry.command.action == .undo,
+           let parent = entry.command.body["undo_of"]?.text,
+           history.adoptConfirmedInverse(of: parent, next: step) { return }
         history.record(step)
     }
     func invokeChildFieldHistory(_ entry: ChildTaskFieldJournalState.Entry) -> Bool {

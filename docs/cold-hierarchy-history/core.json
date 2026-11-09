@@ -1,0 +1,13 @@
+{
+  "mac": {
+    "executed": 145,
+    "failures": 0
+  },
+  "ios": {
+    "executed": 145,
+    "failures": 0
+  },
+  "newBridgeFunctionalCases": 5,
+  "bridgeTotal": 13,
+  "filter": "ConfirmedHistoryBridgeTests|ChildTaskStructureRecoveryTests|ChildTaskStructureCommandTests"
+}

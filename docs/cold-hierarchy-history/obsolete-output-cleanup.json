@@ -1,0 +1,16 @@
+{
+  "freeBeforeBytes": 23942062080,
+  "actions": [
+    {
+      "path": "/tmp/taskfold-step-order-mac-before-20261109",
+      "allocatedBytes": 89640960,
+      "reason": "Obsolete isolated-test preservation copy; identical original retained and restored"
+    },
+    {
+      "path": "/tmp/taskfold-step-order-mac-after-20261109",
+      "allocatedBytes": 89657344,
+      "reason": "Completed synthetic step-review data copy; exact task/project outcome retained, current original/cache/safety copy preserved"
+    }
+  ],
+  "freeAfterBytes": 24121483264
+}

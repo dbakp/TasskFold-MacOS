@@ -10,6 +10,70 @@ import XCTest
         for _ in 0..<1000 { if !bridge.busy { return }; await Task.yield() }
         XCTFail("History operation did not finish")
     }
+    func testColdConfirmedUndoStartsOnRedoWithoutSubmittingAgain() async {
+        let b = bridge(); var calls = 0
+        func next(_ key: String) -> ConfirmedHistoryBridge.Step {
+            .init(name: "Remove subtasks", key: key, retained: { true }, perform: {
+                calls += 1; return next(key == "undo" ? "redo" : "undo")
+            })
+        }
+        XCTAssertTrue(b.adoptConfirmedInverse(of: "original", next: next("undo")))
+        XCTAssertEqual(calls, 0); XCTAssertFalse(b.canUndo); XCTAssertTrue(b.canRedo(key: "undo"))
+        XCTAssertEqual(b.manager.redoActionName, "Remove subtasks")
+        XCTAssertFalse(b.adoptConfirmedInverse(of: "original", next: next("undo")))
+        b.redo(); await settle(b); XCTAssertEqual(calls, 1); XCTAssertTrue(b.canUndo(key: "redo"))
+        b.undo(); await settle(b); XCTAssertEqual(calls, 2); XCTAssertTrue(b.canRedo(key: "undo"))
+    }
+    func testAdoptedColdInversePreservesOlderLocalUndoAndRedoOrder() async {
+        let b = bridge(); var local = 1, calls = 0
+        func localStep(_ value: Int) -> ConfirmedHistoryBridge.Step {
+            .init(name: "Local edit", key: "local", retained: { true }, immediate: {
+                local = value; return localStep(value == 0 ? 1 : 0)
+            })
+        }
+        let recovered = ConfirmedHistoryBridge.Step(name: "Move subtask", key: "recovered", retained: { true }, perform: { calls += 1; return nil })
+        b.record(localStep(0))
+        XCTAssertTrue(b.adoptConfirmedInverse(of: "missing-original", next: recovered))
+        XCTAssertEqual(local, 1); XCTAssertEqual(calls, 0)
+        b.undo(); XCTAssertEqual(local, 0); XCTAssertTrue(b.canRedo(key: "local"))
+        b.redo(); XCTAssertEqual(local, 1); XCTAssertTrue(b.canRedo(key: "recovered"))
+        b.redo(); await settle(b); XCTAssertEqual(calls, 1)
+    }
+    func testColdInverseRefusesKnownFramesInvalidKeysAndChangedScope() {
+        let b = bridge()
+        b.record(.init(name: "Keep local", key: "known", retained: { true }))
+        let next = ConfirmedHistoryBridge.Step(name: "Recovered", key: "next", retained: { true })
+        XCTAssertFalse(b.adoptConfirmedInverse(of: "known", next: next))
+        XCTAssertFalse(b.adoptConfirmedInverse(of: "", next: next))
+        XCTAssertFalse(b.adoptConfirmedInverse(of: "next", next: next))
+        XCTAssertFalse(b.adoptConfirmedInverse(of: "missing", next: .init(name: "No key", retained: { true })))
+        XCTAssertFalse(b.adoptConfirmedInverse(of: "missing", next: .init(name: "Empty key", key: "", retained: { true })))
+        XCTAssertFalse(b.adoptConfirmedInverse(of: "missing", next: .init(name: "Stale", key: "stale", retained: { false })))
+        XCTAssertEqual(b.manager.undoActionName, "Keep local"); XCTAssertTrue(b.canUndo(key: "known"))
+        XCTAssertFalse(b.contains(key: "next")); XCTAssertFalse(b.canRedo)
+    }
+    func testColdInverseCanWaitForAvailabilityButCannotOutliveScope() async {
+        let b = bridge(); var online = false, current = true, calls = 0
+        let next = ConfirmedHistoryBridge.Step(name: "Remove subtasks", key: "undo", retained: { current }, available: { online }, perform: { calls += 1; return nil })
+        XCTAssertTrue(b.adoptConfirmedInverse(of: "source", next: next))
+        XCTAssertFalse(b.canRedo); b.redo(); XCTAssertEqual(calls, 0)
+        online = true; XCTAssertTrue(b.canRedo)
+        current = false; XCTAssertFalse(b.canRedo)
+        b.manager.redo(); await settle(b)
+        XCTAssertEqual(calls, 0); XCTAssertFalse(b.contains(key: "undo"))
+    }
+    func testColdInverseCannotReplaceAnInFlightHistoryOperation() async {
+        let b = bridge(); var resume: CheckedContinuation<Void, Never>?
+        b.record(.init(name: "Pending", key: "pending", retained: { true }, perform: {
+            await withCheckedContinuation { resume = $0 }; return nil
+        }))
+        b.undo()
+        for _ in 0..<1000 { if resume != nil { break }; await Task.yield() }
+        XCTAssertTrue(b.busy)
+        XCTAssertFalse(b.adoptConfirmedInverse(of: "source", next: .init(name: "Recovered", key: "inverse", retained: { true })))
+        XCTAssertFalse(b.contains(key: "inverse"))
+        resume?.resume(); await settle(b)
+    }
     func testConfirmedSavedInverseAdvancesHistoryWithoutSubmittingTwice() async {
         let b = bridge(); var calls = 0
         b.record(.init(name: "Add Subtask", key: "forward", retained: { true }, available: { false }, perform: { calls += 100; return nil }))
