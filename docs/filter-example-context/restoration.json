@@ -1,0 +1,9 @@
+{
+  "productionRestoredExactly": true,
+  "productionSHA256": "84acefdfb4beff5daa39c975fa6700429de3f9e2e2503e45e8ef5f7fa2a11ea6",
+  "candidateAccepted": false,
+  "genuineRequests": 12,
+  "sampledMatches": 8,
+  "semanticQualityClaim": false,
+  "heldOutNotRunBecauseExistingCasesFailed": true
+}

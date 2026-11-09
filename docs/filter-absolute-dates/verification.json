@@ -1,0 +1,21 @@
+{
+  "core": {
+    "mac": {
+      "executed": 50,
+      "passed": 48,
+      "skipped": 2,
+      "failures": 0
+    },
+    "ios": {
+      "executed": 50,
+      "passed": 48,
+      "skipped": 2,
+      "failures": 0
+    }
+  },
+  "modelInferenceAccepted": false,
+  "currentModelEngineUnchanged": true,
+  "newNativeAcceptance": false,
+  "newSDKBuild": false,
+  "sixNewFunctionalCases": true
+}

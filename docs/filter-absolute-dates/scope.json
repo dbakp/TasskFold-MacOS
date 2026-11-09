@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-09",
+  "modelEnginePrefixUnchanged": true,
+  "newCoreFunctionalCases": 6,
+  "localFirstRoutingUnchanged": true,
+  "newNativeAcceptance": false,
+  "newFullSDKBuild": false,
+  "normalAppsChanged": false,
+  "sourceSHA256": "efa543d0787f277078ee93b01297938058c97bf195d810757fff978356ef783a"
+}

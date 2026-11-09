@@ -11680,3 +11680,8 @@ Step reviews now provide stable-identity Move up/down, Remove, editable titles a
 ### 9 November — prepare ordinary day ordering once
 
 Manual day ordering now reads effective priority/rank/source-position once and performs one stable-equivalent sort. Exact authored rows match the prior algorithm across repeated/empty/Unicode IDs, stale anchors, clamped/malformed priorities and edit/membership sequences. Selected Mac95 checks (3 intentional skips) and iOS94 (1 skip) pass; four new Mac cases pass again after correcting a synthetic heading flag. Both Debug comparison diagnostics show2,000-row medians31–39ms→9–14ms and10,000-row130–176ms→37–53ms. Preparation scope only; full-app rendering, native/physical smoothness and installed updates remain separate. See `prepared-day-order/README.md`.
+
+
+### 9 November — explicit dates in local filter descriptions
+
+Local descriptions accept full ASCII ISO Gregorian days for planned dates and deadlines, including strict before/after and existing completion/priority/project/alternative/exclusion composition. Both owners execute50 selected Core cases:48 pass,2 explicit model skips. Six new functional cases cover actual date-source counterexamples, leap/invalid/partial-token refusal, literal names/search and local-origin drafting. No new SDK/native/installed-update claim. A separate typed-example model transcript ran12 unchanged cases and failed4; accidental sampled matches also reveal two counterexample gaps. It is rejected and production model code restored. Keep broader inference quality open; see `filter-absolute-dates/` and `filter-example-context/`.
