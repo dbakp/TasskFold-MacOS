@@ -11668,3 +11668,5 @@ Plain-language filter review (9 November): duplicate syntax echo now describes t
 
 
 9 November · parent-date child-context reuse: unrelated controlled parent edits retain only the exact raw-child/routing proof while full authored identity and actual action validation stay fresh. Both owners pass172 Core cases with3 skips; same-build counterbalanced100-parent/2000-child preparation improves57–61ms→22–23ms with exact states/tokens. Actual signed iPhone Store single-parent save/cold integration passes and restores prior fixture. No whole-batch Store, release/FPS or normal-update claim. See `child-widget-context-proof/`.
+
+Combined-source closeout: current Mac185-source app/runner and iOS178-source app/widget/share/runner SDK products build and pass real signature/source-image audits. These integrate accepted keyboard and child-context changes; native measurements remain pinned to their documented images. Four selected caches fit768MiB after cleanup, final images preserved and about24.6GiB free. NormalMac53 remains unchanged pending the existing Xcode account/group provisioning followup.

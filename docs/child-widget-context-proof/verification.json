@@ -25,5 +25,13 @@
   "iosNativeStoreSingleParentSavesAccepted": true,
   "iosNativeColdTablesAndWidgetTokensExact": true,
   "priorFixtureRestored": true,
-  "ownedSimulatorShutdown": true
+  "ownedSimulatorShutdown": true,
+  "macCombinedSDKAccepted": true,
+  "macCombinedAppSourceCount": 185,
+  "macCombinedImagePreservedAfterCleanup": true,
+  "iosCombinedSDKAccepted": true,
+  "iosCombinedAppSourceCount": 178,
+  "bothCombinedSDKRealTeamSignatures": true,
+  "currentCodeImagesPreservedAfterCleanup": true,
+  "allSelectedCachesWithin768MiB": true
 }
