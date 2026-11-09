@@ -11662,3 +11662,9 @@ Bounded build cleanup (8 November): between20–30GiB free, completed-cache clea
 
 
 Plain-language filter review (9 November): duplicate syntax echo now describes the complete grouped condition, preserving per-list completion defaults and guarded estimate bounds. Both owners pass141 Core checks with3 explicit model skips; actual signed iPhone normal/largest cases accept exact meaning, preview/Use/Cancel, explicit Save and cold return. Mac/iPad/speech/physical and installed-update acceptance remain separate. Cheap cleanup retains213 compiled objects and the tested image within budget. Scope, cancelled build/fixture guard and native evidence: `plain-language-filter-review/`.
+
+
+9 November · Mac note keyboard runtime accepted: the preserved signed product passes fresh heading keys without priority mutation, inline toggles, newline/Apply, description-only save, exact Undo/Redo/cold tables, nested Link isolation and Escape/Discard through CUA. Xcode fails automation initialization before any case executes; this is direct native acceptance, not three XCTest passes. Prior isolated data restored exactly and app closed. Source is merged; broader current-main, iOS hardware/speech/shared scope stays distinct. See `note-heading-command-scope/mac-direct-runtime.json`.
+
+
+9 November · parent-date child-context reuse: unrelated controlled parent edits retain only the exact raw-child/routing proof while full authored identity and actual action validation stay fresh. Both owners pass172 Core cases with3 skips; same-build counterbalanced100-parent/2000-child preparation improves57–61ms→22–23ms with exact states/tokens. Actual signed iPhone Store single-parent save/cold integration passes and restores prior fixture. No whole-batch Store, release/FPS or normal-update claim. See `child-widget-context-proof/`.

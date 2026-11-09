@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-09",
+  "accepted": true,
+  "method": "CUA native keyboard walkthrough with exact reserved-fixture file readbacks",
+  "frozenMacSourceCommit": "6e4d826afc0c610a05048dfb816e5425723ba33e",
+  "sourceAudit": "mac-source-audit.json",
+  "appSourceCount": 185,
+  "xcodeUITestCasesExecuted": 0,
+  "xcodeFailure": "Runner initialization timed out enabling automation mode before any case executed",
+  "xcodeFailedLog": "taskfold-note-heading-fixed-native-20261109-run.log",
+  "freshMenuNotOpened": true,
+  "headingKeys": [
+    "CmdOption1",
+    "CmdOption2",
+    "CmdOption3",
+    "CmdOption0"
+  ],
+  "freshHeadingPriorityBefore": 4,
+  "freshHeadingPriorityAfter": 4,
+  "allSavedTablesUnchangedBeforeApply": true,
+  "inlineKeys": [
+    "CmdB on/off",
+    "CmdI on/off",
+    "CmdShiftX on/off"
+  ],
+  "ordinaryReturnInsertsNewline": true,
+  "cmdReturnOnlyDescriptionSaved": true,
+  "exactUndoTables": true,
+  "exactRedoTables": true,
+  "exactColdReturnTables": true,
+  "coldVisibleDescription": "# Keep the original notes.\nKeyboard note",
+  "nestedLinkKeysDidNotApplyOrChangeDraft": true,
+  "escapeLinkReturnsOuterDraft": true,
+  "escapeChangedOuterDraftAsksDiscard": true,
+  "discardEntireSavedSnapshotUnchanged": true,
+  "priorIsolatedFixtureRestoredExactly": true,
+  "isolatedAppClosed": true,
+  "normalAppChanged": false,
+  "iosHardwareKeyboardAccepted": false,
+  "currentMainIntegrationAccepted": false,
+  "scope": "Frozen signed Mac product; broader speech/shared/account and latest-main integration remain separate"
+}

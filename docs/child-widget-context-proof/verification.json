@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-09",
+  "independentCore": {
+    "mac": {
+      "executed": 175,
+      "passed": 172,
+      "skipped": 3,
+      "failures": 0,
+      "log": "taskfold-child-context-mac-core-final.log"
+    },
+    "ios": {
+      "executed": 175,
+      "passed": 172,
+      "skipped": 3,
+      "failures": 0,
+      "log": "taskfold-child-context-ios-core-final.log"
+    }
+  },
+  "newFunctionalCases": 11,
+  "optInCounterbalancedDiagnosticAccepted": true,
+  "sameBuildWidgetStageOnly": true,
+  "nativeWholeBatchSaveOrFPSAccepted": false,
+  "normalAppChanged": false,
+  "phoneInstallationDeferred": true,
+  "iosNativeStoreSingleParentSavesAccepted": true,
+  "iosNativeColdTablesAndWidgetTokensExact": true,
+  "priorFixtureRestored": true,
+  "ownedSimulatorShutdown": true
+}

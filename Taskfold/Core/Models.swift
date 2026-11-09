@@ -135,7 +135,10 @@ enum JSON: Codable, Equatable, Sendable {
 
 struct Record: Codable, Identifiable, Equatable, Sendable {
     private var sourceIdentity = RecordSourceIdentity()
-    var fields: [String: JSON] { didSet { sourceIdentity = RecordSourceIdentity() } }
+    private var widgetChildIdentity: RecordSourceIdentity?
+    private static let widgetChildContextFields = ["task_generation", "created_at", "project_id", "section_id"]
+    private static let widgetChildInputs = Set(["id", "subtasks"] + widgetChildContextFields)
+    var fields: [String: JSON] { didSet { sourceIdentity = RecordSourceIdentity(); widgetChildIdentity = nil } }
     /// Domain equality remains fields-only; source identity is only a fast proof
     /// that two immutable copies have exactly the same authored fields.
     static func == (lhs: Self, rhs: Self) -> Bool { lhs.fields == rhs.fields }
@@ -147,6 +150,18 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
         static func == (lhs: Self, rhs: Self) -> Bool { lhs.identity === rhs.identity }
     }
     var authoredSourceToken: SourceToken { SourceToken(identity: sourceIdentity) }
+    /// Only a proof of the raw child tree plus the exact root inputs used by
+    /// widget child signatures. It carries no task fields or action authority.
+    var widgetChildSignatureSourceToken: SourceToken { SourceToken(identity: widgetChildIdentity ?? sourceIdentity) }
+    func appendWidgetChildSignatureContext(to values: inout [JSON]) {
+        values.reserveCapacity(values.count + Self.widgetChildContextFields.count)
+        for field in Self.widgetChildContextFields { values.append(self[field]) }
+    }
+    mutating func mergeFields(_ values: [String: JSON]) {
+        let childIdentity = widgetChildIdentity ?? sourceIdentity
+        fields.merge(values) { _, new in new }
+        if Self.widgetChildInputs.isDisjoint(with: values.keys) { widgetChildIdentity = childIdentity }
+    }
 
     var id: String { string("id") }
     init(_ fields: [String: JSON] = [:]) { self.fields = fields }
@@ -157,7 +172,11 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     func encode(to encoder: Encoder) throws { try fields.encode(to: encoder) }
     subscript(_ key: String) -> JSON {
         get { fields[key] ?? .null }
-        set { fields[key] = newValue }
+        set {
+            let childIdentity = widgetChildIdentity ?? sourceIdentity
+            fields[key] = newValue
+            if !Self.widgetChildInputs.contains(key) { widgetChildIdentity = childIdentity }
+        }
     }
     func string(_ key: String) -> String { self[key].text }
     var title: String { string("title") }
@@ -446,7 +465,7 @@ enum TaskCompletionRevision {
         return change
     }
     static func applying(_ fields: [String: JSON], to old: Record) -> Record {
-        var row = old; row.fields.merge(fields.filter { $0.key != "task_generation" }) { _, new in new }
+        var row = old; row.mergeFields(fields.filter { $0.key != "task_generation" })
         if fields["completion_version"] == nil, touches(fields),
            old.completed != row.completed || instant(old["completed_at"]) != instant(row["completed_at"]) || TaskKind(old) != TaskKind(row) {
             row["completion_version"] = .number(Double(old["completion_version"].integer + 1))
