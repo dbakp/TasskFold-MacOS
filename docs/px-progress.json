@@ -4,14 +4,14 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Faster day ordering and remaining everyday pauses",
-  "latest": "Ordinary day ordering now prepares keys once and uses one sort. Both owners preserve exact priority/manual order, duplicate rows and unknown task fields in focused checks. Same-process Debug medians at2,000 rows improve from31–39ms to9–14ms; at10,000 rows130–176ms to37–53ms. This is ordering preparation, not whole-app smoothness. Ordered step-review controls are merged; broader responsiveness and installed updates remain open. Both full SDK builds and real signatures pass; all four selected build caches are below768MiB after cleanup.",
+  "focus": "More useful local filter descriptions",
+  "latest": "Descriptions now accept exact ISO planned dates and deadlines locally, including strict before/after bounds and composition with existing conditions. Both owners pass48 focused Core checks with2 intentional model skips. Invalid/leap/partial dates refuse. A separate typed-example model candidate failed and was restored; raw-model quality remains open. This parser batch has no new native/full-SDK or installed-update acceptance.",
   "next": [
     "Finish the existing-group signing fix when Xcode’s development account is available. The real54 attempt stopped before compilation with No Accounts and missing App Groups capability/entitlement. The user has been asked to sign into Xcode → Settings → Accounts; do not request credentials in chat or repeat the unchanged build. Preserve group.com.dbakp.taskfold and all existing shared data. Require actual app/widget/share profile authorization, then verify startup/lookup/prompt behavior before calling the recurring prompt fixed. Mac53 remains installed/usable; no routine update approval is needed. Phone installation remains deferred.",
     "Continue user-visible task organization and review improvements in bounded batches. New ordinary step ordering is accepted on Mac/iPhone in recorded scope; saved-service menu, iPad/speech/shared-account and genuine model quality remain separate. Avoid repeating successful checks without changed code or unresolved evidence.",
     "Continue final ledger/file-save costs, nonempty/changed-metadata fallbacks, cold/child-heavy preparation and sustained navigation/rendering across projects/platforms/accounts/accessibility. Unchanged metadata has a bounded proof and worker-validation reuse with real app-sync recovery evidence. The 5,000-root admission diagnostic is not full-save or physical smoothness acceptance. Mac 53 is already installed; include the newer metadata source in the next coherent update after the higher-priority shared-storage signing followup.",
     "Continue wider older-work migration: additional source/format variants beyond the accepted keep-editable HTTP flow, account/task/shared-custodian and cross-device/file/audio/history lifecycle. The actual iPhone production-controller Restore/lost-reply Check/Undo/Redo/Finish sequence now passes real Auth/REST with protected cold recovery; this adds no visual, Mac, TLS or hardware acceptance. Advanced normal gates remain off.",
-    "Production filter generation remains unchanged after three rejected designs. The minimal regex failure is identified in its process log as an unsupported pattern guide on this runtime; a finite-choice priority control succeeds. Flat typed tokens and structural bare/predicate enums both fail all fifteen contract/parser cases and are rejected. Continue only with a materially different supported design and the unchanged original/held-out quality oracle. Complete local phrases and plain-language iPhone review are accepted in recorded scope; no cloud or private-library input is authorized.",
+    "Before another raw-model design, strengthen the quality fixture with later deadlines and non-P1 future work. A five-example typed transcript ran12 requests but failed4;2 other sampled matches conceal broadened meaning. It is rejected, engine restored and held-out testing not run. Earlier regex/token/schema failures remain rejected. Complete local phrases, plain-language iPhone review and new ISO-date Core support are separate; no cloud/private-library input is authorized.",
     "Mac note keyboard source is now merged after direct CUA acceptance of the frozen signed product: fresh H1/H2/H3/body without priority changes, inline keys/newlines/Apply, exact Undo/Redo/cold data, nested Link and Escape/Discard. Xcode timed out enabling automation before any of its three cases ran; do not call those passing tests or repeat unchanged authorization attempts. Both current combined-source SDK builds now pass with real signatures. iOS hardware keys, speech, large text, broader account contexts and normal update acceptance remain separate.",
     "Finish Mac/iPad Saved originals controls and wider account/accessibility behavior; then finish broader custodian cleanup, restoration/Undo and the larger older-task/history migration. Command-free discovery/export now has genuine API and Core proof. Keep wider mapped/shared-team/custodian, exact-cache and file/discussion ownership cases distinct; ordinary advanced rollout gates stay off.",
     "Finish protected Mac deletion/recovery and disposable hosted residual-file repair and issuer/verifier checks when their stated prerequisites are available. Never erase device copies without bound confirmation.",
@@ -915,7 +915,7 @@
             {
               "state": "verify",
               "title": "Reviewed task and filter assistance",
-              "detail": "Both apps own editable on-device task-step and filter reviews with explicit Apply/Save and current-source/session guards. Ordered step controls now move by stable identity, retaining edits and inclusion; stale/boundary controls refuse. Each owner passes30 selected Core cases with one explicit real-model skip; both signed SDK builds pass. Actual iPhone normal review accepts edit/exclude/reorder/Cancel/draft-only Add/Save/Undo/Redo and strict cold tables; largest text accepts move/Cancel, with native navigation-title truncation disclosed. Direct Mac CUA accepts move/edit/exclude/Cancel/Apply, unchanged parent/projects, exact Undo/Redo/cold return. All suggestions in these checks are synthetic: no inference claim. Saved-service step ordering has Core command and compiled shared-control proof; its new menu interaction remains open. Prior deterministic local filter phrases and plain-language normal/largest iPhone reviews retain exact sampled matches and read-only/explicit-save/cold guarantees. Prior bounded English/Spanish task-title output is recorded, but broader model/language quality remains open. Production raw-model filters still fail two of five original requests; multiple structured/regex/token candidates were rejected, production restored, and expanded held-out quality remains open. Do not retry rejected designs unchanged. No cloud fallback, private library/catalog input, matching/storage schema or rollout gate changed. Mac/iPad speech, shared/account recovery and installed updates remain distinct.",
+              "detail": "Both apps own editable on-device task-step and filter reviews with explicit Apply/Save and current-source/session guards. Ordered step controls now move by stable identity, retaining edits and inclusion; stale/boundary controls refuse. Each owner passes30 selected Core cases with one explicit real-model skip; both signed SDK builds pass. Actual iPhone normal review accepts edit/exclude/reorder/Cancel/draft-only Add/Save/Undo/Redo and strict cold tables; largest text accepts move/Cancel, with native navigation-title truncation disclosed. Direct Mac CUA accepts move/edit/exclude/Cancel/Apply, unchanged parent/projects, exact Undo/Redo/cold return. All suggestions in these checks are synthetic: no inference claim. Saved-service step ordering has Core command and compiled shared-control proof; its new menu interaction remains open. Prior deterministic local filter phrases and plain-language normal/largest iPhone reviews retain exact sampled matches and read-only/explicit-save/cold guarantees. Prior bounded English/Spanish task-title output is recorded, but broader model/language quality remains open. Production raw-model filters still fail two of five original requests; multiple structured/regex/token candidates were rejected, production restored, and expanded held-out quality remains open. Do not retry rejected designs unchanged. No cloud fallback, private library/catalog input, matching/storage schema or rollout gate changed. Mac/iPad speech, shared/account recovery and installed updates remain distinct. Complete ISO Gregorian planned/deadline descriptions now take the existing local path, with exact/before/after, conjunctions/alternatives/exclusions and literal target/search preservation. Both owners pass48 selected Core checks plus2 opt-in model skips; six new functional cases verify dates and malformed/leap/prefix refusal. No new native/full-SDK acceptance for these phrases. Separately, a five-example typed transcript candidate compiled and ran all12 existing raw-model cases but failed4;8 sampled sets match, including2 broadened-condition coincidences, so no semantic-quality acceptance. Production model engine is restored exactly. Further model work must first add later-deadline/non-P1 future counterexamples and must not repeat this design unchanged.",
               "steps": [
                 {
                   "state": "done",
@@ -928,6 +928,10 @@
                 {
                   "state": "done",
                   "title": "Ordered step review: Core, signed SDKs, iPhone normal/largest and Mac Save/Undo/cold"
+                },
+                {
+                  "state": "done",
+                  "title": "Exact ISO date descriptions: local planned/deadline bounds, composition and refusal (Core)"
                 },
                 {
                   "state": "verify",
@@ -2203,7 +2207,15 @@
     "prepared-day-order/ios-sdk.json",
     "prepared-day-order/core-storage-cleanup.json",
     "prepared-day-order/mac-storage-cleanup.json",
-    "prepared-day-order/ios-storage-cleanup.json"
+    "prepared-day-order/ios-storage-cleanup.json",
+    "filter-absolute-dates/README.md",
+    "filter-absolute-dates/scope.json",
+    "filter-absolute-dates/verification.json",
+    "filter-absolute-dates/storage-cleanup.json",
+    "filter-absolute-dates/finish-run.json",
+    "filter-example-context/README.md",
+    "filter-example-context/quality.json",
+    "filter-example-context/restoration.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2483,6 +2495,11 @@
     "field-activity/verification.json": "dce424a0940bacc8e3300e9496969e4d94a92722bea799f0592407ceadcff4b6",
     "field-history/README.md": "5b06f10129fc2515d2ff19280fceb406ac4bd50186f334d0501d2c7483547d87",
     "field-history/verification.json": "4b5168fb9ec05cee2e9ddc59127ca320232d9e6d2e4f5463e9939783092ed1e9",
+    "filter-absolute-dates/README.md": "dba7e8e9e643ab370a016f6a964d0b88dd7bb40083c36d6d3239b42580769e6b",
+    "filter-absolute-dates/finish-run.json": "fa762ec3308024edd4744707756eda5d099b394e7b992f14751ff2a52b20627f",
+    "filter-absolute-dates/scope.json": "cc02a9924198e20e972a476900ee75300bafa163ee5266dc3b07d22498ba2e99",
+    "filter-absolute-dates/storage-cleanup.json": "0ec2feba64d934c82d66feea37646c47f850bcd67e6feb9022cb1059a868c96e",
+    "filter-absolute-dates/verification.json": "cbf9d7ec0e871ab3e6918bd19774eaffc618529c2175a56f2d8177036c8d14e0",
     "filter-assistance/README.md": "daf9f1d013f099015914726adacce1e334ed663768a2a3b1212098529d2c9170",
     "filter-description-paraphrases/README.md": "15a7dc882f03f9311a8c7fc9257ed8724bb4677d778bc8ec86dfb1def2cbe1c2",
     "filter-description-paraphrases/cache-budgets.json": "18c8006a5f00a2d79bddab9b2b4c940ffee0ad3e1f4d42b7dc1ff4ce293fc044",
@@ -2496,6 +2513,9 @@
     "filter-directory-responsiveness/README.md": "4af3303cbe1a86ce259d8fc88549e8b09cfa8ba9ca9579ba0252a01c15fe518c",
     "filter-directory-responsiveness/core-verification.json": "06b5126192cf171a9a0a38ac44eb246017a05e45c692c42039406d802ed0dcbb",
     "filter-directory-responsiveness/signed-build.json": "202f088e3fba9318a9dfab171f725fc377de889758c4d3356458909bb8fa5dd1",
+    "filter-example-context/README.md": "c17b767f60645838afdff1e2efd5a86747ed7be5d7a71a6df849edd56dc02504",
+    "filter-example-context/quality.json": "fa144e9e9494da11c15e13b0d7c8f3099c6f40580efe0ae7f769ccb3013988d8",
+    "filter-example-context/restoration.json": "d2f90fd9b2d95332cbc7f1ab1167b8b21573bd41ca90851290a617f60d9c0aa2",
     "filter-full-quality-probe/README.md": "7c60df259099ec29b5ef376939ebc4b4fcc623909539dcc38e88ec17538b57b6",
     "filter-full-quality-probe/current-model.json": "9537549ff03f0958c9755a6e5ddbb2062a774def1e196071e1c7eb212bb488d4",
     "filter-full-quality-probe/failure-excerpts.json": "1025ee4643ce4385618d02e382f676f041d19881a50cc7dfe482d642c16a9231",

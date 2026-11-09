@@ -356,7 +356,7 @@ enum LocalFilterDescription {
             }
             if take("with", "a", "deadline") || take("with", "deadline") || take("deadline") { return date(field: "deadline") }
             if take("planned") || take("scheduled") { return date(field: "date") }
-            if let value = relativeDate() { return Atom(text: value == "overdue" ? "overdue" : "date:" + quote(value), facet: "date") }
+            if let value = dateValue() { return Atom(text: value == "overdue" ? "overdue" : "date:" + quote(value), facet: "date") }
             offset = start
             if take("in", "project") || take("in", "the", "project") || take("under", "project") || take("under") || take("project") {
                 guard let name = name() else { return nil }
@@ -444,17 +444,26 @@ enum LocalFilterDescription {
         mutating func date(field: String) -> Atom? {
             _ = take("for") || take("on")
             let comparison = take("before") ? " before" : take("after") ? " after" : ""
-            guard let value = relativeDate(), value != "overdue" || field == "date" && comparison.isEmpty else { return nil }
+            guard let value = dateValue(), value != "overdue" || field == "date" && comparison.isEmpty else { return nil }
             if value == "overdue" { return Atom(text: "overdue", facet: field) }
             if field == "date", value == "today", comparison.isEmpty, take("or", "earlier") {
                 return Atom(text: "(date:\"today\" OR overdue)", facet: field)
             }
             return Atom(text: field + comparison + ":" + quote(value), facet: field)
         }
-        mutating func relativeDate() -> String? {
+        mutating func dateValue() -> String? {
             if take("the", "current", "day") || take("current", "day") { return "today" }
             if ["today", "tomorrow", "yesterday", "overdue"].contains(word) { let value = word; offset += 1; return value }
-            return nil
+            // A full ASCII ISO day is unambiguous regardless of display locale.
+            // Do not accept a valid ten-character prefix of a longer timestamp.
+            guard offset < tokens.count, !tokens[offset].quoted else { return nil }
+            let value = tokens[offset].text, bytes = Array(value.utf8)
+            guard bytes.count == 10, bytes[4] == 45, bytes[7] == 45,
+                  bytes.enumerated().allSatisfy({ $0.offset == 4 || $0.offset == 7 || (48...57).contains($0.element) }) else { return nil }
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+            guard Dates.parse(value, calendar: calendar) != nil else { return nil }
+            offset += 1; return value
         }
         func quote(_ value: String) -> String { "\"" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\"" }
     }

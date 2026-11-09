@@ -1,0 +1,207 @@
+{
+  "schema": 1,
+  "owner": "TasskFold-MacOS",
+  "execution": "Mac-hosted owning Core",
+  "syntheticOnly": true,
+  "savedTaskOrFilterWrites": false,
+  "cloudInferenceFallback": false,
+  "realGenerationAccepted": false,
+  "sourceSHA256": {
+    "Taskfold/Core/OnDeviceAssistance.swift": "0692cde99930f3e3f88a4d35c0d54be442e44b067a50b2f6abde54bc51275a93",
+    "Taskfold/Core/TaskBreakdown.swift": "be92e3406895dd9d18d67f4317d388a9d34c92bf35364fa3b807d5f8f31485fd",
+    "Taskfold/Core/FilterAssistance.swift": "a47654282ea8086c0a2fc222bc366a96dc8f8df3833d2b969070507aa2d73502",
+    "TaskfoldTests/TaskBreakdownTests.swift": "8c8cadd7f8a6d48839929d8d32dae6c55f943793deb435df4a1f4f602cba5634",
+    "TaskfoldTests/FilterAssistanceTests.swift": "10d002eca2f0dc31385d1d7bc10d612bde8f1799375d104a6b1a302b798eea91"
+  },
+  "driverSHA256": "48648a59609bbb1ac71adf07f4875545f50c6f62f8a2c25f1eb67170d3035536",
+  "observations": [
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old"
+      ],
+      "expression": "today OR overdue AND p1 AND open",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today",
+        "old",
+        "low",
+        "done",
+        "done-low"
+      ],
+      "seconds": 11.513660166,
+      "syntheticGoal": "Show open priority 1 tasks planned today or overdue"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "deadline"
+      ],
+      "expression": "deadline today AND open",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "deadline"
+      ],
+      "seconds": 20.018707583,
+      "syntheticGoal": "Show tasks with a deadline today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "expression": "project:\"Work\" AND open",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "seconds": 11.220613042,
+      "syntheticGoal": "Show unfinished tasks in project Work"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "low"
+      ],
+      "expression": "today AND p3 AND open",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "low"
+      ],
+      "seconds": 19.958154167,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "old",
+        "deadline",
+        "child-project-task"
+      ],
+      "expression": "project:\"Work\" AND open",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today",
+        "old",
+        "deadline"
+      ],
+      "seconds": 10.819100375,
+      "syntheticGoal": "Find open work in project Work, including its subprojects"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"Unknown condition “tomorrow”. Use the builder or the syntax examples.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "future-low"
+      ],
+      "expression": "tomorrow AND p3 AND open",
+      "generationPath": "systemModel",
+      "seconds": 17.038220792,
+      "syntheticGoal": "Find unfinished priority 3 tasks planned for tomorrow"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "done-low"
+      ],
+      "expression": "p3 AND completed",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "done-low"
+      ],
+      "seconds": 17.399711375,
+      "syntheticGoal": "Show completed priority 3 tasks"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "deadline",
+        "child-project-task"
+      ],
+      "expression": "project-tree:\"Work\" AND (p1 OR p2 OR p3 OR p4) AND open AND date:\"tomorrow\"",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "deadline",
+        "child-project-task"
+      ],
+      "seconds": 11.36939225,
+      "syntheticGoal": "Find open priority 1 tasks planned tomorrow in project Work and its child projects"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "old",
+        "deadline"
+      ],
+      "expression": "project:\"Work\" AND open AND not today",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "old",
+        "deadline"
+      ],
+      "seconds": 13.950238,
+      "syntheticGoal": "Show open tasks in project Work, excluding those planned today"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today",
+        "low"
+      ],
+      "expression": "today AND (p1 OR p3) AND open",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today",
+        "low"
+      ],
+      "seconds": 14.246592834,
+      "syntheticGoal": "Show open tasks planned today with priority 1 or priority 3"
+    },
+    {
+      "engine": "filter",
+      "expectedIDs": [
+        "today"
+      ],
+      "expression": "open AND p1 AND deadline after:today",
+      "generationPath": "systemModel",
+      "matchedIDs": [
+        "today"
+      ],
+      "seconds": 11.043537042,
+      "syntheticGoal": "Find open priority 1 tasks with a deadline tomorrow"
+    },
+    {
+      "engine": "filter",
+      "error": "FilterFailure(message: \"Unknown condition “planned”. Use the builder or the syntax examples.\", needsPeopleDirectory: false)",
+      "expectedIDs": [
+        "old",
+        "old-low"
+      ],
+      "expression": "planned before:today AND open",
+      "generationPath": "systemModel",
+      "seconds": 13.979640417,
+      "syntheticGoal": "Show open tasks planned before today"
+    }
+  ],
+  "engines": [
+    "filter"
+  ],
+  "expectedObservationCounts": {
+    "steps": 0,
+    "filter": 12,
+    "paraphrases": 0
+  },
+  "testExitCode": 1,
+  "logSHA256": "b3cb8dda217420b355ac8d81442afe27ac5d464258193a9659e10989eb9f54cf",
+  "diagnosticsSHA256": "68fd156852ed6768b74ca4c128d4c5381885dd6ac6b0e037bb2716bda4676b42",
+  "sourcesUnchanged": true,
+  "unavailableReasons": [],
+  "semanticAndShapeChecksPassed": false,
+  "taskTitleQualityReviewed": false
+}
