@@ -1,0 +1,273 @@
+{
+  "productionBehavior": "Defer the task-ID index until the first raw location-reminder row, then use the existing checks for every remaining row. Whole-array equality, duplicate-ID refusal, ticket binding, durable cancellation merging and acknowledgement stay intact. No saved format or normal rollout gate change.",
+  "beforeChecksEach": 29,
+  "afterChecksEach": 169,
+  "newFunctionalCases": 3,
+  "optionalTimingCase": 1,
+  "benchmarkScope": "Debug Core API stage only; 2000 rows, 7 samples each averaging 5 calls; same fixture before/after in separate processes. Excludes encoding, disk, network and UI/frame timing.",
+  "normalAppInstalled": false,
+  "physicalOrFullSaveAcceptance": false,
+  "reports": {
+    "ios-before-v2": {
+      "componentOnly": true,
+      "samples": [
+        {
+          "medianSeconds": 2.1583400666713715e-06,
+          "mode": "unchanged",
+          "rows": 2000,
+          "seconds": [
+            4.77503053843975e-06,
+            2.2833235561847685e-06,
+            2.16667540371418e-06,
+            2.1583400666713715e-06,
+            2.124998718500137e-06,
+            2.124998718500137e-06,
+            2.1083280444145204e-06
+          ]
+        },
+        {
+          "medianSeconds": 0.0027859500143676994,
+          "mode": "no-location",
+          "rows": 2000,
+          "seconds": [
+            0.002829816658049822,
+            0.00273478333838284,
+            0.0027859500143676994,
+            0.0028946916572749615,
+            0.002803074987605214,
+            0.002652558358386159,
+            0.0027566666714847086
+          ]
+        },
+        {
+          "medianSeconds": 0.002748508332297206,
+          "mode": "one-location",
+          "rows": 2000,
+          "seconds": [
+            0.0029826916754245756,
+            0.0028243666514754296,
+            0.002730425028130412,
+            0.002748508332297206,
+            0.002817900013178587,
+            0.002730449987575412,
+            0.002737583313137293
+          ]
+        },
+        {
+          "medianSeconds": 0.0028620500117540358,
+          "mode": "all-location",
+          "rows": 2000,
+          "seconds": [
+            0.0029395000077784062,
+            0.0027591916732490063,
+            0.002797399973496795,
+            0.0028907500207424166,
+            0.0028620500117540358,
+            0.0030718416441231967,
+            0.002818458341062069
+          ]
+        }
+      ]
+    },
+    "mac-before": {
+      "componentOnly": true,
+      "samples": [
+        {
+          "medianSeconds": 2.0833685994148254e-06,
+          "mode": "unchanged",
+          "rows": 2000,
+          "seconds": [
+            2.866657450795174e-06,
+            2.200016751885414e-06,
+            2.0666979253292083e-06,
+            2.0833220332860945e-06,
+            2.0999927073717116e-06,
+            2.0833685994148254e-06,
+            2.0666979253292083e-06
+          ]
+        },
+        {
+          "medianSeconds": 0.002811691677197814,
+          "mode": "no-location",
+          "rows": 2000,
+          "seconds": [
+            0.0030591999646276237,
+            0.002964241662994027,
+            0.0027944666333496572,
+            0.0026927249971777202,
+            0.002811691677197814,
+            0.00280780834145844,
+            0.002905091689899564
+          ]
+        },
+        {
+          "medianSeconds": 0.002819400001317263,
+          "mode": "one-location",
+          "rows": 2000,
+          "seconds": [
+            0.002775516686961055,
+            0.0029085082933306694,
+            0.002819400001317263,
+            0.002800950035452843,
+            0.0027974666561931373,
+            0.0028329750057309866,
+            0.0028941333293914795
+          ]
+        },
+        {
+          "medianSeconds": 0.003058791672810912,
+          "mode": "all-location",
+          "rows": 2000,
+          "seconds": [
+            0.002854741644114256,
+            0.003058791672810912,
+            0.0027684333268553018,
+            0.0031336833257228137,
+            0.0030816750135272742,
+            0.002904141694307327,
+            0.003119491692632437
+          ]
+        }
+      ]
+    },
+    "ios-after-v2": {
+      "componentOnly": true,
+      "samples": [
+        {
+          "medianSeconds": 2.3916829377412798e-06,
+          "mode": "unchanged",
+          "rows": 2000,
+          "seconds": [
+            3.966689109802246e-06,
+            2.3916829377412798e-06,
+            2.124998718500137e-06,
+            2.1083280444145204e-06,
+            2.9083341360092165e-06,
+            2.1750107407569886e-06,
+            5.166651681065559e-06
+          ]
+        },
+        {
+          "medianSeconds": 0.0007649416569620371,
+          "mode": "no-location",
+          "rows": 2000,
+          "seconds": [
+            0.0007618749979883433,
+            0.0007649416569620371,
+            0.0007650583516806364,
+            0.0007677000015974045,
+            0.0007709166500717401,
+            0.0007338666822761297,
+            0.0007344749756157398
+          ]
+        },
+        {
+          "medianSeconds": 0.0025605833157896995,
+          "mode": "one-location",
+          "rows": 2000,
+          "seconds": [
+            0.002659566653892398,
+            0.002505208319053054,
+            0.00278481668792665,
+            0.0025920249987393617,
+            0.0025605833157896995,
+            0.0024509666953235866,
+            0.0025133500341325997
+          ]
+        },
+        {
+          "medianSeconds": 0.002773708337917924,
+          "mode": "all-location",
+          "rows": 2000,
+          "seconds": [
+            0.0027582500129938125,
+            0.0030286833178251983,
+            0.002779716672375798,
+            0.0029040999710559846,
+            0.0027538916561752557,
+            0.002773708337917924,
+            0.0027412666473537683
+          ]
+        }
+      ]
+    },
+    "mac-after": {
+      "componentOnly": true,
+      "samples": [
+        {
+          "medianSeconds": 2.0666513592004778e-06,
+          "mode": "unchanged",
+          "rows": 2000,
+          "seconds": [
+            3.1083356589078905e-06,
+            2.1666288375854493e-06,
+            2.058316022157669e-06,
+            2.0916573703289033e-06,
+            2.0666513592004778e-06,
+            2.0666513592004778e-06,
+            2.041645348072052e-06
+          ]
+        },
+        {
+          "medianSeconds": 0.0008047500159591436,
+          "mode": "no-location",
+          "rows": 2000,
+          "seconds": [
+            0.0008034083060920238,
+            0.0007484916597604752,
+            0.0008163083344697952,
+            0.0008047500159591436,
+            0.0008069250266999006,
+            0.000800483301281929,
+            0.0008324416819959878
+          ]
+        },
+        {
+          "medianSeconds": 0.002556291688233614,
+          "mode": "one-location",
+          "rows": 2000,
+          "seconds": [
+            0.0025347250048071146,
+            0.0025557083543390037,
+            0.002556291688233614,
+            0.0026098249945789576,
+            0.0023599833250045775,
+            0.0026146166957914828,
+            0.0025806500110775233
+          ]
+        },
+        {
+          "medianSeconds": 0.0028819500003010035,
+          "mode": "all-location",
+          "rows": 2000,
+          "seconds": [
+            0.002825875021517277,
+            0.0028819500003010035,
+            0.002858416689559817,
+            0.0028645416721701624,
+            0.00312322499230504,
+            0.0029391749761998654,
+            0.003008758323267102
+          ]
+        }
+      ]
+    }
+  },
+  "sources": {
+    "TaskFold-iOS": {
+      "beforeSHA256": "d2f68afc52c2ac6443113f4479cdb233cd073ffe400ac2795cf7f37dff865a9e",
+      "afterSHA256": "7dcd5a2378edd9a9caecb58c52e642f60c35927a793a0da8340432ec0ef42cd4",
+      "testSHA256": "cfb6209be6e175d45a1e017b98172778994a61da3cba5cc6a16612fc4f8ab0b7"
+    },
+    "TasskFold-MacOS": {
+      "beforeSHA256": "d2f68afc52c2ac6443113f4479cdb233cd073ffe400ac2795cf7f37dff865a9e",
+      "afterSHA256": "7dcd5a2378edd9a9caecb58c52e642f60c35927a793a0da8340432ec0ef42cd4",
+      "testSHA256": "cfb6209be6e175d45a1e017b98172778994a61da3cba5cc6a16612fc4f8ab0b7"
+    }
+  },
+  "rejectedFirstCandidate": {
+    "reason": "Filtering every row reduced the no-location case but regressed dense location reminders from2.862 to3.673ms median. Final candidate stops inspecting raw hints after its first location row.",
+    "sourceSHA256": "ed6719218c105e98766e7a47c224f7344d6ccd2ae544af7163c56382c97f3bcb"
+  },
+  "initialTestFailure": "An unsorted JSON byte comparison failed despite equal fields. The reference encoder now sorts keys; both corrected baselines pass. Production code was unchanged during that correction."
+}

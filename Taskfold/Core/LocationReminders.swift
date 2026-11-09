@@ -606,10 +606,17 @@ enum LocationRetirementOutbox {
             jobs[id] = ticket
         }
         if previous.tables["tasks"] != proposed.tables["tasks"] {
-            let after = Dictionary(grouping: proposed.tables["tasks"] ?? [], by: \.id)
+            var after: [String: [Record]]?
             for before in previous.tables["tasks"] ?? [] {
+                // Before the first raw location row, no task can retire a ticket.
+                // Build the library index lazily, then keep the ordinary checks
+                // for all remaining rows, including disabled/unknown versions.
+                if after == nil {
+                    guard ReminderSpec.rows(before).contains(where: { $0.object["kind"] == .string("location") }) else { continue }
+                    after = Dictionary(grouping: proposed.tables["tasks"] ?? [], by: \.id)
+                }
                 // Duplicate task IDs cannot certify that an old intent is still current.
-                let current = after[before.id].flatMap { $0.count == 1 ? $0.first : nil }
+                let current = (after?[before.id]).flatMap { $0.count == 1 ? $0.first : nil }
                 if current == before { continue }
                 for ticket in LocationReminderTicket.retired(account: account, before: before, after: current) {
                     guard jobs[ticket.identifier] == nil || jobs[ticket.identifier] == ticket else { throw LocationStorageFailure.changed }
