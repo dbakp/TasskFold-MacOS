@@ -11695,3 +11695,8 @@ A real native walkthrough reproduced saved Undo after relaunch restoring work bu
 ### 9 November — phone acceptance of cold hierarchy history
 
 The independently owned iOS regression suite now accepts the merged confirmed-inverse behavior through the production Root editor, saved hierarchy review and ordinary menu in normal light text and largest-text dark mode. Both journeys perform exactly four single-submit actions, preserve every authored/nested field with required fresh restoration identities, and retain exact peer/saved tables across cold return. This is phone Simulator evidence; the earlier Mac native proof remains distinct and is not rerun. All prior isolated phone data, host Info and VoiceOver service state are restored; used scratch is cleaned. No production source, ordinary gate or installed Mac53 change. Wider shared-account/iPad/speech/device scope stays open. See `phone-cold-hierarchy-history/README.md`.
+
+
+### 9 November — less retirement scanning during ordinary saves
+
+The durable save stage now delays its task-ID grouping until the first raw location-reminder row. All later rows keep the original binding, duplicate-ID and cancellation checks; old jobs/ledgers/acknowledgements remain guarded. Both owners pass 169 selected checks and signed all-source SDK builds. At 2,000 roots, no-location Debug stage medians drop 2.79–2.81 ms → 0.76–0.81 ms; unchanged/sparse/dense samples are retained. An earlier dense-regressing filter is rejected. Full-save/render/navigation and physical smoothness remain open. Normal update signing and phone-install deferral stay as recorded. See `retirement-save-scan/README.md`.
