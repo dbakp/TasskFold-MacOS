@@ -1,0 +1,44 @@
+{
+  "scope": "Exact preserved-row encoding in both owners, actual synthetic iPhone Simulator Store saves and cold reopen. No physical/UI/frame-rate/Mac runtime/hosted claim.",
+  "sameBuild": true,
+  "summary": {
+    "control": {
+      "saveMilliseconds": 28.622958343476057,
+      "encodingMilliseconds": 14.354666694998741
+    },
+    "candidate": {
+      "saveMilliseconds": 26.333833346143365,
+      "encodingMilliseconds": 10.411374969407916
+    }
+  },
+  "core": {
+    "ios": {
+      "executed": 134,
+      "passed": 134,
+      "optionalSkipped": 0,
+      "failed": 0
+    },
+    "mac": {
+      "executed": 135,
+      "passed": 134,
+      "optionalSkipped": 1,
+      "failed": 0
+    }
+  },
+  "sources": {
+    "TaskFold-iOS": {
+      "Taskfold/Core/PreservingJSON.swift": "e6d258e5bc246be53c7aa3cc607b57dda945610af0415abd8cd352dcf28c9e12",
+      "Taskfold/Core/Models.swift": "50f3b91db391a7cd10bdfbdb5fa6a65c3aedcf3f7ce6403f3e8534e9ac001aab",
+      "TaskfoldTests/SnapshotRowEncodingCacheTests.swift": "ced703dbd642fd168031a3f73628a3d961ddd5bb7f6eacf34a86569c4eb15800",
+      "Taskfold/Core/Store.swift": "48d1cb3b860378aa71cd71232fe96e726ae9c79a2e1d1af8f31a5bf2d6c23ead",
+      "Taskfold/TeamTemplateNativeFixture.swift": "2e2d7145e881f93a57f22860f5a6ad019052660ab058e50726c791f04649e75c"
+    },
+    "TasskFold-MacOS": {
+      "Taskfold/Core/PreservingJSON.swift": "e6d258e5bc246be53c7aa3cc607b57dda945610af0415abd8cd352dcf28c9e12",
+      "Taskfold/Core/Models.swift": "50f3b91db391a7cd10bdfbdb5fa6a65c3aedcf3f7ce6403f3e8534e9ac001aab",
+      "TaskfoldTests/SnapshotRowEncodingCacheTests.swift": "ced703dbd642fd168031a3f73628a3d961ddd5bb7f6eacf34a86569c4eb15800"
+    }
+  },
+  "normalAppChanged": false,
+  "countsUnchanged": true
+}

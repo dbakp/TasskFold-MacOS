@@ -3027,6 +3027,7 @@ final class DurableSnapshotReadCache {
     private let fieldEncoding: SnapshotFieldEncodingCache
     private let rowEncoding: SnapshotRowEncodingCache
     private var rowPreparationAllowed = true
+    private let preparedRowsEnabled: Bool
     struct RowPreparationRequest: Sendable {
         fileprivate let bytes: Data
         fileprivate let snapshot: Snapshot
@@ -3038,7 +3039,7 @@ final class DurableSnapshotReadCache {
     }
     var rowEncodingStatistics: SnapshotRowEncodingCache.Statistics { rowEncoding.statistics }
     func rowPreparationRequest() -> RowPreparationRequest? {
-        guard rowPreparationAllowed, !rowEncoding.ready, maximumBytes > 0,
+        guard preparedRowsEnabled, rowPreparationAllowed, !rowEncoding.ready, maximumBytes > 0,
               let bytes, let value, bytes.count >= minimumFieldEncodingBytes, bytes.count <= maximumBytes else { return nil }
         return RowPreparationRequest(bytes: bytes, snapshot: value, maximumBytes: maximumBytes)
     }
@@ -3047,7 +3048,7 @@ final class DurableSnapshotReadCache {
         return RowPreparation(bytes: request.bytes, rows: try SnapshotRowEncodingCache.prepare(request.snapshot, maximumBytes: request.maximumBytes))
     }
     @discardableResult func adoptRows(_ prepared: RowPreparation) -> Bool {
-        guard rowPreparationAllowed, !rowEncoding.ready, value != nil, bytes == prepared.bytes else { return false }
+        guard preparedRowsEnabled, rowPreparationAllowed, !rowEncoding.ready, value != nil, bytes == prepared.bytes else { return false }
         fieldEncoding.clear(); rowEncoding.adopt(prepared.rows)
         return true
     }
@@ -3058,8 +3059,9 @@ final class DurableSnapshotReadCache {
     private(set) var decodeCount = 0
     private(set) var metadataValidationCount = 0
     var fieldEncodingStatistics: SnapshotFieldEncodingCache.Statistics { fieldEncoding.statistics }
-    init(maximumBytes: Int = 16 * 1024 * 1024, minimumFieldEncodingBytes: Int = 512 * 1024) {
+    init(maximumBytes: Int = 16 * 1024 * 1024, minimumFieldEncodingBytes: Int = 512 * 1024, preparedRowsEnabled: Bool = true) {
         self.maximumBytes = maximumBytes; self.minimumFieldEncodingBytes = max(0, minimumFieldEncodingBytes)
+        self.preparedRowsEnabled = preparedRowsEnabled
         fieldEncoding = SnapshotFieldEncodingCache(maximumBytes: maximumBytes)
         rowEncoding = SnapshotRowEncodingCache(maximumBytes: maximumBytes)
     }
@@ -3084,7 +3086,9 @@ final class DurableSnapshotReadCache {
         if maximumBytes > 0,
            minimumFieldEncodingBytes == 0 || knownByteCount.map({ $0 >= minimumFieldEncodingBytes && $0 <= maximumBytes }) == true,
            fieldEncoding.admits(snapshot, knownBytes: knownByteCount ?? 0) {
-            rowPreparationAllowed = false
+            // Field reuse is the immediate writer while background rows are
+            // preparing; selecting it must not disable their first preparation.
+            // A declined/failed row attempt still remains disabled until reset.
             do { return try fieldEncoding.encode(snapshot) }
             catch { fieldEncoding.clear() } // Unsupported optimization keeps the ordinary writer's exact behavior.
         } else {
