@@ -2041,6 +2041,18 @@ struct MixedTaskListResult {
             guard let next = await step.perform() else { return nil }; return Self.renaming(next, as: name)
         })
     }
+    /// A reviewed Undo confirmed after relaunch has no original native frame.
+    /// Adopt its already-confirmed inverse on the Redo side without sending it
+    /// again or consuming any older local Undo operation.
+    @discardableResult func adoptConfirmedInverse(of key: String, next: Step) -> Bool {
+        guard !busy, !manager.isUndoing, !manager.isRedoing, !key.isEmpty,
+              let nextKey = next.key, !nextKey.isEmpty, nextKey != key,
+              next.retained(), !contains(key: key), !contains(key: nextKey) else { return false }
+        record(.init(name: next.name, key: key, retained: next.retained, immediate: { next }))
+        if acceptConfirmedInverse(of: key, next: next) { return true }
+        if let frame = frames.last, frame.step?.key == key { remove(frame) }
+        return false
+    }
     func contains(key: String) -> Bool { frames.contains { $0.step?.key == key } }
     func canRedo(key: String) -> Bool { canRedo && frames[cursor].step?.key == key }
     func canUndo(key: String) -> Bool { canUndo && frames[cursor - 1].step?.key == key }

@@ -1,0 +1,427 @@
+{
+  "accepted": true,
+  "method": "Direct CUA with independent synthetic peer/snapshot readback",
+  "newNativeXCTestPassClaim": false,
+  "warmMovePhase": "UI-label candidate before cold-history Core fix; exact move/keyboard Undo/Redo/Undo with nested notes, writes1..4",
+  "currentFixPhase": "Final signed current-source Mac app; reviewed Redo9, cold reviewed Undo10, menu-enabled Redo Remove subtasks, keyboardRedo11 andUndo12, final cold return",
+  "noDuplicateAdoptionRequest": true,
+  "finalRequestWriteReceiptCount": 12,
+  "finalPendingTaskMutations": 0,
+  "finalPeerStateAndSavedTablesColdExact": true,
+  "allAuthoredRootAndNestedFieldsPreserved": true,
+  "requiredFreshCompletionEpochsAndIncarnationsValidated": true,
+  "restoration": {
+    "restoredFilesExactly": {
+      "Taskfold": 120,
+      "Child field native peer": 2
+    },
+    "hostInfoRestoredExactly": true,
+    "testAppQuit": true,
+    "completedTemporaryDataCopyRemovedBytes": 89681920,
+    "currentWorkspaceDataAndOriginalPrivateBackupKept": true
+  },
+  "separateMacRowButtonsOrVoiceOverSpeechAccepted": false,
+  "iosNativeAcceptance": false,
+  "realAuthKeychainSQLHostedAcceptance": false,
+  "ordinaryFlagsChanged": false,
+  "normalInstalledAppsChanged": false,
+  "phases": [
+    {
+      "phase": "baseline",
+      "root": {
+        "project_id": null,
+        "title": "Native child workspace",
+        "subtasks": [
+          {
+            "description": "Original saved notes",
+            "future": {
+              "keep": true
+            },
+            "completed": false,
+            "title": "Prepare the review",
+            "subtasks": [
+              {
+                "future": {
+                  "keep": true
+                },
+                "description": "Keep these nested instructions",
+                "id": "nested",
+                "title": "Collect supporting notes"
+              }
+            ],
+            "priority": 4,
+            "id": "concept"
+          },
+          {
+            "priority": 4,
+            "future": {
+              "keep": true
+            },
+            "title": "Publish the summary",
+            "completed": false,
+            "description": "Original saved notes",
+            "id": "review"
+          }
+        ],
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "id": "ec990000-0000-4000-8000-000000000002",
+        "user_id": "ec990000-0000-4000-8000-000000000001"
+      },
+      "writes": 0,
+      "requests": 0,
+      "archives": 0,
+      "receipts": 0,
+      "captureSHA256": "318d3af43d6c2666146228a54f33787abd045cec4c9f44a243e168dd198e00b8"
+    },
+    {
+      "phase": "warmMove",
+      "root": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "subtasks": [
+          {
+            "priority": 4,
+            "future": {
+              "keep": true
+            },
+            "id": "review",
+            "description": "Original saved notes",
+            "title": "Publish the summary",
+            "completed": false,
+            "subtasks": [
+              {
+                "priority": 4,
+                "future": {
+                  "keep": true
+                },
+                "id": "concept",
+                "description": "Original saved notes",
+                "title": "Prepare the review",
+                "completed": false,
+                "subtasks": [
+                  {
+                    "future": {
+                      "keep": true
+                    },
+                    "description": "Keep these nested instructions",
+                    "title": "Collect supporting notes",
+                    "id": "nested"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "id": "ec990000-0000-4000-8000-000000000002",
+        "user_id": "ec990000-0000-4000-8000-000000000001",
+        "title": "Native child workspace",
+        "project_id": null
+      },
+      "writes": 1,
+      "requests": 1,
+      "archives": 0,
+      "receipts": 1,
+      "captureSHA256": "e21be17c2774b442117c06154cc61f241a30053d3781b26b479182f42eca3439"
+    },
+    {
+      "phase": "warmRemoved",
+      "root": {
+        "project_id": null,
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "user_id": "ec990000-0000-4000-8000-000000000001",
+        "title": "Native child workspace",
+        "subtasks": [
+          {
+            "description": "Original saved notes",
+            "id": "review",
+            "completed": false,
+            "priority": 4,
+            "future": {
+              "keep": true
+            },
+            "title": "Publish the summary"
+          }
+        ],
+        "id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "writes": 5,
+      "requests": 5,
+      "archives": 1,
+      "receipts": 5,
+      "captureSHA256": "0f303d77ff437a966344a6f9c36de97b8a32d40d4fc047ab4f79d272689109a8"
+    },
+    {
+      "phase": "warmRemovalUndo",
+      "root": {
+        "title": "Native child workspace",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "project_id": null,
+        "subtasks": [
+          {
+            "completed": false,
+            "future": {
+              "keep": true
+            },
+            "description": "Original saved notes",
+            "taskfold_completion_v1": {
+              "version": 0,
+              "epoch": "7cade1d5-5dce-4093-b9be-7584f9d4b759"
+            },
+            "title": "Prepare the review",
+            "priority": 4,
+            "id": "concept",
+            "subtasks": [
+              {
+                "title": "Collect supporting notes",
+                "id": "nested",
+                "description": "Keep these nested instructions",
+                "future": {
+                  "keep": true
+                },
+                "taskfold_completion_v1": {
+                  "version": 0,
+                  "epoch": "ab75c0ff-9732-4a60-a9f2-6fa8ceedb12e"
+                }
+              }
+            ]
+          },
+          {
+            "title": "Publish the summary",
+            "id": "review",
+            "priority": 4,
+            "future": {
+              "keep": true
+            },
+            "completed": false,
+            "description": "Original saved notes"
+          }
+        ],
+        "user_id": "ec990000-0000-4000-8000-000000000001",
+        "id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "writes": 6,
+      "requests": 6,
+      "archives": 0,
+      "receipts": 6,
+      "captureSHA256": "f025ea6c3538a435d384f81ab33b089bdca785d39c82e86c871a67b63df862fb"
+    },
+    {
+      "phase": "firstColdUndo",
+      "root": {
+        "user_id": "ec990000-0000-4000-8000-000000000001",
+        "id": "ec990000-0000-4000-8000-000000000002",
+        "title": "Native child workspace",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "project_id": null,
+        "subtasks": [
+          {
+            "completed": false,
+            "taskfold_completion_v1": {
+              "epoch": "60c9faeb-4d5c-460f-83a2-c14a1a453c0f",
+              "version": 0
+            },
+            "subtasks": [
+              {
+                "description": "Keep these nested instructions",
+                "id": "nested",
+                "future": {
+                  "keep": true
+                },
+                "taskfold_completion_v1": {
+                  "epoch": "71b318f8-1917-45d5-9ba5-4767f982f989",
+                  "version": 0
+                },
+                "title": "Collect supporting notes"
+              }
+            ],
+            "title": "Prepare the review",
+            "description": "Original saved notes",
+            "priority": 4,
+            "id": "concept",
+            "future": {
+              "keep": true
+            }
+          },
+          {
+            "title": "Publish the summary",
+            "id": "review",
+            "completed": false,
+            "priority": 4,
+            "future": {
+              "keep": true
+            },
+            "description": "Original saved notes"
+          }
+        ]
+      },
+      "writes": 8,
+      "requests": 8,
+      "archives": 0,
+      "receipts": 8,
+      "captureSHA256": "85dc10c220c9e29610cec136b3a4fb0478c5f78589a71fe6785ed47f0a2bd789"
+    },
+    {
+      "phase": "fixedReviewedRedo",
+      "root": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "subtasks": [
+          {
+            "description": "Original saved notes",
+            "future": {
+              "keep": true
+            },
+            "id": "review",
+            "priority": 4,
+            "completed": false,
+            "title": "Publish the summary"
+          }
+        ],
+        "title": "Native child workspace",
+        "project_id": null,
+        "user_id": "ec990000-0000-4000-8000-000000000001",
+        "id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "writes": 9,
+      "requests": 9,
+      "archives": 1,
+      "receipts": 9,
+      "captureSHA256": "a83eada439911694fd5198bf9e190a9247bd048fa12a37b0f7fc36c43467f41b"
+    },
+    {
+      "phase": "fixedColdUndo",
+      "root": {
+        "user_id": "ec990000-0000-4000-8000-000000000001",
+        "subtasks": [
+          {
+            "future": {
+              "keep": true
+            },
+            "completed": false,
+            "priority": 4,
+            "subtasks": [
+              {
+                "title": "Collect supporting notes",
+                "future": {
+                  "keep": true
+                },
+                "taskfold_completion_v1": {
+                  "version": 0,
+                  "epoch": "91ed329e-8a72-4560-8288-b338e37760db"
+                },
+                "description": "Keep these nested instructions",
+                "id": "nested"
+              }
+            ],
+            "taskfold_completion_v1": {
+              "version": 0,
+              "epoch": "f744dc3d-3149-4dd2-ac7b-84262bb4a969"
+            },
+            "title": "Prepare the review",
+            "description": "Original saved notes",
+            "id": "concept"
+          },
+          {
+            "title": "Publish the summary",
+            "future": {
+              "keep": true
+            },
+            "completed": false,
+            "description": "Original saved notes",
+            "priority": 4,
+            "id": "review"
+          }
+        ],
+        "project_id": null,
+        "id": "ec990000-0000-4000-8000-000000000002",
+        "title": "Native child workspace",
+        "task_generation": "ec990000-0000-4000-8000-000000000003"
+      },
+      "writes": 10,
+      "requests": 10,
+      "archives": 0,
+      "receipts": 10,
+      "captureSHA256": "393a7c6f7513c4eb4539c57c7f1310b9c76dd289e0b9be655ed4ba02635f4ee3"
+    },
+    {
+      "phase": "fixedKeyboardRedo",
+      "root": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "subtasks": [
+          {
+            "description": "Original saved notes",
+            "priority": 4,
+            "id": "review",
+            "future": {
+              "keep": true
+            },
+            "completed": false,
+            "title": "Publish the summary"
+          }
+        ],
+        "project_id": null,
+        "title": "Native child workspace",
+        "user_id": "ec990000-0000-4000-8000-000000000001",
+        "id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "writes": 11,
+      "requests": 11,
+      "archives": 1,
+      "receipts": 11,
+      "captureSHA256": "923efca1245c2e65b1bb93e95a4b25e0d686276877e38de5a92886428b035d91"
+    },
+    {
+      "phase": "fixedKeyboardUndo",
+      "root": {
+        "id": "ec990000-0000-4000-8000-000000000002",
+        "user_id": "ec990000-0000-4000-8000-000000000001",
+        "title": "Native child workspace",
+        "project_id": null,
+        "subtasks": [
+          {
+            "priority": 4,
+            "future": {
+              "keep": true
+            },
+            "completed": false,
+            "subtasks": [
+              {
+                "title": "Collect supporting notes",
+                "description": "Keep these nested instructions",
+                "id": "nested",
+                "taskfold_completion_v1": {
+                  "version": 0,
+                  "epoch": "47fad22b-4515-4d56-8855-767fd3403be9"
+                },
+                "future": {
+                  "keep": true
+                }
+              }
+            ],
+            "description": "Original saved notes",
+            "title": "Prepare the review",
+            "taskfold_completion_v1": {
+              "epoch": "9abeb7ff-a04d-4eaf-8b1b-82272def941a",
+              "version": 0
+            },
+            "id": "concept"
+          },
+          {
+            "future": {
+              "keep": true
+            },
+            "description": "Original saved notes",
+            "priority": 4,
+            "title": "Publish the summary",
+            "id": "review",
+            "completed": false
+          }
+        ],
+        "task_generation": "ec990000-0000-4000-8000-000000000003"
+      },
+      "writes": 12,
+      "requests": 12,
+      "archives": 0,
+      "receipts": 12,
+      "captureSHA256": "4f9dac81df5aeb1530ac5158f2aee0ad8123d9c8e8de5a7364fcfbbc86454d20"
+    }
+  ]
+}

@@ -198,6 +198,17 @@ enum ChildTaskStructureReview {
         guard candidate.replaces(command) else { throw ChildTaskStructureCommand.invalid }
         return candidate
     }
+    /// Native history names the forward action even when a saved Undo was
+    /// confirmed after relaunch, before its original frame exists in memory.
+    static func historyTitle(_ command: ChildTaskStructureCommand) -> String {
+        guard command.action == .undo else { return title(command) }
+        switch command.original?.receipt["action"]?.text {
+        case "insert": return "Add subtask"
+        case "move": return "Move subtask"
+        case "delete": return "Remove subtasks"
+        default: return title(command)
+        }
+    }
     static func title(_ command: ChildTaskStructureCommand) -> String {
         switch command.action { case .insert: return "Add subtask"; case .move: return "Move subtask"; case .delete: return "Remove subtasks"; case .undo: return "Undo hierarchy change" }
     }

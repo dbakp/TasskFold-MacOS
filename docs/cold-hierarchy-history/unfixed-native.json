@@ -1,0 +1,39 @@
+{
+  "method": "Direct CUA, signed isolated app; independent synthetic file-backed peer/snapshot readback",
+  "serverOrHostedAcceptance": false,
+  "warmMove": {
+    "saveAndExplicitSend": 1,
+    "keyboardUndo": 2,
+    "keyboardRedo": 3,
+    "secondUndo": 4,
+    "wholeRootExact": true
+  },
+  "removal": {
+    "nestedReviewItems": 2,
+    "cancelNoWrite": true,
+    "explicitSend": 5,
+    "keyboardUndo": 6,
+    "keyboardRedo": 7,
+    "oneUndoArchiveAfterRedo": true
+  },
+  "cold": {
+    "wholePeerStateExactlyPreserved": true,
+    "savedUndoReviewSaveSend": 8,
+    "authoredFieldsRestored": true,
+    "keyboardRedoFailedNoNewWrite": true,
+    "savedSnapshotMatchesPeer": true,
+    "pendingMutations": 0
+  },
+  "restorationOracleCorrection": {
+    "initialExactRootAssertionFailed": true,
+    "reason": "Existing certified deletion Undo requires fresh node incarnations and completion epochs.",
+    "contract": "docs/child-task-structure-commands/README.md; Scripts/Database/test-child-task-structure-commands.mjs:96",
+    "replacementValidation": "Exact every authored/root/nested field, plus only concept/nested version0 canonical UUID epochs and fresh incarnation; archive consumed. No arbitrary-field stripping."
+  },
+  "accessibility": {
+    "before": "Combined list rows with Move/Remove/Suggest labels",
+    "after": "Combined rows now name each task; containment does not expose separate buttons through CUA",
+    "separateActionsOrVoiceOverSpeechAccepted": false,
+    "coordinateClicksWorked": true
+  }
+}

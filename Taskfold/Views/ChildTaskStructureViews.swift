@@ -137,17 +137,22 @@ struct ChildTaskStructureView: View {
                             .accessibilityIdentifier("childStructureNode-" + node.key)
                         HStack(spacing: 16) {
                             Button { review = .init(root: rootID, source: .move(node.key), opening: try? .init(read: read, node: node.key)) } label: { Label("Move", systemImage: "arrow.up.arrow.down").frame(minHeight: 44) }
+                                .accessibilityLabel("Move " + (node.fields["title"]?.text ?? "subtask"))
                                 .accessibilityIdentifier("moveChildStructure-" + node.key)
                             Button(role: .destructive) { review = .init(root: rootID, source: .remove(node.key), opening: try? .init(read: read, node: node.key)) } label: { Label("Remove", systemImage: "minus.circle").frame(minHeight: 44) }
+                                .accessibilityLabel("Remove " + (node.fields["title"]?.text ?? "subtask"))
                                 .accessibilityIdentifier("removeChildStructure-" + node.key)
                         }.font(.callout).buttonStyle(.borderless)
                             .disabled(pending || model?.busy == true)
                         Button("Suggest steps", systemImage: "wand.and.stars") { stepOpening = .init(root: rootID, parent: node.key) }
+                            .accessibilityLabel("Suggest steps for " + (node.fields["title"]?.text ?? "subtask"))
                             .font(.callout).buttonStyle(.borderless).disabled(pending || model?.busy == true || !store.online || node.fields["completed"] == .bool(true) || node.fields["is_heading"] == .bool(true) || node.path.count >= 24 || read.records.nodes.count >= 1000)
                             .accessibilityIdentifier("reviewSavedChildSteps-" + node.key)
                         ChildTaskTransferLink(rootID: rootID, nodeKey: node.key, show: { transfer = .init(nodeKey: node.key) })
                             .font(.callout).buttonStyle(.borderless).disabled(pending || model?.busy == true)
                     }.padding(.leading, CGFloat(min(node.path.count - 1, 5)) * 12).padding(.vertical, 5)
+                        .accessibilityElement(children: .contain)
+                        .accessibilityIdentifier("childStructureRow-" + node.key)
                 }
                 if pending { Section { Label("A saved action needs attention", systemImage: "tray"); Text("Review it before arranging more subtasks.").font(.footnote).foregroundStyle(.secondary) } }
             } else if reading { ProgressView("Reading saved subtasks…") }
@@ -202,6 +207,9 @@ struct ChildTaskStructureView: View {
             guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
             let step = owner.childStructureHistoryStep(entry, scope: scope)
             if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, owner.viewHistory.acceptConfirmedInverse(of: parent, next: step) { return }
+            if entry.phase == .confirmed, entry.command.action == .undo,
+               let parent = entry.command.body["undo_of"]?.text,
+               owner.viewHistory.adoptConfirmedInverse(of: parent, next: step) { return }
             owner.viewHistory.record(step)
         })
         #endif
@@ -424,6 +432,9 @@ struct ChildTaskStructureRecoveryView: View {
             guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
             let step = owner.childStructureHistoryStep(entry, scope: scope)
             if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, owner.viewHistory.acceptConfirmedInverse(of: parent, next: step) { return }
+            if entry.phase == .confirmed, entry.command.action == .undo,
+               let parent = entry.command.body["undo_of"]?.text,
+               owner.viewHistory.adoptConfirmedInverse(of: parent, next: step) { return }
             owner.viewHistory.record(step)
         })
         #endif
