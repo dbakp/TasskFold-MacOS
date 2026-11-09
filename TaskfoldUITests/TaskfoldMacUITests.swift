@@ -6091,6 +6091,20 @@ extension TaskfoldMacUITests {
 }
 
 extension TaskfoldMacUITests {
+    @MainActor func testMacFreshNoteHeadingKeysNeverChangeTheTaskPriority() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app)
+        let before = try noteProofTables(), editor = noteProofFormat(app)
+        editor.click(); editor.typeKey("a", modifierFlags: .command)
+        // Do not open Text style first: lazy menu registration previously sent
+        // this exact key to the underlying task's Priority command instead.
+        for (key, expected) in [("1", "# Keep the original notes."), ("2", "## Keep the original notes."), ("3", "### Keep the original notes."), ("0", "Keep the original notes.")] {
+            editor.typeKey(key, modifierFlags: [.command, .option])
+            XCTAssertEqual(editor.value as? String, expected)
+            XCTAssertEqual(try noteProofTables(), before, "Formatting keys must not edit task priority or any other saved field")
+        }
+        editor.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 5)); XCTAssertEqual(try noteProofTables(), before)
+    }
     @MainActor func testMacNoteFormattingKeyboardStylesApplyUndoAndColdReturn() throws {
         let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app)
         let before = try noteProofTables(), editor = noteProofFormat(app)

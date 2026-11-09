@@ -208,6 +208,7 @@ final class NotificationRoute {
 struct TaskfoldCommands: Commands {
     @State private var historyUpdates = NativeHistoryCommandUpdates()
     @FocusedValue(\.taskfoldPrint) private var printAction
+    @FocusedValue(\.taskfoldNoteParagraphCommands) private var noteParagraphCommands
     @Environment(\.openSettings) private var openSettings
     let workspace: Workspace
     let store: Store
@@ -274,11 +275,20 @@ struct TaskfoldCommands: Commands {
                 Button("Inbox") { workspace.move(workspace.actionSelection, toProject: "") }
                 ForEach(store.projects) { project in Button(project.name) { workspace.move(workspace.actionSelection, toProject: project.id) } }
             }.disabled(workspace.actionSelection.isEmpty)
+            if let noteParagraphCommands {
+                Menu("Text style") {
+                    ForEach(NoteFormatting.ParagraphStyle.allCases, id: \.self) { style in
+                        Button(style.title) { noteParagraphCommands.apply(style) }
+                            .keyboardShortcut(KeyEquivalent(Character(String(style.level ?? 0))), modifiers: [.command, .option])
+                    }
+                }.disabled(!noteParagraphCommands.enabled)
+            } else {
             Menu("Priority") {
                 ForEach(1...4, id: \.self) { n in
                     Button(n == 4 ? "None" : "Priority \(n)") { workspace.setPriority(workspace.actionSelection, n) }.keyboardShortcut(KeyEquivalent(Character("\(n)")), modifiers: [.command, .option])
                 }
             }.disabled(workspace.actionSelection.isEmpty)
+            }
             Button("Duplicate") { workspace.duplicate(workspace.actionSelection) }.keyboardShortcut("d", modifiers: .command).disabled(workspace.actionSelection.isEmpty)
             Divider()
             Button("Delete") { workspace.delete(workspace.actionSelection) }.keyboardShortcut(.delete, modifiers: .command).disabled(workspace.actionSelection.isEmpty)
