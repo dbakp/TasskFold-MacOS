@@ -11675,3 +11675,8 @@ Combined-source closeout: current Mac185-source app/runner and iOS178-source app
 ### 9 November — ordered suggestion review
 
 Step reviews now provide stable-identity Move up/down, Remove, editable titles and retained inclusion. Both owners pass30 selected Core checks with one explicit inference skip and full signed SDK compilation. Direct Mac CUA verifies synthetic review movement/Cancel leaves task/project tables unchanged; edited/excluded Apply saves exactly two chosen ordered steps; Undo/Redo and cold launch preserve exact tasks/projects and IDs. All120 prior isolated files restored; normal Mac53 unchanged pending existing-group signing. iPhone normal/largest native review checks pass. Saved-service menu, real model quality, speech/iPad/shared-account and installed-update acceptance remain separate. See `ordered-step-review/README.md`.
+
+
+### 9 November — prepare ordinary day ordering once
+
+Manual day ordering now reads effective priority/rank/source-position once and performs one stable-equivalent sort. Exact authored rows match the prior algorithm across repeated/empty/Unicode IDs, stale anchors, clamped/malformed priorities and edit/membership sequences. Selected Mac95 checks (3 intentional skips) and iOS94 (1 skip) pass; four new Mac cases pass again after correcting a synthetic heading flag. Both Debug comparison diagnostics show2,000-row medians31–39ms→9–14ms and10,000-row130–176ms→37–53ms. Preparation scope only; full-app rendering, native/physical smoothness and installed updates remain separate. See `prepared-day-order/README.md`.
