@@ -608,7 +608,7 @@ final class SnapshotFieldEncodingCache {
 #endif
 
 #if !TASKFOLD_SHARE_EXTENSION && !TASKFOLD_WIDGET_EXTENSION
-/// Whole rows prepared off the interface thread for large plain workspaces.
+/// Whole rows prepared off the interface thread, including validated opaque values.
 /// Reuse requires the original immutable Record source, never just its ID.
 final class SnapshotRowEncodingCache {
     struct Statistics: Equatable, Sendable {
@@ -619,7 +619,7 @@ final class SnapshotRowEncodingCache {
         fileprivate let tables: [Data: [Entry]]
         fileprivate let statistics: Statistics
     }
-    private enum Unavailable: Error { case budget, opaque, header, empty }
+    private enum Unavailable: Error { case budget, header, empty }
     private let maximumBytes: Int
     private var tables: [Data: [Entry]] = [:]
     private(set) var ready = false
@@ -636,12 +636,13 @@ final class SnapshotRowEncodingCache {
         try Task.checkCancellation()
         return prepared
     }
-    private static func validatePlainRow(_ row: Record) throws {
+    private static func encodeRow(_ row: Record, using encoder: TaskfoldJSONEncoder) throws -> Data {
+        var hasPreserved = false
         var pending = row.fields.values.map { ($0, 1) }
         while let (value, depth) = pending.popLast() {
             guard depth <= 508 else { throw PreservedJSONFailure.depth }
             switch value {
-            case .preserved: throw Unavailable.opaque
+            case .preserved: hasPreserved = true
             case .array(let values):
                 guard depth < 508 else { throw PreservedJSONFailure.depth }
                 pending.append(contentsOf: values.map { ($0, depth + 1) })
@@ -651,6 +652,11 @@ final class SnapshotRowEncodingCache {
             case .null, .bool, .number, .string: break
             }
         }
+        // The preserving codec validates the completed row after replacing its
+        // opaque leaves. Keep the existing 508-level allowance for the enclosing
+        // snapshot/tables/array, rather than trusting a leaf's standalone depth.
+        if hasPreserved { return try encoder.encodeValidated(row, maximumDepth: 508) }
+        return try encoder.encode(row)
     }
     private func prepareRows(_ snapshot: Snapshot) throws -> Prepared {
         var next: [Data: [Entry]] = [:], measured = Statistics()
@@ -662,9 +668,8 @@ final class SnapshotRowEncodingCache {
             var entries: [Entry] = []; entries.reserveCapacity(snapshot.tables[name]!.count)
             for row in snapshot.tables[name]! {
                 try Task.checkCancellation()
-                try Self.validatePlainRow(row)
                 // Snapshot -> tables -> named array surround each record.
-                let encoded = try encoder.encode(row)
+                let encoded = try Self.encodeRow(row, using: encoder)
                 let cost = encoded.count + key.count + 128
                 guard measured.retained < 50_000, cost <= maximumBytes - measured.retainedBytes else { throw Unavailable.budget }
                 entries.append(Entry(source: row, data: encoded))
@@ -696,8 +701,7 @@ final class SnapshotRowEncodingCache {
                 if index < prior.count, row.sharesAuthoredSource(with: prior[index].source) {
                     entry = prior[index]; measured.reused += 1
                 } else {
-                    try Self.validatePlainRow(row)
-                    entry = Entry(source: row, data: try encoder.encode(row))
+                    entry = Entry(source: row, data: try Self.encodeRow(row, using: encoder))
                     measured.encoded += 1
                 }
                 let cost = entry.data.count + key.count + 128

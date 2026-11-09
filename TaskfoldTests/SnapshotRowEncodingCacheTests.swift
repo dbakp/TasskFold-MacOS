@@ -65,16 +65,80 @@ final class SnapshotRowEncodingCacheTests: XCTestCase {
         XCTAssertEqual(cache.rowEncodingStatistics, .init())
         _ = try cache.decode(old); XCTAssertNotNil(cache.rowPreparationRequest())
     }
-    func testOpaqueValuesKeepExistingWriterAndExactLargeNumbers() throws {
-        let (cache, initial) = try primed(seed()); var value = initial
-        value.tables["tasks"]![0]["opaque"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("9007199254740993.0".utf8))
+    func testOpaqueRowsPrepareReuseAndPreserveExactLexicalValues() throws {
+        let raw = #"{"exact":9007199254740993.0,"huge":1e500,"zero":-0,"é":1,"é":2,"nested":{"n":9007199254740995}}"#
+        let opaque = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(raw.utf8))
+        var source = seed()
+        for i in source.tables["tasks"]!.indices { source.tables["tasks"]![i]["opaque"] = opaque }
+        let (cache, initial) = try primed(source); var value = initial
+        value.tables["tasks"]![0]["due_date"] = .string("2026-11-12")
         let bytes = try cache.encode(value); try exact(bytes, value)
-        XCTAssertTrue(String(decoding: bytes, as: UTF8.self).contains("9007199254740993.0"))
-        XCTAssertEqual(cache.rowEncodingStatistics.retained, 0)
-        let plain = DurableSnapshotReadCache(minimumFieldEncodingBytes: 0); _ = try plain.decode(bytes)
-        let request = try XCTUnwrap(plain.rowPreparationRequest())
-        XCTAssertThrowsError(try DurableSnapshotReadCache.prepareRows(request)); plain.declineRows(request)
-        XCTAssertNil(plain.rowPreparationRequest())
+        XCTAssertTrue(String(decoding: bytes, as: UTF8.self).contains(raw))
+        XCTAssertEqual(cache.rowEncodingStatistics.reused, 2)
+        XCTAssertEqual(cache.rowEncodingStatistics.encoded, 1)
+        value.tables["tasks"]![1]["opaque"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(raw.replacingOccurrences(of: "1e500", with: "2e500").utf8))
+        let edited = try cache.encode(value); try exact(edited, value)
+        XCTAssertTrue(String(decoding: edited, as: UTF8.self).contains("2e500"))
+        XCTAssertEqual(cache.rowEncodingStatistics.reused, 2)
+        value.tables = value.tables.mapValues { $0.map { Record($0.fields) } }
+        try exact(cache.encode(value), value)
+        XCTAssertEqual(cache.rowEncodingStatistics.reused, 0)
+        let decoded = try TaskfoldJSONDecoder().decode(Snapshot.self, from: edited)
+        try exact(cache.encode(decoded), decoded)
+        XCTAssertEqual(cache.rowEncodingStatistics.reused, 0)
+    }
+    func testFieldWriterLeavesOpaqueSavedBytesEligibleForBackgroundRows() throws {
+        var value = seed()
+        // The field writer requires unique, nonempty row IDs.
+        for i in value.tables["tasks"]!.indices { value.tables["tasks"]![i]["id"] = .string("field-row-\(i)") }
+        value.tables["tasks"]![0]["opaque"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("1e500".utf8))
+        let cache = DurableSnapshotReadCache(minimumFieldEncodingBytes: 0)
+        // A real save encodes before requesting preparation; direct decode-only
+        // priming does not exercise the immediate field writer's handoff.
+        try exact(cache.encode(value), value)
+        let request = try XCTUnwrap(cache.rowPreparationRequest())
+        XCTAssertGreaterThan(cache.fieldEncodingStatistics.retained, 0)
+        XCTAssertTrue(cache.adoptRows(try DurableSnapshotReadCache.prepareRows(request)))
+        value.tables["tasks"]![1]["title"] = .string("Changed")
+        try exact(cache.encode(value), value)
+        XCTAssertEqual(cache.rowEncodingStatistics.reused, 2)
+        XCTAssertEqual(cache.rowEncodingStatistics.encoded, 1)
+        XCTAssertEqual(cache.fieldEncodingStatistics.retained, 0)
+        cache.clear(); _ = try cache.encode(value)
+        let declined = try XCTUnwrap(cache.rowPreparationRequest()); cache.declineRows(declined)
+        _ = try cache.encode(value)
+        XCTAssertNil(cache.rowPreparationRequest(), "Selecting the field writer must not retry a declined source")
+    }
+    func testPreparedRowOptOutSurvivesClearAndRejectsMatchingPreparation() throws {
+        let wire = try TaskfoldJSONEncoder().encode(seed())
+        let donor = DurableSnapshotReadCache(minimumFieldEncodingBytes: 0)
+        _ = try donor.decode(wire)
+        let prepared = try DurableSnapshotReadCache.prepareRows(try XCTUnwrap(donor.rowPreparationRequest()))
+        let control = DurableSnapshotReadCache(minimumFieldEncodingBytes: 0, preparedRowsEnabled: false)
+        for _ in 0..<2 {
+            let value = try control.decode(wire)
+            XCTAssertNil(control.rowPreparationRequest()); XCTAssertFalse(control.adoptRows(prepared))
+            try exact(control.encode(value), value)
+            XCTAssertEqual(control.rowEncodingStatistics.retained, 0)
+            control.clear()
+        }
+    }
+    func testOpaqueDepthAtTheCompletedEnvelopeKeepsOrdinarySuccessAndFailure() throws {
+        let leaf = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(#"{"é":1,"é":2,"n":1e500}"#.utf8))
+        for depth in 502...511 {
+            let (cache, initial) = try primed(seed()); var value = initial, nested = leaf
+            for _ in 0..<depth { nested = .array([nested]) }
+            value.tables["tasks"]![0]["deep"] = nested
+            switch Result(catching: { try TaskfoldJSONEncoder().encode(value) }) {
+            case .failure: XCTAssertThrowsError(try cache.encode(value), "depth=\(depth)")
+            case .success(let reference):
+                let actual = try cache.encode(value)
+                XCTAssertEqual(String(decoding: actual, as: UTF8.self).contains("1e500"), true)
+                if (try? TaskfoldJSONDecoder().decode(Snapshot.self, from: reference)) == nil {
+                    XCTAssertThrowsError(try TaskfoldJSONDecoder().decode(Snapshot.self, from: actual))
+                } else { try exact(actual, value) }
+            }
+        }
     }
     func testBudgetAndLargeHeaderFallbackNeverOmitWork() throws {
         let (cache, initial) = try primed(seed(), maximumBytes: 4096); var value = initial
