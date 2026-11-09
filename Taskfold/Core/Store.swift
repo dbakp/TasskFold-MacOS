@@ -132,6 +132,7 @@ final class Store {
     private var teamAccessMask:TeamWorkspaceCache? {
         didSet {
             presentationAccessEpoch = UUID()
+            widgetCompletionSignatures.clear()
             subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
             presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear()
             assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
@@ -1403,6 +1404,7 @@ final class Store {
     private let monitor = NWPathMonitor()
     @ObservationIgnored private let projectMemberReads = ProjectMemberReads()
     private var accountGeneration = UUID() { didSet {
+        widgetCompletionSignatures.clear()
         recordReadCache.clear()
         subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
         projectMemberReads.cancelAll()

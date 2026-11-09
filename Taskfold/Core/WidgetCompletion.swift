@@ -17,8 +17,9 @@ struct WidgetCompletionCache: Codable, Equatable, Sendable {
 
 enum WidgetCompletion {
     enum Plan { case complete([Mutation]), saved, stale }
-    /// Caller-confined, bounded memo of computed hashes, never saved widget
-    /// tokens or task text. A fresh Store/scope always computes its own values.
+    /// Caller-confined hash proofs and separately bounded task projections.
+    /// Projections stay in this scope; the immutable worker seed carries only
+    /// hashes/empty source identities, never task text or saved widget tokens.
     final class SignatureCache {
         struct Scope: Equatable, Sendable {
             let workspace: WorkspaceBinding
@@ -32,11 +33,15 @@ enum WidgetCompletion {
             fileprivate let entries: [String: Entry]
         }
         private let maximumEntries: Int
+        private let projectionCache: TaskHierarchyIndex.ProjectionCache
+        var hierarchyStatistics: TaskHierarchyIndex.ProjectionCache.Statistics { projectionCache.statistics }
+        fileprivate var projections: TaskHierarchyIndex.ProjectionCache? { scope != nil && projectionCache.enabled ? projectionCache : nil }
         private var scope: Scope?
         private var entries: [String: Entry] = [:], next: [String: Entry] = [:]
         private(set) var statistics = Statistics()
-        init(maximumEntries: Int = 4096, seed: Seed? = nil) {
+        init(maximumEntries: Int = 4096, seed: Seed? = nil, maximumProjectionBytes: Int = 8 * 1024 * 1024) {
             self.maximumEntries = max(0, maximumEntries)
+            projectionCache = .init(maximumItems: max(0, min(4096, maximumEntries)), maximumBytes: maximumProjectionBytes)
             if let seed {
                 scope = seed.scope
                 entries = Dictionary(uniqueKeysWithValues: seed.entries.prefix(self.maximumEntries).map { ($0.key, $0.value) })
@@ -48,9 +53,9 @@ enum WidgetCompletion {
             guard let current, current == scope else { return nil }
             return Seed(scope: current, entries: entries)
         }
-        func clear() { scope = nil; entries = [:]; next = [:]; statistics = Statistics() }
+        func clear() { scope = nil; entries = [:]; next = [:]; statistics = Statistics(); projectionCache.clear() }
         fileprivate func begin(_ current: Scope?) {
-            if current == nil || current != scope { entries = [:] }
+            if current == nil || current != scope { entries = [:]; projectionCache.clear() }
             scope = current; next = [:]; statistics = Statistics()
         }
         fileprivate func signature(for row: Record, compute: () -> String) -> String {
@@ -88,7 +93,7 @@ enum WidgetCompletion {
         let tasks = snapshot.tables["tasks"] ?? []
         let instants = InstantNormalizer()
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
-        let children = childItems(snapshot, account: "widget-index")
+        let children = childItems(snapshot, account: "widget-index", projections: signatures?.projections)
         let ids = Set(tasks.map { WidgetTaskIdentity.key($0.id) } + children.map(\.id))
         snapshot.widgetCompletion.states = snapshot.widgetCompletion.states.filter { ids.contains($0.key) }
         for task in tasks where !task.id.isEmpty {
@@ -115,12 +120,12 @@ enum WidgetCompletion {
     }
     /// Primary widgets opt into independent work beneath headings. Ordinary
     /// checklists still require an explicit child filter, including at replay.
-    static func hierarchy(_ snapshot: Snapshot, account: String) -> TaskHierarchyIndex? {
-        guard hasChildFilter(snapshot) || (snapshot.tables["tasks"] ?? []).contains(where: { TaskKind($0) == .heading }) else { return nil }
-        return try? TaskHierarchyIndex(roots: snapshot.tables["tasks"] ?? [], projects: snapshot.tables["projects"] ?? [], workspace: WorkspaceBinding(account: account, generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+    static func hierarchy(_ snapshot: Snapshot, account: String, projections: TaskHierarchyIndex.ProjectionCache? = nil) -> TaskHierarchyIndex? {
+        guard hasChildFilter(snapshot) || (snapshot.tables["tasks"] ?? []).contains(where: { TaskKind($0) == .heading }) else { projections?.clear(); return nil }
+        return try? TaskHierarchyIndex(roots: snapshot.tables["tasks"] ?? [], projects: snapshot.tables["projects"] ?? [], workspace: WorkspaceBinding(account: account, generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!), projections: projections)
     }
-    static func childItems(_ snapshot: Snapshot, account: String) -> [TaskHierarchyIndex.Item] {
-        guard let index = hierarchy(snapshot, account: account) else { return [] }
+    static func childItems(_ snapshot: Snapshot, account: String, projections: TaskHierarchyIndex.ProjectionCache? = nil) -> [TaskHierarchyIndex.Item] {
+        guard let index = hierarchy(snapshot, account: account, projections: projections) else { return [] }
         if hasChildFilter(snapshot) { return index.items.filter(\.isSubtask) }
         let reading = ProductiveTaskReading(tasks: snapshot.tables["tasks"] ?? [])
         return index.items.filter { $0.isSubtask && reading.contains($0.id) }
