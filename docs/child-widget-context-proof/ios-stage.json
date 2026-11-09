@@ -1,0 +1,82 @@
+{
+  "children": 2000,
+  "exactReferenceStatesAndTokens": true,
+  "roots": 100,
+  "samples": [
+    {
+      "computed": 100,
+      "pass": 0,
+      "retainedChildProof": true,
+      "reused": 2000,
+      "seconds": 0.02362066670320928
+    },
+    {
+      "computed": 2100,
+      "pass": 0,
+      "retainedChildProof": false,
+      "reused": 0,
+      "seconds": 0.0607631248421967
+    },
+    {
+      "computed": 2100,
+      "pass": 1,
+      "retainedChildProof": false,
+      "reused": 0,
+      "seconds": 0.06123208347707987
+    },
+    {
+      "computed": 100,
+      "pass": 1,
+      "retainedChildProof": true,
+      "reused": 2000,
+      "seconds": 0.022610875079408288
+    },
+    {
+      "computed": 100,
+      "pass": 2,
+      "retainedChildProof": true,
+      "reused": 2000,
+      "seconds": 0.025375666562467813
+    },
+    {
+      "computed": 2100,
+      "pass": 2,
+      "retainedChildProof": false,
+      "reused": 0,
+      "seconds": 0.06118733319453895
+    },
+    {
+      "computed": 2100,
+      "pass": 3,
+      "retainedChildProof": false,
+      "reused": 0,
+      "seconds": 0.06131020816974342
+    },
+    {
+      "computed": 100,
+      "pass": 3,
+      "retainedChildProof": true,
+      "reused": 2000,
+      "seconds": 0.02273049997165799
+    },
+    {
+      "computed": 100,
+      "pass": 4,
+      "retainedChildProof": true,
+      "reused": 2000,
+      "seconds": 0.0229953748639673
+    },
+    {
+      "computed": 2100,
+      "pass": 4,
+      "retainedChildProof": false,
+      "reused": 0,
+      "seconds": 0.06267904164269567
+    }
+  ],
+  "scope": "Same Debug executable, counterbalanced child-context proof versus discarded-proof full-root invalidation; widget preparation only, not old/new app Save or UI/FPS",
+  "mediansMilliseconds": {
+    "False": 61.23208347707987,
+    "True": 22.9953748639673
+  }
+}

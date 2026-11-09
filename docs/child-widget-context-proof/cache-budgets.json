@@ -1,0 +1,20 @@
+{
+  "freeAfterBytes": 26385031168,
+  "freeGiB": 24.572975158691406,
+  "hardFloorGiB": 20,
+  "allSelectedCachesWithin768MiB": true,
+  "normalAppChanged": false,
+  "newSimulatorClones": 0,
+  "reports": [
+    "core-storage-cleanup.json",
+    "mac-storage-cleanup.json",
+    "ios-storage-cleanup.json"
+  ],
+  "codeImagesPreservedAfterCleanup": true,
+  "cacheAllocatedBytes": {
+    "coreMac": 660525056,
+    "coreIOS": 725348352,
+    "macSDK": 677769216,
+    "iosSDK": 734040064
+  }
+}

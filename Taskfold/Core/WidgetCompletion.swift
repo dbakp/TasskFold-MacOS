@@ -59,10 +59,10 @@ enum WidgetCompletion {
                 cacheable: id.utf8.count <= 256, compute: compute) ?? ""
         }
         fileprivate func signature(for child: TaskHierarchyIndex.Item, compute: () -> String?) -> String? {
-            // The original root owns all raw descendants and routing context.
-            // Any root write invalidates this proof; projections are rebuilt
-            // every pass and cannot supply a stable authored identity themselves.
-            signature(key: "child:" + child.id, source: child.root.authoredSourceToken,
+            // Prove the original child tree and routing inputs, not unrelated
+            // root dates/notes. Projections and current visibility still rebuild
+            // every pass; action admission independently checks current data.
+            signature(key: "child:" + child.id, source: child.root.widgetChildSignatureSourceToken,
                 cacheable: child.id.utf8.count <= 256, compute: compute)
         }
         private func signature(key: String, source: Record.SourceToken, cacheable: Bool, compute: () -> String?) -> String? {
@@ -135,7 +135,9 @@ enum WidgetCompletion {
         // Completion changes only this node; a descendant's independent action
         // must not invalidate its parent's still-visible checkbox.
         var own = item.source.fields; own.removeValue(forKey: "subtasks")
-        let values: [JSON] = [.string(item.id), .object(own), item.root["task_generation"], item.root["created_at"], item.root["project_id"], item.root["section_id"]]
+        var values: [JSON] = []; values.reserveCapacity(6)
+        values.append(.string(item.id)); values.append(.object(own))
+        item.root.appendWidgetChildSignatureContext(to: &values)
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
         return (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) }
     }
