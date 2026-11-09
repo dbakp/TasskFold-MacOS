@@ -1,0 +1,18 @@
+[
+  {
+    "path": "/tmp/taskfold-phone-cold-hierarchy-native-v1.xcresult",
+    "archive": "/tmp/taskfold-phone-cold-hierarchy-native-v1.xcresult.tar.gz",
+    "filesVerified": 56,
+    "bytesBefore": 8020945,
+    "bytesAfter": 7623869,
+    "fullArchiveDigestsVerified": true
+  },
+  {
+    "path": "/tmp/taskfold-phone-cold-hierarchy-native-v2.xcresult",
+    "archive": "/tmp/taskfold-phone-cold-hierarchy-native-v2.xcresult.tar.gz",
+    "filesVerified": 88,
+    "bytesBefore": 153178641,
+    "bytesAfter": 152444525,
+    "fullArchiveDigestsVerified": true
+  }
+]

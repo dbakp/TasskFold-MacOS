@@ -1,0 +1,26 @@
+{
+  "hostInfoExact": true,
+  "hostInfoSHA256": "bb90f8f2477ae9ceea6403aafccc3117ff41e105a10472fd04a0ec7cbcbbfd99",
+  "testHostInfoSHA256": "9e81966ea6219f07bd3801422b1d6d8348347e284ae8de117f03262eaf83b353",
+  "fixtureFolders": {
+    "Taskfold": {
+      "originallyExisted": true,
+      "files": 35,
+      "exactDigestsPreserved": true
+    },
+    "WorkspaceReadPerformance": {
+      "originallyExisted": true,
+      "files": 46,
+      "exactDigestsPreserved": true
+    },
+    "Child field native peer": {
+      "originallyExisted": true,
+      "files": 4,
+      "exactDigestsPreserved": true
+    }
+  },
+  "priorDataRestored": true,
+  "voiceOverActualPriorStateRestoredByPassingXCTestTeardowns": true,
+  "normalAppChanged": false,
+  "acceptedImageAndSignaturePreservedAfterCleanup": true
+}
