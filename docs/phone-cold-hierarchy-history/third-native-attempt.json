@@ -1,0 +1,296 @@
+{
+  "accepted": false,
+  "modelInferenceClaimed": false,
+  "normalAppChanged": false,
+  "realServiceClaimed": false,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "initialDeviceState": "Shutdown",
+  "xcodeExitCode": 65,
+  "elapsedSeconds": 490.77673411369324,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 1,
+    "finishTime": 1794195113.701,
+    "passedTests": 1,
+    "result": "Failed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1794194626.666,
+    "statistics": [],
+    "testFailures": [
+      {
+        "failureText": "Failed to get matching snapshot: No matches found for Elements matching predicate '\"Undo & redo\" IN identifiers' from input {(\n    Button, identifier: 'sun.max', label: 'Today',\n    Button, identifier: 'tray', label: 'Inbox', Selected,\n    Button, identifier: 'calendar.day.timeline.left', label: 'Upcoming',\n    Button, identifier: 'calendar', label: 'Calendar',\n    Button, identifier: 'square.grid.2x2', label: 'Browse',\n    Button, identifier: 'openSettings', label: 'Settings and account',\n    Button, label: 'Task options',\n    Button, identifier: 'openTaskSearch', label: 'Search',\n    Button,\n    Button, identifier: 'floatingAdd', label: 'Add task',\n    Button, identifier: 'sectionHeader-inbox:group:0:unsectioned', label: 'Tasks, 1', value: Expanded,\n    Button, identifier: 'expandChildRows-ec990000-0000-4000-8000-000000000002', label: 'Subtasks of Native child workspace', value: Collapsed,\n    Button, label: 'Complete Native child workspace',\n    Button, identifier: 'taskDetails-ec990000-0000-4000-8000-000000000002', label: 'Native child workspace, 0 of 3 subtasks completed'\n)}\nPossibly caused by runtime issues:\nAutomation type mismatch: computed Button from legacy attributes vs PopUpButton from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 14;\n    \"XC_kAXXCAttributeElementBaseType\" = NSObject;\n    \"XC_kAXXCAttributeElementType\" = \"SwiftUI.AccessibilityNode\";\n    \"XC_kAXXCAttributeTraits\" = 1108101562369;\n}\nSee test report attachments for more detail.",
+        "targetName": "TaskfoldUITests",
+        "testIdentifier": 2,
+        "testIdentifierString": "WorkflowSourceSelectionUITests/testLargestColdHierarchyUndoJoinsNormalHistoryAndColdReturn()",
+        "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/WorkflowSourceSelectionUITests/testLargestColdHierarchyUndoJoinsNormalHistoryAndColdReturn",
+        "testName": "testLargestColdHierarchyUndoJoinsNormalHistoryAndColdReturn()"
+      }
+    ],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 2
+  },
+  "error": "",
+  "restoredFolders": {
+    "Taskfold": {
+      "originallyExisted": true,
+      "files": 35,
+      "exactDigestsPreserved": true
+    },
+    "WorkspaceReadPerformance": {
+      "originallyExisted": true,
+      "files": 46,
+      "exactDigestsPreserved": true
+    },
+    "Child field native peer": {
+      "originallyExisted": true,
+      "files": 4,
+      "exactDigestsPreserved": true
+    }
+  },
+  "generatedDataHashes": {
+    "Taskfold": {
+      "Backups/48f020e2-3b6a-8dd7-8df7-8051e91f40c0/Child hierarchy requests/ec990000-0000-4000-8000-000000000001/a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/requests.taskfoldchildstructure": "b7eec1160963a953614e00a9afbd8915bfd8cb4827afd81d4979490e6533b5cb",
+      "ec990000-0000-4000-8000-000000000001.json": "f61ddfc0491da169e78906c87ee8c7a0f0921c07a3c8adea7996817390f85fe9",
+      "ec990000-0000-4000-8000-000000000001.removal.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "WorkspaceReadPerformance": {
+      "phone-cold-hierarchy-normal.json": "5ad293f70fd88a2a2a3d8582da908731a0403eda76d7bc7d52cdeb16dcdb326d"
+    },
+    "Child field native peer": {
+      "server.json": "61335081c62aa9a7f6d47acf8eab2f7f956f3a6f26b09a1d371b1a755339e139"
+    }
+  },
+  "finalSnapshot": {
+    "widgetCompletion": {
+      "states": {
+        "ec990000-0000-4000-8000-000000000002": {
+          "token": "df11e9c4-26fb-4c64-b032-655fff7be4be",
+          "signature": "58f6d42608427a79b7a0cb8bcba1fd84f9475a59debbcbd7628f7af78026b42b"
+        }
+      },
+      "receiptOrder": [],
+      "receipts": {}
+    },
+    "tables": {
+      "tasks": [
+        {
+          "subtasks": [
+            {
+              "subtasks": [
+                {
+                  "title": "Collect supporting notes",
+                  "taskfold_completion_v1": {
+                    "version": 0,
+                    "epoch": "bc1dd4e5-f481-4263-951c-16a1177c576c"
+                  },
+                  "description": "Keep these nested instructions",
+                  "future": {
+                    "keep": true
+                  },
+                  "id": "nested"
+                }
+              ],
+              "completed": false,
+              "title": "Prepare the review",
+              "priority": 4,
+              "id": "concept",
+              "future": {
+                "keep": true
+              },
+              "taskfold_completion_v1": {
+                "epoch": "491d5215-7e66-4f2b-bc62-db0b93c00ab3",
+                "version": 0
+              },
+              "description": "Original saved notes"
+            },
+            {
+              "description": "Original saved notes",
+              "completed": false,
+              "title": "Publish the summary",
+              "future": {
+                "keep": true
+              },
+              "priority": 4,
+              "id": "review"
+            }
+          ],
+          "title": "Native child workspace",
+          "user_id": "ec990000-0000-4000-8000-000000000001",
+          "project_id": null,
+          "task_generation": "ec990000-0000-4000-8000-000000000003",
+          "id": "ec990000-0000-4000-8000-000000000002"
+        }
+      ]
+    },
+    "pending": []
+  },
+  "finalPeer": {
+    "writes": 0,
+    "structureWrites": 2,
+    "root": {
+      "subtasks": [
+        {
+          "title": "Prepare the review",
+          "id": "concept",
+          "priority": 4,
+          "completed": false,
+          "future": {
+            "keep": true
+          },
+          "subtasks": [
+            {
+              "description": "Keep these nested instructions",
+              "future": {
+                "keep": true
+              },
+              "id": "nested",
+              "title": "Collect supporting notes",
+              "taskfold_completion_v1": {
+                "version": 0,
+                "epoch": "bc1dd4e5-f481-4263-951c-16a1177c576c"
+              }
+            }
+          ],
+          "description": "Original saved notes",
+          "taskfold_completion_v1": {
+            "version": 0,
+            "epoch": "491d5215-7e66-4f2b-bc62-db0b93c00ab3"
+          }
+        },
+        {
+          "title": "Publish the summary",
+          "description": "Original saved notes",
+          "id": "review",
+          "priority": 4,
+          "future": {
+            "keep": true
+          },
+          "completed": false
+        }
+      ],
+      "project_id": null,
+      "id": "ec990000-0000-4000-8000-000000000002",
+      "title": "Native child workspace",
+      "user_id": "ec990000-0000-4000-8000-000000000001",
+      "task_generation": "ec990000-0000-4000-8000-000000000003"
+    },
+    "structureIncarnations": {
+      "nested": "4b0988a1-cfff-48b6-9b23-7c2563b6abe5",
+      "review": "ec990000-0000-4000-8000-000000000006",
+      "concept": "e34da8a4-33cd-440b-bdfb-2498f53d10c6"
+    },
+    "requests": 0,
+    "receipts": {},
+    "versions": {
+      "review": 1,
+      "concept": 1,
+      "nested": 1
+    },
+    "structureRequests": 2,
+    "structureRevision": 3,
+    "lost": false,
+    "structureReceipts": {
+      "fdd04556-c5aa-4685-bf73-2a6ab6417650": {
+        "inverse": {
+          "parent": null,
+          "index": 0
+        },
+        "body": {
+          "account": "ec990000-0000-4000-8000-000000000001",
+          "node_key": "concept",
+          "task_id": "ec990000-0000-4000-8000-000000000002",
+          "protocol": 1,
+          "structure_revision": 1,
+          "task_generation": "ec990000-0000-4000-8000-000000000003",
+          "request_id": "fdd04556-c5aa-4685-bf73-2a6ab6417650",
+          "incarnation": "ec990000-0000-4000-8000-000000000005",
+          "project_id": null,
+          "subtree_versions": {
+            "concept": {
+              "revision": 1,
+              "incarnation": "ec990000-0000-4000-8000-000000000005"
+            },
+            "nested": {
+              "revision": 1,
+              "incarnation": "26db56a8-3e9e-45c0-bbd5-5f5258860fda"
+            }
+          },
+          "action": "delete"
+        },
+        "receipt": {
+          "project_id": null,
+          "undo_of": null,
+          "replayed": false,
+          "task_id": "ec990000-0000-4000-8000-000000000002",
+          "task_generation": "ec990000-0000-4000-8000-000000000003",
+          "action": "delete",
+          "after_revision": 2,
+          "node_key": "concept",
+          "incarnation": null,
+          "account": "ec990000-0000-4000-8000-000000000001",
+          "before_revision": 1,
+          "protocol": 1,
+          "request_id": "fdd04556-c5aa-4685-bf73-2a6ab6417650"
+        },
+        "reversed": true
+      },
+      "c01c5b93-aa1c-4502-a608-d80f33a4c9ec": {
+        "inverse": {},
+        "body": {
+          "task_id": "ec990000-0000-4000-8000-000000000002",
+          "account": "ec990000-0000-4000-8000-000000000001",
+          "protocol": 1,
+          "structure_revision": 2,
+          "task_generation": "ec990000-0000-4000-8000-000000000003",
+          "request_id": "c01c5b93-aa1c-4502-a608-d80f33a4c9ec",
+          "action": "undo",
+          "project_id": null,
+          "undo_of": "fdd04556-c5aa-4685-bf73-2a6ab6417650"
+        },
+        "receipt": {
+          "project_id": null,
+          "undo_of": "fdd04556-c5aa-4685-bf73-2a6ab6417650",
+          "replayed": false,
+          "task_id": "ec990000-0000-4000-8000-000000000002",
+          "task_generation": "ec990000-0000-4000-8000-000000000003",
+          "action": "undo",
+          "after_revision": 3,
+          "node_key": "concept",
+          "incarnation": "e34da8a4-33cd-440b-bdfb-2498f53d10c6",
+          "account": "ec990000-0000-4000-8000-000000000001",
+          "before_revision": 2,
+          "protocol": 1,
+          "request_id": "c01c5b93-aa1c-4502-a608-d80f33a4c9ec"
+        }
+      }
+    },
+    "structureArchives": {}
+  },
+  "priorFixtureRestored": true,
+  "ownedSimulatorShutdown": true,
+  "bootedThisRun": true
+}

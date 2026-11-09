@@ -1,0 +1,184 @@
+{
+  "accepted": true,
+  "modelInferenceClaimed": false,
+  "normalAppChanged": false,
+  "realServiceClaimed": false,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "initialDeviceState": "Shutdown",
+  "xcodeExitCode": 0,
+  "elapsedSeconds": 53.99799704551697,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1794195477.349,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1794195427.153,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "dataContainerReacquiredAfterXcode": true,
+  "proofs": {},
+  "sourceAndImageUnchanged": true,
+  "restoredFolders": {
+    "Taskfold": {
+      "originallyExisted": true,
+      "files": 35,
+      "exactDigestsPreserved": true
+    },
+    "WorkspaceReadPerformance": {
+      "originallyExisted": true,
+      "files": 46,
+      "exactDigestsPreserved": true
+    },
+    "Child field native peer": {
+      "originallyExisted": true,
+      "files": 4,
+      "exactDigestsPreserved": true
+    }
+  },
+  "generatedDataHashes": {
+    "Taskfold": {
+      "ec990000-0000-4000-8000-000000000001.json": "ccf86f83a37cf38115e743f9e41792598a62dbd4ca74c9264be97e2307fcd248",
+      "ec990000-0000-4000-8000-000000000001.removal.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "Child field native peer": {
+      "server.json": "291c507bec9f8993d6eeeac397ee9af111a2fad3391842ca0621ef71b9eb9c2d"
+    }
+  },
+  "finalSnapshot": {
+    "pending": [],
+    "tables": {
+      "tasks": [
+        {
+          "user_id": "ec990000-0000-4000-8000-000000000001",
+          "task_generation": "ec990000-0000-4000-8000-000000000003",
+          "title": "Native child workspace",
+          "id": "ec990000-0000-4000-8000-000000000002",
+          "project_id": null,
+          "subtasks": [
+            {
+              "future": {
+                "keep": true
+              },
+              "completed": false,
+              "id": "concept",
+              "description": "Original saved notes",
+              "priority": 4,
+              "title": "Prepare the review",
+              "subtasks": [
+                {
+                  "future": {
+                    "keep": true
+                  },
+                  "title": "Collect supporting notes",
+                  "description": "Keep these nested instructions",
+                  "id": "nested"
+                }
+              ]
+            },
+            {
+              "completed": false,
+              "description": "Original saved notes",
+              "priority": 4,
+              "future": {
+                "keep": true
+              },
+              "id": "review",
+              "title": "Publish the summary"
+            }
+          ]
+        }
+      ]
+    },
+    "widgetCompletion": {
+      "states": {
+        "ec990000-0000-4000-8000-000000000002": {
+          "token": "08d31e3f-5010-4a46-932e-07086575c757",
+          "signature": "58f6d42608427a79b7a0cb8bcba1fd84f9475a59debbcbd7628f7af78026b42b"
+        }
+      },
+      "receipts": {},
+      "receiptOrder": []
+    }
+  },
+  "finalPeer": {
+    "versions": {
+      "review": 1,
+      "concept": 1
+    },
+    "receipts": {},
+    "root": {
+      "task_generation": "ec990000-0000-4000-8000-000000000003",
+      "project_id": null,
+      "title": "Native child workspace",
+      "user_id": "ec990000-0000-4000-8000-000000000001",
+      "id": "ec990000-0000-4000-8000-000000000002",
+      "subtasks": [
+        {
+          "completed": false,
+          "future": {
+            "keep": true
+          },
+          "priority": 4,
+          "title": "Prepare the review",
+          "id": "concept",
+          "description": "Original saved notes",
+          "subtasks": [
+            {
+              "future": {
+                "keep": true
+              },
+              "title": "Collect supporting notes",
+              "description": "Keep these nested instructions",
+              "id": "nested"
+            }
+          ]
+        },
+        {
+          "completed": false,
+          "description": "Original saved notes",
+          "priority": 4,
+          "future": {
+            "keep": true
+          },
+          "id": "review",
+          "title": "Publish the summary"
+        }
+      ]
+    },
+    "writes": 0,
+    "requests": 0,
+    "lost": false
+  },
+  "priorFixtureRestored": true,
+  "ownedSimulatorShutdown": true,
+  "bootedThisRun": true
+}

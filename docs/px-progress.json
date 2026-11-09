@@ -5,7 +5,7 @@
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
   "focus": "Recoverable subtask editing and native history",
-  "latest": "Fixed a real cold-recovery gap: after reviewing saved hierarchy Undo on Mac, Redo now joins normal keyboard history without resending the confirmation. The signed final app passes cold Undo, enabled Redo Remove subtasks, keyboard Redo/Undo and exact final saved/cold work with12 requests/confirmations. Both owners pass145 Core cases and signed SDK builds. The isolated data/settings are restored; broader account, iOS native and spoken scope remains open.",
+  "latest": "Cold saved-subtask Undo now has iPhone native acceptance in normal text and largest-text dark mode: removal, relaunch, reviewed Undo, ordinary Redo/Undo and final cold persistence. Each journey sends exactly four actions and preserves all authored/nested fields with required fresh restoration identities. The prior Mac keyboard fix remains merged. Test data and settings are restored; broader shared-account, speech and device scope stays open.",
   "next": [
     "Finish the existing-group signing fix when Xcode’s development account is available. The real54 attempt stopped before compilation with No Accounts and missing App Groups capability/entitlement. The user has been asked to sign into Xcode → Settings → Accounts; do not request credentials in chat or repeat the unchanged build. Preserve group.com.dbakp.taskfold and all existing shared data. Require actual app/widget/share profile authorization, then verify startup/lookup/prompt behavior before calling the recurring prompt fixed. Mac53 remains installed/usable; no routine update approval is needed. Phone installation remains deferred.",
     "Continue user-visible task organization and review improvements in bounded batches. New ordinary step ordering is accepted on Mac/iPhone in recorded scope; saved-service menu, iPad/speech/shared-account and genuine model quality remain separate. Avoid repeating successful checks without changed code or unresolved evidence.",
@@ -16,7 +16,7 @@
     "Finish Mac/iPad Saved originals controls and wider account/accessibility behavior; then finish broader custodian cleanup, restoration/Undo and the larger older-task/history migration. Command-free discovery/export now has genuine API and Core proof. Keep wider mapped/shared-team/custodian, exact-cache and file/discussion ownership cases distinct; ordinary advanced rollout gates stay off.",
     "Finish protected Mac deletion/recovery and disposable hosted residual-file repair and issuer/verifier checks when their stated prerequisites are available. Never erase device copies without bound confirmation.",
     "Keep agreed remote-reminder, older-client rollout, distribution, provider-registration/email, physical-location and genuine-audio deferrals paused. The local model is ready; filter quality still fails prose and subproject-scope cases. Do not repeat the rejected prompt experiments unchanged.",
-    "Continue wider hierarchy shared-account, window, background, access, speech and large-library cases. Scoped Mac branch controls and cold saved-Undo keyboard Redo are accepted in recorded phases; both implementations/builds pass. Separate Mac assistive traversal and iOS native cold-history checks remain, alongside real service/Keychain/device acceptance. Do not repeat accepted journeys unchanged.",
+    "Continue wider hierarchy shared-account, window, background, access, speech and large-library cases. Mac branch controls and cold saved-Undo keyboard Redo are accepted in recorded phases; iPhone normal and largest-text dark production-menu Redo/Undo now pass with exact saved/cold data and single-submit checks. Separate Mac assistive traversal, iPad, real service/Keychain and physical-device acceptance remain. Do not repeat accepted journeys unchanged.",
     "Ship bounded independently owned app updates after checks and merges. Preserve saved drafts, frozen packages, install deferrals and storage cleanup on every run.",
     "Continue everyday response work from the real measured stages. Varied-schedule preparation and metadata-only grouping are improved; larger initial rendering/navigation, multiple-project and physical smoothness remain. Preserve exact current source/privacy fences and keep ordinary builds moving after checks and merges."
   ],
@@ -1109,7 +1109,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Separate records, guarded edits, mixed completion, saved-original discovery/export/retention, copy/history mapping and scoped Restore/Undo/Redo/Finish have recorded service/client/native proof. Keep-restored saves retain the inverse, unknown data and prior history; current status cannot revive an ended cycle. A named Previous editable version now selects the retained inverse with fresh review and consent reset. Each schema passes 211 API checks, each client 45 focused cases (five new), and both builds pass. The real iPhone picker/lost-response Check/cold Undo/Redo preserves originals and prior histories; service recovery also makes the selected version editable and accepts ordinary edits without duplicating completion credit. The isolated normal-text iPhone now accepts Previous editable version through the actual restoration-card entry, complete history review, explicit save, cold pending-repair Check and cold ended-cycle actions. Exactly one repair is saved, with earlier originals and history preserved. Other format/source entry variants remain separate. Wider account/task/custodian/file/audio/discussion ownership, cross-device discovery, exact-cache/larger-library and broader Mac/iPad/large-text/speech acceptance remain. Advanced flags and hosted services stay unchanged; normal Mac 53 is installed/synced with saved-work readback and shared-storage UI readiness verified; advanced gates remain unchanged. Actual iPhone restoration over real local Auth/REST now passes nine protected-session/encrypted-journal launches, committed reply loss, exact cold Check, Undo/Redo, Undo/Finish, and preservation of originals, history and concurrent root fields. Keep-editable HTTP now passes 35 checks across eight protected cold processes, including lost commit reply, exact recovery with new writes paused, retained inverse/binding and preserved originals/history. Mac HTTP runtime, additional source/format variants and wider ownership remain separate. Scoped Mac branch controls and keyboard history now pass in recorded phases. The warm move/removal phase exposed cold saved-Undo registering on the wrong native-history side. The final bridge adopts confirmed inverses on Redo without a duplicate service call, preserves older Undo and refuses stale/known/duplicate/busy inputs. Both owners pass145 Core cases; signed SDKs/source/image audits pass. Final current-source Mac native cold Undo10 enables Redo Remove subtasks; keyboardRedo11/Undo12 preserve every authored field with required fresh restoration identities, exact saved tables and final cold peer state. All122 original isolated files and hostInfo restored. iOS native, separate Mac assistive traversal, speech, real Auth/Keychain/SQL/shared/window/device cases remain open; normal gates unchanged.",
+              "detail": "Separate records, guarded edits, mixed completion, saved-original discovery/export/retention, copy/history mapping and scoped Restore/Undo/Redo/Finish have recorded service/client/native proof. Keep-restored saves retain the inverse, unknown data and prior history; current status cannot revive an ended cycle. A named Previous editable version now selects the retained inverse with fresh review and consent reset. Each schema passes 211 API checks, each client 45 focused cases (five new), and both builds pass. The real iPhone picker/lost-response Check/cold Undo/Redo preserves originals and prior histories; service recovery also makes the selected version editable and accepts ordinary edits without duplicating completion credit. The isolated normal-text iPhone now accepts Previous editable version through the actual restoration-card entry, complete history review, explicit save, cold pending-repair Check and cold ended-cycle actions. Exactly one repair is saved, with earlier originals and history preserved. Other format/source entry variants remain separate. Wider account/task/custodian/file/audio/discussion ownership, cross-device discovery, exact-cache/larger-library and broader Mac/iPad/large-text/speech acceptance remain. Advanced flags and hosted services stay unchanged; normal Mac 53 is installed/synced with saved-work readback and shared-storage UI readiness verified; advanced gates remain unchanged. Actual iPhone restoration over real local Auth/REST now passes nine protected-session/encrypted-journal launches, committed reply loss, exact cold Check, Undo/Redo, Undo/Finish, and preservation of originals, history and concurrent root fields. Keep-editable HTTP now passes 35 checks across eight protected cold processes, including lost commit reply, exact recovery with new writes paused, retained inverse/binding and preserved originals/history. Mac HTTP runtime, additional source/format variants and wider ownership remain separate. Scoped Mac branch controls and keyboard history now pass in recorded phases. The warm move/removal phase exposed cold saved-Undo registering on the wrong native-history side. The final bridge adopts confirmed inverses on Redo without a duplicate service call, preserves older Undo and refuses stale/known/duplicate/busy inputs. Both owners pass145 Core cases; signed SDKs/source/image audits pass. Final current-source Mac native cold Undo10 enables Redo Remove subtasks; keyboardRedo11/Undo12 preserve every authored field with required fresh restoration identities, exact saved tables and final cold peer state. All122 original isolated files and hostInfo restored. iPhone normal and largest-text dark native production-menu journeys now pass: remove, cold reviewed Undo, ordinary Redo/Undo and exact final cold peer/tables, four single-submit actions each. Prior isolated data/settings restored. Separate Mac assistive traversal, iPad, speech, real Auth/Keychain/SQL/shared/window/device cases remain open; normal gates unchanged.",
               "steps": [
                 {
                   "state": "done",
@@ -1137,7 +1137,7 @@
                 },
                 {
                   "state": "done",
-                  "title": "Implement hierarchy Undo/Redo and verify saved/mobile history with cold return"
+                  "title": "Implement hierarchy Undo/Redo; accept iPhone normal/largest-text cold saved Undo → ordinary Redo/Undo and exact cold data"
                 },
                 {
                   "state": "done",
@@ -2226,7 +2226,19 @@
     "cold-hierarchy-history/mac-storage-cleanup.json",
     "cold-hierarchy-history/ios-storage-cleanup.json",
     "cold-hierarchy-history/restoration.json",
-    "cold-hierarchy-history/obsolete-output-cleanup.json"
+    "cold-hierarchy-history/obsolete-output-cleanup.json",
+    "phone-cold-hierarchy-history/README.md",
+    "phone-cold-hierarchy-history/sdk-build.json",
+    "phone-cold-hierarchy-history/runtime.json",
+    "phone-cold-hierarchy-history/first-native-attempt.json",
+    "phone-cold-hierarchy-history/second-native-attempt.json",
+    "phone-cold-hierarchy-history/third-native-attempt.json",
+    "phone-cold-hierarchy-history/menu-first-attempt.json",
+    "phone-cold-hierarchy-history/menu-accepted.json",
+    "phone-cold-hierarchy-history/storage-cleanup.json",
+    "phone-cold-hierarchy-history/restoration.json",
+    "phone-cold-hierarchy-history/retired-results.json",
+    "phone-cold-hierarchy-history/build-attempts.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -2873,6 +2885,18 @@
     "pending-approval-boundaries/phone-verification.json": "b628b53944e48363cc26d7984a56036ef4ce30a93f582c366003b4d3547954c8",
     "pending-approval-boundaries/verification.json": "12123e97b7fa378c54d0496013693b00909e4573b432d6b606936e63fb40a03a",
     "personal-child-record-moves/verification.json": "576380252e5aec3e56f60ab8956434f0df4f899bd3d721952c1236a9dc3d7d38",
+    "phone-cold-hierarchy-history/README.md": "20ab54d172744ce46c945b30c078e900c4b465661874932cf77be800a16ef595",
+    "phone-cold-hierarchy-history/build-attempts.json": "b6b9753c4b908f9b9284660284860ad9fdcaef7283f9b2f790502691d9fa1e6c",
+    "phone-cold-hierarchy-history/first-native-attempt.json": "0fb1190542cd1113cfdd41f441029316e93d5bd33282485a26144c77f8cad4cf",
+    "phone-cold-hierarchy-history/menu-accepted.json": "cf40dd1d98ed7d4279b33adbe3e04b8b88177a2ea39b7877b5af7da17bd402e4",
+    "phone-cold-hierarchy-history/menu-first-attempt.json": "57a2f8c80cb047859be1c978b58a276113e177736d3c27760abd399bbc4998c2",
+    "phone-cold-hierarchy-history/restoration.json": "a93ef473043c88e6dab9d99c47ea709c548b1c17c515b9a886cd9f4295e912b4",
+    "phone-cold-hierarchy-history/retired-results.json": "47341ebee4d271195fc6023bbbfbe2aab69afd5def587bbd5076d9e0e467fed8",
+    "phone-cold-hierarchy-history/runtime.json": "2dcc55f03c3d7dcce996edeb7e9f86d6d00d1a3019909256201739879306ba6b",
+    "phone-cold-hierarchy-history/sdk-build.json": "d1fe5765f49b8dbeddf4999d83f4d4e25e4bb682f4a689ff97d0816e233c8526",
+    "phone-cold-hierarchy-history/second-native-attempt.json": "92ec584892d06808f91699252517f35f49d865306a22b16e5ff24197febff1ce",
+    "phone-cold-hierarchy-history/storage-cleanup.json": "08543fe3f6ce678f762e57d53beb0f5a2978f8f438593ca69b490286bd842ddf",
+    "phone-cold-hierarchy-history/third-native-attempt.json": "b7df9460746b4e4fb1a0f06264e4453d34484792d1488526b3031d2a1245bd4f",
     "plain-language-filter-review/README.md": "580012d9b7760603d9df8009d66d4896571760cf14e9b57f9bb58603295c3e81",
     "plain-language-filter-review/core-verification.json": "53cad36753661609db7f5d84d8f03879feaccba885be1935cb3b90c10142b403",
     "plain-language-filter-review/ios-native.json": "99598b2070c3f34976cdfb5a2a3f3ad56e5ad542e3d2222adde21f371537749d",

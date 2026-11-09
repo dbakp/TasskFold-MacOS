@@ -1,0 +1,51 @@
+[
+  {
+    "version": 1,
+    "xcodeExitCode": 65,
+    "elapsedSeconds": 301.81005907058716,
+    "reportSHA256": "13849adc25ba62ce18f1ebcddfee3f4990b913bde2599e9dcb1ea01606cb867e",
+    "nativeAttempted": false
+  },
+  {
+    "version": 2,
+    "xcodeExitCode": 0,
+    "elapsedSeconds": 21.58468198776245,
+    "reportSHA256": "16e96156ae9b794c292b6e1a0c8add51822aab11fa6b78e3122be0720df7ae74",
+    "nativeAttempted": false
+  },
+  {
+    "version": 3,
+    "xcodeExitCode": 0,
+    "elapsedSeconds": 19.718940258026123,
+    "reportSHA256": "63debac638b8c9feb07f8f65efd0c393f640121978f9cb05202be36027a3e40e",
+    "nativeAttempted": true
+  },
+  {
+    "version": 4,
+    "xcodeExitCode": 0,
+    "elapsedSeconds": 21.327351093292236,
+    "reportSHA256": "17f891b149388efc82f72811a180aee189dd431124b59302fd695c118e448b72",
+    "nativeAttempted": true
+  },
+  {
+    "version": 5,
+    "xcodeExitCode": 0,
+    "elapsedSeconds": 21.29736089706421,
+    "reportSHA256": "e6f2bdbb72f1b319bf669e89bd8d0487e51f31a722fc9b570620d9a5a14f8286",
+    "nativeAttempted": true
+  },
+  {
+    "version": 6,
+    "xcodeExitCode": 0,
+    "elapsedSeconds": 20.983960151672363,
+    "reportSHA256": "e9d79757c93106a81cda1332df905767456e8365b46f6db39c1bd41d1b342341",
+    "nativeAttempted": true
+  },
+  {
+    "version": 7,
+    "xcodeExitCode": 0,
+    "elapsedSeconds": 21.162068843841553,
+    "reportSHA256": "d1fe5765f49b8dbeddf4999d83f4d4e25e4bb682f4a689ff97d0816e233c8526",
+    "nativeAttempted": true
+  }
+]
