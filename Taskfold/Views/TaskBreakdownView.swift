@@ -7,6 +7,7 @@ struct TaskBreakdownView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
+    @FocusState private var editing: Bool
     @State private var generation: TaskBreakdownSession
     @State private var goal: String
     @State private var steps: [Step] = []
@@ -16,7 +17,7 @@ struct TaskBreakdownView: View {
     @State private var applied = false
     @State private var error: String?
     @State private var unavailable: String?
-    private struct Step: Identifiable { let id = UUID(); var title: String; var included = true }
+    private typealias Step = TaskBreakdownReview.Step
     // Disappearing controls can read their binding after a save/removal clears the row.
     // Resolve by identity on each access instead of retaining an array-index binding.
     private func stepBinding<Value>(_ step: Step, _ path: WritableKeyPath<Step, Value>) -> Binding<Value> {
@@ -50,7 +51,7 @@ struct TaskBreakdownView: View {
                 if isCurrent {
                 Section {
                     TextField("Task to break down", text: $goal, axis: .vertical)
-                        .lineLimit(2...6).disabled(busy || generation.closed).accessibilityIdentifier("breakdownGoal")
+                        .lineLimit(2...6).focused($editing).disabled(busy || generation.closed).accessibilityIdentifier("breakdownGoal")
                     if let goalProblem {
                         Text(goalProblem).foregroundStyle(.red).accessibilityIdentifier("breakdownGoalWarning")
                     }
@@ -70,24 +71,30 @@ struct TaskBreakdownView: View {
                 }
                 if !steps.isEmpty {
                     Section("Review steps") {
-                        ForEach(steps) { step in
+                        let visibleSteps = steps
+                        ForEach(visibleSteps) { step in
+                            let position = steps.firstIndex { $0.id == step.id } ?? 0
                             VStack(alignment: .leading, spacing: 8) {
-                                TextField("Step title", text: stepBinding(step, \.title), axis: .vertical).lineLimit(1...4)
-                                    .accessibilityIdentifier("breakdownStep-" + step.id.uuidString)
                                 HStack {
-                                    Toggle("Include this step", isOn: stepBinding(step, \.included)).accessibilityLabel("Include " + step.title)
-                                    Button(role: .destructive) {
-                                        let id = step.id; steps.removeAll { $0.id == id }
-                                    } label: { Image(systemName: "trash").frame(minWidth: 44, minHeight: 44) }
-                                        .buttonStyle(.borderless).accessibilityLabel("Remove " + step.title)
+                                    Text("Step \(position + 1)").font(.caption).foregroundStyle(.secondary)
+                                    Spacer()
+                                    TaskBreakdownStepOptions(step: step, position: position, count: steps.count, prefix: "breakdown", move: { move(step, by: $0) }, remove: { remove(step) })
                                 }
+                                TextField("Step title", text: stepBinding(step, \.title), axis: .vertical).lineLimit(1...4).focused($editing)
+                                    .accessibilityIdentifier("breakdownStep-" + step.id.uuidString)
+                                Toggle("Include this step", isOn: stepBinding(step, \.included)).accessibilityLabel("Include " + step.title)
+                                    .accessibilityIdentifier("breakdownIncluded-" + step.id.uuidString)
                             }.disabled(busy).deleteDisabled(busy)
                         }
-                        .onDelete { steps.remove(atOffsets: $0) }
+                        .onDelete { offsets in
+                            guard !busy, !applied, !generation.closed, isCurrent else { return }
+                            let ids = Set(offsets.compactMap { visibleSteps.indices.contains($0) ? visibleSteps[$0].id : nil })
+                            steps.removeAll { ids.contains($0.id) }
+                        }
                         if let selectionProblem {
                             Text(selectionProblem).foregroundStyle(.red).accessibilityIdentifier("breakdownSelectionWarning")
                         }
-                        Text("Existing subtasks stay in place. Selected steps will be appended.")
+                        Text("Existing subtasks stay in place. Selected steps will be appended in the order shown.")
                             .font(.callout).foregroundStyle(.secondary)
                     }
                 }
@@ -96,6 +103,7 @@ struct TaskBreakdownView: View {
                     Text("This task is no longer available.")
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .formStyle(.grouped)
             .navigationTitle("Suggest steps")
             .toolbar {
@@ -103,16 +111,31 @@ struct TaskBreakdownView: View {
                     Button("Cancel") { close(); dismiss() }.accessibilityIdentifier("breakdownCancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add selected") { apply() }
-                        .disabled(busy || applied || generation.closed || !isCurrent || selected.isEmpty || selectionProblem != nil)
-                        .accessibilityValue("\(selected.count) steps").accessibilityIdentifier("breakdownApply")
+                    #if os(iOS)
+                    if editing {
+                        Button("Done") { editing = false }.accessibilityLabel("Hide keyboard").accessibilityIdentifier("breakdownKeyboardDone")
+                    } else { applyButton }
+                    #else
+                    applyButton
+                    #endif
                 }
             }
         }
         #if os(macOS)
         .frame(minWidth: 440, idealWidth: 520, minHeight: 420, idealHeight: 620)
         #endif
-        .task { unavailable = TaskBreakdownEngine.unavailableReason }
+        .task {
+            unavailable = TaskBreakdownEngine.unavailableReason
+            #if DEBUG
+            // Fixed review data only in the reserved acceptance app; this does
+            // not run inference or write the parent task.
+            if Bundle.main.bundleIdentifier?.hasSuffix(".workflowteststeameditbridge") == true,
+               ProcessInfo.processInfo.arguments.contains("--breakdown-order-testing") {
+                steps = ["Inspect the brief", "Review the layout", "Publish the checklist"].map { Step(title: $0) }
+                generatedGoal = goal
+            }
+            #endif
+        }
         .onChange(of: isCurrent, initial: true) { _, value in
             if !value { close(); steps = []; goal = ""; dismiss() }
         }
@@ -127,6 +150,20 @@ struct TaskBreakdownView: View {
         }
         .onChange(of: error) { _, value in if let value { AccessibilityNotification.Announcement(value).post() } }
         .onDisappear { close() }
+    }
+    private var applyButton: some View {
+        Button("Add selected") { apply() }
+            .disabled(busy || applied || generation.closed || !isCurrent || selected.isEmpty || selectionProblem != nil)
+            .accessibilityValue("\(selected.count) steps").accessibilityIdentifier("breakdownApply")
+    }
+    private func remove(_ step: Step) {
+        guard !busy, !applied, !generation.closed, isCurrent else { return }
+        steps.removeAll { $0.id == step.id }
+    }
+    private func move(_ step: Step, by offset: Int) {
+        guard !busy, !applied, !generation.closed, isCurrent,
+              let position = TaskBreakdownReview.move(step.id, by: offset, in: &steps) else { return }
+        AccessibilityNotification.Announcement("Moved \(step.title) to step \(position + 1) of \(steps.count)").post()
     }
     private func generate() {
         guard isCurrent, !busy, let token = generation.begin(workspace: workspace, session: session) else { return }
@@ -156,5 +193,31 @@ struct TaskBreakdownView: View {
             try onApply(children)
             applied = true; close(); dismiss()
         } catch { self.error = error.localizedDescription }
+    }
+}
+
+/// Native menu controls work with touch, keyboard and assistive navigation;
+/// no drag gesture or editing mode is required to arrange a short review.
+struct TaskBreakdownStepOptions: View {
+    let step: TaskBreakdownReview.Step
+    let position: Int
+    let count: Int
+    let prefix: String
+    let move: (Int) -> Void
+    let remove: () -> Void
+    var body: some View {
+        Menu {
+            Button("Move up", systemImage: "arrow.up") { move(-1) }
+                .disabled(position == 0).accessibilityIdentifier(prefix + "MoveUp-" + step.id.uuidString)
+            Button("Move down", systemImage: "arrow.down") { move(1) }
+                .disabled(position + 1 >= count).accessibilityIdentifier(prefix + "MoveDown-" + step.id.uuidString)
+            Divider()
+            Button("Remove step", systemImage: "trash", role: .destructive, action: remove)
+                .accessibilityIdentifier(prefix + "Remove-" + step.id.uuidString)
+        } label: { Image(systemName: "ellipsis").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle()) }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("Options for " + step.title)
+        .accessibilityValue("Step \(position + 1) of \(count)")
+        .accessibilityIdentifier(prefix + "Options-" + step.id.uuidString)
     }
 }

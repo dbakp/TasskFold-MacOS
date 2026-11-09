@@ -31,7 +31,7 @@ struct ReviewedTaskStepsView: View {
     #endif
     @State private var error: String?
     @State private var forgetting: ReviewedTaskStepsCommand?
-    private struct Step: Identifiable { let id = UUID(); var title: String; var included = true }
+    private typealias Step = TaskBreakdownReview.Step
     // Disappearing controls can read their binding after a save/removal clears the row.
     // Resolve by identity on each access instead of retaining an array-index binding.
     private func stepBinding<Value>(_ step: Step, _ path: WritableKeyPath<Step, Value>) -> Binding<Value> {
@@ -87,13 +87,21 @@ struct ReviewedTaskStepsView: View {
                     if !steps.isEmpty {
                         Section("Review steps") {
                             ForEach(steps) { step in
+                                let position = steps.firstIndex { $0.id == step.id } ?? 0
                                 VStack(alignment: .leading, spacing: 8) {
-                                    TextField("Step title", text: stepBinding(step, \.title), axis: .vertical).lineLimit(1...4).focused($editing).accessibilityIdentifier("reviewedStepTitle-" + step.id.uuidString)
-                                    Toggle("Include this step", isOn: stepBinding(step, \.included)).accessibilityLabel("Include " + step.title).accessibilityIdentifier("reviewedStepIncluded-" + step.id.uuidString)
+                                    HStack {
+                                        Text("Step \(position + 1)").font(.caption).foregroundStyle(.secondary)
+                                        Spacer()
+                                        TaskBreakdownStepOptions(step: step, position: position, count: steps.count, prefix: "reviewedSteps", move: { move(step, by: $0) }, remove: { remove(step) })
+                                    }
+                                    TextField("Step title", text: stepBinding(step, \.title), axis: .vertical).lineLimit(1...4).focused($editing)
+                                        .accessibilityIdentifier("reviewedStepTitle-" + step.id.uuidString)
+                                    Toggle("Include this step", isOn: stepBinding(step, \.included)).accessibilityLabel("Include " + step.title)
+                                        .accessibilityIdentifier("reviewedStepIncluded-" + step.id.uuidString)
                                 }.disabled(generating || model?.busy == true)
                             }
                             if let selectionProblem { Text(selectionProblem).foregroundStyle(.red) }
-                            Text("Selected steps are added together after existing subtasks, with one Undo.").font(.callout).foregroundStyle(.secondary)
+                            Text("Selected steps are added in the order shown, after existing subtasks, with one Undo.").font(.callout).foregroundStyle(.secondary)
                             Button("Add selected") { Task { await add() } }
                                 .disabled(!store.online || generating || model?.busy == true || selected.isEmpty || selectionProblem != nil)
                                 .accessibilityValue("\(selected.count) steps").accessibilityIdentifier("reviewedStepsApply")
@@ -182,6 +190,15 @@ struct ReviewedTaskStepsView: View {
     }
     private func status(_ phase: ReviewedTaskStepsState.Phase) -> String {
         switch phase { case .queued: "Saved · not sent"; case .attempted: "Needs attention · original request kept"; case .applied: "Confirmed"; case .closed: "Stopped" }
+    }
+    private func remove(_ step: Step) {
+        guard !generating, model?.busy != true, current, !pending else { return }
+        steps.removeAll { $0.id == step.id }
+    }
+    private func move(_ step: Step, by offset: Int) {
+        guard !generating, model?.busy != true, current, !pending,
+              let position = TaskBreakdownReview.move(step.id, by: offset, in: &steps) else { return }
+        AccessibilityNotification.Announcement("Moved \(step.title) to step \(position + 1) of \(steps.count)").post()
     }
     private func stopGeneration() { token = UUID(); generation?.cancel(); generation = nil; generating = false }
     private func makeModel() throws -> ReviewedTaskStepsModel {

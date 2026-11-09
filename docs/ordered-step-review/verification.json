@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-09",
+  "core": {
+    "mac": {
+      "executed": 31,
+      "passed": 30,
+      "skipped": 1,
+      "failures": 0
+    },
+    "ios": {
+      "executed": 31,
+      "passed": 30,
+      "skipped": 1,
+      "failures": 0
+    }
+  },
+  "newFunctionalCases": 4,
+  "nativeAccepted": true,
+  "modelInferenceClaimed": false,
+  "normalAppChanged": false,
+  "nativeScope": "Signed iPhone normal ordered review/edit/exclusion/Cancel/draft-only Add/explicit Save/Undo/Redo/cold; largest text move/Cancel. Fixed synthetic review titles; no inference.",
+  "nativeCasesPassed": 2,
+  "nativeCasesFailed": 0,
+  "runtimeWarnings": 0,
+  "sourceAndImageUnchanged": true,
+  "prior81FixtureFilesRestoredExactly": true,
+  "ownedSimulatorShutdown": true,
+  "iosImagePreservedAfterCleanup": true,
+  "macSDKAccepted": true,
+  "macRuntimeAccepted": true,
+  "macRuntimeScope": "Direct CUA ordinary seeded review move/edit/exclude/Cancel/Apply/Undo/Redo/cold with exact saved task/project checks",
+  "macPriorFilesRestoredExactly": 120
+}

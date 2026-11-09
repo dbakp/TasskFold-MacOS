@@ -102,6 +102,46 @@ final class TaskBreakdownTests: XCTestCase {
             catch { XCTAssertTrue(error is CancellationError, "Cancellation must win over input or availability: \(error)") }
         }
     }
+    func testReviewOrderKeepsEditsInclusionAndIdentityWithTheirStep() {
+        var steps = ["Inspect", "Review", "Publish"].map { TaskBreakdownReview.Step(title: $0) }
+        let ids = steps.map(\.id)
+        steps[1].title = "Review the final layout"; steps[1].included = false
+        XCTAssertEqual(TaskBreakdownReview.move(ids[2], by: -1, in: &steps), 1)
+        XCTAssertEqual(TaskBreakdownReview.move(ids[2], by: -1, in: &steps), 0)
+        XCTAssertEqual(steps.map(\.id), [ids[2], ids[0], ids[1]])
+        XCTAssertEqual(steps.map(\.title), ["Publish", "Inspect", "Review the final layout"])
+        XCTAssertEqual(steps.filter(\.included).map(\.title), ["Publish", "Inspect"])
+        XCTAssertEqual(TaskBreakdownReview.move(ids[2], by: 1, in: &steps), 1)
+        XCTAssertEqual(steps.map(\.id), [ids[0], ids[2], ids[1]])
+    }
+    func testOldOrOutOfBoundsReviewControlsNeverMoveAnotherStep() {
+        var steps = ["Inspect", "Publish"].map { TaskBreakdownReview.Step(title: $0) }
+        let ids = steps.map(\.id)
+        for (id, offset) in [(ids[0], -1), (ids[1], 1), (UUID(), 1), (ids[0], 0), (ids[0], Int.min), (ids[0], Int.max)] {
+            XCTAssertNil(TaskBreakdownReview.move(id, by: offset, in: &steps))
+            XCTAssertEqual(steps.map(\.id), ids)
+        }
+        let removed = steps.removeFirst(); let remaining = steps.map(\.id)
+        XCTAssertNil(TaskBreakdownReview.move(removed.id, by: 1, in: &steps)); XCTAssertEqual(steps.map(\.id), remaining)
+        steps = ["New result", "Other result"].map { TaskBreakdownReview.Step(title: $0) }
+        let replacement = steps.map(\.id)
+        XCTAssertNil(TaskBreakdownReview.move(ids[1], by: 1, in: &steps)); XCTAssertEqual(steps.map(\.id), replacement)
+    }
+    func testReviewedOrderAppendsLiteralStepsWithoutChangingExistingWork() throws {
+        let original = source(), r = try request(original)
+        var steps = ["Inspect", "Review", "Publish"].map { TaskBreakdownReview.Step(title: $0) }
+        steps[1].included = false
+        let publish = steps[2].id
+        TaskBreakdownReview.move(publish, by: -1, in: &steps); TaskBreakdownReview.move(publish, by: -1, in: &steps)
+        steps[0].title = "Publish #work tomorrow p1"
+        let children = try r.applying(steps.filter(\.included).map(\.title), to: original, workspace: workspace, session: session)
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(children.list[0], original["subtasks"].list[0]))
+        XCTAssertEqual(children.list.dropFirst().map { $0.object["title"]!.text }, ["Publish #work tomorrow p1", "Inspect"])
+        for child in children.list.dropFirst() { XCTAssertEqual(Set(child.object.keys), ["id", "title", "completed"]) }
+        XCTAssertEqual(original.fields, r.source.fields)
+        var changed = original; changed["priority"] = .number(1)
+        XCTAssertThrowsError(try r.applying(steps.filter(\.included).map(\.title), to: changed, workspace: workspace, session: session))
+    }
     func testActualOnDeviceEngineWhenExplicitlyRequested() async throws {
         guard ProcessInfo.processInfo.environment["TASKFOLD_TEST_ON_DEVICE_MODEL"] == "1" else { throw XCTSkip("Actual model probe is opt-in; ordinary checks never run inference.") }
         if let reason = TaskBreakdownEngine.unavailableReason {

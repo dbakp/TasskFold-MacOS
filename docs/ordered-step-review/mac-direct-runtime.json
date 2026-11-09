@@ -1,0 +1,21 @@
+{
+  "accepted": true,
+  "method": "Direct CUA on signed isolated DEBUG app, saved JSON independently checked",
+  "checks": [
+    "review move preserves saved task/project tables",
+    "Cancel exact task/project parity",
+    "edited literal title and excluded row saved as two ordered steps",
+    "all other parent fields/projects exact",
+    "Undo exact original task/project tables",
+    "Redo exact saved child identities/order",
+    "cold launch without seed flags exact task/project tables and visible titles"
+  ],
+  "seededSuggestions": true,
+  "modelInferenceTested": false,
+  "voiceOverSpeechTested": false,
+  "savedServiceReviewNativeTested": false,
+  "earlierExtraReturnAppliedSyntheticReview": true,
+  "earlierApplyUndoneAndBaselineVerified": true,
+  "preservedFilesRestored": 120,
+  "normalAppUpdated": false
+}

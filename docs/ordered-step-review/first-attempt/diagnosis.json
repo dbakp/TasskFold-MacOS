@@ -1,0 +1,20 @@
+{
+  "nativeAccepted": false,
+  "normal": {
+    "reviewMovementAndReadOnlyCancelObserved": true,
+    "failure": "After editing, the test re-queried the original title rather than the stable step identifier."
+  },
+  "largest": {
+    "failure": "Suggest steps was only partially on screen despite isHittable=true. The tap did not open review.",
+    "buttonFrame": {
+      "x": 16,
+      "y": 843,
+      "width": 370,
+      "height": 155.3
+    }
+  },
+  "correction": "Test-only full control viewport containment/directional scrolling with early break; stable field identity after title edit. No production source or save/order oracle changed.",
+  "originalUITestSHA256": "0a6bfe1e2e81143a414ed9565a5aff71c5eca9f98a1b4d6302a9b683b68b1ef1",
+  "fixtureRestoredExactly": true,
+  "ownedSimulatorShutdown": true
+}
