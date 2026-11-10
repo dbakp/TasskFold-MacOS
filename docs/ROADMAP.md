@@ -125,6 +125,11 @@ Rules that keep this token-efficient without losing quality:
    - Empty states, skeleton loading and consistent spring motion.
    - Dark mode tuning, plus a check at Dynamic Type and largest text sizes.
 
+6. **Project generator repair (Mac).** `Scripts/generate_project.py` no longer reproduces the committed Xcode project: about 280 lines differ, including the share-extension target. Fix it so new files can be added safely.
+7. **Progress so far.**
+   - Watch freshness locale bug fixed ([TaskFold-iOS#109](https://github.com/dbakp/TaskFold-iOS/pull/109)).
+   - Design tokens added in both apps: `docs/DESIGN_TOKENS.md` and `Taskfold/Views/DesignTokens.swift`.
+
 ### Phase 2: close the Todoist gaps (about 9 updates)
 1. Mac global Quick Add hotkey (user-configurable) and a menu bar extra with Today and quick add.
 2. Real-time sync feel: live updates, sync-status indicator and no manual refresh in normal use.
@@ -133,8 +138,6 @@ Rules that keep this token-efficient without losing quality:
 5. Layout parity: list, board and calendar views for projects and Upcoming on both apps.
 6. System integration: Spotlight indexing, Focus filters, App Intents and Shortcuts expansion, and an iOS Control Center control.
 7. iOS Live Activity for a running focus session or the next timed task.
-8. Two-way Google and Outlook calendar sync. Needs your OAuth client IDs, already deferred.
-9. Distribution: a notarised Mac build with widgets, and TestFlight for iOS. Needs a paid Apple Developer account.
 
 ### Phase 3: decide the half-finished advanced work
 Finish, hide or cut each of these:
@@ -174,8 +177,12 @@ I'd finish the subtask migration, because it protects data. The rest should ship
   - Safe upgrades for older app versions
   - These feed the Phase 3 ship, hide or cut decision.
 
+### Phase 5: deferred to the end (your decision, 10 November 2026)
+- **Distribution.** A notarised Mac build with widgets, and TestFlight for iOS. Your Apple Developer account is the free tier, so only local development builds are possible until then.
+- **Two-way Google and Outlook calendar sync.** Waiting on OAuth client IDs.
+
 ## 4. Decisions needed from you
 1. **Process reset:** may I slim the `AGENTS.md` rules and stop the evidence and `px-progress` ritual?
-2. **Apple Developer Program:** do you have a paid account, for notarisation, TestFlight and widgets in distributed builds?
+2. **Apple Developer Program:** free account; distribution deferred to Phase 5 (decided 10 November 2026).
 3. **CI:** add GitHub Actions (uses macOS runner minutes), or merge after local checks only?
 4. **Start point:** Phase 0, then Phase 1 in order?

@@ -632,6 +632,7 @@ struct CalendarView: View {
             .environment(\.taskListFocused, taskListFocused)
             .accessibilityIdentifier("calendarTaskList")
             .listStyle(.inset)
+            .background(QuietNativeSelection())
             .contextMenu(forSelectionType: String.self) { ids in
                 if let id = ids.first, ids.count == 1 {
                     Button("Open in Inspector") { workspace.open(id) }

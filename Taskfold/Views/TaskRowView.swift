@@ -26,8 +26,8 @@ struct TaskRowView: View {
     @State private var choosingDate = false
     @Environment(\.appearsActive) private var appearsActive
     @Environment(\.taskListFocused) private var listFocused
-    // A key window can still have a gray list selection while its inspector has focus.
-    private var selectedForeground: Color { appearsActive && listFocused ? Color(nsColor: .alternateSelectedControlTextColor) : Color(nsColor: .labelColor) }
+    // Selection is a soft accent wash (DS.Palette.selectionFill), so selected rows keep primary text colour in every window state.
+    private var selectedForeground: Color { DS.Palette.textPrimary }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
     var body: some View {
@@ -36,26 +36,26 @@ struct TaskRowView: View {
         let fullReading = fullNote?.request == fullRequest ? fullNote?.reading : nil
         let notePreview = fullReading?.text ?? store.taskNotePreview(task)
         let titleLinks = Linkify.reading(task.title), previewLinks = fullReading ?? Linkify.reading(notePreview)
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            if !workspace.hierarchyFilter && !workspace.independentWorkRow(task) && workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1).accessibilityHidden(true) }
+        HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
+            if !workspace.hierarchyFilter && !workspace.independentWorkRow(task) && workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1) /* indent geometry: depth steps, not spacing */.accessibilityHidden(true) }
             if workspace.canExpandTask(task) {
                 Button {
                     if !workspace.expandedTasks.insert(task.id).inserted { workspace.expandedTasks.remove(task.id) }
                 } label: {
                     Image(systemName: workspace.expandedTasks.contains(task.id) ? "chevron.down" : "chevron.right")
-                        .font(.caption.weight(.semibold)).frame(width: 16, height: 22)
+                        .font(DS.Font.chip).frame(width: DS.Space.l, height: 22)
                 }
                 .buttonStyle(.borderless)
-                .foregroundStyle(isSelected ? selectedForeground : .secondary)
+                .foregroundStyle(isSelected ? selectedForeground : DS.Palette.textSecondary)
                 .accessibilityLabel("Subtasks of \(task.title)")
                 .accessibilityValue(workspace.expandedTasks.contains(task.id) ? "Expanded" : "Collapsed")
                 .accessibilityIdentifier("expand-" + task.id)
-            } else { Color.clear.frame(width: 16, height: 1) }
+            } else { Color.clear.frame(width: DS.Space.l, height: 1) }
 
             if TaskKind.mayComplete(task) {
             Button { workspace.complete(task) } label: {
-                CheckMark(checked: checked, color: isSelected ? selectedForeground : Color.priority(task.priority), emphasized: isSelected || task.priority < 4)
-                    .padding(3)
+                CheckMark(checked: checked, color: isSelected ? selectedForeground : DS.Palette.priority(task.priority), emphasized: isSelected || task.priority < 4)
+                    .padding(DS.Space.xs)
             }
             .buttonStyle(GlyphStyle())
             .modifier(HoverLift())
@@ -66,15 +66,16 @@ struct TaskRowView: View {
             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
             } else {
                 Image(systemName: TaskKind(task) == .heading ? "textformat" : "questionmark.square")
-                    .foregroundStyle(isSelected ? selectedForeground : .secondary).frame(width: 24, height: 24)
+                    .foregroundStyle(isSelected ? selectedForeground : DS.Palette.textSecondary).frame(width: DS.Space.xxl, height: DS.Space.xxl)
                     .accessibilityLabel(TaskKind(task) == .heading ? "Heading, stays open" : "Task type unavailable")
             }
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: DS.Space.xs) {
                 if titleLinks.matches.isEmpty {
                     Text(task.title.isEmpty ? "Untitled task" : task.title)
+                        .font(DS.Font.taskTitle)
                         .fontWeight(TaskKind(task) == .heading ? .semibold : .regular)
                         .accessibilityAddTraits(TaskKind(task) == .heading ? .isHeader : [])
-                        .foregroundStyle(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary)
+                        .foregroundStyle(isSelected ? selectedForeground : checked ? DS.Palette.textSecondary : DS.Palette.textPrimary)
                         .strikethrough(checked, color: .secondary)
                         .lineLimit(2)
                         .accessibilityLabel(accessibilitySummary(planning))
@@ -88,30 +89,30 @@ struct TaskRowView: View {
                 }
                 if !notePreview.isEmpty {
                     if previewLinks.matches.isEmpty {
-                        Text(notePreview).font(.callout).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary)
+                        Text(notePreview).font(DS.Font.taskNote).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary)
                             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1).fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("notes-\(task.id)")
                     } else {
-                        LinkText(text: notePreview, font: .preferredFont(forTextStyle: .callout),
+                        LinkText(text: notePreview, font: .preferredFont(forTextStyle: .subheadline),
                                  color: NSColor(isSelected ? selectedForeground.opacity(0.9) : Color.secondary),
                                  linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold), lineLimit: dynamicTypeSize.isAccessibilitySize ? 0 : 1,
                                  accessibilityIdentifier: "notes-\(task.id)", preparedLinks: previewLinks)
                     }
                 }
                 if let fullRequest, fullReading == nil, !fullRequest.source.text.isEmpty {
-                    ProgressView("Preparing full note…").controlSize(.small).font(.caption)
+                    ProgressView("Preparing full note…").controlSize(.small).font(DS.Font.chip)
                         .accessibilityIdentifier("taskNotesPreparing-" + task.id)
                 }
                 if workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {
-                    Text(parent).font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1)
+                    Text(parent).font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary).lineLimit(1)
                 }
                 if planning.deadline != nil || (TaskKind.mayComplete(task) && task.durationMinutes != nil) || planning.showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
                     ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 10) { metadata(wrapping: false, planning: planning) }
+                        HStack(spacing: DS.Space.s) { metadata(wrapping: false, planning: planning) }
                             .labelStyle(.titleAndIcon).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                        VStack(alignment: .leading, spacing: 4) { metadata(wrapping: true, planning: planning) }
+                        VStack(alignment: .leading, spacing: DS.Space.xs) { metadata(wrapping: true, planning: planning) }
                             .labelStyle(WrappingMetadataLabelStyle(wraps: true))
-                    }.font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary)
+                    }.font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -120,10 +121,10 @@ struct TaskRowView: View {
             }
             Menu { priorityOptions } label: {
                 Image(systemName: task.priority < 4 ? "flag.fill" : "flag")
-                    .foregroundStyle(isSelected ? selectedForeground : task.priority < 4 ? Color.priority(task.priority) : Color.secondary)
+                    .foregroundStyle(isSelected ? selectedForeground : task.priority < 4 ? DS.Palette.priority(task.priority) : DS.Palette.textSecondary)
             }
             .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-            .tint(isSelected ? selectedForeground : Color.priority(task.priority))
+            .tint(isSelected ? selectedForeground : DS.Palette.priority(task.priority))
             .opacity(isSelected || task.priority < 4 || hovering ? 1 : 0.65)
             .help("Change priority")
             .accessibilityLabel("Priority for \(task.title)")
@@ -134,14 +135,17 @@ struct TaskRowView: View {
                 Menu("Priority") { priorityOptions }
                 Divider()
                 Button("Edit Details…") { workspace.open(task.id) }
-            } label: { Image(systemName: "ellipsis").fontWeight(.semibold).foregroundStyle(isSelected ? selectedForeground : Color.secondary) }
+            } label: { Image(systemName: "ellipsis").fontWeight(.semibold).foregroundStyle(isSelected ? selectedForeground : DS.Palette.textSecondary) }
             .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
             .tint(isSelected ? selectedForeground : .secondary)
             .opacity(isSelected || hovering ? 1 : 0.65)
             .help("Task actions")
             .accessibilityIdentifier("actions-\(task.id)")
         }
-        .padding(.vertical, density == "compact" ? 2 : 5)
+        .padding(.vertical, DS.Size.rowVerticalPadding(compact: density == "compact"))
+        .padding(.horizontal, DS.Space.xs)
+        .frame(minHeight: DS.Size.rowMinHeight)
+        .background(isSelected ? DS.Palette.selectionFill : Color.clear, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
         .contentShape(.rect)
         .onHover { hovering = $0 }
         .popover(isPresented: $choosingDate) { TaskDatePopover(task: task) }
@@ -188,7 +192,7 @@ struct TaskRowView: View {
             Button { choosingDate = true } label: {
                 Label(text, systemImage: task["is_recurring"].flag ? "repeat" : planning.overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
                     .accessibilityIdentifier("plannedDate-" + task.id)
-                    .foregroundStyle(isSelected ? selectedForeground : planning.overdue ? Color.red : planning.dueToday ? Color.taskfold : Color.secondary)
+                    .foregroundStyle(isSelected ? selectedForeground : planning.overdue ? DS.Palette.dateOverdue : planning.dueToday ? DS.Palette.accent : DS.Palette.textSecondary)
             }
             .buttonStyle(.borderless)
             .help("Change date")
@@ -196,14 +200,14 @@ struct TaskRowView: View {
         }
         if let deadline = planning.deadline {
             Label("Deadline " + deadline.formatted(.dateTime.month(.abbreviated).day()), systemImage: "flag.checkered")
-                .foregroundStyle(isSelected ? selectedForeground : planning.deadlineOverdue ? Color.red : Color.secondary)
+                .foregroundStyle(isSelected ? selectedForeground : planning.deadlineOverdue ? DS.Palette.dateOverdue : DS.Palette.textSecondary)
                 .accessibilityIdentifier("deadline-" + task.id)
         }
         if TaskKind.mayComplete(task), let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").accessibilityIdentifier("duration-" + task.id) }
         if let project = store.record("projects", id: task.string("project_id")) {
             Menu { projectOptions } label: {
-                HStack(spacing: 5) {
-                    Circle().fill(Color.project(project.string("color"))).frame(width: 7, height: 7)
+                HStack(spacing: DS.Space.xs) {
+                    Circle().fill(Color.project(project.string("color"))).frame(width: 8, height: 8) // dot geometry
                     Text(project.name).lineLimit(wrapping ? nil : 1).fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -213,8 +217,8 @@ struct TaskRowView: View {
             .help(workspace.hierarchyPresentation && Workspace.subtaskPath(task.id) != nil ? "Subtasks stay in their parent's project" : "Move to project")
         }
         ForEach(task["labels"].list.map(\.text).filter { !$0.isEmpty }, id: \.self) { name in
-            Text(store.record("labels", id: name)?.name ?? name).lineLimit(wrapping ? nil : 1).fixedSize(horizontal: !wrapping, vertical: true).padding(.horizontal, 6).padding(.vertical, 1)
-                .background(Color.secondary.opacity(0.12), in: .capsule)
+            Text(store.record("labels", id: name)?.name ?? name).lineLimit(wrapping ? nil : 1).fixedSize(horizontal: !wrapping, vertical: true).font(DS.Font.chip).padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xxs)
+                .background(DS.Palette.surfaceSunken, in: .capsule)
         }
         if !task["subtasks"].list.isEmpty {
                 let progress = store.subtaskProgress(task)
@@ -256,17 +260,17 @@ Label("\(progress.completed)/\(progress.total)", systemImage: "checklist")
 struct DragPreview: View {
     let tasks: [Record]
     var body: some View {
-        HStack(spacing: 10) {
-            CheckMark(checked: false, color: Color.priority(tasks.first?.priority ?? 4), emphasized: (tasks.first?.priority ?? 4) < 4)
+        HStack(spacing: DS.Space.s) {
+            CheckMark(checked: false, color: DS.Palette.priority(tasks.first?.priority ?? 4), emphasized: (tasks.first?.priority ?? 4) < 4)
             Text(tasks.first?.title ?? "").lineLimit(1)
             if tasks.count > 1 {
-                Text("\(tasks.count)").font(.caption.weight(.semibold)).monospacedDigit().foregroundStyle(Color.onAccent)
-                    .padding(.horizontal, 7).padding(.vertical, 2).background(Color.taskfold, in: .capsule)
+                Text("\(tasks.count)").font(DS.Font.badge).foregroundStyle(Color.onAccent)
+                    .padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xxs).background(Color.taskfold, in: .capsule)
             }
         }
-        .padding(.horizontal, 14).padding(.vertical, 10)
+        .padding(.horizontal, DS.Space.m).padding(.vertical, DS.Space.s)
         .frame(width: 300, alignment: .leading)
-        .modifier(CardSurface(radius: 10, elevated: true))
+        .modifier(CardSurface(radius: DS.Radius.m, elevated: true))
     }
 }
 
@@ -276,22 +280,22 @@ struct InsertionIndicator: View {
     var hint: String? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DS.Space.s) {
             HStack(spacing: 0) {
-                Circle().fill(Color.taskfold).frame(width: 7, height: 7)
+                Circle().fill(DS.Palette.accent).frame(width: 8, height: 8) // dot geometry
                 Rectangle().fill(Color.taskfold).frame(height: 2)
             }
             if let hint {
-                Text(hint).font(.caption2.weight(.semibold)).foregroundStyle(Color.taskfold)
-                    .padding(.horizontal, 7).padding(.vertical, 2)
-                    .background(Color(nsColor: .controlBackgroundColor), in: .capsule)
+                Text(hint).font(DS.Font.badge).foregroundStyle(DS.Palette.accent)
+                    .padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xxs)
+                    .background(DS.Palette.surfaceRaised, in: .capsule)
                     .overlay(Capsule().strokeBorder(Color.taskfold.opacity(0.35), lineWidth: 1))
                     .fixedSize()
                     .transition(reduceMotion ? .opacity : .badgePop)
                     .accessibilityIdentifier("bandHint")
             }
         }
-        .frame(height: 7)
+        .frame(height: 8)
         .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: hint)
         .transition(.opacity)
         .accessibilityHidden(hint == nil)
@@ -308,7 +312,7 @@ struct TaskDatePopover: View {
     @State private var date: Date
     init(task: Record) { self.task = task; _date = State(initialValue: TaskPlanner.dayDate(task) ?? Date()) }
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.Space.m) {
             Text("Schedule task").font(.headline)
             HStack {
                 Button("Today") { apply(Date()) }
@@ -327,7 +331,7 @@ struct TaskDatePopover: View {
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
                 Button("Apply") { apply(date) }.keyboardShortcut(.defaultAction)
             }
-        }.padding(16).frame(width: 330)
+        }.padding(DS.Space.l).frame(width: 330)
     }
     private func apply(_ date: Date) {
         dismiss()

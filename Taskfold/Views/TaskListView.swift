@@ -154,32 +154,32 @@ struct TaskListView: View {
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
-            HStack(spacing: 10) {
+            HStack(spacing: DS.Space.s) {
                 Spacer(minLength: 0)
-                HStack(spacing: 6) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                HStack(spacing: DS.Space.s) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(DS.Palette.textSecondary)
                     TextField("Filter current list", text: $workspace.search)
                         .textFieldStyle(.plain).focused($filterFocused)
                         .accessibilityIdentifier("listFilter")
                     if !workspace.search.isEmpty {
                         Button { workspace.search = "" } label: { Image(systemName: "xmark.circle.fill") }
-                            .buttonStyle(.plain).foregroundStyle(.secondary).help("Clear filter")
+                            .buttonStyle(.plain).foregroundStyle(DS.Palette.textSecondary).help("Clear filter")
                     }
                 }
-                .padding(7).frame(maxWidth: 220)
-                .background(.quaternary, in: .rect(cornerRadius: 7))
+                .padding(DS.Space.s).frame(maxWidth: 220)
+                .background(.quaternary, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
                 viewOptions
             }
-            .padding(.horizontal, 16).padding(.vertical, 8)
+            .padding(.horizontal, DS.Space.l).padding(.vertical, DS.Space.s)
             .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
             if let failure = store.filterError(scope) {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Label("Filter unavailable", systemImage: "exclamationmark.triangle").font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                    VStack(alignment: .leading, spacing: DS.Space.l) {
+                        Label("Filter unavailable", systemImage: "exclamationmark.triangle").font(DS.Font.screenTitle).accessibilityAddTraits(.isHeader)
                         Text(failure).fixedSize(horizontal: false, vertical: true)
                         Text("Your saved filter is preserved. Its results cannot be shown in this version of Taskfold.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         if case .saved(let id) = scope, let view = store.record("saved_views", id: id) { Button("Edit Filter…") { filterEditor = view } }
-                    }.padding(24).frame(maxWidth: ReadingColumn.width, alignment: .leading).frame(maxWidth: .infinity, alignment: .center)
+                    }.padding(DS.Space.xxl).frame(maxWidth: ReadingColumn.width, alignment: .leading).frame(maxWidth: .infinity, alignment: .center)
                 }.accessibilityIdentifier("savedFilterError")
             } else if case .saved = scope, projectLayout == "board" { SavedFilterBoard(scope: scope, tasks: filtered, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
             else if !projectID.isEmpty && projectLayout == "board" {
@@ -191,11 +191,11 @@ struct TaskListView: View {
             })) {
                 if workspace.scope.usesProductiveWork && store.productiveReading.incomplete {
                     Label("Some grouped tasks need review. Open their heading in All Tasks.", systemImage: "exclamationmark.circle")
-                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        .font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("datedGroupedWorkReview").selectionDisabled()
                 }
                 if !store.online || (store.notice != nil && store.syncConflict == nil && store.focusSyncConflict == nil) { statusRow }
-                if store.syncing && store.tasks.isEmpty && store.lastSync == nil && !store.localMode { SkeletonRows().padding(.vertical, 12).selectionDisabled().listRowSeparator(.hidden).transition(.skeletonReveal) }
+                if store.syncing && store.tasks.isEmpty && store.lastSync == nil && !store.localMode { SkeletonRows().padding(.vertical, DS.Space.m).selectionDisabled().listRowSeparator(.hidden).transition(.skeletonReveal) }
                 if filtered.isEmpty && !dated { emptyState }
                 if dated {
                     ForEach(dayGroups, id: \.0) { group in
@@ -208,7 +208,7 @@ struct TaskListView: View {
                         if scope != .completed || !group.tasks.isEmpty || !group.title.isEmpty {
                             Section {
                                 if projectID.isEmpty || !collapsed(group.key) {
-                                if group.tasks.isEmpty && group.key.contains(":group:query:") { Text("No matching tasks").foregroundStyle(.secondary) }
+                                if group.tasks.isEmpty && group.key.contains(":group:query:") { Text("No matching tasks").foregroundStyle(DS.Palette.textSecondary) }
                                 ForEach(workspace.visibleTasks(group.tasks)) { task in row(task).modifier(DayDragRow(task: task, day: group.key, orderProvider: { order })).tag(task.id) }
                                     .onMove { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).move(from: $0, to: $1) }
                                     .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).insert(at: $0, providers: $1) }
@@ -222,7 +222,7 @@ struct TaskListView: View {
                                         captureSection = group.key.split(separator: ":").last.map(String.init).flatMap { $0 == "none" ? nil : $0 } ?? ""
                                         quickAddVisible = true
                                     }
-                                } else if !group.title.isEmpty { Text(group.title).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true) }
+                                } else if !group.title.isEmpty { Text(group.title).font(DS.Font.sectionHeader).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true) }
                             }
                         }
                     }
@@ -235,7 +235,8 @@ struct TaskListView: View {
             .accessibilityIdentifier("taskList")
             .listStyle(.inset)
             .scrollContentBackground(.hidden)
-            .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
+            .background(QuietNativeSelection())
+            .frame(maxWidth: DS.Size.contentMaxWidth).frame(maxWidth: .infinity)
             .contextMenu(forSelectionType: String.self) { ids in contextMenu(ids) } primaryAction: { ids in
                 if let id = ids.first, ids.count == 1 { workspace.open(id) }
             }
@@ -346,12 +347,12 @@ struct TaskListView: View {
     // MARK: Rows and sections
 
     @ViewBuilder private var statusRow: some View {
-        HStack(spacing: 8) {
-            Image(systemName: store.online ? (store.localMode ? "exclamationmark.triangle" : "exclamationmark.icloud") : "wifi.slash").foregroundStyle(.orange).accessibilityHidden(true)
+        HStack(spacing: DS.Space.s) {
+            Image(systemName: store.online ? (store.localMode ? "exclamationmark.triangle" : "exclamationmark.icloud") : "wifi.slash").foregroundStyle(DS.Palette.dateTomorrow).accessibilityHidden(true)
             Text(!store.online ? "Offline · changes are saved on this Mac and sync later." : store.notice ?? "")
             Spacer()
             if store.notice != nil && store.online && store.syncConflict == nil && store.focusSyncConflict == nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link) }
-        }.font(.callout).foregroundStyle(.secondary).selectionDisabled().listRowSeparator(.hidden)
+        }.font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).selectionDisabled().listRowSeparator(.hidden)
     }
     private var isSavedFilterScope: Bool { if case .saved = scope { return true }; return false }
     private var emptyState: some View {
@@ -372,12 +373,12 @@ struct TaskListView: View {
             }
         } header: {
             Button { withAnimation(layout) { overdueCollapsed.toggle() } } label: {
-            HStack(spacing: 8) {
-                Image(systemName: overdueCollapsed ? "chevron.right" : "chevron.down").font(.caption.weight(.semibold))
-                Text(count == 0 ? "Earlier" : "Overdue")
+            HStack(spacing: DS.Space.s) {
+                Image(systemName: overdueCollapsed ? "chevron.right" : "chevron.down").font(DS.Font.chip)
+                Text(count == 0 ? "Earlier" : "Overdue").font(DS.Font.sectionHeader)
                 if count > 0 {
-                    Text("\(count)").font(.caption.weight(.semibold)).monospacedDigit().padding(.horizontal, 6).padding(.vertical, 1)
-                        .background(Color.red.opacity(0.14), in: .capsule).foregroundStyle(.red).contentTransition(.numericText())
+                    Text("\(count)").font(DS.Font.badge).padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xxs)
+                        .background(DS.Palette.dateOverdue.opacity(0.14), in: .capsule).foregroundStyle(DS.Palette.dateOverdue).contentTransition(.numericText())
                         .transition(reduceMotion ? .opacity : .badgePop)
                 }
             }
@@ -401,11 +402,11 @@ struct TaskListView: View {
                 .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: day, tasks: tasks).insert(at: $0, providers: $1) }
             DayEndRow(day: day, isEmpty: tasks.isEmpty).selectionDisabled().listRowSeparator(.hidden)
         } header: {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(name).foregroundStyle(day == today ? Color.taskfold : .primary)
-                if !(scope == .today && day == today) { Text(detail).font(.subheadline).foregroundStyle(.secondary) }
+            HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
+                Text(name).font(DS.Font.sectionHeader).foregroundStyle(day == today ? DS.Palette.accent : DS.Palette.textPrimary)
+                if !(scope == .today && day == today) { Text(detail).font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary) }
                 Spacer()
-                if open > 0 { Text("\(open)").font(.caption).monospacedDigit().foregroundStyle(.tertiary).contentTransition(.numericText()) }
+                if open > 0 { Text("\(open)").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary).contentTransition(.numericText()) }
             }
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("day-\(day)")
@@ -578,7 +579,7 @@ struct TaskListView: View {
 }
 
 /// Content reads best in a bounded column centered in the window, the way Todoist lays out its lists.
-enum ReadingColumn { static let width: CGFloat = 860 }
+enum ReadingColumn { static let width: CGFloat = DS.Size.contentMaxWidth }
 
 /// A focused, native sheet keeps capture prominent without moving the task list.
 struct TaskCapturePanel: View {
@@ -602,42 +603,42 @@ struct TaskCapturePanel: View {
         return project.name + (section.map { " · " + $0 } ?? "")
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: DS.Space.xl) {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("New Task").font(.title2.weight(.semibold))
-                    Label(effectiveDestination, systemImage: "tray").font(.callout).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: DS.Space.xs) {
+                    Text("New Task").font(DS.Font.screenTitle)
+                    Label(effectiveDestination, systemImage: "tray").font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary)
                 }
                 Spacer()
-                Button { dismiss() } label: { Image(systemName: "xmark").font(.body.weight(.medium)) }
+                Button { dismiss() } label: { Image(systemName: "xmark").font(DS.Font.taskTitle.weight(.medium)) }
                     .buttonStyle(.plain).help("Close (Esc)").accessibilityLabel("Close task entry")
             }
             TextField(prompt, text: $text, selection: $titleSelection, axis: .vertical)
-                .font(.title3).lineLimit(2...4).textFieldStyle(.plain)
+                .font(.title3 /* capture field is larger than body by design */).lineLimit(2...4).textFieldStyle(.plain)
                 .focused($focused).accessibilityIdentifier("quickAdd")
-                .padding(16)
-                .background(Color(nsColor: .textBackgroundColor), in: .rect(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.taskfold.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
+                .padding(DS.Space.l)
+                .background(DS.Palette.surface, in: .rect(cornerRadius: DS.Radius.l, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).strokeBorder(DS.Palette.accent.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
                 .referenceCompletions(text: $text, selection: $titleSelection, choices: $choices, declined: $declined, context: context, focused: focused, task: task, onChoose: { focused = true }, submit: submitInWorkspace, submitsFromKeyboard: true)
             if !parsed.tokens.isEmpty {
                 QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: resumeDraftFromChip)
             }
             if let rule = parsed.updates["recurrence_pattern"] {
-                Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
+                Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
             }
             ReminderAutomaticPreview(task: parsed.fieldPreview(to: task), showDeliveryGuidance: parsed.updates["reminder_specs"] == nil)
-            ForEach(parsed.warnings, id: \.self) { warning in Text(warning).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickEntryWarning") }
+            ForEach(parsed.warnings, id: \.self) { warning in Text(warning).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickEntryWarning") }
             if parsed.updates["reminder_specs"] != nil && !store.remindersEnabled {
-                Text("Reminders are off on this device. Enable delivery in the task’s Reminders after saving.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickReminderDeliveryOff")
+                Text("Reminders are off on this device. Enable delivery in the task’s Reminders after saving.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickReminderDeliveryOff")
             }
             HStack {
-                Text("Try “Call Sam tomorrow at 4pm !30mb p1”").font(.caption).foregroundStyle(.secondary)
+                Text("Try “Call Sam tomorrow at 4pm !30mb p1”").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
                 Spacer()
                 Button("Add Task", action: submitInWorkspace).buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction).disabled(parsed.title.isEmpty)
             }
         }
-        .padding(24).frame(width: 540)
+        .padding(DS.Space.xxl).frame(width: 540)
         .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true }
         .task(id: parsed.updates["project_id"]?.text ?? context.currentProject) { _ = try? await store.refreshProjectMembers(parsed.updates["project_id"]?.text ?? context.currentProject) }
         .onExitCommand { dismiss() }
@@ -666,8 +667,8 @@ struct ConfirmationBar: View {
     @Environment(Workspace.self) private var workspace
     let confirmation: Confirmation
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: confirmation.mixedGroupReview ? "clock.arrow.circlepath" : "checkmark.circle.fill").foregroundStyle(Color.taskfold).id(confirmation.id).transition(.iconSwap)
+        HStack(spacing: DS.Space.m) {
+            Image(systemName: confirmation.mixedGroupReview ? "clock.arrow.circlepath" : "checkmark.circle.fill").foregroundStyle(DS.Palette.accent).id(confirmation.id).transition(.iconSwap)
             Text(confirmation.message).lineLimit(1).id(confirmation.id).transition(.textSwap)
             Spacer()
             if confirmation.mixedGroupReview { Button("Review") { workspace.reviewMixedGroup() }.buttonStyle(.link).accessibilityIdentifier("reviewListMixedGroup") }
@@ -679,20 +680,20 @@ struct ConfirmationBar: View {
             }
             if let token = confirmation.mixedGroup, workspace.canUndoMixedGroup(token) {
                 Button("Undo") { workspace.undoMixedGroup(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
-                Text("⌘Z").foregroundStyle(.tertiary)
+                Text("⌘Z").foregroundStyle(DS.Palette.textTertiary)
             } else if let token = confirmation.childGroup, workspace.canUndoChildGroup(token) {
                 Button("Undo") { workspace.undoChildGroup(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
-                Text("⌘Z").foregroundStyle(.tertiary)
+                Text("⌘Z").foregroundStyle(DS.Palette.textTertiary)
             } else if let token = confirmation.childCompletion, workspace.canUndoChildCompletion(token) {
                 Button("Undo") { workspace.undoChildCompletion(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
-                Text("⌘Z").foregroundStyle(.tertiary)
+                Text("⌘Z").foregroundStyle(DS.Palette.textTertiary)
             } else if confirmation.undoable, let request = confirmation.historyRequest, store.canApplyHistory(request) {
                 Button("Undo") { workspace.undoFromConfirmation(request, confirmationID: confirmation.id) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
-                Text("⌘Z").foregroundStyle(.tertiary)
+                Text("⌘Z").foregroundStyle(DS.Palette.textTertiary)
             }
         }
-        .font(.callout)
-        .padding(.horizontal, 14).padding(.vertical, 8)
+        .font(DS.Font.taskNote)
+        .padding(.horizontal, DS.Space.m).padding(.vertical, DS.Space.s)
         .background(.bar)
         .overlay(alignment: .top) { Divider() }
         .accessibilityElement(children: .contain)
@@ -713,7 +714,7 @@ struct DatePickSheet: View {
     let count: Int
     let confirm: () -> Void
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.Space.l) {
             Text("Pick a date").font(.headline)
             DatePicker("Date", selection: $date, displayedComponents: .date).datePickerStyle(.graphical).labelsHidden()
             HStack {
@@ -722,7 +723,7 @@ struct DatePickSheet: View {
                 Button(count == 1 ? "Reschedule Task" : "Reschedule \(count) Tasks") { confirm(); dismiss() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
             }
         }
-        .padding(20).frame(width: 320)
+        .padding(DS.Space.xl).frame(width: 320)
     }
 }
 
@@ -758,23 +759,23 @@ struct QuickReferenceCompletionModifier: ViewModifier {
     private var visible: Bool { focused && dismissedText != text && completion.range != nil }
     func body(content: Content) -> some View {
         let menu = completion
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: DS.Space.s) {
             content
             if visible {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DS.Space.xs) {
                     HStack {
-                        Text(menu.prompt).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        Text(menu.prompt).font(DS.Font.chip).foregroundStyle(DS.Palette.textSecondary)
                         Spacer()
                         Button { keepLiteral() } label: {
-                            Image(systemName: "xmark").font(.system(size: 12, weight: .semibold)).frame(width: 44, height: 44).contentShape(Rectangle())
+                            Image(systemName: "xmark").font(.system(size: 12, weight: .semibold) /* SF Symbol optical size */).frame(width: 44, height: 44).contentShape(Rectangle())
                         }.buttonStyle(.plain).accessibilityLabel("Keep suggestion as text").accessibilityIdentifier("dismissReferenceSuggestions")
                     }
                     if menu.options.isEmpty {
-                        Text("No matches. Keep typing, or choose from the field controls.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("referenceNoMatches")
+                        Text("No matches. Keep typing, or choose from the field controls.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("referenceNoMatches")
                     } else {
                         ScrollViewReader { proxy in
                             ScrollView {
-                                LazyVStack(spacing: 2) {
+                                LazyVStack(spacing: DS.Space.xxs) {
                                     ForEach(menu.options) { option in
                                         QuickReferenceOptionRow(option: option, highlighted: menu.options.firstIndex(of: option) == highlighted) { choose(option) }.id(option.id)
                                     }
@@ -786,7 +787,7 @@ struct QuickReferenceCompletionModifier: ViewModifier {
                                 }
                         }
                     }
-                }.padding(8).background(Color.taskfold.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
+                }.padding(DS.Space.s).background(DS.Palette.accent.opacity(0.04), in: RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
             }
         }
         .onSubmit {
@@ -866,16 +867,16 @@ private struct QuickReferenceOptionRow: View {
     let choose: () -> Void
     var body: some View {
         Button(action: choose) {
-            HStack(spacing: 10) {
-                Image(systemName: symbol).font(.system(size: 18, weight: .medium)).foregroundStyle(Color.taskfold).frame(width: 24).accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(option.name).font(.subheadline.weight(.medium)).fixedSize(horizontal: false, vertical: true)
-                    Text(option.detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: DS.Space.s) {
+                Image(systemName: symbol).font(.system(size: DS.Size.iconL, weight: .medium)).foregroundStyle(DS.Palette.accent).frame(width: DS.Space.xxl).accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: DS.Space.xxs) {
+                    Text(option.name).font(DS.Font.chip).fixedSize(horizontal: false, vertical: true)
+                    Text(option.detail).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
-                if highlighted { Image(systemName: "return").font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary).frame(width: 20).accessibilityHidden(true) }
-            }.padding(.horizontal, 10).padding(.vertical, 8).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-                .background(highlighted ? Color.taskfold.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: 10))
+                if highlighted { Image(systemName: "return").font(.system(size: DS.Size.iconS, weight: .medium)).foregroundStyle(DS.Palette.textSecondary).frame(width: DS.Space.xl).accessibilityHidden(true) }
+            }.padding(.horizontal, DS.Space.m).padding(.vertical, DS.Space.s).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                .background(highlighted ? DS.Palette.accent.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous))
         }.buttonStyle(.plain).accessibilityIdentifier("referenceSuggestion-" + option.id)
             .accessibilityLabel(option.name + ", " + option.detail)
             .accessibilityHint("Use this result in the task")
