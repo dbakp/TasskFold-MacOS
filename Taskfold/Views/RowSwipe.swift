@@ -224,8 +224,8 @@ struct MacSwipeRow<Content: View>: View {
     @State private var id = UUID() // Distinct surfaces even for repeated saved-query results.
     @Environment(\.appearsActive) private var appearsActive
     @Environment(\.taskListFocused) private var listFocused
-    private var background: Color {
-        selected ? Color(nsColor: appearsActive && listFocused ? .selectedContentBackgroundColor : .unemphasizedSelectedContentBackgroundColor) : Color(nsColor: .textBackgroundColor)
+    private var background: some View {
+        Color(nsColor: .textBackgroundColor).overlay(selected ? DS.Palette.selectionFill : Color.clear)
     }
     var body: some View {
         let offset = controller.offset(for: id)

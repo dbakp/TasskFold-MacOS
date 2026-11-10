@@ -90,7 +90,7 @@ private struct BoardColumn: View {
                 }.focused($taskListFocused)
                 .environment(\.taskListFocused, taskListFocused)
                 .accessibilityIdentifier("boardTaskList")
-                .listStyle(.inset).scrollContentBackground(.hidden)
+                .listStyle(.inset).scrollContentBackground(.hidden).background(QuietNativeSelection())
                 .contextMenu(forSelectionType: String.self) { ids in
                     if !ids.isEmpty {
                         Button("Complete / Reopen") { workspace.toggle(ids) }
@@ -139,7 +139,7 @@ struct ProjectSectionHeader: View {
     let add: () -> Void
     var body: some View {
         HStack {
-            Button { collapsed.toggle() } label: { HStack { Image(systemName: collapsed ? "chevron.right" : "chevron.down"); Text(title); Text("\(count)").foregroundStyle(.secondary) } }
+            Button { collapsed.toggle() } label: { HStack(spacing: DS.Space.s) { Image(systemName: collapsed ? "chevron.right" : "chevron.down"); Text(title); Text("\(count)").foregroundStyle(DS.Palette.textSecondary) }.font(DS.Font.sectionHeader) }
                 .buttonStyle(.plain).accessibilityIdentifier("section-collapse-" + key).accessibilityValue(collapsed ? "Collapsed" : "Expanded")
             Spacer()
             Button(action: add) { Image(systemName: "plus") }.buttonStyle(.borderless).help("Add task to \(title)").accessibilityIdentifier("section-add-" + key)

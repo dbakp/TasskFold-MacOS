@@ -22,7 +22,7 @@ struct QuickEntryChips: View {
     }
 
     var body: some View {
-        QuickEntryChipLayout(spacing: 6) {
+        QuickEntryChipLayout(spacing: DS.Space.s) {
             ForEach(tokens) { token in
                 chip(token)
                     .transition(reduceMotion ? .opacity : .asymmetric(insertion: .scale(scale: 0.85).combined(with: .opacity), removal: .scale(scale: 0.9).combined(with: .opacity)))
@@ -37,12 +37,12 @@ struct QuickEntryChips: View {
 
     private func chip(_ token: QuickEntry.Token) -> some View {
         let focused = focusedChip == token.id
-        return HStack(alignment: .firstTextBaseline, spacing: 5) {
-            Image(systemName: Self.symbol(for: token.group)).font(.caption2.weight(.semibold))
-            Text(token.label).font(.caption.weight(.semibold)).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
+        return HStack(alignment: .firstTextBaseline, spacing: DS.Space.xs) {
+            Image(systemName: Self.symbol(for: token.group)).font(DS.Font.badge)
+            Text(token.label).font(DS.Font.chip).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
             Button { decline(token) } label: {
-                Image(systemName: "xmark").font(.system(size: 8, weight: .bold)).frame(width: 14, height: 14)
-                    .background(Color.taskfold.opacity(0.14), in: .circle)
+                Image(systemName: "xmark").font(.system(size: 8, weight: .bold)).frame(width: 14, height: 14) // exact optical size for the glyph
+                    .background(DS.Palette.accent.opacity(0.14), in: .circle)
             }
             .buttonStyle(.plain)
             .pointerStyle(.link)
@@ -50,10 +50,10 @@ struct QuickEntryChips: View {
             .accessibilityLabel("Keep “\(token.text)” in the title")
             .accessibilityIdentifier("decline-\(token.group)")
         }
-        .padding(.leading, 8).padding(.trailing, 4).padding(.vertical, compact ? 2 : 3)
-        .foregroundStyle(Color.taskfold)
-        .background(Color.taskfold.opacity(0.12), in: .rect(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.taskfold.opacity(focused ? 0.9 : 0), lineWidth: 1.5))
+        .padding(.leading, DS.Space.s).padding(.trailing, DS.Space.xs).padding(.vertical, compact ? DS.Space.xxs : DS.Space.xs)
+        .foregroundStyle(DS.Palette.accent)
+        .background(DS.Palette.accent.opacity(0.12), in: .rect(cornerRadius: DS.Radius.m, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).strokeBorder(DS.Palette.accent.opacity(focused ? 0.9 : 0), lineWidth: 1.5))
         .focusable(true)
         .focused($focusedChip, equals: token.id)
         .focusEffectDisabled()
