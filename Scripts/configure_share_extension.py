@@ -41,7 +41,8 @@ for path in ['Taskfold/Core/SharedCapture.swift', 'Taskfold/Core/SharedCapturePl
         build = uid('app-build:' + path); add(build, f'isa = PBXBuildFile; fileRef = {ref};')
         append(app_phase, 'files', build); append(proj['mainGroup'], 'children', ref)
 
-paths = ['TaskfoldShare/ShareViewController.swift', 'Taskfold/Core/SharedCapture.swift']
+# SharedCapture.swift depends on PreservingJSON.swift, so the extension must compile both.
+paths = ['TaskfoldShare/ShareViewController.swift', 'Taskfold/Core/SharedCapture.swift', 'Taskfold/Core/PreservingJSON.swift']
 refs = [reference(path) for path in paths]
 info = reference('TaskfoldShare/Info.plist'); ent = reference('TaskfoldShare/TaskfoldShare.entitlements')
 builds = []
