@@ -153,6 +153,27 @@ I'd finish the subtask migration, because it protects data. The rest should ship
 - A TickTick-style habit tracker and a Pomodoro timer that reuses Focus sessions.
 - On-device Apple Intelligence: capture a voice note as several tasks, or get a smart reschedule of overdue work.
 
+## Phase 0 outcome (10 November 2026)
+- **Baseline.**
+  - Mac: Core tests 4,376 run, 0 failed, 46 skipped; Debug build succeeds in about 2 minutes.
+  - iOS: Core tests 4,354 run with **2 failures** in `WatchFreshnessTests`. They look date or time-zone dependent, so the fix goes in Phase 1. The Debug simulator build succeeds in about 3 minutes.
+- **Visual checks are blocked on this Mac.**
+  - No iOS Simulator runtime is installed.
+  - Screen Recording permission hasn't been granted to the terminal, so Mac screenshots fail.
+- **CI deferred.** GitHub's newest macOS runner has Xcode 26.6 (Swift 6.3). The code needs the Swift 6.4 SDK used locally. Merges are gated on local checks until runners catch up.
+- **Gated features found.** All are off by default; Info.plist keys are absent.
+  - Teams/organization, plus native team moves and edits
+  - Audio comment drafts, publishing and restoration
+  - Subtask record reads, writes and completion batches, including mixed completion
+  - Email capture
+  - Webhooks and automation keys (Mac)
+  - Server reminders
+  - Geofence delivery
+  - Distribution
+  - Provider OAuth
+  - Safe upgrades for older app versions
+  - These feed the Phase 3 ship, hide or cut decision.
+
 ## 4. Decisions needed from you
 1. **Process reset:** may I slim the `AGENTS.md` rules and stop the evidence and `px-progress` ritual?
 2. **Apple Developer Program:** do you have a paid account, for notarisation, TestFlight and widgets in distributed builds?
