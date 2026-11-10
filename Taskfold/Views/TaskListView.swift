@@ -232,6 +232,7 @@ struct TaskListView: View {
             .background(ListScrollMemory(key: preferenceKey, workspace: workspace, taskIDs: displayedTaskIDs, handle: nativeList))
             .focused($taskListFocused)
             .environment(\.taskListFocused, taskListFocused)
+            .environment(\.taskRowScope, scope)
             .accessibilityIdentifier("taskList")
             .listStyle(.inset)
             .scrollContentBackground(.hidden)

@@ -152,15 +152,26 @@ struct CheckMark: View {
     var color: Color
     var emphasized: Bool
     var size: CGFloat = 18
+    /// Overrides the ring colour (used for the quiet P4 ring); the checked fill still follows `color`.
+    var stroke: Color? = nil
+    /// Opacity of the tint inside the ring while open (priority 1-3 rows use 0.1).
+    var restFill: Double = 0
+    /// Faint tick shown while hovering the control.
+    var previewCheck = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         ZStack {
-            Circle().strokeBorder(color.opacity(emphasized ? 0.9 : 0.55), lineWidth: emphasized ? 1.6 : 1.3)
+            Circle().fill((stroke ?? color).opacity(checked ? 0 : restFill))
+            Circle().strokeBorder((stroke ?? color).opacity(stroke != nil || emphasized ? 0.9 : 0.55), lineWidth: emphasized ? 1.6 : 1.3)
                 .opacity(checked ? 0 : 1)
                 .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: checked)
             Circle().fill(checked ? (emphasized ? color : Color.taskfold) : .clear)
                 .scaleEffect(checked ? 1 : 0.6)
                 .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: checked)
+            DrawnCheck()
+                .stroke((stroke ?? color).opacity(0.5), style: StrokeStyle(lineWidth: max(1.6, size * 0.11), lineCap: .round, lineJoin: .round))
+                .opacity(previewCheck && !checked ? 1 : 0)
+                .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: previewCheck)
             DrawnCheck()
                 .trim(from: 0, to: checked ? 1 : 0)
                 .stroke(Color.contrastingForeground(on: emphasized ? color : .taskfold), style: StrokeStyle(lineWidth: max(1.6, size * 0.11), lineCap: .round, lineJoin: .round))
