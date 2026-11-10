@@ -2620,8 +2620,10 @@ extension TaskfoldMacUITests {
         if !title.waitForExistence(timeout: 3) { app.buttons["Inspector"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click() }
         XCTAssertTrue(title.waitForExistence(timeout: 5)); title.click(); app.typeKey("a", modifierFlags: .command); title.typeText(f.offlineTitle); app.typeKey(.tab, modifierFlags: [])
         _ = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["title"] as? String == f.offlineTitle && ($0["pending"] as? [Any])?.count == 1 }
-        let priority = app.menuButtons["priority-" + f.taskID]
-        XCTAssertTrue(priority.waitForExistence(timeout: 5)); priority.click(); app.menuItems["Priority 1"].firstMatch.click()
+        // Priority moved off the row into its actions menu (shown while the row is selected or hovered).
+        let actions = app.menuButtons["actions-" + f.taskID]
+        XCTAssertTrue(actions.waitForExistence(timeout: 5)); actions.click()
+        app.menuItems["Priority"].firstMatch.hover(); app.menuItems["Priority 1"].firstMatch.click()
         let queued = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["priority"] as? Int == 1 && ($0["pending"] as? [Any])?.count == 2 }
         retainWindow(app, name: "Mac two real offline edits queued")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
