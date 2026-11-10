@@ -95,18 +95,31 @@ struct QuietNativeSelection: NSViewRepresentable {
     final class Probe: NSView {
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
         override func viewDidMoveToWindow() { super.viewDidMoveToWindow(); apply() }
+        // Only the table that this background sits behind is quieted: its scroll
+        // view must contain the probe's centre in window coordinates. Walking up
+        // and taking the first table found could otherwise reach the sidebar.
         func apply() {
             DispatchQueue.main.async { [weak self] in
-                var node: NSView? = self
+                guard let self, self.window != nil else { return }
+                let centre = self.convert(NSPoint(x: self.bounds.midX, y: self.bounds.midY), to: nil)
+                var node: NSView? = self.superview
                 while let current = node {
-                    if let table = Self.table(in: current) { table.selectionHighlightStyle = .none; return }
+                    if let table = Self.table(in: current, containing: centre) {
+                        table.selectionHighlightStyle = .none
+                        return
+                    }
                     node = current.superview
                 }
             }
         }
-        private static func table(in view: NSView) -> NSTableView? {
-            if let table = view as? NSTableView { return table }
-            for sub in view.subviews { if let found = table(in: sub) { return found } }
+        private static func table(in view: NSView, containing point: NSPoint) -> NSTableView? {
+            if let table = view as? NSTableView {
+                let host: NSView = table.enclosingScrollView ?? table
+                return host.convert(host.bounds, to: nil).contains(point) ? table : nil
+            }
+            for sub in view.subviews {
+                if let found = table(in: sub, containing: point) { return found }
+            }
             return nil
         }
     }
