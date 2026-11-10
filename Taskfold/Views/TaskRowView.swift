@@ -12,6 +12,18 @@ extension EnvironmentValues {
     }
 }
 
+private struct TaskRowScopeKey: EnvironmentKey {
+    static let defaultValue: TaskScope? = nil
+}
+
+extension EnvironmentValues {
+    /// Which list the row is shown in. Rows hide the trailing project when the list is that project.
+    var taskRowScope: TaskScope? {
+        get { self[TaskRowScopeKey.self] }
+        set { self[TaskRowScopeKey.self] = newValue }
+    }
+}
+
 /// One task in the content list: check control, title, metadata, and a hover-revealed action.
 struct TaskRowView: View {
     @Environment(Store.self) private var store
@@ -23,6 +35,8 @@ struct TaskRowView: View {
     @State private var notePresentation: UUID?
     var compactDate = false
     @State private var hovering = false
+    @State private var checkHover = false
+    @Environment(\.taskRowScope) private var rowScope
     @State private var choosingDate = false
     @Environment(\.appearsActive) private var appearsActive
     @Environment(\.taskListFocused) private var listFocused
@@ -54,10 +68,14 @@ struct TaskRowView: View {
 
             if TaskKind.mayComplete(task) {
             Button { workspace.complete(task) } label: {
-                CheckMark(checked: checked, color: isSelected ? selectedForeground : DS.Palette.priority(task.priority), emphasized: isSelected || task.priority < 4)
-                    .padding(DS.Space.xs)
+                CheckMark(checked: checked, color: isSelected ? selectedForeground : DS.Palette.priority(task.priority), emphasized: isSelected || task.priority < 4,
+                          size: DS.Size.checkbox, stroke: isSelected || task.priority < 4 ? nil : DS.Palette.textTertiary,
+                          restFill: !isSelected && task.priority < 4 ? 0.1 : 0, previewCheck: checkHover && !checked)
+                    .frame(width: DS.Space.xxxl, height: DS.Space.xxxl) // 32 pt hit area
+                    .contentShape(.rect)
             }
             .buttonStyle(GlyphStyle())
+            .onHover { checkHover = $0 }
             .modifier(HoverLift())
             .pointerStyle(.link)
             .accessibilityLabel(checked ? "Reopen \(task.title)" : "Complete \(task.title)")
@@ -77,17 +95,17 @@ struct TaskRowView: View {
                         .accessibilityAddTraits(TaskKind(task) == .heading ? .isHeader : [])
                         .foregroundStyle(isSelected ? selectedForeground : checked ? DS.Palette.textSecondary : DS.Palette.textPrimary)
                         .strikethrough(checked, color: .secondary)
-                        .lineLimit(2)
+                        .lineLimit(3)
                         .accessibilityLabel(accessibilitySummary(planning))
                         .accessibilityIdentifier("title-\(task.id)")
                 } else {
                     LinkText(text: task.title, font: TaskKind(task) == .heading ? .systemFont(ofSize: NSFont.preferredFont(forTextStyle: .body).pointSize, weight: .semibold) : .preferredFont(forTextStyle: .body),
                              color: NSColor(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary),
                              linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold),
-                             strikethrough: checked, lineLimit: 2,
+                             strikethrough: checked, lineLimit: 3,
                              accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary(planning), preparedLinks: titleLinks)
                 }
-                if !notePreview.isEmpty {
+                if !notePreview.isEmpty && density != "compact" {
                     if previewLinks.matches.isEmpty {
                         Text(notePreview).font(DS.Font.taskNote).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary)
                             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1).fixedSize(horizontal: false, vertical: true)
@@ -106,10 +124,11 @@ struct TaskRowView: View {
                 if workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {
                     Text(parent).font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary).lineLimit(1)
                 }
-                if planning.deadline != nil || (TaskKind.mayComplete(task) && task.durationMinutes != nil) || planning.showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
+                if hasMetadata(planning) {
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: DS.Space.s) { metadata(wrapping: false, planning: planning) }
                             .labelStyle(.titleAndIcon).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                        // At accessibility sizes the line wraps onto a second line rather than truncating.
                         VStack(alignment: .leading, spacing: DS.Space.xs) { metadata(wrapping: true, planning: planning) }
                             .labelStyle(WrappingMetadataLabelStyle(wraps: true))
                     }.font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary)
@@ -119,39 +138,49 @@ struct TaskRowView: View {
             if !task.string("assigned_to").isEmpty {
                 AssigneeMenu(task: task, selected: isSelected) { workspace.assign(task.id, to: $0) }
             }
-            Menu { priorityOptions } label: {
-                Image(systemName: task.priority < 4 ? "flag.fill" : "flag")
-                    .foregroundStyle(isSelected ? selectedForeground : task.priority < 4 ? DS.Palette.priority(task.priority) : DS.Palette.textSecondary)
+            ZStack(alignment: .trailing) {
+                if let project = trailingProject {
+                    HStack(spacing: DS.Space.xs) {
+                        Text(project.name).lineLimit(1)
+                        Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6) // dot geometry
+                    }
+                    .font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary)
+                    .opacity(hovering || isSelected ? 0 : 1)
+                    .accessibilityHidden(true)
+                }
+                HStack(spacing: DS.Space.xs) {
+                    Button { choosingDate = true } label: { Image(systemName: "calendar").frame(width: DS.Space.xxl, height: DS.Space.xxl).contentShape(.rect) }
+                        .buttonStyle(.borderless).foregroundStyle(DS.Palette.textSecondary)
+                        .help("Schedule").accessibilityLabel("Schedule \(task.title)").accessibilityIdentifier("schedule-\(task.id)")
+                    Menu {
+                        Button("Change Date…", systemImage: "calendar") { choosingDate = true }
+                        Menu("Move to Project") { projectOptions }
+                        Menu("Priority") { priorityOptions }
+                        Divider()
+                        Button("Edit Details…") { workspace.open(task.id) }
+                    } label: { Image(systemName: "ellipsis").fontWeight(.semibold).foregroundStyle(isSelected ? selectedForeground : DS.Palette.textSecondary) }
+                    .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                    .tint(isSelected ? selectedForeground : .secondary)
+                    .help("Task actions")
+                    .accessibilityLabel("More actions for \(task.title)")
+                    .accessibilityIdentifier("actions-\(task.id)")
+                }
+                .opacity(hovering || isSelected ? 1 : 0)
+                .allowsHitTesting(hovering || isSelected)
             }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-            .tint(isSelected ? selectedForeground : DS.Palette.priority(task.priority))
-            .opacity(isSelected || task.priority < 4 || hovering ? 1 : 0.65)
-            .help("Change priority")
-            .accessibilityLabel("Priority for \(task.title)")
-            .accessibilityIdentifier("priority-\(task.id)")
-            Menu {
-                Button("Change Date…", systemImage: "calendar") { choosingDate = true }
-                Menu("Move to Project") { projectOptions }
-                Menu("Priority") { priorityOptions }
-                Divider()
-                Button("Edit Details…") { workspace.open(task.id) }
-            } label: { Image(systemName: "ellipsis").fontWeight(.semibold).foregroundStyle(isSelected ? selectedForeground : DS.Palette.textSecondary) }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-            .tint(isSelected ? selectedForeground : .secondary)
-            .opacity(isSelected || hovering ? 1 : 0.65)
-            .help("Task actions")
-            .accessibilityIdentifier("actions-\(task.id)")
         }
         .padding(.vertical, DS.Size.rowVerticalPadding(compact: density == "compact"))
         .padding(.horizontal, DS.Space.xs)
         .frame(minHeight: DS.Size.rowMinHeight)
-        .background(isSelected ? DS.Palette.selectionFill : Color.clear, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
+        .background(isSelected ? DS.Palette.selectionFill : hovering ? DS.Palette.surfaceSunken.opacity(0.5) : Color.clear, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
         .contentShape(.rect)
         .onHover { hovering = $0 }
         .popover(isPresented: $choosingDate) { TaskDatePopover(task: task) }
         .animation(workspace.layout, value: checked)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("task-\(task.id)")
+        .accessibilityAction(named: "Schedule") { choosingDate = true }
+        .accessibilityAction(named: "More") { workspace.open(task.id) }
         .task(id: fullRequest) {
             let ticket = UUID(); notePresentation = ticket
             guard let fullRequest else { fullNote = nil; return }
@@ -185,68 +214,112 @@ struct TaskRowView: View {
             Button(priority == 4 ? "None" : "Priority \(priority)") { workspace.setPriority([task.id], priority) }
         }
     }
+    /// The project shows at the trailing edge only in lists that mix projects.
+    private var trailingProject: Record? {
+        if case .project = rowScope { return nil }
+        return store.record("projects", id: task.string("project_id"))
+    }
+    private var labelNames: [String] { task["labels"].list.map(\.text).filter { !$0.isEmpty }.map { store.record("labels", id: $0)?.name ?? $0 } }
+    private func hasMetadata(_ planning: TaskRowPlanningRead) -> Bool {
+        dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty
+            || !labelNames.isEmpty || !task["attachments"].list.isEmpty || (TaskKind.mayComplete(task) && task.durationMinutes != nil)
+    }
+    private enum DateRole { case overdue, today, tomorrow, thisWeek, later }
+    private func dateRole(_ planning: TaskRowPlanningRead) -> DateRole {
+        guard let day = planning.day else { return .later }
+        if planning.overdue { return .overdue }
+        if task.completed { return .later }
+        let calendar = Calendar.current
+        let gap = calendar.dateComponents([.day], from: calendar.startOfDay(for: Date()), to: calendar.startOfDay(for: day)).day ?? 0
+        switch gap { case 0: return .today; case 1: return .tomorrow; case 2...6: return .thisWeek; default: return .later }
+    }
+    private func dateColor(_ planning: TaskRowPlanningRead) -> Color {
+        switch dateRole(planning) {
+        case .overdue: return DS.Palette.dateOverdue
+        case .today: return DS.Palette.dateToday
+        case .tomorrow: return DS.Palette.dateTomorrow
+        case .thisWeek: return DS.Palette.dateThisWeek
+        case .later: return DS.Palette.dateLater
+        }
+    }
+    /// "Today 14:00", "Tomorrow", "Friday", "12 Nov". Lists that already show the day drop it and keep only the time.
+    private func dateText(_ planning: TaskRowPlanningRead) -> String? {
+        guard planning.showsDate, let due = planning.day else { return nil }
+        let time = planning.clock.isEmpty ? "" : Self.timeText(planning.clock)
+        let zone = planning.zone.isEmpty || time.isEmpty ? "" : " " + planning.zone
+        let day: String
+        if compactDate && !planning.overdue { day = "" }
+        else {
+            switch dateRole(planning) {
+            case .today: day = "Today"
+            case .tomorrow: day = "Tomorrow"
+            case .thisWeek: day = due.formatted(.dateTime.weekday(.wide))
+            case .overdue, .later: day = due.formatted(.dateTime.day().month(.abbreviated))
+            }
+        }
+        let text = [day, time + zone].filter { !$0.isEmpty }.joined(separator: " ")
+        return text.isEmpty ? nil : text
+    }
     @ViewBuilder private func metadata(wrapping: Bool, planning: TaskRowPlanningRead) -> some View {
-        if planning.showsDate, let due = planning.day {
-            let time = planning.clock
-            let text = (compactDate && !planning.overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))) + (planning.zone.isEmpty ? "" : " · " + planning.zone)
+        if let text = dateText(planning) {
             Button { choosingDate = true } label: {
-                Label(text, systemImage: task["is_recurring"].flag ? "repeat" : planning.overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
+                Label(text, systemImage: "calendar")
                     .accessibilityIdentifier("plannedDate-" + task.id)
-                    .foregroundStyle(isSelected ? selectedForeground : planning.overdue ? DS.Palette.dateOverdue : planning.dueToday ? DS.Palette.accent : DS.Palette.textSecondary)
+                    .foregroundStyle(isSelected ? selectedForeground : dateColor(planning))
             }
             .buttonStyle(.borderless)
             .help("Change date")
             .accessibilityIdentifier("date-\(task.id)")
         }
         if let deadline = planning.deadline {
-            Label("Deadline " + deadline.formatted(.dateTime.month(.abbreviated).day()), systemImage: "flag.checkered")
+            Label(deadline.formatted(.dateTime.day().month(.abbreviated)), systemImage: "flag.checkered")
                 .foregroundStyle(isSelected ? selectedForeground : planning.deadlineOverdue ? DS.Palette.dateOverdue : DS.Palette.textSecondary)
+                .accessibilityLabel("Deadline " + deadline.formatted(.dateTime.day().month(.abbreviated)))
                 .accessibilityIdentifier("deadline-" + task.id)
         }
-        if TaskKind.mayComplete(task), let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").accessibilityIdentifier("duration-" + task.id) }
-        if let project = store.record("projects", id: task.string("project_id")) {
-            Menu { projectOptions } label: {
-                HStack(spacing: DS.Space.xs) {
-                    Circle().fill(Color.project(project.string("color"))).frame(width: 8, height: 8) // dot geometry
-                    Text(project.name).lineLimit(wrapping ? nil : 1).fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize(horizontal: !wrapping, vertical: true)
-            .tint(isSelected ? selectedForeground : nil)
-            .disabled(workspace.hierarchyPresentation && Workspace.subtaskPath(task.id) != nil)
-            .help(workspace.hierarchyPresentation && Workspace.subtaskPath(task.id) != nil ? "Subtasks stay in their parent's project" : "Move to project")
-        }
-        ForEach(task["labels"].list.map(\.text).filter { !$0.isEmpty }, id: \.self) { name in
-            Text(store.record("labels", id: name)?.name ?? name).lineLimit(wrapping ? nil : 1).fixedSize(horizontal: !wrapping, vertical: true).font(DS.Font.chip).padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xxs)
-                .background(DS.Palette.surfaceSunken, in: .capsule)
+        if task["is_recurring"].flag {
+            Image(systemName: "repeat").accessibilityLabel("Repeats")
         }
         if !task["subtasks"].list.isEmpty {
-                let progress = store.subtaskProgress(task)
+            let progress = store.subtaskProgress(task)
             if progress.total > 0 {
-Label("\(progress.completed)/\(progress.total)", systemImage: "checklist")
-                .accessibilityLabel("\(progress.completed) of \(progress.total) subtasks completed")
-                .accessibilityIdentifier("subtaskSummary-" + task.id)
-                            }
+                Label("\(progress.completed)/\(progress.total)", systemImage: "list.bullet")
+                    .accessibilityLabel("\(progress.completed) of \(progress.total) subtasks completed")
+                    .accessibilityIdentifier("subtaskSummary-" + task.id)
+            }
         }
         if !task["comments"].list.isEmpty {
-            Label("\(task["comments"].list.count)", systemImage: "text.bubble")
+            Label("\(task["comments"].list.count)", systemImage: "bubble.left")
                 .accessibilityLabel(task["comments"].list.count == 1 ? "1 comment" : "\(task["comments"].list.count) comments")
         }
+        // Not in the spec's list, kept so estimates and attachments stay visible.
+        if TaskKind.mayComplete(task), let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").accessibilityIdentifier("duration-" + task.id) }
         if !task["attachments"].list.isEmpty {
             Image(systemName: "paperclip")
                 .accessibilityLabel(task["attachments"].list.count == 1 ? "1 attachment" : "\(task["attachments"].list.count) attachments")
         }
+        let labels = labelNames
+        ForEach(Array(labels.prefix(2)), id: \.self) { name in
+            Label(name, systemImage: "tag").lineLimit(wrapping ? nil : 1).fixedSize(horizontal: !wrapping, vertical: true)
+        }
+        if labels.count > 2 { Text("+\(labels.count - 2)") }
     }
 
+    /// VoiceOver reads: title, priority, date, project, labels, then note or subtask state.
     private func accessibilitySummary(_ planning: TaskRowPlanningRead) -> String {
         var parts = [task.title]
         if TaskKind(task) == .heading { parts.append("heading, stays open") }
         if TaskKind(task) == .unsupported { parts.append("task type unavailable") }
         if checked { parts.append("completed") }
-        if workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) { parts.append("Subtask of " + parent) }
         if task.priority < 4 { parts.append("priority \(task.priority)") }
-        if let due = planning.day { parts.append(planning.overdue ? "overdue since \(due.formatted(date: .abbreviated, time: .omitted))" : "due \(due.formatted(date: .abbreviated, time: .omitted))") }
+        if let due = planning.day { parts.append(planning.overdue ? "overdue since \(due.formatted(date: .abbreviated, time: .omitted))" : "due \(due.formatted(date: .abbreviated, time: .omitted))" + (planning.clock.isEmpty ? "" : " at " + Self.timeText(planning.clock))) }
         if let project = store.record("projects", id: task.string("project_id")) { parts.append("in \(project.name)") }
+        let labels = labelNames
+        if !labels.isEmpty { parts.append("labels " + labels.joined(separator: ", ")) }
+        let progress = store.subtaskProgress(task)
+        if progress.total > 0 { parts.append("\(progress.completed) of \(progress.total) subtasks done") }
+        else if !store.taskNotePreview(task).isEmpty { parts.append("has note") }
+        if workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) { parts.append("Subtask of " + parent) }
         return parts.joined(separator: ", ")
     }
     static func timeText(_ value: String) -> String {
