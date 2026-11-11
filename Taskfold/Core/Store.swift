@@ -1320,8 +1320,22 @@ final class Store {
                      canSend: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: true) == true },
                      draftJournal: try childTaskStructureDraftJournal(account: scope.account, origin: scope.origin), didApply: didApply)
     }
-    var syncing = false
-    var online = true
+    var syncing = false { didSet { if syncing != oldValue { syncingChanged() } } }
+    /// `syncing`, shown only once a sync has lasted past `SyncTiming.syncingIndicatorDelay`, so quick syncs never flicker.
+    private(set) var syncIndicatorVisible = false
+    /// Whether the realtime socket is joined. Drives the polling interval and nothing in the data path.
+    private(set) var realtimeConnected = false
+    var online = true { didSet { if online && !oldValue { connectivityRestored() } } }
+    /// Bumped when a sync brought in remote changes, so lists can animate that one update.
+    private(set) var remoteChangeGeneration = 0
+    /// Tasks another device or a collaborator just changed. Cleared shortly after, which fades the row tint.
+    private(set) var remoteHighlightIDs: Set<String> = []
+    @ObservationIgnored private var syncIndicatorTask: Task<Void, Never>?
+    @ObservationIgnored private var syncIndicatorShownAt: Date?
+    @ObservationIgnored private var realtimeSupervisor: RealtimeSupervisor?
+    @ObservationIgnored private lazy var syncRunner = CoalescingRunner { [weak self] in await self?.performSync() }
+    @ObservationIgnored private var recentLocalTaskEdits: [String: Date] = [:]
+    @ObservationIgnored private var remoteHighlightTask: Task<Void, Never>?
     @ObservationIgnored private var teamCompletionErrorRevision = UUID()
     @ObservationIgnored private var teamCompletionReviewFailure: TeamCompletionReviewFailure?
     var error: String? {
@@ -2399,8 +2413,10 @@ final class Store {
                 #if DEBUG
                 if FullSchemaNativeFixture.enabled,FullSchemaNativeNetwork.offline {self?.online=false;return}
                 #endif
+                let wasOnline = self?.online ?? true
                 self?.online = path.status == .satisfied
-                if path.status == .satisfied { await self?.refreshRemoteReminderRegistration(); await self?.sync() }
+                // Coming back online already syncs (see `online`); a path change while online still checks in.
+                if path.status == .satisfied { await self?.refreshRemoteReminderRegistration(); if wasOnline { await self?.sync() } }
             }
         }
         monitor.start(queue: DispatchQueue(label: "taskfold.connectivity"))
@@ -3159,6 +3175,7 @@ final class Store {
     }
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil, localHistory: LocalActivityCreation.Preparation? = nil) -> Bool {
+        noteLocalTaskEdits(changes)
         let historySourceRevision = snapshotRevision
         let admittedHistory = localMode ? localHistory?.admit(changes, source: historySourceRevision, account: userID, cache: nativeConversationTeamCache) : nil
         #if DEBUG
@@ -3432,7 +3449,9 @@ final class Store {
         do { try persist(backgroundWidgets: widgetReceipt == nil && sharedCaptureReceipt == nil, preparedEncoding: retainCapturedChanges && !groupedHistoryChanged ? admittedHistory?.encodedCache : nil) } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
         workflowSaveSucceeded = true
         if remember, let history { undoStack.append(history); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
-        Task { await reschedule(); await sync() }
+        // Push first: reminder scheduling must never delay sending the edit.
+        Task { await sync() }
+        Task { await reschedule() }
         return true
     }
     @discardableResult
@@ -3757,6 +3776,7 @@ final class Store {
         snapshot = encoding.snapshot
         do { try persist(backgroundWidgets: true, preparedEncoding: encoding) }
         catch { snapshot = before; throw error }
+        noteRemoteChanges(before: before, after: snapshot)
         #if DEBUG
         if FullSchemaNativeFixture.enabled { nativePreparedWorkspaceRefreshes += 1 }
         #endif
@@ -3773,7 +3793,75 @@ final class Store {
         }
         return true
     }
-    func sync() async {
+    /// Requests a sync. One runs at a time; a request made during a sync is kept and served by exactly one follow-up.
+    func sync() async { await syncRunner.request() }
+    /// Seconds between safety-net polls: relaxed while realtime is joined.
+    var pollInterval: TimeInterval { SyncTiming.pollInterval(realtimeConnected: realtimeConnected) }
+    private func syncingChanged() {
+        syncIndicatorTask?.cancel(); syncIndicatorTask = nil
+        if syncing {
+            syncIndicatorTask = Task { [weak self] in
+                try? await Task.sleep(for: SyncTiming.syncingIndicatorDelay)
+                guard !Task.isCancelled, let self, self.syncing else { return }
+                self.syncIndicatorShownAt = Date(); self.syncIndicatorVisible = true
+            }
+        } else if syncIndicatorVisible {
+            // Once shown, stay for a beat so a sync that just crossed the threshold does not blink.
+            let shown = Date().timeIntervalSince(syncIndicatorShownAt ?? Date())
+            let remaining = max(0, 0.45 - shown)
+            syncIndicatorTask = Task { [weak self] in
+                if remaining > 0 { try? await Task.sleep(for: .seconds(remaining)) }
+                guard !Task.isCancelled, let self, !self.syncing else { return }
+                self.syncIndicatorVisible = false
+            }
+        }
+    }
+    private func connectivityRestored() {
+        realtimeSupervisor?.wake()
+        Task { await sync() }
+    }
+    /// Keeps a realtime connection alive for the signed-in account until cancelled.
+    func runRealtime() async {
+        let supervisor = RealtimeSupervisor(
+            connect: { [weak self] joined, changed in
+                guard let self else { return }
+                try await self.backend.watchChanges(onJoined: joined, onChange: changed)
+            },
+            setConnected: { [weak self] in if self?.realtimeConnected != $0 { self?.realtimeConnected = $0 } },
+            requestSync: { [weak self] in await self?.sync() })
+        realtimeSupervisor = supervisor
+        await supervisor.run()
+        realtimeSupervisor = nil
+    }
+    private func noteLocalTaskEdits(_ changes: [Mutation]) {
+        let now = Date()
+        for change in changes where change.table == "tasks" { recentLocalTaskEdits[change.recordID] = now }
+    }
+    /// Marks tasks that another device or a collaborator changed; this device's own edits never count.
+    private func noteRemoteChanges(before: Snapshot, after: Snapshot) {
+        guard lastSync != nil else { return } // the first read of a session is not "new"
+        let cutoff = Date().addingTimeInterval(-SyncTiming.localEditEchoWindow)
+        recentLocalTaskEdits = recentLocalTaskEdits.filter { $0.value > cutoff }
+        let local = Set(recentLocalTaskEdits.keys).union(after.pending.filter { $0.table == "tasks" }.map(\.recordID))
+        let result = RemoteChanges.compare(before: before.tables["tasks"] ?? [], after: after.tables["tasks"] ?? [], excluding: local)
+        guard !result.isEmpty else { return }
+        presentRemoteChanges(result.changed)
+    }
+    private func presentRemoteChanges(_ changed: Set<String>) {
+        remoteChangeGeneration &+= 1
+        remoteHighlightIDs = changed
+        remoteHighlightTask?.cancel()
+        remoteHighlightTask = Task { [weak self] in
+            try? await Task.sleep(for: SyncTiming.remoteHighlightHold)
+            guard !Task.isCancelled else { return }
+            self?.remoteHighlightIDs = []
+        }
+    }
+    #if DEBUG
+    /// Screenshot fixture: shows the remote-change tint on these tasks, held until it is replaced.
+    func previewRemoteHighlight(_ ids: Set<String>) { remoteChangeGeneration &+= 1; remoteHighlightIDs = ids }
+    #endif
+    private func performSync() async {
         #if DEBUG
         if ChildFieldNativeIdentity.enabled { try? childFieldNativeRefresh(); return }
         if PersonalHeadingNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") { return }

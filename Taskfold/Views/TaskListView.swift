@@ -480,6 +480,7 @@ struct TaskListView: View {
             guard let intent else { return nil }
             return { command in performRowGesture(command, intent: intent) }
         }) { TaskRowView(task: task, compactDate: dated) }
+        .remoteChangeHighlight(task.id)
         .background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
         .accessibilityActions { if TaskKind.mayComplete(task) { Button(task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } } } }
         .accessibilityAction(named: "Move to tomorrow") { if let intent { performRowGesture(.tomorrow, intent: intent) } }
