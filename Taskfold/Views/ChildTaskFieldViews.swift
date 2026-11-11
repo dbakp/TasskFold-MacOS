@@ -467,7 +467,7 @@ struct ChildTaskFieldEditorView: View {
                                     noticeRequest = ChildFieldNoticeRequest(scope: captured, key: selectedKey, session: session?.id, revision: capturedEditing)
                                     #if os(macOS)
                                     if reduceMotion { proxy.scrollTo("childFieldSavedNotice", anchor: .bottom) }
-                                    else { withAnimation(.easeOut(duration: 0.18)) { proxy.scrollTo("childFieldSavedNotice", anchor: .bottom) } }
+                                    else { withAnimation(Motion.layout) { proxy.scrollTo("childFieldSavedNotice", anchor: .bottom) } }
                                     #endif
                                 }
                             }

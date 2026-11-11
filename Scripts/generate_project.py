@@ -12,7 +12,7 @@ def uid(name):
     return hashlib.md5(name.encode()).hexdigest()[:24].upper()
 
 app_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Taskfold").rglob("*.swift"))
-app_resources = ["Taskfold/Assets.xcassets", "Taskfold/Backend.plist", "Taskfold/TaskfoldIcon.icon", "Taskfold/Legal/AppAuth-LICENSE.txt"]
+app_resources = ["Taskfold/Assets.xcassets", "Taskfold/Backend.plist", "Taskfold/TaskfoldIcon.icon", "Taskfold/Legal/AppAuth-LICENSE.txt", "Taskfold/Resources/complete.wav"]
 test_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldUITests").rglob("*.swift"))
 widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift")) + ["Taskfold/Core/PreservingJSON.swift", "Taskfold/Core/WidgetActions.swift", "Taskfold/Core/FocusWidget.swift", "Taskfold/Core/ProjectPulseWidget.swift"]
 # Set TASKFOLD_WIDGETS=0 to leave the widget extension out (for example while App Groups cannot be provisioned).
@@ -23,6 +23,7 @@ def file_type(path):
     if path.endswith(".swift"): return "sourcecode.swift"
     if path.endswith(".xcassets"): return "folder.assetcatalog"
     if path.endswith(".icon"): return "folder.icon"
+    if path.endswith(".wav"): return "audio.wav"
     if path.endswith(".plist"): return "text.plist.xml"
     if path.endswith(".entitlements"): return "text.plist.entitlements"
     return "text"

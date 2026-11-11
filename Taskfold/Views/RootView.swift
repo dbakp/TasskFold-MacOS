@@ -244,6 +244,16 @@ struct RootView: View {
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
                         try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
                     }
+                } else if option("capture-toast") != nil {
+                    // The bottom bar hosted alone: --capture-toast=goal shows the daily-goal celebration.
+                    let toast = Confirmation(message: "Daily goal reached", celebration: "5 of 5 today")
+                    let host = NSHostingView(rootView: ConfirmationBar(confirmation: toast).environment(store).environment(workspace).frame(width: 640, height: 56).background(Color(nsColor: .windowBackgroundColor)))
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 640, height: 56), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(1.5))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
+                    }
                 } else if arguments.contains("--capture-quick-add") {
                     // The sheet cannot be captured with the window, so host the composer alone, pre-filled with --quick-add-text.
                     let sample = option("quick-add-text") ?? "Call Anna tomorrow at 4pm #Work @calls p1 !30m"
@@ -550,6 +560,14 @@ struct RootView: View {
             }
             var inbox = Record.task(user: "preview"); inbox["title"] = .string("Read that article about slow productivity"); samples.append(inbox)
             store.snapshot.tables["tasks"] = samples
+            // Empty-state captures: --empty-fixture removes every task; =done leaves only one finished today.
+            if let value = option("empty-fixture") ?? (arguments.contains("--empty-fixture") ? "" : nil) {
+                store.snapshot.tables["tasks"] = []
+                if value == "done" {
+                    var task = Record.task(user: "preview", date: Date()); task["title"] = .string("Finished today"); task["completed"] = .bool(true); task["completed_at"] = .string(Dates.timestamp())
+                    store.snapshot.tables["tasks"] = [task]
+                }
+            }
         }
         #endif
     }

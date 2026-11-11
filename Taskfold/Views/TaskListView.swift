@@ -3,6 +3,21 @@ import AppKit
 
 /// The content column: a system List with native multi-selection, keyboard navigation, context menus, and
 /// day sections that accept drags. Everything the iOS TaskScreen did with sheets happens in the inspector.
+/// Empty states ease in with a fade and a slight scale (0.96 to 1); Reduce Motion keeps only the fade.
+struct EmptyStateAppear: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shown = false
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown ? 1 : 0)
+            .scaleEffect(shown || reduceMotion ? 1 : Transitions.Scale.large)
+            .onAppear { withAnimation(Motion.respecting(reduceMotion, Transitions.Ease.smoothOut(Transitions.Duration.medium))) { shown = true } }
+    }
+}
+
+/// The ids shown on the previous render, so a lingering row can be put back where it was.
+final class RowOrderMemory { var ids: [String] = [] }
+
 struct TaskListView: View {
     @Environment(Store.self) private var store
     @Environment(\.openPinnedNotes) private var openPinnedNotes
@@ -32,6 +47,7 @@ struct TaskListView: View {
     @State private var captureSection = ""
     @State private var nativeList = ListNativeHandle()
     @State private var rowSwipe = MacRowSwipeController()
+    @State private var orderMemory = RowOrderMemory()
     @AppStorage("mac.rowGesture.leading") private var leadingGesture = "complete"
     @AppStorage("mac.rowGesture.trailing") private var trailingGesture = "tomorrow"
     @AppStorage("mac.rowGesture.fullSwipe") private var fullSwipe = false
@@ -81,7 +97,22 @@ struct TaskListView: View {
     }
     /// "priority" was a sort option before bands became the default order; treat a stored value as default.
     private var manualOrder: Bool { sortBy == "manual" || sortBy == "priority" }
+    /// Rows that were just checked keep their place for a beat. Their pre-completion record is put back where it
+    /// was (the order seen on the previous render) while the store already holds the completed or advanced record.
     private var filtered: [Record] {
+        let base = unlingeredRows
+        let pending = workspace.activeLingering(scopeKey: preferenceKey)
+        guard !pending.isEmpty else { return base }
+        var rows = base.filter { row in !pending.contains { $0.before.id == row.id } }
+        for entry in pending.sorted(by: { (orderMemory.ids.firstIndex(of: $0.before.id) ?? .max) < (orderMemory.ids.firstIndex(of: $1.before.id) ?? .max) }) {
+            guard let position = orderMemory.ids.firstIndex(of: entry.before.id) else { continue }
+            let predecessor = orderMemory.ids[..<position].last { id in rows.contains { $0.id == id } }
+            let index = predecessor.flatMap { id in rows.firstIndex { $0.id == id } }.map { $0 + 1 } ?? 0
+            rows.insert(entry.before, at: min(index, rows.count))
+        }
+        return rows
+    }
+    private var unlingeredRows: [Record] {
         if workspace.section == .assigned {
             return workspace.assignedTasks.filter {
                 (showCompleted || !$0.completed) && (priorityFilter == 0 || $0.priority == priorityFilter) &&
@@ -196,15 +227,15 @@ struct TaskListView: View {
                 }
                 if !store.online || (store.notice != nil && store.syncConflict == nil && store.focusSyncConflict == nil) { statusRow }
                 if store.syncing && store.tasks.isEmpty && store.lastSync == nil && !store.localMode { SkeletonRows().padding(.vertical, DS.Space.m).selectionDisabled().listRowSeparator(.hidden).transition(.skeletonReveal) }
-                if filtered.isEmpty && !dated { emptyState }
+                if filtered.isEmpty && !dated || datedEmpty { emptyState }
                 if dated {
-                    ForEach(dayGroups, id: \.0) { group in
+                    ForEach(datedEmpty ? [] : dayGroups, id: \.0) { group in
                         if group.0 == "Overdue" { if !group.1.isEmpty { overdueSection(group.1) } }
                         else { daySection(group.0, group.1) }
                     }
                 } else {
                     if !overdueTasks.isEmpty { overdueSection(overdueTasks) }
-                    ForEach(groups, id: \.key) { group in
+                    ForEach(bareEmptyProject ? [] : groups, id: \.key) { group in
                         if scope != .completed || !group.tasks.isEmpty || !group.title.isEmpty {
                             Section {
                                 if projectID.isEmpty || !collapsed(group.key) {
@@ -246,7 +277,7 @@ struct TaskListView: View {
             }
         }
         .background(Color(nsColor: .textBackgroundColor))
-        .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation).transition(reduceMotion ? .opacity : .toast) } }
+        .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation) } }
         .animation(Transitions.Ease.smoothOut, value: workspace.confirmation)
         .onAppear { if workspace.section.scope == scope { workspace.navigationSubtitle = subtitle } }
         .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
@@ -261,6 +292,7 @@ struct TaskListView: View {
         .alert("Could not prepare document", isPresented: Binding(get: { printFailure != nil }, set: { if !$0 { printFailure = nil } })) { Button("OK") { printFailure = nil } } message: { Text(printFailure ?? "") }
         .onChange(of: store.workspaceGeneration) { _, _ in printReview = nil; printFailure = nil; rowSwipe.cancel() }
         .onAppear { configureRowSwipes() }
+        .onChange(of: filtered.map(\.id), initial: true) { _, ids in orderMemory.ids = ids }
         .onChange(of: leadingGesture) { _, _ in configureRowSwipes() }
         .onChange(of: trailingGesture) { _, _ in configureRowSwipes() }
         .onChange(of: fullSwipe) { _, _ in configureRowSwipes() }
@@ -356,13 +388,40 @@ struct TaskListView: View {
         }.font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).selectionDisabled().listRowSeparator(.hidden)
     }
     private var isSavedFilterScope: Bool { if case .saved = scope { return true }; return false }
-    private var emptyState: some View {
-        ContentUnavailableView {
-            Label(workspace.search.isEmpty && !isSavedFilterScope ? "All clear" : "No matching tasks", systemImage: workspace.search.isEmpty && !isSavedFilterScope ? "checkmark.seal" : "magnifyingglass")
-        } description: {
-            Text(isSavedFilterScope ? "Edit the filter or add a task that matches." : workspace.search.isEmpty ? "Press ⌘N to add something new." : "Try a different search or filter.")
+    /// A list with no tasks and no sections shows only its empty state, not an empty group beneath it.
+    private var bareEmptyProject: Bool { !dated && projectLayout != "board" && filtered.isEmpty && groups.count == 1 }
+    /// Today and Upcoming show a per-scope empty state once every day group is empty.
+    private var datedEmpty: Bool { dated && filtered.isEmpty && dayGroups.allSatisfy { $0.1.isEmpty } }
+    private struct EmptyContent { var symbol: String; var tint: Color; var title: String; var line: String?; var addTask = false }
+    private var emptyContent: EmptyContent {
+        let quiet = DS.Palette.textTertiary
+        if !workspace.search.isEmpty { return EmptyContent(symbol: "magnifyingglass", tint: quiet, title: "No matching tasks", line: "Try a different search or filter.") }
+        if isSavedFilterScope { return EmptyContent(symbol: "magnifyingglass", tint: quiet, title: "No matching tasks", line: "Edit the filter or add a task that matches.") }
+        switch scope {
+        case .today:
+            if workspace.completedTodayCount() > 0 { return EmptyContent(symbol: "sparkles", tint: DS.Palette.dateToday, title: "You did it", line: "Everything for today is done.") }
+            return EmptyContent(symbol: "sun.max", tint: DS.Palette.dateToday, title: "All clear for today", line: "Enjoy the rest of your day.")
+        case .inbox: return EmptyContent(symbol: "tray", tint: DS.Palette.accent, title: "Inbox zero", line: "Everything has a place.")
+        case .upcoming: return EmptyContent(symbol: "calendar", tint: DS.Palette.dateThisWeek, title: "Nothing planned", line: "Add a task with a date to see it here.")
+        case .project(let id): return EmptyContent(symbol: "folder", tint: Color.project(store.record("projects", id: id)?.string("color") ?? ""), title: "No tasks yet", line: nil, addTask: true)
+        case .label(let id): return EmptyContent(symbol: "tag", tint: Color.project(store.record("labels", id: id)?.string("color") ?? ""), title: "Nothing with this label", line: nil)
+        case .completed: return EmptyContent(symbol: "checkmark.circle", tint: quiet, title: "Nothing completed yet", line: nil)
+        default: return EmptyContent(symbol: "checkmark.seal", tint: quiet, title: "All clear", line: "Press ⌘N to add something new.")
         }
-        .selectionDisabled().listRowSeparator(.hidden).frame(minHeight: 260)
+    }
+    private var emptyState: some View {
+        let content = emptyContent
+        return ContentUnavailableView {
+            Label { Text(content.title) } icon: { Image(systemName: content.symbol).foregroundStyle(content.tint.opacity(0.75)) }
+        } description: {
+            if let line = content.line { Text(line) }
+        } actions: {
+            if content.addTask { Button("Add task") { revealQuickAdd() }.accessibilityIdentifier("emptyStateAddTask") }
+        }
+        .modifier(EmptyStateAppear())
+        .id(content.title)
+        .selectionDisabled().listRowSeparator(.hidden).frame(maxWidth: .infinity, minHeight: 260)
+        .accessibilityIdentifier("emptyState")
     }
     private func overdueSection(_ tasks: [Record]) -> some View {
         let count = tasks.filter(TaskKind.mayComplete).count
@@ -586,11 +645,24 @@ enum ReadingColumn { static let width: CGFloat = DS.Size.contentMaxWidth }
 struct ConfirmationBar: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let confirmation: Confirmation
+    @State private var sparkle = false
     var body: some View {
         HStack(spacing: DS.Space.m) {
+            if confirmation.celebration != nil {
+                Image(systemName: "sparkles").foregroundStyle(DS.Palette.accent)
+                    .scaleEffect(sparkle ? 1 : 0.4).rotationEffect(.degrees(sparkle || reduceMotion ? 0 : -20))
+                    .symbolEffect(.bounce, options: .nonRepeating, isActive: sparkle && !reduceMotion)
+                    .id(confirmation.id).transition(.iconSwap)
+                    .onAppear { if reduceMotion { sparkle = true } else { withAnimation(Motion.settle) { sparkle = true } } }
+                    .accessibilityHidden(true)
+                Text(confirmation.message).fontWeight(.semibold).lineLimit(1).id(confirmation.id).transition(.textSwap)
+                Text(confirmation.celebration ?? "").foregroundStyle(DS.Palette.textSecondary).lineLimit(1)
+            } else {
             Image(systemName: confirmation.mixedGroupReview ? "clock.arrow.circlepath" : "checkmark.circle.fill").foregroundStyle(DS.Palette.accent).id(confirmation.id).transition(.iconSwap)
             Text(confirmation.message).lineLimit(1).id(confirmation.id).transition(.textSwap)
+            }
             Spacer()
             if confirmation.mixedGroupReview { Button("Review") { workspace.reviewMixedGroup() }.buttonStyle(.link).accessibilityIdentifier("reviewListMixedGroup") }
             if confirmation.childGroupReview {
@@ -618,10 +690,13 @@ struct ConfirmationBar: View {
         .background(.bar)
         .overlay(alignment: .top) { Divider() }
         .accessibilityElement(children: .contain)
+        .onHover { workspace.confirmationHovering = $0 }
+        .onDisappear { workspace.confirmationHovering = false }
+        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
         .task(id: confirmation.id) {
             guard NSApp.isActive, NSWorkspace.shared.isVoiceOverEnabled else { return }
             // A removed row can announce “no row selected”; keep the action's result audible.
-            var announcement = AttributedString(confirmation.message)
+            var announcement = AttributedString(confirmation.message + (confirmation.celebration.map { ", " + $0 } ?? ""))
             announcement.accessibilitySpeechAnnouncementPriority = .high
             AccessibilityNotification.Announcement(announcement).post()
         }

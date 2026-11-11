@@ -61,7 +61,7 @@ struct VoiceDraftView: View {
                     do { try await Task.sleep(for: .milliseconds(300)) } catch { return }
                     guard transcriptFocused, request.id == reviewID, capture.session.phase != .closed,
                           request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) else { return }
-                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { proxy.scrollTo("voiceTranscript", anchor: .center) }
+                    withAnimation(Motion.respecting(reduceMotion, Motion.layout)) { proxy.scrollTo("voiceTranscript", anchor: .center) }
                 }
             }
             .navigationTitle("Dictate tasks")

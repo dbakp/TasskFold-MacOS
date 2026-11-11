@@ -35,6 +35,7 @@ struct GeneralSettings: View {
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("defaultView") private var defaultView = "today"
     @AppStorage("accent") private var accent = "rose"
+    @AppStorage(CompletionSound.defaultsKey) private var playCompletionSound = true
     var body: some View {
         Form {
             Picker("Start view", selection: $defaultView) {
@@ -43,6 +44,7 @@ struct GeneralSettings: View {
                 if !store.projects.isEmpty { Divider(); ForEach(store.projects) { Text($0.name).tag(TaskScope.project($0.id).preferenceKey) } }
                 if !store.labels.isEmpty { Divider(); ForEach(store.labels) { Text($0.name).tag(TaskScope.label($0.id).preferenceKey) } }
             }
+            Toggle("Play sound on completion", isOn: $playCompletionSound).accessibilityIdentifier("playCompletionSound")
             Toggle("Task reminders", isOn: Binding(get: { store.remindersEnabled }, set: { enabled in if enabled { Task { await store.enableNotifications() } } else { store.disableNotifications() } }))
                 .disabled(!store.signedIn || store.requestingNotifications || store.requestingFocusAlerts)
             if store.requestingNotifications {

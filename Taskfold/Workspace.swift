@@ -66,6 +66,8 @@ struct Confirmation: Equatable {
     var message: String
     var undoable = true
     var historyRequest: EditHistoryRequest?
+    /// Second line for a celebration toast, such as "5 of 5 today".
+    var celebration: String? = nil
     var childCompletion: ChildTaskListCompletionUndo? = nil
     var childCompletionReview = false
     var mixedGroup: MixedTaskListUndo? = nil
@@ -182,9 +184,18 @@ final class Workspace {
     /// Presents the welcome tour.
     var onboarding = false
     var confirmation: Confirmation?
+    /// True while the pointer rests on the confirmation bar; the bar stays until it leaves.
+    var confirmationHovering = false
     var reduceMotion = false
     /// Tasks the user just checked. They stay visible for a beat so the check animation reads, then leave.
     var completing = Set<String>()
+    /// A row that stays on screen after it was checked. The data write, sync and undo registration already happened at
+    /// tap time; this only defers the visual exit. `before` is what the row looked like, `after` what the store holds now.
+    struct Lingering: Equatable { var before: Record; var after: Record; var scopeKey: String }
+    var lingering: [String: Lingering] = [:]
+    @ObservationIgnored private var lingerTimers: [String: Task<Void, Never>] = [:]
+    static let lingerDuration = 0.45
+    static let lingerReducedDuration = 0.15
     var calendarDay = Calendar.current.startOfDay(for: Date())
     var calendarMode: CalendarMode { didSet { UserDefaults.standard.set(calendarMode.rawValue, forKey: "calendarMode") } }
     @ObservationIgnored weak var undoManager: UndoManager?
@@ -295,6 +306,7 @@ final class Workspace {
         guard let undoManager else { return }
         undoManager.setActionName(name)
         undoManager.registerUndo(withTarget: self) { workspace in
+            workspace.dropAllLingering()
             withAnimation(workspace.layout) {
                 if undoManager.isUndoing { workspace.store.undo() } else { workspace.store.redo() }
             }
@@ -302,26 +314,109 @@ final class Workspace {
         }
     }
 
-    func confirm(_ message: String, undoable: Bool = true) {
+    func confirm(_ message: String, undoable: Bool = true, celebration: String? = nil) {
         childCompletionUndoID = nil; childGroupUndoID = nil; mixedGroupUndoID = nil
         confirmationTimer?.cancel()
-        withAnimation(layout) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil) }
+        confirmationHovering = false
+        withAnimation(toastAnimation) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil, celebration: celebration) }
         confirmationTimer = Task { [weak self] in
             #if DEBUG
-            let delay = ChildFieldNativeIdentity.mainListTesting && ProcessInfo.processInfo.arguments.contains("--child-fields-list-completion") ? 90.0 : 4.0
+            let delay = ChildFieldNativeIdentity.mainListTesting && ProcessInfo.processInfo.arguments.contains("--child-fields-list-completion") ? 90.0 : Self.toastLifetime
             #else
-            let delay = 4.0
+            let delay = Self.toastLifetime
             #endif
-            try? await Task.sleep(for: .seconds(delay))
+            // The countdown only advances while the pointer is away from the bar.
+            var remaining = delay
+            while remaining > 0 {
+                try? await Task.sleep(for: .milliseconds(100))
+                guard !Task.isCancelled, let self else { return }
+                if !self.confirmationHovering { remaining -= 0.1 }
+            }
             guard !Task.isCancelled, let self else { return }
-            withAnimation(self.layout) { self.confirmation = nil }
+            withAnimation(self.toastAnimation) { self.confirmation = nil }
         }
+    }
+    /// Same lifetime as the iOS undo toast.
+    static let toastLifetime = 5.0
+    var toastAnimation: Animation? { Motion.respecting(reduceMotion, Motion.settle) }
+    // MARK: Completion linger
+
+    /// Rows still showing their completed state. An entry whose record no longer matches what the commit produced
+    /// (the user undid it) is dropped at once so the row snaps back to normal.
+    func activeLingering(scopeKey: String) -> [Lingering] {
+        lingering.values.filter { $0.scopeKey == scopeKey && store.record("tasks", id: $0.before.id) == $0.after }
+    }
+    func isLingering(_ id: String) -> Bool {
+        guard let entry = lingering[id] else { return false }
+        return store.record("tasks", id: id) == entry.after
+    }
+    /// Starts the linger for a task that was just completed. Each task has its own timer, so quick successive checks
+    /// neither stack delays nor drop a completion.
+    private func beginLinger(_ before: Record) {
+        guard !before.completed, let after = store.record("tasks", id: before.id), after != before else { return }
+        lingerTimers[before.id]?.cancel()
+        lingering[before.id] = Lingering(before: before, after: after, scopeKey: section.key)
+        completing.insert(before.id)
+        let id = before.id
+        lingerTimers[id] = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(self?.reduceMotion == true ? Self.lingerReducedDuration : Self.lingerDuration))
+            guard !Task.isCancelled, let self else { return }
+            self.endLinger(id, animated: true)
+        }
+    }
+    /// Undo and redo restore every pending row to its true state at once.
+    func dropAllLingering() {
+        for task in lingerTimers.values { task.cancel() }
+        lingerTimers.removeAll(); lingering.removeAll(); completing.removeAll()
+    }
+    private func endLinger(_ id: String, animated: Bool) {
+        lingerTimers[id]?.cancel(); lingerTimers[id] = nil
+        if animated {
+            withAnimation(layout) { lingering[id] = nil; completing.remove(id) }
+        } else { lingering[id] = nil; completing.remove(id) }
+    }
+    /// A second click inside the window reopens the row instantly through the undo stack.
+    private func cancelLingerByUndo(_ id: String) -> Bool {
+        guard isLingering(id) else { endLinger(id, animated: false); return false }
+        endLinger(id, animated: false)
+        guard let manager = undoManager, manager.canUndo else { return false }
+        manager.undo()
+        return true
+    }
+
+    // MARK: Daily goal
+
+    /// Root tasks completed today. A cheap stand-in for the recorded-activity count, which needs an async read.
+    func completedTodayCount(calendar: Calendar = .current, now: Date = Date()) -> Int {
+        let start = calendar.startOfDay(for: now)
+        let plain = ISO8601DateFormatter(), fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return store.activeTasks.filter { task in
+            guard task.completed, case let stamp = task.string("completed_at"), let date = plain.date(from: stamp) ?? fractional.date(from: stamp) else { return false }
+            return date >= start && date <= now.addingTimeInterval(60)
+        }.count
+    }
+    /// Celebrates the completion that reaches today's target, once per day. Counts the user's root tasks completed today
+    /// in the goals' time zone; nothing shows when goals are off, on a rest day, or unavailable.
+    private func celebrateDailyGoalIfReached() {
+        guard store.insightsAvailable, let goals = store.productivityGoals else { return }
+        let now = Date()
+        guard let target = goals.target(on: now) else { return }
+        let calendar = goals.calendar
+        let key = TaskPlanner.dayKey(now, calendar: calendar)
+        let defaultsKey = "lastGoalCelebration." + store.userID
+        guard UserDefaults.standard.string(forKey: defaultsKey) != key else { return }
+        let count = completedTodayCount(calendar: calendar, now: now)
+        guard count == target else { return }
+        UserDefaults.standard.set(key, forKey: defaultsKey)
+        Feedback.celebrate()
+        confirm("Daily goal reached", celebration: "\(count) of \(target) today")
     }
     func undoFromConfirmation(_ request: EditHistoryRequest, confirmationID: UUID) {
         guard confirmation?.id == confirmationID, store.canApplyHistory(request), let manager = undoManager, manager.canUndo else { return }
         manager.undo()
         guard store.redoStack.last?.id == request.entry else { return }
-        confirmationTimer?.cancel(); withAnimation(layout) { confirmation = nil }
+        confirmationTimer?.cancel(); withAnimation(toastAnimation) { confirmation = nil }
     }
 
     var childGroupReview = false
@@ -492,21 +587,25 @@ final class Workspace {
     /// Persist completion before returning from the action, including an immediate app exit.
     func complete(_ task: Record) {
         guard TaskKind.mayComplete(task) else { store.error = "Headings stay open. Open the heading to edit its details."; return }
+        // Checking a row that is still lingering undoes its completion instead of completing it again.
+        if lingering[task.id] != nil, cancelLingerByUndo(task.id) { return }
         if store.childTaskCompletionEnabled, Self.subtaskPath(task.id) != nil { completeIndependentChild(task); return }
         if Self.subtaskPath(task.id) == nil, store.hasSharedTaskSelection([task.id]) {
             var saved = false
             run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { saved = store.toggleNativeTask(task) } }
             guard saved else { return }
             completing.remove(task.id)
-            if !task.completed { Feedback.complete() }
+            if !task.completed { Feedback.complete(); beginLinger(task) }
             confirm(task.completed ? "Reopened “\(task.title)”" : "Completed “\(task.title)”")
+            if !task.completed { celebrateDailyGoalIfReached() }
             return
         }
         if hierarchyPresentation {
             let now = Date()
             guard runSelection([task], name: task.completed ? "Reopen Task" : "Complete Task", action: { _ in .completion(!task.completed, now) }) else { return }
-            if !task.completed { Feedback.complete() }
+            if !task.completed { Feedback.complete(); beginLinger(task) }
             confirm(task.completed ? "Reopened “\(task.title)”" : "Completed “\(task.title)”")
+            if !task.completed { celebrateDailyGoalIfReached() }
             return
         }
         if Self.subtaskPath(task.id) != nil {
@@ -523,7 +622,7 @@ final class Workspace {
             withAnimation(layout) { saved = store.commit(store.toggleChanges(task)) }
         }
         guard saved else { return }
-        if !task.completed { Feedback.complete(); confirm("Completed “\(task.title)”") }
+        if !task.completed { Feedback.complete(); beginLinger(task); confirm("Completed “\(task.title)”"); celebrateDailyGoalIfReached() }
     }
     func toggle(_ ids: Set<String>) {
         if store.childTaskCompletionEnabled, ids.contains(where: { Self.subtaskPath($0) != nil }) {
