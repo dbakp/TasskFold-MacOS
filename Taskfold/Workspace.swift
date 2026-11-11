@@ -184,6 +184,8 @@ final class Workspace {
     var newProjectRequest = 0
     /// Presents the planning sheet for a day or a week.
     var planning: PlanKind?
+    /// Presents the end-of-day shutdown review.
+    var shuttingDown = false
     /// Presents the welcome tour.
     var onboarding = false
     var confirmation: Confirmation?

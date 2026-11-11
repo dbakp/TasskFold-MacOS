@@ -262,6 +262,7 @@ struct TaskListView: View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
             HStack(spacing: DS.Space.s) {
+                if scope == .today { DayPlanTodayPrompt(plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }) }
                 if scope == .today, let summary = momentum.summary, summary.chipText != nil { StreakChip(summary: summary, open: openInsights) }
                 Spacer(minLength: 0)
                 HStack(spacing: DS.Space.s) {
@@ -746,8 +747,8 @@ struct TaskListView: View {
             }
             if scope == .today || scope == .upcoming {
                 Button { workspace.planning = scope == .today ? .day : .week } label: { Label(scope == .today ? "Plan Your Day" : "Review This Week", systemImage: "sparkles") }
-                    .help(scope == .today ? "Triage overdue and today's tasks one at a time (⌥⌘P)" : "Review the next seven days one task at a time (⌥⌘W)")
-                    .disabled(workspace.planQueue(scope == .today ? .day : .week).isEmpty)
+                    .help(scope == .today ? "Triage, estimate and time-block today (⌥⌘P)" : "Review the next seven days one task at a time (⌥⌘W)")
+                    .disabled(scope == .upcoming && workspace.planQueue(.week).isEmpty)
                     .accessibilityIdentifier("planButton")
             }
             Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCaptureInList")
