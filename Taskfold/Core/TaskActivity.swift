@@ -1029,10 +1029,15 @@ struct ProductivityGoals: Equatable, Sendable {
     var activeWeekdays: Set<Int>
     var weekStart: Int
     var timeZone: String
+    /// Vacation mode: the current vacation (`vacation_from`/`vacation_until`) and up to ten past ranges. Read
+    /// leniently, so a malformed value never costs the user their goals; see Core/Momentum.swift.
+    var vacationFrom: String?
+    var vacationUntil: String?
+    var vacationRanges: [VacationRange]
     private var original: [String:JSON]
     init(document:JSON = .null, calendar:Calendar = .current) throws {
         if document == .null {
-            dailyTarget=0;weeklyTarget=0;activeWeekdays=Set(2...6);weekStart=2;timeZone=calendar.timeZone.identifier;original=[:];return
+            dailyTarget=0;weeklyTarget=0;activeWeekdays=Set(2...6);weekStart=2;timeZone=calendar.timeZone.identifier;original=[:];vacationFrom=nil;vacationUntil=nil;vacationRanges=[];return
         }
         guard case .object(let fields)=document, fields["version"] == .number(1),
               let data=try? TaskfoldJSONEncoder().encode(document),data.count<=4096 else { throw AppFailure(message:"These goals need a newer Taskfold version. Your settings are preserved.") }
@@ -1046,14 +1051,17 @@ struct ProductivityGoals: Equatable, Sendable {
               Set(days.map(\.integer)).count==days.count,
               case .string(let zone)=fields["time_zone"],TimeZone(identifier:zone) != nil else { throw AppFailure(message:"Choose a supported time zone and distinct weekdays.") }
         activeWeekdays=Set(days.map(\.integer));timeZone=zone;original=fields
+        let vacation=Self.readVacation(fields);vacationFrom=vacation.from;vacationUntil=vacation.until;vacationRanges=vacation.ranges
         guard dailyTarget==0 || !activeWeekdays.isEmpty else { throw AppFailure(message:"Choose at least one active day, or turn off the daily goal.") }
     }
     var document:JSON {
-        .object(original.merging(["version":.number(1),"daily_target":.number(Double(dailyTarget)),"weekly_target":.number(Double(weeklyTarget)),"active_weekdays":.array(activeWeekdays.sorted().map{.number(Double($0))}),"week_start":.number(Double(weekStart)),"time_zone":.string(timeZone)]){_,new in new})
+        var fields=original.merging(["version":.number(1),"daily_target":.number(Double(dailyTarget)),"weekly_target":.number(Double(weeklyTarget)),"active_weekdays":.array(activeWeekdays.sorted().map{.number(Double($0))}),"week_start":.number(Double(weekStart)),"time_zone":.string(timeZone)]){_,new in new}
+        for key in Self.vacationFields { fields[key]=nil }
+        return .object(fields.merging(vacationDocumentFields()){_,new in new})
     }
     var calendar:Calendar { var value=Calendar(identifier:.gregorian);value.timeZone=TimeZone(identifier:timeZone) ?? .gmt;value.firstWeekday=(1...7).contains(weekStart) ? weekStart : 2;return value }
     func target(on day:Date) -> Int? { dailyTarget>0 && activeWeekdays.contains(calendar.component(.weekday,from:day)) ? dailyTarget : nil }
-    func validated() throws -> Self { try Self(document:document) }
+    func validated() throws -> Self { try checkVacation();return try Self(document:document) }
     static func row(_ snapshot:Snapshot,account:String) -> Record? { snapshot.tables["view_preferences"]?.first{$0.id==recordID && $0.string("user_id")==account} }
 }
 
@@ -1238,7 +1246,7 @@ enum ProductivityGoalEdit {
         _ = try ProductivityGoals(document:desired);_ = try ProductivityGoals(document:remote)
         guard desired != .null,remote != .null else { return desired }
         var result=remote.object
-        for key in ["version","daily_target","weekly_target","active_weekdays","week_start","time_zone"] { result[key]=desired.object[key] }
+        for key in ["version","daily_target","weekly_target","active_weekdays","week_start","time_zone"]+ProductivityGoals.vacationFields { result[key]=desired.object[key] }
         return try ProductivityGoals(document:.object(result)).document
     }
     static func resolving(_ conflict:SyncConflict,snapshot:Snapshot,keepLocal:Bool) -> Snapshot? {
@@ -1867,12 +1875,14 @@ struct PreparedInsights: Sendable {
     let input: Input
     private let personal7: InsightsReading, personal28: InsightsReading
     private let workspace7: InsightsReading, workspace28: InsightsReading
+    /// Personal streaks, score and level, from the same single history fold.
+    let momentum: MomentumSummary
     init(_ input: Input, shouldStop: () -> Bool = { Task.isCancelled }) throws {
         self.input = input
         _ = try input.goals.validated()
         if shouldStop() { throw CancellationError() }
         let workspace = InsightsReading(account: input.account, activity: input.activity, epoch: input.epoch,
-            goals: input.goals, scope: .workspace, accessibleProjects: input.accessibleProjects, windowDays: 28,
+            goals: input.goals, scope: .workspace, accessibleProjects: input.accessibleProjects, windowDays: Momentum.windowDays,
             now: input.now, children: input.children, shouldStop: shouldStop)
         if shouldStop() { throw CancellationError() }
         var personal = workspace
@@ -1889,14 +1899,15 @@ struct PreparedInsights: Sendable {
                 incomplete: workspace.historyIncomplete, count: value.count)
             return value
         }
-        func week(_ reading: InsightsReading) -> InsightsReading {
+        func window(_ reading: InsightsReading, days: Int) -> InsightsReading {
             var value = reading
-            value.windowStart = input.goals.calendar.date(byAdding: .day, value: -7, to: reading.windowEnd)!
+            value.windowStart = input.goals.calendar.date(byAdding: .day, value: -days, to: reading.windowEnd)!
             value.days = reading.days.filter { $0.date >= value.windowStart }
             return value
         }
-        workspace28 = workspace; workspace7 = week(workspace)
-        personal28 = personal; personal7 = week(personal)
+        momentum = Momentum.summary(reading: personal, goals: input.goals, now: input.now)
+        workspace28 = window(workspace, days: 28); workspace7 = window(workspace, days: 7)
+        personal28 = window(personal, days: 28); personal7 = window(personal, days: 7)
         if shouldStop() { throw CancellationError() }
     }
     func reading(scope: InsightsReading.Scope, windowDays: Int) -> InsightsReading {

@@ -396,21 +396,35 @@ final class Workspace {
             return date >= start && date <= now.addingTimeInterval(60)
         }.count
     }
-    /// Celebrates the completion that reaches today's target, once per day. Counts the user's root tasks completed today
-    /// in the goals' time zone; nothing shows when goals are off, on a rest day, or unavailable.
+    /// Celebrates the completion that reaches today's target, once per day, and Momentum milestones (a 7, 30, 100 or 365-day
+    /// streak, or a new level). Counts the user's root tasks completed today in the goals' time zone; nothing shows when goals
+    /// are off, on a rest day with no milestone, on vacation, or unavailable. At most one celebration per completion.
     private func celebrateDailyGoalIfReached() {
-        guard store.insightsAvailable, let goals = store.productivityGoals else { return }
+        guard store.insightsAvailable, let goals = store.productivityGoals, goals.dailyTarget > 0 else { return }
         let now = Date()
-        guard let target = goals.target(on: now) else { return }
-        let calendar = goals.calendar
-        let key = TaskPlanner.dayKey(now, calendar: calendar)
-        let defaultsKey = "lastGoalCelebration." + store.userID
-        guard UserDefaults.standard.string(forKey: defaultsKey) != key else { return }
-        let count = completedTodayCount(calendar: calendar, now: now)
-        guard count == target else { return }
-        UserDefaults.standard.set(key, forKey: defaultsKey)
-        Feedback.celebrate()
-        confirm("Daily goal reached", celebration: "\(count) of \(target) today")
+        guard goals.vacationStatus(now: now) == .off else { return }
+        var reached: String?
+        if let target = goals.target(on: now) {
+            let calendar = goals.calendar
+            let key = TaskPlanner.dayKey(now, calendar: calendar)
+            let defaultsKey = "lastGoalCelebration." + store.userID
+            if UserDefaults.standard.string(forKey: defaultsKey) != key {
+                let count = completedTodayCount(calendar: calendar, now: now)
+                if count == target {
+                    UserDefaults.standard.set(key, forKey: defaultsKey)
+                    reached = "\(count) of \(target) today"
+                }
+            }
+        }
+        let summary = Momentum.summary(account: store.userID, activity: store.rows(TaskActivity.table), epoch: store.rows(TaskActivity.epochTable),
+                                       goals: goals, children: store.childActivityHistory, now: now)
+        let milestone = MomentumCelebration.milestone(summary: summary, goals: goals, todayCount: summary.week.last?.count ?? 0, account: store.userID, now: now)
+        switch (reached, milestone) {
+        case let (goal?, milestone?): Feedback.celebrate(); confirm("Daily goal reached", celebration: goal + " · " + milestone.short)
+        case let (goal?, nil): Feedback.celebrate(); confirm("Daily goal reached", celebration: goal)
+        case let (nil, milestone?): Feedback.celebrate(); confirm(milestone.title, celebration: milestone.detail)
+        case (nil, nil): break
+        }
     }
     func undoFromConfirmation(_ request: EditHistoryRequest, confirmationID: UUID) {
         guard confirmation?.id == confirmationID, store.canApplyHistory(request), let manager = undoManager, manager.canUndo else { return }

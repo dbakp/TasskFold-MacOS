@@ -244,9 +244,25 @@ struct RootView: View {
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
                         try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
                     }
+                } else if arguments.contains("--capture-momentum") {
+                    // Insights hosted alone (a sheet cannot be captured with the window): add --momentum-fixture=streak|vacation.
+                    let request = InsightsRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+                    let size = NSSize(width: 700, height: 1400)
+                    let host = NSHostingView(rootView: InsightsView(request: request).environment(store).environment(workspace).frame(width: size.width, height: size.height).background(Color(nsColor: .windowBackgroundColor)))
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(4))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
+                    }
                 } else if option("capture-toast") != nil {
                     // The bottom bar hosted alone: --capture-toast=goal shows the daily-goal celebration.
-                    let toast = Confirmation(message: "Daily goal reached", celebration: "5 of 5 today")
+                    // =streak shows a milestone alone, =combined a goal that lands with one, =level a level-up.
+                    let kind = option("capture-toast") ?? "goal"
+                    let toast = kind == "streak" ? Confirmation(message: MomentumMilestone.streak(7).title, celebration: MomentumMilestone.streak(7).detail)
+                        : kind == "level" ? Confirmation(message: MomentumMilestone.level(name: "Focused").title, celebration: MomentumMilestone.level(name: "Focused").detail)
+                        : kind == "combined" ? Confirmation(message: "Daily goal reached", celebration: "3 of 3 today · " + MomentumMilestone.streak(7).short)
+                        : Confirmation(message: "Daily goal reached", celebration: "5 of 5 today")
                     let host = NSHostingView(rootView: ConfirmationBar(confirmation: toast).environment(store).environment(workspace).frame(width: 640, height: 56).background(Color(nsColor: .windowBackgroundColor)))
                     let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 640, height: 56), styleMask: [.borderless], backing: .buffered, defer: false)
                     panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
@@ -596,6 +612,8 @@ struct RootView: View {
             }
             var inbox = Record.task(user: "preview"); inbox["title"] = .string("Read that article about slow productivity"); samples.append(inbox)
             store.snapshot.tables["tasks"] = samples
+            // Momentum captures: --momentum-fixture=streak|vacation|milestone adds a recorded history and goals.
+            if let value = MomentumFixture.variant(arguments) { MomentumFixture.apply(to: &store.snapshot, account: store.userID, variant: value) }
             // Empty-state captures: --empty-fixture removes every task; =done leaves only one finished today.
             if let value = option("empty-fixture") ?? (arguments.contains("--empty-fixture") ? "" : nil) {
                 store.snapshot.tables["tasks"] = []
