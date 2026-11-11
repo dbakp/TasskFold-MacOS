@@ -353,7 +353,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let choice = app.buttons["referenceSuggestion-due_time:planning:in the morning"]; XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.click(); app.buttons["Add Task"].click()
         app.buttons["Inbox"].firstMatch.click(); XCTAssertTrue(app.staticTexts["Clock plan"].waitForExistence(timeout: 5))
         app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock shift at midnight")
-        let rollover = app.descendants(matching: .any).matching(identifier: "chip-due_time").firstMatch
+        let rollover = app.buttons["quickChipDate"]
         XCTAssertTrue(rollover.waitForExistence(timeout: 5)); XCTAssertTrue(rollover.label.contains("Tomorrow")); app.buttons["Add Task"].click()
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.staticTexts["Clock plan"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["Clock shift"].exists); XCTAssertTrue(app.staticTexts["Literal clock at 13pm"].exists)
     }
@@ -1240,6 +1240,21 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("z", modifierFlags: .command)
         sleep(1)
         XCTAssertGreaterThan(delta.frame.minY, gamma.frame.minY, "Undo restores the previous order in one step")
+    }
+
+    /// The composer shows the property chips; a manual choice replaces the parsed token and its words stay in the title.
+    @MainActor func testQuickAddPropertyChipsAndManualPriority() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
+        app.typeKey("n", modifierFlags: .command)
+        XCTAssertTrue(app.textFields["quickAdd"].waitForExistence(timeout: 5))
+        for id in ["quickChipDate", "quickChipPriority", "quickChipLabels", "quickChipReminders", "quickChipMore"] { XCTAssertTrue(app.buttons[id].exists, id) }
+        app.typeText("Chip capture p1")
+        XCTAssertTrue(app.buttons["decline-priority"].waitForExistence(timeout: 5))
+        app.buttons["quickChipPriority"].click()
+        app.buttons["taskPriority-2"].click()
+        XCTAssertTrue(waitForDisappearance(app.buttons["decline-priority"], timeout: 3), "A chosen priority replaces the parsed token")
+        XCTAssertTrue(app.buttons["quickChipPriority"].label.contains("P2"))
     }
 
     /// Declining the date chip keeps "tomorrow" in the title while the priority chip still applies.

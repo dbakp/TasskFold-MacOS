@@ -54,6 +54,9 @@ enum DS {
         static var dateTomorrow: Color { .orange }
         static var dateThisWeek: Color { .purple }
         static var dateLater: Color { textSecondary }
+        /// Quick Add highlight roles: `#project` and `/section`, and `@label`.
+        static var accentSecondary: Color { .teal }
+        static var label: Color { .purple }
         static func priority(_ value: Int) -> Color { Color.priority(value) }
         static var accent: Color { Color.taskfold }
         /// Accent at 0.14 (light) / 0.22 (dark). A selected row keeps `textPrimary`, never white on light grey.
