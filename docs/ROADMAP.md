@@ -158,7 +158,7 @@ Finish, hide or cut each of these:
 I'd finish the subtask migration, because it protects data. The rest should ship only if you actually want them.
 
 ### Phase 4: beyond Todoist (secondary)
-- A Things-style "This Evening" slot and a "Someday" list.
+- ~~A Things-style "This Evening" slot and a "Someday" list.~~ Done: [Mac #128](https://github.com/dbakp/TasskFold-MacOS/pull/128), [iOS #129](https://github.com/dbakp/TaskFold-iOS/pull/129). State lives in `view_orders` rows; no schema change.
 - A Structured or Sunsama-style daily time-blocking flow, built on the existing hourly planner.
 - A TickTick-style habit tracker and a Pomodoro timer that reuses Focus sessions.
 - On-device Apple Intelligence: capture a voice note as several tasks, or get a smart reschedule of overdue work.
