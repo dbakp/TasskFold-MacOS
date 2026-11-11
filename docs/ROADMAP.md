@@ -38,8 +38,8 @@ Draft, 10 November 2026. Based on `TasskFold-MacOS@a43fca03` and `TaskFold-iOS@e
 ### Remaining Todoist gaps (to confirm against Todoist's current help centre before Phase 2)
 | Gap | Mac | iOS |
 |---|---|---|
-| Global Quick Add hotkey from any app | built on branch feat/global-quick-add (Mac only; real hotkey press not yet exercised) | n/a |
-| Menu bar extra (quick add and Today) | built on branch feat/global-quick-add (Mac only) | n/a |
+| Global Quick Add hotkey from any app | missing | n/a |
+| Menu bar extra (quick add and Today) | missing | n/a |
 | Server push reminders (cross-device, app closed) | deferred | deferred |
 | Two-way Google/Outlook calendar sync | read-only, no provider IDs | same |
 | Karma, streaks and vacation mode (on top of goals) | missing | missing |
@@ -138,7 +138,7 @@ Rules that keep this token-efficient without losing quality:
    - Open: Mac UI tests sign with the personal team (push and time-sensitive entitlements stripped locally), but unattended runs need UI automation enabled without a password prompt. Three iOS UI tests fail on `main` in the task editor (assignee behind "+", estimate stepper height, completion undo).
 
 ### Phase 2: close the Todoist gaps (about 9 updates)
-1. Mac global Quick Add hotkey (user-configurable) and a menu bar extra with Today and quick add. Built (`feat/global-quick-add`, specs/GLOBAL_QUICK_ADD.md); tick when merged.
+1. Mac global Quick Add hotkey (user-configurable) and a menu bar extra with Today and quick add.
 2. Real-time sync feel: live updates, sync-status indicator and no manual refresh in normal use.
 3. Server push reminders. Turn on the existing APNs worker after your sign-off on hosted services.
 4. Karma or productivity score, streaks and vacation mode, built on the existing goals and insights.
