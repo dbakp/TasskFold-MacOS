@@ -230,3 +230,21 @@ struct WrappingMetadataLabelStyle: LabelStyle {
         }
     }
 }
+
+/// A soft accent tint on a row another device or a collaborator just changed. It appears at once and fades out
+/// over about 1.5 s. Opacity only, so Reduce Motion needs no alternative. Never used for this device's own edits.
+struct RemoteChangeHighlight: ViewModifier {
+    @Environment(Store.self) private var store
+    let id: String
+    func body(content: Content) -> some View {
+        let active = store.remoteHighlightIDs.contains(id)
+        content.background {
+            Rectangle().fill(Color.taskfold.opacity(active ? 0.10 : 0))
+                .animation(active ? .easeOut(duration: 0.12) : .easeOut(duration: SyncTiming.remoteHighlightFade), value: active)
+                .allowsHitTesting(false)
+        }
+    }
+}
+extension View {
+    func remoteChangeHighlight(_ id: String) -> some View { modifier(RemoteChangeHighlight(id: id)) }
+}

@@ -100,7 +100,7 @@ struct RootView: View {
             await store.reschedule()
             await store.sync()
             while !Task.isCancelled {
-                do { try await Task.sleep(for: .seconds(60)) } catch { return }
+                do { try await Task.sleep(for: .seconds(store.pollInterval)) } catch { return }
                 await store.reschedule()
                 await store.sync()
             }
@@ -110,11 +110,7 @@ struct RootView: View {
             #if DEBUG
             if ChildFieldNativeIdentity.mainListTesting { return }
             #endif
-            while !Task.isCancelled {
-                do { try await store.backend.watchChanges { await store.sync() } }
-                catch { if Task.isCancelled { return } }
-                try? await Task.sleep(for: .seconds(5))
-            }
+            await store.runRealtime()
         }
         .task(id: "focus-finished-\(NotificationRoute.shared.focusReceipt?.signature ?? "")-\(store.workspaceGeneration)-\(store.widgetPublicationRevision)") {
             guard let receipt = NotificationRoute.shared.focusReceipt, store.signedIn || store.localMode else { return }
@@ -227,6 +223,10 @@ struct RootView: View {
             }
         }
         if arguments.contains("--preview") { Task { try? await Task.sleep(for: .milliseconds(400)); NSApp.windows.first { $0.isVisible }?.setContentSize(NSSize(width: 1380, height: 840)) } }
+        if arguments.contains("--remote-highlight-preview") {
+            // Screenshot fixture: tint the first two visible tasks as if another device had just changed them.
+            Task { try? await Task.sleep(for: .seconds(1.5)); store.previewRemoteHighlight(Set(store.tasks.prefix(2).map(\.id))) }
+        }
         if let value = option("calendar-mode"), let mode = CalendarMode(rawValue: value) { workspace.calendarMode = mode }
         if let value = option("appearance") { NSApp.appearance = NSAppearance(named: value == "dark" ? .darkAqua : .aqua) }
         if let title = option("select-title") {
@@ -249,6 +249,17 @@ struct RootView: View {
                     let toast = Confirmation(message: "Daily goal reached", celebration: "5 of 5 today")
                     let host = NSHostingView(rootView: ConfirmationBar(confirmation: toast).environment(store).environment(workspace).frame(width: 640, height: 56).background(Color(nsColor: .windowBackgroundColor)))
                     let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 640, height: 56), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(1.5))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
+                    }
+                } else if let state = option("capture-sync-status") {
+                    // The sidebar footer hosted alone: --capture-sync-status=synced|syncing|offline|pending.
+                    let host = NSHostingView(rootView: SyncFooter(preview: state).environment(store).environment(workspace).frame(width: 260).background(Color(nsColor: .windowBackgroundColor)))
+                    let size = NSSize(width: 260, height: ceil(host.fittingSize.height))
+                    host.frame = NSRect(origin: .zero, size: size)
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
                     panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
                     try? await Task.sleep(for: .seconds(1.5))
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {

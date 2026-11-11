@@ -437,7 +437,7 @@ final class SyncStatusTests: XCTestCase {
     func testLocalOfflineAndInFlightStatesTakePrecedence() {
         let date = Date()
         XCTAssertEqual(SyncStatus.presentation(local: true, online: false, syncing: false, needsAttention: true, pending: 2, lastSync: date).title, "Saved on this device")
-        XCTAssertEqual(SyncStatus.presentation(local: false, online: false, syncing: false, needsAttention: true, pending: 2, lastSync: date).symbol, "wifi.slash")
+        XCTAssertEqual(SyncStatus.presentation(local: false, online: false, syncing: false, needsAttention: true, pending: 2, lastSync: date).symbol, "icloud.slash")
         XCTAssertEqual(SyncStatus.presentation(local: false, online: true, syncing: true, needsAttention: true, pending: 2, lastSync: date).title, "Syncing…")
         XCTAssertEqual(SyncStatus.presentation(local: false, online: true, syncing: false, needsAttention: false, pending: 0, lastSync: date).symbol, "checkmark.icloud")
     }

@@ -206,35 +206,60 @@ struct TaskDropTarget<Content: View>: View {
 struct SyncFooter: View {
     @Environment(Store.self) private var store
     @State private var reviewing = false
+    /// Screenshot fixture (`--capture-sync-status=synced|syncing|offline|pending`); nil in the app.
+    var preview: String? = nil
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Divider()
             HStack(spacing: 6) {
-                Image(systemName: symbol)
-                    .foregroundStyle(store.notice != nil ? .orange : .secondary)
-                    .id(symbol).transition(.iconSwap)
-                Group {
-                    if store.syncing { ShimmerText(text: "Syncing…") }
-                    else { Text(status).lineLimit(2).fixedSize(horizontal: false, vertical: true).id(status).transition(.textSwap).accessibilityIdentifier("syncStatus") }
+                Button { Task { await store.sync() } } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: symbol)
+                            .foregroundStyle(store.notice != nil && preview == nil ? .orange : .secondary)
+                            .symbolEffect(.pulse, options: .repeating, isActive: presentation.state == .syncing) // opacity only: no spinning
+                            .id(symbol).transition(.iconSwap)
+                        Group {
+                            if presentation.state == .syncing { ShimmerText(text: status) }
+                            else { Text(status).lineLimit(2).fixedSize(horizontal: false, vertical: true).id(status).transition(.textSwap) }
+                        }
+                        Spacer(minLength: 0)
+                    }.contentShape(.rect)
                 }
-                Spacer(minLength: 0)
-                if store.syncConflict != nil { Button("Review") { reviewing = true }.buttonStyle(.link).font(.caption).accessibilityIdentifier("reviewSyncConflict") }
-                else if store.canSignInForSync && store.focusSyncConflict == nil { SyncSignInButton().buttonStyle(.link).font(.caption) }
-                else if store.notice != nil && store.focusSyncConflict == nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
+                .buttonStyle(.plain).disabled(!canSyncNow)
+                .accessibilityLabel(status).accessibilityValue(presentation.help ?? "")
+                .accessibilityIdentifier("syncStatus")
+                if preview == nil {
+                    if store.syncConflict != nil { Button("Review") { reviewing = true }.buttonStyle(.link).font(.caption).accessibilityIdentifier("reviewSyncConflict") }
+                    else if store.canSignInForSync && store.focusSyncConflict == nil { SyncSignInButton().buttonStyle(.link).font(.caption) }
+                    else if store.notice != nil && store.focusSyncConflict == nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
+                }
             }
             .font(.caption).foregroundStyle(.secondary)
             .padding(.horizontal, 14).padding(.vertical, 8)
             .animation(Transitions.Ease.smoothOut, value: symbol)
             .animation(Transitions.Ease.smoothOut, value: status)
-            .help(store.notice ?? (store.localMode ? "Tasks are stored only on this Mac." : "Changes sync to your Taskfold account."))
-            TeamAudioRestoreRecoveryButton().buttonStyle(.link).font(.caption).padding(.horizontal, 14).padding(.bottom, 8)
+            .help(helpText)
+            if preview == nil { TeamAudioRestoreRecoveryButton().buttonStyle(.link).font(.caption).padding(.horizontal, 14).padding(.bottom, 8) }
         }
         .background(.bar)
         .sheet(isPresented: $reviewing) { if let conflict = store.syncConflict { ConflictReview(conflict: conflict) } }
     }
+    private var canSyncNow: Bool { preview != nil || (!store.localMode && store.signedIn && store.online && !store.syncing) }
     private var presentation: SyncStatus.Presentation {
-        SyncStatus.presentation(local: store.localMode, online: store.online, syncing: store.syncing,
-                                needsAttention: store.notice != nil || store.canSignInForSync, pending: store.pendingCount, lastSync: store.lastSync)
+        #if DEBUG
+        if let preview {
+            return SyncStatus.presentation(local: false, online: preview != "offline", syncing: preview == "syncing", needsAttention: false,
+                                           pending: preview == "offline" ? 3 : preview == "pending" ? 2 : 0, lastSync: Date())
+        }
+        #endif
+        return SyncStatus.presentation(local: store.localMode, online: store.online, syncing: store.syncIndicatorVisible,
+                                       needsAttention: store.notice != nil || store.canSignInForSync, pending: store.pendingCount, lastSync: store.lastSync)
+    }
+    private var helpText: String {
+        if preview == nil, let notice = store.notice { return notice }
+        if store.localMode && preview == nil { return "Tasks are stored only on this Mac." }
+        let detail = presentation.help ?? presentation.title
+        return canSyncNow && presentation.state != .syncing ? detail + ". Click to sync now (⌘R)." : detail
     }
     private var symbol: String { presentation.symbol }
     private var status: String { presentation.title }

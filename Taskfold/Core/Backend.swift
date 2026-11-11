@@ -36,19 +36,30 @@ struct AccountReauthenticationMismatch: LocalizedError {
 /// Explain transport interruptions without presenting internal networking codes.
 /// This describes already-persisted sync work, not an unsaved editor draft.
 enum SyncStatus {
+    enum State: Equatable { case local, synced, syncing, offline, pending, needsAttention, waiting }
     struct Presentation {
         let title: String
         let symbol: String
+        var state: State = .waiting
+        /// Secondary detail for hover or long-press, such as "Synced just now".
+        var help: String? = nil
     }
+    private static func changes(_ count: Int) -> String { "\(count) \(count == 1 ? "change" : "changes")" }
     /// A prior successful sync never overrides a current interruption or unsent work.
-    static func presentation(local: Bool, online: Bool, syncing: Bool, needsAttention: Bool, pending: Int, lastSync: Date?) -> Presentation {
-        if local { return Presentation(title: "Saved on this device", symbol: "internaldrive") }
-        if !online { return Presentation(title: "Offline · saved on this device", symbol: "wifi.slash") }
-        if syncing { return Presentation(title: "Syncing…", symbol: "arrow.triangle.2.circlepath") }
-        if needsAttention { return Presentation(title: "Sync needs attention", symbol: "exclamationmark.icloud") }
-        if pending > 0 { return Presentation(title: "\(pending) \(pending == 1 ? "change" : "changes") waiting to sync", symbol: "icloud") }
-        if let lastSync { return Presentation(title: "Synced \(lastSync.formatted(date: .omitted, time: .shortened))", symbol: "checkmark.icloud") }
-        return Presentation(title: "Waiting to sync", symbol: "icloud")
+    /// `syncing` should already be debounced so brief syncs never flicker.
+    static func presentation(local: Bool, online: Bool, syncing: Bool, needsAttention: Bool, pending: Int, lastSync: Date?, now: Date = Date()) -> Presentation {
+        if local { return Presentation(title: "Saved on this device", symbol: "internaldrive", state: .local) }
+        if !online {
+            let title = pending > 0 ? "Offline. \(changes(pending)) will sync when you're back online." : "Offline. Changes will sync when you're back online."
+            return Presentation(title: title, symbol: "icloud.slash", state: .offline)
+        }
+        if syncing { return Presentation(title: "Syncing…", symbol: "arrow.triangle.2.circlepath.icloud", state: .syncing) }
+        if needsAttention { return Presentation(title: "Sync needs attention", symbol: "exclamationmark.icloud", state: .needsAttention) }
+        if pending > 0 { return Presentation(title: "\(changes(pending)) waiting to sync", symbol: "icloud", state: .pending) }
+        if let lastSync {
+            return Presentation(title: "Synced", symbol: "checkmark.icloud", state: .synced, help: "Synced \(relativeDescription(of: lastSync, now: now))")
+        }
+        return Presentation(title: "Waiting to sync", symbol: "icloud", state: .waiting)
     }
     static func failureMessage(_ error: Error) -> String {
         if error is SavedTaskWriteUnconfirmed {
@@ -1754,7 +1765,9 @@ final class Backend: NSObject {
 
 extension Backend {
     /// Supabase Realtime signals a refresh; the REST snapshot remains the source of truth.
-    func watchChanges(onChange: @escaping @MainActor () async -> Void) async throws {
+    /// `onJoined` runs once the server has confirmed the subscription; `onChange` runs for every change event.
+    func watchChanges(onJoined: @escaping @MainActor () async -> Void = {},
+                      onChange: @escaping @MainActor () async -> Void) async throws {
         try await refreshIfNeeded()
         guard let session else { return }
         var components = URLComponents(string: baseURL.replacingOccurrences(of: "https://", with: "wss://") + "/realtime/v1/websocket")!
@@ -1778,14 +1791,21 @@ extension Backend {
             }
         }
         defer { heartbeat.cancel() }
+        var joined = false
         try await withTaskCancellationHandler {
             while !Task.isCancelled {
                 let message = try await socket.receive()
                 let data: Data
                 switch message { case .data(let bytes): data = bytes; case .string(let text): data = Data(text.utf8); @unknown default: continue }
                 let event = try TaskfoldJSONDecoder().decode(Record.self, from: data)
-                if event.string("event") == "postgres_changes" { await onChange() }
-                if event.string("event") == "phx_error" { throw AppFailure(message: "Realtime connection interrupted.") }
+                switch event.string("event") {
+                case "postgres_changes": await onChange()
+                case "phx_reply" where event.string("ref") == "1":
+                    guard event["payload"].object["status"]?.text == "ok" else { throw AppFailure(message: "Realtime subscription was refused.") }
+                    if !joined { joined = true; await onJoined() }
+                case "phx_error", "phx_close": throw AppFailure(message: "Realtime connection interrupted.")
+                default: break
+                }
             }
         } onCancel: { socket.cancel(with: .goingAway, reason: nil) }
     }
