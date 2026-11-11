@@ -9,6 +9,7 @@ struct TaskfoldMacApp: App {
     /// Read here so a new accent re-renders the scene; `Color.taskfold` resolves it everywhere else.
     @AppStorage("accent") private var accent = "rose"
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+    @AppStorage(GlobalQuickAddSettings.menuBarKey) private var showInMenuBar = true
     private var tint: Color { Color.adaptiveAccent(accent) }
 
     init() {
@@ -24,7 +25,23 @@ struct TaskfoldMacApp: App {
         let store = Store.shared
         NativeCalendarAuthorization.install()
         _store = State(initialValue: store)
-        _workspace = State(initialValue: Workspace(store: store))
+        let workspace = Workspace(store: store)
+        _workspace = State(initialValue: workspace)
+        // The global Quick Add hot key works with every window closed, so it starts with the app rather than a view.
+        var registersHotKey = true
+        #if DEBUG
+        let launch = ProcessInfo.processInfo.arguments
+        registersHotKey = !launch.contains("--uitesting") && !launch.contains { $0.hasPrefix("--capture") }
+        #endif
+        GlobalQuickAddController.shared.start(store: store, workspace: workspace, registersHotKey: registersHotKey)
+    }
+
+    private var menuBarInserted: Binding<Bool> {
+        #if DEBUG
+        // UI-test hosts get no menu bar item, so a fixture run never leaves one behind.
+        if ProcessInfo.processInfo.arguments.contains("--uitesting") { return .constant(false) }
+        #endif
+        return $showInMenuBar
     }
 
     @ViewBuilder private var mainContent: some View {
@@ -80,6 +97,14 @@ struct TaskfoldMacApp: App {
         .windowToolbarStyle(.unified)
         .commands { TaskfoldCommands(workspace: workspace, store: store) }
 
+        MenuBarExtra(isInserted: menuBarInserted) {
+            MenuBarContent().environment(store).environment(workspace)
+        } label: {
+            // A template symbol, so the system tints it for light, dark and tinted menu bars.
+            Image(systemName: "checkmark.circle")
+        }
+        .menuBarExtraStyle(.window)
+
         Settings {
             #if DEBUG
             if WorkflowUndoNativePeer.enabled {
@@ -125,6 +150,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             }
         }
         return .terminateLater
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        MainActor.assumeIsolated { GlobalQuickAddController.shared.stop() }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

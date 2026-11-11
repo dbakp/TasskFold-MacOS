@@ -254,6 +254,31 @@ struct RootView: View {
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
                         try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
                     }
+                } else if arguments.contains("--capture-global-quick-add") || arguments.contains("--capture-menu-bar") {
+                    // The floating panel and the menu bar window are separate NSWindows, so host their content alone.
+                    // --capture-global-quick-add shows the composer (add --global-confirm for the "Added to Inbox" moment);
+                    // --capture-menu-bar shows today's list (--menu-bar-text=... pre-fills its Add field).
+                    let menuBar = arguments.contains("--capture-menu-bar")
+                    let width: CGFloat = menuBar ? 320 : 540
+                    let frame: Color = Color(nsColor: .windowBackgroundColor)
+                    let content: AnyView = menuBar
+                        ? AnyView(MenuBarContent(initialText: option("menu-bar-text") ?? "", staticHint: true))
+                        : AnyView(GlobalQuickAddCaptureHost(text: option("quick-add-text") ?? "Call Anna tomorrow at 4pm #Work p1", confirm: arguments.contains("--global-confirm")))
+                    let host = NSHostingView(rootView: content.environment(store).environment(workspace)
+                        .clipShape(.rect(cornerRadius: DS.Radius.l, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).strokeBorder(DS.Palette.separator, lineWidth: 0.5))
+                        .padding(DS.Space.xxl).background(frame))
+                    host.safeAreaRegions = []
+                    let size = NSSize(width: width + 2 * DS.Space.xxl, height: ceil(host.fittingSize.height))
+                    host.frame = NSRect(origin: .zero, size: size)
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(1.5))
+                    let fitted = NSSize(width: size.width, height: ceil(host.fittingSize.height))
+                    if fitted.height != size.height { panel.setContentSize(fitted); host.frame = NSRect(origin: .zero, size: fitted); try? await Task.sleep(for: .seconds(0.5)) }
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
+                    }
                 } else if arguments.contains("--capture-quick-add") {
                     // The sheet cannot be captured with the window, so host the composer alone, pre-filled with --quick-add-text.
                     let sample = option("quick-add-text") ?? "Call Anna tomorrow at 4pm #Work @calls p1 !30m"
