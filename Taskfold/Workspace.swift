@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 /// One entry in the sidebar. Task sections map onto the shared `TaskScope`; Calendar is its own surface.
 enum SidebarItem: Hashable {
-    case today, inbox, upcoming, calendar, all, completed, assigned, project(String), label(String), saved(String)
+    case today, inbox, upcoming, calendar, all, completed, assigned, someday, project(String), label(String), saved(String)
     var scope: TaskScope? {
         switch self {
         case .today: return .today
@@ -15,13 +15,14 @@ enum SidebarItem: Hashable {
         case .project(let id): return .project(id)
         case .label(let id): return .label(id)
         case .saved(let id): return .saved(id)
-        case .calendar: return nil
+        case .calendar, .someday: return nil
         }
     }
-    var key: String { self == .assigned ? "assigned" : scope?.preferenceKey ?? "calendar" }
+    var key: String { self == .assigned ? "assigned" : self == .someday ? "someday" : scope?.preferenceKey ?? "calendar" }
     init(key: String) {
         if key == "calendar" { self = .calendar; return }
         if key == "assigned" { self = .assigned; return }
+        if key == "someday" { self = .someday; return }
         switch TaskScope(preferenceKey: key) ?? .today {
         case .today: self = .today
         case .inbox: self = .inbox
@@ -41,6 +42,7 @@ enum SidebarItem: Hashable {
         case .calendar: return "calendar"
         case .all: return "tray.full"
         case .assigned: return "person.crop.circle.badge.checkmark"
+        case .someday: return "moon.zzz"
         case .completed: return "checkmark.circle"
         case .project: return "folder.fill"
         case .label: return "tag.fill"
@@ -133,6 +135,7 @@ final class Workspace {
     var navigationTitle: String {
         switch section {
         case .calendar: return "Calendar"
+        case .someday: return "Someday"
         case .assigned: return "Assigned to Me"
         case .project(let id): return store.record("projects", id: id)?.name ?? "Project"
         case .label(let id): return store.record("labels", id: id)?.name ?? "Label"
@@ -798,6 +801,38 @@ final class Workspace {
         Feedback.drop()
         confirm(day == nil ? "Removed dates" : ids.count == 1 ? "Moved to \(label)" : "Moved \(ids.count) tasks to \(label)")
     }
+    // MARK: This Evening and Someday
+
+    private func inListOrder(_ ids: Set<String>) -> [String] { store.tasks.map(\.id).filter(ids.contains) + ids.filter { Self.subtaskPath($0) != nil }.sorted() }
+    private func planningRoots(_ ids: Set<String>) -> [String] { inListOrder(ids).filter { Self.subtaskPath($0) == nil } }
+    func moveToEvening(_ ids: Set<String>) {
+        let roots = planningRoots(ids)
+        var saved = false
+        withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { run("Move to This Evening") { saved = store.moveToEvening(roots) } }
+        guard saved else { return }
+        Feedback.drop(); confirm(roots.count == 1 ? "Moved to This Evening" : "Moved \(roots.count) tasks to This Evening")
+    }
+    func removeFromEvening(_ ids: Set<String>) {
+        let roots = planningRoots(ids)
+        var saved = false
+        withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { run("Return to Today") { saved = store.removeFromEvening(roots) } }
+        if saved { confirm(roots.count == 1 ? "Back in Today" : "\(roots.count) tasks back in Today") }
+    }
+    func moveToSomeday(_ ids: Set<String>) {
+        let roots = planningRoots(ids)
+        var saved = false
+        withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { run("Move to Someday") { saved = store.moveToSomeday(roots) } }
+        guard saved else { return }
+        Feedback.drop(); selection.subtract(ids); confirm(roots.count == 1 ? "Moved to Someday" : "Moved \(roots.count) tasks to Someday")
+    }
+    /// Scheduling a Someday task sets its date and releases it from the shelf in one undoable step.
+    func scheduleFromSomeday(_ ids: Set<String>, to day: String, label: String) {
+        let roots = planningRoots(ids)
+        var saved = false
+        withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { run("Schedule") { saved = store.scheduleFromSomeday(roots, day: day) } }
+        guard saved else { return }
+        Feedback.drop(); selection.subtract(ids); confirm(roots.count == 1 ? "Scheduled for \(label)" : "Scheduled \(roots.count) tasks for \(label)")
+    }
     func move(_ ids: Set<String>, toProject project: String) {
         let shared = ids.contains { id in store.nativeConversationTeamCache?.knownTasks.contains(id) == true || store.record("tasks", id: id).map { store.nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true }
         if shared {
@@ -930,6 +965,7 @@ final class Workspace {
     }
     func quickEntryContext(project: String = "") -> QuickEntryContext {
         var context = store.quickEntryContext(project: project)
+        context.planning = true
         context.members = Dictionary(uniqueKeysWithValues: store.projects.map { project in
             let task = Record(["project_id": .string(project.id)])
             return (project.id, assignmentMembers(task).map { person in
@@ -950,7 +986,7 @@ final class Workspace {
     }
     /// Creates a task from quick-entry text. Returns the new task's id.
     @discardableResult
-    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:], manual: [String: JSON] = [:], scope override: TaskScope? = nil) -> String? {
+    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:], manual: [String: JSON] = [:], scope override: TaskScope? = nil, planning forced: PlanningSlot? = nil) -> String? {
         let project = manual["project_id"]?.text ?? project
         // A value chosen by hand replaces the matching parsed token, exactly as the composer previewed it.
         let declined = declined.union(TaskCapturePanel.supersededGroups(manual))
@@ -959,7 +995,7 @@ final class Workspace {
                 var shared = Record.task(user: store.userID, project: project, date: date)
                 shared["section_id"] = sectionID.isEmpty ? .null : .string(sectionID)
                 for (field, value) in manual where field != "labels" { shared[field] = value }
-                let excluded = SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"])
+                let excluded = SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels", "planning"])
                 shared = QuickEntry(input, disabled: declined.union(excluded), context: quickEntryContext(project: project), task: shared).applying(to: shared)
                 teamTaskCreationText = input
                 teamTaskCreation = try store.teamTaskCreationOpening(shared)
@@ -971,12 +1007,20 @@ final class Workspace {
         let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")).choosingReferences(referenceChoices), task: task)
         guard !parsed.title.isEmpty else { return nil }
         task = parsed.applying(to: task)
+        let slot = forced ?? parsed.planning
+        if forced == .someday { for (field, value) in Planning.clearedSchedule { task[field] = value } }
+        var planningRows: [Mutation] = []
+        if let slot {
+            do { planningRows = try store.planningMutations(forNew: task, slot: slot) }
+            catch { store.error = error.localizedDescription; return nil }
+        }
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text || $0.id == value.text }) {
             _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
         }
         var created = false
-        run("Add Task") { withAnimation(layout) { created = store.save("tasks", task) } }
+        run("Add Task") { withAnimation(layout) { created = store.save("tasks", task, alongside: planningRows) } }
         let scope = override ?? self.scope
+        if created, let slot { confirm(slot == .evening ? "Added to This Evening" : "Added to Someday"); return task.id }
         if created, case .saved = scope, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }) { confirmation = Confirmation(message: "Added · outside this filter", undoable: true, historyRequest: store.captureHistoryRequest()) }
         else if created, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }), let project = store.record("projects", id: task.string("project_id")) { confirmation = Confirmation(message: "Added to " + project.name, undoable: true, historyRequest: store.captureHistoryRequest()) }
         return created ? task.id : nil
@@ -989,6 +1033,8 @@ final class Workspace {
         static func group(project: String, section: String) -> String { "group:\(project):\(section.isEmpty ? "none" : section)" }
         static func scope(_ scope: TaskScope) -> String { "scope:" + scope.preferenceKey }
         static func isDay(_ key: String) -> Bool { Dates.parse(key) != nil }
+        /// The This Evening section of Today: a manual-order drop target that never changes a due date.
+        static let evening = "planning:evening"
     }
     private func placementIDs(_ key: String, in snapshot: Snapshot? = nil) -> [String] {
         let rows = snapshot?.tables[DayPlacement.table] ?? store.rows(DayPlacement.table)
@@ -1005,6 +1051,14 @@ final class Workspace {
     /// task's priority band, and the whole move is one undoable commit.
     @discardableResult
     func move(_ ids: [String], to slot: DragSlot) -> Bool {
+        if slot.day == Placement.evening {
+            let movable = ids.filter { Self.subtaskPath($0) == nil && store.record("tasks", id: $0).map { !$0.completed } == true && $0 != slot.before }
+            guard !movable.isEmpty else { return false }
+            var moved = false
+            run("Move to This Evening") { withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { moved = store.moveToEvening(movable, before: slot.before) } }
+            if moved { Feedback.drop() }
+            return moved
+        }
         // A project column on the Today or label board: dropping changes the task's project through the
         // same path as "Move to", which also reviews shared tasks.
         if slot.day.hasPrefix("project:") {
@@ -1051,6 +1105,12 @@ final class Workspace {
             }
             for change in step { snapshot.apply(change) }
             changes += step
+        }
+        // A task dropped on a day leaves This Evening; the list update commits with the move so one Undo restores both.
+        if isDay {
+            let evening = Set(store.planningState.evening)
+            let leaving = tasks.map(\.id).filter(evening.contains)
+            if !leaving.isEmpty, let removal = try? Planning.removeFromEvening(leaving, tasks: store.tasks, rows: store.rows(Planning.table), account: store.userID, today: store.calendarContext.today) { changes += removal }
         }
         guard !changes.isEmpty else { return false }
         var moved = false
@@ -1105,6 +1165,8 @@ final class DragCoordinator {
     /// Snaps a raw slot into the dragged task's band and remembers whether it moved, so the indicator shows
     /// where the task will really land and the hint explains why.
     func constrain(_ slot: DragSlot) -> (slot: DragSlot, hint: String?) {
+        // This Evening is ordered by hand, not by priority band.
+        if slot.day == Workspace.Placement.evening { return (slot, nil) }
         let band: TaskPriorityBandRead
         if let existing = bandReads[slot.day] { band = existing }
         else { band = TaskPriorityBandRead(members(of: slot.day), excluding: Set(ids)); bandReads[slot.day] = band }

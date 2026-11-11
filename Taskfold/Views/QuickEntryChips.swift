@@ -16,11 +16,11 @@ struct QuickEntryChips: View {
 
     static func symbol(for group: String) -> String {
         if group.hasPrefix("reminder_specs") { return "bell" }
-        switch group { case "project_id": return "folder"; case "section_id": return "rectangle.stack"; case "assigned_to": return "person.crop.circle"; case "priority": return "flag.fill"; case "labels": return "tag.fill"; case "due_time": return "clock"; case "recurrence": return "repeat"; case "deadline_date": return "flag.checkered"; case "duration_minutes": return "hourglass"; default: return "calendar" }
+        switch group { case "project_id": return "folder"; case "section_id": return "rectangle.stack"; case "assigned_to": return "person.crop.circle"; case "priority": return "flag.fill"; case "labels": return "tag.fill"; case "due_time": return "clock"; case "recurrence": return "repeat"; case "deadline_date": return "flag.checkered"; case "duration_minutes": return "hourglass"; case "planning": return "moon.fill"; default: return "calendar" }
     }
     static func name(for group: String) -> String {
         if group.hasPrefix("reminder_specs") { return "reminder" }
-        switch group { case "project_id": return "project"; case "section_id": return "section"; case "assigned_to": return "assignee"; case "priority": return "priority"; case "labels": return "label"; case "due_time": return "time"; case "recurrence": return "repeat"; case "deadline_date": return "deadline"; case "duration_minutes": return "estimate"; default: return "date" }
+        switch group { case "project_id": return "project"; case "section_id": return "section"; case "assigned_to": return "assignee"; case "priority": return "priority"; case "labels": return "label"; case "due_time": return "time"; case "recurrence": return "repeat"; case "deadline_date": return "deadline"; case "duration_minutes": return "estimate"; case "planning": return "planning"; default: return "date" }
     }
 
     /// Role colour for a recognised token, shared by the declinable chips, the property chips and the in-text highlight.
@@ -31,6 +31,7 @@ struct QuickEntryChips: View {
         case "due_date", "due_time", "recurrence": return date
         case "project_id", "section_id": return DS.Palette.accentSecondary
         case "labels": return DS.Palette.label
+        case "planning": return DS.Palette.accentSecondary
         case "priority": return DS.Palette.priority(Int(token.text.suffix(1)) ?? 4)
         default: return DS.Palette.textSecondary
         }

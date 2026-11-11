@@ -630,6 +630,24 @@ struct RootView: View {
             }
             var inbox = Record.task(user: "preview"); inbox["title"] = .string("Read that article about slow productivity"); samples.append(inbox)
             store.snapshot.tables["tasks"] = samples
+            // Plan captures: --plan-fixture adds three tasks held for This Evening and six undated Someday tasks (three older than a month).
+            if arguments.contains("--plan-fixture") {
+                var added: [Record] = []
+                func make(_ title: String, due: Bool, daysOld: Int) -> Record {
+                    var task = Record.task(user: store.userID, date: due ? Date() : nil, createdAt: ISO8601DateFormatter().string(from: Calendar.current.date(byAdding: .day, value: -daysOld, to: Date()) ?? Date()))
+                    task["title"] = .string(title); return task
+                }
+                let evening = [make("Cook dinner for the neighbours", due: true, daysOld: 1), make("Evening run along the harbour", due: true, daysOld: 1), make("Read a chapter before bed", due: true, daysOld: 2)]
+                let someday = [make("Learn to play the cello", due: false, daysOld: 92), make("Build a bookshelf for the hallway", due: false, daysOld: 61), make("See the northern lights", due: false, daysOld: 47),
+                               make("Plan a small herb garden", due: false, daysOld: 9), make("Try a pottery class", due: false, daysOld: 4), make("Write down family recipes", due: false, daysOld: 2)]
+                added = evening + someday
+                store.snapshot.tables["tasks"] = (store.snapshot.tables["tasks"] ?? []) + added
+                let today = Dates.day(Date())
+                store.snapshot.tables["view_orders"] = [
+                    Record(["id": .string(Planning.eveningKey(today)), "user_id": .string(store.userID), "ids": .array(evening.map { .string($0.id) })]),
+                    Record(["id": .string(Planning.somedayKey), "user_id": .string(store.userID), "ids": .array(someday.map { .string($0.id) })])
+                ]
+            }
             // Debug only: `--focus-filter-fixture` seeds five projects and turns on a Focus filter for three, in memory.
             store.installFocusFilterFixture()
             // Layout captures: --capture-layout=<today|inbox|upcoming|project|label>:<list|board|calendar>, or picker:<scope>.
@@ -679,7 +697,8 @@ struct WorkspaceView: View {
                     .navigationSplitViewColumnWidth(min: 200, ideal: 230, max: 320)
             } detail: {
                 Group {
-                    if workspace.section == .calendar {
+                    if workspace.section == .someday { SomedayView() }
+                    else if workspace.section == .calendar {
                         // Use the window budget, including space for the expanded sidebar, so
                         // toggling it cannot trigger a second calendar layout mid-transition.
                         CalendarView(showsDayPanel: window.size.width >= (workspace.inspectorVisible ? 1550 : 1240))
