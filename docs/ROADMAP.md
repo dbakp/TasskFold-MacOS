@@ -139,7 +139,7 @@ Rules that keep this token-efficient without losing quality:
 
 ### Phase 2: close the Todoist gaps (about 9 updates)
 1. ~~Mac global Quick Add hotkey (user-configurable) and a menu bar extra with Today and quick add.~~ Done ([TasskFold-MacOS#118](https://github.com/dbakp/TasskFold-MacOS/pull/118), spec `specs/GLOBAL_QUICK_ADD.md`); a real hotkey press is still to be checked by hand.
-2. Real-time sync feel: live updates, sync-status indicator and no manual refresh in normal use.
+2. ~~Real-time sync feel: live updates, sync-status indicator and no manual refresh in normal use.~~ Done ([TasskFold-MacOS#120](https://github.com/dbakp/TasskFold-MacOS/pull/120), [TaskFold-iOS#121](https://github.com/dbakp/TaskFold-iOS/pull/121), spec `specs/REALTIME_SYNC.md`); real two-device realtime still to be checked by hand.
 3. Server push reminders. Turn on the existing APNs worker after your sign-off on hosted services.
 4. Karma or productivity score, streaks and vacation mode, built on the existing goals and insights.
 5. Layout parity: list, board and calendar views for projects and Upcoming on both apps.
