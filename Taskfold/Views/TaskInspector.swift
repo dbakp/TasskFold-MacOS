@@ -503,14 +503,14 @@ struct TaskInspectorForm: View {
     }
     @ViewBuilder private var labelChips: some View {
         let assigned = TaskLabels.normalized(draft["labels"].list, labels: store.labels).compactMap { value in store.labels.first { .string($0.id) == value } }
-        if assigned.isEmpty {
-            PropertyChip(icon: "tag", text: "Labels", accessibility: "Add labels", identifier: isTeamTask ? "taskTeamLabels" : "taskLabels") { if isTeamTask { openTeamLabels() } else { openChip = .label("") } }
-                .popover(isPresented: chipOpen(.label("")), arrowEdge: .bottom) { TaskLabelsEditor(draft: $draft) }
-        } else {
-            ForEach(assigned) { label in
-                PropertyChip(icon: "tag.fill", text: label.name, tint: Color.project(label.string("color")), accessibility: "Label, \(label.name)", identifier: isTeamTask ? "taskTeamLabels" : "taskLabelChip-" + label.id) { if isTeamTask { openTeamLabels() } else { openChip = .label(label.id) } }
-                    .popover(isPresented: chipOpen(.label(label.id)), arrowEdge: .bottom) { TaskLabelsEditor(draft: $draft) }
-            }
+        // Positional identity keeps the first chip, and the popover anchored to it, alive while labels are toggled.
+        ForEach(Array((assigned.isEmpty ? [nil] : assigned.map(Optional.some)).enumerated()), id: \.offset) { index, label in
+            let open = { if isTeamTask { openTeamLabels() } else { openChip = .label("") } }
+            let chip = PropertyChip(icon: label == nil ? "tag" : "tag.fill", text: label?.name ?? "Labels", tint: label.map { Color.project($0.string("color")) },
+                                    accessibility: label.map { "Label, \($0.name)" } ?? "Add labels",
+                                    identifier: isTeamTask ? "taskTeamLabels" : label.map { "taskLabelChip-" + $0.id } ?? "taskLabels", action: open)
+            if index == 0 { chip.popover(isPresented: chipOpen(.label("")), arrowEdge: .bottom) { TaskLabelsEditor(draft: $draft) } }
+            else { chip }
         }
     }
     private var remindersChip: some View {
