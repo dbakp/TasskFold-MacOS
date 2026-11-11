@@ -70,6 +70,7 @@ struct AssigneeMenu: View {
     var contextID: String? = nil
     var selected = false
     var showsName = false
+    var startsOpen = false
     var select: (String) -> Void
     private var name: String { workspace.assigneeName(task, contextID: contextID) }
     private var identity: Record {
@@ -92,6 +93,7 @@ struct AssigneeMenu: View {
         .accessibilityValue(task.string("assigned_to").isEmpty ? "" : photoLoaded ? "Photo loaded" : "Photo placeholder")
         .help("Assigned to \(name)").accessibilityLabel("Assigned to \(name)")
         .accessibilityIdentifier(showsName ? "taskAssignee" : "assignee-" + task.id)
+        .onAppear { if startsOpen { choosing = true } }
         .popover(isPresented: $choosing) {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Assign task").font(.headline)
