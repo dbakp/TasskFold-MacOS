@@ -22,6 +22,8 @@ struct DayDragRow: ViewModifier {
     @Environment(Store.self) private var store
     let task: Record
     let day: String
+    /// Shared tasks and other rows that must not be rescheduled by dragging stay put but still accept drops.
+    var enabled = true
     let orderProvider: () -> [(day: String, ids: [String])]
     func body(content: Content) -> some View {
         let drag = workspace.drag
@@ -31,6 +33,7 @@ struct DayDragRow: ViewModifier {
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { drag.rowHeights[task.id] = $0 }
             .onDrop(of: [.taskfoldTask], delegate: RowDropDelegate(workspace: workspace, id: task.id, day: day))
             .itemProvider {
+                guard enabled else { return nil }
                 let groups = orderProvider()
                 let order = groups.flatMap(\.ids)
                 let ids = (workspace.selection.contains(task.id) ? Array(workspace.selection) : [task.id])

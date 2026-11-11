@@ -39,7 +39,15 @@ struct TaskListView: View {
         nonmutating set { workspace.quickAdd = newValue }
     }
     @AppStorage("mac.collapsedProjectSections") private var collapsedSections = ""
-    private var projectLayout: String { get { store.viewValue(scope, field: "layout", fallback: .string("list")).text } nonmutating set { store.setViewValue(scope, field: "layout", value: .string(newValue)) } }
+    private var storedLayout: String { get { store.viewValue(scope, field: "layout", fallback: .string("list")).text } nonmutating set { store.setViewValue(scope, field: "layout", value: .string(newValue)) } }
+    /// What the scope shows now. A stored value the scope cannot show reads as List and is not rewritten.
+    private var layoutMode: TaskLayout { TaskLayout.resolved(storedLayout, for: scope) }
+    private var boardLayout: Bool { layoutMode == .board && !isSavedFilterScope }
+    private var calendarLayout: Bool { layoutMode == .calendar }
+    @State private var calendarMonth = Date()
+    @State private var calendarDay = Dates.day(Date())
+    @State private var captureDateOverride: Date?
+    @State private var captureProjectOverride: String?
     @State private var multiLinePresented = false
     @State private var printReview: PrintReviewRequest?
     @State private var printOwner = UUID()
@@ -165,6 +173,29 @@ struct TaskListView: View {
         })
     }
     private var boardColumns: [ProjectColumn] {
+        switch scope {
+        case .project: return projectBoardColumns
+        case .upcoming:
+            return UpcomingColumns.build(tasks: filtered).map { column in
+                let key: String, add: String
+                switch column.kind {
+                case .overdue: key = overdueKey; add = ""
+                case .day(let day): key = day; add = day
+                default: key = column.id; add = ""
+                }
+                return ProjectColumn(id: key, sectionID: add, title: column.title, subtitle: column.subtitle, tasks: ordered(column.tasks, day: key),
+                                     groupsOverdue: false, receivesDrops: column.kind != .overdue)
+            }
+        case .today, .label:
+            return ProjectColumns.build(tasks: filtered, projects: store.allProjects).map { column in
+                var project = ""; if case .project(let id) = column.kind { project = id }
+                return ProjectColumn(id: column.id, sectionID: project, title: column.title, tasks: ordered(column.tasks, day: column.id))
+            }
+        default:
+            return groups.map { group in ProjectColumn(id: group.key, sectionID: "", title: group.title.isEmpty ? title : group.title, tasks: group.tasks) }
+        }
+    }
+    private var projectBoardColumns: [ProjectColumn] {
         // Board columns include overdue work; list groups intentionally omit it.
         let rowsBySection = Dictionary(grouping: filtered, by: { $0.string("section_id") })
         return groups.map { group in
@@ -173,8 +204,39 @@ struct TaskListView: View {
                                  tasks: ordered(rowsBySection[section == "none" ? "" : section] ?? [], day: group.key))
         }
     }
+    private var boardIdentifier: String {
+        switch scope {
+        case .project: return "projectBoard"
+        case .upcoming: return "upcomingBoard"
+        case .today: return "todayBoard"
+        case .label: return "labelBoard"
+        default: return "inboxBoard"
+        }
+    }
+    private var boardMoveTitle: String {
+        switch scope { case .upcoming: return "Move to Day"; case .today, .label: return "Move to Project"; default: return "Move to Section" }
+    }
+    /// Shared tasks never drag-reschedule: their changes go through the shared-task review in the context menu.
+    private func canDragReschedule(_ task: Record) -> Bool { !store.hasSharedTaskSelection([task.id]) }
+    private var calendarTasks: [Record] { filtered.filter { Workspace.subtaskPath($0.id) == nil && TaskKind.mayComplete($0) } }
+    private var captureProjectID: String { captureProjectOverride ?? projectID }
+    private func beginBoardAdd(_ column: ProjectColumn) {
+        captureSection = ""; captureDateOverride = nil; captureProjectOverride = nil
+        switch scope {
+        case .project: captureSection = column.sectionID
+        case .upcoming: captureDateOverride = Dates.parse(column.sectionID)
+        case .today, .label: captureProjectOverride = column.sectionID
+        default: break
+        }
+        quickAddVisible = true
+    }
+    private func beginCalendarAdd(_ day: String) {
+        captureSection = ""; captureProjectOverride = nil; captureDateOverride = Dates.parse(day)
+        quickAddVisible = true
+    }
     private var displayedTaskIDs: [String] {
-        if !projectID.isEmpty && projectLayout == "board" { return boardColumns.filter { !collapsed($0.id) }.flatMap { workspace.visibleTasks($0.tasks).map(\.id) } }
+        if calendarLayout { return calendarTasks.map(\.id) }
+        if boardLayout && (!projectID.isEmpty || !boardColumns.isEmpty) { return boardColumns.filter { !collapsed($0.id) }.flatMap { workspace.visibleTasks($0.tasks).map(\.id) } }
         if dated { return dayGroups.filter { $0.0 != "Overdue" || !overdueCollapsed }.flatMap { workspace.visibleTasks($0.1).map(\.id) } }
         return (overdueCollapsed ? [] : workspace.visibleTasks(overdueTasks).map(\.id)) + groups.filter { !collapsed($0.key) }.flatMap { workspace.visibleTasks($0.tasks).map(\.id) }
     }
@@ -215,9 +277,14 @@ struct TaskListView: View {
                         if case .saved(let id) = scope, let view = store.record("saved_views", id: id) { Button("Edit Filter…") { filterEditor = view } }
                     }.padding(DS.Space.xxl).frame(maxWidth: ReadingColumn.width, alignment: .leading).frame(maxWidth: .infinity, alignment: .center)
                 }.accessibilityIdentifier("savedFilterError")
-            } else if case .saved = scope, projectLayout == "board" { SavedFilterBoard(scope: scope, tasks: filtered, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
-            else if !projectID.isEmpty && projectLayout == "board" {
-                ProjectBoard(columns: boardColumns) { section in captureSection = section; quickAddVisible = true }
+            } else if case .saved = scope, layoutMode == .board { SavedFilterBoard(scope: scope, tasks: filtered, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
+            else if calendarLayout {
+                MonthCalendarView(tasks: calendarTasks, month: $calendarMonth, selectedDay: $calendarDay, identifier: scope == .upcoming ? "upcomingCalendar" : "projectCalendar",
+                                  canDrag: canDragReschedule, add: beginCalendarAdd)
+            }
+            else if boardLayout && (!projectID.isEmpty || !boardColumns.isEmpty) {
+                ProjectBoard(columns: boardColumns, identifier: boardIdentifier, moveMenuTitle: boardMoveTitle, compactDate: dated,
+                             canDrag: projectID.isEmpty ? canDragReschedule : { _ in true }, add: beginBoardAdd)
             } else {
             List(selection: Binding(get: { workspace.section.scope == scope ? workspace.selection : [] }, set: { selection in
                 guard workspace.section.scope == scope else { return }
@@ -325,6 +392,7 @@ struct TaskListView: View {
             if requested && workspace.section.scope == scope { filterFocused = true; workspace.searchPresented = false }
         }
         .onDisappear { quickAddVisible = false; rowSwipe.cancel(); rowSwipe.isAvailable = { false } }
+        .onChange(of: quickAddVisible) { _, shown in if !shown { captureDateOverride = nil; captureProjectOverride = nil } }
         .onChange(of: displayedTaskIDs) { _, ids in
             // Assign only when something actually left the list; re-setting selection during a table update is reentrant.
             guard workspace.section.scope == scope else { return }
@@ -356,11 +424,11 @@ struct TaskListView: View {
         default: return "Add a task to \(title)"
         }
     }
-    private func revealQuickAdd() { captureSection = ""; quickAddVisible = true }
+    private func revealQuickAdd() { captureSection = ""; captureDateOverride = nil; captureProjectOverride = nil; quickAddVisible = true }
 
-    private var captureDate: Date? { scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil }
+    private var captureDate: Date? { captureDateOverride ?? (scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil) }
     private var captureDraft: Record {
-        var task = workspace.captureTask(project: projectID, date: captureDate, sectionID: captureSection)
+        var task = workspace.captureTask(project: captureProjectID, date: captureDate, sectionID: captureSection)
         if case .label(let id) = scope, store.record("labels", id: id) != nil {
             task["labels"] = .array(TaskLabels.normalized(task["labels"].list + [.string(id)], labels: store.labels))
         }
@@ -370,7 +438,7 @@ struct TaskListView: View {
         if workspace.quickAdd.contains(where: { $0.isNewline }) { quickAddVisible = false; multiLinePresented = true; return }
         let date = captureDate
         let labelName: String? = { if case .label(let id) = scope { return store.record("labels", id: id)?.name }; return nil }()
-        guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups, sectionID: captureSection, referenceChoices: referenceChoices, manual: workspace.quickAddManual) else { return }
+        guard let id = workspace.add(quickAdd, project: captureProjectID, date: date, declined: declinedGroups, sectionID: captureSection, referenceChoices: referenceChoices, manual: workspace.quickAddManual) else { return }
         declinedGroups = []; workspace.quickAddManual = [:]
         if let labelName, var task = store.record("tasks", id: id), !task["labels"].list.contains(.string(labelName)) {
             task["labels"] = .array(task["labels"].list + [.string(labelName)]); store.save("tasks", task)
@@ -378,6 +446,7 @@ struct TaskListView: View {
         quickAdd = ""
         referenceChoices = [:]
         quickAddVisible = false
+        captureDateOverride = nil; captureProjectOverride = nil
         workspace.selection = [id]
     }
 
@@ -393,7 +462,7 @@ struct TaskListView: View {
     }
     private var isSavedFilterScope: Bool { if case .saved = scope { return true }; return false }
     /// A list with no tasks and no sections shows only its empty state, not an empty group beneath it.
-    private var bareEmptyProject: Bool { !dated && projectLayout != "board" && filtered.isEmpty && groups.count == 1 }
+    private var bareEmptyProject: Bool { !dated && layoutMode != .board && filtered.isEmpty && groups.count == 1 }
     /// Today and Upcoming show a per-scope empty state once every day group is empty.
     private var datedEmpty: Bool { dated && filtered.isEmpty && dayGroups.allSatisfy { $0.1.isEmpty } }
     private struct EmptyContent { var symbol: String; var tint: Color; var title: String; var line: String?; var addTask = false }
@@ -521,7 +590,7 @@ struct TaskListView: View {
     private func printableDocument() throws -> PrintDocument {
         if let error = store.filterError(scope) { throw AppFailure(message: error) }
         let sections: [(String, [Record])]
-        if !projectID.isEmpty && projectLayout == "board" { sections = boardColumns.map { ($0.title, $0.tasks) } }
+        if !projectID.isEmpty && layoutMode == .board { sections = boardColumns.map { ($0.title, $0.tasks) } }
         else if dated { sections = dayGroups }
         else { sections = (overdueTasks.isEmpty ? [] : [("Overdue", overdueTasks)]) + groups.map { ($0.title, $0.tasks) } }
         let named = sections.map { name, tasks in (Dates.parse(name)?.formatted(.dateTime.weekday(.wide).day().month(.wide).year()) ?? name, tasks) }
@@ -599,9 +668,9 @@ struct TaskListView: View {
                 Picker("Priority", selection: Binding(get: { priorityFilter }, set: { priorityFilter = $0 })) { Text("All Priorities").tag(0); ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
                 }
                 Picker("Sort", selection: Binding(get: { manualOrder ? "manual" : sortBy }, set: { sortBy = $0 })) { Text("Default Order").tag("manual"); Text("Due Date").tag("date"); Text("Title").tag("title"); Text("Deadline").tag("deadline"); Text("Estimate").tag("duration") }
-                if !projectID.isEmpty || scope.preferenceKey.hasPrefix("view:") {
-                    Picker("Layout", selection: Binding(get: { projectLayout }, set: { projectLayout = $0 })) { Text("List").tag("list"); Text("Board").tag("board") }
-                    if !projectID.isEmpty {
+                let layouts = TaskLayout.available(for: scope)
+                if layouts.count > 1 { LayoutPicker(layouts: layouts, selection: Binding(get: { layoutMode }, set: { storedLayout = $0.rawValue })) }
+                if !projectID.isEmpty {
                     Divider()
                     Button("Edit Project…", systemImage: "pencil") { projectEditor = store.record("projects", id: projectID) }
                     if let project = store.record("projects", id: projectID) {
@@ -610,7 +679,6 @@ struct TaskListView: View {
                     }
                     Button("Sections…", systemImage: "rectangle.split.3x1") { sectionsEditor = true }
                     Button("Collaborators…", systemImage: "person.2") { collaborationProject = store.record("projects", id: projectID) }.disabled(store.localMode)
-                    }
                 }
             } label: { Label("View Options", systemImage: "line.3.horizontal.decrease.circle") }
                 .help("View options").accessibilityLabel("Task options")

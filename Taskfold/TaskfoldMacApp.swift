@@ -331,6 +331,13 @@ struct TaskfoldCommands: Commands {
             Divider()
             Button(workspace.inspectorShown ? "Hide Inspector" : "Show Inspector") { workspace.inspectorShown.toggle() }.keyboardShortcut("i", modifiers: [.command, .option])
             Divider()
+            // ⌃⌘ rather than ⌥⌘: ⌥⌘1 to ⌥⌘4 already set a task's priority.
+            ForEach(Array(TaskLayout.allCases.enumerated()), id: \.element) { index, layout in
+                Button("\(layout.title) Layout") { workspace.setLayout(layout) }
+                    .keyboardShortcut(KeyEquivalent(Character(String(index + 1))), modifiers: [.control, .command])
+                    .disabled(!workspace.availableLayouts.contains(layout))
+            }
+            Divider()
             Button("Plan Your Day…") { workspace.planning = .day }.keyboardShortcut("p", modifiers: [.command, .option]).disabled(!store.signedIn)
             Button("Review This Week…") { workspace.planning = .week }.keyboardShortcut("w", modifiers: [.command, .option]).disabled(!store.signedIn)
             Divider()

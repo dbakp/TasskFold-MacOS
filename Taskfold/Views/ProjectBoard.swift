@@ -1,16 +1,26 @@
 import SwiftUI
 
 struct ProjectColumn: Identifiable {
+    /// The drop key: a project group key, a day, `project:<id>` or an overdue list key.
     var id: String
+    /// What the column's Add button hands back (a section id, a day, or a project id).
     var sectionID: String
     var title: String
+    var subtitle: String? = nil
     var tasks: [Record]
+    /// The Overdue column of Upcoming holds only late work, so a nested Overdue band would repeat it.
+    var groupsOverdue = true
+    var receivesDrops = true
 }
 
 struct ProjectBoard: View {
     @Environment(Workspace.self) private var workspace
     let columns: [ProjectColumn]
-    let add: (String) -> Void
+    var identifier = "projectBoard"
+    var moveMenuTitle = "Move to Section"
+    var compactDate = false
+    var canDrag: (Record) -> Bool = { _ in true }
+    let add: (ProjectColumn) -> Void
     private var order: [(day: String, ids: [String])] { columns.map { ($0.id, $0.tasks.map(\.id)) } }
     private var selectedColumn: String? {
         guard workspace.selection.count == 1, let selected = workspace.selection.first else { return nil }
@@ -20,13 +30,13 @@ struct ProjectBoard: View {
     var body: some View {
         ScrollViewReader { proxy in
         ScrollView(.horizontal) {
-            HStack(alignment: .top, spacing: 16) {
+            HStack(alignment: .top, spacing: DS.Space.l) {
                 ForEach(columns) { column in
-                    BoardColumn(column: column, order: order, add: { add(column.sectionID) })
-                        .frame(width: 320).id(column.id)
+                    BoardColumn(column: column, order: order, moveMenuTitle: moveMenuTitle, compactDate: compactDate, canDrag: canDrag, destinations: columns.filter(\.receivesDrops), add: { add(column) })
+                        .frame(width: 280).id(column.id)
                 }
-            }.padding(.horizontal, 20).padding(.bottom, 12)
-        }.accessibilityIdentifier("projectBoard")
+            }.padding(.horizontal, DS.Space.xl).padding(.bottom, DS.Space.m)
+        }.accessibilityIdentifier(identifier)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { _ in
             reveal(selectedColumn, using: proxy)
         }
@@ -48,6 +58,10 @@ private struct BoardColumn: View {
     @Environment(Workspace.self) private var workspace
     let column: ProjectColumn
     let order: [(day: String, ids: [String])]
+    let moveMenuTitle: String
+    let compactDate: Bool
+    let canDrag: (Record) -> Bool
+    let destinations: [ProjectColumn]
     let add: () -> Void
     @AppStorage("mac.collapsedProjectSections") private var collapsedSections = ""
     private var collapsed: Bool { collapsedSections.split(separator: "\n").contains(Substring(column.id)) }
@@ -57,21 +71,28 @@ private struct BoardColumn: View {
         collapsedSections = keys.sorted().joined(separator: "\n")
     }
     @AppStorage private var overdueCollapsed: Bool
-    init(column: ProjectColumn, order: [(day: String, ids: [String])], add: @escaping () -> Void) {
-        self.column = column; self.order = order; self.add = add
+    init(column: ProjectColumn, order: [(day: String, ids: [String])], moveMenuTitle: String, compactDate: Bool, canDrag: @escaping (Record) -> Bool, destinations: [ProjectColumn], add: @escaping () -> Void) {
+        self.column = column; self.order = order; self.moveMenuTitle = moveMenuTitle; self.compactDate = compactDate; self.canDrag = canDrag; self.destinations = destinations; self.add = add
         _overdueCollapsed = AppStorage(wrappedValue: false, "mac.board.\(column.id).overdueCollapsed")
     }
-    private var overdue: [Record] { column.tasks.filter { TaskKind.mayComplete($0) && !$0.completed && $0.due.map { $0 < Calendar.current.startOfDay(for: Date()) } == true } }
+    private var overdue: [Record] { !column.groupsOverdue ? [] : column.tasks.filter { TaskKind.mayComplete($0) && !$0.completed && $0.due.map { $0 < Calendar.current.startOfDay(for: Date()) } == true } }
     private var regular: [Record] { let ids = Set(overdue.map(\.id)); return column.tasks.filter { !ids.contains($0.id) } }
+    private var headerLabel: String {
+        var label = column.title
+        if let subtitle = column.subtitle { label += ", " + subtitle }
+        return label + ", " + TaskKind.listCountLabel(column.tasks) + " tasks"
+    }
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 Button { toggleCollapsed() } label: {
-                    HStack { Image(systemName: collapsed ? "chevron.right" : "chevron.down"); Text(column.title); Text(TaskKind.listCountLabel(column.tasks)).foregroundStyle(.secondary) }
+                    HStack { Image(systemName: collapsed ? "chevron.right" : "chevron.down"); Text(column.title); if let subtitle = column.subtitle { Text(subtitle).font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary) }; Text(TaskKind.listCountLabel(column.tasks)).foregroundStyle(.secondary) }
                 }.buttonStyle(.plain).accessibilityIdentifier("board-collapse-" + column.sectionID)
+                    .accessibilityLabel(headerLabel)
+                    .accessibilityValue(collapsed ? "Collapsed" : "Expanded")
                 Spacer()
-                Button(action: add) { Image(systemName: "plus") }.buttonStyle(.borderless).help("Add task to \(column.title)").accessibilityIdentifier("board-add-" + column.sectionID)
-            }.padding(12).modifier(DayHeaderDrop(day: column.id))
+                if column.receivesDrops { Button(action: add) { Image(systemName: "plus") }.buttonStyle(.borderless).help("Add task to \(column.title)").accessibilityLabel("Add task to \(column.title)").accessibilityIdentifier("board-add-" + column.sectionID) }
+            }.padding(12).modifier(DropHeader(day: column.id, enabled: column.receivesDrops))
             if !collapsed {
                 List(selection: Binding(get: { workspace.selection }, set: { workspace.selection = $0 })) {
                     if !overdue.isEmpty {
@@ -85,8 +106,10 @@ private struct BoardColumn: View {
                         }
                     }
                     rows(regular)
-                    DayEndRow(day: column.id, isEmpty: column.tasks.isEmpty, emptyText: "Drop a task here, or use +", releaseText: "Move to \(column.title)")
-                        .selectionDisabled().listRowSeparator(.hidden)
+                    if column.receivesDrops {
+                        DayEndRow(day: column.id, isEmpty: column.tasks.isEmpty, emptyText: "Drop a task here, or use +", releaseText: "Move to \(column.title)")
+                            .selectionDisabled().listRowSeparator(.hidden)
+                    }
                 }.focused($taskListFocused)
                 .environment(\.taskListFocused, taskListFocused)
                 .accessibilityIdentifier("boardTaskList")
@@ -95,12 +118,12 @@ private struct BoardColumn: View {
                     if !ids.isEmpty {
                         Button("Complete / Reopen") { workspace.toggle(ids) }
                         if ids.allSatisfy({ Workspace.subtaskPath($0) == nil }) {
-                            Menu("Move to Section") {
-                                ForEach(order, id: \.day) { destination in
-                                    Button(destinationName(destination.day)) {
+                            Menu(moveMenuTitle) {
+                                ForEach(destinations) { destination in
+                                    Button(destination.title + (destination.subtitle.map { " · " + $0 } ?? "")) {
                                         workspace.drag.order = order
                                         let ordered = order.flatMap(\.ids).filter { ids.contains($0) }
-                                        _ = workspace.move(ordered, to: DragSlot(day: destination.day, before: nil))
+                                        _ = workspace.move(ordered, to: DragSlot(day: destination.id, before: nil))
                                         workspace.drag.end()
                                     }
                                 }
@@ -117,17 +140,22 @@ private struct BoardColumn: View {
     }
     @ViewBuilder private func rows(_ tasks: [Record]) -> some View {
         ForEach(workspace.visibleTasks(tasks)) { task in
-            TaskRowView(task: task)
-                .modifier(DayDragRow(task: task, day: column.id, orderProvider: { order }))
+            TaskRowView(task: task, compactDate: compactDate)
+                .modifier(DayDragRow(task: task, day: column.id, enabled: canDrag(task), orderProvider: { order }))
                 .tag(task.id).listRowSeparator(.hidden)
 
         }
         .onMove { DayDropHandling(workspace: workspace, day: column.id, tasks: tasks).move(from: $0, to: $1) }
         .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: column.id, tasks: tasks).insert(at: $0, providers: $1) }
     }
-    private func destinationName(_ key: String) -> String {
-        let section = key.split(separator: ":").last.map(String.init) ?? ""
-        return workspace.store.record("sections", id: section)?.name ?? "Tasks"
+}
+
+/// Header drop target that can be switched off for columns that only display work.
+private struct DropHeader: ViewModifier {
+    let day: String
+    let enabled: Bool
+    func body(content: Content) -> some View {
+        if enabled { content.modifier(DayHeaderDrop(day: day)) } else { content }
     }
 }
 
