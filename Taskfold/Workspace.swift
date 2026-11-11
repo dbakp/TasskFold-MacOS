@@ -1005,6 +1005,15 @@ final class Workspace {
     /// task's priority band, and the whole move is one undoable commit.
     @discardableResult
     func move(_ ids: [String], to slot: DragSlot) -> Bool {
+        // A project column on the Today or label board: dropping changes the task's project through the
+        // same path as "Move to", which also reviews shared tasks.
+        if slot.day.hasPrefix("project:") {
+            let project = String(slot.day.dropFirst("project:".count))
+            let movable = ids.filter { id in Self.subtaskPath(id) == nil && taskRecord(id).map { !$0.completed && $0.string("project_id") != project } == true }
+            guard !movable.isEmpty else { return false }
+            move(Set(movable), toProject: project)
+            return true
+        }
         let tasks = ids.compactMap { taskRecord($0) }.filter { !$0.completed && $0.id != slot.before }
         guard !tasks.isEmpty else { return false }
         var changes: [Mutation] = []

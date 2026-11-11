@@ -281,6 +281,19 @@ struct RootView: View {
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
                         try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
                     }
+                } else if let spec = option("capture-layout"), spec.hasPrefix("picker:") {
+                    // The View Options menu cannot be captured offscreen, so host its Layout control alone for the scope after "picker:".
+                    let scope = TaskScope(preferenceKey: String(spec.dropFirst("picker:".count))) ?? .upcoming
+                    let host = NSHostingView(rootView: LayoutPickerCaptureCard(layouts: TaskLayout.available(for: scope), selected: workspace.currentLayout).environment(store).environment(workspace).padding(DS.Space.xxl).background(Color(nsColor: .windowBackgroundColor)))
+                    host.safeAreaRegions = []
+                    let size = NSSize(width: 420, height: ceil(host.fittingSize.height))
+                    host.frame = NSRect(origin: .zero, size: size)
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(1.5))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
+                    }
                 } else if arguments.contains("--capture-global-quick-add") || arguments.contains("--capture-menu-bar") {
                     // The floating panel and the menu bar window are separate NSWindows, so host their content alone.
                     // --capture-global-quick-add shows the composer (add --global-confirm for the "Added to Inbox" moment);
@@ -325,7 +338,7 @@ struct RootView: View {
                     // visual-effect region (whose backdrop cannot be rendered offscreen) with a solid background and its
                     // own subviews. Sandboxed, so the PNG lands in the container's temporary directory.
                     if let frame = window.contentView?.superview, let png = DebugCapture.image(of: frame).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
-                        try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
+                        try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
                     }
                 }
                 NSApp.terminate(nil)
@@ -612,6 +625,20 @@ struct RootView: View {
             }
             var inbox = Record.task(user: "preview"); inbox["title"] = .string("Read that article about slow productivity"); samples.append(inbox)
             store.snapshot.tables["tasks"] = samples
+            // Layout captures: --capture-layout=<today|inbox|upcoming|project|label>:<list|board|calendar>, or picker:<scope>.
+            if let spec = option("capture-layout") {
+                let parts = spec.split(separator: ":").map(String.init)
+                let scope: TaskScope
+                switch parts.first == "picker" ? (parts.dropFirst().first ?? "upcoming") : (parts.first ?? "today") {
+                case "upcoming": scope = .upcoming
+                case "inbox": scope = .inbox
+                case "project": scope = .project("preview-project")
+                case "label": scope = .label("preview-label")
+                default: scope = .today
+                }
+                workspace.section = SidebarItem(key: scope.preferenceKey)
+                if parts.count > 1, parts.first != "picker" { store.setViewValue(scope, field: "layout", value: .string(parts[1])) }
+            }
             // Momentum captures: --momentum-fixture=streak|vacation|milestone adds a recorded history and goals.
             if let value = MomentumFixture.variant(arguments) { MomentumFixture.apply(to: &store.snapshot, account: store.userID, variant: value) }
             // Empty-state captures: --empty-fixture removes every task; =done leaves only one finished today.
