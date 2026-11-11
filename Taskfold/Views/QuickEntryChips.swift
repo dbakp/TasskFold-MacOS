@@ -45,7 +45,7 @@ struct QuickEntryChips: View {
                     .transition(reduceMotion ? .opacity : .asymmetric(insertion: .scale(scale: 0.85).combined(with: .opacity), removal: .scale(scale: 0.9).combined(with: .opacity)))
             }
         }
-        .animation(reduceMotion ? .easeInOut(duration: 0.12) : Transitions.Ease.smoothOut(Transitions.Duration.quick), value: shown.map(\.id))
+        .animation(Motion.respecting(reduceMotion, Transitions.Ease.smoothOut(Transitions.Duration.quick)), value: shown.map(\.id))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("quickEntryChips")
         .onChange(of: focusedChip) { _, value in focusChanged(value != nil) }

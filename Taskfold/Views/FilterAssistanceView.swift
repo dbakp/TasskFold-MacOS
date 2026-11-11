@@ -143,13 +143,13 @@ struct FilterAssistanceView: View {
                 }
                 .onChange(of: previewCount) { _, count in
                     guard count != nil, isCurrent, focusedField == nil, checkedStamp == previewStamp else { return }
-                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                    withAnimation(Motion.respecting(reduceMotion, Motion.layout)) {
                         proxy.scrollTo("filterAssistanceCountAnchor", anchor: .top)
                     }
                 }
                 .onChange(of: error) { _, message in
                     guard message != nil, isCurrent, focusedField == nil else { return }
-                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                    withAnimation(Motion.respecting(reduceMotion, Motion.layout)) {
                         proxy.scrollTo("filterAssistanceErrorAnchor", anchor: .top)
                     }
                 }

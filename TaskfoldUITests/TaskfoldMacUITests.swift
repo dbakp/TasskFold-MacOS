@@ -590,7 +590,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(last.isHittable); XCTAssertGreaterThanOrEqual(last.frame.minY, column.frame.minY); XCTAssertLessThanOrEqual(last.frame.maxY, column.frame.maxY)
         let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Saved filter lower card on Mac"; shot.lifetime = .keepAlways; add(shot)
         last.click(); XCTAssertEqual(app.textFields["taskTitle"].value as? String, "Workshop task 44")
-        app.buttons["Complete Workshop task 44"].click(); XCTAssertFalse(app.buttons["Complete Workshop task 44"].waitForExistence(timeout: 2))
+        app.buttons["Complete Workshop task 44"].click(); XCTAssertTrue(waitForDisappearance(app.buttons["Complete Workshop task 44"], timeout: 5), "The checked row lingers about half a second, then leaves")
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(column.waitForExistence(timeout: 5)); for _ in 0..<30 where !app.buttons["savedFilterOpen-parity-43"].isHittable { column.swipeUp(velocity: .slow) }
         XCTAssertTrue(app.buttons["savedFilterOpen-parity-43"].exists); XCTAssertFalse(app.buttons["Complete Workshop task 44"].exists)

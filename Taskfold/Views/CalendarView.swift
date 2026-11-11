@@ -645,7 +645,7 @@ struct CalendarView: View {
             .animation(layout, value: items.map(\.id))
         }
         .background(Color(nsColor: .controlBackgroundColor))
-        .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation).transition(.toast) } }
+        .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation) } }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("calendarDayPanel")
     }

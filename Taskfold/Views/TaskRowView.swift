@@ -29,6 +29,7 @@ struct TaskRowView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("mac.taskDensity") private var density = "roomy"
     let task: Record
     @State private var fullNote: (request: TaskNotePreviewReadCache.Request, reading: Linkify.Reading)?
@@ -43,7 +44,9 @@ struct TaskRowView: View {
     // Selection is a soft accent wash (DS.Palette.selectionFill), so selected rows keep primary text colour in every window state.
     private var selectedForeground: Color { DS.Palette.textPrimary }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
-    private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
+    private var checked: Bool { task.completed || workspace.isLingering(task.id) }
+    /// Just checked: the title fades to the tertiary colour while the row lingers.
+    private var lingeringDone: Bool { workspace.isLingering(task.id) }
     var body: some View {
         let planning = TaskRowPlanningRead(task: task, compactDate: compactDate)
         let fullRequest = dynamicTypeSize.isAccessibilitySize ? store.fullTaskNotePreviewRequest(task) : nil
@@ -94,8 +97,9 @@ struct TaskRowView: View {
                         .font(DS.Font.taskTitle)
                         .fontWeight(TaskKind(task) == .heading ? .semibold : .regular)
                         .accessibilityAddTraits(TaskKind(task) == .heading ? .isHeader : [])
-                        .foregroundStyle(isSelected ? selectedForeground : checked ? DS.Palette.textSecondary : DS.Palette.textPrimary)
+                        .foregroundStyle(isSelected ? selectedForeground : lingeringDone ? DS.Palette.textTertiary : checked ? DS.Palette.textSecondary : DS.Palette.textPrimary)
                         .strikethrough(checked, color: .secondary)
+                        .animation(Motion.respecting(reduceMotion, Transitions.Ease.smoothOut(Transitions.Duration.fast)), value: checked)
                         .lineLimit(3)
                         .accessibilityLabel(accessibilitySummary(planning))
                         .accessibilityIdentifier("title-\(task.id)")

@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import AVFoundation
 
 /// The iOS motion vocabulary tuned for the desktop: the same set of tokens, shorter and with less bounce,
 /// because a pointer is more precise than a finger and a large window magnifies overshoot.
@@ -30,7 +31,27 @@ enum Feedback {
     /// A dragged task landed.
     static func drop() { performer.perform(.levelChange, performanceTime: .now) }
     /// A task was completed.
-    static func complete() { performer.perform(.levelChange, performanceTime: .drawCompleted) }
+    static func complete() { performer.perform(.levelChange, performanceTime: .drawCompleted); CompletionSound.play() }
+    /// A celebration moment, such as reaching the daily goal.
+    static func celebrate() { performer.perform(.levelChange, performanceTime: .now) }
+}
+
+/// The soft completion "pling" bundled with the app. Preference: Settings > General > Play sound on completion.
+@MainActor
+enum CompletionSound {
+    static let defaultsKey = "playCompletionSound"
+    private static var player: AVAudioPlayer? = {
+        guard let url = Bundle.main.url(forResource: "complete", withExtension: "wav") else { return nil }
+        let player = try? AVAudioPlayer(contentsOf: url)
+        player?.volume = 0.5
+        player?.prepareToPlay()
+        return player
+    }()
+    static func play() {
+        guard UserDefaults.standard.object(forKey: defaultsKey) as? Bool ?? true, let player else { return }
+        player.currentTime = 0
+        player.play()
+    }
 }
 
 /// Gentle scale-and-dim press feedback for clickable surfaces that are not system buttons.
