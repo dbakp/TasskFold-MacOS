@@ -260,6 +260,19 @@ struct RootView: View {
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
                         try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
                     }
+                } else if let name = option("capture-dayplan") {
+                    // The planning flow hosted alone: --capture-dayplan=estimate|timeblock|done|shutdown with --dayplan-fixture
+                    // (a sheet cannot be captured with the window). Shutdown also reads --momentum-fixture=streak.
+                    let size = NSSize(width: name == "timeblock" ? 820 : 560, height: name == "timeblock" ? 780 : name == "done" ? 580 : name == "shutdown" ? 620 : 640)
+                    let root: AnyView = name == "shutdown" ? AnyView(DayPlanShutdownView())
+                        : AnyView(PlanDayView(kind: .day, queue: [], start: name == "timeblock" ? .timeBlock : name == "done" ? .done : .estimate))
+                    let host = NSHostingView(rootView: root.environment(store).environment(workspace).frame(width: size.width, height: size.height).background(Color(nsColor: .windowBackgroundColor)))
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(2.5))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
+                    }
                 } else if option("capture-toast") != nil {
                     // The bottom bar hosted alone: --capture-toast=goal shows the daily-goal celebration.
                     // =streak shows a milestone alone, =combined a goal that lands with one, =level a level-up.
@@ -664,6 +677,8 @@ struct RootView: View {
                 workspace.section = SidebarItem(key: scope.preferenceKey)
                 if parts.count > 1, parts.first != "picker" { store.setViewValue(scope, field: "layout", value: .string(parts[1])) }
             }
+            // Daily planning captures: --dayplan-fixture replaces the samples with nine tasks due today (six estimated, over the free time).
+            if DayPlanFixture.enabled { store.snapshot.tables["tasks"] = DayPlanFixture.tasks(user: store.userID, shutdown: DayPlanFixture.step == "shutdown") }
             // Momentum captures: --momentum-fixture=streak|vacation|milestone adds a recorded history and goals.
             if let value = MomentumFixture.variant(arguments) { MomentumFixture.apply(to: &store.snapshot, account: store.userID, variant: value) }
             // Empty-state captures: --empty-fixture removes every task; =done leaves only one finished today.
@@ -721,6 +736,7 @@ struct WorkspaceView: View {
         }
         .sheet(isPresented: $workspace.finderPresented, onDismiss: { workspace.finishFinderDismissal() }) { FinderView() }
         .sheet(item: $workspace.planning) { kind in PlanDayView(kind: kind, queue: workspace.planQueue(kind)) }
+        .sheet(isPresented: $workspace.shuttingDown) { DayPlanShutdownView() }
         .sheet(isPresented: $workspace.onboarding) { OnboardingView() }
         .onAppear {
             // First launch shows the tour once; fixtures opt in with --onboarding so tests stay deterministic.
