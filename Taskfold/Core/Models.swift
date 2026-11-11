@@ -1070,8 +1070,10 @@ struct QuickEntry {
         var label: String
         var id: String { group + ":" + text }
     }
-    static let groups = ["priority", "labels", "due_time", "recurrence", "due_date", "deadline_date", "duration_minutes", "project_id", "section_id", "assigned_to", "reminder_specs"]
+    static let groups = ["priority", "labels", "due_time", "recurrence", "due_date", "deadline_date", "duration_minutes", "project_id", "section_id", "assigned_to", "reminder_specs", "planning"]
     var title: String
+    /// `this evening` or `someday`, when the entry asked for a planning state. The caller files the task after creating it.
+    var planning: PlanningSlot?
     var updates: [String: JSON] = [:]
     var tokens: [Token] = []
     var warnings: [String] = []
@@ -1102,6 +1104,20 @@ struct QuickEntry {
         protect(#""[^"\n]*""#)
         protect(#"(?<!\S)(?:https?://|www\.)\S+"#)
         protect(#"(?<!\S)[^\s!]+![^\s!]+"#)
+        // This Evening / Someday are claimed before the clock pass so "evening" is not read as 7 PM; unaccepted ones are restored below.
+        var planningMatches: [(slot: PlanningSlot, raw: String, marker: String, literal: Int)] = []
+        if context.planning && !disabled.contains("planning") {
+            for slot in PlanningSlot.allCases {
+                guard let regex = try? NSRegularExpression(pattern: slot == .evening ? Planning.eveningPattern : Planning.somedayPattern, options: .caseInsensitive) else { continue }
+                let source = title
+                for found in regex.matches(in: source, range: NSRange(source.startIndex..., in: source)).reversed() {
+                    guard let range = Range(found.range, in: source), let target = Range(found.range, in: title) else { continue }
+                    let raw = String(source[range]), marker = "\u{E00A}" + UUID().uuidString + "\u{E00B}"
+                    title.replaceSubrange(target, with: marker)
+                    literals.append((marker, raw)); planningMatches.append((slot, raw, marker, literals.count - 1))
+                }
+            }
+        }
         var reminderRows = ReminderSpec.rows(task)
         let reminderSeed = reminderRows.map { $0.object["id"]?.text ?? "" }.joined(separator: "|")
         if let regex = try? NSRegularExpression(pattern: QuickReminderText.pattern, options: .caseInsensitive) {
@@ -1275,6 +1291,28 @@ struct QuickEntry {
                 if passed, let index = tokens.firstIndex(where: { $0.group == "due_time" }) { tokens[index].label = "Tomorrow · " + tokens[index].label }
             }
         }
+        if !planningMatches.isEmpty {
+            let todayKey = TaskPlanner.dayKey(now, calendar: calendar)
+            if planningMatches.count > 1 {
+                warnings.append("Choose one of This Evening or Someday. Those words stay in the title.")
+            } else if let match = planningMatches.first {
+                var accepted = false
+                if match.slot == .evening {
+                    if let day = updates["due_date"]?.text, day != todayKey { warnings.append("“\(match.raw)” only works for today. Its text stays in the title.") }
+                    else { updates["due_date"] = .string(todayKey); accepted = true }
+                } else if updates["due_date"] != nil || updates["due_time"] != nil || updates["is_recurring"] != nil || task["is_recurring"].flag {
+                    warnings.append("Someday tasks have no date or repeat. “\(match.raw)” stays in the title.")
+                } else {
+                    for key in Planning.clearedSchedule.keys { updates[key] = .null }
+                    accepted = true
+                }
+                if accepted {
+                    literals[match.literal].1 = ""
+                    planning = match.slot
+                    tokens.append(Token(group: "planning", text: match.raw, label: match.slot.title))
+                }
+            }
+        }
         // Drop a dangling "at" left behind when only the time was declined or accepted.
         if updates["due_time"] != nil { title = title.replacingOccurrences(of: #"\s+at\s*$"#, with: "", options: .regularExpression) }
         if acceptedReminders.contains(where: { $0.0.kind == "relative" }) && (updates["due_date"]?.text ?? task.string("due_date")).isEmpty {
@@ -1356,6 +1394,8 @@ struct QuickEntryContext {
     var currentProject = ""
     var currentUser = ""
     var datePreferences: DatePhrasePreferences? = DatePhrasePreferences()
+    /// Only capture surfaces that can file a task under This Evening or Someday read those words as tokens.
+    var planning = false
     func choosingReferences(_ choices: [String: String]) -> Self { var copy = self; copy.referenceChoices = choices; return copy }
     static func key(_ name: String) -> String {
         name.trimmingCharacters(in: .whitespacesAndNewlines).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
@@ -2491,6 +2531,9 @@ enum WidgetProjection {
 
     static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], pulseChildren: ChildWorkHistory? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil), checking: (WidgetRenderCheckpoint) throws -> Void) rethrows -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
+        // Someday work stays out of widgets; it is undated, and Inbox-style widget lists must not surface it.
+        let someday = Planning.listedSomeday(rows: viewOrders, account: account)
+        let tasks = someday.isEmpty ? tasks : tasks.filter { !Planning.hides($0, listed: someday) }
         try checking(.lists)
         let lists = try listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments, checking: checking)
         try checking(.pulse)

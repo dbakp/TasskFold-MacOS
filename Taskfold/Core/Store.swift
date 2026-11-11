@@ -2093,7 +2093,9 @@ final class Store {
         let matches = taskCache.matching(query)
         if case .project = query.scope { return matches }
         let archived = projectCatalog.archivedIDs
-        return matches.filter { !archived.contains($0.string("project_id")) }
+        // Someday work is undated and filed away: it stays out of Inbox (it remains in projects, All and search).
+        let someday = query.scope == .inbox ? Planning.listedSomeday(rows: rows(Planning.table), account: userID) : []
+        return matches.filter { !archived.contains($0.string("project_id")) && (someday.isEmpty || !Planning.hides($0, listed: someday)) }
     }
     /// A synchronous presentation read. Observing the live snapshot even on
     /// hits keeps date/completion/archive/access edits visible to SwiftUI. All
@@ -3467,7 +3469,7 @@ final class Store {
         return true
     }
     @discardableResult
-    func save(_ table: String, _ record: Record, baseline: Record? = nil, applyReminderDefaults: Bool = true) -> Bool {
+    func save(_ table: String, _ record: Record, baseline: Record? = nil, applyReminderDefaults: Bool = true, alongside extra: [Mutation] = []) -> Bool {
         let existing = self.record(table, id: record.id)
         if table == "tasks", let existing, let baseline {
             do { try TaskKind.validateTypeEdit(original: baseline, edited: record, current: existing) }
@@ -3506,7 +3508,7 @@ final class Store {
             savedFilterFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
         }
         #endif
-        return commit(changes)
+        return commit(changes + extra)
     }
     func isPinnedNote(_ taskID: String) -> Bool { PinnedNotes.contains(taskID, pins: rows("view_orders"), account: userID) }
     /// Pinned-note text uses the same task admission, conflict, queue and Undo

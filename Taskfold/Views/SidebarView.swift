@@ -16,6 +16,7 @@ struct SidebarView: View {
     @State private var projectsExpanded = true
     @State private var labelsExpanded = true
     private var today: String { Dates.day(Date()) }
+    private var somedayListed: Set<String> { Planning.listedSomeday(rows: store.rows(Planning.table), account: store.userID) }
     var body: some View {
         let navigationCounts = store.navigationCounts
         let reading = store.productiveReading
@@ -35,7 +36,8 @@ struct SidebarView: View {
         List(selection: Binding(get: { Optional(workspace.section) }, set: { if let value = $0 { workspace.section = value } })) {
             Section {
                 item(.today, "Today", count: store.matching(TaskQuery(scope: .today), focus: store.focusScope?.hideOtherBadges ?? true).filter { TaskKind.mayComplete($0) && !$0.completed }.count, incomplete: store.productiveReading.incomplete, dropDay: today)
-                item(.inbox, "Inbox", count: store.focusScope?.hideOtherBadges == true ? 0 : store.inboxProductiveReading.work.filter(InboxReviewRequest.eligible).count, incomplete: store.inboxProductiveReading.incomplete, dropProject: "")
+                item(.inbox, "Inbox", count: store.focusScope?.hideOtherBadges == true ? 0 : store.inboxProductiveReading.work.filter { InboxReviewRequest.eligible($0) && !Planning.hides($0, listed: somedayListed) }.count, incomplete: store.inboxProductiveReading.incomplete, dropProject: "")
+                item(.someday, "Someday", count: store.focusScope?.hideOtherBadges == true ? nil : store.somedayCount)
                 item(.upcoming, "Upcoming", count: nil, dropDay: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!))
                 item(.calendar, "Calendar", count: nil)
             }

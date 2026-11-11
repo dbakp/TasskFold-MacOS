@@ -84,7 +84,8 @@ struct TaskInspectorForm: View {
     @State private var teamDraft: TeamTaskEditorDraft?
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
-    private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
+    /// Planning words ("this evening", "someday") are capture tokens only; editing a title never moves a task.
+    private var quickExclusions: Set<String> { (isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : []).union(["planning"]) }
     @State private var taskFiles: TaskFileUploadRequest?
     @State private var teamMove: TeamTaskMoveRequest?
     @State private var teamDeletion: TeamTaskDeletionRequest?

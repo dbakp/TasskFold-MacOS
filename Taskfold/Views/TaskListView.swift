@@ -143,8 +143,14 @@ struct TaskListView: View {
     private var dayGroups: [(String, [Record])] {
         let now = Date(), calendar = Calendar.current, today = Dates.day(now)
         let read = workspace.section == .assigned ? TaskDayGroupsRead(tasks: filtered, today: today, calendar: calendar) : store.taskDayGroups(taskQuery, today: today, calendar: calendar)
+        if scope == .today {
+            // This Evening takes its tasks out of Overdue and Today without touching their dates.
+            let evening = store.eveningPartition(read.overdue + (read.rowsByDay[today] ?? [])).evening
+            let eveningIDs = Set(evening.map(\.id))
+            let overdue = ordered(read.overdue.filter { !eveningIDs.contains($0.id) }, day: overdueKey)
+            return [("Overdue", overdue), (today, ordered((read.rowsByDay[today] ?? []).filter { !eveningIDs.contains($0.id) }, day: today)), (Workspace.Placement.evening, evening)]
+        }
         let overdue = ordered(read.overdue, day: overdueKey)
-        if scope == .today { return [("Overdue", overdue), (today, ordered(read.rowsByDay[today] ?? [], day: today))] }
         let horizon = (0..<14).compactMap { calendar.date(byAdding: .day, value: $0, to: now).map(Dates.day) }
         return [("Overdue", overdue)] + read.upcomingDays(adding: horizon).map { day in (day, ordered(read.rowsByDay[day] ?? [], day: day)) }
     }
@@ -176,7 +182,7 @@ struct TaskListView: View {
         switch scope {
         case .project: return projectBoardColumns
         case .upcoming:
-            return UpcomingColumns.build(tasks: filtered).map { column in
+            return UpcomingColumns.build(tasks: boardRows).map { column in
                 let key: String, add: String
                 switch column.kind {
                 case .overdue: key = overdueKey; add = ""
@@ -187,7 +193,7 @@ struct TaskListView: View {
                                      groupsOverdue: false, receivesDrops: column.kind != .overdue)
             }
         case .today, .label:
-            return ProjectColumns.build(tasks: filtered, projects: store.allProjects).map { column in
+            return ProjectColumns.build(tasks: boardRows, projects: store.allProjects).map { column in
                 var project = ""; if case .project(let id) = column.kind { project = id }
                 return ProjectColumn(id: column.id, sectionID: project, title: column.title, tasks: ordered(column.tasks, day: column.id))
             }
@@ -197,7 +203,7 @@ struct TaskListView: View {
     }
     private var projectBoardColumns: [ProjectColumn] {
         // Board columns include overdue work; list groups intentionally omit it.
-        let rowsBySection = Dictionary(grouping: filtered, by: { $0.string("section_id") })
+        let rowsBySection = Dictionary(grouping: boardRows, by: { $0.string("section_id") })
         return groups.map { group in
             let section = group.key.split(separator: ":").last.map(String.init) ?? "none"
             return ProjectColumn(id: group.key, sectionID: section == "none" ? "" : section, title: group.title.isEmpty ? "Tasks" : group.title,
@@ -218,6 +224,12 @@ struct TaskListView: View {
     }
     /// Shared tasks never drag-reschedule: their changes go through the shared-task review in the context menu.
     private func canDragReschedule(_ task: Record) -> Bool { !store.hasSharedTaskSelection([task.id]) }
+    /// Someday tasks are muted in lists that keep them (projects, labels, All, filters) and hidden from boards.
+    private var somedayListed: Set<String> { Planning.listedSomeday(rows: store.rows(Planning.table), account: store.userID) }
+    private var mutedSomeday: Set<String> {
+        switch scope { case .project, .label, .all, .saved: return somedayListed; default: return [] }
+    }
+    private var boardRows: [Record] { let hidden = somedayListed; return hidden.isEmpty ? filtered : filtered.filter { !Planning.hides($0, listed: hidden) } }
     private var calendarTasks: [Record] { filtered.filter { Workspace.subtaskPath($0.id) == nil && TaskKind.mayComplete($0) } }
     private var captureProjectID: String { captureProjectOverride ?? projectID }
     private func beginBoardAdd(_ column: ProjectColumn) {
@@ -237,7 +249,7 @@ struct TaskListView: View {
     private var displayedTaskIDs: [String] {
         if calendarLayout { return calendarTasks.map(\.id) }
         if boardLayout && (!projectID.isEmpty || !boardColumns.isEmpty) { return boardColumns.filter { !collapsed($0.id) }.flatMap { workspace.visibleTasks($0.tasks).map(\.id) } }
-        if dated { return dayGroups.filter { $0.0 != "Overdue" || !overdueCollapsed }.flatMap { workspace.visibleTasks($0.1).map(\.id) } }
+        if dated { return dayGroups.filter { ($0.0 != "Overdue" || !overdueCollapsed) && ($0.0 != Workspace.Placement.evening || !collapsed($0.0)) }.flatMap { workspace.visibleTasks($0.1).map(\.id) } }
         return (overdueCollapsed ? [] : workspace.visibleTasks(overdueTasks).map(\.id)) + groups.filter { !collapsed($0.key) }.flatMap { workspace.visibleTasks($0.tasks).map(\.id) }
     }
     private var order: [(day: String, ids: [String])] {
@@ -277,7 +289,7 @@ struct TaskListView: View {
                         if case .saved(let id) = scope, let view = store.record("saved_views", id: id) { Button("Edit Filter…") { filterEditor = view } }
                     }.padding(DS.Space.xxl).frame(maxWidth: ReadingColumn.width, alignment: .leading).frame(maxWidth: .infinity, alignment: .center)
                 }.accessibilityIdentifier("savedFilterError")
-            } else if case .saved = scope, layoutMode == .board { SavedFilterBoard(scope: scope, tasks: filtered, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
+            } else if case .saved = scope, layoutMode == .board { SavedFilterBoard(scope: scope, tasks: boardRows, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
             else if calendarLayout {
                 MonthCalendarView(tasks: calendarTasks, month: $calendarMonth, selectedDay: $calendarDay, identifier: scope == .upcoming ? "upcomingCalendar" : "projectCalendar",
                                   canDrag: canDragReschedule, add: beginCalendarAdd)
@@ -301,6 +313,7 @@ struct TaskListView: View {
                 if dated {
                     ForEach(datedEmpty ? [] : dayGroups, id: \.0) { group in
                         if group.0 == "Overdue" { if !group.1.isEmpty { overdueSection(group.1) } }
+                        else if group.0 == Workspace.Placement.evening { if !group.1.isEmpty || workspace.drag.active { eveningSection(group.1) } }
                         else { daySection(group.0, group.1) }
                     }
                 } else {
@@ -334,6 +347,7 @@ struct TaskListView: View {
             .focused($taskListFocused)
             .environment(\.taskListFocused, taskListFocused)
             .environment(\.taskRowScope, scope)
+            .environment(\.somedayMuted, mutedSomeday)
             .accessibilityIdentifier("taskList")
             .listStyle(.inset)
             .scrollContentBackground(.hidden)
@@ -522,6 +536,36 @@ struct TaskListView: View {
             .accessibilityIdentifier("overdueToggle")
         }
     }
+    private func eveningSection(_ tasks: [Record]) -> some View {
+        let key = Workspace.Placement.evening
+        let count = tasks.filter { TaskKind.mayComplete($0) && !$0.completed && !workspace.completing.contains($0.id) }.count
+        let isCollapsed = collapsed(key) && !workspace.drag.active
+        return Section {
+            if !isCollapsed {
+                ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: key, orderProvider: { order })).tag(task.id) }
+                    .onMove { DayDropHandling(workspace: workspace, day: key, tasks: tasks).move(from: $0, to: $1) }
+                    .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: key, tasks: tasks).insert(at: $0, providers: $1) }
+                DayEndRow(day: key, isEmpty: tasks.isEmpty, emptyText: "Nothing for this evening", releaseText: "Release to plan for this evening").selectionDisabled().listRowSeparator(.hidden)
+            }
+        } header: {
+            Button { withAnimation(layout) { collapseBinding(key).wrappedValue.toggle() } } label: {
+                HStack(spacing: DS.Space.s) {
+                    Image(systemName: isCollapsed ? "chevron.right" : "chevron.down").font(DS.Font.chip)
+                    Image(systemName: "moon.fill").font(DS.Font.chip).foregroundStyle(DS.Palette.accentSecondary)
+                    Text("This Evening").font(DS.Font.sectionHeader)
+                    Spacer()
+                    if count > 0 { Text("\(count)").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary).contentTransition(.numericText()) }
+                }
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("This Evening, \(count) \(count == 1 ? "task" : "tasks")")
+            .accessibilityValue(isCollapsed ? "Collapsed" : "Expanded")
+            .accessibilityIdentifier("eveningToggle")
+            .modifier(DayHeaderDrop(day: key))
+        }
+    }
     private func daySection(_ day: String, _ tasks: [Record]) -> some View {
         let today = Dates.day(Date())
         let tomorrow = Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!)
@@ -552,11 +596,15 @@ struct TaskListView: View {
         return MacSwipeRow(controller: rowSwipe, completed: task.completed, canComplete: TaskKind.mayComplete(task), selected: workspace.selection.contains(task.id), prepare: {
             guard let intent else { return nil }
             return { command in performRowGesture(command, intent: intent) }
-        }) { TaskRowView(task: task, compactDate: dated) }
+        }) { TaskRowView(task: task, compactDate: dated).modifier(SomedayMute(task: task)) }
         .remoteChangeHighlight(task.id)
         .background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
         .accessibilityActions { if TaskKind.mayComplete(task) { Button(task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } } } }
         .accessibilityAction(named: "Move to tomorrow") { if let intent { performRowGesture(.tomorrow, intent: intent) } }
+        .accessibilityAction(named: store.isInEvening(task) ? "Back to Today" : "Move to This Evening") {
+            if store.isInEvening(task) { workspace.removeFromEvening([task.id]) } else if store.canMoveToEvening([task.id]) { workspace.moveToEvening([task.id]) }
+        }
+        .accessibilityAction(named: "Move to Someday") { if store.canMoveToSomeday([task.id]) { workspace.moveToSomeday([task.id]) } }
         .accessibilityAction(named: "Edit") { if let intent { performRowGesture(.edit, intent: intent) } }
         .accessibilityAction(named: "Delete") { if let intent { performRowGesture(.delete, intent: intent) } }
     }
@@ -593,7 +641,7 @@ struct TaskListView: View {
         if !projectID.isEmpty && layoutMode == .board { sections = boardColumns.map { ($0.title, $0.tasks) } }
         else if dated { sections = dayGroups }
         else { sections = (overdueTasks.isEmpty ? [] : [("Overdue", overdueTasks)]) + groups.map { ($0.title, $0.tasks) } }
-        let named = sections.map { name, tasks in (Dates.parse(name)?.formatted(.dateTime.weekday(.wide).day().month(.wide).year()) ?? name, tasks) }
+        let named = sections.map { name, tasks in (name == Workspace.Placement.evening ? "This Evening" : Dates.parse(name)?.formatted(.dateTime.weekday(.wide).day().month(.wide).year()) ?? name, tasks) }
         let detail = Date().formatted(.dateTime.day().month(.wide).year()) + (workspace.search.isEmpty ? "" : " · Search: " + workspace.search) + (priorityFilter == 0 ? "" : " · Priority \(priorityFilter)")
         return try PrintDocument.capture(title: workspace.section == .assigned ? "Assigned to me" : title, subtitle: detail, groups: named, projects: store.allProjects, labels: store.labels, hierarchyRoots: workspace.hierarchyPresentation ? store.tasks : nil, expandOrdinaryChecklists: !workspace.hierarchyFilter, assigneeName: store.assigneeName)
     }
@@ -629,6 +677,9 @@ struct TaskListView: View {
                 Divider()
                 Button("Remove Date", systemImage: "calendar.badge.minus") { workspace.reschedule(targets, to: nil, label: "") }
             }
+            if store.canMoveToEvening(targets) { Button("This Evening", systemImage: "moon.fill") { workspace.moveToEvening(targets) }.accessibilityIdentifier("moveToEvening") }
+            if tasks.allSatisfy({ store.isInEvening($0) }) { Button("Back to Today", systemImage: "sun.max") { workspace.removeFromEvening(targets) }.accessibilityIdentifier("backToToday") }
+            if store.canMoveToSomeday(targets) { Button("Move to Someday", systemImage: "moon.zzz") { workspace.moveToSomeday(targets) }.accessibilityIdentifier("moveToSomeday") }
             Button("Edit Deadlines…", systemImage: "flag.checkered") { workspace.editDeadlines(targets) }.accessibilityIdentifier("bulkDeadlines")
             Button("Edit Estimates…", systemImage: "hourglass") { workspace.editEstimates(targets) }.accessibilityIdentifier("bulkEstimates")
             if store.hasSharedTaskSelection(targets) {
@@ -781,6 +832,7 @@ struct DatePickSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var date: Date
     let count: Int
+    var verb = "Reschedule"
     let confirm: () -> Void
     var body: some View {
         VStack(spacing: DS.Space.l) {
@@ -789,7 +841,7 @@ struct DatePickSheet: View {
             HStack {
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
                 Spacer()
-                Button(count == 1 ? "Reschedule Task" : "Reschedule \(count) Tasks") { confirm(); dismiss() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
+                Button(count == 1 ? "\(verb) Task" : "\(verb) \(count) Tasks") { confirm(); dismiss() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
             }
         }
         .padding(DS.Space.xl).frame(width: 320)
