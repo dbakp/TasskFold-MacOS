@@ -42,7 +42,7 @@ Draft, 10 November 2026. Based on `TasskFold-MacOS@a43fca03` and `TaskFold-iOS@e
 | Menu bar extra (quick add and Today) | done ([TasskFold-MacOS#118](https://github.com/dbakp/TasskFold-MacOS/pull/118)) | n/a |
 | Server push reminders (cross-device, app closed) | deferred | deferred |
 | Two-way Google/Outlook calendar sync | read-only, no provider IDs | same |
-| Karma, streaks and vacation mode (on top of goals) | missing | missing |
+| Karma, streaks and vacation mode (on top of goals) | done (#122) | done (#123) |
 | Spotlight indexing of tasks | missing | missing |
 | Focus filters (show work or personal projects per Focus mode) | missing | missing |
 | Live Activity for focus or next task | n/a | removed earlier |
@@ -141,7 +141,7 @@ Rules that keep this token-efficient without losing quality:
 1. ~~Mac global Quick Add hotkey (user-configurable) and a menu bar extra with Today and quick add.~~ Done ([TasskFold-MacOS#118](https://github.com/dbakp/TasskFold-MacOS/pull/118), spec `specs/GLOBAL_QUICK_ADD.md`); a real hotkey press is still to be checked by hand.
 2. ~~Real-time sync feel: live updates, sync-status indicator and no manual refresh in normal use.~~ Done ([TasskFold-MacOS#120](https://github.com/dbakp/TasskFold-MacOS/pull/120), [TaskFold-iOS#121](https://github.com/dbakp/TaskFold-iOS/pull/121), spec `specs/REALTIME_SYNC.md`); real two-device realtime still to be checked by hand.
 3. Server push reminders. Turn on the existing APNs worker after your sign-off on hosted services.
-4. Karma or productivity score, streaks and vacation mode, built on the existing goals and insights.
+4. ~~Karma or productivity score, streaks and vacation mode, built on the existing goals and insights.~~ Done ([TasskFold-MacOS#122](https://github.com/dbakp/TasskFold-MacOS/pull/122), [TaskFold-iOS#123](https://github.com/dbakp/TaskFold-iOS/pull/123), spec `specs/MOMENTUM.md`): streaks, a 0–100 Momentum score with levels, and vacation mode; the live Mac milestone toast is still to be checked by hand.
 5. Layout parity: list, board and calendar views for projects and Upcoming on both apps.
 6. System integration: Spotlight indexing, Focus filters, App Intents and Shortcuts expansion, and an iOS Control Center control.
 7. iOS Live Activity for a running focus session or the next timed task.
