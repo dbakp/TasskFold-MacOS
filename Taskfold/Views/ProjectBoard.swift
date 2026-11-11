@@ -19,6 +19,7 @@ struct ProjectBoard: View {
     var identifier = "projectBoard"
     var moveMenuTitle = "Move to Section"
     var compactDate = false
+    var showsProject = true
     var canDrag: (Record) -> Bool = { _ in true }
     let add: (ProjectColumn) -> Void
     private var order: [(day: String, ids: [String])] { columns.map { ($0.id, $0.tasks.map(\.id)) } }
@@ -32,7 +33,7 @@ struct ProjectBoard: View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: DS.Space.l) {
                 ForEach(columns) { column in
-                    BoardColumn(column: column, order: order, moveMenuTitle: moveMenuTitle, compactDate: compactDate, canDrag: canDrag, destinations: columns.filter(\.receivesDrops), add: { add(column) })
+                    BoardColumn(column: column, order: order, moveMenuTitle: moveMenuTitle, compactDate: compactDate, showsProject: showsProject, canDrag: canDrag, destinations: columns.filter(\.receivesDrops), add: { add(column) })
                         .frame(width: 280).id(column.id)
                 }
             }.padding(.horizontal, DS.Space.xl).padding(.bottom, DS.Space.m)
@@ -60,6 +61,7 @@ private struct BoardColumn: View {
     let order: [(day: String, ids: [String])]
     let moveMenuTitle: String
     let compactDate: Bool
+    let showsProject: Bool
     let canDrag: (Record) -> Bool
     let destinations: [ProjectColumn]
     let add: () -> Void
@@ -71,8 +73,8 @@ private struct BoardColumn: View {
         collapsedSections = keys.sorted().joined(separator: "\n")
     }
     @AppStorage private var overdueCollapsed: Bool
-    init(column: ProjectColumn, order: [(day: String, ids: [String])], moveMenuTitle: String, compactDate: Bool, canDrag: @escaping (Record) -> Bool, destinations: [ProjectColumn], add: @escaping () -> Void) {
-        self.column = column; self.order = order; self.moveMenuTitle = moveMenuTitle; self.compactDate = compactDate; self.canDrag = canDrag; self.destinations = destinations; self.add = add
+    init(column: ProjectColumn, order: [(day: String, ids: [String])], moveMenuTitle: String, compactDate: Bool, showsProject: Bool, canDrag: @escaping (Record) -> Bool, destinations: [ProjectColumn], add: @escaping () -> Void) {
+        self.column = column; self.order = order; self.moveMenuTitle = moveMenuTitle; self.compactDate = compactDate; self.showsProject = showsProject; self.canDrag = canDrag; self.destinations = destinations; self.add = add
         _overdueCollapsed = AppStorage(wrappedValue: false, "mac.board.\(column.id).overdueCollapsed")
     }
     private var overdue: [Record] { !column.groupsOverdue ? [] : column.tasks.filter { TaskKind.mayComplete($0) && !$0.completed && $0.due.map { $0 < Calendar.current.startOfDay(for: Date()) } == true } }
@@ -113,6 +115,7 @@ private struct BoardColumn: View {
                 }.focused($taskListFocused)
                 .environment(\.taskListFocused, taskListFocused)
                 .accessibilityIdentifier("boardTaskList")
+                .environment(\.boardCard, BoardCardStyle(showsProject: showsProject))
                 .listStyle(.inset).scrollContentBackground(.hidden).background(QuietNativeSelection())
                 .contextMenu(forSelectionType: String.self) { ids in
                     if !ids.isEmpty {
@@ -143,7 +146,7 @@ private struct BoardColumn: View {
             TaskRowView(task: task, compactDate: compactDate)
                 .modifier(DayDragRow(task: task, day: column.id, enabled: canDrag(task), orderProvider: { order }))
                 .tag(task.id).listRowSeparator(.hidden)
-
+                .listRowInsets(EdgeInsets(top: 3, leading: DS.Space.s, bottom: 3, trailing: DS.Space.s))
         }
         .onMove { DayDropHandling(workspace: workspace, day: column.id, tasks: tasks).move(from: $0, to: $1) }
         .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: column.id, tasks: tasks).insert(at: $0, providers: $1) }
