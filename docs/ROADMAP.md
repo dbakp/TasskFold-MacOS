@@ -133,6 +133,8 @@ Rules that keep this token-efficient without losing quality:
    - Task row redesign ([TasskFold-MacOS#111](https://github.com/dbakp/TasskFold-MacOS/pull/111), [TaskFold-iOS#111](https://github.com/dbakp/TaskFold-iOS/pull/111)) and iOS list polish ([TaskFold-iOS#112](https://github.com/dbakp/TaskFold-iOS/pull/112)).
    - Task detail redesign ([TasskFold-MacOS#112](https://github.com/dbakp/TasskFold-MacOS/pull/112), [TaskFold-iOS#113](https://github.com/dbakp/TaskFold-iOS/pull/113)). Spec: `specs/TASK_DETAIL.md`.
    - Quick Add composer with inline highlighting and property chips ([TasskFold-MacOS#114](https://github.com/dbakp/TasskFold-MacOS/pull/114), [TaskFold-iOS#115](https://github.com/dbakp/TaskFold-iOS/pull/115)). Spec: `specs/QUICK_ADD.md`. The iOS UI-test row lookup is fixed.
+   - Delight pass: completion linger and sound, daily goal toast, per-scope empty states, iOS skeleton, 5 s undo toasts ([TasskFold-MacOS#116](https://github.com/dbakp/TasskFold-MacOS/pull/116), [TaskFold-iOS#117](https://github.com/dbakp/TaskFold-iOS/pull/117)). Spec: `specs/DELIGHT_PASS.md`. Phase 1 is complete.
+   - Polish follow-ups: hide the empty "Tasks 0" header under iOS empty states; raise contrast of the iOS "Add task" empty-state button in dark.
    - Open: Mac UI tests sign with the personal team (push and time-sensitive entitlements stripped locally), but unattended runs need UI automation enabled without a password prompt. Three iOS UI tests fail on `main` in the task editor (assignee behind "+", estimate stepper height, completion undo).
 
 ### Phase 2: close the Todoist gaps (about 9 updates)
