@@ -132,7 +132,8 @@ Rules that keep this token-efficient without losing quality:
    - Project generator repaired ([TasskFold-MacOS#110](https://github.com/dbakp/TasskFold-MacOS/pull/110)).
    - Task row redesign ([TasskFold-MacOS#111](https://github.com/dbakp/TasskFold-MacOS/pull/111), [TaskFold-iOS#111](https://github.com/dbakp/TaskFold-iOS/pull/111)) and iOS list polish ([TaskFold-iOS#112](https://github.com/dbakp/TaskFold-iOS/pull/112)).
    - Task detail redesign ([TasskFold-MacOS#112](https://github.com/dbakp/TasskFold-MacOS/pull/112), [TaskFold-iOS#113](https://github.com/dbakp/TaskFold-iOS/pull/113)). Spec: `specs/TASK_DETAIL.md`.
-   - Open: the Mac UI tests need an Apple account in Xcode (App Group entitlements need a development profile). About 9 iOS UI tests fail on row titles now being buttons; a test-lookup fix is queued with the Quick Add update.
+   - Quick Add composer with inline highlighting and property chips ([TasskFold-MacOS#114](https://github.com/dbakp/TasskFold-MacOS/pull/114), [TaskFold-iOS#115](https://github.com/dbakp/TaskFold-iOS/pull/115)). Spec: `specs/QUICK_ADD.md`. The iOS UI-test row lookup is fixed.
+   - Open: Mac UI tests sign with the personal team (push and time-sensitive entitlements stripped locally), but unattended runs need UI automation enabled without a password prompt. Three iOS UI tests fail on `main` in the task editor (assignee behind "+", estimate stepper height, completion undo).
 
 ### Phase 2: close the Todoist gaps (about 9 updates)
 1. Mac global Quick Add hotkey (user-configurable) and a menu bar extra with Today and quick add.
