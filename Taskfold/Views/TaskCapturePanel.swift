@@ -198,7 +198,12 @@ struct TaskCapturePanel: View {
     private func dateChip(_ parsed: QuickEntry, _ effective: Record) -> some View {
         let tokens = parsed.tokens.filter { ["due_date", "due_time", "recurrence"].contains($0.group) }
         let manualFields = ["due_date", "due_time", "time_zone", "is_recurring", "recurrence_pattern", "recurrence_end_date"].filter { manual[$0] != nil }
-        var declines = tokens.map(parsedDecline)
+        // One "×" for the whole date: "tomorrow at 4pm" is one idea, so it is kept in the title together.
+        var declines = tokens.first.map { first in
+            [ChipDecline(id: "decline-\(first.group)", help: "Keep “\(tokens.map(\.text).joined(separator: " "))” in the title") {
+                for token in tokens { declined.insert(token.group) }
+            }]
+        } ?? []
         if !manualFields.isEmpty { declines.append(ChipDecline(id: "quickClearDate", help: "Clear the chosen date") { clearManual(manualFields) }) }
         let set = effective.due.map { day -> (text: String, tint: Color) in
             let relative = TaskDetailFormat.relativeDay(day)
