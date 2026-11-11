@@ -1672,6 +1672,8 @@ struct TaskQuery: Hashable {
     var filterAssignments = TaskAssignmentProvenance.Catalog(nil)
     var userID = ""
     var timeZone = TimeZone.current.identifier
+    /// A Focus filter's view-only project scope. Part of the cache key, never of a saved filter.
+    var focusProjects: Set<String>?
 }
 
 /// Shared by tabs. Results survive navigation and invalidate only when task data changes.
@@ -1851,6 +1853,7 @@ final class TaskCache {
         let matched = candidates.filter { task in
             if query.scope == .completed { if !task.completed { return false } }
             else if !query.includeCompleted && task.completed && !(query.filter?.hasQuerySections == true && query.filter?.includesCompletion == true) { return false }
+            if let focus = query.focusProjects, !focus.contains(task.string("project_id")) { return false }
             if query.priority > 0 && task.priority != query.priority { return false }
             if !query.text.isEmpty && !(task.title + " " + task.string("description")).localizedCaseInsensitiveContains(query.text) { return false }
             if let filter = query.filter {

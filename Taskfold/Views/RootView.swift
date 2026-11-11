@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import CoreSpotlight
 
 struct RootView: View {
     @Environment(Store.self) private var store
@@ -25,6 +26,7 @@ struct RootView: View {
             if store.signedIn {
                 VStack(spacing: 0) {
                     if store.accessRecoveryPending { AccessRecoveryBanner() }
+                    FocusFilterBanner()
                     WorkspaceView()
                 }.transition(.opacity)
             }
@@ -139,6 +141,9 @@ struct RootView: View {
             }
         }
         .onOpenURL(perform: handleExternalURL)
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            if let url = store.spotlightURL(for: activity) { handleExternalURL(url) }
+        }
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
         #if DEBUG
         .safeAreaInset(edge: .top) { if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") { WidgetActionTestPanel() } }
@@ -148,7 +153,7 @@ struct RootView: View {
         .modifier(CalendarContextFixtureControls())
         #endif
         .modifier(WidgetCapacityRefresh())
-        .onChange(of: phase) { _, value in if value == .active { Task { await store.reschedule(); await store.sync() } } }
+        .onChange(of: phase) { _, value in if value == .active { store.reloadFocusFilter(); Task { await store.reschedule(); await store.sync() } } }
         .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
     }
@@ -625,6 +630,8 @@ struct RootView: View {
             }
             var inbox = Record.task(user: "preview"); inbox["title"] = .string("Read that article about slow productivity"); samples.append(inbox)
             store.snapshot.tables["tasks"] = samples
+            // Debug only: `--focus-filter-fixture` seeds five projects and turns on a Focus filter for three, in memory.
+            store.installFocusFilterFixture()
             // Layout captures: --capture-layout=<today|inbox|upcoming|project|label>:<list|board|calendar>, or picker:<scope>.
             if let spec = option("capture-layout") {
                 let parts = spec.split(separator: ":").map(String.init)

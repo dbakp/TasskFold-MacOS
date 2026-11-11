@@ -1419,6 +1419,7 @@ final class Store {
     @ObservationIgnored private let projectMemberReads = ProjectMemberReads()
     private var accountGeneration = UUID() { didSet {
         widgetCompletionSignatures.clear()
+        spotlight.suspend()
         recordReadCache.clear()
         subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
         projectMemberReads.cancelAll()
@@ -1473,6 +1474,12 @@ final class Store {
     var todoistImportFixture: Bool { false }
     #endif
     var workspaceGeneration: UUID { accountGeneration }
+    /// System integration (Spotlight, Focus filters, controls). Logic: SystemIntegration.swift and the pure Core files.
+    /// The Focus filter is a view-only scope; it never changes data or sync.
+    var focusFilterState: FocusFilterState? = FocusFilterStore.load(FocusFilterStore.defaults())
+    var focusFilterShownAllActivation: UUID?
+    @ObservationIgnored let spotlight = SpotlightIndexer()
+    func republishSystemSurfaces() { publishWidgetSnapshot(scheduleCapacityRefresh: false) }
     var audioConversationRevision = UUID()
     var teamOrganizationReadable: Bool { workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked }
     var sharedCaptureAvailable: Bool { !accountRemovalBlocked && workspaceCacheReadable && (signedIn || localMode) && !signingOut && !userID.isEmpty }
@@ -2071,9 +2078,10 @@ final class Store {
         } catch { self.error = error.localizedDescription; return false }
     }
     /// Native queries share the observed clock; selected calendar days remain explicit.
-    func matching(_ query: TaskQuery) -> [Record] {
+    /// `focus: false` reads the same list without a Focus filter's view-only scope (for counts the filter leaves alone).
+    func matching(_ query: TaskQuery, focus: Bool = true) -> [Record] {
         _ = taskRevision
-        var query = calendarContext.applying(to: query)
+        var query = calendarContext.applying(to: focus ? focusScoped(query) : query)
         if case .saved(let id) = query.scope {
             guard let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [] }
             query.filterProjects = filterContext.projectReferences; query.filterSections = rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
@@ -2090,7 +2098,8 @@ final class Store {
     /// A synchronous presentation read. Observing the live snapshot even on
     /// hits keeps date/completion/archive/access edits visible to SwiftUI. All
     /// actions still capture and validate their current source independently.
-    func taskDayGroups(_ query: TaskQuery, today: String, calendar: Calendar = .current) -> TaskDayGroupsRead {
+    func taskDayGroups(_ original: TaskQuery, today: String, calendar: Calendar = .current) -> TaskDayGroupsRead {
+        let query = focusScoped(original)
         _ = snapshot; _ = taskRevision; _ = workspaceReadRevision
         let context = TaskDayGroupsReadCache.Context(source: datedReadRevision, access: presentationAccessEpoch,
             session: backend.reminderSessionIncarnation, workspace: .init(account: userID, generation: workspaceGeneration),
@@ -2312,7 +2321,7 @@ final class Store {
     }
     var navigationCounts: TaskNavigationCounts {
         _ = taskRevision
-        return taskCache.navigationCounts(labels: rows("labels"), excluding: projectCatalog.archivedIDs)
+        return taskCache.navigationCounts(labels: rows("labels"), excluding: projectCatalog.archivedIDs.union(focusBadgeExclusions))
     }
     func dayDragTargetContext(manual: Bool, calendar: Calendar) -> DayDragTargetRead.Context {
         .init(workspace: .init(account: userID, generation: workspaceGeneration),
@@ -2571,7 +2580,9 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
-        var input = WidgetPublicationInput(tasks: activeTasks, projects: projects, account: account)
+        scheduleSpotlightIndex()
+        // A Focus filter narrows what widgets show, through this one projection.
+        var input = WidgetPublicationInput(tasks: focusScope.map { $0.apply(to: activeTasks) } ?? activeTasks, projects: projects, account: account)
         input.labels = labels; input.sections = rows("sections"); input.savedViews = savedViews
         if !account.isEmpty {
             input.context = WidgetPublicationContext(snapshot: presentationSnapshot, account: account,
@@ -2680,7 +2691,7 @@ final class Store {
             self.startupSharingFailed = !self.startupSharedStorageReady
             if self.startupSharedStorageReady { self.refreshSharedCaptureDraftCount(); self.consumeWidgetCompletions() }
             #if canImport(WidgetKit)
-            WidgetCenter.shared.reloadAllTimelines()
+            WidgetCenter.shared.reloadAllTimelines(); reloadSystemControls()
             #endif
         }
     }
@@ -2770,7 +2781,7 @@ final class Store {
         do { try disk.publish(result.get()); widgetPublicationRevision += 1; success = true }
         catch { try? disk.clearProjection() }
         #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadAllTimelines()
+        WidgetCenter.shared.reloadAllTimelines(); reloadSystemControls()
         #endif
         return success
     }
@@ -2869,6 +2880,7 @@ final class Store {
                 try disk.acknowledge(request)
             }
         } catch { widgetActionStatus = "Widget actions need attention: " + error.localizedDescription; notice = widgetActionStatus }
+        consumeFocusControlRequest(); reloadFocusFilter()
     }
     func startLocal() {
         guard !signingOut else { return }

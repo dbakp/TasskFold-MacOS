@@ -1916,6 +1916,8 @@ struct TaskfoldWidgetBundle: WidgetBundle {
         PulseWidget()
         #if os(iOS)
         AddTaskControl()
+        OpenTodayControl()
+        FocusTimerControl()
         #endif
     }
 }
@@ -1932,6 +1934,53 @@ struct AddTaskControl: ControlWidget {
         StaticControlConfiguration(kind: "TaskfoldAddTask") {
             ControlWidgetButton(action: OpenQuickAddIntent()) { Label("Add Task", systemImage: "plus.circle.fill") }
         }.displayName("Add Task").description("Opens Taskfold ready to type a new task.")
+    }
+}
+
+/// Opens the Today list. Needs nothing from the workspace, so it works with the app closed.
+struct OpenTodayIntent: AppIntent {
+    static let title: LocalizedStringResource = "Open Today"
+    static let isDiscoverable = false
+    static let openAppWhenRun = true
+    func perform() async throws -> some IntentResult & OpensIntent {
+        .result(opensIntent: OpenURLIntent(SystemControlRoute.today))
+    }
+}
+struct OpenTodayControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "TaskfoldOpenToday") {
+            ControlWidgetButton(action: OpenTodayIntent()) { Label("Today", systemImage: "sun.max.fill") }
+        }.displayName("Open Today").description("Opens your Today list in Taskfold.")
+    }
+}
+
+/// The control shows the shared Focus snapshot. A tap leaves one expiring request in the App
+/// Group; the app applies it through the normal Focus session path, because the timer lives in
+/// the synced workspace, which this extension never holds.
+struct ToggleFocusTimerIntent: SetValueIntent {
+    static let title: LocalizedStringResource = "Focus timer"
+    static let description = IntentDescription("Starts a Focus session on your next task, or stops the running one.")
+    static let isDiscoverable = false
+    static let openAppWhenRun = true
+    @Parameter(title: "Running") var value: Bool
+    func perform() async throws -> some IntentResult {
+        let seen = WidgetSnapshot.load().focusSession?.clock?.sessionID
+        try? FocusControlDisk.system()?.write(FocusControlRequest(action: value ? .start : .stop, sessionID: value ? nil : seen))
+        return .result()
+    }
+}
+struct FocusTimerValueProvider: ControlValueProvider {
+    var previewValue: Bool { false }
+    func currentValue() async throws -> Bool { WidgetSnapshot.load().focusSessionStatus(at: Date()) == .running }
+}
+struct FocusTimerControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "TaskfoldFocusTimer", provider: FocusTimerValueProvider()) { running in
+            ControlWidgetToggle("Focus timer", isOn: running, action: ToggleFocusTimerIntent()) { isOn in
+                Label(isOn ? "Running" : "Start", systemImage: isOn ? "timer" : "play.circle.fill")
+            }
+        }
+        .displayName("Focus timer").description("Starts or stops a Focus session and shows when one is running.")
     }
 }
 #endif
