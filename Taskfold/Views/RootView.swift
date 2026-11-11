@@ -235,7 +235,16 @@ struct RootView: View {
         if let path = option("capture") {
             Task {
                 try? await Task.sleep(for: .seconds(3))
-                if let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }) {
+                if arguments.contains("--capture-inspector") {
+                    // The split view's inspector column renders blank offscreen, so host the inspector alone.
+                    let host = NSHostingView(rootView: TaskInspector().environment(store).environment(workspace).frame(width: 340, height: 860).background(Color(nsColor: .windowBackgroundColor)))
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 340, height: 860), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(1.5))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
+                    }
+                } else if let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }) {
                     window.setContentSize(NSSize(width: 1280, height: 800))
                     window.center(); window.orderBack(nil)
                     window.layoutIfNeeded(); window.displayIfNeeded()

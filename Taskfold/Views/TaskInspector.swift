@@ -357,7 +357,7 @@ struct TaskInspectorForm: View {
         // A hidden copy of the text sizes the editor so the description grows with its content.
         Text(draft.string("description").isEmpty ? " " : draft.string("description") + "\u{200B}")
             .font(DS.Font.taskNote).padding(.horizontal, DS.Space.xs + 1).padding(.vertical, DS.Space.s).padding(.trailing, DS.Space.xxl)
-            .frame(maxWidth: .infinity, minHeight: DS.Space.xxxl + DS.Space.s, alignment: .topLeading).opacity(0).accessibilityHidden(true)
+            .frame(maxWidth: .infinity, alignment: .topLeading).opacity(0).accessibilityHidden(true)
             .overlay {
                 TextEditor(text: text("description"))
                     .font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).scrollContentBackground(.hidden)
@@ -553,7 +553,8 @@ struct TaskInspectorForm: View {
                 if !isSubtask, !draft["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = !isTeamTask; openChip = .date } }
                 if canAssign { Button("Assignee", systemImage: "person.crop.circle.badge.plus") { if isTeamTask { openTeamAssignee() } else { assigneeRequested = true } } }
             } label: { ChipLabel(icon: "plus") }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+            // The button menu style keeps the outlined chip label; borderless would strip it to a bare glyph.
+            .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
             .help("Add property").accessibilityLabel("Add property").accessibilityIdentifier("taskAddProperty")
         }
     }
