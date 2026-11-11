@@ -38,8 +38,8 @@ Draft, 10 November 2026. Based on `TasskFold-MacOS@a43fca03` and `TaskFold-iOS@e
 ### Remaining Todoist gaps (to confirm against Todoist's current help centre before Phase 2)
 | Gap | Mac | iOS |
 |---|---|---|
-| Global Quick Add hotkey from any app | missing | n/a |
-| Menu bar extra (quick add and Today) | missing | n/a |
+| Global Quick Add hotkey from any app | done ([TasskFold-MacOS#118](https://github.com/dbakp/TasskFold-MacOS/pull/118)) | n/a |
+| Menu bar extra (quick add and Today) | done ([TasskFold-MacOS#118](https://github.com/dbakp/TasskFold-MacOS/pull/118)) | n/a |
 | Server push reminders (cross-device, app closed) | deferred | deferred |
 | Two-way Google/Outlook calendar sync | read-only, no provider IDs | same |
 | Karma, streaks and vacation mode (on top of goals) | missing | missing |
@@ -134,11 +134,11 @@ Rules that keep this token-efficient without losing quality:
    - Task detail redesign ([TasskFold-MacOS#112](https://github.com/dbakp/TasskFold-MacOS/pull/112), [TaskFold-iOS#113](https://github.com/dbakp/TaskFold-iOS/pull/113)). Spec: `specs/TASK_DETAIL.md`.
    - Quick Add composer with inline highlighting and property chips ([TasskFold-MacOS#114](https://github.com/dbakp/TasskFold-MacOS/pull/114), [TaskFold-iOS#115](https://github.com/dbakp/TaskFold-iOS/pull/115)). Spec: `specs/QUICK_ADD.md`. The iOS UI-test row lookup is fixed.
    - Delight pass: completion linger and sound, daily goal toast, per-scope empty states, iOS skeleton, 5 s undo toasts ([TasskFold-MacOS#116](https://github.com/dbakp/TasskFold-MacOS/pull/116), [TaskFold-iOS#117](https://github.com/dbakp/TaskFold-iOS/pull/117)). Spec: `specs/DELIGHT_PASS.md`. Phase 1 is complete.
-   - Polish follow-ups: hide the empty "Tasks 0" header under iOS empty states; raise contrast of the iOS "Add task" empty-state button in dark.
+   - Empty-state polish follow-ups done ([TaskFold-iOS#119](https://github.com/dbakp/TaskFold-iOS/pull/119)).
    - Open: Mac UI tests sign with the personal team (push and time-sensitive entitlements stripped locally), but unattended runs need UI automation enabled without a password prompt. Three iOS UI tests fail on `main` in the task editor (assignee behind "+", estimate stepper height, completion undo).
 
 ### Phase 2: close the Todoist gaps (about 9 updates)
-1. Mac global Quick Add hotkey (user-configurable) and a menu bar extra with Today and quick add.
+1. ~~Mac global Quick Add hotkey (user-configurable) and a menu bar extra with Today and quick add.~~ Done ([TasskFold-MacOS#118](https://github.com/dbakp/TasskFold-MacOS/pull/118), spec `specs/GLOBAL_QUICK_ADD.md`); a real hotkey press is still to be checked by hand.
 2. Real-time sync feel: live updates, sync-status indicator and no manual refresh in normal use.
 3. Server push reminders. Turn on the existing APNs worker after your sign-off on hosted services.
 4. Karma or productivity score, streaks and vacation mode, built on the existing goals and insights.
