@@ -63,6 +63,8 @@ struct TaskListView: View {
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
     @FocusState private var filterFocused: Bool
+    @State private var momentum = MomentumModel()
+    @Environment(\.openInsights) private var openInsights
     @FocusState private var taskListFocused: Bool
 
     init(scope: TaskScope, preferenceKey: String? = nil) {
@@ -186,6 +188,7 @@ struct TaskListView: View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
             HStack(spacing: DS.Space.s) {
+                if scope == .today, let summary = momentum.summary, summary.chipText != nil { StreakChip(summary: summary, open: openInsights) }
                 Spacer(minLength: 0)
                 HStack(spacing: DS.Space.s) {
                     Image(systemName: "magnifyingglass").foregroundStyle(DS.Palette.textSecondary)
@@ -279,6 +282,7 @@ struct TaskListView: View {
         .background(Color(nsColor: .textBackgroundColor))
         .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation) } }
         .animation(Transitions.Ease.smoothOut, value: workspace.confirmation)
+        .task(id: MomentumModel.trigger(store)) { if scope == .today { momentum.refresh(store: store) } }
         .onAppear { if workspace.section.scope == scope { workspace.navigationSubtitle = subtitle } }
         .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
         .animation(Transitions.Ease.smoothOut, value: subtitle)

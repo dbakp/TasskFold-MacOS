@@ -323,6 +323,12 @@ struct InsightsView:View {
         .frame(minWidth:520,idealWidth:700,minHeight:580,idealHeight:760)
         #endif
     }
+    /// Turns vacation off from the progress view. Past vacation days stay excluded from streaks.
+    private func endVacation(_ goals:ProductivityGoals) {
+        var next=goals;next.endVacation()
+        guard let document=try? next.validated().document else { store.error="Vacation mode could not be turned off. Open Goals to change it.";return }
+        store.saveProductivityGoals(document,expected:store.productivityGoalDocument,workspace:request.workspace)
+    }
     private func input(_ goals: ProductivityGoals, now: Date) -> PreparedInsights.Input {
         .init(account: store.userID, activity: store.rows(TaskActivity.table), epoch: store.rows(TaskActivity.epochTable),
               goals: goals, accessibleProjects: Set(store.allProjects.map(\.id)), children: store.childActivityHistory, now: now)
@@ -335,6 +341,8 @@ struct InsightsView:View {
                 VStack(alignment:.leading,spacing:12) { personalHeading;goalsButton }
             } else { HStack(alignment:.firstTextBaseline) { personalHeading;Spacer(minLength:12);goalsButton } }
             if personal.reliable {
+                MomentumCard(summary:prepared.momentum,calendar:goals.calendar,setGoal:{editing=true})
+                VacationBanner(status:prepared.momentum.vacation,turnOff:{endVacation(goals)})
                 if textSize.isAccessibilitySize { VStack(spacing:14) { progressCards(goals,reading:personal,now:now) } }
                 else { ViewThatFits(in:.horizontal) {
                     HStack(spacing:14) { progressCards(goals,reading:personal,now:now) }
@@ -432,6 +440,9 @@ struct ProductivityGoalsEditor:View {
     @State private var activeDays=Set(2...6)
     @State private var weekStart=2
     @State private var zone=TimeZone.current.identifier
+    @State private var vacationOn=false
+    @State private var vacationHasEnd=false
+    @State private var vacationEnd=Calendar.current.date(byAdding:.day,value:7,to:Calendar.current.startOfDay(for:Date())) ?? Date()
     @State private var choosingZone=false
     @State private var review:JSON?
     @State private var discard=false
@@ -444,6 +455,11 @@ struct ProductivityGoalsEditor:View {
             guard !daily || Int(dailyText).map({(1...10000).contains($0)})==true else { throw AppFailure(message:"Use a daily goal between 1 and 10,000, or turn it off.") }
             guard !weekly || Int(weeklyText).map({(1...10000).contains($0)})==true else { throw AppFailure(message:"Use a weekly goal between 1 and 10,000, or turn it off.") }
             goals.dailyTarget=daily ? Int(dailyText)! : 0;goals.weeklyTarget=weekly ? Int(weeklyText)! : 0;goals.activeWeekdays=activeDays;goals.weekStart=weekStart;goals.timeZone=zone
+            let running:Bool = { if case .on = goals.vacationStatus() { return true };return false }()
+            if vacationOn {
+                let until:String?=vacationHasEnd ? TaskPlanner.dayKey(vacationEnd,calendar:.current) : nil
+                if !running || until != goals.vacationUntil { try goals.startVacation(until:until) }
+            } else if running { goals.endVacation() }
             return try goals.validated().document
         }
     }
@@ -494,6 +510,16 @@ struct ProductivityGoalsEditor:View {
                             Button { choosingZone=true } label: { HStack { Text("Time zone");Spacer();Text(zone).foregroundStyle(.secondary).multilineTextAlignment(.trailing) }.frame(minHeight:44) }.accessibilityIdentifier("goalTimeZone")
                             Text("This time zone is saved with your goals so phone and Mac use the same day and week. Task dates stay as planned.").font(.footnote).foregroundStyle(.secondary)
                         }
+                        Section("Vacation mode") {
+                            Toggle("Vacation mode",isOn:$vacationOn.animation()).accessibilityIdentifier("vacationModeEnabled")
+                            if vacationOn {
+                                Toggle("End date",isOn:$vacationHasEnd.animation()).accessibilityIdentifier("vacationHasEnd")
+                                if vacationHasEnd {
+                                    DatePicker("Back on",selection:$vacationEnd,in:Calendar.current.startOfDay(for:Date())...,displayedComponents:.date).accessibilityIdentifier("vacationEndDate")
+                                }
+                            }
+                            Text("Streaks pause and goal celebrations stay quiet. Days off never count against you, and it turns off by itself after the end date.").font(.footnote).foregroundStyle(.secondary)
+                        }
                         if store.productivityGoalDocument != baseline {
                             Section("Changed on another device") { Button("Review latest goals") { review=store.productivityGoalDocument }.accessibilityIdentifier("reviewLatestGoals") }
                         }
@@ -537,6 +563,10 @@ struct ProductivityGoalsEditor:View {
         baseline=document;base=try? ProductivityGoals(document:document);message=nil
         guard let goals=base else {initial=document;return}
         daily=goals.dailyTarget>0;weekly=goals.weeklyTarget>0;dailyText=String(daily ? goals.dailyTarget : 5);weeklyText=String(weekly ? goals.weeklyTarget : 20);activeDays=goals.activeWeekdays;weekStart=goals.weekStart;zone=goals.timeZone;initial=goals.document
+        if case .on(_,let until)=goals.vacationStatus() {
+            vacationOn=true;vacationHasEnd=until != nil
+            if let until,let date=Dates.parse(until,calendar:.current) { vacationEnd=max(date,Calendar.current.startOfDay(for:Date())) }
+        } else { vacationOn=false;vacationHasEnd=false }
     }
     private func save(reviewing latest:JSON?) {
         guard validWorkspace else { message="Reopen goals in your current workspace.";return }
