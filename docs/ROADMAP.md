@@ -43,8 +43,8 @@ Draft, 10 November 2026. Based on `TasskFold-MacOS@a43fca03` and `TaskFold-iOS@e
 | Server push reminders (cross-device, app closed) | deferred | deferred |
 | Two-way Google/Outlook calendar sync | read-only, no provider IDs | same |
 | Karma, streaks and vacation mode (on top of goals) | done (#122) | done (#123) |
-| Spotlight indexing of tasks | missing | missing |
-| Focus filters (show work or personal projects per Focus mode) | missing | missing |
+| Spotlight indexing of tasks | done (#126) | done (#127) |
+| Focus filters (show work or personal projects per Focus mode) | done (#126) | done (#127) |
 | Live Activity for focus or next task | n/a | removed earlier |
 | Real-time multi-device sync feel (instant, no manual ⌘R) | verify | verify |
 | Installable signed builds (notarised, TestFlight) | missing | missing |
@@ -142,8 +142,8 @@ Rules that keep this token-efficient without losing quality:
 2. ~~Real-time sync feel: live updates, sync-status indicator and no manual refresh in normal use.~~ Done ([TasskFold-MacOS#120](https://github.com/dbakp/TasskFold-MacOS/pull/120), [TaskFold-iOS#121](https://github.com/dbakp/TaskFold-iOS/pull/121), spec `specs/REALTIME_SYNC.md`); real two-device realtime still to be checked by hand.
 3. Server push reminders. Turn on the existing APNs worker after your sign-off on hosted services.
 4. ~~Karma or productivity score, streaks and vacation mode, built on the existing goals and insights.~~ Done ([TasskFold-MacOS#122](https://github.com/dbakp/TasskFold-MacOS/pull/122), [TaskFold-iOS#123](https://github.com/dbakp/TaskFold-iOS/pull/123), spec `specs/MOMENTUM.md`): streaks, a 0–100 Momentum score with levels, and vacation mode; the live Mac milestone toast is still to be checked by hand.
-5. Layout parity: list, board and calendar views for projects and Upcoming on both apps.
-6. System integration: Spotlight indexing, Focus filters, App Intents and Shortcuts expansion, and an iOS Control Center control.
+5. ~~Layout parity: list, board and calendar views for projects and Upcoming on both apps.~~ Done ([TasskFold-MacOS#124](https://github.com/dbakp/TasskFold-MacOS/pull/124), [TaskFold-iOS#125](https://github.com/dbakp/TaskFold-iOS/pull/125), spec `specs/LAYOUT_PARITY.md`): one Layout picker, boards for Upcoming, Today, labels and Inbox, and month calendars for projects and Upcoming. Drag and drop and the Mac ⌃⌘1–3 shortcuts are still to be checked by hand. Follow-up polish: compact board cards on Mac ([TasskFold-MacOS#125](https://github.com/dbakp/TasskFold-MacOS/pull/125)) and the View Options test identifiers restored on iOS 27 ([TaskFold-iOS#126](https://github.com/dbakp/TaskFold-iOS/pull/126)); `testTaskDensityAcrossViewsAndRelaunch` still expects equal row heights in compact Today.
+6. ~~System integration: Spotlight indexing, Focus filters, App Intents and Shortcuts expansion, and an iOS Control Center control.~~ Done ([TasskFold-MacOS#126](https://github.com/dbakp/TasskFold-MacOS/pull/126), [TaskFold-iOS#127](https://github.com/dbakp/TaskFold-iOS/pull/127), spec `specs/SYSTEM_INTEGRATION.md`): Spotlight for tasks and projects, a view-only Focus filter, 9 App Shortcuts, and Open Today and Focus timer controls. A real Focus mode, Siri and the controls with the app closed are still to be checked on a device.
 7. iOS Live Activity for a running focus session or the next timed task.
 
 ### Phase 3: decide the half-finished advanced work
