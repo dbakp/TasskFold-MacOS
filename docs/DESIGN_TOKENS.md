@@ -65,6 +65,8 @@ Use `.continuous` style for every rounded rectangle.
 | `dateTomorrow` | orange |
 | `dateThisWeek` | purple |
 | `dateLater` | `textSecondary` |
+| `accentSecondary` | teal. Quick Add highlight for `#project` and `/section` |
+| `label` | purple. Quick Add highlight for `@label` |
 | `selectionFill` | accent at 0.14 opacity (light) / 0.22 opacity (dark). The selected row keeps primary text colour, never white on light grey. |
 
 Priority, accent and project palettes keep their current values and stay where they are. `DS.Palette` gets `priority(_:)` and `accent` passthroughs.

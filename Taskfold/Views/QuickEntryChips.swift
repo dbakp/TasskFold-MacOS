@@ -6,6 +6,8 @@ import SwiftUI
 struct QuickEntryChips: View {
     let tokens: [QuickEntry.Token]
     var compact = false
+    /// Groups a property chip already shows (date, priority, labels). They are not repeated in this row.
+    var excluding: Set<String> = []
     let decline: (QuickEntry.Token) -> Void
     var returnFocus: () -> Void = {}
     var focusChanged: (Bool) -> Void = { _ in }
@@ -21,14 +23,29 @@ struct QuickEntryChips: View {
         switch group { case "project_id": return "project"; case "section_id": return "section"; case "assigned_to": return "assignee"; case "priority": return "priority"; case "labels": return "label"; case "due_time": return "time"; case "recurrence": return "repeat"; case "deadline_date": return "deadline"; case "duration_minutes": return "estimate"; default: return "date" }
     }
 
+    /// Role colour for a recognised token, shared by the declinable chips, the property chips and the in-text highlight.
+    /// Dates take the colour of the day they resolve to; the caller passes it so all three agree.
+    static func tint(for token: QuickEntry.Token, date: Color = DS.Palette.accent) -> Color {
+        if token.group.hasPrefix("reminder_specs") { return DS.Palette.accent }
+        switch token.group {
+        case "due_date", "due_time", "recurrence": return date
+        case "project_id", "section_id": return DS.Palette.accentSecondary
+        case "labels": return DS.Palette.label
+        case "priority": return DS.Palette.priority(Int(token.text.suffix(1)) ?? 4)
+        default: return DS.Palette.textSecondary
+        }
+    }
+
+    private var shown: [QuickEntry.Token] { tokens.filter { !excluding.contains($0.group) } }
+
     var body: some View {
         QuickEntryChipLayout(spacing: DS.Space.s) {
-            ForEach(tokens) { token in
+            ForEach(shown) { token in
                 chip(token)
                     .transition(reduceMotion ? .opacity : .asymmetric(insertion: .scale(scale: 0.85).combined(with: .opacity), removal: .scale(scale: 0.9).combined(with: .opacity)))
             }
         }
-        .animation(reduceMotion ? .easeInOut(duration: 0.12) : Transitions.Ease.smoothOut(Transitions.Duration.quick), value: tokens.map(\.id))
+        .animation(reduceMotion ? .easeInOut(duration: 0.12) : Transitions.Ease.smoothOut(Transitions.Duration.quick), value: shown.map(\.id))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("quickEntryChips")
         .onChange(of: focusedChip) { _, value in focusChanged(value != nil) }
@@ -37,12 +54,13 @@ struct QuickEntryChips: View {
 
     private func chip(_ token: QuickEntry.Token) -> some View {
         let focused = focusedChip == token.id
+        let tint = Self.tint(for: token)
         return HStack(alignment: .firstTextBaseline, spacing: DS.Space.xs) {
             Image(systemName: Self.symbol(for: token.group)).font(DS.Font.badge)
             Text(token.label).font(DS.Font.chip).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
             Button { decline(token) } label: {
                 Image(systemName: "xmark").font(.system(size: 8, weight: .bold)).frame(width: 14, height: 14) // exact optical size for the glyph
-                    .background(DS.Palette.accent.opacity(0.14), in: .circle)
+                    .background(tint.opacity(0.14), in: .circle)
             }
             .buttonStyle(.plain)
             .pointerStyle(.link)
@@ -50,10 +68,10 @@ struct QuickEntryChips: View {
             .accessibilityLabel("Keep “\(token.text)” in the title")
             .accessibilityIdentifier("decline-\(token.group)")
         }
-        .padding(.leading, DS.Space.s).padding(.trailing, DS.Space.xs).padding(.vertical, compact ? DS.Space.xxs : DS.Space.xs)
-        .foregroundStyle(DS.Palette.accent)
-        .background(DS.Palette.accent.opacity(0.12), in: .rect(cornerRadius: DS.Radius.m, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).strokeBorder(DS.Palette.accent.opacity(focused ? 0.9 : 0), lineWidth: 1.5))
+        .padding(.leading, DS.Space.s).padding(.trailing, DS.Space.xs).padding(.vertical, compact ? DS.Space.xs : DS.Space.xs + DS.Space.xxs)
+        .foregroundStyle(tint)
+        .background(tint.opacity(0.12), in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).strokeBorder(tint.opacity(focused ? 0.9 : 0), lineWidth: 1.5))
         .focusable(true)
         .focused($focusedChip, equals: token.id)
         .focusEffectDisabled()

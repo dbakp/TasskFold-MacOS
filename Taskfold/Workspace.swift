@@ -118,6 +118,9 @@ final class Workspace {
     var teamTaskCreationText = ""
     var teamTaskCreation: TaskEditorOpening?
     var quickAdd = ""
+    /// Properties chosen by hand in the Quick Add composer (date, priority, labels, reminders, destination...).
+    /// They are applied to the new task before the typed text is parsed, so they win over a parsed token.
+    var quickAddManual: [String: JSON] = [:]
     private struct NavigationMemory {
         var selection = Set<String>()
         var search = ""
@@ -215,6 +218,7 @@ final class Workspace {
         deadlineSelection = nil
         search = ""
         quickAdd = ""
+        quickAddManual = [:]
     }
 
     var inspectorVisible: Bool { inspectorShown && (!selection.isEmpty || finderTaskID.flatMap { taskRecord($0) } != nil) }
@@ -832,11 +836,15 @@ final class Workspace {
     }
     /// Creates a task from quick-entry text. Returns the new task's id.
     @discardableResult
-    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:]) -> String? {
+    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:], manual: [String: JSON] = [:]) -> String? {
+        let project = manual["project_id"]?.text ?? project
+        // A value chosen by hand replaces the matching parsed token, exactly as the composer previewed it.
+        let declined = declined.union(TaskCapturePanel.supersededGroups(manual))
         if store.nativeConversationTeamCache?.knownTeams[project] != nil {
             do {
                 var shared = Record.task(user: store.userID, project: project, date: date)
                 shared["section_id"] = sectionID.isEmpty ? .null : .string(sectionID)
+                for (field, value) in manual where field != "labels" { shared[field] = value }
                 let excluded = SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"])
                 shared = QuickEntry(input, disabled: declined.union(excluded), context: quickEntryContext(project: project), task: shared).applying(to: shared)
                 teamTaskCreationText = input
@@ -845,6 +853,7 @@ final class Workspace {
             return nil
         }
         var task = captureTask(project: project, date: date, sectionID: sectionID)
+        for (field, value) in manual { task[field] = value }
         let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")).choosingReferences(referenceChoices), task: task)
         guard !parsed.title.isEmpty else { return nil }
         task = parsed.applying(to: task)

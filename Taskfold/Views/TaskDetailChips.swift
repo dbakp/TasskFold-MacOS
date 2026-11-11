@@ -14,6 +14,8 @@ struct ChipLabel: View {
     var text: String? = nil
     var tint: Color? = nil
     var trailingIcon: String? = nil
+    /// Room kept at the trailing edge for controls a container draws over the chip, such as Quick Add's decline "×".
+    var trailingInset: CGFloat = 0
     var body: some View {
         HStack(spacing: DS.Space.xs) {
             Image(systemName: icon).font(DS.Font.chip).accessibilityHidden(true)
@@ -21,7 +23,7 @@ struct ChipLabel: View {
             if let trailingIcon { Image(systemName: trailingIcon).font(DS.Font.badge).accessibilityHidden(true) }
         }
         .font(DS.Font.chip)
-        .padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xs + DS.Space.xxs)
+        .padding(.leading, DS.Space.s).padding(.trailing, DS.Space.s + trailingInset).padding(.vertical, DS.Space.xs + DS.Space.xxs)
         .foregroundStyle(tint ?? DS.Palette.textSecondary)
         .background(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill((tint ?? .clear).opacity(0.12)))
         .overlay { if tint == nil { RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).strokeBorder(DS.Palette.separator, lineWidth: 1) } }
@@ -34,11 +36,12 @@ struct PropertyChip: View {
     var text: String? = nil
     var tint: Color? = nil
     var trailingIcon: String? = nil
+    var trailingInset: CGFloat = 0
     let accessibility: String
     let identifier: String
     let action: () -> Void
     var body: some View {
-        Button(action: action) { ChipLabel(icon: icon, text: text, tint: tint, trailingIcon: trailingIcon) }
+        Button(action: action) { ChipLabel(icon: icon, text: text, tint: tint, trailingIcon: trailingIcon, trailingInset: trailingInset) }
             .buttonStyle(.plain).pointerStyle(.link)
             .accessibilityLabel(accessibility)
             .accessibilityIdentifier(identifier)

@@ -273,7 +273,7 @@ struct TaskListView: View {
         .onChange(of: workspace.drag.active) { _, _ in rowSwipe.cancel() }
         .sheet(isPresented: $multiLinePresented) { MultiLineCaptureView(text: workspace.quickAdd, project: captureDraft.string("project_id"), section: captureDraft.string("section_id"), defaults: captureDraft.fields, onSaved: { workspace.quickAdd = "" }) }
         .sheet(isPresented: $quickAddVisible) {
-            TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, choices: $referenceChoices, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
+            TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, choices: $referenceChoices, prompt: quickAddPrompt,
                 context: workspace.quickEntryContext(project: captureDraft.string("project_id")), task: captureDraft, submit: submitQuickAdd)
         }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
@@ -334,8 +334,8 @@ struct TaskListView: View {
         if workspace.quickAdd.contains(where: { $0.isNewline }) { quickAddVisible = false; multiLinePresented = true; return }
         let date = captureDate
         let labelName: String? = { if case .label(let id) = scope { return store.record("labels", id: id)?.name }; return nil }()
-        guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups, sectionID: captureSection, referenceChoices: referenceChoices) else { return }
-        declinedGroups = []
+        guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups, sectionID: captureSection, referenceChoices: referenceChoices, manual: workspace.quickAddManual) else { return }
+        declinedGroups = []; workspace.quickAddManual = [:]
         if let labelName, var task = store.record("tasks", id: id), !task["labels"].list.contains(.string(labelName)) {
             task["labels"] = .array(task["labels"].list + [.string(labelName)]); store.save("tasks", task)
         }
@@ -581,86 +581,6 @@ struct TaskListView: View {
 
 /// Content reads best in a bounded column centered in the window, the way Todoist lays out its lists.
 enum ReadingColumn { static let width: CGFloat = DS.Size.contentMaxWidth }
-
-/// A focused, native sheet keeps capture prominent without moving the task list.
-struct TaskCapturePanel: View {
-    @Environment(Store.self) private var store
-    @Environment(\.dismiss) private var dismiss
-    @State private var workspaceBinding: WorkspaceBinding?
-    @Binding var text: String
-    @Binding var declined: Set<String>
-    @Binding var choices: [String: String]
-    @State private var titleSelection: TextSelection?
-    let destination: String
-    let prompt: String
-    let context: QuickEntryContext
-    var task = Record()
-    let submit: () -> Void
-    @FocusState private var focused: Bool
-    private var parsed: QuickEntry { QuickEntry(text, disabled: declined, context: context.choosingReferences(choices), task: task) }
-    private var effectiveDestination: String {
-        guard let projectID = parsed.updates["project_id"]?.text, let project = context.projects.first(where: { $0.id == projectID }) else { return destination }
-        let section = (parsed.updates["section_id"]?.text).flatMap { id in context.sections.first { $0.id == id }?.name }
-        return project.name + (section.map { " · " + $0 } ?? "")
-    }
-    var body: some View {
-        VStack(alignment: .leading, spacing: DS.Space.xl) {
-            HStack {
-                VStack(alignment: .leading, spacing: DS.Space.xs) {
-                    Text("New Task").font(DS.Font.screenTitle)
-                    Label(effectiveDestination, systemImage: "tray").font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary)
-                }
-                Spacer()
-                Button { dismiss() } label: { Image(systemName: "xmark").font(DS.Font.taskTitle.weight(.medium)) }
-                    .buttonStyle(.plain).help("Close (Esc)").accessibilityLabel("Close task entry")
-            }
-            TextField(prompt, text: $text, selection: $titleSelection, axis: .vertical)
-                .font(.title3 /* capture field is larger than body by design */).lineLimit(2...4).textFieldStyle(.plain)
-                .focused($focused).accessibilityIdentifier("quickAdd")
-                .padding(DS.Space.l)
-                .background(DS.Palette.surface, in: .rect(cornerRadius: DS.Radius.l, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).strokeBorder(DS.Palette.accent.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
-                .referenceCompletions(text: $text, selection: $titleSelection, choices: $choices, declined: $declined, context: context, focused: focused, task: task, onChoose: { focused = true }, submit: submitInWorkspace, submitsFromKeyboard: true)
-            if !parsed.tokens.isEmpty {
-                QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: resumeDraftFromChip)
-            }
-            if let rule = parsed.updates["recurrence_pattern"] {
-                Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
-            }
-            ReminderAutomaticPreview(task: parsed.fieldPreview(to: task), showDeliveryGuidance: parsed.updates["reminder_specs"] == nil)
-            ForEach(parsed.warnings, id: \.self) { warning in Text(warning).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickEntryWarning") }
-            if parsed.updates["reminder_specs"] != nil && !store.remindersEnabled {
-                Text("Reminders are off on this device. Enable delivery in the task’s Reminders after saving.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickReminderDeliveryOff")
-            }
-            HStack {
-                Text("Try “Call Sam tomorrow at 4pm !30mb p1”").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
-                Spacer()
-                Button("Add Task", action: submitInWorkspace).buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction).disabled(parsed.title.isEmpty)
-            }
-        }
-        .padding(DS.Space.xxl).frame(width: 540)
-        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true }
-        .task(id: parsed.updates["project_id"]?.text ?? context.currentProject) { _ = try? await store.refreshProjectMembers(parsed.updates["project_id"]?.text ?? context.currentProject) }
-        .onExitCommand { dismiss() }
-        .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
-    }
-    private func resumeDraftFromChip() {
-        let draft = text
-        focused = true
-        // AppKit selects the entire field when it becomes first responder again.
-        // Restore an insertion point after that update so typing keeps the draft.
-        DispatchQueue.main.async {
-            guard focused, text == draft else { return }
-            titleSelection = TextSelection(insertionPoint: text.endIndex)
-        }
-    }
-
-    private func submitInWorkspace() {
-        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "The workspace changed. Close this capture and open it in the current workspace."; return }
-        submit()
-    }
-}
 
 /// A brief confirmation at the foot of the list. It never blocks; it just names what happened and offers Undo.
 struct ConfirmationBar: View {
