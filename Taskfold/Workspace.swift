@@ -925,17 +925,18 @@ final class Workspace {
         return context
     }
     /// Capture previews and Save share the same inherited planning/default fields.
-    func captureTask(project: String = "", date: Date?, sectionID: String = "") -> Record {
+    /// `scope` overrides the main window's list for captures that must not inherit it (the global Quick Add and menu bar use Inbox).
+    func captureTask(project: String = "", date: Date?, sectionID: String = "", scope override: TaskScope? = nil) -> Record {
         var task = Record.task(user: store.userID, project: project, date: date)
-        for (field, value) in store.captureDefaults(scope) { task[field] = value }
+        for (field, value) in store.captureDefaults(override ?? scope) { task[field] = value }
         if let date { task["due_date"] = .string(Dates.day(date)) }
         if !sectionID.isEmpty { task["section_id"] = .string(sectionID) }
-        if section == .assigned { task["assigned_to"] = .string(store.userID) }
+        if override == nil, section == .assigned { task["assigned_to"] = .string(store.userID) }
         return task
     }
     /// Creates a task from quick-entry text. Returns the new task's id.
     @discardableResult
-    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:], manual: [String: JSON] = [:]) -> String? {
+    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:], manual: [String: JSON] = [:], scope override: TaskScope? = nil) -> String? {
         let project = manual["project_id"]?.text ?? project
         // A value chosen by hand replaces the matching parsed token, exactly as the composer previewed it.
         let declined = declined.union(TaskCapturePanel.supersededGroups(manual))
@@ -951,7 +952,7 @@ final class Workspace {
             } catch { store.error = error.localizedDescription }
             return nil
         }
-        var task = captureTask(project: project, date: date, sectionID: sectionID)
+        var task = captureTask(project: project, date: date, sectionID: sectionID, scope: override)
         for (field, value) in manual { task[field] = value }
         let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")).choosingReferences(referenceChoices), task: task)
         guard !parsed.title.isEmpty else { return nil }
@@ -961,6 +962,7 @@ final class Workspace {
         }
         var created = false
         run("Add Task") { withAnimation(layout) { created = store.save("tasks", task) } }
+        let scope = override ?? self.scope
         if created, case .saved = scope, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }) { confirmation = Confirmation(message: "Added · outside this filter", undoable: true, historyRequest: store.captureHistoryRequest()) }
         else if created, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }), let project = store.record("projects", id: task.string("project_id")) { confirmation = Confirmation(message: "Added to " + project.name, undoable: true, historyRequest: store.captureHistoryRequest()) }
         return created ? task.id : nil

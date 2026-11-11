@@ -23,6 +23,12 @@ struct TaskCapturePanel: View {
     let context: QuickEntryContext
     var task = Record()
     let submit: () -> Void
+    /// Closes the composer where `dismiss` has nothing to dismiss (the global floating panel). Defaults to `dismiss`.
+    var onClose: (() -> Void)?
+    /// Where hand-chosen properties live. The in-app composer shares `Workspace.quickAddManual`; the global panel keeps its own.
+    var manualChoices: Binding<[String: JSON]>?
+    /// A quiet line of key hints under the footer (the global panel only).
+    var hint: String?
     @FocusState private var focused: Bool
     @FocusState private var focusedChip: String?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -39,7 +45,9 @@ struct TaskCapturePanel: View {
 
     // MARK: State
 
-    private var manual: [String: JSON] { workspace.quickAddManual }
+    private var manual: [String: JSON] { manualChoices?.wrappedValue ?? workspace.quickAddManual }
+    private func setManual(_ value: [String: JSON]) { if let manualChoices { manualChoices.wrappedValue = value } else { workspace.quickAddManual = value } }
+    private func close() { if let onClose { onClose() } else { dismiss() } }
     private var baseTask: Record { var base = task; for (field, value) in manual { base[field] = value }; return base }
     private var parseContext: QuickEntryContext {
         var c = context.choosingReferences(choices)
@@ -55,14 +63,14 @@ struct TaskCapturePanel: View {
     /// Editors for list-like values (labels, reminders) see only defaults and manual choices; parsed tokens merge on top and keep their own chips.
     private var manualBinding: Binding<Record> { Binding(get: { baseTask }, set: { applyEdit($0, from: baseTask) }) }
     private func applyEdit(_ new: Record, from old: Record) {
-        var m = workspace.quickAddManual
+        var m = manual
         for field in Self.manualFields where new[field] != old[field] { m[field] = new[field] }
-        workspace.quickAddManual = m
+        setManual(m)
     }
     private func clearManual(_ fields: [String]) {
-        var m = workspace.quickAddManual
+        var m = manual
         for field in fields { m.removeValue(forKey: field) }
-        workspace.quickAddManual = m
+        setManual(m)
     }
     private func chipOpen(_ chip: DetailChip) -> Binding<Bool> {
         Binding(get: { openChip == chip }, set: { if $0 { openChip = chip } else if openChip == chip { openChip = nil } })
@@ -78,7 +86,7 @@ struct TaskCapturePanel: View {
             HStack {
                 Text("New Task").font(DS.Font.screenTitle)
                 Spacer()
-                Button { dismiss() } label: { Image(systemName: "xmark").font(DS.Font.taskTitle.weight(.medium)) }
+                Button { close() } label: { Image(systemName: "xmark").font(DS.Font.taskTitle.weight(.medium)) }
                     .buttonStyle(.plain).help("Close (Esc)").accessibilityLabel("Close task entry")
             }
             titleField(parsed, effective: effective, dateTint: dateTint)
@@ -99,13 +107,14 @@ struct TaskCapturePanel: View {
                 Text("Reminders are off on this device. Enable delivery in the task’s Reminders after saving.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickReminderDeliveryOff")
             }
             footer(effective, canAdd: !parsed.title.isEmpty)
+            if let hint { Text(hint).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).frame(maxWidth: .infinity).accessibilityIdentifier("quickAddHint") }
         }
         .padding(DS.Space.xxl).frame(width: 540)
         .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true }
         .task(id: parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) { _ = try? await store.refreshProjectMembers(parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) }
-        .onExitCommand { dismiss() }
+        .onExitCommand { close() }
         .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
-        .onDisappear { if text.isEmpty { workspace.quickAddManual = [:] } }
+        .onDisappear { if text.isEmpty { setManual([:]) } }
     }
 
     /// Groups a property chip shows. Their tokens are declined from the chip, not from the row below.

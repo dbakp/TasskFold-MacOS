@@ -45,6 +45,7 @@ struct GeneralSettings: View {
                 if !store.labels.isEmpty { Divider(); ForEach(store.labels) { Text($0.name).tag(TaskScope.label($0.id).preferenceKey) } }
             }
             Toggle("Play sound on completion", isOn: $playCompletionSound).accessibilityIdentifier("playCompletionSound")
+            GlobalQuickAddSettings()
             Toggle("Task reminders", isOn: Binding(get: { store.remindersEnabled }, set: { enabled in if enabled { Task { await store.enableNotifications() } } else { store.disableNotifications() } }))
                 .disabled(!store.signedIn || store.requestingNotifications || store.requestingFocusAlerts)
             if store.requestingNotifications {

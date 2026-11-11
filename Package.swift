@@ -20,6 +20,11 @@ let package = Package(
             sources: ["TaskfoldWidgets.swift"],
             swiftSettings: [.define("WIDGET_MODEL_TESTING")]
         ),
-        .testTarget(name: "TaskfoldCoreTests", dependencies: ["TaskfoldCore", "WidgetModel"], path: "TaskfoldTests", resources: [.copy("Fixtures")])
+        .target(
+            name: "QuickAddShortcutModel",
+            path: "Taskfold/GlobalQuickAdd",
+            sources: ["QuickAddShortcut.swift"]
+        ),
+        .testTarget(name: "TaskfoldCoreTests", dependencies: ["TaskfoldCore", "WidgetModel", "QuickAddShortcutModel"], path: "TaskfoldTests", resources: [.copy("Fixtures")])
     ]
 )
