@@ -66,7 +66,10 @@ struct MultiSelectionInspector: View {
 }
 
 struct TaskInspectorForm: View {
-    @State private var showingReminders = false
+    @State private var openChip: DetailChip?
+    @State private var repeatExpanded = false
+    @State private var assigneeRequested = false
+    @State private var collapsedSections = Set<String>()
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     let taskID: String
@@ -256,10 +259,39 @@ struct TaskInspectorForm: View {
         .onChange(of:recoveryExtras) {_,_ in checkpoint()}
         .onDisappear {checkpoint()}
     }
-    private var editingBody: some View {
+    private var detailContent: some View {
         ScrollViewReader { proxy in
-        Form {
-            Section {
+            ScrollView {
+                VStack(alignment: .leading, spacing: DS.Space.l) {
+                    header
+                    chipRow
+                    destinationRow
+                    if let projectChangeFailure { Text(projectChangeFailure).foregroundStyle(DS.Palette.danger).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("taskProjectMoveFailure").id("taskProjectMoveFailure") }
+                    linksSection
+                    subtasksSection
+                    attachmentsSection
+                    commentsSection
+                    footer
+                }
+                .padding(DS.Space.l)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .onChange(of: projectFailureReveal) { _, _ in
+                guard projectChangeFailure != nil else { return }
+                // Reveal after the conditional message has joined the layout.
+                DispatchQueue.main.async {
+                    withAnimation(workspace.layout) { proxy.scrollTo("taskProjectMoveFailure", anchor: .center) }
+                }
+            }
+        }
+    }
+
+    // MARK: Header
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: DS.Space.s) {
+            HStack(alignment: .top, spacing: DS.Space.s) {
+                completionControl
                 TextField("Title", text: text("title"), selection: $titleSelection, prompt: Text("What needs doing?"), axis: .vertical)
                     .labelsHidden().multilineTextAlignment(.leading)
                     .font(.title3.weight(.semibold)).textFieldStyle(.plain).lineLimit(1...4)
@@ -267,187 +299,110 @@ struct TaskInspectorForm: View {
                     .onChange(of: titleFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
                     .accessibilityIdentifier("taskTitle")
                     .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: quickExclusions, onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
-                if store.canAuthorTaskHeadings(teamDraft: teamDraft) {
-                    Picker("Task type", selection: Binding(get: { TaskKind(draft) == .heading }, set: { heading in
-                        guard editorAvailable else { return }
-                        do { draft = try TaskKind.setting(draft, heading: heading) }
-                        catch { store.error = error.localizedDescription }
-                    })) {
-                        Text("Task").tag(false)
-                        Text("Heading").tag(true)
-                    }.disabled(TaskKind(draft) == .unsupported).accessibilityIdentifier("taskKindPicker")
-                    if draft.completed { Text("Reopen this task to turn it into a heading.").font(.caption).foregroundStyle(.secondary) }
-                    if let request = TodoistHeadingConversion(draft) {
-                        Button("Review imported heading", systemImage: "textformat") { titleFocused = false; headingConversion = request }.accessibilityIdentifier("reviewImportedHeading")
+                moreMenu
+            }
+            if !TaskKind.mayComplete(draft) {
+                Label(TaskKind(draft) == .heading ? "Heading · stays open" : "Task type unavailable", systemImage: TaskKind(draft) == .heading ? "textformat" : "questionmark.square")
+                    .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("taskKindStatus")
+            }
+            if draft.completed, let at = ISO8601DateFormatter().date(from: draft.string("completed_at")) {
+                Text("Completed \(at.formatted(.relative(presentation: .named)))").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
+            }
+            if store.canAuthorTaskHeadings(teamDraft: teamDraft), draft.completed { Text("Reopen this task to turn it into a heading.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary) }
+            if store.canAuthorTaskHeadings(teamDraft: teamDraft), let request = TodoistHeadingConversion(draft) {
+                Button("Review imported heading", systemImage: "textformat") { titleFocused = false; headingConversion = request }.accessibilityIdentifier("reviewImportedHeading")
+            }
+            if let suggestions {
+                VStack(alignment: .leading, spacing: DS.Space.xs) {
+                    QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: resumeTitleFromChip, focusChanged: { titleChipFocused = $0 }).padding(.vertical, DS.Space.xxs)
+                    if !suggestions.tokens.isEmpty { Text("Return applies these · ✕ keeps the words in the title").font(.caption2).foregroundStyle(DS.Palette.textTertiary) }
+                    if suggestions.updates["reminder_specs"] != nil && !store.remindersEnabled {
+                        Text("Reminders are off on this device. Enable delivery in Reminders below.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickReminderDeliveryOff")
                     }
-                }
-                if !TaskKind.mayComplete(draft) {
-                    Label(TaskKind(draft) == .heading ? "Heading · stays open" : "Task type unavailable", systemImage: TaskKind(draft) == .heading ? "textformat" : "questionmark.square")
-                        .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("taskKindStatus")
-                }
-                Text(isCreating ? "Added only when you choose Add Task" : "Changes save automatically")
-                    .font(.caption).foregroundStyle(.secondary)
-                    .accessibilityIdentifier("inspectorAutosaveHint")
-                if let suggestions {
-                    VStack(alignment: .leading, spacing: 4) {
-                        QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: resumeTitleFromChip, focusChanged: { titleChipFocused = $0 }).padding(.vertical, 2)
-                        if !suggestions.tokens.isEmpty { Text("Return applies these · ✕ keeps the words in the title").font(.caption2).foregroundStyle(.tertiary) }
-                        if suggestions.updates["reminder_specs"] != nil && !store.remindersEnabled {
-                            Text("Reminders are off on this device. Enable delivery in Reminders below.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickReminderDeliveryOff")
-                        }
-                        if let rule = suggestions.updates["recurrence_pattern"] {
-                            Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
-                        }
-                        ForEach(suggestions.warnings, id: \.self) { warning in Text(warning).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickEntryWarning") }
+                    if let rule = suggestions.updates["recurrence_pattern"] {
+                        Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
                     }
-                    .transition(.opacity)
+                    ForEach(suggestions.warnings, id: \.self) { warning in Text(warning).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickEntryWarning") }
                 }
+                .transition(.opacity)
+            }
+            descriptionEditor
+        }
+    }
+
+    private var completionControl: some View {
+        Group {
+            if TaskKind.mayComplete(draft) {
+                Button {
+                    guard editorAvailable, editingGeneration == currentGeneration, workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "This task or workspace changed. Reopen its current details."; return }
+                    if workspace.hierarchyPresentation {
+                        do { workspace.complete(try store.selectionRecord(taskID)) } catch { store.error = error.localizedDescription }
+                    } else if let current { workspace.complete(current) }
+                } label: {
+                    CheckMark(checked: draft.completed, color: DS.Palette.priority(draft.priority), emphasized: draft.priority < 4,
+                              size: DS.Size.checkbox, stroke: draft.priority < 4 ? nil : DS.Palette.textTertiary, restFill: draft.priority < 4 ? 0.1 : 0)
+                        .frame(width: DS.Space.xxl + DS.Space.xs, height: DS.Space.xxl + DS.Space.xs).contentShape(.rect)
+                }
+                .buttonStyle(.plain).pointerStyle(.link).disabled(isTeamTask)
+                .accessibilityLabel(draft.completed ? "Reopen task" : "Complete task").accessibilityIdentifier("taskComplete")
+            } else {
+                Image(systemName: TaskKind(draft) == .heading ? "textformat" : "questionmark.square")
+                    .foregroundStyle(DS.Palette.textSecondary).frame(width: DS.Space.xxl + DS.Space.xs, height: DS.Space.xxl + DS.Space.xs)
+                    .accessibilityLabel(TaskKind(draft) == .heading ? "Heading, stays open" : "Task type unavailable")
+            }
+        }
+    }
+
+    private var descriptionEditor: some View {
+        // A hidden copy of the text sizes the editor so the description grows with its content.
+        Text(draft.string("description").isEmpty ? " " : draft.string("description") + "\u{200B}")
+            .font(DS.Font.taskNote).padding(.horizontal, DS.Space.xs + 1).padding(.vertical, DS.Space.s).padding(.trailing, DS.Space.xxl)
+            .frame(maxWidth: .infinity, minHeight: DS.Space.xxxl + DS.Space.s, alignment: .topLeading).opacity(0).accessibilityHidden(true)
+            .overlay {
                 TextEditor(text: text("description"))
-                    .font(.body).foregroundStyle(.secondary).scrollContentBackground(.hidden)
-                    .frame(minHeight: 52, maxHeight: 180)
+                    .font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).scrollContentBackground(.hidden)
                     .overlay(alignment: .topLeading) {
                         if draft.string("description").isEmpty {
-                            Text("Notes").foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5).allowsHitTesting(false)
+                            Text("Description").font(DS.Font.taskNote).foregroundStyle(DS.Palette.textTertiary).padding(.top, DS.Space.s).padding(.leading, DS.Space.xs + 1).allowsHitTesting(false)
                         }
                     }
-                    .accessibilityLabel("Notes").accessibilityIdentifier("taskDescription")
-                Button("Format notes", systemImage: "textformat") {
+                    .accessibilityLabel("Description").accessibilityIdentifier("taskDescription")
+            }
+            .overlay(alignment: .topTrailing) {
+                Button {
                     guard let binding = workspaceBinding else { return }
                     noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft,sourceRootID:sourceRoot?.id,admission:TaskEditorAdmission(workspace:binding,record:draft,root:sourceRoot,kind:.nested,teamDraft:teamDraft))
-                }.disabled(current == nil && !isCreating).accessibilityIdentifier("openNoteFormatting")
-                if !isTeamTask, store.record("tasks", id: taskID) != nil {
-                    Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
-                    Text("Pin only text you want visible on your desktop or Home Screen. Choose it in the Pinned note widget; hide its details for privacy.").font(.caption).foregroundStyle(.secondary)
+                } label: {
+                    Text("Aa").font(DS.Font.chip).foregroundStyle(DS.Palette.textSecondary)
+                        .padding(.horizontal, DS.Space.xs + DS.Space.xxs).padding(.vertical, DS.Space.xxs)
+                        .background(DS.Palette.surfaceSunken, in: .rect(cornerRadius: DS.Radius.xs, style: .continuous))
                 }
-                HStack {
-                    if TaskKind.mayComplete(draft) {
-                    Button(draft.completed ? "Reopen" : "Complete", systemImage: draft.completed ? "arrow.uturn.backward.circle" : "checkmark.circle") {
-                        guard editorAvailable,editingGeneration == currentGeneration, workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "This task or workspace changed. Reopen its current details."; return }
-                        if workspace.hierarchyPresentation {
-                            do { workspace.complete(try store.selectionRecord(taskID)) } catch { store.error = error.localizedDescription }
-                        } else if let current { workspace.complete(current) }
-                    }
-                        .controlSize(.small).disabled(isTeamTask || !TaskKind.mayComplete(draft))
-                    }
-                    Spacer()
-                    if draft.completed, let at = ISO8601DateFormatter().date(from: draft.string("completed_at")) { Text("Completed \(at.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(.secondary) }
-                }
+                .buttonStyle(.plain).pointerStyle(.link).help("Format notes").padding(DS.Space.xs)
+                .disabled(current == nil && !isCreating)
+                .accessibilityLabel("Format notes").accessibilityIdentifier("openNoteFormatting")
             }
-            let links = Linkify.urls(in: draft.title + "\n" + draft.string("description"))
-            if !links.isEmpty {
-                Section("Links") {
-                    ForEach(links, id: \.absoluteString) { url in
-                        Button { LinkOpener.open(url, workspace: workspace) } label: {
-                            Label {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(LinkTitles.shared.title(for: url) ?? Linkify.shortLabel(url)).lineLimit(1)
-                                    Text(Linkify.host(url)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                                }
-                            } icon: { Image(systemName: "safari") }
-                        }
-                        .buttonStyle(.plain).pointerStyle(.link)
-                        .help(url.absoluteString)
-                        .contextMenu {
-                            Button("Open Link", systemImage: "arrow.up.right.square") { LinkOpener.open(url, workspace: workspace) }
-                            Button("Copy Link", systemImage: "doc.on.doc") { LinkOpener.copy(url); workspace.confirm("Copied link", undoable: false) }
-                            ShareLink(item: url) { Label("Share…", systemImage: "square.and.arrow.up") }
-                        }
-                        .accessibilityIdentifier("inspectorLink")
-                    }
-                }
-            }
-            Section("Plan") {
-                Toggle("Planned date", isOn: Binding(get: { draft.due != nil }, set: { draft["due_date"] = $0 ? .string(Dates.day(Date())) : .null; if !$0 { draft["due_time"] = .null } }))
-                if draft.due != nil {
-                    DatePicker("Date", selection: Binding(get: { draft.due ?? Date() }, set: { draft["due_date"] = .string(Dates.day($0)) }), displayedComponents: .date)
-                    Toggle("Time", isOn: Binding(get: { !draft.string("due_time").isEmpty }, set: { draft["due_time"] = $0 ? .string("09:00") : .null }))
-                    if !draft.string("due_time").isEmpty {
-                        DatePicker("Time", selection: Binding(get: {
-                            let parts = draft.string("due_time").split(separator: ":").compactMap { Int($0) }
-                            return Calendar.current.date(bySettingHour: parts.first ?? 9, minute: parts.count > 1 ? parts[1] : 0, second: 0, of: Date()) ?? Date()
-                        }, set: { let parts = Calendar.current.dateComponents([.hour, .minute], from: $0); draft["due_time"] = .string(String(format: "%02d:%02d", parts.hour ?? 9, parts.minute ?? 0)) }), displayedComponents: .hourAndMinute)
-                    }
-                    HStack(spacing: 6) {
-                        quickDate("Today", Date()); quickDate("Tomorrow", Calendar.current.date(byAdding: .day, value: 1, to: Date())!); if let day = store.datePhraseDay("next week") { quickDate("Next week", day) }
-                    }.controlSize(.small)
-                }
-                Toggle("Deadline", isOn: Binding(get: { draft.deadline != nil }, set: { draft["deadline_date"] = $0 ? .string(Dates.day(Date())) : .null }))
-                if draft.deadline != nil {
-                    DatePicker("Must be done by", selection: Binding(get: { draft.deadline ?? Date() }, set: { draft["deadline_date"] = .string(Dates.day($0)) }), displayedComponents: .date)
-                        .accessibilityIdentifier("taskDeadline")
-                    Text("Rescheduling the plan leaves this deadline in place.").font(.caption).foregroundStyle(.secondary)
-                }
-                Toggle("Time estimate", isOn: Binding(get: { draft.durationMinutes != nil }, set: { draft["duration_minutes"] = $0 ? .number(30) : .null }))
-                if let minutes = draft.durationMinutes {
-                    Stepper("Estimate · \(minutes) min", value: Binding(get: { draft.durationMinutes ?? 30 }, set: { draft["duration_minutes"] = .number(Double($0)) }), in: 1...10080)
-                        .accessibilityIdentifier("taskDuration")
-                        .accessibilityLabel("Time estimate in minutes")
-                        .accessibilityValue("\(minutes)")
-                }
-                if !draft.string("due_time").isEmpty {
-                    Picker("Time zone", selection: text("time_zone")) {
-                        Text("Local time · wherever I am").tag("")
-                        Text("Fixed · " + TimeZone.current.identifier).tag(TimeZone.current.identifier)
-                        if !draft.string("time_zone").isEmpty && draft.string("time_zone") != TimeZone.current.identifier {
-                            Text("Fixed · " + draft.string("time_zone")).tag(draft.string("time_zone"))
-                        }
-                    }.accessibilityIdentifier("taskTimeZone")
-                    if !draft.string("time_zone").isEmpty { Text("Date and time are shown in " + draft.string("time_zone") + ".").font(.caption).foregroundStyle(.secondary) }
-                }
-                Picker("Priority", selection: Binding(get: { draft.priority }, set: { draft["priority"] = .number(Double($0)) })) {
-                    ForEach(1...4, id: \.self) { n in Label(n == 4 ? "None" : "Priority \(n)", systemImage: "flag.fill").foregroundStyle(Color.priority(n)).tag(n) }
-                }
-                LabeledContent("Assigned to") {
-                    if isTeamTask {
-                        Button(teamAssigneeCaption, action: openTeamAssignee).accessibilityIdentifier("taskAssignee")
-                    } else {
-                        AssigneeMenu(task: draft, contextID: taskID, showsName: true) { draft["assigned_to"] = $0.isEmpty ? .null : .string($0) }
-                    }
-                }
-                if Workspace.subtaskPath(taskID) == nil {
-                Picker("Project", selection: Binding(get: { draft.string("project_id") }, set: changeTaskProject)) {
-                    Text("Inbox").tag("")
-                    ForEach(store.projects) { Text($0.name).tag($0.id) }
-                }.disabled(isTeamTask).accessibilityIdentifier("taskProjectPicker")
-                if let projectChangeFailure { Text(projectChangeFailure).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("taskProjectMoveFailure").id("taskProjectMoveFailure") }
-                if !draft.string("project_id").isEmpty {
-                    Picker("Section", selection: text("section_id")) {
-                        Text("No section").tag("")
-                        ForEach(store.rows("sections").filter { $0.string("project_id") == draft.string("project_id") }) { Text($0.name).tag($0.id) }
-                    }
-                }
-                } else {
-                    LabeledContent("Project", value: store.record("projects", id: workspace.assignmentProject(draft, contextID: taskID))?.name ?? "Inbox")
-                    Text("Subtasks stay with the parent task.").font(.caption).foregroundStyle(.secondary)
-                }
-                if Workspace.subtaskPath(taskID) == nil {
-                if isTeamTask {
-                    Button(action: openTeamRepeat) { LabeledContent("Repeat", value: draft["is_recurring"].flag ? Recurrence.summary(Recurrence.effective(draft)) : "Never") }.accessibilityIdentifier("taskRepeat")
-                } else { RecurrenceEditor(task: $draft) }
-                if isTeamTask {
-                    Button("Shared reminders…", systemImage: "bell", action: openTeamReminders).accessibilityIdentifier("taskTeamReminders")
-                } else {
-                    Button("Reminders…", systemImage: "bell") { showingReminders = true }.accessibilityIdentifier("taskReminders")
-                }
-                } else {
-                    Text("Manage repeating schedules and reminders on the parent task.").font(.caption).foregroundStyle(.secondary)
-                }
+    }
 
+    // MARK: Menu
+
+    private var canBreakDown: Bool { workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty }
+    private var isSubtask: Bool { Workspace.subtaskPath(taskID) != nil }
+    private var moreMenu: some View {
+        Menu {
+            if store.canAuthorTaskHeadings(teamDraft: teamDraft) {
+                Picker("Task type", selection: Binding(get: { TaskKind(draft) == .heading }, set: { heading in
+                    guard editorAvailable else { return }
+                    do { draft = try TaskKind.setting(draft, heading: heading) }
+                    catch { store.error = error.localizedDescription }
+                })) {
+                    Text("Task").tag(false)
+                    Text("Heading").tag(true)
+                }.pickerStyle(.inline).disabled(TaskKind(draft) == .unsupported).accessibilityIdentifier("taskKindPicker")
             }
-            Section("Labels") {
-                if isTeamTask {
-                    Button("Edit shared labels", systemImage: "tag", action: openTeamLabels).accessibilityIdentifier("taskTeamLabels")
-                } else {
-                if store.labels.isEmpty { Text("Create labels from the sidebar.").foregroundStyle(.secondary) }
-                ForEach(store.labels) { label in
-                    Toggle(isOn: Binding(get: { TaskLabels.normalized(draft["labels"].list, labels: store.labels).contains(.string(label.id)) }, set: { enabled in
-                        var labels = TaskLabels.normalized(draft["labels"].list, labels: store.labels).filter { $0 != .string(label.id) }; if enabled { labels.append(.string(label.id)) }; draft["labels"] = .array(labels)
-                    })) { Label(label.name, systemImage: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }.accessibilityIdentifier("taskLabel-" + label.id)
-                }
-                }
+            if !isTeamTask, store.record("tasks", id: taskID) != nil {
+                Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
             }
-            if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
-            Section("Subtasks") {
+            if canBreakDown {
                 Button("Suggest steps", systemImage: "wand.and.stars") {
                     saveTask?.cancel()
                     guard saveNow() else { return }
@@ -455,8 +410,229 @@ struct TaskInspectorForm: View {
                     catch { store.error = error.localizedDescription }
                 }.disabled(!editorAvailable || draft.completed || !TaskKind.mayComplete(draft) || draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !SubtaskTree.hasListContainer(draft["subtasks"]) || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth)
                     .accessibilityIdentifier("suggestTaskSteps")
-                let childRows = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope)
-                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 }, presentHierarchy: { independentHierarchy = .init(rootID: $0) }, saveAndOpen: { children, path in
+            }
+            if !isSubtask, store.conversationsAvailable, let saved = current, !saved.string("project_id").isEmpty {
+                Button("Shared conversation", systemImage: "bubble.left.and.bubble.right") { conversation = ConversationRequest(task: saved, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) }.accessibilityIdentifier("openSharedConversation")
+            }
+            if store.audioDraftsEnabled, !isSubtask, !isTeamTask || store.teamAudioPublishingEnabled {
+                Button("Private audio recordings", systemImage: "waveform") {
+                    guard editorAvailable, draft.string("project_id") == current?.string("project_id") else { return }
+                    audioDraft = store.audioDraftRequest(taskID: taskID)
+                }.disabled(!editorAvailable || store.audioDraftScope(taskID: taskID) == nil).accessibilityIdentifier("openTaskAudioDrafts")
+            }
+            if !isSubtask, !isCreating, let request = store.audioConversationRequest(taskID: taskID), draft.string("project_id") == current?.string("project_id") {
+                Button("Audio comments", systemImage: "waveform.bubble") { audioConversation = request }.accessibilityIdentifier("openAudioConversation")
+            }
+            Divider()
+            if !isTeamTask, !isCreating, !isSubtask {
+                Button("Duplicate", systemImage: "doc.on.doc") { workspace.duplicate([taskID]) }.accessibilityIdentifier("taskDuplicate")
+            }
+            if !isSubtask, !isTeamTask {
+                Menu("Move to project", systemImage: "folder") {
+                    Button("Inbox") { changeTaskProject("") }
+                    ForEach(store.projects) { project in Button(project.name) { changeTaskProject(project.id) } }
+                }.accessibilityIdentifier("taskMoveToProject")
+            }
+            if isTeamTask && !isCreating && !isSubtask {
+                Button("Move shared task…", systemImage: "folder.badge.arrow.forward") {
+                    guard editorAvailable, teamDeletionClean, let captured = teamDraft else { return }
+                    saveTask?.cancel()
+                    teamMove = TeamTaskMoveRequest(draft: captured, current: { editorAvailable && teamDeletionClean }, completed: {
+                        _ = recoverySession?.finish(); teamMove = nil; workspace.selection.remove(taskID)
+                        if workspace.finderTaskID == taskID { workspace.finderTaskID = nil }
+                    })
+                }.disabled(!teamDeletionClean).accessibilityIdentifier("reviewTeamTaskMove")
+                Button("Delete shared task…", systemImage: "trash", role: .destructive, action: openTeamDeletion)
+                    .disabled(!teamDeletionClean).accessibilityIdentifier("reviewTeamTaskDeletion")
+            } else if !isTeamTask && !isCreating {
+                Button("Delete Task…", systemImage: "trash", role: .destructive) { confirmDelete = true }.accessibilityIdentifier("taskDelete")
+            }
+        } label: {
+            Image(systemName: "ellipsis").font(.body.weight(.semibold)).foregroundStyle(DS.Palette.textSecondary)
+                .frame(width: DS.Space.xxl + DS.Space.xs, height: DS.Space.xxl + DS.Space.xs).contentShape(.rect)
+        }
+        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+        .help("More actions").accessibilityLabel("More actions").accessibilityIdentifier("taskMoreMenu")
+    }
+
+    // MARK: Chips
+
+    private func chipOpen(_ chip: DetailChip) -> Binding<Bool> {
+        Binding(get: { openChip == chip }, set: { if $0 { openChip = chip } else if openChip == chip { openChip = nil } })
+    }
+    private var dateChipText: (text: String, tint: Color)? {
+        guard let due = draft.due else { return nil }
+        let day = TaskDetailFormat.relativeDay(due, completed: draft.completed)
+        let clock = draft.string("due_time").isEmpty ? "" : TaskDetailFormat.clock(draft.string("due_time"))
+        return ([day.text, clock].filter { !$0.isEmpty }.joined(separator: " "), day.tint)
+    }
+    private var activeReminderCount: Int { ReminderSpec.rows(draft).compactMap { ReminderSpec(row: $0) }.filter(\.enabled).count }
+    private var chipRow: some View {
+        QuickEntryChipLayout(spacing: DS.Space.s) {
+            dateChip
+            if let deadline = draft.deadline { deadlineChip(deadline) }
+            priorityChip
+            labelChips
+            if !isSubtask { remindersChip }
+            if let minutes = draft.durationMinutes { estimateChip(minutes) }
+            assigneeChip
+            addPropertyChip
+        }
+        .accessibilityElement(children: .contain).accessibilityIdentifier("taskPropertyChips")
+    }
+    private var dateChip: some View {
+        let set = dateChipText
+        return PropertyChip(icon: "calendar", text: set?.text ?? "Date", tint: set?.tint, trailingIcon: draft["is_recurring"].flag ? "repeat" : nil,
+                            accessibility: set.map { "Date, \($0.text)" + (draft["is_recurring"].flag ? ", repeats" : "") } ?? "Add date", identifier: "taskDate") { openChip = .date }
+            .popover(isPresented: chipOpen(.date), arrowEdge: .bottom) {
+                TaskDateEditor(draft: $draft, repeatExpanded: $repeatExpanded, canRepeat: !isSubtask, isTeamTask: isTeamTask, openTeamRepeat: openTeamRepeat, close: { openChip = nil })
+            }
+    }
+    private func deadlineChip(_ day: Date) -> some View {
+        let past = Calendar.current.startOfDay(for: day) < Calendar.current.startOfDay(for: Date()) && !draft.completed
+        let text = "Deadline " + TaskDetailFormat.relativeDay(day, completed: true).text
+        return PropertyChip(icon: "flag.checkered", text: text, tint: past ? DS.Palette.danger : DS.Palette.dateTomorrow, accessibility: "Deadline, " + TaskDetailFormat.relativeDay(day).text, identifier: "taskDeadline") { openChip = .deadline }
+            .popover(isPresented: chipOpen(.deadline), arrowEdge: .bottom) { TaskDeadlineEditor(draft: $draft, close: { openChip = nil }) }
+    }
+    private var priorityChip: some View {
+        let value = draft.priority
+        let set = value < 4
+        return PropertyChip(icon: set ? "flag.fill" : "flag", text: set ? "P\(value)" : "Priority", tint: set ? DS.Palette.priority(value) : nil,
+                            accessibility: set ? "Priority, P\(value)" : "Add priority", identifier: "taskPriority") { openChip = .priority }
+            .popover(isPresented: chipOpen(.priority), arrowEdge: .bottom) { TaskPriorityEditor(draft: $draft, close: { openChip = nil }) }
+    }
+    @ViewBuilder private var labelChips: some View {
+        let assigned = TaskLabels.normalized(draft["labels"].list, labels: store.labels).compactMap { value in store.labels.first { .string($0.id) == value } }
+        if assigned.isEmpty {
+            PropertyChip(icon: "tag", text: "Labels", accessibility: "Add labels", identifier: isTeamTask ? "taskTeamLabels" : "taskLabels") { if isTeamTask { openTeamLabels() } else { openChip = .label("") } }
+                .popover(isPresented: chipOpen(.label("")), arrowEdge: .bottom) { TaskLabelsEditor(draft: $draft) }
+        } else {
+            ForEach(assigned) { label in
+                PropertyChip(icon: "tag.fill", text: label.name, tint: Color.project(label.string("color")), accessibility: "Label, \(label.name)", identifier: isTeamTask ? "taskTeamLabels" : "taskLabelChip-" + label.id) { if isTeamTask { openTeamLabels() } else { openChip = .label(label.id) } }
+                    .popover(isPresented: chipOpen(.label(label.id)), arrowEdge: .bottom) { TaskLabelsEditor(draft: $draft) }
+            }
+        }
+    }
+    private var remindersChip: some View {
+        let count = activeReminderCount
+        return PropertyChip(icon: count > 0 ? "bell.fill" : "bell", text: count > 0 ? "\(count)" : "Reminders", tint: count > 0 ? DS.Palette.accent : nil,
+                            accessibility: count > 0 ? "Reminders, \(count)" : "Add reminders", identifier: isTeamTask ? "taskTeamReminders" : "taskReminders") { if isTeamTask { openTeamReminders() } else { openChip = .reminders } }
+            .popover(isPresented: chipOpen(.reminders), arrowEdge: .bottom) {
+                VStack(spacing: 0) {
+                    TaskReminderEditor(task: $draft).onAppear { draft = store.applyingReminderDefault(draft, previous: original) }
+                    Divider()
+                    HStack { Spacer(); Button("Done") { openChip = nil }.keyboardShortcut(.defaultAction) }.padding(DS.Space.m)
+                }.frame(width: 520, height: 600)
+            }
+    }
+    private func estimateChip(_ minutes: Int) -> some View {
+        PropertyChip(icon: "hourglass", text: TaskDetailFormat.estimate(minutes), tint: DS.Palette.textSecondary, accessibility: "Estimate, \(TaskDetailFormat.estimate(minutes))", identifier: "taskDuration") { openChip = .estimate }
+            .popover(isPresented: chipOpen(.estimate), arrowEdge: .bottom) { TaskEstimateEditor(draft: $draft, close: { openChip = nil }) }
+    }
+    @ViewBuilder private var assigneeChip: some View {
+        if isTeamTask {
+            if !draft.string("assigned_to").isEmpty {
+                PropertyChip(icon: "person.crop.circle", text: teamAssigneeCaption, tint: DS.Palette.accent, accessibility: "Assignee, \(teamAssigneeCaption)", identifier: "taskAssignee", action: openTeamAssignee)
+            }
+        } else if !draft.string("assigned_to").isEmpty || assigneeRequested {
+            AssigneeMenu(task: draft, contextID: taskID, showsName: true, startsOpen: assigneeRequested && draft.string("assigned_to").isEmpty) {
+                assigneeRequested = false
+                draft["assigned_to"] = $0.isEmpty ? .null : .string($0)
+            }
+            .padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xs)
+            .font(DS.Font.chip)
+            .background(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(DS.Palette.accent.opacity(0.12)))
+        }
+    }
+    @ViewBuilder private var addPropertyChip: some View {
+        let canAssign = draft.string("assigned_to").isEmpty && !assigneeRequested
+        if draft.deadline == nil || draft.durationMinutes == nil || (!isSubtask && !draft["is_recurring"].flag) || canAssign {
+            Menu {
+                if draft.deadline == nil { Button("Deadline", systemImage: "flag.checkered") { draft["deadline_date"] = .string(Dates.day(Date())); DispatchQueue.main.async { openChip = .deadline } } }
+                if draft.durationMinutes == nil { Button("Estimate", systemImage: "hourglass") { draft["duration_minutes"] = .number(30); DispatchQueue.main.async { openChip = .estimate } } }
+                if !isSubtask, !draft["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = !isTeamTask; openChip = .date } }
+                if canAssign { Button("Assignee", systemImage: "person.crop.circle.badge.plus") { if isTeamTask { openTeamAssignee() } else { assigneeRequested = true } } }
+            } label: { ChipLabel(icon: "plus") }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+            .help("Add property").accessibilityLabel("Add property").accessibilityIdentifier("taskAddProperty")
+        }
+    }
+    private var destinationText: String {
+        let projectID = workspace.assignmentProject(draft, contextID: taskID)
+        let project = store.record("projects", id: projectID)?.name
+        let section = store.rows("sections").first { $0.id == draft.string("section_id") && !draft.string("section_id").isEmpty }?.name
+        guard let project else { return "Inbox" }
+        return "# " + [project, section].compactMap { $0 }.joined(separator: " / ")
+    }
+    @ViewBuilder private var destinationRow: some View {
+        if !isSubtask {
+            Button { openChip = .destination } label: {
+                Label { Text(destinationText).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading) } icon: { Image(systemName: draft.string("project_id").isEmpty ? "tray" : "folder").accessibilityHidden(true) }
+                    .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).contentShape(.rect)
+            }
+            .buttonStyle(.plain).pointerStyle(.link)
+            .accessibilityLabel("Project, \(destinationText.replacingOccurrences(of: "# ", with: ""))").accessibilityIdentifier("taskDestination")
+            .popover(isPresented: chipOpen(.destination), arrowEdge: .bottom) { TaskDestinationEditor(draft: $draft, projectLocked: isTeamTask, changeProject: changeTaskProject) }
+        } else {
+            VStack(alignment: .leading, spacing: DS.Space.xxs) {
+                Label(destinationText, systemImage: "folder").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
+                Text("Subtasks stay with the parent task. Manage repeating schedules and reminders on the parent task.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textTertiary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    // MARK: Sections
+
+    private func block<Content: View>(_ id: String, _ title: String, summary: String? = nil, @ViewBuilder content: () -> Content) -> some View {
+        let collapsed = collapsedSections.contains(id)
+        return VStack(alignment: .leading, spacing: DS.Space.s) {
+            Button {
+                if collapsed { collapsedSections.remove(id) } else { collapsedSections.insert(id) }
+            } label: {
+                HStack(spacing: DS.Space.xs) {
+                    Image(systemName: collapsed ? "chevron.right" : "chevron.down").font(DS.Font.badge).frame(width: DS.Space.m).accessibilityHidden(true)
+                    Text(title).font(DS.Font.sectionHeader)
+                    if let summary { Text(summary).font(DS.Font.sectionHeader).foregroundStyle(DS.Palette.textSecondary) }
+                    Spacer(minLength: 0)
+                }.foregroundStyle(DS.Palette.textPrimary).contentShape(.rect)
+            }
+            .buttonStyle(.plain).accessibilityLabel(title + (summary.map { ", " + $0 } ?? "")).accessibilityValue(collapsed ? "Collapsed" : "Expanded").accessibilityIdentifier("section-" + id)
+            if !collapsed { VStack(alignment: .leading, spacing: DS.Space.s) { content() } }
+        }
+    }
+
+    @ViewBuilder private var linksSection: some View {
+        let links = Linkify.urls(in: draft.title + "\n" + draft.string("description"))
+        if !links.isEmpty {
+            block("links", "Links") {
+                ForEach(links, id: \.absoluteString) { url in
+                    Button { LinkOpener.open(url, workspace: workspace) } label: {
+                        Label {
+                            VStack(alignment: .leading, spacing: DS.Space.xxs) {
+                                Text(LinkTitles.shared.title(for: url) ?? Linkify.shortLabel(url)).lineLimit(1)
+                                Text(Linkify.host(url)).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).lineLimit(1)
+                            }
+                        } icon: { Image(systemName: "safari") }
+                    }
+                    .buttonStyle(.plain).pointerStyle(.link)
+                    .help(url.absoluteString)
+                    .contextMenu {
+                        Button("Open Link", systemImage: "arrow.up.right.square") { LinkOpener.open(url, workspace: workspace) }
+                        Button("Copy Link", systemImage: "doc.on.doc") { LinkOpener.copy(url); workspace.confirm("Copied link", undoable: false) }
+                        ShareLink(item: url) { Label("Share…", systemImage: "square.and.arrow.up") }
+                    }
+                    .accessibilityIdentifier("inspectorLink")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var subtasksSection: some View {
+        if canBreakDown {
+            let childRows = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope)
+            let done = childRows.filter { SubtaskTree.inlinePresentation($0.value).completed }.count
+            block("subtasks", "Subtasks", summary: childRows.isEmpty ? nil : "\(done)/\(childRows.count)") {
+                SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 }, presentHierarchy: { independentHierarchy = .init(rootID: $0) }, saveAndOpen: { children, path in
                     let previous = draft
                     draft["subtasks"] = children
                     guard saveNow() else { draft = previous; return false }
@@ -464,163 +640,145 @@ struct TaskInspectorForm: View {
                     workspace.open(childID)
                     return true
                 })
-                ForEach(childRows) { row in
-                    let index = row.index, value = row.value
-                    let preview = SubtaskTree.inlinePresentation(value)
-                    let title = preview.title
-                    let completed = preview.completed
-                    let accessibleTitle = title.isEmpty ? "untitled subtask" : title
-                    HStack {
-                        if TaskKind.mayComplete(preview) {
-                        Button {
-                            guard editorAvailable, let request = row.request,
-                                  let changed = inlineSubtasks.toggle(request, children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
-                            draft["subtasks"] = changed
-                        } label: {
-                            Image(systemName: completed ? "checkmark.circle.fill" : "circle").foregroundStyle(completed ? Color.taskfold : .secondary)
-                        }.buttonStyle(.borderless)
-                            .accessibilityLabel((completed ? "Reopen " : "Complete ") + accessibleTitle)
-                            .accessibilityValue(completed ? "Completed" : "Not completed")
-                            .accessibilityIdentifier("subtaskCompletion-\(index)")
-                        } else {
-                            Image(systemName: TaskKind(preview) == .heading ? "textformat" : "questionmark.square")
-                                .foregroundStyle(.secondary).accessibilityLabel(TaskKind(preview) == .heading ? "Heading, stays open" : "Task type unavailable")
-                        }
-                        if row.request != nil {
-                        TextField("Subtask", text: Binding(get: {
-                            row.request.flatMap { inlineSubtasks.value($0, children: draft["subtasks"], scope: inlineSubtaskScope) }.map(SubtaskTree.inlineTitle) ?? title
-                        }, set: { text in
-                            guard editorAvailable, let request = row.request,
-                                  let changed = inlineSubtasks.title(text, request: request, children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
-                            draft["subtasks"] = changed
-                        }), prompt: Text("Subtask"), axis: .vertical)
-                            .labelsHidden().textFieldStyle(.plain)
-                        } else {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(title.isEmpty ? "Subtask needs review" : title).accessibilityIdentifier("subtaskReadOnly-\(index)")
-                                Text("Review before editing").font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                        Button {
-                            guard editorAvailable, let request = row.request, saveNow(),
-                                  let current = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope).first(where: { $0.id == request.token && $0.request != nil }) else { return }
-                            workspace.expandedTasks.insert(taskID)
-                            workspace.open(workspace.childID(parent: taskID, value: current.value, index: current.index))
-                        } label: { Image(systemName: "sidebar.trailing") }
-                            .buttonStyle(.borderless).accessibilityLabel("Open details for " + accessibleTitle)
-                            .disabled(isTeamTask || row.request == nil)
-                        Button {
-                            guard editorAvailable, let request = row.request,
-                                  let changed = inlineSubtasks.remove([request], children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
-                            draft["subtasks"] = changed
-                        } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
-                    }.disabled(row.request == nil)
-                }
+                ForEach(childRows) { row in subtaskRow(row) }
                 HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).accessibilityLabel("Add subtask").disabled(!SubtaskTree.hasListContainer(draft["subtasks"]) || subtask.trimmingCharacters(in: .whitespaces).isEmpty || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth) }
             }
+        }
+    }
+
+    private func subtaskRow(_ row: SubtaskInlineDraft.Row) -> some View {
+        let index = row.index, value = row.value
+        let preview = SubtaskTree.inlinePresentation(value)
+        let title = preview.title
+        let completed = preview.completed
+        let accessibleTitle = title.isEmpty ? "untitled subtask" : title
+        return HStack {
+            if TaskKind.mayComplete(preview) {
+            Button {
+                guard editorAvailable, let request = row.request,
+                      let changed = inlineSubtasks.toggle(request, children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
+                draft["subtasks"] = changed
+            } label: {
+                Image(systemName: completed ? "checkmark.circle.fill" : "circle").foregroundStyle(completed ? Color.taskfold : .secondary)
+            }.buttonStyle(.borderless)
+                .accessibilityLabel((completed ? "Reopen " : "Complete ") + accessibleTitle)
+                .accessibilityValue(completed ? "Completed" : "Not completed")
+                .accessibilityIdentifier("subtaskCompletion-\(index)")
+            } else {
+                Image(systemName: TaskKind(preview) == .heading ? "textformat" : "questionmark.square")
+                    .foregroundStyle(.secondary).accessibilityLabel(TaskKind(preview) == .heading ? "Heading, stays open" : "Task type unavailable")
             }
-            Section("Attachments") {
-                if isTeamTask && (store.taskFileUploadsEnabled || draft["attachments"].list.contains(where: { !$0.object["storage_object_id", default: .null].text.isEmpty })) {
-                    Button("Shared files…", systemImage: "paperclip") { taskFiles = store.fileUploadRequest(taskID: taskID) }.accessibilityIdentifier("openTaskFiles")
+            if row.request != nil {
+            TextField("Subtask", text: Binding(get: {
+                row.request.flatMap { inlineSubtasks.value($0, children: draft["subtasks"], scope: inlineSubtaskScope) }.map(SubtaskTree.inlineTitle) ?? title
+            }, set: { text in
+                guard editorAvailable, let request = row.request,
+                      let changed = inlineSubtasks.title(text, request: request, children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
+                draft["subtasks"] = changed
+            }), prompt: Text("Subtask"), axis: .vertical)
+                .labelsHidden().textFieldStyle(.plain)
+            } else {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title.isEmpty ? "Subtask needs review" : title).accessibilityIdentifier("subtaskReadOnly-\(index)")
+                    Text("Review before editing").font(.caption).foregroundStyle(.secondary)
                 }
-                ForEach(Array(draft["attachments"].list.enumerated()), id: \.offset) { index, value in
+            }
+            Button {
+                guard editorAvailable, let request = row.request, saveNow(),
+                      let current = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope).first(where: { $0.id == request.token && $0.request != nil }) else { return }
+                workspace.expandedTasks.insert(taskID)
+                workspace.open(workspace.childID(parent: taskID, value: current.value, index: current.index))
+            } label: { Image(systemName: "sidebar.trailing") }
+                .buttonStyle(.borderless).accessibilityLabel("Open details for " + accessibleTitle)
+                .disabled(isTeamTask || row.request == nil)
+            Button {
+                guard editorAvailable, let request = row.request,
+                      let changed = inlineSubtasks.remove([request], children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
+                draft["subtasks"] = changed
+            } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
+        }.disabled(row.request == nil)
+    }
+
+    private var attachmentsSection: some View {
+        block("attachments", "Attachments") {
+            if isTeamTask && (store.taskFileUploadsEnabled || draft["attachments"].list.contains(where: { !$0.object["storage_object_id", default: .null].text.isEmpty })) {
+                Button("Shared files…", systemImage: "paperclip") { taskFiles = store.fileUploadRequest(taskID: taskID) }.accessibilityIdentifier("openTaskFiles")
+            }
+            ForEach(Array(draft["attachments"].list.enumerated()), id: \.offset) { index, value in
+                HStack {
+                    Button { if !value.object["storage_object_id", default: .null].text.isEmpty { taskFiles = store.fileUploadRequest(taskID: taskID) } else { openAttachment(Record(value.object)) } } label: { Label(value.object["name"]?.text ?? "Attachment", systemImage: "paperclip") }.buttonStyle(.link)
+                    Spacer()
+                    Button { var list = draft["attachments"].list; list.remove(at: index); draft["attachments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).disabled(isTeamTask).accessibilityLabel("Remove attachment")
+                }
+            }
+            Button("Attach a File…", systemImage: "doc.badge.plus") { importing = true }.disabled(isTeamTask)
+        }
+    }
+
+    private var commentsSection: some View {
+        let count = draft["comments"].list.count
+        return block("comments", "Comments and activity", summary: count > 0 ? "\(count)" : nil) {
+            ForEach(Array(draft["comments"].list.enumerated()), id: \.offset) { index, value in
+                let row = Record(value.object)
+                VStack(alignment: .leading, spacing: DS.Space.xs) {
                     HStack {
-                        Button { if !value.object["storage_object_id", default: .null].text.isEmpty { taskFiles = store.fileUploadRequest(taskID: taskID) } else { openAttachment(Record(value.object)) } } label: { Label(value.object["name"]?.text ?? "Attachment", systemImage: "paperclip") }.buttonStyle(.link)
+                        Text(row.string("authorName").isEmpty ? "Comment" : row.string("authorName")).font(DS.Font.chip).foregroundStyle(DS.Palette.textSecondary)
                         Spacer()
-                        Button { var list = draft["attachments"].list; list.remove(at: index); draft["attachments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).disabled(isTeamTask).accessibilityLabel("Remove attachment")
+                        Button { var list = draft["comments"].list; list.remove(at: index); draft["comments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).disabled(isTeamTask).accessibilityLabel("Delete comment")
+                    }
+                    if !row.string("text").isEmpty { Text(.init(row.string("text"))).textSelection(.enabled) }
+                    if case .object(let attachment) = row["attachment"] {
+                        Button { openAttachment(Record(attachment)) } label: { CommentAttachmentPreview(attachment: Record(attachment)) }
+                            .buttonStyle(.plain).help("Open attachment").accessibilityIdentifier("commentImageAttachment")
                     }
                 }
-                Button("Attach a File…", systemImage: "doc.badge.plus") { importing = true }.disabled(isTeamTask)
             }
-            if Workspace.subtaskPath(taskID) == nil, store.conversationsAvailable, let saved = current, !saved.string("project_id").isEmpty {
-                Section { Button("Shared conversation", systemImage: "bubble.left.and.bubble.right") { conversation = ConversationRequest(task: saved, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) }.accessibilityIdentifier("openSharedConversation")
-                    Text("Share comments and mention teammates here. Earlier task comments stay below.").font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            if store.audioDraftsEnabled, Workspace.subtaskPath(taskID) == nil, !isTeamTask || store.teamAudioPublishingEnabled {
-                Section("Audio drafts") {
-                    Button("Open private recordings", systemImage: "waveform") {
-                        guard editorAvailable, draft.string("project_id") == current?.string("project_id") else { return }
-                        audioDraft = store.audioDraftRequest(taskID: taskID)
-                    }.disabled(!editorAvailable || store.audioDraftScope(taskID: taskID) == nil).accessibilityIdentifier("openTaskAudioDrafts")
-                    Text("Saved on this device. Task exports do not include recordings.").font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            if Workspace.subtaskPath(taskID)==nil, !isCreating, let request=store.audioConversationRequest(taskID:taskID), draft.string("project_id")==current?.string("project_id") {
-                Section { Button("Audio comments",systemImage:"waveform.bubble") { audioConversation=request }.accessibilityIdentifier("openAudioConversation") }
-            }
-            Section("Comments") {
-                ForEach(Array(draft["comments"].list.enumerated()), id: \.offset) { index, value in
-                    let row = Record(value.object)
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(row.string("authorName").isEmpty ? "Comment" : row.string("authorName")).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                            Spacer()
-                            Button { var list = draft["comments"].list; list.remove(at: index); draft["comments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).disabled(isTeamTask).accessibilityLabel("Delete comment")
-                        }
-                        if !row.string("text").isEmpty { Text(.init(row.string("text"))).textSelection(.enabled) }
-                        if case .object(let attachment) = row["attachment"] {
-                            Button { openAttachment(Record(attachment)) } label: { CommentAttachmentPreview(attachment: Record(attachment)) }
-                                .buttonStyle(.plain).help("Open attachment").accessibilityIdentifier("commentImageAttachment")
-                        }
-                    }
-                }
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Write a comment").font(.caption).foregroundStyle(.secondary)
-                    CommentEditor(text: $comment, pasteImage: { data in
-                        do {
-                            let name = "Pasted image \(UUID().uuidString.prefix(8)).png"
-                            guard data.count <= 5 * 1024 * 1024 else { throw AppFailure(message: "Choose an image smaller than 5 MB.") }
-                            guard NSImage(data: data) != nil else { throw AppFailure(message: "This clipboard image could not be read.") }
-                            let attachment = Record(["id": .string(UUID().uuidString.lowercased()), "name": .string(name), "size": .number(Double(data.count)), "type": .string("image/png"), "url": .string("data:image/png;base64," + data.base64EncodedString()), "uploadedAt": .string(Dates.timestamp())])
-                            appendComment(attachment: attachment)
-                            saveTask?.cancel()
-                            saveNow()
-                            if draft == original { pastedImageName = name }
-                        } catch { store.error = error.localizedDescription }
-                    }, pasteError: { store.error = $0 })
-                    .disabled(isTeamTask)
-                    .frame(height: 80)
-                    .background(Color(nsColor: .textBackgroundColor), in: .rect(cornerRadius: 6))
-                    if let pastedImageName {
-                        Label("Attached \(pastedImageName)", systemImage: "checkmark.circle")
-                            .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("pastedImageConfirmation")
-                    }
-                    Text("Paste an image with ⌘V to attach it immediately.").font(.caption).foregroundStyle(.secondary)
-                }
-                Button("Add Comment", systemImage: "text.bubble") {
-                    appendComment(text: comment.trimmingCharacters(in: .whitespacesAndNewlines))
-                    comment = ""
-                }.disabled(isTeamTask || comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-            Section {
-                if let created = ISO8601DateFormatter().date(from: draft.string("created_at")) { LabeledContent("Created", value: created.formatted(date: .abbreviated, time: .shortened)) }
-                if isTeamTask && !isCreating && Workspace.subtaskPath(taskID) == nil {
-                    Button("Move shared task…", systemImage: "folder.badge.arrow.forward") {
-                        guard editorAvailable, teamDeletionClean, let captured = teamDraft else { return }
+            VStack(alignment: .leading, spacing: DS.Space.xs + DS.Space.xxs) {
+                CommentEditor(text: $comment, pasteImage: { data in
+                    do {
+                        let name = "Pasted image \(UUID().uuidString.prefix(8)).png"
+                        guard data.count <= 5 * 1024 * 1024 else { throw AppFailure(message: "Choose an image smaller than 5 MB.") }
+                        guard NSImage(data: data) != nil else { throw AppFailure(message: "This clipboard image could not be read.") }
+                        let attachment = Record(["id": .string(UUID().uuidString.lowercased()), "name": .string(name), "size": .number(Double(data.count)), "type": .string("image/png"), "url": .string("data:image/png;base64," + data.base64EncodedString()), "uploadedAt": .string(Dates.timestamp())])
+                        appendComment(attachment: attachment)
                         saveTask?.cancel()
-                        teamMove = TeamTaskMoveRequest(draft: captured, current: { editorAvailable && teamDeletionClean }, completed: {
-                            _ = recoverySession?.finish(); teamMove = nil; workspace.selection.remove(taskID)
-                            if workspace.finderTaskID == taskID { workspace.finderTaskID = nil }
-                        })
-                    }.disabled(!teamDeletionClean).accessibilityIdentifier("reviewTeamTaskMove")
-                    Button("Delete shared task…", systemImage: "trash", role: .destructive, action: openTeamDeletion)
-                        .disabled(!teamDeletionClean).accessibilityIdentifier("reviewTeamTaskDeletion")
-                    if !teamDeletionClean { Text("Finish saving your edits before moving or deleting this task.").font(.footnote).foregroundStyle(.secondary) }
-                } else if isTeamTask && !isCreating {
-                    Text("Manage this checklist item from its parent task.").font(.footnote).foregroundStyle(.secondary)
-                } else if !isCreating { Button("Delete Task…", systemImage: "trash", role: .destructive) { confirmDelete = true } }
+                        saveNow()
+                        if draft == original { pastedImageName = name }
+                    } catch { store.error = error.localizedDescription }
+                }, pasteError: { store.error = $0 })
+                .disabled(isTeamTask)
+                .frame(height: 80)
+                .background(DS.Palette.surfaceRaised, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).strokeBorder(DS.Palette.separator, lineWidth: 1))
+                if let pastedImageName {
+                    Label("Attached \(pastedImageName)", systemImage: "checkmark.circle")
+                        .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("pastedImageConfirmation")
+                }
+                HStack {
+                    Text("Paste an image with ⌘V to attach it immediately.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: DS.Space.s)
+                    Button("Add Comment", systemImage: "text.bubble") {
+                        appendComment(text: comment.trimmingCharacters(in: .whitespacesAndNewlines))
+                        comment = ""
+                    }.disabled(isTeamTask || comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
             }
         }
-        .formStyle(.grouped)
-        .onChange(of: projectFailureReveal) { _, _ in
-            guard projectChangeFailure != nil else { return }
-            // Reveal after the conditional message has joined the form layout.
-            DispatchQueue.main.async {
-                withAnimation(workspace.layout) { proxy.scrollTo("taskProjectMoveFailure", anchor: .center) }
+    }
+
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
+            if let created = ISO8601DateFormatter().date(from: draft.string("created_at")) {
+                Text("Created " + created.formatted(date: .abbreviated, time: .shortened)).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
             }
+            if isTeamTask && !isCreating && !isSubtask && !teamDeletionClean { Text("Finish saving your edits before moving or deleting this task.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary) }
+            else if isTeamTask && !isCreating && isSubtask { Text("Manage this checklist item from its parent task.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary) }
+            Text(isCreating ? "Added only when you choose Add Task" : "Changes save automatically")
+                .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textTertiary).accessibilityIdentifier("inspectorAutosaveHint")
         }
-        }
+    }
+    private var editingBody: some View {
+        detailContent
         .confirmationDialog("Delete “\(draft.title)”?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {guard editorAvailable else {stopEditing();return};workspace.delete([taskID])}
         } message: { Text("You can undo this from the Edit menu.") }
@@ -657,12 +815,6 @@ struct TaskInspectorForm: View {
                 return failure
             }
         }
-        .sheet(isPresented: $showingReminders) {
-            NavigationStack {
-                TaskReminderEditor(task: $draft).onAppear { draft = store.applyingReminderDefault(draft, previous: original) }
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showingReminders = false } } }
-            }.frame(minWidth: 550, minHeight: 620)
-        }
         .onChange(of: draft) { _, _ in checkpoint();scheduleSave() }
         .onChange(of: currentGeneration) { _, _ in stopEditing() }
         .onChange(of: current) { _, value in
@@ -689,9 +841,6 @@ struct TaskInspectorForm: View {
             if (draft != original || notePin != nil || !subtask.isEmpty || !comment.isEmpty),recoverySession?.flush() != true { request.hasUnsavedEdits = true }
         }
         .onDisappear { saveTask?.cancel(); titleFocused = false; applySuggestions(); saveNow() }
-    }
-    private func quickDate(_ title: String, _ date: Date) -> some View {
-        Button(title) { draft["due_date"] = .string(Dates.day(date)) }.buttonStyle(.bordered)
     }
     private func finishTitleWhenUnfocused() {
         // Moving from the title to one of its chips is still editing the title.
