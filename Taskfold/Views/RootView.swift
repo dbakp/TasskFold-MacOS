@@ -230,7 +230,7 @@ struct RootView: View {
         if let value = option("calendar-mode"), let mode = CalendarMode(rawValue: value) { workspace.calendarMode = mode }
         if let value = option("appearance") { NSApp.appearance = NSAppearance(named: value == "dark" ? .darkAqua : .aqua) }
         if let title = option("select-title") {
-            Task { try? await Task.sleep(for: .seconds(1)); if let task = store.tasks.first(where: { $0.title == title }) { workspace.selection = [task.id] } }
+            Task { try? await Task.sleep(for: .seconds(1)); if let task = store.tasks.first(where: { $0.title == title }) { workspace.selection = [task.id]; workspace.inspectorShown = true } }
         }
         if let path = option("capture") {
             Task {

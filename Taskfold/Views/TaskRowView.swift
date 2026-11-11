@@ -68,9 +68,10 @@ struct TaskRowView: View {
 
             if TaskKind.mayComplete(task) {
             Button { workspace.complete(task) } label: {
-                CheckMark(checked: checked, color: isSelected ? selectedForeground : DS.Palette.priority(task.priority), emphasized: isSelected || task.priority < 4,
-                          size: DS.Size.checkbox, stroke: isSelected || task.priority < 4 ? nil : DS.Palette.textTertiary,
-                          restFill: !isSelected && task.priority < 4 ? 0.1 : 0, previewCheck: checkHover && !checked)
+                // Selection keeps the priority colour: the selected fill is a soft tint, not a solid highlight.
+                CheckMark(checked: checked, color: DS.Palette.priority(task.priority), emphasized: task.priority < 4,
+                          size: DS.Size.checkbox, stroke: task.priority < 4 ? nil : DS.Palette.textTertiary,
+                          restFill: task.priority < 4 ? 0.1 : 0, previewCheck: checkHover && !checked)
                     .frame(width: DS.Space.xxxl, height: DS.Space.xxxl) // 32 pt hit area
                     .contentShape(.rect)
             }

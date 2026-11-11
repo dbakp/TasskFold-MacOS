@@ -554,6 +554,10 @@ struct BackupVault: Sendable {
         #if DEBUG && !SWIFT_PACKAGE
         if FullSchemaNativeFixture.protectedStorageRequested {
             service = FullSchemaNativeFixture.keychainService("backup")
+        } else if ProcessInfo.processInfo.arguments.contains("--preview") {
+            // Preview launches never read the real recovery key. An unsigned debug
+            // build would otherwise block on an invisible Keychain access prompt.
+            service = "com.taskfold.recovery.v1.preview"
         }
         #endif
         return [kSecClass as String: kSecClassGenericPassword,
