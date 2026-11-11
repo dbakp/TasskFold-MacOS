@@ -283,7 +283,7 @@ struct TaskListView: View {
                                   canDrag: canDragReschedule, add: beginCalendarAdd)
             }
             else if boardLayout && (!projectID.isEmpty || !boardColumns.isEmpty) {
-                ProjectBoard(columns: boardColumns, identifier: boardIdentifier, moveMenuTitle: boardMoveTitle, compactDate: dated,
+                ProjectBoard(columns: boardColumns, identifier: boardIdentifier, moveMenuTitle: boardMoveTitle, compactDate: dated, showsProject: scope == .upcoming,
                              canDrag: projectID.isEmpty ? canDragReschedule : { _ in true }, add: beginBoardAdd)
             } else {
             List(selection: Binding(get: { workspace.section.scope == scope ? workspace.selection : [] }, set: { selection in

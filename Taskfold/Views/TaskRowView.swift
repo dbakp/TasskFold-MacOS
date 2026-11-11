@@ -24,6 +24,23 @@ extension EnvironmentValues {
     }
 }
 
+private struct BoardCardKey: EnvironmentKey {
+    static let defaultValue: BoardCardStyle? = nil
+}
+
+/// Board cards: compact rows with a small inset, full-width title, metadata beneath and a card surface.
+struct BoardCardStyle: Equatable {
+    /// False on boards already grouped by project, where the name would repeat the column header.
+    var showsProject = true
+}
+
+extension EnvironmentValues {
+    var boardCard: BoardCardStyle? {
+        get { self[BoardCardKey.self] }
+        set { self[BoardCardKey.self] = newValue }
+    }
+}
+
 /// One task in the content list: check control, title, metadata, and a hover-revealed action.
 struct TaskRowView: View {
     @Environment(Store.self) private var store
@@ -38,6 +55,7 @@ struct TaskRowView: View {
     @State private var hovering = false
     @State private var checkHover = false
     @Environment(\.taskRowScope) private var rowScope
+    @Environment(\.boardCard) private var card
     @State private var choosingDate = false
     @Environment(\.appearsActive) private var appearsActive
     @Environment(\.taskListFocused) private var listFocused
@@ -54,7 +72,7 @@ struct TaskRowView: View {
         let notePreview = fullReading?.text ?? store.taskNotePreview(task)
         let titleLinks = Linkify.reading(task.title), previewLinks = fullReading ?? Linkify.reading(notePreview)
         HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
-            if !workspace.hierarchyFilter && !workspace.independentWorkRow(task) && workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1) /* indent geometry: depth steps, not spacing */.accessibilityHidden(true) }
+            if card == nil, !workspace.hierarchyFilter && !workspace.independentWorkRow(task) && workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1) /* indent geometry: depth steps, not spacing */.accessibilityHidden(true) }
             if workspace.canExpandTask(task) {
                 Button {
                     if !workspace.expandedTasks.insert(task.id).inserted { workspace.expandedTasks.remove(task.id) }
@@ -67,7 +85,7 @@ struct TaskRowView: View {
                 .accessibilityLabel("Subtasks of \(task.title)")
                 .accessibilityValue(workspace.expandedTasks.contains(task.id) ? "Expanded" : "Collapsed")
                 .accessibilityIdentifier("expand-" + task.id)
-            } else { Color.clear.frame(width: DS.Space.l, height: 1) }
+            } else if card == nil { Color.clear.frame(width: DS.Space.l, height: 1) }
 
             if TaskKind.mayComplete(task) {
             Button { workspace.complete(task) } label: {
@@ -143,41 +161,21 @@ struct TaskRowView: View {
             if !task.string("assigned_to").isEmpty {
                 AssigneeMenu(task: task, selected: isSelected) { workspace.assign(task.id, to: $0) }
             }
-            ZStack(alignment: .trailing) {
-                if let project = trailingProject {
-                    HStack(spacing: DS.Space.xs) {
-                        Text(project.name).lineLimit(1)
-                        Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6) // dot geometry
-                    }
-                    .font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary)
-                    .opacity(hovering || isSelected ? 0 : 1)
-                    .accessibilityHidden(true)
-                }
-                HStack(spacing: DS.Space.xs) {
-                    Button { choosingDate = true } label: { Image(systemName: "calendar").frame(width: DS.Space.xxl, height: DS.Space.xxl).contentShape(.rect) }
-                        .buttonStyle(.borderless).foregroundStyle(DS.Palette.textSecondary)
-                        .help("Schedule").accessibilityLabel("Schedule \(task.title)").accessibilityIdentifier("schedule-\(task.id)")
-                    Menu {
-                        Button("Change Date…", systemImage: "calendar") { choosingDate = true }
-                        Menu("Move to Project") { projectOptions }
-                        Menu("Priority") { priorityOptions }
-                        Divider()
-                        Button("Edit Details…") { workspace.open(task.id) }
-                    } label: { Image(systemName: "ellipsis").fontWeight(.semibold).foregroundStyle(isSelected ? selectedForeground : DS.Palette.textSecondary) }
-                    .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-                    .tint(isSelected ? selectedForeground : .secondary)
-                    .help("Task actions")
-                    .accessibilityLabel("More actions for \(task.title)")
-                    .accessibilityIdentifier("actions-\(task.id)")
-                }
-                .opacity(hovering || isSelected ? 1 : 0)
-                .allowsHitTesting(hovering || isSelected)
+            if card == nil { trailing }
+        }
+        .overlay(alignment: .topTrailing) { if card != nil { trailing.background(DS.Palette.surfaceRaised, in: .rect(cornerRadius: DS.Radius.s)).opacity(hovering || isSelected ? 1 : 0).allowsHitTesting(hovering || isSelected) } }
+        .padding(.vertical, card == nil ? DS.Size.rowVerticalPadding(compact: density == "compact") : DS.Space.s)
+        .padding(.horizontal, card == nil ? DS.Space.xs : DS.Space.s)
+        .frame(minHeight: DS.Size.rowMinHeight)
+        .background {
+            if card != nil {
+                RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(DS.Palette.surfaceRaised)
+                    .overlay { RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(isSelected ? DS.Palette.selectionFill : hovering ? DS.Palette.surfaceSunken.opacity(0.5) : Color.clear) }
+                    .overlay { RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).strokeBorder(DS.Palette.separator.opacity(0.6), lineWidth: 0.5) }
+            } else {
+                RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(isSelected ? DS.Palette.selectionFill : hovering ? DS.Palette.surfaceSunken.opacity(0.5) : Color.clear)
             }
         }
-        .padding(.vertical, DS.Size.rowVerticalPadding(compact: density == "compact"))
-        .padding(.horizontal, DS.Space.xs)
-        .frame(minHeight: DS.Size.rowMinHeight)
-        .background(isSelected ? DS.Palette.selectionFill : hovering ? DS.Palette.surfaceSunken.opacity(0.5) : Color.clear, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
         .contentShape(.rect)
         .onHover { hovering = $0 }
         .popover(isPresented: $choosingDate) { TaskDatePopover(task: task) }
@@ -208,6 +206,38 @@ struct TaskRowView: View {
         }
         .onDisappear { notePresentation = nil; fullNote = nil }
     }
+    private var trailing: some View {
+        ZStack(alignment: .trailing) {
+            if let project = trailingProject {
+                HStack(spacing: DS.Space.xs) {
+                    Text(project.name).lineLimit(1)
+                    Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6) // dot geometry
+                }
+                .font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary)
+                .opacity(hovering || isSelected ? 0 : 1)
+                .accessibilityHidden(true)
+            }
+            HStack(spacing: DS.Space.xs) {
+                Button { choosingDate = true } label: { Image(systemName: "calendar").frame(width: DS.Space.xxl, height: DS.Space.xxl).contentShape(.rect) }
+                    .buttonStyle(.borderless).foregroundStyle(DS.Palette.textSecondary)
+                    .help("Schedule").accessibilityLabel("Schedule \(task.title)").accessibilityIdentifier("schedule-\(task.id)")
+                Menu {
+                    Button("Change Date…", systemImage: "calendar") { choosingDate = true }
+                    Menu("Move to Project") { projectOptions }
+                    Menu("Priority") { priorityOptions }
+                    Divider()
+                    Button("Edit Details…") { workspace.open(task.id) }
+                } label: { Image(systemName: "ellipsis").fontWeight(.semibold).foregroundStyle(isSelected ? selectedForeground : DS.Palette.textSecondary) }
+                .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                .tint(isSelected ? selectedForeground : .secondary)
+                .help("Task actions")
+                .accessibilityLabel("More actions for \(task.title)")
+                .accessibilityIdentifier("actions-\(task.id)")
+            }
+            .opacity(hovering || isSelected ? 1 : 0)
+            .allowsHitTesting(hovering || isSelected)
+        }
+    }
     @ViewBuilder private var projectOptions: some View {
         Button("Inbox") { workspace.move([task.id], toProject: "") }
         ForEach(store.projects) { project in
@@ -221,12 +251,18 @@ struct TaskRowView: View {
     }
     /// The project shows at the trailing edge only in lists that mix projects.
     private var trailingProject: Record? {
+        if card != nil { return nil }
         if case .project = rowScope { return nil }
+        return store.record("projects", id: task.string("project_id"))
+    }
+    /// Board cards carry the project in the metadata line, unless the board is grouped by project.
+    private var cardProject: Record? {
+        guard let card, card.showsProject else { return nil }
         return store.record("projects", id: task.string("project_id"))
     }
     private var labelNames: [String] { task["labels"].list.map(\.text).filter { !$0.isEmpty }.map { store.record("labels", id: $0)?.name ?? $0 } }
     private func hasMetadata(_ planning: TaskRowPlanningRead) -> Bool {
-        dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty
+        cardProject != nil || dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty
             || !labelNames.isEmpty || !task["attachments"].list.isEmpty || (TaskKind.mayComplete(task) && task.durationMinutes != nil)
     }
     private enum DateRole { case overdue, today, tomorrow, thisWeek, later }
@@ -275,6 +311,12 @@ struct TaskRowView: View {
             .buttonStyle(.borderless)
             .help("Change date")
             .accessibilityIdentifier("date-\(task.id)")
+        }
+        if let project = cardProject {
+            HStack(spacing: DS.Space.xs) {
+                Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6) // dot geometry
+                Text(project.name).lineLimit(1)
+            }.accessibilityHidden(true)
         }
         if let deadline = planning.deadline {
             Label(deadline.formatted(.dateTime.day().month(.abbreviated)), systemImage: "flag.checkered")
