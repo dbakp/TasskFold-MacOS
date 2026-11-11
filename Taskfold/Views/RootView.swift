@@ -655,7 +655,7 @@ struct RootView: View {
                                make("Plan a small herb garden", due: false, daysOld: 9), make("Try a pottery class", due: false, daysOld: 4), make("Write down family recipes", due: false, daysOld: 2)]
                 added = evening + someday
                 store.snapshot.tables["tasks"] = (store.snapshot.tables["tasks"] ?? []) + added
-                let today = Dates.day(Date())
+                let today = store.calendarContext.today
                 store.snapshot.tables["view_orders"] = [
                     Record(["id": .string(Planning.eveningKey(today)), "user_id": .string(store.userID), "ids": .array(evening.map { .string($0.id) })]),
                     Record(["id": .string(Planning.somedayKey), "user_id": .string(store.userID), "ids": .array(someday.map { .string($0.id) })])

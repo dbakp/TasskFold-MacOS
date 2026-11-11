@@ -159,7 +159,7 @@ I'd finish the subtask migration, because it protects data. The rest should ship
 
 ### Phase 4: beyond Todoist (secondary)
 - ~~A Things-style "This Evening" slot and a "Someday" list.~~ Done: [Mac #128](https://github.com/dbakp/TasskFold-MacOS/pull/128), [iOS #129](https://github.com/dbakp/TaskFold-iOS/pull/129). State lives in `view_orders` rows; no schema change.
-- A Structured or Sunsama-style daily time-blocking flow, built on the existing hourly planner. **Built on `feat/daily-planning` in both repos, awaiting review.** A guided Plan your day (Triage, Estimate, Time-block with Fit my day, Done) and an evening Shut down. The "planned today" and "shut down" markers live in `view_orders` (`planning:day:<date>`, `planning:shutdown:<date>`), per account and expiring with the day; no schema change. Pure logic is in `Core/DayPlan.swift`.
+- ~~A Structured or Sunsama-style daily time-blocking flow, built on the existing hourly planner.~~ Done: [Mac #130](https://github.com/dbakp/TasskFold-MacOS/pull/130), [iOS #131](https://github.com/dbakp/TaskFold-iOS/pull/131). Guided Plan your day (triage, estimate, Fit my day, done) and an end-of-day shutdown.
 - A TickTick-style habit tracker and a Pomodoro timer that reuses Focus sessions.
 - On-device Apple Intelligence: capture a voice note as several tasks, or get a smart reschedule of overdue work.
 
