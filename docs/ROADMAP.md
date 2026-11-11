@@ -129,6 +129,10 @@ Rules that keep this token-efficient without losing quality:
 7. **Progress so far.**
    - Watch freshness locale bug fixed ([TaskFold-iOS#109](https://github.com/dbakp/TaskFold-iOS/pull/109)).
    - Design tokens added in both apps: `docs/DESIGN_TOKENS.md` and `Taskfold/Views/DesignTokens.swift`.
+   - Project generator repaired ([TasskFold-MacOS#110](https://github.com/dbakp/TasskFold-MacOS/pull/110)).
+   - Task row redesign ([TasskFold-MacOS#111](https://github.com/dbakp/TasskFold-MacOS/pull/111), [TaskFold-iOS#111](https://github.com/dbakp/TaskFold-iOS/pull/111)) and iOS list polish ([TaskFold-iOS#112](https://github.com/dbakp/TaskFold-iOS/pull/112)).
+   - Task detail redesign ([TasskFold-MacOS#112](https://github.com/dbakp/TasskFold-MacOS/pull/112), [TaskFold-iOS#113](https://github.com/dbakp/TaskFold-iOS/pull/113)). Spec: `specs/TASK_DETAIL.md`.
+   - Open: the Mac UI tests need an Apple account in Xcode (App Group entitlements need a development profile). About 9 iOS UI tests fail on row titles now being buttons; a test-lookup fix is queued with the Quick Add update.
 
 ### Phase 2: close the Todoist gaps (about 9 updates)
 1. Mac global Quick Add hotkey (user-configurable) and a menu bar extra with Today and quick add.
